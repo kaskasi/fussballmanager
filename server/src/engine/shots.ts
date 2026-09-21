@@ -28,14 +28,8 @@ import { defendingPressure } from "./pressure.ts";
 function keeperOf(
   state: MatchState,
   teamId: MatchState["homeTeamId"],
-): PlayerMatchStatus {
-  const keeper = onPitchFor(state.players, teamId).find(
-    (player) => player.role === "GK",
-  );
-  if (!keeper) {
-    throw new Error(`No goalkeeper on pitch for ${teamId}`);
-  }
-  return keeper;
+): PlayerMatchStatus | undefined {
+  return onPitchFor(state.players, teamId).find((player) => player.role === "GK");
 }
 
 function involvedAssist(
@@ -51,7 +45,7 @@ function involvedAssist(
 function resolveOutcome(
   state: MatchState,
   shooter: PlayerMatchStatus,
-  keeper: PlayerMatchStatus,
+  keeper: PlayerMatchStatus | undefined,
   defender: PlayerMatchStatus | undefined,
 ): { outcome: ShotOutcome; rng: MatchState["rng"] } {
   const attackTactics =
@@ -71,10 +65,10 @@ function resolveOutcome(
     fatigue: shooter.fatigue,
     mentality: attackTactics.mentality,
     distanceToGoal: dist,
-    keeperGoalkeeping: keeper.attributes.goalkeeping,
-    keeperPositioning: keeper.attributes.positioning,
-    keeperForm: keeper.form,
-    keeperFatigue: keeper.fatigue,
+    keeperGoalkeeping: keeper?.attributes.goalkeeping ?? 0,
+    keeperPositioning: keeper?.attributes.positioning ?? 0,
+    keeperForm: keeper?.form ?? 50,
+    keeperFatigue: keeper?.fatigue ?? 0,
     defenderClose: close,
     defenderTackling: defender?.attributes.tackling ?? 40,
     transitionAttack: inGainedBall(state),
@@ -93,6 +87,12 @@ function resolveOutcome(
     return { outcome: "block", rng: blockRoll.rng };
   }
   const finish = nextUnit(blockRoll.rng);
+  if (!keeper) {
+    return {
+      outcome: finish.n < 0.94 ? "goal" : "wide",
+      rng: finish.rng,
+    };
+  }
   return {
     outcome: finish.n < chances.goalGivenOnTarget ? "goal" : "save",
     rng: finish.rng,
@@ -103,7 +103,7 @@ function pendingAfterShot(
   outcome: ShotOutcome,
   state: MatchState,
   shooter: PlayerMatchStatus,
-  keeper: PlayerMatchStatus,
+  keeper: PlayerMatchStatus | undefined,
 ): PendingFollowUp | null {
   const defendingId = oppositionTeamId(
     state.homeTeamId,
@@ -111,6 +111,15 @@ function pendingAfterShot(
     state.awayTeamId,
   );
   if (outcome === "save") {
+    if (!keeper) {
+      return {
+        type: "goal",
+        scorerId: shooter.playerId,
+        ...(state.lastPasserId && state.lastPasserId !== shooter.playerId
+          ? { assistId: state.lastPasserId }
+          : {}),
+      };
+    }
     return { type: "save", keeperId: keeper.playerId, shooterId: shooter.playerId };
   }
   if (outcome === "goal") {
@@ -154,7 +163,7 @@ export function stepShot(state: MatchState): StepResult {
   const ball =
     resolved.outcome === "goal"
       ? mouth
-      : resolved.outcome === "save"
+      : resolved.outcome === "save" && keeper
         ? keeper.position
         : resolved.outcome === "block" && defender
           ? defender.position
@@ -186,7 +195,8 @@ export function stepShot(state: MatchState): StepResult {
     state: {
       ...timed,
       ball,
-      ballCarrierId: resolved.outcome === "save" ? keeper.playerId : null,
+      ballCarrierId:
+        resolved.outcome === "save" && keeper ? keeper.playerId : null,
       possessionTeamId: shooter.teamId,
       lastPasserId: null,
       pending: pendingAfterShot(resolved.outcome, timed, shooter, keeper),
@@ -352,17 +362,22 @@ export function stepRestart(
   }
 
   if (phase === "goal_kick") {
-    const keeper = keeperOf(timed, takingTeamId);
+    const taker =
+      keeperOf(timed, takingTeamId) ??
+      onPitchFor(timed.players, takingTeamId)[0];
+    if (!taker) {
+      throw new Error("No taker for goal kick");
+    }
     const spot =
       takingTeamId === timed.homeTeamId ? { x: 6, y: 50 } : { x: 94, y: 50 };
-    const keeperInv = { ...asInvolved(keeper), position: spot };
+    const takerInv = { ...asInvolved(taker), position: spot };
     const event: MatchEvent = {
       type: "restart",
       seq: timed.nextSeq,
       matchId: timed.matchId,
       clock,
       ball: spot,
-      involved: [keeperInv],
+      involved: [takerInv],
       possessionTeamId: takingTeamId,
       phase: "goal_kick",
       takingTeamId,
@@ -373,10 +388,10 @@ export function stepRestart(
         ...timed,
         phase: "open_play",
         ball: spot,
-        ballCarrierId: keeper.playerId,
+        ballCarrierId: taker.playerId,
         possessionTeamId: takingTeamId,
         players: patchPlayers(timed.players, [
-          { playerId: keeper.playerId, position: spot },
+          { playerId: taker.playerId, position: spot },
         ]),
         pending: null,
         nextSeq: timed.nextSeq + 1,

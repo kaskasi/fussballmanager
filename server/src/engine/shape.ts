@@ -28,6 +28,11 @@ export type LineDuty = "gk" | "defend" | "mid" | "attack";
 const OPP_BOX_DEPTH = 83;
 const HALF_WAY = 50;
 
+/** Pace is a nudge, not a 2× first-to-the-ball cheat. */
+export function offBallMaxStep(pace: number): number {
+  return 3.45 + (clamp(pace, 0, 100) / 100) * 1.1;
+}
+
 export function lineDuty(role: PlayerRole): LineDuty {
   switch (role) {
     case "GK":
@@ -645,7 +650,7 @@ export function applyShape(
       depthFromOwnGoal(player.position, ownGoal, teamSign) >
         depthFromOwnGoal(state.ball, ownGoal, teamSign) + 10;
     const maxStep =
-      (2.2 + player.attributes.pace * 0.05) *
+      offBallMaxStep(player.attributes.pace) *
       (lost && defending ? 0.35 : 1) *
       (beaten ? 0.4 : 1);
     const dist = distance(player.position, target);

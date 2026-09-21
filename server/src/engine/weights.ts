@@ -35,7 +35,8 @@ export function openPlayWeights(input: {
     proximity * (0.3 + 0.7 * (input.pressing / 100));
   const carry =
     (0.12 +
-      0.45 * ((input.dribbling + input.pace) / 200) +
+      0.42 * (input.dribbling / 100) +
+      0.1 * (input.pace / 100) +
       0.2 * (input.mentality / 100) +
       0.15 * (input.tempo / 100) +
       freshness) *
@@ -86,6 +87,26 @@ export function contestStrength(input: {
     1,
     input.attribute + input.form * 0.5 - input.fatigue * 0.5 + input.tacticBonus,
   );
+}
+
+/** Average adult reference. Taller than this helps headers; shorter hurts. */
+const AERIAL_HEIGHT_REF_CM = 180;
+
+/** Height is centimetres, not a 0–100 skill. ~0.75 contest points per cm. */
+export function heightAerialBonus(heightCm: number): number {
+  return (clamp(heightCm, 150, 215) - AERIAL_HEIGHT_REF_CM) * 0.75;
+}
+
+/** Aerial skill plus standing height. Pace is not an input. */
+export function aerialContestAttribute(input: {
+  aerial: number;
+  heightCm: number;
+}): number {
+  return input.aerial + heightAerialBonus(input.heightCm);
+}
+
+export function contestWinChance(self: number, opponent: number): number {
+  return self / (self + opponent);
 }
 
 export function shotOutcomeChances(input: {

@@ -124,6 +124,7 @@ export function stepPass(state: MatchState): StepResult {
           lastPasserId: null,
           players: patchPlayers(timed.players, [
             { playerId: passer.playerId, position: passerPos },
+            { playerId: target.playerId, position: to.position },
             { playerId: coverer.playerId, position: ball },
           ]),
           nextSeq: timed.nextSeq + 1,

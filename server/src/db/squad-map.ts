@@ -128,7 +128,10 @@ function toPlayer(row: PlayerRecord): Player {
     role: row.role,
     form: row.form,
     fatigue: row.fatigue,
-    attributes: row.attributes,
+    attributes: {
+      ...row.attributes,
+      heightCm: clampStat(row.attributes.heightCm ?? 180, 150, 215),
+    },
   };
 }
 

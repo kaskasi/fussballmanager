@@ -2,7 +2,7 @@ import type { PlayerId, TeamId } from "./ids.ts";
 
 export type PlayerRole = "GK" | "FB" | "CB" | "DM" | "CM" | "AM" | "W" | "ST";
 
-/** 0–100 ratings used as explicit engine inputs. */
+/** Match inputs. Skills are 0–100; heightCm is standing height, not a skill. */
 export type PlayerAttributes = {
   passing: number;
   tackling: number;
@@ -13,6 +13,8 @@ export type PlayerAttributes = {
   aerial: number;
   dribbling: number;
   goalkeeping: number;
+  /** Centimetres. Feeds aerial contests together with `aerial` skill. */
+  heightCm: number;
 };
 
 export type Player = {

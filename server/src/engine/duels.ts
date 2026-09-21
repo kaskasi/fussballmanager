@@ -15,7 +15,7 @@ import {
   patchPlayers,
   requirePlayer,
 } from "./helpers.ts";
-import { contestStrength } from "./weights.ts";
+import { aerialContestAttribute, contestStrength } from "./weights.ts";
 import { beginTransition } from "./moments.ts";
 
 function pickKind(
@@ -26,7 +26,7 @@ function pickKind(
   const picked = pickWeighted(rng, [
     {
       item: "dribble" as const,
-      weight: attacker.attributes.dribbling + attacker.attributes.pace * 0.4,
+      weight: attacker.attributes.dribbling,
     },
     {
       item: "tackle" as const,
@@ -42,14 +42,14 @@ function pickKind(
 
 function attackerAttribute(kind: DuelKind, player: PlayerMatchStatus): number {
   if (kind === "aerial") {
-    return player.attributes.aerial;
+    return aerialContestAttribute(player.attributes);
   }
   return player.attributes.dribbling;
 }
 
 function defenderAttribute(kind: DuelKind, player: PlayerMatchStatus): number {
   if (kind === "aerial") {
-    return player.attributes.aerial;
+    return aerialContestAttribute(player.attributes);
   }
   return player.attributes.tackling;
 }

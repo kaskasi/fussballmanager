@@ -25,6 +25,7 @@ function stubPlayer(shirt: number): Player {
       aerial: 50,
       dribbling: 50,
       goalkeeping: 8,
+      heightCm: 180,
     },
   };
 }

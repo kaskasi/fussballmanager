@@ -49,8 +49,8 @@ export function interceptChance(
 ): number {
   const base =
     0.18 +
-    defender.attributes.positioning / 220 +
-    defender.attributes.pace / 400 +
+    defender.attributes.positioning / 200 +
+    defender.attributes.pace / 900 +
     pressing / 400;
   const shape = lostBall ? 0.42 : 1;
   return clamp(base * shape, 0.04, 0.62);

@@ -81,6 +81,7 @@ const sampleAttributes = {
   aerial: 52,
   dribbling: 54,
   goalkeeping: 8,
+  heightCm: 180,
 };
 
 export const sampleState: MatchState = {

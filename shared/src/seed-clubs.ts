@@ -20,6 +20,7 @@ const ROLE_BASE: Record<PlayerRole, PlayerAttributes> = {
     aerial: 64,
     dribbling: 22,
     goalkeeping: 72,
+    heightCm: 190,
   },
   FB: {
     passing: 58,
@@ -31,6 +32,7 @@ const ROLE_BASE: Record<PlayerRole, PlayerAttributes> = {
     aerial: 52,
     dribbling: 58,
     goalkeeping: 8,
+    heightCm: 178,
   },
   CB: {
     passing: 54,
@@ -42,6 +44,7 @@ const ROLE_BASE: Record<PlayerRole, PlayerAttributes> = {
     aerial: 74,
     dribbling: 40,
     goalkeeping: 8,
+    heightCm: 188,
   },
   DM: {
     passing: 66,
@@ -53,6 +56,7 @@ const ROLE_BASE: Record<PlayerRole, PlayerAttributes> = {
     aerial: 62,
     dribbling: 52,
     goalkeeping: 8,
+    heightCm: 183,
   },
   CM: {
     passing: 70,
@@ -64,6 +68,7 @@ const ROLE_BASE: Record<PlayerRole, PlayerAttributes> = {
     aerial: 54,
     dribbling: 64,
     goalkeeping: 8,
+    heightCm: 178,
   },
   AM: {
     passing: 72,
@@ -75,6 +80,7 @@ const ROLE_BASE: Record<PlayerRole, PlayerAttributes> = {
     aerial: 44,
     dribbling: 72,
     goalkeeping: 8,
+    heightCm: 176,
   },
   W: {
     passing: 64,
@@ -86,6 +92,7 @@ const ROLE_BASE: Record<PlayerRole, PlayerAttributes> = {
     aerial: 36,
     dribbling: 74,
     goalkeeping: 8,
+    heightCm: 175,
   },
   ST: {
     passing: 58,
@@ -97,6 +104,7 @@ const ROLE_BASE: Record<PlayerRole, PlayerAttributes> = {
     aerial: 64,
     dribbling: 62,
     goalkeeping: 8,
+    heightCm: 184,
   },
 };
 

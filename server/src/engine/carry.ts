@@ -13,6 +13,11 @@ import {
   requirePlayer,
 } from "./helpers.ts";
 
+/** Pace adds a little length; dribbling is the main carry skill. */
+export function carryLengthMax(dribbling: number, pace: number): number {
+  return 5 + (dribbling / 100) * 4 + (pace / 100) * 1.6;
+}
+
 export function stepCarry(state: MatchState): StepResult {
   if (!state.possessionTeamId || !state.ballCarrierId) {
     throw new Error("Cannot carry without possession and a ball carrier");
@@ -20,7 +25,11 @@ export function stepCarry(state: MatchState): StepResult {
   const carrier = requirePlayer(state.players, state.ballCarrierId);
   const tactics =
     carrier.teamId === state.homeTeamId ? state.homeTactics : state.awayTactics;
-  const length = nextRange(state.rng, 3, 5 + (carrier.attributes.pace / 100) * 8);
+  const length = nextRange(
+    state.rng,
+    3,
+    carryLengthMax(carrier.attributes.dribbling, carrier.attributes.pace),
+  );
   const drift = nextRange(length.rng, -1, 1);
   const duration = nextRange(drift.rng, 1, 4);
   const from = carrier.position;

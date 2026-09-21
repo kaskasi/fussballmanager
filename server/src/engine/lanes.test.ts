@@ -16,6 +16,7 @@ const attrs = {
   aerial: 50,
   dribbling: 50,
   goalkeeping: 8,
+  heightCm: 180,
 };
 
 function defender(x: number, y: number): PlayerMatchStatus {

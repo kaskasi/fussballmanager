@@ -32,6 +32,7 @@ const attrs = {
   aerial: 50,
   dribbling: 50,
   goalkeeping: 8,
+  heightCm: 180,
 };
 
 describe("marking targets", () => {

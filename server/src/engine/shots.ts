@@ -5,6 +5,7 @@ import type {
   PlayerId,
   PlayerMatchStatus,
   ShotOutcome,
+  RestartPhase,
   StepResult,
 } from "@fussballmanager/shared";
 import { nextRange, nextUnit } from "@fussballmanager/shared";
@@ -24,6 +25,7 @@ import {
 import { shotOutcomeChances } from "./weights.ts";
 import { beginTransition, inGainedBall } from "./moments.ts";
 import { defendingPressure } from "./pressure.ts";
+import { penaltySpot, throwInSpot } from "./laws.ts";
 
 function keeperOf(
   state: MatchState,
@@ -73,6 +75,7 @@ function resolveOutcome(
     defenderTackling: defender?.attributes.tackling ?? 40,
     transitionAttack: inGainedBall(state),
     restCovers: pressure.restCovers,
+    penalty: state.phase === "penalty",
   });
   const onTargetRoll = nextUnit(state.rng);
   if (onTargetRoll.n >= chances.onTarget) {
@@ -151,10 +154,13 @@ export function stepShot(state: MatchState): StepResult {
     state.awayTeamId,
   );
   const keeper = keeperOf(state, defendingId);
-  const defender = nearest(
-    onPitchFor(state.players, defendingId).filter((p) => p.role !== "GK"),
-    shooter.position,
-  );
+  const penalty = state.phase === "penalty";
+  const defender = penalty
+    ? undefined
+    : nearest(
+        onPitchFor(state.players, defendingId).filter((p) => p.role !== "GK"),
+        shooter.position,
+      );
   const resolved = resolveOutcome(state, shooter, keeper, defender);
   const duration = nextRange(resolved.rng, 1, 3);
   const mouth = goalMouth(state.homeTeamId, shooter.teamId);
@@ -319,7 +325,7 @@ function stepGoal(
 
 export function stepRestart(
   state: MatchState,
-  phase: "goal_kick" | "corner" | "kickoff" | "free_kick",
+  phase: RestartPhase,
   takingTeamId: MatchState["homeTeamId"],
 ): StepResult {
   const timed = withTime(state, 2, state.rng);
@@ -427,6 +433,85 @@ export function stepRestart(
         ball: spot,
         ballCarrierId: taker.playerId,
         possessionTeamId: takingTeamId,
+        players: patchPlayers(timed.players, [
+          { playerId: taker.playerId, position: spot },
+        ]),
+        pending: null,
+        nextSeq: timed.nextSeq + 1,
+      },
+    };
+  }
+
+  if (phase === "throw_in") {
+    const spot = throwInSpot(timed.ball);
+    const taker =
+      nearest(onPitchFor(timed.players, takingTeamId), spot) ??
+      onPitchFor(timed.players, takingTeamId)[0];
+    if (!taker) {
+      throw new Error("No throw-in taker");
+    }
+    const takerInv = { ...asInvolved(taker), position: spot };
+    const event: MatchEvent = {
+      type: "restart",
+      seq: timed.nextSeq,
+      matchId: timed.matchId,
+      clock,
+      ball: spot,
+      involved: [takerInv],
+      possessionTeamId: takingTeamId,
+      phase: "throw_in",
+      takingTeamId,
+    };
+    return {
+      event,
+      state: {
+        ...timed,
+        phase: "open_play",
+        ball: spot,
+        ballCarrierId: taker.playerId,
+        possessionTeamId: takingTeamId,
+        players: patchPlayers(timed.players, [
+          { playerId: taker.playerId, position: spot },
+        ]),
+        pending: null,
+        nextSeq: timed.nextSeq + 1,
+      },
+    };
+  }
+
+  if (phase === "penalty") {
+    const spot = penaltySpot(takingTeamId, timed.homeTeamId);
+    const onPitch = onPitchFor(timed.players, takingTeamId);
+    const taker =
+      onPitch
+        .filter((player) => player.role === "ST")
+        .sort((a, b) => b.attributes.shooting - a.attributes.shooting)[0] ??
+      nearest(onPitch, spot) ??
+      onPitch[0];
+    if (!taker) {
+      throw new Error("No penalty taker");
+    }
+    const takerInv = { ...asInvolved(taker), position: spot };
+    const event: MatchEvent = {
+      type: "restart",
+      seq: timed.nextSeq,
+      matchId: timed.matchId,
+      clock,
+      ball: spot,
+      involved: [takerInv],
+      possessionTeamId: takingTeamId,
+      phase: "penalty",
+      takingTeamId,
+    };
+    return {
+      event,
+      state: {
+        ...timed,
+        phase: "penalty",
+        ball: spot,
+        ballCarrierId: taker.playerId,
+        possessionTeamId: takingTeamId,
+        lastPasserId: null,
         players: patchPlayers(timed.players, [
           { playerId: taker.playerId, position: spot },
         ]),

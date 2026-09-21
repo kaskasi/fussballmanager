@@ -202,11 +202,19 @@ function stepInner(input: StepInput): StepResult {
     return stepKickoff(timed);
   }
 
+  if (timed.phase === "penalty") {
+    if (!timed.ballCarrierId) {
+      return stepTurnover(timed);
+    }
+    return stepShot(timed);
+  }
+
   if (
     timed.phase !== "open_play" &&
     timed.phase !== "free_kick" &&
     timed.phase !== "goal_kick" &&
     timed.phase !== "corner" &&
+    timed.phase !== "throw_in" &&
     timed.phase !== "goal_restart"
   ) {
     throw new Error(`step() does not handle phase ${timed.phase} yet`);

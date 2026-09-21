@@ -20,6 +20,7 @@ import { bestLaneCover, interceptChance } from "./lanes.ts";
 import { defendingPressure } from "./pressure.ts";
 import { beginTransition, inLostBall } from "./moments.ts";
 import { passCompleteChance } from "./weights.ts";
+import { isOffsideReceiver, outOfPlayRestart } from "./laws.ts";
 
 function pickTeammate(
   state: MatchState,
@@ -86,7 +87,8 @@ export function stepPass(state: MatchState): StepResult {
         pressing: pressure.pressing,
       });
   const duration = nextRange(intercept.rng, 2, 6);
-  const timed = withTime(state, duration.n, duration.rng);
+  const slice = nextRange(duration.rng, -12, 12);
+  const timed = withTime(state, duration.n, slice.rng);
   const passerPos = clampPitch(lerp(passer.position, target.position, 0.12));
   const receiverPos = complete
     ? target.position
@@ -131,6 +133,100 @@ export function stepPass(state: MatchState): StepResult {
         },
         coverer.teamId,
       ),
+    };
+  }
+
+  if (
+    complete &&
+    isOffsideReceiver({
+      receiver: target.position,
+      ball: passer.position,
+      defenders,
+      attackingTeamId: passer.teamId,
+      homeTeamId: state.homeTeamId,
+    })
+  ) {
+    const ball = clampPitch(target.position);
+    const event: MatchEvent = {
+      type: "turnover",
+      seq: timed.nextSeq,
+      matchId: timed.matchId,
+      clock: timed.clock,
+      ball,
+      involved: [from, to],
+      possessionTeamId: defendId,
+      fromTeamId: passer.teamId,
+      toTeamId: defendId,
+      reason: "offside",
+    };
+    return {
+      event,
+      state: {
+        ...timed,
+        phase: "free_kick",
+        ball,
+        ballCarrierId: null,
+        possessionTeamId: defendId,
+        lastPasserId: null,
+        players: patchPlayers(timed.players, [
+          { playerId: passer.playerId, position: passerPos },
+        ]),
+        pending: {
+          type: "restart",
+          phase: "free_kick",
+          takingTeamId: defendId,
+        },
+        nextSeq: timed.nextSeq + 1,
+      },
+    };
+  }
+
+  const intended = complete
+    ? target.position
+    : {
+        x: passerPos.x + (target.position.x - passerPos.x) * 0.6,
+        y: passerPos.y + (target.position.y - passerPos.y) * 0.6 + slice.n,
+      };
+  const out = complete
+    ? null
+    : outOfPlayRestart(
+        intended,
+        passer.teamId,
+        state.homeTeamId,
+        state.awayTeamId,
+      );
+  if (out) {
+    const event: MatchEvent = {
+      type: "pass",
+      seq: timed.nextSeq,
+      matchId: timed.matchId,
+      clock: timed.clock,
+      ball: out.spot,
+      involved: [from, to],
+      possessionTeamId: out.takingTeamId,
+      from,
+      to,
+      complete: false,
+    };
+    return {
+      event,
+      state: {
+        ...timed,
+        phase: out.phase,
+        ball: out.spot,
+        ballCarrierId: null,
+        possessionTeamId: out.takingTeamId,
+        lastPasserId: null,
+        players: patchPlayers(timed.players, [
+          { playerId: passer.playerId, position: passerPos },
+        ]),
+        pending: {
+          type: "restart",
+          phase: out.phase,
+          takingTeamId: out.takingTeamId,
+        },
+        nextSeq: timed.nextSeq + 1,
+      },
     };
   }
 

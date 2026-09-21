@@ -5,13 +5,8 @@ import type {
 } from "@fussballmanager/shared";
 import { nextRange } from "@fussballmanager/shared";
 import { withTime } from "./clock.ts";
-import {
-  asInvolved,
-  attackingSign,
-  clampPitch,
-  patchPlayers,
-  requirePlayer,
-} from "./helpers.ts";
+import { asInvolved, attackingSign, clampPitch, patchPlayers, requirePlayer } from "./helpers.ts";
+import { outOfPlayRestart } from "./laws.ts";
 
 /** Pace adds a little length; dribbling is the main carry skill. */
 export function carryLengthMax(dribbling: number, pace: number): number {
@@ -37,10 +32,17 @@ export function stepCarry(state: MatchState): StepResult {
   const distance =
     length.n * (0.7 + 0.3 * (tactics.tempo / 100) + 0.15 * (tactics.mentality / 100));
   const yShift = drift.n * 4 * (tactics.width / 100);
-  const to = clampPitch({
+  const raw = {
     x: from.x + sign * distance,
     y: from.y + yShift,
-  });
+  };
+  const out = outOfPlayRestart(
+    raw,
+    carrier.teamId,
+    state.homeTeamId,
+    state.awayTeamId,
+  );
+  const to = clampPitch(raw);
   const timed = withTime(state, duration.n, duration.rng);
   const clock = timed.clock;
   const player = { ...asInvolved(carrier), position: to };
@@ -50,24 +52,28 @@ export function stepCarry(state: MatchState): StepResult {
     seq: state.nextSeq,
     matchId: state.matchId,
     clock,
-    ball: to,
+    ball: out ? out.spot : to,
     involved: [player],
-    possessionTeamId: carrier.teamId,
+    possessionTeamId: out ? out.takingTeamId : carrier.teamId,
     player,
     from,
-    to,
+    to: out ? out.spot : to,
   };
 
   return {
     event,
     state: {
       ...timed,
-      ball: to,
-      ballCarrierId: carrier.playerId,
-      possessionTeamId: carrier.teamId,
+      ball: out ? out.spot : to,
+      ballCarrierId: out ? null : carrier.playerId,
+      possessionTeamId: out ? out.takingTeamId : carrier.teamId,
       players: patchPlayers(timed.players, [
         { playerId: carrier.playerId, position: to },
       ]),
+      pending: out
+        ? { type: "restart", phase: out.phase, takingTeamId: out.takingTeamId }
+        : timed.pending,
+      phase: out ? out.phase : timed.phase,
       nextSeq: timed.nextSeq + 1,
     },
   };

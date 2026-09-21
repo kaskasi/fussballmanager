@@ -1,4 +1,5 @@
 import type { FormationSlotId } from "./formations.ts";
+import { getFormation } from "./formations.ts";
 import { asPlayerId, asTeamId } from "./ids.ts";
 import type { Player, PlayerAttributes, PlayerRole, Team } from "./player.ts";
 import type { Squad } from "./squad.ts";
@@ -110,7 +111,7 @@ const ROLE_BASE: Record<PlayerRole, PlayerAttributes> = {
 
 function player(
   teamId: ReturnType<typeof asTeamId>,
-  prefix: "nord" | "rhein",
+  prefix: string,
   shirt: number,
   name: string,
   role: PlayerRole,
@@ -141,6 +142,81 @@ function squad(
     starters: starters.map(([p, slot]) => ({ player: p, slot })),
     bench,
   };
+}
+
+const BENCH_ROLES: readonly PlayerRole[] = [
+  "GK",
+  "CB",
+  "FB",
+  "CM",
+  "AM",
+  "W",
+  "ST",
+];
+
+function shiftAttrs(
+  role: PlayerRole,
+  skillShift: number,
+): Partial<PlayerAttributes> {
+  if (skillShift === 0) {
+    return {};
+  }
+  const base = ROLE_BASE[role];
+  const next: Partial<PlayerAttributes> = {};
+  for (const key of Object.keys(base) as (keyof PlayerAttributes)[]) {
+    if (key === "heightCm") {
+      continue;
+    }
+    next[key] = Math.min(99, Math.max(1, (base[key] ?? 50) + skillShift));
+  }
+  return next;
+}
+
+/** 11 formation slots + 7 bench names. Used for extra division clubs. */
+export function fillSquad(input: {
+  team: Team;
+  prefix: string;
+  tactics: TeamTactics;
+  names: readonly string[];
+  skillShift?: number;
+}): Squad {
+  const slots = getFormation(input.tactics.formation);
+  if (input.names.length < slots.length + BENCH_ROLES.length) {
+    throw new Error(`Need 18 names for ${input.team.name}`);
+  }
+  const shift = input.skillShift ?? 0;
+  const starters = slots.map((slot, index) => {
+    const shirt = index + 1;
+    const name = input.names[index] ?? `Player ${shirt}`;
+    return [
+      player(
+        input.team.id,
+        input.prefix,
+        shirt,
+        name,
+        slot.role,
+        52 + (shirt % 12),
+        4 + (shirt % 8),
+        shiftAttrs(slot.role, shift),
+      ),
+      slot.id,
+    ] as [Player, FormationSlotId];
+  });
+  const bench = BENCH_ROLES.map((role, index) => {
+    const shirt = 12 + index;
+    const name = input.names[11 + index] ?? `Player ${shirt}`;
+    return player(
+      input.team.id,
+      input.prefix,
+      shirt,
+      name,
+      role,
+      48 + (index % 10),
+      3 + (index % 6),
+      shiftAttrs(role, shift),
+    );
+  });
+  return squad(input.team, input.tactics, starters, bench);
 }
 
 export const NORDSTERN_ID = asTeamId("fc-nordstern");

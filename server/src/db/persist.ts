@@ -4,7 +4,9 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import {
   asMatchId,
+  SEED_DIVISION,
   SEED_MATCHUP,
+  matchdayFixtures,
   type MatchEvent,
   type PlayerAttributes,
   type Squad,
@@ -47,7 +49,7 @@ export async function seedDivision(pool: pg.Pool): Promise<void> {
      ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`,
     [DIVISION_ID, DIVISION_NAME],
   );
-  for (const squad of [SEED_MATCHUP.home, SEED_MATCHUP.away]) {
+  for (const squad of SEED_DIVISION) {
     const { club, players } = recordsFromSquad(squad);
     await pool.query(
       `INSERT INTO clubs (id, division_id, name, short_name, tactics)
@@ -240,6 +242,28 @@ export async function persistSeedFixture(
   await seedDivision(pool);
   await ensureScheduledMatch(pool, { matchId, seed });
   return playScheduledMatch(pool, matchId);
+}
+
+export async function persistSeedMatchday(
+  pool: pg.Pool,
+  baseSeed: number,
+  matchday = 1,
+): Promise<PlayedFixture[]> {
+  await migrate(pool);
+  await seedDivision(pool);
+  const clubIds = SEED_DIVISION.map((squad) => squad.team.id);
+  const fixtures = matchdayFixtures(clubIds, matchday);
+  const played: PlayedFixture[] = [];
+  for (const [index, fixture] of fixtures.entries()) {
+    await ensureScheduledMatch(pool, {
+      matchId: fixture.id,
+      seed: baseSeed + index * 19,
+      homeClubId: fixture.homeTeamId,
+      awayClubId: fixture.awayTeamId,
+    });
+    played.push(await playScheduledMatch(pool, fixture.id));
+  }
+  return played;
 }
 
 function clubFromRow(row: {

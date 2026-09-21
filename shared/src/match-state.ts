@@ -1,6 +1,6 @@
 import type { FormationSlotId } from "./formations.ts";
 import type { MatchId, PlayerId, TeamId } from "./ids.ts";
-import type { CardColor, MatchClock, MatchPhase } from "./match-event.ts";
+import type { CardColor, MatchClock, MatchPhase, RestartPhase } from "./match-event.ts";
 import type { PitchPosition } from "./pitch.ts";
 import type { PlayerAttributes, PlayerRole } from "./player.ts";
 import type { RngState } from "./rng.ts";
@@ -77,7 +77,7 @@ export type PendingFollowUp =
     }
   | {
       type: "restart";
-      phase: "goal_kick" | "corner" | "kickoff" | "free_kick";
+      phase: RestartPhase;
       takingTeamId: TeamId;
     }
   | {
@@ -85,7 +85,7 @@ export type PendingFollowUp =
       playerId: PlayerId;
       color: CardColor;
       thenRestart?: {
-        phase: "free_kick";
+        phase: RestartPhase;
         takingTeamId: TeamId;
       };
     }

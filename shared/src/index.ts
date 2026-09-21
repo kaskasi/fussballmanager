@@ -20,12 +20,24 @@ export {
   NORDSTERN_ID,
   RHEINWACHT_ID,
   SEED_MATCHUP,
+  fillSquad,
   nordsternPyramidSquad,
   nordsternSquad,
   nordsternTeam,
   rheinwachtSquad,
   rheinwachtTeam,
 } from "./seed-clubs.ts";
+
+export {
+  SEED_DIVISION,
+  elbstrandSquad,
+  holzwegSquad,
+  kuestenholzSquad,
+  moorsielSquad,
+} from "./seed-division.ts";
+
+export type { FixtureResult, ScheduledFixture, TableRow } from "./league.ts";
+export { matchdayFixtures, standings } from "./league.ts";
 
 export type {
   CentreMidDuty,
@@ -66,6 +78,7 @@ export type {
   PassEvent,
   PeriodEndEvent,
   RestartEvent,
+  RestartPhase,
   SaveEvent,
   ShotEvent,
   ShotOutcome,

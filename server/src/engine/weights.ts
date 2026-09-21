@@ -124,23 +124,28 @@ export function shotOutcomeChances(input: {
   /** Lost-ball rest defence is not set; shots are more likely to go in. */
   transitionAttack?: boolean;
   restCovers?: number;
+  /** Penalty: no wall, keeper 1v1 from 12 yards. */
+  penalty?: boolean;
 }): { onTarget: number; block: number; goalGivenOnTarget: number } {
   const quality = (input.shooting + input.form - input.fatigue) / 100;
-  const onTarget = clamp(
-    0.32 + 0.48 * quality - 0.015 * input.distanceToGoal + 0.12 * (input.mentality / 100),
-    0.12,
-    0.88,
-  );
+  const onTarget = input.penalty
+    ? clamp(0.72 + 0.2 * quality, 0.62, 0.94)
+    : clamp(
+        0.32 + 0.48 * quality - 0.015 * input.distanceToGoal + 0.12 * (input.mentality / 100),
+        0.12,
+        0.88,
+      );
   const isolated = isolationFactor(input.restCovers ?? 4);
-  const block = input.defenderClose
-    ? clamp(
-        (0.15 + 0.35 * (input.defenderTackling / 100)) *
-          (input.transitionAttack ? 0.5 : 1) /
-          isolated,
-        0.04,
-        0.55,
-      )
-    : 0;
+  const block =
+    input.penalty || !input.defenderClose
+      ? 0
+      : clamp(
+          (0.15 + 0.35 * (input.defenderTackling / 100)) *
+            (input.transitionAttack ? 0.5 : 1) /
+            isolated,
+          0.04,
+          0.55,
+        );
   const shotStr = contestStrength({
     attribute: input.shooting,
     form: input.form,
@@ -154,8 +159,8 @@ export function shotOutcomeChances(input: {
     tacticBonus: input.keeperPositioning * 0.15,
   });
   const goalGivenOnTarget =
-    (shotStr / (shotStr + gkStr * 1.2)) *
+    (shotStr / (shotStr + gkStr * (input.penalty ? 1.05 : 1.2))) *
     (input.transitionAttack ? 1.28 : 1) *
-    isolated;
+    (input.penalty ? 1.15 : isolated);
   return { onTarget, block, goalGivenOnTarget };
 }

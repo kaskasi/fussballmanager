@@ -4,11 +4,13 @@ import type {
   MatchState,
   PlayerId,
   PlayerMatchStatus,
+  RestartPhase,
   StepResult,
   TeamId,
 } from "@fussballmanager/shared";
 import { nextUnit } from "@fussballmanager/shared";
 import { withTime } from "./clock.ts";
+import { foulRestartPhase } from "./laws.ts";
 import {
   asInvolved,
   clamp,
@@ -122,16 +124,21 @@ export function stepFoul(
     fouled: fouledInv,
     ...(carded.card ? { card: carded.card } : {}),
   };
+  const restartPhase = foulRestartPhase(
+    fouled.position,
+    fouler.teamId,
+    state.homeTeamId,
+  );
   const restart = {
     type: "restart" as const,
-    phase: "free_kick" as const,
+    phase: restartPhase,
     takingTeamId: fouled.teamId,
   };
   return {
     event,
     state: {
       ...timed,
-      phase: "free_kick",
+      phase: restartPhase,
       ball: fouled.position,
       ballCarrierId: fouled.playerId,
       possessionTeamId: fouled.teamId,
@@ -142,7 +149,7 @@ export function stepFoul(
             playerId: fouler.playerId,
             color: carded.card,
             thenRestart: {
-              phase: "free_kick",
+              phase: restartPhase,
               takingTeamId: fouled.teamId,
             },
           }
@@ -156,7 +163,7 @@ export function stepCard(
   state: MatchState,
   playerId: PlayerId,
   color: CardColor,
-  thenRestart: { phase: "free_kick"; takingTeamId: MatchState["homeTeamId"] } | undefined,
+  thenRestart: { phase: RestartPhase; takingTeamId: MatchState["homeTeamId"] } | undefined,
 ): StepResult {
   const player = requirePlayer(state.players, playerId);
   const sentOffRaw = color === "red" || color === "second_yellow";

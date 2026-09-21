@@ -101,7 +101,7 @@ export type TurnoverEvent = EventBase & {
   type: "turnover";
   fromTeamId: TeamId;
   toTeamId: TeamId;
-  reason: "interception" | "tackle" | "loose_ball" | "error";
+  reason: "interception" | "tackle" | "loose_ball" | "error" | "offside";
 };
 
 export type FoulEvent = EventBase & {
@@ -130,12 +130,14 @@ export type SubstitutionEvent = EventBase & {
   playerOn: InvolvedPlayer;
 };
 
+export type RestartPhase = Extract<
+  MatchPhase,
+  "throw_in" | "goal_kick" | "corner" | "free_kick" | "penalty" | "kickoff"
+>;
+
 export type RestartEvent = EventBase & {
   type: "restart";
-  phase: Extract<
-    MatchPhase,
-    "throw_in" | "goal_kick" | "corner" | "free_kick" | "penalty" | "kickoff"
-  >;
+  phase: RestartPhase;
   takingTeamId: TeamId;
 };
 

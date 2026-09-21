@@ -43,6 +43,60 @@ describe("discipline", () => {
     }
   });
 
+  it("turns a foul in the box into a penalty", () => {
+    const state = afterKickoff();
+    const attacker = onPitchFor(state.players, state.homeTeamId).find(
+      (player) => player.role === "ST",
+    );
+    const defender = onPitchFor(state.players, state.awayTeamId).find(
+      (player) => player.role === "CB",
+    );
+    expect(attacker && defender).toBeTruthy();
+    if (!attacker || !defender) {
+      return;
+    }
+    const boxed = {
+      ...state,
+      players: state.players.map((player) =>
+        player.playerId === attacker.playerId
+          ? { ...player, position: { x: 90, y: 50 } }
+          : player,
+      ),
+    };
+    const fouledPlayer =
+      boxed.players.find((player) => player.playerId === attacker.playerId) ??
+      attacker;
+    const fouled = stepFoul(boxed, defender, fouledPlayer);
+    const pending = fouled.state.pending;
+    expect(pending).toBeTruthy();
+    if (pending?.type === "restart") {
+      expect(pending.phase).toBe("penalty");
+    }
+    if (pending?.type === "card") {
+      expect(pending.thenRestart?.phase).toBe("penalty");
+    }
+    let current = fouled.state;
+    let sawPenalty = false;
+    let sawShot = false;
+    for (let i = 0; i < 6; i += 1) {
+      const next = step({
+        state: current,
+        homeTactics: current.homeTactics,
+        awayTactics: current.awayTactics,
+      });
+      if (next.event.type === "restart" && next.event.phase === "penalty") {
+        sawPenalty = true;
+      }
+      if (next.event.type === "shot") {
+        sawShot = true;
+        break;
+      }
+      current = next.state;
+    }
+    expect(sawPenalty).toBe(true);
+    expect(sawShot).toBe(true);
+  });
+
   it("sends a player off on a second yellow", () => {
     const state = afterKickoff();
     const defender = onPitchFor(state.players, state.awayTeamId).find(

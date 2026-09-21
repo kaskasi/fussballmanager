@@ -134,6 +134,9 @@ export function commentate(event: MatchEvent, ctx: CommentaryContext): string {
     case "save":
       return `${ctx.playerName(event.keeper.playerId)} keeps out ${ctx.playerName(event.shooter.playerId)}.`;
     case "turnover":
+      if (event.reason === "offside") {
+        return `Offside against ${ctx.teamName(event.fromTeamId)}. ${ctx.teamName(event.toTeamId)} will take the free kick.`;
+      }
       return `${ctx.teamName(event.fromTeamId)} give it away. ${ctx.teamName(event.toTeamId)} are on the ball.`;
     case "foul": {
       const line = `${ctx.playerName(event.fouler.playerId)} fouls ${ctx.playerName(event.fouled.playerId)}.`;

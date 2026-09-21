@@ -42,7 +42,13 @@ function rosterOf(squad: Squad): MatchViewRosterPlayer[] {
   ];
 }
 
-function frameFrom(state: MatchState, seq: number): MatchViewFrame {
+function frameFrom(state: MatchState, seq: number, event?: MatchEvent): MatchViewFrame {
+  let cue: MatchViewFrame["cue"] = null;
+  if (event?.type === "turnover" && event.reason === "offside") {
+    cue = "offside";
+  } else if (event?.type === "restart" && event.phase === "throw_in") {
+    cue = "throw_in";
+  }
   return {
     seq,
     ball: state.ball,
@@ -51,6 +57,7 @@ function frameFrom(state: MatchState, seq: number): MatchViewFrame {
     ballCarrierId: state.ballCarrierId,
     clock: state.clock,
     ballInAir: state.ballInAir,
+    cue,
     dots: state.players
       .filter((player) => player.onPitch && !player.sentOff)
       .map((player) => ({
@@ -111,7 +118,7 @@ export function buildMatchView(input: {
       awayTactics: current.awayTactics,
     });
     current = result.state;
-    frames.push(frameFrom(current, result.event.seq));
+    frames.push(frameFrom(current, result.event.seq, result.event));
     if (isCommentaryWorthy(result.event, previousEvent)) {
       lines.push({
         seq: result.event.seq,

@@ -37,19 +37,20 @@ export function stepPass(
   const picked = pickPassTarget(state, passer, kind);
   const target = picked.target;
   const passKind = picked.kind;
+  const dest = picked.spot;
   const rng = picked.rng;
   const defendId =
     passer.teamId === state.homeTeamId ? state.awayTeamId : state.homeTeamId;
   const defendTactics =
     defendId === state.homeTeamId ? state.homeTactics : state.awayTactics;
   const defenders = onPitchFor(state.players, defendId);
-  const laneCover = bestLaneCover(defenders, passer.position, target.position);
+  const laneCover = bestLaneCover(defenders, passer.position, dest);
   const manShadow =
     defendTactics.marking === "man"
       ? defenders.find(
           (player) =>
             player.role !== "GK" &&
-            distance(player.position, target.position) < 5.5,
+            distance(player.position, dest) < 5.5,
         )
       : undefined;
   const coverer =
@@ -79,14 +80,14 @@ export function stepPass(
   const duration = nextRange(intercept.rng, 2, 6);
   const slice = nextRange(duration.rng, -34, 34);
   const timed = withTime(state, duration.n, slice.rng);
-  const passerPos = clampPitch(lerp(passer.position, target.position, 0.12));
+  const passerPos = clampPitch(lerp(passer.position, dest, 0.12));
   const receiverPos = complete
-    ? target.position
-    : clampPitch(lerp(passer.position, target.position, 0.45));
+    ? dest
+    : clampPitch(lerp(target.position, dest, 0.45));
   const from = { ...asInvolved(passer), position: passerPos };
   const to = {
     ...asInvolved(target),
-    position: complete ? target.position : receiverPos,
+    position: complete ? dest : receiverPos,
   };
 
   if (intercepted && coverer) {
@@ -137,7 +138,7 @@ export function stepPass(
       homeTeamId: state.homeTeamId,
     })
   ) {
-    const ball = clampPitch(target.position);
+    const ball = clampPitch(dest);
     const event: MatchEvent = {
       type: "turnover",
       seq: timed.nextSeq,
@@ -174,10 +175,10 @@ export function stepPass(
   }
 
   const intended = complete
-    ? target.position
+    ? dest
     : {
-        x: passerPos.x + (target.position.x - passerPos.x) * 0.6,
-        y: passerPos.y + (target.position.y - passerPos.y) * 0.6 + slice.n,
+        x: passerPos.x + (dest.x - passerPos.x) * 0.6,
+        y: passerPos.y + (dest.y - passerPos.y) * 0.6 + slice.n,
       };
   const out = complete
     ? null
@@ -224,14 +225,11 @@ export function stepPass(
     };
   }
 
-  const ball = clampPitch(
-    complete ? target.position : lerp(passerPos, target.position, 0.6),
-  );
+  const ball = clampPitch(complete ? dest : lerp(passerPos, dest, 0.6));
   const air =
     passKind === "cross" ||
     passKind === "through" ||
-    (passKind === "restart" &&
-      distance(passer.position, target.position) > 28);
+    (passKind === "restart" && distance(passer.position, dest) > 28);
   if (!complete) {
     const loose = nearest(defenders, ball);
     if (loose) {
@@ -296,6 +294,7 @@ export function stepPass(
       ballInAir: air,
       players: patchPlayers(timed.players, [
         { playerId: passer.playerId, position: passerPos },
+        { playerId: target.playerId, position: receiverPos },
       ]),
       nextSeq: timed.nextSeq + 1,
     },

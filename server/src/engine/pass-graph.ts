@@ -1,6 +1,7 @@
 import type {
   MatchState,
   PassKind,
+  PitchPosition,
   PlayerMatchStatus,
   PlayerRole,
   TeamId,
@@ -9,9 +10,12 @@ import type {
 import { pickWeighted } from "@fussballmanager/shared";
 import {
   attackingSign,
+  clamp,
+  clampPitch,
   distance,
   onPitchFor,
 } from "./helpers.ts";
+import { coveringLane } from "./lanes.ts";
 import { isOffsideReceiver } from "./laws.ts";
 import { depthFromOwnGoal } from "./shape.ts";
 
@@ -36,8 +40,10 @@ export function widePassFeedWeight(input: {
   targetRole: PlayerRole;
   targetDistGoal: number;
   targetY: number;
+  /** Only dump into the box from the final third, not a 40 m hope from halfway. */
+  passerInFinalThird?: boolean;
 }): number {
-  if (!input.passerWide) {
+  if (!input.passerWide || input.passerInFinalThird === false) {
     return 1;
   }
   const box =
@@ -84,6 +90,181 @@ export function isCornerSituation(carrier: PlayerMatchStatus): boolean {
   );
 }
 
+function nearestOpponentGap(
+  defenders: readonly PlayerMatchStatus[] | undefined,
+  spot: { x: number; y: number },
+): number {
+  if (!defenders || defenders.length === 0) {
+    return 14;
+  }
+  let best = 99;
+  for (const defender of defenders) {
+    if (defender.role === "GK") {
+      continue;
+    }
+    const gap = distance(defender.position, spot);
+    if (gap < best) {
+      best = gap;
+    }
+  }
+  return best;
+}
+
+function spaceOnReceiver(gap: number): number {
+  return clamp(gap / 7, 0.22, 1.12);
+}
+
+function laneOpenFactor(
+  defenders: readonly PlayerMatchStatus[] | undefined,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): number {
+  if (!defenders) {
+    return 1;
+  }
+  for (const defender of defenders) {
+    if (coveringLane(defender, from, to)) {
+      return 0.28;
+    }
+  }
+  return 1;
+}
+
+function shortRangeFactor(dist: number): number {
+  return 1 / (1 + (dist / 8) ** 1.45);
+}
+
+function runTime(
+  player: PlayerMatchStatus,
+  from: PitchPosition,
+  to: PitchPosition,
+): number {
+  const speed = 14 + player.attributes.pace * 0.22;
+  return distance(from, to) / speed;
+}
+
+function canRunThrough(role: PlayerRole): boolean {
+  return (
+    role === "ST" ||
+    role === "W" ||
+    role === "AM" ||
+    role === "CM" ||
+    role === "FB"
+  );
+}
+
+/**
+ * Ball to a point the runner would reach first, between him and the goal —
+ * not to the shirt he is wearing now.
+ */
+export function throughLeadSpot(input: {
+  passer: PlayerMatchStatus;
+  runner: PlayerMatchStatus;
+  ownGoal: PitchPosition;
+  attackSign: 1 | -1;
+  defenders: readonly PlayerMatchStatus[];
+  homeTeamId: TeamId;
+}): { spot: PitchPosition; quality: number } | null {
+  if (!canRunThrough(input.runner.role) || input.runner.role === "GK") {
+    return null;
+  }
+  const mouth = {
+    x: input.ownGoal.x + input.attackSign * 100,
+    y: 50,
+  };
+  const from = input.runner.position;
+  const vx = mouth.x - from.x;
+  const vy = mouth.y - from.y;
+  const len = Math.hypot(vx, vy);
+  if (len < 6) {
+    return null;
+  }
+  const ux = vx / len;
+  const uy = vy / len;
+  let best: { spot: PitchPosition; quality: number } | null = null;
+  for (const lead of [12, 9, 7]) {
+    const spot = clampPitch({
+      x: from.x + ux * lead,
+      y: from.y + uy * lead,
+    });
+    const passDist = distance(input.passer.position, spot);
+    if (passDist < 8 || passDist > 36) {
+      continue;
+    }
+    const spotGoal = distance(spot, mouth);
+    const feetGoal = distance(from, mouth);
+    if (spotGoal >= feetGoal - 1.2) {
+      continue;
+    }
+    if (
+      isOffsideReceiver({
+        receiver: from,
+        ball: input.passer.position,
+        defenders: input.defenders,
+        attackingTeamId: input.passer.teamId,
+        homeTeamId: input.homeTeamId,
+      })
+    ) {
+      continue;
+    }
+    const att = runTime(input.runner, from, spot);
+    let def = 99;
+    for (const defender of input.defenders) {
+      const t = runTime(defender, defender.position, spot);
+      if (t < def) {
+        def = t;
+      }
+    }
+    if (def < att * 0.88) {
+      continue;
+    }
+    const gap = nearestOpponentGap(input.defenders, spot);
+    const lane = laneOpenFactor(
+      input.defenders,
+      input.passer.position,
+      spot,
+    );
+    const race = clamp(def / Math.max(att, 0.04), 0.7, 1.8);
+    const quality = spaceOnReceiver(gap) * lane * race * (12 / lead);
+    if (!best || quality > best.quality) {
+      best = { spot, quality };
+    }
+  }
+  return best;
+}
+
+export function bestThroughLead(
+  passer: PlayerMatchStatus,
+  teammates: readonly PlayerMatchStatus[],
+  ownGoal: PitchPosition,
+  attackSign: 1 | -1,
+  defenders: readonly PlayerMatchStatus[],
+  homeTeamId: TeamId,
+): { runner: PlayerMatchStatus; spot: PitchPosition; quality: number } | null {
+  let best: {
+    runner: PlayerMatchStatus;
+    spot: PitchPosition;
+    quality: number;
+  } | null = null;
+  for (const runner of teammates) {
+    const lead = throughLeadSpot({
+      passer,
+      runner,
+      ownGoal,
+      attackSign,
+      defenders,
+      homeTeamId,
+    });
+    if (!lead) {
+      continue;
+    }
+    if (!best || lead.quality > best.quality) {
+      best = { runner, spot: lead.spot, quality: lead.quality };
+    }
+  }
+  return best;
+}
+
 function inferKind(
   passer: PlayerMatchStatus,
   target: PlayerMatchStatus,
@@ -111,59 +292,65 @@ export function passTargetWeight(input: {
   kind: PassKind | undefined;
   offside: boolean;
   tactics: TeamTactics;
+  defenders?: readonly PlayerMatchStatus[];
+  /** Through-ball collection point; defaults to the runner's current feet. */
+  spot?: PitchPosition;
 }): number {
   const { passer, target, kind } = input;
+  const dest = input.spot ?? target.position;
   const mouth = {
     x: input.ownGoal.x + input.attackSign * 100,
     y: 50,
   };
-  const dist = distance(passer.position, target.position);
-  const dy = Math.abs(target.position.y - passer.position.y);
-  const distGoal = distance(target.position, mouth);
+  const dist = distance(passer.position, dest);
+  const dy = Math.abs(dest.y - passer.position.y);
+  const distGoal = distance(dest, mouth);
   const graph = rolePassLink(passer.role, target.role);
+  const passerDepth = depthFromOwnGoal(
+    passer.position,
+    input.ownGoal,
+    input.attackSign,
+  );
   const feed = widePassFeedWeight({
     passerWide:
       passer.role === "W" ||
       passer.role === "FB" ||
       Math.abs(passer.position.y - 50) > 28,
+    passerInFinalThird: passerDepth >= 62,
     targetRole: target.role,
     targetDistGoal: distGoal,
     targetY: target.position.y,
   });
   const offside = input.offside ? 0.22 : 1;
+  const space = spaceOnReceiver(nearestOpponentGap(input.defenders, dest));
+  const lane = laneOpenFactor(input.defenders, passer.position, dest);
   if (kind === "cross") {
     const box =
-      distGoal < 18 && Math.abs(target.position.y - 50) < 24 ? 3.2 : 0.35;
+      distGoal < 18 && Math.abs(dest.y - 50) < 24 ? 3.2 : 0.35;
     const runner =
       target.role === "ST" || target.role === "AM" || target.role === "W"
         ? 1.4
         : 0.15;
-    return graph * box * runner * offside;
+    return graph * box * runner * offside * (0.55 + 0.45 * space);
   }
   if (kind === "through") {
-    const passerDepth = depthFromOwnGoal(
-      passer.position,
-      input.ownGoal,
-      input.attackSign,
-    );
-    const targetDepth = depthFromOwnGoal(
-      target.position,
-      input.ownGoal,
-      input.attackSign,
-    );
-    const ahead = targetDepth > passerDepth + 4 ? 1.6 : 0.2;
+    const targetDepth = depthFromOwnGoal(dest, input.ownGoal, input.attackSign);
+    const ahead = targetDepth > passerDepth + 2 ? 1.7 : 0.15;
     const runner =
       target.role === "ST" ||
       target.role === "W" ||
       target.role === "AM" ||
       target.role === "CM"
-        ? 1.3
-        : 0.2;
-    return graph * ahead * runner * offside * (1 / (1 + dist / 14));
+        ? 1.45
+        : target.role === "FB"
+          ? 0.95
+          : 0.15;
+    const range = 1 / (1 + (dist / 18) ** 1.15);
+    return graph * ahead * runner * offside * range * lane * space * 1.55;
   }
   if (kind === "switch") {
     const wide = target.role === "W" || target.role === "FB" ? 1.8 : 0.7;
-    return graph * wide * (dy / 40) * (1 / (1 + dist / 22)) * offside;
+    return graph * wide * (dy / 40) * (1 / (1 + dist / 22)) * offside * lane;
   }
   if (kind === "restart" || passer.role === "GK") {
     const short =
@@ -173,14 +360,10 @@ export function passTargetWeight(input: {
     return (
       graph *
       (short ? 3.2 : long ? 0.9 + tempo : 0.25) *
-      (1 / (1 + dist / (short ? 10 : 22)))
+      (1 / (1 + dist / (short ? 10 : 22))) *
+      space
     );
   }
-  const passerDepth = depthFromOwnGoal(
-    passer.position,
-    input.ownGoal,
-    input.attackSign,
-  );
   const targetDepth = depthFromOwnGoal(
     target.position,
     input.ownGoal,
@@ -197,27 +380,37 @@ export function passTargetWeight(input: {
     attacker && passerToGoal < 28 && drop > 10
       ? clamp(1 - (drop - 10) / 22, 0.1, 1)
       : 1;
-  return graph * feed * (1 / (1 + dist / 8)) * offside * (dy > 34 ? 1.25 : 1) * retreat;
+  return (
+    graph *
+    feed *
+    shortRangeFactor(dist) *
+    offside *
+    retreat *
+    space *
+    lane
+  );
 }
+
+type PassChoice = {
+  target: PlayerMatchStatus;
+  kind: PassKind | undefined;
+  spot: PitchPosition;
+};
 
 export function pickPassTarget(
   state: MatchState,
   passer: PlayerMatchStatus,
   kind: PassKind | undefined,
-): { target: PlayerMatchStatus; kind: PassKind; rng: MatchState["rng"] } {
+): {
+  target: PlayerMatchStatus;
+  kind: PassKind;
+  rng: MatchState["rng"];
+  spot: PitchPosition;
+} {
   const teammates = onPitchFor(state.players, passer.teamId).filter(
     (player) => player.playerId !== passer.playerId,
   );
   const outfield = teammates.filter((player) => player.role !== "GK");
-  const pool =
-    kind === "restart" || passer.role === "GK"
-      ? teammates
-      : outfield.length > 0
-        ? outfield
-        : teammates;
-  if (pool.length === 0) {
-    throw new Error("No pass target on the pitch");
-  }
   const tactics =
     passer.teamId === state.homeTeamId ? state.homeTactics : state.awayTactics;
   const ownGoal =
@@ -226,34 +419,86 @@ export function pickPassTarget(
   const defendId =
     passer.teamId === state.homeTeamId ? state.awayTeamId : state.homeTeamId;
   const defenders = onPitchFor(state.players, defendId);
+  const pool =
+    kind === "cross" || kind === "through"
+      ? outfield.length > 0
+        ? outfield
+        : teammates
+      : teammates;
+  if (pool.length === 0) {
+    throw new Error("No pass target on the pitch");
+  }
+  const options: PassChoice[] = [];
+  for (const player of pool) {
+    if (kind !== "through") {
+      options.push({
+        target: player,
+        kind,
+        spot: player.position,
+      });
+    }
+    if (
+      (kind === undefined || kind === "through") &&
+      player.role !== "GK" &&
+      passer.role !== "GK"
+    ) {
+      const lead = throughLeadSpot({
+        passer,
+        runner: player,
+        ownGoal,
+        attackSign,
+        defenders,
+        homeTeamId: state.homeTeamId,
+      });
+      if (lead) {
+        options.push({
+          target: player,
+          kind: "through",
+          spot: lead.spot,
+        });
+      }
+    }
+  }
+  if (options.length === 0) {
+    options.push({
+      target: pool[0]!,
+      kind,
+      spot: pool[0]!.position,
+    });
+  }
+  const scored = options.map((option) => ({
+    item: option,
+    weight: passTargetWeight({
+      passer,
+      target: option.target,
+      ownGoal,
+      attackSign,
+      kind: option.kind,
+      tactics,
+      defenders,
+      spot: option.spot,
+      offside: isOffsideReceiver({
+        receiver: option.target.position,
+        ball: passer.position,
+        defenders,
+        attackingTeamId: passer.teamId,
+        homeTeamId: state.homeTeamId,
+      }),
+    }),
+  }));
+  const best = scored.reduce((max, entry) => Math.max(max, entry.weight), 0);
   const picked = pickWeighted(
     state.rng,
-    pool.map((player) => ({
-      item: player,
-      weight: Math.max(
-        0.01,
-        passTargetWeight({
-          passer,
-          target: player,
-          ownGoal,
-          attackSign,
-          kind,
-          tactics,
-          offside: isOffsideReceiver({
-            receiver: player.position,
-            ball: passer.position,
-            defenders,
-            attackingTeamId: passer.teamId,
-            homeTeamId: state.homeTeamId,
-          }),
-        }),
-      ),
+    scored.map((entry) => ({
+      item: entry.item,
+      weight: entry.weight >= best * 0.42 ? entry.weight : 0,
     })),
   );
   return {
-    target: picked.item,
-    kind: inferKind(passer, picked.item, kind),
+    target: picked.item.target,
+    kind: inferKind(passer, picked.item.target, picked.item.kind),
     rng: picked.rng,
+    spot: picked.item.spot,
   };
 }
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   coveringLane,
+  openKeeperLook,
   pointToSegmentDistance,
 } from "./lanes.ts";
 import { asPlayerId, asTeamId } from "@fussballmanager/shared";
@@ -43,5 +44,29 @@ describe("passing lanes", () => {
     );
     expect(coveringLane(defender(55, 51), from, to)).toBe(true);
     expect(coveringLane(defender(55, 80), from, to)).toBe(false);
+  });
+
+  it("lets any shirt shoot when the keeper is the only body on the goal line", () => {
+    const from = { x: 84, y: 48 };
+    const mouth = { x: 100, y: 50 };
+    const gk = { ...defender(96, 50), role: "GK" as const, playerId: asPlayerId("gk") };
+    const wide = { ...defender(82, 78), playerId: asPlayerId("wide") };
+    const blocker = { ...defender(90, 49), playerId: asPlayerId("block") };
+    expect(
+      openKeeperLook({
+        from,
+        mouth,
+        defenders: [gk, wide],
+        distanceToGoal: 16,
+      }),
+    ).toBe(true);
+    expect(
+      openKeeperLook({
+        from,
+        mouth,
+        defenders: [gk, blocker],
+        distanceToGoal: 16,
+      }),
+    ).toBe(false);
   });
 });

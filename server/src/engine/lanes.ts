@@ -42,6 +42,31 @@ export function coveringLane(
   return t > 0.12 && t < 0.88 && dist <= laneRadius(defender);
 }
 
+/** True when the only body in front of goal is the keeper — 7, 8, 9 or 10 all shoot. */
+export function openKeeperLook(input: {
+  from: PitchPosition;
+  mouth: PitchPosition;
+  defenders: readonly PlayerMatchStatus[];
+  distanceToGoal: number;
+}): boolean {
+  if (input.distanceToGoal > 16) {
+    return false;
+  }
+  if (Math.abs(input.from.y - 50) > 26) {
+    return false;
+  }
+  const gk = input.defenders.find((player) => player.role === "GK");
+  if (gk && distance(gk.position, input.mouth) > 16) {
+    return false;
+  }
+  for (const defender of input.defenders) {
+    if (coveringLane(defender, input.from, input.mouth)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function interceptChance(
   defender: PlayerMatchStatus,
   pressing: number,

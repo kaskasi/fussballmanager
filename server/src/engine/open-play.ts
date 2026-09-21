@@ -16,7 +16,9 @@ import {
   isGoalKickSituation,
   isWideFinalThird,
   countUsefulOutlets,
+  bestThroughLead,
 } from "./pass-graph.ts";
+import { openKeeperLook } from "./lanes.ts";
 import { defendingPressure } from "./pressure.ts";
 import { depthFromOwnGoal } from "./shape.ts";
 import { carryPermission, openPlayWeights } from "./weights.ts";
@@ -143,10 +145,8 @@ export function chooseOpenPlay(state: MatchState): OpenPlayChoice {
   const ownGoal =
     carrier.teamId === state.homeTeamId ? { x: 0, y: 50 } : { x: 100, y: 50 };
   const attackSign = attackingSign(state.homeTeamId, carrier.teamId);
-  const distGoal = distance(
-    carrier.position,
-    goalMouth(state.homeTeamId, carrier.teamId),
-  );
+  const mouth = goalMouth(state.homeTeamId, carrier.teamId);
+  const distGoal = distance(carrier.position, mouth);
   const pressure = defendingPressure(state, oppositionId);
   const teammates = onPitchFor(state.players, carrier.teamId).filter(
     (player) => player.playerId !== carrier.playerId,
@@ -159,6 +159,12 @@ export function chooseOpenPlay(state: MatchState): OpenPlayChoice {
     live,
     state.homeTeamId,
   );
+  const keeperLook = openKeeperLook({
+    from: carrier.position,
+    mouth,
+    defenders: live,
+    distanceToGoal: distGoal,
+  });
   const weights = openPlayWeights({
     distanceToDefender: dist,
     distanceToGoal: distGoal,
@@ -171,9 +177,8 @@ export function chooseOpenPlay(state: MatchState): OpenPlayChoice {
     shooting: carrier.attributes.shooting,
     form: carrier.form,
     fatigue: carrier.fatigue,
-    strikerBonus:
-      carrier.role === "ST" ||
-      ((carrier.role === "W" || carrier.role === "AM") && distGoal < 22),
+    strikerBonus: false,
+    openKeeperLook: keeperLook,
     transitionAttack: inGainedBall(state),
     restCovers: pressure.restCovers,
     localPress: Math.min(pressure.localCount, 2),
@@ -186,13 +191,20 @@ export function chooseOpenPlay(state: MatchState): OpenPlayChoice {
   const goalKick = isGoalKickSituation(carrier, ownGoal, attackSign);
   const corner = isCornerSituation(carrier);
   const wideFinal = isWideFinalThird(state.ball, ownGoal, attackSign);
+  const throughLead = bestThroughLead(
+    carrier,
+    teammates,
+    ownGoal,
+    attackSign,
+    live,
+    state.homeTeamId,
+  );
   const throughOn =
-    distGoal > 16 &&
-    distGoal < 42 &&
-    (carrier.role === "CM" ||
-      carrier.role === "AM" ||
-      carrier.role === "DM" ||
-      carrier.role === "W");
+    !!throughLead &&
+    distGoal > 8 &&
+    distGoal < 48 &&
+    carrier.role !== "GK" &&
+    carrier.role !== "CB";
   const passWeight = teammates.length > 0 ? weights.pass : 0;
   const picked = pickWeighted(state.rng, [
     {
@@ -228,7 +240,10 @@ export function chooseOpenPlay(state: MatchState): OpenPlayChoice {
         teammates.length === 0 || goalKick || corner
           ? 0
           : throughOn
-            ? 0.28 + attackTactics.tempo / 280
+            ? 0.42 +
+              throughLead.quality * 0.5 +
+              attackTactics.tempo / 240 +
+              attackTactics.mentality / 280
             : 0,
     },
   ]);
@@ -244,6 +259,15 @@ export function chooseOpenPlay(state: MatchState): OpenPlayChoice {
     !goalKick &&
     !corner &&
     weights.shot >= weights.pass
+  ) {
+    action = "shot";
+  }
+  if (
+    action === "pass" &&
+    keeperLook &&
+    !goalKick &&
+    !corner &&
+    weights.shot > weights.pass
   ) {
     action = "shot";
   }

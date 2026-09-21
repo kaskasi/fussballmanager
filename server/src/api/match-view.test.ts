@@ -25,6 +25,8 @@ describe("buildMatchView", () => {
     for (const line of view.lines) {
       expect(seqs.has(line.seq)).toBe(true);
     }
+    expect(view.kickoff.cue).toBeNull();
+    expect(view.frames.some((frame) => frame.cue === "throw_in")).toBe(true);
     expect(view.finalScore.home + view.finalScore.away).toBeGreaterThanOrEqual(0);
   });
 

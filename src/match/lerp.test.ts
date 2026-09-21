@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MatchViewFrame } from "@fussballmanager/shared";
-import { frameDurationMs, lerp, mixDot, mixFrame } from "./lerp";
+import { frameDurationMs, holdPoint, lerp, mixDot, mixFrame } from "./lerp";
 
 const baseFrame = (): MatchViewFrame => ({
   seq: 1,
@@ -11,6 +11,7 @@ const baseFrame = (): MatchViewFrame => ({
   clock: { minute: 0, second: 0, period: "first_half", stoppageMinute: 0 },
   dots: [],
   ballInAir: false,
+  cue: null,
 });
 
 describe("pitch lerp", () => {
@@ -56,5 +57,53 @@ describe("pitch lerp", () => {
     expect(frameDurationMs(1)).toBe(280);
     expect(frameDurationMs(4)).toBe(70);
     expect(frameDurationMs(32)).toBe(9);
+  });
+
+  it("flies the ball across a long pass instead of teleporting", () => {
+    const from = { ...baseFrame(), ball: { x: 12, y: 18 } };
+    const to = { ...baseFrame(), seq: 2, ball: { x: 78, y: 82 } };
+    const mid = mixFrame(from, to, 0.5);
+    expect(mid.ball.x).toBe(45);
+    expect(mid.ball.y).toBe(50);
+  });
+
+  it("carries the ball at the striker's feet and in the keeper's hands", () => {
+    const st = {
+      ...baseFrame(),
+      ballCarrierId: "nord-9",
+      possessionTeamId: "fc-nordstern",
+      ball: { x: 50, y: 62 },
+      dots: [
+        {
+          playerId: "nord-9",
+          teamId: "fc-nordstern",
+          x: 50,
+          y: 62,
+        },
+      ],
+    };
+    const feet = holdPoint(st, "fc-nordstern", () => "ST");
+    expect(feet.x).toBeGreaterThan(50);
+    expect(feet.y).toBeGreaterThan(62);
+    const gk = {
+      ...st,
+      ballCarrierId: "nord-1",
+      ball: { x: 8, y: 50 },
+      dots: [
+        {
+          playerId: "nord-1",
+          teamId: "fc-nordstern",
+          x: 8,
+          y: 50,
+        },
+      ],
+    };
+    expect(holdPoint(gk, "fc-nordstern", () => "GK")).toEqual({ x: 8, y: 50 });
+    const air = holdPoint(
+      { ...st, ballInAir: true, ball: { x: 40, y: 40 } },
+      "fc-nordstern",
+      () => "ST",
+    );
+    expect(air).toEqual({ x: 40, y: 40 });
   });
 });

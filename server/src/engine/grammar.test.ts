@@ -65,12 +65,14 @@ describe("wide service", () => {
       targetRole: "ST",
       targetDistGoal: 20,
       targetY: 50,
+      passerInFinalThird: true,
     });
     const box = widePassFeedWeight({
       passerWide: true,
       targetRole: "ST",
       targetDistGoal: 10,
       targetY: 50,
+      passerInFinalThird: true,
     });
     expect(box).toBeGreaterThan(dZone * 1.6);
   });

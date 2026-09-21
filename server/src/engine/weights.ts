@@ -61,6 +61,8 @@ export function openPlayWeights(input: {
   localPress?: number;
   /** Teammates who are actually on for a pass (not a long drop). */
   usefulOutlets?: number;
+  /** Keeper is the only obstacle to goal; any shirt can take this on. */
+  openKeeperLook?: boolean;
 }): OpenPlayWeights {
   const proximity = clamp((16 - input.distanceToDefender) / 16, 0, 1);
   const freshness = clamp((input.form - input.fatigue) / 100, -0.25, 0.45);
@@ -92,20 +94,24 @@ export function openPlayWeights(input: {
       freshness) *
     (1 - proximity * 0.15) *
     (1 - 0.82 * goalThreat) *
-    (stuck ? 0.28 : 1);
+    (stuck ? 0.28 : 1) *
+    (goalThreat > 0.35 && !input.openKeeperLook ? 0.55 : 1) *
+    (input.openKeeperLook ? 0.42 : 1);
   const isolated = isolationFactor(input.restCovers ?? 4);
+  const look = input.openKeeperLook === true;
   const shot =
     goalThreat *
     (0.16 +
       0.55 * (input.shooting / 100) +
       0.18 * (input.mentality / 100) +
-      (input.strikerBonus ? 0.4 : 0.12) +
+      (look || input.strikerBonus ? 0.4 : 0.12) +
       freshness) *
     (input.transitionAttack ? 1.35 : 1) *
     (1 + 0.18 * Math.max(0, isolated - 1)) *
     (1 + 0.85 * goalThreat) *
     (stuck ? 2.35 : 1) *
-    (stuck ? 1 : 1 - 0.38 * fringe);
+    (stuck || look ? 1 : 1 - 0.38 * fringe) *
+    (look ? 2.15 : 1);
   const swarm = Math.min(input.localPress ?? 1, 6) / 4;
   const carryBoost = input.transitionAttack ? 1.12 : 1;
   const passDamp = input.transitionAttack ? 0.92 : 1;

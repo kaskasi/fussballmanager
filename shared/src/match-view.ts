@@ -22,6 +22,8 @@ export type MatchViewFrame = {
   dots: MatchViewDot[];
   /** Same engine flag as the event tick — pitch may draw a 2D height cue. */
   ballInAir: boolean;
+  /** Broadcast overlay; null on ordinary open-play ticks. */
+  cue: "offside" | "throw_in" | null;
 };
 
 export type MatchViewLine = {

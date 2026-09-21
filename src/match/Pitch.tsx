@@ -4,6 +4,7 @@ import type {
   MatchViewRosterPlayer,
   MatchViewSide,
 } from "@fussballmanager/shared";
+import { IncidentBanner } from "./IncidentBanner";
 import { mixFrame, type DisplayedPose } from "./lerp";
 
 const PITCH_W = 105;
@@ -39,14 +40,14 @@ function paint(svg: SVGSVGElement, pose: DisplayedPose): void {
   if (shadow instanceof SVGEllipseElement) {
     shadow.setAttribute("cx", grassX);
     shadow.setAttribute("cy", String(grassY));
-    shadow.setAttribute("rx", String(1.35 + pose.ballLift * 0.25));
-    shadow.setAttribute("ry", String(0.7 + pose.ballLift * 0.12));
-    shadow.setAttribute("opacity", String(0.12 + 0.38 * pose.ballLift));
+    shadow.setAttribute("rx", String(1.2 + pose.ballLift * 0.55));
+    shadow.setAttribute("ry", String(0.55 + pose.ballLift * 0.2));
+    shadow.setAttribute("opacity", String(0.18 + 0.42 * pose.ballLift));
   }
   if (ball instanceof SVGCircleElement) {
     ball.setAttribute("cx", grassX);
     ball.setAttribute("cy", String(grassY));
-    ball.setAttribute("r", String(0.85 + pose.ballLift * 0.35));
+    ball.setAttribute("r", "0.95");
   }
 }
 
@@ -59,6 +60,7 @@ type PitchProps = {
   home: MatchViewSide;
   away: MatchViewSide;
   roster: readonly MatchViewRosterPlayer[];
+  cue: MatchViewFrame["cue"];
 };
 
 export function Pitch({
@@ -70,10 +72,13 @@ export function Pitch({
   home,
   away,
   roster,
+  cue,
 }: PitchProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const shirts = new Map(roster.map((player) => [player.id, player]));
-  const start = mixFrame(from, to, playing ? 0 : 1);
+  const roleOf = (playerId: string) => shirts.get(playerId)?.role;
+  const poseAt = (t: number) => mixFrame(from, to, t, homeId, roleOf);
+  const start = poseAt(playing ? 0 : 1);
 
   useLayoutEffect(() => {
     const svg = svgRef.current;
@@ -81,25 +86,26 @@ export function Pitch({
       return;
     }
     if (!playing || durationMs <= 0) {
-      paint(svg, mixFrame(from, to, 1));
+      paint(svg, poseAt(1));
       return;
     }
     const begun = performance.now();
     let raf = 0;
     const tick = (now: number) => {
       const t = Math.min(1, (now - begun) / durationMs);
-      paint(svg, mixFrame(from, to, t));
+      paint(svg, poseAt(t));
       if (t < 1) {
         raf = window.requestAnimationFrame(tick);
       }
     };
-    paint(svg, mixFrame(from, to, 0));
+    paint(svg, poseAt(0));
     raf = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(raf);
-  }, [from, to, playing, durationMs]);
+  }, [from, to, playing, durationMs, homeId, roster]);
 
   return (
     <figure className="pitch-wrap">
+      <IncidentBanner cue={cue} seq={to.seq} />
       <svg
         ref={svgRef}
         className="pitch"
@@ -222,16 +228,16 @@ export function Pitch({
           data-ball-shadow
           cx={mapX(start.ball.x)}
           cy={mapY(start.ball.y)}
-          rx={1.35 + start.ballLift * 0.25}
-          ry={0.7 + start.ballLift * 0.12}
+          rx={1.2 + start.ballLift * 0.55}
+          ry={0.55 + start.ballLift * 0.2}
           fill="#052e16"
-          opacity={0.12 + 0.38 * start.ballLift}
+          opacity={0.18 + 0.42 * start.ballLift}
         />
         <circle
           data-ball
           cx={mapX(start.ball.x)}
           cy={mapY(start.ball.y)}
-          r={0.85 + start.ballLift * 0.35}
+          r={0.95}
           fill="#fff"
           stroke="#0f172a"
           strokeWidth={0.2}

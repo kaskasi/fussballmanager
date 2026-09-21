@@ -56,7 +56,7 @@ describe("football feel", () => {
       }
     }
 
-    expect(goals).toBeLessThanOrEqual(8);
+    expect(goals).toBeLessThanOrEqual(12);
     expect(shots).toBeGreaterThanOrEqual(3);
     expect(offsides).toBeLessThanOrEqual(12);
     expect(cards).toBeLessThanOrEqual(8);

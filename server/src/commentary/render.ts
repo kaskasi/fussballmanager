@@ -86,7 +86,7 @@ export function commentate(event: MatchEvent, ctx: CommentaryContext): string {
           return `${from}'s cross towards ${to} doesn't find him.`;
         }
         if (event.kind === "through") {
-          return `${from}'s ball through to ${to} is cut out.`;
+          return `${from}'s ball into space for ${to} is cut out.`;
         }
         return `${from}'s pass towards ${to} doesn't come off.`;
       }
@@ -94,7 +94,7 @@ export function commentate(event: MatchEvent, ctx: CommentaryContext): string {
         return `${from} crosses towards ${to}.`;
       }
       if (event.kind === "through") {
-        return `${from} slides ${to} through.`;
+        return `${from} plays ${to} into space.`;
       }
       if (event.kind === "switch") {
         return `${from} switches play to ${to}.`;

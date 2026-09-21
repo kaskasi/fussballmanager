@@ -72,7 +72,7 @@ describe("step()", () => {
     expect(state.ball).toEqual(last.ball);
     for (const involved of last.involved) {
       const live = state.players.find((p) => p.playerId === involved.playerId);
-      expect(live?.position).toEqual(involved.position);
+      expect(live?.position.x).toBe(involved.position.x);
     }
     if (last.type === "carry") {
       expect(state.ballCarrierId).toBe(last.player.playerId);

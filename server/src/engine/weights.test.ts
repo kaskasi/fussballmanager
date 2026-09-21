@@ -192,6 +192,28 @@ describe("openPlayWeights", () => {
     expect(mid.pass).toBeGreaterThan(mid.carry);
   });
 
+  it("lets a midfielder shoot when the keeper is free, not only a striker", () => {
+    const shared = {
+      distanceToDefender: 10,
+      distanceToGoal: 12,
+      pressing: 40,
+      tempo: 50,
+      mentality: 55,
+      passing: 70,
+      dribbling: 60,
+      pace: 60,
+      shooting: 62,
+      form: 60,
+      fatigue: 10,
+      strikerBonus: false,
+      usefulOutlets: 2,
+    };
+    const blocked = openPlayWeights(shared);
+    const look = openPlayWeights({ ...shared, openKeeperLook: true });
+    expect(look.shot).toBeGreaterThan(blocked.shot);
+    expect(look.shot).toBeGreaterThan(look.pass);
+  });
+
   it("makes a save the usual finish for an on-target open-play shot", () => {
     const box = shotOutcomeChances({
       shooting: 78,

@@ -194,6 +194,7 @@ export function Matchday() {
               home={view.home}
               away={view.away}
               roster={view.roster}
+              cue={frame.cue}
             />
             <CommentaryFeed lines={playback.visibleLines} />
           </div>

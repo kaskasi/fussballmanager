@@ -56,4 +56,7 @@ export type {
 
 export type { MatchState, PlayerMatchStatus, Score } from "./match-state.ts";
 
+export { createRng, nextInt, nextRange, nextUnit } from "./rng.ts";
+export type { RngState } from "./rng.ts";
+
 export type { SimulateResult, StepInput, StepResult } from "./engine.ts";

@@ -1,7 +1,8 @@
 import type { MatchId, PlayerId, TeamId } from "./ids.ts";
 import type { MatchClock, MatchPhase } from "./match-event.ts";
 import type { PitchPosition } from "./pitch.ts";
-import type { PlayerRole } from "./player.ts";
+import type { PlayerAttributes, PlayerRole } from "./player.ts";
+import type { RngState } from "./rng.ts";
 import type { TeamTactics } from "./tactics.ts";
 
 export type PlayerMatchStatus = {
@@ -11,6 +12,7 @@ export type PlayerMatchStatus = {
   /** Current on-pitch position (updated every step). */
   position: PitchPosition;
   onPitch: boolean;
+  attributes: PlayerAttributes;
   /** 0–100; explicit engine input, not a hidden constant. */
   fatigue: number;
   /** 0–100 match form. */
@@ -29,10 +31,12 @@ export type MatchState = {
   phase: MatchPhase;
   score: Score;
   ball: PitchPosition;
+  ballCarrierId: PlayerId | null;
   possessionTeamId: TeamId | null;
   players: ReadonlyArray<PlayerMatchStatus>;
   homeTactics: TeamTactics;
   awayTactics: TeamTactics;
+  rng: RngState;
   /** Next event sequence number. */
   nextSeq: number;
 };

@@ -1,4 +1,5 @@
 import { asMatchId, asPlayerId, asTeamId } from "./ids.ts";
+import { createRng } from "./rng.ts";
 import type { InvolvedPlayer, MatchEvent, MatchClock } from "./match-event.ts";
 import type { MatchState } from "./match-state.ts";
 import { isOnPitch } from "./pitch.ts";
@@ -61,6 +62,18 @@ const awayTactics: TeamTactics = {
   tempo: 44,
 };
 
+const sampleAttributes = {
+  passing: 60,
+  tackling: 55,
+  shooting: 50,
+  pace: 60,
+  stamina: 65,
+  positioning: 58,
+  aerial: 52,
+  dribbling: 54,
+  goalkeeping: 8,
+};
+
 export const sampleState: MatchState = {
   matchId,
   homeTeamId: homeId,
@@ -69,6 +82,7 @@ export const sampleState: MatchState = {
   phase: "open_play",
   score: { home: 0, away: 0 },
   ball: { x: 62, y: 40 },
+  ballCarrierId: passerId,
   possessionTeamId: homeId,
   players: [
     {
@@ -77,6 +91,7 @@ export const sampleState: MatchState = {
       role: "CM",
       position: passer.position,
       onPitch: true,
+      attributes: { ...sampleAttributes, passing: 76 },
       fatigue: 12,
       form: 61,
       yellowCards: 0,
@@ -88,6 +103,7 @@ export const sampleState: MatchState = {
       role: "ST",
       position: receiver.position,
       onPitch: true,
+      attributes: { ...sampleAttributes, shooting: 80 },
       fatigue: 18,
       form: 70,
       yellowCards: 0,
@@ -99,6 +115,7 @@ export const sampleState: MatchState = {
       role: "CB",
       position: defender.position,
       onPitch: true,
+      attributes: { ...sampleAttributes, tackling: 76 },
       fatigue: 15,
       form: 54,
       yellowCards: 0,
@@ -110,6 +127,7 @@ export const sampleState: MatchState = {
       role: "GK",
       position: keeper.position,
       onPitch: true,
+      attributes: { ...sampleAttributes, goalkeeping: 74 },
       fatigue: 4,
       form: 58,
       yellowCards: 0,
@@ -118,6 +136,7 @@ export const sampleState: MatchState = {
   ],
   homeTactics,
   awayTactics,
+  rng: createRng(1),
   nextSeq: 14,
 };
 

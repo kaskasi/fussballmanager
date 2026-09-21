@@ -6,7 +6,7 @@ import type {
 } from "@fussballmanager/shared";
 import { PITCH_MAX, PITCH_MIN } from "@fussballmanager/shared";
 import { attackingSign, clamp, oppositionTeamId } from "./helpers.ts";
-import { depthFromOwnGoal } from "./shape.ts";
+import { depthFromOwnGoal, offsideLineDepth } from "./shape.ts";
 
 const BOX_Y_MIN = 21;
 const BOX_Y_MAX = 79;
@@ -73,14 +73,11 @@ export function isOffsideReceiver(input: {
   if (recv <= 50) {
     return false;
   }
-  if (recv <= ball + 0.4) {
+  if (recv <= ball + 1.2) {
     return false;
   }
-  const depths = input.defenders
-    .map((player) => depthFromOwnGoal(player.position, attackOwnGoal, sign))
-    .sort((a, b) => b - a);
-  const secondLast = depths[1] ?? depths[0] ?? 0;
-  return recv > secondLast + 0.4;
+  const secondLast = offsideLineDepth(input.defenders, attackOwnGoal, sign);
+  return recv > secondLast + 1.2;
 }
 
 export type OutOfPlay = {

@@ -53,16 +53,16 @@ export function duelFoulChance(input: {
   fatigue: number;
   kindTackle: boolean;
 }): number {
-  const base = input.kindTackle ? 0.14 : 0.05;
+  const base = input.kindTackle ? 0.045 : 0.016;
   return clamp(
-    base * (0.6 + 0.8 * (input.pressing / 100)) * (0.85 + input.fatigue / 200),
-    0.03,
-    0.28,
+    base * (0.55 + 0.7 * (input.pressing / 100)) * (0.85 + input.fatigue / 250),
+    0.008,
+    0.09,
   );
 }
 
 export function duelInjuryChance(fatigue: number): number {
-  return clamp(0.01 + fatigue / 4000, 0.008, 0.03);
+  return clamp(0.0024 + fatigue / 9000, 0.002, 0.01);
 }
 
 export function pickDuelInterruption(
@@ -93,10 +93,10 @@ function cardForFoul(
   rng: MatchState["rng"],
 ): { card?: CardColor; rng: MatchState["rng"] } {
   const roll = nextUnit(rng);
-  if (roll.n < 0.04) {
+  if (roll.n < 0.006) {
     return { card: "red", rng: roll.rng };
   }
-  if (roll.n < 0.38) {
+  if (roll.n < 0.1) {
     const color: CardColor = fouler.yellowCards >= 1 ? "second_yellow" : "yellow";
     return { card: color, rng: roll.rng };
   }

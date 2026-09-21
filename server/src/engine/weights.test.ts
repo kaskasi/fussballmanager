@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { openPlayWeights } from "./weights.ts";
+import { openPlayWeights, shotOutcomeChances } from "./weights.ts";
 
 describe("openPlayWeights", () => {
   it("raises duel weight when the defender is close and pressing is high", () => {
@@ -121,5 +121,44 @@ describe("openPlayWeights", () => {
     const transition = openPlayWeights({ ...base, transitionAttack: true });
     expect(transition.shot).toBeGreaterThan(settled.shot);
     expect(transition.carry).toBeGreaterThan(settled.carry);
+  });
+
+  it("prefers a pass to a carry in space for a typical midfielder", () => {
+    const mid = openPlayWeights({
+      distanceToDefender: 18,
+      distanceToGoal: 50,
+      pressing: 44,
+      tempo: 52,
+      mentality: 52,
+      passing: 70,
+      dribbling: 60,
+      pace: 60,
+      shooting: 55,
+      form: 55,
+      fatigue: 12,
+      strikerBonus: false,
+    });
+    expect(mid.pass).toBeGreaterThan(mid.carry);
+  });
+
+  it("makes a save the usual finish for an on-target open-play shot", () => {
+    const box = shotOutcomeChances({
+      shooting: 78,
+      form: 60,
+      fatigue: 10,
+      mentality: 55,
+      distanceToGoal: 14,
+      keeperGoalkeeping: 72,
+      keeperPositioning: 68,
+      keeperForm: 55,
+      keeperFatigue: 8,
+      defenderClose: true,
+      defenderTackling: 70,
+      restCovers: 3,
+    });
+    expect(box.goalGivenOnTarget).toBeLessThan(0.38);
+    expect(box.onTarget * (1 - box.block) * box.goalGivenOnTarget).toBeLessThan(
+      0.14,
+    );
   });
 });

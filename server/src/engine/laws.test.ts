@@ -67,6 +67,15 @@ describe("pitch laws", () => {
         homeTeamId: home,
       }),
     ).toBe(false);
+    expect(
+      isOffsideReceiver({
+        receiver: { x: 73, y: 50 },
+        ball: { x: 60, y: 50 },
+        defenders: line,
+        attackingTeamId: home,
+        homeTeamId: home,
+      }),
+    ).toBe(false);
   });
 
   it("does not flag a receiver in their own half", () => {

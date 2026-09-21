@@ -36,10 +36,26 @@ function pickTeammate(
   }
   const picked = pickWeighted(
     state.rng,
-    pool.map((player) => ({
-      item: player,
-      weight: 1 / (1 + distance(passer.position, player.position) / 8),
-    })),
+    pool.map((player) => {
+      const offside = isOffsideReceiver({
+        receiver: player.position,
+        ball: passer.position,
+        defenders: onPitchFor(
+          state.players,
+          passer.teamId === state.homeTeamId
+            ? state.awayTeamId
+            : state.homeTeamId,
+        ),
+        attackingTeamId: passer.teamId,
+        homeTeamId: state.homeTeamId,
+      });
+      return {
+        item: player,
+        weight:
+          (1 / (1 + distance(passer.position, player.position) / 8)) *
+          (offside ? 0.32 : 1),
+      };
+    }),
   );
   return { target: picked.item, rng: picked.rng };
 }
@@ -87,7 +103,7 @@ export function stepPass(state: MatchState): StepResult {
         pressing: pressure.pressing,
       });
   const duration = nextRange(intercept.rng, 2, 6);
-  const slice = nextRange(duration.rng, -12, 12);
+  const slice = nextRange(duration.rng, -34, 34);
   const timed = withTime(state, duration.n, slice.rng);
   const passerPos = clampPitch(lerp(passer.position, target.position, 0.12));
   const receiverPos = complete

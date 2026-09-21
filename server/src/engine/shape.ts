@@ -140,6 +140,37 @@ export function depthFromOwnGoal(
   return (position.x - ownGoal.x) * attackSign;
 }
 
+/** Depth of the second-last defender from the attacking team's own goal. */
+export function offsideLineDepth(
+  defenders: readonly PlayerMatchStatus[],
+  attackOwnGoal: PitchPosition,
+  attackSign: 1 | -1,
+): number {
+  const depths = defenders
+    .map((player) => depthFromOwnGoal(player.position, attackOwnGoal, attackSign))
+    .sort((a, b) => b - a);
+  return depths[1] ?? depths[0] ?? 100;
+}
+
+function stayOnside(
+  player: PlayerMatchStatus,
+  target: PitchPosition,
+  ownGoal: PitchPosition,
+  attackSign: 1 | -1,
+  defenders: readonly PlayerMatchStatus[],
+): PitchPosition {
+  if (player.role === "GK") {
+    return target;
+  }
+  const line = offsideLineDepth(defenders, ownGoal, attackSign);
+  const depth = depthFromOwnGoal(target, ownGoal, attackSign);
+  const shoulder = line + 2.4;
+  if (depth <= shoulder) {
+    return target;
+  }
+  return atDepth(ownGoal, attackSign, Math.max(8, shoulder), target.y);
+}
+
 export function atDepth(
   ownGoal: PitchPosition,
   attackSign: 1 | -1,
@@ -643,6 +674,9 @@ export function applyShape(
         );
     }
     target = clampBackLine(player, target, ownGoal, teamSign, teamTactics);
+    if (!defending) {
+      target = stayOnside(player, target, ownGoal, teamSign, defenders);
+    }
     const lost = inLostBall(state, player.teamId);
     const beaten =
       defending &&

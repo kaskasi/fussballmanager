@@ -31,7 +31,9 @@ export function stepCarry(state: MatchState): StepResult {
   const sign = attackingSign(state.homeTeamId, carrier.teamId);
   const distance =
     length.n * (0.7 + 0.3 * (tactics.tempo / 100) + 0.15 * (tactics.mentality / 100));
-  const yShift = drift.n * 4 * (tactics.width / 100);
+  const nearTouch = from.y < 22 || from.y > 78;
+  const yShift =
+    drift.n * (nearTouch ? 20 : 9) * (0.65 + tactics.width / 180);
   const raw = {
     x: from.x + sign * distance,
     y: from.y + yShift,

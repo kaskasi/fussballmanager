@@ -1,6 +1,6 @@
 import { SEED_MATCHUP } from "@fussballmanager/shared";
 import { describe, expect, it } from "vitest";
-import { stepCard, stepFoul, stepInjury } from "./discipline.ts";
+import { duelFoulChance, stepCard, stepFoul, stepInjury } from "./discipline.ts";
 import { createInitialState } from "./initial-state.ts";
 import { onPitchFor } from "./helpers.ts";
 import { step } from "./step.ts";
@@ -19,6 +19,15 @@ function afterKickoff() {
 }
 
 describe("discipline", () => {
+  it("keeps a typical tackle from being a yellow-card lottery", () => {
+    expect(
+      duelFoulChance({ pressing: 50, fatigue: 20, kindTackle: true }),
+    ).toBeLessThan(0.08);
+    expect(
+      duelFoulChance({ pressing: 80, fatigue: 40, kindTackle: true }),
+    ).toBeLessThan(0.09);
+  });
+
   it("emits a foul and follows up with a card and/or free kick", () => {
     const state = afterKickoff();
     const attacker = onPitchFor(state.players, state.homeTeamId)[0];

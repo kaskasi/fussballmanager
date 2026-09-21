@@ -30,35 +30,36 @@ export function openPlayWeights(input: {
 }): OpenPlayWeights {
   const proximity = clamp((16 - input.distanceToDefender) / 16, 0, 1);
   const freshness = clamp((input.form - input.fatigue) / 100, -0.25, 0.45);
-  const goalThreat = clamp((34 - input.distanceToGoal) / 34, 0, 1);
+  const goalThreat = clamp((24 - input.distanceToGoal) / 24, 0, 1);
   const duel =
     proximity * (0.3 + 0.7 * (input.pressing / 100));
   const carry =
-    (0.12 +
-      0.42 * (input.dribbling / 100) +
-      0.1 * (input.pace / 100) +
-      0.2 * (input.mentality / 100) +
-      0.15 * (input.tempo / 100) +
+    (0.06 +
+      0.28 * (input.dribbling / 100) +
+      0.06 * (input.pace / 100) +
+      0.08 * (input.mentality / 100) +
+      0.08 * (input.tempo / 100) +
       freshness) *
     (1 - proximity * 0.35);
   const pass =
-    (0.18 +
-      0.5 * (input.passing / 100) +
-      0.2 * (input.tempo / 100) +
+    (0.38 +
+      0.55 * (input.passing / 100) +
+      0.15 * (input.tempo / 100) +
       freshness) *
     (1 - proximity * 0.15);
+  const isolated = isolationFactor(input.restCovers ?? 4);
   const shot =
     goalThreat *
-    (0.2 +
-      0.7 * (input.shooting / 100) +
-      0.25 * (input.mentality / 100) +
-      (input.strikerBonus ? 0.35 : 0) +
+    (0.16 +
+      0.55 * (input.shooting / 100) +
+      0.18 * (input.mentality / 100) +
+      (input.strikerBonus ? 0.28 : 0) +
       freshness) *
-    (input.transitionAttack ? 1.9 : 1) *
-    isolationFactor(input.restCovers ?? 4);
+    (input.transitionAttack ? 1.35 : 1) *
+    (1 + 0.18 * Math.max(0, isolated - 1));
   const swarm = Math.min(input.localPress ?? 1, 6) / 4;
-  const carryBoost = input.transitionAttack ? 1.35 : 1;
-  const passDamp = input.transitionAttack ? 0.82 : 1;
+  const carryBoost = input.transitionAttack ? 1.12 : 1;
+  const passDamp = input.transitionAttack ? 0.92 : 1;
   return {
     pass: Math.max(pass * passDamp, 0.05),
     carry: Math.max(carry * carryBoost, 0.04),
@@ -131,20 +132,23 @@ export function shotOutcomeChances(input: {
   const onTarget = input.penalty
     ? clamp(0.72 + 0.2 * quality, 0.62, 0.94)
     : clamp(
-        0.32 + 0.48 * quality - 0.015 * input.distanceToGoal + 0.12 * (input.mentality / 100),
-        0.12,
-        0.88,
+        0.26 +
+          0.42 * quality -
+          0.016 * input.distanceToGoal +
+          0.08 * (input.mentality / 100),
+        0.1,
+        0.76,
       );
   const isolated = isolationFactor(input.restCovers ?? 4);
   const block =
     input.penalty || !input.defenderClose
       ? 0
       : clamp(
-          (0.15 + 0.35 * (input.defenderTackling / 100)) *
-            (input.transitionAttack ? 0.5 : 1) /
+          (0.18 + 0.38 * (input.defenderTackling / 100)) *
+            (input.transitionAttack ? 0.7 : 1) /
             isolated,
-          0.04,
-          0.55,
+          0.06,
+          0.58,
         );
   const shotStr = contestStrength({
     attribute: input.shooting,
@@ -156,11 +160,16 @@ export function shotOutcomeChances(input: {
     attribute: input.keeperGoalkeeping,
     form: input.keeperForm,
     fatigue: input.keeperFatigue,
-    tacticBonus: input.keeperPositioning * 0.15,
+    tacticBonus: input.keeperPositioning * 0.22,
   });
-  const goalGivenOnTarget =
-    (shotStr / (shotStr + gkStr * (input.penalty ? 1.05 : 1.2))) *
-    (input.transitionAttack ? 1.28 : 1) *
-    (input.penalty ? 1.15 : isolated);
+  const finish =
+    (shotStr / (shotStr + gkStr * (input.penalty ? 1.15 : 1.95))) *
+    (input.transitionAttack ? 1.08 : 1) *
+    (input.penalty ? 1.12 : 0.78 + 0.16 * Math.min(isolated - 1, 0.55));
+  const goalGivenOnTarget = clamp(
+    finish,
+    input.penalty ? 0.22 : 0.05,
+    input.penalty ? 0.58 : 0.36,
+  );
   return { onTarget, block, goalGivenOnTarget };
 }

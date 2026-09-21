@@ -9,7 +9,6 @@ import { nextRange, nextUnit, pickWeighted } from "@fussballmanager/shared";
 import { withTime } from "./clock.ts";
 import {
   asInvolved,
-  attackingSign,
   clampPitch,
   lerp,
   patchPlayers,
@@ -18,11 +17,17 @@ import {
 import { aerialContestAttribute, contestStrength } from "./weights.ts";
 import { beginTransition } from "./moments.ts";
 
-function pickKind(
+const DUEL_COOLDOWN_SECONDS = 5;
+
+export function pickDuelKind(
   attacker: PlayerMatchStatus,
   defender: PlayerMatchStatus,
   rng: MatchState["rng"],
+  ballInAir: boolean,
 ): { kind: DuelKind; rng: MatchState["rng"] } {
+  const aerial = ballInAir
+    ? (attacker.attributes.aerial + defender.attributes.aerial) / 2
+    : 0;
   const picked = pickWeighted(rng, [
     {
       item: "dribble" as const,
@@ -34,7 +39,7 @@ function pickKind(
     },
     {
       item: "aerial" as const,
-      weight: (attacker.attributes.aerial + defender.attributes.aerial) / 2,
+      weight: aerial,
     },
   ]);
   return { kind: picked.item, rng: picked.rng };
@@ -54,6 +59,10 @@ function defenderAttribute(kind: DuelKind, player: PlayerMatchStatus): number {
   return player.attributes.tackling;
 }
 
+function retreatX(defender: PlayerMatchStatus, homeTeamId: MatchState["homeTeamId"]): number {
+  return defender.teamId === homeTeamId ? -1 : 1;
+}
+
 export function stepDuel(
   state: MatchState,
   defender: PlayerMatchStatus,
@@ -62,7 +71,12 @@ export function stepDuel(
     throw new Error("Cannot duel without a ball carrier");
   }
   const attacker = requirePlayer(state.players, state.ballCarrierId);
-  const kindRoll = pickKind(attacker, defender, state.rng);
+  const kindRoll = pickDuelKind(
+    attacker,
+    defender,
+    state.rng,
+    state.ballInAir,
+  );
   const attackTactics =
     attacker.teamId === state.homeTeamId ? state.homeTactics : state.awayTactics;
   const defendTactics =
@@ -81,11 +95,15 @@ export function stepDuel(
   });
   const roll = nextUnit(kindRoll.rng);
   const attackerWins = roll.n < att / (att + def);
-  const duration = nextRange(roll.rng, 1, 3);
+  const duration = nextRange(roll.rng, 2, 5);
   const contest = clampPitch(lerp(attacker.position, defender.position, 0.5));
-  const sign = attackingSign(state.homeTeamId, attacker.teamId);
+  const back = retreatX(defender, state.homeTeamId);
   const winnerPos = clampPitch({
-    x: contest.x + (attackerWins ? 3 * sign : 0),
+    x: contest.x + (attackerWins ? -back * 4 : back * 8),
+    y: contest.y + (contest.y >= 50 ? 3 : -3),
+  });
+  const loserPos = clampPitch({
+    x: contest.x + (attackerWins ? back * 3 : -back * 3),
     y: contest.y,
   });
   const ball = winnerPos;
@@ -93,11 +111,11 @@ export function stepDuel(
   const clock = timed.clock;
   const attackerAfter = {
     ...asInvolved(attacker),
-    position: attackerWins ? ball : contest,
+    position: attackerWins ? winnerPos : loserPos,
   };
   const defenderAfter = {
     ...asInvolved(defender),
-    position: attackerWins ? contest : ball,
+    position: attackerWins ? loserPos : winnerPos,
   };
   const winnerId = attackerWins ? attacker.playerId : defender.playerId;
 
@@ -121,6 +139,8 @@ export function stepDuel(
     ballCarrierId: winnerId,
     possessionTeamId: attackerWins ? attacker.teamId : defender.teamId,
     lastPasserId: attackerWins ? timed.lastPasserId : null,
+    ballInAir: false,
+    duelCooldownUntil: timed.periodElapsedSeconds + DUEL_COOLDOWN_SECONDS,
     players: patchPlayers(timed.players, [
       { playerId: attacker.playerId, position: attackerAfter.position },
       { playerId: defender.playerId, position: defenderAfter.position },

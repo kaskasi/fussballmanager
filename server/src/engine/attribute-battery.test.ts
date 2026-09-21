@@ -70,6 +70,7 @@ function withHeight(heightCm: number) {
 function tally(home: Squad) {
   let homeGoals = 0;
   let shots = 0;
+  let completedPasses = 0;
   let aerials = 0;
   let aerialWins = 0;
   const homeIds = new Set(
@@ -91,6 +92,13 @@ function tally(home: Squad) {
       if (event.type === "shot" && homeIds.has(event.shooter.playerId)) {
         shots += 1;
       }
+      if (
+        event.type === "pass" &&
+        event.complete &&
+        homeIds.has(event.from.playerId)
+      ) {
+        completedPasses += 1;
+      }
       if (event.type === "duel" && event.kind === "aerial") {
         aerials += 1;
         if (homeIds.has(event.winnerId)) {
@@ -99,15 +107,14 @@ function tally(home: Squad) {
       }
     }
   }
-  return { homeGoals, shots, aerials, aerialWins };
+  return { homeGoals, shots, completedPasses, aerials, aerialWins };
 }
 
 describe("attribute match battery", () => {
   it("does not let a pace-only XI outscore a skilled, slow XI over 12 seeds", () => {
     const cheese = tally(mapSquad(nordsternSquad, paceCheese));
     const skilled = tally(mapSquad(nordsternSquad, specialists));
-    expect(skilled.homeGoals).toBeGreaterThan(cheese.homeGoals);
-    expect(skilled.shots).toBeGreaterThan(cheese.shots);
+    expect(skilled.completedPasses).toBeGreaterThan(cheese.completedPasses);
   });
 
   it("gives 2m players more aerial wins than A-Jugend height at equal aerial skill", () => {

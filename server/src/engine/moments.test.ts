@@ -61,6 +61,8 @@ function stub(elapsed: number): MatchState {
     humanTeamId: home,
     transitionGainedTeamId: null,
     transitionUntilElapsed: null,
+    duelCooldownUntil: null,
+    ballInAir: false,
     nextSeq: 0,
   };
 }

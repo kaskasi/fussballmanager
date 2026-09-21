@@ -12,6 +12,7 @@ import {
   commentate,
   commentaryContextFromSquads,
   formatClock,
+  isCommentaryWorthy,
 } from "./render.ts";
 
 const homeId = asTeamId("fc-nordstern");
@@ -288,6 +289,30 @@ describe("template commentary", () => {
     expect(commentate(restartKickoff, ctx)).toBe(
       "Theo Brandt restarts from the centre spot.",
     );
+  });
+
+  it("keeps quiet carries out of the text feed", () => {
+    const nord = player("nord-8");
+    const first: MatchEvent = {
+      type: "carry",
+      seq: 1,
+      matchId,
+      clock,
+      ball: { x: 62, y: 50 },
+      involved: [nord],
+      possessionTeamId: homeId,
+      player: nord,
+      from: { x: 50, y: 50 },
+      to: { x: 62, y: 50 },
+    };
+    const follow: MatchEvent = {
+      ...first,
+      seq: 2,
+      from: { x: 62, y: 50 },
+      to: { x: 70, y: 50 },
+    };
+    expect(isCommentaryWorthy(first, undefined)).toBe(true);
+    expect(isCommentaryWorthy(follow, first)).toBe(false);
   });
 
   it("renders every event from a simulated match without throwing", () => {

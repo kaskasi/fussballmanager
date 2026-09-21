@@ -8,5 +8,6 @@ export {
   commentateLine,
   commentaryContextFromSquads,
   formatClock,
+  isCommentaryWorthy,
 } from "./render.ts";
 export type { CommentaryContext } from "./render.ts";

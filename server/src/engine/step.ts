@@ -119,6 +119,8 @@ function beginSecondHalf(state: MatchState): MatchState {
     players: movePlayer(state.players, kicker.playerId, spot),
     transitionGainedTeamId: null,
     transitionUntilElapsed: null,
+    duelCooldownUntil: null,
+    ballInAir: false,
   };
 }
 

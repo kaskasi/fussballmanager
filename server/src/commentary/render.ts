@@ -208,3 +208,40 @@ export function commentateLine(
 ): string {
   return `${formatClock(event.clock)}  ${commentate(event, ctx)}`;
 }
+
+function passLength(event: Extract<MatchEvent, { type: "pass" }>): number {
+  return Math.hypot(
+    event.to.position.x - event.from.position.x,
+    event.to.position.y - event.from.position.y,
+  );
+}
+
+function carryLength(event: Extract<MatchEvent, { type: "carry" }>): number {
+  return Math.hypot(event.to.x - event.from.x, event.to.y - event.from.y);
+}
+
+/**
+ * Engine ticks stay in the event stream for the 2D view.
+ * The text feed only speaks when something changes the story.
+ */
+export function isCommentaryWorthy(
+  event: MatchEvent,
+  previous: MatchEvent | undefined,
+): boolean {
+  if (event.type === "carry") {
+    if (
+      previous?.type === "carry" &&
+      previous.player.playerId === event.player.playerId
+    ) {
+      return false;
+    }
+    return carryLength(event) >= 7;
+  }
+  if (event.type === "pass" && event.complete) {
+    if (previous?.type === "pass" && previous.complete && passLength(event) < 14) {
+      return false;
+    }
+    return true;
+  }
+  return true;
+}

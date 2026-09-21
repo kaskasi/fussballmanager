@@ -21,6 +21,7 @@ export {
   RHEINWACHT_ID,
   SEED_MATCHUP,
   fillSquad,
+  scatterAttributes,
   nordsternPyramidSquad,
   nordsternSquad,
   nordsternTeam,

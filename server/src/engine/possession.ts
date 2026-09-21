@@ -2,14 +2,17 @@ import type {
   MatchEvent,
   MatchState,
   PlayerMatchStatus,
+  PlayerRole,
   StepResult,
 } from "@fussballmanager/shared";
 import { nextRange, nextUnit, pickWeighted } from "@fussballmanager/shared";
 import { withTime } from "./clock.ts";
 import {
   asInvolved,
+  clamp,
   clampPitch,
   distance,
+  goalMouth,
   lerp,
   nearest,
   onPitchFor,
@@ -21,6 +24,28 @@ import { defendingPressure } from "./pressure.ts";
 import { beginTransition, inLostBall } from "./moments.ts";
 import { passCompleteChance } from "./weights.ts";
 import { isOffsideReceiver, outOfPlayRestart } from "./laws.ts";
+
+/** Wide service prefers the six-yard/box, not a striker parked on the D. */
+export function widePassFeedWeight(input: {
+  passerWide: boolean;
+  targetRole: PlayerRole;
+  targetDistGoal: number;
+  targetY: number;
+}): number {
+  if (!input.passerWide) {
+    return 1;
+  }
+  const box =
+    input.targetDistGoal < 16 && Math.abs(input.targetY - 50) < 20 ? 1 : 0;
+  const close = clamp((18 - input.targetDistGoal) / 18, 0, 1);
+  const runner =
+    input.targetRole === "ST" ||
+    input.targetRole === "AM" ||
+    input.targetRole === "W"
+      ? 1.15
+      : 1;
+  return (1 + 2.2 * close + 1.6 * box) * runner;
+}
 
 function pickTeammate(
   state: MatchState,
@@ -34,6 +59,11 @@ function pickTeammate(
   if (pool.length === 0) {
     throw new Error("No pass target on the pitch");
   }
+  const mouth = goalMouth(state.homeTeamId, passer.teamId);
+  const passerWide =
+    passer.role === "W" ||
+    passer.role === "FB" ||
+    Math.abs(passer.position.y - 50) > 28;
   const picked = pickWeighted(
     state.rng,
     pool.map((player) => {
@@ -49,10 +79,17 @@ function pickTeammate(
         attackingTeamId: passer.teamId,
         homeTeamId: state.homeTeamId,
       });
+      const feed = widePassFeedWeight({
+        passerWide,
+        targetRole: player.role,
+        targetDistGoal: distance(player.position, mouth),
+        targetY: player.position.y,
+      });
       return {
         item: player,
         weight:
           (1 / (1 + distance(passer.position, player.position) / 8)) *
+          feed *
           (offside ? 0.32 : 1),
       };
     }),
@@ -140,6 +177,7 @@ export function stepPass(state: MatchState): StepResult {
           ballCarrierId: coverer.playerId,
           possessionTeamId: coverer.teamId,
           lastPasserId: null,
+          ballInAir: false,
           players: patchPlayers(timed.players, [
             { playerId: passer.playerId, position: passerPos },
             { playerId: target.playerId, position: to.position },
@@ -184,6 +222,7 @@ export function stepPass(state: MatchState): StepResult {
         ballCarrierId: null,
         possessionTeamId: defendId,
         lastPasserId: null,
+        ballInAir: false,
         players: patchPlayers(timed.players, [
           { playerId: passer.playerId, position: passerPos },
         ]),
@@ -233,6 +272,7 @@ export function stepPass(state: MatchState): StepResult {
         ballCarrierId: null,
         possessionTeamId: out.takingTeamId,
         lastPasserId: null,
+        ballInAir: false,
         players: patchPlayers(timed.players, [
           { playerId: passer.playerId, position: passerPos },
         ]),
@@ -249,6 +289,45 @@ export function stepPass(state: MatchState): StepResult {
   const ball = clampPitch(
     complete ? target.position : lerp(passerPos, target.position, 0.6),
   );
+  const air = distance(passer.position, target.position) > 24;
+  if (!complete) {
+    const loose = nearest(defenders, ball);
+    if (loose) {
+      const event: MatchEvent = {
+        type: "pass",
+        seq: timed.nextSeq,
+        matchId: timed.matchId,
+        clock: timed.clock,
+        ball,
+        involved: [from, to, asInvolved(loose)],
+        possessionTeamId: loose.teamId,
+        from,
+        to,
+        complete: false,
+      };
+      return {
+        event,
+        state: beginTransition(
+          {
+            ...timed,
+            phase: "open_play",
+            ball,
+            ballCarrierId: loose.playerId,
+            possessionTeamId: loose.teamId,
+            lastPasserId: null,
+            ballInAir: air,
+            players: patchPlayers(timed.players, [
+              { playerId: passer.playerId, position: passerPos },
+              { playerId: target.playerId, position: receiverPos },
+              { playerId: loose.playerId, position: ball },
+            ]),
+            nextSeq: timed.nextSeq + 1,
+          },
+          loose.teamId,
+        ),
+      };
+    }
+  }
   const event: MatchEvent = {
     type: "pass",
     seq: timed.nextSeq,
@@ -267,14 +346,12 @@ export function stepPass(state: MatchState): StepResult {
       ...timed,
       phase: "open_play",
       ball,
-      ballCarrierId: complete ? target.playerId : null,
+      ballCarrierId: target.playerId,
       possessionTeamId: passer.teamId,
-      lastPasserId: complete ? passer.playerId : null,
+      lastPasserId: passer.playerId,
+      ballInAir: air,
       players: patchPlayers(timed.players, [
         { playerId: passer.playerId, position: passerPos },
-        ...(complete
-          ? []
-          : [{ playerId: target.playerId, position: receiverPos }]),
       ]),
       nextSeq: timed.nextSeq + 1,
     },

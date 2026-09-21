@@ -100,6 +100,8 @@ export function createInitialState(input: {
     humanTeamId: input.humanTeamId ?? null,
     transitionGainedTeamId: null,
     transitionUntilElapsed: null,
+    duelCooldownUntil: null,
+    ballInAir: false,
     nextSeq: 0,
   };
 }

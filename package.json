@@ -13,6 +13,7 @@
     "test": "npm test -w @fussballmanager/shared && npm test -w @fussballmanager/server",
     "play-match": "npm run play-match -w @fussballmanager/server",
     "play-matchday": "npm run play-matchday -w @fussballmanager/server",
+    "play-probe": "npm run play-probe -w @fussballmanager/server",
     "persist-match": "npm run persist-match -w @fussballmanager/server"
   },
   "dependencies": {

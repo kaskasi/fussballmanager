@@ -521,7 +521,13 @@ function restAttackTargetAtBase(
   }
   const job = strikerDutyFor(player, tactics);
   if (job === "false_nine") {
-    return atDepth(ownGoal, attackSign, 54, lerp({ x: 50, y: 50 }, ball, 0.55).y);
+    const ballDepth = depthFromOwnGoal(ball, ownGoal, attackSign);
+    return atDepth(
+      ownGoal,
+      attackSign,
+      clamp(46 + ballDepth * 0.45, 48, 84),
+      lerp({ x: 50, y: 50 }, ball, 0.55).y,
+    );
   }
   if (job === "target") {
     return atDepth(ownGoal, attackSign, 72, 50);
@@ -583,7 +589,7 @@ export function clampBackLine(
   } else if (player.role === "ST") {
     const job = strikerDutyFor(player, tactics);
     if (job === "false_nine") {
-      depth = clamp(depth, 36, 78);
+      depth = clamp(depth, 36, 86);
     } else if (job === "target") {
       depth = clamp(depth, 48, 86);
     } else {

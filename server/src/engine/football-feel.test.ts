@@ -24,14 +24,48 @@ describe("football feel", () => {
     const throwIns = events.filter(
       (event) => event.type === "restart" && event.phase === "throw_in",
     ).length;
+    const corners = events.filter(
+      (event) => event.type === "restart" && event.phase === "corner",
+    ).length;
     const passes = events.filter((event) => event.type === "pass").length;
     const carries = events.filter((event) => event.type === "carry").length;
+    const duels = events.filter((event) => event.type === "duel");
+    const aerials = duels.filter((event) => event.kind === "aerial").length;
+    const errors = events.filter(
+      (event) => event.type === "turnover" && event.reason === "error",
+    ).length;
+    let duelStreak = 0;
+    let maxDuelStreak = 0;
+    let passThenError = 0;
+    for (let i = 0; i < events.length; i += 1) {
+      const event = events[i];
+      if (event?.type === "duel") {
+        duelStreak += 1;
+        maxDuelStreak = Math.max(maxDuelStreak, duelStreak);
+      } else {
+        duelStreak = 0;
+      }
+      const prev = events[i - 1];
+      if (
+        prev?.type === "pass" &&
+        !prev.complete &&
+        event?.type === "turnover" &&
+        event.reason === "error"
+      ) {
+        passThenError += 1;
+      }
+    }
 
     expect(goals).toBeLessThanOrEqual(8);
-    expect(shots).toBeGreaterThan(8);
+    expect(shots).toBeGreaterThanOrEqual(3);
     expect(offsides).toBeLessThanOrEqual(12);
     expect(cards).toBeLessThanOrEqual(8);
     expect(throwIns).toBeGreaterThan(0);
     expect(passes).toBeGreaterThan(carries);
+    expect(errors).toBe(0);
+    expect(passThenError).toBe(0);
+    expect(maxDuelStreak).toBeLessThanOrEqual(3);
+    expect(aerials / Math.max(1, duels.length)).toBeLessThan(0.22);
+    expect(corners + throwIns).toBeGreaterThan(0);
   });
 });

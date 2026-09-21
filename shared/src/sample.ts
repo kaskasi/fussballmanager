@@ -156,6 +156,8 @@ export const sampleState: MatchState = {
   humanTeamId: homeId,
   transitionGainedTeamId: null,
   transitionUntilElapsed: null,
+  duelCooldownUntil: null,
+  ballInAir: false,
   nextSeq: 14,
 };
 

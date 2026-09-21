@@ -254,6 +254,15 @@ describe("marking targets", () => {
     expect(strikerDutyFor(stub("ST", "ST", { x: 70, y: 50 }), base)).toBe("false_nine");
     expect(nine.x).toBeLessThan(poacher.x);
     expect(poacher.x).toBeGreaterThan(75);
+    const nineHigh = restAttackTarget(
+      stub("ST", "ST", { x: 70, y: 50 }),
+      { x: 90, y: 50 },
+      ownGoal,
+      1,
+      base,
+    );
+    expect(nineHigh.x).toBeGreaterThan(nine.x);
+    expect(nineHigh.x).toBeGreaterThan(80);
   });
 
   it("pushes the attacking line higher when lineHeight is raised", () => {

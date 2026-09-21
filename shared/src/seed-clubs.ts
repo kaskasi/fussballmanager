@@ -109,6 +109,64 @@ const ROLE_BASE: Record<PlayerRole, PlayerAttributes> = {
   },
 };
 
+function saltHash(salt: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < salt.length; i += 1) {
+    hash ^= salt.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function signedOffset(salt: string, key: string, span: number): number {
+  const n = saltHash(`${salt}:${key}`);
+  return (n % (span * 2 + 1)) - span;
+}
+
+function applyShift(
+  base: PlayerAttributes,
+  skillShift: number,
+): PlayerAttributes {
+  if (skillShift === 0) {
+    return { ...base };
+  }
+  const next = { ...base };
+  for (const key of Object.keys(base) as (keyof PlayerAttributes)[]) {
+    if (key === "heightCm") {
+      continue;
+    }
+    next[key] = Math.min(99, Math.max(1, base[key] + skillShift));
+  }
+  return next;
+}
+
+/** Deterministic per-player scatter so two CMs are not the same card. */
+export function scatterAttributes(
+  base: PlayerAttributes,
+  salt: string,
+): PlayerAttributes {
+  const next = { ...base };
+  const skillKeys: Exclude<keyof PlayerAttributes, "heightCm">[] = [
+    "passing",
+    "tackling",
+    "shooting",
+    "pace",
+    "stamina",
+    "positioning",
+    "aerial",
+    "dribbling",
+    "goalkeeping",
+  ];
+  for (const key of skillKeys) {
+    next[key] = Math.min(99, Math.max(1, base[key] + signedOffset(salt, key, 7)));
+  }
+  next.heightCm = Math.min(
+    210,
+    Math.max(158, base.heightCm + signedOffset(salt, "heightCm", 5)),
+  );
+  return next;
+}
+
 function player(
   teamId: ReturnType<typeof asTeamId>,
   prefix: string,
@@ -118,7 +176,12 @@ function player(
   form: number,
   fatigue: number,
   overrides: Partial<PlayerAttributes> = {},
+  skillShift = 0,
 ): Player {
+  const scattered = scatterAttributes(
+    applyShift(ROLE_BASE[role], skillShift),
+    `${prefix}-${shirt}`,
+  );
   return {
     id: asPlayerId(`${prefix}-${shirt}`),
     teamId,
@@ -126,7 +189,7 @@ function player(
     role,
     form,
     fatigue,
-    attributes: { ...ROLE_BASE[role], ...overrides },
+    attributes: { ...scattered, ...overrides },
   };
 }
 
@@ -154,24 +217,6 @@ const BENCH_ROLES: readonly PlayerRole[] = [
   "ST",
 ];
 
-function shiftAttrs(
-  role: PlayerRole,
-  skillShift: number,
-): Partial<PlayerAttributes> {
-  if (skillShift === 0) {
-    return {};
-  }
-  const base = ROLE_BASE[role];
-  const next: Partial<PlayerAttributes> = {};
-  for (const key of Object.keys(base) as (keyof PlayerAttributes)[]) {
-    if (key === "heightCm") {
-      continue;
-    }
-    next[key] = Math.min(99, Math.max(1, (base[key] ?? 50) + skillShift));
-  }
-  return next;
-}
-
 /** 11 formation slots + 7 bench names. Used for extra division clubs. */
 export function fillSquad(input: {
   team: Team;
@@ -197,7 +242,8 @@ export function fillSquad(input: {
         slot.role,
         52 + (shirt % 12),
         4 + (shirt % 8),
-        shiftAttrs(slot.role, shift),
+        {},
+        shift,
       ),
       slot.id,
     ] as [Player, FormationSlotId];
@@ -213,7 +259,8 @@ export function fillSquad(input: {
       role,
       48 + (index % 10),
       3 + (index % 6),
-      shiftAttrs(role, shift),
+      {},
+      shift,
     );
   });
   return squad(input.team, input.tactics, starters, bench);

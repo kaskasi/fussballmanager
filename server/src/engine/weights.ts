@@ -30,7 +30,12 @@ export function openPlayWeights(input: {
 }): OpenPlayWeights {
   const proximity = clamp((16 - input.distanceToDefender) / 16, 0, 1);
   const freshness = clamp((input.form - input.fatigue) / 100, -0.25, 0.45);
-  const goalThreat = clamp((24 - input.distanceToGoal) / 24, 0, 1);
+  const goalThreat = clamp((28 - input.distanceToGoal) / 28, 0, 1);
+  /** 12–24 m: carry toward the box instead of blasting from the D. */
+  const fringe =
+    input.distanceToGoal > 12 && input.distanceToGoal < 24
+      ? clamp(1 - Math.abs(input.distanceToGoal - 18) / 8, 0, 1)
+      : 0;
   const duel =
     proximity * (0.3 + 0.7 * (input.pressing / 100));
   const carry =
@@ -40,7 +45,8 @@ export function openPlayWeights(input: {
       0.08 * (input.mentality / 100) +
       0.08 * (input.tempo / 100) +
       freshness) *
-    (1 - proximity * 0.35);
+    (1 - proximity * 0.35) *
+    (1 + 0.28 * fringe);
   const pass =
     (0.38 +
       0.55 * (input.passing / 100) +
@@ -53,10 +59,11 @@ export function openPlayWeights(input: {
     (0.16 +
       0.55 * (input.shooting / 100) +
       0.18 * (input.mentality / 100) +
-      (input.strikerBonus ? 0.28 : 0) +
+      (input.strikerBonus ? 0.4 : 0.12) +
       freshness) *
     (input.transitionAttack ? 1.35 : 1) *
-    (1 + 0.18 * Math.max(0, isolated - 1));
+    (1 + 0.18 * Math.max(0, isolated - 1)) *
+    (1 - 0.38 * fringe);
   const swarm = Math.min(input.localPress ?? 1, 6) / 4;
   const carryBoost = input.transitionAttack ? 1.12 : 1;
   const passDamp = input.transitionAttack ? 0.92 : 1;

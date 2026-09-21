@@ -60,6 +60,10 @@ export type MatchState = {
   transitionGainedTeamId: TeamId | null;
   /** Period elapsed time when the 10s transition window ends. */
   transitionUntilElapsed: number | null;
+  /** No new duel until this elapsed time (stops wrestle chains). */
+  duelCooldownUntil: number | null;
+  /** Headers only while the ball is in the air (set-piece, long ball). */
+  ballInAir: boolean;
   /** Next event sequence number. */
   nextSeq: number;
 };

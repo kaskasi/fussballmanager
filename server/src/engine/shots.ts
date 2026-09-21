@@ -25,7 +25,7 @@ import {
 import { shotOutcomeChances } from "./weights.ts";
 import { beginTransition, inGainedBall } from "./moments.ts";
 import { defendingPressure } from "./pressure.ts";
-import { penaltySpot, throwInSpot } from "./laws.ts";
+import { outOfPlayRestart, penaltySpot, throwInSpot } from "./laws.ts";
 
 function keeperOf(
   state: MatchState,
@@ -134,13 +134,14 @@ function pendingAfterShot(
         : {}),
     };
   }
-  if (outcome === "wide") {
-    return { type: "restart", phase: "goal_kick", takingTeamId: defendingId };
-  }
-  if (outcome === "block") {
-    return { type: "restart", phase: "corner", takingTeamId: shooter.teamId };
-  }
   return null;
+}
+
+function bylineMiss(mouth: { x: number; y: number }, yJitter: number) {
+  return {
+    x: mouth.x >= 50 ? 102 : -2,
+    y: 50 + yJitter * 1.6,
+  };
 }
 
 export function stepShot(state: MatchState): StepResult {
@@ -162,21 +163,112 @@ export function stepShot(state: MatchState): StepResult {
         shooter.position,
       );
   const resolved = resolveOutcome(state, shooter, keeper, defender);
-  const duration = nextRange(resolved.rng, 1, 3);
-  const mouth = goalMouth(state.homeTeamId, shooter.teamId);
+  const duration = nextRange(resolved.rng, 2, 4);
   const yJitter = nextRange(duration.rng, -8, 8);
+  const bounce = nextUnit(yJitter.rng);
+  const mouth = goalMouth(state.homeTeamId, shooter.teamId);
   const target = clampPitch({ x: mouth.x, y: mouth.y + yJitter.n });
-  const ball =
-    resolved.outcome === "goal"
+  let outcome = resolved.outcome;
+  let pending = pendingAfterShot(outcome, state, shooter, keeper);
+  let phase: MatchState["phase"] = "open_play";
+  let carrier: PlayerId | null = null;
+  let possession = shooter.teamId;
+  let ballInAir = false;
+
+  let ball =
+    outcome === "goal"
       ? mouth
-      : resolved.outcome === "save" && keeper
+      : outcome === "save" && keeper
         ? keeper.position
-        : resolved.outcome === "block" && defender
+        : outcome === "block" && defender
           ? defender.position
-          : resolved.outcome === "woodwork"
+          : outcome === "woodwork"
             ? clampPitch({ x: mouth.x, y: mouth.y + (yJitter.n < 0 ? -6 : 6) })
             : clampPitch({ x: mouth.x, y: yJitter.n < 0 ? 4 : 96 });
-  const timed = withTime(state, duration.n, yJitter.rng);
+
+  if (outcome === "goal") {
+    phase = "goal_restart";
+  } else if (outcome === "wide") {
+    const lastTouch =
+      !penalty && bounce.n < 0.24 ? defendingId : shooter.teamId;
+    const miss = bylineMiss(mouth, yJitter.n);
+    const out = outOfPlayRestart(
+      miss,
+      lastTouch,
+      state.homeTeamId,
+      state.awayTeamId,
+    );
+    if (out) {
+      ball = out.spot;
+      pending = {
+        type: "restart",
+        phase: out.phase,
+        takingTeamId: out.takingTeamId,
+      };
+      phase = out.phase;
+      possession = out.takingTeamId;
+    }
+  } else if (outcome === "block" && defender) {
+    if (bounce.n < 0.48) {
+      ball = clampPitch(defender.position);
+      carrier = defender.playerId;
+      possession = defender.teamId;
+      pending = null;
+      phase = "open_play";
+    } else {
+      const out = outOfPlayRestart(
+        bylineMiss(mouth, yJitter.n),
+        defender.teamId,
+        state.homeTeamId,
+        state.awayTeamId,
+      );
+      if (out) {
+        ball = out.spot;
+        pending = {
+          type: "restart",
+          phase: out.phase,
+          takingTeamId: out.takingTeamId,
+        };
+        phase = out.phase;
+        possession = out.takingTeamId;
+      }
+    }
+  } else if (outcome === "save" && keeper && !penalty && bounce.n < 0.22) {
+    const out = outOfPlayRestart(
+      bylineMiss(mouth, yJitter.n),
+      keeper.teamId,
+      state.homeTeamId,
+      state.awayTeamId,
+    );
+    if (out) {
+      ball = out.spot;
+      pending = {
+        type: "restart",
+        phase: out.phase,
+        takingTeamId: out.takingTeamId,
+      };
+      phase = out.phase;
+      possession = out.takingTeamId;
+    } else {
+      carrier = keeper.playerId;
+      possession = keeper.teamId;
+    }
+  } else if (outcome === "save" && keeper) {
+    carrier = keeper.playerId;
+    possession = keeper.teamId;
+  } else if (outcome === "woodwork") {
+    const loose =
+      nearest(
+        onPitchFor(state.players, defendingId).filter((p) => p.role !== "GK"),
+        ball,
+      ) ?? keeper;
+    if (loose) {
+      carrier = loose.playerId;
+      possession = loose.teamId;
+    }
+  }
+
+  const timed = withTime(state, duration.n, bounce.rng);
   const clock = timed.clock;
   const shooterInv = asInvolved(shooter);
   const assist = involvedAssist(state, shooter.playerId);
@@ -189,33 +281,28 @@ export function stepShot(state: MatchState): StepResult {
     clock,
     ball,
     involved,
-    possessionTeamId: shooter.teamId,
+    possessionTeamId: possession,
     shooter: shooterInv,
     ...(assist ? { assist } : {}),
     target,
-    outcome: resolved.outcome,
+    outcome,
   };
 
-  return {
-    event,
-    state: {
+  const flipped = possession !== shooter.teamId;
+  const nextState = {
       ...timed,
       ball,
-      ballCarrierId:
-        resolved.outcome === "save" && keeper ? keeper.playerId : null,
-      possessionTeamId: shooter.teamId,
+      ballCarrierId: carrier,
+      possessionTeamId: possession,
       lastPasserId: null,
-      pending: pendingAfterShot(resolved.outcome, timed, shooter, keeper),
-      phase:
-        resolved.outcome === "goal"
-          ? "goal_restart"
-          : resolved.outcome === "wide"
-            ? "goal_kick"
-            : resolved.outcome === "block"
-              ? "corner"
-              : "open_play",
+      ballInAir,
+      pending,
+      phase,
       nextSeq: timed.nextSeq + 1,
-    },
+  };
+  return {
+    event,
+    state: flipped ? beginTransition(nextState, possession) : nextState,
   };
 }
 
@@ -362,6 +449,7 @@ export function stepRestart(
           { playerId: kicker.playerId, position: spot },
         ]),
         pending: null,
+        ballInAir: false,
         nextSeq: timed.nextSeq + 1,
       },
     };
@@ -400,6 +488,7 @@ export function stepRestart(
           { playerId: taker.playerId, position: spot },
         ]),
         pending: null,
+        ballInAir: true,
         nextSeq: timed.nextSeq + 1,
       },
     };
@@ -437,6 +526,7 @@ export function stepRestart(
           { playerId: taker.playerId, position: spot },
         ]),
         pending: null,
+        ballInAir: true,
         nextSeq: timed.nextSeq + 1,
       },
     };
@@ -474,6 +564,7 @@ export function stepRestart(
           { playerId: taker.playerId, position: spot },
         ]),
         pending: null,
+        ballInAir: true,
         nextSeq: timed.nextSeq + 1,
       },
     };
@@ -516,6 +607,7 @@ export function stepRestart(
           { playerId: taker.playerId, position: spot },
         ]),
         pending: null,
+        ballInAir: false,
         nextSeq: timed.nextSeq + 1,
       },
     };
@@ -555,6 +647,7 @@ export function stepRestart(
         { playerId: taker.playerId, position: corner },
       ]),
       pending: null,
+      ballInAir: true,
       nextSeq: timed.nextSeq + 1,
     },
   };

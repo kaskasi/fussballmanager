@@ -32,19 +32,23 @@ export function pickChallenger(
   if (!attackId) {
     return nearestOut;
   }
-  const ownGoal = goalMouth(state.homeTeamId, attackId);
-  const sign = attackingSign(state.homeTeamId, oppositionId);
-  const ballDepth = depthFromOwnGoal(state.ball, ownGoal, sign);
+  const gkOwnGoal =
+    oppositionId === state.homeTeamId ? { x: 0, y: 50 } : { x: 100, y: 50 };
+  const gkSign = attackingSign(state.homeTeamId, oppositionId);
+  const ballDepth = depthFromOwnGoal(state.ball, gkOwnGoal, gkSign);
   const gkDist = distance(gk.position, state.ball);
+  const outDist = nearestOut
+    ? distance(nearestOut.position, state.ball)
+    : 99;
   if (
     tactics.keeperDuty === "sweeper" &&
-    ballDepth < 50 &&
-    gkDist < 16 &&
-    (!nearestOut || gkDist <= distance(nearestOut.position, state.ball) + 1)
+    ballDepth < 28 &&
+    gkDist < 10 &&
+    gkDist + 4 < outDist
   ) {
     return gk;
   }
-  if (tactics.keeperDuty === "stay" && ballDepth < 14 && gkDist < 8) {
+  if (tactics.keeperDuty === "stay" && ballDepth < 12 && gkDist < 7) {
     return gk;
   }
   return nearestOut;
@@ -87,15 +91,23 @@ export function chooseOpenPlay(state: MatchState): OpenPlayChoice {
     shooting: carrier.attributes.shooting,
     form: carrier.form,
     fatigue: carrier.fatigue,
-    strikerBonus: carrier.role === "ST",
+    strikerBonus:
+      carrier.role === "ST" ||
+      ((carrier.role === "W" || carrier.role === "AM") && distGoal < 22),
     transitionAttack: inGainedBall(state),
     restCovers: pressure.restCovers,
     localPress: pressure.localCount,
   });
+  const onCooldown =
+    state.duelCooldownUntil !== null &&
+    state.periodElapsedSeconds < state.duelCooldownUntil;
   const picked = pickWeighted(state.rng, [
     { item: "pass" as const, weight: teammates.length > 0 ? weights.pass : 0 },
     { item: "carry" as const, weight: weights.carry },
-    { item: "duel" as const, weight: defender ? weights.duel : 0 },
+    {
+      item: "duel" as const,
+      weight: defender && !onCooldown ? weights.duel : 0,
+    },
     { item: "shot" as const, weight: weights.shot },
   ]);
   let action =

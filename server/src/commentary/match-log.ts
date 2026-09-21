@@ -2,6 +2,7 @@ import type { MatchEvent, Squad } from "@fussballmanager/shared";
 import {
   commentateLine,
   commentaryContextFromSquads,
+  isCommentaryWorthy,
 } from "./render.ts";
 
 export type MatchLogInput = {
@@ -23,7 +24,11 @@ export function formatMatchLog(input: MatchLogInput): string {
     "",
   ];
 
-  for (const event of input.events) {
+  for (let i = 0; i < input.events.length; i += 1) {
+    const event = input.events[i];
+    if (!event || !isCommentaryWorthy(event, input.events[i - 1])) {
+      continue;
+    }
     let line = commentateLine(event, ctx);
     if (event.type === "goal") {
       if (event.scorer.teamId === homeId) {

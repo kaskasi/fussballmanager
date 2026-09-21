@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { asPlayerId, asTeamId } from "@fussballmanager/shared";
 import type { PlayerMatchStatus } from "@fussballmanager/shared";
 import { interceptChance } from "./lanes.ts";
-import { carryLengthMax } from "./carry.ts";
+import { carryLengthMax, carryStepLength } from "./carry.ts";
 import { offBallMaxStep } from "./shape.ts";
 import {
   aerialContestAttribute,
@@ -129,6 +129,13 @@ describe("physicals do not flatten skill contests", () => {
   it("caps pace so a sprinter is not first to every ball", () => {
     expect(offBallMaxStep(99) / offBallMaxStep(20)).toBeLessThan(1.35);
     expect(carryLengthMax(22, 99) / carryLengthMax(82, 22)).toBeLessThan(1.15);
+  });
+
+  it("turns an 18 m carry into the box without stretching midfield carries", () => {
+    const fromD = carryStepLength(5, 50, 55, 18);
+    const midfield = carryStepLength(5, 50, 55, 50);
+    expect(18 - fromD).toBeLessThan(12);
+    expect(midfield).toBeLessThan(fromD * 0.7);
   });
 
   it("lets positioning intercept more than raw pace", () => {

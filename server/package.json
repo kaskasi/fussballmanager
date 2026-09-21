@@ -6,14 +6,17 @@
     "dev": "tsx src/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "play-match": "tsx src/cli/play-match.ts"
+    "play-match": "tsx src/cli/play-match.ts",
+    "persist-match": "tsx src/cli/persist-match.ts"
   },
   "dependencies": {
     "@fussballmanager/shared": "*",
-    "fastify": "^5.3.2"
+    "fastify": "^5.3.2",
+    "pg": "^8.23.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.1",
+    "@types/pg": "^8.23.1",
     "tsx": "^4.19.3"
   }
 }

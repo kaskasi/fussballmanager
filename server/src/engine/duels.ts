@@ -16,6 +16,7 @@ import {
   requirePlayer,
 } from "./helpers.ts";
 import { contestStrength } from "./weights.ts";
+import { beginTransition } from "./moments.ts";
 
 function pickKind(
   attacker: PlayerMatchStatus,
@@ -114,19 +115,22 @@ export function stepDuel(
     winnerId,
   };
 
+  const nextState = {
+    ...timed,
+    ball,
+    ballCarrierId: winnerId,
+    possessionTeamId: attackerWins ? attacker.teamId : defender.teamId,
+    lastPasserId: attackerWins ? timed.lastPasserId : null,
+    players: patchPlayers(timed.players, [
+      { playerId: attacker.playerId, position: attackerAfter.position },
+      { playerId: defender.playerId, position: defenderAfter.position },
+    ]),
+    nextSeq: timed.nextSeq + 1,
+  };
   return {
     event,
-    state: {
-      ...timed,
-      ball,
-      ballCarrierId: winnerId,
-      possessionTeamId: attackerWins ? attacker.teamId : defender.teamId,
-      lastPasserId: attackerWins ? timed.lastPasserId : null,
-      players: patchPlayers(timed.players, [
-        { playerId: attacker.playerId, position: attackerAfter.position },
-        { playerId: defender.playerId, position: defenderAfter.position },
-      ]),
-      nextSeq: timed.nextSeq + 1,
-    },
+    state: attackerWins
+      ? nextState
+      : beginTransition(nextState, defender.teamId),
   };
 }

@@ -131,5 +131,8 @@ describe("formatMatchLog", () => {
     expect(parseSeed(["node", "play-match.ts"])).toBe(2026);
     expect(parseSeed(["node", "play-match.ts", "11"])).toBe(11);
     expect(parseSeed(["node", "play-match.ts", "nope"])).toBe(2026);
+    expect(parseSeed(["node", "play-match.ts", "--formation=2-3-5", "11"])).toBe(
+      11,
+    );
   });
 });

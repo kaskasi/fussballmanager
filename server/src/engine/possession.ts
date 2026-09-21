@@ -4,24 +4,22 @@ import type {
   PlayerMatchStatus,
   StepResult,
 } from "@fussballmanager/shared";
-import { nextInt, nextRange, nextUnit } from "@fussballmanager/shared";
+import { nextRange, nextUnit, pickWeighted } from "@fussballmanager/shared";
 import { withTime } from "./clock.ts";
 import {
   asInvolved,
   clampPitch,
+  distance,
   lerp,
   nearest,
   onPitchFor,
   patchPlayers,
   requirePlayer,
 } from "./helpers.ts";
+import { bestLaneCover, interceptChance } from "./lanes.ts";
+import { defendingPressure } from "./pressure.ts";
+import { beginTransition, inLostBall } from "./moments.ts";
 import { passCompleteChance } from "./weights.ts";
-
-function oppositionPressing(state: MatchState, teamId: string): number {
-  return teamId === state.homeTeamId
-    ? state.awayTactics.pressing
-    : state.homeTactics.pressing;
-}
 
 function pickTeammate(
   state: MatchState,
@@ -35,12 +33,14 @@ function pickTeammate(
   if (pool.length === 0) {
     throw new Error("No pass target on the pitch");
   }
-  const picked = nextInt(state.rng, pool.length);
-  const target = pool[picked.i];
-  if (!target) {
-    throw new Error("Pass target index out of range");
-  }
-  return { target, rng: picked.rng };
+  const picked = pickWeighted(
+    state.rng,
+    pool.map((player) => ({
+      item: player,
+      weight: 1 / (1 + distance(passer.position, player.position) / 8),
+    })),
+  );
+  return { target: picked.item, rng: picked.rng };
 }
 
 export function stepPass(state: MatchState): StepResult {
@@ -49,34 +49,98 @@ export function stepPass(state: MatchState): StepResult {
   }
   const passer = requirePlayer(state.players, state.ballCarrierId);
   const { target, rng } = pickTeammate(state, passer);
-  const roll = nextUnit(rng);
-  const complete = roll.n < passCompleteChance({
-    passing: passer.attributes.passing,
-    form: passer.form,
-    fatigue: passer.fatigue,
-    pressing: oppositionPressing(state, passer.teamId),
-  });
-  const duration = nextRange(roll.rng, 2, 6);
+  const defendId =
+    passer.teamId === state.homeTeamId ? state.awayTeamId : state.homeTeamId;
+  const defendTactics =
+    defendId === state.homeTeamId ? state.homeTactics : state.awayTactics;
+  const defenders = onPitchFor(state.players, defendId);
+  const laneCover = bestLaneCover(defenders, passer.position, target.position);
+  const manShadow =
+    defendTactics.marking === "man"
+      ? defenders.find(
+          (player) =>
+            player.role !== "GK" &&
+            distance(player.position, target.position) < 5.5,
+        )
+      : undefined;
+  const coverer =
+    defendTactics.marking === "zonal" ? laneCover : (manShadow ?? laneCover);
+  const pressure = defendingPressure(state, defendId);
+  const quality = nextUnit(rng);
+  const intercept = nextUnit(quality.rng);
+  const intercepted =
+    !!coverer &&
+    intercept.n <
+      interceptChance(
+        coverer,
+        pressure.pressing,
+        inLostBall(state, defendId),
+      );
+  const complete =
+    !intercepted &&
+    quality.n <
+      passCompleteChance({
+        passing: passer.attributes.passing,
+        form: passer.form,
+        fatigue: passer.fatigue,
+        pressing: pressure.pressing,
+      });
+  const duration = nextRange(intercept.rng, 2, 6);
   const timed = withTime(state, duration.n, duration.rng);
-  const clock = timed.clock;
   const passerPos = clampPitch(lerp(passer.position, target.position, 0.12));
   const receiverPos = complete
     ? target.position
     : clampPitch(lerp(passer.position, target.position, 0.45));
-  const ball = clampPitch(
-    complete ? target.position : lerp(passerPos, target.position, 0.6),
-  );
   const from = { ...asInvolved(passer), position: passerPos };
   const to = {
     ...asInvolved(target),
     position: complete ? target.position : receiverPos,
   };
 
+  if (intercepted && coverer) {
+    const ball = clampPitch(coverer.position);
+    const interceptor = asInvolved(coverer);
+    const event: MatchEvent = {
+      type: "turnover",
+      seq: timed.nextSeq,
+      matchId: timed.matchId,
+      clock: timed.clock,
+      ball,
+      involved: [from, to, interceptor],
+      possessionTeamId: coverer.teamId,
+      fromTeamId: passer.teamId,
+      toTeamId: coverer.teamId,
+      reason: "interception",
+    };
+    return {
+      event,
+      state: beginTransition(
+        {
+          ...timed,
+          phase: "open_play",
+          ball,
+          ballCarrierId: coverer.playerId,
+          possessionTeamId: coverer.teamId,
+          lastPasserId: null,
+          players: patchPlayers(timed.players, [
+            { playerId: passer.playerId, position: passerPos },
+            { playerId: coverer.playerId, position: ball },
+          ]),
+          nextSeq: timed.nextSeq + 1,
+        },
+        coverer.teamId,
+      ),
+    };
+  }
+
+  const ball = clampPitch(
+    complete ? target.position : lerp(passerPos, target.position, 0.6),
+  );
   const event: MatchEvent = {
     type: "pass",
-    seq: state.nextSeq,
-    matchId: state.matchId,
-    clock,
+    seq: timed.nextSeq,
+    matchId: timed.matchId,
+    clock: timed.clock,
     ball,
     involved: [from, to],
     possessionTeamId: passer.teamId,
@@ -84,7 +148,6 @@ export function stepPass(state: MatchState): StepResult {
     to,
     complete,
   };
-
   return {
     event,
     state: {
@@ -137,16 +200,19 @@ export function stepTurnover(state: MatchState): StepResult {
 
   return {
     event,
-    state: {
-      ...timed,
-      ball,
-      ballCarrierId: winner.playerId,
-      possessionTeamId: toTeamId,
-      lastPasserId: null,
-      players: patchPlayers(timed.players, [
-        { playerId: winner.playerId, position: ball },
-      ]),
-      nextSeq: timed.nextSeq + 1,
-    },
+    state: beginTransition(
+      {
+        ...timed,
+        ball,
+        ballCarrierId: winner.playerId,
+        possessionTeamId: toTeamId,
+        lastPasserId: null,
+        players: patchPlayers(timed.players, [
+          { playerId: winner.playerId, position: ball },
+        ]),
+        nextSeq: timed.nextSeq + 1,
+      },
+      toTeamId,
+    ),
   };
 }

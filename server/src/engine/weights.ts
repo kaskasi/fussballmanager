@@ -1,4 +1,5 @@
 import { clamp } from "./helpers.ts";
+import { isolationFactor } from "./pressure.ts";
 
 export type OpenPlayWeights = {
   pass: number;
@@ -21,6 +22,11 @@ export function openPlayWeights(input: {
   form: number;
   fatigue: number;
   strikerBonus: boolean;
+  /** Gained-ball window: more direct, more shots. */
+  transitionAttack?: boolean;
+  /** Teammates of the defending side still between ball and their goal. */
+  restCovers?: number;
+  localPress?: number;
 }): OpenPlayWeights {
   const proximity = clamp((16 - input.distanceToDefender) / 16, 0, 1);
   const freshness = clamp((input.form - input.fatigue) / 100, -0.25, 0.45);
@@ -46,11 +52,16 @@ export function openPlayWeights(input: {
       0.7 * (input.shooting / 100) +
       0.25 * (input.mentality / 100) +
       (input.strikerBonus ? 0.35 : 0) +
-      freshness);
+      freshness) *
+    (input.transitionAttack ? 1.9 : 1) *
+    isolationFactor(input.restCovers ?? 4);
+  const swarm = Math.min(input.localPress ?? 1, 6) / 4;
+  const carryBoost = input.transitionAttack ? 1.35 : 1;
+  const passDamp = input.transitionAttack ? 0.82 : 1;
   return {
-    pass: Math.max(pass, 0.05),
-    carry: Math.max(carry, 0.04),
-    duel,
+    pass: Math.max(pass * passDamp, 0.05),
+    carry: Math.max(carry * carryBoost, 0.04),
+    duel: duel * (0.55 + 0.7 * swarm),
     shot,
   };
 }
@@ -89,6 +100,9 @@ export function shotOutcomeChances(input: {
   keeperFatigue: number;
   defenderClose: boolean;
   defenderTackling: number;
+  /** Lost-ball rest defence is not set; shots are more likely to go in. */
+  transitionAttack?: boolean;
+  restCovers?: number;
 }): { onTarget: number; block: number; goalGivenOnTarget: number } {
   const quality = (input.shooting + input.form - input.fatigue) / 100;
   const onTarget = clamp(
@@ -96,8 +110,15 @@ export function shotOutcomeChances(input: {
     0.12,
     0.88,
   );
+  const isolated = isolationFactor(input.restCovers ?? 4);
   const block = input.defenderClose
-    ? clamp(0.15 + 0.35 * (input.defenderTackling / 100), 0.1, 0.55)
+    ? clamp(
+        (0.15 + 0.35 * (input.defenderTackling / 100)) *
+          (input.transitionAttack ? 0.5 : 1) /
+          isolated,
+        0.04,
+        0.55,
+      )
     : 0;
   const shotStr = contestStrength({
     attribute: input.shooting,
@@ -111,6 +132,9 @@ export function shotOutcomeChances(input: {
     fatigue: input.keeperFatigue,
     tacticBonus: input.keeperPositioning * 0.15,
   });
-  const goalGivenOnTarget = shotStr / (shotStr + gkStr * 1.2);
+  const goalGivenOnTarget =
+    (shotStr / (shotStr + gkStr * 1.2)) *
+    (input.transitionAttack ? 1.28 : 1) *
+    isolated;
   return { onTarget, block, goalGivenOnTarget };
 }

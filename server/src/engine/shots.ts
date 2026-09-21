@@ -22,6 +22,8 @@ import {
   requirePlayer,
 } from "./helpers.ts";
 import { shotOutcomeChances } from "./weights.ts";
+import { beginTransition, inGainedBall } from "./moments.ts";
+import { defendingPressure } from "./pressure.ts";
 
 function keeperOf(
   state: MatchState,
@@ -57,6 +59,12 @@ function resolveOutcome(
   const mouth = goalMouth(state.homeTeamId, shooter.teamId);
   const dist = distance(shooter.position, mouth);
   const close = defender ? distance(shooter.position, defender.position) < 8 : false;
+  const defendId = oppositionTeamId(
+    state.homeTeamId,
+    shooter.teamId,
+    state.awayTeamId,
+  );
+  const pressure = defendingPressure(state, defendId);
   const chances = shotOutcomeChances({
     shooting: shooter.attributes.shooting,
     form: shooter.form,
@@ -69,6 +77,8 @@ function resolveOutcome(
     keeperFatigue: keeper.fatigue,
     defenderClose: close,
     defenderTackling: defender?.attributes.tackling ?? 40,
+    transitionAttack: inGainedBall(state),
+    restCovers: pressure.restCovers,
   });
   const onTargetRoll = nextUnit(state.rng);
   if (onTargetRoll.n >= chances.onTarget) {
@@ -232,9 +242,8 @@ function stepSave(
     keeper: keeperInv,
     shooter: shooterInv,
   };
-  return {
-    event,
-    state: {
+  const saved = beginTransition(
+    {
       ...timed,
       phase: "open_play",
       ball: keeper.position,
@@ -243,6 +252,11 @@ function stepSave(
       pending: null,
       nextSeq: timed.nextSeq + 1,
     },
+    keeper.teamId,
+  );
+  return {
+    event,
+    state: saved,
   };
 }
 

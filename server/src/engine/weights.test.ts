@@ -101,4 +101,25 @@ describe("openPlayWeights", () => {
     expect(box.shot).toBeGreaterThan(midfield.shot);
     expect(midfield.shot).toBe(0);
   });
+
+  it("raises shot weight in the gained-ball window", () => {
+    const base = {
+      distanceToDefender: 16,
+      distanceToGoal: 18,
+      pressing: 40,
+      tempo: 50,
+      mentality: 55,
+      passing: 60,
+      dribbling: 60,
+      pace: 60,
+      shooting: 70,
+      form: 60,
+      fatigue: 10,
+      strikerBonus: true,
+    };
+    const settled = openPlayWeights(base);
+    const transition = openPlayWeights({ ...base, transitionAttack: true });
+    expect(transition.shot).toBeGreaterThan(settled.shot);
+    expect(transition.carry).toBeGreaterThan(settled.carry);
+  });
 });

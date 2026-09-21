@@ -1,3 +1,4 @@
+import type { FormationSlotId } from "./formations.ts";
 import type { MatchId, PlayerId, TeamId } from "./ids.ts";
 import type { CardColor, MatchClock, MatchPhase } from "./match-event.ts";
 import type { PitchPosition } from "./pitch.ts";
@@ -19,6 +20,8 @@ export type PlayerMatchStatus = {
   form: number;
   yellowCards: number;
   sentOff: boolean;
+  /** Formation slot when this player started; used for zonal shape. */
+  slot?: FormationSlotId;
 };
 
 export type Score = { home: number; away: number };
@@ -45,6 +48,18 @@ export type MatchState = {
   stoppageAllowanceSeconds: number;
   firstKickoffTeamId: TeamId;
   substitutionsUsed: { home: number; away: number };
+  /**
+   * Player-managed club. Auto-subs apply only to the other side (AI).
+   * Null means both teams are AI (rest-of-league fixtures).
+   */
+  humanTeamId: TeamId | null;
+  /**
+   * Team that just won the ball. Until `transitionUntilElapsed`, they are in
+   * gained-ball / the other side in lost-ball (Van Gaal moments).
+   */
+  transitionGainedTeamId: TeamId | null;
+  /** Period elapsed time when the 10s transition window ends. */
+  transitionUntilElapsed: number | null;
   /** Next event sequence number. */
   nextSeq: number;
 };

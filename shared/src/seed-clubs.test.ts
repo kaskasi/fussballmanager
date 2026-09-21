@@ -6,8 +6,29 @@ describe("seed squads", () => {
   it("gives each club 11 starters, a bench, and a fixed formation", () => {
     expect(squadIssues(SEED_MATCHUP.home)).toEqual([]);
     expect(squadIssues(SEED_MATCHUP.away)).toEqual([]);
-    expect(SEED_MATCHUP.home.tactics.formation).toBe("4-3-3");
-    expect(SEED_MATCHUP.away.tactics.formation).toBe("4-4-2");
+    expect(SEED_MATCHUP.home.tactics.keeperDuty).toBe("sweeper");
+    expect(SEED_MATCHUP.home.tactics.fullbackDuty).toEqual({
+      LB: "inside",
+      RB: "inside",
+    });
+    expect(SEED_MATCHUP.away.tactics.keeperDuty).toBe("stay");
+    expect(SEED_MATCHUP.home.tactics.dmDuty).toBe("hold");
+    expect(SEED_MATCHUP.home.tactics.cmDuty).toEqual({
+      LCM: "playmaker",
+      RCM: "mezzala",
+    });
+    expect(SEED_MATCHUP.home.tactics.wideDuty).toEqual({
+      left: "invert",
+      right: "invert",
+    });
+    expect(SEED_MATCHUP.home.tactics.strikerDuty.ST).toBe("false_nine");
+    expect(SEED_MATCHUP.away.tactics.cmDuty.LCM).toBe("box_to_box");
+    expect(SEED_MATCHUP.away.tactics.wideDuty.left).toBe("wide");
+    expect(SEED_MATCHUP.away.tactics.strikerDuty).toEqual({
+      ST: "poacher",
+      LST: "target",
+      RST: "poacher",
+    });
     expect(SEED_MATCHUP.home.bench).toHaveLength(7);
     expect(SEED_MATCHUP.away.bench).toHaveLength(7);
   });

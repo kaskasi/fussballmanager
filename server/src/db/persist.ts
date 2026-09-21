@@ -200,6 +200,7 @@ export async function playScheduledMatch(
     away,
     seed,
     matchId: asMatchId(matchId),
+    humanTeamId: home.team.id,
   });
   const { events, finalState } = simulate({
     state: initial,

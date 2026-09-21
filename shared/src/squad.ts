@@ -1,5 +1,6 @@
 import {
   awayKickoffPosition,
+  FORMATION_IDS,
   type FormationId,
   type FormationSlotId,
   getFormation,
@@ -7,8 +8,9 @@ import {
 } from "./formations.ts";
 import type { PitchPosition } from "./pitch.ts";
 import { isOnPitch } from "./pitch.ts";
-import type { Player, Team } from "./player.ts";
+import type { Player, PlayerRole, Team } from "./player.ts";
 import type { TeamTactics } from "./tactics.ts";
+import { FORMATION_PRESETS } from "./tactics.ts";
 
 export type StartingPlace = {
   player: Player;
@@ -102,5 +104,73 @@ export function kickoffLineup(
 }
 
 export function isFormationId(value: string): value is FormationId {
-  return value === "4-3-3" || value === "4-4-2";
+  return (FORMATION_IDS as readonly string[]).includes(value);
+}
+
+const ROLE_RANK: Record<PlayerRole, number> = {
+  GK: 0,
+  FB: 1,
+  CB: 2,
+  DM: 3,
+  CM: 4,
+  AM: 5,
+  W: 6,
+  ST: 7,
+};
+
+function roleFit(playerRole: PlayerRole, slotRole: PlayerRole): number {
+  if (playerRole === slotRole) {
+    return 0;
+  }
+  return Math.abs(ROLE_RANK[playerRole] - ROLE_RANK[slotRole]);
+}
+
+/**
+ * Re-seat a squad on a fixed formation. Players keep names/attributes;
+ * slot + role follow the template so the engine shape matches the XI.
+ */
+export function selectFormation(squad: Squad, formation: FormationId): Squad {
+  const slots = getFormation(formation);
+  const preset = FORMATION_PRESETS[formation];
+  const pool = [...squad.starters.map((place) => place.player)];
+  const starters = slots.map((slot) => {
+    let bestIndex = 0;
+    let bestFit = Number.POSITIVE_INFINITY;
+    for (let index = 0; index < pool.length; index += 1) {
+      const candidate = pool[index];
+      if (!candidate) {
+        continue;
+      }
+      const fit = roleFit(candidate.role, slot.role);
+      if (fit < bestFit) {
+        bestFit = fit;
+        bestIndex = index;
+      }
+    }
+    const chosen = pool.splice(bestIndex, 1)[0];
+    if (!chosen) {
+      throw new Error(`Not enough starters to fill ${formation}`);
+    }
+    return {
+      player: { ...chosen, role: slot.role },
+      slot: slot.id,
+    };
+  });
+  return {
+    ...squad,
+    starters,
+    tactics: {
+      ...squad.tactics,
+      formation,
+      pressing: preset.pressing,
+      lineHeight: preset.lineHeight,
+      intensity: preset.intensity,
+      keeperDuty: preset.keeperDuty,
+      fullbackDuty: preset.fullbackDuty,
+      dmDuty: preset.dmDuty,
+      cmDuty: preset.cmDuty,
+      wideDuty: preset.wideDuty,
+      strikerDuty: preset.strikerDuty,
+    },
+  };
 }

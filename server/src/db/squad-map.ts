@@ -24,7 +24,7 @@ const ROLES = new Set<PlayerRole>([
   "ST",
 ]);
 
-const FORMATIONS = new Set<FormationId>(["4-3-3", "4-4-2"]);
+const FORMATIONS = new Set<FormationId>(["4-3-3", "4-4-2", "2-3-5"]);
 
 export const DIVISION_ID = "regionalliga-nord";
 export const DIVISION_NAME = "Regionalliga Nord";
@@ -139,5 +139,49 @@ function parseTactics(tactics: TeamTactics, clubId: string): TeamTactics {
   return {
     ...tactics,
     teamId: asTeamId(clubId),
+    marking: tactics.marking === "man" ? "man" : "zonal",
+    keeperDuty: tactics.keeperDuty === "sweeper" ? "sweeper" : "stay",
+    fullbackDuty: {
+      LB: tactics.fullbackDuty?.LB === "inside" ? "inside" : "overlap",
+      RB: tactics.fullbackDuty?.RB === "inside" ? "inside" : "overlap",
+    },
+    dmDuty: tactics.dmDuty === "regista" ? "regista" : "hold",
+    cmDuty: {
+      LCM:
+        tactics.cmDuty?.LCM === "playmaker" || tactics.cmDuty?.LCM === "mezzala"
+          ? tactics.cmDuty.LCM
+          : "box_to_box",
+      RCM:
+        tactics.cmDuty?.RCM === "playmaker" || tactics.cmDuty?.RCM === "mezzala"
+          ? tactics.cmDuty.RCM
+          : "box_to_box",
+    },
+    wideDuty: {
+      left: tactics.wideDuty?.left === "invert" ? "invert" : "wide",
+      right: tactics.wideDuty?.right === "invert" ? "invert" : "wide",
+    },
+    strikerDuty: {
+      ST: parseStrikerDuty(tactics.strikerDuty?.ST),
+      LST: parseStrikerDuty(tactics.strikerDuty?.LST),
+      RST: parseStrikerDuty(tactics.strikerDuty?.RST),
+    },
+    lineHeight: clampStat(tactics.lineHeight ?? 50, 25, 90),
+    intensity: clampStat(tactics.intensity ?? 100, 80, 130),
   };
+}
+
+function clampStat(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+  return Math.min(max, Math.max(min, value));
+}
+
+function parseStrikerDuty(
+  duty: TeamTactics["strikerDuty"]["ST"] | undefined,
+): TeamTactics["strikerDuty"]["ST"] {
+  if (duty === "target" || duty === "false_nine") {
+    return duty;
+  }
+  return "poacher";
 }

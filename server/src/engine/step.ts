@@ -18,6 +18,8 @@ import { pickDuelInterruption, stepFoul, stepInjury } from "./discipline.ts";
 import { chooseOpenPlay } from "./open-play.ts";
 import { stepPass, stepTurnover } from "./possession.ts";
 import { resolvePending, stepShot } from "./shots.ts";
+import { clearTransition, settleTransition } from "./moments.ts";
+import { applyShape } from "./shape.ts";
 
 function withTactics(input: StepInput): MatchState {
   return {
@@ -115,6 +117,8 @@ function beginSecondHalf(state: MatchState): MatchState {
     lastPasserId: null,
     pending: null,
     players: movePlayer(state.players, kicker.playerId, spot),
+    transitionGainedTeamId: null,
+    transitionUntilElapsed: null,
   };
 }
 
@@ -142,8 +146,31 @@ function stepMatchEnd(state: MatchState): StepResult {
   };
 }
 
+function finalize(result: StepResult): StepResult {
+  if (result.event.type === "period_end" || result.event.type === "match_end") {
+    return {
+      ...result,
+      state: clearTransition(result.state),
+    };
+  }
+  const locked = new Set(
+    result.event.involved.map((player) => player.playerId),
+  );
+  return {
+    ...result,
+    state: {
+      ...result.state,
+      players: applyShape(result.state, locked),
+    },
+  };
+}
+
 export function step(input: StepInput): StepResult {
-  const state = withTactics(input);
+  return finalize(stepInner(input));
+}
+
+function stepInner(input: StepInput): StepResult {
+  const state = settleTransition(withTactics(input));
 
   if (state.clock.period === "full_time") {
     throw new Error("Match is over");

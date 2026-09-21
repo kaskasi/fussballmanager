@@ -3,6 +3,11 @@ import { asPlayerId, asTeamId } from "./ids.ts";
 import type { Player, PlayerAttributes, PlayerRole, Team } from "./player.ts";
 import type { Squad } from "./squad.ts";
 import type { TeamTactics } from "./tactics.ts";
+import {
+  DIRECT_LINE_DUTIES,
+  POSSESSION_LINE_DUTIES,
+  PYRAMID_LINE_DUTIES,
+} from "./tactics.ts";
 
 const ROLE_BASE: Record<PlayerRole, PlayerAttributes> = {
   GK: {
@@ -152,6 +157,10 @@ const nordsternTactics: TeamTactics = {
   pressing: 64,
   width: 62,
   tempo: 56,
+  marking: "zonal",
+  lineHeight: 56,
+  intensity: 105,
+  ...POSSESSION_LINE_DUTIES,
 };
 
 const rheinwachtTactics: TeamTactics = {
@@ -161,6 +170,10 @@ const rheinwachtTactics: TeamTactics = {
   pressing: 44,
   width: 50,
   tempo: 42,
+  marking: "man",
+  lineHeight: 48,
+  intensity: 95,
+  ...DIRECT_LINE_DUTIES,
 };
 
 /** Shirt 8 / 9 match the sample MatchEvent player ids. */
@@ -178,6 +191,45 @@ export const nordsternSquad: Squad = squad(
     [player(NORDSTERN_ID, "nord", 7, "Luca Merz", "CM", 62, 14), "RCM"],
     [player(NORDSTERN_ID, "nord", 11, "Levin Kruse", "W", 68, 6, { pace: 82 }), "LW"],
     [player(NORDSTERN_ID, "nord", 9, "Juri Holm", "ST", 72, 5, { shooting: 80 }), "ST"],
+    [player(NORDSTERN_ID, "nord", 10, "Sami Farouk", "W", 64, 13), "RW"],
+  ],
+  [
+    player(NORDSTERN_ID, "nord", 12, "Marlon Beck", "GK", 52, 2, { goalkeeping: 64 }),
+    player(NORDSTERN_ID, "nord", 13, "Henrik Vos", "CB", 54, 8),
+    player(NORDSTERN_ID, "nord", 14, "Ole Jensen", "FB", 55, 10),
+    player(NORDSTERN_ID, "nord", 15, "Can Yildiz", "CM", 58, 7),
+    player(NORDSTERN_ID, "nord", 16, "Nils Hartwig", "AM", 61, 4, { dribbling: 76 }),
+    player(NORDSTERN_ID, "nord", 17, "Bastian Orth", "W", 56, 11),
+    player(NORDSTERN_ID, "nord", 18, "Miro Petrov", "ST", 59, 6),
+  ],
+);
+
+/** Same Nordstern names, 1930s 2-3-5: two backs, three half-backs, five forwards. */
+export const nordsternPyramidSquad: Squad = squad(
+  nordsternTeam,
+  {
+    teamId: NORDSTERN_ID,
+    formation: "2-3-5",
+    mentality: 62,
+    pressing: 76,
+    width: 70,
+    tempo: 50,
+    marking: "zonal",
+    lineHeight: 74,
+    intensity: 115,
+    ...PYRAMID_LINE_DUTIES,
+  },
+  [
+    [player(NORDSTERN_ID, "nord", 1, "Elias Kranz", "GK", 61, 4, { goalkeeping: 76 }), "GK"],
+    [player(NORDSTERN_ID, "nord", 5, "Nico Bruns", "FB", 57, 12, { pace: 74 }), "LB"],
+    [player(NORDSTERN_ID, "nord", 2, "Malik Vogel", "FB", 60, 9, { dribbling: 64 }), "RB"],
+    [player(NORDSTERN_ID, "nord", 8, "Theo Brandt", "CM", 70, 7, { passing: 76 }), "LCM"],
+    [player(NORDSTERN_ID, "nord", 6, "Armin Seidel", "DM", 66, 8, { tackling: 74 }), "DM"],
+    [player(NORDSTERN_ID, "nord", 7, "Luca Merz", "CM", 62, 14), "RCM"],
+    [player(NORDSTERN_ID, "nord", 11, "Levin Kruse", "W", 68, 6, { pace: 82 }), "LW"],
+    [player(NORDSTERN_ID, "nord", 4, "Pavel Kolar", "ST", 63, 10, { aerial: 78 }), "LST"],
+    [player(NORDSTERN_ID, "nord", 9, "Juri Holm", "ST", 72, 5, { shooting: 80 }), "ST"],
+    [player(NORDSTERN_ID, "nord", 3, "Jonas Hildebrandt", "ST", 59, 11), "RST"],
     [player(NORDSTERN_ID, "nord", 10, "Sami Farouk", "W", 64, 13), "RW"],
   ],
   [

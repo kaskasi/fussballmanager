@@ -14,6 +14,7 @@ function toStatus(
   player: Player,
   position: { x: number; y: number },
   onPitch: boolean,
+  slot?: PlayerMatchStatus["slot"],
 ): PlayerMatchStatus {
   return {
     playerId: player.id,
@@ -26,6 +27,7 @@ function toStatus(
     form: player.form,
     yellowCards: 0,
     sentOff: false,
+    ...(slot ? { slot } : {}),
   };
 }
 
@@ -35,14 +37,20 @@ export function createInitialState(input: {
   seed: number;
   matchId?: MatchId;
   kickingTeamId?: TeamId;
+  /** Player club; omit or null for AI vs AI. */
+  humanTeamId?: TeamId | null;
 }): MatchState {
   const homeLineup = kickoffLineup(input.home, "home");
   const awayLineup = kickoffLineup(input.away, "away");
   const kickingTeamId = input.kickingTeamId ?? input.home.team.id;
 
   const players: PlayerMatchStatus[] = [
-    ...homeLineup.map((place) => toStatus(place.player, place.position, true)),
-    ...awayLineup.map((place) => toStatus(place.player, place.position, true)),
+    ...homeLineup.map((place) =>
+      toStatus(place.player, place.position, true, place.slot),
+    ),
+    ...awayLineup.map((place) =>
+      toStatus(place.player, place.position, true, place.slot),
+    ),
     ...input.home.bench.map((player) =>
       toStatus(player, { x: 2, y: 2 }, false),
     ),
@@ -89,6 +97,9 @@ export function createInitialState(input: {
     stoppageAllowanceSeconds: 0,
     firstKickoffTeamId: kickingTeamId,
     substitutionsUsed: { home: 0, away: 0 },
+    humanTeamId: input.humanTeamId ?? null,
+    transitionGainedTeamId: null,
+    transitionUntilElapsed: null,
     nextSeq: 0,
   };
 }

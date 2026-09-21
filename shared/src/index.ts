@@ -11,22 +11,41 @@ export type {
   FormationSlot,
   FormationSlotId,
 } from "./formations.ts";
-export { awayKickoffPosition, getFormation, getFormationSlot } from "./formations.ts";
+export { awayKickoffPosition, FORMATION_IDS, getFormation, getFormationSlot } from "./formations.ts";
 
 export type { KickoffPlace, Squad, StartingPlace } from "./squad.ts";
-export { assertValidSquad, kickoffLineup, squadIssues } from "./squad.ts";
+export { assertValidSquad, isFormationId, kickoffLineup, selectFormation, squadIssues } from "./squad.ts";
 
 export {
   NORDSTERN_ID,
   RHEINWACHT_ID,
   SEED_MATCHUP,
+  nordsternPyramidSquad,
   nordsternSquad,
   nordsternTeam,
   rheinwachtSquad,
   rheinwachtTeam,
 } from "./seed-clubs.ts";
 
-export type { TeamTactics } from "./tactics.ts";
+export type {
+  CentreMidDuty,
+  FormationPreset,
+  FullbackDuty,
+  HoldingDuty,
+  KeeperDuty,
+  LineDuties,
+  MarkingStyle,
+  StrikerDuty,
+  TeamTactics,
+  WideDuty,
+} from "./tactics.ts";
+export {
+  DEFAULT_LINE_CONTROL,
+  DIRECT_LINE_DUTIES,
+  FORMATION_PRESETS,
+  POSSESSION_LINE_DUTIES,
+  PYRAMID_LINE_DUTIES,
+} from "./tactics.ts";
 
 export type {
   CardColor,

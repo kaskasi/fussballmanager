@@ -5,6 +5,7 @@ import type {
   RngState,
 } from "@fussballmanager/shared";
 import { nextInt } from "@fussballmanager/shared";
+import { tickFatigue } from "./fatigue.ts";
 
 export const REGULATION_SECONDS = 45 * 60;
 
@@ -58,12 +59,17 @@ export function withTime(
   }
   const period =
     state.clock.period === "full_time" ? "second_half" : state.clock.period;
-  return {
+  const clock = clockFromElapsed(period, elapsed);
+  const advanced: MatchState = {
     ...state,
     rng: nextRng,
     periodElapsedSeconds: elapsed,
     stoppageAllowanceSeconds: allowance,
-    clock: clockFromElapsed(period, elapsed),
+    clock,
+  };
+  return {
+    ...advanced,
+    players: tickFatigue(advanced, Math.max(0, Math.round(seconds))),
   };
 }
 

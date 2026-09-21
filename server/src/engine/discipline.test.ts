@@ -45,7 +45,9 @@ describe("discipline", () => {
 
   it("sends a player off on a second yellow", () => {
     const state = afterKickoff();
-    const defender = onPitchFor(state.players, state.awayTeamId)[0];
+    const defender = onPitchFor(state.players, state.awayTeamId).find(
+      (player) => player.role !== "GK",
+    );
     expect(defender).toBeDefined();
     if (!defender) {
       return;
@@ -98,5 +100,76 @@ describe("discipline", () => {
       expect(sub.event.playerOn.playerId).not.toBe(victim.playerId);
     }
     expect(sub.state.substitutionsUsed.home).toBe(1);
+  });
+
+  it("does not auto-sub the human-managed team after an injury", () => {
+    const state = {
+      ...afterKickoff(),
+      humanTeamId: SEED_MATCHUP.home.team.id,
+    };
+    const victim = onPitchFor(state.players, state.homeTeamId).find(
+      (player) => player.role === "CM",
+    );
+    expect(victim).toBeDefined();
+    if (!victim) {
+      return;
+    }
+    let current = state;
+    let injury = stepInjury(current, victim.playerId);
+    for (
+      let i = 0;
+      i < 40 &&
+      injury.event.type === "injury" &&
+      injury.event.severity === "knock";
+      i += 1
+    ) {
+      current = { ...state, rng: injury.state.rng };
+      injury = stepInjury(current, victim.playerId);
+    }
+    expect(injury.event.type).toBe("injury");
+    if (injury.event.type !== "injury") {
+      return;
+    }
+    expect(injury.event.severity).not.toBe("knock");
+    expect(injury.state.pending).toBeNull();
+    const live = injury.state.players.find(
+      (player) => player.playerId === victim.playerId,
+    );
+    expect(live?.onPitch).toBe(false);
+    expect(onPitchFor(injury.state.players, state.homeTeamId)).toHaveLength(10);
+  });
+
+  it("still auto-subs an AI opponent when the human team is set", () => {
+    const state = {
+      ...afterKickoff(),
+      humanTeamId: SEED_MATCHUP.home.team.id,
+    };
+    const victim = onPitchFor(state.players, state.awayTeamId).find(
+      (player) => player.role === "CM",
+    );
+    expect(victim).toBeDefined();
+    if (!victim) {
+      return;
+    }
+    let current = state;
+    let injury = stepInjury(current, victim.playerId);
+    for (
+      let i = 0;
+      i < 40 &&
+      injury.event.type === "injury" &&
+      injury.event.severity === "knock";
+      i += 1
+    ) {
+      current = { ...state, rng: injury.state.rng };
+      injury = stepInjury(current, victim.playerId);
+    }
+    expect(injury.state.pending?.type).toBe("substitution");
+    const sub = step({
+      state: injury.state,
+      homeTactics: injury.state.homeTactics,
+      awayTactics: injury.state.awayTactics,
+    });
+    expect(sub.event.type).toBe("substitution");
+    expect(sub.state.substitutionsUsed.away).toBe(1);
   });
 });

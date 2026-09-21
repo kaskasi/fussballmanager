@@ -51,8 +51,10 @@ export function formatMatchLog(input: MatchLogInput): string {
 }
 
 export function parseSeed(argv: readonly string[], fallback = 2026): number {
-  const raw = argv[2];
-  if (raw === undefined || raw === "") {
+  const raw = argv.find(
+    (arg, index) => index >= 2 && !arg.startsWith("--") && arg !== "",
+  );
+  if (raw === undefined) {
     return fallback;
   }
   const seed = Number.parseInt(raw, 10);

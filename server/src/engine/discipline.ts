@@ -5,6 +5,7 @@ import type {
   PlayerId,
   PlayerMatchStatus,
   StepResult,
+  TeamId,
 } from "@fussballmanager/shared";
 import { nextUnit } from "@fussballmanager/shared";
 import { withTime } from "./clock.ts";
@@ -17,6 +18,10 @@ import {
 } from "./helpers.ts";
 
 const MAX_SUBS = 3;
+
+export function usesAutoSubs(state: MatchState, teamId: TeamId): boolean {
+  return state.humanTeamId === null || state.humanTeamId !== teamId;
+}
 
 function isSoleOnPitchGk(
   state: MatchState,
@@ -155,19 +160,28 @@ export function stepCard(
 ): StepResult {
   const player = requirePlayer(state.players, playerId);
   const sentOffRaw = color === "red" || color === "second_yellow";
-  const sentOff =
-    sentOffRaw &&
-    !(isSoleOnPitchGk(state, player) && !hasBenchGk(state, player.teamId));
+  const cannotReplaceGk =
+    isSoleOnPitchGk(state, player) &&
+    (!hasBenchGk(state, player.teamId) || !usesAutoSubs(state, player.teamId));
+  const sentOff = sentOffRaw && !cannotReplaceGk;
   const yellowCards =
     color === "yellow" || color === "second_yellow"
       ? player.yellowCards + 1
       : player.yellowCards;
   const timed = withTime(state, 1, state.rng);
+  const teamKey = player.teamId === timed.homeTeamId ? "home" : "away";
+  const gkSub =
+    sentOff &&
+    player.role === "GK" &&
+    hasBenchGk(timed, player.teamId) &&
+    timed.substitutionsUsed[teamKey] < MAX_SUBS &&
+    usesAutoSubs(timed, player.teamId);
+  const leavePitch = sentOff && !gkSub;
   const involved = asInvolved({
     ...player,
     yellowCards,
     sentOff,
-    onPitch: sentOff ? false : player.onPitch,
+    onPitch: leavePitch ? false : player.onPitch,
   });
   const event: MatchEvent = {
     type: "card",
@@ -180,12 +194,6 @@ export function stepCard(
     player: involved,
     color,
   };
-  const teamKey = player.teamId === timed.homeTeamId ? "home" : "away";
-  const gkSub =
-    sentOff &&
-    player.role === "GK" &&
-    hasBenchGk(timed, player.teamId) &&
-    timed.substitutionsUsed[teamKey] < MAX_SUBS;
   const pending = gkSub
     ? {
         type: "substitution" as const,
@@ -206,10 +214,10 @@ export function stepCard(
       players: updatePlayer(timed.players, playerId, {
         yellowCards,
         sentOff,
-        onPitch: sentOff ? false : player.onPitch,
+        onPitch: leavePitch ? false : player.onPitch,
       }),
       ballCarrierId:
-        sentOff && timed.ballCarrierId === playerId ? null : timed.ballCarrierId,
+        leavePitch && timed.ballCarrierId === playerId ? null : timed.ballCarrierId,
       pending,
       phase: pending ? timed.phase : "open_play",
       nextSeq: timed.nextSeq + 1,
@@ -240,7 +248,8 @@ export function stepInjury(
   };
   const teamKey = player.teamId === timed.homeTeamId ? "home" : "away";
   const gkLocked =
-    isSoleOnPitchGk(timed, player) && !hasBenchGk(timed, player.teamId);
+    isSoleOnPitchGk(timed, player) &&
+    (!hasBenchGk(timed, player.teamId) || !usesAutoSubs(timed, player.teamId));
   const leaves = severity !== "knock" && !gkLocked;
   const hasBench = timed.players.some(
     (candidate) =>
@@ -249,16 +258,24 @@ export function stepInjury(
       !candidate.sentOff &&
       candidate.playerId !== playerId,
   );
-  const canSub = leaves && hasBench && timed.substitutionsUsed[teamKey] < MAX_SUBS;
+  const canSub =
+    leaves &&
+    hasBench &&
+    timed.substitutionsUsed[teamKey] < MAX_SUBS &&
+    usesAutoSubs(timed, player.teamId);
+  const keepGkUntilSub = canSub && player.role === "GK";
+  const actuallyLeave = leaves && !keepGkUntilSub;
   return {
     event,
     state: {
       ...timed,
-      players: leaves
+      players: actuallyLeave
         ? updatePlayer(timed.players, playerId, { onPitch: false })
         : timed.players,
       ballCarrierId:
-        leaves && timed.ballCarrierId === playerId ? null : timed.ballCarrierId,
+        actuallyLeave && timed.ballCarrierId === playerId
+          ? null
+          : timed.ballCarrierId,
       pending: canSub
         ? { type: "substitution", teamId: player.teamId, playerOffId: playerId }
         : null,

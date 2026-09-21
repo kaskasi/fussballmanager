@@ -4,6 +4,7 @@ import type { InvolvedPlayer, MatchEvent, MatchClock } from "./match-event.ts";
 import type { MatchState } from "./match-state.ts";
 import { isOnPitch } from "./pitch.ts";
 import type { TeamTactics } from "./tactics.ts";
+import { DIRECT_LINE_DUTIES, POSSESSION_LINE_DUTIES } from "./tactics.ts";
 
 const matchId = asMatchId("match-sample");
 const homeId = asTeamId("fc-nordstern");
@@ -51,6 +52,10 @@ const homeTactics: TeamTactics = {
   pressing: 60,
   width: 58,
   tempo: 52,
+  marking: "zonal",
+  lineHeight: 56,
+  intensity: 105,
+  ...POSSESSION_LINE_DUTIES,
 };
 
 const awayTactics: TeamTactics = {
@@ -60,6 +65,10 @@ const awayTactics: TeamTactics = {
   pressing: 45,
   width: 50,
   tempo: 44,
+  marking: "man",
+  lineHeight: 48,
+  intensity: 95,
+  ...DIRECT_LINE_DUTIES,
 };
 
 const sampleAttributes = {
@@ -143,6 +152,9 @@ export const sampleState: MatchState = {
   stoppageAllowanceSeconds: 0,
   firstKickoffTeamId: homeId,
   substitutionsUsed: { home: 0, away: 0 },
+  humanTeamId: homeId,
+  transitionGainedTeamId: null,
+  transitionUntilElapsed: null,
   nextSeq: 14,
 };
 

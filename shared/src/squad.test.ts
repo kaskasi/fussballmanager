@@ -3,6 +3,7 @@ import { asPlayerId, asTeamId } from "./ids.ts";
 import type { Player } from "./player.ts";
 import { squadIssues } from "./squad.ts";
 import type { Squad } from "./squad.ts";
+import { DIRECT_LINE_DUTIES, DEFAULT_LINE_CONTROL } from "./tactics.ts";
 
 const teamId = asTeamId("test-club");
 
@@ -52,6 +53,9 @@ describe("squadIssues", () => {
         pressing: 50,
         width: 50,
         tempo: 50,
+        marking: "zonal",
+        ...DEFAULT_LINE_CONTROL,
+        ...DIRECT_LINE_DUTIES,
       },
       starters: slots.map((slot, index) => ({
         player: stubPlayer(index + 1),

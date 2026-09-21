@@ -1,7 +1,8 @@
 import type { PitchPosition } from "./pitch.ts";
 import type { PlayerRole } from "./player.ts";
 
-export type FormationId = "4-3-3" | "4-4-2";
+export const FORMATION_IDS = ["4-3-3", "4-4-2", "2-3-5"] as const;
+export type FormationId = (typeof FORMATION_IDS)[number];
 
 export type FormationSlotId =
   | "GK"
@@ -64,9 +65,24 @@ export const FORMATION_442: readonly FormationSlot[] = [
   slot("RST", "ST", 68, 62),
 ];
 
+export const FORMATION_235: readonly FormationSlot[] = [
+  slot("GK", "GK", 6, 50),
+  slot("LB", "FB", 24, 32),
+  slot("RB", "FB", 24, 68),
+  slot("LCM", "CM", 40, 22),
+  slot("DM", "DM", 38, 50),
+  slot("RCM", "CM", 40, 78),
+  slot("LW", "W", 70, 8),
+  slot("LST", "ST", 68, 32),
+  slot("ST", "ST", 74, 50),
+  slot("RST", "ST", 68, 68),
+  slot("RW", "W", 70, 92),
+];
+
 const FORMATIONS: Record<FormationId, readonly FormationSlot[]> = {
   "4-3-3": FORMATION_433,
   "4-4-2": FORMATION_442,
+  "2-3-5": FORMATION_235,
 };
 
 export function getFormation(id: FormationId): readonly FormationSlot[] {

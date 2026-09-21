@@ -81,9 +81,25 @@ export function commentate(event: MatchEvent, ctx: CommentaryContext): string {
     case "pass": {
       const from = ctx.playerName(event.from.playerId);
       const to = ctx.playerName(event.to.playerId);
-      return event.complete
-        ? `${from} finds ${to}.`
-        : `${from}'s pass towards ${to} doesn't come off.`;
+      if (!event.complete) {
+        if (event.kind === "cross") {
+          return `${from}'s cross towards ${to} doesn't find him.`;
+        }
+        if (event.kind === "through") {
+          return `${from}'s ball through to ${to} is cut out.`;
+        }
+        return `${from}'s pass towards ${to} doesn't come off.`;
+      }
+      if (event.kind === "cross") {
+        return `${from} crosses towards ${to}.`;
+      }
+      if (event.kind === "through") {
+        return `${from} slides ${to} through.`;
+      }
+      if (event.kind === "switch") {
+        return `${from} switches play to ${to}.`;
+      }
+      return `${from} finds ${to}.`;
     }
     case "carry":
       return `${ctx.playerName(event.player.playerId)} drives forward.`;
@@ -238,6 +254,9 @@ export function isCommentaryWorthy(
     return carryLength(event) >= 7;
   }
   if (event.type === "pass" && event.complete) {
+    if (event.kind === "cross" || event.kind === "through" || event.kind === "switch") {
+      return true;
+    }
     if (previous?.type === "pass" && previous.complete && passLength(event) < 14) {
       return false;
     }

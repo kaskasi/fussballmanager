@@ -72,7 +72,7 @@ export const PYRAMID_LINE_DUTIES: LineDuties = {
   dmDuty: "hold",
   cmDuty: { LCM: "box_to_box", RCM: "box_to_box" },
   wideDuty: { left: "wide", right: "wide" },
-  strikerDuty: { ST: "poacher", LST: "target", RST: "target" },
+  strikerDuty: { ST: "poacher", LST: "poacher", RST: "poacher" },
 };
 
 export const DEFAULT_LINE_CONTROL = {

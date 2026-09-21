@@ -488,7 +488,7 @@ export function stepRestart(
           { playerId: taker.playerId, position: spot },
         ]),
         pending: null,
-        ballInAir: true,
+        ballInAir: false,
         nextSeq: timed.nextSeq + 1,
       },
     };
@@ -526,7 +526,7 @@ export function stepRestart(
           { playerId: taker.playerId, position: spot },
         ]),
         pending: null,
-        ballInAir: true,
+        ballInAir: false,
         nextSeq: timed.nextSeq + 1,
       },
     };
@@ -564,7 +564,7 @@ export function stepRestart(
           { playerId: taker.playerId, position: spot },
         ]),
         pending: null,
-        ballInAir: true,
+        ballInAir: false,
         nextSeq: timed.nextSeq + 1,
       },
     };
@@ -647,7 +647,7 @@ export function stepRestart(
         { playerId: taker.playerId, position: corner },
       ]),
       pending: null,
-      ballInAir: true,
+      ballInAir: false,
       nextSeq: timed.nextSeq + 1,
     },
   };

@@ -117,6 +117,14 @@ export function squadFromRecords(
   return squad;
 }
 
+function shirtFromId(id: string): number {
+  const match = /(?:^|-)(\d+)$/.exec(id);
+  if (!match) {
+    return 0;
+  }
+  return Number.parseInt(match[1] ?? "0", 10);
+}
+
 function toPlayer(row: PlayerRecord): Player {
   if (!ROLES.has(row.role)) {
     throw new Error(`Unknown role ${row.role}`);
@@ -128,6 +136,7 @@ function toPlayer(row: PlayerRecord): Player {
     role: row.role,
     form: row.form,
     fatigue: row.fatigue,
+    shirt: shirtFromId(row.id),
     attributes: {
       ...row.attributes,
       heightCm: clampStat(row.attributes.heightCm ?? 180, 150, 215),

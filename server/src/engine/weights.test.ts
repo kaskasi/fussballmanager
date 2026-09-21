@@ -100,6 +100,7 @@ describe("openPlayWeights", () => {
     });
     expect(box.shot).toBeGreaterThan(midfield.shot);
     expect(midfield.shot).toBe(0);
+    expect(box.shot).toBeGreaterThan(box.pass);
   });
 
   it("carries through the D instead of shooting from 18 metres", () => {
@@ -127,6 +128,29 @@ describe("openPlayWeights", () => {
     });
     expect(fringe.carry).toBeGreaterThan(fringe.shot);
     expect(box.shot).toBeGreaterThan(box.carry);
+  });
+
+  it("shoots instead of dropping deep when no useful outlet is on", () => {
+    const shared = {
+      distanceToDefender: 10,
+      distanceToGoal: 14,
+      pressing: 40,
+      tempo: 50,
+      mentality: 55,
+      passing: 70,
+      dribbling: 60,
+      pace: 60,
+      shooting: 72,
+      form: 65,
+      fatigue: 8,
+      strikerBonus: true,
+    };
+    const withOptions = openPlayWeights({ ...shared, usefulOutlets: 3 });
+    const stuck = openPlayWeights({ ...shared, usefulOutlets: 0 });
+    expect(stuck.shot).toBeGreaterThan(stuck.pass);
+    expect(stuck.shot / stuck.pass).toBeGreaterThan(
+      withOptions.shot / withOptions.pass,
+    );
   });
 
   it("raises shot weight in the gained-ball window", () => {

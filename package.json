@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "vite",
+    "dev:server": "npm run dev -w @fussballmanager/server",
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w @fussballmanager/shared && npm run typecheck -w @fussballmanager/server",
     "test": "npm test -w @fussballmanager/shared && npm test -w @fussballmanager/server",
@@ -17,6 +18,7 @@
     "persist-match": "npm run persist-match -w @fussballmanager/server"
   },
   "dependencies": {
+    "@fussballmanager/shared": "*",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

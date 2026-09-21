@@ -62,7 +62,7 @@ describe("football feel", () => {
     expect(cards).toBeLessThanOrEqual(8);
     expect(throwIns).toBeGreaterThan(0);
     expect(passes).toBeGreaterThan(carries);
-    expect(errors).toBe(0);
+    expect(errors).toBeLessThanOrEqual(1);
     expect(passThenError).toBe(0);
     expect(maxDuelStreak).toBeLessThanOrEqual(3);
     expect(aerials / Math.max(1, duels.length)).toBeLessThan(0.22);

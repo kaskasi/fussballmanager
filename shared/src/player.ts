@@ -27,6 +27,8 @@ export type Player = {
   form: number;
   /** Pre-match fatigue, 0–100 (0 = fresh). */
   fatigue: number;
+  /** Squad shirt number, shown on the pitch and XI. */
+  shirt: number;
 };
 
 export type Team = {

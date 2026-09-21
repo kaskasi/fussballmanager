@@ -55,11 +55,15 @@ export type KickoffEvent = EventBase & {
   kickingTeamId: TeamId;
 };
 
+export type PassKind = "short" | "switch" | "cross" | "through" | "restart";
+
 export type PassEvent = EventBase & {
   type: "pass";
   from: InvolvedPlayer;
   to: InvolvedPlayer;
   complete: boolean;
+  /** How the pass was meant; omitted on older fixtures. */
+  kind?: PassKind;
 };
 
 export type CarryEvent = EventBase & {

@@ -189,6 +189,7 @@ function player(
     role,
     form,
     fatigue,
+    shirt,
     attributes: { ...scattered, ...overrides },
   };
 }

@@ -41,6 +41,17 @@ describe("formations", () => {
     expect(forwards).toHaveLength(5);
     expect(backs.every((place) => place.position.x < 30)).toBe(true);
     expect(forwards.every((place) => place.position.x > 60)).toBe(true);
+    const backXs = backs.map((place) => place.position.x);
+    const halfXs = halfBacks.map((place) => place.position.x);
+    const fwdXs = forwards.map((place) => place.position.x);
+    expect(Math.max(...backXs)).toBeLessThan(Math.min(...halfXs) - 8);
+    expect(Math.max(...halfXs)).toBeLessThan(Math.min(...fwdXs) - 20);
+    const spread = (places: typeof home) => {
+      const ys = places.map((place) => place.position.y);
+      return Math.max(...ys) - Math.min(...ys);
+    };
+    expect(spread(backs)).toBeLessThan(spread(halfBacks));
+    expect(spread(halfBacks)).toBeLessThan(spread(forwards));
   });
 
   it("selects a fixed formation onto an existing squad", () => {

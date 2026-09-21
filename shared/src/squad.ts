@@ -174,3 +174,154 @@ export function selectFormation(squad: Squad, formation: FormationId): Squad {
     },
   };
 }
+
+export type SandboxPlan = {
+  formation: FormationId;
+  mentality: number;
+  pressing: number;
+  width: number;
+  tempo: number;
+  lineHeight: number;
+  intensity: number;
+  marking: TeamTactics["marking"];
+  keeperDuty: TeamTactics["keeperDuty"];
+  fullbackDuty: TeamTactics["fullbackDuty"]["LB"];
+  wideDuty: TeamTactics["wideDuty"]["left"];
+  strikerDuty: TeamTactics["strikerDuty"]["ST"];
+};
+
+function clampStat(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
+export function sandboxPlanFromTactics(tactics: TeamTactics): SandboxPlan {
+  return {
+    formation: tactics.formation,
+    mentality: tactics.mentality,
+    pressing: tactics.pressing,
+    width: tactics.width,
+    tempo: tactics.tempo,
+    lineHeight: tactics.lineHeight,
+    intensity: tactics.intensity,
+    marking: tactics.marking,
+    keeperDuty: tactics.keeperDuty,
+    fullbackDuty: tactics.fullbackDuty.LB,
+    wideDuty: tactics.wideDuty.left,
+    strikerDuty: tactics.strikerDuty.ST,
+  };
+}
+
+export function sandboxPlanFromFormation(formation: FormationId): SandboxPlan {
+  const preset = FORMATION_PRESETS[formation];
+  return {
+    formation,
+    mentality: formation === "2-3-5" ? 62 : formation === "4-4-2" ? 46 : 58,
+    pressing: preset.pressing,
+    width: formation === "2-3-5" ? 70 : formation === "4-4-2" ? 50 : 62,
+    tempo: formation === "4-4-2" ? 42 : 56,
+    lineHeight: preset.lineHeight,
+    intensity: preset.intensity,
+    marking: formation === "4-4-2" ? "man" : "zonal",
+    keeperDuty: preset.keeperDuty,
+    fullbackDuty: preset.fullbackDuty.LB,
+    wideDuty: preset.wideDuty.left,
+    strikerDuty: preset.strikerDuty.ST,
+  };
+}
+
+/** Re-seat the XI, then overlay the sandbox sliders the engine actually reads. */
+export function applySandboxPlan(squad: Squad, plan: SandboxPlan): Squad {
+  const formation = isFormationId(plan.formation) ? plan.formation : squad.tactics.formation;
+  const seated = selectFormation(squad, formation);
+  const fullback = plan.fullbackDuty === "overlap" ? "overlap" : "inside";
+  const wide = plan.wideDuty === "invert" ? "invert" : "wide";
+  const striker =
+    plan.strikerDuty === "target" || plan.strikerDuty === "false_nine"
+      ? plan.strikerDuty
+      : "poacher";
+  return {
+    ...seated,
+    tactics: {
+      ...seated.tactics,
+      mentality: clampStat(plan.mentality, 0, 100),
+      pressing: clampStat(plan.pressing, 0, 100),
+      width: clampStat(plan.width, 0, 100),
+      tempo: clampStat(plan.tempo, 0, 100),
+      lineHeight: clampStat(plan.lineHeight, 25, 90),
+      intensity: clampStat(plan.intensity, 80, 130),
+      marking: plan.marking === "man" ? "man" : "zonal",
+      keeperDuty: plan.keeperDuty === "sweeper" ? "sweeper" : "stay",
+      fullbackDuty: { LB: fullback, RB: fullback },
+      wideDuty: { left: wide, right: wide },
+      strikerDuty: { ST: striker, LST: striker, RST: striker },
+    },
+  };
+}
+
+export function parseSandboxPlan(
+  raw: unknown,
+  fallback: SandboxPlan,
+): SandboxPlan {
+  if (!raw || typeof raw !== "object") {
+    return fallback;
+  }
+  const value = raw as Record<string, unknown>;
+  const formation =
+    typeof value.formation === "string" && isFormationId(value.formation)
+      ? value.formation
+      : fallback.formation;
+  const base =
+    formation !== fallback.formation
+      ? sandboxPlanFromFormation(formation)
+      : fallback;
+  const num = (key: string, current: number, min: number, max: number) =>
+    clampStat(
+      typeof value[key] === "number" ? (value[key] as number) : current,
+      min,
+      max,
+    );
+  const strikerRaw = value.strikerDuty;
+  const striker =
+    strikerRaw === "target" ||
+    strikerRaw === "false_nine" ||
+    strikerRaw === "poacher"
+      ? strikerRaw
+      : base.strikerDuty;
+  return {
+    formation,
+    mentality: num("mentality", base.mentality, 0, 100),
+    pressing: num("pressing", base.pressing, 0, 100),
+    width: num("width", base.width, 0, 100),
+    tempo: num("tempo", base.tempo, 0, 100),
+    lineHeight: num("lineHeight", base.lineHeight, 25, 90),
+    intensity: num("intensity", base.intensity, 80, 130),
+    marking:
+      value.marking === "man"
+        ? "man"
+        : value.marking === "zonal"
+          ? "zonal"
+          : base.marking,
+    keeperDuty:
+      value.keeperDuty === "sweeper"
+        ? "sweeper"
+        : value.keeperDuty === "stay"
+          ? "stay"
+          : base.keeperDuty,
+    fullbackDuty:
+      value.fullbackDuty === "overlap"
+        ? "overlap"
+        : value.fullbackDuty === "inside"
+          ? "inside"
+          : base.fullbackDuty,
+    wideDuty:
+      value.wideDuty === "invert"
+        ? "invert"
+        : value.wideDuty === "wide"
+          ? "wide"
+          : base.wideDuty,
+    strikerDuty: striker,
+  };
+}

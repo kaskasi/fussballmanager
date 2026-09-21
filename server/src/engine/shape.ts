@@ -1,15 +1,16 @@
-import type {
-  CentreMidDuty,
-  FullbackDuty,
-  HoldingDuty,
-  MatchState,
-  PitchPosition,
-  PlayerId,
-  PlayerMatchStatus,
-  PlayerRole,
-  StrikerDuty,
-  TeamTactics,
-  WideDuty,
+import {
+  getFormation,
+  type CentreMidDuty,
+  type FullbackDuty,
+  type HoldingDuty,
+  type MatchState,
+  type PitchPosition,
+  type PlayerId,
+  type PlayerMatchStatus,
+  type PlayerRole,
+  type StrikerDuty,
+  type TeamTactics,
+  type WideDuty,
 } from "@fussballmanager/shared";
 import {
   attackingSign,
@@ -23,6 +24,10 @@ import {
 import { inGainedBall, inLostBall } from "./moments.ts";
 
 export type LineDuty = "gk" | "defend" | "mid" | "attack";
+
+function isPyramid(tactics: TeamTactics): boolean {
+  return tactics.formation === "2-3-5";
+}
 
 /** Opposing 18-yard box starts here, measured from own goal (pitch units). */
 const OPP_BOX_DEPTH = 83;
@@ -132,6 +137,31 @@ export function strikerDutyFor(
   return tactics.strikerDuty.ST;
 }
 
+/** Formation home-lane, not live position — otherwise the pack ratchets onto the ball. */
+export function channelY(
+  player: PlayerMatchStatus,
+  tactics: TeamTactics,
+): number {
+  if (player.slot) {
+    const home = getFormation(tactics.formation).find(
+      (entry) => entry.id === player.slot,
+    );
+    if (home) {
+      return home.homePosition.y;
+    }
+  }
+  if (player.role === "W" || player.role === "FB") {
+    return isRightChannel(player) ? 84 : 16;
+  }
+  if (player.role === "CM") {
+    return isRightChannel(player) ? 68 : 32;
+  }
+  if (player.role === "CB") {
+    return isRightChannel(player) ? 62 : 38;
+  }
+  return 50;
+}
+
 export function depthFromOwnGoal(
   position: PitchPosition,
   ownGoal: PitchPosition,
@@ -152,6 +182,7 @@ export function offsideLineDepth(
   return depths[1] ?? depths[0] ?? 100;
 }
 
+/** Sit behind the second-last man. Laws flag offside past line + 1.2. */
 function stayOnside(
   player: PlayerMatchStatus,
   target: PitchPosition,
@@ -164,7 +195,7 @@ function stayOnside(
   }
   const line = offsideLineDepth(defenders, ownGoal, attackSign);
   const depth = depthFromOwnGoal(target, ownGoal, attackSign);
-  const shoulder = line + 2.4;
+  const shoulder = line - 1.8;
   if (depth <= shoulder) {
     return target;
   }
@@ -193,6 +224,9 @@ function coverFraction(player: PlayerMatchStatus, tactics?: TeamTactics): number
     return clamp(0.26 - height * 0.12, 0.12, 0.28);
   }
   if (player.role === "FB") {
+    if (tactics && isPyramid(tactics)) {
+      return clamp(0.26 - height * 0.12, 0.12, 0.28);
+    }
     const tucked = tactics && fullbackDutyFor(player, tactics) === "inside";
     return clamp((tucked ? 0.28 : 0.32) - height * 0.1 * press, 0.14, 0.34);
   }
@@ -218,7 +252,8 @@ export function zonalCoverTarget(
   tactics?: TeamTactics,
 ): PitchPosition {
   const along = lerp(ball, ownGoal, coverFraction(player, tactics));
-  const yMix = lerp(along, { x: along.x, y: player.position.y }, 0.35);
+  const lane = tactics ? channelY(player, tactics) : player.position.y;
+  const yMix = lerp(along, { x: along.x, y: lane }, 0.92);
   return clampPitch(yMix);
 }
 
@@ -272,8 +307,8 @@ export function triangleSpots(
   width: number,
   gainedBall: boolean,
 ): TriangleSpots {
-  const spread = 7 + (width / 100) * 7;
-  const ahead = gainedBall ? 11 : 8;
+  const spread = 18 + (width / 100) * 10;
+  const ahead = gainedBall ? 14 : 11;
   return {
     left: clampPitch({
       x: ball.x + attackSign * ahead,
@@ -284,7 +319,7 @@ export function triangleSpots(
       y: ball.y + spread,
     }),
     back: clampPitch({
-      x: ball.x - attackSign * 8,
+      x: ball.x - attackSign * 14,
       y: ball.y,
     }),
   };
@@ -363,17 +398,8 @@ export function triangleAssignments(
 ): Map<PlayerId, PitchPosition> {
   const used = new Set<PlayerId>([carrierId]);
   const assigned = new Map<PlayerId, PitchPosition>();
-  const forward = teammates.filter((player) => offersForwardTriangle(player, tactics));
   const drop = teammates.filter((player) => offersBackTriangle(player, tactics));
-  const leftId = assignClosest(forward, spots.left, used);
-  const rightId = assignClosest(forward, spots.right, used);
   const backId = assignClosest(drop, spots.back, used);
-  if (leftId) {
-    assigned.set(leftId, spots.left);
-  }
-  if (rightId) {
-    assigned.set(rightId, spots.right);
-  }
   if (backId) {
     assigned.set(backId, spots.back);
   }
@@ -454,13 +480,16 @@ function restAttackTargetAtBase(
     });
   }
   if (player.role === "CB") {
-    return atDepth(ownGoal, attackSign, 22, player.position.y);
+    return atDepth(ownGoal, attackSign, 22, channelY(player, tactics));
   }
   if (player.role === "FB") {
+    if (isPyramid(tactics)) {
+      return atDepth(ownGoal, attackSign, 20, channelY(player, tactics));
+    }
     const job = fullbackDutyFor(player, tactics);
     const right = isRightChannel(player);
     if (job === "inside") {
-      return atDepth(ownGoal, attackSign, 34, right ? 62 : 38);
+      return atDepth(ownGoal, attackSign, 34, right ? 76 : 24);
     }
     return atDepth(
       ownGoal,
@@ -470,46 +499,56 @@ function restAttackTargetAtBase(
     );
   }
   if (player.role === "DM") {
-    const depth = dmDutyFor(tactics) === "regista" ? 40 : 30;
-    return atDepth(ownGoal, attackSign, depth, 50 * 0.7 + ball.y * 0.3);
+    const depth = isPyramid(tactics)
+      ? 32
+      : dmDutyFor(tactics) === "regista"
+        ? 40
+        : 30;
+    return atDepth(ownGoal, attackSign, depth, 50 * 0.85 + ball.y * 0.15);
   }
   if (player.role === "CM") {
     const job = cmDutyFor(player, tactics);
-    const right = isRightChannel(player);
-    if (job === "playmaker") {
-      return clampPitch({
-        x: ball.x - attackSign * 8,
-        y: lerp(player.position, ball, 0.45).y,
-      });
-    }
-    if (job === "mezzala") {
+    const lane = channelY(player, tactics);
+    if (isPyramid(tactics)) {
       return atDepth(
         ownGoal,
         attackSign,
-        depthFromOwnGoal(ball, ownGoal, attackSign) + 6,
-        right ? 66 : 34,
+        38,
+        lerp({ x: 50, y: lane }, ball, 0.06).y,
       );
+    }
+    if (job === "playmaker") {
+      return atDepth(ownGoal, attackSign, 44, lerp({ x: 50, y: lane }, ball, 0.06).y);
+    }
+    if (job === "mezzala") {
+      return atDepth(ownGoal, attackSign, 64, lane);
     }
     return atDepth(
       ownGoal,
       attackSign,
-      depthFromOwnGoal(ball, ownGoal, attackSign) + 2,
-      lerp(player.position, ball, 0.3).y,
+      52,
+      lerp({ x: 50, y: lane }, ball, 0.08).y,
     );
   }
   if (player.role === "W" || player.role === "AM") {
     const right = isRightChannel(player);
     const wideJob = wideDutyFor(player, tactics);
     const wingSlot = player.slot === "LM" || player.slot === "RM";
+    const lane = channelY(player, tactics);
     if (player.role === "AM") {
-      return atDepth(ownGoal, attackSign, 62, lerp(player.position, ball, 0.4).y);
+      return atDepth(
+        ownGoal,
+        attackSign,
+        62,
+        lerp({ x: 50, y: lane }, ball, 0.14).y,
+      );
     }
     if (wideJob === "invert") {
       return atDepth(
         ownGoal,
         attackSign,
         wingSlot ? 52 : 74,
-        right ? 64 : 36,
+        right ? 82 : 18,
       );
     }
     return atDepth(
@@ -520,24 +559,104 @@ function restAttackTargetAtBase(
     );
   }
   const job = strikerDutyFor(player, tactics);
+  const lane = channelY(player, tactics);
+  const inside = player.slot === "LST" || player.slot === "RST";
   if (job === "false_nine") {
     const ballDepth = depthFromOwnGoal(ball, ownGoal, attackSign);
     return atDepth(
       ownGoal,
       attackSign,
       clamp(46 + ballDepth * 0.45, 48, 84),
-      lerp({ x: 50, y: 50 }, ball, 0.55).y,
+      lerp({ x: 50, y: inside ? lane : 50 }, ball, 0.08).y,
     );
   }
   if (job === "target") {
-    return atDepth(ownGoal, attackSign, 72, 50);
+    return atDepth(ownGoal, attackSign, 72, inside ? lane : 50);
   }
   return atDepth(
     ownGoal,
     attackSign,
     86,
-    clamp(ball.y * 0.4 + 50 * 0.6, 38, 62),
+    inside
+      ? lane
+      : clamp(ball.y * 0.22 + lane * 0.78, 38, 62),
   );
+}
+
+/** Ball wide in the final third: crash the box instead of parking on the D. */
+export function occupyBoxTarget(
+  player: PlayerMatchStatus,
+  ball: PitchPosition,
+  ownGoal: PitchPosition,
+  attackSign: 1 | -1,
+  tactics: TeamTactics,
+): PitchPosition | null {
+  const depth = depthFromOwnGoal(ball, ownGoal, attackSign);
+  if (depth < 66 || Math.abs(ball.y - 50) < 26) {
+    return null;
+  }
+  if (player.role === "ST") {
+    const job = strikerDutyFor(player, tactics);
+    const sit = job === "false_nine" ? 80 : job === "target" ? 86 : 90;
+    const lane = channelY(player, tactics);
+    return atDepth(
+      ownGoal,
+      attackSign,
+      sit,
+      clamp(lane * 0.82 + ball.y * 0.18, 22, 78),
+    );
+  }
+  if (player.role === "AM") {
+    return atDepth(ownGoal, attackSign, 82, 50);
+  }
+  if (player.role === "W") {
+    const right = isRightChannel(player);
+    const ballRight = ball.y >= 50;
+    if (right === ballRight) {
+      return null;
+    }
+    return atDepth(ownGoal, attackSign, 84, ballRight ? 42 : 58);
+  }
+  if (player.role === "CM" && cmDutyFor(player, tactics) === "mezzala") {
+    return atDepth(ownGoal, attackSign, 76, clamp(ball.y * 0.3 + 50 * 0.7, 40, 60));
+  }
+  return null;
+}
+
+/** Outfield attackers defend in lanes, not by collapsing onto the ball. */
+export function restDefendTarget(
+  player: PlayerMatchStatus,
+  ball: PitchPosition,
+  ownGoal: PitchPosition,
+  attackSign: 1 | -1,
+  tactics: TeamTactics,
+): PitchPosition {
+  const lane = channelY(player, tactics);
+  const y = lerp({ x: 50, y: lane }, ball, 0.06).y;
+  const line = isPyramid(tactics)
+    ? lineDepthBias(tactics) * 0.45
+    : lineDepthBias(tactics);
+  if (player.role === "W") {
+    const right = isRightChannel(player);
+    const wide = wideDutyFor(player, tactics) === "wide";
+    const hug = wide ? (right ? 88 : 12) : (right ? 82 : 18);
+    return atDepth(
+      ownGoal,
+      attackSign,
+      50 + line,
+      lerp({ x: 50, y: hug }, ball, 0.08).y,
+    );
+  }
+  if (player.role === "AM") {
+    return atDepth(ownGoal, attackSign, 48 + line, y);
+  }
+  if (player.role === "ST") {
+    return atDepth(ownGoal, attackSign, 56 + line, y);
+  }
+  if (player.role === "CM") {
+    return atDepth(ownGoal, attackSign, 40 + line, y);
+  }
+  return atDepth(ownGoal, attackSign, 34 + line, y);
 }
 
 /** CBs and stay-GKs never visit the far box; overlap FBs hug the touchline instead. */
@@ -557,15 +676,20 @@ export function clampBackLine(
   } else if (player.role === "CB") {
     depth = clamp(depth, 8, HALF_WAY + (tactics.lineHeight - 50) * 0.35);
   } else if (player.role === "FB") {
-    const job = fullbackDutyFor(player, tactics);
-    const line = lineDepthBias(tactics);
-    if (job === "inside") {
-      depth = clamp(depth, 10, 48 + line);
+    if (isPyramid(tactics)) {
+      depth = clamp(depth, 8, HALF_WAY + (tactics.lineHeight - 50) * 0.35);
       y = clamp(y, 28, 72);
     } else {
-      depth = Math.min(depth, 78 + Math.max(0, line));
-      if (depth > OPP_BOX_DEPTH - 8) {
-        y = y >= 50 ? 90 : 10;
+      const job = fullbackDutyFor(player, tactics);
+      const line = lineDepthBias(tactics);
+      if (job === "inside") {
+        depth = clamp(depth, 10, 48 + line);
+        y = clamp(y, 20, 80);
+      } else {
+        depth = Math.min(depth, 78 + Math.max(0, line));
+        if (depth > OPP_BOX_DEPTH - 8) {
+          y = y >= 50 ? 90 : 10;
+        }
       }
     }
   } else if (player.role === "DM") {
@@ -584,7 +708,7 @@ export function clampBackLine(
       }
     } else {
       depth = clamp(depth, 28, 88);
-      y = clamp(y, 28, 72);
+      y = clamp(y, 12, 88);
     }
   } else if (player.role === "ST") {
     const job = strikerDutyFor(player, tactics);
@@ -632,12 +756,15 @@ export function applyShape(
     attackTactics.width,
     inGainedBall(state),
   );
+  const trianglePool = attackers.filter(
+    (player) => distance(player.position, state.ball) <= 16,
+  );
   const triangle = carrier
-    ? triangleAssignments(carrier.playerId, attackers, spots, attackTactics)
+    ? triangleAssignments(carrier.playerId, trianglePool, spots, attackTactics)
     : new Map<PlayerId, PitchPosition>();
 
   return state.players.map((player) => {
-    if (!player.onPitch || player.sentOff || locked.has(player.playerId)) {
+    if (!player.onPitch || player.sentOff) {
       return player;
     }
     const defending = player.teamId !== attackId;
@@ -649,6 +776,13 @@ export function applyShape(
     );
     const teamTactics = defending ? defendTactics : attackTactics;
     const teamSign = attackingSign(state.homeTeamId, player.teamId);
+    const involved = locked.has(player.playerId);
+    const carrierLocked =
+      involved && player.playerId === state.ballCarrierId;
+    if (carrierLocked) {
+      return player;
+    }
+    let occupiedBox = false;
     let target: PitchPosition;
     if (player.role === "GK") {
       target = keeperTarget({
@@ -667,9 +801,28 @@ export function applyShape(
       target =
         defendTactics.marking === "man" && marked
           ? manMarkTarget(marked.position, ownGoal)
-          : zonalCoverTarget(player, state.ball, ownGoal, defendTactics);
+          : player.role === "CB" ||
+              player.role === "FB" ||
+              player.role === "DM"
+            ? zonalCoverTarget(player, state.ball, ownGoal, defendTactics)
+            : restDefendTarget(
+                player,
+                state.ball,
+                ownGoal,
+                teamSign,
+                defendTactics,
+              );
     } else {
+      const box = occupyBoxTarget(
+        player,
+        state.ball,
+        ownGoal,
+        teamSign,
+        attackTactics,
+      );
+      occupiedBox = box !== null;
       target =
+        box ??
         triangle.get(player.playerId) ??
         restAttackTarget(
           player,
@@ -683,16 +836,45 @@ export function applyShape(
     if (!defending) {
       target = stayOnside(player, target, ownGoal, teamSign, defenders);
     }
+    if (
+      !occupiedBox &&
+      (player.role === "CB" ||
+        player.role === "W" ||
+        player.role === "FB")
+    ) {
+      const lane = channelY(player, teamTactics);
+      const hold =
+        player.role === "CB" ||
+        (player.role === "FB" && isPyramid(teamTactics))
+          ? 0.7
+          : 0.4;
+      target = {
+        ...target,
+        y: lerp(target, { x: target.x, y: lane }, hold).y,
+      };
+    }
+    if (involved) {
+      target = { x: player.position.x, y: target.y };
+    }
+    if (!defending && !carrierLocked) {
+      target = stayOnside(player, target, ownGoal, teamSign, defenders);
+    }
     const lost = inLostBall(state, player.teamId);
     const beaten =
       defending &&
       lineDuty(player.role) === "attack" &&
       depthFromOwnGoal(player.position, ownGoal, teamSign) >
         depthFromOwnGoal(state.ball, ownGoal, teamSign) + 10;
+    const offside =
+      !defending &&
+      player.role !== "GK" &&
+      depthFromOwnGoal(player.position, ownGoal, teamSign) >
+        offsideLineDepth(defenders, ownGoal, teamSign) - 1.2;
     const maxStep =
       offBallMaxStep(player.attributes.pace) *
       (lost && defending ? 0.35 : 1) *
-      (beaten ? 0.4 : 1);
+      (beaten ? 0.4 : 1) *
+      (offside ? 2.4 : 1);
     const dist = distance(player.position, target);
     if (dist < 0.4) {
       return player;

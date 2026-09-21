@@ -4,10 +4,16 @@ import {
   asTeamId,
   DEFAULT_LINE_CONTROL,
   POSSESSION_LINE_DUTIES,
+  nordsternSquad,
+  rheinwachtSquad,
   type PlayerMatchStatus,
   type TeamTactics,
 } from "@fussballmanager/shared";
+import { createInitialState } from "./initial-state.ts";
+import { isOffsideReceiver } from "./laws.ts";
+import { distance } from "./helpers.ts";
 import {
+  applyShape,
   clampBackLine,
   cmDutyFor,
   fullbackDutyFor,
@@ -15,6 +21,7 @@ import {
   lineDuty,
   manMarkTarget,
   restAttackTarget,
+  restDefendTarget,
   strikerDutyFor,
   triangleAssignments,
   triangleSpots,
@@ -62,7 +69,7 @@ describe("marking targets", () => {
     );
   });
 
-  it("places two teammates ahead of the ball and one behind for a triangle", () => {
+  it("places one teammate behind the ball as a safe option", () => {
     const spots = triangleSpots({ x: 50, y: 50 }, 1, 60, false);
     expect(spots.left.x).toBeGreaterThan(50);
     expect(spots.right.x).toBeGreaterThan(50);
@@ -104,7 +111,8 @@ describe("marking targets", () => {
       ...DEFAULT_LINE_CONTROL,
       ...POSSESSION_LINE_DUTIES,
     });
-    expect(assigned.size).toBe(3);
+    expect(assigned.size).toBe(1);
+    expect(assigned.get(dm.playerId)).toEqual(spots.back);
     expect(lineDuty("CB")).toBe("defend");
     expect(lineDuty("CM")).toBe("mid");
     expect(lineDuty("ST")).toBe("attack");
@@ -172,7 +180,8 @@ describe("marking targets", () => {
     const overlap = restAttackTarget(lb, ball, ownGoal, 1, overlapTactics);
     expect(fullbackDutyFor(lb, insideTactics)).toBe("inside");
     expect(inside.x).toBeLessThan(50);
-    expect(inside.y).toBeGreaterThan(30);
+    expect(inside.y).toBeGreaterThan(20);
+    expect(inside.y).toBeLessThan(40);
     expect(overlap.x).toBeGreaterThan(inside.x);
     expect(overlap.y).toBeLessThan(20);
     const cb: PlayerMatchStatus = { ...lb, role: "CB", slot: "LCB", position: { x: 20, y: 40 } };
@@ -306,5 +315,210 @@ describe("marking targets", () => {
       intensity: 110,
     });
     expect(high.x).toBeGreaterThan(low.x);
+  });
+
+  it("does not send the far winger or a defending striker onto the ball", () => {
+    const ownGoal = { x: 0, y: 50 };
+    const ball = { x: 62, y: 12 };
+    const tactics: TeamTactics = {
+      teamId: asTeamId("home"),
+      formation: "4-3-3",
+      mentality: 55,
+      pressing: 50,
+      width: 62,
+      tempo: 50,
+      marking: "zonal",
+      ...DEFAULT_LINE_CONTROL,
+      ...POSSESSION_LINE_DUTIES,
+      wideDuty: { left: "wide", right: "wide" },
+    };
+    const rw: PlayerMatchStatus = {
+      playerId: asPlayerId("rw"),
+      teamId: asTeamId("home"),
+      role: "W",
+      slot: "RW",
+      position: { x: 64, y: 84 },
+      onPitch: true,
+      attributes: attrs,
+      fatigue: 0,
+      form: 50,
+      yellowCards: 0,
+      sentOff: false,
+    };
+    const st: PlayerMatchStatus = {
+      ...rw,
+      playerId: asPlayerId("st"),
+      role: "ST",
+      slot: "ST",
+      position: { x: 70, y: 50 },
+    };
+    const attackW = restAttackTarget(rw, ball, ownGoal, 1, tactics);
+    const defendSt = restDefendTarget(st, ball, ownGoal, 1, tactics);
+    expect(attackW.y).toBeGreaterThan(75);
+    expect(distance(defendSt, ball)).toBeGreaterThan(28);
+    const spots = triangleSpots(ball, 1, 62, false);
+    expect(Math.abs(spots.left.y - spots.right.y)).toBeGreaterThan(35);
+  });
+
+  it("keeps Nordstern's inverted 4-3-3 wider than a six-yard huddle", () => {
+    const state = createInitialState({
+      home: nordsternSquad,
+      away: rheinwachtSquad,
+      seed: 1,
+    });
+    const st = state.players.find(
+      (player) => player.teamId === nordsternSquad.team.id && player.role === "ST",
+    );
+    if (!st) {
+      throw new Error("missing ST");
+    }
+    const ball = { x: 58, y: 48 };
+    let current = {
+      ...state,
+      ball,
+      possessionTeamId: nordsternSquad.team.id,
+      ballCarrierId: st.playerId,
+      players: state.players.map((player) =>
+        player.playerId === st.playerId ? { ...player, position: ball } : player,
+      ),
+    };
+    for (let i = 0; i < 40; i += 1) {
+      current = {
+        ...current,
+        players: applyShape(current, new Set([st.playerId])),
+      };
+    }
+    const home = current.players.filter(
+      (player) =>
+        player.teamId === nordsternSquad.team.id &&
+        player.onPitch &&
+        player.role !== "GK",
+    );
+    const ys = home.map((player) => player.position.y);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(45);
+    const lw = home.find((player) => player.slot === "LW");
+    const rw = home.find((player) => player.slot === "RW");
+    expect(rw && lw && rw.position.y - lw.position.y).toBeGreaterThan(40);
+  });
+
+  it("peels event-locked teammates back into lanes so a pass cannot freeze a huddle", () => {
+    const state = createInitialState({
+      home: nordsternSquad,
+      away: rheinwachtSquad,
+      seed: 1,
+    });
+    const huddle = { x: 46, y: 48 };
+    const striker = nordsternSquad.starters.find((place) => place.slot === "ST");
+    if (!striker) {
+      throw new Error("missing ST");
+    }
+    const bunched = {
+      ...state,
+      ball: huddle,
+      possessionTeamId: nordsternSquad.team.id,
+      ballCarrierId: striker.player.id,
+      players: state.players.map((player) =>
+        player.role === "GK"
+          ? player
+          : { ...player, position: huddle },
+      ),
+    };
+    const locked = new Set(
+      bunched.players
+        .filter((player) => player.teamId === nordsternSquad.team.id)
+        .map((player) => player.playerId),
+    );
+    let current = bunched;
+    for (let i = 0; i < 12; i += 1) {
+      current = {
+        ...current,
+        players: applyShape(current, locked),
+      };
+    }
+    const home = current.players.filter(
+      (player) =>
+        player.teamId === nordsternSquad.team.id &&
+        player.onPitch &&
+        player.role !== "GK",
+    );
+    const lw = home.find((player) => player.slot === "LW");
+    const rw = home.find((player) => player.slot === "RW");
+    const lcb = home.find((player) => player.slot === "LCB");
+    const rcb = home.find((player) => player.slot === "RCB");
+    expect(rw && lw && rw.position.y - lw.position.y).toBeGreaterThan(40);
+    expect(rcb && lcb && rcb.position.y - lcb.position.y).toBeGreaterThan(16);
+  });
+
+  it("holds attackers behind the second-last defender, not on the far side of them", () => {
+    const state = createInitialState({
+      home: nordsternSquad,
+      away: rheinwachtSquad,
+      seed: 1,
+    });
+    const carrier = state.players.find(
+      (player) =>
+        player.teamId === nordsternSquad.team.id && player.slot === "DM",
+    );
+    if (!carrier) {
+      throw new Error("missing DM");
+    }
+    const ball = { x: 52, y: 50 };
+    let current = {
+      ...state,
+      ball,
+      possessionTeamId: nordsternSquad.team.id,
+      ballCarrierId: carrier.playerId,
+      players: state.players.map((player) => {
+        if (player.teamId === rheinwachtSquad.team.id && player.role === "GK") {
+          return { ...player, position: { x: 94, y: 50 } };
+        }
+        if (
+          player.teamId === rheinwachtSquad.team.id &&
+          (player.role === "CB" || player.role === "FB")
+        ) {
+          return { ...player, position: { x: 68, y: player.position.y } };
+        }
+        if (
+          player.teamId === nordsternSquad.team.id &&
+          (player.role === "ST" || player.role === "W")
+        ) {
+          return { ...player, position: { x: 86, y: player.position.y } };
+        }
+        if (player.playerId === carrier.playerId) {
+          return { ...player, position: ball };
+        }
+        return player;
+      }),
+    };
+    for (let i = 0; i < 16; i += 1) {
+      current = {
+        ...current,
+        players: applyShape(current, new Set()),
+      };
+    }
+    const defenders = current.players.filter(
+      (player) =>
+        player.teamId === rheinwachtSquad.team.id &&
+        player.onPitch &&
+        !player.sentOff,
+    );
+    const attackers = current.players.filter(
+      (player) =>
+        player.teamId === nordsternSquad.team.id &&
+        player.onPitch &&
+        (player.role === "ST" || player.role === "W" || player.role === "AM"),
+    );
+    expect(attackers.length).toBeGreaterThan(0);
+    for (const player of attackers) {
+      expect(
+        isOffsideReceiver({
+          receiver: player.position,
+          ball: current.ball,
+          defenders,
+          attackingTeamId: nordsternSquad.team.id,
+          homeTeamId: nordsternSquad.team.id,
+        }),
+      ).toBe(false);
+    }
   });
 });

@@ -13,8 +13,18 @@ export type {
 } from "./formations.ts";
 export { awayKickoffPosition, FORMATION_IDS, getFormation, getFormationSlot } from "./formations.ts";
 
-export type { KickoffPlace, Squad, StartingPlace } from "./squad.ts";
-export { assertValidSquad, isFormationId, kickoffLineup, selectFormation, squadIssues } from "./squad.ts";
+export type { KickoffPlace, SandboxPlan, Squad, StartingPlace } from "./squad.ts";
+export {
+  applySandboxPlan,
+  assertValidSquad,
+  isFormationId,
+  kickoffLineup,
+  sandboxPlanFromFormation,
+  sandboxPlanFromTactics,
+  parseSandboxPlan,
+  selectFormation,
+  squadIssues,
+} from "./squad.ts";
 
 export {
   NORDSTERN_ID,
@@ -77,6 +87,7 @@ export type {
   MatchPeriod,
   MatchPhase,
   PassEvent,
+  PassKind,
   PeriodEndEvent,
   RestartEvent,
   RestartPhase,
@@ -88,6 +99,16 @@ export type {
 } from "./match-event.ts";
 
 export type { MatchState, PendingFollowUp, PlayerMatchStatus, Score } from "./match-state.ts";
+
+export type {
+  MatchView,
+  MatchViewDot,
+  MatchViewFrame,
+  MatchViewLine,
+  MatchViewRosterPlayer,
+  MatchViewSide,
+} from "./match-view.ts";
+
 
 export { createRng, nextInt, nextRange, nextUnit, pickWeighted } from "./rng.ts";
 export type { RngState } from "./rng.ts";

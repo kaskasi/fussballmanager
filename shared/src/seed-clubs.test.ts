@@ -57,6 +57,9 @@ describe("seed squads", () => {
     expect(nordIds).toContain("nord-9");
     expect(rheinIds).toContain("rhein-1");
     expect(rheinIds).toContain("rhein-5");
+    expect(SEED_MATCHUP.home.starters.find((place) => place.slot === "ST")?.player.shirt).toBe(
+      9,
+    );
     expect(SEED_MATCHUP.home.team.id).toBe(NORDSTERN_ID);
     expect(SEED_MATCHUP.away.team.id).toBe(RHEINWACHT_ID);
     const homeCb = SEED_MATCHUP.home.starters.find((place) => place.slot === "LCB");

@@ -1,18 +1,16 @@
 import type {
   MatchEvent,
   MatchState,
+  PassKind,
   PlayerMatchStatus,
-  PlayerRole,
   StepResult,
 } from "@fussballmanager/shared";
-import { nextRange, nextUnit, pickWeighted } from "@fussballmanager/shared";
+import { nextRange, nextUnit } from "@fussballmanager/shared";
 import { withTime } from "./clock.ts";
 import {
   asInvolved,
-  clamp,
   clampPitch,
   distance,
-  goalMouth,
   lerp,
   nearest,
   onPitchFor,
@@ -20,89 +18,26 @@ import {
   requirePlayer,
 } from "./helpers.ts";
 import { bestLaneCover, interceptChance } from "./lanes.ts";
+import { pickPassTarget } from "./pass-graph.ts";
 import { defendingPressure } from "./pressure.ts";
 import { beginTransition, inLostBall } from "./moments.ts";
 import { passCompleteChance } from "./weights.ts";
 import { isOffsideReceiver, outOfPlayRestart } from "./laws.ts";
 
-/** Wide service prefers the six-yard/box, not a striker parked on the D. */
-export function widePassFeedWeight(input: {
-  passerWide: boolean;
-  targetRole: PlayerRole;
-  targetDistGoal: number;
-  targetY: number;
-}): number {
-  if (!input.passerWide) {
-    return 1;
-  }
-  const box =
-    input.targetDistGoal < 16 && Math.abs(input.targetY - 50) < 20 ? 1 : 0;
-  const close = clamp((18 - input.targetDistGoal) / 18, 0, 1);
-  const runner =
-    input.targetRole === "ST" ||
-    input.targetRole === "AM" ||
-    input.targetRole === "W"
-      ? 1.15
-      : 1;
-  return (1 + 2.2 * close + 1.6 * box) * runner;
-}
+export { widePassFeedWeight } from "./pass-graph.ts";
 
-function pickTeammate(
+export function stepPass(
   state: MatchState,
-  passer: PlayerMatchStatus,
-): { target: PlayerMatchStatus; rng: MatchState["rng"] } {
-  const teammates = onPitchFor(state.players, passer.teamId).filter(
-    (player) => player.playerId !== passer.playerId,
-  );
-  const outfield = teammates.filter((player) => player.role !== "GK");
-  const pool = outfield.length > 0 ? outfield : teammates;
-  if (pool.length === 0) {
-    throw new Error("No pass target on the pitch");
-  }
-  const mouth = goalMouth(state.homeTeamId, passer.teamId);
-  const passerWide =
-    passer.role === "W" ||
-    passer.role === "FB" ||
-    Math.abs(passer.position.y - 50) > 28;
-  const picked = pickWeighted(
-    state.rng,
-    pool.map((player) => {
-      const offside = isOffsideReceiver({
-        receiver: player.position,
-        ball: passer.position,
-        defenders: onPitchFor(
-          state.players,
-          passer.teamId === state.homeTeamId
-            ? state.awayTeamId
-            : state.homeTeamId,
-        ),
-        attackingTeamId: passer.teamId,
-        homeTeamId: state.homeTeamId,
-      });
-      const feed = widePassFeedWeight({
-        passerWide,
-        targetRole: player.role,
-        targetDistGoal: distance(player.position, mouth),
-        targetY: player.position.y,
-      });
-      return {
-        item: player,
-        weight:
-          (1 / (1 + distance(passer.position, player.position) / 8)) *
-          feed *
-          (offside ? 0.32 : 1),
-      };
-    }),
-  );
-  return { target: picked.item, rng: picked.rng };
-}
-
-export function stepPass(state: MatchState): StepResult {
+  kind?: PassKind,
+): StepResult {
   if (!state.possessionTeamId || !state.ballCarrierId) {
     throw new Error("Cannot pass without possession and a ball carrier");
   }
   const passer = requirePlayer(state.players, state.ballCarrierId);
-  const { target, rng } = pickTeammate(state, passer);
+  const picked = pickPassTarget(state, passer, kind);
+  const target = picked.target;
+  const passKind = picked.kind;
+  const rng = picked.rng;
   const defendId =
     passer.teamId === state.homeTeamId ? state.awayTeamId : state.homeTeamId;
   const defendTactics =
@@ -138,6 +73,8 @@ export function stepPass(state: MatchState): StepResult {
         form: passer.form,
         fatigue: passer.fatigue,
         pressing: pressure.pressing,
+        kind: passKind,
+        passerRole: passer.role,
       });
   const duration = nextRange(intercept.rng, 2, 6);
   const slice = nextRange(duration.rng, -34, 34);
@@ -262,6 +199,7 @@ export function stepPass(state: MatchState): StepResult {
       from,
       to,
       complete: false,
+      kind: passKind,
     };
     return {
       event,
@@ -289,7 +227,11 @@ export function stepPass(state: MatchState): StepResult {
   const ball = clampPitch(
     complete ? target.position : lerp(passerPos, target.position, 0.6),
   );
-  const air = distance(passer.position, target.position) > 24;
+  const air =
+    passKind === "cross" ||
+    passKind === "through" ||
+    (passKind === "restart" &&
+      distance(passer.position, target.position) > 28);
   if (!complete) {
     const loose = nearest(defenders, ball);
     if (loose) {
@@ -304,6 +246,7 @@ export function stepPass(state: MatchState): StepResult {
         from,
         to,
         complete: false,
+        kind: passKind,
       };
       return {
         event,
@@ -339,6 +282,7 @@ export function stepPass(state: MatchState): StepResult {
     from,
     to,
     complete,
+    kind: passKind,
   };
   return {
     event,

@@ -1,5 +1,37 @@
+import type { PlayerMatchStatus, TeamTactics } from "@fussballmanager/shared";
 import { clamp } from "./helpers.ts";
 import { isolationFactor } from "./pressure.ts";
+import { cmDutyFor, fullbackDutyFor } from "./shape.ts";
+
+/** 0–1.2: who is allowed to dribble. CBs almost never; overlap FBs often. */
+export function carryPermission(
+  player: PlayerMatchStatus,
+  tactics: TeamTactics,
+  distanceToGoal: number,
+): number {
+  switch (player.role) {
+    case "GK":
+      return 0.04;
+    case "CB":
+      return distanceToGoal > 55 ? 0.18 : 0.08;
+    case "FB":
+      return fullbackDutyFor(player, tactics) === "overlap" ? 1.18 : 0.42;
+    case "DM":
+      return 0.38;
+    case "CM":
+      return cmDutyFor(player, tactics) === "playmaker" ? 0.42 : 1.05;
+    case "AM":
+      return 1.05;
+    case "W":
+      return 1.08;
+    case "ST":
+      return distanceToGoal < 22 ? 1.12 : 0.48;
+    default: {
+      const _never: never = player.role;
+      return _never;
+    }
+  }
+}
 
 export type OpenPlayWeights = {
   pass: number;
@@ -27,6 +59,8 @@ export function openPlayWeights(input: {
   /** Teammates of the defending side still between ball and their goal. */
   restCovers?: number;
   localPress?: number;
+  /** Teammates who are actually on for a pass (not a long drop). */
+  usefulOutlets?: number;
 }): OpenPlayWeights {
   const proximity = clamp((16 - input.distanceToDefender) / 16, 0, 1);
   const freshness = clamp((input.form - input.fatigue) / 100, -0.25, 0.45);
@@ -36,6 +70,9 @@ export function openPlayWeights(input: {
     input.distanceToGoal > 12 && input.distanceToGoal < 24
       ? clamp(1 - Math.abs(input.distanceToGoal - 18) / 8, 0, 1)
       : 0;
+  const outlets = input.usefulOutlets;
+  const stuck =
+    goalThreat > 0.2 && outlets !== undefined && outlets === 0;
   const duel =
     proximity * (0.3 + 0.7 * (input.pressing / 100));
   const carry =
@@ -46,13 +83,16 @@ export function openPlayWeights(input: {
       0.08 * (input.tempo / 100) +
       freshness) *
     (1 - proximity * 0.35) *
-    (1 + 0.28 * fringe);
+    (1 + 0.28 * fringe) *
+    (stuck ? 1.15 : 1);
   const pass =
     (0.38 +
       0.55 * (input.passing / 100) +
       0.15 * (input.tempo / 100) +
       freshness) *
-    (1 - proximity * 0.15);
+    (1 - proximity * 0.15) *
+    (1 - 0.82 * goalThreat) *
+    (stuck ? 0.28 : 1);
   const isolated = isolationFactor(input.restCovers ?? 4);
   const shot =
     goalThreat *
@@ -63,12 +103,14 @@ export function openPlayWeights(input: {
       freshness) *
     (input.transitionAttack ? 1.35 : 1) *
     (1 + 0.18 * Math.max(0, isolated - 1)) *
-    (1 - 0.38 * fringe);
+    (1 + 0.85 * goalThreat) *
+    (stuck ? 2.35 : 1) *
+    (stuck ? 1 : 1 - 0.38 * fringe);
   const swarm = Math.min(input.localPress ?? 1, 6) / 4;
   const carryBoost = input.transitionAttack ? 1.12 : 1;
   const passDamp = input.transitionAttack ? 0.92 : 1;
   return {
-    pass: Math.max(pass * passDamp, 0.05),
+    pass: Math.max(pass * passDamp, goalThreat > 0.35 ? 0.02 : 0.05),
     carry: Math.max(carry * carryBoost, 0.04),
     duel: duel * (0.55 + 0.7 * swarm),
     shot,
@@ -80,9 +122,24 @@ export function passCompleteChance(input: {
   form: number;
   fatigue: number;
   pressing: number;
+  kind?: "short" | "switch" | "cross" | "through" | "restart";
+  passerRole?: string;
 }): number {
   const quality = (input.passing + input.form - input.fatigue) / 100;
-  return clamp(0.5 + 0.4 * quality - 0.25 * (input.pressing / 100), 0.2, 0.92);
+  const base = clamp(0.5 + 0.4 * quality - 0.25 * (input.pressing / 100), 0.2, 0.92);
+  if (input.kind === "restart" || input.passerRole === "GK") {
+    return clamp(base + 0.28, 0.74, 0.96);
+  }
+  if (input.kind === "cross") {
+    return clamp(base * 0.72, 0.18, 0.6);
+  }
+  if (input.kind === "through") {
+    return clamp(base * 0.8, 0.18, 0.7);
+  }
+  if (input.kind === "switch") {
+    return clamp(base * 0.9, 0.24, 0.84);
+  }
+  return base;
 }
 
 export function contestStrength(input: {

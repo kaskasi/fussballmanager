@@ -67,16 +67,16 @@ export const FORMATION_442: readonly FormationSlot[] = [
 
 export const FORMATION_235: readonly FormationSlot[] = [
   slot("GK", "GK", 6, 50),
-  slot("LB", "FB", 24, 32),
-  slot("RB", "FB", 24, 68),
-  slot("LCM", "CM", 40, 22),
-  slot("DM", "DM", 38, 50),
-  slot("RCM", "CM", 40, 78),
-  slot("LW", "W", 70, 8),
-  slot("LST", "ST", 68, 32),
+  slot("LB", "FB", 16, 38),
+  slot("RB", "FB", 16, 62),
+  slot("LCM", "CM", 36, 28),
+  slot("DM", "DM", 34, 50),
+  slot("RCM", "CM", 36, 72),
+  slot("LW", "W", 68, 10),
+  slot("LST", "ST", 70, 30),
   slot("ST", "ST", 74, 50),
-  slot("RST", "ST", 68, 68),
-  slot("RW", "W", 70, 92),
+  slot("RST", "ST", 70, 70),
+  slot("RW", "W", 68, 90),
 ];
 
 const FORMATIONS: Record<FormationId, readonly FormationSlot[]> = {

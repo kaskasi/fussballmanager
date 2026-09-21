@@ -11,11 +11,19 @@ import {
   periodTimeUp,
   withTime,
 } from "./clock.ts";
-import { asInvolved, movePlayer, onPitchFor, requirePlayer } from "./helpers.ts";
+import {
+  asInvolved,
+  attackingSign,
+  goalMouth,
+  movePlayer,
+  onPitchFor,
+  requirePlayer,
+} from "./helpers.ts";
 import { stepCarry } from "./carry.ts";
 import { stepDuel } from "./duels.ts";
 import { pickDuelInterruption, stepFoul, stepInjury } from "./discipline.ts";
 import { chooseOpenPlay } from "./open-play.ts";
+import { isGoalKickSituation, passKindForAction } from "./pass-graph.ts";
 import { stepPass, stepTurnover } from "./possession.ts";
 import { resolvePending, stepShot } from "./shots.ts";
 import { clearTransition, settleTransition } from "./moments.ts";
@@ -263,7 +271,22 @@ function stepInner(input: StepInput): StepResult {
   if (choice.action === "shot") {
     return stepShot(next);
   }
-  return stepPass(next);
+  const ownGoal = goalMouth(next.homeTeamId, carrier.teamId);
+  const attackSign = attackingSign(next.homeTeamId, carrier.teamId);
+  const kind = passKindForAction(
+    choice.action === "cross"
+      ? "cross"
+      : choice.action === "through"
+        ? "through"
+        : "pass",
+    carrier,
+    ownGoal,
+    attackSign,
+  );
+  if (choice.action === "pass" && isGoalKickSituation(carrier, ownGoal, attackSign)) {
+    return stepPass(next, "restart");
+  }
+  return stepPass(next, kind);
 }
 
 export function stepMany(

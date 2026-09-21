@@ -15,6 +15,7 @@ function stubPlayer(shirt: number): Player {
     role: "CM",
     form: 50,
     fatigue: 0,
+    shirt,
     attributes: {
       passing: 50,
       tackling: 50,

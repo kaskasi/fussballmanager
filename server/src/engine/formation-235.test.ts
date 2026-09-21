@@ -126,4 +126,50 @@ describe("2-3-5 pyramid vs a modern back four", () => {
       behind(pyramid, nordsternPyramidSquad.team.id, 40),
     ).toBeLessThan(behind(modern, nordsternSquad.team.id, 40));
   });
+
+  it("attacks in two-three-five bands, not a back three plus a front five", () => {
+    const state = createInitialState({
+      home: nordsternPyramidSquad,
+      away: rheinwachtSquad,
+      seed: 1,
+    });
+    const dm = state.players.find(
+      (player) =>
+        player.teamId === nordsternPyramidSquad.team.id && player.role === "DM",
+    );
+    if (!dm) {
+      throw new Error("missing DM");
+    }
+    const ball = { x: 48, y: 50 };
+    let current = {
+      ...state,
+      ball,
+      possessionTeamId: nordsternPyramidSquad.team.id,
+      ballCarrierId: dm.playerId,
+      players: state.players.map((player) =>
+        player.playerId === dm.playerId ? { ...player, position: ball } : player,
+      ),
+    };
+    for (let i = 0; i < 24; i += 1) {
+      current = {
+        ...current,
+        players: applyShape(current, new Set()),
+      };
+    }
+    const home = current.players.filter(
+      (player) =>
+        player.teamId === nordsternPyramidSquad.team.id && player.onPitch,
+    );
+    const xs = (role: PlayerMatchStatus["role"]) =>
+      home.filter((player) => player.role === role).map((player) => player.position.x);
+    const backs = xs("FB");
+    const halves = [...xs("DM"), ...xs("CM")];
+    const front = [...xs("W"), ...xs("ST")];
+    expect(Math.max(...backs)).toBeLessThan(Math.min(...halves));
+    expect(Math.max(...halves)).toBeLessThan(Math.min(...front));
+    const backYs = home
+      .filter((player) => player.role === "FB")
+      .map((player) => player.position.y);
+    expect(Math.max(...backYs) - Math.min(...backYs)).toBeLessThan(36);
+  });
 });

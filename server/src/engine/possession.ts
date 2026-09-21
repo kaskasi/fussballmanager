@@ -8,28 +8,19 @@ import { nextInt, nextRange, nextUnit } from "@fussballmanager/shared";
 import { advanceClock } from "./clock.ts";
 import {
   asInvolved,
-  clamp,
   clampPitch,
   lerp,
-  movePlayer,
   nearest,
   onPitchFor,
+  patchPlayers,
   requirePlayer,
 } from "./helpers.ts";
+import { passCompleteChance } from "./weights.ts";
 
 function oppositionPressing(state: MatchState, teamId: string): number {
   return teamId === state.homeTeamId
     ? state.awayTactics.pressing
     : state.homeTactics.pressing;
-}
-
-function passCompleteChance(
-  passer: PlayerMatchStatus,
-  pressing: number,
-): number {
-  const quality =
-    (passer.attributes.passing + passer.form - passer.fatigue) / 100;
-  return clamp(0.5 + 0.4 * quality - 0.25 * (pressing / 100), 0.2, 0.92);
 }
 
 function pickTeammate(
@@ -59,17 +50,26 @@ export function stepPass(state: MatchState): StepResult {
   const passer = requirePlayer(state.players, state.ballCarrierId);
   const { target, rng } = pickTeammate(state, passer);
   const roll = nextUnit(rng);
-  const complete =
-    roll.n < passCompleteChance(passer, oppositionPressing(state, passer.teamId));
+  const complete = roll.n < passCompleteChance({
+    passing: passer.attributes.passing,
+    form: passer.form,
+    fatigue: passer.fatigue,
+    pressing: oppositionPressing(state, passer.teamId),
+  });
   const duration = nextRange(roll.rng, 2, 6);
   const clock = advanceClock(state.clock, duration.n);
+  const passerPos = clampPitch(lerp(passer.position, target.position, 0.12));
+  const receiverPos = complete
+    ? target.position
+    : clampPitch(lerp(passer.position, target.position, 0.45));
   const ball = clampPitch(
-    complete
-      ? target.position
-      : lerp(passer.position, target.position, 0.6),
+    complete ? target.position : lerp(passerPos, target.position, 0.6),
   );
-  const from = asInvolved(passer);
-  const to = asInvolved(target);
+  const from = { ...asInvolved(passer), position: passerPos };
+  const to = {
+    ...asInvolved(target),
+    position: complete ? target.position : receiverPos,
+  };
 
   const event: MatchEvent = {
     type: "pass",
@@ -93,6 +93,12 @@ export function stepPass(state: MatchState): StepResult {
       ball,
       ballCarrierId: complete ? target.playerId : null,
       possessionTeamId: passer.teamId,
+      players: patchPlayers(state.players, [
+        { playerId: passer.playerId, position: passerPos },
+        ...(complete
+          ? []
+          : [{ playerId: target.playerId, position: receiverPos }]),
+      ]),
       rng: duration.rng,
       nextSeq: state.nextSeq + 1,
     },
@@ -136,7 +142,9 @@ export function stepTurnover(state: MatchState): StepResult {
       ball,
       ballCarrierId: winner.playerId,
       possessionTeamId: toTeamId,
-      players: movePlayer(state.players, winner.playerId, ball),
+      players: patchPlayers(state.players, [
+        { playerId: winner.playerId, position: ball },
+      ]),
       rng: duration.rng,
       nextSeq: state.nextSeq + 1,
     },

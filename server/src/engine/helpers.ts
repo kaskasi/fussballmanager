@@ -77,12 +77,30 @@ export function nearest(
   return best;
 }
 
+export function patchPlayers(
+  players: ReadonlyArray<PlayerMatchStatus>,
+  updates: ReadonlyArray<{ playerId: PlayerId; position: PitchPosition }>,
+): PlayerMatchStatus[] {
+  const byId = new Map(
+    updates.map((update) => [update.playerId, update.position]),
+  );
+  return players.map((player) => {
+    const position = byId.get(player.playerId);
+    return position ? { ...player, position } : player;
+  });
+}
+
 export function movePlayer(
   players: ReadonlyArray<PlayerMatchStatus>,
   playerId: PlayerId,
   position: PitchPosition,
 ): PlayerMatchStatus[] {
-  return players.map((player) =>
-    player.playerId === playerId ? { ...player, position } : player,
-  );
+  return patchPlayers(players, [{ playerId, position }]);
+}
+
+export function attackingSign(
+  homeTeamId: TeamId,
+  teamId: TeamId,
+): 1 | -1 {
+  return teamId === homeTeamId ? 1 : -1;
 }

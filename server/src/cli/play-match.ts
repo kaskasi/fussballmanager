@@ -29,6 +29,13 @@ function formatEvent(
   if (event.type === "pass") {
     return `${clock}  ${event.complete ? "pass" : "incomplete pass"}  ${who}`;
   }
+  if (event.type === "carry") {
+    return `${clock}  carry  ${who}`;
+  }
+  if (event.type === "duel") {
+    const winner = label.get(event.winnerId) ?? event.winnerId;
+    return `${clock}  duel (${event.kind})  ${who}  winner ${winner}`;
+  }
   if (event.type === "turnover") {
     return `${clock}  turnover  ${who}`;
   }
@@ -48,7 +55,7 @@ const { events, state } = stepMany(
     homeTactics: initial.homeTactics,
     awayTactics: initial.awayTactics,
   },
-  8,
+  20,
 );
 
 console.log(

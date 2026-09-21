@@ -38,3 +38,27 @@ export function nextRange(
   const rolled = nextUnit(rng);
   return { n: min + (max - min) * rolled.n, rng: rolled.rng };
 }
+
+export function pickWeighted<T>(
+  rng: RngState,
+  items: ReadonlyArray<{ item: T; weight: number }>,
+): { item: T; rng: RngState } {
+  if (items.length === 0) {
+    throw new Error("pickWeighted requires at least one item");
+  }
+  const weighted = items.filter((entry) => entry.weight > 0);
+  const pool = weighted.length > 0 ? weighted : [items[0]!];
+  const total = pool.reduce((sum, entry) => sum + entry.weight, 0);
+  const rolled = nextUnit(rng);
+  if (total <= 0) {
+    return { item: pool[0]!.item, rng: rolled.rng };
+  }
+  let cursor = rolled.n * total;
+  for (const entry of pool) {
+    cursor -= entry.weight;
+    if (cursor <= 0) {
+      return { item: entry.item, rng: rolled.rng };
+    }
+  }
+  return { item: pool[pool.length - 1]!.item, rng: rolled.rng };
+}

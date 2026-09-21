@@ -6,6 +6,9 @@ import type {
 } from "@fussballmanager/shared";
 import { advanceClock } from "./clock.ts";
 import { asInvolved, movePlayer, onPitchFor, requirePlayer } from "./helpers.ts";
+import { stepCarry } from "./carry.ts";
+import { stepDuel } from "./duels.ts";
+import { chooseOpenPlay } from "./open-play.ts";
 import { stepPass, stepTurnover } from "./possession.ts";
 
 function withTactics(input: StepInput): MatchState {
@@ -76,11 +79,19 @@ export function step(input: StepInput): StepResult {
   }
 
   const carrier = requirePlayer(state.players, state.ballCarrierId);
-  if (!onPitchFor(state.players, carrier.teamId).includes(carrier)) {
+  if (!onPitchFor(state.players, carrier.teamId).some((p) => p.playerId === carrier.playerId)) {
     return stepTurnover(state);
   }
 
-  return stepPass(state);
+  const choice = chooseOpenPlay(state);
+  const next = { ...state, rng: choice.rng };
+  if (choice.action === "duel" && choice.defender) {
+    return stepDuel(next, choice.defender);
+  }
+  if (choice.action === "carry") {
+    return stepCarry(next);
+  }
+  return stepPass(next);
 }
 
 export function stepMany(input: StepInput, count: number): {

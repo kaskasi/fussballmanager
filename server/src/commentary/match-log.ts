@@ -1,0 +1,60 @@
+import type { MatchEvent, Squad } from "@fussballmanager/shared";
+import {
+  commentateLine,
+  commentaryContextFromSquads,
+} from "./render.ts";
+
+export type MatchLogInput = {
+  home: Squad;
+  away: Squad;
+  seed: number;
+  events: readonly MatchEvent[];
+  finalScore: { home: number; away: number };
+};
+
+export function formatMatchLog(input: MatchLogInput): string {
+  const ctx = commentaryContextFromSquads(input.home, input.away);
+  const homeId = input.home.team.id;
+  let home = 0;
+  let away = 0;
+  const lines: string[] = [
+    `${input.home.team.name} vs ${input.away.team.name}`,
+    `seed ${input.seed}`,
+    "",
+  ];
+
+  for (const event of input.events) {
+    let line = commentateLine(event, ctx);
+    if (event.type === "goal") {
+      if (event.scorer.teamId === homeId) {
+        home += 1;
+      } else {
+        away += 1;
+      }
+      line += `  (${home}–${away})`;
+    }
+    lines.push(line);
+    if (event.type === "period_end" && event.period === "first_half") {
+      lines.push(
+        `HT ${input.home.team.name} ${home}–${away} ${input.away.team.name}`,
+      );
+      lines.push("");
+    }
+  }
+
+  lines.push("");
+  lines.push(
+    `FT ${input.home.team.name} ${input.finalScore.home}–${input.finalScore.away} ${input.away.team.name}`,
+  );
+  lines.push(`${input.events.length} events`);
+  return lines.join("\n");
+}
+
+export function parseSeed(argv: readonly string[], fallback = 2026): number {
+  const raw = argv[2];
+  if (raw === undefined || raw === "") {
+    return fallback;
+  }
+  const seed = Number.parseInt(raw, 10);
+  return Number.isFinite(seed) ? seed : fallback;
+}

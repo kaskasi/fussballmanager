@@ -37,6 +37,25 @@ export type MatchState = {
   homeTactics: TeamTactics;
   awayTactics: TeamTactics;
   rng: RngState;
+  lastPasserId: PlayerId | null;
+  pending: PendingFollowUp | null;
   /** Next event sequence number. */
   nextSeq: number;
 };
+
+export type PendingFollowUp =
+  | {
+      type: "save";
+      keeperId: PlayerId;
+      shooterId: PlayerId;
+    }
+  | {
+      type: "goal";
+      scorerId: PlayerId;
+      assistId?: PlayerId;
+    }
+  | {
+      type: "restart";
+      phase: "goal_kick" | "corner" | "kickoff";
+      takingTeamId: TeamId;
+    };

@@ -39,6 +39,18 @@ function formatEvent(
   if (event.type === "turnover") {
     return `${clock}  turnover  ${who}`;
   }
+  if (event.type === "shot") {
+    return `${clock}  shot (${event.outcome})  ${who}`;
+  }
+  if (event.type === "save") {
+    return `${clock}  save  ${who}`;
+  }
+  if (event.type === "goal") {
+    return `${clock}  GOAL  ${who}`;
+  }
+  if (event.type === "restart") {
+    return `${clock}  restart (${event.phase})  ${who}`;
+  }
   if (event.type === "kickoff") {
     return `${clock}  kickoff  ${who}`;
   }
@@ -55,7 +67,7 @@ const { events, state } = stepMany(
     homeTactics: initial.homeTactics,
     awayTactics: initial.awayTactics,
   },
-  20,
+  48,
 );
 
 console.log(

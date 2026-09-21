@@ -121,6 +121,7 @@ export function stepDuel(
       ball,
       ballCarrierId: winnerId,
       possessionTeamId: attackerWins ? attacker.teamId : defender.teamId,
+      lastPasserId: attackerWins ? state.lastPasserId : null,
       players: patchPlayers(state.players, [
         { playerId: attacker.playerId, position: attackerAfter.position },
         { playerId: defender.playerId, position: defenderAfter.position },

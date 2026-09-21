@@ -10,6 +10,7 @@ import { stepCarry } from "./carry.ts";
 import { stepDuel } from "./duels.ts";
 import { chooseOpenPlay } from "./open-play.ts";
 import { stepPass, stepTurnover } from "./possession.ts";
+import { resolvePending, stepShot } from "./shots.ts";
 
 function withTactics(input: StepInput): MatchState {
   return {
@@ -62,6 +63,10 @@ function stepKickoff(state: MatchState): StepResult {
 export function step(input: StepInput): StepResult {
   const state = withTactics(input);
 
+  if (state.pending) {
+    return resolvePending(state);
+  }
+
   if (state.phase === "pre_match" || state.phase === "kickoff") {
     return stepKickoff(state);
   }
@@ -90,6 +95,9 @@ export function step(input: StepInput): StepResult {
   }
   if (choice.action === "carry") {
     return stepCarry(next);
+  }
+  if (choice.action === "shot") {
+    return stepShot(next);
   }
   return stepPass(next);
 }

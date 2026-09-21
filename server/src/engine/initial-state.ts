@@ -83,6 +83,8 @@ export function createInitialState(input: {
     homeTactics: input.home.tactics,
     awayTactics: input.away.tactics,
     rng: createRng(input.seed),
+    lastPasserId: null,
+    pending: null,
     nextSeq: 0,
   };
 }

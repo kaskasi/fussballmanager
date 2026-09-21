@@ -93,6 +93,7 @@ export function stepPass(state: MatchState): StepResult {
       ball,
       ballCarrierId: complete ? target.playerId : null,
       possessionTeamId: passer.teamId,
+      lastPasserId: complete ? passer.playerId : null,
       players: patchPlayers(state.players, [
         { playerId: passer.playerId, position: passerPos },
         ...(complete
@@ -142,6 +143,7 @@ export function stepTurnover(state: MatchState): StepResult {
       ball,
       ballCarrierId: winner.playerId,
       possessionTeamId: toTeamId,
+      lastPasserId: null,
       players: patchPlayers(state.players, [
         { playerId: winner.playerId, position: ball },
       ]),

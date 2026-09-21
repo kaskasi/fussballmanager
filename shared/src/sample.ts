@@ -137,6 +137,8 @@ export const sampleState: MatchState = {
   homeTactics,
   awayTactics,
   rng: createRng(1),
+  lastPasserId: passerId,
+  pending: null,
   nextSeq: 14,
 };
 

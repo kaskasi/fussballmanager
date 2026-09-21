@@ -104,3 +104,15 @@ export function attackingSign(
 ): 1 | -1 {
   return teamId === homeTeamId ? 1 : -1;
 }
+
+export function oppositionTeamId(
+  homeTeamId: TeamId,
+  teamId: TeamId,
+  awayTeamId: TeamId,
+): TeamId {
+  return teamId === homeTeamId ? awayTeamId : homeTeamId;
+}
+
+export function goalMouth(homeTeamId: TeamId, attackingTeamId: TeamId): PitchPosition {
+  return attackingTeamId === homeTeamId ? { x: 100, y: 50 } : { x: 0, y: 50 };
+}

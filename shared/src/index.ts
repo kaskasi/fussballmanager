@@ -54,7 +54,7 @@ export type {
   TurnoverEvent,
 } from "./match-event.ts";
 
-export type { MatchState, PlayerMatchStatus, Score } from "./match-state.ts";
+export type { MatchState, PendingFollowUp, PlayerMatchStatus, Score } from "./match-state.ts";
 
 export { createRng, nextInt, nextRange, nextUnit, pickWeighted } from "./rng.ts";
 export type { RngState } from "./rng.ts";

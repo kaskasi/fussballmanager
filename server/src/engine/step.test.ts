@@ -3,7 +3,16 @@ import { describe, expect, it } from "vitest";
 import { createInitialState } from "./initial-state.ts";
 import { step, stepMany } from "./step.ts";
 
-const OPEN_PLAY = new Set(["pass", "carry", "duel", "turnover"]);
+const OPEN_PLAY = new Set([
+  "pass",
+  "carry",
+  "duel",
+  "turnover",
+  "shot",
+  "save",
+  "goal",
+  "restart",
+]);
 
 function play(seed: number, count: number) {
   const state = createInitialState({

@@ -1,0 +1,22 @@
+---
+description: "Match engine conventions"
+globs: ["server/engine/**", "server/match/**"]
+alwaysApply: false
+---
+# Match engine
+
+- Simulate event by event (passes, duels, chances, cards, injuries,
+  substitutions) — never resolve a match with a single probability roll.
+- The engine emits a single, ordered event stream per match. Both the text
+  commentary generator and the pitch-visualization renderer must consume
+  this same stream — don't build a second, separate simulation path for
+  either presentation layer.
+- Events should carry enough state (position, involved players, tactical
+  context) that both a text sentence and a pitch-coordinate update can be
+  derived from the same event without extra lookups.
+- Match outcomes should be shaped by team tactics, player attributes,
+  form, and fatigue — keep these as explicit inputs to event generation,
+  not hidden constants.
+- Prefer pure functions for event generation where practical (input:
+  match state + tactics → output: next event + updated state) to keep the
+  engine testable in isolation from the backend/API layer.

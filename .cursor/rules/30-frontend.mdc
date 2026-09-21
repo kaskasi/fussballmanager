@@ -1,0 +1,19 @@
+---
+description: "Frontend / UI conventions"
+globs: ["src/**/*.tsx", "src/**/*.ts"]
+alwaysApply: false
+---
+# Frontend
+
+- Text is the default medium (squad lists, reports, inbox, dialogue), but
+  it is not mandatory. Morale, financial health, match momentum,
+  staff/player quality, and relationships should be represented visually
+  (color, icons, small charts, AI-generated imagery) rather than as raw
+  numbers in a table, wherever that communicates better.
+- Pitch and stadium-editor visuals: SVG components, 2D only. No 3D
+  libraries, no WebGL unless explicitly requested.
+- Aim for a clean, colorful interface — not a dense spreadsheet and not a
+  terminal look.
+- Match commentary feed and pitch visualization are two views of the same
+  match-event stream; keep their data source shared (e.g. one hook/context
+  feeding both), not two independently polled/fetched states.

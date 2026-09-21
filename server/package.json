@@ -1,0 +1,19 @@
+{
+  "name": "@fussballmanager/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "play-match": "tsx src/cli/play-match.ts"
+  },
+  "dependencies": {
+    "@fussballmanager/shared": "*",
+    "fastify": "^5.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "tsx": "^4.19.3"
+  }
+}

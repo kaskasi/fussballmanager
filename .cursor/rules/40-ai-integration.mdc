@@ -1,0 +1,25 @@
+---
+description: "LLM and image-generation integration conventions"
+globs: ["server/ai/**", "server/llm/**"]
+alwaysApply: false
+---
+# AI integration
+
+- Local-first: text generation runs against a local model via Ollama.
+  Don't introduce a cloud LLM API call without being explicitly asked —
+  this includes convenience fallbacks "in case the local model is slow".
+- Staff-authored content (an assistant coach's tactical suggestion, a
+  scout's report, a fitness assessment) must have its quality/usefulness
+  gated by that staff member's in-game skill attribute. A low-rated staff
+  member's output should be visibly vaguer or less reliable than a
+  top-rated one's — don't generate uniform-quality output regardless of
+  the underlying attribute.
+- Press conferences, agent/player dialogue, and similar generated content
+  are not purely cosmetic — they can subtly affect morale/relationships.
+  When adding a new generated-content type, consider whether it should
+  feed back into morale/relationship state, not just render as flavor
+  text.
+- Image generation (icons, backgrounds, placeholders) is generated once
+  per asset and cached as a static file — never regenerated on every
+  render or every request. Treat generated images as build-time or
+  first-use assets, not live per-request output.

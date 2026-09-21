@@ -1,0 +1,28 @@
+{
+  "name": "fussballmanager",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "server"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w @fussballmanager/shared && npm run typecheck -w @fussballmanager/server",
+    "test": "npm test -w @fussballmanager/shared && npm test -w @fussballmanager/server",
+    "play-match": "npm run play-match -w @fussballmanager/server"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.4",
+    "vitest": "^3.1.2"
+  }
+}

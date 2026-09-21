@@ -6,7 +6,7 @@ import type {
   StepResult,
 } from "@fussballmanager/shared";
 import { nextRange, nextUnit, pickWeighted } from "@fussballmanager/shared";
-import { advanceClock } from "./clock.ts";
+import { withTime } from "./clock.ts";
 import {
   asInvolved,
   attackingSign,
@@ -88,7 +88,8 @@ export function stepDuel(
     y: contest.y,
   });
   const ball = winnerPos;
-  const clock = advanceClock(state.clock, duration.n);
+  const timed = withTime(state, duration.n, duration.rng);
+  const clock = timed.clock;
   const attackerAfter = {
     ...asInvolved(attacker),
     position: attackerWins ? ball : contest,
@@ -116,18 +117,16 @@ export function stepDuel(
   return {
     event,
     state: {
-      ...state,
-      clock,
+      ...timed,
       ball,
       ballCarrierId: winnerId,
       possessionTeamId: attackerWins ? attacker.teamId : defender.teamId,
-      lastPasserId: attackerWins ? state.lastPasserId : null,
-      players: patchPlayers(state.players, [
+      lastPasserId: attackerWins ? timed.lastPasserId : null,
+      players: patchPlayers(timed.players, [
         { playerId: attacker.playerId, position: attackerAfter.position },
         { playerId: defender.playerId, position: defenderAfter.position },
       ]),
-      rng: duration.rng,
-      nextSeq: state.nextSeq + 1,
+      nextSeq: timed.nextSeq + 1,
     },
   };
 }

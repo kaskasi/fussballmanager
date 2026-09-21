@@ -4,7 +4,7 @@ import type {
   StepResult,
 } from "@fussballmanager/shared";
 import { nextRange } from "@fussballmanager/shared";
-import { advanceClock } from "./clock.ts";
+import { withTime } from "./clock.ts";
 import {
   asInvolved,
   attackingSign,
@@ -32,7 +32,8 @@ export function stepCarry(state: MatchState): StepResult {
     x: from.x + sign * distance,
     y: from.y + yShift,
   });
-  const clock = advanceClock(state.clock, duration.n);
+  const timed = withTime(state, duration.n, duration.rng);
+  const clock = timed.clock;
   const player = { ...asInvolved(carrier), position: to };
 
   const event: MatchEvent = {
@@ -51,16 +52,14 @@ export function stepCarry(state: MatchState): StepResult {
   return {
     event,
     state: {
-      ...state,
-      clock,
+      ...timed,
       ball: to,
       ballCarrierId: carrier.playerId,
       possessionTeamId: carrier.teamId,
-      players: patchPlayers(state.players, [
+      players: patchPlayers(timed.players, [
         { playerId: carrier.playerId, position: to },
       ]),
-      rng: duration.rng,
-      nextSeq: state.nextSeq + 1,
+      nextSeq: timed.nextSeq + 1,
     },
   };
 }

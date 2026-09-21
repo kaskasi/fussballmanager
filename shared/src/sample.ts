@@ -139,6 +139,10 @@ export const sampleState: MatchState = {
   rng: createRng(1),
   lastPasserId: passerId,
   pending: null,
+  periodElapsedSeconds: 12 * 60 + 18,
+  stoppageAllowanceSeconds: 0,
+  firstKickoffTeamId: homeId,
+  substitutionsUsed: { home: 0, away: 0 },
   nextSeq: 14,
 };
 

@@ -85,6 +85,10 @@ export function createInitialState(input: {
     rng: createRng(input.seed),
     lastPasserId: null,
     pending: null,
+    periodElapsedSeconds: 0,
+    stoppageAllowanceSeconds: 0,
+    firstKickoffTeamId: kickingTeamId,
+    substitutionsUsed: { home: 0, away: 0 },
     nextSeq: 0,
   };
 }

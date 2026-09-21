@@ -12,6 +12,10 @@ const OPEN_PLAY = new Set([
   "save",
   "goal",
   "restart",
+  "foul",
+  "card",
+  "injury",
+  "substitution",
 ]);
 
 function play(seed: number, count: number) {

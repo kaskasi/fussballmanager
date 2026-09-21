@@ -1,5 +1,5 @@
 import type { MatchId, PlayerId, TeamId } from "./ids.ts";
-import type { MatchClock, MatchPhase } from "./match-event.ts";
+import type { CardColor, MatchClock, MatchPhase } from "./match-event.ts";
 import type { PitchPosition } from "./pitch.ts";
 import type { PlayerAttributes, PlayerRole } from "./player.ts";
 import type { RngState } from "./rng.ts";
@@ -39,6 +39,12 @@ export type MatchState = {
   rng: RngState;
   lastPasserId: PlayerId | null;
   pending: PendingFollowUp | null;
+  /** Seconds elapsed in the current period (including stoppage). */
+  periodElapsedSeconds: number;
+  /** Stoppage awarded for this period; 0 until regulation is reached. */
+  stoppageAllowanceSeconds: number;
+  firstKickoffTeamId: TeamId;
+  substitutionsUsed: { home: number; away: number };
   /** Next event sequence number. */
   nextSeq: number;
 };
@@ -56,6 +62,25 @@ export type PendingFollowUp =
     }
   | {
       type: "restart";
-      phase: "goal_kick" | "corner" | "kickoff";
+      phase: "goal_kick" | "corner" | "kickoff" | "free_kick";
       takingTeamId: TeamId;
+    }
+  | {
+      type: "card";
+      playerId: PlayerId;
+      color: CardColor;
+      thenRestart?: {
+        phase: "free_kick";
+        takingTeamId: TeamId;
+      };
+    }
+  | {
+      type: "injury";
+      playerId: PlayerId;
+      severity: "knock" | "off" | "stretcher";
+    }
+  | {
+      type: "substitution";
+      teamId: TeamId;
+      playerOffId: PlayerId;
     };

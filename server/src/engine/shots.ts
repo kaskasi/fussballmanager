@@ -8,7 +8,8 @@ import type {
   StepResult,
 } from "@fussballmanager/shared";
 import { nextRange, nextUnit } from "@fussballmanager/shared";
-import { advanceClock } from "./clock.ts";
+import { resolveDisciplinePending } from "./discipline.ts";
+import { withTime } from "./clock.ts";
 import {
   asInvolved,
   clampPitch,
@@ -150,7 +151,8 @@ export function stepShot(state: MatchState): StepResult {
           : resolved.outcome === "woodwork"
             ? clampPitch({ x: mouth.x, y: mouth.y + (yJitter.n < 0 ? -6 : 6) })
             : clampPitch({ x: mouth.x, y: yJitter.n < 0 ? 4 : 96 });
-  const clock = advanceClock(state.clock, duration.n);
+  const timed = withTime(state, duration.n, yJitter.rng);
+  const clock = timed.clock;
   const shooterInv = asInvolved(shooter);
   const assist = involvedAssist(state, shooter.playerId);
   const involved = assist ? [shooterInv, assist] : [shooterInv];
@@ -172,13 +174,12 @@ export function stepShot(state: MatchState): StepResult {
   return {
     event,
     state: {
-      ...state,
-      clock,
+      ...timed,
       ball,
       ballCarrierId: resolved.outcome === "save" ? keeper.playerId : null,
       possessionTeamId: shooter.teamId,
       lastPasserId: null,
-      pending: pendingAfterShot(resolved.outcome, state, shooter, keeper),
+      pending: pendingAfterShot(resolved.outcome, timed, shooter, keeper),
       phase:
         resolved.outcome === "goal"
           ? "goal_restart"
@@ -187,8 +188,7 @@ export function stepShot(state: MatchState): StepResult {
             : resolved.outcome === "block"
               ? "corner"
               : "open_play",
-      rng: yJitter.rng,
-      nextSeq: state.nextSeq + 1,
+      nextSeq: timed.nextSeq + 1,
     },
   };
 }
@@ -204,7 +204,10 @@ export function resolvePending(state: MatchState): StepResult {
   if (pending.type === "goal") {
     return stepGoal(state, pending.scorerId, pending.assistId);
   }
-  return stepRestart(state, pending.phase, pending.takingTeamId);
+  if (pending.type === "restart") {
+    return stepRestart(state, pending.phase, pending.takingTeamId);
+  }
+  return resolveDisciplinePending(state);
 }
 
 function stepSave(
@@ -214,7 +217,8 @@ function stepSave(
 ): StepResult {
   const keeper = requirePlayer(state.players, keeperId);
   const shooter = requirePlayer(state.players, shooterId);
-  const clock = advanceClock(state.clock, 1);
+  const timed = withTime(state, 1, state.rng);
+  const clock = timed.clock;
   const keeperInv = asInvolved(keeper);
   const shooterInv = asInvolved(shooter);
   const event: MatchEvent = {
@@ -231,14 +235,13 @@ function stepSave(
   return {
     event,
     state: {
-      ...state,
-      clock,
+      ...timed,
       phase: "open_play",
       ball: keeper.position,
       ballCarrierId: keeper.playerId,
       possessionTeamId: keeper.teamId,
       pending: null,
-      nextSeq: state.nextSeq + 1,
+      nextSeq: timed.nextSeq + 1,
     },
   };
 }
@@ -252,7 +255,8 @@ function stepGoal(
   const assist = assistId
     ? asInvolved(requirePlayer(state.players, assistId))
     : undefined;
-  const clock = advanceClock(state.clock, 1);
+  const timed = withTime(state, 1, state.rng);
+  const clock = timed.clock;
   const scorerInv = asInvolved(scorer);
   const homeScored = scorer.teamId === state.homeTeamId;
   const score = {
@@ -278,28 +282,28 @@ function stepGoal(
   return {
     event,
     state: {
-      ...state,
-      clock,
+      ...timed,
       score,
       phase: "goal_restart",
       possessionTeamId: conceding,
       ballCarrierId: null,
       pending: { type: "restart", phase: "kickoff", takingTeamId: conceding },
-      nextSeq: state.nextSeq + 1,
+      nextSeq: timed.nextSeq + 1,
     },
   };
 }
 
-function stepRestart(
+export function stepRestart(
   state: MatchState,
-  phase: "goal_kick" | "corner" | "kickoff",
+  phase: "goal_kick" | "corner" | "kickoff" | "free_kick",
   takingTeamId: MatchState["homeTeamId"],
 ): StepResult {
-  const clock = advanceClock(state.clock, 2);
+  const timed = withTime(state, 2, state.rng);
+  const clock = timed.clock;
   if (phase === "kickoff") {
     const kicker =
-      onPitchFor(state.players, takingTeamId).find((p) => p.role === "ST") ??
-      onPitchFor(state.players, takingTeamId)[0];
+      onPitchFor(timed.players, takingTeamId).find((p) => p.role === "ST") ??
+      onPitchFor(timed.players, takingTeamId)[0];
     if (!kicker) {
       throw new Error("No kicker for restart kickoff");
     }
@@ -307,8 +311,8 @@ function stepRestart(
     const kickerInv = { ...asInvolved(kicker), position: spot };
     const event: MatchEvent = {
       type: "restart",
-      seq: state.nextSeq,
-      matchId: state.matchId,
+      seq: timed.nextSeq,
+      matchId: timed.matchId,
       clock,
       ball: spot,
       involved: [kickerInv],
@@ -319,30 +323,29 @@ function stepRestart(
     return {
       event,
       state: {
-        ...state,
-        clock,
+        ...timed,
         phase: "kickoff",
         ball: spot,
         ballCarrierId: kicker.playerId,
         possessionTeamId: takingTeamId,
-        players: patchPlayers(state.players, [
+        players: patchPlayers(timed.players, [
           { playerId: kicker.playerId, position: spot },
         ]),
         pending: null,
-        nextSeq: state.nextSeq + 1,
+        nextSeq: timed.nextSeq + 1,
       },
     };
   }
 
   if (phase === "goal_kick") {
-    const keeper = keeperOf(state, takingTeamId);
+    const keeper = keeperOf(timed, takingTeamId);
     const spot =
-      takingTeamId === state.homeTeamId ? { x: 6, y: 50 } : { x: 94, y: 50 };
+      takingTeamId === timed.homeTeamId ? { x: 6, y: 50 } : { x: 94, y: 50 };
     const keeperInv = { ...asInvolved(keeper), position: spot };
     const event: MatchEvent = {
       type: "restart",
-      seq: state.nextSeq,
-      matchId: state.matchId,
+      seq: timed.nextSeq,
+      matchId: timed.matchId,
       clock,
       ball: spot,
       involved: [keeperInv],
@@ -353,36 +356,72 @@ function stepRestart(
     return {
       event,
       state: {
-        ...state,
-        clock,
+        ...timed,
         phase: "open_play",
         ball: spot,
         ballCarrierId: keeper.playerId,
         possessionTeamId: takingTeamId,
-        players: patchPlayers(state.players, [
+        players: patchPlayers(timed.players, [
           { playerId: keeper.playerId, position: spot },
         ]),
         pending: null,
-        nextSeq: state.nextSeq + 1,
+        nextSeq: timed.nextSeq + 1,
+      },
+    };
+  }
+
+  if (phase === "free_kick") {
+    const spot = timed.ball;
+    const taker =
+      nearest(onPitchFor(timed.players, takingTeamId), spot) ??
+      onPitchFor(timed.players, takingTeamId)[0];
+    if (!taker) {
+      throw new Error("No free-kick taker");
+    }
+    const takerInv = { ...asInvolved(taker), position: spot };
+    const event: MatchEvent = {
+      type: "restart",
+      seq: timed.nextSeq,
+      matchId: timed.matchId,
+      clock,
+      ball: spot,
+      involved: [takerInv],
+      possessionTeamId: takingTeamId,
+      phase: "free_kick",
+      takingTeamId,
+    };
+    return {
+      event,
+      state: {
+        ...timed,
+        phase: "open_play",
+        ball: spot,
+        ballCarrierId: taker.playerId,
+        possessionTeamId: takingTeamId,
+        players: patchPlayers(timed.players, [
+          { playerId: taker.playerId, position: spot },
+        ]),
+        pending: null,
+        nextSeq: timed.nextSeq + 1,
       },
     };
   }
 
   const corner = clampPitch({
-    x: takingTeamId === state.homeTeamId ? 98 : 2,
-    y: state.ball.y < 50 ? 4 : 96,
+    x: takingTeamId === timed.homeTeamId ? 98 : 2,
+    y: timed.ball.y < 50 ? 4 : 96,
   });
   const taker =
-    nearest(onPitchFor(state.players, takingTeamId), corner) ??
-    onPitchFor(state.players, takingTeamId)[0];
+    nearest(onPitchFor(timed.players, takingTeamId), corner) ??
+    onPitchFor(timed.players, takingTeamId)[0];
   if (!taker) {
     throw new Error("No corner taker");
   }
   const takerInv = { ...asInvolved(taker), position: corner };
   const event: MatchEvent = {
     type: "restart",
-    seq: state.nextSeq,
-    matchId: state.matchId,
+    seq: timed.nextSeq,
+    matchId: timed.matchId,
     clock,
     ball: corner,
     involved: [takerInv],
@@ -393,17 +432,17 @@ function stepRestart(
   return {
     event,
     state: {
-      ...state,
-      clock,
+      ...timed,
       phase: "open_play",
       ball: corner,
       ballCarrierId: taker.playerId,
       possessionTeamId: takingTeamId,
-      players: patchPlayers(state.players, [
+      players: patchPlayers(timed.players, [
         { playerId: taker.playerId, position: corner },
       ]),
       pending: null,
-      nextSeq: state.nextSeq + 1,
+      nextSeq: timed.nextSeq + 1,
     },
   };
 }
+

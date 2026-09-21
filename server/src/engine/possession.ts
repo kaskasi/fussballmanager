@@ -5,7 +5,7 @@ import type {
   StepResult,
 } from "@fussballmanager/shared";
 import { nextInt, nextRange, nextUnit } from "@fussballmanager/shared";
-import { advanceClock } from "./clock.ts";
+import { withTime } from "./clock.ts";
 import {
   asInvolved,
   clampPitch,
@@ -57,7 +57,8 @@ export function stepPass(state: MatchState): StepResult {
     pressing: oppositionPressing(state, passer.teamId),
   });
   const duration = nextRange(roll.rng, 2, 6);
-  const clock = advanceClock(state.clock, duration.n);
+  const timed = withTime(state, duration.n, duration.rng);
+  const clock = timed.clock;
   const passerPos = clampPitch(lerp(passer.position, target.position, 0.12));
   const receiverPos = complete
     ? target.position
@@ -87,21 +88,19 @@ export function stepPass(state: MatchState): StepResult {
   return {
     event,
     state: {
-      ...state,
-      clock,
+      ...timed,
       phase: "open_play",
       ball,
       ballCarrierId: complete ? target.playerId : null,
       possessionTeamId: passer.teamId,
       lastPasserId: complete ? passer.playerId : null,
-      players: patchPlayers(state.players, [
+      players: patchPlayers(timed.players, [
         { playerId: passer.playerId, position: passerPos },
         ...(complete
           ? []
           : [{ playerId: target.playerId, position: receiverPos }]),
       ]),
-      rng: duration.rng,
-      nextSeq: state.nextSeq + 1,
+      nextSeq: timed.nextSeq + 1,
     },
   };
 }
@@ -118,7 +117,8 @@ export function stepTurnover(state: MatchState): StepResult {
     throw new Error("No opponent available for turnover");
   }
   const duration = nextRange(state.rng, 1, 3);
-  const clock = advanceClock(state.clock, duration.n);
+  const timed = withTime(state, duration.n, duration.rng);
+  const clock = timed.clock;
   const ball = winner.position;
   const involved = [asInvolved(winner)];
 
@@ -138,17 +138,15 @@ export function stepTurnover(state: MatchState): StepResult {
   return {
     event,
     state: {
-      ...state,
-      clock,
+      ...timed,
       ball,
       ballCarrierId: winner.playerId,
       possessionTeamId: toTeamId,
       lastPasserId: null,
-      players: patchPlayers(state.players, [
+      players: patchPlayers(timed.players, [
         { playerId: winner.playerId, position: ball },
       ]),
-      rng: duration.rng,
-      nextSeq: state.nextSeq + 1,
+      nextSeq: timed.nextSeq + 1,
     },
   };
 }

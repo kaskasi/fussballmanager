@@ -1,0 +1,102 @@
+import { SEED_MATCHUP } from "@fussballmanager/shared";
+import { describe, expect, it } from "vitest";
+import { stepCard, stepFoul, stepInjury } from "./discipline.ts";
+import { createInitialState } from "./initial-state.ts";
+import { onPitchFor } from "./helpers.ts";
+import { step } from "./step.ts";
+
+function afterKickoff() {
+  const initial = createInitialState({
+    home: SEED_MATCHUP.home,
+    away: SEED_MATCHUP.away,
+    seed: 4,
+  });
+  return step({
+    state: initial,
+    homeTactics: initial.homeTactics,
+    awayTactics: initial.awayTactics,
+  }).state;
+}
+
+describe("discipline", () => {
+  it("emits a foul and follows up with a card and/or free kick", () => {
+    const state = afterKickoff();
+    const attacker = onPitchFor(state.players, state.homeTeamId)[0];
+    const defender = onPitchFor(state.players, state.awayTeamId)[0];
+    expect(attacker && defender).toBeTruthy();
+    if (!attacker || !defender) {
+      return;
+    }
+    const fouled = stepFoul(state, defender, attacker);
+    expect(fouled.event.type).toBe("foul");
+    expect(fouled.state.possessionTeamId).toBe(attacker.teamId);
+    expect(fouled.state.pending).not.toBeNull();
+
+    const follow = step({
+      state: fouled.state,
+      homeTactics: fouled.state.homeTactics,
+      awayTactics: fouled.state.awayTactics,
+    });
+    expect(["card", "restart"]).toContain(follow.event.type);
+    if (follow.event.type === "restart") {
+      expect(follow.event.phase).toBe("free_kick");
+    }
+  });
+
+  it("sends a player off on a second yellow", () => {
+    const state = afterKickoff();
+    const defender = onPitchFor(state.players, state.awayTeamId)[0];
+    expect(defender).toBeDefined();
+    if (!defender) {
+      return;
+    }
+    const carded = stepCard(state, defender.playerId, "second_yellow", undefined);
+    expect(carded.event.type).toBe("card");
+    const live = carded.state.players.find(
+      (player) => player.playerId === defender.playerId,
+    );
+    expect(live?.sentOff).toBe(true);
+    expect(live?.onPitch).toBe(false);
+    expect(onPitchFor(carded.state.players, defender.teamId)).toHaveLength(10);
+  });
+
+  it("can substitute an injured player who leaves the pitch", () => {
+    const state = afterKickoff();
+    const victim = onPitchFor(state.players, state.homeTeamId).find(
+      (player) => player.role === "CM",
+    );
+    expect(victim).toBeDefined();
+    if (!victim) {
+      return;
+    }
+    let current = state;
+    let injury = stepInjury(current, victim.playerId);
+    for (
+      let i = 0;
+      i < 40 &&
+      injury.event.type === "injury" &&
+      injury.event.severity === "knock";
+      i += 1
+    ) {
+      current = { ...state, rng: injury.state.rng };
+      injury = stepInjury(current, victim.playerId);
+    }
+    expect(injury.event.type).toBe("injury");
+    if (injury.event.type !== "injury") {
+      return;
+    }
+    expect(injury.event.severity).not.toBe("knock");
+    expect(injury.state.pending?.type).toBe("substitution");
+    const sub = step({
+      state: injury.state,
+      homeTactics: injury.state.homeTactics,
+      awayTactics: injury.state.awayTactics,
+    });
+    expect(sub.event.type).toBe("substitution");
+    if (sub.event.type === "substitution") {
+      expect(sub.event.playerOff.playerId).toBe(victim.playerId);
+      expect(sub.event.playerOn.playerId).not.toBe(victim.playerId);
+    }
+    expect(sub.state.substitutionsUsed.home).toBe(1);
+  });
+});

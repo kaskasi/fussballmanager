@@ -98,6 +98,16 @@ export function movePlayer(
   return patchPlayers(players, [{ playerId, position }]);
 }
 
+export function updatePlayer(
+  players: ReadonlyArray<PlayerMatchStatus>,
+  playerId: PlayerId,
+  patch: Partial<PlayerMatchStatus>,
+): PlayerMatchStatus[] {
+  return players.map((player) =>
+    player.playerId === playerId ? { ...player, ...patch } : player,
+  );
+}
+
 export function attackingSign(
   homeTeamId: TeamId,
   teamId: TeamId,

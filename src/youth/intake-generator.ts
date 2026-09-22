@@ -1,4 +1,5 @@
 import type { Attributes, Player, PositionPrimary } from "../types/player.ts";
+import { estimateCa, marketValue } from "../transfers/market-value.ts";
 
 /**
  * Yearly academy intake (PRD 03.1, defaults from PRD 07.2).
@@ -191,6 +192,7 @@ function generateOne(
   );
 
   const idNumber = input.idStart + index;
+  const position = INTAKE_POSITIONS[index] ?? "CM";
   return {
     id: `pl_${String(idNumber).padStart(5, "0")}`,
     name: {},
@@ -203,10 +205,18 @@ function generateOne(
     age: 15,
     club_id: input.clubId,
     squad_status: "u17",
-    position: INTAKE_POSITIONS[index] ?? "CM",
+    position,
     flexibility: [],
     contract: null,
-    market_value: 0,
+    market_value: marketValue({
+      ca: estimateCa(attributes, position),
+      age: 15,
+      monthsRemaining: 0,
+      wage: 0,
+      marketWage: 0,
+      demandFactor: 1,
+      reputationFactor: 1,
+    }),
     attributes,
     hidden: {
       anlage,

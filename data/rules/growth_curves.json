@@ -1,0 +1,7 @@
+{
+  "pace": { "decline_start": 25, "per_year": -1.5 },
+  "stamina": { "decline_start": 27, "per_year": -1.2 },
+  "strength": { "decline_start": 30, "per_year": -0.8 },
+  "all_other": { "decline_start": 32, "per_year": -0.3 },
+  "leadership": { "decline_start": null, "per_year": 0 }
+}

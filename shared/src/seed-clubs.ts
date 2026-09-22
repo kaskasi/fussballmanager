@@ -292,6 +292,7 @@ const nordsternTactics: TeamTactics = {
   marking: "zonal",
   lineHeight: 56,
   intensity: 105,
+  fluidity: 42,
   ...POSSESSION_LINE_DUTIES,
 };
 
@@ -305,6 +306,7 @@ const rheinwachtTactics: TeamTactics = {
   marking: "man",
   lineHeight: 48,
   intensity: 95,
+  fluidity: 22,
   ...DIRECT_LINE_DUTIES,
 };
 
@@ -349,6 +351,7 @@ export const nordsternPyramidSquad: Squad = squad(
     marking: "zonal",
     lineHeight: 74,
     intensity: 115,
+    fluidity: 34,
     ...PYRAMID_LINE_DUTIES,
   },
   [

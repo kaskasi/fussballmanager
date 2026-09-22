@@ -27,6 +27,12 @@ describe("buildMatchView", () => {
     }
     expect(view.kickoff.cue).toBeNull();
     expect(view.frames.some((frame) => frame.cue === "throw_in")).toBe(true);
+    expect(view.kickoff.stats.home.shots).toBe(0);
+    const last = view.frames.at(-1);
+    expect(last?.stats.home.goals).toBe(view.finalScore.home);
+    expect(last?.stats.away.goals).toBe(view.finalScore.away);
+    expect((last?.stats.home.shots ?? 0) + (last?.stats.away.shots ?? 0)).toBeGreaterThan(0);
+    expect(last?.stats.home.passes ?? 0).toBeGreaterThan(0);
     expect(view.finalScore.home + view.finalScore.away).toBeGreaterThanOrEqual(0);
   });
 

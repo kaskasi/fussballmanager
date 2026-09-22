@@ -69,6 +69,79 @@ body {
   font-size: 0.85rem;
 }
 
+.match-stats {
+  margin: 0.85rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid #d1fae5;
+}
+
+.match-stats ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.stat-teams,
+.match-stats li {
+  display: grid;
+  grid-template-columns: 3.2rem minmax(0, 1fr) 3.2rem;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.stat-teams {
+  margin-bottom: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #047857;
+}
+
+.stat-teams span:last-child,
+.stat-away {
+  text-align: right;
+}
+
+.stat-home,
+.stat-away {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.stat-mid {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.stat-label {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.stat-track {
+  display: flex;
+  height: 0.42rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #ecfdf5;
+}
+
+.stat-fill.home {
+  background: #f59e0b;
+}
+
+.stat-fill.away {
+  background: #2563eb;
+}
+
 .tactics-board {
   display: grid;
   grid-template-columns: 1fr 1fr;

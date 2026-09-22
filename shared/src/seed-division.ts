@@ -35,6 +35,7 @@ function tactics(
     pressing: preset.pressing,
     lineHeight: preset.lineHeight,
     intensity: preset.intensity,
+    fluidity: preset.fluidity,
     keeperDuty: preset.keeperDuty,
     fullbackDuty: preset.fullbackDuty,
     dmDuty: preset.dmDuty,

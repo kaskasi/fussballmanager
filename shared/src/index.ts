@@ -100,6 +100,15 @@ export type {
 
 export type { MatchState, PendingFollowUp, PlayerMatchStatus, Score } from "./match-state.ts";
 
+export type { MatchPairStats, MatchSideStats } from "./match-stats.ts";
+export {
+  applyMatchStatEvent,
+  emptyPairStats,
+  emptySideStats,
+  isShotOnTarget,
+  passCompletionPct,
+} from "./match-stats.ts";
+
 export type {
   MatchView,
   MatchViewDot,

@@ -43,6 +43,8 @@ export type TeamTactics = {
   lineHeight: number;
   /** 80–130. 100 = match pace; 120 burns legs, especially after the 60th minute. */
   intensity: number;
+  /** 0–100. How far outfield players may leave their slot. 0 sits on the dot. */
+  fluidity: number;
 } & LineDuties;
 
 /** Possession 4-3-3: inverted full-backs, inverted wingers, false nine. */
@@ -78,12 +80,14 @@ export const PYRAMID_LINE_DUTIES: LineDuties = {
 export const DEFAULT_LINE_CONTROL = {
   lineHeight: 50,
   intensity: 100,
+  fluidity: 30,
 } as const;
 
 export type FormationPreset = LineDuties & {
   lineHeight: number;
   intensity: number;
   pressing: number;
+  fluidity: number;
 };
 
 /** Fixed selectable shapes. Line/press/intensity are starting points, not hard-coded match rules. */
@@ -93,17 +97,20 @@ export const FORMATION_PRESETS: Record<FormationId, FormationPreset> = {
     lineHeight: 56,
     intensity: 105,
     pressing: 64,
+    fluidity: 42,
   },
   "4-4-2": {
     ...DIRECT_LINE_DUTIES,
     lineHeight: 48,
     intensity: 95,
     pressing: 44,
+    fluidity: 22,
   },
   "2-3-5": {
     ...PYRAMID_LINE_DUTIES,
     lineHeight: 74,
     intensity: 115,
     pressing: 76,
+    fluidity: 34,
   },
 };

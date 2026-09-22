@@ -55,6 +55,7 @@ const homeTactics: TeamTactics = {
   marking: "zonal",
   lineHeight: 56,
   intensity: 105,
+  fluidity: 42,
   ...POSSESSION_LINE_DUTIES,
 };
 
@@ -68,6 +69,7 @@ const awayTactics: TeamTactics = {
   marking: "man",
   lineHeight: 48,
   intensity: 95,
+  fluidity: 22,
   ...DIRECT_LINE_DUTIES,
 };
 

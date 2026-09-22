@@ -137,29 +137,44 @@ export function strikerDutyFor(
   return tactics.strikerDuty.ST;
 }
 
+/** Formation home-lane, stretched by the width slider. 50 keeps the slot. */
+export function widenedY(homeY: number, width: number): number {
+  const pinch = clamp(width, 0, 100) / 50;
+  return clamp(50 + (homeY - 50) * (0.72 + 0.28 * pinch), 4, 96);
+}
+
 /** Formation home-lane, not live position — otherwise the pack ratchets onto the ball. */
 export function channelY(
   player: PlayerMatchStatus,
   tactics: TeamTactics,
 ): number {
+  let home = 50;
   if (player.slot) {
-    const home = getFormation(tactics.formation).find(
+    const slot = getFormation(tactics.formation).find(
       (entry) => entry.id === player.slot,
     );
-    if (home) {
-      return home.homePosition.y;
+    if (slot) {
+      home = slot.homePosition.y;
     }
+  } else if (player.role === "W" || player.role === "FB") {
+    home = isRightChannel(player) ? 84 : 16;
+  } else if (player.role === "CM") {
+    home = isRightChannel(player) ? 68 : 32;
+  } else if (player.role === "CB") {
+    home = isRightChannel(player) ? 62 : 38;
   }
-  if (player.role === "W" || player.role === "FB") {
-    return isRightChannel(player) ? 84 : 16;
+  if (player.role === "GK") {
+    return 50;
   }
-  if (player.role === "CM") {
-    return isRightChannel(player) ? 68 : 32;
+  return widenedY(home, tactics.width);
+}
+
+/** How far this player may sit off the slot before shape reels them in. */
+export function strayLeash(fluidity: number, role: PlayerRole): number {
+  if (role === "GK") {
+    return 3.5;
   }
-  if (player.role === "CB") {
-    return isRightChannel(player) ? 62 : 38;
-  }
-  return 50;
+  return 0.45 + (clamp(fluidity, 0, 100) / 100) * 10;
 }
 
 export function depthFromOwnGoal(
@@ -489,13 +504,13 @@ function restAttackTargetAtBase(
     const job = fullbackDutyFor(player, tactics);
     const right = isRightChannel(player);
     if (job === "inside") {
-      return atDepth(ownGoal, attackSign, 34, right ? 76 : 24);
+      return atDepth(ownGoal, attackSign, 34, widenedY(right ? 76 : 24, tactics.width));
     }
     return atDepth(
       ownGoal,
       attackSign,
       68 + (tactics.width - 50) * 0.08,
-      right ? 90 : 10,
+      widenedY(right ? 90 : 10, tactics.width),
     );
   }
   if (player.role === "DM") {
@@ -548,14 +563,14 @@ function restAttackTargetAtBase(
         ownGoal,
         attackSign,
         wingSlot ? 52 : 74,
-        right ? 82 : 18,
+        widenedY(right ? 82 : 18, tactics.width),
       );
     }
     return atDepth(
       ownGoal,
       attackSign,
       wingSlot ? 54 : 72 + (tactics.width - 50) * 0.1,
-      right ? 90 : 10,
+      widenedY(right ? 90 : 10, tactics.width),
     );
   }
   const job = strikerDutyFor(player, tactics);
@@ -639,7 +654,9 @@ export function restDefendTarget(
   if (player.role === "W") {
     const right = isRightChannel(player);
     const wide = wideDutyFor(player, tactics) === "wide";
-    const hug = wide ? (right ? 88 : 12) : (right ? 82 : 18);
+    const hug = wide
+      ? widenedY(right ? 88 : 12, tactics.width)
+      : widenedY(right ? 82 : 18, tactics.width);
     return atDepth(
       ownGoal,
       attackSign,
@@ -688,7 +705,7 @@ export function clampBackLine(
       } else {
         depth = Math.min(depth, 78 + Math.max(0, line));
         if (depth > OPP_BOX_DEPTH - 8) {
-          y = y >= 50 ? 90 : 10;
+          y = widenedY(y >= 50 ? 90 : 10, tactics.width);
         }
       }
     }
@@ -704,7 +721,7 @@ export function clampBackLine(
     if (job === "wide") {
       depth = Math.min(depth, 80);
       if (depth > OPP_BOX_DEPTH - 8) {
-        y = y >= 50 ? 90 : 10;
+        y = widenedY(y >= 50 ? 90 : 10, tactics.width);
       }
     } else {
       depth = clamp(depth, 28, 88);
@@ -843,11 +860,13 @@ export function applyShape(
         player.role === "FB")
     ) {
       const lane = channelY(player, teamTactics);
+      const fluid = clamp(teamTactics.fluidity, 0, 100) / 100;
       const hold =
-        player.role === "CB" ||
+        (player.role === "CB" ||
         (player.role === "FB" && isPyramid(teamTactics))
           ? 0.7
-          : 0.4;
+          : 0.4) *
+        (1 - fluid * 0.55);
       target = {
         ...target,
         y: lerp(target, { x: target.x, y: lane }, hold).y,
@@ -876,10 +895,13 @@ export function applyShape(
       (beaten ? 0.4 : 1) *
       (offside ? 2.4 : 1);
     const dist = distance(player.position, target);
-    if (dist < 0.4) {
+    const leash =
+      offside || occupiedBox ? 0 : strayLeash(teamTactics.fluidity, player.role);
+    const slack = Math.max(0, dist - leash);
+    if (slack < 0.35) {
       return player;
     }
-    const t = Math.min(1, maxStep / dist);
+    const t = Math.min(maxStep, slack) / dist;
     return { ...player, position: lerp(player.position, target, t) };
   });
 }

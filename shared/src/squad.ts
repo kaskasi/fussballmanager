@@ -165,6 +165,7 @@ export function selectFormation(squad: Squad, formation: FormationId): Squad {
       pressing: preset.pressing,
       lineHeight: preset.lineHeight,
       intensity: preset.intensity,
+      fluidity: preset.fluidity,
       keeperDuty: preset.keeperDuty,
       fullbackDuty: preset.fullbackDuty,
       dmDuty: preset.dmDuty,
@@ -183,6 +184,7 @@ export type SandboxPlan = {
   tempo: number;
   lineHeight: number;
   intensity: number;
+  fluidity: number;
   marking: TeamTactics["marking"];
   keeperDuty: TeamTactics["keeperDuty"];
   fullbackDuty: TeamTactics["fullbackDuty"]["LB"];
@@ -206,6 +208,7 @@ export function sandboxPlanFromTactics(tactics: TeamTactics): SandboxPlan {
     tempo: tactics.tempo,
     lineHeight: tactics.lineHeight,
     intensity: tactics.intensity,
+    fluidity: tactics.fluidity,
     marking: tactics.marking,
     keeperDuty: tactics.keeperDuty,
     fullbackDuty: tactics.fullbackDuty.LB,
@@ -224,6 +227,7 @@ export function sandboxPlanFromFormation(formation: FormationId): SandboxPlan {
     tempo: formation === "4-4-2" ? 42 : 56,
     lineHeight: preset.lineHeight,
     intensity: preset.intensity,
+    fluidity: preset.fluidity,
     marking: formation === "4-4-2" ? "man" : "zonal",
     keeperDuty: preset.keeperDuty,
     fullbackDuty: preset.fullbackDuty.LB,
@@ -252,6 +256,7 @@ export function applySandboxPlan(squad: Squad, plan: SandboxPlan): Squad {
       tempo: clampStat(plan.tempo, 0, 100),
       lineHeight: clampStat(plan.lineHeight, 25, 90),
       intensity: clampStat(plan.intensity, 80, 130),
+      fluidity: clampStat(plan.fluidity, 0, 100),
       marking: plan.marking === "man" ? "man" : "zonal",
       keeperDuty: plan.keeperDuty === "sweeper" ? "sweeper" : "stay",
       fullbackDuty: { LB: fullback, RB: fullback },
@@ -298,6 +303,7 @@ export function parseSandboxPlan(
     tempo: num("tempo", base.tempo, 0, 100),
     lineHeight: num("lineHeight", base.lineHeight, 25, 90),
     intensity: num("intensity", base.intensity, 80, 130),
+    fluidity: num("fluidity", base.fluidity, 0, 100),
     marking:
       value.marking === "man"
         ? "man"

@@ -179,6 +179,7 @@ function parseTactics(tactics: TeamTactics, clubId: string): TeamTactics {
     },
     lineHeight: clampStat(tactics.lineHeight ?? 50, 25, 90),
     intensity: clampStat(tactics.intensity ?? 100, 80, 130),
+    fluidity: clampStat(tactics.fluidity ?? 30, 0, 100),
   };
 }
 

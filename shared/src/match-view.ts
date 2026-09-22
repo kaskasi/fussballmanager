@@ -3,6 +3,7 @@ import type { PitchPosition } from "./pitch.ts";
 import type { PlayerRole } from "./player.ts";
 import type { Score } from "./match-state.ts";
 import type { SandboxPlan } from "./squad.ts";
+import type { MatchPairStats } from "./match-stats.ts";
 
 /** On-pitch dots for one engine tick. Same seq as the match event. */
 export type MatchViewDot = {
@@ -24,6 +25,8 @@ export type MatchViewFrame = {
   ballInAir: boolean;
   /** Broadcast overlay; null on ordinary open-play ticks. */
   cue: "offside" | "throw_in" | null;
+  /** Running totals up to this tick, same event stream as commentary. */
+  stats: MatchPairStats;
 };
 
 export type MatchViewLine = {

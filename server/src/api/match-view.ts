@@ -10,6 +10,8 @@ import type {
 } from "@fussballmanager/shared";
 import {
   applySandboxPlan,
+  applyMatchStatEvent,
+  emptyPairStats,
   parseSandboxPlan,
   sandboxPlanFromTactics,
   SEED_MATCHUP,
@@ -42,7 +44,12 @@ function rosterOf(squad: Squad): MatchViewRosterPlayer[] {
   ];
 }
 
-function frameFrom(state: MatchState, seq: number, event?: MatchEvent): MatchViewFrame {
+function frameFrom(
+  state: MatchState,
+  seq: number,
+  event: MatchEvent | undefined,
+  stats: MatchViewFrame["stats"],
+): MatchViewFrame {
   let cue: MatchViewFrame["cue"] = null;
   if (event?.type === "turnover" && event.reason === "offside") {
     cue = "offside";
@@ -58,6 +65,10 @@ function frameFrom(state: MatchState, seq: number, event?: MatchEvent): MatchVie
     clock: state.clock,
     ballInAir: state.ballInAir,
     cue,
+    stats: {
+      home: { ...stats.home },
+      away: { ...stats.away },
+    },
     dots: state.players
       .filter((player) => player.onPitch && !player.sentOff)
       .map((player) => ({
@@ -105,11 +116,13 @@ export function buildMatchView(input: {
     humanTeamId: home.team.id,
   });
   const ctx = commentaryContextFromSquads(home, away);
-  const kickoff = frameFrom(initial, 0);
+  const stats = emptyPairStats();
+  const kickoff = frameFrom(initial, 0, undefined, stats);
   const frames: MatchViewFrame[] = [];
   const lines: MatchViewLine[] = [];
   let current = initial;
   let previousEvent: MatchEvent | undefined;
+  let running = stats;
 
   for (let i = 0; i < maxSteps; i += 1) {
     const result = step({
@@ -118,7 +131,8 @@ export function buildMatchView(input: {
       awayTactics: current.awayTactics,
     });
     current = result.state;
-    frames.push(frameFrom(current, result.event.seq, result.event));
+    running = applyMatchStatEvent(running, result.event, home.team.id);
+    frames.push(frameFrom(current, result.event.seq, result.event, running));
     if (isCommentaryWorthy(result.event, previousEvent)) {
       lines.push({
         seq: result.event.seq,

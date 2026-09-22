@@ -58,6 +58,16 @@ function Side({ label, plan, onChange }: SideProps) {
         />
       </label>
       <label>
+        Fluidity {plan.fluidity}
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={plan.fluidity}
+          onChange={(event) => set({ fluidity: Number(event.target.value) })}
+        />
+      </label>
+      <label>
         Tempo {plan.tempo}
         <input
           type="range"

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MatchViewFrame } from "@fussballmanager/shared";
+import { emptyPairStats } from "@fussballmanager/shared";
 import { frameDurationMs, holdPoint, lerp, mixDot, mixFrame } from "./lerp";
 
 const baseFrame = (): MatchViewFrame => ({
@@ -12,6 +13,7 @@ const baseFrame = (): MatchViewFrame => ({
   dots: [],
   ballInAir: false,
   cue: null,
+  stats: emptyPairStats(),
 });
 
 describe("pitch lerp", () => {

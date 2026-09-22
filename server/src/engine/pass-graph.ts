@@ -153,6 +153,52 @@ function canRunThrough(role: PlayerRole): boolean {
   );
 }
 
+/** Outfield opponents the ball goes beyond on the way to goal. */
+export function playersBypassed(
+  from: PitchPosition,
+  to: PitchPosition,
+  defenders: readonly PlayerMatchStatus[],
+  ownGoal: PitchPosition,
+  attackSign: 1 | -1,
+): number {
+  const fromDepth = depthFromOwnGoal(from, ownGoal, attackSign);
+  const toDepth = depthFromOwnGoal(to, ownGoal, attackSign);
+  if (toDepth <= fromDepth + 2) {
+    return 0;
+  }
+  let beaten = 0;
+  for (const defender of defenders) {
+    if (defender.role === "GK") {
+      continue;
+    }
+    const depth = depthFromOwnGoal(defender.position, ownGoal, attackSign);
+    if (depth > fromDepth + 1 && depth < toDepth - 0.5) {
+      beaten += 1;
+    }
+  }
+  return beaten;
+}
+
+/** Outfield opponents still between this spot and the goal. */
+export function defendersBeyond(
+  from: PitchPosition,
+  defenders: readonly PlayerMatchStatus[],
+  ownGoal: PitchPosition,
+  attackSign: 1 | -1,
+): number {
+  const fromDepth = depthFromOwnGoal(from, ownGoal, attackSign);
+  let ahead = 0;
+  for (const defender of defenders) {
+    if (defender.role === "GK") {
+      continue;
+    }
+    if (depthFromOwnGoal(defender.position, ownGoal, attackSign) > fromDepth + 1) {
+      ahead += 1;
+    }
+  }
+  return ahead;
+}
+
 /**
  * Ball to a point the runner would reach first, between him and the goal —
  * not to the shirt he is wearing now.
@@ -164,7 +210,7 @@ export function throughLeadSpot(input: {
   attackSign: 1 | -1;
   defenders: readonly PlayerMatchStatus[];
   homeTeamId: TeamId;
-}): { spot: PitchPosition; quality: number } | null {
+}): { spot: PitchPosition; quality: number; bypassed: number } | null {
   if (!canRunThrough(input.runner.role) || input.runner.role === "GK") {
     return null;
   }
@@ -181,7 +227,8 @@ export function throughLeadSpot(input: {
   }
   const ux = vx / len;
   const uy = vy / len;
-  let best: { spot: PitchPosition; quality: number } | null = null;
+  let best: { spot: PitchPosition; quality: number; bypassed: number } | null =
+    null;
   for (const lead of [12, 9, 7]) {
     const spot = clampPitch({
       x: from.x + ux * lead,
@@ -191,9 +238,14 @@ export function throughLeadSpot(input: {
     if (passDist < 8 || passDist > 36) {
       continue;
     }
-    const spotGoal = distance(spot, mouth);
-    const feetGoal = distance(from, mouth);
-    if (spotGoal >= feetGoal - 1.2) {
+    const bypassed = playersBypassed(
+      input.passer.position,
+      spot,
+      input.defenders,
+      input.ownGoal,
+      input.attackSign,
+    );
+    if (bypassed < 1) {
       continue;
     }
     if (
@@ -225,9 +277,14 @@ export function throughLeadSpot(input: {
       spot,
     );
     const race = clamp(def / Math.max(att, 0.04), 0.7, 1.8);
-    const quality = spaceOnReceiver(gap) * lane * race * (12 / lead);
+    const direct =
+      (depthFromOwnGoal(spot, input.ownGoal, input.attackSign) -
+        depthFromOwnGoal(input.passer.position, input.ownGoal, input.attackSign)) /
+      Math.max(passDist, 1);
+    const quality =
+      spaceOnReceiver(gap) * lane * race * (0.45 + direct) * bypassed;
     if (!best || quality > best.quality) {
-      best = { spot, quality };
+      best = { spot, quality, bypassed };
     }
   }
   return best;
@@ -240,11 +297,17 @@ export function bestThroughLead(
   attackSign: 1 | -1,
   defenders: readonly PlayerMatchStatus[],
   homeTeamId: TeamId,
-): { runner: PlayerMatchStatus; spot: PitchPosition; quality: number } | null {
+): {
+  runner: PlayerMatchStatus;
+  spot: PitchPosition;
+  quality: number;
+  bypassed: number;
+} | null {
   let best: {
     runner: PlayerMatchStatus;
     spot: PitchPosition;
     quality: number;
+    bypassed: number;
   } | null = null;
   for (const runner of teammates) {
     const lead = throughLeadSpot({
@@ -259,7 +322,12 @@ export function bestThroughLead(
       continue;
     }
     if (!best || lead.quality > best.quality) {
-      best = { runner, spot: lead.spot, quality: lead.quality };
+      best = {
+        runner,
+        spot: lead.spot,
+        quality: lead.quality,
+        bypassed: lead.bypassed,
+      };
     }
   }
   return best;
@@ -346,7 +414,19 @@ export function passTargetWeight(input: {
           ? 0.95
           : 0.15;
     const range = 1 / (1 + (dist / 18) ** 1.15);
-    return graph * ahead * runner * offside * range * lane * space * 1.55;
+    const bypassed = playersBypassed(
+      passer.position,
+      dest,
+      input.defenders ?? [],
+      input.ownGoal,
+      input.attackSign,
+    );
+    if (bypassed < 1) {
+      return 0;
+    }
+    return (
+      graph * ahead * runner * offside * range * lane * space * bypassed
+    );
   }
   if (kind === "switch") {
     const wide = target.role === "W" || target.role === "FB" ? 1.8 : 0.7;

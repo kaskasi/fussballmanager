@@ -1,4 +1,5 @@
 import type { MatchClock, MatchView, MatchViewFrame } from "@fussballmanager/shared";
+import { MatchStats } from "./MatchStats";
 
 function clockLabel(clock: MatchClock): string {
   const sec = String(clock.second).padStart(2, "0");
@@ -41,6 +42,7 @@ export function Scoreboard({ view, frame }: ScoreboardProps) {
           {view.home.formation} vs {view.away.formation}
         </span>
       </p>
+      <MatchStats view={view} stats={frame.stats} />
     </header>
   );
 }

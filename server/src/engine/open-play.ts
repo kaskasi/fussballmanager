@@ -17,6 +17,7 @@ import {
   isWideFinalThird,
   countUsefulOutlets,
   bestThroughLead,
+  defendersBeyond,
 } from "./pass-graph.ts";
 import { openKeeperLook } from "./lanes.ts";
 import { defendingPressure } from "./pressure.ts";
@@ -201,11 +202,18 @@ export function chooseOpenPlay(state: MatchState): OpenPlayChoice {
   );
   const throughOn =
     !!throughLead &&
+    throughLead.bypassed >= 1 &&
     distGoal > 8 &&
     distGoal < 48 &&
     carrier.role !== "GK" &&
     carrier.role !== "CB";
-  const passWeight = teammates.length > 0 ? weights.pass : 0;
+  const pocket =
+    !goalKick &&
+    !corner &&
+    distGoal <= 16 &&
+    defendersBeyond(carrier.position, live, ownGoal, attackSign) <= 1 &&
+    !throughOn;
+  const passWeight = teammates.length === 0 || pocket ? 0 : weights.pass;
   const picked = pickWeighted(state.rng, [
     {
       item: "pass" as const,
@@ -219,11 +227,14 @@ export function chooseOpenPlay(state: MatchState): OpenPlayChoice {
       item: "duel" as const,
       weight: defender && !onCooldown && !goalKick ? weights.duel : 0,
     },
-    { item: "shot" as const, weight: goalKick || corner ? 0 : weights.shot },
+    {
+      item: "shot" as const,
+      weight: goalKick || corner ? 0 : weights.shot * (pocket ? 4 : 1),
+    },
     {
       item: "cross" as const,
       weight:
-        teammates.length === 0
+        teammates.length === 0 || pocket
           ? 0
           : corner
             ? 3.4
@@ -237,11 +248,10 @@ export function chooseOpenPlay(state: MatchState): OpenPlayChoice {
     {
       item: "through" as const,
       weight:
-        teammates.length === 0 || goalKick || corner
+        teammates.length === 0 || goalKick || corner || pocket
           ? 0
           : throughOn
-            ? 0.42 +
-              throughLead.quality * 0.5 +
+            ? 0.28 * throughLead.bypassed +
               attackTactics.tempo / 240 +
               attackTactics.mentality / 280
             : 0,

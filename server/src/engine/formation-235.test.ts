@@ -10,6 +10,14 @@ import { defendingPressure } from "./pressure.ts";
 import { applyShape } from "./shape.ts";
 import { simulate } from "./step.ts";
 
+function settle(state: Parameters<typeof applyShape>[0], ticks = 24) {
+  let players = state.players;
+  for (let i = 0; i < ticks; i += 1) {
+    players = applyShape({ ...state, players }, new Set());
+  }
+  return players;
+}
+
 function run(home: Squad, seed: number) {
   const state = createInitialState({ home, away: rheinwachtSquad, seed });
   return simulate({
@@ -36,6 +44,8 @@ function defendingAt(home: Squad, ball: PitchPosition) {
   }
   const next = {
     ...state,
+    homeTactics: { ...state.homeTactics, fluidity: 0 },
+    awayTactics: { ...state.awayTactics, fluidity: 0 },
     possessionTeamId: rheinwachtSquad.team.id,
     ballCarrierId: carrier.playerId,
     ball,
@@ -43,11 +53,11 @@ function defendingAt(home: Squad, ball: PitchPosition) {
       player.playerId === carrier.playerId ? { ...player, position: ball } : player,
     ),
   };
-  const players = applyShape(next, new Set());
+  const players = settle(next);
   return defendingPressure({ ...next, players }, home.team.id);
 }
 
-function defendingInOwnThird(home: Squad): PlayerMatchStatus[] {
+function defendingInOwnThird(home: Squad): readonly PlayerMatchStatus[] {
   const state = createInitialState({ home, away: rheinwachtSquad, seed: 1 });
   const carrier =
     state.players.find(
@@ -65,6 +75,8 @@ function defendingInOwnThird(home: Squad): PlayerMatchStatus[] {
   const ball = { x: 28, y: 50 };
   const next = {
     ...state,
+    homeTactics: { ...state.homeTactics, fluidity: 0 },
+    awayTactics: { ...state.awayTactics, fluidity: 0 },
     possessionTeamId: rheinwachtSquad.team.id,
     ballCarrierId: carrier.playerId,
     ball,
@@ -72,7 +84,7 @@ function defendingInOwnThird(home: Squad): PlayerMatchStatus[] {
       player.playerId === carrier.playerId ? { ...player, position: ball } : player,
     ),
   };
-  return applyShape(next, new Set());
+  return settle(next);
 }
 
 function behind(

@@ -23,6 +23,7 @@ import {
   restAttackTarget,
   restDefendTarget,
   strikerDutyFor,
+  strayLeash,
   triangleAssignments,
   triangleSpots,
   wideDutyFor,
@@ -301,6 +302,7 @@ describe("marking targets", () => {
       ...POSSESSION_LINE_DUTIES,
       lineHeight: 36,
       intensity: 100,
+      fluidity: 30,
     });
     const high = restAttackTarget(st, ball, ownGoal, 1, {
       teamId: asTeamId("home"),
@@ -313,6 +315,7 @@ describe("marking targets", () => {
       ...POSSESSION_LINE_DUTIES,
       lineHeight: 78,
       intensity: 110,
+      fluidity: 30,
     });
     expect(high.x).toBeGreaterThan(low.x);
   });
@@ -520,5 +523,92 @@ describe("marking targets", () => {
         }),
       ).toBe(false);
     }
+  });
+
+  it("spreads a winger with width and lets fluidity leave the slot", () => {
+    const ownGoal = { x: 0, y: 50 };
+    const ball = { x: 55, y: 50 };
+    const base: TeamTactics = {
+      teamId: asTeamId("home"),
+      formation: "4-3-3",
+      mentality: 55,
+      pressing: 50,
+      width: 20,
+      tempo: 50,
+      marking: "zonal",
+      ...DEFAULT_LINE_CONTROL,
+      ...POSSESSION_LINE_DUTIES,
+      wideDuty: { left: "wide", right: "wide" },
+    };
+    const lw: PlayerMatchStatus = {
+      playerId: asPlayerId("lw"),
+      teamId: asTeamId("home"),
+      role: "W",
+      slot: "LW",
+      position: { x: 70, y: 16 },
+      onPitch: true,
+      attributes: attrs,
+      fatigue: 0,
+      form: 50,
+      yellowCards: 0,
+      sentOff: false,
+    };
+    const narrow = restAttackTarget(lw, ball, ownGoal, 1, base);
+    const wide = restAttackTarget(lw, ball, ownGoal, 1, { ...base, width: 95 });
+    expect(Math.abs(wide.y - 50)).toBeGreaterThan(Math.abs(narrow.y - 50) + 6);
+    expect(strayLeash(0, "W")).toBeLessThan(1);
+    expect(strayLeash(100, "W")).toBeGreaterThan(9);
+
+    const state = createInitialState({
+      home: nordsternSquad,
+      away: rheinwachtSquad,
+      seed: 1,
+    });
+    const cm = state.players.find(
+      (player) =>
+        player.teamId === nordsternSquad.team.id && player.role === "CM",
+    );
+    if (!cm) {
+      throw new Error("missing CM");
+    }
+    const homeTactics = {
+      ...state.homeTactics,
+      fluidity: 100,
+    };
+    const slot = restAttackTarget(
+      cm,
+      { x: 8, y: 8 },
+      { x: 0, y: 50 },
+      1,
+      homeTactics,
+    );
+    const shifted = {
+      ...state,
+      ball: { x: 8, y: 8 },
+      possessionTeamId: nordsternSquad.team.id,
+      ballCarrierId: null,
+      homeTactics,
+      players: state.players.map((player) =>
+        player.playerId === cm.playerId
+          ? { ...player, position: { x: slot.x, y: slot.y + 6 } }
+          : player,
+      ),
+    };
+    const rigid = applyShape(
+      { ...shifted, homeTactics: { ...homeTactics, fluidity: 0 } },
+      new Set(),
+    ).find((player) => player.playerId === cm.playerId);
+    const loose = applyShape(shifted, new Set()).find(
+      (player) => player.playerId === cm.playerId,
+    );
+    if (!rigid || !loose) {
+      throw new Error("missing shaped CM");
+    }
+    const start = shifted.players.find((player) => player.playerId === cm.playerId);
+    if (!start) {
+      throw new Error("missing shifted CM");
+    }
+    expect(Math.abs(loose.position.y - start.position.y)).toBeLessThan(0.2);
+    expect(Math.abs(rigid.position.y - start.position.y)).toBeGreaterThan(2);
   });
 });

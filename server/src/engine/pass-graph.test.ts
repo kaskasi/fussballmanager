@@ -10,7 +10,7 @@ import {
 } from "@fussballmanager/shared";
 import { describe, expect, it } from "vitest";
 import { createInitialState } from "./initial-state.ts";
-import { pickPassTarget, passTargetWeight, rolePassLink, throughLeadSpot } from "./pass-graph.ts";
+import { pickPassTarget, passTargetWeight, playersBypassed, rolePassLink, throughLeadSpot } from "./pass-graph.ts";
 import { occupyBoxTarget } from "./shape.ts";
 import { distance } from "./helpers.ts";
 
@@ -270,6 +270,34 @@ describe("pass graph", () => {
     expect(counts.ten).toBeGreaterThan(counts.eight);
     expect(counts.through).toBeGreaterThan(counts.eight);
     expect(counts.ten).toBeGreaterThan(counts.eleven);
+  });
+
+  it("refuses a ball into space when the passer is already past the defence", () => {
+    const ten = stub("W", "RW", { x: 88, y: 62 });
+    const seven = stub("W", "LW", { x: 78, y: 40 });
+    const behind = {
+      ...stub("CB", "RCB", { x: 70, y: 52 }),
+      teamId: asTeamId("away"),
+      playerId: asPlayerId("behind"),
+    };
+    const lead = throughLeadSpot({
+      passer: ten,
+      runner: seven,
+      ownGoal: { x: 0, y: 50 },
+      attackSign: 1,
+      defenders: [behind],
+      homeTeamId: asTeamId("home"),
+    });
+    expect(lead).toBeNull();
+    expect(
+      playersBypassed(
+        ten.position,
+        { x: 84, y: 48 },
+        [behind],
+        { x: 0, y: 50 },
+        1,
+      ),
+    ).toBe(0);
   });
 });
 

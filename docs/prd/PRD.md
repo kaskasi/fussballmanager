@@ -1,5 +1,7 @@
 # PRD: Football Manager Game (working title)
 
+> **Archiv, nicht verbindlich.** Es gilt `.cursor/rules/main.mdc` und die nummerierten Dateien in diesem Ordner (`02`–`10`). Diese Datei ist die ältere Vision (Taktik und Wirtschaft zuerst, Match-Engine als Produkt). Bei Widerspruch gewinnen die nummerierten PRDs. Die Match-Engine bleibt eingefroren; der Wrapper steht in den neuen Specs.
+
 **Draft v0.2** — living document, update as design decisions firm up.
 
 ## 1. Vision & Motivation

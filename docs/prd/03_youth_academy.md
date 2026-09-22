@@ -1,0 +1,212 @@
+# /docs/prd/03_youth_academy.md
+
+**Version:** 1.1
+**Last Updated:** 2026-09-22
+**Status:** Final
+
+---
+
+## Purpose
+
+Spezifikation der Jugendakademie: Intake-Generierung, automatische Simulation, Entscheidungs-Punkte. Jugendteams werden **nicht manuell verwaltet**.
+
+---
+
+## Scope
+
+- Modul 3: Jugendakademie
+- Intake-Generator (`/src/youth/intake_generator.ts`)
+- Academy-Visualisierung (2D Iso, `/src/ui/screens/`)
+- Youth-Simulation (`/src/youth/youth_sim.ts`)
+
+**Dependencies:** PRD 02 (Growth Engine), PRD 07 (Player-Schema), PRD 08 (Savegame), PRD 09 (UI Screens)
+
+---
+
+## Design-Grundsätze
+
+1. **Vollautomatische Jugendteams:** Manager stellt niemals U17/U19 Aufstellungen.
+2. **Jährlicher Intake:** 24 neue Spieler pro Jahr (U17-Start, Alter 15).
+3. **Gaussian Mixture Distribution:** Erlaubt normale Talente und seltene Elite-Ausnahmen (Yamal-Typ).
+4. **Entscheidungs-Limitierung:** Max 4 Decision-Items pro Woche, verhindert Mikromanagement.
+5. **Abgangsrisiko real:** Spieler können abspringen.
+
+---
+
+## Specification
+
+### 03.1 Intake-Generierung
+
+**Jährliche Generierung** am Saisonende (Ende Mai). Verteilung folgt Gaussian Mixture Model:
+
+```json
+{
+  "generation_config": {
+    "per_year_count": 24,
+    "region_diversity": "national",
+    "skill_distribution": {
+      "method": "gaussian_mixture",
+      "components": [
+        { "weight": 0.85, "mean": 65, "stddev": 10 },
+        { "weight": 0.12, "mean": 85, "stddev": 8 },
+        { "weight": 0.025, "mean": 105, "stddev": 6 },
+        { "weight": 0.005, "mean": 120, "stddev": 5 }
+      ]
+    },
+    "drive_distribution": {
+      "method": "triangular",
+      "min": 0.6,
+      "mode": 1.0,
+      "max": 1.5,
+      "correlation_to_anlage": -0.15
+    },
+    "maturity_variance": {
+      "early_bloomer_prob": 0.03,
+      "late_bloomer_prob": 0.08
+    }
+  }
+}
+```
+
+Die Gewichte summieren sich auf 1.
+
+**Anlage-Generierung pro Spieler:**
+
+- Pro Attribut: uniform 0.85–1.50, unabhängig gesampelt.
+- Leichte Variation (±0.10) um den positionsbasierten Mittelwert.
+- Drive: triangular(0.6, 1.0, 1.5), plus Korrelation −0.15 zur mittleren Anlage.
+- Anti-Korrelation bei Elite-Anlage (Skill-Mean > 95): 15 % Chance auf ×0.85.
+- Ergebnis auf [0.4, 1.6] clampen (PRD 07.3).
+
+**Maturity-Offset:**
+
+- Standard: 0.
+- Early Bloomer: +5 (wirkt wie fünf Jahre älter über `effective_age`, PRD 02.1). Wahrscheinlichkeit 3 %.
+- Late Bloomer: −5. Wahrscheinlichkeit 8 %.
+- Komponente 4 (Mean 120, Gewicht 0.005) setzt zusätzlich `hidden.breakout_flags` += `"prodigy_foundation"` (PRD 06.1). Das ist der Generational-Marker, kein Laufzeit-Event.
+
+„Intake-Base +10 / +25“ aus 03.2 verschiebt jeden Mixture-Mean um diesen Betrag. Die Verschiebungen stapeln nicht: Elite ersetzt Performance, Performance ersetzt Basis.
+
+### 03.2 Jugend-Campus (2D Iso-Visualisierung)
+
+Gebäude-Levels nach `/data/infrastructure/stadium_upgrades.json`:
+
+```json
+{
+  "academy_facilities": [
+    {
+      "id": "academy_basic",
+      "name": "Jugendhaus (Basis)",
+      "cost": 0,
+      "effect": "Standard Intake-Qualität",
+      "icon": "🏠"
+    },
+    {
+      "id": "academy_performance",
+      "name": "Leistungszentrum",
+      "cost": 2500000,
+      "requires": "stadion_min_capacity_20000",
+      "effect": "Intake-Means +10, Drive-Umfeld +0.15",
+      "icon": "🏋️"
+    },
+    {
+      "id": "academy_elite",
+      "name": "Elite-Akademie",
+      "cost": 8500000,
+      "requires": "academy_performance",
+      "effect": "Intake-Means +25, 1.5× Gewicht der Elite-Komponente (mean 120), Mentoren-Level steigt",
+      "icon": "⭐"
+    }
+  ]
+}
+```
+
+1.5× gilt für das Gewicht 0.005, nicht für einen zusätzlichen Würfel. Die anderen Gewichte werden proportional herunterskaliert, damit die Summe 1 bleibt.
+
+### 03.3 Simulation & Reports
+
+Automatische Sim U17/U19. Nur Summary-Outputs:
+
+```typescript
+interface YouthReport {
+  week: number;
+  u17_results: { wins: number; draws: number; losses: number };
+  u19_results: { wins: number; draws: number; losses: number };
+  standout_players: Array<{
+    player_id: string;
+    rating_change: number;
+    minutes_played: number;
+    coach_comment_icon: "🚀" | "➡️" | "⚠️" | "😞";
+  }>;
+  promotion_recommendations: Array<{
+    player_id: string;
+    reason: "ready_for_first_team" | "needs_more_experience" | "contract_priority";
+    urgency: "now" | "next_window" | "future";
+  }>;
+}
+```
+
+### 03.4 Manager-Entscheidungen (Decision Inbox)
+
+Max 4 Items pro Woche. Ein Abgangsrisiko (03.5) zählt als eines dieser vier Items. Overflow wird mit Warning verworfen.
+
+```typescript
+interface YouthDecisions {
+  loans: Array<{ player_id: string; destination_club: string; guarantee_minutes?: number }>;
+  promotions: Array<{ player_id: string; probation_weeks: number }>;
+  contract_offers: Array<{ player_id: string; term_years: number; wage_category: string }>;
+  training_focus_override: { player_id: string; focus: "technical" | "physical" | "mental" };
+}
+```
+
+Interaktionsregel: Drag-and-Drop eines Spieler-Badges auf Action-Icons.
+
+| Aktion | Icon |
+|---|---|
+| Leihen | 🔄 |
+| Hochziehen | ⬆️ |
+| Vertrag | ✍️ |
+| Trainingsfokus | 💪 |
+
+Dieselben vier Icons gelten auf Screen 2b (PRD 09).
+
+### 03.5 Abgangsrisiko
+
+```json
+{
+  "departure_risks": {
+    "trigger_factors": {
+      "no_game_time_threshold": "weniger als 45 Minuten in 4 Wochen",
+      "offer_from_better_club": "Rivale mit höherer Akademiestufe",
+      "family_move": "random_event 0.5%/Woche",
+      "lack_of_contract_offer": "kein Vertrag bis Alter 17"
+    },
+    "notification": "Manager sieht Warn-Icon (🚩) vor Abgang, hat 1 Woche Entscheidungsfenster",
+    "counter_measures": {
+      "guarantee_playing_time": "Auto-Sim muss die Mindestminuten einhalten, kostet Moral anderer",
+      "loan_with_option": "hält Rechte, gibt Spielpraxis",
+      "raise_wage": "kurzfristige Kostensteigerung"
+    },
+    "loss_consequence": "Spieler geht, Club erhält ggf. Ablöse oder gar nichts"
+  }
+}
+```
+
+Die Minuten-Garantie erfüllt die automatische Jugend-Sim, nicht eine manuelle Aufstellung.
+
+### 03.6 Invarianten
+
+| Regel | Überprüfung |
+|---|---|
+| Intake nur am Saisonende | Aufruf während der Saison wirft |
+| Jugend-Simulation läuft vor der Entscheidungsinbox | Inbox ist der Folge-Step |
+| Max 4 Decision-Items pro Woche, inklusive Abgangswarnung | Clamp, Overflow mit Warning verworfen |
+| Abgangsrisiko nur bei 16+ Jahren | Jüngere Spieler können nicht abspringen |
+
+## References
+
+- Growth Engine: PRD 02.1
+- Player-Schema: PRD 07
+- UI Screens: PRD 09.2 (Screen 2)
+- Savegame: PRD 08.1
+- Generational-Flag: PRD 06.1

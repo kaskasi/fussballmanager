@@ -1,0 +1,223 @@
+---
+alwaysApply: true
+---
+# .cursorrules — Fußball-Manager PRD & Regeln
+
+## Projekt-Identität
+- **Projektname**: FC Tycoon (Arbeitstitel)
+- **Vision**: 2D Fußball-Manager mit Fokus auf **Talent-Entwicklung** statt Matches selbst zu spielen
+- **Referenz**: FIFA Manager 14 DNA + absolute Attribute (kein relatives Potential) + Varianz im Wachstum
+- **Match-Engine**: Bereits vorhanden unter `server/src/engine/`, **NICHT ANFASSEN** — nur Wrapper umschließen (Gesetz 4)
+
+---
+
+## Dokumenten-Struktur (Source of Truth)
+
+Geschrieben und verbindlich:
+
+- `02_growth_engine.md` — Wachstum-Engine, Formel, Alterskurven
+- `03_youth_academy.md` — Intake, Academy-Visualisierung, Simulation
+- `04_scouting.md` — Wissensmodell, Scouts, Events
+- `05_transfers.md` — Transfers, Verträge, Market Value
+- `06_breakouts.md` — Breakout-Events, Drive-Mutationen
+- `07_player_schema.md` — Vollständiges Player-Interface (TypeScript)
+- `08_savegame.md` — Savegame-Struktur, Versionierung, Sanitizer
+- `09_ui_screens.md` — UI-Screens, Wireframes, Interaktionsregeln
+- `10_feature_list.md` — Vollständiger Feature-Katalog
+
+Noch nicht geschrieben, nicht erfinden:
+
+- `01_vision.md`
+- `11_finances.md`
+- `12_league_world.md`
+- `13_meta.md`
+
+`PRD.md` in diesem Ordner ist Archiv und nicht verbindlich.
+
+**Regel 1:** Die nummerierten Dateien unter `/docs/prd/` sind die **verbindliche Quelle**. Wenn etwas unklar ist, zuerst die passende PRD lesen. Code nicht ändern, ohne die PRD verstanden zu haben.
+
+**Regel 2:** Bei Änderungen der PRDs **bump `save_version`** in `manifest.json` und eine Migrations-Datei schreiben (`/src/persistence/migrations/`).
+
+---
+
+## Design-Gesetze
+
+### Gesetz 1: No Hard Cap on Potential
+- **Es gibt keine feste `potential`-Zahl** bei Spielern.
+- Wachstum folgt der Formel aus PRD 02.1. Die Kurven-Daten liegen in PRD 02.2 (`growth_curves.json`). Die Varianz-σ stehen in PRD 02.3.
+- Soft Cap bei 180 (Wachstum ×0.3), Hard Cap 199 (asymptotisch, gespeicherter Wert höchstens 199).
+- **Nie** eine Potential-Decke erzwingen. Spieler können über 125 hinaus wachsen, bis der Soft Cap greift.
+
+### Gesetz 2: Hidden Values
+- `hidden.anlage` (pro Attribut 0.85–1.50) und `hidden.drive` (0.4–1.6) sind **versteckt**.
+- Scouting schätzt Unsicherheit (CI-Band), keine genauen Zahlen. Eigene Spieler sind ab Tag 1 bekannt (PRD 04.6).
+- Beim Export/Sanitizer werden `hidden.*` Felder entfernt (PRD 08.3).
+- **Cheating ist lokal unvermeidbar**, aber Teilen wird spoiler-safe.
+
+### Gesetz 3: Icon/Visual First
+- Jede UI-Entscheidung priorisiert **Icons, Bilder, Charts vor Text**.
+- Tooltips nur als sekundäre Vertiefung.
+- ASCII-Wireframes stehen vor der Implementation als `/** WIREFRAME: PRD 09.2 */` Kommentar im Code.
+
+### Gesetz 4: Engine Hands-Off
+- Der bestehende Match-Engine-Ordner `server/src/engine/` wird **nie geändert**.
+- Nur einen Wrapper schreiben, der den Input-Contract erfüllt (Aufstellung, Taktik, Attribute → Events, Score, Ratings).
+- Das Player-Schema (0–199) ist nicht das Attribut-Set der Engine (0–100). Die Abbildung macht der Wrapper, nicht die Engine.
+- Deterministische Seeds: `hash(master_seed, season, week, match_id)` für Reproduzierbarkeit.
+
+### Gesetz 5: Development with Variance
+- Wachstum hat Gaussian-Noise (σ = 0.15 Technik, 0.20 Physis, 0.10 Mental).
+- **Breakout-Events** sind seltene, einmalige Auslöser (PRD 06). `mentor_ignition` hebt `drive` einmalig um +0.25, geclamp auf 1.6.
+- Freddy Adu / Hervé Bugnet-Typen müssen möglich sein.
+
+### Gesetz 6: Youth Automation
+- **Jugendteams werden vollautomatisch simuliert** — Manager sieht nur Reports und trifft Entscheidungen.
+- Niemals U17/U19 Aufstellungen stellen oder Spiele anschauen.
+- Decision Inbox begrenzt auf 4 Items pro Woche (keine Mikromanagement-Falle).
+
+### Gesetz 7: Difficulty & Stakes
+- Abstieg ist real, keine Schutzmechaniken.
+- KI-Clubs verwenden dieselbe Growth Engine — Liga driftet nach oben.
+- Late Game darf nicht langweilig werden — Rivalen holen Talente nach.
+
+### Gesetz 8: Savegame Integrity
+- Speichern nur am Wochenende (nach Sim-Abschluss).
+- Auto-Save: jede Save-Datei temp schreiben, dann atomic rename.
+- Migrationen sind **one-way**; Fehlschlag = read-only Backup.
+
+---
+
+## Code-Architektur
+
+### Ordnerstruktur
+
+```text
+server/src/engine/     ← Match-Engine (HANDS-OFF)
+src/sim/               Saison-Sim, Liga-Table, Schedule
+src/development/       growth_engine.ts, breakouts.ts, aging.ts
+src/youth/             intake_generator.ts, youth_sim.ts, academy.ts
+src/scouting/          estimate_model.ts, scout_network.ts, events.ts
+src/transfers/         market_value.ts, negotiations.ts
+src/economy/           finance.ts, buildings.ts
+src/persistence/       savegame.ts, sanitizer.ts, migrations/
+src/ui/                screens/, components/
+src/types/             player.ts, contracts.ts (PRD 07)
+```
+
+### Naming Conventions
+- TypeScript Interfaces: PascalCase (Player, Attributes, Contract)
+- Functions: camelCase (`calculateWeeklyGrowth`, `generateYouthPlayer`)
+- Files: kebab-case (`growth-engine.ts`, `scout-network.ts`)
+- JSON Files: snake_case (`growth_curves.json`, `scout_network.json`)
+- Constants: UPPER_SNAKE_CASE (`SOFT_CAP = 180`, `HARD_CAP = 199`)
+
+### Testing Requirements
+- Jede PRD-Formel benötigt Unit-Tests
+- Beispiel: `growth_engine.test.ts` muss testen:
+  - Soft Cap bei 180 (×0.3 Faktor)
+  - Pace-Decay ab decline_start 25, Stamina ab 27 (PRD 02.2), als Wochenanteil des Jahreswerts
+  - `mentor_ignition`: drive +0.25, einmalig, Clamp auf 1.6 (PRD 06.2, PRD 07.3)
+  - Gaussian Noise Verteilung (σ korrekt, PRD 02.3)
+
+---
+
+## JSON-Schemas (Connectors)
+
+### Player (PRD 07)
+
+```typescript
+// src/types/player.ts — VERBINDLICH
+// Siehe PRD 07 TypeScript-Definition
+```
+
+### Savegame Structure (PRD 08.1)
+
+```text
+/savegame_{name}_{slot}/
+  manifest.json          // Metadaten, Version, Struktur-Index
+  state.json             // "Jetzt" — Woche, Saison, dynamische Zustände
+  players.json           // Alle aktiven Spieler (PRD 07 Objekte)
+  retired.json           // Ruhestands-CAs final
+  history.jsonl          // Append-only Event-Log
+  chronicle.json         // Vereinschronik (Feature F11.4)
+  rng_state.json         // Seed-Chain für Reproduzierbarkeit
+```
+
+---
+
+## Workflow Guidelines für Cursor
+
+### Task-Größe
+- Max 1 Modul pro Task: "Implementiere growth_engine.ts nach PRD 02.1" — nicht "baue Training + Youth + Scouting".
+- Kleine Steps: Erst Types, dann Formel, dann Tests, dann Integration.
+- Token-Effizienz: Lies immer die PRD-Datei am Anfang eines Tasks, nicht den ganzen Kontext transportieren.
+
+### When to Search
+- Vor jeder Implementierung prüfen: Ist die Logik schon in `/docs/prd/*` definiert?
+- Falls nicht: Task stoppen, erst PRD ergänzen, dann implementieren.
+- Never hallucinate Features — wenn es nicht in einer nummerierten PRD steht, gibt es das Feature nicht.
+
+### Code Quality Checklist
+Bei jedem Commit prüfen:
+
+- Hat die Datei einen WIREFRAME-Kommentar wenn UI?
+- Gibt es Unit-Tests für neue Formeln?
+- Wurde `/docs/prd/*` geändert oder neu hinzugefügt?
+- Ist `save_version` gebumpt wenn das Schema geändert wurde?
+- Wurde eine Migration geschrieben wenn ein altes Savegame betroffen ist?
+
+### Red Flags (Stop Immediately)
+
+| Situation | Action |
+|---|---|
+| Task fragt nach `potential`-Wert im Player-Objekt | STOPP — PRD 07 hat kein `potential` |
+| Engine-Ordner `server/src/engine/` soll geändert werden | STOPP — Gesetz 4, nur Wrapper |
+| Jugend-Aufstellung konfigurieren gefragt | STOPP — Gesetz 6, vollautomatisch |
+| Text-first UI geplant | STOPP — Gesetz 3, Icon-first |
+| `drive` im Export sichtbar bleiben | STOPP — PRD 08.3, Sanitizer entfernen |
+| Relativer 5-Sterne-Wert für Spieler-Potential vorgeschlagen | STOPP — Absolute Werte, PRD 02.1 |
+
+### Data Flow (Wichtig für Debugging)
+
+```text
+┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
+│   JUGEND        │────▶│   SCOUTING           │────▶│   TRAINING      │
+│   Intake        │     │   Bewertungen        │     │   Entwicklung   │
+│   (pro Jahr)    │     │   (Schätzung + CI)   │     │   (realisiert)  │
+└─────────────────┘     └──────────────────────┘     └─────────────────┘
+       │                        │                            │
+       └────────────────────────┴────────────────────────────┘
+                                ▼
+                    ┌────────────────────────┐
+                    │   KADER & WERTERHALT   │
+                    │   (Profikader-Bindung) │
+                    └────────────────────────┘
+```
+
+### Prioritäten für MVP (M1)
+
+P0 aus dieser Datei ist die Reihenfolge für die ersten Tasks. M1 in PRD 10 ist der größere Kern-Loop und kommt danach. UI-Screens sind P1, auch wenn einzelne Icons schon in M1-Features vorkommen.
+
+| Modul | MVP-Prio | Prio-Nummer |
+|---|---|---|
+| Growth Engine (Formel) | Must | P0 |
+| Intake-Generierung | Must | P0 |
+| Wochenplanung (Training) | Must | P0 |
+| Jugend-Campus (Basic) | Must | P0 |
+| Scout-Basis-Wissen | Must | P0 |
+| Market Value Formel | Must | P0 |
+| Savegame Structure | Must | P0 |
+| Player-Schema (F-TYP-1, PRD 07) | Must | P0, vor der Formel |
+| UI Screens (8 total) | Should | P1 |
+| Mentoring System | Could | P2 |
+| Scouting-Events | Could | P2 |
+| Breakout Events | Could | P2 |
+| Individualtraining | Could | P2 |
+
+Arbeite erst P0 ab, dann P1.
+
+---
+
+## Update-History
+- 2026-09-22: Initialversion erstellt. Design-Prinzipien festgeschrieben (kein Potential, Varianz, Icon-first). PRD-Struktur definiert. MVP-Priorisierung aufgenommen.
+- 2026-09-22: Querverweise korrigiert (Formel ist 02.1). Engine-Pfad `server/src/engine/`. Archiv-Hinweis für `PRD.md`. Offene Dateien 01, 11–13 als ungeschrieben markiert.

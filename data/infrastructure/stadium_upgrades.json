@@ -1,0 +1,27 @@
+{
+  "academy_facilities": [
+    {
+      "id": "academy_basic",
+      "name": "Jugendhaus (Basis)",
+      "cost": 0,
+      "effect": "Standard Intake-Qualität",
+      "icon": "🏠"
+    },
+    {
+      "id": "academy_performance",
+      "name": "Leistungszentrum",
+      "cost": 2500000,
+      "requires": "stadion_min_capacity_20000",
+      "effect": "Intake-Means +10, Drive-Umfeld +0.15",
+      "icon": "🏋️"
+    },
+    {
+      "id": "academy_elite",
+      "name": "Elite-Akademie",
+      "cost": 8500000,
+      "requires": "academy_performance",
+      "effect": "Intake-Means +25, 1.5× Gewicht der Elite-Komponente (mean 120), Mentoren-Level steigt",
+      "icon": "⭐"
+    }
+  ]
+}

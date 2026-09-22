@@ -417,6 +417,154 @@ body {
   font-weight: 700;
 }
 
+.pipeline {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 2.5rem;
+}
+
+.pipeline-head,
+.pipeline-tiles,
+.pipeline-scout,
+.pipeline-slots {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.pipeline-head {
+  justify-content: space-between;
+}
+
+.pipeline-head button,
+.pipeline button[aria-label^="Zurück"] {
+  border: 0;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+}
+
+.pipeline-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5rem;
+  min-height: 7rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.pipeline-stage {
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+  font-weight: 800;
+}
+
+.pipeline-bar {
+  width: 2.2rem;
+  border-radius: 0.6rem 0.6rem 0.2rem 0.2rem;
+  background: #059669;
+}
+
+.pipeline-tiles {
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.pipeline-tile {
+  position: relative;
+  flex: 1 1 14rem;
+  border: 0;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  text-align: left;
+  box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
+  cursor: pointer;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.pipeline-light.is-set {
+  color: #059669;
+}
+
+.pipeline-light.is-watch {
+  color: #d97706;
+}
+
+.pipeline-dot {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.7rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: #059669;
+}
+
+.pipeline-heat {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 1rem 0;
+}
+
+.heat-cell {
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 999px;
+  background: #059669;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.heat-cell.is-down {
+  border-radius: 0.2rem;
+  background: #d97706;
+}
+
+.heat-cell small {
+  font-size: 0.62rem;
+}
+
+.pipeline-go {
+  border: 0;
+  background: #059669;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.7rem 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pipeline-week {
+  font-variant-numeric: tabular-nums;
+}
+
+.pipeline-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.8rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.pipeline-slots {
+  list-style: none;
+  padding: 0;
+  font-size: 1.4rem;
+}
+
+.pipeline-scout {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
 .app-nav {
   display: flex;
   gap: 0.5rem;

@@ -50,6 +50,13 @@ export {
 export type { FixtureResult, ScheduledFixture, TableRow } from "./league.ts";
 export { matchdayFixtures, standings } from "./league.ts";
 
+export type { PlayerSeasonStat } from "./match-player-stats.ts";
+export {
+  aggregatePlayerMatchStats,
+  mergePlayerSeasonStats,
+  topByStat,
+} from "./match-player-stats.ts";
+
 export type {
   CentreMidDuty,
   FormationPreset,

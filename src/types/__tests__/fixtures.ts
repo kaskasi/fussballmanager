@@ -71,6 +71,8 @@ export const validPlayer: Player = {
     morale: 70,
     weekly_minutes: 0,
     season_minutes: 0,
+    recent_growth_26w: 0,
+    recent_weekly_minutes: [],
     modifiers: [],
   },
   history: {

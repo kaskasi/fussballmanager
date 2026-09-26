@@ -1,4 +1,8 @@
 import { useState } from "react";
+import {
+  profileMenuItems,
+  type PlayerProfileAction,
+} from "../../player/profile-actions.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import { confidenceLabel, type AbilityEstimate } from "../../scouting/estimate-model.ts";
@@ -8,6 +12,7 @@ import {
   scoutReveal,
 } from "../../scouting/scout-visibility.ts";
 import { Hint } from "../components/Hint.tsx";
+import { ProfileActionsMenu } from "../components/ProfileActionsMenu.tsx";
 import {
   achievementBadges,
   contractView,
@@ -40,9 +45,15 @@ export interface PlayerProfileProps {
   scoutEstimate?: AbilityEstimate;
   scouting?: boolean;
   week?: number;
+  transferWindowOpen?: boolean;
+  shortlisted?: boolean;
   onBack: () => void;
   onOpenYouth?: () => void;
   onAssignScout?: () => void;
+  onToggleShortlist?: () => void;
+  onPurchase?: () => void;
+  onProfileAction?: (action: PlayerProfileAction) => void;
+  actionFeedback?: string | null;
 }
 
 export function PlayerProfile({
@@ -54,8 +65,16 @@ export function PlayerProfile({
   onBack,
   onOpenYouth,
   onAssignScout,
+  transferWindowOpen = false,
+  shortlisted = false,
+  onToggleShortlist,
+  onPurchase,
+  onProfileAction,
+  actionFeedback = null,
 }: PlayerProfileProps) {
   const [tab, setTab] = useState<ProfileTab>("overview");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuItems = profileMenuItems(player, owned);
   const reveal = scoutEstimate ? scoutReveal(scoutEstimate.uncertaintyRange) : null;
   const fitness = stateMark(player.state.fitness);
   const morale = stateMark(player.state.morale);
@@ -89,8 +108,21 @@ export function PlayerProfile({
         <button type="button" onClick={onBack} aria-label="Zurück">
           ←
         </button>
-        <p className="eyebrow">Spieler{week ? ` · Woche ${week}` : ""}</p>
+        <p className="profile-toolbar-title eyebrow">Spieler{week ? ` · Woche ${week}` : ""}</p>
+        {owned && onProfileAction ? (
+          <ProfileActionsMenu
+            open={menuOpen}
+            items={menuItems}
+            onToggle={() => setMenuOpen((open) => !open)}
+            onClose={() => setMenuOpen(false)}
+            onSelect={onProfileAction}
+          />
+        ) : null}
       </header>
+
+      {actionFeedback ? (
+        <p className="profile-feedback" role="status">{actionFeedback}</p>
+      ) : null}
 
       <article className="profile-card">
         <div className="profile-identity">
@@ -160,11 +192,37 @@ export function PlayerProfile({
       </article>
 
       {!owned && onAssignScout ? (
-        <Hint text="Scout beobachtet den Spieler jede Woche. Pipeline → Woche simulieren." block>
-          <button type="button" className="profile-scout" onClick={onAssignScout} disabled={scouting}>
-            {scouting ? "🟢 Scout aktiv · Bericht nach Wochensim" : "👁️ Diesen Spieler scouten"}
-          </button>
-        </Hint>
+        <div className="profile-actions">
+          <Hint text="Scout beobachtet den Spieler jede Woche. Pipeline → Woche simulieren." block>
+            <button type="button" className="profile-scout" onClick={onAssignScout} disabled={scouting}>
+              {scouting ? "🟢 Scout aktiv · Bericht nach Wochensim" : "👁️ Diesen Spieler scouten"}
+            </button>
+          </Hint>
+          {onToggleShortlist ? (
+            <button type="button" className="profile-scout" onClick={onToggleShortlist}>
+              {shortlisted ? "⭐ Merkliste" : "☆ Merken"}
+            </button>
+          ) : null}
+          {onPurchase ? (
+            <Hint
+              text={
+                transferWindowOpen
+                  ? "Angebot nach Marktwert — Gegenangebot möglich."
+                  : "Transfers nur im Sommer- (KW 27–34) und Winterfenster (KW 2–4)."
+              }
+              block
+            >
+              <button
+                type="button"
+                className="profile-scout"
+                onClick={onPurchase}
+                disabled={!transferWindowOpen}
+              >
+                💰 Kaufen
+              </button>
+            </Hint>
+          ) : null}
+        </div>
       ) : null}
 
       {onOpenYouth ? (

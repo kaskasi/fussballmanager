@@ -29,5 +29,6 @@ export function runMatchday(input: { matchday: number; baseSeed: number }) {
       awayGoals: fixture.awayGoals,
     })),
     table: played.table,
+    playerStats: played.playerStats,
   };
 }

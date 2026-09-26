@@ -1,9 +1,10 @@
 import { NORDSTERN_ID, asTeamId } from "@fussballmanager/shared";
 import { describe, expect, it } from "vitest";
-import { defaultLeagueState } from "../persistence/league-state.ts";
+import { defaultLeagueState, totalSeasonMatchdays } from "../persistence/league-state.ts";
 import {
   advanceLeagueWeek,
   applyProMatchMinutes,
+  leagueTable,
   simulateQuickMatchday,
   weeklySeed,
 } from "./league-week.ts";
@@ -24,6 +25,22 @@ describe("league week", () => {
     expect(advanced.league.results.length).toBeGreaterThan(0);
     expect(advanced.league.matchday).toBe(2);
     expect(advanced.playerFixture).not.toBeNull();
+    expect(advanced.league.player_stats.length).toBeGreaterThan(0);
+    expect(totalSeasonMatchdays(league)).toBe(30);
+  });
+
+  it("completes the season after 30 matchdays with 30 games per club", async () => {
+    let league = defaultLeagueState();
+    let seasonComplete = false;
+    for (let week = 1; week <= 30; week++) {
+      const step = await advanceLeagueWeek(league, 1, week, 2026);
+      league = step.league;
+      seasonComplete = step.seasonComplete;
+    }
+    expect(seasonComplete).toBe(true);
+    expect(league.season_complete).toBe(true);
+    const table = leagueTable(league);
+    expect(table.every((row) => row.played === 30)).toBe(true);
   });
 
   it("assigns pro minutes after a club fixture", () => {

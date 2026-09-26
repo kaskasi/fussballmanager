@@ -7,5 +7,6 @@ describe("matchday api", () => {
     expect(played.results).toHaveLength(3);
     expect(played.table).toHaveLength(6);
     expect(played.table[0]?.points).toBeGreaterThanOrEqual(0);
+    expect(played.playerStats.length).toBeGreaterThan(0);
   });
 });

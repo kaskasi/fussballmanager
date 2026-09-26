@@ -31,6 +31,10 @@ export interface Player {
     morale: number;
     weekly_minutes: number;
     season_minutes: number;
+    /** Rolling sum of attribute growth over the last 26 weeks (PRD 06.3). */
+    recent_growth_26w: number;
+    /** Last four weekly minute totals, oldest first (PRD 03.5). */
+    recent_weekly_minutes: number[];
     modifiers: TemporaryModifier[];
   };
 

@@ -1,4 +1,5 @@
 import { ACHIEVEMENT, grantAchievements, type AchievementLabel } from "../player/achievements.ts";
+import { pushWeeklyMinutes } from "../player/minute-history.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
 import type { CoachIcon } from "./academy.ts";
@@ -82,14 +83,7 @@ export function simulateYouthWeek(
     if (ratingChange >= 0.55) badges.push(ACHIEVEMENT.youthTopForm);
     if (minutes >= 80) badges.push(ACHIEVEMENT.youthHeavyMinutes);
     const withBadges = grantAchievements(player, badges);
-    return {
-      ...withBadges,
-      state: {
-        ...withBadges.state,
-        weekly_minutes: minutes,
-        season_minutes: withBadges.state.season_minutes + minutes,
-      },
-    };
+    return pushWeeklyMinutes(withBadges, minutes);
   });
 
   return {

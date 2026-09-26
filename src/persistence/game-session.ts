@@ -3,6 +3,7 @@ import type { ScoutBoard } from "../scouting/scout-board.ts";
 import type { Player } from "../types/player.ts";
 import { loadDemoRoster } from "../ui/demo-roster.ts";
 import { emptyInbox, generateWeeklyInbox, type YouthInboxState } from "../youth/decision-inbox.ts";
+import { emptyTransferState, type TransferState } from "../transfers/negotiations.ts";
 import { defaultLeagueState, type LeagueState } from "./league-state.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
 import { createSave, type SaveGame } from "./savegame-model.ts";
@@ -20,6 +21,7 @@ export interface GameSession {
   scoutBoard: ScoutBoard;
   youthInbox: YouthInboxState;
   league: LeagueState;
+  transferState: TransferState;
   clubId: string;
   managerName: string;
   masterSeed: number;
@@ -56,6 +58,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     scoutBoard: pipeline.scout_board,
     youthInbox: pipeline.youth_inbox ?? emptyInbox(save.state.week),
     league: save.state.league ?? defaultLeagueState(),
+    transferState: pipeline.transfer_state ?? emptyTransferState(),
     clubId: save.manifest.player_club_id,
     managerName: save.manifest.manager_name,
     masterSeed: save.rng_state.master_seed,
@@ -67,6 +70,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     training_plan: session.trainingPlan,
     scout_board: session.scoutBoard,
     youth_inbox: session.youthInbox,
+    transfer_state: session.transferState,
   };
   const iso = now.toISOString();
 

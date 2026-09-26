@@ -1,10 +1,8 @@
 import { useCallback, useState } from "react";
-import { advanceLeagueWeek, applyProMatchMinutes } from "./sim/league-week.ts";
-import { applyTrainingWeek } from "./development/pipeline-week.ts";
-import { planToSessions } from "./development/training-units.ts";
 import type { TrainingSlot } from "./development/training-units.ts";
 import { Matchday } from "./match/Matchday";
 import {
+  DEFAULT_CLUB_ID,
   DEFAULT_SLOT,
   newGameSession,
   saveFromSession,
@@ -14,23 +12,26 @@ import { loadLocalSave, removeLocalSave, writeLocalSave } from "./persistence/lo
 import type { SaveGame } from "./persistence/savegame-model.ts";
 import {
   activeScoutCount,
-  advanceScoutWeek,
   assignScout,
   getBoardTarget,
 } from "./scouting/scout-board.ts";
+import { simulateGameWeek } from "./sim/week-pipeline.ts";
+import { isTransferWindowOpen } from "./sim/transfer-windows.ts";
+import { attemptPurchase, completePurchase, toggleShortlist } from "./transfers/negotiations.ts";
+import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
+import { LoanList } from "./ui/screens/LoanList.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
 import { PlayerProfile } from "./ui/screens/PlayerProfile";
 import { ScoutingCenter } from "./ui/screens/ScoutingCenter";
 import { DecisionInboxModal } from "./ui/components/DecisionInbox.tsx";
 import { YouthCampus } from "./ui/screens/YouthCampus";
 import {
-  advanceInboxWeek,
-  applyInboxDecision,
-  type DecisionAction,
-} from "./youth/decision-inbox.ts";
-import { simulateYouthWeek } from "./youth/youth-sim.ts";
+  applyProfileActionToSquad,
+  type PlayerProfileAction,
+} from "./player/profile-actions.ts";
+import { applyInboxDecision, type DecisionAction } from "./youth/decision-inbox.ts";
 
-type Screen = "hub" | "campus" | "matchday" | "scouting";
+type Screen = "hub" | "campus" | "matchday" | "scouting" | "loans" | "squad";
 
 function bootstrapSave(): SaveGame {
   try {
@@ -52,9 +53,11 @@ export default function App() {
   const [campusYearOpen, setCampusYearOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
   const [simulating, setSimulating] = useState(false);
+  const [profileFeedback, setProfileFeedback] = useState<string | null>(null);
 
   const session = sessionFromSave(save);
-  const { season, week, players, trainingPlan, scoutBoard, youthInbox, league } = session;
+  const { season, week, players, trainingPlan, scoutBoard, youthInbox, league, transferState } =
+    session;
 
   const patchSession = useCallback((recipe: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>) => {
     setSave((current) => {
@@ -69,40 +72,9 @@ export default function App() {
     setSimulating(true);
     try {
       const snapshot = sessionFromSave(save);
-      const nextWeek = snapshot.week + 1;
-      const leagueStep = await advanceLeagueWeek(
-        snapshot.league,
-        snapshot.season,
-        nextWeek,
-        snapshot.masterSeed,
-      );
-      const sessions = planToSessions(snapshot.trainingPlan);
-      const trained = snapshot.players.map((player) => applyTrainingWeek(player, sessions));
-      const withMinutes = applyProMatchMinutes(
-        trained,
-        leagueStep.playerFixture,
-        snapshot.league.player_club_id,
-      );
-      const youth = simulateYouthWeek(withMinutes, snapshot.week, snapshot.masterSeed);
-      const advanced = advanceInboxWeek(
-        snapshot.youthInbox,
-        youth.players,
-        nextWeek,
-        snapshot.masterSeed,
-        youth.report,
-      );
+      const result = await simulateGameWeek(snapshot);
       setSave((current) => {
-        const next = saveFromSession(
-          {
-            ...snapshot,
-            week: nextWeek,
-            players: advanced.players,
-            scoutBoard: advanceScoutWeek(snapshot.scoutBoard),
-            youthInbox: advanced.inbox,
-            league: leagueStep.league,
-          },
-          current,
-        );
+        const next = saveFromSession(result.session, current);
         writeLocalSave(DEFAULT_SLOT, next);
         return next;
       });
@@ -141,6 +113,58 @@ export default function App() {
     [patchSession],
   );
 
+  const handleToggleShortlist = useCallback(
+    (playerId: string) => {
+      patchSession((current) => ({
+        ...current,
+        transferState: toggleShortlist(current.transferState, playerId),
+      }));
+    },
+    [patchSession],
+  );
+
+  const handlePurchase = useCallback(
+    (playerId: string) => {
+      patchSession((current) => {
+        const target = getBoardTarget(current.scoutBoard, playerId);
+        if (!target || !isTransferWindowOpen(current.week)) return current;
+
+        const deal = attemptPurchase(current.transferState, target.player, current.season, current.week);
+        if (!deal.accepted) {
+          return { ...current, transferState: deal.state };
+        }
+
+        const bought = completePurchase(target.player, DEFAULT_CLUB_ID, current.season);
+        const targets = { ...current.scoutBoard.targets };
+        delete targets[playerId];
+        return {
+          ...current,
+          players: [...current.players, bought],
+          transferState: deal.state,
+          scoutBoard: { targets },
+        };
+      });
+      setForeignPlayerId(null);
+    },
+    [patchSession],
+  );
+
+  const handleProfileAction = useCallback(
+    (playerId: string, action: PlayerProfileAction) => {
+      patchSession((current) => {
+        const { players: nextPlayers, result } = applyProfileActionToSquad(
+          current.players,
+          playerId,
+          action,
+        );
+        if (!result) return current;
+        setProfileFeedback(result.message);
+        return { ...current, players: nextPlayers };
+      });
+    },
+    [patchSession],
+  );
+
   const handleTrainingPlanChange = useCallback(
     (plan: TrainingSlot[]) => {
       patchSession((current) => ({ ...current, trainingPlan: plan }));
@@ -157,6 +181,7 @@ export default function App() {
     setForeignPlayerId(null);
     setCampusYearOpen(false);
     setInboxOpen(false);
+    setProfileFeedback(null);
     setScreen("hub");
   }, []);
 
@@ -178,8 +203,12 @@ export default function App() {
           scoutEstimate={foreignTarget.estimate}
           scouting={foreignTarget.assigned}
           week={week}
+          transferWindowOpen={isTransferWindowOpen(week)}
+          shortlisted={transferState.shortlist.includes(foreignTarget.player.id)}
           onBack={() => setForeignPlayerId(null)}
           onAssignScout={() => handleAssignScout(foreignTarget.player.id)}
+          onToggleShortlist={() => handleToggleShortlist(foreignTarget.player.id)}
+          onPurchase={() => handlePurchase(foreignTarget.player.id)}
         />
       </>
     );
@@ -198,7 +227,12 @@ export default function App() {
           player={profilePlayer}
           owned
           week={week}
-          onBack={() => setProfileId(null)}
+          actionFeedback={profileFeedback}
+          onProfileAction={(action) => handleProfileAction(profilePlayer.id, action)}
+          onBack={() => {
+            setProfileId(null);
+            setProfileFeedback(null);
+          }}
           onOpenYouth={
             profilePlayer.squad_status === "u17" || profilePlayer.squad_status === "u19"
               ? () => {
@@ -235,6 +269,8 @@ export default function App() {
             setScreen("campus");
           }}
           onOpenScouting={() => setScreen("scouting")}
+          onOpenLoans={() => setScreen("loans")}
+          onOpenSquad={() => setScreen("squad")}
           onOpenInbox={() => setInboxOpen(true)}
           youthInbox={youthInbox}
           onNewGame={resetGame}
@@ -266,6 +302,23 @@ export default function App() {
           onAssignScout={handleAssignScout}
         />
       ) : null}
+      {screen === "loans" ? (
+        <LoanList
+          players={players}
+          season={season}
+          onBack={() => setScreen("hub")}
+          onSelectPlayer={setProfileId}
+        />
+      ) : null}
+      {screen === "squad" ? (
+        <FirstTeam
+          players={players}
+          clubId={session.clubId}
+          season={season}
+          onBack={() => setScreen("hub")}
+          onSelectPlayer={setProfileId}
+        />
+      ) : null}
       {screen === "matchday" ? <Matchday /> : null}
     </>
   );
@@ -295,6 +348,16 @@ function AppNav({
         ●
       </NavButton>
       <NavButton
+        pressed={screen === "squad"}
+        label="Kader"
+        onClick={() => {
+          onCloseProfile?.();
+          onNavigate("squad");
+        }}
+      >
+        ⭐
+      </NavButton>
+      <NavButton
         pressed={screen === "campus"}
         label="Jugend"
         onClick={() => {
@@ -314,6 +377,16 @@ function AppNav({
         }}
       >
         👁️
+      </NavButton>
+      <NavButton
+        pressed={screen === "loans"}
+        label="Ausleihen"
+        onClick={() => {
+          onCloseProfile?.();
+          onNavigate("loans");
+        }}
+      >
+        🔄
       </NavButton>
       <NavButton
         pressed={screen === "matchday"}

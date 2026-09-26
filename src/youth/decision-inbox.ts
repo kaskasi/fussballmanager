@@ -2,6 +2,7 @@ import { ACHIEVEMENT, grantAchievement } from "../player/achievements.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
 import type { CoachIcon } from "./academy.ts";
+import { departureReasonLabel, departureRiskReasons } from "./departure-risk.ts";
 import type { YouthReport } from "./youth-sim.ts";
 
 /** PRD 03.4 — max decision items per week, departure warnings count. */
@@ -66,7 +67,13 @@ export function inboxSummary(inbox: YouthInboxState): {
 export function inboxItemLabel(item: DecisionInboxItem): string {
   switch (item.reason) {
     case "no_game_time":
-      return "Wenig Spielzeit — Abgang droht";
+      return departureReasonLabel("no_game_time");
+    case "rival_offer":
+      return departureReasonLabel("rival_offer");
+    case "family_move":
+      return departureReasonLabel("family_move");
+    case "no_contract":
+      return departureReasonLabel("no_contract");
     case "ready_for_u19":
       return "Bereit für U19";
     case "ready_for_pro":
@@ -154,19 +161,18 @@ export function generateWeeklyInbox(
   const candidates: DecisionInboxItem[] = [];
 
   if (report) {
-    for (const standout of report.standout_players) {
-      const player = youth.find((entry) => entry.id === standout.player_id);
-      if (!player || player.age < 16) continue;
-      if (standout.minutes_played < 45) {
-        candidates.push({
-          id: `dep_${player.id}_${week}`,
-          playerId: player.id,
-          kind: "departure_risk",
-          week,
-          urgency: "now",
-          reason: "no_game_time",
-        });
-      }
+    for (const player of youth) {
+      const reasons = departureRiskReasons(player, week, masterSeed);
+      const primary = reasons[0];
+      if (!primary) continue;
+      candidates.push({
+        id: `dep_${player.id}_${week}`,
+        playerId: player.id,
+        kind: "departure_risk",
+        week,
+        urgency: "now",
+        reason: primary,
+      });
     }
     for (const recommendation of report.promotion_recommendations) {
       const player = youth.find((entry) => entry.id === recommendation.player_id);
@@ -213,16 +219,17 @@ export function generateWeeklyInbox(
     }
   } else {
     for (const player of youth) {
-      if (player.age >= 16 && inboxRoll(masterSeed, week, player.id, "departure") < 0.1) {
-        candidates.push({
-          id: `dep_${player.id}_${week}`,
-          playerId: player.id,
-          kind: "departure_risk",
-          week,
-          urgency: "now",
-          reason: "no_game_time",
-        });
-      }
+      const reasons = departureRiskReasons(player, week, masterSeed);
+      const primary = reasons[0];
+      if (!primary) continue;
+      candidates.push({
+        id: `dep_${player.id}_${week}`,
+        playerId: player.id,
+        kind: "departure_risk",
+        week,
+        urgency: "now",
+        reason: primary,
+      });
     }
 
     for (const player of youth.filter((entry) => entry.squad_status === "u17")) {

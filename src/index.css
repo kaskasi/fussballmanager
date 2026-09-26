@@ -442,10 +442,17 @@ body {
   font-size: 1.35rem;
 }
 
-.pipeline-head-meta {
+.pipeline-head-main {
   display: grid;
-  justify-items: end;
   gap: 0.2rem;
+  margin-top: 0.15rem;
+}
+
+.pipeline-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
 }
 
 .pipeline-league {
@@ -460,6 +467,145 @@ body {
   font-size: 0.82rem;
   font-weight: 700;
   color: #475569;
+}
+
+.league-hub {
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
+}
+
+.league-hub-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.league-hub-mode {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.league-hub-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .league-hub-grid {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.league-table-wrap {
+  overflow-x: auto;
+}
+
+.league-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.league-table th,
+.league-table td {
+  padding: 0.35rem 0.45rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.league-table th:nth-child(2),
+.league-table td:nth-child(2) {
+  text-align: left;
+}
+
+.league-table thead th {
+  color: #64748b;
+  font-weight: 800;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.league-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.league-table tbody tr.is-player-club {
+  font-weight: 800;
+}
+
+.league-leaders {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.league-leader-card {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.league-leader-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.league-leader-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.league-leader-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.45rem;
+  align-items: baseline;
+  font-size: 0.78rem;
+  padding: 0.2rem 0.35rem;
+  border-radius: 0.45rem;
+}
+
+.league-leader-list li.is-player-club .league-leader-name,
+.league-leader-list li.is-player-club strong {
+  font-weight: 800;
+}
+
+.league-leader-name {
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.league-leader-list li strong {
+  font-weight: 400;
+}
+
+.league-leader-list li.is-player-club strong {
+  font-weight: 800;
+}
+
+.league-leader-club {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.league-leader-empty {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .pipeline-save {
@@ -498,35 +644,21 @@ body {
   color: #047857;
 }
 
-.pipeline-foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+.pipeline-menu-popover {
+  min-width: 11rem;
 }
 
-.pipeline-reset-banner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 0.75rem;
-  background: #fef2f2;
-  color: #991b1b;
+.pipeline-menu-note {
+  margin: 0 0 0.35rem;
+  padding: 0 0.15rem;
+  font-size: 0.78rem;
   font-weight: 700;
+  color: #991b1b;
+  line-height: 1.35;
 }
 
-.pipeline-reset-confirm {
+.pipeline-menu-danger {
   color: #b91c1c;
-  font-weight: 800;
-}
-
-.pipeline-reset {
-  color: #b91c1c;
-  font-weight: 800;
 }
 
 .pipeline-head button,
@@ -640,9 +772,14 @@ body {
   background: #059669;
   color: #fff;
   border-radius: 999px;
-  padding: 0.7rem 1.1rem;
+  padding: 0.55rem 0.95rem;
+  font-size: 0.88rem;
   font-weight: 800;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
 }
 
 .pipeline-week {
@@ -1039,6 +1176,30 @@ body {
   margin-bottom: 0.85rem;
 }
 
+.profile-toolbar-title {
+  flex: 1;
+  margin: 0;
+}
+
+.profile-actions-menu {
+  margin-left: auto;
+}
+
+.profile-actions-popover {
+  right: 0;
+  left: auto;
+}
+
+.profile-feedback {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.75rem;
+  background: #ecfdf5;
+  color: #047857;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
 .profile-toolbar button {
   border: 0;
   background: #fff;
@@ -1423,6 +1584,144 @@ body {
   max-width: 52rem;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 2.5rem;
+}
+
+.squad,
+.loans {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 2.5rem;
+}
+
+.squad-head {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.squad-head button {
+  border: 0;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.squad-head h1 {
+  margin: 0;
+}
+
+.squad-summary {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.squad-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
+}
+
+.squad-empty-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.squad-empty-hint {
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.squad-table-head,
+.squad-row {
+  grid-template-columns: 2.5rem 1.3fr 3rem 3.5rem 3rem 3.5rem 3rem 2rem;
+}
+
+.squad-value {
+  font-weight: 700;
+  color: #0f766e;
+  font-size: 0.88rem;
+}
+
+.squad-form {
+  font-weight: 800;
+}
+
+.squad-form.is-good {
+  color: #059669;
+}
+
+.squad-form.is-mid {
+  color: #d97706;
+}
+
+.squad-form.is-low {
+  color: #dc2626;
+}
+
+.loans-head {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.loans-head button {
+  border: 0;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.loans-head h1 {
+  margin: 0;
+}
+
+.loans-summary {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.loans-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
+}
+
+.loans-empty-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.loans-empty-hint {
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.loans-table-head,
+.loans-row {
+  grid-template-columns: 2.5rem 1.4fr 3rem 3.5rem 3rem 1.4fr 3.5rem;
+}
+
+.loans-club {
+  font-weight: 700;
+  color: #0f766e;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .scouting-head {

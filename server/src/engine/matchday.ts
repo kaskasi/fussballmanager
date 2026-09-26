@@ -1,8 +1,11 @@
 import type { Squad, TeamId } from "@fussballmanager/shared";
 import {
+  aggregatePlayerMatchStats,
   matchdayFixtures,
+  mergePlayerSeasonStats,
   standings,
   type FixtureResult,
+  type PlayerSeasonStat,
   type ScheduledFixture,
   type TableRow,
 } from "@fussballmanager/shared";
@@ -19,6 +22,7 @@ export type PlayedMatchday = {
   matchday: number;
   fixtures: PlayedMatchdayFixture[];
   table: TableRow[];
+  playerStats: PlayerSeasonStat[];
 };
 
 export function playMatchday(input: {
@@ -30,6 +34,7 @@ export function playMatchday(input: {
   const byId = new Map(input.squads.map((squad) => [squad.team.id, squad]));
   const clubIds = input.squads.map((squad) => squad.team.id);
   const scheduled = matchdayFixtures(clubIds, matchday);
+  let playerStats: PlayerSeasonStat[] = [];
   const fixtures: PlayedMatchdayFixture[] = scheduled.map((fixture, index) => {
     const home = byId.get(fixture.homeTeamId);
     const away = byId.get(fixture.awayTeamId);
@@ -43,6 +48,10 @@ export function playMatchday(input: {
       homeTactics: state.homeTactics,
       awayTactics: state.awayTactics,
     });
+    playerStats = mergePlayerSeasonStats(
+      playerStats,
+      aggregatePlayerMatchStats(events, home, away),
+    );
     return {
       ...fixture,
       seed,
@@ -61,6 +70,7 @@ export function playMatchday(input: {
     matchday,
     fixtures,
     table: standings(clubIds, results),
+    playerStats,
   };
 }
 

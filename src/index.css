@@ -608,11 +608,28 @@ body {
   font-weight: 700;
 }
 
+.pipeline-finance {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #1d4ed8;
+}
+
 .pipeline-save {
   margin: 0;
   font-size: 0.78rem;
   font-weight: 800;
   color: #047857;
+}
+
+.inbox-contract-hint {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.65rem;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
 .pipeline-go:disabled {
@@ -1198,6 +1215,35 @@ body {
   color: #047857;
   font-weight: 600;
   font-size: 0.92rem;
+}
+
+.pipeline-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.75rem;
+  background: #ecfdf5;
+  color: #047857;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.pipeline-notice-dismiss {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.row-menu-item-danger {
+  color: #b91c1c;
 }
 
 .profile-toolbar button {
@@ -2332,6 +2378,123 @@ body {
 
 .inbox-action:hover {
   background: #ecfdf5;
+}
+
+.hub-inbox {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+}
+
+.hub-inbox-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.hub-inbox-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.hub-inbox-meta {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.hub-inbox-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.hub-inbox-column-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+}
+
+.hub-inbox-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.hub-inbox-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hub-inbox-row:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.hub-inbox-icon {
+  font-size: 1.1rem;
+}
+
+.hub-inbox-row-body {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.hub-inbox-row-body strong {
+  font-size: 0.9rem;
+}
+
+.hub-inbox-row-body span {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.hub-inbox-row-cta {
+  color: #64748b;
+  font-weight: 800;
+}
+
+.hub-inbox-empty {
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.84rem;
+}
+
+.hub-inbox-overflow {
+  margin: 0.75rem 0 0;
+  font-size: 0.84rem;
+  color: #b45309;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .hub-inbox-columns {
+    grid-template-columns: 1fr;
+  }
 }
 
 .pipeline-tile-inbox {

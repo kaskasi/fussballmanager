@@ -57,6 +57,17 @@ export {
   topByStat,
 } from "./match-player-stats.ts";
 
+export type { CareerPlayerAttributes, CareerPlayerInput } from "./career-squad-bridge.ts";
+export {
+  buildCareerEngineSquad,
+  careerPositionToRole,
+  mapCareerAttributes,
+  mapCareerFatigue,
+  mapCareerForm,
+  scaleCareerAttribute,
+  squadAverageStrength,
+} from "./career-squad-bridge.ts";
+
 export type {
   CentreMidDuty,
   FormationPreset,

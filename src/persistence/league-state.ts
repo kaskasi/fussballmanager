@@ -6,6 +6,17 @@ import type { FixtureResult, PlayerSeasonStat, TeamId } from "@fussballmanager/s
  */
 export const LEAGUE_MEETINGS_PER_OPPONENT = 6;
 
+/** Career-player contributions for the manager club (replaces engine names in the hub). */
+export interface CareerLeagueStat {
+  playerId: string;
+  name: string;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  minutes: number;
+  apps: number;
+}
+
 /** Engine-side league snapshot stored in `state.json`. */
 export interface LeagueState {
   division_id: "regionalliga-nord";
@@ -17,6 +28,7 @@ export interface LeagueState {
   matchday: number;
   results: FixtureResult[];
   player_stats: PlayerSeasonStat[];
+  career_player_stats?: CareerLeagueStat[];
   /** Set after the final matchday until the next week sim clears the table. */
   season_complete?: boolean;
 }
@@ -34,6 +46,7 @@ export function resetLeagueSeason(league: LeagueState): LeagueState {
     matchday: 1,
     results: [],
     player_stats: [],
+    career_player_stats: [],
     season_complete: false,
   };
 }
@@ -48,6 +61,7 @@ export function defaultLeagueState(): LeagueState {
     matchday: 1,
     results: [],
     player_stats: [],
+    career_player_stats: [],
     season_complete: false,
   };
 }

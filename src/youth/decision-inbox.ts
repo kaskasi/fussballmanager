@@ -1,4 +1,5 @@
 import { ACHIEVEMENT, grantAchievement } from "../player/achievements.ts";
+import { signYouthContract } from "../player/youth-contract.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
 import type { CoachIcon } from "./academy.ts";
@@ -107,7 +108,7 @@ export function actionLabel(action: DecisionAction): string {
     case "promote":
       return "Hochziehen";
     case "contract":
-      return "Vertrag";
+      return "Jugendvertrag";
     case "training_focus":
       return "Trainingsfokus";
     case "dismiss":
@@ -364,22 +365,16 @@ export function applyInboxDecision(
         );
       }
       break;
-    case "contract":
+    case "contract": {
+      const moraleBoost =
+        item.reason === "no_contract" || item.kind === "contract_offer" ? 10 : 6;
       nextPlayers = nextPlayers.map((entry) => {
         if (entry.id !== item.playerId) return entry;
-        const signed = {
-          ...entry,
-          contract: entry.contract ?? {
-            wage_weekly: 350,
-            bonus_goal: 0,
-            bonus_appearance: 25,
-            until_season: season + 3,
-            guaranteed_minutes_promise: "rotation" as const,
-          },
-        };
+        const signed = signYouthContract(entry, season, { moraleBoost });
         return grantAchievement(signed, ACHIEVEMENT.contractSigned);
       });
       break;
+    }
     case "training_focus":
       nextPlayers = nextPlayers.map((entry) => {
         if (entry.id !== item.playerId) return entry;
@@ -401,6 +396,18 @@ export function applyInboxDecision(
       });
       break;
     case "dismiss":
+      if (item.kind === "departure_risk" && item.reason === "no_contract") {
+        nextPlayers = nextPlayers.map((entry) => {
+          if (entry.id !== item.playerId) return entry;
+          return {
+            ...entry,
+            state: {
+              ...entry.state,
+              morale: Math.max(0, entry.state.morale - 6),
+            },
+          };
+        });
+      }
       break;
   }
 

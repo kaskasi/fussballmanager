@@ -3,6 +3,7 @@ import type { ScoutBoard } from "../scouting/scout-board.ts";
 import type { Player } from "../types/player.ts";
 import { loadDemoRoster } from "../ui/demo-roster.ts";
 import { emptyInbox, generateWeeklyInbox, type YouthInboxState } from "../youth/decision-inbox.ts";
+import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
 import { emptyTransferState, type TransferState } from "../transfers/negotiations.ts";
 import { defaultLeagueState, type LeagueState } from "./league-state.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
@@ -22,6 +23,7 @@ export interface GameSession {
   youthInbox: YouthInboxState;
   league: LeagueState;
   transferState: TransferState;
+  finances: ClubFinances;
   clubId: string;
   managerName: string;
   masterSeed: number;
@@ -59,6 +61,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     youthInbox: pipeline.youth_inbox ?? emptyInbox(save.state.week),
     league: save.state.league ?? defaultLeagueState(),
     transferState: pipeline.transfer_state ?? emptyTransferState(),
+    finances: pipeline.club_finances ?? defaultClubFinances(),
     clubId: save.manifest.player_club_id,
     managerName: save.manifest.manager_name,
     masterSeed: save.rng_state.master_seed,
@@ -71,6 +74,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     scout_board: session.scoutBoard,
     youth_inbox: session.youthInbox,
     transfer_state: session.transferState,
+    club_finances: session.finances,
   };
   const iso = now.toISOString();
 

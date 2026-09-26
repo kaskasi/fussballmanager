@@ -128,7 +128,7 @@ function contractLabel(player: Player, owned: boolean): string {
     return `bis Saison ${player.contract.until_season}`;
   }
   if (player.squad_status === "u17" || player.squad_status === "u19") {
-    return "Jugendvertrag";
+    return "Kein Vertrag";
   }
   if (!owned) return "Unbekannt";
   return "Verhandlung offen";

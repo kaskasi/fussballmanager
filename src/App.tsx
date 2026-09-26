@@ -17,7 +17,19 @@ import {
 } from "./scouting/scout-board.ts";
 import { simulateGameWeek } from "./sim/week-pipeline.ts";
 import { isTransferWindowOpen } from "./sim/transfer-windows.ts";
-import { attemptPurchase, completePurchase, toggleShortlist } from "./transfers/negotiations.ts";
+import {
+  applyTransferFee,
+  canAffordTransfer,
+  formatClubCash,
+  transferBudget,
+} from "./economy/club-finances.ts";
+import { formatPlayerName } from "./types/player-display.ts";
+import {
+  attemptPurchase,
+  completePurchase,
+  sellerAskingPrice,
+  toggleShortlist,
+} from "./transfers/negotiations.ts";
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
 import { LoanList } from "./ui/screens/LoanList.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
@@ -52,12 +64,23 @@ export default function App() {
   const [foreignPlayerId, setForeignPlayerId] = useState<string | null>(null);
   const [campusYearOpen, setCampusYearOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
+  const [inboxItemId, setInboxItemId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState<string | null>(null);
+  const [hubNotice, setHubNotice] = useState<string | null>(null);
 
   const session = sessionFromSave(save);
-  const { season, week, players, trainingPlan, scoutBoard, youthInbox, league, transferState } =
-    session;
+  const {
+    season,
+    week,
+    players,
+    trainingPlan,
+    scoutBoard,
+    youthInbox,
+    league,
+    transferState,
+    finances,
+  } = session;
 
   const patchSession = useCallback((recipe: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>) => {
     setSave((current) => {
@@ -131,17 +154,26 @@ export default function App() {
 
         const deal = attemptPurchase(current.transferState, target.player, current.season, current.week);
         if (!deal.accepted) {
+          setHubNotice("Angebot abgelehnt — höheres Gebot nötig.");
+          return { ...current, transferState: deal.state };
+        }
+
+        const fee = deal.fee ?? sellerAskingPrice(target.player, current.season);
+        if (!canAffordTransfer(current.finances, fee)) {
+          setHubNotice(`Transfer-Budget zu niedrig (benötigt ca. ${formatClubCash(fee)}).`);
           return { ...current, transferState: deal.state };
         }
 
         const bought = completePurchase(target.player, DEFAULT_CLUB_ID, current.season);
         const targets = { ...current.scoutBoard.targets };
         delete targets[playerId];
+        setHubNotice(`Zugang ${formatPlayerName(bought)} für ${formatClubCash(fee)}.`);
         return {
           ...current,
           players: [...current.players, bought],
           transferState: deal.state,
           scoutBoard: { targets },
+          finances: applyTransferFee(current.finances, fee),
         };
       });
       setForeignPlayerId(null);
@@ -156,9 +188,17 @@ export default function App() {
           current.players,
           playerId,
           action,
+          current.clubId,
+          current.season,
         );
         if (!result) return current;
-        setProfileFeedback(result.message);
+        if (result.removed) {
+          setProfileId(null);
+          setProfileFeedback(null);
+          setHubNotice(result.message);
+        } else {
+          setProfileFeedback(result.message);
+        }
         return { ...current, players: nextPlayers };
       });
     },
@@ -182,6 +222,7 @@ export default function App() {
     setCampusYearOpen(false);
     setInboxOpen(false);
     setProfileFeedback(null);
+    setHubNotice(null);
     setScreen("hub");
   }, []);
 
@@ -203,7 +244,10 @@ export default function App() {
           scoutEstimate={foreignTarget.estimate}
           scouting={foreignTarget.assigned}
           week={week}
+          season={season}
           transferWindowOpen={isTransferWindowOpen(week)}
+          transferBudget={transferBudget(finances)}
+          purchasePrice={sellerAskingPrice(foreignTarget.player, season)}
           shortlisted={transferState.shortlist.includes(foreignTarget.player.id)}
           onBack={() => setForeignPlayerId(null)}
           onAssignScout={() => handleAssignScout(foreignTarget.player.id)}
@@ -227,6 +271,7 @@ export default function App() {
           player={profilePlayer}
           owned
           week={week}
+          season={season}
           actionFeedback={profileFeedback}
           onProfileAction={(action) => handleProfileAction(profilePlayer.id, action)}
           onBack={() => {
@@ -261,7 +306,11 @@ export default function App() {
           onTrainingPlanChange={handleTrainingPlanChange}
           activeScouts={activeScoutCount(scoutBoard)}
           league={league}
+          finances={finances}
+          clubId={session.clubId}
           simulating={simulating}
+          notice={hubNotice}
+          onDismissNotice={() => setHubNotice(null)}
           onSimulateWeek={() => void simulateWeek()}
           onSelectPlayer={setProfileId}
           onOpenYouth={() => {
@@ -271,8 +320,13 @@ export default function App() {
           onOpenScouting={() => setScreen("scouting")}
           onOpenLoans={() => setScreen("loans")}
           onOpenSquad={() => setScreen("squad")}
-          onOpenInbox={() => setInboxOpen(true)}
+          onOpenInbox={(itemId) => {
+            setInboxItemId(itemId ?? null);
+            setInboxOpen(true);
+          }}
+          onSelectScoutTarget={(playerId) => setForeignPlayerId(playerId)}
           youthInbox={youthInbox}
+          scoutBoard={scoutBoard}
           onNewGame={resetGame}
         />
       </div>
@@ -280,8 +334,12 @@ export default function App() {
         <DecisionInboxModal
           inbox={youthInbox}
           players={players}
+          initialItemId={inboxItemId}
           onDecision={handleInboxDecision}
-          onClose={() => setInboxOpen(false)}
+          onClose={() => {
+            setInboxOpen(false);
+            setInboxItemId(null);
+          }}
         />
       ) : null}
       {screen === "campus" ? (

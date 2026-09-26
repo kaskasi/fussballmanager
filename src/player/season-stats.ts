@@ -18,13 +18,18 @@ export function careerSeasonStats(
   if (player.squad_status === "loaned_out") return null;
 
   const minutes = player.state.season_minutes;
-  const apps = minutes > 0 ? Math.max(1, Math.round(minutes / 72)) : 0;
+  const apps =
+    player.state.season_apps > 0
+      ? player.state.season_apps
+      : minutes > 0
+        ? Math.max(1, Math.round(minutes / 72))
+        : 0;
   const rating = estimateMatchRating(player, minutes);
 
   return {
     apps,
-    goals: 0,
-    assists: 0,
+    goals: player.state.season_goals ?? 0,
+    assists: player.state.season_assists ?? 0,
     minutes,
     rating,
   };

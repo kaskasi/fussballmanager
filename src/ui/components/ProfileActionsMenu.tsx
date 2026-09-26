@@ -46,7 +46,7 @@ export function ProfileActionsMenu({
               key={item.action}
               type="button"
               role="menuitem"
-              className="row-menu-item"
+              className={`row-menu-item${item.action === "release" ? " row-menu-item-danger" : ""}`}
               title={item.hint}
               onClick={() => {
                 onSelect(item.action);

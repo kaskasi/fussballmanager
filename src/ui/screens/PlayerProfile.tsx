@@ -3,6 +3,7 @@ import {
   profileMenuItems,
   type PlayerProfileAction,
 } from "../../player/profile-actions.ts";
+import { formatClubCash } from "../../economy/club-finances.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import { confidenceLabel, type AbilityEstimate } from "../../scouting/estimate-model.ts";
@@ -45,7 +46,10 @@ export interface PlayerProfileProps {
   scoutEstimate?: AbilityEstimate;
   scouting?: boolean;
   week?: number;
+  season?: number;
   transferWindowOpen?: boolean;
+  transferBudget?: number;
+  purchasePrice?: number;
   shortlisted?: boolean;
   onBack: () => void;
   onOpenYouth?: () => void;
@@ -62,6 +66,9 @@ export function PlayerProfile({
   scoutEstimate,
   scouting = false,
   week,
+  season = 1,
+  transferBudget,
+  purchasePrice,
   onBack,
   onOpenYouth,
   onAssignScout,
@@ -74,7 +81,9 @@ export function PlayerProfile({
 }: PlayerProfileProps) {
   const [tab, setTab] = useState<ProfileTab>("overview");
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuItems = profileMenuItems(player, owned);
+  const menuItems = profileMenuItems(player, owned, season);
+  const canAffordPurchase =
+    purchasePrice === undefined || transferBudget === undefined || transferBudget >= purchasePrice;
   const reveal = scoutEstimate ? scoutReveal(scoutEstimate.uncertaintyRange) : null;
   const fitness = stateMark(player.state.fitness);
   const morale = stateMark(player.state.morale);
@@ -206,9 +215,11 @@ export function PlayerProfile({
           {onPurchase ? (
             <Hint
               text={
-                transferWindowOpen
-                  ? "Angebot nach Marktwert — Gegenangebot möglich."
-                  : "Transfers nur im Sommer- (KW 27–34) und Winterfenster (KW 2–4)."
+                !transferWindowOpen
+                  ? "Transfers nur im Sommer- (KW 27–34) und Winterfenster (KW 2–4)."
+                  : !canAffordPurchase
+                    ? `Transfer-Budget reicht nicht (ca. ${formatMoney(purchasePrice ?? 0)} nötig).`
+                    : "Angebot nach Marktwert — Gegenangebot möglich."
               }
               block
             >
@@ -216,9 +227,9 @@ export function PlayerProfile({
                 type="button"
                 className="profile-scout"
                 onClick={onPurchase}
-                disabled={!transferWindowOpen}
+                disabled={!transferWindowOpen || !canAffordPurchase}
               >
-                💰 Kaufen
+                💰 Kaufen{purchasePrice ? ` · ca. ${formatMoney(purchasePrice)}` : ""}
               </button>
             </Hint>
           ) : null}
@@ -382,7 +393,7 @@ function StatsTab({
 }) {
   return (
     <section className="profile-panel" aria-label="Statistik">
-      <Hint text="Saisonwerte aus gespeicherten Einsatzminuten. Tore/Vorlagen folgen mit Liga-Brücke." block>
+      <Hint text="Saisonwerte aus deinem Karriere-Kader — Minuten, Tore und Vorlagen nach Ligaspiel." block>
         {stats ? (
           <dl className="profile-stat-grid">
             <StatItem icon="👕" label="Einsätze" value={String(stats.apps)} />
@@ -475,6 +486,10 @@ function StateChip({
       <strong>{value}</strong>
     </div>
   );
+}
+
+function formatMoney(amount: number): string {
+  return formatClubCash(amount);
 }
 
 function positionGlyph(position: Player["position"]): string {

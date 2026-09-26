@@ -1,4 +1,5 @@
 import { createInitialTrainingPlan, type TrainingSlot } from "../development/training-units.ts";
+import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
 import { createScoutBoard, type ScoutBoard } from "../scouting/scout-board.ts";
 import { emptyTransferState, type TransferState } from "../transfers/negotiations.ts";
 import { emptyInbox, type YouthInboxState } from "../youth/decision-inbox.ts";
@@ -9,6 +10,7 @@ export interface PipelineState {
   scout_board: ScoutBoard;
   youth_inbox: YouthInboxState;
   transfer_state?: TransferState;
+  club_finances?: ClubFinances;
 }
 
 export function defaultPipelineState(week = 1): PipelineState {
@@ -17,5 +19,6 @@ export function defaultPipelineState(week = 1): PipelineState {
     scout_board: createScoutBoard(),
     youth_inbox: emptyInbox(week),
     transfer_state: emptyTransferState(),
+    club_finances: defaultClubFinances(),
   };
 }

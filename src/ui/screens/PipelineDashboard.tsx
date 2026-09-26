@@ -15,7 +15,10 @@ import {
   playerFixture,
   playerTableRow,
 } from "../../sim/league-week.ts";
+import { formatClubCash, weeklyWageBill, type ClubFinances } from "../../economy/club-finances.ts";
+import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import { inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
+import { HubInboxPanel } from "../components/HubInboxPanel.tsx";
 import { LeagueHubPanel } from "../components/LeagueHubPanel.tsx";
 import { TrainingCenter } from "./TrainingCenter.tsx";
 
@@ -38,9 +41,15 @@ export function PipelineDashboard({
   onOpenLoans,
   onOpenSquad,
   onOpenInbox,
+  onSelectScoutTarget,
   youthInbox,
+  scoutBoard,
   league,
+  finances,
+  clubId,
   simulating,
+  notice = null,
+  onDismissNotice,
   onNewGame,
 }: {
   players: Player[];
@@ -56,10 +65,16 @@ export function PipelineDashboard({
   onOpenScouting: () => void;
   onOpenLoans: () => void;
   onOpenSquad: () => void;
-  onOpenInbox: () => void;
+  onOpenInbox: (itemId?: string) => void;
+  onSelectScoutTarget: (playerId: string) => void;
   youthInbox: YouthInboxState;
+  scoutBoard: ScoutBoard;
   league: LeagueState;
+  finances: ClubFinances;
+  clubId: string;
   simulating: boolean;
+  notice?: string | null;
+  onDismissNotice?: () => void;
   onNewGame: () => void;
 }) {
   const [panel, setPanel] = useState<"hub" | "training">("hub");
@@ -107,6 +122,7 @@ export function PipelineDashboard({
       )
     : null;
   const seasonMatchdays = totalSeasonMatchdays(league);
+  const wageBill = weeklyWageBill(players, clubId);
   const matchdayLabel = league.season_complete
     ? "Saison beendet"
     : `Spieltag ${Math.min(league.matchday, seasonMatchdays)}/${seasonMatchdays}`;
@@ -125,6 +141,16 @@ export function PipelineDashboard({
 
   return (
     <main className="pipeline">
+      {notice ? (
+        <p className="pipeline-notice" role="status">
+          {notice}
+          {onDismissNotice ? (
+            <button type="button" className="pipeline-notice-dismiss" onClick={onDismissNotice}>
+              Schließen
+            </button>
+          ) : null}
+        </p>
+      ) : null}
       <header className="pipeline-head">
         <div>
           <p className="eyebrow">
@@ -143,6 +169,9 @@ export function PipelineDashboard({
             ) : (
               "Liga — Saisonstart"
             )}
+          </p>
+          <p className="pipeline-finance" title={`Gehälter diese Woche: ${formatClubCash(wageBill)}`}>
+            💰 {formatClubCash(finances.cash)}
           </p>
           <p className="pipeline-save" title={lastSaved}>💾 Gespeichert</p>
         </div>
@@ -220,6 +249,14 @@ export function PipelineDashboard({
           </>
         )}
       </p>
+      <HubInboxPanel
+        week={week}
+        players={players}
+        youthInbox={youthInbox}
+        scoutBoard={scoutBoard}
+        onOpenDecision={(itemId) => onOpenInbox(itemId)}
+        onSelectScoutTarget={onSelectScoutTarget}
+      />
       <LeagueHubPanel league={league} />
       <section>
         <div className="pipeline-chart" aria-label="Pipeline nach Stufe">
@@ -247,16 +284,20 @@ export function PipelineDashboard({
           </button>
           <button type="button" className="pipeline-tile" onClick={onOpenYouth}>
             <span>🏫</span>
+            <span>Jugend-Campus · U17→U19→⭐</span>
+          </button>
+          <button
+            type="button"
+            className={inbox.pending > 0 ? "pipeline-tile pipeline-tile-inbox" : "pipeline-tile"}
+            onClick={() => onOpenInbox()}
+          >
+            <span>📥</span>
             <span>
-              Jugend-Campus · U17→U19→⭐ via 📥 Inbox
+              {inbox.pending > 0
+                ? `${inbox.pending} Entscheidungen offen`
+                : "Inbox · Entscheidungen & Scouts"}
             </span>
           </button>
-          {inbox.pending > 0 ? (
-            <button type="button" className="pipeline-tile pipeline-tile-inbox" onClick={onOpenInbox}>
-              <span>📥</span>
-              <span>{inbox.pending} Entscheidungen offen</span>
-            </button>
-          ) : null}
           <button type="button" className="pipeline-tile" onClick={onOpenScouting}>
             <span>👁️</span>
             <span>🟢 {activeScouts} Scout-Ziele aktiv · Marktliste</span>

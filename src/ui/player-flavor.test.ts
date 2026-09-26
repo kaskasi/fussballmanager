@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ACHIEVEMENT, grantAchievement } from "../player/achievements.ts";
+import { defaultYouthContract } from "../player/youth-contract.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import {
   achievementBadges,
@@ -62,7 +63,9 @@ describe("player flavor", () => {
     const youth = clonePlayer();
     youth.squad_status = "u17";
     youth.contract = null;
-    expect(contractView(youth, true).status).toBe("Jugendvertrag");
+    expect(contractView(youth, true).status).toBe("Kein Vertrag");
+    expect(contractView(youth, true).wageWeekly).toBe("Noch nicht unterzeichnet");
+    youth.contract = defaultYouthContract(15, 1);
     expect(contractView(youth, true).wageWeekly).toContain("€");
   });
 });

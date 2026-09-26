@@ -198,6 +198,27 @@ export function contractView(player: Player, owned: boolean, estimate?: AbilityE
       minutesPromise: "?",
     };
   }
+  if (player.squad_status === "u17" || player.squad_status === "u19") {
+    const youth = player.contract ?? defaultYouthContract(player.age, 1);
+    return {
+      status: player.contract ? "Jugendvertrag" : "Kein Vertrag",
+      wageWeekly: player.contract
+        ? `€ ${youth.wage_weekly.toLocaleString("de-DE")} / Woche`
+        : "Noch nicht unterzeichnet",
+      untilSeason: player.contract ? `Saison ${youth.until_season}` : "—",
+      clauses: player.contract
+        ? [
+            youth.bonus_appearance > 0
+              ? `Einsatzbonus € ${youth.bonus_appearance}`
+              : "Kein Einsatzbonus",
+            youth.guaranteed_minutes_promise === "rotation"
+              ? "Rotation in der Akademie versprochen"
+              : "Akademie-Einsätze nach Sim",
+          ]
+        : ["Ohne Vertrag droht Abgang ab 17", "Inbox oder ⋮-Menü: Jugendvertrag"],
+      minutesPromise: minutesLabel(youth.guaranteed_minutes_promise ?? "none"),
+    };
+  }
   if (player.contract) {
     return {
       status: "Profivertrag",
@@ -208,21 +229,6 @@ export function contractView(player: Player, owned: boolean, estimate?: AbilityE
         player.contract.sell_on_percentage ? `Weiterverkaufsbeteiligung ${player.contract.sell_on_percentage}%` : "Keine Sell-on-Klausel",
       ],
       minutesPromise: minutesLabel(player.contract.guaranteed_minutes_promise ?? "none"),
-    };
-  }
-  if (player.squad_status === "u17" || player.squad_status === "u19") {
-    const youth = player.contract ?? defaultYouthContract(player.age, 1);
-    return {
-      status: "Jugendvertrag",
-      wageWeekly: `€ ${youth.wage_weekly.toLocaleString("de-DE")} / Woche`,
-      untilSeason: `Saison ${youth.until_season}`,
-      clauses: [
-        "Kein Profivertrag unter 16",
-        youth.bonus_appearance > 0
-          ? `Einsatzbonus € ${youth.bonus_appearance}`
-          : "Kein Einsatzbonus",
-      ],
-      minutesPromise: "Akademie-Minuten (automatische Sim)",
     };
   }
   return {

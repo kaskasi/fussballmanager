@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 import { defaultLeagueState, totalSeasonMatchdays } from "../persistence/league-state.ts";
 import {
   advanceLeagueWeek,
-  applyProMatchMinutes,
   leagueTable,
   simulateQuickMatchday,
   weeklySeed,
 } from "./league-week.ts";
+import { applyCareerMatchWeek } from "./career-match-sync.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 
 describe("league week", () => {
@@ -64,7 +64,7 @@ describe("league week", () => {
       homeGoals: 2,
       awayGoals: 1,
     };
-    const next = applyProMatchMinutes([player], fixture, NORDSTERN_ID)[0];
+    const next = applyCareerMatchWeek([player], fixture, NORDSTERN_ID, 1, 2026, 1).players[0];
     expect(next?.state.weekly_minutes).toBeGreaterThan(50);
   });
 });

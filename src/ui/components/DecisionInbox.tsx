@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName, roundStat } from "../../types/player-display.ts";
+import { defaultYouthContract } from "../../player/youth-contract.ts";
 import { estimateCa } from "../../transfers/market-value.ts";
 import type { CoachIcon } from "../../youth/academy.ts";
 import {
@@ -25,14 +26,22 @@ export function DecisionInboxModal({
   players,
   onDecision,
   onClose,
+  initialItemId = null,
 }: {
   inbox: YouthInboxState;
   players: Player[];
   onDecision: (itemId: string, action: DecisionAction) => void;
   onClose: () => void;
+  initialItemId?: string | null;
 }) {
   const pending = useMemo(() => pendingInboxItems(inbox), [inbox]);
-  const [activeId, setActiveId] = useState<string | null>(pending[0]?.id ?? null);
+  const [activeId, setActiveId] = useState<string | null>(initialItemId ?? pending[0]?.id ?? null);
+
+  useEffect(() => {
+    if (initialItemId && pending.some((item) => item.id === initialItemId)) {
+      setActiveId(initialItemId);
+    }
+  }, [initialItemId, pending]);
 
   useEffect(() => {
     if (!pending.some((item) => item.id === activeId)) {
@@ -108,6 +117,12 @@ export function DecisionInboxModal({
                     </p>
                   </div>
                 </div>
+
+                {active.kind === "contract_offer" || active.reason === "no_contract" ? (
+                  <p className="inbox-contract-hint">
+                    ✍️ Angebot: € {defaultYouthContract(player.age, 1).wage_weekly}/Woche · Moral + bei Unterschrift
+                  </p>
+                ) : null}
 
                 <div className="inbox-actions" aria-label="Aktionen">
                   {allowedActions(active).map((action) => (

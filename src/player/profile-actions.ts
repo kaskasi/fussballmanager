@@ -1,6 +1,9 @@
 import { ACHIEVEMENT, grantAchievement } from "./achievements.ts";
+import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
+import { needsYouthContract, signYouthContract } from "./youth-contract.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
+import { formatPlayerName } from "../types/player-display.ts";
 
 export type PlayerProfileAction =
   | "praise"
@@ -8,7 +11,11 @@ export type PlayerProfileAction =
   | "promote_u19"
   | "promote_pro"
   | "demote_u19"
-  | "demote_u17";
+  | "demote_u17"
+  | "sign_contract"
+  | "release";
+
+const MIN_PRO_SQUAD = 11;
 
 export interface ProfileMenuItem {
   action: PlayerProfileAction;
@@ -39,7 +46,11 @@ function ca(player: Player): number {
 }
 
 /** Contextual manager menu for owned players (PRD 09.2 Screen 4). */
-export function profileMenuItems(player: Player, owned: boolean): ProfileMenuItem[] {
+export function profileMenuItems(
+  player: Player,
+  owned: boolean,
+  season = 1,
+): ProfileMenuItem[] {
   if (!owned || player.squad_status === "loaned_out") return [];
 
   const items: ProfileMenuItem[] = [];
@@ -93,15 +104,64 @@ export function profileMenuItems(player: Player, owned: boolean): ProfileMenuIte
     });
   }
 
+  if (needsYouthContract(player, season)) {
+    const wageHint = player.age <= 15 ? 80 : player.age === 16 ? 120 : 175;
+    items.push({
+      action: "sign_contract",
+      label: "✍️ Jugendvertrag",
+      hint: `Vertrag bis Saison ${season + (player.age <= 16 ? 3 : 2)} · ca. € ${wageHint}/Woche`,
+    });
+  }
+
+  items.push({
+    action: "release",
+    label: "🚪 Aus Kader entfernen",
+    hint: "Spieler verlässt den Verein und ist vereinslos.",
+  });
+
   return items;
 }
 
 export interface ProfileActionResult {
   player: Player;
   message: string;
+  removed?: boolean;
 }
 
-export function applyProfileAction(player: Player, action: PlayerProfileAction): ProfileActionResult {
+export function canReleasePlayer(
+  player: Player,
+  squad: readonly Player[],
+  clubId: string = DEFAULT_CLUB_ID,
+): string | null {
+  if (player.club_id !== clubId) return "Spieler gehört nicht zum Verein.";
+  if (player.squad_status === "loaned_out") {
+    return "Ausgeliehene Spieler können nicht entlassen werden.";
+  }
+
+  const clubPlayers = squad.filter((entry) => entry.club_id === clubId);
+  if (player.squad_status === "pro") {
+    const pros = clubPlayers.filter((entry) => entry.squad_status === "pro");
+    if (pros.length <= MIN_PRO_SQUAD) {
+      return `Mindestens ${MIN_PRO_SQUAD} Profis müssen im Kader bleiben.`;
+    }
+    if (player.position === "GK") {
+      const otherGoalkeepers = pros.filter(
+        (entry) => entry.position === "GK" && entry.id !== player.id,
+      );
+      if (otherGoalkeepers.length === 0) {
+        return "Mindestens ein Torwart muss im Profikader bleiben.";
+      }
+    }
+  }
+
+  return null;
+}
+
+export function applyProfileAction(
+  player: Player,
+  action: PlayerProfileAction,
+  season = 1,
+): ProfileActionResult {
   switch (action) {
     case "praise": {
       const boost = player.state.form >= 2 ? 10 : 5;
@@ -171,6 +231,24 @@ export function applyProfileAction(player: Player, action: PlayerProfileAction):
       };
       return { player: next, message: "Abstieg in U17 — Spieler ist enttäuscht." };
     }
+    case "sign_contract": {
+      if (!needsYouthContract(player, season)) {
+        return { player, message: "Für diesen Spieler ist kein neuer Jugendvertrag nötig." };
+      }
+      const next = grantAchievement(signYouthContract(player, season, { moraleBoost: 8 }), ACHIEVEMENT.contractSigned);
+      const wage = next.contract?.wage_weekly ?? 0;
+      return {
+        player: next,
+        message: `Jugendvertrag bis Saison ${next.contract?.until_season} · € ${wage}/Woche · Moral steigt.`,
+      };
+    }
+    case "release": {
+      return {
+        player,
+        message: `${formatPlayerName(player)} wurde aus dem Kader entfernt.`,
+        removed: true,
+      };
+    }
   }
 }
 
@@ -178,10 +256,26 @@ export function applyProfileActionToSquad(
   players: readonly Player[],
   playerId: string,
   action: PlayerProfileAction,
+  clubId: string = DEFAULT_CLUB_ID,
+  season = 1,
 ): { players: Player[]; result: ProfileActionResult | null } {
   const index = players.findIndex((player) => player.id === playerId);
   if (index < 0) return { players: [...players], result: null };
-  const result = applyProfileAction(players[index]!, action);
+  const player = players[index]!;
+
+  if (action === "release") {
+    const blocked = canReleasePlayer(player, players, clubId);
+    if (blocked) {
+      return { players: [...players], result: { player, message: blocked } };
+    }
+    const result = applyProfileAction(player, action);
+    return {
+      players: players.filter((entry) => entry.id !== playerId),
+      result,
+    };
+  }
+
+  const result = applyProfileAction(player, action, season);
   const next = [...players];
   next[index] = result.player;
   return { players: next, result };

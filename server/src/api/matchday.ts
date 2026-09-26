@@ -1,8 +1,23 @@
-import { SEED_DIVISION } from "@fussballmanager/shared";
+import {
+  assertValidSquad,
+  NORDSTERN_ID,
+  SEED_DIVISION,
+  type Squad,
+} from "@fussballmanager/shared";
 import { playMatchday } from "../engine/matchday.ts";
 
-export function parseMatchdayBody(body: unknown): { matchday: number; baseSeed: number } {
-  const payload = body as { matchday?: number; baseSeed?: number };
+export interface MatchdayInput {
+  matchday: number;
+  baseSeed: number;
+  playerClubSquad?: Squad;
+}
+
+export function parseMatchdayBody(body: unknown): MatchdayInput {
+  const payload = body as {
+    matchday?: number;
+    baseSeed?: number;
+    playerClubSquad?: Squad;
+  };
   const matchday = Number(payload.matchday ?? 1);
   const baseSeed = Number(payload.baseSeed ?? 2026);
   if (!Number.isFinite(matchday) || matchday < 1) {
@@ -11,12 +26,28 @@ export function parseMatchdayBody(body: unknown): { matchday: number; baseSeed: 
   if (!Number.isFinite(baseSeed)) {
     throw new Error("baseSeed must be a number");
   }
-  return { matchday, baseSeed };
+
+  const playerClubSquad = payload.playerClubSquad;
+  if (playerClubSquad) {
+    assertValidSquad(playerClubSquad);
+    if (playerClubSquad.team.id !== NORDSTERN_ID) {
+      throw new Error("playerClubSquad must belong to the player club");
+    }
+  }
+
+  return { matchday, baseSeed, playerClubSquad };
 }
 
-export function runMatchday(input: { matchday: number; baseSeed: number }) {
+function squadsForMatchday(playerClubSquad?: Squad) {
+  if (!playerClubSquad) return [...SEED_DIVISION];
+  return SEED_DIVISION.map((squad) =>
+    squad.team.id === playerClubSquad.team.id ? playerClubSquad : squad,
+  );
+}
+
+export function runMatchday(input: MatchdayInput) {
   const played = playMatchday({
-    squads: SEED_DIVISION,
+    squads: squadsForMatchday(input.playerClubSquad),
     matchday: input.matchday,
     baseSeed: input.baseSeed,
   });

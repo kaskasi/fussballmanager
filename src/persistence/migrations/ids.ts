@@ -6,4 +6,6 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_006_league_season_mode",
   "migration_007_player_tracking",
   "migration_008_calendar",
+  "migration_009_career_league_sync",
+  "migration_010_club_finances",
 ] as const;

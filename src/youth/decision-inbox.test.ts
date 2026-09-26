@@ -91,6 +91,31 @@ describe("decision inbox", () => {
     expect(pendingInboxItems(result.inbox)).toHaveLength(0);
   });
 
+  it("signs a youth contract with wage bands and morale boost", () => {
+    const player = youthPlayer("pl_contract", 17);
+    const inbox: YouthInboxState = {
+      week: 34,
+      items: [
+        {
+          id: "con_pl_contract_34",
+          playerId: player.id,
+          kind: "contract_offer",
+          week: 34,
+          urgency: "now",
+          reason: "contract_due",
+        },
+      ],
+      resolvedIds: [],
+      overflowDropped: 0,
+      coachIcons: {},
+      lastReport: null,
+    };
+    const result = applyInboxDecision(inbox, [player], "con_pl_contract_34", "contract", 1);
+    expect(result.players[0]?.contract?.wage_weekly).toBe(175);
+    expect(result.players[0]?.state.morale).toBeGreaterThan(player.state.morale);
+    expect(result.players[0]?.history.achievements).toContain(ACHIEVEMENT.contractSigned);
+  });
+
   it("drops players who ignore a departure warning", () => {
     const player = youthPlayer("pl_leave", 17);
     const inbox: YouthInboxState = {

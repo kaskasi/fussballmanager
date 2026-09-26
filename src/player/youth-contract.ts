@@ -8,12 +8,44 @@ export function defaultYouthContract(age: number, currentSeason: number): Contra
     bonus_goal: 0,
     bonus_appearance: 25,
     until_season: currentSeason + (age <= 16 ? 3 : 2),
-    guaranteed_minutes_promise: "none",
+    guaranteed_minutes_promise: age >= 17 ? "rotation" : "none",
+  };
+}
+
+export interface YouthContractOptions {
+  moraleBoost?: number;
+}
+
+function clampMorale(value: number): number {
+  return Math.min(100, Math.max(0, value));
+}
+
+export function signYouthContract(
+  player: Player,
+  currentSeason: number,
+  options: YouthContractOptions = {},
+): Player {
+  const hadContract = Boolean(player.contract);
+  const contract = defaultYouthContract(player.age, currentSeason);
+  const moraleBoost = options.moraleBoost ?? (hadContract ? 3 : 8);
+  return {
+    ...player,
+    contract,
+    state: {
+      ...player.state,
+      morale: clampMorale(player.state.morale + moraleBoost),
+    },
   };
 }
 
 export function ensureYouthContract(player: Player, currentSeason: number): Player {
   if (player.squad_status !== "u17" && player.squad_status !== "u19") return player;
   if (player.contract) return player;
-  return { ...player, contract: defaultYouthContract(player.age, currentSeason) };
+  return signYouthContract(player, currentSeason, { moraleBoost: 0 });
+}
+
+export function needsYouthContract(player: Player, currentSeason: number): boolean {
+  if (player.squad_status !== "u17" && player.squad_status !== "u19") return false;
+  if (!player.contract) return true;
+  return player.contract.until_season <= currentSeason;
 }

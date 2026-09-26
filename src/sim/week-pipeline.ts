@@ -1,14 +1,17 @@
 import { expireBreakoutModifiers, processWeeklyBreakoutChecks } from "../development/breakouts.ts";
 import { applyTrainingWeek } from "../development/pipeline-week.ts";
 import { planToSessions } from "../development/training-units.ts";
+import { advanceWeeklyClubFinances } from "../economy/club-finances.ts";
 import type { GameSession } from "../persistence/game-session.ts";
+import { applyDepartureMoralePressure } from "../youth/departure-morale.ts";
 import { accumulateWeeklyGrowth, weeklyAttributeGrowth } from "../player/growth-history.ts";
 import { advanceScoutWeek } from "../scouting/scout-board.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
 import { advanceInboxWeek } from "../youth/decision-inbox.ts";
 import { simulateYouthWeek } from "../youth/youth-sim.ts";
+import { mergeCareerLeagueStats, applyCareerMatchWeek } from "./career-match-sync.ts";
 import { advanceCalendarWeek } from "./game-calendar.ts";
-import { advanceLeagueWeek, applyProMatchMinutes } from "./league-week.ts";
+import { advanceLeagueWeek } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
 
 export interface WeekSimResult {
@@ -24,6 +27,7 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     session.season,
     nextWeek,
     session.masterSeed,
+    session.players,
   );
 
   const sessions = planToSessions(session.trainingPlan);
@@ -34,11 +38,23 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     return accumulateWeeklyGrowth(trained, growth);
   });
 
-  players = applyProMatchMinutes(
+  const careerMatch = applyCareerMatchWeek(
     players,
     leagueStep.playerFixture,
     session.league.player_club_id,
+    leagueStep.matchdayPlayed,
+    session.masterSeed,
+    session.season,
+    leagueStep.clubPlayerStats,
   );
+  players = careerMatch.players;
+  const leagueWithCareerStats = {
+    ...leagueStep.league,
+    career_player_stats: mergeCareerLeagueStats(
+      leagueStep.league.career_player_stats ?? [],
+      careerMatch.matchdayStats,
+    ),
+  };
 
   const youth = simulateYouthWeek(players, session.week, session.masterSeed);
   players = youth.players;
@@ -54,16 +70,19 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     session.masterSeed,
     youth.report,
   );
+  const playersWithMorale = applyDepartureMoralePressure(advanced.players, advanced.inbox);
+  const finances = advanceWeeklyClubFinances(session.finances, playersWithMorale, session.clubId);
 
   const seasonEnded = footballSeasonEnded;
   let nextSession: GameSession = {
     ...session,
     season: seasonEnded ? session.season + 1 : session.season,
     week: nextWeek,
-    players: advanced.players,
-    scoutBoard: advanceScoutWeek(session.scoutBoard),
+    players: playersWithMorale,
+    scoutBoard: advanceScoutWeek(session.scoutBoard, nextWeek),
     youthInbox: advanced.inbox,
-    league: leagueStep.league,
+    league: leagueWithCareerStats,
+    finances,
   };
 
   let intakeCount = 0;

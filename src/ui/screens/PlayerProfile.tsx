@@ -1,0 +1,427 @@
+import { useState } from "react";
+import type { Player } from "../../types/player.ts";
+import { formatPlayerName } from "../../types/player-display.ts";
+import { confidenceLabel, type AbilityEstimate } from "../../scouting/estimate-model.ts";
+import {
+  formatScoutCa,
+  formatScoutStateValue,
+  scoutReveal,
+} from "../../scouting/scout-visibility.ts";
+import { Hint } from "../components/Hint.tsx";
+import {
+  achievementBadges,
+  contractView,
+  flavorForScout,
+  seasonStatsStub,
+} from "../player-flavor.ts";
+import {
+  attributeBars,
+  attributeLabel,
+  formMark,
+  growthPolyline,
+  growthSeries,
+  profileFacts,
+  stateMark,
+  visibleBreakoutFlags,
+} from "../player-profile.ts";
+
+type ProfileTab = "overview" | "development" | "stats" | "contract";
+
+const TABS: { id: ProfileTab; label: string; icon: string }[] = [
+  { id: "overview", label: "Überblick", icon: "📋" },
+  { id: "development", label: "Entwicklung", icon: "📈" },
+  { id: "stats", label: "Statistik", icon: "⚽" },
+  { id: "contract", label: "Vertrag", icon: "✍️" },
+];
+
+export interface PlayerProfileProps {
+  player: Player;
+  owned: boolean;
+  scoutEstimate?: AbilityEstimate;
+  scouting?: boolean;
+  week?: number;
+  onBack: () => void;
+  onOpenYouth?: () => void;
+  onAssignScout?: () => void;
+}
+
+export function PlayerProfile({
+  player,
+  owned,
+  scoutEstimate,
+  scouting = false,
+  week,
+  onBack,
+  onOpenYouth,
+  onAssignScout,
+}: PlayerProfileProps) {
+  const [tab, setTab] = useState<ProfileTab>("overview");
+  const reveal = scoutEstimate ? scoutReveal(scoutEstimate.uncertaintyRange) : null;
+  const fitness = stateMark(player.state.fitness);
+  const morale = stateMark(player.state.morale);
+  const form = formMark(player.state.form);
+  const bars = attributeBars(player, owned, scoutEstimate);
+  const growth = owned
+    ? growthSeries(player)
+    : reveal?.showExactCa
+      ? [{ season: 1, ca: Number(formatScoutCa(player, scoutEstimate!, false)) }]
+      : [];
+  const timeline = visibleBreakoutFlags(player.hidden.breakout_flags);
+  const scoutLabel =
+    owned || !scoutEstimate
+      ? null
+      : confidenceLabel({ status: "scouted", estimate: scoutEstimate });
+  const ca = owned
+    ? formatScoutCa(player, scoutEstimate ?? { estimatedAbilityMean: 65, uncertaintyRange: 0, sampleSize: 0 }, true)
+    : scoutEstimate
+      ? formatScoutCa(player, scoutEstimate, false)
+      : "?";
+  const facts = profileFacts(player, owned);
+  const metaLine = facts.map((fact) => `${fact.icon} ${fact.value}`).join(" · ");
+  const flavor = flavorForScout(player, owned, scoutEstimate);
+  const achievements = achievementBadges(player, owned, scoutEstimate);
+  const stats = seasonStatsStub(player, owned, scoutEstimate);
+  const contract = contractView(player, owned, scoutEstimate);
+
+  return (
+    <main className="profile">
+      <header className="profile-toolbar">
+        <button type="button" onClick={onBack} aria-label="Zurück">
+          ←
+        </button>
+        <p className="eyebrow">Spieler{week ? ` · Woche ${week}` : ""}</p>
+      </header>
+
+      <article className="profile-card">
+        <div className="profile-identity">
+          <span className="profile-portrait" aria-hidden="true">{positionGlyph(player.position)}</span>
+          <div className="profile-identity-body">
+            <Hint text="Spielername. Fremde Spieler werden erst durch Scouting besser bekannt." block>
+              <h1 className="profile-name">{formatPlayerName(player)}</h1>
+            </Hint>
+            <div className="profile-identity-stats">
+              <Hint text="Hauptposition auf dem Platz.">
+                <span className="profile-stat">{player.position}</span>
+              </Hint>
+              <Hint text="Alter in Jahren.">
+                <span className="profile-stat">{player.age} J.</span>
+              </Hint>
+              <Hint text="Current Ability — geschätzte Gesamtstärke.">
+                <span className="profile-stat profile-stat-ca">CA {ca}</span>
+              </Hint>
+              {scoutLabel ? (
+                <Hint text="Wie gut dein Verein diesen Spieler kennt.">
+                  <span className="profile-scout-badge">{scoutLabel}</span>
+                </Hint>
+              ) : null}
+            </div>
+            <Hint text="Stammdaten auf einen Blick." block>
+              <p className="profile-meta-line">{metaLine}</p>
+            </Hint>
+          </div>
+        </div>
+
+        <nav className="profile-tabs" aria-label="Profil-Bereiche">
+          {TABS.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              className={tab === entry.id ? "profile-tab is-active" : "profile-tab"}
+              aria-current={tab === entry.id ? "page" : undefined}
+              onClick={() => setTab(entry.id)}
+            >
+              <span aria-hidden="true">{entry.icon}</span>
+              {entry.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="profile-card-divider" />
+
+        {tab === "overview" ? (
+          <OverviewTab flavor={flavor} achievements={achievements} owned={owned} />
+        ) : null}
+        {tab === "development" ? (
+          <DevelopmentTab
+            player={player}
+            owned={owned}
+            scoutEstimate={scoutEstimate}
+            fitness={fitness}
+            morale={morale}
+            form={form}
+            bars={bars}
+            growth={growth}
+            timeline={timeline}
+            reveal={reveal}
+          />
+        ) : null}
+        {tab === "stats" ? <StatsTab stats={stats} owned={owned} /> : null}
+        {tab === "contract" ? <ContractTab contract={contract} /> : null}
+      </article>
+
+      {!owned && onAssignScout ? (
+        <Hint text="Scout beobachtet den Spieler jede Woche. Pipeline → Woche simulieren." block>
+          <button type="button" className="profile-scout" onClick={onAssignScout} disabled={scouting}>
+            {scouting ? "🟢 Scout aktiv · Bericht nach Wochensim" : "👁️ Diesen Spieler scouten"}
+          </button>
+        </Hint>
+      ) : null}
+
+      {onOpenYouth ? (
+        <button type="button" className="profile-next" onClick={onOpenYouth}>
+          → Zur Jahrgangsliste
+        </button>
+      ) : null}
+    </main>
+  );
+}
+
+function OverviewTab({
+  flavor,
+  achievements,
+  owned,
+}: {
+  flavor: ReturnType<typeof flavorForScout>;
+  achievements: string[];
+  owned: boolean;
+}) {
+  return (
+    <section className="profile-panel" aria-label="Überblick">
+      <Hint text="Kurzportrait — aus Region, Position und Scout-Berichten generiert. Mehr Scouting = mehr Text." block>
+        {flavor ? (
+          <div className="profile-flavor">
+            <p className="profile-flavor-headline">{flavor.headline}</p>
+            <p className="profile-flavor-body">{flavor.body}</p>
+            <ul className="profile-trait-list">
+              {flavor.traits.map((trait) => (
+                <li key={trait}>{trait}</li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="profile-empty">Noch kaum Gerüchte. Scouten und Wochen simulieren, um mehr zu erfahren.</p>
+        )}
+      </Hint>
+
+      <Hint text="Erfolge und Auszeichnungen — bei fremden Spielern erst nach besserem Scout-Wissen." block>
+        <div className="profile-achievements">
+          <p className="profile-section-label">Erfolge</p>
+          {achievements.length > 0 ? (
+            <ul className="profile-badge-list">
+              {achievements.map((badge) => (
+                <li key={badge}>{badge}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="profile-empty">{owned ? "Noch keine Einträge." : "Unbekannt — Scout-Berichte nötig."}</p>
+          )}
+        </div>
+      </Hint>
+    </section>
+  );
+}
+
+function DevelopmentTab({
+  player,
+  owned,
+  scoutEstimate,
+  fitness,
+  morale,
+  form,
+  bars,
+  growth,
+  timeline,
+  reveal,
+}: {
+  player: Player;
+  owned: boolean;
+  scoutEstimate?: AbilityEstimate;
+  fitness: ReturnType<typeof stateMark>;
+  morale: ReturnType<typeof stateMark>;
+  form: ReturnType<typeof formMark>;
+  bars: ReturnType<typeof attributeBars>;
+  growth: { season: number; ca: number }[];
+  timeline: string[];
+  reveal: ReturnType<typeof scoutReveal> | null;
+}) {
+  return (
+    <section className="profile-panel" aria-label="Entwicklung">
+      <Hint text="Aktueller Zustand. ● gut, ▲ mittel, ◆ schwach." block>
+        <div className="profile-state">
+          <StateChip label="Fit" mark={fitness.mark} tone={fitness.tone} value={formatState(player.state.fitness, owned, scoutEstimate)} />
+          <StateChip label="Form" mark={form.mark} tone={form.tone} value={formatState(player.state.form, owned, scoutEstimate, true)} />
+          <StateChip label="Morale" mark={morale.mark} tone={morale.tone} value={formatState(player.state.morale, owned, scoutEstimate)} />
+        </div>
+      </Hint>
+
+      <Hint text="Die sechs wichtigsten Skills für diese Position." block>
+        <div className="profile-bars">
+          <p className="profile-section-label">Kernattribute</p>
+          {bars.map((bar) => (
+            <div key={bar.key} className={bar.dimmed ? "profile-bar-row is-dimmed" : "profile-bar-row"}>
+              <span className="profile-bar-label">{attributeLabel(bar.key)}</span>
+              <div className="profile-bar-track">
+                {bar.showCi && bar.low !== undefined && bar.high !== undefined ? (
+                  <span
+                    className="profile-bar-ci"
+                    style={{ left: `${(bar.low / 199) * 100}%`, width: `${((bar.high - bar.low) / 199) * 100}%` }}
+                  />
+                ) : null}
+                <span className="profile-bar-fill" style={{ width: `${(bar.value / 199) * 100}%` }} />
+              </div>
+              <span className="profile-bar-value">{bar.showValue ? bar.value : "?"}</span>
+            </div>
+          ))}
+        </div>
+      </Hint>
+
+      {growth.length > 0 ? (
+        <Hint text="Entwicklung über die Saisons." block>
+          <div className="profile-growth">
+            <p className="profile-section-label">Entwicklung</p>
+            <svg viewBox="0 0 240 72" role="img" aria-label="Attributverlauf">
+              <polyline points={growthPolyline(growth)} fill="none" stroke="#059669" strokeWidth="3" />
+              {growth.map((point, index) => {
+                const x = growth.length === 1 ? 120 : (index / (growth.length - 1)) * 240;
+                const min = Math.min(...growth.map((entry) => entry.ca));
+                const max = Math.max(...growth.map((entry) => entry.ca));
+                const y = 68 - ((point.ca - min) / Math.max(max - min, 1)) * 60;
+                return <circle key={point.season} cx={x} cy={y} r="4" fill="#047857" />;
+              })}
+            </svg>
+            <p className="profile-growth-note">
+              {owned
+                ? player.history.growth.length === 0
+                  ? "Saison 1 · erster Stand"
+                  : `${player.history.growth.length} Saison(en)`
+                : reveal?.showExactCa
+                  ? "Scout-Schätzung"
+                  : "Noch kein belastbarer Verlauf"}
+            </p>
+          </div>
+        </Hint>
+      ) : (
+        <p className="profile-growth-note profile-growth-empty">Entwicklung noch unbekannt</p>
+      )}
+
+      {owned && timeline.length > 0 ? (
+        <div className="profile-timeline" aria-label="Breakouts">
+          {timeline.map((flag) => (
+            <span key={flag} title={flag}>💡</span>
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function StatsTab({
+  stats,
+  owned,
+}: {
+  stats: ReturnType<typeof seasonStatsStub>;
+  owned: boolean;
+}) {
+  return (
+    <section className="profile-panel" aria-label="Statistik">
+      <Hint text="Saison-Stub aus Demo-Daten. Echte Match-Engine-Stats kommen später." block>
+        {stats ? (
+          <dl className="profile-stat-grid">
+            <StatItem icon="👕" label="Einsätze" value={String(stats.apps)} />
+            <StatItem icon="⚽" label="Tore" value={String(stats.goals)} />
+            <StatItem icon="🅰️" label="Vorlagen" value={String(stats.assists)} />
+            <StatItem icon="⏱️" label="Minuten" value={String(stats.minutes)} />
+            <StatItem icon="★" label="Ø Note" value={stats.rating} />
+          </dl>
+        ) : (
+          <p className="profile-empty">
+            {owned ? "Noch keine Saison-Spiele." : "Statistik unbekannt — mehr Scouting nötig."}
+          </p>
+        )}
+      </Hint>
+    </section>
+  );
+}
+
+function ContractTab({ contract }: { contract: ReturnType<typeof contractView> }) {
+  return (
+    <section className="profile-panel" aria-label="Vertrag">
+      <Hint text="Vertragsdetails — Stubs bis das Transfer-Modul (F5) live ist." block>
+        <dl className="profile-contract-list">
+          <div className="profile-contract-row">
+            <dt>Status</dt>
+            <dd>{contract.status}</dd>
+          </div>
+          <div className="profile-contract-row">
+            <dt>Gehalt</dt>
+            <dd>{contract.wageWeekly}</dd>
+          </div>
+          <div className="profile-contract-row">
+            <dt>Laufzeit bis</dt>
+            <dd>{contract.untilSeason}</dd>
+          </div>
+          <div className="profile-contract-row">
+            <dt>Minuten</dt>
+            <dd>{contract.minutesPromise}</dd>
+          </div>
+        </dl>
+        <ul className="profile-clause-list">
+          {contract.clauses.map((clause) => (
+            <li key={clause}>{clause}</li>
+          ))}
+        </ul>
+      </Hint>
+    </section>
+  );
+}
+
+function StatItem({ icon, label, value }: { icon: string; label: string; value: string }) {
+  return (
+    <div className="profile-stat-item">
+      <span aria-hidden="true">{icon}</span>
+      <span className="profile-stat-item-label">{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function formatState(
+  value: number,
+  owned: boolean,
+  scoutEstimate?: AbilityEstimate,
+  signed = false,
+): string {
+  if (owned || !scoutEstimate) {
+    return signed && value > 0 ? `+${value}` : String(value);
+  }
+  const masked = formatScoutStateValue(value, scoutEstimate, false);
+  if (masked === "?") return "?";
+  return signed && value > 0 ? `+${value}` : masked;
+}
+
+function StateChip({
+  label,
+  mark,
+  tone,
+  value,
+}: {
+  label: string;
+  mark: string;
+  tone: "good" | "mid" | "low";
+  value: string;
+}) {
+  return (
+    <div className={`profile-chip tone-${tone}`}>
+      <span aria-hidden="true">{mark}</span>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function positionGlyph(position: Player["position"]): string {
+  if (position === "GK") return "🧤";
+  if (position === "CB" || position === "LB" || position === "RB") return "🛡️";
+  if (position === "CF") return "⚽";
+  return "👟";
+}

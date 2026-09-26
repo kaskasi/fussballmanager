@@ -4,28 +4,37 @@ import {
   focusSlotsFor,
   passingGrowthForPlan,
   sessionGroup,
+  SLOT_COUNT,
   validateWeeklyPlan,
   weeklyFocusMultiplier,
   type TrainingSession,
 } from "./weekly-plan.ts";
 
-const full: TrainingSession[] = [
+const filler: TrainingSession = { group: "mental", focus: false };
+
+function padWeek(sessions: TrainingSession[]): TrainingSession[] {
+  const out = [...sessions];
+  while (out.length < SLOT_COUNT) out.push(filler);
+  return out;
+}
+
+const full = padWeek([
   { group: "technical", focus: true },
   { group: "technical", focus: true },
   { group: "physical", focus: true },
   { group: "mental", focus: false },
   { group: "physical", focus: false },
-];
+]);
 
 describe("validateWeeklyPlan", () => {
-  it("accepts five sessions with three focus slots and two on one group", () => {
+  it("accepts a full week with three focus slots and two on one group", () => {
     expect(validateWeeklyPlan(full)).toEqual({ valid: true, errors: [] });
   });
 
-  it("rejects a week that is not five sessions", () => {
-    const check = validateWeeklyPlan(full.slice(0, 4));
+  it("rejects a week that is not the full slot count", () => {
+    const check = validateWeeklyPlan(full.slice(0, SLOT_COUNT - 1));
     expect(check.valid).toBe(false);
-    expect(check.errors[0]).toMatch(/5 sessions/);
+    expect(check.errors[0]).toMatch(new RegExp(`${SLOT_COUNT} sessions`));
   });
 
   it("rejects a fourth focus session", () => {
@@ -38,13 +47,13 @@ describe("validateWeeklyPlan", () => {
   });
 
   it("rejects a third focus session on the same group", () => {
-    const sessions: TrainingSession[] = [
+    const sessions = padWeek([
       { group: "technical", focus: true },
       { group: "technical", focus: true },
       { group: "technical", focus: true },
       { group: "physical", focus: false },
       { group: "mental", focus: false },
-    ];
+    ]);
     const check = validateWeeklyPlan(sessions);
     expect(check.valid).toBe(false);
     expect(check.errors.join(" ")).toMatch(/technical/);
@@ -62,13 +71,13 @@ describe("focus multipliers", () => {
   });
 
   it("counts focus sessions only, so extra normal sessions do not stack", () => {
-    const sessions: TrainingSession[] = [
+    const sessions = padWeek([
       { group: "technical", focus: true },
       { group: "technical", focus: false },
       { group: "technical", focus: false },
       { group: "technical", focus: false },
       { group: "technical", focus: false },
-    ];
+    ]);
     expect(focusSlotsFor(sessions, "shooting")).toBe(1);
     expect(weeklyFocusMultiplier(sessions, "shooting", false)).toBe(1.25);
     expect(weeklyFocusMultiplier(sessions, "pace", false)).toBe(1);
@@ -83,26 +92,26 @@ describe("focus multipliers", () => {
   });
 
   it("scales the published age-19 passing week by the focus multiplier", () => {
-    const quiet: TrainingSession[] = [
+    const quiet = padWeek([
       { group: "physical", focus: false },
       { group: "physical", focus: false },
       { group: "mental", focus: false },
       { group: "mental", focus: false },
       { group: "technical", focus: false },
-    ];
-    const one: TrainingSession[] = [
+    ]);
+    const one = padWeek([
       { group: "technical", focus: true },
       { group: "physical", focus: false },
       { group: "physical", focus: false },
       { group: "mental", focus: false },
       { group: "mental", focus: false },
-    ];
+    ]);
     expect(passingGrowthForPlan(quiet)).toBeCloseTo(2.898, 3);
     expect(passingGrowthForPlan(one)).toBeCloseTo(2.898 * 1.25, 3);
     expect(passingGrowthForPlan(full)).toBeCloseTo(2.898 * 1.5, 3);
   });
 
   it("refuses to read focus off an illegal plan", () => {
-    expect(() => focusSlotsFor(full.slice(0, 3), "passing")).toThrow(/5 sessions/);
+    expect(() => focusSlotsFor(full.slice(0, 3), "passing")).toThrow(new RegExp(`${SLOT_COUNT} sessions`));
   });
 });

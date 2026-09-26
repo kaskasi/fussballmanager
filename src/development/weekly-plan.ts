@@ -4,8 +4,9 @@ import { calculateWeeklyGrowth, trainingFocus, type FocusSlots } from "./growth-
 /**
  * Club weekly training plan (F2.1, PRD 02.4).
  *
- * Five sessions, at most three marked focus, at most two focus sessions
- * on one group. A focus session raises `trainingFocus` for every attribute
+ * Fifteen sessions (Mo–Fr, drei Einheiten pro Tag), at most three marked
+ * focus, at most two focus sessions on one group. A focus session raises
+ * `trainingFocus` for every attribute
  * in that group. A normal session does not.
  *
  * Physical and mental membership follows the σ groups in PRD 02.3.
@@ -13,7 +14,9 @@ import { calculateWeeklyGrowth, trainingFocus, type FocusSlots } from "./growth-
  * Intensity and the fatigue light are named in F2.1 and have no formula.
  */
 
-export const SLOT_COUNT = 5;
+export const UNITS_PER_DAY = 3;
+export const TRAINING_DAYS = ["Mo", "Di", "Mi", "Do", "Fr"] as const;
+export const SLOT_COUNT = TRAINING_DAYS.length * UNITS_PER_DAY;
 export const MAX_FOCUS_SLOTS = 3;
 export const MAX_FOCUS_PER_GROUP = 2;
 

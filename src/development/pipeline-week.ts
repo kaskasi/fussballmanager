@@ -1,5 +1,6 @@
 import type { Attributes, Player } from "../types/player.ts";
 import { applyGrowth, calculateWeeklyGrowth } from "./growth-engine.ts";
+import { defaultTrainingPlan, planToSessions } from "./training-units.ts";
 import { focusSlotsFor, type TrainingSession } from "./weekly-plan.ts";
 
 /**
@@ -8,13 +9,8 @@ import { focusSlotsFor, type TrainingSession } from "./weekly-plan.ts";
  * player already has; this does not play a fixture.
  */
 
-export const HUB_PLAN: readonly TrainingSession[] = [
-  { group: "technical", focus: true },
-  { group: "technical", focus: true },
-  { group: "physical", focus: true },
-  { group: "mental", focus: false },
-  { group: "physical", focus: false },
-];
+/** Default demo plan — same as `defaultTrainingPlan()` in the training UI. */
+export const HUB_PLAN: readonly TrainingSession[] = planToSessions(defaultTrainingPlan());
 
 const SKILLS = [
   "shooting",

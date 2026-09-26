@@ -132,7 +132,10 @@ export interface LoanRecord {
  * Named by PRD 07.1 and used on Player. The PRD lists no properties.
  * Left empty so this task does not invent a name, club, or milestone shape.
  */
-export interface PlayerName {}
+export interface PlayerName {
+  first?: string;
+  last?: string;
+}
 
 export interface ClubHistoryEntry {}
 

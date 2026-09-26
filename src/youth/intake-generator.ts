@@ -1,4 +1,5 @@
 import type { Attributes, Player, PositionPrimary } from "../types/player.ts";
+import { generatePlayerName } from "../types/player-display.ts";
 import { estimateCa, marketValue } from "../transfers/market-value.ts";
 
 /**
@@ -193,9 +194,10 @@ function generateOne(
 
   const idNumber = input.idStart + index;
   const position = INTAKE_POSITIONS[index] ?? "CM";
+  const portraitSeed = Math.floor(input.random() * 1_000_000_000);
   return {
     id: `pl_${String(idNumber).padStart(5, "0")}`,
-    name: {},
+    name: generatePlayerName(portraitSeed),
     birth: {
       date: intakeBirthDate(input.seasonYear, input.random),
       place: input.region,
@@ -239,7 +241,7 @@ function generateOne(
       achievements: [],
       milestones: [],
     },
-    portrait_seed: Math.floor(input.random() * 1_000_000_000),
+    portrait_seed: portraitSeed,
   };
 }
 

@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { ACHIEVEMENT, grantAchievement } from "../player/achievements.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import {
   achievementBadges,
   contractView,
   flavorForScout,
   generatePlayerFlavor,
+  generatePlayerTraits,
   seasonStatsStub,
 } from "./player-flavor.ts";
 
@@ -19,6 +21,13 @@ describe("player flavor", () => {
     expect(first.body.length).toBeGreaterThan(20);
   });
 
+  it("adds negative traits from player state", () => {
+    const moody = clonePlayer();
+    moody.state.morale = 30;
+    const traits = generatePlayerTraits(moody);
+    expect(traits.some((trait) => trait.tone === "negative" && trait.label.includes("Launisch"))).toBe(true);
+  });
+
   it("hides flavor for unknown foreign players", () => {
     expect(flavorForScout(player, false, { estimatedAbilityMean: 65, uncertaintyRange: 40, sampleSize: 0 })).toBeNull();
   });
@@ -30,10 +39,22 @@ describe("player flavor", () => {
     expect(known?.traits.length).toBeGreaterThan(1);
   });
 
+  it("hides negative traits from lightly scouted foreign players", () => {
+    const foreign = clonePlayer();
+    foreign.state.morale = 20;
+    const partial = flavorForScout(foreign, false, { estimatedAbilityMean: 65, uncertaintyRange: 16, sampleSize: 2 });
+    expect(partial?.traits.every((trait) => trait.tone !== "negative")).toBe(true);
+  });
+
+  it("returns only stored achievements", () => {
+    expect(achievementBadges(player, true)).toEqual([]);
+    const decorated = grantAchievement(player, ACHIEVEMENT.promotedU19);
+    expect(achievementBadges(decorated, true)).toEqual([ACHIEVEMENT.promotedU19]);
+  });
+
   it("builds stub stats and contract views", () => {
     expect(seasonStatsStub(player, true)?.apps).toBeGreaterThan(0);
     expect(seasonStatsStub(player, false, { estimatedAbilityMean: 65, uncertaintyRange: 30, sampleSize: 0 })).toBeNull();
     expect(contractView(player, true).status).toBe("Profivertrag");
-    expect(achievementBadges(player, true).length).toBeGreaterThan(0);
   });
 });

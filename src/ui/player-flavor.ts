@@ -4,10 +4,17 @@ import { attributeLabel, profileAttributeKeys } from "./player-profile.ts";
 import type { AbilityEstimate } from "../scouting/estimate-model.ts";
 import { scoutReveal } from "../scouting/scout-visibility.ts";
 
+export type FlavorTraitTone = "positive" | "negative" | "neutral";
+
+export interface FlavorTrait {
+  label: string;
+  tone: FlavorTraitTone;
+}
+
 export interface PlayerFlavor {
   headline: string;
   body: string;
-  traits: string[];
+  traits: FlavorTrait[];
 }
 
 export interface SeasonStatsStub {
@@ -32,6 +39,7 @@ const HEADLINES = [
   "Kopf oben, Ball sicher",
   "Arbeitstier mit Spielintelligenz",
   "Unbekannt, aber interessant",
+  "Talent mit Fragezeichen",
 ] as const;
 
 const BODIES = [
@@ -39,76 +47,139 @@ const BODIES = [
   "In der {position}-Rolle wirkt {name} wachgerümt — vor allem wenn der Ball schnell läuft.",
   "{name} gilt in {region} als einer, der Training ernst nimmt und im Teamgefüge mitwächst.",
   "Der erste Eindruck: viel Potenzial, wenig Show — genau der Typ, den man später bereut, nicht früher gesehen zu haben.",
+  "Berichte aus {region} sind gemischt: mal brillant, mal unaufmerksam — {name} bleibt schwer einzuordnen.",
 ] as const;
 
-const TRAIT_LINES = [
+const POSITIVE_TRAITS = [
   "Starker erster Kontakt",
   "Liest Räume früh",
   "Zweikampffreudig",
   "Bleibt nach Fehlern ruhig",
   "Überzeugt im Training",
+] as const;
+
+const AMBIVALENT_TRAITS = [
   "Noch unberechenbar",
+  "Braucht klare Rollenvorgabe",
 ] as const;
 
-const ACHIEVEMENT_STUBS = [
-  "🏆 Kreispokal-Junior",
-  "⭐ Trainingsgruppe A",
-  "🎯 5 Tore in Folge (Jugend)",
-  "🧤 Clean Sheet Serie",
-  "📋 Nationalmannschaft U15 Beobachtung",
-] as const;
+interface NegativeTraitRule {
+  label: string;
+  matches: (player: Player, options: FlavorOptions) => boolean;
+}
 
-export function generatePlayerFlavor(player: Player): PlayerFlavor {
+const NEGATIVE_TRAIT_RULES: NegativeTraitRule[] = [
+  {
+    label: "Launisch unter Druck",
+    matches: (player) => player.state.morale < 42,
+  },
+  {
+    label: "Unzufrieden mit Spielzeit",
+    matches: (player) =>
+      (player.squad_status === "u17" || player.squad_status === "u19") && player.state.weekly_minutes < 45,
+  },
+  {
+    label: "Formtief",
+    matches: (player) => player.state.form < -1,
+  },
+  {
+    label: "Trainingsmotivation schwankt",
+    matches: (player, options) => options.includeHiddenSignals && player.hidden.drive < 0.75,
+  },
+  {
+    label: "Einzelgänger-Tendenzen",
+    matches: (player) => player.attributes.teamwork < 45,
+  },
+  {
+    label: "Nervös in entscheidenden Momenten",
+    matches: (player) => player.attributes.composure < 40,
+  },
+  {
+    label: "Aktuell verletzt",
+    matches: (player) => player.state.injury !== null,
+  },
+  {
+    label: "Körperlich noch hinterher",
+    matches: (player) => player.attributes.stamina < 38 && player.age <= 17,
+  },
+];
+
+interface FlavorOptions {
+  includeHiddenSignals: boolean;
+}
+
+function negativeTraitsFor(player: Player, options: FlavorOptions): FlavorTrait[] {
+  return NEGATIVE_TRAIT_RULES.filter((rule) => rule.matches(player, options)).map((rule) => ({
+    label: rule.label,
+    tone: "negative",
+  }));
+}
+
+export function generatePlayerTraits(player: Player, options: FlavorOptions = { includeHiddenSignals: true }): FlavorTrait[] {
   const random = mulberry32(player.portrait_seed);
   const topKey = profileAttributeKeys(player.position)[0] ?? "passing";
+  const traits: FlavorTrait[] = [
+    { label: `${attributeLabel(topKey)} im Fokus`, tone: "positive" },
+    { label: pick(POSITIVE_TRAITS, random), tone: "positive" },
+  ];
+
+  const negatives = negativeTraitsFor(player, options);
+  const primaryNegative = negatives[0];
+  if (primaryNegative) {
+    traits.push(primaryNegative);
+  } else {
+    traits.push({ label: pick(AMBIVALENT_TRAITS, random), tone: "neutral" });
+  }
+
+  traits.push({
+    label:
+      player.squad_status === "u17" || player.squad_status === "u19" ? "Akademie-Background" : "Profil-Erfahrung",
+    tone: "neutral",
+  });
+
+  if (player.hidden.breakout_flags.includes("prodigy_foundation")) {
+    traits.push({ label: "Frühes Talent-Signal", tone: "positive" });
+  }
+
+  return traits.slice(0, 4);
+}
+
+export function generatePlayerFlavor(player: Player, options: FlavorOptions = { includeHiddenSignals: true }): PlayerFlavor {
+  const random = mulberry32(player.portrait_seed);
   const headline = pick(HEADLINES, random);
   const bodyTemplate = pick(BODIES, random);
   const body = bodyTemplate
     .replaceAll("{name}", formatPlayerName(player))
     .replaceAll("{region}", player.birth.region)
     .replaceAll("{position}", player.position);
-  const traits = [
-    `${attributeLabel(topKey)} im Fokus`,
-    pick(TRAIT_LINES, random),
-    player.squad_status === "u17" || player.squad_status === "u19" ? "Akademie-Background" : "Profil-Erfahrung",
-  ];
-  if (player.hidden.breakout_flags.includes("prodigy_foundation")) {
-    traits.push("Frühes Talent-Signal");
-  }
-  return { headline, body, traits: traits.slice(0, 3) };
+  return { headline, body, traits: generatePlayerTraits(player, options) };
 }
 
 export function flavorForScout(player: Player, owned: boolean, estimate?: AbilityEstimate): PlayerFlavor | null {
-  if (owned || !estimate) return generatePlayerFlavor(player);
+  if (owned || !estimate) {
+    return generatePlayerFlavor(player, { includeHiddenSignals: true });
+  }
   const reveal = scoutReveal(estimate.uncertaintyRange);
   if (estimate.uncertaintyRange >= 40) return null;
   if (estimate.uncertaintyRange >= 20) {
     return {
       headline: "Gerüchte aus dem Markt",
       body: `Über ${formatPlayerName(player)} kursieren nur vage Hinweise aus ${player.birth.region}. Position: ${player.position}.`,
-      traits: ["Noch wenig belastbare Details"],
+      traits: [{ label: "Noch wenig belastbare Details", tone: "neutral" }],
     };
   }
-  const full = generatePlayerFlavor(player);
+  const full = generatePlayerFlavor(player, { includeHiddenSignals: reveal.showExactSkills });
   if (reveal.showExactSkills) return full;
   return {
     headline: full.headline,
     body: full.body,
-    traits: full.traits.slice(0, 2),
+    traits: full.traits.filter((trait) => trait.tone !== "negative").slice(0, 2),
   };
 }
 
 export function achievementBadges(player: Player, owned: boolean, estimate?: AbilityEstimate): string[] {
-  const stored = player.history.achievements;
-  if (stored.length > 0) return stored;
   if (!owned && estimate && estimate.uncertaintyRange >= 20) return [];
-  const random = mulberry32(player.portrait_seed ^ 0x9e37);
-  const count = player.age <= 16 ? 1 : 1 + Math.floor(random() * 2);
-  const picks: string[] = [];
-  for (let index = 0; index < count; index++) {
-    picks.push(pick(ACHIEVEMENT_STUBS, random));
-  }
-  return picks;
+  return [...player.history.achievements];
 }
 
 export function seasonStatsStub(player: Player, owned: boolean, estimate?: AbilityEstimate): SeasonStatsStub | null {

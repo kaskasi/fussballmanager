@@ -8,33 +8,15 @@ import {
   facilityGate,
   sortCampusBadges,
   type CampusBadge,
-  type CoachIcon,
 } from "../../youth/academy.ts";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
+import type { YouthInboxState } from "../../youth/decision-inbox.ts";
+import type { YouthReport } from "../../youth/youth-sim.ts";
+import { coachIconForPlayer, DecisionInboxModal, hasDepartureRisk } from "../components/DecisionInbox.tsx";
+import type { DecisionAction } from "../../youth/decision-inbox.ts";
 
 /**
  * WIREFRAME: PRD 09.2 Screen 2 — Youth Campus (2D iso)
- *
- * ┌────────────────────────────────────────────────────────┐
- * │ 🏫 Jugendhaus                                          │
- * │                                                        │
- * │     [🏠 owned]    [🏋️ gate]    [⭐ gate]             │
- * │                                                        │
- * │ click owned building → Screen 2a Jahrgang             │
- * └────────────────────────────────────────────────────────┘
- *
- * Screen 2a
- * ┌────────────────────────────────────────────────────────┐
- * │ [←] Jahrgang                                           │
- * │ 🚀  badges                                             │
- * │ [Alle] [GK] [CM] …                                     │
- * │ Name · Pos · Alter · CA · Region · Coach               │
- * │ departure badge: red edge + 🚩 → inbox                 │
- * └────────────────────────────────────────────────────────┘
- *
- * Coach icons stay ➡️ until the youth sim exists. The building
- * the club owns is the free Jugendhaus. The other two are visible
- * and gated. Paying for them is not this screen.
  */
 
 const OWNED: AcademyFacility = "academy_basic";
@@ -65,35 +47,44 @@ interface YearRow extends CampusBadge {
 
 export function YouthCampus({
   players,
+  youthInbox,
+  onInboxDecision,
   onSelectPlayer,
   yearOpen,
   onYearOpenChange,
 }: {
   players: Player[];
+  youthInbox: YouthInboxState;
+  onInboxDecision: (itemId: string, action: DecisionAction) => void;
   onSelectPlayer: (playerId: string) => void;
   yearOpen: boolean;
   onYearOpenChange: (open: boolean) => void;
 }) {
-  const [inboxId, setInboxId] = useState<string | null>(null);
-  const rows = useMemo(() => rosterRows(players), [players]);
-  const inbox = rows.find((row) => row.playerId === inboxId) ?? null;
+  const [inboxOpen, setInboxOpen] = useState(false);
+  const rows = useMemo(() => rosterRows(players, youthInbox), [players, youthInbox]);
 
   return (
     <main className="campus">
       {yearOpen ? (
         <YearGroup
           rows={rows}
-          onBack={() => {
-            setInboxId(null);
-            onYearOpenChange(false);
-          }}
-          onDeparture={(playerId) => setInboxId(playerId)}
+          report={youthInbox.lastReport}
+          onBack={() => onYearOpenChange(false)}
+          onOpenInbox={() => setInboxOpen(true)}
+          onDeparture={() => setInboxOpen(true)}
           onSelectPlayer={onSelectPlayer}
         />
       ) : (
         <CampusGround onOpenYear={() => onYearOpenChange(true)} />
       )}
-      {inbox ? <Inbox badge={inbox} onClose={() => setInboxId(null)} /> : null}
+      {inboxOpen ? (
+        <DecisionInboxModal
+          inbox={youthInbox}
+          players={players}
+          onDecision={onInboxDecision}
+          onClose={() => setInboxOpen(false)}
+        />
+      ) : null}
     </main>
   );
 }
@@ -154,15 +145,23 @@ function GateMark({ gate }: { gate: ReturnType<typeof facilityGate> }) {
   return <span className="campus-gate">◆</span>;
 }
 
+function formatResults(results: YouthReport["u17_results"]): string {
+  return `${results.wins}-${results.draws}-${results.losses}`;
+}
+
 function YearGroup({
   rows,
+  report,
   onBack,
+  onOpenInbox,
   onDeparture,
   onSelectPlayer,
 }: {
   rows: YearRow[];
+  report: YouthReport | null;
   onBack: () => void;
-  onDeparture: (playerId: string) => void;
+  onOpenInbox: () => void;
+  onDeparture: () => void;
   onSelectPlayer: (playerId: string) => void;
 }) {
   const [position, setPosition] = useState<PositionPrimary | "all">("all");
@@ -180,7 +179,18 @@ function YearGroup({
           ←
         </button>
         <h1>U17 · {visible.length} Spieler</h1>
+        <button type="button" className="campus-inbox-open" onClick={onOpenInbox}>
+          📥 Inbox
+        </button>
       </div>
+
+      {report ? (
+        <p className="campus-report">
+          Woche {report.week} · U17 {formatResults(report.u17_results)} · U19 {formatResults(report.u19_results)}
+        </p>
+      ) : (
+        <p className="campus-report">Noch kein Jugend-Report — Woche im Hub simulieren.</p>
+      )}
 
       <div className="campus-chips" role="toolbar" aria-label="Position filtern">
         <PositionChip active={position === "all"} onClick={() => setPosition("all")}>Alle</PositionChip>
@@ -211,7 +221,7 @@ function YearGroup({
               <button
                 type="button"
                 className={row.departureRisk ? "campus-row is-risk" : "campus-row"}
-                onClick={() => (row.departureRisk ? onDeparture(row.playerId) : onSelectPlayer(row.playerId))}
+                onClick={() => (row.departureRisk ? onDeparture() : onSelectPlayer(row.playerId))}
               >
                 <span className="campus-portrait" aria-hidden="true">{positionGlyph(row.position)}</span>
                 <span className="campus-player-name">{row.displayName}</span>
@@ -258,25 +268,6 @@ function positionGlyph(position: PositionPrimary): string {
   return "👟";
 }
 
-function Inbox({ badge, onClose }: { badge: CampusBadge; onClose: () => void }) {
-  return (
-    <div className="campus-inbox" role="dialog" aria-label="Entscheidungs-Inbox">
-      <p>
-        <span aria-hidden="true">🚩</span> {badge.position}
-      </p>
-      <div className="campus-actions" aria-label="Aktionen">
-        <span title="Leihen">🔄</span>
-        <span title="Hochziehen">⬆️</span>
-        <span title="Vertrag">✍️</span>
-        <span title="Trainingsfokus">💪</span>
-      </div>
-      <button type="button" onClick={onClose} aria-label="Schließen">
-        ←
-      </button>
-    </div>
-  );
-}
-
 function IsoBuilding({ facility }: { facility: AcademyFacility }) {
   const height = facility === "academy_elite" ? 52 : facility === "academy_performance" ? 38 : 26;
   const halfW = facility === "academy_basic" ? 26 : 36;
@@ -312,7 +303,7 @@ function IsoBuilding({ facility }: { facility: AcademyFacility }) {
   );
 }
 
-function rosterRows(players: Player[]): YearRow[] {
+function rosterRows(players: Player[], inbox: YouthInboxState): YearRow[] {
   return players
     .filter((player) => player.squad_status === "u17")
     .map((player) => ({
@@ -322,7 +313,7 @@ function rosterRows(players: Player[]): YearRow[] {
       age: player.age,
       ca: roundStat(estimateCa(player.attributes, player.position)),
       region: player.birth.region,
-      coachIcon: "➡️" satisfies CoachIcon,
-      departureRisk: false,
+      coachIcon: coachIconForPlayer(inbox, player.id),
+      departureRisk: hasDepartureRisk(inbox, player.id),
     }));
 }

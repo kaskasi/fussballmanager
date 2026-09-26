@@ -1,47 +1,167 @@
 import { useCallback, useState } from "react";
+import { advanceLeagueWeek, applyProMatchMinutes } from "./sim/league-week.ts";
 import { applyTrainingWeek } from "./development/pipeline-week.ts";
-import { createInitialTrainingPlan, planToSessions } from "./development/training-units.ts";
+import { planToSessions } from "./development/training-units.ts";
 import type { TrainingSlot } from "./development/training-units.ts";
 import { Matchday } from "./match/Matchday";
+import {
+  DEFAULT_SLOT,
+  newGameSession,
+  saveFromSession,
+  sessionFromSave,
+} from "./persistence/game-session.ts";
+import { loadLocalSave, removeLocalSave, writeLocalSave } from "./persistence/local-save.ts";
+import type { SaveGame } from "./persistence/savegame-model.ts";
 import {
   activeScoutCount,
   advanceScoutWeek,
   assignScout,
-  createScoutBoard,
   getBoardTarget,
-  type ScoutBoard,
 } from "./scouting/scout-board.ts";
-import { loadDemoRoster } from "./ui/demo-roster.ts";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
 import { PlayerProfile } from "./ui/screens/PlayerProfile";
 import { ScoutingCenter } from "./ui/screens/ScoutingCenter";
+import { DecisionInboxModal } from "./ui/components/DecisionInbox.tsx";
 import { YouthCampus } from "./ui/screens/YouthCampus";
-import type { Player } from "./types/player.ts";
+import {
+  advanceInboxWeek,
+  applyInboxDecision,
+  type DecisionAction,
+} from "./youth/decision-inbox.ts";
+import { simulateYouthWeek } from "./youth/youth-sim.ts";
 
 type Screen = "hub" | "campus" | "matchday" | "scouting";
 
+function bootstrapSave(): SaveGame {
+  try {
+    const loaded = loadLocalSave(DEFAULT_SLOT);
+    if (loaded) return loaded;
+  } catch {
+    removeLocalSave(DEFAULT_SLOT);
+  }
+  const fresh = saveFromSession(newGameSession());
+  writeLocalSave(DEFAULT_SLOT, fresh);
+  return fresh;
+}
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>("hub");
-  const [week, setWeek] = useState(1);
-  const [players, setPlayers] = useState<Player[]>(() => loadDemoRoster());
-  const [scoutBoard, setScoutBoard] = useState<ScoutBoard>(() => createScoutBoard());
+  const [save, setSave] = useState<SaveGame>(bootstrapSave);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [foreignPlayerId, setForeignPlayerId] = useState<string | null>(null);
   const [campusYearOpen, setCampusYearOpen] = useState(false);
-  const [trainingPlan, setTrainingPlan] = useState<TrainingSlot[]>(() => createInitialTrainingPlan());
+  const [inboxOpen, setInboxOpen] = useState(false);
+  const [simulating, setSimulating] = useState(false);
+
+  const session = sessionFromSave(save);
+  const { season, week, players, trainingPlan, scoutBoard, youthInbox, league } = session;
+
+  const patchSession = useCallback((recipe: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>) => {
+    setSave((current) => {
+      const next = saveFromSession(recipe(sessionFromSave(current)), current);
+      writeLocalSave(DEFAULT_SLOT, next);
+      return next;
+    });
+  }, []);
+
+  const simulateWeek = useCallback(async () => {
+    if (simulating) return;
+    setSimulating(true);
+    try {
+      const snapshot = sessionFromSave(save);
+      const nextWeek = snapshot.week + 1;
+      const leagueStep = await advanceLeagueWeek(
+        snapshot.league,
+        snapshot.season,
+        nextWeek,
+        snapshot.masterSeed,
+      );
+      const sessions = planToSessions(snapshot.trainingPlan);
+      const trained = snapshot.players.map((player) => applyTrainingWeek(player, sessions));
+      const withMinutes = applyProMatchMinutes(
+        trained,
+        leagueStep.playerFixture,
+        snapshot.league.player_club_id,
+      );
+      const youth = simulateYouthWeek(withMinutes, snapshot.week, snapshot.masterSeed);
+      const advanced = advanceInboxWeek(
+        snapshot.youthInbox,
+        youth.players,
+        nextWeek,
+        snapshot.masterSeed,
+        youth.report,
+      );
+      setSave((current) => {
+        const next = saveFromSession(
+          {
+            ...snapshot,
+            week: nextWeek,
+            players: advanced.players,
+            scoutBoard: advanceScoutWeek(snapshot.scoutBoard),
+            youthInbox: advanced.inbox,
+            league: leagueStep.league,
+          },
+          current,
+        );
+        writeLocalSave(DEFAULT_SLOT, next);
+        return next;
+      });
+    } finally {
+      setSimulating(false);
+    }
+  }, [save, simulating]);
+
+  const handleInboxDecision = useCallback(
+    (itemId: string, action: DecisionAction) => {
+      patchSession((current) => {
+        const result = applyInboxDecision(
+          current.youthInbox,
+          current.players,
+          itemId,
+          action,
+          current.season,
+        );
+        return {
+          ...current,
+          players: result.players,
+          youthInbox: result.inbox,
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handleAssignScout = useCallback(
+    (playerId: string) => {
+      patchSession((current) => ({
+        ...current,
+        scoutBoard: assignScout(current.scoutBoard, playerId),
+      }));
+    },
+    [patchSession],
+  );
+
+  const handleTrainingPlanChange = useCallback(
+    (plan: TrainingSlot[]) => {
+      patchSession((current) => ({ ...current, trainingPlan: plan }));
+    },
+    [patchSession],
+  );
+
+  const resetGame = useCallback(() => {
+    removeLocalSave(DEFAULT_SLOT);
+    const fresh = saveFromSession(newGameSession());
+    writeLocalSave(DEFAULT_SLOT, fresh);
+    setSave(fresh);
+    setProfileId(null);
+    setForeignPlayerId(null);
+    setCampusYearOpen(false);
+    setInboxOpen(false);
+    setScreen("hub");
+  }, []);
+
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
   const foreignTarget = foreignPlayerId ? getBoardTarget(scoutBoard, foreignPlayerId) : null;
-
-  const simulateWeek = useCallback(() => {
-    const sessions = planToSessions(trainingPlan);
-    setPlayers((current) => current.map((player) => applyTrainingWeek(player, sessions)));
-    setScoutBoard((current) => advanceScoutWeek(current));
-    setWeek((current) => current + 1);
-  }, [trainingPlan]);
-
-  const handleAssignScout = useCallback((playerId: string) => {
-    setScoutBoard((current) => assignScout(current, playerId));
-  }, []);
 
   if (foreignTarget) {
     return (
@@ -98,23 +218,41 @@ export default function App() {
       <AppNav screen={screen} onNavigate={setScreen} onCampusNavigate={() => setCampusYearOpen(false)} />
       <div hidden={screen !== "hub"}>
         <PipelineDashboard
+          key={save.manifest.created}
           players={players}
+          season={season}
           week={week}
+          lastSaved={save.manifest.last_played}
           trainingPlan={trainingPlan}
-          onTrainingPlanChange={setTrainingPlan}
+          onTrainingPlanChange={handleTrainingPlanChange}
           activeScouts={activeScoutCount(scoutBoard)}
-          onSimulateWeek={simulateWeek}
+          league={league}
+          simulating={simulating}
+          onSimulateWeek={() => void simulateWeek()}
           onSelectPlayer={setProfileId}
           onOpenYouth={() => {
             setCampusYearOpen(false);
             setScreen("campus");
           }}
           onOpenScouting={() => setScreen("scouting")}
+          onOpenInbox={() => setInboxOpen(true)}
+          youthInbox={youthInbox}
+          onNewGame={resetGame}
         />
       </div>
+      {inboxOpen ? (
+        <DecisionInboxModal
+          inbox={youthInbox}
+          players={players}
+          onDecision={handleInboxDecision}
+          onClose={() => setInboxOpen(false)}
+        />
+      ) : null}
       {screen === "campus" ? (
         <YouthCampus
           players={players}
+          youthInbox={youthInbox}
+          onInboxDecision={handleInboxDecision}
           yearOpen={campusYearOpen}
           onYearOpenChange={setCampusYearOpen}
           onSelectPlayer={setProfileId}

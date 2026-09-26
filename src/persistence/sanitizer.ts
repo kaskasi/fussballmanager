@@ -1,5 +1,5 @@
 import type { GrowthSnapshot, Player } from "../types/player.ts";
-import type { SaveGame, SaveManifest } from "./savegame.ts";
+import type { SaveGame, SaveManifest } from "./savegame-model.ts";
 
 /**
  * Export copy only (PRD 08.3). The local save keeps `hidden` and drive.
@@ -22,16 +22,23 @@ export interface ExportSave extends Omit<SaveGame, "manifest" | "players" | "rng
   rng_state: Omit<SaveGame["rng_state"], "chain_details">;
 }
 
+function stripPlayer(player: Player): ExportPlayer {
+  const { hidden: _hidden, history, ...rest } = player;
+  const growth = history.growth.map((snapshot) => {
+    const { drive_at_snapshot: _drive, ...kept } = snapshot;
+    return kept;
+  });
+  return { ...rest, history: { ...history, growth } };
+}
+
 export function sanitizeForExport(save: SaveGame): ExportSave {
   const copy = structuredClone(save);
-  const players = copy.players.map((player) => {
-    const { hidden: _hidden, history, ...rest } = player;
-    const growth = history.growth.map((snapshot) => {
-      const { drive_at_snapshot: _drive, ...kept } = snapshot;
-      return kept;
-    });
-    return { ...rest, history: { ...history, growth } };
-  });
+  const players = copy.players.map(stripPlayer);
+  if (copy.state.pipeline?.scout_board) {
+    for (const target of Object.values(copy.state.pipeline.scout_board.targets)) {
+      target.player = stripPlayer(target.player) as Player;
+    }
+  }
   const { chain_details: _chain, ...rng } = copy.rng_state;
   return {
     ...copy,

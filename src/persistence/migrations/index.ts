@@ -1,18 +1,19 @@
-import type { SaveGame } from "../savegame.ts";
+import type { SaveGame } from "../savegame-model.ts";
+import { migration002PipelineState } from "./migration_002_pipeline_state.ts";
+import { migration003YouthInbox } from "./migration_003_youth_inbox.ts";
+import { migration004LeagueState } from "./migration_004_league_state.ts";
 import { SaveReadOnlyError } from "./errors.ts";
-
-/**
- * Migration list for save_version 1.
- * The first real file will be `migration_001_<description>.ts`.
- * There is no historical `migration_001_add_drive`.
- */
 
 export interface SaveMigration {
   id: `migration_${string}`;
   apply: (save: SaveGame) => SaveGame;
 }
 
-export const MIGRATIONS: readonly SaveMigration[] = [];
+export const MIGRATIONS: readonly SaveMigration[] = [
+  migration002PipelineState,
+  migration003YouthInbox,
+  migration004LeagueState,
+];
 
 export { SaveReadOnlyError } from "./errors.ts";
 

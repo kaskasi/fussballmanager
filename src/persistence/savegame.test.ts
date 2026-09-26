@@ -73,7 +73,10 @@ describe("save folder", () => {
     await saveToFolder(dir, save, { weekend: true, simulating: false });
     const loaded = await loadSave(dir);
     expect(loaded.manifest.save_version).toBe(SAVE_VERSION);
-    expect(loaded.manifest.migrations_applied).toEqual([]);
+    expect(loaded.manifest.migrations_applied).toEqual([
+      "migration_002_pipeline_state",
+      "migration_003_youth_inbox",
+    ]);
     expect(loaded.players[0]?.hidden.drive).toBe(1);
     expect(loaded.players[0]?.hidden.anlage.passing).toBe(1.1);
     expect(loaded.history).toEqual(save.history);
@@ -139,7 +142,12 @@ describe("migrations", () => {
     ];
     const once = applyMigrations(save, migrations);
     const twice = applyMigrations(once, migrations);
-    expect(twice.manifest.migrations_applied).toEqual(["migration_001_note", "migration_002_note"]);
+    expect(twice.manifest.migrations_applied).toEqual([
+      "migration_002_pipeline_state",
+      "migration_003_youth_inbox",
+      "migration_001_note",
+      "migration_002_note",
+    ]);
     expect(twice.history.map((event) => (event as { step?: number }).step).filter(Boolean)).toEqual([1, 2]);
   });
 
@@ -166,9 +174,15 @@ describe("migrations", () => {
     const original = JSON.parse(await readFile(path.join(dir, "manifest.json"), "utf8")) as {
       migrations_applied: string[];
     };
-    expect(original.migrations_applied).toEqual([]);
+    expect(original.migrations_applied).toEqual([
+      "migration_002_pipeline_state",
+      "migration_003_youth_inbox",
+    ]);
     const backup = await loadSave(`${dir}.backup`);
-    expect(backup.manifest.migrations_applied).toEqual([]);
+    expect(backup.manifest.migrations_applied).toEqual([
+      "migration_002_pipeline_state",
+      "migration_003_youth_inbox",
+    ]);
   });
 });
 

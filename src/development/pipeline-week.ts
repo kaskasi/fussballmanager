@@ -12,6 +12,30 @@ import { focusSlotsFor, type TrainingSession } from "./weekly-plan.ts";
 /** Default demo plan — same as `defaultTrainingPlan()` in the training UI. */
 export const HUB_PLAN: readonly TrainingSession[] = planToSessions(defaultTrainingPlan());
 
+/** Youth teams train and play at lower intensity than the pro squad. */
+export function developmentScale(status: Player["squad_status"]): number {
+  switch (status) {
+    case "u17":
+      return 0.3;
+    case "u19":
+      return 0.55;
+    default:
+      return 1;
+  }
+}
+
+/** Youth minutes count less toward match-practice growth than pro minutes. */
+export function developmentMinutes(status: Player["squad_status"], minutes: number): number {
+  switch (status) {
+    case "u17":
+      return Math.min(minutes, 45);
+    case "u19":
+      return Math.min(minutes, 70);
+    default:
+      return minutes;
+  }
+}
+
 const SKILLS = [
   "shooting",
   "passing",
@@ -43,16 +67,18 @@ export function applyTrainingWeek(player: Player, sessions: readonly TrainingSes
 }
 
 function growthOf(player: Player, key: keyof Attributes, sessions: readonly TrainingSession[]): number {
-  return calculateWeeklyGrowth({
+  const scale = developmentScale(player.squad_status);
+  const raw = calculateWeeklyGrowth({
     age: player.age,
     maturityOffset: player.hidden.maturity_offset,
     attribute: key,
     value: player.attributes[key],
     anlage: player.hidden.anlage[key],
     drive: player.hidden.drive,
-    minutes: player.state.weekly_minutes,
+    minutes: developmentMinutes(player.squad_status, player.state.weekly_minutes),
     injured: player.state.injury !== null,
     focusSlots: focusSlotsFor(sessions, key),
     noise: 1,
   });
+  return raw * scale;
 }

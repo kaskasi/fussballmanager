@@ -1,11 +1,14 @@
+import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
-import { generateYouthIntake } from "../youth/intake-generator.ts";
+import { generateYouthIntake, SEASON_END_WEEK } from "../youth/intake-generator.ts";
+import { generateDemoProSquad } from "./demo-pro-squad.ts";
 
-/** One deterministic U17 intake for the pipeline and campus demos. */
+/** Mixed academy + pro squad for the pipeline demo. */
 export function loadDemoRoster(): Player[] {
-  return generateYouthIntake({
+  const random = mulberry32(2026);
+  const intake = generateYouthIntake({
     season: 1,
-    week: 34,
+    week: SEASON_END_WEEK,
     seasonYear: 2026,
     clubId: "cl_fc_nordstern",
     nationality: "DE",
@@ -13,7 +16,30 @@ export function loadDemoRoster(): Player[] {
     facility: "academy_basic",
     idStart: 1,
     random: mulberry32(2026),
+  }).map((player, index) => ({
+    ...player,
+    age: 15 + (index % 3),
+  }));
+
+  const ranked = [...intake].sort(
+    (left, right) => estimateCa(right.attributes, right.position) - estimateCa(left.attributes, left.position),
+  );
+  const u19 = ranked.slice(0, 6).map((player) => ({
+    ...player,
+    squad_status: "u19" as const,
+    age: Math.max(player.age, 16),
+  }));
+  const u17 = ranked.slice(6).map((player) => ({
+    ...player,
+    squad_status: "u17" as const,
+  }));
+  const pros = generateDemoProSquad({
+    clubId: "cl_fc_nordstern",
+    idStart: 100,
+    random,
   });
+
+  return [...pros, ...u19, ...u17];
 }
 
 function mulberry32(seed: number): () => number {

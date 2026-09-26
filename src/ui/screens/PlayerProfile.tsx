@@ -187,14 +187,14 @@ function OverviewTab({
 }) {
   return (
     <section className="profile-panel" aria-label="Überblick">
-      <Hint text="Kurzportrait — aus Region, Position und Scout-Berichten generiert. Mehr Scouting = mehr Text." block>
+      <Hint text="Kurzportrait — aus Region, Position und aktuellem Zustand. Rote Eigenschaften spiegeln Form, Moral oder Spielzeit wider." block>
         {flavor ? (
           <div className="profile-flavor">
             <p className="profile-flavor-headline">{flavor.headline}</p>
             <p className="profile-flavor-body">{flavor.body}</p>
             <ul className="profile-trait-list">
               {flavor.traits.map((trait) => (
-                <li key={trait}>{trait}</li>
+                <li key={trait.label} className={`profile-trait is-${trait.tone}`}>{trait.label}</li>
               ))}
             </ul>
           </div>
@@ -203,7 +203,7 @@ function OverviewTab({
         )}
       </Hint>
 
-      <Hint text="Erfolge und Auszeichnungen — bei fremden Spielern erst nach besserem Scout-Wissen." block>
+      <Hint text="Erfolge aus echten Vereinsereignissen — Jugendleistung, Aufstieg, Vertrag, Leihe. Fremde Spieler: erst nach Scout-Wissen sichtbar." block>
         <div className="profile-achievements">
           <p className="profile-section-label">Erfolge</p>
           {achievements.length > 0 ? (

@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { clubEventIcon, type ClubEvent } from "../../inbox/club-events.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import { scoutReportsForWeek, type ScoutBoard } from "../../scouting/scout-board.ts";
@@ -17,33 +19,45 @@ import {
  * └──────────────────────┴─────────────────────────────────┘
  */
 
+const EVENTS_PER_PAGE = 4;
+
 export function HubInboxPanel({
   week,
   players,
   youthInbox,
   scoutBoard,
+  clubEvents,
+  season,
   onOpenDecision,
   onSelectScoutTarget,
 }: {
   week: number;
+  season: number;
   players: readonly Player[];
   youthInbox: YouthInboxState;
   scoutBoard: ScoutBoard;
+  clubEvents: readonly ClubEvent[];
   onOpenDecision: (itemId: string) => void;
   onSelectScoutTarget: (playerId: string) => void;
 }) {
   const decisions = pendingInboxItems(youthInbox);
   const reports = scoutReportsForWeek(scoutBoard, week);
+  const totalEventPages = Math.max(1, Math.ceil(clubEvents.length / EVENTS_PER_PAGE));
+  const [eventPage, setEventPage] = useState(0);
+
+  useEffect(() => {
+    setEventPage((current) => Math.min(current, totalEventPages - 1));
+  }, [totalEventPages]);
+
+  const pageEvents = clubEvents.slice(
+    eventPage * EVENTS_PER_PAGE,
+    eventPage * EVENTS_PER_PAGE + EVENTS_PER_PAGE,
+  );
 
   return (
     <section className="hub-inbox" aria-label="Inbox">
       <header className="hub-inbox-head">
         <h3>📥 Inbox</h3>
-        <p className="hub-inbox-meta">
-          {decisions.length} Entscheidung{decisions.length === 1 ? "" : "en"}
-          {" · "}
-          {reports.length} Scout-Bericht{reports.length === 1 ? "" : "e"}
-        </p>
       </header>
 
       <div className="hub-inbox-columns">
@@ -66,9 +80,9 @@ export function HubInboxPanel({
                       <span className="hub-inbox-icon" aria-hidden="true">
                         {item.kind === "departure_risk" ? "🚩" : item.kind === "contract_offer" ? "✍️" : "⚠️"}
                       </span>
-                      <span className="hub-inbox-row-body">
+                      <span className="hub-inbox-row-text">
                         <strong>{formatPlayerName(player)}</strong>
-                        <span>{inboxItemLabel(item)}</span>
+                        <span className="hub-inbox-row-detail">{inboxItemLabel(item)}</span>
                       </span>
                       <span className="hub-inbox-row-cta">→</span>
                     </button>
@@ -95,9 +109,9 @@ export function HubInboxPanel({
                     onClick={() => onSelectScoutTarget(report.playerId)}
                   >
                     <span className="hub-inbox-icon" aria-hidden="true">👁️</span>
-                    <span className="hub-inbox-row-body">
+                    <span className="hub-inbox-row-text">
                       <strong>{report.playerName}</strong>
-                      <span>
+                      <span className="hub-inbox-row-detail">
                         {report.position} · CA ~{report.estimatedCa} · {report.confidence}
                         {report.uncertaintyDelta < 0 ? " · schärfer" : ""}
                       </span>
@@ -111,11 +125,42 @@ export function HubInboxPanel({
         </div>
       </div>
 
-      {youthInbox.overflowDropped > 0 ? (
-        <p className="hub-inbox-overflow">
-          ⚠️ {youthInbox.overflowDropped} weitere Jugend-Hinweise warten auf eine spätere Woche.
-        </p>
-      ) : null}
+      <div className="hub-inbox-events">
+        <p className="hub-inbox-column-title">Ereignisse</p>
+        {clubEvents.length === 0 ? (
+          <p className="hub-inbox-empty">Noch keine Club-Ereignisse — Transfers, Profil-Aktionen und Inbox landen hier.</p>
+        ) : (
+          <>
+            <ul className="hub-inbox-list hub-inbox-list-events">
+              {pageEvents.map((event) => (
+                <li key={event.id}>
+                  <div className="hub-inbox-event">
+                    <span className="hub-inbox-icon" aria-hidden="true">{clubEventIcon(event.kind)}</span>
+                    <span className="hub-inbox-event-message">{event.message}</span>
+                    <span className="hub-inbox-event-meta">KW {event.week}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {totalEventPages > 1 ? (
+              <nav className="hub-inbox-events-pagination" aria-label="Ereignisse Seiten">
+                {Array.from({ length: totalEventPages }, (_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className={index === eventPage ? "hub-inbox-page is-active" : "hub-inbox-page"}
+                    aria-current={index === eventPage ? "page" : undefined}
+                    onClick={() => setEventPage(index)}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </nav>
+            ) : null}
+          </>
+        )}
+      </div>
+
     </section>
   );
 }

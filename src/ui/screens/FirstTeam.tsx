@@ -1,6 +1,12 @@
+import { useMemo, useState } from "react";
 import type { Player } from "../../types/player.ts";
-import type { PositionPrimary } from "../../types/player.ts";
-import { formatMarketValueShort, listProSquad } from "../../squad/pro-roster.ts";
+import {
+  formatMarketValueShort,
+  listProSquad,
+  sortProSquadRows,
+  type ProSquadSortDirection,
+  type ProSquadSortKey,
+} from "../../squad/pro-roster.ts";
 import { Hint } from "../components/Hint.tsx";
 
 /**
@@ -9,10 +15,15 @@ import { Hint } from "../components/Hint.tsx";
  * │ ←  ⭐ Profikader · 14 Spieler                │
  * │ Ø CA 74 · Marktwert 18.2M                    │
  * ├──────────────────────────────────────────────┤
- * │ 🧤 Neuer · GK · 28 J. · CA 81 · 2.1M · ●    │
- * │ 🛡️ Hummels · CB · 27 J. · CA 78 · 1.8M · ▲  │
+ * │ Neuer · GK · 28 J. · CA 81 · 2.1M · ●       │
+ * │ Hummels · CB · 27 J. · CA 78 · 1.8M · ▲     │
  * └──────────────────────────────────────────────┘
  */
+
+const DEFAULT_SORT: { key: ProSquadSortKey; direction: ProSquadSortDirection } = {
+  key: "position",
+  direction: "asc",
+};
 
 export function FirstTeam({
   players,
@@ -27,10 +38,26 @@ export function FirstTeam({
   onBack: () => void;
   onSelectPlayer: (playerId: string) => void;
 }) {
-  const rows = listProSquad(players, clubId);
+  const [sortKey, setSortKey] = useState<ProSquadSortKey>(DEFAULT_SORT.key);
+  const [sortDirection, setSortDirection] = useState<ProSquadSortDirection>(DEFAULT_SORT.direction);
+
+  const rows = useMemo(() => {
+    const baseRows = listProSquad(players, clubId);
+    return sortProSquadRows(baseRows, sortKey, sortDirection);
+  }, [players, clubId, sortKey, sortDirection]);
+
   const avgCa =
     rows.length > 0 ? Math.round(rows.reduce((sum, row) => sum + row.ca, 0) / rows.length) : 0;
   const totalValue = rows.reduce((sum, row) => sum + row.marketValue, 0);
+
+  const toggleSort = (key: ProSquadSortKey) => {
+    if (sortKey === key) {
+      setSortDirection((current) => (current === "desc" ? "asc" : "desc"));
+      return;
+    }
+    setSortKey(key);
+    setSortDirection(key === "name" || key === "position" ? "asc" : "desc");
+  };
 
   return (
     <main className="squad">
@@ -56,38 +83,91 @@ export function FirstTeam({
           <p className="squad-empty-hint">Talente aus U19 über die 📥 Inbox hochziehen.</p>
         </section>
       ) : (
-        <div className="campus-table squad-table" role="table" aria-label="Profikader">
-          <div className="campus-table-head squad-table-head" role="row">
-            <span role="columnheader" className="campus-col-icon" aria-hidden="true" />
-            <span role="columnheader">Name</span>
-            <span role="columnheader">Pos</span>
-            <span role="columnheader">Alter</span>
-            <span role="columnheader">CA</span>
-            <span role="columnheader">Wert</span>
-            <span role="columnheader">Min</span>
-            <span role="columnheader">Form</span>
-          </div>
-          <ul className="campus-list" role="rowgroup">
-            {rows.map((row) => (
-              <li key={row.playerId} role="none">
-                <button type="button" className="campus-row squad-row" onClick={() => onSelectPlayer(row.playerId)}>
-                  <span className="campus-portrait" aria-hidden="true">{positionGlyph(row.position)}</span>
-                  <span className="campus-player-name">{row.displayName}</span>
-                  <span className="campus-meta">{row.position}</span>
-                  <span className="campus-meta">{row.age} J.</span>
-                  <span className="campus-ca">{row.ca}</span>
-                  <span className="squad-value">{formatMarketValueShort(row.marketValue)}</span>
-                  <span className="campus-meta">{row.seasonMinutes}</span>
-                  <span className={`squad-form is-${formTone(row.form)}`} title={`Form ${row.form}`}>
+        <div className="squad-table-wrap">
+          <table className="squad-table">
+            <thead>
+              <tr>
+                <SortHeader label="Name" sortKey="name" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} align="left" />
+                <SortHeader label="Pos" sortKey="position" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SortHeader label="Alt" sortKey="age" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SortHeader label="CA" sortKey="ca" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SortHeader label="Wert" sortKey="marketValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SortHeader label="Min" sortKey="seasonMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SortHeader label="T" sortKey="goals" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SortHeader label="A" sortKey="assists" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SortHeader label="K" sortKey="yellowCards" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SortHeader label="Tkl" sortKey="tackles" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SortHeader label="Kop" sortKey="headers" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SortHeader label="Ø" sortKey="avgRating" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SortHeader label="Form" sortKey="form" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.playerId} className="squad-table-row" onClick={() => onSelectPlayer(row.playerId)}>
+                  <td className="squad-col-name">{row.displayName}</td>
+                  <td>{row.position}</td>
+                  <td>{row.age}</td>
+                  <td className="squad-col-ca">{row.ca}</td>
+                  <td className="squad-col-value">{formatMarketValueShort(row.marketValue)}</td>
+                  <td>{row.seasonMinutes}</td>
+                  <td>{row.goals}</td>
+                  <td>{row.assists}</td>
+                  <td>{row.yellowCards}</td>
+                  <td>{row.tackles}</td>
+                  <td>{row.headers}</td>
+                  <td>{row.avgRating?.toFixed(1) ?? "—"}</td>
+                  <td className={`squad-form is-${formTone(row.form)}`} title={`Form ${row.form}`}>
                     {formMark(row.form)}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </main>
+  );
+}
+
+function SortHeader({
+  label,
+  sortKey,
+  activeKey,
+  direction,
+  onSort,
+  align = "right",
+}: {
+  label: string;
+  sortKey: ProSquadSortKey;
+  activeKey: ProSquadSortKey;
+  direction: ProSquadSortDirection;
+  onSort: (key: ProSquadSortKey) => void;
+  align?: "left" | "right";
+}) {
+  const active = sortKey === activeKey;
+  return (
+    <th
+      scope="col"
+      className={align === "left" ? "squad-col-name" : undefined}
+      aria-sort={active ? (direction === "asc" ? "ascending" : "descending") : "none"}
+    >
+      <button
+        type="button"
+        className={`squad-sort-header${active ? " is-active" : ""}${align === "left" ? " is-left" : ""}`}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onSort(sortKey);
+        }}
+      >
+        <span>{label}</span>
+        <span className="squad-sort-icons" aria-hidden="true">
+          <span className={active && direction === "asc" ? "is-active" : ""}>▲</span>
+          <span className={active && direction === "desc" ? "is-active" : ""}>▼</span>
+        </span>
+      </button>
+    </th>
   );
 }
 
@@ -101,11 +181,4 @@ function formTone(form: number): "good" | "mid" | "low" {
   if (form >= 2) return "good";
   if (form >= -1) return "mid";
   return "low";
-}
-
-function positionGlyph(position: PositionPrimary): string {
-  if (position === "GK") return "🧤";
-  if (position === "CB" || position === "LB" || position === "RB") return "🛡️";
-  if (position === "CF") return "⚽";
-  return "👟";
 }

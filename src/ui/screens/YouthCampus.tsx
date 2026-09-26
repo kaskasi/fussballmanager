@@ -13,6 +13,7 @@ import type { AcademyFacility } from "../../youth/intake-generator.ts";
 import type { YouthInboxState } from "../../youth/decision-inbox.ts";
 import type { YouthReport } from "../../youth/youth-sim.ts";
 import { coachIconForPlayer, DecisionInboxModal, hasDepartureRisk } from "../components/DecisionInbox.tsx";
+import { pendingInboxItems } from "../../youth/decision-inbox.ts";
 import type { DecisionAction } from "../../youth/decision-inbox.ts";
 
 /**
@@ -61,23 +62,26 @@ export function YouthCampus({
   onYearOpenChange: (open: boolean) => void;
 }) {
   const [inboxOpen, setInboxOpen] = useState(false);
-  const rows = useMemo(() => rosterRows(players, youthInbox), [players, youthInbox]);
+  const openInbox = () => {
+    if (pendingInboxItems(youthInbox).length > 0) setInboxOpen(true);
+  };
 
   return (
     <main className="campus">
       {yearOpen ? (
         <YearGroup
-          rows={rows}
+          players={players}
+          youthInbox={youthInbox}
           report={youthInbox.lastReport}
           onBack={() => onYearOpenChange(false)}
-          onOpenInbox={() => setInboxOpen(true)}
-          onDeparture={() => setInboxOpen(true)}
+          onOpenInbox={openInbox}
+          onDeparture={openInbox}
           onSelectPlayer={onSelectPlayer}
         />
       ) : (
         <CampusGround onOpenYear={() => onYearOpenChange(true)} />
       )}
-      {inboxOpen ? (
+      {inboxOpen && pendingInboxItems(youthInbox).length > 0 ? (
         <DecisionInboxModal
           inbox={youthInbox}
           players={players}
@@ -149,38 +153,74 @@ function formatResults(results: YouthReport["u17_results"]): string {
   return `${results.wins}-${results.draws}-${results.losses}`;
 }
 
+type YouthTeam = "u17" | "u19";
+
 function YearGroup({
-  rows,
+  players,
+  youthInbox,
   report,
   onBack,
   onOpenInbox,
   onDeparture,
   onSelectPlayer,
 }: {
-  rows: YearRow[];
+  players: readonly Player[];
+  youthInbox: YouthInboxState;
   report: YouthReport | null;
   onBack: () => void;
   onOpenInbox: () => void;
   onDeparture: () => void;
   onSelectPlayer: (playerId: string) => void;
 }) {
+  const [team, setTeam] = useState<YouthTeam>("u17");
   const [position, setPosition] = useState<PositionPrimary | "all">("all");
+
+  const u17Count = useMemo(() => players.filter((player) => player.squad_status === "u17").length, [players]);
+  const u19Count = useMemo(() => players.filter((player) => player.squad_status === "u19").length, [players]);
+
+  const rows = useMemo(() => rosterRows(players, youthInbox, team), [players, youthInbox, team]);
   const positions = useMemo(() => positionsInRoster(rows), [rows]);
   const visible = useMemo(() => {
     const filtered = position === "all" ? rows : rows.filter((row) => row.position === position);
     return sortCampusBadges(filtered);
   }, [rows, position]);
 
+  const switchTeam = (next: YouthTeam) => {
+    setTeam(next);
+    setPosition("all");
+  };
+
   return (
     <section className="campus-year">
-      <p className="eyebrow">Jahrgang</p>
+      <p className="eyebrow">Jugend</p>
       <div className="campus-year-head">
         <button type="button" onClick={onBack} aria-label="Zurück zum Campus">
           ←
         </button>
-        <h1>U17 · {visible.length} Spieler</h1>
+        <h1>🏫 Jugendkader</h1>
         <button type="button" className="campus-inbox-open" onClick={onOpenInbox}>
           📥 Inbox
+        </button>
+      </div>
+
+      <div className="segmented-control" role="tablist" aria-label="Jugendteam wählen">
+        <button
+          type="button"
+          role="tab"
+          className={team === "u17" ? "is-active" : undefined}
+          aria-selected={team === "u17"}
+          onClick={() => switchTeam("u17")}
+        >
+          U17 · {u17Count}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          className={team === "u19" ? "is-active" : undefined}
+          aria-selected={team === "u19"}
+          onClick={() => switchTeam("u19")}
+        >
+          U19 · {u19Count}
         </button>
       </div>
 
@@ -205,37 +245,45 @@ function YearGroup({
         ))}
       </div>
 
-      <div className="campus-table" role="table" aria-label="U17 Kader">
-        <div className="campus-table-head" role="row">
-          <span role="columnheader" className="campus-col-icon" aria-hidden="true" />
-          <span role="columnheader">Name</span>
-          <span role="columnheader">Pos</span>
-          <span role="columnheader">Alter</span>
-          <span role="columnheader">CA</span>
-          <span role="columnheader">Region</span>
-          <span role="columnheader">Coach</span>
+      {visible.length === 0 ? (
+        <section className="squad-empty campus-roster-empty" aria-label="Leerer Jugendkader">
+          <p>Keine Spieler in {team === "u17" ? "der U17" : "der U19"}.</p>
+        </section>
+      ) : (
+        <div className="squad-table-wrap">
+          <table className="squad-table youth-roster-table" aria-label={`${team.toUpperCase()} Kader`}>
+            <thead>
+              <tr>
+                <th scope="col" className="squad-col-name">Name</th>
+                <th scope="col">Pos</th>
+                <th scope="col">Alt</th>
+                <th scope="col">CA</th>
+                <th scope="col">Region</th>
+                <th scope="col">Coach</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((row) => (
+                <tr
+                  key={row.playerId}
+                  className={row.departureRisk ? "squad-table-row is-risk" : "squad-table-row"}
+                  onClick={() => (row.departureRisk ? onDeparture() : onSelectPlayer(row.playerId))}
+                >
+                  <td className="squad-col-name">
+                    {row.departureRisk ? <span className="youth-risk-flag" aria-hidden="true">🚩 </span> : null}
+                    {row.displayName}
+                  </td>
+                  <td>{row.position}</td>
+                  <td>{row.age}</td>
+                  <td className="squad-col-ca">{roundStat(row.ca)}</td>
+                  <td className="youth-col-region">{row.region}</td>
+                  <td className="youth-col-coach" title={`Coach ${row.coachIcon}`}>{row.coachIcon}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <ul className="campus-list" role="rowgroup">
-          {visible.map((row) => (
-            <li key={row.playerId} role="none">
-              <button
-                type="button"
-                className={row.departureRisk ? "campus-row is-risk" : "campus-row"}
-                onClick={() => (row.departureRisk ? onDeparture() : onSelectPlayer(row.playerId))}
-              >
-                <span className="campus-portrait" aria-hidden="true">{positionGlyph(row.position)}</span>
-                <span className="campus-player-name">{row.displayName}</span>
-                <span className="campus-meta">{row.position}</span>
-                <span className="campus-meta">{row.age}</span>
-                <span className="campus-ca">{roundStat(row.ca)}</span>
-                <span className="campus-region">{row.region}</span>
-                <span className="campus-coach" title={`Coach ${row.coachIcon}`}>{row.coachIcon}</span>
-                {row.departureRisk ? <span className="campus-risk" aria-hidden="true">🚩</span> : null}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      )}
     </section>
   );
 }
@@ -259,13 +307,6 @@ function PositionChip({
 function positionsInRoster(rows: readonly YearRow[]): PositionPrimary[] {
   const present = new Set(rows.map((row) => row.position));
   return POSITION_ORDER.filter((slot) => present.has(slot));
-}
-
-function positionGlyph(position: PositionPrimary): string {
-  if (position === "GK") return "🧤";
-  if (position === "CB" || position === "LB" || position === "RB") return "🛡️";
-  if (position === "CF") return "⚽";
-  return "👟";
 }
 
 function IsoBuilding({ facility }: { facility: AcademyFacility }) {
@@ -303,9 +344,9 @@ function IsoBuilding({ facility }: { facility: AcademyFacility }) {
   );
 }
 
-function rosterRows(players: Player[], inbox: YouthInboxState): YearRow[] {
+function rosterRows(players: readonly Player[], inbox: YouthInboxState, team: YouthTeam): YearRow[] {
   return players
-    .filter((player) => player.squad_status === "u17")
+    .filter((player) => player.squad_status === team)
     .map((player) => ({
       playerId: player.id,
       position: player.position,

@@ -41,6 +41,9 @@ export function resetSeasonMinutes(player: Player): Player {
       season_apps: 0,
       season_goals: 0,
       season_assists: 0,
+      season_yellow_cards: 0,
+      season_tackles: 0,
+      season_headers: 0,
       recent_weekly_minutes: [],
     },
   };

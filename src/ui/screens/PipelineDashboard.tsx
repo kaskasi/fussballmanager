@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { planToSessions } from "../../development/training-units.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
 import { projectWeek } from "../../development/pipeline-week.ts";
@@ -16,6 +16,7 @@ import {
   playerTableRow,
 } from "../../sim/league-week.ts";
 import { formatClubCash, weeklyWageBill, type ClubFinances } from "../../economy/club-finances.ts";
+import type { ClubEvent } from "../../inbox/club-events.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import { inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
 import { HubInboxPanel } from "../components/HubInboxPanel.tsx";
@@ -34,7 +35,6 @@ export function PipelineDashboard({
   trainingPlan,
   onTrainingPlanChange,
   activeScouts,
-  onSimulateWeek,
   onSelectPlayer,
   onOpenYouth,
   onOpenScouting,
@@ -47,10 +47,7 @@ export function PipelineDashboard({
   league,
   finances,
   clubId,
-  simulating,
-  notice = null,
-  onDismissNotice,
-  onNewGame,
+  clubEvents,
 }: {
   players: Player[];
   season: number;
@@ -59,7 +56,6 @@ export function PipelineDashboard({
   trainingPlan: TrainingSlot[];
   onTrainingPlanChange: (plan: TrainingSlot[]) => void;
   activeScouts: number;
-  onSimulateWeek: () => void;
   onSelectPlayer: (playerId: string) => void;
   onOpenYouth: () => void;
   onOpenScouting: () => void;
@@ -72,28 +68,10 @@ export function PipelineDashboard({
   league: LeagueState;
   finances: ClubFinances;
   clubId: string;
-  simulating: boolean;
-  notice?: string | null;
-  onDismissNotice?: () => void;
-  onNewGame: () => void;
+  clubEvents: readonly ClubEvent[];
 }) {
   const [panel, setPanel] = useState<"hub" | "training">("hub");
   const [legend, setLegend] = useState(false);
-  const [resetAsk, setResetAsk] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    function handlePointer(event: MouseEvent) {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        setMenuOpen(false);
-        setResetAsk(false);
-      }
-    }
-    document.addEventListener("mousedown", handlePointer);
-    return () => document.removeEventListener("mousedown", handlePointer);
-  }, [menuOpen]);
   const sessions = useMemo(() => planToSessions(trainingPlan), [trainingPlan]);
   const planOk = validateWeeklyPlan(sessions).valid;
   const focusCount = trainingPlan.filter((slot) => slot.focus).length;
@@ -141,16 +119,6 @@ export function PipelineDashboard({
 
   return (
     <main className="pipeline">
-      {notice ? (
-        <p className="pipeline-notice" role="status">
-          {notice}
-          {onDismissNotice ? (
-            <button type="button" className="pipeline-notice-dismiss" onClick={onDismissNotice}>
-              Schließen
-            </button>
-          ) : null}
-        </p>
-      ) : null}
       <header className="pipeline-head">
         <div>
           <p className="eyebrow">
@@ -175,64 +143,6 @@ export function PipelineDashboard({
           </p>
           <p className="pipeline-save" title={lastSaved}>💾 Gespeichert</p>
         </div>
-        <div className="pipeline-head-actions">
-          <button type="button" className="pipeline-go" onClick={onSimulateWeek} disabled={simulating}>
-            {simulating ? "Simuliere…" : `▶ Woche ${week + 1} simulieren`}
-          </button>
-          <div className="row-menu" ref={menuRef}>
-            <button
-              type="button"
-              className="row-menu-trigger"
-              aria-label="Weitere Aktionen"
-              aria-expanded={menuOpen}
-              aria-haspopup="menu"
-              onClick={() => {
-                setMenuOpen((open) => !open);
-                if (menuOpen) setResetAsk(false);
-              }}
-            >
-              ⋮
-            </button>
-            {menuOpen ? (
-              <div className="row-menu-popover pipeline-menu-popover" role="menu">
-                {resetAsk ? (
-                  <>
-                    <p className="pipeline-menu-note">Spielstand löschen und neu starten?</p>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="row-menu-item pipeline-menu-danger"
-                      onClick={() => {
-                        onNewGame();
-                        setResetAsk(false);
-                        setMenuOpen(false);
-                      }}
-                    >
-                      Ja, neu starten
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="row-menu-item"
-                      onClick={() => setResetAsk(false)}
-                    >
-                      Abbrechen
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="row-menu-item pipeline-menu-danger"
-                    onClick={() => setResetAsk(true)}
-                  >
-                    Neues Spiel
-                  </button>
-                )}
-              </div>
-            ) : null}
-          </div>
-        </div>
       </header>
       <p className="pipeline-matchline">
         {lastResult ? (
@@ -251,9 +161,11 @@ export function PipelineDashboard({
       </p>
       <HubInboxPanel
         week={week}
+        season={season}
         players={players}
         youthInbox={youthInbox}
         scoutBoard={scoutBoard}
+        clubEvents={clubEvents}
         onOpenDecision={(itemId) => onOpenInbox(itemId)}
         onSelectScoutTarget={onSelectScoutTarget}
       />
@@ -289,7 +201,9 @@ export function PipelineDashboard({
           <button
             type="button"
             className={inbox.pending > 0 ? "pipeline-tile pipeline-tile-inbox" : "pipeline-tile"}
-            onClick={() => onOpenInbox()}
+            onClick={() => {
+              if (inbox.pending > 0) onOpenInbox();
+            }}
           >
             <span>📥</span>
             <span>

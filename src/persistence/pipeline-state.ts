@@ -2,6 +2,7 @@ import { createInitialTrainingPlan, type TrainingSlot } from "../development/tra
 import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
 import { createScoutBoard, type ScoutBoard } from "../scouting/scout-board.ts";
 import { emptyTransferState, type TransferState } from "../transfers/negotiations.ts";
+import { emptyClubEvents, type ClubEvent } from "../inbox/club-events.ts";
 import { emptyInbox, type YouthInboxState } from "../youth/decision-inbox.ts";
 
 /** Dynamic hub state stored in `state.json` (PRD 08). */
@@ -11,6 +12,7 @@ export interface PipelineState {
   youth_inbox: YouthInboxState;
   transfer_state?: TransferState;
   club_finances?: ClubFinances;
+  club_events?: ClubEvent[];
 }
 
 export function defaultPipelineState(week = 1): PipelineState {
@@ -20,5 +22,6 @@ export function defaultPipelineState(week = 1): PipelineState {
     youth_inbox: emptyInbox(week),
     transfer_state: emptyTransferState(),
     club_finances: defaultClubFinances(),
+    club_events: emptyClubEvents(),
   };
 }

@@ -1,5 +1,6 @@
 import type { Player, PositionPrimary } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
+import { seasonMatchRating } from "../player/season-stats.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 
 export interface ProSquadRow {
@@ -11,7 +12,30 @@ export interface ProSquadRow {
   form: number;
   seasonMinutes: number;
   marketValue: number;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  tackles: number;
+  headers: number;
+  avgRating: number | null;
 }
+
+export type ProSquadSortKey =
+  | "name"
+  | "position"
+  | "age"
+  | "ca"
+  | "marketValue"
+  | "seasonMinutes"
+  | "goals"
+  | "assists"
+  | "yellowCards"
+  | "tackles"
+  | "headers"
+  | "avgRating"
+  | "form";
+
+export type ProSquadSortDirection = "asc" | "desc";
 
 const POSITION_ORDER: Record<PositionPrimary, number> = {
   GK: 0,
@@ -40,13 +64,66 @@ export function listProSquad(players: readonly Player[], clubId: string): ProSqu
       form: player.state.form,
       seasonMinutes: player.state.season_minutes,
       marketValue: player.market_value,
-    }))
-    .sort(
-      (left, right) =>
-        POSITION_ORDER[left.position] - POSITION_ORDER[right.position] ||
-        right.ca - left.ca ||
-        left.displayName.localeCompare(right.displayName),
-    );
+      goals: player.state.season_goals ?? 0,
+      assists: player.state.season_assists ?? 0,
+      yellowCards: player.state.season_yellow_cards ?? 0,
+      tackles: player.state.season_tackles ?? 0,
+      headers: player.state.season_headers ?? 0,
+      avgRating: seasonMatchRating(player),
+    }));
+}
+
+export function sortProSquadRows(
+  rows: readonly ProSquadRow[],
+  key: ProSquadSortKey,
+  direction: ProSquadSortDirection,
+): ProSquadRow[] {
+  return [...rows].sort(compareProSquadRows(key, direction));
+}
+
+function compareProSquadRows(
+  key: ProSquadSortKey,
+  direction: ProSquadSortDirection,
+): (left: ProSquadRow, right: ProSquadRow) => number {
+  const factor = direction === "asc" ? 1 : -1;
+  return (left, right) => {
+    const delta = compareByKey(left, right, key);
+    if (delta !== 0) return delta * factor;
+    return left.displayName.localeCompare(right.displayName, "de");
+  };
+}
+
+function compareByKey(left: ProSquadRow, right: ProSquadRow, key: ProSquadSortKey): number {
+  switch (key) {
+    case "name":
+      return left.displayName.localeCompare(right.displayName, "de");
+    case "position":
+      return POSITION_ORDER[left.position] - POSITION_ORDER[right.position] || right.ca - left.ca;
+    case "age":
+      return left.age - right.age;
+    case "ca":
+      return left.ca - right.ca;
+    case "marketValue":
+      return left.marketValue - right.marketValue;
+    case "seasonMinutes":
+      return left.seasonMinutes - right.seasonMinutes;
+    case "goals":
+      return left.goals - right.goals;
+    case "assists":
+      return left.assists - right.assists;
+    case "yellowCards":
+      return left.yellowCards - right.yellowCards;
+    case "tackles":
+      return left.tackles - right.tackles;
+    case "headers":
+      return left.headers - right.headers;
+    case "avgRating":
+      return (left.avgRating ?? -1) - (right.avgRating ?? -1);
+    case "form":
+      return left.form - right.form;
+    default:
+      return 0;
+  }
 }
 
 export function formatMarketValueShort(value: number): string {

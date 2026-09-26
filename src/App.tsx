@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { TrainingSlot } from "./development/training-units.ts";
 import { Matchday } from "./match/Matchday";
 import {
@@ -36,12 +36,19 @@ import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
 import { PlayerProfile } from "./ui/screens/PlayerProfile";
 import { ScoutingCenter } from "./ui/screens/ScoutingCenter";
 import { DecisionInboxModal } from "./ui/components/DecisionInbox.tsx";
+import { TransferWindowAmbience } from "./ui/components/TransferWindowAmbience.tsx";
 import { YouthCampus } from "./ui/screens/YouthCampus";
 import {
   applyProfileActionToSquad,
   type PlayerProfileAction,
 } from "./player/profile-actions.ts";
-import { applyInboxDecision, type DecisionAction } from "./youth/decision-inbox.ts";
+import { withClubEvent, type ClubEventKind } from "./inbox/club-events.ts";
+import {
+  actionLabel,
+  applyInboxDecision,
+  pendingInboxItems,
+  type DecisionAction,
+} from "./youth/decision-inbox.ts";
 
 type Screen = "hub" | "campus" | "matchday" | "scouting" | "loans" | "squad";
 
@@ -67,7 +74,6 @@ export default function App() {
   const [inboxItemId, setInboxItemId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState<string | null>(null);
-  const [hubNotice, setHubNotice] = useState<string | null>(null);
 
   const session = sessionFromSave(save);
   const {
@@ -80,7 +86,19 @@ export default function App() {
     league,
     transferState,
     finances,
+    clubEvents,
   } = session;
+
+  function sessionWithEvent(
+    current: ReturnType<typeof sessionFromSave>,
+    kind: ClubEventKind,
+    message: string,
+  ): ReturnType<typeof sessionFromSave> {
+    return {
+      ...current,
+      clubEvents: withClubEvent(current.clubEvents, current.season, current.week, kind, message),
+    };
+  }
 
   const patchSession = useCallback((recipe: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>) => {
     setSave((current) => {
@@ -106,9 +124,22 @@ export default function App() {
     }
   }, [save, simulating]);
 
+  const openInbox = useCallback(
+    (itemId?: string) => {
+      const pending = pendingInboxItems(youthInbox);
+      if (!itemId && pending.length === 0) return;
+      if (itemId && !pending.some((item) => item.id === itemId)) return;
+      setInboxItemId(itemId ?? null);
+      setInboxOpen(true);
+    },
+    [youthInbox],
+  );
+
   const handleInboxDecision = useCallback(
     (itemId: string, action: DecisionAction) => {
       patchSession((current) => {
+        const item = current.youthInbox.items.find((entry) => entry.id === itemId);
+        const player = item ? current.players.find((entry) => entry.id === item.playerId) : null;
         const result = applyInboxDecision(
           current.youthInbox,
           current.players,
@@ -116,11 +147,24 @@ export default function App() {
           action,
           current.season,
         );
-        return {
-          ...current,
-          players: result.players,
-          youthInbox: result.inbox,
-        };
+        if (pendingInboxItems(result.inbox).length === 0) {
+          setInboxOpen(false);
+          setInboxItemId(null);
+        }
+        const playerName = player ? formatPlayerName(player) : "Spieler";
+        const message =
+          action === "dismiss"
+            ? `Entscheidung vertagt: ${playerName}`
+            : `${actionLabel(action)}: ${playerName}`;
+        return sessionWithEvent(
+          {
+            ...current,
+            players: result.players,
+            youthInbox: result.inbox,
+          },
+          "inbox",
+          message,
+        );
       });
     },
     [patchSession],
@@ -154,27 +198,36 @@ export default function App() {
 
         const deal = attemptPurchase(current.transferState, target.player, current.season, current.week);
         if (!deal.accepted) {
-          setHubNotice("Angebot abgelehnt — höheres Gebot nötig.");
-          return { ...current, transferState: deal.state };
+          return sessionWithEvent(
+            { ...current, transferState: deal.state },
+            "transfer",
+            "Angebot abgelehnt — höheres Gebot nötig.",
+          );
         }
 
         const fee = deal.fee ?? sellerAskingPrice(target.player, current.season);
         if (!canAffordTransfer(current.finances, fee)) {
-          setHubNotice(`Transfer-Budget zu niedrig (benötigt ca. ${formatClubCash(fee)}).`);
-          return { ...current, transferState: deal.state };
+          return sessionWithEvent(
+            { ...current, transferState: deal.state },
+            "finance",
+            `Transfer-Budget zu niedrig (benötigt ca. ${formatClubCash(fee)}).`,
+          );
         }
 
         const bought = completePurchase(target.player, DEFAULT_CLUB_ID, current.season);
         const targets = { ...current.scoutBoard.targets };
         delete targets[playerId];
-        setHubNotice(`Zugang ${formatPlayerName(bought)} für ${formatClubCash(fee)}.`);
-        return {
-          ...current,
-          players: [...current.players, bought],
-          transferState: deal.state,
-          scoutBoard: { targets },
-          finances: applyTransferFee(current.finances, fee),
-        };
+        return sessionWithEvent(
+          {
+            ...current,
+            players: [...current.players, bought],
+            transferState: deal.state,
+            scoutBoard: { targets },
+            finances: applyTransferFee(current.finances, fee),
+          },
+          "transfer",
+          `Zugang ${formatPlayerName(bought)} für ${formatClubCash(fee)}.`,
+        );
       });
       setForeignPlayerId(null);
     },
@@ -192,14 +245,18 @@ export default function App() {
           current.season,
         );
         if (!result) return current;
+        const next = sessionWithEvent(
+          { ...current, players: nextPlayers },
+          "profile",
+          result.message,
+        );
         if (result.removed) {
           setProfileId(null);
           setProfileFeedback(null);
-          setHubNotice(result.message);
         } else {
           setProfileFeedback(result.message);
         }
-        return { ...current, players: nextPlayers };
+        return next;
       });
     },
     [patchSession],
@@ -222,7 +279,6 @@ export default function App() {
     setCampusYearOpen(false);
     setInboxOpen(false);
     setProfileFeedback(null);
-    setHubNotice(null);
     setScreen("hub");
   }, []);
 
@@ -232,8 +288,9 @@ export default function App() {
   if (foreignTarget) {
     return (
       <>
-        <AppNav
+        <AppChrome
           screen={screen}
+          week={week}
           onNavigate={setScreen}
           onCloseProfile={() => setForeignPlayerId(null)}
           onCampusNavigate={() => setCampusYearOpen(false)}
@@ -261,8 +318,9 @@ export default function App() {
   if (profilePlayer) {
     return (
       <>
-        <AppNav
+        <AppChrome
           screen={screen}
+          week={week}
           onNavigate={setScreen}
           onCloseProfile={() => setProfileId(null)}
           onCampusNavigate={() => setCampusYearOpen(false)}
@@ -294,7 +352,22 @@ export default function App() {
 
   return (
     <>
-      <AppNav screen={screen} onNavigate={setScreen} onCampusNavigate={() => setCampusYearOpen(false)} />
+      <AppChrome
+        screen={screen}
+        week={week}
+        onNavigate={setScreen}
+        onCampusNavigate={() => setCampusYearOpen(false)}
+        hubActions={
+          screen === "hub"
+            ? {
+                week,
+                simulating,
+                onNext: () => void simulateWeek(),
+                onNewGame: resetGame,
+              }
+            : undefined
+        }
+      />
       <div hidden={screen !== "hub"}>
         <PipelineDashboard
           key={save.manifest.created}
@@ -308,10 +381,6 @@ export default function App() {
           league={league}
           finances={finances}
           clubId={session.clubId}
-          simulating={simulating}
-          notice={hubNotice}
-          onDismissNotice={() => setHubNotice(null)}
-          onSimulateWeek={() => void simulateWeek()}
           onSelectPlayer={setProfileId}
           onOpenYouth={() => {
             setCampusYearOpen(false);
@@ -320,17 +389,14 @@ export default function App() {
           onOpenScouting={() => setScreen("scouting")}
           onOpenLoans={() => setScreen("loans")}
           onOpenSquad={() => setScreen("squad")}
-          onOpenInbox={(itemId) => {
-            setInboxItemId(itemId ?? null);
-            setInboxOpen(true);
-          }}
+          onOpenInbox={openInbox}
           onSelectScoutTarget={(playerId) => setForeignPlayerId(playerId)}
           youthInbox={youthInbox}
           scoutBoard={scoutBoard}
-          onNewGame={resetGame}
+          clubEvents={clubEvents}
         />
       </div>
-      {inboxOpen ? (
+      {inboxOpen && pendingInboxItems(youthInbox).length > 0 ? (
         <DecisionInboxModal
           inbox={youthInbox}
           players={players}
@@ -382,19 +448,74 @@ export default function App() {
   );
 }
 
+interface HubNavActions {
+  week: number;
+  simulating: boolean;
+  onNext: () => void;
+  onNewGame: () => void;
+}
+
+function AppChrome({
+  week,
+  screen,
+  onNavigate,
+  onCloseProfile,
+  onCampusNavigate,
+  hubActions,
+}: {
+  week: number;
+  screen: Screen;
+  onNavigate: (screen: Screen) => void;
+  onCloseProfile?: () => void;
+  onCampusNavigate?: () => void;
+  hubActions?: HubNavActions;
+}) {
+  return (
+    <>
+      <AppNav
+        screen={screen}
+        onNavigate={onNavigate}
+        onCloseProfile={onCloseProfile}
+        onCampusNavigate={onCampusNavigate}
+        hubActions={hubActions}
+      />
+      <TransferWindowAmbience week={week} />
+    </>
+  );
+}
+
 function AppNav({
   screen,
   onNavigate,
   onCloseProfile,
   onCampusNavigate,
+  hubActions,
 }: {
   screen: Screen;
   onNavigate: (screen: Screen) => void;
   onCloseProfile?: () => void;
   onCampusNavigate?: () => void;
+  hubActions?: HubNavActions;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [resetAsk, setResetAsk] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handlePointer(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+        setResetAsk(false);
+      }
+    }
+    document.addEventListener("mousedown", handlePointer);
+    return () => document.removeEventListener("mousedown", handlePointer);
+  }, [menuOpen]);
+
   return (
     <nav className="app-nav" aria-label="Bereiche">
+      <div className="app-nav-tabs">
       <NavButton
         pressed={screen === "hub"}
         label="Pipeline"
@@ -456,6 +577,73 @@ function AppNav({
       >
         ⚽
       </NavButton>
+      </div>
+      {hubActions ? (
+        <div className="app-nav-actions">
+          <button
+            type="button"
+            className="app-nav-next"
+            onClick={hubActions.onNext}
+            disabled={hubActions.simulating}
+            title={`Woche ${hubActions.week + 1} simulieren`}
+          >
+            {hubActions.simulating ? "…" : "▶ Next"}
+          </button>
+          <div className="row-menu app-nav-menu" ref={menuRef}>
+            <button
+              type="button"
+              className="row-menu-trigger"
+              aria-label="Weitere Aktionen"
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              onClick={() => {
+                setMenuOpen((open) => !open);
+                if (menuOpen) setResetAsk(false);
+              }}
+            >
+              ⋮
+            </button>
+            {menuOpen ? (
+              <div className="row-menu-popover pipeline-menu-popover" role="menu">
+                {resetAsk ? (
+                  <>
+                    <p className="pipeline-menu-note">Spielstand löschen und neu starten?</p>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="row-menu-item pipeline-menu-danger"
+                      onClick={() => {
+                        hubActions.onNewGame();
+                        setResetAsk(false);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      Ja, neu starten
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="row-menu-item"
+                      onClick={() => setResetAsk(false)}
+                    >
+                      Abbrechen
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="row-menu-item pipeline-menu-danger"
+                    onClick={() => setResetAsk(true)}
+                  >
+                    Neues Spiel
+                  </button>
+                )}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </nav>
   );
 }

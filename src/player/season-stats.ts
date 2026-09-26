@@ -35,9 +35,15 @@ export function careerSeasonStats(
   };
 }
 
-function estimateMatchRating(player: Player, minutes: number): string {
-  if (minutes === 0) return "—";
+export function seasonMatchRating(player: Player): number | null {
+  const minutes = player.state.season_minutes;
+  if (minutes === 0) return null;
   const base = 6.35 + player.state.form * 0.14 + Math.min(minutes / 1_200, 0.55);
   const moraleBoost = (player.state.morale - 50) / 200;
-  return Math.min(9.2, Math.max(5.4, base + moraleBoost)).toFixed(1);
+  return Math.min(9.2, Math.max(5.4, base + moraleBoost));
+}
+
+function estimateMatchRating(player: Player, minutes: number): string {
+  if (minutes === 0) return "—";
+  return seasonMatchRating(player)!.toFixed(1);
 }

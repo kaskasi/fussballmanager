@@ -81,6 +81,8 @@ export function applyCareerMatchWeek(
     const goals = goalMap.get(player.id) ?? 0;
     const assists = assistMap.get(player.id) ?? 0;
     const yellowCards = cardMap.get(player.id) ?? 0;
+    const tackles = matchTackles(player, minutes, masterSeed, season, matchday);
+    const headers = matchHeaders(player, minutes, masterSeed, season, matchday);
     const withMinutes = pushWeeklyMinutes(player, minutes);
     const next: Player = {
       ...withMinutes,
@@ -89,6 +91,9 @@ export function applyCareerMatchWeek(
         season_apps: withMinutes.state.season_apps + 1,
         season_goals: withMinutes.state.season_goals + goals,
         season_assists: withMinutes.state.season_assists + assists,
+        season_yellow_cards: (withMinutes.state.season_yellow_cards ?? 0) + yellowCards,
+        season_tackles: (withMinutes.state.season_tackles ?? 0) + tackles,
+        season_headers: (withMinutes.state.season_headers ?? 0) + headers,
         form: adjustForm(withMinutes.state.form, goals, assists, goalsAgainst, minutes),
       },
     };
@@ -253,6 +258,66 @@ function weightedPick(
     if (roll <= 0) return pool[index]!;
   }
   return pool[pool.length - 1]!;
+}
+
+function matchTackles(
+  player: Player,
+  minutes: number,
+  masterSeed: number,
+  season: number,
+  matchday: number,
+): number {
+  if (minutes <= 0) return 0;
+  const rate = tackleRate(player);
+  const base = Math.floor((minutes / 90) * rate);
+  const bonus = syncRoll(masterSeed, season, matchday, player.id, "tkl") % 3;
+  return base + (bonus === 0 ? 1 : 0);
+}
+
+function matchHeaders(
+  player: Player,
+  minutes: number,
+  masterSeed: number,
+  season: number,
+  matchday: number,
+): number {
+  if (minutes <= 0) return 0;
+  const rate = headerRate(player);
+  const base = Math.floor((minutes / 90) * rate);
+  const bonus = syncRoll(masterSeed, season, matchday, player.id, "hdr") % 4;
+  return base + (bonus === 0 && rate >= 2 ? 1 : 0);
+}
+
+function tackleRate(player: Player): number {
+  switch (player.position) {
+    case "DM":
+    case "CB":
+      return 4.2;
+    case "LB":
+    case "RB":
+      return 3.4;
+    case "CM":
+      return 2.8;
+    case "LM":
+    case "RM":
+      return 2.2;
+    default:
+      return 1.2;
+  }
+}
+
+function headerRate(player: Player): number {
+  const aerial = player.attributes.strength * 0.45 + player.attributes.positioning * 0.25;
+  switch (player.position) {
+    case "CB":
+      return 2.8 + aerial / 120;
+    case "CF":
+      return 2.2 + aerial / 140;
+    case "DM":
+      return 1.4 + aerial / 160;
+    default:
+      return 0.6 + aerial / 200;
+  }
 }
 
 function adjustForm(

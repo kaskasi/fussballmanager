@@ -2,6 +2,8 @@ import { expireBreakoutModifiers, processWeeklyBreakoutChecks } from "../develop
 import { applyTrainingWeek } from "../development/pipeline-week.ts";
 import { planToSessions } from "../development/training-units.ts";
 import { advanceWeeklyClubFinances } from "../economy/club-finances.ts";
+import type { FixtureResult } from "@fussballmanager/shared";
+import type { CareerLeagueStat } from "../persistence/league-state.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import { applyDepartureMoralePressure } from "../youth/departure-morale.ts";
 import { accumulateWeeklyGrowth, weeklyAttributeGrowth } from "../player/growth-history.ts";
@@ -18,6 +20,8 @@ export interface WeekSimResult {
   session: GameSession;
   seasonEnded: boolean;
   intakeCount: number;
+  playerFixture: FixtureResult | null;
+  matchdayStats: CareerLeagueStat[];
 }
 
 export async function simulateGameWeek(session: GameSession): Promise<WeekSimResult> {
@@ -92,5 +96,11 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     intakeCount = ended.intakeCount;
   }
 
-  return { session: nextSession, seasonEnded, intakeCount };
+  return {
+    session: nextSession,
+    seasonEnded,
+    intakeCount,
+    playerFixture: leagueStep.playerFixture,
+    matchdayStats: careerMatch.matchdayStats,
+  };
 }

@@ -1,4 +1,4 @@
-export type ClubEventKind = "transfer" | "profile" | "finance" | "inbox" | "info";
+export type ClubEventKind = "transfer" | "profile" | "finance" | "inbox" | "match" | "info";
 
 export interface ClubEvent {
   id: string;
@@ -36,6 +36,8 @@ export function clubEventIcon(kind: ClubEventKind): string {
       return "💶";
     case "inbox":
       return "📥";
+    case "match":
+      return "⚽";
     default:
       return "ℹ️";
   }

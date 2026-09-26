@@ -8,4 +8,6 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_008_calendar",
   "migration_009_career_league_sync",
   "migration_010_club_finances",
+  "migration_011_squad_season_stats",
+  "migration_012_weekday",
 ] as const;

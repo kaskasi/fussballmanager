@@ -27,6 +27,7 @@ describe("buildMatchView", () => {
     }
     expect(view.kickoff.cue).toBeNull();
     expect(view.frames.some((frame) => frame.cue === "throw_in")).toBe(true);
+    expect(view.frames.some((frame) => frame.cue === "goal")).toBe(true);
     expect(view.kickoff.stats.home.shots).toBe(0);
     const last = view.frames.at(-1);
     expect(last?.stats.home.goals).toBe(view.finalScore.home);

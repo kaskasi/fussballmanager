@@ -129,6 +129,8 @@ export {
 
 export type {
   MatchView,
+  MatchViewCue,
+  MatchViewCueDetail,
   MatchViewDot,
   MatchViewFrame,
   MatchViewLine,

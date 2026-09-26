@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import { parseCareerMatchBody, runCareerMatch } from "./api/career-match.ts";
 import { parseMatchdayBody, runMatchday } from "./api/matchday.ts";
 import { buildMatchView, parseMatchBody, parseViewSeed } from "./api/match-view.ts";
 import { deleteFolderSave, newFolderSave, readFolderSave, writeFolderSave } from "./api/savegame.ts";
@@ -18,6 +19,15 @@ export function buildApp(logger = false) {
   app.post("/api/match", async (request) => {
     const parsed = parseMatchBody(request.body);
     return buildMatchView(parsed);
+  });
+
+  app.post("/api/career-match", async (request, reply) => {
+    try {
+      return runCareerMatch(parseCareerMatchBody(request.body));
+    } catch (error) {
+      reply.code(400);
+      return { error: error instanceof Error ? error.message : "Invalid career match request" };
+    }
   });
 
   app.post("/api/matchday", async (request, reply) => {

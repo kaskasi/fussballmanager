@@ -8,7 +8,7 @@ import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
  * Folder I/O lives in `savegame-io.ts`.
  */
 
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 export const GAME_VERSION = "0.1.0";
 
 export const SAVE_FILES = [
@@ -50,6 +50,9 @@ export interface SaveManifest {
 export interface SaveState {
   season: number;
   week: number;
+  /** 1 = Monday … 7 = Sunday */
+  weekday?: number;
+  match_played_this_week?: boolean;
   pipeline?: PipelineState;
   league?: LeagueState;
 }
@@ -120,6 +123,8 @@ export function createSave(input: NewSaveInput): SaveGame {
     state: {
       season: input.season,
       week: input.week,
+      weekday: 1,
+      match_played_this_week: false,
       pipeline: defaultPipelineState(input.week),
       league: defaultLeagueState(),
     },

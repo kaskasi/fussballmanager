@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TrainingSlot } from "./development/training-units.ts";
+import { CareerMatch } from "./match/CareerMatch";
+import { appendMatchdayClubEvents } from "./match/post-match-events.ts";
 import { Matchday } from "./match/Matchday";
 import {
   DEFAULT_CLUB_ID,
@@ -15,6 +17,9 @@ import {
   assignScout,
   getBoardTarget,
 } from "./scouting/scout-board.ts";
+import { WeekdayStrip } from "./ui/components/WeekdayStrip.tsx";
+import { prepareCareerMatch, type CareerMatchSetup } from "./sim/career-match-setup.ts";
+import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
 import { simulateGameWeek } from "./sim/week-pipeline.ts";
 import { isTransferWindowOpen } from "./sim/transfer-windows.ts";
 import {
@@ -74,11 +79,13 @@ export default function App() {
   const [inboxItemId, setInboxItemId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState<string | null>(null);
+  const [careerMatchSetup, setCareerMatchSetup] = useState<CareerMatchSetup | null>(null);
 
   const session = sessionFromSave(save);
   const {
     season,
     week,
+    weekday,
     players,
     trainingPlan,
     scoutBoard,
@@ -108,21 +115,66 @@ export default function App() {
     });
   }, []);
 
+  const finishWeekSimulation = useCallback(async () => {
+    const snapshot = sessionFromSave(save);
+    const result = await simulateGameWeek(snapshot);
+    setSave((current) => {
+      let nextSession = {
+        ...result.session,
+        weekday: MONDAY,
+        matchPlayedThisWeek: false,
+      };
+      if (result.playerFixture) {
+        nextSession = {
+          ...nextSession,
+          clubEvents: appendMatchdayClubEvents(
+            nextSession.clubEvents,
+            nextSession.season,
+            nextSession.week,
+            result.playerFixture,
+            nextSession.league.player_club_id,
+            result.matchdayStats,
+          ),
+        };
+      }
+      const next = saveFromSession(nextSession, current);
+      writeLocalSave(DEFAULT_SLOT, next);
+      return next;
+    });
+  }, [save]);
+
   const simulateWeek = useCallback(async () => {
     if (simulating) return;
     setSimulating(true);
     try {
-      const snapshot = sessionFromSave(save);
-      const result = await simulateGameWeek(snapshot);
-      setSave((current) => {
-        const next = saveFromSession(result.session, current);
-        writeLocalSave(DEFAULT_SLOT, next);
-        return next;
-      });
+      await finishWeekSimulation();
     } finally {
       setSimulating(false);
     }
-  }, [save, simulating]);
+  }, [finishWeekSimulation, simulating]);
+
+  const completeCareerMatch = useCallback(
+    async (skipPlayback = false) => {
+      if (simulating) return;
+      if (skipPlayback) {
+        setSimulating(true);
+        try {
+          await finishWeekSimulation();
+          setCareerMatchSetup(null);
+        } finally {
+          setSimulating(false);
+        }
+        return;
+      }
+      patchSession((current) => ({
+        ...current,
+        weekday: 7,
+        matchPlayedThisWeek: true,
+      }));
+      setCareerMatchSetup(null);
+    },
+    [finishWeekSimulation, patchSession, simulating],
+  );
 
   const openInbox = useCallback(
     (itemId?: string) => {
@@ -134,6 +186,36 @@ export default function App() {
     },
     [youthInbox],
   );
+
+  const handleNext = useCallback(() => {
+    if (simulating) return;
+    const hasInbox = pendingInboxItems(youthInbox).length > 0;
+    const skip = resolveSmartSkip(session, hasInbox);
+
+    if (skip.action === "inbox") {
+      openInbox();
+      return;
+    }
+
+    const sessionAtTarget = { ...session, weekday: skip.weekday };
+
+    if (skip.daysAdvanced > 0) {
+      patchSession((current) => ({ ...current, weekday: skip.weekday }));
+    }
+
+    if (skip.action === "match") {
+      const setup = prepareCareerMatch(sessionAtTarget);
+      if (setup) {
+        setCareerMatchSetup(setup);
+        setScreen("hub");
+      }
+      return;
+    }
+
+    if (skip.action === "simulate_week") {
+      void simulateWeek();
+    }
+  }, [openInbox, patchSession, session, simulating, simulateWeek, youthInbox]);
 
   const handleInboxDecision = useCallback(
     (itemId: string, action: DecisionAction) => {
@@ -279,11 +361,34 @@ export default function App() {
     setCampusYearOpen(false);
     setInboxOpen(false);
     setProfileFeedback(null);
+    setCareerMatchSetup(null);
     setScreen("hub");
   }, []);
 
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
   const foreignTarget = foreignPlayerId ? getBoardTarget(scoutBoard, foreignPlayerId) : null;
+
+  if (careerMatchSetup) {
+    return (
+      <>
+        <AppChrome
+          screen="hub"
+          week={week}
+          onNavigate={setScreen}
+          onCampusNavigate={() => setCampusYearOpen(false)}
+        />
+        <CareerMatch
+          setup={careerMatchSetup}
+          players={players}
+          week={week}
+          weekday={weekday}
+          simulating={simulating}
+          onComplete={() => void completeCareerMatch(false)}
+          onSkip={() => void completeCareerMatch(true)}
+        />
+      </>
+    );
+  }
 
   if (foreignTarget) {
     return (
@@ -361,8 +466,9 @@ export default function App() {
           screen === "hub"
             ? {
                 week,
+                weekday,
                 simulating,
-                onNext: () => void simulateWeek(),
+                onNext: () => void handleNext(),
                 onNewGame: resetGame,
               }
             : undefined
@@ -450,6 +556,7 @@ export default function App() {
 
 interface HubNavActions {
   week: number;
+  weekday: number;
   simulating: boolean;
   onNext: () => void;
   onNewGame: () => void;
@@ -580,12 +687,13 @@ function AppNav({
       </div>
       {hubActions ? (
         <div className="app-nav-actions">
+          <WeekdayStrip week={hubActions.week} weekday={hubActions.weekday} />
           <button
             type="button"
             className="app-nav-next"
             onClick={hubActions.onNext}
             disabled={hubActions.simulating}
-            title={`Woche ${hubActions.week + 1} simulieren`}
+            title="Smart Skip — zum nächsten Ereignis"
           >
             {hubActions.simulating ? "…" : "▶ Next"}
           </button>

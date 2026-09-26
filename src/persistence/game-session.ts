@@ -6,6 +6,7 @@ import { emptyInbox, generateWeeklyInbox, type YouthInboxState } from "../youth/
 import { emptyClubEvents, type ClubEvent } from "../inbox/club-events.ts";
 import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
 import { emptyTransferState, type TransferState } from "../transfers/negotiations.ts";
+import { MONDAY } from "../sim/day-calendar.ts";
 import { defaultLeagueState, type LeagueState } from "./league-state.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
 import { createSave, type SaveGame } from "./savegame-model.ts";
@@ -18,6 +19,8 @@ export const DEFAULT_MASTER_SEED = 2026;
 export interface GameSession {
   season: number;
   week: number;
+  weekday: number;
+  matchPlayedThisWeek: boolean;
   players: Player[];
   trainingPlan: TrainingSlot[];
   scoutBoard: ScoutBoard;
@@ -57,6 +60,8 @@ export function sessionFromSave(save: SaveGame): GameSession {
   return {
     season: save.state.season,
     week: save.state.week,
+    weekday: save.state.weekday ?? MONDAY,
+    matchPlayedThisWeek: save.state.match_played_this_week ?? false,
     players: save.players,
     trainingPlan: pipeline.training_plan,
     scoutBoard: pipeline.scout_board,
@@ -93,6 +98,8 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
       state: {
         season: session.season,
         week: session.week,
+        weekday: session.weekday,
+        match_played_this_week: session.matchPlayedThisWeek,
         pipeline,
         league: session.league,
       },
@@ -122,6 +129,8 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     state: {
       season: session.season,
       week: session.week,
+      weekday: session.weekday,
+      match_played_this_week: session.matchPlayedThisWeek,
       pipeline,
       league: session.league,
     },

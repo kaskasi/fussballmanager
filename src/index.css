@@ -308,6 +308,170 @@ body {
   border-radius: 0.45rem;
 }
 
+.incident-banner-scorer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12%;
+  margin: 0;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 55%);
+}
+
+.match-sub-ticker {
+  position: absolute;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: 0.55rem;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.55rem;
+  background: rgb(15 23 42 / 82%);
+  color: #f8fafc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  pointer-events: none;
+  animation: incident-pop 3.2s ease-out both;
+}
+
+.match-sub-ticker-label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #86efac;
+  font-size: 0.68rem;
+}
+
+.match-sub-ticker-team {
+  color: #cbd5e1;
+}
+
+.match-sub-ticker-players {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.career-match-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: end;
+  margin: 1rem 0;
+}
+
+.career-match-actions .transport button {
+  font: inherit;
+  border-radius: 0.55rem;
+  border: 1px solid #a7f3d0;
+  padding: 0.45rem 0.7rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.career-match-actions .playpause {
+  min-width: 6.5rem;
+  padding: 0.55rem 1rem;
+  font-weight: 700;
+  background: #047857;
+  color: #fff;
+  border-color: #047857;
+}
+
+.career-match-actions .playpause.is-playing {
+  background: #b45309;
+  border-color: #b45309;
+}
+
+.career-match-speed {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #047857;
+  text-transform: uppercase;
+}
+
+.career-match-speed select {
+  font: inherit;
+  border-radius: 0.55rem;
+  border: 1px solid #a7f3d0;
+  padding: 0.4rem 0.7rem;
+  background: #fff;
+}
+
+.career-match-finish {
+  margin-left: auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.1rem;
+  background: #059669;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.career-match-finish:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.career-lineup-header h1 {
+  margin: 0;
+}
+
+.career-lineup-sub {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.career-lineup-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+  margin: 1rem 0;
+}
+
+.career-lineup-formation {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #047857;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.career-lineup-formation select {
+  font: inherit;
+  border-radius: 0.55rem;
+  border: 1px solid #a7f3d0;
+  padding: 0.45rem 0.7rem;
+  background: #fff;
+  min-width: 7rem;
+}
+
+.career-lineup-confirm {
+  margin-left: auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.15rem;
+  background: #059669;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.career-lineup-table tbody .squad-table-row {
+  cursor: default;
+}
+
 @keyframes incident-pop {
   0% {
     opacity: 0;
@@ -2140,8 +2304,37 @@ body {
 .app-nav-actions {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
   flex-shrink: 0;
+}
+
+.weekday-strip {
+  display: flex;
+  gap: 0.2rem;
+  padding: 0.2rem 0.35rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #a7f3d0;
+}
+
+.weekday-strip-day {
+  min-width: 1.55rem;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  padding: 0.2rem 0.15rem;
+  border-radius: 999px;
+}
+
+.weekday-strip-day.is-today {
+  background: #059669;
+  color: #fff;
+}
+
+.weekday-strip-day.is-matchday:not(.is-today) {
+  color: #047857;
+  border: 1px dashed #6ee7b7;
 }
 
 .app-nav-next {

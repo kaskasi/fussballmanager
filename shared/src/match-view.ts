@@ -5,6 +5,20 @@ import type { Score } from "./match-state.ts";
 import type { SandboxPlan } from "./squad.ts";
 import type { MatchPairStats } from "./match-stats.ts";
 
+export type MatchViewCue =
+  | "offside"
+  | "throw_in"
+  | "goal"
+  | "corner"
+  | "penalty"
+  | "substitution"
+  | null;
+
+export type MatchViewCueDetail = {
+  label?: string;
+  teamShortName?: string;
+};
+
 /** On-pitch dots for one engine tick. Same seq as the match event. */
 export type MatchViewDot = {
   playerId: string;
@@ -24,7 +38,8 @@ export type MatchViewFrame = {
   /** Same engine flag as the event tick — pitch may draw a 2D height cue. */
   ballInAir: boolean;
   /** Broadcast overlay; null on ordinary open-play ticks. */
-  cue: "offside" | "throw_in" | null;
+  cue: MatchViewCue;
+  cueDetail?: MatchViewCueDetail;
   /** Running totals up to this tick, same event stream as commentary. */
   stats: MatchPairStats;
 };

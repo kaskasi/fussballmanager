@@ -1,0 +1,224 @@
+import { useCallback, useEffect, useState } from "react";
+import type { Squad } from "@fussballmanager/shared";
+import type { Player } from "../types/player.ts";
+import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
+import { fetchCareerMatchView } from "./fetch-career-match.ts";
+import { WeekdayStrip } from "../ui/components/WeekdayStrip.tsx";
+import { CareerLineupScreen } from "./CareerLineupScreen.tsx";
+import { CommentaryFeed } from "./CommentaryFeed.tsx";
+import { Lineup } from "./Lineup.tsx";
+import { Pitch } from "./Pitch.tsx";
+import { Scoreboard } from "./Scoreboard.tsx";
+import { useMatchPlayback } from "./useMatchPlayback.ts";
+
+export function CareerMatch({
+  setup,
+  players,
+  week,
+  weekday,
+  simulating,
+  onComplete,
+  onSkip,
+}: {
+  setup: CareerMatchSetup;
+  players: readonly Player[];
+  week: number;
+  weekday: number;
+  simulating: boolean;
+  onComplete: () => void;
+  onSkip: () => void;
+}) {
+  const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
+
+  if (!playerClubSquad) {
+    return (
+      <CareerLineupScreen
+        setup={setup}
+        players={players}
+        week={week}
+        weekday={weekday}
+        onConfirm={setPlayerClubSquad}
+      />
+    );
+  }
+
+  return (
+    <CareerMatchPlayback
+      setup={setup}
+      playerClubSquad={playerClubSquad}
+      week={week}
+      weekday={weekday}
+      simulating={simulating}
+      onComplete={onComplete}
+      onSkip={onSkip}
+    />
+  );
+}
+
+function CareerMatchPlayback({
+  setup,
+  playerClubSquad,
+  week,
+  weekday,
+  simulating,
+  onComplete,
+  onSkip,
+}: {
+  setup: CareerMatchSetup;
+  playerClubSquad: Squad;
+  week: number;
+  weekday: number;
+  simulating: boolean;
+  onComplete: () => void;
+  onSkip: () => void;
+}) {
+  const [view, setView] = useState<Awaited<ReturnType<typeof fetchCareerMatchView>> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const playback = useMatchPlayback(view);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const next = await fetchCareerMatchView({
+        seed: setup.seed,
+        homeTeamId: setup.homeTeamId,
+        awayTeamId: setup.awayTeamId,
+        playerClubSquad,
+      });
+      setView(next);
+    } catch (caught) {
+      setView(null);
+      setError(caught instanceof Error ? caught.message : "Spiel konnte nicht geladen werden");
+    } finally {
+      setLoading(false);
+    }
+  }, [setup, playerClubSquad]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLSelectElement ||
+        event.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+      if (event.code === "Space") {
+        event.preventDefault();
+        playback.toggle();
+      } else if (event.code === "ArrowRight") {
+        event.preventDefault();
+        playback.stepForward();
+      } else if (event.code === "ArrowLeft") {
+        event.preventDefault();
+        playback.stepBack();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [playback.toggle, playback.stepForward, playback.stepBack]);
+
+  const frame = playback.frame;
+  const finished = view ? playback.index >= view.frames.length - 1 : false;
+
+  return (
+    <main className="matchday career-match">
+      <WeekdayStrip week={week} weekday={weekday} />
+      {view && frame ? <Scoreboard view={view} frame={frame} /> : (
+        <header className="scoreboard">
+          <p className="eyebrow">Spieltag {setup.matchday}</p>
+          <h1>
+            {setup.isHome ? "Heim" : "Auswärts"} vs {setup.opponentShortName}
+          </h1>
+        </header>
+      )}
+
+      <div className="career-match-actions">
+        <div className="transport">
+          <button
+            type="button"
+            className="step"
+            onClick={playback.stepBack}
+            disabled={!view || loading}
+            aria-label="Schritt zurück"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            className={`playpause ${playback.playing ? "is-playing" : ""}`}
+            onClick={playback.toggle}
+            disabled={!view || loading}
+          >
+            {playback.playing ? "Pause" : "Play"}
+          </button>
+          <button
+            type="button"
+            className="step"
+            onClick={playback.stepForward}
+            disabled={!view || loading}
+            aria-label="Schritt vor"
+          >
+            ›
+          </button>
+        </div>
+        <label className="career-match-speed">
+          Speed
+          <select
+            value={playback.speed}
+            onChange={(event) => playback.setSpeed(Number(event.target.value))}
+            disabled={!view || loading}
+          >
+            <option value={1}>1×</option>
+            <option value={2}>2×</option>
+            <option value={4}>4×</option>
+            <option value={8}>8×</option>
+            <option value={16}>16×</option>
+          </select>
+        </label>
+        <button
+          type="button"
+          className="career-match-finish"
+          onClick={finished ? onComplete : onSkip}
+          disabled={simulating || loading || !view}
+        >
+          {simulating
+            ? "Woche wird simuliert…"
+            : finished
+              ? "Sonntag · Spieltag abschließen"
+              : "Überspringen · Woche simulieren"}
+        </button>
+      </div>
+
+      {loading ? <p className="status">Spiel wird vorbereitet…</p> : null}
+      {error ? <p className="status error">{error}</p> : null}
+
+      {view && frame ? (
+        <>
+          <div className="stage">
+            <Pitch
+              from={playback.previous ?? frame}
+              to={frame}
+              playing={playback.playing}
+              durationMs={playback.frameDurationMs}
+              homeId={view.home.id}
+              home={view.home}
+              away={view.away}
+              roster={view.roster}
+              cue={frame.cue}
+              cueDetail={frame.cueDetail}
+            />
+            <CommentaryFeed lines={playback.visibleLines} />
+          </div>
+          <Lineup view={view} frame={frame} />
+        </>
+      ) : null}
+    </main>
+  );
+}

@@ -1,10 +1,12 @@
 import { useLayoutEffect, useRef } from "react";
 import type {
+  MatchViewCueDetail,
   MatchViewFrame,
   MatchViewRosterPlayer,
   MatchViewSide,
 } from "@fussballmanager/shared";
 import { IncidentBanner } from "./IncidentBanner";
+import { MatchSubstitutionTicker } from "./MatchSubstitutionTicker";
 import { mixFrame, type DisplayedPose } from "./lerp";
 
 const PITCH_W = 105;
@@ -61,6 +63,7 @@ type PitchProps = {
   away: MatchViewSide;
   roster: readonly MatchViewRosterPlayer[];
   cue: MatchViewFrame["cue"];
+  cueDetail?: MatchViewCueDetail;
 };
 
 export function Pitch({
@@ -73,6 +76,7 @@ export function Pitch({
   away,
   roster,
   cue,
+  cueDetail,
 }: PitchProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const shirts = new Map(roster.map((player) => [player.id, player]));
@@ -105,7 +109,8 @@ export function Pitch({
 
   return (
     <figure className="pitch-wrap">
-      <IncidentBanner cue={cue} seq={to.seq} />
+      <IncidentBanner cue={cue} cueDetail={cueDetail} seq={to.seq} />
+      <MatchSubstitutionTicker cue={cue} cueDetail={cueDetail} seq={to.seq} />
       <svg
         ref={svgRef}
         className="pitch"

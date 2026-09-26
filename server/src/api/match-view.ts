@@ -7,6 +7,7 @@ import type {
   MatchViewRosterPlayer,
   SandboxPlan,
   Squad,
+  TeamId,
 } from "@fussballmanager/shared";
 import {
   applySandboxPlan,
@@ -20,6 +21,7 @@ import {
   commentateLine,
   commentaryContextFromSquads,
   isCommentaryWorthy,
+  type CommentaryContext,
 } from "../commentary/index.ts";
 import { createInitialState, step } from "../engine/index.ts";
 
@@ -49,9 +51,24 @@ function frameFrom(
   seq: number,
   event: MatchEvent | undefined,
   stats: MatchViewFrame["stats"],
+  ctx: CommentaryContext,
 ): MatchViewFrame {
   let cue: MatchViewFrame["cue"] = null;
-  if (event?.type === "turnover" && event.reason === "offside") {
+  let cueDetail: MatchViewFrame["cueDetail"];
+  if (event?.type === "goal") {
+    cue = "goal";
+    cueDetail = { label: ctx.playerName(event.scorer.playerId) };
+  } else if (event?.type === "substitution") {
+    cue = "substitution";
+    cueDetail = {
+      label: `${ctx.playerName(event.playerOff.playerId)} → ${ctx.playerName(event.playerOn.playerId)}`,
+      teamShortName: ctx.teamName(event.teamId),
+    };
+  } else if (event?.type === "restart" && event.phase === "corner") {
+    cue = "corner";
+  } else if (event?.type === "restart" && event.phase === "penalty") {
+    cue = "penalty";
+  } else if (event?.type === "turnover" && event.reason === "offside") {
     cue = "offside";
   } else if (event?.type === "restart" && event.phase === "throw_in") {
     cue = "throw_in";
@@ -65,6 +82,7 @@ function frameFrom(
     clock: state.clock,
     ballInAir: state.ballInAir,
     cue,
+    cueDetail,
     stats: {
       home: { ...stats.home },
       away: { ...stats.away },
@@ -97,6 +115,7 @@ export function buildMatchView(input: {
   away?: Squad;
   homePlan?: SandboxPlan;
   awayPlan?: SandboxPlan;
+  humanTeamId?: TeamId;
   maxSteps?: number;
 }): MatchView {
   const homeBase = input.home ?? SEED_MATCHUP.home;
@@ -113,11 +132,11 @@ export function buildMatchView(input: {
     home,
     away,
     seed,
-    humanTeamId: home.team.id,
+    humanTeamId: input.humanTeamId ?? home.team.id,
   });
   const ctx = commentaryContextFromSquads(home, away);
   const stats = emptyPairStats();
-  const kickoff = frameFrom(initial, 0, undefined, stats);
+  const kickoff = frameFrom(initial, 0, undefined, stats, ctx);
   const frames: MatchViewFrame[] = [];
   const lines: MatchViewLine[] = [];
   let current = initial;
@@ -132,7 +151,7 @@ export function buildMatchView(input: {
     });
     current = result.state;
     running = applyMatchStatEvent(running, result.event, home.team.id);
-    frames.push(frameFrom(current, result.event.seq, result.event, running));
+    frames.push(frameFrom(current, result.event.seq, result.event, running, ctx));
     if (isCommentaryWorthy(result.event, previousEvent)) {
       lines.push({
         seq: result.event.seq,

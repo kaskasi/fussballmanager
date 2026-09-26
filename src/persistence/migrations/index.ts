@@ -9,6 +9,7 @@ import { migration008Calendar } from "./migration_008_calendar.ts";
 import { migration009CareerLeagueSync } from "./migration_009_career_league_sync.ts";
 import { migration010ClubFinances } from "./migration_010_club_finances.ts";
 import { migration011SquadSeasonStats } from "./migration_011_squad_season_stats.ts";
+import { migration012Weekday } from "./migration_012_weekday.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -27,6 +28,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration009CareerLeagueSync,
   migration010ClubFinances,
   migration011SquadSeasonStats,
+  migration012Weekday,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

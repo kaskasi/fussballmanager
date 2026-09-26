@@ -1,46 +1,64 @@
 import { useEffect, useState } from "react";
-import type { MatchViewFrame } from "@fussballmanager/shared";
+import type { MatchViewCue, MatchViewCueDetail } from "@fussballmanager/shared";
 
-const BANNERS = {
+const BANNERS: Record<
+  Exclude<MatchViewCue, null | "substitution">,
+  { src: string; alt: string }
+> = {
   offside: {
     src: "/match/offside-banner.png",
-    alt: "Offside",
+    alt: "Abseits",
   },
   throw_in: {
     src: "/match/throw-in-banner.png",
-    alt: "Throw-in",
+    alt: "Einwurf",
   },
-} as const;
+  goal: {
+    src: "/match/goal-banner.svg",
+    alt: "Tor",
+  },
+  corner: {
+    src: "/match/corner-banner.svg",
+    alt: "Ecke",
+  },
+  penalty: {
+    src: "/match/penalty-banner.svg",
+    alt: "Elfmeter",
+  },
+};
 
 const HOLD_MS = 2600;
 
 type IncidentBannerProps = {
-  cue: MatchViewFrame["cue"];
+  cue: MatchViewCue;
+  cueDetail?: MatchViewCueDetail;
   seq: number;
 };
 
-export function IncidentBanner({ cue, seq }: IncidentBannerProps) {
+export function IncidentBanner({ cue, cueDetail, seq }: IncidentBannerProps) {
   const [shown, setShown] = useState<{
-    cue: keyof typeof BANNERS;
+    cue: Exclude<MatchViewCue, null | "substitution">;
     seq: number;
+    label?: string;
   } | null>(null);
 
   useEffect(() => {
-    if (cue !== "offside" && cue !== "throw_in") {
-      return;
-    }
-    setShown({ cue, seq });
+    if (!cue || cue === "substitution") return;
+    setShown({ cue, seq, label: cueDetail?.label });
     const hide = window.setTimeout(() => setShown(null), HOLD_MS);
     return () => window.clearTimeout(hide);
-  }, [cue, seq]);
+  }, [cue, cueDetail, seq]);
 
   if (!shown) {
     return null;
   }
   const banner = BANNERS[shown.cue];
   return (
-    <div className="incident-banner" role="status">
+    <div className={`incident-banner incident-banner--${shown.cue}`} role="status">
       <img src={banner.src} alt={banner.alt} />
+      {shown.label && shown.cue === "goal" ? (
+        <p className="incident-banner-scorer">{shown.label}</p>
+      ) : null}
     </div>
   );
 }

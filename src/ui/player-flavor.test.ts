@@ -52,9 +52,17 @@ describe("player flavor", () => {
     expect(achievementBadges(decorated, true)).toEqual([ACHIEVEMENT.promotedU19]);
   });
 
-  it("builds stub stats and contract views", () => {
-    expect(seasonStatsStub(player, true)?.apps).toBeGreaterThan(0);
+  it("builds season stats and contract views", () => {
+    const withMinutes = clonePlayer();
+    withMinutes.state.season_minutes = 360;
+    expect(seasonStatsStub(withMinutes, true)?.apps).toBeGreaterThan(0);
+    expect(seasonStatsStub(player, true)?.minutes).toBe(0);
     expect(seasonStatsStub(player, false, { estimatedAbilityMean: 65, uncertaintyRange: 30, sampleSize: 0 })).toBeNull();
     expect(contractView(player, true).status).toBe("Profivertrag");
+    const youth = clonePlayer();
+    youth.squad_status = "u17";
+    youth.contract = null;
+    expect(contractView(youth, true).status).toBe("Jugendvertrag");
+    expect(contractView(youth, true).wageWeekly).toContain("€");
   });
 });

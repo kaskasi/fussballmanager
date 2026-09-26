@@ -1,14 +1,15 @@
+import { ensureYouthContract } from "../player/youth-contract.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
-import { generateYouthIntake, SEASON_END_WEEK } from "../youth/intake-generator.ts";
+import { buildAcademyCohort } from "../youth/intake-generator.ts";
 import { generateDemoProSquad } from "./demo-pro-squad.ts";
 
 /** Mixed academy + pro squad for the pipeline demo. */
 export function loadDemoRoster(): Player[] {
   const random = mulberry32(2026);
-  const intake = generateYouthIntake({
+  const intake = buildAcademyCohort({
     season: 1,
-    week: SEASON_END_WEEK,
+    week: 1,
     seasonYear: 2026,
     clubId: "cl_fc_nordstern",
     nationality: "DE",
@@ -39,7 +40,11 @@ export function loadDemoRoster(): Player[] {
     random,
   });
 
-  return [...pros, ...u19, ...u17];
+  return [...pros, ...u19, ...u17].map((player) =>
+    player.squad_status === "u17" || player.squad_status === "u19"
+      ? ensureYouthContract(player, 1)
+      : player,
+  );
 }
 
 function mulberry32(seed: number): () => number {

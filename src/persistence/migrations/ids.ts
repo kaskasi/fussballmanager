@@ -5,4 +5,5 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_005_league_player_stats",
   "migration_006_league_season_mode",
   "migration_007_player_tracking",
+  "migration_008_calendar",
 ] as const;

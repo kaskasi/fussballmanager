@@ -107,7 +107,7 @@ describe("generateYouthIntake", () => {
       expect(validatePlayer(player).valid).toBe(true);
       expect(player.age).toBe(15);
       expect(player.squad_status).toBe("u17");
-      expect(player.contract).toBeNull();
+      expect(player.contract?.wage_weekly).toBeGreaterThan(0);
       expect(player.market_value).toBeGreaterThan(0);
       expect(player.current_loan).toBeUndefined();
       expect(player.state.fitness).toBe(100);

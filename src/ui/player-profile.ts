@@ -125,13 +125,13 @@ function nationalityLabel(code: string): string {
 
 function contractLabel(player: Player, owned: boolean): string {
   if (player.contract) {
-    return `bis Saison ${player.contract.until_season} · Stub`;
+    return `bis Saison ${player.contract.until_season}`;
   }
   if (player.squad_status === "u17" || player.squad_status === "u19") {
-    return "Jugendvertrag · Stub";
+    return "Jugendvertrag";
   }
   if (!owned) return "Unbekannt";
-  return "Verhandlung offen · Stub";
+  return "Verhandlung offen";
 }
 
 export function growthSeries(player: Player): GrowthPoint[] {

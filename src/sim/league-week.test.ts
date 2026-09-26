@@ -21,12 +21,24 @@ describe("league week", () => {
 
   it("advances league state offline", async () => {
     const league = defaultLeagueState();
-    const advanced = await advanceLeagueWeek(league, 1, 35, 2026);
+    const advanced = await advanceLeagueWeek(league, 1, 1, 2026);
     expect(advanced.league.results.length).toBeGreaterThan(0);
     expect(advanced.league.matchday).toBe(2);
     expect(advanced.playerFixture).not.toBeNull();
     expect(advanced.league.player_stats.length).toBeGreaterThan(0);
     expect(totalSeasonMatchdays(league)).toBe(30);
+  });
+
+  it("skips league play after matchday 30 and during the postseason", async () => {
+    let league = defaultLeagueState();
+    for (let week = 1; week <= 30; week++) {
+      const step = await advanceLeagueWeek(league, 1, week, 2026);
+      league = step.league;
+    }
+    const offseason = await advanceLeagueWeek(league, 1, 31, 2026);
+    expect(offseason.league.results.length).toBe(30 * 3);
+    expect(offseason.league.matchday).toBe(1);
+    expect(offseason.playerFixture).toBeNull();
   });
 
   it("completes the season after 30 matchdays with 30 games per club", async () => {

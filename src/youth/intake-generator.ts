@@ -1,5 +1,7 @@
 import type { Attributes, Player, PositionPrimary } from "../types/player.ts";
 import { generatePlayerName } from "../types/player-display.ts";
+import { ensureYouthContract } from "../player/youth-contract.ts";
+import { SEASON_END_WEEK } from "../sim/game-calendar.ts";
 import { estimateCa, marketValue } from "../transfers/market-value.ts";
 
 /**
@@ -14,12 +16,8 @@ import { estimateCa, marketValue } from "../transfers/market-value.ts";
  */
 
 export const INTAKE_COUNT = 24;
-/**
- * Intake is legal only at season end (PRD 03.6). No calendar PRD exists.
- * Week 34 is the last week of the summer window (PRD 05) and of a 34-match
- * league, which is the season that finishes at the end of May.
- */
-export const SEASON_END_WEEK = 34;
+/** Re-export for callers that already import from this module. */
+export { SEASON_END_WEEK } from "../sim/game-calendar.ts";
 
 const PRODIGY_FLAG = "prodigy_foundation";
 const ANLAGE_MIN = 0.85;
@@ -155,10 +153,8 @@ export function intakeBirthDate(seasonYear: number, random: () => number): strin
   return iso > seasonEnd ? seasonEnd : iso;
 }
 
-export function generateYouthIntake(input: GenerateIntakeInput): Player[] {
-  if (input.week !== SEASON_END_WEEK) {
-    throw new IntakeOutOfSeasonError(input.week);
-  }
+/** Build intake players without the season-end week gate (demo roster seeding). */
+export function buildAcademyCohort(input: GenerateIntakeInput): Player[] {
   if (INTAKE_POSITIONS.length !== INTAKE_COUNT) {
     throw new Error(`Intake position list must contain ${INTAKE_COUNT} slots`);
   }
@@ -173,6 +169,13 @@ export function generateYouthIntake(input: GenerateIntakeInput): Player[] {
     players.push(generateOne(input, mixture, index));
   }
   return players;
+}
+
+export function generateYouthIntake(input: GenerateIntakeInput): Player[] {
+  if (input.week !== SEASON_END_WEEK) {
+    throw new IntakeOutOfSeasonError(input.week);
+  }
+  return buildAcademyCohort(input);
 }
 
 function generateOne(
@@ -195,7 +198,7 @@ function generateOne(
   const idNumber = input.idStart + index;
   const position = INTAKE_POSITIONS[index] ?? "CM";
   const portraitSeed = Math.floor(input.random() * 1_000_000_000);
-  return {
+  const player: Player = {
     id: `pl_${String(idNumber).padStart(5, "0")}`,
     name: generatePlayerName(portraitSeed),
     birth: {
@@ -245,6 +248,7 @@ function generateOne(
     },
     portrait_seed: portraitSeed,
   };
+  return ensureYouthContract(player, input.season);
 }
 
 function drawAttributes(component: MixtureComponent, random: () => number): Attributes {

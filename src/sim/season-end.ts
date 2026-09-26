@@ -2,9 +2,10 @@ import { appendSeasonSnapshot } from "../ui/player-profile.ts";
 import type { Player } from "../types/player.ts";
 import { resetSeasonMinutes } from "../player/minute-history.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
+import { resetLeagueSeason } from "../persistence/league-state.ts";
+import { SEASON_END_WEEK } from "../sim/game-calendar.ts";
 import {
   generateYouthIntake,
-  SEASON_END_WEEK,
   type AcademyFacility,
 } from "../youth/intake-generator.ts";
 import type { GameSession } from "../persistence/game-session.ts";
@@ -51,7 +52,11 @@ export function runSeasonEnd(
 
   const players = refreshAllMarketValues([...aged, ...intake], session.season);
   return {
-    session: { ...session, players },
+    session: {
+      ...session,
+      players,
+      league: resetLeagueSeason(session.league),
+    },
     intakeCount: intake.length,
   };
 }

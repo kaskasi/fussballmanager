@@ -1,6 +1,8 @@
 import type { Player } from "../types/player.ts";
 import { formatPlayerName, roundStat } from "../types/player-display.ts";
 import { attributeLabel, profileAttributeKeys } from "./player-profile.ts";
+import { careerSeasonStats } from "../player/season-stats.ts";
+import { defaultYouthContract } from "../player/youth-contract.ts";
 import type { AbilityEstimate } from "../scouting/estimate-model.ts";
 import { scoutReveal } from "../scouting/scout-visibility.ts";
 
@@ -183,19 +185,7 @@ export function achievementBadges(player: Player, owned: boolean, estimate?: Abi
 }
 
 export function seasonStatsStub(player: Player, owned: boolean, estimate?: AbilityEstimate): SeasonStatsStub | null {
-  if (!owned && estimate && estimate.uncertaintyRange >= 20) return null;
-  const random = mulberry32(player.portrait_seed ^ 0x517c);
-  const apps = 4 + Math.floor(random() * 18);
-  const goals =
-    player.position === "GK"
-      ? 0
-      : player.position === "CF"
-        ? Math.floor(random() * 12)
-        : Math.floor(random() * 6);
-  const assists = player.position === "GK" ? 0 : Math.floor(random() * 8);
-  const minutes = apps * (55 + Math.floor(random() * 25));
-  const rating = String(roundStat(6.2 + random() * 1.6));
-  return { apps, goals, assists, minutes, rating };
+  return careerSeasonStats(player, owned, estimate);
 }
 
 export function contractView(player: Player, owned: boolean, estimate?: AbilityEstimate): ContractView {
@@ -221,19 +211,25 @@ export function contractView(player: Player, owned: boolean, estimate?: AbilityE
     };
   }
   if (player.squad_status === "u17" || player.squad_status === "u19") {
+    const youth = player.contract ?? defaultYouthContract(player.age, 1);
     return {
       status: "Jugendvertrag",
-      wageWeekly: "€ 0 / Woche (Stub)",
-      untilSeason: "Automatische Verlängerung (Stub)",
-      clauses: ["Kein Profivertrag unter 16", "Ausstiegsklausel nicht hinterlegt"],
-      minutesPromise: "Akademie-Minuten (Stub)",
+      wageWeekly: `€ ${youth.wage_weekly.toLocaleString("de-DE")} / Woche`,
+      untilSeason: `Saison ${youth.until_season}`,
+      clauses: [
+        "Kein Profivertrag unter 16",
+        youth.bonus_appearance > 0
+          ? `Einsatzbonus € ${youth.bonus_appearance}`
+          : "Kein Einsatzbonus",
+      ],
+      minutesPromise: "Akademie-Minuten (automatische Sim)",
     };
   }
   return {
     status: owned ? "Verhandlung offen" : "Fremdclub · unbekannt",
-    wageWeekly: owned ? "€ — (Stub)" : "?",
+    wageWeekly: owned ? "€ — (noch nicht vereinbart)" : "?",
     untilSeason: owned ? "—" : "?",
-    clauses: owned ? ["Vertragsgespräch noch nicht abgeschlossen"] : ["Keine belastbaren Infos"],
+    clauses: owned ? ["Vertragsgespräch über Inbox oder Profil"] : ["Keine belastbaren Infos"],
     minutesPromise: owned ? "Offen" : "?",
   };
 }

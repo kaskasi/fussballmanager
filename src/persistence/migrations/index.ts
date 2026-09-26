@@ -5,6 +5,7 @@ import { migration004LeagueState } from "./migration_004_league_state.ts";
 import { migration005LeaguePlayerStats } from "./migration_005_league_player_stats.ts";
 import { migration006LeagueSeasonMode } from "./migration_006_league_season_mode.ts";
 import { migration007PlayerTracking } from "./migration_007_player_tracking.ts";
+import { migration008Calendar } from "./migration_008_calendar.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -19,6 +20,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration005LeaguePlayerStats,
   migration006LeagueSeasonMode,
   migration007PlayerTracking,
+  migration008Calendar,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

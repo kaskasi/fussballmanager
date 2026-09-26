@@ -17,6 +17,7 @@ import {
   totalSeasonMatchdays,
   type LeagueState,
 } from "../persistence/league-state.ts";
+import { isLeagueMatchWeek } from "./game-calendar.ts";
 import { pushWeeklyMinutes } from "../player/minute-history.ts";
 import type { Player } from "../types/player.ts";
 
@@ -252,30 +253,26 @@ function normalizeLeague(league: LeagueState): LeagueState {
   };
 }
 
-function startNewLeagueSeason(league: LeagueState): LeagueState {
-  return {
-    ...league,
-    matchday: 1,
-    results: [],
-    player_stats: [],
-    season_complete: false,
-  };
-}
-
 export async function advanceLeagueWeek(
   league: LeagueState,
   season: number,
-  week: number,
+  calendarWeek: number,
   masterSeed: number,
 ): Promise<LeagueWeekAdvance> {
-  let current = normalizeLeague(league);
-  if (current.season_complete) {
-    current = startNewLeagueSeason(current);
+  const current = normalizeLeague(league);
+
+  if (!isLeagueMatchWeek(calendarWeek) || current.season_complete) {
+    return {
+      league: current,
+      playerFixture: null,
+      matchdayPlayed: 0,
+      seasonComplete: current.season_complete ?? false,
+    };
   }
 
   const maxMatchday = totalSeasonMatchdays(current);
   const matchdayPlayed = current.matchday;
-  const baseSeed = weeklySeed(masterSeed, season, week);
+  const baseSeed = weeklySeed(masterSeed, season, calendarWeek);
   const payload = await fetchMatchdayPayload(matchdayPlayed, baseSeed);
   const scheduled = playerFixture(current, matchdayPlayed);
   const playerResult = scheduled ? fixtureResult(payload.results, scheduled) ?? null : null;

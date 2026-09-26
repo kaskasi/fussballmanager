@@ -7,6 +7,7 @@ import { advanceScoutWeek } from "../scouting/scout-board.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
 import { advanceInboxWeek } from "../youth/decision-inbox.ts";
 import { simulateYouthWeek } from "../youth/youth-sim.ts";
+import { advanceCalendarWeek } from "./game-calendar.ts";
 import { advanceLeagueWeek, applyProMatchMinutes } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
 
@@ -17,7 +18,7 @@ export interface WeekSimResult {
 }
 
 export async function simulateGameWeek(session: GameSession): Promise<WeekSimResult> {
-  const nextWeek = session.week + 1;
+  const { nextWeek, footballSeasonEnded } = advanceCalendarWeek(session.week);
   const leagueStep = await advanceLeagueWeek(
     session.league,
     session.season,
@@ -54,11 +55,11 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     youth.report,
   );
 
-  const seasonEnded = leagueStep.seasonComplete;
+  const seasonEnded = footballSeasonEnded;
   let nextSession: GameSession = {
     ...session,
     season: seasonEnded ? session.season + 1 : session.season,
-    week: seasonEnded ? 1 : nextWeek,
+    week: nextWeek,
     players: advanced.players,
     scoutBoard: advanceScoutWeek(session.scoutBoard),
     youthInbox: advanced.inbox,

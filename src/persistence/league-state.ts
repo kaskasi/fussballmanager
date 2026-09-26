@@ -28,6 +28,16 @@ export function totalSeasonMatchdays(league: Pick<LeagueState, "club_ids" | "mee
 
 export const PLAYER_ENGINE_CLUB_ID = NORDSTERN_ID;
 
+export function resetLeagueSeason(league: LeagueState): LeagueState {
+  return {
+    ...league,
+    matchday: 1,
+    results: [],
+    player_stats: [],
+    season_complete: false,
+  };
+}
+
 export function defaultLeagueState(): LeagueState {
   const club_ids = SEED_DIVISION.map((squad) => squad.team.id);
   return {

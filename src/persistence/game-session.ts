@@ -33,7 +33,7 @@ export function newGameSession(now = new Date()): GameSession {
     playerClubId: DEFAULT_CLUB_ID,
     managerName: DEFAULT_MANAGER,
     season: 1,
-    week: 34,
+    week: 1,
     masterSeed: DEFAULT_MASTER_SEED,
     players: loadDemoRoster(),
   });

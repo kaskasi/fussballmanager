@@ -382,7 +382,7 @@ function StatsTab({
 }) {
   return (
     <section className="profile-panel" aria-label="Statistik">
-      <Hint text="Saison-Stub aus Demo-Daten. Echte Match-Engine-Stats kommen später." block>
+      <Hint text="Saisonwerte aus gespeicherten Einsatzminuten. Tore/Vorlagen folgen mit Liga-Brücke." block>
         {stats ? (
           <dl className="profile-stat-grid">
             <StatItem icon="👕" label="Einsätze" value={String(stats.apps)} />
@@ -404,7 +404,7 @@ function StatsTab({
 function ContractTab({ contract }: { contract: ReturnType<typeof contractView> }) {
   return (
     <section className="profile-panel" aria-label="Vertrag">
-      <Hint text="Vertragsdetails — Stubs bis das Transfer-Modul (F5) live ist." block>
+      <Hint text="Vertragsdetails aus dem Spielerobjekt. Profi-Verhandlungen laufen über Transfers/Inbox." block>
         <dl className="profile-contract-list">
           <div className="profile-contract-row">
             <dt>Status</dt>

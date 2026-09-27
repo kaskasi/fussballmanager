@@ -1,0 +1,76 @@
+import type { TableRow, TeamId } from "@fussballmanager/shared";
+import type { LeagueState } from "../../persistence/league-state.ts";
+import { formSparkline, teamForm } from "../../sim/league-form.ts";
+import { promotionZoneRank } from "../../sim/promotion-relegation.ts";
+import { clubShortName } from "../../sim/league-week.ts";
+
+export function LeagueTable({
+  table,
+  leagueSlice,
+  playerClubId,
+  onSelectClub,
+}: {
+  table: TableRow[];
+  leagueSlice: Pick<LeagueState, "club_ids" | "results">;
+  playerClubId: TeamId;
+  onSelectClub?: (teamId: TeamId) => void;
+}) {
+  return (
+    <div className="league-table-wrap">
+      <table className="league-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Verein</th>
+            <th>Sp</th>
+            <th>S</th>
+            <th>U</th>
+            <th>N</th>
+            <th>Tore</th>
+            <th>Diff</th>
+            <th>Form</th>
+            <th>Pkt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {table.map((row, index) => {
+            const zone = promotionZoneRank(index, table.length);
+            const form = formSparkline(teamForm(leagueSlice, row.teamId));
+            const rowClass = [
+              row.teamId === playerClubId ? "is-player-club" : "",
+              zone ? `league-zone-${zone}` : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            return (
+              <tr key={row.teamId} className={rowClass || undefined}>
+                <td>{index + 1}</td>
+                <td>
+                  {onSelectClub ? (
+                    <button
+                      type="button"
+                      className="league-club-link"
+                      onClick={() => onSelectClub(row.teamId)}
+                    >
+                      {clubShortName(row.teamId)}
+                    </button>
+                  ) : (
+                    clubShortName(row.teamId)
+                  )}
+                </td>
+                <td>{row.played}</td>
+                <td>{row.won}</td>
+                <td>{row.drawn}</td>
+                <td>{row.lost}</td>
+                <td>{row.goalsFor}:{row.goalsAgainst}</td>
+                <td>{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td>
+                <td className="league-form" title="Letzte 5 Spiele">{form || "—"}</td>
+                <td><strong>{row.points}</strong></td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}

@@ -1,8 +1,7 @@
-import type { PlayerSeasonStat } from "@fussballmanager/shared";
+import type { PlayerSeasonStat, TeamId } from "@fussballmanager/shared";
 import { totalSeasonMatchdays, type LeagueState } from "../../persistence/league-state.ts";
 import { divisionLabel } from "../../sim/league-divisions.ts";
-import { formSparkline, teamForm } from "../../sim/league-form.ts";
-import { promotionZoneRank } from "../../sim/promotion-relegation.ts";
+import { leagueSliceForForm } from "../../sim/league-standings.ts";
 import {
   clubShortName,
   leagueTable,
@@ -10,13 +9,21 @@ import {
   topScorers,
   topYellowCards,
 } from "../../sim/league-week.ts";
+import { LeagueTable } from "./LeagueTable.tsx";
 
 /** WIREFRAME: PRD 09.2 — Liga-Übersicht im Hub */
-export function LeagueHubPanel({ league }: { league: LeagueState }) {
+export function LeagueHubPanel({
+  league,
+  onSelectClub,
+}: {
+  league: LeagueState;
+  onSelectClub?: (teamId: TeamId) => void;
+}) {
   const table = leagueTable(league);
   const scorers = topScorers(league);
   const assists = topAssists(league);
   const yellows = topYellowCards(league);
+  const leagueSlice = leagueSliceForForm(league.club_ids, league.results);
 
   return (
     <section className="league-hub" aria-label="Ligaübersicht">
@@ -27,53 +34,12 @@ export function LeagueHubPanel({ league }: { league: LeagueState }) {
         </span>
       </h3>
       <div className="league-hub-grid">
-        <div className="league-table-wrap">
-          <table className="league-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Verein</th>
-                <th>Sp</th>
-                <th>S</th>
-                <th>U</th>
-                <th>N</th>
-                <th>Tore</th>
-                <th>Diff</th>
-                <th>Form</th>
-                <th>Pkt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {table.map((row, index) => {
-                const zone = promotionZoneRank(index, table.length);
-                const form = formSparkline(teamForm(league, row.teamId));
-                const rowClass = [
-                  row.teamId === league.player_club_id ? "is-player-club" : "",
-                  zone ? `league-zone-${zone}` : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ");
-                return (
-                <tr
-                  key={row.teamId}
-                  className={rowClass || undefined}
-                >
-                  <td>{index + 1}</td>
-                  <td>{clubShortName(row.teamId)}</td>
-                  <td>{row.played}</td>
-                  <td>{row.won}</td>
-                  <td>{row.drawn}</td>
-                  <td>{row.lost}</td>
-                  <td>{row.goalsFor}:{row.goalsAgainst}</td>
-                  <td>{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td>
-                  <td className="league-form" title="Letzte 5 Spiele">{form || "—"}</td>
-                  <td><strong>{row.points}</strong></td>
-                </tr>
-              );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <LeagueTable
+          table={table}
+          leagueSlice={leagueSlice}
+          playerClubId={league.player_club_id}
+          onSelectClub={onSelectClub}
+        />
         <div className="league-leaders">
           <LeaderList title="⚽ Torschützen" rows={scorers} field="goals" playerClubId={league.player_club_id} />
           <LeaderList title="🅰️ Assists" rows={assists} field="assists" playerClubId={league.player_club_id} />

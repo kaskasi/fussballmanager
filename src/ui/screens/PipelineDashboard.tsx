@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { planToSessions } from "../../development/training-units.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
 import { formatGrowthDelta, weeklyGrowthDelta } from "../../player/growth-history.ts";
+import type { TeamId } from "@fussballmanager/shared";
 import type { Player } from "../../types/player.ts";
 import { validateWeeklyPlan } from "../../development/weekly-plan.ts";
 import { totalSeasonMatchdays, type LeagueState } from "../../persistence/league-state.ts";
@@ -55,6 +56,7 @@ export function PipelineDashboard({
   board,
   clubId,
   clubEvents,
+  onSelectClub,
 }: {
   players: Player[];
   season: number;
@@ -78,6 +80,7 @@ export function PipelineDashboard({
   board: BoardState;
   clubId: string;
   clubEvents: readonly ClubEvent[];
+  onSelectClub?: (teamId: TeamId) => void;
 }) {
   const [panel, setPanel] = useState<"hub" | "training">("hub");
   const [legend, setLegend] = useState(false);
@@ -201,7 +204,7 @@ export function PipelineDashboard({
         onSelectScoutTarget={onSelectScoutTarget}
       />
       <DevelopmentHubPanel movers={developmentMovers} onSelectPlayer={onSelectPlayer} />
-      <LeagueHubPanel league={league} />
+      <LeagueHubPanel league={league} onSelectClub={onSelectClub} />
       <section>
         <div className="pipeline-chart" aria-label="Pipeline nach Stufe">
           {stages.map((stage) => (

@@ -54,6 +54,8 @@ import { STADIUM_BASE_BLOCKS, normalizeClubStadium, stadiumTotalCapacity } from 
 import { purchaseStadiumUpgrade } from "./stadium/stadium-upgrades.ts";
 import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
+import { LeaguesScreen } from "./ui/screens/LeaguesScreen.tsx";
+import { ClubProfileModal } from "./ui/components/ClubProfileModal.tsx";
 import { PlayerProfile } from "./ui/screens/PlayerProfile";
 import {
   DEFAULT_MARKET_FILTERS,
@@ -81,7 +83,7 @@ import {
 } from "./youth/decision-inbox.ts";
 import type { NavPrimaryAction } from "./ui/nav-primary-action.ts";
 
-type Screen = "hub" | "campus" | "matchday" | "scouting" | "transfers" | "squad" | "finances" | "stadium";
+type Screen = "hub" | "campus" | "matchday" | "scouting" | "transfers" | "squad" | "finances" | "stadium" | "leagues";
 
 function bootstrapSave(slot: number): SaveGame {
   try {
@@ -137,6 +139,7 @@ export default function App() {
   const [matchNavAction, setMatchNavAction] = useState<NavPrimaryAction | null>(null);
   const [marketFilters, setMarketFilters] = useState<MarketFilters>(DEFAULT_MARKET_FILTERS);
   const [marketSort, setMarketSort] = useState<MarketSort>(DEFAULT_MARKET_SORT);
+  const [clubProfileId, setClubProfileId] = useState<TeamId | null>(null);
 
   const session = sessionFromSave(save);
   const {
@@ -755,6 +758,7 @@ export default function App() {
           youthInbox={youthInbox}
           scoutBoard={scoutBoard}
           clubEvents={clubEvents}
+          onSelectClub={setClubProfileId}
         />
       </div>
       {inboxOpen && pendingInboxItems(youthInbox, players).length > 0 ? (
@@ -827,6 +831,16 @@ export default function App() {
           onOpenStadium={() => setScreen("stadium")}
         />
       ) : null}
+      {screen === "leagues" ? (
+        <LeaguesScreen
+          league={league}
+          season={season}
+          masterSeed={session.masterSeed}
+          players={players}
+          stadium={stadium}
+          onOpenStadium={() => setScreen("stadium")}
+        />
+      ) : null}
       {screen === "stadium" ? (
         <StadiumScreen
           stadium={stadium}
@@ -838,7 +852,19 @@ export default function App() {
             }))
           }
           onPurchaseUpgrade={handlePurchaseStadiumUpgrade}
-          onBack={() => setScreen("finances")}
+        />
+      ) : null}
+      {clubProfileId && screen !== "leagues" ? (
+        <ClubProfileModal
+          teamId={clubProfileId}
+          league={league}
+          players={players}
+          stadium={stadium}
+          onClose={() => setClubProfileId(null)}
+          onOpenStadium={() => {
+            setClubProfileId(null);
+            setScreen("stadium");
+          }}
         />
       ) : null}
       {screen === "matchday" ? <Matchday /> : null}
@@ -971,6 +997,26 @@ function AppNav({
         }}
       >
         💰
+      </NavButton>
+      <NavButton
+        pressed={screen === "leagues"}
+        label="Ligen"
+        onClick={() => {
+          onCloseProfile?.();
+          onNavigate("leagues");
+        }}
+      >
+        🏆
+      </NavButton>
+      <NavButton
+        pressed={screen === "stadium"}
+        label="Stadion"
+        onClick={() => {
+          onCloseProfile?.();
+          onNavigate("stadium");
+        }}
+      >
+        🏟️
       </NavButton>
       </div>
       <div className="app-nav-actions">

@@ -47,7 +47,7 @@ export function StadiumScreen({
   finances: ClubFinances;
   onStadiumChange: (stadium: ClubStadium) => void;
   onPurchaseUpgrade: (upgradeId: string) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const capacity = stadiumTotalCapacity(stadium);
@@ -62,9 +62,11 @@ export function StadiumScreen({
   return (
     <main className="stadium">
       <header className="stadium-head">
-        <button type="button" onClick={onBack} aria-label="Zurück">
-          ←
-        </button>
+        {onBack ? (
+          <button type="button" onClick={onBack} aria-label="Zurück">
+            ←
+          </button>
+        ) : null}
         <div>
           <p className="eyebrow">Verein</p>
           <h1>🏟️ {stadium.name}</h1>

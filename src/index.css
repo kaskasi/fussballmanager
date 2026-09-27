@@ -925,6 +925,251 @@ body {
   color: #475569;
 }
 
+.league-club-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: #0f766e;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.league-club-link:hover {
+  color: #047857;
+}
+
+.leagues-screen {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 1.5rem 2rem;
+}
+
+.leagues-screen-head h1 {
+  margin: 0.15rem 0 0.35rem;
+  font-size: 1.35rem;
+}
+
+.leagues-screen-sub {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.leagues-screen-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0.75rem;
+}
+
+.leagues-screen-tabs button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.leagues-screen-tabs button.is-active {
+  border-color: #059669;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.leagues-screen-own {
+  font-weight: 600;
+  color: #64748b;
+}
+
+.leagues-screen-table {
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
+}
+
+.leagues-screen-meta {
+  margin: 0 0 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.leagues-screen-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.leagues-screen-legend i {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.9rem;
+  margin-right: 0.3rem;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.leagues-screen-legend .zone-promoted {
+  background: #16a34a;
+}
+
+.leagues-screen-legend .zone-playoff {
+  background: #eab308;
+}
+
+.leagues-screen-legend .zone-relegated {
+  background: #dc2626;
+}
+
+.club-profile-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgb(15 23 42 / 55%);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.club-profile-modal {
+  width: min(32rem, 100%);
+  max-height: min(90vh, 36rem);
+  overflow: auto;
+  border-radius: 0.9rem;
+  background: #fff;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 18px 40px rgb(15 23 42 / 18%);
+}
+
+.club-profile-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.club-profile-head h2 {
+  margin: 0.15rem 0;
+  font-size: 1.2rem;
+}
+
+.club-profile-sub {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.club-profile-close {
+  border: 0;
+  background: #f1f5f9;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.club-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-bottom: 0.85rem;
+}
+
+.club-profile-stat {
+  display: flex;
+  gap: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.65rem;
+  background: #f8fafc;
+}
+
+.club-profile-stat-icon {
+  font-size: 1.1rem;
+}
+
+.club-profile-stat-label {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.club-profile-stat-value {
+  display: block;
+  font-size: 0.92rem;
+}
+
+.club-profile-stat-hint {
+  margin: 0.1rem 0 0;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.club-profile-players h3 {
+  margin: 0 0 0.45rem;
+  font-size: 0.88rem;
+}
+
+.club-profile-player-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.club-profile-player-list li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.45rem;
+  background: #f8fafc;
+  font-size: 0.8rem;
+}
+
+.club-profile-player-role {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.club-profile-empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.club-profile-foot {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.club-profile-stadium-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  background: #059669;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .summer-checklist {
   margin-bottom: 1rem;
   padding: 0.85rem 1rem;

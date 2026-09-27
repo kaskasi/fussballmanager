@@ -4,7 +4,7 @@ import type { LeagueState } from "../persistence/league-state.ts";
 export type FormResult = "W" | "D" | "L";
 
 export function teamMatchResults(
-  league: LeagueState,
+  league: Pick<LeagueState, "results">,
   teamId: TeamId,
 ): FixtureResult[] {
   return league.results.filter(
@@ -22,7 +22,7 @@ export function resultOutcome(result: FixtureResult, teamId: TeamId): FormResult
 }
 
 export function teamForm(
-  league: LeagueState,
+  league: Pick<LeagueState, "results">,
   teamId: TeamId,
   limit = 5,
 ): FormResult[] {

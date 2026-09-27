@@ -42,37 +42,55 @@ function teamStrength(teamId: TeamId): number {
   return squad ? squadAverageStrength(squad) : 48;
 }
 
+function simulateMatchdayResults(
+  clubIds: readonly TeamId[],
+  matchday: number,
+  baseSeed: number,
+): FixtureResult[] {
+  const fixtures = matchdayFixtures(clubIds, matchday);
+  return fixtures.map((fixture, index) => {
+    const homeStrength = teamStrength(fixture.homeTeamId);
+    const awayStrength = teamStrength(fixture.awayTeamId);
+    const edge = (homeStrength - awayStrength) / 20;
+    const homeGoals = Math.min(
+      5,
+      Math.max(0, Math.round(1.1 + edge + seededRoll(baseSeed, matchday * 17 + index) * 2.4)),
+    );
+    const awayGoals = Math.min(
+      5,
+      Math.max(0, Math.round(1.0 - edge * 0.6 + seededRoll(baseSeed, matchday * 19 + index + 3) * 2.2)),
+    );
+    return {
+      homeTeamId: fixture.homeTeamId,
+      awayTeamId: fixture.awayTeamId,
+      homeGoals,
+      awayGoals,
+    };
+  });
+}
+
+export function simulatePartialDivisionSeason(
+  clubIds: readonly TeamId[],
+  meetingsPerOpponent: number,
+  matchdays: number,
+  baseSeed: number,
+): FixtureResult[] {
+  const maxMatchdays = (clubIds.length - 1) * meetingsPerOpponent;
+  const limit = Math.max(0, Math.min(matchdays, maxMatchdays));
+  const results: FixtureResult[] = [];
+  for (let matchday = 1; matchday <= limit; matchday++) {
+    results.push(...simulateMatchdayResults(clubIds, matchday, baseSeed));
+  }
+  return results;
+}
+
 export function simulateFullDivisionSeason(
   clubIds: readonly TeamId[],
   meetingsPerOpponent: number,
   baseSeed: number,
 ): FixtureResult[] {
   const matchdays = (clubIds.length - 1) * meetingsPerOpponent;
-  const results: FixtureResult[] = [];
-  for (let matchday = 1; matchday <= matchdays; matchday++) {
-    const fixtures = matchdayFixtures(clubIds, matchday);
-    for (let index = 0; index < fixtures.length; index++) {
-      const fixture = fixtures[index]!;
-      const homeStrength = teamStrength(fixture.homeTeamId);
-      const awayStrength = teamStrength(fixture.awayTeamId);
-      const edge = (homeStrength - awayStrength) / 20;
-      const homeGoals = Math.min(
-        5,
-        Math.max(0, Math.round(1.1 + edge + seededRoll(baseSeed, matchday * 17 + index) * 2.4)),
-      );
-      const awayGoals = Math.min(
-        5,
-        Math.max(0, Math.round(1.0 - edge * 0.6 + seededRoll(baseSeed, matchday * 19 + index + 3) * 2.2)),
-      );
-      results.push({
-        homeTeamId: fixture.homeTeamId,
-        awayTeamId: fixture.awayTeamId,
-        homeGoals,
-        awayGoals,
-      });
-    }
-  }
-  return results;
+  return simulatePartialDivisionSeason(clubIds, meetingsPerOpponent, matchdays, baseSeed);
 }
 
 function simulatePlayoffMatch(homeTeamId: TeamId, awayTeamId: TeamId, seed: number): FixtureResult {

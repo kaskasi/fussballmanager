@@ -1,0 +1,110 @@
+import { useMemo, useState } from "react";
+import type { TeamId } from "@fussballmanager/shared";
+import type { Player } from "../../types/player.ts";
+import type { ClubStadium } from "../../stadium/club-stadium.ts";
+import type { DivisionEconomyId } from "../../economy/division-economy.ts";
+import { totalSeasonMatchdays, type LeagueState } from "../../persistence/league-state.ts";
+import { divisionLabel, REGIONALLIGA_ID, OBERLIGA_ID } from "../../sim/league-divisions.ts";
+import { divisionStandings, leagueSliceForForm } from "../../sim/league-standings.ts";
+import { ClubProfileModal } from "../components/ClubProfileModal.tsx";
+import { LeagueTable } from "../components/LeagueTable.tsx";
+
+const DIVISIONS: DivisionEconomyId[] = [REGIONALLIGA_ID, OBERLIGA_ID];
+
+/**
+ * WIREFRAME: PRD 09.2 / F10 — Ligen & Tabellen
+ */
+export function LeaguesScreen({
+  league,
+  season,
+  masterSeed,
+  players,
+  stadium,
+  onOpenStadium,
+}: {
+  league: LeagueState;
+  season: number;
+  masterSeed: number;
+  players: readonly Player[];
+  stadium: ClubStadium;
+  onOpenStadium?: () => void;
+}) {
+  const [divisionId, setDivisionId] = useState<DivisionEconomyId>(league.division_id);
+  const [selectedClubId, setSelectedClubId] = useState<TeamId | null>(null);
+
+  const standings = useMemo(
+    () => divisionStandings(league, divisionId, masterSeed, season),
+    [league, divisionId, masterSeed, season],
+  );
+  const leagueSlice = useMemo(
+    () => leagueSliceForForm(standings.clubIds, standings.results),
+    [standings.clubIds, standings.results],
+  );
+  const matchdays = totalSeasonMatchdays({ club_ids: standings.clubIds, meetings_per_opponent: league.meetings_per_opponent });
+
+  return (
+    <main className="leagues-screen">
+      <header className="leagues-screen-head">
+        <div>
+          <p className="eyebrow">Wettbewerb</p>
+          <h1>🏆 Ligen</h1>
+          <p className="leagues-screen-sub">
+            Klick auf einen Verein für Kurzprofil · {standings.simulated ? "Fremdliga simuliert" : "Deine Liga live"}
+          </p>
+        </div>
+      </header>
+
+      <div className="leagues-screen-tabs" role="tablist" aria-label="Spielklassen">
+        {DIVISIONS.map((id) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={divisionId === id}
+            className={divisionId === id ? "is-active" : undefined}
+            onClick={() => setDivisionId(id)}
+          >
+            {divisionLabel(id)}
+            {id === league.division_id ? <span className="leagues-screen-own"> · dein Verein</span> : null}
+          </button>
+        ))}
+      </div>
+
+      <section className="leagues-screen-table" aria-label={divisionLabel(divisionId)}>
+        <p className="leagues-screen-meta">
+          Spieltag {standings.matchdaysPlayed}/{matchdays}
+          {standings.simulated ? " · Auto-Sim" : ""}
+        </p>
+        <LeagueTable
+          table={standings.table}
+          leagueSlice={leagueSlice}
+          playerClubId={league.player_club_id}
+          onSelectClub={setSelectedClubId}
+        />
+        <div className="leagues-screen-legend" aria-label="Tabellenzonen">
+          <span><i className="zone-promoted" /> Aufstieg</span>
+          <span><i className="zone-playoff" /> Relegation</span>
+          <span><i className="zone-relegated" /> Abstieg</span>
+        </div>
+      </section>
+
+      {selectedClubId ? (
+        <ClubProfileModal
+          teamId={selectedClubId}
+          league={league}
+          players={players}
+          stadium={stadium}
+          onClose={() => setSelectedClubId(null)}
+          onOpenStadium={
+            selectedClubId === league.player_club_id && onOpenStadium
+              ? () => {
+                  setSelectedClubId(null);
+                  onOpenStadium();
+                }
+              : undefined
+          }
+        />
+      ) : null}
+    </main>
+  );
+}

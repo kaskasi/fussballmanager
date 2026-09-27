@@ -29,6 +29,7 @@ import {
   fanbaseMood,
   fanbaseMoodIcon,
   fanbaseMoodLabel,
+  formatFanbase,
 } from "../../stadium/fanbase.ts";
 import { DEFAULT_FANBASE } from "../../stadium/club-stadium.ts";
 import { Hint } from "../components/Hint.tsx";
@@ -81,7 +82,7 @@ export function StadiumScreen({
         <div className={`stadium-fanbase-card is-${mood}`}>
           <span className="stadium-fanbase-icon" aria-hidden="true">{fanbaseMoodIcon(mood)}</span>
           <div>
-            <strong>Fanbase {fanbase}</strong>
+            <strong>Fanbase {formatFanbase(fanbase)}</strong>
             <p>{fanbaseMoodLabel(mood)} · Erfolg &amp; Tabellenplatz steuern die Zuschauerzahl</p>
           </div>
           {delta != null && delta !== 0 ? (

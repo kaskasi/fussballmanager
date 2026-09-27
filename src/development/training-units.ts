@@ -27,6 +27,7 @@ export function slotPeriodIndex(slotIndex: number): number {
 
 export function slotLabel(slotIndex: number): string {
   const day = TRAINING_DAYS[slotDayIndex(slotIndex)] ?? "?";
+  if (UNITS_PER_DAY === 1) return day;
   const period = slotPeriodIndex(slotIndex) + 1;
   return `${day} · Einheit ${period}`;
 }
@@ -57,18 +58,19 @@ export function defaultTrainingPlan(): TrainingSlot[] {
     { unitId: "phys_speed", focus: false },
     { unitId: "ment_tactical", focus: false },
     { unitId: "tech_ball", focus: true },
-    { unitId: "phys_power", focus: false },
-    { unitId: "ment_calm", focus: false },
-    { unitId: "tech_shoot", focus: false },
-    { unitId: "phys_speed", focus: true },
-    { unitId: "ment_leader", focus: false },
-    { unitId: "tech_pass", focus: false },
-    { unitId: "phys_power", focus: false },
-    { unitId: "ment_tactical", focus: false },
-    { unitId: "tech_ball", focus: false },
-    { unitId: "phys_speed", focus: false },
-    { unitId: "ment_calm", focus: false },
+    { unitId: "phys_power", focus: true },
   ];
+}
+
+const LEGACY_SLOTS_PER_WEEK = 15;
+
+/** Converts a pre-025 fifteen-slot week (Mo–Fr × 3) to five weekday slots. */
+export function migrateLegacyTrainingPlan(plan: readonly TrainingSlot[]): TrainingSlot[] {
+  if (plan.length === SLOT_COUNT) return [...plan];
+  if (plan.length === LEGACY_SLOTS_PER_WEEK) {
+    return [0, 3, 6, 9, 12].map((index) => plan[index]!).filter(Boolean);
+  }
+  return createInitialTrainingPlan();
 }
 
 export function planToSessions(plan: readonly TrainingSlot[]): TrainingSession[] {

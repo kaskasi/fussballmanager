@@ -3,7 +3,7 @@ import type { Player } from "../../types/player.ts";
 import { formatPlayerName, roundStat } from "../../types/player-display.ts";
 import { defaultYouthContract } from "../../player/youth-contract.ts";
 import { estimateCa } from "../../transfers/market-value.ts";
-import type { CoachIcon } from "../../youth/academy.ts";
+import { coachIconLabel, type CoachIcon } from "../../youth/academy.ts";
 import {
   actionIcon,
   actionLabel,
@@ -139,7 +139,12 @@ export function DecisionInboxModal({
                     </p>
                     <p className="inbox-reason">
                       {itemKindIcon(active.kind)} {inboxItemLabel(active)}
-                      {coachIcon ? <span className="inbox-coach"> · Coach {coachIcon}</span> : null}
+                      {coachIcon ? (
+                        <span className="inbox-coach" title={coachIconLabel(coachIcon)}>
+                          {" "}
+                          · Coach {coachIcon}
+                        </span>
+                      ) : null}
                     </p>
                   </div>
                 </div>

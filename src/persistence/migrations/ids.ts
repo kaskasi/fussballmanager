@@ -22,4 +22,5 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_022_board",
   "migration_023_league_pools",
   "migration_024_rival_growth",
+  "migration_025_training_five_slots",
 ] as const;

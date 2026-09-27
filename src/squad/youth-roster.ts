@@ -3,12 +3,13 @@ import { formatPlayerName } from "../types/player-display.ts";
 import { seasonMatchRating } from "../player/season-stats.ts";
 import { weeklyCaDelta } from "../player/ca-tracking.ts";
 import { estimateCa } from "../transfers/market-value.ts";
+import type { CoachIcon } from "../youth/academy.ts";
 import type { ProSquadRow, ProSquadSortDirection, ProSquadSortKey } from "./pro-roster.ts";
 import { sortProSquadRows } from "./pro-roster.ts";
 
 export interface YouthSquadRow extends ProSquadRow {
   region: string;
-  coachIcon: string;
+  coachIcon: CoachIcon;
   departureRisk: boolean;
 }
 

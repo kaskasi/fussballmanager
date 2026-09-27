@@ -12,6 +12,15 @@ export function normalizeFanbase(value: number): number {
   return Math.min(FANBASE_MAX, Math.max(FANBASE_MIN, value));
 }
 
+/** Display/storage rounding — avoids float artifacts like 51.879999… in the UI. */
+export function roundFanbase(value: number): number {
+  return Math.round(normalizeFanbase(value) * 100) / 100;
+}
+
+export function formatFanbase(value: number): string {
+  return roundFanbase(value).toFixed(2);
+}
+
 export function fanbaseFillMultiplier(fanbase: number): number {
   const clamped = normalizeFanbase(fanbase);
   return 1 + (clamped - DEFAULT_FANBASE) * 0.004;
@@ -88,7 +97,7 @@ export function advanceClubFanbase(
   stadium: ClubStadium,
   delta: number,
 ): ClubStadium {
-  const nextFanbase = normalizeFanbase((stadium.fanbase ?? DEFAULT_FANBASE) + delta);
+  const nextFanbase = roundFanbase((stadium.fanbase ?? DEFAULT_FANBASE) + delta);
   return applyStadiumFillRates({
     ...stadium,
     fanbase: nextFanbase,

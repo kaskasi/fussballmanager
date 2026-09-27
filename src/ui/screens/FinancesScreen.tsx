@@ -23,7 +23,7 @@ import {
   stadiumTotalCapacity,
   type ClubStadium,
 } from "../../stadium/club-stadium.ts";
-import { fanbaseMoodIcon, fanbaseMood } from "../../stadium/fanbase.ts";
+import { fanbaseMoodIcon, fanbaseMood, formatFanbase } from "../../stadium/fanbase.ts";
 import { Hint } from "../components/Hint.tsx";
 
 /**
@@ -92,7 +92,7 @@ export function FinancesScreen({
           <span aria-hidden="true">🏟️</span>
           <span>
             {fanbaseMoodIcon(fanbaseMood(stadium.fanbase ?? DEFAULT_FANBASE))}{" "}
-            {stadium.name} · Fanbase {stadium.fanbase ?? DEFAULT_FANBASE} · Heimspiel{" "}
+            {stadium.name} · Fanbase {formatFanbase(stadium.fanbase ?? DEFAULT_FANBASE)} · Heimspiel{" "}
             {formatClubCash(stadiumMatchdayIncome(stadium))}
           </span>
           <span aria-hidden="true">→</span>

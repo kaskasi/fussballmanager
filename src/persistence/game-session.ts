@@ -29,6 +29,7 @@ function normalizeTransferState(state?: TransferState): TransferState {
 import { MONDAY } from "../sim/day-calendar.ts";
 import { defaultLeagueState, normalizeLeagueState, type LeagueState } from "./league-state.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
+import { migrateLegacyTrainingPlan } from "../development/training-units.ts";
 import { createSave, type SaveGame } from "./savegame-model.ts";
 import { normalizeRivalPlayers } from "../sim/rival-growth.ts";
 
@@ -99,7 +100,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     weekday: save.state.weekday ?? MONDAY,
     matchPlayedThisWeek: save.state.match_played_this_week ?? false,
     players: save.players,
-    trainingPlan: pipeline.training_plan,
+    trainingPlan: migrateLegacyTrainingPlan(pipeline.training_plan),
     scoutBoard: pipeline.scout_board,
     youthInbox: pruneYouthInbox(
       normalizeYouthInbox(pipeline.youth_inbox ?? emptyInbox(save.state.week)),

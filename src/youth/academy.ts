@@ -12,6 +12,18 @@ export const COACH_ICON_ORDER = ["🚀", "➡️", "⚠️", "😞"] as const;
 
 export type CoachIcon = (typeof COACH_ICON_ORDER)[number];
 
+/** PRD 03.3 coach_comment_icon — short tooltip copy for the youth roster. */
+export const COACH_ICON_LABELS: Record<CoachIcon, string> = {
+  "🚀": "Starke Woche — Top-Form im Jugendspiel",
+  "➡️": "Solide Woche — normaler Entwicklungsverlauf",
+  "⚠️": "Achtung — wenig Spielzeit oder Stagnation",
+  "😞": "Schwache Form oder niedrige Moral",
+};
+
+export function coachIconLabel(icon: CoachIcon): string {
+  return COACH_ICON_LABELS[icon];
+}
+
 export interface AcademyFacilityDef {
   id: AcademyFacility;
   name: string;

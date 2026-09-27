@@ -80,7 +80,7 @@ describe("game session", () => {
     writeLocalSave(1, legacy);
     const loaded = loadLocalSave(1);
     expect(loaded?.manifest.save_version).toBe(SAVE_VERSION);
-    expect(loaded?.state.pipeline?.training_plan).toHaveLength(15);
+    expect(loaded?.state.pipeline?.training_plan).toHaveLength(5);
     expect(loaded?.state.pipeline?.youth_inbox.queue.length).toBeGreaterThan(0);
     removeLocalSave(1);
   });

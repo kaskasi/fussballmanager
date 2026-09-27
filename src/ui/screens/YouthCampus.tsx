@@ -11,6 +11,7 @@ import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 import {
   ACADEMY_FACILITIES,
   facilityById,
+  coachIconLabel,
   facilityGate,
 } from "../../youth/academy.ts";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
@@ -302,7 +303,9 @@ function YearGroup({
                     {formMark(row.form)}
                   </td>
                   <td className="youth-col-region">{row.region}</td>
-                  <td className="youth-col-coach" title={`Coach ${row.coachIcon}`}>{row.coachIcon}</td>
+                  <td className="youth-col-coach" title={coachIconLabel(row.coachIcon)}>
+                    <span aria-label={coachIconLabel(row.coachIcon)}>{row.coachIcon}</span>
+                  </td>
                 </tr>
               ))}
             </tbody>

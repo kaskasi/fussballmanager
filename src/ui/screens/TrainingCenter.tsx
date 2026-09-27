@@ -5,7 +5,6 @@ import {
   TRAINING_DAYS,
   TRAINING_UNITS,
   trainingUnit,
-  UNITS_PER_DAY,
   type TrainingSlot,
 } from "../../development/training-units.ts";
 import { attributeLabel } from "../player-profile.ts";
@@ -31,7 +30,7 @@ const GROUP_LABELS: Record<SessionGroup, string> = {
 /**
  * WIREFRAME: PRD 09.2 Screen 1 + 1a — Training
  *
- * Team: Stundenplan (Mo–Fr, 3 Einheiten/Tag). Fokus-Modus per Checkbox, Klick markiert Einheit.
+ * Team: Wochenplan (Mo–Fr, 5 Slots). Fokus-Modus per Checkbox, Klick markiert Einheit.
  * Individuell: Extra-Programme pro Spieler (F2.3 Stub bis M2).
  */
 
@@ -128,7 +127,7 @@ function TeamPlan({
         block
       >
         <p className="training-rules">
-          {SLOT_COUNT} Einheiten · {focusCount}/{MAX_FOCUS_SLOTS} Fokus · max. {MAX_FOCUS_PER_GROUP} Fokus pro Bereich
+          {SLOT_COUNT} Trainingsslots (Mo–Fr) · {focusCount}/{MAX_FOCUS_SLOTS} Fokus · max. {MAX_FOCUS_PER_GROUP} Fokus pro Bereich
           {!check.valid ? <span className="training-warn"> · Plan ungültig</span> : null}
         </p>
       </Hint>
@@ -148,30 +147,18 @@ function TeamPlan({
       {focusMode ? <p className="training-focus-hint">Einheit anklicken, um Fokus zu setzen oder zu entfernen.</p> : null}
 
       <div
-        className={focusMode ? "training-timetable is-focus-mode" : "training-timetable"}
+        className={focusMode ? "training-week is-focus-mode" : "training-week"}
         aria-label="Wochenplan"
       >
-        {TRAINING_DAYS.map((day, dayIndex) => (
-          <section key={day} className="training-day-block" aria-label={day}>
-            <h3 className="training-day-head">{day}</h3>
-            <div className="training-day-slots">
-              {plan
-                .slice(dayIndex * UNITS_PER_DAY, (dayIndex + 1) * UNITS_PER_DAY)
-                .map((slot, periodIndex) => {
-                  const index = dayIndex * UNITS_PER_DAY + periodIndex;
-                  return (
-                    <SlotCard
-                      key={index}
-                      period={`Einheit ${periodIndex + 1}`}
-                      slot={slot}
-                      focusMode={focusMode}
-                      active={!focusMode && pickSlot === index}
-                      onSelect={() => handleSlotClick(index)}
-                    />
-                  );
-                })}
-            </div>
-          </section>
+        {plan.map((slot, index) => (
+          <SlotCard
+            key={index}
+            period={TRAINING_DAYS[index] ?? slotLabel(index)}
+            slot={slot}
+            focusMode={focusMode}
+            active={!focusMode && pickSlot === index}
+            onSelect={() => handleSlotClick(index)}
+          />
         ))}
       </div>
 

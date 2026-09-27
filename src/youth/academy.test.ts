@@ -2,12 +2,20 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   ACADEMY_FACILITIES,
+  coachIconLabel,
   PERFORMANCE_STADIUM_CAPACITY,
   facilityGate,
   groupCampusBadges,
   sortCampusBadges,
   type CampusBadge,
 } from "./academy.ts";
+
+describe("coach icons", () => {
+  it("explains each coach comment icon for tooltips", () => {
+    expect(coachIconLabel("🚀")).toMatch(/Top-Form/);
+    expect(coachIconLabel("⚠️")).toMatch(/Spielzeit/);
+  });
+});
 
 describe("academy facilities", () => {
   it("matches the published campus catalogue", () => {

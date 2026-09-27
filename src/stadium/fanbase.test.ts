@@ -4,7 +4,9 @@ import { asTeamId, NORDSTERN_ID, type FixtureResult } from "@fussballmanager/sha
 import { defaultClubStadium, fillRateForTicketPrice } from "./club-stadium.ts";
 import {
   advanceClubFanbase,
+  formatFanbase,
   fanbaseFillMultiplier,
+  roundFanbase,
   matchResultFanbaseDelta,
   seasonEndFanbaseBonus,
   weeklyFanbaseDelta,
@@ -23,6 +25,11 @@ function leagueWithResults(results: FixtureResult[]): LeagueState {
 }
 
 describe("fanbase", () => {
+  it("rounds float artifacts for display and storage", () => {
+    expect(formatFanbase(51.879999999999995)).toBe("51.88");
+    expect(roundFanbase(51.879999999999995)).toBe(51.88);
+  });
+
   it("raises baseline fill rates with a stronger fanbase", () => {
     const low = fillRateForTicketPrice("north", 12, 35);
     const high = fillRateForTicketPrice("north", 12, 80);

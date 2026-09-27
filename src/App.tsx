@@ -39,6 +39,12 @@ import {
   toggleShortlist,
 } from "./transfers/negotiations.ts";
 import {
+  attemptPreContract,
+  canSignPreContract,
+  preContractOffer,
+} from "./transfers/pre-contracts.ts";
+import { careerTeamId } from "./sim/rival-growth.ts";
+import {
   appendTransferRecord,
   createPurchaseRecord,
   createSaleRecord,
@@ -567,6 +573,68 @@ export default function App() {
     [patchSession],
   );
 
+  const handlePreContract = useCallback(
+    (playerId: string) => {
+      patchSession((current) => {
+        const target = getBoardTarget(current.scoutBoard, playerId);
+        if (!target) return current;
+
+        const pending = current.transferState.pending_transfers ?? [];
+        const eligibility = canSignPreContract(
+          target.player,
+          current.clubId,
+          current.season,
+          current.week,
+          pending,
+        );
+        if (!eligibility.allowed) {
+          return sessionWithEvent(current, "transfer", eligibility.reason ?? "Vorvertrag nicht möglich.");
+        }
+
+        const offer = preContractOffer(target.player, current.season, current.week);
+        if (!offer || !canAffordTransfer(current.finances, offer.signingBonus)) {
+          return sessionWithEvent(
+            current,
+            "finance",
+            `Transfer-Budget zu niedrig (Signaturbonus ca. ${formatClubCash(offer?.signingBonus ?? 0)}).`,
+          );
+        }
+
+        const leagueClubIds = current.league.club_ids.map((teamId) => careerTeamId(teamId));
+        const deal = attemptPreContract(
+          current.transferState,
+          target.player,
+          current.clubId,
+          current.season,
+          current.week,
+          current.masterSeed,
+          leagueClubIds,
+        );
+        if (!deal.won || !deal.pending) {
+          return sessionWithEvent(
+            { ...current, transferState: deal.state },
+            "transfer",
+            deal.winnerClubId
+              ? `${formatPlayerName(target.player)} wählt ${loanClubName(deal.winnerClubId)}.`
+              : "Vorvertrag fehlgeschlagen.",
+          );
+        }
+
+        return sessionWithEvent(
+          {
+            ...current,
+            transferState: deal.state,
+            finances: applyTransferFee(current.finances, deal.pending.signing_bonus, current.week),
+          },
+          "transfer",
+          `Vorvertrag mit ${formatPlayerName(target.player)} — wirksam Saison ${deal.pending.effective_season}.`,
+        );
+      });
+      setForeignPlayerId(null);
+    },
+    [patchSession],
+  );
+
   const handlePurchase = useCallback(
     (playerId: string) => {
       patchSession((current) => {
@@ -853,6 +921,24 @@ export default function App() {
           onAssignScout={() => handleAssignScout(foreignTarget.player.id)}
           onToggleShortlist={() => handleToggleShortlist(foreignTarget.player.id)}
           onPurchase={() => handlePurchase(foreignTarget.player.id)}
+          preContractBonus={preContractOffer(foreignTarget.player, season, week)?.signingBonus}
+          preContractBlockedReason={(() => {
+            const eligibility = canSignPreContract(
+              foreignTarget.player,
+              session.clubId,
+              season,
+              week,
+              transferState.pending_transfers ?? [],
+            );
+            if (!eligibility.allowed) return eligibility.reason ?? null;
+            const offer = preContractOffer(foreignTarget.player, season, week);
+            if (!offer) return "Kein Vertrag.";
+            if (!canAffordTransfer(finances, offer.signingBonus)) {
+              return `Signaturbonus ca. ${formatClubCash(offer.signingBonus)} — Budget zu niedrig.`;
+            }
+            return null;
+          })()}
+          onPreContract={() => handlePreContract(foreignTarget.player.id)}
         />
         {saveManagerOverlay}
       </>

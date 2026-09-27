@@ -27,6 +27,7 @@ import { applySeasonEndFinances } from "../economy/club-finances.ts";
 import type { SeasonObjectiveEvaluation } from "../board/board-state.ts";
 import { advanceClubFanbase, seasonEndFanbaseBonus } from "../stadium/fanbase.ts";
 import type { GameSession } from "../persistence/game-session.ts";
+import { activatePendingPreContracts } from "../transfers/pre-contracts.ts";
 
 export interface SeasonEndResult {
   session: GameSession;
@@ -62,8 +63,16 @@ export function runSeasonEnd(
     endingSeason,
     SEASON_END_WEEK,
   );
+  const preContractStep = activatePendingPreContracts(
+    afterReturns,
+    session.rivalPlayers,
+    session.transferState,
+    endingSeason,
+    SEASON_END_WEEK,
+    session.clubId,
+  );
 
-  const idStart = nextIntakeIdStart(afterReturns);
+  const idStart = nextIntakeIdStart(preContractStep.players);
   const intake = generateYouthIntake({
     season: session.season,
     week: SEASON_END_WEEK,
@@ -76,7 +85,7 @@ export function runSeasonEnd(
     random: mulberry32(session.masterSeed ^ endingSeason),
   });
 
-  const players = refreshAllMarketValues([...afterReturns, ...intake], session.season);
+  const players = refreshAllMarketValues([...preContractStep.players, ...intake], session.season);
   const financesAfterPrizes = applySeasonEndFinances(
     session.finances,
     session.league,
@@ -94,7 +103,7 @@ export function runSeasonEnd(
   if (!boardStep.evaluation.dismissed) {
     board = startBoardSeason(board, board.employer_club_id, session.season);
   }
-  let transferState = session.transferState;
+  let transferState = preContractStep.transferState;
   for (const record of loanReturns) {
     transferState = appendTransferRecord(transferState, record);
   }
@@ -127,7 +136,7 @@ export function runSeasonEnd(
       transferState,
       stadium,
       board,
-      rivalPlayers: ageRivalPlayers(session.rivalPlayers),
+      rivalPlayers: ageRivalPlayers(preContractStep.rivalPlayers),
       league: resetLeagueSeason(leagueAfterMovement),
     },
     intakeCount: intake.length,

@@ -28,6 +28,7 @@ import { migration027IndividualTraining } from "./migration_027_individual_train
 import { migration028MatchLineup } from "./migration_028_match_lineup.ts";
 import { migration029AiTransferMarket } from "./migration_029_ai_transfer_market.ts";
 import { migration030CoachingStaff } from "./migration_030_coaching_staff.ts";
+import { migration031PreContracts } from "./migration_031_pre_contracts.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -65,6 +66,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration028MatchLineup,
   migration029AiTransferMarket,
   migration030CoachingStaff,
+  migration031PreContracts,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

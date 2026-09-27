@@ -2,6 +2,20 @@ import type { Player } from "../types/player.ts";
 import type { TransferRecord } from "./transfer-history.ts";
 import { estimateCa, marketValue } from "./market-value.ts";
 
+/** F5.7 — pre-contract signed before contract expiry (PRD 05.6). */
+export interface PendingTransfer {
+  id: string;
+  player_id: string;
+  buyer_club_id: string;
+  signing_bonus: number;
+  wage_weekly: number;
+  contract_until_season: number;
+  signed_season: number;
+  signed_week: number;
+  effective_season: number;
+  saved_transfer_fee: number;
+}
+
 export type OfferReaction = "accept" | "counter" | "reject";
 
 export interface TransferOffer {
@@ -24,10 +38,12 @@ export interface TransferState {
   history: TransferRecord[];
   /** F5.6 — per-club AI transfer budgets (PRD 05.5). */
   ai_budgets?: Record<string, AiClubBudget>;
+  /** F5.7 — pre-contracts effective at contract end (PRD 05.6). */
+  pending_transfers?: PendingTransfer[];
 }
 
 export function emptyTransferState(): TransferState {
-  return { shortlist: [], offers: [], history: [], ai_budgets: {} };
+  return { shortlist: [], offers: [], history: [], ai_budgets: {}, pending_transfers: [] };
 }
 
 export function toggleShortlist(state: TransferState, playerId: string): TransferState {

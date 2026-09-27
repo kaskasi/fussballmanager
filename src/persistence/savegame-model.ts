@@ -8,7 +8,7 @@ import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
  * Folder I/O lives in `savegame-io.ts`.
  */
 
-export const SAVE_VERSION = 30;
+export const SAVE_VERSION = 31;
 export const GAME_VERSION = "0.1.0";
 
 export const SAVE_FILES = [

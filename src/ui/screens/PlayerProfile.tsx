@@ -65,6 +65,9 @@ export interface PlayerProfileProps {
   onAssignScout?: () => void;
   onToggleShortlist?: () => void;
   onPurchase?: () => void;
+  preContractBonus?: number;
+  preContractBlockedReason?: string | null;
+  onPreContract?: () => void;
   onSell?: () => void;
   onProfileAction?: (action: PlayerProfileAction) => void;
   actionFeedback?: string | null;
@@ -88,6 +91,9 @@ export function PlayerProfile({
   shortlisted = false,
   onToggleShortlist,
   onPurchase,
+  preContractBonus,
+  preContractBlockedReason = null,
+  onPreContract,
   onSell,
   onProfileAction,
   actionFeedback = null,
@@ -243,6 +249,24 @@ export function PlayerProfile({
                 disabled={!transferWindowOpen || !canAffordPurchase}
               >
                 💰 Kaufen{purchasePrice ? ` · ca. ${formatMoney(purchasePrice)}` : ""}
+              </button>
+            </Hint>
+          ) : null}
+          {onPreContract ? (
+            <Hint
+              text={
+                preContractBlockedReason ??
+                "Vorvertrag ab 6 Monate vor Vertragsende. Signaturbonus 10–15 % der gesparten Ablöse — 1–3 Liga-Mitbieter."
+              }
+              block
+            >
+              <button
+                type="button"
+                className="profile-scout"
+                onClick={onPreContract}
+                disabled={Boolean(preContractBlockedReason)}
+              >
+                ✍️ Vorvertrag{preContractBonus ? ` · ca. ${formatMoney(preContractBonus)}` : ""}
               </button>
             </Hint>
           ) : null}

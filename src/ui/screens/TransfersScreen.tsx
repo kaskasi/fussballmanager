@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import type { Player } from "../../types/player.ts";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import { listLoanedPlayers } from "../../transfers/loan-roster.ts";
+import { canRecallLoan } from "../../transfers/loans.ts";
+import { transferWindowLabel } from "../../sim/transfer-windows.ts";
 import type { TransferRecord } from "../../transfers/transfer-history.ts";
 import {
   availableTransferSeasons,
@@ -30,15 +32,19 @@ import { Hint } from "../components/Hint.tsx";
 export function TransfersScreen({
   players,
   season,
+  week,
   history,
   onBack,
   onSelectPlayer,
+  onRecallLoan,
 }: {
   players: readonly Player[];
   season: number;
+  week: number;
   history: readonly TransferRecord[];
   onBack: () => void;
   onSelectPlayer: (playerId: string) => void;
+  onRecallLoan: (playerId: string) => void;
 }) {
   const seasons = useMemo(() => availableTransferSeasons(history, season), [history, season]);
   const [selectedSeason, setSelectedSeason] = useState(season);
@@ -58,7 +64,7 @@ export function TransfersScreen({
           <p className="eyebrow">Saison {season}</p>
           <h1>💰 Transfers</h1>
           <Hint
-            text="Aktive Ausleihen laufen bis Saisonende — danach kehren Spieler zurück. Historie nach Saison filterbar."
+            text="Recall im Winterfenster (KW 2–4). Sonst Rückkehr zum Saisonende. Leihgebühr bei Verleih: ~15 % Marktwert."
             block
           >
             <p className="transfers-summary">
@@ -72,6 +78,7 @@ export function TransfersScreen({
 
       <section className="transfers-section" aria-label="Aktive Ausleihen">
         <h2>🔄 Aktive Ausleihen</h2>
+        <p className="transfers-window-hint">{transferWindowLabel(week)}</p>
         {activeLoans.length === 0 ? (
           <p className="transfers-empty-inline">Keine Spieler derzeit verliehen.</p>
         ) : (
@@ -85,26 +92,41 @@ export function TransfersScreen({
                   <th scope="col">CA</th>
                   <th scope="col">Verein</th>
                   <th scope="col">Bis</th>
+                  <th scope="col">Recall</th>
                 </tr>
               </thead>
               <tbody>
-                {activeLoans.map((row) => (
+                {activeLoans.map((row) => {
+                  const player = players.find((entry) => entry.id === row.playerId);
+                  const recall = player ? canRecallLoan(week, player) : { allowed: false };
+                  return (
                   <tr
                     key={row.playerId}
                     className="squad-table-row"
-                    onClick={() => onSelectPlayer(row.playerId)}
                   >
-                    <td className="squad-col-name">{row.displayName}</td>
-                    <td>{row.position}</td>
-                    <td>{row.age}</td>
-                    <td className="squad-col-ca">{row.ca}</td>
-                    <td>
+                    <td className="squad-col-name" onClick={() => onSelectPlayer(row.playerId)}>{row.displayName}</td>
+                    <td onClick={() => onSelectPlayer(row.playerId)}>{row.position}</td>
+                    <td onClick={() => onSelectPlayer(row.playerId)}>{row.age}</td>
+                    <td className="squad-col-ca" onClick={() => onSelectPlayer(row.playerId)}>{row.ca}</td>
+                    <td onClick={() => onSelectPlayer(row.playerId)}>
                       {row.toClubName}
                       {row.hasOption ? " · Option" : ""}
                     </td>
-                    <td>S{row.untilSeason}</td>
+                    <td onClick={() => onSelectPlayer(row.playerId)}>S{row.untilSeason}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="transfers-recall-btn"
+                        disabled={!recall.allowed}
+                        title={recall.allowed ? "Spieler zurückholen" : recall.reason}
+                        onClick={() => onRecallLoan(row.playerId)}
+                      >
+                        ↩️ Recall
+                      </button>
+                    </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

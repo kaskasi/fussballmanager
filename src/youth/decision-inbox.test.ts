@@ -89,7 +89,7 @@ describe("decision inbox", () => {
       coachIcons: { [player.id]: "🚀" },
       lastReport: null,
     };
-    const result = applyInboxDecision(inbox, [player], "pro1_pl_pro_34", "promote", 1);
+    const result = applyInboxDecision(inbox, [player], "pro1_pl_pro_34", "promote", 1, 10);
     expect(result.players[0]?.squad_status).toBe("u19");
     expect(result.players[0]?.state.pro_trial?.ends_week).toBe(35);
     expect(result.players[0]?.history.achievements).toContain(ACHIEVEMENT.proTrialWeek);
@@ -114,7 +114,7 @@ describe("decision inbox", () => {
       coachIcons: { [player.id]: "🚀" },
       lastReport: null,
     };
-    const result = applyInboxDecision(inbox, [player], "pro_pl_promo_34", "promote", 1);
+    const result = applyInboxDecision(inbox, [player], "pro_pl_promo_34", "promote", 1, 10);
     expect(result.players[0]?.squad_status).toBe("u19");
     expect(result.players[0]?.history.achievements).toContain(ACHIEVEMENT.promotedU19);
     expect(pendingInboxItems(result.inbox)).toHaveLength(0);
@@ -139,7 +139,7 @@ describe("decision inbox", () => {
       coachIcons: {},
       lastReport: null,
     };
-    const result = applyInboxDecision(inbox, [player], "con_pl_contract_34", "contract", 1);
+    const result = applyInboxDecision(inbox, [player], "con_pl_contract_34", "contract", 1, 10);
     expect(result.players[0]?.contract?.wage_weekly).toBe(175);
     expect(result.players[0]?.state.morale).toBeGreaterThan(player.state.morale);
     expect(result.players[0]?.history.achievements).toContain(ACHIEVEMENT.contractSigned);

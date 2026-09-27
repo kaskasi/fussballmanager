@@ -80,6 +80,7 @@ export function loanPlayerOut(
   week: number,
   fromClubId: string,
   toClubId = DEFAULT_LOAN_PARTNER_ID,
+  fee?: number,
 ): { player: Player; record: TransferRecord } {
   const loaned = grantAchievement(
     {
@@ -104,6 +105,7 @@ export function loanPlayerOut(
     player_name: formatPlayerName(player),
     other_club_id: toClubId,
     other_club_name: loanClubName(toClubId),
+    fee,
   };
   return { player: loaned, record };
 }

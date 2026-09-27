@@ -2,7 +2,8 @@ import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { ACHIEVEMENT, grantAchievement } from "../player/achievements.ts";
 import { signYouthContract } from "../player/youth-contract.ts";
 import { estimateCa } from "../transfers/market-value.ts";
-import { loanPlayerOut, type TransferRecord } from "../transfers/transfer-history.ts";
+import { canLoanPlayerOut, loanYouthPlayer } from "../transfers/loans.ts";
+import type { TransferRecord } from "../transfers/transfer-history.ts";
 import type { Player } from "../types/player.ts";
 import type { CoachIcon } from "./academy.ts";
 import { departureReasonLabel, departureRiskReasons } from "./departure-risk.ts";
@@ -164,6 +165,7 @@ export function allowedActions(
   item: DecisionInboxItem,
   players?: readonly Player[],
   clubId?: string,
+  week?: number,
 ): DecisionAction[] {
   const base: DecisionAction[] = (() => {
     switch (item.kind) {
@@ -178,15 +180,37 @@ export function allowedActions(
     }
   })();
 
-  if (item.kind !== "promotion" || !players || !clubId) return base;
+  let actions = base;
 
-  const player = players.find((entry) => entry.id === item.playerId);
-  if (!player) return base;
-  if (canPromotePlayer(players, clubId, player).allowed && !hasActiveProTrial(player)) {
-    return base;
+  if (players && clubId) {
+    const player = players.find((entry) => entry.id === item.playerId);
+    if (player) {
+      if (item.kind === "promotion") {
+        if (!canPromotePlayer(players, clubId, player).allowed || hasActiveProTrial(player)) {
+          actions = actions.filter((action) => action !== "promote");
+        }
+      }
+      if (week !== undefined && !canLoanPlayerOut(players, clubId, week, player).allowed) {
+        actions = actions.filter((action) => action !== "loan");
+      }
+    }
   }
 
-  return base.filter((action) => action !== "promote");
+  return actions;
+}
+
+export function loanBlockReason(
+  item: DecisionInboxItem,
+  players: readonly Player[],
+  clubId: string,
+  week: number,
+): string | null {
+  if (item.kind !== "departure_risk" && item.kind !== "promotion") return null;
+  const player = players.find((entry) => entry.id === item.playerId);
+  if (!player) return null;
+  const eligibility = canLoanPlayerOut(players, clubId, week, player);
+  if (eligibility.allowed) return null;
+  return eligibility.reason ?? "Leihen nicht möglich.";
 }
 
 export interface DecisionActionContext {
@@ -443,13 +467,21 @@ export function generateWeeklyInbox(
   return { week, items: [], queue: unique, resolvedIds: [], coachIcons, lastReport: report };
 }
 
+export interface InboxDecisionResult {
+  inbox: YouthInboxState;
+  players: Player[];
+  transferRecord?: TransferRecord;
+  loanFee?: number;
+}
+
 export function applyInboxDecision(
   inbox: YouthInboxState,
   players: readonly Player[],
   itemId: string,
   action: DecisionAction,
   season: number,
-): { inbox: YouthInboxState; players: Player[]; transferRecord?: TransferRecord } {
+  currentWeek: number,
+): InboxDecisionResult {
   const item = inbox.items.find((entry) => entry.id === itemId);
   if (!item || inbox.resolvedIds.includes(itemId)) {
     return { inbox, players: [...players] };
@@ -459,7 +491,7 @@ export function applyInboxDecision(
   let transferRecord: TransferRecord | undefined;
   const player = nextPlayers.find((entry) => entry.id === item.playerId);
   const clubId = player?.club_id ?? resolveClubId(players);
-  if (!allowedActions(item, players, clubId).includes(action)) {
+  if (!allowedActions(item, players, clubId, currentWeek).includes(action)) {
     return { inbox, players: nextPlayers };
   }
   if (!player) {
@@ -471,17 +503,24 @@ export function applyInboxDecision(
 
   switch (action) {
     case "loan": {
-      const loaned = loanPlayerOut(
+      const eligibility = canLoanPlayerOut(nextPlayers, clubId, currentWeek, player);
+      if (!eligibility.allowed) break;
+      const loaned = loanYouthPlayer(
         player,
         season,
-        item.week,
-        player.club_id ?? "cl_fc_nordstern",
+        currentWeek,
+        player.club_id ?? clubId,
       );
       transferRecord = loaned.record;
       nextPlayers = nextPlayers.map((entry) =>
         entry.id === item.playerId ? loaned.player : entry,
       );
-      break;
+      return {
+        inbox: { ...inbox, resolvedIds: [...inbox.resolvedIds, itemId] },
+        players: nextPlayers,
+        transferRecord,
+        loanFee: loaned.fee,
+      };
     }
     case "promote":
       if (!canPromotePlayer(nextPlayers, clubId, player).allowed) break;

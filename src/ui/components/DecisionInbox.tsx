@@ -8,6 +8,7 @@ import {
   actionIcon,
   actionLabel,
   allowedActions,
+  loanBlockReason,
   inboxItemLabel,
   pendingInboxItems,
   type DecisionAction,
@@ -74,6 +75,7 @@ export function DecisionInboxModal({
       ? promotionGateLabel(canPromotePlayer(players, clubId, player), player.position)
       : null;
   const trialHint = player ? proTrialLabel(player, season, week) : null;
+  const loanBlock = active && player ? loanBlockReason(active, players, clubId, week) : null;
 
   return (
     <div className="inbox-backdrop" onClick={onClose} role="presentation">
@@ -154,6 +156,8 @@ export function DecisionInboxModal({
 
                 {trialHint ? <p className="inbox-trial-hint">🏃 {trialHint}</p> : null}
 
+                {loanBlock ? <p className="inbox-promotion-block">🔄 {loanBlock}</p> : null}
+
                 {active.reason === "ready_for_pro" && !promotionBlock ? (
                   <p className="inbox-contract-hint">
                     🏃 Probewoche: eine Woche Profiteam, danach automatische Beförderung wenn Platz frei ist.
@@ -161,7 +165,7 @@ export function DecisionInboxModal({
                 ) : null}
 
                 <div className="inbox-actions" aria-label="Aktionen">
-                  {allowedActions(active, players, clubId).map((action) => (
+                  {allowedActions(active, players, clubId, week).map((action) => (
                     <button
                       key={action}
                       type="button"

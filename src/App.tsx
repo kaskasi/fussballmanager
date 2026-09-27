@@ -39,7 +39,9 @@ import {
   appendTransferRecord,
   createPurchaseRecord,
   loanOutMessage,
+  loanReturnMessage,
 } from "./transfers/transfer-history.ts";
+import { recallLoanPlayer } from "./transfers/loans.ts";
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
 import { FinancesScreen } from "./ui/screens/FinancesScreen.tsx";
 import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
@@ -287,6 +289,7 @@ export default function App() {
           itemId,
           action,
           current.season,
+          current.week,
         );
         if (pendingInboxItems(result.inbox, result.players).length === 0) {
           setInboxOpen(false);
@@ -302,6 +305,15 @@ export default function App() {
           next = {
             ...next,
             transferState: appendTransferRecord(current.transferState, result.transferRecord),
+          };
+        }
+        if (result.loanFee && result.loanFee > 0) {
+          next = {
+            ...next,
+            finances: {
+              ...next.finances,
+              cash: next.finances.cash + result.loanFee,
+            },
           };
         }
         const message =
@@ -323,6 +335,29 @@ export default function App() {
         ...current,
         scoutBoard: assignScout(current.scoutBoard, playerId),
       }));
+    },
+    [patchSession],
+  );
+
+  const handleRecallLoan = useCallback(
+    (playerId: string) => {
+      patchSession((current) => {
+        const player = current.players.find((entry) => entry.id === playerId);
+        if (!player) return current;
+        const recalled = recallLoanPlayer(player, current.season, current.week);
+        if (!recalled) return current;
+        return sessionWithEvent(
+          {
+            ...current,
+            players: current.players.map((entry) =>
+              entry.id === playerId ? recalled.player : entry,
+            ),
+            transferState: appendTransferRecord(current.transferState, recalled.record),
+          },
+          "transfer",
+          loanReturnMessage(recalled.record),
+        );
+      });
     },
     [patchSession],
   );
@@ -696,9 +731,11 @@ export default function App() {
         <TransfersScreen
           players={players}
           season={season}
+          week={week}
           history={transferState.history}
           onBack={() => setScreen("hub")}
           onSelectPlayer={setProfileId}
+          onRecallLoan={handleRecallLoan}
         />
       ) : null}
       {screen === "squad" ? (

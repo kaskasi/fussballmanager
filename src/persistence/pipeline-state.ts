@@ -14,6 +14,8 @@ import type { Player } from "../types/player.ts";
 /** Dynamic hub state stored in `state.json` (PRD 08). */
 export interface PipelineState {
   training_plan: TrainingSlot[];
+  /** F2.1 — weekly intensity (80–130, default 100). */
+  training_intensity?: number;
   scout_board: ScoutBoard;
   youth_inbox: YouthInboxState;
   transfer_state?: TransferState;

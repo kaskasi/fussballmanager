@@ -37,6 +37,18 @@ export function BoardObjectivesPanel({
               : `Druck ${board.pressure}%`}
           </p>
         </div>
+        {board.job_status !== "dismissed" ? (
+          <div
+            className="board-pressure-meter"
+            role="meter"
+            aria-valuenow={board.pressure}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Vorstand-Druck ${board.pressure} Prozent`}
+          >
+            <span className="board-pressure-fill" style={{ width: `${board.pressure}%` }} />
+          </div>
+        ) : null}
       </header>
       <ul className="board-objective-list">
         {board.objectives.map((objective) => {

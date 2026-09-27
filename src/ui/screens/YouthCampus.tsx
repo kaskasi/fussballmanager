@@ -6,7 +6,7 @@ import {
   sortYouthSquadRows,
   type YouthSquadRow,
 } from "../../squad/youth-roster.ts";
-import { caDeltaClassName, formatCaDelta } from "../../player/ca-tracking.ts";
+import { caDeltaClassName, caDeltaMark, formatCaDelta } from "../../player/ca-tracking.ts";
 import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 import {
   ACADEMY_FACILITIES,
@@ -290,7 +290,10 @@ function YearGroup({
                   <td>{row.position}</td>
                   <td>{row.age}</td>
                   <td className="squad-col-ca">{row.ca}</td>
-                  <td className={caDeltaClassName(row.caDelta)} title="CA seit letzter Woche">{formatCaDelta(row.caDelta)}</td>
+                  <td className={caDeltaClassName(row.caDelta)} title="CA seit letzter Woche">
+                    <span className="squad-delta-mark" aria-hidden="true">{caDeltaMark(row.caDelta)}</span>
+                    {formatCaDelta(row.caDelta)}
+                  </td>
                   <td className="squad-col-value">{formatMarketValueShort(row.marketValue)}</td>
                   <td>{row.seasonMinutes}</td>
                   <td>{row.goals}</td>

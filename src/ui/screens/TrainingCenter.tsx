@@ -17,6 +17,13 @@ import {
 } from "../../development/weekly-plan.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
+import {
+  clampTrainingIntensity,
+  fatigueAmpelClassName,
+  squadTrainingLoad,
+  TRAINING_INTENSITY_MAX,
+  TRAINING_INTENSITY_MIN,
+} from "../../development/training-load.ts";
 import { Hint } from "../components/Hint.tsx";
 
 type TrainingTab = "team" | "individual";
@@ -37,20 +44,30 @@ const GROUP_LABELS: Record<SessionGroup, string> = {
 export function TrainingCenter({
   week,
   plan,
+  intensity,
   onPlanChange,
+  onIntensityChange,
   players,
+  clubId,
   onBack,
 }: {
   week: number;
   plan: TrainingSlot[];
+  intensity: number;
   onPlanChange: (plan: TrainingSlot[]) => void;
+  onIntensityChange: (intensity: number) => void;
   players: Player[];
+  clubId: string;
   onBack?: () => void;
 }) {
   const [tab, setTab] = useState<TrainingTab>("team");
   const [pickSlot, setPickSlot] = useState<number | null>(null);
   const check = useMemo(() => validateWeeklyPlan(planToSessions(plan)), [plan]);
   const focusCount = plan.filter((slot) => slot.focus).length;
+  const load = useMemo(
+    () => squadTrainingLoad(players, clubId, intensity, focusCount),
+    [players, clubId, intensity, focusCount],
+  );
 
   return (
     <main className="training">
@@ -85,8 +102,11 @@ export function TrainingCenter({
           pickSlot={pickSlot}
           focusCount={focusCount}
           check={check}
+          intensity={intensity}
+          load={load}
           onPickSlot={setPickSlot}
           onPlanChange={onPlanChange}
+          onIntensityChange={onIntensityChange}
         />
       ) : (
         <IndividualPlan players={players} />
@@ -100,15 +120,21 @@ function TeamPlan({
   pickSlot,
   focusCount,
   check,
+  intensity,
+  load,
   onPickSlot,
   onPlanChange,
+  onIntensityChange,
 }: {
   plan: TrainingSlot[];
   pickSlot: number | null;
   focusCount: number;
   check: ReturnType<typeof validateWeeklyPlan>;
+  intensity: number;
+  load: ReturnType<typeof squadTrainingLoad>;
   onPickSlot: (slot: number | null) => void;
   onPlanChange: (plan: TrainingSlot[]) => void;
+  onIntensityChange: (intensity: number) => void;
 }) {
   const [focusMode, setFocusMode] = useState(false);
 
@@ -131,6 +157,30 @@ function TeamPlan({
           {!check.valid ? <span className="training-warn"> · Plan ungültig</span> : null}
         </p>
       </Hint>
+
+      <div className="training-controls">
+        <label className="training-intensity">
+          <span>Intensität {intensity}</span>
+          <input
+            type="range"
+            min={TRAINING_INTENSITY_MIN}
+            max={TRAINING_INTENSITY_MAX}
+            step={5}
+            value={intensity}
+            onChange={(event) => onIntensityChange(clampTrainingIntensity(Number(event.target.value)))}
+          />
+        </label>
+        <p
+          className={`training-fatigue is-${load.ampel}`}
+          title={load.label}
+          aria-label={`Fatigue-Ampel: ${load.label}`}
+        >
+          <span className={`pipeline-light ${fatigueAmpelClassName(load.ampel)}`} aria-hidden="true">
+            {load.icon}
+          </span>
+          <span>{load.label}</span>
+        </p>
+      </div>
 
       <label className="training-focus-mode">
         <input

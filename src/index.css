@@ -1563,10 +1563,26 @@ body {
 }
 
 .board-panel-head {
-  display: flex;
-  gap: 0.55rem;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.55rem 0.65rem;
+  align-items: start;
   margin-bottom: 0.45rem;
+}
+
+.board-pressure-meter {
+  grid-column: 1 / -1;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.board-pressure-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #34d399, #fbbf24, #f87171);
 }
 
 .board-panel-head strong {
@@ -2168,6 +2184,35 @@ body {
   color: #d97706;
 }
 
+.pipeline-light.is-risk {
+  color: #dc2626;
+}
+
+.pipeline-board-pressure {
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: #fff;
+  cursor: default;
+}
+
+.pipeline-board-pressure.is-good {
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+.pipeline-board-pressure.is-warn {
+  border-color: #fcd34d;
+  color: #b45309;
+}
+
+.pipeline-board-pressure.is-bad {
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
 .pipeline-dot {
   position: absolute;
   top: 0.55rem;
@@ -2337,6 +2382,54 @@ body {
 .training-day-block {
   display: grid;
   gap: 0.45rem;
+}
+
+.training-controls {
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: 0.65rem;
+}
+
+.training-intensity {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.65rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.training-intensity input {
+  width: 100%;
+  accent-color: #059669;
+}
+
+.training-fatigue {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.training-fatigue.is-good {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.training-fatigue.is-watch {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.training-fatigue.is-risk {
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
 .training-focus-mode {
@@ -3341,6 +3434,13 @@ body {
 
 .squad-col-delta.is-down {
   color: #b45309;
+}
+
+.squad-delta-mark {
+  display: inline-block;
+  width: 0.9rem;
+  margin-right: 0.15rem;
+  text-align: center;
 }
 
 .squad-col-value {

@@ -159,6 +159,7 @@ export default function App() {
     weekday,
     players,
     trainingPlan,
+    trainingIntensity,
     scoutBoard,
     youthInbox,
     league,
@@ -539,6 +540,13 @@ export default function App() {
     [patchSession],
   );
 
+  const handleTrainingIntensityChange = useCallback(
+    (intensity: number) => {
+      patchSession((current) => ({ ...current, trainingIntensity: intensity }));
+    },
+    [patchSession],
+  );
+
   const resetGame = useCallback(() => {
     removeLocalSave(activeSlot);
     const fresh = saveFromSession(newGameSession());
@@ -750,6 +758,7 @@ export default function App() {
           week={week}
           lastSaved={save.manifest.last_played}
           trainingPlan={trainingPlan}
+          trainingIntensity={trainingIntensity}
           onTrainingPlanChange={handleTrainingPlanChange}
           activeScouts={activeScoutCount(scoutBoard)}
           league={league}
@@ -778,8 +787,11 @@ export default function App() {
         <TrainingCenter
           week={week}
           plan={trainingPlan}
+          intensity={trainingIntensity}
           onPlanChange={handleTrainingPlanChange}
+          onIntensityChange={handleTrainingIntensityChange}
           players={players}
+          clubId={session.clubId}
         />
       ) : null}
       {inboxOpen && pendingInboxItems(youthInbox, players).length > 0 ? (

@@ -26,6 +26,54 @@ export function caDeltaClassName(delta: number | null): string {
   return "squad-col-delta";
 }
 
+/** Icon-first CA delta mark (PRD 09 — paired with color). */
+export function caDeltaMark(delta: number | null): string {
+  if (delta === null) return "·";
+  if (delta > 0) return "▲";
+  if (delta < 0) return "▼";
+  return "—";
+}
+
+export interface SquadCaDeltaSummary {
+  total: number;
+  risers: number;
+  fallers: number;
+  flat: number;
+  hasData: boolean;
+}
+
+export function squadWeeklyCaDeltaSummary(
+  players: readonly Player[],
+  clubId: string,
+): SquadCaDeltaSummary {
+  const squad = players.filter(
+    (player) => player.club_id === clubId && player.squad_status === "pro",
+  );
+  let total = 0;
+  let risers = 0;
+  let fallers = 0;
+  let flat = 0;
+  let hasData = false;
+
+  for (const player of squad) {
+    const delta = weeklyCaDelta(player);
+    if (delta === null) continue;
+    hasData = true;
+    total += delta;
+    if (delta > 0) risers += 1;
+    else if (delta < 0) fallers += 1;
+    else flat += 1;
+  }
+
+  return { total, risers, fallers, flat, hasData };
+}
+
+export function formatSquadCaDeltaSummary(summary: SquadCaDeltaSummary): string {
+  if (!summary.hasData) return "Noch keine Woche simuliert";
+  const sign = summary.total > 0 ? "+" : "";
+  return `${sign}${summary.total} CA · ${summary.risers}▲ ${summary.fallers}▼`;
+}
+
 export function formatRecentGrowth(value: number): string {
   if (value <= 0) return "0";
   return `+${value.toFixed(1)}`;

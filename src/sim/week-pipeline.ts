@@ -43,7 +43,11 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
 
   const playersAtWeekStart = session.players;
   const sessions = planToSessions(session.trainingPlan);
-  const trainingContext = { season: session.season, week: nextWeek };
+  const trainingContext = {
+    season: session.season,
+    week: nextWeek,
+    intensity: session.trainingIntensity,
+  };
   let players = session.players.map((player) =>
     applyTrainingWeek(player, sessions, trainingContext),
   );

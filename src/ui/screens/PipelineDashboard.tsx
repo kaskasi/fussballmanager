@@ -20,7 +20,13 @@ import { formatClubCash, weeklyWageBill, type ClubFinances } from "../../economy
 import type { ClubEvent } from "../../inbox/club-events.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import { inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
-import { listDevelopmentMovers } from "../../player/ca-tracking.ts";
+import {
+  formatSquadCaDeltaSummary,
+  listDevelopmentMovers,
+  squadWeeklyCaDeltaSummary,
+} from "../../player/ca-tracking.ts";
+import { fatigueAmpelClassName, squadTrainingLoad } from "../../development/training-load.ts";
+import { boardPressureTone } from "../../board/season-objectives.ts";
 import type { BoardState } from "../../board/board-state.ts";
 import { BoardObjectivesPanel } from "../components/BoardObjectivesPanel.tsx";
 import { DevelopmentHubPanel } from "../components/DevelopmentHubPanel.tsx";
@@ -38,6 +44,7 @@ export function PipelineDashboard({
   week,
   lastSaved,
   trainingPlan,
+  trainingIntensity,
   onTrainingPlanChange,
   activeScouts,
   onSelectPlayer,
@@ -63,6 +70,7 @@ export function PipelineDashboard({
   week: number;
   lastSaved: string;
   trainingPlan: TrainingSlot[];
+  trainingIntensity: number;
   onTrainingPlanChange: (plan: TrainingSlot[]) => void;
   activeScouts: number;
   onSelectPlayer: (playerId: string) => void;
@@ -87,6 +95,15 @@ export function PipelineDashboard({
   const sessions = useMemo(() => planToSessions(trainingPlan), [trainingPlan]);
   const planOk = validateWeeklyPlan(sessions).valid;
   const focusCount = trainingPlan.filter((slot) => slot.focus).length;
+  const trainingLoad = useMemo(
+    () => squadTrainingLoad(players, clubId, trainingIntensity, focusCount),
+    [players, clubId, trainingIntensity, focusCount],
+  );
+  const caSummary = useMemo(
+    () => squadWeeklyCaDeltaSummary(players, clubId),
+    [players, clubId],
+  );
+  const boardTone = boardPressureTone(board.pressure);
   const cells = useMemo(
     () =>
       players.map((player) => ({
@@ -149,6 +166,13 @@ export function PipelineDashboard({
           </p>
           <button
             type="button"
+            className={`pipeline-board-pressure is-${boardTone}`}
+            title={`Vorstand-Druck ${board.pressure}% · Saisonziele unten`}
+          >
+            🤵 {board.pressure}%
+          </button>
+          <button
+            type="button"
             className="pipeline-finance"
             title={`Gehälter diese Woche: ${formatClubCash(wageBill)} · Transfer-Topf ${formatClubCash(finances.transfer_budget)}`}
             onClick={onOpenFinances}
@@ -208,10 +232,17 @@ export function PipelineDashboard({
         </div>
         <div className="pipeline-tiles">
           <button type="button" className="pipeline-tile" onClick={onOpenTraining}>
-            <span className={planOk ? "pipeline-light is-set" : "pipeline-light is-watch"} aria-hidden="true">
-              {planOk ? "●" : "▲"}
+            <span
+              className={`pipeline-light ${fatigueAmpelClassName(trainingLoad.ampel)}`}
+              aria-hidden="true"
+              title={trainingLoad.label}
+            >
+              {trainingLoad.icon}
             </span>
-            <span>🏋️ Team-Plan · {focusCount}/3 Fokus</span>
+            <span>
+              🏋️ Training · {focusCount}/3 Fokus
+              {!planOk ? " · Plan prüfen" : ""}
+            </span>
           </button>
           <button type="button" className="pipeline-tile" onClick={onOpenSquad}>
             <span>⭐</span>
@@ -247,7 +278,9 @@ export function PipelineDashboard({
           </button>
         </div>
         <div className="pipeline-heat-head">
-          <p className="pipeline-heat-label">Letzte Woche — Klick öffnet Profil</p>
+          <p className="pipeline-heat-label">
+            Letzte Woche — Profikader Δ {formatSquadCaDeltaSummary(caSummary)} · Klick öffnet Profil
+          </p>
           <button
             type="button"
             className="pipeline-legend-toggle"

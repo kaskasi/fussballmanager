@@ -1,12 +1,14 @@
 import type { Attributes, Player } from "../types/player.ts";
 import { isOnProTrial } from "../youth/pro-trial.ts";
 import { applyGrowth, calculateWeeklyGrowth } from "./growth-engine.ts";
+import { trainingIntensityMultiplier } from "./training-load.ts";
 import { defaultTrainingPlan, planToSessions } from "./training-units.ts";
 import { focusSlotsFor, type TrainingSession } from "./weekly-plan.ts";
 
 export interface TrainingWeekContext {
   season: number;
   week: number;
+  intensity?: number;
 }
 
 /**
@@ -96,7 +98,9 @@ function growthOf(
   context?: TrainingWeekContext,
   random?: () => number,
 ): number {
-  const scale = effectiveDevelopmentScale(player, context);
+  const scale =
+    effectiveDevelopmentScale(player, context) *
+    trainingIntensityMultiplier(context?.intensity ?? 100);
   const raw = calculateWeeklyGrowth({
     age: player.age,
     maturityOffset: player.hidden.maturity_offset,

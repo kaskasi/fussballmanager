@@ -29,6 +29,7 @@ function normalizeTransferState(state?: TransferState): TransferState {
 import { MONDAY } from "../sim/day-calendar.ts";
 import { defaultLeagueState, normalizeLeagueState, type LeagueState } from "./league-state.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
+import { normalizeTrainingIntensity } from "../development/training-load.ts";
 import { migrateLegacyTrainingPlan } from "../development/training-units.ts";
 import { createSave, type SaveGame } from "./savegame-model.ts";
 import { normalizeRivalPlayers } from "../sim/rival-growth.ts";
@@ -45,6 +46,7 @@ export interface GameSession {
   matchPlayedThisWeek: boolean;
   players: Player[];
   trainingPlan: TrainingSlot[];
+  trainingIntensity: number;
   scoutBoard: ScoutBoard;
   youthInbox: YouthInboxState;
   league: LeagueState;
@@ -101,6 +103,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     matchPlayedThisWeek: save.state.match_played_this_week ?? false,
     players: save.players,
     trainingPlan: migrateLegacyTrainingPlan(pipeline.training_plan),
+    trainingIntensity: normalizeTrainingIntensity(pipeline.training_intensity),
     scoutBoard: pipeline.scout_board,
     youthInbox: pruneYouthInbox(
       normalizeYouthInbox(pipeline.youth_inbox ?? emptyInbox(save.state.week)),
@@ -126,6 +129,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
 export function saveFromSession(session: GameSession, base?: SaveGame, now = new Date()): SaveGame {
   const pipeline: PipelineState = {
     training_plan: session.trainingPlan,
+    training_intensity: session.trainingIntensity,
     scout_board: session.scoutBoard,
     youth_inbox: session.youthInbox,
     transfer_state: session.transferState,

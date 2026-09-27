@@ -10,7 +10,7 @@ import { calculateWeeklyGrowth, trainingFocus, type FocusSlots } from "./growth-
  *
  * Physical and mental membership follows the σ groups in PRD 02.3.
  * PRD 02.4 only writes the technical list.
- * Intensity and the fatigue light are named in F2.1 and have no formula.
+ * Intensity scales growth via `training-load.ts`; fatigue ampel is UI-only (F2.1).
  */
 
 export const TRAINING_DAYS = ["Mo", "Di", "Mi", "Do", "Fr"] as const;

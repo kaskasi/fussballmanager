@@ -31,6 +31,7 @@ import { migration030CoachingStaff } from "./migration_030_coaching_staff.ts";
 import { migration031PreContracts } from "./migration_031_pre_contracts.ts";
 import { migration032SeasonAwards } from "./migration_032_season_awards.ts";
 import { migration033NarrativeVision } from "./migration_033_narrative_vision.ts";
+import { migration034LeagueWorldPrd } from "./migration_034_league_world_prd.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -71,6 +72,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration031PreContracts,
   migration032SeasonAwards,
   migration033NarrativeVision,
+  migration034LeagueWorldPrd,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

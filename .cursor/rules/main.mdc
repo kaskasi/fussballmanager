@@ -15,6 +15,7 @@ alwaysApply: true
 
 Geschrieben und verbindlich:
 
+- `01_vision.md` — Produktvision, Underdog-Ton, Story aus der Simulation
 - `02_growth_engine.md` — Wachstum-Engine, Formel, Alterskurven
 - `03_youth_academy.md` — Intake, Academy-Visualisierung, Simulation
 - `04_scouting.md` — Wissensmodell, Scouts, Events
@@ -25,11 +26,10 @@ Geschrieben und verbindlich:
 - `09_ui_screens.md` — UI-Screens, Wireframes, Interaktionsregeln
 - `10_feature_list.md` — Vollständiger Feature-Katalog
 - `11_finances.md` — Vereinsfinanzen, Budget-Split, Cashflow (F6.1–F6.4)
+- `12_league_world.md` — Prozedurale Welt, Ligagröße, Clubs und Kader
 
 Noch nicht geschrieben, nicht erfinden:
 
-- `01_vision.md`
-- `12_league_world.md`
 - `13_meta.md`
 
 `PRD.md` in diesem Ordner ist Archiv und nicht verbindlich.

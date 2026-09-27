@@ -907,6 +907,82 @@ body {
   font-weight: 800;
 }
 
+.league-table tbody tr.league-zone-promoted td:first-child {
+  box-shadow: inset 3px 0 0 #16a34a;
+}
+
+.league-table tbody tr.league-zone-playoff td:first-child {
+  box-shadow: inset 3px 0 0 #eab308;
+}
+
+.league-table tbody tr.league-zone-relegated td:first-child {
+  box-shadow: inset 3px 0 0 #dc2626;
+}
+
+.league-form {
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.05em;
+  color: #475569;
+}
+
+.summer-checklist {
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #f0fdf4, #fff);
+  box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
+}
+
+.summer-checklist-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.summer-checklist-head h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.summer-checklist-progress {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.summer-checklist-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.summer-checklist-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.5rem;
+  background: rgb(255 255 255 / 70%);
+}
+
+.summer-checklist-list li.is-done {
+  color: #166534;
+}
+
+.summer-checklist-list li.is-pending {
+  color: #334155;
+}
+
+.summer-checklist-state {
+  font-weight: 800;
+}
+
 .league-leaders {
   display: grid;
   gap: 0.75rem;

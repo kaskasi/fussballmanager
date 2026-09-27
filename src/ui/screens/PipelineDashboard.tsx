@@ -25,6 +25,7 @@ import { BoardObjectivesPanel } from "../components/BoardObjectivesPanel.tsx";
 import { DevelopmentHubPanel } from "../components/DevelopmentHubPanel.tsx";
 import { HubInboxPanel } from "../components/HubInboxPanel.tsx";
 import { LeagueHubPanel } from "../components/LeagueHubPanel.tsx";
+import { SummerChecklistPanel } from "../components/SummerChecklistPanel.tsx";
 import { TrainingCenter } from "./TrainingCenter.tsx";
 
 /**
@@ -181,6 +182,13 @@ export function PipelineDashboard({
           </>
         )}
       </p>
+      <SummerChecklistPanel
+        week={week}
+        season={season}
+        league={league}
+        board={board}
+        trainingPlan={trainingPlan}
+      />
       <BoardObjectivesPanel board={board} league={league} finances={finances} />
       <HubInboxPanel
         week={week}

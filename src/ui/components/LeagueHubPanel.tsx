@@ -1,5 +1,8 @@
 import type { PlayerSeasonStat } from "@fussballmanager/shared";
 import { totalSeasonMatchdays, type LeagueState } from "../../persistence/league-state.ts";
+import { divisionLabel } from "../../sim/league-divisions.ts";
+import { formSparkline, teamForm } from "../../sim/league-form.ts";
+import { promotionZoneRank } from "../../sim/promotion-relegation.ts";
 import {
   clubShortName,
   leagueTable,
@@ -18,9 +21,9 @@ export function LeagueHubPanel({ league }: { league: LeagueState }) {
   return (
     <section className="league-hub" aria-label="Ligaübersicht">
       <h3 className="league-hub-title">
-        Regionalliga Nord
+        {divisionLabel(league.division_id)}
         <span className="league-hub-mode">
-          6 Teams · {league.meetings_per_opponent ?? 6}× Hin- und Rückrunde · {totalSeasonMatchdays(league)} Spiele/Team
+          {league.club_ids.length} Teams · {league.meetings_per_opponent ?? 6}× Hin- und Rückrunde · {totalSeasonMatchdays(league)} Spiele/Team
         </span>
       </h3>
       <div className="league-hub-grid">
@@ -36,14 +39,24 @@ export function LeagueHubPanel({ league }: { league: LeagueState }) {
                 <th>N</th>
                 <th>Tore</th>
                 <th>Diff</th>
+                <th>Form</th>
                 <th>Pkt</th>
               </tr>
             </thead>
             <tbody>
-              {table.map((row, index) => (
+              {table.map((row, index) => {
+                const zone = promotionZoneRank(index, table.length);
+                const form = formSparkline(teamForm(league, row.teamId));
+                const rowClass = [
+                  row.teamId === league.player_club_id ? "is-player-club" : "",
+                  zone ? `league-zone-${zone}` : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+                return (
                 <tr
                   key={row.teamId}
-                  className={row.teamId === league.player_club_id ? "is-player-club" : undefined}
+                  className={rowClass || undefined}
                 >
                   <td>{index + 1}</td>
                   <td>{clubShortName(row.teamId)}</td>
@@ -53,9 +66,11 @@ export function LeagueHubPanel({ league }: { league: LeagueState }) {
                   <td>{row.lost}</td>
                   <td>{row.goalsFor}:{row.goalsAgainst}</td>
                   <td>{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td>
+                  <td className="league-form" title="Letzte 5 Spiele">{form || "—"}</td>
                   <td><strong>{row.points}</strong></td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>

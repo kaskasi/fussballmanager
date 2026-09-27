@@ -3,7 +3,6 @@ import {
   matchdayFixtures,
   mergePlayerSeasonStats,
   NORDSTERN_ID,
-  SEED_DIVISION,
   squadAverageStrength,
   standings,
   topByStat,
@@ -23,6 +22,7 @@ import {
 import type { Player } from "../types/player.ts";
 import { careerEngineSquadFromPlayers } from "./career-engine-squad.ts";
 import { isLeagueMatchWeek } from "./game-calendar.ts";
+import { squadForLeagueClub } from "./league-divisions.ts";
 
 export function weeklySeed(masterSeed: number, season: number, week: number): number {
   let hash = masterSeed ^ season ^ week;
@@ -31,7 +31,7 @@ export function weeklySeed(masterSeed: number, season: number, week: number): nu
 }
 
 export function clubShortName(clubId: TeamId): string {
-  const squad = SEED_DIVISION.find((entry) => entry.team.id === clubId);
+  const squad = squadForLeagueClub(clubId);
   return squad?.team.shortName ?? clubId;
 }
 
@@ -115,8 +115,8 @@ function teamStrength(teamId: TeamId, playerClubSquad?: Squad): number {
   if (playerClubSquad && teamId === playerClubSquad.team.id) {
     return squadAverageStrength(playerClubSquad);
   }
-  const squad = SEED_DIVISION.find((entry) => entry.team.id === teamId);
-  if (!squad) return 50;
+  const squad = squadForTeam(teamId, playerClubSquad);
+  if (!squad) return 48;
   return squadAverageStrength(squad);
 }
 
@@ -124,7 +124,7 @@ function squadForTeam(teamId: TeamId, playerClubSquad?: Squad): Squad | undefine
   if (playerClubSquad && teamId === playerClubSquad.team.id) {
     return playerClubSquad;
   }
-  return SEED_DIVISION.find((entry) => entry.team.id === teamId);
+  return squadForLeagueClub(teamId);
 }
 
 function seededRoll(baseSeed: number, salt: number): number {
@@ -231,13 +231,14 @@ export interface MatchdayPayload {
 export async function fetchMatchdayPayload(
   matchday: number,
   baseSeed: number,
+  clubIds: readonly TeamId[],
   playerClubSquad?: Squad,
 ): Promise<MatchdayPayload> {
   try {
     const response = await fetch("/api/matchday", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ matchday, baseSeed, playerClubSquad }),
+      body: JSON.stringify({ matchday, baseSeed, clubIds, playerClubSquad }),
     });
     if (!response.ok) {
       throw new Error(`matchday ${response.status}`);
@@ -248,7 +249,6 @@ export async function fetchMatchdayPayload(
       playerStats: body.playerStats ?? [],
     };
   } catch {
-    const clubIds = SEED_DIVISION.map((squad) => squad.team.id);
     const results = simulateQuickMatchday(matchday, baseSeed, clubIds, playerClubSquad);
     return {
       results,
@@ -300,7 +300,12 @@ export async function advanceLeagueWeek(
     current.player_club_id === NORDSTERN_ID
       ? careerEngineSquadFromPlayers(careerPlayers)
       : undefined;
-  const payload = await fetchMatchdayPayload(matchdayPlayed, baseSeed, playerClubSquad);
+  const payload = await fetchMatchdayPayload(
+    matchdayPlayed,
+    baseSeed,
+    current.club_ids,
+    playerClubSquad,
+  );
   const scheduled = playerFixture(current, matchdayPlayed);
   const playerResult = scheduled ? fixtureResult(payload.results, scheduled) ?? null : null;
   const seasonComplete = matchdayPlayed >= maxMatchday;

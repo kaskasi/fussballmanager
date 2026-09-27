@@ -1,5 +1,7 @@
-import { NORDSTERN_ID, SEED_DIVISION } from "@fussballmanager/shared";
+import { NORDSTERN_ID } from "@fussballmanager/shared";
 import type { FixtureResult, PlayerSeasonStat, TeamId } from "@fussballmanager/shared";
+import type { DivisionEconomyId } from "../economy/division-economy.ts";
+import { defaultLeaguePools } from "../sim/league-divisions.ts";
 
 /**
  * 6-team league: each club meets every opponent 6 times → 5 × 6 = 30 league games.
@@ -19,9 +21,10 @@ export interface CareerLeagueStat {
 
 /** Engine-side league snapshot stored in `state.json`. */
 export interface LeagueState {
-  division_id: "regionalliga-nord";
+  division_id: DivisionEconomyId;
   player_club_id: TeamId;
   club_ids: TeamId[];
+  league_pools?: Record<DivisionEconomyId, TeamId[]>;
   /** Pairings per opponent within one season (6-team default: 6 → 30 matchdays). */
   meetings_per_opponent: number;
   /** Next matchday to play (1-based). */
@@ -51,12 +54,31 @@ export function resetLeagueSeason(league: LeagueState): LeagueState {
   };
 }
 
+export function normalizeLeagueState(league: LeagueState): LeagueState {
+  const pools = league.league_pools ?? defaultLeaguePools();
+  const division_id = league.division_id ?? "regionalliga-nord";
+  return {
+    ...league,
+    division_id,
+    league_pools: pools,
+    club_ids: league.club_ids?.length
+      ? [...league.club_ids]
+      : [...(pools[division_id] ?? [])],
+    meetings_per_opponent: league.meetings_per_opponent ?? LEAGUE_MEETINGS_PER_OPPONENT,
+    player_stats: league.player_stats ?? [],
+    career_player_stats: league.career_player_stats ?? [],
+    season_complete: league.season_complete ?? false,
+  };
+}
+
 export function defaultLeagueState(): LeagueState {
-  const club_ids = SEED_DIVISION.map((squad) => squad.team.id);
+  const pools = defaultLeaguePools();
+  const club_ids = pools["regionalliga-nord"];
   return {
     division_id: "regionalliga-nord",
     player_club_id: PLAYER_ENGINE_CLUB_ID,
     club_ids: [...club_ids],
+    league_pools: pools,
     meetings_per_opponent: LEAGUE_MEETINGS_PER_OPPONENT,
     matchday: 1,
     results: [],

@@ -7,7 +7,13 @@ import {
   processLoanReturns,
   type TransferRecord,
 } from "../transfers/transfer-history.ts";
-import { resetLeagueSeason } from "../persistence/league-state.ts";
+import { normalizeLeagueState, resetLeagueSeason } from "../persistence/league-state.ts";
+import { defaultLeaguePools } from "./league-divisions.ts";
+import {
+  applyPromotionRelegation,
+  leagueStateAfterMovement,
+  type PromotionRelegationResult,
+} from "./promotion-relegation.ts";
 import { SEASON_END_WEEK } from "../sim/game-calendar.ts";
 import {
   generateYouthIntake,
@@ -24,6 +30,7 @@ export interface SeasonEndResult {
   intakeCount: number;
   loanReturns: TransferRecord[];
   boardEvaluation?: SeasonObjectiveEvaluation;
+  promotionRelegation?: PromotionRelegationResult;
 }
 
 function nextIntakeIdStart(players: readonly Player[]): number {
@@ -89,6 +96,19 @@ export function runSeasonEnd(
     transferState = appendTransferRecord(transferState, record);
   }
   const stadium = advanceClubFanbase(session.stadium, seasonEndFanbaseBonus(session.league));
+  const leagueNormalized = normalizeLeagueState(session.league);
+  const pools = leagueNormalized.league_pools ?? defaultLeaguePools();
+  const promotionRelegation = applyPromotionRelegation(
+    leagueNormalized,
+    pools,
+    session.masterSeed,
+    endingSeason,
+  );
+  const leagueAfterMovement = leagueStateAfterMovement(
+    leagueNormalized,
+    promotionRelegation.pools,
+    leagueNormalized.player_club_id,
+  );
   return {
     session: {
       ...session,
@@ -97,11 +117,12 @@ export function runSeasonEnd(
       transferState,
       stadium,
       board,
-      league: resetLeagueSeason(session.league),
+      league: resetLeagueSeason(leagueAfterMovement),
     },
     intakeCount: intake.length,
     loanReturns,
     boardEvaluation: boardStep.evaluation,
+    promotionRelegation,
   };
 }
 

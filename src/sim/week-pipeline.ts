@@ -136,6 +136,11 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
         ended.boardEvaluation.summary,
       );
     }
+    if (ended.promotionRelegation) {
+      for (const message of ended.promotionRelegation.messages) {
+        clubEvents = withClubEvent(clubEvents, session.season, SEASON_END_WEEK, "info", message);
+      }
+    }
     nextSession = { ...ended.session, clubEvents };
     intakeCount = ended.intakeCount;
   }

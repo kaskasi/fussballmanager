@@ -47,6 +47,16 @@ export {
   moorsielSquad,
 } from "./seed-division.ts";
 
+export {
+  SEED_OBERLIGA,
+  altenbruchSquad,
+  brookfeldSquad,
+  deichhausenSquad,
+  hafenlohSquad,
+  marschdorfSquad,
+  wiesmoorSquad,
+} from "./seed-oberliga.ts";
+
 export type { FixtureResult, ScheduledFixture, TableRow } from "./league.ts";
 export { matchdayFixtures, standings } from "./league.ts";
 

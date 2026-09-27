@@ -1,13 +1,19 @@
 import { describe, expect, it } from "vitest";
+import { defaultLeagueState } from "../persistence/league-state.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import {
   advanceWeeklyClubFinances,
+  applySeasonEndFinances,
   applyTransferFee,
   canAffordTransfer,
   defaultClubFinances,
   formatClubCash,
+  matchdayTicketIncome,
+  normalizeFinances,
+  wageBudgetHeadroom,
   weeklyWageBill,
 } from "./club-finances.ts";
+import { financeMonthForWeek } from "./finance-ledger.ts";
 
 describe("club finances", () => {
   it("sums weekly wages for owned players", () => {
@@ -17,19 +23,87 @@ describe("club finances", () => {
     expect(weeklyWageBill([player], "cl_fc_nordstern")).toBe(1_000);
   });
 
-  it("applies sponsorship income and wage costs each week", () => {
+  it("applies sponsorship, tv, wages, staff and maintenance each week", () => {
     const player = clonePlayer();
     player.club_id = "cl_fc_nordstern";
     player.contract = { ...player.contract!, wage_weekly: 5_000 };
-    const next = advanceWeeklyClubFinances(defaultClubFinances(), [player], "cl_fc_nordstern");
-    expect(next.cash).toBe(defaultClubFinances().cash + 55_000 - 5_000);
+    const { finances } = advanceWeeklyClubFinances(defaultClubFinances(), {
+      players: [player],
+      clubId: "cl_fc_nordstern",
+      divisionId: "regionalliga-nord",
+      isHomeMatchWeek: false,
+      season: 1,
+      week: 1,
+    });
+    expect(finances.cash).toBe(defaultClubFinances().cash + 55_000 + 12_000 - 5_000 - 18_000 - 9_000);
+    expect(finances.pending_lines).toHaveLength(5);
   });
 
-  it("blocks transfers above available cash", () => {
-    const finances = { cash: 500_000 };
-    expect(canAffordTransfer(finances, 400_000)).toBe(true);
-    expect(canAffordTransfer(finances, 600_000)).toBe(false);
-    expect(applyTransferFee(finances, 400_000).cash).toBe(100_000);
+  it("adds ticket income on home match weeks", () => {
+    const { finances } = advanceWeeklyClubFinances(defaultClubFinances(), {
+      players: [],
+      clubId: "cl_fc_nordstern",
+      divisionId: "regionalliga-nord",
+      isHomeMatchWeek: true,
+      season: 1,
+      week: 2,
+    });
+    expect(finances.cash).toBe(
+      defaultClubFinances().cash +
+        55_000 +
+        12_000 -
+        18_000 -
+        9_000 +
+        matchdayTicketIncome("regionalliga-nord", true),
+    );
+  });
+
+  it("uses transfer_budget for affordability and fees", () => {
+    const finances = normalizeFinances({
+      cash: 500_000,
+      transfer_budget: 400_000,
+      wage_budget_weekly: 85_000,
+      last_closed_month: 0,
+    });
+    expect(canAffordTransfer(finances, 350_000)).toBe(true);
+    expect(canAffordTransfer(finances, 450_000)).toBe(false);
+    const afterFee = applyTransferFee(finances, 300_000, 8);
+    expect(afterFee.cash).toBe(200_000);
+    expect(afterFee.transfer_budget).toBe(100_000);
+  });
+
+  it("closes finance month after week 4", () => {
+    let finances = defaultClubFinances();
+    for (let week = 1; week <= 4; week += 1) {
+      finances = advanceWeeklyClubFinances(finances, {
+        players: [],
+        clubId: "cl_fc_nordstern",
+        divisionId: "regionalliga-nord",
+        isHomeMatchWeek: false,
+        season: 1,
+        week,
+      }).finances;
+    }
+    expect(financeMonthForWeek(4)).toBe(1);
+    expect(finances.last_closed_month).toBe(1);
+    expect(finances.ledger).toHaveLength(1);
+    expect(finances.pending_lines).toHaveLength(0);
+  });
+
+  it("reports wage budget headroom", () => {
+    const player = clonePlayer();
+    player.club_id = "cl_fc_nordstern";
+    player.contract = { ...player.contract!, wage_weekly: 40_000 };
+    const finances = defaultClubFinances();
+    expect(wageBudgetHeadroom(finances, [player], "cl_fc_nordstern")).toBe(45_000);
+  });
+
+  it("pays season prizes into cash and transfer pool", () => {
+    const league = defaultLeagueState();
+    league.season_complete = true;
+    const next = applySeasonEndFinances(defaultClubFinances(), league, 1, 30);
+    expect(next.cash).toBeGreaterThan(defaultClubFinances().cash);
+    expect(next.transfer_budget).toBeGreaterThan(defaultClubFinances().transfer_budget);
   });
 
   it("formats cash for the UI", () => {

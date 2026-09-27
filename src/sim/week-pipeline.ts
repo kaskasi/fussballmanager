@@ -78,7 +78,17 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     youth.report,
   );
   const playersWithMorale = applyDepartureMoralePressure(advanced.players, advanced.inbox);
-  const finances = advanceWeeklyClubFinances(session.finances, playersWithMorale, session.clubId);
+  const isHomeMatchWeek =
+    leagueStep.playerFixture?.homeTeamId === session.league.player_club_id;
+  const financeStep = advanceWeeklyClubFinances(session.finances, {
+    players: playersWithMorale,
+    clubId: session.clubId,
+    divisionId: session.league.division_id,
+    isHomeMatchWeek,
+    season: session.season,
+    week: nextWeek,
+  });
+  const finances = financeStep.finances;
   const playersWithCaStamp = playersWithMorale.map(stampLastWeekCa);
 
   const seasonEnded = footballSeasonEnded;

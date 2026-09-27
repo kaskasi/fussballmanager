@@ -14,6 +14,7 @@ import { migration013InboxQueue } from "./migration_013_inbox_queue.ts";
 import { migration014ScoutMarketRivals } from "./migration_014_scout_market_rivals.ts";
 import { migration015TransferHistory } from "./migration_015_transfer_history.ts";
 import { migration016LastWeekCa } from "./migration_016_last_week_ca.ts";
+import { migration017Finances } from "./migration_017_finances.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -37,6 +38,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration014ScoutMarketRivals,
   migration015TransferHistory,
   migration016LastWeekCa,
+  migration017Finances,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

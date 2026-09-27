@@ -42,7 +42,7 @@ Matchday-Commerce (Wurst/Bier/Shirt-Preise) und Stadion-Editor liegen in F7; bis
 
 - `/src/economy/club-finances.ts` — Formeln, Wochenabschluss
 - `/src/economy/finance-ledger.ts` — Monats-Snapshots für Wasserfall
-- `/src/economy/division-economy.json` — TV-/Prämien-Koeffizienten pro Liga
+- `/src/economy/division-economy.ts` — TV-/Prämien-Koeffizienten pro Liga
 - `/src/ui/screens/FinancesScreen.tsx` — F6.4
 - `/src/persistence/migrations/migration_XXX_finances.ts`
 
@@ -126,7 +126,7 @@ Alle Einnahmen laufen über `applyIncome(finances, line)` → erhöht `cash`. Tr
 | `tv_bonus` | Saisonende | `division.tv_season_bonus[table_place]` |
 | `player_sale` | Transfer Verkauf | Ablöse (PRD 05) |
 
-**Division-Defaults** (`/src/economy/division-economy.json`):
+**Division-Defaults** (`/src/economy/division-economy.ts`):
 
 ```json
 {

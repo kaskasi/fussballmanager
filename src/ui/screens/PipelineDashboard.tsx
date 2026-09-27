@@ -42,6 +42,7 @@ export function PipelineDashboard({
   onOpenScouting,
   onOpenTransfers,
   onOpenSquad,
+  onOpenFinances,
   onOpenInbox,
   onSelectScoutTarget,
   youthInbox,
@@ -63,6 +64,7 @@ export function PipelineDashboard({
   onOpenScouting: () => void;
   onOpenTransfers: () => void;
   onOpenSquad: () => void;
+  onOpenFinances: () => void;
   onOpenInbox: (itemId?: string) => void;
   onSelectScoutTarget: (playerId: string) => void;
   youthInbox: YouthInboxState;
@@ -144,9 +146,14 @@ export function PipelineDashboard({
               "Liga — Saisonstart"
             )}
           </p>
-          <p className="pipeline-finance" title={`Gehälter diese Woche: ${formatClubCash(wageBill)}`}>
+          <button
+            type="button"
+            className="pipeline-finance"
+            title={`Gehälter diese Woche: ${formatClubCash(wageBill)} · Transfer-Topf ${formatClubCash(finances.transfer_budget)}`}
+            onClick={onOpenFinances}
+          >
             💰 {formatClubCash(finances.cash)}
-          </p>
+          </button>
           <p className="pipeline-save" title={lastSaved}>💾 Gespeichert</p>
         </div>
       </header>

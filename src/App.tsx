@@ -41,6 +41,7 @@ import {
   loanOutMessage,
 } from "./transfers/transfer-history.ts";
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
+import { FinancesScreen } from "./ui/screens/FinancesScreen.tsx";
 import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
 import { PlayerProfile } from "./ui/screens/PlayerProfile";
@@ -68,7 +69,7 @@ import {
   type DecisionAction,
 } from "./youth/decision-inbox.ts";
 
-type Screen = "hub" | "campus" | "matchday" | "scouting" | "transfers" | "squad";
+type Screen = "hub" | "campus" | "matchday" | "scouting" | "transfers" | "squad" | "finances";
 
 function bootstrapSave(): SaveGame {
   try {
@@ -344,7 +345,7 @@ export default function App() {
             players: [...current.players, bought],
             transferState: appendTransferRecord(deal.state, purchaseRecord),
             scoutBoard: { targets },
-            finances: applyTransferFee(current.finances, fee),
+            finances: applyTransferFee(current.finances, fee, current.week),
           },
           "transfer",
           `Zugang ${formatPlayerName(bought)} für ${formatClubCash(fee)}.`,
@@ -539,6 +540,7 @@ export default function App() {
           onOpenScouting={() => setScreen("scouting")}
           onOpenTransfers={() => setScreen("transfers")}
           onOpenSquad={() => setScreen("squad")}
+          onOpenFinances={() => setScreen("finances")}
           onOpenInbox={openInbox}
           onSelectScoutTarget={(playerId) => setForeignPlayerId(playerId)}
           youthInbox={youthInbox}
@@ -596,6 +598,16 @@ export default function App() {
           season={season}
           onBack={() => setScreen("hub")}
           onSelectPlayer={setProfileId}
+        />
+      ) : null}
+      {screen === "finances" ? (
+        <FinancesScreen
+          finances={finances}
+          players={players}
+          clubId={session.clubId}
+          season={season}
+          week={week}
+          onBack={() => setScreen("hub")}
         />
       ) : null}
       {screen === "matchday" ? <Matchday /> : null}

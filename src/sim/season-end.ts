@@ -13,6 +13,7 @@ import {
   generateYouthIntake,
   type AcademyFacility,
 } from "../youth/intake-generator.ts";
+import { applySeasonEndFinances } from "../economy/club-finances.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 
 export interface SeasonEndResult {
@@ -62,6 +63,12 @@ export function runSeasonEnd(
   });
 
   const players = refreshAllMarketValues([...afterReturns, ...intake], session.season);
+  const finances = applySeasonEndFinances(
+    session.finances,
+    session.league,
+    endingSeason,
+    SEASON_END_WEEK,
+  );
   let transferState = session.transferState;
   for (const record of loanReturns) {
     transferState = appendTransferRecord(transferState, record);
@@ -70,6 +77,7 @@ export function runSeasonEnd(
     session: {
       ...session,
       players,
+      finances,
       transferState,
       league: resetLeagueSeason(session.league),
     },

@@ -28,4 +28,7 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_028_match_lineup",
   "migration_029_ai_transfer_market",
   "migration_030_coaching_staff",
+  "migration_031_pre_contracts",
+  "migration_032_season_awards",
+  "migration_033_narrative_vision",
 ] as const;

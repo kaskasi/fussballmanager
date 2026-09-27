@@ -1,5 +1,7 @@
 import {
   FORMATION_PRESETS,
+  SEED_DIVISION,
+  SEED_OBERLIGA,
   asTeamId,
   fillSquad,
   type FormationId,
@@ -30,6 +32,11 @@ const WORLD_CLUBS = new Map(
 
 export const ALL_LEAGUE_SQUADS: readonly Squad[] =
   DEFAULT_GENERATED_WORLD.clubs.map(templateForWorldClub);
+/** Read-only compatibility templates for generation_version 0 saves. */
+export const LEGACY_LEAGUE_SQUADS: readonly Squad[] = [
+  ...SEED_DIVISION,
+  ...SEED_OBERLIGA,
+];
 
 export function defaultLeaguePools(
   masterSeed = DEFAULT_WORLD_SEED,
@@ -53,7 +60,10 @@ export function divisionLabel(divisionId: DivisionEconomyId): string {
 }
 
 export function templateSquadForClub(teamId: TeamId): Squad | undefined {
-  return ALL_LEAGUE_SQUADS.find((entry) => entry.team.id === teamId);
+  return (
+    ALL_LEAGUE_SQUADS.find((entry) => entry.team.id === teamId) ??
+    LEGACY_LEAGUE_SQUADS.find((entry) => entry.team.id === teamId)
+  );
 }
 
 export function worldClubForTeam(teamId: TeamId): WorldClub | undefined {

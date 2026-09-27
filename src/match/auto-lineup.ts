@@ -37,8 +37,9 @@ export function autoLineupAssignments(
   players: readonly Player[],
   formation: FormationId,
   mode: AutoLineupMode,
+  managerClubId: string = DEFAULT_CLUB_ID,
 ): LineupAssignments {
-  const pool = proSquad(players);
+  const pool = proSquad(players, managerClubId);
   if (pool.length === 0) return {};
 
   const ranked = rankPool(pool, mode);
@@ -55,9 +56,9 @@ export function autoLineupAssignments(
   return assignments;
 }
 
-function proSquad(players: readonly Player[]): Player[] {
+function proSquad(players: readonly Player[], managerClubId: string): Player[] {
   return players.filter(
-    (player) => player.club_id === DEFAULT_CLUB_ID && player.squad_status === "pro",
+    (player) => player.club_id === managerClubId && player.squad_status === "pro",
   );
 }
 

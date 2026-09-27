@@ -1,11 +1,13 @@
 import {
   assertValidSquad,
-  NORDSTERN_ID,
   SEED_DIVISION,
+  SEED_OBERLIGA,
   type Squad,
   type TeamId,
 } from "@fussballmanager/shared";
 import { buildMatchView, parseViewSeed } from "./match-view.ts";
+
+const ALL_LEAGUE_SQUADS: Squad[] = [...SEED_DIVISION, ...SEED_OBERLIGA];
 
 export interface CareerMatchInput {
   seed: number;
@@ -31,8 +33,11 @@ export function parseCareerMatchBody(body: unknown): CareerMatchInput {
   const playerClubSquad = payload.playerClubSquad;
   if (playerClubSquad) {
     assertValidSquad(playerClubSquad);
-    if (playerClubSquad.team.id !== NORDSTERN_ID) {
-      throw new Error("playerClubSquad must belong to the player club");
+    if (
+      playerClubSquad.team.id !== homeTeamId &&
+      playerClubSquad.team.id !== awayTeamId
+    ) {
+      throw new Error("playerClubSquad must be home or away team");
     }
   }
 
@@ -40,8 +45,8 @@ export function parseCareerMatchBody(body: unknown): CareerMatchInput {
 }
 
 function squadsForCareerMatch(playerClubSquad?: Squad): Squad[] {
-  if (!playerClubSquad) return [...SEED_DIVISION];
-  return SEED_DIVISION.map((squad) =>
+  if (!playerClubSquad) return ALL_LEAGUE_SQUADS;
+  return ALL_LEAGUE_SQUADS.map((squad) =>
     squad.team.id === playerClubSquad.team.id ? playerClubSquad : squad,
   );
 }

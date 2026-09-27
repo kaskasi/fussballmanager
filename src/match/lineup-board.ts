@@ -16,6 +16,8 @@ import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
 import { careerPlayerInputs, suggestCareerSquad } from "../sim/career-engine-squad.ts";
+import { templateSquadForClub } from "../sim/league-divisions.ts";
+import type { TeamId } from "@fussballmanager/shared";
 
 export type LineupAssignments = Partial<Record<FormationSlotId, string>>;
 
@@ -44,11 +46,14 @@ export function clearPlayerFromLineup(
 export function defaultMatchLineup(
   players: readonly Player[],
   plan: SandboxPlan,
+  managerClubId: string = DEFAULT_CLUB_ID,
+  playerClubId?: TeamId,
 ): MatchLineupState {
+  const teamId = playerClubId ?? nordsternSquad.team.id;
   return {
     formation: plan.formation,
     plan,
-    assignments: suggestLineupAssignments(players, plan.formation),
+    assignments: suggestLineupAssignments(players, plan.formation, teamId, managerClubId),
   };
 }
 
@@ -56,15 +61,16 @@ export function normalizeMatchLineup(
   saved: MatchLineupState | undefined,
   players: readonly Player[],
   fallbackPlan: SandboxPlan,
+  managerClubId: string = DEFAULT_CLUB_ID,
 ): MatchLineupState {
   if (!saved?.formation || !saved.plan) {
-    return defaultMatchLineup(players, fallbackPlan);
+    return defaultMatchLineup(players, fallbackPlan, managerClubId);
   }
   const plan = { ...saved.plan, formation: saved.formation };
   const slots = getFormation(plan.formation);
   const proIds = new Set(
     players
-      .filter((player) => player.club_id === DEFAULT_CLUB_ID && player.squad_status === "pro")
+      .filter((player) => player.club_id === managerClubId && player.squad_status === "pro")
       .map((player) => player.id),
   );
   const assignments: LineupAssignments = {};
@@ -76,15 +82,17 @@ export function normalizeMatchLineup(
       used.add(playerId);
     }
   }
-  const filled = fillMissingAssignments(players, plan.formation, assignments);
+  const filled = fillMissingAssignments(players, plan.formation, assignments, managerClubId);
   return { formation: plan.formation, plan, assignments: filled };
 }
 
 export function suggestLineupAssignments(
   players: readonly Player[],
   formation: FormationId,
+  playerClubId: TeamId,
+  managerClubId: string = DEFAULT_CLUB_ID,
 ): LineupAssignments {
-  const squad = suggestCareerSquad(players, formation);
+  const squad = suggestCareerSquad(players, formation, playerClubId, managerClubId);
   if (!squad) return {};
   const assignments: LineupAssignments = {};
   for (const place of squad.starters) {
@@ -97,6 +105,7 @@ export function fillMissingAssignments(
   players: readonly Player[],
   formation: FormationId,
   assignments: LineupAssignments,
+  managerClubId: string = DEFAULT_CLUB_ID,
 ): LineupAssignments {
   const slots = getFormation(formation);
   const used = new Set(Object.values(assignments).filter(Boolean) as string[]);
@@ -104,7 +113,7 @@ export function fillMissingAssignments(
   const pool = players
     .filter(
       (player) =>
-        player.club_id === DEFAULT_CLUB_ID &&
+        player.club_id === managerClubId &&
         player.squad_status === "pro" &&
         !used.has(player.id),
     )
@@ -174,12 +183,13 @@ function pickBestForSlot(pool: Player[], slotRole: string, slotId: FormationSlot
 export function benchPlayers(
   players: readonly Player[],
   assignments: LineupAssignments,
+  managerClubId: string = DEFAULT_CLUB_ID,
 ): Player[] {
   const used = new Set(Object.values(assignments).filter(Boolean) as string[]);
   return players
     .filter(
       (player) =>
-        player.club_id === DEFAULT_CLUB_ID &&
+        player.club_id === managerClubId &&
         player.squad_status === "pro" &&
         !used.has(player.id),
     )
@@ -198,17 +208,20 @@ export function buildSquadFromAssignments(
   players: readonly Player[],
   plan: SandboxPlan,
   assignments: LineupAssignments,
+  playerClubId: TeamId,
+  managerClubId: string = DEFAULT_CLUB_ID,
 ): Squad | undefined {
-  const filled = fillMissingAssignments(players, plan.formation, assignments);
-  const input = careerPlayerInputs(players);
+  const filled = fillMissingAssignments(players, plan.formation, assignments, managerClubId);
+  const input = careerPlayerInputs(players, managerClubId);
   if (input.length === 0) return undefined;
 
+  const baseTemplate = templateSquadForClub(playerClubId) ?? nordsternSquad;
   const template =
-    plan.formation === nordsternSquad.tactics.formation
-      ? nordsternSquad
+    plan.formation === baseTemplate.tactics.formation
+      ? baseTemplate
       : {
-          ...nordsternSquad,
-          tactics: { ...nordsternSquad.tactics, formation: plan.formation },
+          ...baseTemplate,
+          tactics: { ...baseTemplate.tactics, formation: plan.formation },
         };
 
   const auto = buildCareerEngineSquad(template, input);
@@ -249,6 +262,8 @@ export function buildSquadFromAssignments(
 
   const seated: Squad = {
     ...auto,
+    team: template.team,
+    tactics: { ...auto.tactics, teamId: template.team.id },
     starters,
     bench,
   };

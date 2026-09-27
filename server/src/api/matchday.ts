@@ -1,14 +1,18 @@
 import {
   assertValidSquad,
-  NORDSTERN_ID,
   SEED_DIVISION,
+  SEED_OBERLIGA,
   type Squad,
+  type TeamId,
 } from "@fussballmanager/shared";
 import { playMatchday } from "../engine/matchday.ts";
+
+const ALL_LEAGUE_SQUADS: Squad[] = [...SEED_DIVISION, ...SEED_OBERLIGA];
 
 export interface MatchdayInput {
   matchday: number;
   baseSeed: number;
+  clubIds?: TeamId[];
   playerClubSquad?: Squad;
 }
 
@@ -16,6 +20,7 @@ export function parseMatchdayBody(body: unknown): MatchdayInput {
   const payload = body as {
     matchday?: number;
     baseSeed?: number;
+    clubIds?: TeamId[];
     playerClubSquad?: Squad;
   };
   const matchday = Number(payload.matchday ?? 1);
@@ -30,24 +35,37 @@ export function parseMatchdayBody(body: unknown): MatchdayInput {
   const playerClubSquad = payload.playerClubSquad;
   if (playerClubSquad) {
     assertValidSquad(playerClubSquad);
-    if (playerClubSquad.team.id !== NORDSTERN_ID) {
-      throw new Error("playerClubSquad must belong to the player club");
+    const clubIds = payload.clubIds ?? SEED_DIVISION.map((squad) => squad.team.id);
+    if (!clubIds.includes(playerClubSquad.team.id)) {
+      throw new Error("playerClubSquad must belong to a club in clubIds");
     }
   }
 
-  return { matchday, baseSeed, playerClubSquad };
+  return {
+    matchday,
+    baseSeed,
+    clubIds: payload.clubIds,
+    playerClubSquad,
+  };
 }
 
-function squadsForMatchday(playerClubSquad?: Squad) {
-  if (!playerClubSquad) return [...SEED_DIVISION];
-  return SEED_DIVISION.map((squad) =>
-    squad.team.id === playerClubSquad.team.id ? playerClubSquad : squad,
-  );
+function squadsForMatchday(clubIds: TeamId[], playerClubSquad?: Squad): Squad[] {
+  return clubIds.map((clubId) => {
+    const template = ALL_LEAGUE_SQUADS.find((squad) => squad.team.id === clubId);
+    if (!template) {
+      throw new Error(`Unknown club for matchday: ${clubId}`);
+    }
+    if (playerClubSquad?.team.id === clubId) {
+      return playerClubSquad;
+    }
+    return template;
+  });
 }
 
 export function runMatchday(input: MatchdayInput) {
+  const clubIds = input.clubIds ?? SEED_DIVISION.map((squad) => squad.team.id);
   const played = playMatchday({
-    squads: squadsForMatchday(input.playerClubSquad),
+    squads: squadsForMatchday(clubIds, input.playerClubSquad),
     matchday: input.matchday,
     baseSeed: input.baseSeed,
   });

@@ -67,6 +67,7 @@ import { FinancesScreen } from "./ui/screens/FinancesScreen.tsx";
 import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
 import type { SandboxPlan, TeamId } from "@fussballmanager/shared";
 import { listJobOffers } from "./board/job-offers.ts";
+import { switchManagerClub } from "./board/manager-club-switch.ts";
 import { startBoardSeason } from "./board/season-objectives.ts";
 import type { MatchLineupState } from "./match/lineup-board.ts";
 import { saveTacticsPreset, type TacticsPresetId } from "./match/tactics-presets.ts";
@@ -436,7 +437,7 @@ export default function App() {
   const handleAcceptJobOffer = useCallback(
     (clubId: TeamId) => {
       patchSession((current) => {
-        const offer = listJobOffers(current.board.employer_club_id, current.season).find(
+        const offer = listJobOffers(current.board.employer_club_id, current.season, current.league).find(
           (entry) => entry.clubId === clubId,
         );
         const bonus = offer?.signingBonus ?? 0;
@@ -445,12 +446,16 @@ export default function App() {
           clubId,
           current.season,
         );
-        return sessionWithEvent(
+        const switched = switchManagerClub(
           {
             ...current,
             board: nextBoard,
             finances: { ...current.finances, cash: current.finances.cash + bonus },
           },
+          clubId,
+        );
+        return sessionWithEvent(
+          switched,
           "info",
           `Neuer Job bei ${offer?.clubName ?? clubId} — Saisonziele gesetzt.`,
         );
@@ -867,7 +872,7 @@ export default function App() {
     });
   }, []);
 
-  const jobOffers = listJobOffers(board.employer_club_id, season);
+  const jobOffers = listJobOffers(board.employer_club_id, season, league);
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
   const foreignTarget = foreignPlayerId ? getBoardTarget(scoutBoard, foreignPlayerId) : null;
   const navActions: HubNavActions = {

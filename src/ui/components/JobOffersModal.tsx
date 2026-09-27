@@ -17,7 +17,10 @@ export function JobOffersModal({
         <header className="job-offers-head">
           <p className="eyebrow">F9.2 · Kein Game Over</p>
           <h2>Neuer Job</h2>
-          <p>Der Vorstand hat dich entlassen. Wähle einen neuen Verein — dein Savegame läuft weiter.</p>
+          <p>
+            Der Vorstand hat dich entlassen. Angebote nur aus deiner aktuellen Liga
+            {offers[0]?.divisionLabel ? ` (${offers[0].divisionLabel})` : ""} — dein Savegame läuft weiter.
+          </p>
         </header>
         <ul className="job-offers-list">
           {offers.map((offer) => (

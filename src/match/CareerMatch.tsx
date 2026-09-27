@@ -49,6 +49,10 @@ export function CareerMatch({
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
 
   useEffect(() => {
+    setPlayerClubSquad(null);
+  }, [setup.playerClubId, setup.homeTeamId, setup.awayTeamId]);
+
+  useEffect(() => {
     if (!playerClubSquad) return;
     return () => onNavActionChange(null);
   }, [playerClubSquad, onNavActionChange]);

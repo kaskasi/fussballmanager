@@ -31,6 +31,7 @@ import {
 import { MatchdayLineupAmbience } from "../ui/components/MatchdayLineupAmbience.tsx";
 import { buildOpponentLineupPreview } from "./opponent-lineup-preview.ts";
 import { clubShortName } from "../sim/league-week.ts";
+import { careerTeamId } from "../sim/rival-growth.ts";
 
 type CareerLineupScreenProps = {
   setup: CareerMatchSetup;
@@ -59,11 +60,12 @@ export function CareerLineupScreen({
   onConfirm,
   onNavActionChange,
 }: CareerLineupScreenProps) {
+  const managerClubId = careerTeamId(setup.playerClubId);
   const fallbackPlan = useMemo(() => loadTacticsPreset(tacticsPresets, 1), [tacticsPresets]);
   const [plan, setPlan] = useState<SandboxPlan>(() => matchLineup?.plan ?? fallbackPlan);
   const [activePreset, setActivePreset] = useState<TacticsPresetId | null>(matchLineup ? null : 1);
   const [assignments, setAssignments] = useState<LineupAssignments>(() =>
-    normalizeMatchLineup(matchLineup, players, fallbackPlan).assignments,
+    normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId).assignments,
   );
   const [dragPlayerId, setDragPlayerId] = useState<string | null>(null);
 
@@ -71,7 +73,10 @@ export function CareerLineupScreen({
     () => new Map(players.map((player) => [player.id, player])),
     [players],
   );
-  const bench = useMemo(() => benchPlayers(players, assignments), [players, assignments]);
+  const bench = useMemo(
+    () => benchPlayers(players, assignments, managerClubId),
+    [players, assignments, managerClubId],
+  );
   const opponentPreview = useMemo(
     () => buildOpponentLineupPreview(setup, rivalPlayers),
     [setup, rivalPlayers],
@@ -79,8 +84,8 @@ export function CareerLineupScreen({
   const playerTeamLabel = clubShortName(setup.playerClubId);
   const filledCount = lineupSlotCount(assignments, plan.formation);
   const squad = useMemo(
-    () => buildSquadFromAssignments(players, plan, assignments),
-    [players, plan, assignments],
+    () => buildSquadFromAssignments(players, plan, assignments, setup.playerClubId, managerClubId),
+    [players, plan, assignments, setup.playerClubId, managerClubId],
   );
 
   const persistLineup = useCallback(
@@ -115,11 +120,11 @@ export function CareerLineupScreen({
 
   const applyAuto = useCallback(
     (mode: "best_eleven" | "rotation" | "youth") => {
-      const next = autoLineupAssignments(players, plan.formation, mode);
+      const next = autoLineupAssignments(players, plan.formation, mode, managerClubId);
       setAssignments(next);
       persistLineup(next, plan);
     },
-    [players, plan, persistLineup],
+    [players, plan, persistLineup, managerClubId],
   );
 
   const changeFormation = useCallback(
@@ -127,11 +132,11 @@ export function CareerLineupScreen({
       const nextPlan = sandboxPlanFromFormation(formation);
       setActivePreset(null);
       setPlan(nextPlan);
-      const nextAssignments = fillMissingAssignments(players, formation, {});
+      const nextAssignments = fillMissingAssignments(players, formation, {}, managerClubId);
       setAssignments(nextAssignments);
       persistLineup(nextAssignments, nextPlan);
     },
-    [players, persistLineup],
+    [players, persistLineup, managerClubId],
   );
 
   useEffect(() => {
@@ -205,7 +210,7 @@ export function CareerLineupScreen({
                     const loaded = loadTacticsPreset(tacticsPresets, preset.id);
                     setPlan(loaded);
                     setActivePreset(preset.id);
-                    const next = fillMissingAssignments(players, loaded.formation, assignments);
+                    const next = fillMissingAssignments(players, loaded.formation, assignments, managerClubId);
                     setAssignments(next);
                     persistLineup(next, loaded);
                   }}

@@ -2,7 +2,6 @@ import {
   asPlayerId,
   matchdayFixtures,
   mergePlayerSeasonStats,
-  NORDSTERN_ID,
   squadAverageStrength,
   standings,
   topByStat,
@@ -332,10 +331,7 @@ export async function advanceLeagueWeek(
   const maxMatchday = totalSeasonMatchdays(current);
   const matchdayPlayed = current.matchday;
   const baseSeed = weeklySeed(masterSeed, season, calendarWeek);
-  const playerClubSquad =
-    current.player_club_id === NORDSTERN_ID
-      ? careerEngineSquadFromPlayers(careerPlayers)
-      : undefined;
+  const playerClubSquad = careerEngineSquadFromPlayers(careerPlayers, current.player_club_id);
   let payload = await fetchMatchdayPayload(
     matchdayPlayed,
     baseSeed,

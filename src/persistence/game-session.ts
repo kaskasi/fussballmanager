@@ -42,6 +42,7 @@ import {
   type CoachingStaff,
 } from "../staff/coaching-staff.ts";
 import { normalizeRivalPlayers } from "../sim/rival-growth.ts";
+import { switchManagerClub } from "../board/manager-club-switch.ts";
 import type { SeasonAwardsSnapshot } from "../sim/season-awards.ts";
 
 export const DEFAULT_SLOT = 1;
@@ -108,9 +109,19 @@ export function withFreshInbox(session: GameSession): GameSession {
   };
 }
 
+function syncManagerClubWithBoard(session: GameSession): GameSession {
+  if (
+    session.board.job_status === "employed" &&
+    session.board.employer_club_id !== session.league.player_club_id
+  ) {
+    return switchManagerClub(session, session.board.employer_club_id);
+  }
+  return session;
+}
+
 export function sessionFromSave(save: SaveGame): GameSession {
   const pipeline = save.state.pipeline ?? defaultPipelineState(save.state.week);
-  return {
+  const session: GameSession = {
     season: save.state.season,
     week: save.state.week,
     weekday: save.state.weekday ?? MONDAY,
@@ -142,6 +153,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     masterSeed: save.rng_state.master_seed,
     lastSeasonAwards: pipeline.last_season_awards,
   };
+  return syncManagerClubWithBoard(session);
 }
 
 export function saveFromSession(session: GameSession, base?: SaveGame, now = new Date()): SaveGame {
@@ -169,6 +181,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
       ...base,
       manifest: {
         ...base.manifest,
+        player_club_id: session.clubId,
         last_played: iso,
         current_week: { season: session.season, week: session.week },
       },

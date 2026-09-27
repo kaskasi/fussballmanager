@@ -20,12 +20,17 @@ export function divisionLabel(divisionId: DivisionEconomyId): string {
   return DIVISION_ECONOMY[divisionId].label;
 }
 
+export function templateSquadForClub(teamId: TeamId): Squad | undefined {
+  return ALL_LEAGUE_SQUADS.find((entry) => entry.team.id === teamId);
+}
+
 export function squadForLeagueClub(
   teamId: TeamId,
   rivalPlayers?: readonly Player[],
+  playerClubId?: TeamId,
 ): Squad | undefined {
-  const template = ALL_LEAGUE_SQUADS.find((entry) => entry.team.id === teamId);
-  if (!template || teamId === NORDSTERN_ID || !rivalPlayers?.length) {
+  const template = templateSquadForClub(teamId);
+  if (!template || teamId === playerClubId || !rivalPlayers?.length) {
     return template;
   }
   return squadWithRivalRoster(template, rivalPlayers) ?? template;

@@ -6,6 +6,16 @@ export async function fetchCareerMatchView(input: {
   awayTeamId: TeamId;
   playerClubSquad?: Squad;
 }): Promise<MatchView> {
+  if (
+    input.playerClubSquad &&
+    input.playerClubSquad.team.id !== input.homeTeamId &&
+    input.playerClubSquad.team.id !== input.awayTeamId
+  ) {
+    throw new Error(
+      "Aufstellung passt nicht zum Spiel — bitte Seite neu laden und Aufstellung erneut bestätigen.",
+    );
+  }
+
   const response = await fetch("/api/career-match", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -24,7 +34,13 @@ export async function fetchCareerMatchView(input: {
     } catch {
       // ignore non-JSON error bodies
     }
-    throw new Error(`Career match request failed (${response.status})${detail}`);
+    const staleServer =
+      detail.includes("must belong to the player club") ||
+      detail.includes("Unknown home or away team");
+    const hint = staleServer
+      ? " — bitte npm run dev:server neu starten (alter Match-Server läuft noch)."
+      : "";
+    throw new Error(`Career match request failed (${response.status})${detail}${hint}`);
   }
   return (await response.json()) as MatchView;
 }

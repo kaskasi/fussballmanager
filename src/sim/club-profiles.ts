@@ -177,11 +177,16 @@ function topPlayersFromSquad(
   return players.sort((left, right) => right.ca - left.ca).slice(0, limit);
 }
 
-function squadForProfile(teamId: TeamId, careerPlayers?: readonly Player[]): Squad | undefined {
-  if (teamId === NORDSTERN_ID && careerPlayers?.length) {
-    return careerEngineSquadFromPlayers(careerPlayers);
+function squadForProfile(
+  teamId: TeamId,
+  careerPlayers?: readonly Player[],
+  playerClubId?: TeamId,
+  rivalPlayers?: readonly Player[],
+): Squad | undefined {
+  if (teamId === playerClubId && careerPlayers?.length) {
+    return careerEngineSquadFromPlayers(careerPlayers, teamId);
   }
-  return squadForLeagueClub(teamId);
+  return squadForLeagueClub(teamId, rivalPlayers, playerClubId);
 }
 
 export function buildClubProfile(
@@ -195,9 +200,10 @@ export function buildClubProfile(
   },
 ): ClubProfile | null {
   const isPlayerClub = options?.playerClubId === teamId;
+  const playerClubId = options?.playerClubId ?? NORDSTERN_ID;
   const profileSquad = isPlayerClub
-    ? squadForProfile(teamId, options?.careerPlayers)
-    : squadForLeagueClub(teamId, options?.rivalPlayers);
+    ? squadForProfile(teamId, options?.careerPlayers, playerClubId, options?.rivalPlayers)
+    : squadForLeagueClub(teamId, options?.rivalPlayers, playerClubId);
   const team = profileSquad?.team;
   if (!team) return null;
 

@@ -16,4 +16,5 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_016_last_week_ca",
   "migration_017_finances",
   "migration_018_club_stadium",
+  "migration_019_fanbase",
 ] as const;

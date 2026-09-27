@@ -19,6 +19,12 @@ import {
   type StadiumTier,
 } from "../../stadium/club-stadium.ts";
 import { formatClubCash } from "../../economy/club-finances.ts";
+import {
+  fanbaseMood,
+  fanbaseMoodIcon,
+  fanbaseMoodLabel,
+} from "../../stadium/fanbase.ts";
+import { DEFAULT_FANBASE } from "../../stadium/club-stadium.ts";
 import { Hint } from "../components/Hint.tsx";
 
 /**
@@ -37,6 +43,9 @@ export function StadiumScreen({
   const capacity = stadiumTotalCapacity(stadium);
   const matchdayIncome = stadiumMatchdayIncome(stadium);
   const avgTicket = stadiumAverageTicket(stadium);
+  const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
+  const mood = fanbaseMood(fanbase);
+  const delta = stadium.fanbase_last_delta;
 
   const blockOrder = ["north", "west", "east", "south", "vip"] as const;
 
@@ -56,7 +65,23 @@ export function StadiumScreen({
         </div>
       </header>
 
-      <Hint text="Preise pro Block anpassen — höhere Tickets senken die Auslastung (F7.5-Vorbereitung)." block>
+      <section className="stadium-fanbase" aria-label="Fanbase">
+        <div className={`stadium-fanbase-card is-${mood}`}>
+          <span className="stadium-fanbase-icon" aria-hidden="true">{fanbaseMoodIcon(mood)}</span>
+          <div>
+            <strong>Fanbase {fanbase}</strong>
+            <p>{fanbaseMoodLabel(mood)} · Erfolg &amp; Tabellenplatz steuern die Zuschauerzahl</p>
+          </div>
+          {delta != null && delta !== 0 ? (
+            <span className={delta > 0 ? "stadium-fanbase-delta is-up" : "stadium-fanbase-delta is-down"}>
+              {delta > 0 ? "+" : ""}
+              {delta.toFixed(1)} diese Woche
+            </span>
+          ) : null}
+        </div>
+      </section>
+
+      <Hint text="Preise senken die Auslastung — Fanbase und Ergebnisse heben die Basis an." block>
         <section className="stadium-layout" aria-label="Stadion-Grundriss">
           <StadiumPitchPlan
             blocks={stadium.blocks}

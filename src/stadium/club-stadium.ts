@@ -14,7 +14,12 @@ export interface StadiumBlock {
 export interface ClubStadium {
   name: string;
   blocks: StadiumBlock[];
+  /** F7.5 — 25–95, drives baseline attendance before ticket pricing. */
+  fanbase?: number;
+  fanbase_last_delta?: number;
 }
+
+export const DEFAULT_FANBASE = 52;
 
 export const TICKET_PRICE_MIN = 8;
 export const TICKET_PRICE_MAX = 95;
@@ -24,8 +29,51 @@ export const FILL_RATE_MAX = 0.95;
 /** Price sensitivity — prep for F7.5 fanbase curve. */
 export const PRICE_ELASTICITY = 0.42;
 
+const SEED_BLOCKS: StadiumBlock[] = [
+  {
+    id: "north",
+    name: "Nordkurve",
+    tier: "standing",
+    capacity: 2_400,
+    ticket_price_eur: 12,
+    fill_rate: 0.85,
+  },
+  {
+    id: "south",
+    name: "Südkurve",
+    tier: "standing",
+    capacity: 2_200,
+    ticket_price_eur: 12,
+    fill_rate: 0.82,
+  },
+  {
+    id: "west",
+    name: "Westtribüne",
+    tier: "seating",
+    capacity: 2_200,
+    ticket_price_eur: 22,
+    fill_rate: 0.68,
+  },
+  {
+    id: "east",
+    name: "Osttribüne",
+    tier: "seating",
+    capacity: 800,
+    ticket_price_eur: 28,
+    fill_rate: 0.55,
+  },
+  {
+    id: "vip",
+    name: "Business-Loge",
+    tier: "vip",
+    capacity: 400,
+    ticket_price_eur: 65,
+    fill_rate: 0.72,
+  },
+];
+
 const DEFAULT_REFERENCE = Object.fromEntries(
-  defaultClubStadiumSeed().blocks.map((block) => [
+  SEED_BLOCKS.map((block) => [
     block.id,
     { ticket_price_eur: block.ticket_price_eur, fill_rate: block.fill_rate },
   ]),
@@ -52,56 +100,25 @@ export function tierIcon(tier: StadiumTier): string {
 }
 
 function defaultClubStadiumSeed(): ClubStadium {
-  return {
+  return applyStadiumFillRates({
     name: "Nordstern Arena",
-    blocks: [
-      {
-        id: "north",
-        name: "Nordkurve",
-        tier: "standing",
-        capacity: 2_400,
-        ticket_price_eur: 12,
-        fill_rate: 0.85,
-      },
-      {
-        id: "south",
-        name: "Südkurve",
-        tier: "standing",
-        capacity: 2_200,
-        ticket_price_eur: 12,
-        fill_rate: 0.82,
-      },
-      {
-        id: "west",
-        name: "Westtribüne",
-        tier: "seating",
-        capacity: 2_200,
-        ticket_price_eur: 22,
-        fill_rate: 0.68,
-      },
-      {
-        id: "east",
-        name: "Osttribüne",
-        tier: "seating",
-        capacity: 800,
-        ticket_price_eur: 28,
-        fill_rate: 0.55,
-      },
-      {
-        id: "vip",
-        name: "Business-Loge",
-        tier: "vip",
-        capacity: 400,
-        ticket_price_eur: 65,
-        fill_rate: 0.72,
-      },
-    ],
-  };
+    fanbase: DEFAULT_FANBASE,
+    blocks: SEED_BLOCKS.map((block) => ({ ...block })),
+  });
 }
 
 /** Default layout — totals ~8k seats and matches division economy ticket yield. */
 export function defaultClubStadium(): ClubStadium {
   return defaultClubStadiumSeed();
+}
+
+export function normalizeClubStadium(stadium: ClubStadium): ClubStadium {
+  const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
+  return applyStadiumFillRates({
+    ...stadium,
+    fanbase,
+    blocks: stadium.blocks ?? [],
+  });
 }
 
 export function referenceFillRate(blockId: string): number {
@@ -112,12 +129,34 @@ export function referenceTicketPrice(blockId: string): number {
   return DEFAULT_REFERENCE[blockId]?.ticket_price_eur ?? 18;
 }
 
-export function fillRateForTicketPrice(blockId: string, ticketPrice: number): number {
+export function fillRateForTicketPrice(
+  blockId: string,
+  ticketPrice: number,
+  fanbase: number = DEFAULT_FANBASE,
+): number {
   const ref = DEFAULT_REFERENCE[blockId];
   if (!ref || ticketPrice <= 0) return FILL_RATE_MAX;
+  const fanbaseMultiplier = 1 + (normalizeFanbaseIndex(fanbase) - DEFAULT_FANBASE) * 0.004;
+  const adjustedRef = ref.fill_rate * fanbaseMultiplier;
   const ratio = ticketPrice / ref.ticket_price_eur;
-  const raw = ref.fill_rate / Math.pow(ratio, PRICE_ELASTICITY);
+  const raw = adjustedRef / Math.pow(ratio, PRICE_ELASTICITY);
   return Math.min(FILL_RATE_MAX, Math.max(FILL_RATE_MIN, raw));
+}
+
+function normalizeFanbaseIndex(value: number): number {
+  return Math.min(95, Math.max(25, value));
+}
+
+export function applyStadiumFillRates(stadium: ClubStadium): ClubStadium {
+  const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
+  return {
+    ...stadium,
+    fanbase,
+    blocks: stadium.blocks.map((block) => ({
+      ...block,
+      fill_rate: fillRateForTicketPrice(block.id, block.ticket_price_eur, fanbase),
+    })),
+  };
 }
 
 export function stadiumBlockAttendees(block: StadiumBlock): number {
@@ -149,9 +188,10 @@ export function stadiumFromDivisionDefaults(divisionId: DivisionEconomyId): Club
         ...block,
         capacity: Math.round(block.capacity * scale),
         ticket_price_eur,
-        fill_rate: fillRateForTicketPrice(block.id, ticket_price_eur),
+        fill_rate: fillRateForTicketPrice(block.id, ticket_price_eur, DEFAULT_FANBASE),
       };
     }),
+    fanbase: DEFAULT_FANBASE,
   };
 }
 
@@ -186,7 +226,11 @@ export function adjustBlockTicketPrice(
         TICKET_PRICE_MAX,
         Math.max(TICKET_PRICE_MIN, block.ticket_price_eur + delta),
       );
-      const fill_rate = fillRateForTicketPrice(block.id, ticket_price_eur);
+      const fill_rate = fillRateForTicketPrice(
+        block.id,
+        ticket_price_eur,
+        stadium.fanbase ?? DEFAULT_FANBASE,
+      );
       return { ...block, ticket_price_eur, fill_rate };
     }),
   };

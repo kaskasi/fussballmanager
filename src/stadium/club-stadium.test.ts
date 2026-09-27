@@ -32,7 +32,9 @@ describe("club stadium", () => {
     const pricier = adjustBlockTicketPrice(stadium, "north", 8);
     const updated = pricier.blocks.find((block) => block.id === "north")!;
     expect(updated.fill_rate).toBeLessThan(north.fill_rate);
-    expect(updated.fill_rate).toBe(fillRateForTicketPrice("north", updated.ticket_price_eur));
+    expect(updated.fill_rate).toBe(
+      fillRateForTicketPrice("north", updated.ticket_price_eur, stadium.fanbase),
+    );
   });
 
   it("maps fill rate to a green-to-red heat color", () => {

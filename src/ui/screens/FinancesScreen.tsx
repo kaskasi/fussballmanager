@@ -18,10 +18,12 @@ import {
   seasonCashSparkline,
 } from "../../economy/finance-ledger.ts";
 import {
+  DEFAULT_FANBASE,
   stadiumMatchdayIncome,
   stadiumTotalCapacity,
   type ClubStadium,
 } from "../../stadium/club-stadium.ts";
+import { fanbaseMoodIcon, fanbaseMood } from "../../stadium/fanbase.ts";
 import { Hint } from "../components/Hint.tsx";
 
 /**
@@ -89,7 +91,8 @@ export function FinancesScreen({
         <button type="button" className="finances-stadium-btn" onClick={onOpenStadium}>
           <span aria-hidden="true">🏟️</span>
           <span>
-            {stadium.name} · {stadiumTotalCapacity(stadium).toLocaleString("de-DE")} Plätze · Heimspiel{" "}
+            {fanbaseMoodIcon(fanbaseMood(stadium.fanbase ?? DEFAULT_FANBASE))}{" "}
+            {stadium.name} · Fanbase {stadium.fanbase ?? DEFAULT_FANBASE} · Heimspiel{" "}
             {formatClubCash(stadiumMatchdayIncome(stadium))}
           </span>
           <span aria-hidden="true">→</span>

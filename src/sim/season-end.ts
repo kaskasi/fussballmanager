@@ -14,6 +14,7 @@ import {
   type AcademyFacility,
 } from "../youth/intake-generator.ts";
 import { applySeasonEndFinances } from "../economy/club-finances.ts";
+import { advanceClubFanbase, seasonEndFanbaseBonus } from "../stadium/fanbase.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 
 export interface SeasonEndResult {
@@ -73,12 +74,14 @@ export function runSeasonEnd(
   for (const record of loanReturns) {
     transferState = appendTransferRecord(transferState, record);
   }
+  const stadium = advanceClubFanbase(session.stadium, seasonEndFanbaseBonus(session.league));
   return {
     session: {
       ...session,
       players,
       finances,
       transferState,
+      stadium,
       league: resetLeagueSeason(session.league),
     },
     intakeCount: intake.length,

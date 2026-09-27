@@ -11,7 +11,7 @@ import {
 } from "../youth/decision-inbox.ts";
 import { emptyClubEvents, type ClubEvent } from "../inbox/club-events.ts";
 import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
-import { defaultClubStadium, type ClubStadium } from "../stadium/club-stadium.ts";
+import { defaultClubStadium, normalizeClubStadium, type ClubStadium } from "../stadium/club-stadium.ts";
 import { emptyTransferState, type TransferState } from "../transfers/negotiations.ts";
 
 function normalizeTransferState(state?: TransferState): TransferState {
@@ -95,7 +95,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     league: save.state.league ?? defaultLeagueState(),
     transferState: normalizeTransferState(pipeline.transfer_state),
     finances: pipeline.club_finances ?? defaultClubFinances(),
-    stadium: pipeline.club_stadium ?? defaultClubStadium(),
+    stadium: normalizeClubStadium(pipeline.club_stadium ?? defaultClubStadium()),
     clubEvents: pipeline.club_events ?? emptyClubEvents(),
     clubId: save.manifest.player_club_id,
     managerName: save.manifest.manager_name,

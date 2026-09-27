@@ -13,6 +13,7 @@ import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
 import { withClubEvent } from "../inbox/club-events.ts";
 import { loanReturnMessage } from "../transfers/transfer-history.ts";
 import { advanceInboxWeek } from "../youth/decision-inbox.ts";
+import { advanceClubFanbase, weeklyFanbaseDelta } from "../stadium/fanbase.ts";
 import { advanceProTrials } from "../youth/pro-trial.ts";
 import { simulateYouthWeek } from "../youth/youth-sim.ts";
 import { mergeCareerLeagueStats, applyCareerMatchWeek } from "./career-match-sync.ts";
@@ -81,6 +82,12 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
   );
   const trialStep = advanceProTrials(advanced.players, session.clubId, session.season, nextWeek);
   const playersWithMorale = applyDepartureMoralePressure(trialStep.players, advanced.inbox);
+  const fanbaseDelta = weeklyFanbaseDelta(
+    leagueWithCareerStats,
+    session.clubId,
+    leagueStep.playerFixture != null,
+  );
+  const stadium = advanceClubFanbase(session.stadium, fanbaseDelta);
   const isHomeMatchWeek =
     leagueStep.playerFixture?.homeTeamId === session.league.player_club_id;
   const financeStep = advanceWeeklyClubFinances(session.finances, {
@@ -90,7 +97,7 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     isHomeMatchWeek,
     season: session.season,
     week: nextWeek,
-    stadium: session.stadium,
+    stadium,
   });
   const finances = financeStep.finances;
   const playersWithCaStamp = playersWithMorale.map(stampLastWeekCa);
@@ -105,6 +112,7 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     youthInbox: advanced.inbox,
     league: leagueWithCareerStats,
     finances,
+    stadium,
   };
 
   let intakeCount = 0;

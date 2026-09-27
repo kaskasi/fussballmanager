@@ -2,6 +2,8 @@ import { appendSeasonSnapshot } from "../ui/player-profile.ts";
 import type { Player } from "../types/player.ts";
 import { resetSeasonMinutes } from "../player/minute-history.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
+import { resetAiBudgetsForSeason } from "../transfers/ai-transfer-market.ts";
+import { careerTeamId } from "./rival-growth.ts";
 import {
   appendTransferRecord,
   processLoanReturns,
@@ -96,6 +98,12 @@ export function runSeasonEnd(
   for (const record of loanReturns) {
     transferState = appendTransferRecord(transferState, record);
   }
+  const leagueNormalizedForBudgets = normalizeLeagueState(session.league);
+  const budgetClubIds = leagueNormalizedForBudgets.club_ids.map((teamId) => careerTeamId(teamId));
+  transferState = {
+    ...transferState,
+    ai_budgets: resetAiBudgetsForSeason(budgetClubIds, leagueNormalizedForBudgets.division_id),
+  };
   const stadium = advanceClubFanbase(session.stadium, seasonEndFanbaseBonus(session.league));
   const leagueNormalized = normalizeLeagueState(session.league);
   const pools = leagueNormalized.league_pools ?? defaultLeaguePools();

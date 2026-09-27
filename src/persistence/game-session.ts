@@ -25,6 +25,7 @@ function normalizeTransferState(state?: TransferState): TransferState {
     shortlist: base.shortlist ?? [],
     offers: base.offers ?? [],
     history: base.history ?? [],
+    ai_budgets: base.ai_budgets ?? {},
   };
 }
 import { MONDAY } from "../sim/day-calendar.ts";

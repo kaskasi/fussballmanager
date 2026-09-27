@@ -12,7 +12,9 @@ import { stampWeeklyGrowthBatch } from "../player/growth-history.ts";
 import { advanceScoutWeek } from "../scouting/scout-board.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
 import { withClubEvent } from "../inbox/club-events.ts";
+import { advanceAiTransferWeek } from "../transfers/ai-transfer-market.ts";
 import { loanReturnMessage } from "../transfers/transfer-history.ts";
+import { isTransferWindowOpen } from "./transfer-windows.ts";
 import { advanceInboxWeek } from "../youth/decision-inbox.ts";
 import { advanceClubFanbase, weeklyFanbaseDelta } from "../stadium/fanbase.ts";
 import { advanceProTrials } from "../youth/pro-trial.ts";
@@ -121,13 +123,32 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
   const playersWithCaStamp = playersWithGrowth.map(stampLastWeekCa);
 
   const seasonEnded = footballSeasonEnded;
-  const rivalPlayers = advanceRivalGrowthWeek(
+  let rivalPlayers = advanceRivalGrowthWeek(
     session.rivalPlayers,
     session.season,
     nextWeek,
     session.masterSeed,
     leagueStep.matchdayPlayed > 0,
   );
+
+  let transferState = session.transferState;
+  let clubEvents = session.clubEvents;
+  if (isTransferWindowOpen(nextWeek)) {
+    const aiTransfers = advanceAiTransferWeek({
+      rivalPlayers,
+      transferState,
+      leagueClubIds: leagueWithCareerStats.club_ids,
+      divisionId: leagueWithCareerStats.division_id,
+      season: session.season,
+      week: nextWeek,
+      masterSeed: session.masterSeed,
+    });
+    rivalPlayers = aiTransfers.rivalPlayers;
+    transferState = aiTransfers.transferState;
+    for (const message of aiTransfers.messages) {
+      clubEvents = withClubEvent(clubEvents, session.season, nextWeek, "transfer", `💱 ${message}`);
+    }
+  }
 
   let nextSession: GameSession = {
     ...session,
@@ -140,6 +161,8 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     finances,
     stadium,
     rivalPlayers,
+    transferState,
+    clubEvents,
     individualPrograms: individualStep.programs,
   };
 

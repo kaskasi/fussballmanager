@@ -12,14 +12,22 @@ export interface TransferOffer {
   status: "pending" | "accepted" | "rejected";
 }
 
+export interface AiClubBudget {
+  transfer_budget: number;
+  spent: number;
+  earned: number;
+}
+
 export interface TransferState {
   shortlist: string[];
   offers: TransferOffer[];
   history: TransferRecord[];
+  /** F5.6 — per-club AI transfer budgets (PRD 05.5). */
+  ai_budgets?: Record<string, AiClubBudget>;
 }
 
 export function emptyTransferState(): TransferState {
-  return { shortlist: [], offers: [], history: [] };
+  return { shortlist: [], offers: [], history: [], ai_budgets: {} };
 }
 
 export function toggleShortlist(state: TransferState, playerId: string): TransferState {

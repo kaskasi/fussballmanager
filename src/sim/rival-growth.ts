@@ -152,7 +152,7 @@ export function enginePlayerToCareer(
       wage_weekly: 1_200,
       bonus_goal: 0,
       bonus_appearance: 0,
-      until_season: 99,
+      until_season: 2 + Math.floor(rng() * 3),
       guaranteed_minutes_promise: "none",
     },
     market_value: 120_000,

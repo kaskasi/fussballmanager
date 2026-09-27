@@ -4,7 +4,7 @@ import { grantAchievement, ACHIEVEMENT } from "../player/achievements.ts";
 import { loanClubName } from "./loan-roster.ts";
 import type { TransferState } from "./negotiations.ts";
 
-export type TransferKind = "in" | "out" | "loan_out" | "loan_return";
+export type TransferKind = "in" | "out" | "loan_out" | "loan_return" | "ai";
 
 export interface TransferRecord {
   id: string;
@@ -30,6 +30,8 @@ export function transferKindIcon(kind: TransferKind): string {
       return "🔄";
     case "loan_return":
       return "↩️";
+    case "ai":
+      return "💱";
     default:
       return "💰";
   }
@@ -45,6 +47,8 @@ export function transferKindLabel(kind: TransferKind): string {
       return "Verliehen";
     case "loan_return":
       return "Rückkehr";
+    case "ai":
+      return "Liga-Transfer";
     default:
       return "Transfer";
   }
@@ -108,6 +112,27 @@ export function loanPlayerOut(
     fee,
   };
   return { player: loaned, record };
+}
+
+export function createAiTransferRecord(
+  player: Player,
+  fee: number,
+  season: number,
+  week: number,
+  fromClubId: string,
+  toClubId: string,
+): TransferRecord {
+  return {
+    id: `tr_${season}_${week}_ai_${player.id}`,
+    season,
+    week,
+    kind: "ai",
+    player_id: player.id,
+    player_name: formatPlayerName(player),
+    other_club_id: toClubId,
+    other_club_name: `${loanClubName(fromClubId)} → ${loanClubName(toClubId)}`,
+    fee,
+  };
 }
 
 export function createPurchaseRecord(

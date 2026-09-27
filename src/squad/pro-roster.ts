@@ -73,11 +73,11 @@ export function listProSquad(players: readonly Player[], clubId: string): ProSqu
     }));
 }
 
-export function sortProSquadRows(
-  rows: readonly ProSquadRow[],
+export function sortProSquadRows<T extends ProSquadRow>(
+  rows: readonly T[],
   key: ProSquadSortKey,
   direction: ProSquadSortDirection,
-): ProSquadRow[] {
+): T[] {
   return [...rows].sort(compareProSquadRows(key, direction));
 }
 

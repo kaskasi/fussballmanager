@@ -2,6 +2,11 @@ import { appendSeasonSnapshot } from "../ui/player-profile.ts";
 import type { Player } from "../types/player.ts";
 import { resetSeasonMinutes } from "../player/minute-history.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
+import {
+  appendTransferRecord,
+  processLoanReturns,
+  type TransferRecord,
+} from "../transfers/transfer-history.ts";
 import { resetLeagueSeason } from "../persistence/league-state.ts";
 import { SEASON_END_WEEK } from "../sim/game-calendar.ts";
 import {
@@ -13,6 +18,7 @@ import type { GameSession } from "../persistence/game-session.ts";
 export interface SeasonEndResult {
   session: GameSession;
   intakeCount: number;
+  loanReturns: TransferRecord[];
 }
 
 function nextIntakeIdStart(players: readonly Player[]): number {
@@ -36,8 +42,13 @@ export function runSeasonEnd(
     ...resetSeasonMinutes(player),
     age: player.age + 1,
   }));
+  const { players: afterReturns, records: loanReturns } = processLoanReturns(
+    aged,
+    endingSeason,
+    SEASON_END_WEEK,
+  );
 
-  const idStart = nextIntakeIdStart(aged);
+  const idStart = nextIntakeIdStart(afterReturns);
   const intake = generateYouthIntake({
     season: session.season,
     week: SEASON_END_WEEK,
@@ -50,14 +61,20 @@ export function runSeasonEnd(
     random: mulberry32(session.masterSeed ^ endingSeason),
   });
 
-  const players = refreshAllMarketValues([...aged, ...intake], session.season);
+  const players = refreshAllMarketValues([...afterReturns, ...intake], session.season);
+  let transferState = session.transferState;
+  for (const record of loanReturns) {
+    transferState = appendTransferRecord(transferState, record);
+  }
   return {
     session: {
       ...session,
       players,
+      transferState,
       league: resetLeagueSeason(session.league),
     },
     intakeCount: intake.length,
+    loanReturns,
   };
 }
 

@@ -2,10 +2,24 @@ import type { TrainingSlot } from "../development/training-units.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
 import type { Player } from "../types/player.ts";
 import { loadDemoRoster } from "../ui/demo-roster.ts";
-import { emptyInbox, generateWeeklyInbox, type YouthInboxState } from "../youth/decision-inbox.ts";
+import {
+  emptyInbox,
+  generateWeeklyInbox,
+  normalizeYouthInbox,
+  type YouthInboxState,
+} from "../youth/decision-inbox.ts";
 import { emptyClubEvents, type ClubEvent } from "../inbox/club-events.ts";
 import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
 import { emptyTransferState, type TransferState } from "../transfers/negotiations.ts";
+
+function normalizeTransferState(state?: TransferState): TransferState {
+  const base = state ?? emptyTransferState();
+  return {
+    shortlist: base.shortlist ?? [],
+    offers: base.offers ?? [],
+    history: base.history ?? [],
+  };
+}
 import { MONDAY } from "../sim/day-calendar.ts";
 import { defaultLeagueState, type LeagueState } from "./league-state.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
@@ -65,9 +79,9 @@ export function sessionFromSave(save: SaveGame): GameSession {
     players: save.players,
     trainingPlan: pipeline.training_plan,
     scoutBoard: pipeline.scout_board,
-    youthInbox: pipeline.youth_inbox ?? emptyInbox(save.state.week),
+    youthInbox: normalizeYouthInbox(pipeline.youth_inbox ?? emptyInbox(save.state.week)),
     league: save.state.league ?? defaultLeagueState(),
-    transferState: pipeline.transfer_state ?? emptyTransferState(),
+    transferState: normalizeTransferState(pipeline.transfer_state),
     finances: pipeline.club_finances ?? defaultClubFinances(),
     clubEvents: pipeline.club_events ?? emptyClubEvents(),
     clubId: save.manifest.player_club_id,

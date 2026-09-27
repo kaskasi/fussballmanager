@@ -23,6 +23,7 @@ export function loadLocalSave(slot: number): SaveGame | null {
   const pending = MIGRATIONS.some((migration) => !save.manifest.migrations_applied.includes(migration.id));
   if (pending || save.manifest.save_version < SAVE_VERSION) {
     save = applyMigrations(save, MIGRATIONS);
+    writeLocalSave(slot, save);
   }
   if (!save.state.pipeline) {
     save = {

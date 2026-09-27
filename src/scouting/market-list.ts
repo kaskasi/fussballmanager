@@ -1,12 +1,12 @@
+import { NORDSTERN_ID, SEED_DIVISION } from "@fussballmanager/shared";
 import type { Player, PositionPrimary } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
-import { generateYouthIntake } from "../youth/intake-generator.ts";
+import { generateDemoProSquad } from "../ui/demo-pro-squad.ts";
 import { confidenceLabel, type AbilityEstimate } from "./estimate-model.ts";
 
 /**
  * Market targets for Screen 3 (PRD 09.2, F4.1).
- * The wireframe counts are an example size. This demo list is smaller
- * but uses the same three headline buckets.
+ * Senior players from rival league clubs — not youth intake.
  */
 
 export type ConfidenceBucket = "known" | "unclear" | "unknown";
@@ -21,6 +21,47 @@ export interface MarketFilters {
   position: PositionPrimary | "all";
   confidence: ConfidenceBucket | "all";
 }
+
+export const DEFAULT_MARKET_FILTERS: MarketFilters = {
+  query: "",
+  position: "all",
+  confidence: "all",
+};
+
+export type MarketSortKey =
+  | "name"
+  | "position"
+  | "age"
+  | "ca"
+  | "marketValue"
+  | "seasonMinutes"
+  | "goals"
+  | "assists"
+  | "yellowCards"
+  | "tackles"
+  | "headers"
+  | "avgRating"
+  | "form";
+
+export type MarketSortDirection = "asc" | "desc";
+
+export interface MarketSort {
+  key: MarketSortKey;
+  direction: MarketSortDirection;
+}
+
+export const DEFAULT_MARKET_SORT: MarketSort = {
+  key: "ca",
+  direction: "desc",
+};
+
+const RIVAL_REGIONS: Record<string, string> = {
+  "tsv-holzweg": "Niedersachsen",
+  "union-elbstrand": "Hamburg",
+  "vfb-moorsiel": "Schleswig-Holstein",
+  "spvgg-kuestenholz": "Schleswig-Holstein",
+  "sv-rheinwacht": "Nordrhein-Westfalen",
+};
 
 export function confidenceBucket(range: number): ConfidenceBucket {
   if (range >= 40) return "unknown";
@@ -59,41 +100,55 @@ export function filterMarket(targets: readonly ScoutedTarget[], filters: MarketF
     return (
       formatPlayerName(target.player).toLowerCase().includes(query) ||
       target.player.position.toLowerCase().includes(query) ||
-      target.player.birth.region.toLowerCase().includes(query)
+      target.player.birth.region.toLowerCase().includes(query) ||
+      (target.player.club_id ?? "").toLowerCase().includes(query)
     );
   });
 }
 
-/** Forty-eight external players with mixed scout knowledge (two intake batches). */
+/** Senior squads from rival league clubs (excludes the player club). */
 export function loadMarketList(): ScoutedTarget[] {
-  const batches = [
-    generateYouthIntake({
-      season: 1,
-      week: 34,
-      seasonYear: 2026,
-      clubId: "cl_rival_pool",
-      nationality: "DE",
-      region: "Nordrhein",
-      facility: "academy_basic",
-      idStart: 101,
-      random: mulberry32(404),
-    }),
-    generateYouthIntake({
-      season: 1,
-      week: 34,
-      seasonYear: 2026,
-      clubId: "cl_rival_pool",
-      nationality: "DE",
-      region: "Bayern",
-      facility: "academy_basic",
-      idStart: 125,
-      random: mulberry32(505),
-    }),
-  ];
-  return batches.flat().map((player, index) => ({
-    player: { ...player, club_id: "cl_rival_pool", squad_status: "pro", contract: null },
-    estimate: estimateForSlot(index),
-  }));
+  const targets: ScoutedTarget[] = [];
+  let slot = 0;
+  let idStart = 1_000;
+
+  for (const squad of SEED_DIVISION) {
+    if (squad.team.id === NORDSTERN_ID) continue;
+    const clubId = careerClubId(squad.team.id);
+    const region = RIVAL_REGIONS[squad.team.id] ?? "Deutschland";
+    const pros = generateDemoProSquad({
+      clubId,
+      idStart,
+      random: mulberry32(hashTeam(squad.team.id)),
+    }).map((player) => ({
+      ...player,
+      club_id: clubId,
+      birth: { ...player.birth, region },
+    }));
+
+    for (const player of pros) {
+      targets.push({
+        player,
+        estimate: estimateForSlot(slot),
+      });
+      slot += 1;
+    }
+    idStart += 20;
+  }
+
+  return targets;
+}
+
+function careerClubId(teamId: string): string {
+  return `cl_${teamId.replace(/-/g, "_")}`;
+}
+
+function hashTeam(teamId: string): number {
+  let hash = 0;
+  for (const ch of teamId) {
+    hash = Math.imul(hash ^ ch.charCodeAt(0), 0x9e3779b1);
+  }
+  return hash >>> 0;
 }
 
 function estimateForSlot(index: number): AbilityEstimate {

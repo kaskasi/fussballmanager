@@ -80,8 +80,10 @@ export function DecisionInboxModal({
           </button>
         </header>
 
-        {inbox.overflowDropped > 0 ? (
-          <p className="inbox-overflow">⚠️ {inbox.overflowDropped} weitere Hinweise warten auf eine spätere Woche.</p>
+        {inbox.queue.length > 0 ? (
+          <p className="inbox-queue-note">
+            📥 {inbox.queue.length} weitere Hinweise in der Warteschlange · 1 pro Tag
+          </p>
         ) : null}
 
         {pending.length === 0 ? (

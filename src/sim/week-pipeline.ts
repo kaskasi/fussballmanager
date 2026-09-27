@@ -9,6 +9,8 @@ import { applyDepartureMoralePressure } from "../youth/departure-morale.ts";
 import { accumulateWeeklyGrowth, weeklyAttributeGrowth } from "../player/growth-history.ts";
 import { advanceScoutWeek } from "../scouting/scout-board.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
+import { withClubEvent } from "../inbox/club-events.ts";
+import { loanReturnMessage } from "../transfers/transfer-history.ts";
 import { advanceInboxWeek } from "../youth/decision-inbox.ts";
 import { simulateYouthWeek } from "../youth/youth-sim.ts";
 import { mergeCareerLeagueStats, applyCareerMatchWeek } from "./career-match-sync.ts";
@@ -92,7 +94,17 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
   let intakeCount = 0;
   if (seasonEnded) {
     const ended = runSeasonEnd(nextSession, session.season);
-    nextSession = ended.session;
+    let clubEvents = nextSession.clubEvents;
+    for (const record of ended.loanReturns) {
+      clubEvents = withClubEvent(
+        clubEvents,
+        record.season,
+        record.week,
+        "transfer",
+        loanReturnMessage(record),
+      );
+    }
+    nextSession = { ...ended.session, clubEvents };
     intakeCount = ended.intakeCount;
   }
 

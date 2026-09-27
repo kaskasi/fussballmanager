@@ -1797,7 +1797,8 @@ body {
 }
 
 .squad,
-.loans {
+.loans,
+.transfers {
   max-width: 52rem;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 2.5rem;
@@ -2021,6 +2022,104 @@ body {
 .loans-table-head,
 .loans-row {
   grid-template-columns: 2.5rem 1.4fr 3rem 3.5rem 3rem 1.4fr 3.5rem;
+}
+
+.transfers-head {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.transfers-head button {
+  border: 0;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.transfers-head h1 {
+  margin: 0;
+}
+
+.transfers-summary {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.transfers-section {
+  margin-bottom: 1.5rem;
+}
+
+.transfers-section h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.transfers-season-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.transfers-season-picker {
+  flex-shrink: 0;
+}
+
+.transfers-empty-inline {
+  margin: 0;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.transfers-history {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.transfers-history-row {
+  width: 100%;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  border: 0;
+  background: #fff;
+  border-radius: 0.9rem;
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
+}
+
+.transfers-history-row:hover {
+  background: rgb(236 253 245 / 55%);
+}
+
+.transfers-history-icon {
+  font-size: 1.25rem;
+}
+
+.transfers-history-main {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.transfers-history-main strong {
+  font-size: 0.95rem;
+}
+
+.transfers-history-main small {
+  color: #64748b;
+  font-weight: 600;
 }
 
 .loans-club {
@@ -2761,11 +2860,24 @@ body {
   font-size: 1rem;
 }
 
+.inbox-queue-note,
+.hub-inbox-queue-note,
 .inbox-overflow,
 .inbox-empty {
   margin: 0 0 0.75rem;
   font-weight: 700;
   color: #64748b;
+}
+
+.inbox-queue-note,
+.hub-inbox-queue-note {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+  color: #047857;
+}
+
+.hub-inbox-queue-note {
+  margin-bottom: 0.35rem;
 }
 
 .inbox-overflow {

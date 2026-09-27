@@ -1,12 +1,13 @@
 import { ACHIEVEMENT, grantAchievement } from "../player/achievements.ts";
 import { signYouthContract } from "../player/youth-contract.ts";
 import { estimateCa } from "../transfers/market-value.ts";
+import { loanPlayerOut, type TransferRecord } from "../transfers/transfer-history.ts";
 import type { Player } from "../types/player.ts";
 import type { CoachIcon } from "./academy.ts";
 import { departureReasonLabel, departureRiskReasons } from "./departure-risk.ts";
 import type { YouthReport } from "./youth-sim.ts";
 
-/** PRD 03.4 — max decision items per week, departure warnings count. */
+/** PRD 03.4 — max open decisions at once; extra candidates wait in queue. */
 export const MAX_INBOX_ITEMS = 4;
 
 export type DecisionAction = "loan" | "promote" | "contract" | "training_focus" | "dismiss";
@@ -29,8 +30,9 @@ export interface DecisionInboxItem {
 export interface YouthInboxState {
   week: number;
   items: DecisionInboxItem[];
+  /** Priority-sorted backlog; one item moves to `items` per in-game day. */
+  queue: DecisionInboxItem[];
   resolvedIds: string[];
-  overflowDropped: number;
   coachIcons: Record<string, CoachIcon>;
   lastReport: YouthReport | null;
 }
@@ -43,7 +45,18 @@ const KIND_PRIORITY: Record<InboxItemKind, number> = {
 };
 
 export function emptyInbox(week: number): YouthInboxState {
-  return { week, items: [], resolvedIds: [], overflowDropped: 0, coachIcons: {}, lastReport: null };
+  return { week, items: [], queue: [], resolvedIds: [], coachIcons: {}, lastReport: null };
+}
+
+/** Older browser saves may lack `queue` until migration 013 is persisted. */
+export function normalizeYouthInbox(inbox: YouthInboxState): YouthInboxState {
+  return {
+    ...inbox,
+    items: inbox.items ?? [],
+    queue: inbox.queue ?? [],
+    resolvedIds: inbox.resolvedIds ?? [],
+    coachIcons: inbox.coachIcons ?? {},
+  };
 }
 
 export function pendingInboxItems(inbox: YouthInboxState): DecisionInboxItem[] {
@@ -54,15 +67,38 @@ export function inboxSummary(inbox: YouthInboxState): {
   pending: number;
   recommendations: number;
   departureRisks: number;
-  overflowDropped: number;
+  queued: number;
 } {
   const open = pendingInboxItems(inbox);
   return {
     pending: open.length,
     recommendations: open.filter((item) => item.kind !== "departure_risk").length,
     departureRisks: open.filter((item) => item.kind === "departure_risk").length,
-    overflowDropped: inbox.overflowDropped,
+    queued: inbox.queue.length,
   };
+}
+
+export function deliverDailyInbox(inbox: YouthInboxState): YouthInboxState {
+  const normalized = normalizeYouthInbox(inbox);
+  const pending = pendingInboxItems(normalized);
+  if (pending.length >= MAX_INBOX_ITEMS || normalized.queue.length === 0) {
+    return normalized;
+  }
+  const [next, ...rest] = normalized.queue;
+  if (!next) return normalized;
+  return {
+    ...normalized,
+    items: [...normalized.items, next],
+    queue: rest,
+  };
+}
+
+export function deliverInboxForDays(inbox: YouthInboxState, days: number): YouthInboxState {
+  let current = inbox;
+  for (let index = 0; index < days; index += 1) {
+    current = deliverDailyInbox(current);
+  }
+  return current;
 }
 
 export function inboxItemLabel(item: DecisionInboxItem): string {
@@ -302,10 +338,7 @@ export function generateWeeklyInbox(
     return true;
   });
 
-  const items = unique.slice(0, MAX_INBOX_ITEMS);
-  const overflowDropped = Math.max(0, unique.length - MAX_INBOX_ITEMS);
-
-  return { week, items, resolvedIds: [], overflowDropped, coachIcons, lastReport: report };
+  return { week, items: [], queue: unique, resolvedIds: [], coachIcons, lastReport: report };
 }
 
 export function applyInboxDecision(
@@ -314,7 +347,7 @@ export function applyInboxDecision(
   itemId: string,
   action: DecisionAction,
   season: number,
-): { inbox: YouthInboxState; players: Player[] } {
+): { inbox: YouthInboxState; players: Player[]; transferRecord?: TransferRecord } {
   const item = inbox.items.find((entry) => entry.id === itemId);
   if (!item || inbox.resolvedIds.includes(itemId)) {
     return { inbox, players: [...players] };
@@ -324,6 +357,7 @@ export function applyInboxDecision(
   }
 
   let nextPlayers = [...players];
+  let transferRecord: TransferRecord | undefined;
   const player = nextPlayers.find((entry) => entry.id === item.playerId);
   if (!player) {
     return {
@@ -333,23 +367,19 @@ export function applyInboxDecision(
   }
 
   switch (action) {
-    case "loan":
-      nextPlayers = nextPlayers.map((entry) => {
-        if (entry.id !== item.playerId) return entry;
-        const loaned = {
-          ...entry,
-          squad_status: "loaned_out" as const,
-          current_loan: {
-            from_club: entry.club_id ?? "cl_fc_nordstern",
-            to_club: "cl_loan_partner",
-            until_season: season + 1,
-            has_option: true,
-            minute_guarantee: 900,
-          },
-        };
-        return grantAchievement(loaned, ACHIEVEMENT.loanMove);
-      });
+    case "loan": {
+      const loaned = loanPlayerOut(
+        player,
+        season,
+        item.week,
+        player.club_id ?? "cl_fc_nordstern",
+      );
+      transferRecord = loaned.record;
+      nextPlayers = nextPlayers.map((entry) =>
+        entry.id === item.playerId ? loaned.player : entry,
+      );
       break;
+    }
     case "promote":
       if (player.squad_status === "u17") {
         nextPlayers = nextPlayers.map((entry) =>
@@ -414,6 +444,7 @@ export function applyInboxDecision(
   return {
     inbox: { ...inbox, resolvedIds: [...inbox.resolvedIds, itemId] },
     players: nextPlayers,
+    transferRecord,
   };
 }
 
@@ -436,8 +467,15 @@ export function advanceInboxWeek(
 
   const remaining = players.filter((player) => !lost.includes(player.id));
   const fresh = generateWeeklyInbox(remaining, nextWeek, masterSeed, report);
+  const carriedQueue = inbox.queue.filter(
+    (item) => !inbox.resolvedIds.includes(item.id) && !inbox.items.some((open) => open.id === item.id),
+  );
 
-  return { inbox: fresh, players: remaining, lostPlayerIds: lost };
+  return {
+    inbox: { ...fresh, queue: [...carriedQueue, ...fresh.queue] },
+    players: remaining,
+    lostPlayerIds: lost,
+  };
 }
 
 function inboxRoll(masterSeed: number, week: number, playerId: string, salt: string): number {

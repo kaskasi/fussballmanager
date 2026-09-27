@@ -10,6 +10,9 @@ import { migration009CareerLeagueSync } from "./migration_009_career_league_sync
 import { migration010ClubFinances } from "./migration_010_club_finances.ts";
 import { migration011SquadSeasonStats } from "./migration_011_squad_season_stats.ts";
 import { migration012Weekday } from "./migration_012_weekday.ts";
+import { migration013InboxQueue } from "./migration_013_inbox_queue.ts";
+import { migration014ScoutMarketRivals } from "./migration_014_scout_market_rivals.ts";
+import { migration015TransferHistory } from "./migration_015_transfer_history.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -29,6 +32,9 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration010ClubFinances,
   migration011SquadSeasonStats,
   migration012Weekday,
+  migration013InboxQueue,
+  migration014ScoutMarketRivals,
+  migration015TransferHistory,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

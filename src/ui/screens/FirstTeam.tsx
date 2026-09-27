@@ -8,6 +8,7 @@ import {
   type ProSquadSortKey,
 } from "../../squad/pro-roster.ts";
 import { Hint } from "../components/Hint.tsx";
+import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 
 /**
  * WIREFRAME: PRD 09 — Profikader
@@ -87,19 +88,19 @@ export function FirstTeam({
           <table className="squad-table">
             <thead>
               <tr>
-                <SortHeader label="Name" sortKey="name" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} align="left" />
-                <SortHeader label="Pos" sortKey="position" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SortHeader label="Alt" sortKey="age" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SortHeader label="CA" sortKey="ca" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SortHeader label="Wert" sortKey="marketValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SortHeader label="Min" sortKey="seasonMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SortHeader label="T" sortKey="goals" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SortHeader label="A" sortKey="assists" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SortHeader label="K" sortKey="yellowCards" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SortHeader label="Tkl" sortKey="tackles" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SortHeader label="Kop" sortKey="headers" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SortHeader label="Ø" sortKey="avgRating" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SortHeader label="Form" sortKey="form" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Name" sortKey="name" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} align="left" />
+                <SquadSortHeader label="Pos" sortKey="position" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Alt" sortKey="age" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="CA" sortKey="ca" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Wert" sortKey="marketValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Min" sortKey="seasonMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="T" sortKey="goals" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="A" sortKey="assists" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="K" sortKey="yellowCards" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Tkl" sortKey="tackles" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Kop" sortKey="headers" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Ø" sortKey="avgRating" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Form" sortKey="form" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
               </tr>
             </thead>
             <tbody>
@@ -127,47 +128,6 @@ export function FirstTeam({
         </div>
       )}
     </main>
-  );
-}
-
-function SortHeader({
-  label,
-  sortKey,
-  activeKey,
-  direction,
-  onSort,
-  align = "right",
-}: {
-  label: string;
-  sortKey: ProSquadSortKey;
-  activeKey: ProSquadSortKey;
-  direction: ProSquadSortDirection;
-  onSort: (key: ProSquadSortKey) => void;
-  align?: "left" | "right";
-}) {
-  const active = sortKey === activeKey;
-  return (
-    <th
-      scope="col"
-      className={align === "left" ? "squad-col-name" : undefined}
-      aria-sort={active ? (direction === "asc" ? "ascending" : "descending") : "none"}
-    >
-      <button
-        type="button"
-        className={`squad-sort-header${active ? " is-active" : ""}${align === "left" ? " is-left" : ""}`}
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          onSort(sortKey);
-        }}
-      >
-        <span>{label}</span>
-        <span className="squad-sort-icons" aria-hidden="true">
-          <span className={active && direction === "asc" ? "is-active" : ""}>▲</span>
-          <span className={active && direction === "desc" ? "is-active" : ""}>▼</span>
-        </span>
-      </button>
-    </th>
   );
 }
 

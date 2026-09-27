@@ -38,7 +38,7 @@ export function PipelineDashboard({
   onSelectPlayer,
   onOpenYouth,
   onOpenScouting,
-  onOpenLoans,
+  onOpenTransfers,
   onOpenSquad,
   onOpenInbox,
   onSelectScoutTarget,
@@ -59,7 +59,7 @@ export function PipelineDashboard({
   onSelectPlayer: (playerId: string) => void;
   onOpenYouth: () => void;
   onOpenScouting: () => void;
-  onOpenLoans: () => void;
+  onOpenTransfers: () => void;
   onOpenSquad: () => void;
   onOpenInbox: (itemId?: string) => void;
   onSelectScoutTarget: (playerId: string) => void;
@@ -216,10 +216,10 @@ export function PipelineDashboard({
             <span>👁️</span>
             <span>🟢 {activeScouts} Scout-Ziele aktiv · Marktliste</span>
           </button>
-          <button type="button" className="pipeline-tile" onClick={onOpenLoans}>
-            <span>🔄</span>
+          <button type="button" className="pipeline-tile" onClick={onOpenTransfers}>
+            <span>💰</span>
             <span>
-              {loanCount > 0 ? `${loanCount} verliehen · Ausleihen` : "Ausleihen · noch leer"}
+              {loanCount > 0 ? `${loanCount} verliehen · Transfers` : "Transfers · Historie"}
             </span>
           </button>
         </div>

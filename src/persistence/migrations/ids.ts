@@ -10,4 +10,7 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_010_club_finances",
   "migration_011_squad_season_stats",
   "migration_012_weekday",
+  "migration_013_inbox_queue",
+  "migration_014_scout_market_rivals",
+  "migration_015_transfer_history",
 ] as const;

@@ -54,7 +54,7 @@ describe("game session", () => {
     persistSession(session, 1);
     const loaded = loadLocalSave(1);
     expect(loaded?.state.pipeline?.scout_board).toEqual(createScoutBoard());
-    expect(loaded?.state.pipeline?.youth_inbox.items.length).toBeGreaterThan(0);
+    expect(loaded?.state.pipeline?.youth_inbox.queue.length).toBeGreaterThan(0);
     expect(sessionFromSave(loaded!)).toMatchObject({
       week: session.week,
       season: session.season,
@@ -81,7 +81,7 @@ describe("game session", () => {
     const loaded = loadLocalSave(1);
     expect(loaded?.manifest.save_version).toBe(SAVE_VERSION);
     expect(loaded?.state.pipeline?.training_plan).toHaveLength(15);
-    expect(loaded?.state.pipeline?.youth_inbox.items.length).toBeGreaterThan(0);
+    expect(loaded?.state.pipeline?.youth_inbox.queue.length).toBeGreaterThan(0);
     removeLocalSave(1);
   });
 });

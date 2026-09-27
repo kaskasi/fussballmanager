@@ -10,14 +10,18 @@ import {
 describe("market list", () => {
   const market = loadMarketList();
 
-  it("loads 48 external players", () => {
-    expect(market).toHaveLength(48);
-    expect(market.every((target) => target.player.club_id === "cl_rival_pool")).toBe(true);
+  it("loads senior players from rival league clubs", () => {
+    expect(market.length).toBeGreaterThan(40);
+    expect(market.every((target) => target.player.squad_status === "pro")).toBe(true);
+    expect(market.every((target) => target.player.age >= 19)).toBe(true);
+    expect(market.every((target) => target.player.club_id !== "cl_fc_nordstern")).toBe(true);
+    const clubs = new Set(market.map((target) => target.player.club_id));
+    expect(clubs.size).toBeGreaterThan(1);
   });
 
   it("counts headline buckets from uncertainty range", () => {
     const counts = headlineCounts(market);
-    expect(counts.known + counts.unclear + counts.unknown).toBe(48);
+    expect(counts.known + counts.unclear + counts.unknown).toBe(market.length);
     expect(confidenceBucket(40)).toBe("unknown");
     expect(confidenceBucket(25)).toBe("unclear");
     expect(confidenceBucket(8)).toBe("known");

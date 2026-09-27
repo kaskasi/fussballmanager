@@ -1,20 +1,21 @@
 import { useMemo, useState } from "react";
 import type { Player, PositionPrimary } from "../../types/player.ts";
-import { formatPlayerName, roundStat } from "../../types/player-display.ts";
-import { estimateCa } from "../../transfers/market-value.ts";
+import { formatMarketValueShort, type ProSquadSortDirection, type ProSquadSortKey } from "../../squad/pro-roster.ts";
+import {
+  listYouthSquad,
+  sortYouthSquadRows,
+  type YouthSquadRow,
+} from "../../squad/youth-roster.ts";
+import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 import {
   ACADEMY_FACILITIES,
   facilityById,
   facilityGate,
-  sortCampusBadges,
-  type CampusBadge,
 } from "../../youth/academy.ts";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
 import type { YouthInboxState } from "../../youth/decision-inbox.ts";
 import type { YouthReport } from "../../youth/youth-sim.ts";
-import { coachIconForPlayer, DecisionInboxModal, hasDepartureRisk } from "../components/DecisionInbox.tsx";
-import { pendingInboxItems } from "../../youth/decision-inbox.ts";
-import type { DecisionAction } from "../../youth/decision-inbox.ts";
+import { coachIconForPlayer, hasDepartureRisk } from "../components/DecisionInbox.tsx";
 
 /**
  * WIREFRAME: PRD 09.2 Screen 2 — Youth Campus (2D iso)
@@ -38,34 +39,26 @@ const POSITION_ORDER: PositionPrimary[] = [
   "CF",
 ];
 
-interface YearRow extends CampusBadge {
-  position: PositionPrimary;
-  displayName: string;
-  age: number;
-  ca: number;
-  region: string;
-}
+const DEFAULT_YOUTH_SORT: { key: ProSquadSortKey; direction: ProSquadSortDirection } = {
+  key: "position",
+  direction: "asc",
+};
 
 export function YouthCampus({
   players,
   youthInbox,
-  onInboxDecision,
   onSelectPlayer,
+  onDepartureRisk,
   yearOpen,
   onYearOpenChange,
 }: {
   players: Player[];
   youthInbox: YouthInboxState;
-  onInboxDecision: (itemId: string, action: DecisionAction) => void;
   onSelectPlayer: (playerId: string) => void;
+  onDepartureRisk: () => void;
   yearOpen: boolean;
   onYearOpenChange: (open: boolean) => void;
 }) {
-  const [inboxOpen, setInboxOpen] = useState(false);
-  const openInbox = () => {
-    if (pendingInboxItems(youthInbox).length > 0) setInboxOpen(true);
-  };
-
   return (
     <main className="campus">
       {yearOpen ? (
@@ -74,21 +67,12 @@ export function YouthCampus({
           youthInbox={youthInbox}
           report={youthInbox.lastReport}
           onBack={() => onYearOpenChange(false)}
-          onOpenInbox={openInbox}
-          onDeparture={openInbox}
+          onDepartureRisk={onDepartureRisk}
           onSelectPlayer={onSelectPlayer}
         />
       ) : (
         <CampusGround onOpenYear={() => onYearOpenChange(true)} />
       )}
-      {inboxOpen && pendingInboxItems(youthInbox).length > 0 ? (
-        <DecisionInboxModal
-          inbox={youthInbox}
-          players={players}
-          onDecision={onInboxDecision}
-          onClose={() => setInboxOpen(false)}
-        />
-      ) : null}
     </main>
   );
 }
@@ -160,34 +144,45 @@ function YearGroup({
   youthInbox,
   report,
   onBack,
-  onOpenInbox,
-  onDeparture,
+  onDepartureRisk,
   onSelectPlayer,
 }: {
   players: readonly Player[];
   youthInbox: YouthInboxState;
   report: YouthReport | null;
   onBack: () => void;
-  onOpenInbox: () => void;
-  onDeparture: () => void;
+  onDepartureRisk: () => void;
   onSelectPlayer: (playerId: string) => void;
 }) {
   const [team, setTeam] = useState<YouthTeam>("u17");
   const [position, setPosition] = useState<PositionPrimary | "all">("all");
+  const [sortKey, setSortKey] = useState<ProSquadSortKey>(DEFAULT_YOUTH_SORT.key);
+  const [sortDirection, setSortDirection] = useState<ProSquadSortDirection>(DEFAULT_YOUTH_SORT.direction);
 
   const u17Count = useMemo(() => players.filter((player) => player.squad_status === "u17").length, [players]);
   const u19Count = useMemo(() => players.filter((player) => player.squad_status === "u19").length, [players]);
 
-  const rows = useMemo(() => rosterRows(players, youthInbox, team), [players, youthInbox, team]);
+  const rows = useMemo(() => enrichYouthRows(listYouthSquad(players, team), youthInbox), [players, youthInbox, team]);
   const positions = useMemo(() => positionsInRoster(rows), [rows]);
   const visible = useMemo(() => {
     const filtered = position === "all" ? rows : rows.filter((row) => row.position === position);
-    return sortCampusBadges(filtered);
-  }, [rows, position]);
+    return sortYouthSquadRows(filtered, sortKey, sortDirection);
+  }, [rows, position, sortKey, sortDirection]);
+
+  const toggleSort = (key: ProSquadSortKey) => {
+    if (sortKey === key) {
+      setSortDirection((current) => (current === "desc" ? "asc" : "desc"));
+      return;
+    }
+    setSortKey(key);
+    setSortDirection(key === "name" || key === "position" ? "asc" : "desc");
+  };
 
   const switchTeam = (next: YouthTeam) => {
     setTeam(next);
     setPosition("all");
+    setSortKey(DEFAULT_YOUTH_SORT.key);
+    setSortDirection(DEFAULT_YOUTH_SORT.direction);
   };
 
   return (
@@ -198,9 +193,6 @@ function YearGroup({
           ←
         </button>
         <h1>🏫 Jugendkader</h1>
-        <button type="button" className="campus-inbox-open" onClick={onOpenInbox}>
-          📥 Inbox
-        </button>
       </div>
 
       <div className="segmented-control" role="tablist" aria-label="Jugendteam wählen">
@@ -254,10 +246,19 @@ function YearGroup({
           <table className="squad-table youth-roster-table" aria-label={`${team.toUpperCase()} Kader`}>
             <thead>
               <tr>
-                <th scope="col" className="squad-col-name">Name</th>
-                <th scope="col">Pos</th>
-                <th scope="col">Alt</th>
-                <th scope="col">CA</th>
+                <SquadSortHeader label="Name" sortKey="name" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} align="left" />
+                <SquadSortHeader label="Pos" sortKey="position" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Alt" sortKey="age" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="CA" sortKey="ca" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Wert" sortKey="marketValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Min" sortKey="seasonMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="T" sortKey="goals" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="A" sortKey="assists" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="K" sortKey="yellowCards" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Tkl" sortKey="tackles" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Kop" sortKey="headers" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Ø" sortKey="avgRating" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Form" sortKey="form" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
                 <th scope="col">Region</th>
                 <th scope="col">Coach</th>
               </tr>
@@ -267,7 +268,7 @@ function YearGroup({
                 <tr
                   key={row.playerId}
                   className={row.departureRisk ? "squad-table-row is-risk" : "squad-table-row"}
-                  onClick={() => (row.departureRisk ? onDeparture() : onSelectPlayer(row.playerId))}
+                  onClick={() => (row.departureRisk ? onDepartureRisk() : onSelectPlayer(row.playerId))}
                 >
                   <td className="squad-col-name">
                     {row.departureRisk ? <span className="youth-risk-flag" aria-hidden="true">🚩 </span> : null}
@@ -275,7 +276,18 @@ function YearGroup({
                   </td>
                   <td>{row.position}</td>
                   <td>{row.age}</td>
-                  <td className="squad-col-ca">{roundStat(row.ca)}</td>
+                  <td className="squad-col-ca">{row.ca}</td>
+                  <td className="squad-col-value">{formatMarketValueShort(row.marketValue)}</td>
+                  <td>{row.seasonMinutes}</td>
+                  <td>{row.goals}</td>
+                  <td>{row.assists}</td>
+                  <td>{row.yellowCards}</td>
+                  <td>{row.tackles}</td>
+                  <td>{row.headers}</td>
+                  <td>{row.avgRating?.toFixed(1) ?? "—"}</td>
+                  <td className={`squad-form is-${formTone(row.form)}`} title={`Form ${row.form}`}>
+                    {formMark(row.form)}
+                  </td>
                   <td className="youth-col-region">{row.region}</td>
                   <td className="youth-col-coach" title={`Coach ${row.coachIcon}`}>{row.coachIcon}</td>
                 </tr>
@@ -304,7 +316,27 @@ function PositionChip({
   );
 }
 
-function positionsInRoster(rows: readonly YearRow[]): PositionPrimary[] {
+function formMark(form: number): string {
+  if (form >= 2) return "●";
+  if (form >= -1) return "▲";
+  return "◆";
+}
+
+function formTone(form: number): "good" | "mid" | "low" {
+  if (form >= 2) return "good";
+  if (form >= -1) return "mid";
+  return "low";
+}
+
+function enrichYouthRows(rows: YouthSquadRow[], inbox: YouthInboxState): YouthSquadRow[] {
+  return rows.map((row) => ({
+    ...row,
+    coachIcon: coachIconForPlayer(inbox, row.playerId),
+    departureRisk: hasDepartureRisk(inbox, row.playerId),
+  }));
+}
+
+function positionsInRoster(rows: readonly YouthSquadRow[]): PositionPrimary[] {
   const present = new Set(rows.map((row) => row.position));
   return POSITION_ORDER.filter((slot) => present.has(slot));
 }
@@ -344,17 +376,3 @@ function IsoBuilding({ facility }: { facility: AcademyFacility }) {
   );
 }
 
-function rosterRows(players: readonly Player[], inbox: YouthInboxState, team: YouthTeam): YearRow[] {
-  return players
-    .filter((player) => player.squad_status === team)
-    .map((player) => ({
-      playerId: player.id,
-      position: player.position,
-      displayName: formatPlayerName(player),
-      age: player.age,
-      ca: roundStat(estimateCa(player.attributes, player.position)),
-      region: player.birth.region,
-      coachIcon: coachIconForPlayer(inbox, player.id),
-      departureRisk: hasDepartureRisk(inbox, player.id),
-    }));
-}

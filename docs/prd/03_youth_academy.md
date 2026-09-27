@@ -1,7 +1,7 @@
 # /docs/prd/03_youth_academy.md
 
-**Version:** 1.1
-**Last Updated:** 2026-09-22
+**Version:** 1.2
+**Last Updated:** 2026-09-27
 **Status:** Final
 
 ---
@@ -28,7 +28,7 @@ Spezifikation der Jugendakademie: Intake-Generierung, automatische Simulation, E
 1. **Vollautomatische Jugendteams:** Manager stellt niemals U17/U19 Aufstellungen.
 2. **Jährlicher Intake:** 24 neue Spieler pro Jahr (U17-Start, Alter 15).
 3. **Gaussian Mixture Distribution:** Erlaubt normale Talente und seltene Elite-Ausnahmen (Yamal-Typ).
-4. **Entscheidungs-Limitierung:** Max 4 Decision-Items pro Woche, verhindert Mikromanagement.
+4. **Entscheidungs-Limitierung:** Max 4 offene Decision-Items gleichzeitig; weitere Kandidaten warten in einer Queue (1 Zustellung pro Spieltag), nichts wird verworfen.
 5. **Abgangsrisiko real:** Spieler können abspringen.
 
 ---
@@ -148,9 +148,16 @@ interface YouthReport {
 
 ### 03.4 Manager-Entscheidungen (Decision Inbox)
 
-Max 4 Items pro Woche. Ein Abgangsrisiko (03.5) zählt als eines dieser vier Items. Overflow wird mit Warning verworfen.
+Max **4 offene** Items gleichzeitig. Ein Abgangsrisiko (03.5) zählt wie jedes andere Item. Alle weiteren Kandidaten der Woche landen in einer **priorisierten Queue** und werden mit **1 Item pro Spieltag** in die Inbox übernommen — **kein Drop**, kein Overflow-Warning.
 
 ```typescript
+interface YouthInboxState {
+  week: number;
+  items: DecisionInboxItem[];      // offen, max 4 pending
+  queue: DecisionInboxItem[];      // wartend, priorisiert
+  resolvedIds: string[];
+}
+
 interface YouthDecisions {
   loans: Array<{ player_id: string; destination_club: string; guarantee_minutes?: number }>;
   promotions: Array<{ player_id: string; probation_weeks: number }>;
@@ -200,7 +207,8 @@ Die Minuten-Garantie erfüllt die automatische Jugend-Sim, nicht eine manuelle A
 |---|---|
 | Intake nur am Saisonende | Aufruf während der Saison wirft |
 | Jugend-Simulation läuft vor der Entscheidungsinbox | Inbox ist der Folge-Step |
-| Max 4 Decision-Items pro Woche, inklusive Abgangswarnung | Clamp, Overflow mit Warning verworfen |
+| Max 4 offene Decision-Items gleichzeitig | Pending-Clamp; Queue liefert 1/Tag |
+| Keine verworfenen Kandidaten | Queue statt Overflow-Drop |
 | Abgangsrisiko nur bei 16+ Jahren | Jüngere Spieler können nicht abspringen |
 
 ## References

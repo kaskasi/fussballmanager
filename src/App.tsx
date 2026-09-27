@@ -35,10 +35,21 @@ import {
   sellerAskingPrice,
   toggleShortlist,
 } from "./transfers/negotiations.ts";
+import {
+  appendTransferRecord,
+  createPurchaseRecord,
+  loanOutMessage,
+} from "./transfers/transfer-history.ts";
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
-import { LoanList } from "./ui/screens/LoanList.tsx";
+import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
 import { PlayerProfile } from "./ui/screens/PlayerProfile";
+import {
+  DEFAULT_MARKET_FILTERS,
+  DEFAULT_MARKET_SORT,
+  type MarketFilters,
+  type MarketSort,
+} from "./scouting/market-list.ts";
 import { ScoutingCenter } from "./ui/screens/ScoutingCenter";
 import { DecisionInboxModal } from "./ui/components/DecisionInbox.tsx";
 import { TransferWindowAmbience } from "./ui/components/TransferWindowAmbience.tsx";
@@ -51,11 +62,13 @@ import { withClubEvent, type ClubEventKind } from "./inbox/club-events.ts";
 import {
   actionLabel,
   applyInboxDecision,
+  deliverDailyInbox,
+  deliverInboxForDays,
   pendingInboxItems,
   type DecisionAction,
 } from "./youth/decision-inbox.ts";
 
-type Screen = "hub" | "campus" | "matchday" | "scouting" | "loans" | "squad";
+type Screen = "hub" | "campus" | "matchday" | "scouting" | "transfers" | "squad";
 
 function bootstrapSave(): SaveGame {
   try {
@@ -80,6 +93,8 @@ export default function App() {
   const [simulating, setSimulating] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState<string | null>(null);
   const [careerMatchSetup, setCareerMatchSetup] = useState<CareerMatchSetup | null>(null);
+  const [marketFilters, setMarketFilters] = useState<MarketFilters>(DEFAULT_MARKET_FILTERS);
+  const [marketSort, setMarketSort] = useState<MarketSort>(DEFAULT_MARKET_SORT);
 
   const session = sessionFromSave(save);
   const {
@@ -123,6 +138,7 @@ export default function App() {
         ...result.session,
         weekday: MONDAY,
         matchPlayedThisWeek: false,
+        youthInbox: deliverDailyInbox(result.session.youthInbox),
       };
       if (result.playerFixture) {
         nextSession = {
@@ -197,10 +213,18 @@ export default function App() {
       return;
     }
 
-    const sessionAtTarget = { ...session, weekday: skip.weekday };
+    const inboxAfterDays =
+      skip.daysAdvanced > 0
+        ? deliverInboxForDays(session.youthInbox, skip.daysAdvanced)
+        : session.youthInbox;
+    const sessionAtTarget = { ...session, weekday: skip.weekday, youthInbox: inboxAfterDays };
 
     if (skip.daysAdvanced > 0) {
-      patchSession((current) => ({ ...current, weekday: skip.weekday }));
+      patchSession((current) => ({
+        ...current,
+        weekday: skip.weekday,
+        youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced),
+      }));
     }
 
     if (skip.action === "match") {
@@ -234,19 +258,25 @@ export default function App() {
           setInboxItemId(null);
         }
         const playerName = player ? formatPlayerName(player) : "Spieler";
+        let next = {
+          ...current,
+          players: result.players,
+          youthInbox: result.inbox,
+        };
+        if (result.transferRecord) {
+          next = {
+            ...next,
+            transferState: appendTransferRecord(current.transferState, result.transferRecord),
+          };
+        }
         const message =
-          action === "dismiss"
-            ? `Entscheidung vertagt: ${playerName}`
-            : `${actionLabel(action)}: ${playerName}`;
-        return sessionWithEvent(
-          {
-            ...current,
-            players: result.players,
-            youthInbox: result.inbox,
-          },
-          "inbox",
-          message,
-        );
+          action === "loan" && result.transferRecord
+            ? loanOutMessage(result.transferRecord)
+            : action === "dismiss"
+              ? `Entscheidung vertagt: ${playerName}`
+              : `${actionLabel(action)}: ${playerName}`;
+        const kind = action === "loan" ? "transfer" : "inbox";
+        return sessionWithEvent(next, kind, message);
       });
     },
     [patchSession],
@@ -299,11 +329,19 @@ export default function App() {
         const bought = completePurchase(target.player, DEFAULT_CLUB_ID, current.season);
         const targets = { ...current.scoutBoard.targets };
         delete targets[playerId];
+        const purchaseRecord = createPurchaseRecord(
+          bought,
+          fee,
+          current.season,
+          current.week,
+          target.player.club_id ?? "cl_rival_pool",
+          DEFAULT_CLUB_ID,
+        );
         return sessionWithEvent(
           {
             ...current,
             players: [...current.players, bought],
-            transferState: deal.state,
+            transferState: appendTransferRecord(deal.state, purchaseRecord),
             scoutBoard: { targets },
             finances: applyTransferFee(current.finances, fee),
           },
@@ -362,6 +400,8 @@ export default function App() {
     setInboxOpen(false);
     setProfileFeedback(null);
     setCareerMatchSetup(null);
+    setMarketFilters(DEFAULT_MARKET_FILTERS);
+    setMarketSort(DEFAULT_MARKET_SORT);
     setScreen("hub");
   }, []);
 
@@ -376,6 +416,13 @@ export default function App() {
           week={week}
           onNavigate={setScreen}
           onCampusNavigate={() => setCampusYearOpen(false)}
+          hubActions={{
+            week,
+            weekday,
+            simulating,
+            onNext: () => void handleNext(),
+            onNewGame: resetGame,
+          }}
         />
         <CareerMatch
           setup={careerMatchSetup}
@@ -493,7 +540,7 @@ export default function App() {
             setScreen("campus");
           }}
           onOpenScouting={() => setScreen("scouting")}
-          onOpenLoans={() => setScreen("loans")}
+          onOpenTransfers={() => setScreen("transfers")}
           onOpenSquad={() => setScreen("squad")}
           onOpenInbox={openInbox}
           onSelectScoutTarget={(playerId) => setForeignPlayerId(playerId)}
@@ -518,24 +565,29 @@ export default function App() {
         <YouthCampus
           players={players}
           youthInbox={youthInbox}
-          onInboxDecision={handleInboxDecision}
           yearOpen={campusYearOpen}
           onYearOpenChange={setCampusYearOpen}
           onSelectPlayer={setProfileId}
+          onDepartureRisk={openInbox}
         />
       ) : null}
       {screen === "scouting" ? (
         <ScoutingCenter
           targets={Object.values(scoutBoard.targets)}
+          filters={marketFilters}
+          onFiltersChange={setMarketFilters}
+          sort={marketSort}
+          onSortChange={setMarketSort}
           onBack={() => setScreen("hub")}
           onSelectTarget={(playerId) => setForeignPlayerId(playerId)}
           onAssignScout={handleAssignScout}
         />
       ) : null}
-      {screen === "loans" ? (
-        <LoanList
+      {screen === "transfers" ? (
+        <TransfersScreen
           players={players}
           season={season}
+          history={transferState.history}
           onBack={() => setScreen("hub")}
           onSelectPlayer={setProfileId}
         />
@@ -665,24 +717,14 @@ function AppNav({
         👁️
       </NavButton>
       <NavButton
-        pressed={screen === "loans"}
-        label="Ausleihen"
+        pressed={screen === "transfers"}
+        label="Transfers"
         onClick={() => {
           onCloseProfile?.();
-          onNavigate("loans");
+          onNavigate("transfers");
         }}
       >
-        🔄
-      </NavButton>
-      <NavButton
-        pressed={screen === "matchday"}
-        label="Matchday"
-        onClick={() => {
-          onCloseProfile?.();
-          onNavigate("matchday");
-        }}
-      >
-        ⚽
+        💰
       </NavButton>
       </div>
       {hubActions ? (
@@ -738,14 +780,28 @@ function AppNav({
                     </button>
                   </>
                 ) : (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="row-menu-item pipeline-menu-danger"
-                    onClick={() => setResetAsk(true)}
-                  >
-                    Neues Spiel
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="row-menu-item"
+                      onClick={() => {
+                        onCloseProfile?.();
+                        onNavigate("matchday");
+                        setMenuOpen(false);
+                      }}
+                    >
+                      ⚽ Matchday Sandbox
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="row-menu-item pipeline-menu-danger"
+                      onClick={() => setResetAsk(true)}
+                    >
+                      Neues Spiel
+                    </button>
+                  </>
                 )}
               </div>
             ) : null}

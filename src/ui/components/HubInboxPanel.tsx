@@ -63,6 +63,11 @@ export function HubInboxPanel({
       <div className="hub-inbox-columns">
         <div className="hub-inbox-column">
           <p className="hub-inbox-column-title">Entscheidungen</p>
+          {youthInbox.queue.length > 0 ? (
+            <p className="hub-inbox-queue-note">
+              +{youthInbox.queue.length} in Warteschlange (1 pro Tag)
+            </p>
+          ) : null}
           {decisions.length === 0 ? (
             <p className="hub-inbox-empty">Keine offenen Jugend-Entscheidungen.</p>
           ) : (

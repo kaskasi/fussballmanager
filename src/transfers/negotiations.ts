@@ -1,4 +1,5 @@
 import type { Player } from "../types/player.ts";
+import type { TransferRecord } from "./transfer-history.ts";
 import { estimateCa, marketValue } from "./market-value.ts";
 
 export type OfferReaction = "accept" | "counter" | "reject";
@@ -14,10 +15,11 @@ export interface TransferOffer {
 export interface TransferState {
   shortlist: string[];
   offers: TransferOffer[];
+  history: TransferRecord[];
 }
 
 export function emptyTransferState(): TransferState {
-  return { shortlist: [], offers: [] };
+  return { shortlist: [], offers: [], history: [] };
 }
 
 export function toggleShortlist(state: TransferState, playerId: string): TransferState {

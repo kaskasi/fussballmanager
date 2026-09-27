@@ -1,17 +1,20 @@
 import { useMemo, useState } from "react";
 import type { PositionPrimary } from "../../types/player.ts";
-import { formatPlayerName } from "../../types/player-display.ts";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
 import {
-  barBand,
   filterMarket,
   headlineCounts,
   targetLabel,
   type ConfidenceBucket,
+  type MarketFilters,
+  type MarketSort,
 } from "../../scouting/market-list.ts";
-import { formatScoutCa, scoutReveal } from "../../scouting/scout-visibility.ts";
+import { listMarketRows, sortMarketRows } from "../../scouting/market-roster.ts";
+import { formatScoutCa } from "../../scouting/scout-visibility.ts";
+import { formatMarketValueShort, type ProSquadSortKey } from "../../squad/pro-roster.ts";
 import { Hint } from "../components/Hint.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
+import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 
 const POSITIONS: PositionPrimary[] = [
   "GK",
@@ -36,11 +39,19 @@ const CONFIDENCE_FILTERS: { bucket: ConfidenceBucket; label: string; title: stri
 
 export function ScoutingCenter({
   targets,
+  filters,
+  onFiltersChange,
+  sort,
+  onSortChange,
   onSelectTarget,
   onAssignScout,
   onBack,
 }: {
   targets: BoardTarget[];
+  filters: MarketFilters;
+  onFiltersChange: (filters: MarketFilters) => void;
+  sort: MarketSort;
+  onSortChange: (sort: MarketSort) => void;
   onSelectTarget: (playerId: string) => void;
   onAssignScout: (playerId: string) => void;
   onBack: () => void;
@@ -49,13 +60,26 @@ export function ScoutingCenter({
     () => targets.map((target) => ({ player: target.player, estimate: target.estimate })),
     [targets],
   );
-  const [query, setQuery] = useState("");
-  const [position, setPosition] = useState<PositionPrimary | "all">("all");
-  const [confidence, setConfidence] = useState<ConfidenceBucket | "all">("all");
+  const assignedIds = useMemo(
+    () => new Set(targets.filter((target) => target.assigned).map((target) => target.player.id)),
+    [targets],
+  );
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const counts = headlineCounts(market);
-  const visible = filterMarket(market, { query, position, confidence });
-  const assigned = targets.filter((target) => target.assigned).length;
+  const visible = useMemo(() => {
+    const filtered = filterMarket(market, filters);
+    const rows = listMarketRows(filtered, assignedIds);
+    return sortMarketRows(rows, sort.key, sort.direction);
+  }, [market, filters, assignedIds, sort]);
+  const assigned = assignedIds.size;
+
+  const toggleSort = (key: ProSquadSortKey) => {
+    if (sort.key === key) {
+      onSortChange({ key, direction: sort.direction === "desc" ? "asc" : "desc" });
+      return;
+    }
+    onSortChange({ key, direction: key === "name" || key === "position" ? "asc" : "desc" });
+  };
 
   return (
     <main className="scouting">
@@ -85,19 +109,24 @@ export function ScoutingCenter({
           <span className="sr-only">Suche</span>
           <input
             type="search"
-            value={query}
+            value={filters.query}
             placeholder="Name, Position, Region"
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => onFiltersChange({ ...filters, query: event.target.value })}
           />
         </label>
 
         <div className="scouting-chips" role="toolbar" aria-label="Filter">
-          <Chip active={position === "all"} onClick={() => setPosition("all")}>Alle</Chip>
+          <Chip active={filters.position === "all"} onClick={() => onFiltersChange({ ...filters, position: "all" })}>Alle</Chip>
           {POSITIONS.map((slot) => (
             <Chip
               key={slot}
-              active={position === slot}
-              onClick={() => setPosition(position === slot ? "all" : slot)}
+              active={filters.position === slot}
+              onClick={() =>
+                onFiltersChange({
+                  ...filters,
+                  position: filters.position === slot ? "all" : slot,
+                })
+              }
             >
               {slot}
             </Chip>
@@ -105,10 +134,15 @@ export function ScoutingCenter({
           {CONFIDENCE_FILTERS.map((filter) => (
             <Chip
               key={filter.bucket}
-              active={confidence === filter.bucket}
+              active={filters.confidence === filter.bucket}
               title={filter.title}
               hint={filter.hint}
-              onClick={() => setConfidence(confidence === filter.bucket ? "all" : filter.bucket)}
+              onClick={() =>
+                onFiltersChange({
+                  ...filters,
+                  confidence: filters.confidence === filter.bucket ? "all" : filter.bucket,
+                })
+              }
             >
               {filter.label}
             </Chip>
@@ -116,75 +150,61 @@ export function ScoutingCenter({
         </div>
       </Hint>
 
-      <ul className="scouting-list" aria-label="Marktliste">
-        {visible.map((target) => {
-          const boardTarget = targets.find((entry) => entry.player.id === target.player.id);
-          const isAssigned = boardTarget?.assigned ?? false;
-          const reveal = scoutReveal(target.estimate.uncertaintyRange);
-          const band = barBand(target.estimate);
-          const ca = formatScoutCa(target.player, target.estimate, false);
-          return (
-            <li key={target.player.id} className="scouting-item">
-              <button
-                type="button"
-                className="scouting-item-main"
-                onClick={() => onSelectTarget(target.player.id)}
-              >
-                <span className="scouting-portrait" aria-hidden="true">{glyph(target.player.position)}</span>
-                <span className="scouting-player-card">
-                  <strong className="scouting-player-name">
-                    {formatPlayerName(target.player)}
-                    {isAssigned ? <span className="scouting-active" title="Scout aktiv"> 🟢</span> : null}
-                  </strong>
-                  <small className="scouting-player-meta">
-                    {target.player.position} · {target.player.age} J. · CA {ca}
-                  </small>
-                </span>
-                <span className="scouting-label">{targetLabel(target)}</span>
-                <span className="scouting-item-bars">
-                  <ScoutBar label="CA" band={band} reveal={reveal} />
-                  <ScoutBar label="Fit" band={band} reveal={reveal} />
-                </span>
-              </button>
-              <RowMenu
-                open={openMenuId === target.player.id}
-                assigned={isAssigned}
-                onToggle={() => setOpenMenuId((current) => (current === target.player.id ? null : target.player.id))}
-                onClose={() => setOpenMenuId(null)}
-                onScout={() => onAssignScout(target.player.id)}
-                onOpenProfile={() => onSelectTarget(target.player.id)}
-              />
-            </li>
-          );
-        })}
-      </ul>
+      {visible.length === 0 ? (
+        <section className="squad-empty scouting-empty" aria-label="Leere Marktliste">
+          <span className="squad-empty-icon" aria-hidden="true">👁️</span>
+          <p>Keine Treffer für die aktuellen Filter.</p>
+        </section>
+      ) : (
+        <div className="squad-table-wrap">
+          <table className="squad-table scouting-table" aria-label="Marktliste">
+            <thead>
+              <tr>
+                <SquadSortHeader label="Name" sortKey="name" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} align="left" />
+                <SquadSortHeader label="Pos" sortKey="position" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} />
+                <SquadSortHeader label="Alt" sortKey="age" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} />
+                <SquadSortHeader label="CA" sortKey="ca" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} />
+                <SquadSortHeader label="Wert" sortKey="marketValue" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} />
+                <th scope="col">Kenntnis</th>
+                <th scope="col" className="scouting-col-menu" aria-label="Aktionen" />
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((row) => {
+                const ca = formatScoutCa(row.player, row.estimate, false);
+                return (
+                  <tr
+                    key={row.playerId}
+                    className="squad-table-row scouting-table-row"
+                    onClick={() => onSelectTarget(row.playerId)}
+                  >
+                    <td className="squad-col-name">
+                      {row.assigned ? <span className="scouting-active" title="Scout aktiv">🟢 </span> : null}
+                      {row.displayName}
+                    </td>
+                    <td>{row.position}</td>
+                    <td>{row.age}</td>
+                    <td className="squad-col-ca">{ca}</td>
+                    <td className="squad-col-value">{formatMarketValueShort(row.marketValue)}</td>
+                    <td className="scouting-col-label">{targetLabel({ player: row.player, estimate: row.estimate })}</td>
+                    <td className="scouting-col-menu" onClick={(event) => event.stopPropagation()}>
+                      <RowMenu
+                        open={openMenuId === row.playerId}
+                        assigned={row.assigned}
+                        onToggle={() => setOpenMenuId((current) => (current === row.playerId ? null : row.playerId))}
+                        onClose={() => setOpenMenuId(null)}
+                        onScout={() => onAssignScout(row.playerId)}
+                        onOpenProfile={() => onSelectTarget(row.playerId)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </main>
-  );
-}
-
-function ScoutBar({
-  label,
-  band,
-  reveal,
-}: {
-  label: string;
-  band: { value: number; low: number; high: number };
-  reveal: ReturnType<typeof scoutReveal>;
-}) {
-  const fill = reveal.showExactSkills ? band.value : Math.round(band.value * reveal.barFillRatio);
-  return (
-    <span className="scouting-bar">
-      <small>{label}</small>
-      <span className="scouting-bar-track">
-        {reveal.showCi ? (
-          <span
-            className="scouting-bar-ci"
-            style={{ left: `${(band.low / 199) * 100}%`, width: `${((band.high - band.low) / 199) * 100}%` }}
-          />
-        ) : null}
-        <span className="scouting-bar-fill" style={{ width: `${(fill / 199) * 100}%`, opacity: reveal.barFillRatio || 0.15 }} />
-      </span>
-    </span>
   );
 }
 
@@ -215,9 +235,3 @@ function Chip({
   return <Hint text={hint}>{chip}</Hint>;
 }
 
-function glyph(position: PositionPrimary): string {
-  if (position === "GK") return "🧤";
-  if (position === "CB" || position === "LB" || position === "RB") return "🛡️";
-  if (position === "CF") return "⚽";
-  return "👟";
-}

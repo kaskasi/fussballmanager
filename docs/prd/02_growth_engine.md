@@ -1,7 +1,7 @@
 # /docs/prd/02_growth_engine.md
 
-**Version:** 1.1
-**Last Updated:** 2026-09-22
+**Version:** 1.2
+**Last Updated:** 2026-09-27
 **Status:** Final
 
 ---
@@ -41,7 +41,7 @@ Pro Skill-Attribut `attr` (alle `Attributes`-Schlüssel außer `weak_foot`):
 effective_age = clamp(age + maturity_offset, 14, 45)
 
 growth(attr) =
-    learning_base(effective_age)     // 1.0 Punkt × age_factor
+    learning_base(effective_age)     // 0.06 Punkte × age_factor
   × anlage(attr)                     // 0.85–1.50
   × drive                            // 0.4–1.6
   × environment()                    // M1: immer 1.0
@@ -51,7 +51,12 @@ growth(attr) =
   − decay_per_week(attr, effective_age)
 ```
 
-`learning_base` ist `1.0 × age_factor`. Die Namen `bell`, `early_peak`, `late_peak`, `plateau`, `continuous_growth` in 02.2 sind Labels. Sie sind kein zweiter Multiplikator. Der numerische Alterseffekt ist `age_factor` plus der subtraktive Decay.
+`learning_base` ist `0.06 × age_factor`. Die frühere Basis `1.0` war um mehr
+als eine Größenordnung zu hoch: Ein durchschnittlicher Jugendspieler gewann
+dadurch in einer Saison dutzende Punkte pro Attribut. Die Namen `bell`,
+`early_peak`, `late_peak`, `plateau`, `continuous_growth` in 02.2 sind Labels.
+Sie sind kein zweiter Multiplikator. Der numerische Alterseffekt ist
+`age_factor` plus der subtraktive Decay.
 
 `environment()` ist in M1 konstant 1.0. Trainer, Gebäude und Mentoring dürfen später einen Bonus liefern. Sie dürfen Minuten und Fokus-Slots nicht noch einmal zählen. `match_practice` und `training_focus` sind dafür da.
 
@@ -102,7 +107,7 @@ age_factor =
     }
   },
   "learning_base_by_age": {
-    "points_per_week": 1.0,
+    "points_per_week": 0.06,
     "formula": "age_factor = (15 <= age <= 23 ? 1.5 : 1.0) * (age > 27 ? 0.7 : 1.0) * (age > 32 ? 0.4 : 1.0)"
   },
   "decay_rates": {
@@ -171,10 +176,25 @@ Annahmen der Tests: `environment = 1`, Noise = 1, kein Fokus, `maturity_offset =
 
 | Testfall | Erwartetes Ergebnis |
 |---|---|
-| Spieler age 19, attribute 100, anlage 1.2, drive 1.4, 90 Min | growth = 1 × 1.5 × 1.2 × 1.4 × 1.15 = 2.898, also > 2.0 |
-| Spieler age 30, attribute 140, anlage 1.0, drive 0.8, 0 Min | growth = 1 × 0.7 × 1.0 × 0.8 × 0.7 = 0.392, also < 0.5 |
+| Spieler age 19, attribute 100, anlage 1.2, drive 1.4, 90 Min | growth = 0.06 × 1.5 × 1.2 × 1.4 × 1.15 = 0.17388 |
+| Spieler age 30, attribute 140, anlage 1.0, drive 0.8, 0 Min | growth = 0.06 × 0.7 × 1.0 × 0.8 × 0.7 = 0.02352 |
 | Spieler age 25, attribute 180, anlage 1.1, drive 1.2, 45 Min | positives Wachstum × 0.3 (soft cap), danach Clamp |
-| Spieler age 33, pace 130, anlage 1.0, drive 1.0, 0 Min, gesund | Wachstumsteil 0.196, Decay 1.5/52 ≈ 0.029, Netto ≈ 0.167. Der Decay ist sichtbar. Das Vorzeichen kippt bei diesen Raten nicht allein durchs Alter |
+| Spieler age 33, pace 130, anlage 1.0, drive 1.0, 0 Min, gesund | Wachstumsteil 0.01176, Decay 1.5/52 ≈ 0.02885, Netto ≈ −0.01709. Tempo sinkt |
+
+### 02.8 Balance-Korridore
+
+Diese Korridore sind Regression-Gates, keine Potentialgrenzen:
+
+- Durchschnittlicher gesunder Profi von 19 Jahren ohne Fokus: relevante
+  Attribute wachsen über 52 Wochen typischerweise um etwa 4–7 Punkte.
+- U17-Spieler mit `developmentScale = 0.3` gewinnt über 30 Wochen weniger als
+  3 CA-Punkte.
+- Ein gesunder 33-Jähriger ohne Einsatz verliert über 52 Wochen mindestens
+  0.5 Pace-Punkte.
+- Ein Spieler darf durch eine normale Saison niemals von Intake-Niveau zum
+  Weltstar springen.
+- Elite-Verläufe entstehen aus hoher Anlage, hohem Drive, Fokus, Spielpraxis
+  und seltenen Breakouts gemeinsam — nicht aus der Basisrate allein.
 
 ## References
 

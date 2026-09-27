@@ -41,7 +41,7 @@ describe("PRD 02.7 growth invariants", () => {
     expect(boosted).toBeCloseTo(baseline * 1.08, 4);
   });
 
-  it("age 19, 90 minutes, grows by 2.898", () => {
+  it("age 19, 90 minutes, grows by 0.17388", () => {
     const delta = growth({
       age: 19,
       attribute: "passing",
@@ -50,11 +50,11 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 1.4,
       minutes: 90,
     });
-    expect(delta).toBeCloseTo(2.898, 3);
-    expect(delta).toBeGreaterThan(2);
+    expect(delta).toBeCloseTo(0.17388, 5);
+    expect(delta).toBeLessThan(0.2);
   });
 
-  it("age 30, unused, grows by 0.392", () => {
+  it("age 30, unused, grows by 0.02352", () => {
     const delta = growth({
       age: 30,
       attribute: "passing",
@@ -63,8 +63,8 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 0.8,
       minutes: 0,
     });
-    expect(delta).toBeCloseTo(0.392, 3);
-    expect(delta).toBeLessThan(0.5);
+    expect(delta).toBeCloseTo(0.02352, 5);
+    expect(delta).toBeLessThan(0.03);
   });
 
   it("age 25 at 180 applies the 0.3 soft cap before the clamp", () => {
@@ -76,13 +76,13 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 1.2,
       minutes: 45,
     });
-    const uncapped = 1 * 1.1 * 1.2 * (1 + (45 / 90) * 0.15);
+    const uncapped = 0.06 * 1.1 * 1.2 * (1 + (45 / 90) * 0.15);
     expect(delta).toBeCloseTo(uncapped * 0.3, 5);
     expect(delta).toBeGreaterThan(0);
     expect(delta).toBeLessThanOrEqual(5);
   });
 
-  it("age 33 pace stays slightly positive once decay is subtracted", () => {
+  it("age 33 pace declines once decay is subtracted", () => {
     const delta = growth({
       age: 33,
       attribute: "pace",
@@ -91,8 +91,8 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 1,
       minutes: 0,
     });
-    expect(delta).toBeCloseTo(0.28 * 0.7 - 1.5 / 52, 5);
-    expect(delta).toBeGreaterThan(0);
+    expect(delta).toBeCloseTo(0.06 * 0.28 * 0.7 - 1.5 / 52, 5);
+    expect(delta).toBeLessThan(0);
     expect(decayPerWeek("pace", 33)).toBeCloseTo(1.5 / 52, 8);
   });
 });
@@ -102,10 +102,12 @@ describe("growth constraints", () => {
     const curves = JSON.parse(
       readFileSync(new URL("../../data/rules/growth_curves.json", import.meta.url), "utf8"),
     ) as {
+      learning_base_points_per_week: number;
       pace: { decline_start: number };
       stamina: { decline_start: number };
       leadership: { per_year: number };
     };
+    expect(curves.learning_base_points_per_week).toBe(0.06);
     expect(curves.pace.decline_start).toBe(25);
     expect(curves.stamina.decline_start).toBe(27);
     expect(curves.leadership.per_year).toBe(0);
@@ -138,6 +140,7 @@ describe("growth constraints", () => {
       minutes: 90,
       focusSlots: 2,
       noise: 2,
+      environmentFactor: 100,
     });
     expect(delta).toBe(5);
     expect(applyGrowth(197, delta)).toBe(199);

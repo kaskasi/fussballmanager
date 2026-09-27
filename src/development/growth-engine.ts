@@ -11,6 +11,7 @@ import type { Attributes } from "../types/player.ts";
 const SOFT_CAP = 180;
 const GROWTH_MIN = -3;
 const GROWTH_MAX = 5;
+export const LEARNING_BASE_POINTS_PER_WEEK = 0.06;
 
 const TECHNICAL = new Set<keyof Attributes>([
   "shooting",
@@ -54,12 +55,12 @@ export function effectiveAge(age: number, maturityOffset: number): number {
   return Math.min(45, Math.max(14, age + maturityOffset));
 }
 
-/** `1.0 × age_factor`. Curve labels in PRD 02.2 are not a second multiplier. */
+/** `0.06 × age_factor`. Curve labels in PRD 02.2 are not a second multiplier. */
 export function learningBase(effectiveAgeValue: number): number {
   const youth = effectiveAgeValue >= 15 && effectiveAgeValue <= 23 ? 1.5 : 1;
   const late = effectiveAgeValue > 27 ? 0.7 : 1;
   const veteran = effectiveAgeValue > 32 ? 0.4 : 1;
-  return youth * late * veteran;
+  return LEARNING_BASE_POINTS_PER_WEEK * youth * late * veteran;
 }
 
 export function attributeSigma(attribute: keyof Attributes): number {

@@ -40,10 +40,11 @@ const POSITION_SLOTS: Record<PositionPrimary, number> = {
   DM: 2,
   CM: 3,
   AM: 2,
-  LM: 1,
-  RM: 1,
-  LW: 1,
-  RW: 1,
+  // Wide roles are interchangeable in the generated three-player wing group.
+  LM: 0,
+  RM: 0,
+  LW: 0,
+  RW: 0,
   CF: 2,
 };
 

@@ -6,6 +6,7 @@ export const CLUBS_PER_DIVISION = 18;
 export const PLAYERS_PER_CLUB = 22;
 export const GENERATED_CLUB_COUNT = CLUBS_PER_DIVISION * 2;
 export const GENERATED_PLAYER_COUNT = GENERATED_CLUB_COUNT * PLAYERS_PER_CLUB;
+export const NORDSTERN_TEAM_ID = "fc-nordstern";
 export const NORDSTERN_CLUB_ID = "cl_fc_nordstern";
 
 export type WorldDivisionId = "regionalliga-nord" | "oberliga-nord";
@@ -400,7 +401,7 @@ export function generateClubs(masterSeed: number): WorldClub[] {
 
     if (index === 0) {
       clubs.push({
-        id: NORDSTERN_CLUB_ID,
+        id: NORDSTERN_TEAM_ID,
         name: "FC Nordstern",
         short_name: "NOR",
         region: "Fördeküste",
@@ -420,7 +421,7 @@ export function generateClubs(masterSeed: number): WorldClub[] {
     const reputationBase = division_id === "regionalliga-nord" ? 40 : 24;
 
     clubs.push({
-      id: `cl_${idHash}_${index}`,
+      id: `world-${idHash}-${index}`,
       name: `${prefix} ${place}${suffix ? ` ${suffix}` : ""}`,
       short_name: `C${String(index + 1).padStart(2, "0")}`,
       region: pick(REGIONS, random),
@@ -493,7 +494,7 @@ function divisionPools(clubs: readonly WorldClub[]): Record<WorldDivisionId, str
 }
 
 function startingClubStrength(masterSeed: number, club: WorldClub, clubIndex: number): number {
-  if (club.id === NORDSTERN_CLUB_ID) return 68.5;
+  if (club.id === NORDSTERN_TEAM_ID) return 68.5;
   const random = mulberry32(deriveWorldSeed(masterSeed, "club-strength", clubIndex));
   if (club.division_id === "oberliga-nord") return 60 + random() * 14;
   // Three nearby survival rivals keep the underdog start difficult but playable.
@@ -544,7 +545,7 @@ function generateProfessional(
     },
     nationality: "DE",
     age,
-    club_id: club.id,
+    club_id: worldCareerClubId(club.id),
     squad_status: "pro",
     position,
     flexibility: secondaryPositions(position, random),
@@ -587,7 +588,7 @@ function generateProfessional(
     },
     history: {
       growth: [],
-      clubs: [{ club_id: club.id, from_season: 1, to_season: null, apps: 0, goals: 0 }],
+      clubs: [{ club_id: worldCareerClubId(club.id), from_season: 1, to_season: null, apps: 0, goals: 0 }],
       achievements: [],
       milestones: [],
     },
@@ -651,6 +652,10 @@ function generatedPlayerId(masterSeed: number, stableIndex: number): string {
   // 7,919 is coprime with 100,000, so every stable index maps to a unique id.
   const numericId = (base + stableIndex * 7_919) % 100_000;
   return `pl_${String(numericId).padStart(5, "0")}`;
+}
+
+export function worldCareerClubId(teamId: string): string {
+  return `cl_${teamId.replace(/-/g, "_")}`;
 }
 
 function secondaryPositions(

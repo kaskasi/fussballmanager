@@ -7,10 +7,11 @@ import {
 } from "./game-calendar.ts";
 
 describe("game calendar", () => {
-  it("plays league on weeks 1-30 only", () => {
+  it("plays league on weeks 1-34 only", () => {
     expect(isLeagueMatchWeek(1)).toBe(true);
     expect(isLeagueMatchWeek(LEAGUE_LAST_WEEK)).toBe(true);
-    expect(isLeagueMatchWeek(31)).toBe(false);
+    expect(isLeagueMatchWeek(31)).toBe(true);
+    expect(isLeagueMatchWeek(35)).toBe(false);
   });
 
   it("ends the football season after week 34", () => {

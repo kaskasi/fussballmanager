@@ -44,6 +44,7 @@ import {
 import { normalizeRivalPlayers } from "../sim/rival-growth.ts";
 import { switchManagerClub } from "../board/manager-club-switch.ts";
 import type { SeasonAwardsSnapshot } from "../sim/season-awards.ts";
+import { generateWorld, NORDSTERN_CLUB_ID } from "../world/world-generator.ts";
 
 export const DEFAULT_SLOT = 1;
 export const DEFAULT_CLUB_ID = "cl_fc_nordstern";
@@ -78,6 +79,8 @@ export interface GameSession {
 }
 
 export function newGameSession(now = new Date()): GameSession {
+  const world = generateWorld(DEFAULT_MASTER_SEED);
+  const academy = loadDemoRoster().filter((player) => player.squad_status !== "pro");
   const save = createSave({
     nowIso: now.toISOString(),
     playerClubId: DEFAULT_CLUB_ID,
@@ -85,7 +88,10 @@ export function newGameSession(now = new Date()): GameSession {
     season: 1,
     week: 1,
     masterSeed: DEFAULT_MASTER_SEED,
-    players: loadDemoRoster(),
+    players: [
+      ...world.players.filter((player) => player.club_id === NORDSTERN_CLUB_ID),
+      ...academy,
+    ],
   });
   return withFreshInbox(sessionFromSave(save));
 }

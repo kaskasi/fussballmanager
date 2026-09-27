@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest";
+import { asTeamId, matchdayFixtures } from "@fussballmanager/shared";
 import { estimateCa } from "../transfers/market-value.ts";
 import { validatePlayer } from "../types/validation.ts";
 import {
   CLUBS_PER_DIVISION,
   GENERATED_CLUB_COUNT,
   GENERATED_PLAYER_COUNT,
-  NORDSTERN_CLUB_ID,
+  NORDSTERN_TEAM_ID,
   PLAYERS_PER_CLUB,
   deriveWorldSeed,
   generateClubRoster,
   generateWorld,
+  worldCareerClubId,
 } from "./world-generator.ts";
 
 describe("deterministic world generator", () => {
@@ -50,7 +52,7 @@ describe("deterministic world generator", () => {
     expect(clubIds.size).toBe(GENERATED_CLUB_COUNT);
     expect(clubNames.size).toBe(GENERATED_CLUB_COUNT);
     expect(playerIds.size).toBe(GENERATED_PLAYER_COUNT);
-    expect(world.clubs.filter((club) => club.id === NORDSTERN_CLUB_ID)).toHaveLength(1);
+    expect(world.clubs.filter((club) => club.id === NORDSTERN_TEAM_ID)).toHaveLength(1);
 
     for (const club of world.clubs) {
       expect(club.rivalry_ids.length).toBeLessThanOrEqual(2);
@@ -80,7 +82,8 @@ describe("deterministic world generator", () => {
     };
 
     for (const club of world.clubs) {
-      const roster = world.players.filter((player) => player.club_id === club.id);
+      const clubId = worldCareerClubId(club.id);
+      const roster = world.players.filter((player) => player.club_id === clubId);
       const positionCounts = Object.fromEntries(
         Object.keys(expectedPositions).map((position) => [
           position,
@@ -94,18 +97,40 @@ describe("deterministic world generator", () => {
       expect(roster.filter((player) => player.age >= 30).length).toBeGreaterThanOrEqual(2);
       for (const player of roster) {
         expect(validatePlayer(player), player.id).toEqual({ valid: true, errors: [] });
-        expect(player.club_id).toBe(club.id);
+        expect(player.club_id).toBe(clubId);
         expect(player.contract).not.toBeNull();
         expect("potential" in player).toBe(false);
       }
     }
   });
 
+  it("supports a 34-round home-and-away schedule", () => {
+    const world = generateWorld(2026);
+    const ids = world.league_pools["regionalliga-nord"].map(asTeamId);
+    const fixtures = Array.from({ length: 34 }, (_, index) =>
+      matchdayFixtures(ids, index + 1),
+    ).flat();
+    const pairCounts = new Map<string, number>();
+    const homeCounts = new Map<string, number>();
+
+    for (const fixture of fixtures) {
+      const pair = [fixture.homeTeamId, fixture.awayTeamId].sort().join(":");
+      pairCounts.set(pair, (pairCounts.get(pair) ?? 0) + 1);
+      homeCounts.set(fixture.homeTeamId, (homeCounts.get(fixture.homeTeamId) ?? 0) + 1);
+    }
+
+    expect(fixtures).toHaveLength(306);
+    expect([...pairCounts.values()].every((count) => count === 2)).toBe(true);
+    expect(ids.every((id) => homeCounts.get(id) === 17)).toBe(true);
+  });
+
   it("keeps entity streams independent and roster generation addressable", () => {
     const world = generateWorld(8080);
     const club = world.clubs[7]!;
     const directRoster = generateClubRoster(8080, club, 7);
-    const worldRoster = world.players.filter((player) => player.club_id === club.id);
+    const worldRoster = world.players.filter(
+      (player) => player.club_id === worldCareerClubId(club.id),
+    );
 
     expect(directRoster).toEqual(worldRoster);
     expect(deriveWorldSeed(8080, "player", 7)).not.toBe(
@@ -124,12 +149,12 @@ describe("deterministic world generator", () => {
           id: club.id,
           ca: average(
             world.players
-              .filter((player) => player.club_id === club.id)
+              .filter((player) => player.club_id === worldCareerClubId(club.id))
               .map((player) => estimateCa(player.attributes, player.position)),
           ),
         }))
         .sort((left, right) => left.ca - right.ca);
-      const nordstern = strengths.find((entry) => entry.id === NORDSTERN_CLUB_ID)!;
+      const nordstern = strengths.find((entry) => entry.id === NORDSTERN_TEAM_ID)!;
       const median = strengths[Math.floor(strengths.length / 2)]!;
       const secondWeakest = strengths[1]!;
 

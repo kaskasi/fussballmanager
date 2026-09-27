@@ -1,5 +1,4 @@
 import {
-  NORDSTERN_ID,
   type Player as EnginePlayer,
   type PlayerRole,
   type PlayerAttributes as EngineAttributes,
@@ -8,7 +7,10 @@ import {
 import { applyTrainingWeek } from "../development/pipeline-week.ts";
 import { defaultTrainingPlan, planToSessions } from "../development/training-units.ts";
 import type { Attributes, Player, PositionPrimary } from "../types/player.ts";
-import { ALL_LEAGUE_SQUADS } from "./league-divisions.ts";
+import {
+  generateWorld,
+  NORDSTERN_CLUB_ID,
+} from "../world/world-generator.ts";
 import { isLeagueMatchWeek } from "./game-calendar.ts";
 
 const AI_TRAINING = planToSessions(defaultTrainingPlan());
@@ -186,17 +188,9 @@ export function enginePlayerToCareer(
 }
 
 export function initializeRivalPlayers(masterSeed: number): Player[] {
-  const players: Player[] = [];
-  for (const squad of ALL_LEAGUE_SQUADS) {
-    if (squad.team.id === NORDSTERN_ID) continue;
-    for (const place of squad.starters) {
-      players.push(enginePlayerToCareer(place.player, masterSeed));
-    }
-    for (const benchPlayer of squad.bench) {
-      players.push(enginePlayerToCareer(benchPlayer, masterSeed));
-    }
-  }
-  return players;
+  return generateWorld(masterSeed).players.filter(
+    (player) => player.club_id !== NORDSTERN_CLUB_ID,
+  );
 }
 
 export function normalizeRivalPlayers(

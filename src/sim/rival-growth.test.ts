@@ -1,9 +1,10 @@
 import { asTeamId } from "@fussballmanager/shared";
 import { describe, expect, it } from "vitest";
 import { squadAverageStrength } from "@fussballmanager/shared";
-import { squadForLeagueClub } from "./league-divisions.ts";
+import { defaultLeaguePools, squadForLeagueClub } from "./league-divisions.ts";
 import {
   advanceRivalGrowthWeek,
+  careerTeamId,
   initializeRivalPlayers,
   rivalCareerId,
 } from "./rival-growth.ts";
@@ -17,26 +18,30 @@ describe("rival growth", () => {
   });
 
   it("grows rival squads over multiple league weeks", () => {
-    const rivals = initializeRivalPlayers(4242);
-    const teamId = asTeamId("sv-rheinwacht");
+    const rivals = initializeRivalPlayers(2026);
+    const teamId = defaultLeaguePools()["regionalliga-nord"][1]!;
+    const clubId = careerTeamId(teamId);
     const template = squadForLeagueClub(teamId)!;
-    const before = squadAverageStrength(buildRivalEngineSquad(template, rivals.filter((p) => p.club_id === "cl_sv_rheinwacht")));
+    const before = squadAverageStrength(
+      buildRivalEngineSquad(template, rivals.filter((player) => player.club_id === clubId)),
+    );
 
     let current = rivals;
     for (let week = 1; week <= 8; week++) {
-      current = advanceRivalGrowthWeek(current, 1, week, 4242, true);
+      current = advanceRivalGrowthWeek(current, 1, week, 2026, true);
     }
     const after = squadAverageStrength(
       buildRivalEngineSquad(
         template,
-        current.filter((player) => player.club_id === "cl_sv_rheinwacht"),
+        current.filter((player) => player.club_id === clubId),
       ),
     );
     expect(after).toBeGreaterThanOrEqual(before);
   });
 
   it("uses stable career ids per engine player", () => {
-    const template = squadForLeagueClub(asTeamId("tsv-holzweg"))!;
+    const teamId = defaultLeaguePools()["regionalliga-nord"][1] ?? asTeamId("missing");
+    const template = squadForLeagueClub(teamId)!;
     const enginePlayer = template.starters[0]!.player;
     expect(rivalCareerId(enginePlayer)).toBe(`rp_${enginePlayer.teamId}_${enginePlayer.shirt}`);
   });

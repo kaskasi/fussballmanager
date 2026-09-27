@@ -10,6 +10,7 @@ import {
   type WatchedPlayerMatch,
 } from "../sim/watched-player-match.ts";
 import { CareerLineupScreen } from "./CareerLineupScreen.tsx";
+import { squadForLeagueClub } from "../sim/league-divisions.ts";
 import type { MatchLineupState } from "./lineup-board.ts";
 import { CommentaryFeed } from "./CommentaryFeed.tsx";
 import { Lineup } from "./Lineup.tsx";
@@ -79,6 +80,7 @@ export function CareerMatch({
     <CareerMatchPlayback
       setup={setup}
       playerClubSquad={playerClubSquad}
+      rivalPlayers={rivalPlayers}
       week={week}
       weekday={weekday}
       simulating={simulating}
@@ -92,6 +94,7 @@ export function CareerMatch({
 function CareerMatchPlayback({
   setup,
   playerClubSquad,
+  rivalPlayers,
   week,
   weekday,
   simulating,
@@ -101,6 +104,7 @@ function CareerMatchPlayback({
 }: {
   setup: CareerMatchSetup;
   playerClubSquad: Squad;
+  rivalPlayers: readonly Player[];
   week: number;
   weekday: number;
   simulating: boolean;
@@ -117,10 +121,22 @@ function CareerMatchPlayback({
     setLoading(true);
     setError(null);
     try {
+      const opponentId =
+        setup.homeTeamId === setup.playerClubId ? setup.awayTeamId : setup.homeTeamId;
+      const opponentSquad = squadForLeagueClub(opponentId, rivalPlayers);
+      if (!opponentSquad) {
+        throw new Error("Gegnerkader konnte nicht geladen werden.");
+      }
+      const homeSquad =
+        setup.homeTeamId === setup.playerClubId ? playerClubSquad : opponentSquad;
+      const awaySquad =
+        setup.awayTeamId === setup.playerClubId ? playerClubSquad : opponentSquad;
       const next = await fetchCareerMatchView({
         seed: setup.seed,
         homeTeamId: setup.homeTeamId,
         awayTeamId: setup.awayTeamId,
+        homeSquad,
+        awaySquad,
         playerClubSquad,
       });
       setView(next);
@@ -130,7 +146,7 @@ function CareerMatchPlayback({
     } finally {
       setLoading(false);
     }
-  }, [setup, playerClubSquad]);
+  }, [setup, playerClubSquad, rivalPlayers]);
 
   useEffect(() => {
     void load();

@@ -1,18 +1,50 @@
-import { NORDSTERN_ID, SEED_DIVISION, SEED_OBERLIGA, type Squad, type TeamId } from "@fussballmanager/shared";
+import {
+  FORMATION_PRESETS,
+  asTeamId,
+  fillSquad,
+  type FormationId,
+  type Squad,
+  type Team,
+  type TeamId,
+  type TeamTactics,
+} from "@fussballmanager/shared";
 import type { DivisionEconomyId } from "../economy/division-economy.ts";
 import { DIVISION_ECONOMY } from "../economy/division-economy.ts";
 import type { Player } from "../types/player.ts";
+import {
+  generateClubs,
+  generateWorld,
+  type ClubIdentity,
+  type WorldClub,
+} from "../world/world-generator.ts";
 import { squadWithRivalRoster } from "./rival-engine-squad.ts";
 
 export const REGIONALLIGA_ID: DivisionEconomyId = "regionalliga-nord";
 export const OBERLIGA_ID: DivisionEconomyId = "oberliga-nord";
+export const DEFAULT_WORLD_SEED = 2026;
 
-export const ALL_LEAGUE_SQUADS: readonly Squad[] = [...SEED_DIVISION, ...SEED_OBERLIGA];
+export const DEFAULT_GENERATED_WORLD = generateWorld(DEFAULT_WORLD_SEED);
+const WORLD_CLUBS = new Map(
+  DEFAULT_GENERATED_WORLD.clubs.map((club) => [club.id, club] as const),
+);
 
-export function defaultLeaguePools(): Record<DivisionEconomyId, TeamId[]> {
+export const ALL_LEAGUE_SQUADS: readonly Squad[] =
+  DEFAULT_GENERATED_WORLD.clubs.map(templateForWorldClub);
+
+export function defaultLeaguePools(
+  masterSeed = DEFAULT_WORLD_SEED,
+): Record<DivisionEconomyId, TeamId[]> {
+  const clubs =
+    masterSeed === DEFAULT_WORLD_SEED
+      ? DEFAULT_GENERATED_WORLD.clubs
+      : generateClubs(masterSeed);
   return {
-    "regionalliga-nord": SEED_DIVISION.map((squad) => squad.team.id),
-    "oberliga-nord": SEED_OBERLIGA.map((squad) => squad.team.id),
+    "regionalliga-nord": clubs
+      .filter((club) => club.division_id === REGIONALLIGA_ID)
+      .map((club) => asTeamId(club.id)),
+    "oberliga-nord": clubs
+      .filter((club) => club.division_id === OBERLIGA_ID)
+      .map((club) => asTeamId(club.id)),
   };
 }
 
@@ -22,6 +54,10 @@ export function divisionLabel(divisionId: DivisionEconomyId): string {
 
 export function templateSquadForClub(teamId: TeamId): Squad | undefined {
   return ALL_LEAGUE_SQUADS.find((entry) => entry.team.id === teamId);
+}
+
+export function worldClubForTeam(teamId: TeamId): WorldClub | undefined {
+  return WORLD_CLUBS.get(teamId);
 }
 
 export function squadForLeagueClub(
@@ -41,4 +77,44 @@ export function clubIdsForDivision(
   divisionId: DivisionEconomyId,
 ): TeamId[] {
   return [...(pools[divisionId] ?? [])];
+}
+
+function templateForWorldClub(club: WorldClub): Squad {
+  const team: Team = {
+    id: asTeamId(club.id),
+    name: club.name,
+    shortName: club.short_name,
+  };
+  const formation = formationForIdentity(club.identity);
+  const preset = FORMATION_PRESETS[formation];
+  const tactics: TeamTactics = {
+    teamId: team.id,
+    formation,
+    mentality: club.identity === "ambitious" ? 62 : club.identity === "traditional" ? 44 : 52,
+    pressing: preset.pressing,
+    width: formation === "4-4-2" ? 50 : 60,
+    tempo: club.identity === "workers" ? 58 : 50,
+    lineHeight: preset.lineHeight,
+    intensity: preset.intensity,
+    fluidity: preset.fluidity,
+    marking: club.identity === "traditional" ? "man" : "zonal",
+    keeperDuty: preset.keeperDuty,
+    fullbackDuty: preset.fullbackDuty,
+    dmDuty: preset.dmDuty,
+    cmDuty: preset.cmDuty,
+    wideDuty: preset.wideDuty,
+    strikerDuty: preset.strikerDuty,
+  };
+  return fillSquad({
+    team,
+    prefix: `world-${club.id}`,
+    tactics,
+    skillShift: 0,
+    names: Array.from({ length: 18 }, (_, index) => `${club.short_name} Spieler ${index + 1}`),
+  });
+}
+
+function formationForIdentity(identity: ClubIdentity): FormationId {
+  if (identity === "traditional" || identity === "workers") return "4-4-2";
+  return "4-3-3";
 }

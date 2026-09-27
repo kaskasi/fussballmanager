@@ -26,7 +26,7 @@ describe("day calendar smart skip", () => {
 
   it("jumps to Sunday on a non-match week", () => {
     const session = newGameSession();
-    session.week = 31;
+    session.week = 35;
     session.weekday = 2;
     expect(resolveSmartSkip(session, false)).toEqual({
       weekday: SUNDAY,

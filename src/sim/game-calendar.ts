@@ -1,12 +1,12 @@
 /**
  * In-game calendar (PRD 05 transfer windows + PRD 03 intake timing).
- * Sportliche Saison: Wochen 1–34, Liga-Spieltage 1–30.
+ * Sportliche Saison: Wochen 1–34, Liga-Spieltage 1–34.
  */
 
 export const WEEKS_PER_YEAR = 52;
 export const SEASON_END_WEEK = 34;
 export const LEAGUE_FIRST_WEEK = 1;
-export const LEAGUE_LAST_WEEK = 30;
+export const LEAGUE_LAST_WEEK = 34;
 
 export function isLeagueMatchWeek(week: number): boolean {
   return week >= LEAGUE_FIRST_WEEK && week <= LEAGUE_LAST_WEEK;

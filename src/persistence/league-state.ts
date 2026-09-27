@@ -3,10 +3,8 @@ import type { FixtureResult, PlayerSeasonStat, TeamId } from "@fussballmanager/s
 import type { DivisionEconomyId } from "../economy/division-economy.ts";
 import { defaultLeaguePools } from "../sim/league-divisions.ts";
 
-/**
- * 6-team league: each club meets every opponent 6 times → 5 × 6 = 30 league games.
- */
-export const LEAGUE_MEETINGS_PER_OPPONENT = 6;
+/** 18-team double round robin: 17 opponents × 2 = 34 league games. */
+export const LEAGUE_MEETINGS_PER_OPPONENT = 2;
 
 /** Career-player contributions for the manager club (replaces engine names in the hub). */
 export interface CareerLeagueStat {
@@ -25,7 +23,7 @@ export interface LeagueState {
   player_club_id: TeamId;
   club_ids: TeamId[];
   league_pools?: Record<DivisionEconomyId, TeamId[]>;
-  /** Pairings per opponent within one season (6-team default: 6 → 30 matchdays). */
+  /** Pairings per opponent within one season (18-team default: 2 → 34 matchdays). */
   meetings_per_opponent: number;
   /** Next matchday to play (1-based). */
   matchday: number;

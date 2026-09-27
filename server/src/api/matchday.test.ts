@@ -1,4 +1,8 @@
-import { buildCareerEngineSquad, nordsternSquad } from "@fussballmanager/shared";
+import {
+  buildCareerEngineSquad,
+  nordsternSquad,
+  SEED_DIVISION,
+} from "@fussballmanager/shared";
 import { describe, expect, it } from "vitest";
 import { runMatchday } from "./matchday.ts";
 
@@ -29,7 +33,12 @@ const careerSquad = buildCareerEngineSquad(
 
 describe("matchday api", () => {
   it("returns results and table for a division matchday", () => {
-    const played = runMatchday({ matchday: 1, baseSeed: 2026 });
+    const played = runMatchday({
+      matchday: 1,
+      baseSeed: 2026,
+      clubIds: SEED_DIVISION.map((squad) => squad.team.id),
+      squads: [...SEED_DIVISION],
+    });
     expect(played.results).toHaveLength(3);
     expect(played.table).toHaveLength(6);
     expect(played.table[0]?.points).toBeGreaterThanOrEqual(0);
@@ -37,7 +46,13 @@ describe("matchday api", () => {
   });
 
   it("uses a career squad override for the player club", () => {
-    const played = runMatchday({ matchday: 1, baseSeed: 2026, playerClubSquad: careerSquad });
+    const played = runMatchday({
+      matchday: 1,
+      baseSeed: 2026,
+      clubIds: SEED_DIVISION.map((squad) => squad.team.id),
+      squads: [...SEED_DIVISION],
+      playerClubSquad: careerSquad,
+    });
     const clubStats = played.playerStats.filter((row) => row.teamId === careerSquad.team.id);
     expect(clubStats.some((row) => String(row.playerId).startsWith("pl_api_"))).toBe(true);
   });

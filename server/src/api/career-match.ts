@@ -1,18 +1,16 @@
 import {
   assertValidSquad,
-  SEED_DIVISION,
-  SEED_OBERLIGA,
   type Squad,
   type TeamId,
 } from "@fussballmanager/shared";
 import { buildMatchView, parseViewSeed } from "./match-view.ts";
 
-const ALL_LEAGUE_SQUADS: Squad[] = [...SEED_DIVISION, ...SEED_OBERLIGA];
-
 export interface CareerMatchInput {
   seed: number;
   homeTeamId: TeamId;
   awayTeamId: TeamId;
+  homeSquad: Squad;
+  awaySquad: Squad;
   playerClubSquad?: Squad;
 }
 
@@ -21,6 +19,8 @@ export function parseCareerMatchBody(body: unknown): CareerMatchInput {
     seed?: number;
     homeTeamId?: TeamId;
     awayTeamId?: TeamId;
+    homeSquad?: Squad;
+    awaySquad?: Squad;
     playerClubSquad?: Squad;
   };
   const seed = parseViewSeed(payload.seed);
@@ -28,6 +28,16 @@ export function parseCareerMatchBody(body: unknown): CareerMatchInput {
   const awayTeamId = payload.awayTeamId;
   if (!homeTeamId || !awayTeamId) {
     throw new Error("homeTeamId and awayTeamId are required");
+  }
+  const homeSquad = payload.homeSquad;
+  const awaySquad = payload.awaySquad;
+  if (!homeSquad || !awaySquad) {
+    throw new Error("homeSquad and awaySquad are required");
+  }
+  assertValidSquad(homeSquad);
+  assertValidSquad(awaySquad);
+  if (homeSquad.team.id !== homeTeamId || awaySquad.team.id !== awayTeamId) {
+    throw new Error("Supplied squads must match homeTeamId and awayTeamId");
   }
 
   const playerClubSquad = payload.playerClubSquad;
@@ -41,23 +51,18 @@ export function parseCareerMatchBody(body: unknown): CareerMatchInput {
     }
   }
 
-  return { seed, homeTeamId, awayTeamId, playerClubSquad };
-}
-
-function squadsForCareerMatch(playerClubSquad?: Squad): Squad[] {
-  if (!playerClubSquad) return ALL_LEAGUE_SQUADS;
-  return ALL_LEAGUE_SQUADS.map((squad) =>
-    squad.team.id === playerClubSquad.team.id ? playerClubSquad : squad,
-  );
+  return { seed, homeTeamId, awayTeamId, homeSquad, awaySquad, playerClubSquad };
 }
 
 export function runCareerMatch(input: CareerMatchInput) {
-  const squads = squadsForCareerMatch(input.playerClubSquad);
-  const home = squads.find((squad) => squad.team.id === input.homeTeamId);
-  const away = squads.find((squad) => squad.team.id === input.awayTeamId);
-  if (!home || !away) {
-    throw new Error("Unknown home or away team for career match");
-  }
+  const home =
+    input.playerClubSquad?.team.id === input.homeTeamId
+      ? input.playerClubSquad
+      : input.homeSquad;
+  const away =
+    input.playerClubSquad?.team.id === input.awayTeamId
+      ? input.playerClubSquad
+      : input.awaySquad;
   const humanTeamId =
     input.playerClubSquad?.team.id === home.team.id ||
     input.playerClubSquad?.team.id === away.team.id

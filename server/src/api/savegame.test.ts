@@ -36,7 +36,7 @@ describe("save API", () => {
     });
     expect(created.statusCode).toBe(200);
     const save = created.json();
-    expect(save.state.pipeline?.training_plan).toHaveLength(15);
+    expect(save.state.pipeline?.training_plan).toHaveLength(5);
 
     const put = await app.inject({
       method: "PUT",

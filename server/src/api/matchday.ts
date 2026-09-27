@@ -1,18 +1,15 @@
 import {
   assertValidSquad,
-  SEED_DIVISION,
-  SEED_OBERLIGA,
   type Squad,
   type TeamId,
 } from "@fussballmanager/shared";
 import { playMatchday } from "../engine/matchday.ts";
 
-const ALL_LEAGUE_SQUADS: Squad[] = [...SEED_DIVISION, ...SEED_OBERLIGA];
-
 export interface MatchdayInput {
   matchday: number;
   baseSeed: number;
-  clubIds?: TeamId[];
+  clubIds: TeamId[];
+  squads: Squad[];
   playerClubSquad?: Squad;
 }
 
@@ -21,6 +18,7 @@ export function parseMatchdayBody(body: unknown): MatchdayInput {
     matchday?: number;
     baseSeed?: number;
     clubIds?: TeamId[];
+    squads?: Squad[];
     playerClubSquad?: Squad;
   };
   const matchday = Number(payload.matchday ?? 1);
@@ -32,10 +30,24 @@ export function parseMatchdayBody(body: unknown): MatchdayInput {
     throw new Error("baseSeed must be a number");
   }
 
+  const squads = payload.squads ?? [];
+  const clubIds = payload.clubIds ?? squads.map((squad) => squad.team.id);
+  if (clubIds.length < 2 || clubIds.length % 2 !== 0) {
+    throw new Error("clubIds must contain an even division");
+  }
+  if (squads.length !== clubIds.length) {
+    throw new Error("squads must contain one entry per clubId");
+  }
+  for (const squad of squads) {
+    assertValidSquad(squad);
+    if (!clubIds.includes(squad.team.id)) {
+      throw new Error(`Squad ${squad.team.id} is not present in clubIds`);
+    }
+  }
+
   const playerClubSquad = payload.playerClubSquad;
   if (playerClubSquad) {
     assertValidSquad(playerClubSquad);
-    const clubIds = payload.clubIds ?? SEED_DIVISION.map((squad) => squad.team.id);
     if (!clubIds.includes(playerClubSquad.team.id)) {
       throw new Error("playerClubSquad must belong to a club in clubIds");
     }
@@ -44,28 +56,29 @@ export function parseMatchdayBody(body: unknown): MatchdayInput {
   return {
     matchday,
     baseSeed,
-    clubIds: payload.clubIds,
+    clubIds,
+    squads,
     playerClubSquad,
   };
 }
 
-function squadsForMatchday(clubIds: TeamId[], playerClubSquad?: Squad): Squad[] {
-  return clubIds.map((clubId) => {
-    const template = ALL_LEAGUE_SQUADS.find((squad) => squad.team.id === clubId);
+function squadsForMatchday(input: MatchdayInput): Squad[] {
+  const byTeam = new Map(input.squads.map((squad) => [squad.team.id, squad] as const));
+  return input.clubIds.map((clubId) => {
+    const template = byTeam.get(clubId);
     if (!template) {
       throw new Error(`Unknown club for matchday: ${clubId}`);
     }
-    if (playerClubSquad?.team.id === clubId) {
-      return playerClubSquad;
+    if (input.playerClubSquad?.team.id === clubId) {
+      return input.playerClubSquad;
     }
     return template;
   });
 }
 
 export function runMatchday(input: MatchdayInput) {
-  const clubIds = input.clubIds ?? SEED_DIVISION.map((squad) => squad.team.id);
   const played = playMatchday({
-    squads: squadsForMatchday(clubIds, input.playerClubSquad),
+    squads: squadsForMatchday(input),
     matchday: input.matchday,
     baseSeed: input.baseSeed,
   });

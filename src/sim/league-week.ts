@@ -246,10 +246,22 @@ export async function fetchMatchdayPayload(
   rivalPlayers?: readonly Player[],
 ): Promise<MatchdayPayload> {
   try {
+    const squads = clubIds.map((teamId) =>
+      squadForTeam(teamId, playerClubSquad, rivalPlayers),
+    );
+    if (squads.some((squad) => squad === undefined)) {
+      throw new Error("Generated league squad is missing");
+    }
     const response = await fetch("/api/matchday", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ matchday, baseSeed, clubIds, playerClubSquad }),
+      body: JSON.stringify({
+        matchday,
+        baseSeed,
+        clubIds,
+        squads: squads as Squad[],
+        playerClubSquad,
+      }),
     });
     if (!response.ok) {
       throw new Error(`matchday ${response.status}`);

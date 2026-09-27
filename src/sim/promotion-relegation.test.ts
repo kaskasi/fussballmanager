@@ -21,7 +21,7 @@ describe("promotion and relegation", () => {
     const pools = defaultLeaguePools();
     const regIds = pools["regionalliga-nord"];
     const oberIds = pools["oberliga-nord"];
-    const results = simulateFullDivisionSeason(regIds, 6, 4242);
+    const results = simulateFullDivisionSeason(regIds, 2, 4242);
     const league = {
       ...defaultLeagueState(),
       results,
@@ -30,9 +30,9 @@ describe("promotion and relegation", () => {
     const movement = applyPromotionRelegation(league, pools, 4242, 1);
     const nextReg = movement.pools["regionalliga-nord"];
     const nextOber = movement.pools["oberliga-nord"];
-    expect(nextReg.length).toBe(6);
-    expect(nextOber.length).toBe(6);
-    expect(new Set([...nextReg, ...nextOber]).size).toBe(12);
+    expect(nextReg.length).toBe(18);
+    expect(nextOber.length).toBe(18);
+    expect(new Set([...nextReg, ...nextOber]).size).toBe(36);
     expect(movement.messages.length).toBeGreaterThan(0);
   });
 

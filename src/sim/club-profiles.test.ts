@@ -1,8 +1,9 @@
-import { asTeamId, NORDSTERN_ID } from "@fussballmanager/shared";
+import { NORDSTERN_ID } from "@fussballmanager/shared";
 import { describe, expect, it } from "vitest";
 import { defaultLeagueState } from "../persistence/league-state.ts";
 import { newGameSession } from "../persistence/game-session.ts";
 import { buildClubProfile } from "./club-profiles.ts";
+import { defaultLeaguePools } from "./league-divisions.ts";
 
 describe("club profiles", () => {
   it("builds a profile with squad and stadium flavor", () => {
@@ -23,7 +24,8 @@ describe("club profiles", () => {
 
   it("uses career CA for rival clubs", () => {
     const session = newGameSession();
-    const profile = buildClubProfile(asTeamId("vfb-moorsiel"), { rivalPlayers: session.rivalPlayers });
+    const rivalId = defaultLeaguePools()["regionalliga-nord"][1]!;
+    const profile = buildClubProfile(rivalId, { rivalPlayers: session.rivalPlayers });
     expect(profile?.squadStrength).toBeGreaterThan(50);
     expect(profile?.bestPlayers[0]?.ca).toBeGreaterThan(50);
   });

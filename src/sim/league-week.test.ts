@@ -17,7 +17,7 @@ describe("league week", () => {
     const first = simulateQuickMatchday(1, weeklySeed(2026, 1, 35), league.club_ids);
     const second = simulateQuickMatchday(1, weeklySeed(2026, 1, 35), league.club_ids);
     expect(first).toEqual(second);
-    expect(first.length).toBe(3);
+    expect(first.length).toBe(9);
   });
 
   it("advances league state offline", async () => {
@@ -27,25 +27,25 @@ describe("league week", () => {
     expect(advanced.league.matchday).toBe(2);
     expect(advanced.playerFixture).not.toBeNull();
     expect(advanced.league.player_stats.length).toBeGreaterThan(0);
-    expect(totalSeasonMatchdays(league)).toBe(30);
+    expect(totalSeasonMatchdays(league)).toBe(34);
   });
 
-  it("skips league play after matchday 30 and during the postseason", async () => {
+  it("skips league play after matchday 34", async () => {
     let league = defaultLeagueState();
-    for (let week = 1; week <= 30; week++) {
+    for (let week = 1; week <= 34; week++) {
       const step = await advanceLeagueWeek(league, 1, week, 2026);
       league = step.league;
     }
-    const offseason = await advanceLeagueWeek(league, 1, 31, 2026);
-    expect(offseason.league.results.length).toBe(30 * 3);
+    const offseason = await advanceLeagueWeek(league, 1, 35, 2026);
+    expect(offseason.league.results.length).toBe(34 * 9);
     expect(offseason.league.matchday).toBe(1);
     expect(offseason.playerFixture).toBeNull();
   });
 
-  it("completes the season after 30 matchdays with 30 games per club", async () => {
+  it("completes the season after 34 matchdays with 34 games per club", async () => {
     let league = defaultLeagueState();
     let seasonComplete = false;
-    for (let week = 1; week <= 30; week++) {
+    for (let week = 1; week <= 34; week++) {
       const step = await advanceLeagueWeek(league, 1, week, 2026);
       league = step.league;
       seasonComplete = step.seasonComplete;
@@ -53,7 +53,7 @@ describe("league week", () => {
     expect(seasonComplete).toBe(true);
     expect(league.season_complete).toBe(true);
     const table = leagueTable(league);
-    expect(table.every((row) => row.played === 30)).toBe(true);
+    expect(table.every((row) => row.played === 34)).toBe(true);
   });
 
   it("applies a watched player fixture instead of re-simming", async () => {

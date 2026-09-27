@@ -4,6 +4,8 @@ export async function fetchCareerMatchView(input: {
   seed: number;
   homeTeamId: TeamId;
   awayTeamId: TeamId;
+  homeSquad: Squad;
+  awaySquad: Squad;
   playerClubSquad?: Squad;
 }): Promise<MatchView> {
   if (

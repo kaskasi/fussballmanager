@@ -34,7 +34,7 @@ describe("career match setup", () => {
 
   it("skips non-league weeks", () => {
     const session = newGameSession();
-    session.week = 31;
+    session.week = 35;
     expect(prepareCareerMatch(session)).toBeNull();
   });
 });

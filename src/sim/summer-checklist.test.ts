@@ -6,8 +6,8 @@ import { buildSummerChecklist, showSummerChecklist } from "./summer-checklist.ts
 describe("summer checklist", () => {
   it("shows after the league schedule or when the season is complete", () => {
     const league = defaultLeagueState();
-    expect(showSummerChecklist(30, league)).toBe(false);
-    expect(showSummerChecklist(31, league)).toBe(true);
+    expect(showSummerChecklist(34, league)).toBe(false);
+    expect(showSummerChecklist(35, league)).toBe(true);
     expect(showSummerChecklist(20, { ...league, season_complete: true })).toBe(true);
   });
 

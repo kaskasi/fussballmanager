@@ -1,6 +1,10 @@
 import { calculateWeeklyGrowth } from "./growth-engine.ts";
 import type { TrainingWeekContext } from "./pipeline-week.ts";
-import { developmentMinutes, effectiveDevelopmentScale } from "./pipeline-week.ts";
+import {
+  developmentMinutes,
+  effectiveDevelopmentScale,
+  seededGrowthRandom,
+} from "./pipeline-week.ts";
 import { trainingIntensityMultiplier } from "./training-load.ts";
 import type { Player, PositionPrimary } from "../types/player.ts";
 
@@ -142,6 +146,18 @@ function weakFootWeeklyGrowth(
     effectiveDevelopmentScale(player, context) *
     trainingIntensityMultiplier(context?.intensity ?? 100) *
     WEAK_FOOT_PROGRAM_BONUS;
+  const resolvedRandom =
+    random ??
+    (context?.masterSeed !== undefined
+      ? seededGrowthRandom(
+          context.masterSeed,
+          context.season,
+          context.week,
+          player.id,
+          "weak_foot",
+          "individual",
+        )
+      : undefined);
   const raw = calculateWeeklyGrowth({
     age: player.age,
     maturityOffset: player.hidden.maturity_offset,
@@ -152,8 +168,8 @@ function weakFootWeeklyGrowth(
     minutes: developmentMinutes(player.squad_status, player.state.weekly_minutes),
     injured: player.state.injury !== null,
     focusSlots: 1,
-    noise: random ? undefined : 1,
-    random,
+    noise: resolvedRandom ? undefined : 1,
+    random: resolvedRandom,
   });
   return raw * scale;
 }

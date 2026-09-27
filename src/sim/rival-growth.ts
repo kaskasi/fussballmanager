@@ -216,10 +216,9 @@ export function advanceRivalGrowthWeek(
   masterSeed: number,
   leagueMatchWeek: boolean,
 ): Player[] {
-  const context = { season, week };
+  const context = { season, week, masterSeed };
   const playedWeek = leagueMatchWeek && isLeagueMatchWeek(week);
   return rivalPlayers.map((player) => {
-    const rng = mulberry32(hashString(`${masterSeed}:${season}:${week}:${player.id}`));
     const withMinutes = {
       ...player,
       state: {
@@ -227,7 +226,7 @@ export function advanceRivalGrowthWeek(
         weekly_minutes: rivalMinutesFromId(player.id, playedWeek),
       },
     };
-    return applyTrainingWeek(withMinutes, AI_TRAINING, context, rng);
+    return applyTrainingWeek(withMinutes, AI_TRAINING, context);
   });
 }
 

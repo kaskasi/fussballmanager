@@ -1,4 +1,8 @@
-import { expireBreakoutModifiers, processWeeklyBreakoutChecks } from "../development/breakouts.ts";
+import {
+  expireBreakoutModifiers,
+  processWeeklyBreakoutChecks,
+  type BreakoutNarrative,
+} from "../development/breakouts.ts";
 import { advanceIndividualTrainingWeek } from "../development/individual-training.ts";
 import { applyTrainingWeek } from "../development/pipeline-week.ts";
 import { planToSessions } from "../development/training-units.ts";
@@ -14,7 +18,7 @@ import {
   reconcileScoutBoard,
 } from "../scouting/scout-board.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
-import { withClubEvent } from "../inbox/club-events.ts";
+import { withClubEvent, type ClubEvent } from "../inbox/club-events.ts";
 import { advanceAiTransferWeek } from "../transfers/ai-transfer-market.ts";
 import { loanReturnMessage } from "../transfers/transfer-history.ts";
 import { isTransferWindowOpen } from "./transfer-windows.ts";
@@ -40,6 +44,25 @@ export interface WeekSimResult {
   matchdayStats: CareerLeagueStat[];
 }
 
+export function appendBreakoutNarrativesToEvents(
+  events: readonly ClubEvent[],
+  narratives: readonly BreakoutNarrative[],
+  season: number,
+  week: number,
+): ClubEvent[] {
+  let next = [...events];
+  for (const narrative of narratives) {
+    next = withClubEvent(
+      next,
+      season,
+      week,
+      "profile",
+      `💡 ${narrative.narrative}`,
+    );
+  }
+  return next;
+}
+
 export async function simulateGameWeek(
   session: GameSession,
   watchedPlayerMatch?: WatchedPlayerMatch | null,
@@ -60,6 +83,7 @@ export async function simulateGameWeek(
   const trainingContext = {
     season: session.season,
     week: nextWeek,
+    masterSeed: session.masterSeed,
     intensity: session.trainingIntensity,
     environmentFactor: environmentFromCoachingStaff(session.coachingStaff),
   };
@@ -102,7 +126,12 @@ export async function simulateGameWeek(
   const youth = simulateYouthWeek(players, session.week, session.masterSeed, session.clubId);
   players = youth.players;
 
-  const breakouts = processWeeklyBreakoutChecks(players, nextWeek, session.masterSeed);
+  const breakouts = processWeeklyBreakoutChecks(
+    players,
+    nextWeek,
+    session.masterSeed,
+    session.season,
+  );
   players = expireBreakoutModifiers(breakouts.players, nextWeek);
   players = refreshAllMarketValues(players, session.season);
 
@@ -145,9 +174,21 @@ export async function simulateGameWeek(
     session.masterSeed,
     leagueStep.matchdayPlayed > 0,
   );
+  const rivalBreakouts = processWeeklyBreakoutChecks(
+    rivalPlayers,
+    nextWeek,
+    session.masterSeed,
+    session.season,
+  );
+  rivalPlayers = expireBreakoutModifiers(rivalBreakouts.players, nextWeek);
 
   let transferState = session.transferState;
-  let clubEvents = session.clubEvents;
+  let clubEvents = appendBreakoutNarrativesToEvents(
+    session.clubEvents,
+    breakouts.narratives,
+    session.season,
+    nextWeek,
+  );
   if (isTransferWindowOpen(nextWeek)) {
     const aiTransfers = advanceAiTransferWeek({
       rivalPlayers,

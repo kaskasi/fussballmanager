@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { IndividualProgram } from "./development/individual-training.ts";
+import { processTransferBreakout } from "./development/breakouts.ts";
 import type { TrainingSlot } from "./development/training-units.ts";
 import { CareerMatch } from "./match/CareerMatch";
 import { appendMatchdayClubEvents } from "./match/post-match-events.ts";
@@ -577,21 +578,29 @@ export default function App() {
         }
 
         const sold = completeSale(player, buyerClubId, current.season);
+        const shifted = processTransferBreakout(sold, {
+          masterSeed: current.masterSeed,
+          worldEventId: `sale_${current.season}_${current.week}_${playerId}_${buyerClubId}`,
+          week: current.week,
+          previousMorale: player.state.morale,
+          matchFitPoor: false,
+        });
+        const finalized = shifted.player;
         const saleRecord = createSaleRecord(
-          sold,
+          finalized,
           deal.fee,
           current.season,
           current.week,
           current.clubId,
           buyerClubId,
         );
-        return sessionWithEvent(
+        let next = sessionWithEvent(
           {
             ...current,
             players: current.players.filter((entry) => entry.id !== playerId),
             rivalPlayers: [
               ...current.rivalPlayers.filter((entry) => entry.id !== playerId),
-              sold,
+              finalized,
             ],
             matchLineup: clearPlayerFromLineup(current.matchLineup, playerId),
             transferState: appendTransferRecord(current.transferState, saleRecord),
@@ -600,6 +609,10 @@ export default function App() {
           "transfer",
           `Abgang ${formatPlayerName(player)} zu ${loanClubName(buyerClubId)} für ${formatClubCash(deal.fee)}.`,
         );
+        for (const narrative of shifted.narratives) {
+          next = sessionWithEvent(next, "profile", `💡 ${narrative.narrative}`);
+        }
+        return next;
       });
       setProfileId(null);
       setProfileFeedback(null);
@@ -694,28 +707,40 @@ export default function App() {
         }
 
         const bought = completePurchase(target.player, current.clubId, current.season);
+        const shifted = processTransferBreakout(bought, {
+          masterSeed: current.masterSeed,
+          worldEventId: `purchase_${current.season}_${current.week}_${playerId}_${current.clubId}`,
+          week: current.week,
+          previousMorale: target.player.state.morale,
+          matchFitPoor: false,
+        });
+        const finalized = shifted.player;
         const targets = { ...current.scoutBoard.targets };
         delete targets[playerId];
         const purchaseRecord = createPurchaseRecord(
-          bought,
+          finalized,
           fee,
           current.season,
           current.week,
           target.player.club_id ?? "cl_rival_pool",
           current.clubId,
         );
-        return sessionWithEvent(
+        let next = sessionWithEvent(
           {
             ...current,
-            players: [...current.players, bought],
+            players: [...current.players, finalized],
             rivalPlayers: current.rivalPlayers.filter((player) => player.id !== playerId),
             transferState: appendTransferRecord(deal.state, purchaseRecord),
             scoutBoard: { ...current.scoutBoard, targets },
             finances: applyTransferFee(current.finances, fee, current.week),
           },
           "transfer",
-          `Zugang ${formatPlayerName(bought)} für ${formatClubCash(fee)}.`,
+          `Zugang ${formatPlayerName(finalized)} für ${formatClubCash(fee)}.`,
         );
+        for (const narrative of shifted.narratives) {
+          next = sessionWithEvent(next, "profile", `💡 ${narrative.narrative}`);
+        }
+        return next;
       });
       setForeignPlayerId(null);
     },

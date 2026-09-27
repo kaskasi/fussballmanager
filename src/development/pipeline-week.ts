@@ -8,6 +8,7 @@ import { focusSlotsFor, type TrainingSession } from "./weekly-plan.ts";
 export interface TrainingWeekContext {
   season: number;
   week: number;
+  masterSeed?: number;
   intensity?: number;
   /** F8.1 — from coaching staff; default 1.0. */
   environmentFactor?: number;
@@ -103,6 +104,18 @@ function growthOf(
   const scale =
     effectiveDevelopmentScale(player, context) *
     trainingIntensityMultiplier(context?.intensity ?? 100);
+  const resolvedRandom =
+    random ??
+    (context?.masterSeed !== undefined
+      ? seededGrowthRandom(
+          context.masterSeed,
+          context.season,
+          context.week,
+          player.id,
+          key,
+          "team",
+        )
+      : undefined);
   const raw = calculateWeeklyGrowth({
     age: player.age,
     maturityOffset: player.hidden.maturity_offset,
@@ -114,8 +127,29 @@ function growthOf(
     injured: player.state.injury !== null,
     focusSlots: focusSlotsFor(sessions, key),
     environmentFactor: context?.environmentFactor ?? 1,
-    noise: random ? undefined : 1,
-    random,
+    noise: resolvedRandom ? undefined : 1,
+    random: resolvedRandom,
   });
   return raw * scale;
+}
+
+export function seededGrowthRandom(
+  masterSeed: number,
+  season: number,
+  week: number,
+  playerId: string,
+  attribute: keyof Attributes,
+  channel: string,
+): () => number {
+  let hash = 0x811c9dc5;
+  for (const char of `${masterSeed}:${season}:${week}:${playerId}:${attribute}:${channel}`) {
+    hash = Math.imul(hash ^ char.charCodeAt(0), 0x9e3779b1);
+  }
+  let state = hash >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) | 0;
+    let value = Math.imul(state ^ (state >>> 15), 1 | state);
+    value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
+    return ((value ^ (value >>> 14)) >>> 0) / 4_294_967_296;
+  };
 }

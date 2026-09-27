@@ -28,6 +28,17 @@ describe("pipeline week", () => {
     expect(effectiveDevelopmentScale(youth, { season: 1, week: 8 })).toBe(0.55);
   });
 
+  it("uses reproducible weekly variance from player, week, and attribute", () => {
+    const player = clonePlayer();
+    const context = { season: 1, week: 8, masterSeed: 2026 };
+    const first = applyTrainingWeek(player, HUB_PLAN, context);
+    const replay = applyTrainingWeek(player, HUB_PLAN, context);
+    const nextWeek = applyTrainingWeek(player, HUB_PLAN, { ...context, week: 9 });
+
+    expect(first.attributes).toEqual(replay.attributes);
+    expect(nextWeek.attributes).not.toEqual(first.attributes);
+  });
+
   it("dampens U17 development versus the pro squad", () => {
     const pro = clonePlayer();
     const youth = clonePlayer();

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
-import { applyBreakoutEffect, clampDrive, processWeeklyBreakoutChecks } from "./breakouts.ts";
+import {
+  applyBreakoutEffect,
+  BREAKOUT_SIGNAL,
+  clampDrive,
+  expireBreakoutModifiers,
+  processTransferBreakout,
+  processWeeklyBreakoutChecks,
+} from "./breakouts.ts";
 
 describe("breakouts", () => {
   it("clamps mentor_ignition drive delta to 1.6", () => {
@@ -44,14 +51,84 @@ describe("breakouts", () => {
     player.age = 24;
     player.hidden.drive = 1.1;
     player.state.recent_growth_26w = 12;
-    let fired = false;
-    for (let seed = 1; seed < 500; seed++) {
-      const { players } = processWeeklyBreakoutChecks([player], 20, seed);
-      if (players[0]?.hidden.breakout_flags.includes("late_bloomer_kick")) {
-        fired = true;
-        break;
+    const result = fireEvent(player, "late_bloomer_kick");
+    expect(result.player.hidden.breakout_flags).toContain("late_bloomer_kick");
+  });
+
+  it("supports the hidden success-inflation slump", () => {
+    const player = withSignal(clonePlayer(), BREAKOUT_SIGNAL.contractTripled);
+    player.age = 25;
+    player.hidden.drive = 0.8;
+    const result = fireEvent(player, "success_inflation");
+    expect(result.player.hidden.drive).toBeCloseTo(0.55);
+    expect(result.narratives).toHaveLength(0);
+  });
+
+  it("applies prodigy pressure with a visible owned-player narrative", () => {
+    let player = clonePlayer();
+    player.hidden.breakout_flags = ["prodigy_foundation"];
+    player = withSignal(player, BREAKOUT_SIGNAL.mediaHypeHigh);
+    player = withSignal(player, BREAKOUT_SIGNAL.topClubPressure);
+    const result = fireEvent(player, "prodigy_pressure");
+    expect(result.player.hidden.drive).toBeCloseTo(0.7);
+    expect(result.player.state.morale).toBe(50);
+    expect(result.player.attributes.composure).toBe(55);
+    expect(result.narratives[0]?.narrative).toContain(player.name.first ?? "Spieler");
+  });
+
+  it("expires and reverses the temporary underdog composure bonus", () => {
+    const player = withSignal(clonePlayer(), BREAKOUT_SIGNAL.mediaSnubEightWeeks);
+    const result = fireEvent(player, "underdog_resolve", 10);
+    expect(result.player.attributes.composure).toBe(65);
+    expect(result.player.state.modifiers.some((mod) => mod.source_event_id === "underdog_resolve")).toBe(true);
+    const expired = expireBreakoutModifiers([result.player], 22)[0]!;
+    expect(expired.attributes.composure).toBe(60);
+    expect(expired.state.modifiers.some((mod) => mod.source_event_id === "underdog_resolve")).toBe(false);
+  });
+
+  it("can turn a transfer into a visible positive environment shift", () => {
+    const player = clonePlayer();
+    player.age = 22;
+    player.state.morale = 30;
+    let shifted: ReturnType<typeof processTransferBreakout> | null = null;
+    for (let event = 1; event <= 100 && !shifted; event++) {
+      const result = processTransferBreakout(player, {
+        masterSeed: 2026,
+        worldEventId: `transfer_${event}`,
+        week: 8,
+        previousMorale: 30,
+        matchFitPoor: false,
+      });
+      if (result.player.hidden.breakout_flags.includes("environment_shift_positive")) {
+        shifted = result;
       }
     }
-    expect(fired).toBe(true);
+    expect(shifted?.player.state.morale).toBe(75);
+    expect(shifted?.narratives).toHaveLength(1);
   });
 });
+
+function withSignal(player: ReturnType<typeof clonePlayer>, signal: string) {
+  return {
+    ...player,
+    state: {
+      ...player.state,
+      modifiers: [...player.state.modifiers, { source_event_id: signal }],
+    },
+  };
+}
+
+function fireEvent(
+  player: ReturnType<typeof clonePlayer>,
+  eventId: string,
+  week = 20,
+) {
+  for (let seed = 1; seed <= 10_000; seed++) {
+    const result = processWeeklyBreakoutChecks([player], week, seed);
+    const updated = result.players[0]!;
+    if (updated.hidden.breakout_flags.includes(eventId)) {
+      return { player: updated, narratives: result.narratives };
+    }
+  }
+  throw new Error(`Event ${eventId} did not fire`);
+}

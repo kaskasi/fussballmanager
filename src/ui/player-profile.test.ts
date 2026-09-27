@@ -55,7 +55,14 @@ describe("player profile helpers", () => {
     const player = clonePlayer();
     expect(growthSeries(player, 1)).toHaveLength(1);
     expect(growthPolyline(growthSeries(player, 1))).toMatch(/^\d/);
-    expect(visibleBreakoutFlags(["prodigy_foundation", "mentor_ignition"])).toEqual(["mentor_ignition"]);
+    expect(
+      visibleBreakoutFlags([
+        "prodigy_foundation",
+        "injury_desperation",
+        "success_inflation",
+        "mentor_ignition",
+      ]),
+    ).toEqual(["mentor_ignition"]);
     const withHistory = appendSeasonSnapshot(player, 1);
     expect(withHistory.history.growth).toHaveLength(1);
   });

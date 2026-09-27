@@ -2,8 +2,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   applyGrowth,
+  attributeSigma,
   calculateWeeklyGrowth,
   decayPerWeek,
+  sampleNoise,
   type WeeklyGrowthInput,
 } from "./growth-engine.ts";
 
@@ -98,6 +100,25 @@ describe("PRD 02.7 growth invariants", () => {
 });
 
 describe("growth constraints", () => {
+  it("draws the published Gaussian sigma per attribute group", () => {
+    const cases = [
+      ["passing", 0.15],
+      ["pace", 0.2],
+      ["composure", 0.1],
+    ] as const;
+    for (const [attribute, expectedSigma] of cases) {
+      const random = deterministicRandom(attribute.length * 101);
+      const draws = Array.from({ length: 20_000 }, () => sampleNoise(attribute, random));
+      const mean = draws.reduce((sum, value) => sum + value, 0) / draws.length;
+      const variance =
+        draws.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) /
+        draws.length;
+      expect(mean).toBeCloseTo(1, 1);
+      expect(Math.sqrt(variance)).toBeCloseTo(expectedSigma, 1);
+      expect(attributeSigma(attribute)).toBe(expectedSigma);
+    }
+  });
+
   it("loads the published decline ages", () => {
     const curves = JSON.parse(
       readFileSync(new URL("../../data/rules/growth_curves.json", import.meta.url), "utf8"),
@@ -146,3 +167,11 @@ describe("growth constraints", () => {
     expect(applyGrowth(197, delta)).toBe(199);
   });
 });
+
+function deterministicRandom(seed: number): () => number {
+  let state = seed;
+  return () => {
+    state = (Math.imul(state, 1_664_525) + 1_013_904_223) >>> 0;
+    return state / 4_294_967_296;
+  };
+}

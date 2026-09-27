@@ -5,6 +5,7 @@ import type { TeamId } from "@fussballmanager/shared";
 import type { DivisionEconomyId } from "../economy/division-economy.ts";
 import { DIVISION_ECONOMY } from "../economy/division-economy.ts";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
+import { processTransferBreakout } from "../development/breakouts.ts";
 import { careerTeamId } from "../sim/rival-growth.ts";
 import { isTransferWindowOpen, transferWindowKind } from "../sim/transfer-windows.ts";
 import type { PositionPrimary, Player } from "../types/player.ts";
@@ -241,7 +242,14 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
     if (!deal) continue;
 
     const bought = completePurchase(deal.player, buyerClubId, input.season);
-    const valued = refreshPlayerMarketValue(bought, input.season);
+    const shifted = processTransferBreakout(bought, {
+      masterSeed: input.masterSeed,
+      worldEventId: `ai_transfer_${input.season}_${input.week}_${deal.player.id}_${buyerClubId}`,
+      week: input.week,
+      previousMorale: deal.player.state.morale,
+      matchFitPoor: false,
+    });
+    const valued = refreshPlayerMarketValue(shifted.player, input.season);
     players = players.map((player) => (player.id === deal.player.id ? valued : player));
 
     budgets = {

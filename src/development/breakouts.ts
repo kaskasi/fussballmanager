@@ -11,7 +11,7 @@ export interface BreakoutEffect {
   morale_delta?: number;
   morale_set?: number;
   attribute_delta?: Partial<Record<keyof Attributes, number>>;
-  modifiers?: TemporaryModifier[];
+  modifiers?: Array<TemporaryModifier & { weeks?: number }>;
   permanent: boolean;
 }
 
@@ -32,11 +32,30 @@ export interface BreakoutNarrative {
   week: number;
 }
 
+export interface TransferBreakoutContext {
+  masterSeed: number;
+  worldEventId: string;
+  week: number;
+  previousMorale: number;
+  matchFitPoor: boolean;
+}
+
 const WEEKLY_ORDER = [
   "injury_desperation",
+  "prodigy_pressure",
+  "success_inflation",
   "late_bloomer_kick",
   "mentor_ignition",
+  "underdog_resolve",
 ] as const;
+
+export const BREAKOUT_SIGNAL = {
+  mentorReady: "mentor_assigned_6m_high_drive",
+  contractTripled: "new_contract_wage_3x",
+  mediaHypeHigh: "media_hype_high",
+  topClubPressure: "club_is_top",
+  mediaSnubEightWeeks: "media_snub_8w",
+} as const;
 
 const EVENTS: Record<(typeof WEEKLY_ORDER)[number], BreakoutEventDef> = {
   injury_desperation: {
@@ -55,6 +74,41 @@ const EVENTS: Record<(typeof WEEKLY_ORDER)[number], BreakoutEventDef> = {
       player.state.injury.severity === "severe" &&
       player.state.injury.weeks_remaining >= 10 &&
       !player.hidden.breakout_flags.includes("injury_desperation"),
+  },
+  prodigy_pressure: {
+    id: "prodigy_pressure",
+    visibility: "partial",
+    narrative_template:
+      "Die Erwartungen erdrücken {player_first}. Zu viele Interviews, zu wenig Fußball.",
+    weekly_probability: 0.005,
+    karma_weight: 1.4,
+    effect: {
+      drive_delta: -0.3,
+      morale_delta: -20,
+      attribute_delta: { composure: -5 },
+      permanent: true,
+    },
+    check: (player) =>
+      player.hidden.breakout_flags.includes("prodigy_foundation") &&
+      hasSignal(player, BREAKOUT_SIGNAL.mediaHypeHigh) &&
+      hasSignal(player, BREAKOUT_SIGNAL.topClubPressure) &&
+      !player.hidden.breakout_flags.includes("prodigy_pressure"),
+  },
+  success_inflation: {
+    id: "success_inflation",
+    visibility: "hidden",
+    narrative_template: null,
+    weekly_probability: 0.008,
+    karma_weight: 1,
+    effect: {
+      drive_delta: -0.25,
+      permanent: true,
+    },
+    check: (player) =>
+      player.age <= 27 &&
+      player.hidden.drive <= 0.9 &&
+      hasSignal(player, BREAKOUT_SIGNAL.contractTripled) &&
+      !player.hidden.breakout_flags.includes("success_inflation"),
   },
   late_bloomer_kick: {
     id: "late_bloomer_kick",
@@ -88,10 +142,36 @@ const EVENTS: Record<(typeof WEEKLY_ORDER)[number], BreakoutEventDef> = {
     check: (player) =>
       player.age <= 23 &&
       !player.hidden.breakout_flags.includes("mentor_ignition") &&
-      (player.state.modifiers.some((mod) => mod.source_event_id === "mentor_assigned") ||
-        (player.hidden.drive >= 1.0 && (player.state.recent_growth_26w ?? 0) > 4)),
+      hasSignal(player, BREAKOUT_SIGNAL.mentorReady),
+  },
+  underdog_resolve: {
+    id: "underdog_resolve",
+    visibility: "partial",
+    narrative_template: "{player_first} hat sich etwas vorgenommen. Man sieht es an jedem Training.",
+    weekly_probability: 0.003,
+    karma_weight: 1.2,
+    effect: {
+      drive_delta: 0.15,
+      modifiers: [
+        {
+          source_event_id: "underdog_resolve",
+          attribute: "composure",
+          delta: 5,
+          weeks: 12,
+        },
+      ],
+      permanent: false,
+    },
+    check: (player) =>
+      player.state.morale >= 40 &&
+      hasSignal(player, BREAKOUT_SIGNAL.mediaSnubEightWeeks) &&
+      !player.hidden.breakout_flags.includes("underdog_resolve"),
   },
 };
+
+function hasSignal(player: Player, signal: string): boolean {
+  return player.state.modifiers.some((modifier) => modifier.source_event_id === signal);
+}
 
 export function clampDrive(value: number): number {
   return Math.min(DRIVE_MAX, Math.max(DRIVE_MIN, value));
@@ -125,7 +205,11 @@ export function applyBreakoutEffect(player: Player, effect: BreakoutEffect, week
     if (mod.attribute && mod.delta !== undefined) {
       attributes[mod.attribute] = Math.min(199, Math.max(0, attributes[mod.attribute] + mod.delta));
     }
-    modifiers.push(mod);
+    const { weeks, ...stored } = mod;
+    modifiers.push({
+      ...stored,
+      until_week: weeks !== undefined ? week + weeks : stored.until_week,
+    });
   }
 
   if (!hidden.breakout_flags.includes(eventId)) {
@@ -145,23 +229,35 @@ export function applyBreakoutEffect(player: Player, effect: BreakoutEffect, week
 }
 
 export function expireBreakoutModifiers(players: readonly Player[], week: number): Player[] {
-  return players.map((player) => ({
-    ...player,
-    state: {
-      ...player.state,
-      modifiers: player.state.modifiers.filter((mod) => {
-        if (mod.until_injury_end) return player.state.injury !== null;
-        if (mod.until_week !== undefined) return mod.until_week > week;
-        return true;
-      }),
-    },
-  }));
+  return players.map((player) => {
+    const attributes = { ...player.attributes };
+    const modifiers = player.state.modifiers.filter((mod) => {
+      const active = mod.until_injury_end
+        ? player.state.injury !== null
+        : mod.until_week !== undefined
+          ? mod.until_week > week
+          : true;
+      if (!active && mod.attribute && mod.delta !== undefined) {
+        attributes[mod.attribute] = Math.min(
+          199,
+          Math.max(0, attributes[mod.attribute] - mod.delta),
+        );
+      }
+      return active;
+    });
+    return {
+      ...player,
+      attributes,
+      state: { ...player.state, modifiers },
+    };
+  });
 }
 
 export function processWeeklyBreakoutChecks(
   players: readonly Player[],
   week: number,
   masterSeed: number,
+  season = 1,
 ): { players: Player[]; narratives: BreakoutNarrative[] } {
   const narratives: BreakoutNarrative[] = [];
   const nextPlayers = players.map((player) => {
@@ -171,7 +267,7 @@ export function processWeeklyBreakoutChecks(
       if (!def.check(player)) continue;
 
       const probability = def.weekly_probability * def.karma_weight;
-      if (breakoutRoll(masterSeed, week, player.id, def.id) >= probability) continue;
+      if (breakoutRoll(masterSeed, season, week, player.id, def.id) >= probability) continue;
 
       const updated = applyBreakoutEffect(player, def.effect, week, def.id);
       if (def.visibility !== "hidden" && def.narrative_template) {
@@ -190,10 +286,94 @@ export function processWeeklyBreakoutChecks(
   return { players: nextPlayers, narratives };
 }
 
-function breakoutRoll(masterSeed: number, week: number, playerId: string, eventId: string): number {
-  let hash = masterSeed ^ week;
-  for (const ch of `${playerId}:${eventId}`) {
+export function processTransferBreakout(
+  player: Player,
+  context: TransferBreakoutContext,
+): { player: Player; narratives: BreakoutNarrative[] } {
+  const candidates = [
+    {
+      id: "environment_shift_positive",
+      eligible:
+        context.previousMorale < 40 &&
+        player.age >= 18 &&
+        player.age <= 26 &&
+        !player.hidden.breakout_flags.includes("environment_shift_positive"),
+      probability: 0.35,
+      effect: {
+        drive_delta: 0.15,
+        morale_set: 75,
+        permanent: true,
+      } satisfies BreakoutEffect,
+      narrative: "Der Wechsel tut {player_first} sichtlich gut. Endlich Spielzeit, endlich Vertrauen.",
+    },
+    {
+      id: "environment_shift_negative",
+      eligible:
+        context.matchFitPoor &&
+        !player.hidden.breakout_flags.includes("environment_shift_negative"),
+      probability: 0.25,
+      effect: {
+        drive_delta: -0.2,
+        permanent: true,
+      } satisfies BreakoutEffect,
+      narrative: null,
+    },
+  ] as const;
+
+  for (const candidate of candidates) {
+    if (!candidate.eligible) continue;
+    const roll = breakoutEventRoll(
+      context.masterSeed,
+      context.worldEventId,
+      player.id,
+      candidate.id,
+    );
+    if (roll >= candidate.probability) continue;
+    const updated = applyBreakoutEffect(
+      player,
+      candidate.effect,
+      context.week,
+      candidate.id,
+    );
+    const narratives = candidate.narrative
+      ? [{
+          playerId: player.id,
+          eventId: candidate.id,
+          narrative: candidate.narrative.replace(
+            "{player_first}",
+            player.name.first ?? "Spieler",
+          ),
+          week: context.week,
+        }]
+      : [];
+    return { player: updated, narratives };
+  }
+  return { player, narratives: [] };
+}
+
+function breakoutRoll(
+  masterSeed: number,
+  season: number,
+  week: number,
+  playerId: string,
+  eventId: string,
+): number {
+  let hash = 0x811c9dc5;
+  for (const ch of `${masterSeed}:${season}:${week}:${playerId}:${eventId}`) {
     hash = Math.imul(hash ^ ch.charCodeAt(0), 0x9e3779b1);
+  }
+  return ((hash >>> 0) % 10_000) / 10_000;
+}
+
+function breakoutEventRoll(
+  masterSeed: number,
+  worldEventId: string,
+  playerId: string,
+  eventId: string,
+): number {
+  let hash = masterSeed;
+  for (const char of `${worldEventId}:${playerId}:${eventId}`) {
+    hash = Math.imul(hash ^ char.charCodeAt(0), 0x9e3779b1);
   }
   return ((hash >>> 0) % 10_000) / 10_000;
 }

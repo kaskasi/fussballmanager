@@ -7,9 +7,7 @@ import { scoutReveal } from "../scouting/scout-visibility.ts";
 /** PRD 06.5: only `full` events get 💡. Generational flags stay off the timeline. */
 const VISIBLE_BREAKOUTS = new Set([
   "mentor_ignition",
-  "injury_desperation",
   "prodigy_pressure",
-  "success_inflation",
   "late_bloomer_kick",
   "underdog_resolve",
   "environment_shift_positive",

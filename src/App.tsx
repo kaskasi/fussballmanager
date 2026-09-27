@@ -87,6 +87,7 @@ import {
 import { ScoutingCenter } from "./ui/screens/ScoutingCenter";
 import { DecisionInboxModal } from "./ui/components/DecisionInbox.tsx";
 import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
+import { SaveToast } from "./ui/components/SaveToast.tsx";
 import { TransferWindowAmbience } from "./ui/components/TransferWindowAmbience.tsx";
 import { YouthCampus } from "./ui/screens/YouthCampus";
 import {
@@ -184,6 +185,20 @@ export default function App() {
   const [accessibility, setAccessibility] = useState<AccessibilityPreferences>(() =>
     loadAccessibilityPreferences(),
   );
+  const [saveToastVisible, setSaveToastVisible] = useState(false);
+  const saveToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const flashSaveToast = useCallback(() => {
+    if (saveToastTimerRef.current) clearTimeout(saveToastTimerRef.current);
+    setSaveToastVisible(true);
+    saveToastTimerRef.current = setTimeout(() => setSaveToastVisible(false), 2000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (saveToastTimerRef.current) clearTimeout(saveToastTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     applyAccessibilityPreferences(accessibility);
@@ -232,7 +247,8 @@ export default function App() {
       writeLocalSave(activeSlot, next);
       return next;
     });
-  }, [activeSlot]);
+    flashSaveToast();
+  }, [activeSlot, flashSaveToast]);
 
   const finishWeekSimulation = useCallback(async () => {
     const snapshot = sessionFromSave(save);
@@ -261,7 +277,8 @@ export default function App() {
       writeLocalSave(activeSlot, next);
       return next;
     });
-  }, [activeSlot, save]);
+    flashSaveToast();
+  }, [activeSlot, flashSaveToast, save]);
 
   const simulateWeek = useCallback(async () => {
     if (simulating) return;
@@ -1009,7 +1026,6 @@ export default function App() {
           players={players}
           season={season}
           week={week}
-          lastSaved={save.manifest.last_played}
           trainingPlan={trainingPlan}
           trainingIntensity={trainingIntensity}
           individualPrograms={individualPrograms}
@@ -1020,20 +1036,13 @@ export default function App() {
           board={board}
           clubId={session.clubId}
           onSelectPlayer={setProfileId}
-          onOpenYouth={() => {
-            setCampusYearOpen(false);
-            setScreen("campus");
-          }}
           onOpenScouting={() => setScreen("scouting")}
           onOpenTransfers={() => setScreen("transfers")}
-          onOpenSquad={() => setScreen("squad")}
-          onOpenFinances={() => setScreen("finances")}
           onOpenInbox={openInbox}
           onSelectScoutTarget={(playerId) => setForeignPlayerId(playerId)}
           youthInbox={youthInbox}
           scoutBoard={scoutBoard}
           clubEvents={clubEvents}
-          onSelectClub={setClubProfileId}
           onOpenTraining={() => setScreen("training")}
           lastSeasonAwards={lastSeasonAwards}
         />
@@ -1170,6 +1179,7 @@ export default function App() {
         <JobOffersModal offers={jobOffers} onAccept={handleAcceptJobOffer} />
       ) : null}
       {saveManagerOverlay}
+      <SaveToast visible={saveToastVisible} />
     </>
   );
 }
@@ -1316,6 +1326,16 @@ function AppNav({
         }}
       >
         💰
+      </NavButton>
+      <NavButton
+        pressed={screen === "finances"}
+        label="Finanzen"
+        onClick={() => {
+          onCloseProfile?.();
+          onNavigate("finances");
+        }}
+      >
+        💶
       </NavButton>
       <NavButton
         pressed={screen === "leagues"}

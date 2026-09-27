@@ -1315,7 +1315,7 @@ body {
 .pipeline {
   max-width: 72rem;
   margin: 0 auto;
-  padding: 1.25rem 1.5rem 2.5rem;
+  padding: 0.75rem 1.25rem 2rem;
 }
 
 .pipeline-head,
@@ -1330,6 +1330,53 @@ body {
 .pipeline-head {
   justify-content: space-between;
   align-items: flex-start;
+}
+
+.pipeline-head-compact {
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.pipeline-head-primary {
+  min-width: 0;
+  flex: 1;
+}
+
+.pipeline-eyebrow {
+  margin: 0;
+  color: #059669;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+
+.pipeline-head-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.pipeline-chip {
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  background: #fff;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.pipeline-chip.pipeline-finance {
+  color: #1d4ed8;
+  cursor: pointer;
+  text-decoration: none;
 }
 
 .pipeline-title {
@@ -1358,10 +1405,26 @@ body {
 }
 
 .pipeline-matchline {
-  margin: 0 0 0.75rem;
-  font-size: 0.82rem;
-  font-weight: 700;
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: #475569;
+  line-height: 1.35;
+}
+
+.pipeline-core {
+  margin-bottom: 0.85rem;
+}
+
+.pipeline-secondary {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pipeline-secondary .board-panel,
+.pipeline-secondary .hub-inbox,
+.pipeline-secondary .dev-hub {
+  margin: 0;
 }
 
 .league-hub {
@@ -1557,6 +1620,25 @@ body {
 
 .leagues-screen-legend .zone-relegated {
   background: #dc2626;
+}
+
+.leagues-screen-leaders {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
+}
+
+.leagues-screen-leaders .league-leaders {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 720px) {
+  .leagues-screen-leaders .league-leaders {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .club-profile-backdrop {
@@ -2573,11 +2655,32 @@ body {
   }
 }
 
-.pipeline-save {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: #047857;
+.save-toast {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 1200;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  background: #047857;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 18%);
+  animation: save-toast-in 0.2s ease-out;
+  pointer-events: none;
+}
+
+@keyframes save-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .inbox-contract-hint {
@@ -2689,6 +2792,10 @@ body {
 .pipeline-tiles {
   align-items: stretch;
   flex-wrap: wrap;
+}
+
+.pipeline-tiles-row {
+  flex-wrap: nowrap;
 }
 
 .pipeline-tile {
@@ -3888,27 +3995,67 @@ body {
   gap: 0.45rem;
 }
 
-.dev-hub-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 0.65rem;
+.dev-hub-list-horizontal {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 640px) {
+  .dev-hub-list-horizontal {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dev-hub-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
   width: 100%;
-  padding: 0.55rem 0.65rem;
-  border: 0;
-  border-radius: 0.75rem;
-  background: #f8fafc;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  background: #fff;
   text-align: left;
   cursor: pointer;
 }
 
-.dev-hub-row:hover {
-  background: rgb(236 253 245 / 80%);
+.dev-hub-card:hover {
+  border-color: #a7f3d0;
+  background: rgb(236 253 245 / 45%);
+}
+
+.dev-hub-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.dev-hub-card-bottom {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.dev-hub-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.86rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dev-hub-status {
+  margin-left: 0.15rem;
+  color: #64748b;
 }
 
 .dev-hub-rank {
-  width: 1.5rem;
-  height: 1.5rem;
+  flex-shrink: 0;
+  width: 1.2rem;
+  height: 1.2rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3916,7 +4063,7 @@ body {
   background: #047857;
   color: #fff;
   font-weight: 900;
-  font-size: 0.8rem;
+  font-size: 0.68rem;
 }
 
 .dev-hub-body {
@@ -3932,11 +4079,18 @@ body {
 }
 
 .dev-hub-meta {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: #64748b;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
 }
 
 .dev-hub-growth {
+  flex-shrink: 0;
+  font-size: 0.78rem;
   font-weight: 900;
   color: #047857;
   font-variant-numeric: tabular-nums;

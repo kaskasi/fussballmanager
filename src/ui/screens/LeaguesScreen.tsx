@@ -7,7 +7,9 @@ import { totalSeasonMatchdays, type LeagueState } from "../../persistence/league
 import { divisionLabel, REGIONALLIGA_ID, OBERLIGA_ID } from "../../sim/league-divisions.ts";
 import { divisionStandings, leagueSliceForForm } from "../../sim/league-standings.ts";
 import { ClubProfileModal } from "../components/ClubProfileModal.tsx";
+import { LeagueLeaderLists } from "../components/LeagueLeaderLists.tsx";
 import { LeagueTable } from "../components/LeagueTable.tsx";
+import { topAssists, topScorers, topYellowCards } from "../../sim/league-week.ts";
 
 const DIVISIONS: DivisionEconomyId[] = [REGIONALLIGA_ID, OBERLIGA_ID];
 
@@ -43,6 +45,7 @@ export function LeaguesScreen({
     [standings.clubIds, standings.results],
   );
   const matchdays = totalSeasonMatchdays({ club_ids: standings.clubIds, meetings_per_opponent: league.meetings_per_opponent });
+  const showLeaders = divisionId === league.division_id;
 
   return (
     <main className="leagues-screen">
@@ -89,6 +92,17 @@ export function LeaguesScreen({
           <span><i className="zone-relegated" /> Abstieg</span>
         </div>
       </section>
+
+      {showLeaders ? (
+        <section className="leagues-screen-leaders" aria-label="Saisonstatistik">
+          <LeagueLeaderLists
+            scorers={topScorers(league)}
+            assists={topAssists(league)}
+            yellows={topYellowCards(league)}
+            playerClubId={league.player_club_id}
+          />
+        </section>
+      ) : null}
 
       {selectedClubId ? (
         <ClubProfileModal

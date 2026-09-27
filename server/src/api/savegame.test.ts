@@ -22,7 +22,7 @@ async function tempSaveRoot(): Promise<string> {
 describe("save API", () => {
   it("creates and round-trips a folder save through HTTP", async () => {
     await tempSaveRoot();
-    const app = buildApp();
+    const app = await buildApp();
     const created = await app.inject({
       method: "POST",
       url: "/api/save/new",

@@ -61,7 +61,7 @@ describe("buildMatchView", () => {
 
 describe("match API", () => {
   it("serves a match view over HTTP", async () => {
-    const app = buildApp();
+    const app = await buildApp();
     const response = await app.inject({
       method: "GET",
       url: "/api/match?seed=2026",
@@ -74,7 +74,7 @@ describe("match API", () => {
   });
 
   it("accepts a 2-3-5 sandbox POST", async () => {
-    const app = buildApp();
+    const app = await buildApp();
     const response = await app.inject({
       method: "POST",
       url: "/api/match",

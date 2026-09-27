@@ -1,6 +1,22 @@
 services:
+  app:
+    build: .
+    ports:
+      - "8080:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      HOST: 0.0.0.0
+      STATIC_ROOT: /app/dist
+      SAVE_ROOT: /app/saves
+    volumes:
+      - saves:/app/saves
+    restart: unless-stopped
+
   db:
     image: postgres:16
+    profiles:
+      - tools
     environment:
       POSTGRES_USER: fussballmanager
       POSTGRES_PASSWORD: fussballmanager
@@ -11,4 +27,5 @@ services:
       - pgdata:/var/lib/postgresql/data
 
 volumes:
+  saves:
   pgdata:

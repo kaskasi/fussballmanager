@@ -1,6 +1,12 @@
 import { buildApp } from "./app.ts";
 
-const app = buildApp(true);
 const port = Number(process.env.PORT ?? 3001);
+const host = process.env.HOST ?? "127.0.0.1";
+const staticRoot = process.env.STATIC_ROOT;
 
-await app.listen({ port, host: "127.0.0.1" });
+const app = await buildApp({
+  logger: process.env.NODE_ENV !== "test",
+  staticRoot,
+});
+
+await app.listen({ port, host });

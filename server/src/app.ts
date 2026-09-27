@@ -1,12 +1,19 @@
 import Fastify from "fastify";
+import fastifyStatic from "@fastify/static";
 import { parseCareerMatchBody, runCareerMatch } from "./api/career-match.ts";
 import { parseMatchdayBody, runMatchday } from "./api/matchday.ts";
 import { buildMatchView, parseMatchBody, parseViewSeed } from "./api/match-view.ts";
 import { deleteFolderSave, newFolderSave, readFolderSave, writeFolderSave } from "./api/savegame.ts";
 import type { SaveGame } from "../../src/persistence/savegame-model.ts";
 
-export function buildApp(logger = false) {
-  const app = Fastify({ logger });
+export interface BuildAppOptions {
+  logger?: boolean;
+  /** When set, serves the Vite build and SPA fallback (Docker / production). */
+  staticRoot?: string;
+}
+
+export async function buildApp(options: BuildAppOptions = {}) {
+  const app = Fastify({ logger: options.logger ?? false });
 
   app.get("/health", async () => ({ ok: true, phase: 1 }));
   app.get("/api/health", async () => ({ ok: true, phase: 1 }));
@@ -97,6 +104,20 @@ export function buildApp(logger = false) {
       players: body.players,
     });
   });
+
+  if (options.staticRoot) {
+    await app.register(fastifyStatic, {
+      root: options.staticRoot,
+      wildcard: false,
+    });
+    app.setNotFoundHandler((request, reply) => {
+      if (request.url.startsWith("/api")) {
+        reply.code(404).send({ error: "Not found" });
+        return;
+      }
+      reply.sendFile("index.html");
+    });
+  }
 
   return app;
 }

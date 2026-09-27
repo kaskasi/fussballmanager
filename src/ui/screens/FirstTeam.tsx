@@ -7,6 +7,7 @@ import {
   type ProSquadSortDirection,
   type ProSquadSortKey,
 } from "../../squad/pro-roster.ts";
+import { caDeltaClassName, formatCaDelta } from "../../player/ca-tracking.ts";
 import { Hint } from "../components/Hint.tsx";
 import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 
@@ -92,6 +93,7 @@ export function FirstTeam({
                 <SquadSortHeader label="Pos" sortKey="position" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
                 <SquadSortHeader label="Alt" sortKey="age" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
                 <SquadSortHeader label="CA" sortKey="ca" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Δ" sortKey="caDelta" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title="CA seit letzter Woche" />
                 <SquadSortHeader label="Wert" sortKey="marketValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
                 <SquadSortHeader label="Min" sortKey="seasonMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
                 <SquadSortHeader label="T" sortKey="goals" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
@@ -110,6 +112,7 @@ export function FirstTeam({
                   <td>{row.position}</td>
                   <td>{row.age}</td>
                   <td className="squad-col-ca">{row.ca}</td>
+                  <td className={caDeltaClassName(row.caDelta)} title="CA seit letzter Woche">{formatCaDelta(row.caDelta)}</td>
                   <td className="squad-col-value">{formatMarketValueShort(row.marketValue)}</td>
                   <td>{row.seasonMinutes}</td>
                   <td>{row.goals}</td>

@@ -1,6 +1,7 @@
 import type { Player, PositionPrimary } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { seasonMatchRating } from "../player/season-stats.ts";
+import { weeklyCaDelta } from "../player/ca-tracking.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 
 export interface ProSquadRow {
@@ -9,6 +10,7 @@ export interface ProSquadRow {
   position: PositionPrimary;
   age: number;
   ca: number;
+  caDelta: number | null;
   form: number;
   seasonMinutes: number;
   marketValue: number;
@@ -25,6 +27,7 @@ export type ProSquadSortKey =
   | "position"
   | "age"
   | "ca"
+  | "caDelta"
   | "marketValue"
   | "seasonMinutes"
   | "goals"
@@ -61,6 +64,7 @@ export function listProSquad(players: readonly Player[], clubId: string): ProSqu
       position: player.position,
       age: player.age,
       ca: Math.round(estimateCa(player.attributes, player.position)),
+      caDelta: weeklyCaDelta(player),
       form: player.state.form,
       seasonMinutes: player.state.season_minutes,
       marketValue: player.market_value,
@@ -103,6 +107,8 @@ function compareByKey(left: ProSquadRow, right: ProSquadRow, key: ProSquadSortKe
       return left.age - right.age;
     case "ca":
       return left.ca - right.ca;
+    case "caDelta":
+      return (left.caDelta ?? -999) - (right.caDelta ?? -999);
     case "marketValue":
       return left.marketValue - right.marketValue;
     case "seasonMinutes":

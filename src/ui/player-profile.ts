@@ -134,15 +134,45 @@ function contractLabel(player: Player, owned: boolean): string {
   return "Verhandlung offen";
 }
 
-export function growthSeries(player: Player): GrowthPoint[] {
+export function growthSeries(player: Player, currentSeason = 1): GrowthPoint[] {
+  const currentCa = roundStat(estimateCa(player.attributes, player.position));
   const points = player.history.growth.map((snapshot) => ({
     season: snapshot.season,
     ca: roundStat(estimateCa(snapshot.attributes_snapshot, player.position)),
   }));
   if (points.length === 0) {
-    return [{ season: 1, ca: roundStat(estimateCa(player.attributes, player.position)) }];
+    return [{ season: currentSeason, ca: currentCa }];
   }
-  return points;
+  const last = points.at(-1);
+  if (last?.season === currentSeason && last.ca === currentCa) {
+    return points;
+  }
+  return [...points, { season: currentSeason, ca: currentCa }];
+}
+
+export interface GrowthChartPoint extends GrowthPoint {
+  x: number;
+  y: number;
+}
+
+export function layoutGrowthChart(
+  points: GrowthPoint[],
+  width = 240,
+  height = 72,
+): GrowthChartPoint[] {
+  if (points.length === 0) return [];
+  const minCa = Math.min(...points.map((point) => point.ca));
+  const maxCa = Math.max(...points.map((point) => point.ca));
+  const span = maxCa - minCa;
+  const padding = 4;
+  const plotHeight = height - padding * 2;
+
+  return points.map((point, index) => {
+    const x = points.length === 1 ? width / 2 : (index / (points.length - 1)) * width;
+    const norm = span === 0 ? 0.5 : (point.ca - minCa) / span;
+    const y = height - padding - norm * plotHeight;
+    return { ...point, x, y };
+  });
 }
 
 export function visibleBreakoutFlags(flags: readonly string[]): string[] {
@@ -162,17 +192,8 @@ export function formMark(form: number): { mark: StateMark; tone: StateTone } {
 }
 
 export function growthPolyline(points: GrowthPoint[], width = 240, height = 72): string {
-  if (points.length === 0) return "";
-  const minCa = Math.min(...points.map((point) => point.ca));
-  const maxCa = Math.max(...points.map((point) => point.ca));
-  const span = Math.max(maxCa - minCa, 1);
-  const step = points.length === 1 ? 0 : width / (points.length - 1);
-  return points
-    .map((point, index) => {
-      const x = points.length === 1 ? width / 2 : index * step;
-      const y = height - ((point.ca - minCa) / span) * (height - 8) - 4;
-      return `${x},${y}`;
-    })
+  return layoutGrowthChart(points, width, height)
+    .map((point) => `${point.x},${point.y}`)
     .join(" ");
 }
 

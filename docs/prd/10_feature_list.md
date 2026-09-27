@@ -98,7 +98,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F5.8 | Beraterwesen | M3 | Beziehungs-System, Sympathie-Effekte |
 | F5.9 | Rückhol-Stories | M4 | Legenden kehren zurück |
 
-### Modul 6 · Finanzen *(PRD 11 — noch zu schreiben)*
+### Modul 6 · Finanzen *(PRD 11)*
 
 | ID | Feature | M | Beschreibung |
 |---|---|---|---|
@@ -224,4 +224,4 @@ Tasks referenzieren Features via ID: „Implementiere F2.2 (Growth Engine) nach 
 ## References
 
 - PRD 02 (Growth), 03 (Jugend), 04 (Scouting), 05 (Transfers), 06 (Breakouts), 07 (Player-Schema), 08 (Savegame), 09 (UI)
-- Offene PRDs: 01 (Vision), 11 (Finanzen), 12 (Liga/Welt-Details), 13 (Meta) — für M2 vor Redaktion von M2-Features erforderlich
+- Offene PRDs: 01 (Vision), 12 (Liga/Welt-Details), 13 (Meta) — für M2 vor Redaktion von M2-Features erforderlich

@@ -39,6 +39,8 @@ export interface Player {
     season_headers: number;
     /** Rolling sum of attribute growth over the last 26 weeks (PRD 06.3). */
     recent_growth_26w: number;
+    /** CA at end of previous simulated week — for weekly Δ display. */
+    last_week_ca?: number;
     /** Last four weekly minute totals, oldest first (PRD 03.5). */
     recent_weekly_minutes: number[];
     modifiers: TemporaryModifier[];

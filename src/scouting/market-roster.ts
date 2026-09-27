@@ -23,6 +23,7 @@ export function listMarketRows(
     position: player.position,
     age: player.age,
     ca: Math.round(estimateCa(player.attributes, player.position)),
+    caDelta: null,
     form: player.state.form,
     seasonMinutes: player.state.season_minutes,
     marketValue: player.market_value,

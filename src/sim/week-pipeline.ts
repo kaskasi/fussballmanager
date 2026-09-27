@@ -6,6 +6,7 @@ import type { FixtureResult } from "@fussballmanager/shared";
 import type { CareerLeagueStat } from "../persistence/league-state.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import { applyDepartureMoralePressure } from "../youth/departure-morale.ts";
+import { stampLastWeekCa } from "../player/ca-tracking.ts";
 import { accumulateWeeklyGrowth, weeklyAttributeGrowth } from "../player/growth-history.ts";
 import { advanceScoutWeek } from "../scouting/scout-board.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
@@ -78,13 +79,14 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
   );
   const playersWithMorale = applyDepartureMoralePressure(advanced.players, advanced.inbox);
   const finances = advanceWeeklyClubFinances(session.finances, playersWithMorale, session.clubId);
+  const playersWithCaStamp = playersWithMorale.map(stampLastWeekCa);
 
   const seasonEnded = footballSeasonEnded;
   let nextSession: GameSession = {
     ...session,
     season: seasonEnded ? session.season + 1 : session.season,
     week: nextWeek,
-    players: playersWithMorale,
+    players: playersWithCaStamp,
     scoutBoard: advanceScoutWeek(session.scoutBoard, nextWeek),
     youthInbox: advanced.inbox,
     league: leagueWithCareerStats,

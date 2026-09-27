@@ -11,7 +11,8 @@ import {
 } from "../../scouting/market-list.ts";
 import { listMarketRows, sortMarketRows } from "../../scouting/market-roster.ts";
 import { formatScoutCa } from "../../scouting/scout-visibility.ts";
-import { formatMarketValueShort, type ProSquadSortKey } from "../../squad/pro-roster.ts";
+import { formatMarketValueShort } from "../../squad/pro-roster.ts";
+import type { MarketSortKey } from "../../scouting/market-list.ts";
 import { Hint } from "../components/Hint.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
 import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
@@ -73,7 +74,7 @@ export function ScoutingCenter({
   }, [market, filters, assignedIds, sort]);
   const assigned = assignedIds.size;
 
-  const toggleSort = (key: ProSquadSortKey) => {
+  const toggleSort = (key: MarketSortKey) => {
     if (sort.key === key) {
       onSortChange({ key, direction: sort.direction === "desc" ? "asc" : "desc" });
       return;

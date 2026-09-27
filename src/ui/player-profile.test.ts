@@ -7,6 +7,7 @@ import {
   formMark,
   growthPolyline,
   growthSeries,
+  layoutGrowthChart,
   profileAttributeKeys,
   stateMark,
   visibleBreakoutFlags,
@@ -52,10 +53,31 @@ describe("player profile helpers", () => {
 
   it("draws a growth line and hides generational flags", () => {
     const player = clonePlayer();
-    expect(growthSeries(player)).toHaveLength(1);
-    expect(growthPolyline(growthSeries(player))).toMatch(/^\d/);
+    expect(growthSeries(player, 1)).toHaveLength(1);
+    expect(growthPolyline(growthSeries(player, 1))).toMatch(/^\d/);
     expect(visibleBreakoutFlags(["prodigy_foundation", "mentor_ignition"])).toEqual(["mentor_ignition"]);
     const withHistory = appendSeasonSnapshot(player, 1);
     expect(withHistory.history.growth).toHaveLength(1);
+  });
+
+  it("appends current CA after season snapshots for a visible trend line", () => {
+    const player = clonePlayer();
+    const snap = appendSeasonSnapshot(player, 1);
+    const series = growthSeries(snap, 2);
+    expect(series).toHaveLength(2);
+    expect(series[0]!.season).toBe(1);
+    expect(series[1]!.season).toBe(2);
+    const layout = layoutGrowthChart(
+      [{ season: 1, ca: 120 }, { season: 2, ca: 190 }],
+      320,
+      120,
+    );
+    expect(layout[0]!.y).toBeGreaterThan(layout[1]!.y);
+  });
+
+  it("centers a flat single-point chart", () => {
+    const layout = layoutGrowthChart([{ season: 1, ca: 100 }], 320, 120);
+    expect(layout[0]!.y).toBeGreaterThan(40);
+    expect(layout[0]!.y).toBeLessThan(80);
   });
 });

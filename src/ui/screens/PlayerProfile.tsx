@@ -21,11 +21,18 @@ import {
   seasonStatsStub,
 } from "../player-flavor.ts";
 import {
+  formatCaDelta,
+  formatRecentGrowth,
+  playerCa,
+  weeklyCaDelta,
+} from "../../player/ca-tracking.ts";
+import {
   attributeBars,
   attributeLabel,
   formMark,
   growthPolyline,
   growthSeries,
+  layoutGrowthChart,
   profileFacts,
   stateMark,
   visibleBreakoutFlags,
@@ -79,7 +86,7 @@ export function PlayerProfile({
   onProfileAction,
   actionFeedback = null,
 }: PlayerProfileProps) {
-  const [tab, setTab] = useState<ProfileTab>("overview");
+  const [tab, setTab] = useState<ProfileTab>(owned ? "development" : "overview");
   const [menuOpen, setMenuOpen] = useState(false);
   const menuItems = profileMenuItems(player, owned, season);
   const canAffordPurchase =
@@ -90,7 +97,7 @@ export function PlayerProfile({
   const form = formMark(player.state.form);
   const bars = attributeBars(player, owned, scoutEstimate);
   const growth = owned
-    ? growthSeries(player)
+    ? growthSeries(player, season)
     : reveal?.showExactCa
       ? [{ season: 1, ca: Number(formatScoutCa(player, scoutEstimate!, false)) }]
       : [];
@@ -313,8 +320,73 @@ function DevelopmentTab({
   timeline: string[];
   reveal: ReturnType<typeof scoutReveal> | null;
 }) {
+  const caDelta = owned ? weeklyCaDelta(player) : null;
+  const recentGrowth = player.state.recent_growth_26w ?? 0;
+  const chartPoints = layoutGrowthChart(growth, 320, 120);
+
   return (
     <section className="profile-panel" aria-label="Entwicklung">
+      {owned ? (
+        <div className="profile-dev-hero">
+          <div className="profile-dev-momentum">
+            <div className="profile-dev-stat">
+              <span className="profile-dev-stat-label">CA</span>
+              <strong className="profile-dev-stat-value">{playerCa(player)}</strong>
+            </div>
+            <div className="profile-dev-stat">
+              <span className="profile-dev-stat-label">Δ Woche</span>
+              <strong className={`profile-dev-stat-value ${caDelta !== null && caDelta > 0 ? "is-up" : caDelta !== null && caDelta < 0 ? "is-down" : ""}`}>
+                {formatCaDelta(caDelta)}
+              </strong>
+            </div>
+            <div className="profile-dev-stat">
+              <span className="profile-dev-stat-label">26 Wochen</span>
+              <strong className="profile-dev-stat-value is-up">{formatRecentGrowth(recentGrowth)}</strong>
+            </div>
+          </div>
+
+          {growth.length > 0 ? (
+            <Hint text="CA-Verlauf über die Saisons — zentral für die Talent-Entwicklung." block>
+              <div className="profile-growth profile-growth-hero">
+                <svg viewBox="0 0 320 120" role="img" aria-label="CA-Verlauf">
+                  {chartPoints.length > 1 ? (
+                    <polyline
+                      points={growthPolyline(growth, 320, 120)}
+                      fill="none"
+                      stroke="#059669"
+                      strokeWidth="4"
+                    />
+                  ) : null}
+                  {chartPoints.map((point) => (
+                    <circle key={`${point.season}-${point.ca}`} cx={point.x} cy={point.y} r="5" fill="#047857" />
+                  ))}
+                </svg>
+                <p className="profile-growth-note">
+                  {player.history.growth.length === 0
+                    ? `Saison ${growth[0]?.season ?? 1} · erster Stand`
+                    : `Saison ${growth[0]?.season ?? 1} → ${growth.at(-1)?.season ?? growth[0]?.season ?? 1}`}
+                </p>
+              </div>
+            </Hint>
+          ) : (
+            <p className="profile-growth-note profile-growth-empty">Noch kein Saisonverlauf — nach der ersten Saison sichtbar.</p>
+          )}
+        </div>
+      ) : growth.length > 0 ? (
+        <Hint text="Scout-Schätzung der Entwicklung." block>
+          <div className="profile-growth profile-growth-hero">
+            <svg viewBox="0 0 320 120" role="img" aria-label="Attributverlauf">
+              <polyline points={growthPolyline(growth, 320, 120)} fill="none" stroke="#059669" strokeWidth="4" />
+            </svg>
+            <p className="profile-growth-note">
+              {reveal?.showExactCa ? "Scout-Schätzung" : "Noch kein belastbarer Verlauf"}
+            </p>
+          </div>
+        </Hint>
+      ) : (
+        <p className="profile-growth-note profile-growth-empty">Entwicklung noch unbekannt</p>
+      )}
+
       <Hint text="Aktueller Zustand. ● gut, ▲ mittel, ◆ schwach." block>
         <div className="profile-state">
           <StateChip label="Fit" mark={fitness.mark} tone={fitness.tone} value={formatState(player.state.fitness, owned, scoutEstimate)} />
@@ -343,35 +415,6 @@ function DevelopmentTab({
           ))}
         </div>
       </Hint>
-
-      {growth.length > 0 ? (
-        <Hint text="Entwicklung über die Saisons." block>
-          <div className="profile-growth">
-            <p className="profile-section-label">Entwicklung</p>
-            <svg viewBox="0 0 240 72" role="img" aria-label="Attributverlauf">
-              <polyline points={growthPolyline(growth)} fill="none" stroke="#059669" strokeWidth="3" />
-              {growth.map((point, index) => {
-                const x = growth.length === 1 ? 120 : (index / (growth.length - 1)) * 240;
-                const min = Math.min(...growth.map((entry) => entry.ca));
-                const max = Math.max(...growth.map((entry) => entry.ca));
-                const y = 68 - ((point.ca - min) / Math.max(max - min, 1)) * 60;
-                return <circle key={point.season} cx={x} cy={y} r="4" fill="#047857" />;
-              })}
-            </svg>
-            <p className="profile-growth-note">
-              {owned
-                ? player.history.growth.length === 0
-                  ? "Saison 1 · erster Stand"
-                  : `${player.history.growth.length} Saison(en)`
-                : reveal?.showExactCa
-                  ? "Scout-Schätzung"
-                  : "Noch kein belastbarer Verlauf"}
-            </p>
-          </div>
-        </Hint>
-      ) : (
-        <p className="profile-growth-note profile-growth-empty">Entwicklung noch unbekannt</p>
-      )}
 
       {owned && timeline.length > 0 ? (
         <div className="profile-timeline" aria-label="Breakouts">

@@ -28,7 +28,7 @@ Transfersystem, Vertragsverhandlungen und den KI-Transfermarkt spezifizieren. Ze
 1. **Market Value ist deterministisch:** Eine Funktion aus Attributen, Alter, Vertrag und Reputation. Kein Random Walk. Verhandlungen bewegen sich um diesen Wert.
 2. **Der Eigentümer kennt seinen Spieler zu 100 %.** Käufer schätzen. Preisverhandlungen mit unbekannten Talenten sind Risk-Analytics.
 3. **Fenster-Disziplin:** Sommer (KW 27–34) und Winter (KW 2–4). Außerhalb: keine Transfers, nur Vertragsverhandlungen mit vereinslosen Spielern.
-4. **Verträge binden:** Gehalt, Bonus und Klauseln sind Wirtschaftsgrößen. Die Finanz-PRD (`11_finances.md`) ist noch nicht geschrieben. Bis dahin gilt diese Datei für Gebühren und Gehälter.
+4. **Verträge binden:** Gehalt, Bonus und Klauseln sind Wirtschaftsgrößen. Budget-Limits (Transfer-Topf, Gehalts-Cap) stehen in PRD 11.1; Ablösen und Gehälter buchen gegen `transfer_budget` bzw. `wage_budget_weekly`.
 5. **Verkauf ist erlaubt und normal:** Sell-On-Klauseln an Jugendspielern machen die Pipeline ökonomisch lohnend.
 
 ---

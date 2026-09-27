@@ -29,6 +29,12 @@ const BANNERS: Record<
 
 const HOLD_MS = 2600;
 
+type Incident = {
+  cue: Exclude<MatchViewCue, null | "substitution">;
+  seq: number;
+  label?: string;
+};
+
 type IncidentBannerProps = {
   cue: MatchViewCue;
   cueDetail?: MatchViewCueDetail;
@@ -36,28 +42,32 @@ type IncidentBannerProps = {
 };
 
 export function IncidentBanner({ cue, cueDetail, seq }: IncidentBannerProps) {
-  const [shown, setShown] = useState<{
-    cue: Exclude<MatchViewCue, null | "substitution">;
-    seq: number;
-    label?: string;
-  } | null>(null);
+  const [visible, setVisible] = useState<Incident | null>(null);
 
   useEffect(() => {
     if (!cue || cue === "substitution") return;
-    setShown({ cue, seq, label: cueDetail?.label });
-    const hide = window.setTimeout(() => setShown(null), HOLD_MS);
-    return () => window.clearTimeout(hide);
+    setVisible({ cue, seq, label: cueDetail?.label });
   }, [cue, cueDetail, seq]);
 
-  if (!shown) {
+  useEffect(() => {
+    if (!visible) return;
+    const hide = window.setTimeout(() => setVisible(null), HOLD_MS);
+    return () => window.clearTimeout(hide);
+  }, [visible?.seq]);
+
+  if (!visible) {
     return null;
   }
-  const banner = BANNERS[shown.cue];
+  const banner = BANNERS[visible.cue];
   return (
-    <div className={`incident-banner incident-banner--${shown.cue}`} role="status">
+    <div
+      key={visible.seq}
+      className={`incident-banner incident-banner--${visible.cue}`}
+      role="status"
+    >
       <img src={banner.src} alt={banner.alt} />
-      {shown.label && shown.cue === "goal" ? (
-        <p className="incident-banner-scorer">{shown.label}</p>
+      {visible.label && visible.cue === "goal" ? (
+        <p className="incident-banner-scorer">{visible.label}</p>
       ) : null}
     </div>
   );

@@ -1,6 +1,7 @@
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { seasonMatchRating } from "../player/season-stats.ts";
+import { weeklyCaDelta } from "../player/ca-tracking.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { ProSquadRow, ProSquadSortDirection, ProSquadSortKey } from "./pro-roster.ts";
 import { sortProSquadRows } from "./pro-roster.ts";
@@ -20,6 +21,7 @@ export function listYouthSquad(players: readonly Player[], team: "u17" | "u19"):
       position: player.position,
       age: player.age,
       ca: Math.round(estimateCa(player.attributes, player.position)),
+      caDelta: weeklyCaDelta(player),
       form: player.state.form,
       seasonMinutes: player.state.season_minutes,
       marketValue: player.market_value,

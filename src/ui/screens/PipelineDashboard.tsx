@@ -19,6 +19,8 @@ import { formatClubCash, weeklyWageBill, type ClubFinances } from "../../economy
 import type { ClubEvent } from "../../inbox/club-events.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import { inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
+import { listDevelopmentMovers } from "../../player/ca-tracking.ts";
+import { DevelopmentHubPanel } from "../components/DevelopmentHubPanel.tsx";
 import { HubInboxPanel } from "../components/HubInboxPanel.tsx";
 import { LeagueHubPanel } from "../components/LeagueHubPanel.tsx";
 import { TrainingCenter } from "./TrainingCenter.tsx";
@@ -101,6 +103,10 @@ export function PipelineDashboard({
     : null;
   const seasonMatchdays = totalSeasonMatchdays(league);
   const wageBill = weeklyWageBill(players, clubId);
+  const developmentMovers = useMemo(
+    () => listDevelopmentMovers(players, clubId),
+    [players, clubId],
+  );
   const matchdayLabel = league.season_complete
     ? "Saison beendet"
     : `Spieltag ${Math.min(league.matchday, seasonMatchdays)}/${seasonMatchdays}`;
@@ -169,6 +175,7 @@ export function PipelineDashboard({
         onOpenDecision={(itemId) => onOpenInbox(itemId)}
         onSelectScoutTarget={onSelectScoutTarget}
       />
+      <DevelopmentHubPanel movers={developmentMovers} onSelectPlayer={onSelectPlayer} />
       <LeagueHubPanel league={league} />
       <section>
         <div className="pipeline-chart" aria-label="Pipeline nach Stufe">

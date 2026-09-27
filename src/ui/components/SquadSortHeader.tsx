@@ -1,19 +1,21 @@
-import type { ProSquadSortDirection, ProSquadSortKey } from "../../squad/pro-roster.ts";
+import type { ProSquadSortDirection } from "../../squad/pro-roster.ts";
 
-export function SquadSortHeader({
+export function SquadSortHeader<K extends string>({
   label,
   sortKey,
   activeKey,
   direction,
   onSort,
   align = "right",
+  title,
 }: {
   label: string;
-  sortKey: ProSquadSortKey;
-  activeKey: ProSquadSortKey;
+  sortKey: K;
+  activeKey: K;
   direction: ProSquadSortDirection;
-  onSort: (key: ProSquadSortKey) => void;
+  onSort: (key: K) => void;
   align?: "left" | "right";
+  title?: string;
 }) {
   const active = sortKey === activeKey;
   return (
@@ -25,6 +27,7 @@ export function SquadSortHeader({
       <button
         type="button"
         className={`squad-sort-header${active ? " is-active" : ""}${align === "left" ? " is-left" : ""}`}
+        title={title}
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();

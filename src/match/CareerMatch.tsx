@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Squad } from "@fussballmanager/shared";
 import type { Player } from "../types/player.ts";
+import type { NavPrimaryAction } from "../ui/nav-primary-action.ts";
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
 import { fetchCareerMatchView } from "./fetch-career-match.ts";
-import { WeekdayStrip } from "../ui/components/WeekdayStrip.tsx";
 import { CareerLineupScreen } from "./CareerLineupScreen.tsx";
 import { CommentaryFeed } from "./CommentaryFeed.tsx";
 import { Lineup } from "./Lineup.tsx";
@@ -19,6 +19,7 @@ export function CareerMatch({
   simulating,
   onComplete,
   onSkip,
+  onNavActionChange,
 }: {
   setup: CareerMatchSetup;
   players: readonly Player[];
@@ -27,8 +28,14 @@ export function CareerMatch({
   simulating: boolean;
   onComplete: () => void;
   onSkip: () => void;
+  onNavActionChange: (action: NavPrimaryAction | null) => void;
 }) {
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
+
+  useEffect(() => {
+    if (!playerClubSquad) return;
+    return () => onNavActionChange(null);
+  }, [playerClubSquad, onNavActionChange]);
 
   if (!playerClubSquad) {
     return (
@@ -38,6 +45,7 @@ export function CareerMatch({
         week={week}
         weekday={weekday}
         onConfirm={setPlayerClubSquad}
+        onNavActionChange={onNavActionChange}
       />
     );
   }
@@ -51,6 +59,7 @@ export function CareerMatch({
       simulating={simulating}
       onComplete={onComplete}
       onSkip={onSkip}
+      onNavActionChange={onNavActionChange}
     />
   );
 }
@@ -63,6 +72,7 @@ function CareerMatchPlayback({
   simulating,
   onComplete,
   onSkip,
+  onNavActionChange,
 }: {
   setup: CareerMatchSetup;
   playerClubSquad: Squad;
@@ -71,6 +81,7 @@ function CareerMatchPlayback({
   simulating: boolean;
   onComplete: () => void;
   onSkip: () => void;
+  onNavActionChange: (action: NavPrimaryAction | null) => void;
 }) {
   const [view, setView] = useState<Awaited<ReturnType<typeof fetchCareerMatchView>> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -127,9 +138,22 @@ function CareerMatchPlayback({
   const frame = playback.frame;
   const finished = view ? playback.index >= view.frames.length - 1 : false;
 
+  useEffect(() => {
+    onNavActionChange({
+      label: simulating
+        ? "…"
+        : finished
+          ? "Spieltag abschließen"
+          : "Spiel simulieren",
+      onClick: finished ? onComplete : onSkip,
+      disabled: simulating || loading || !view,
+      title: finished ? "Ergebnis übernehmen und zum Sonntag" : "Spiel überspringen und Woche simulieren",
+    });
+    return () => onNavActionChange(null);
+  }, [finished, simulating, loading, view, onComplete, onSkip, onNavActionChange]);
+
   return (
     <main className="matchday career-match">
-      <WeekdayStrip week={week} weekday={weekday} />
       {view && frame ? <Scoreboard view={view} frame={frame} /> : (
         <header className="scoreboard">
           <p className="eyebrow">Spieltag {setup.matchday}</p>
@@ -182,18 +206,6 @@ function CareerMatchPlayback({
             <option value={16}>16×</option>
           </select>
         </label>
-        <button
-          type="button"
-          className="career-match-finish"
-          onClick={finished ? onComplete : onSkip}
-          disabled={simulating || loading || !view}
-        >
-          {simulating
-            ? "Woche wird simuliert…"
-            : finished
-              ? "Sonntag · Spieltag abschließen"
-              : "Überspringen · Woche simulieren"}
-        </button>
       </div>
 
       {loading ? <p className="status">Spiel wird vorbereitet…</p> : null}

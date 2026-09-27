@@ -6,6 +6,7 @@ import {
   emptyInbox,
   generateWeeklyInbox,
   normalizeYouthInbox,
+  pruneYouthInbox,
   type YouthInboxState,
 } from "../youth/decision-inbox.ts";
 import { emptyClubEvents, type ClubEvent } from "../inbox/club-events.ts";
@@ -79,7 +80,10 @@ export function sessionFromSave(save: SaveGame): GameSession {
     players: save.players,
     trainingPlan: pipeline.training_plan,
     scoutBoard: pipeline.scout_board,
-    youthInbox: normalizeYouthInbox(pipeline.youth_inbox ?? emptyInbox(save.state.week)),
+    youthInbox: pruneYouthInbox(
+      normalizeYouthInbox(pipeline.youth_inbox ?? emptyInbox(save.state.week)),
+      save.players,
+    ),
     league: save.state.league ?? defaultLeagueState(),
     transferState: normalizeTransferState(pipeline.transfer_state),
     finances: pipeline.club_finances ?? defaultClubFinances(),

@@ -59,8 +59,33 @@ export function normalizeYouthInbox(inbox: YouthInboxState): YouthInboxState {
   };
 }
 
-export function pendingInboxItems(inbox: YouthInboxState): DecisionInboxItem[] {
-  return inbox.items.filter((item) => !inbox.resolvedIds.includes(item.id));
+function youthPlayerIds(players: readonly Player[]): Set<string> {
+  return new Set(
+    players
+      .filter((player) => player.squad_status === "u17" || player.squad_status === "u19")
+      .map((player) => player.id),
+  );
+}
+
+/** Drop inbox rows for players who left youth or the club. */
+export function pruneYouthInbox(inbox: YouthInboxState, players: readonly Player[]): YouthInboxState {
+  const validIds = youthPlayerIds(players);
+  const keep = (item: DecisionInboxItem) => validIds.has(item.playerId);
+  return {
+    ...inbox,
+    items: inbox.items.filter(keep),
+    queue: inbox.queue.filter(keep),
+  };
+}
+
+export function pendingInboxItems(
+  inbox: YouthInboxState,
+  players?: readonly Player[],
+): DecisionInboxItem[] {
+  const open = inbox.items.filter((item) => !inbox.resolvedIds.includes(item.id));
+  if (!players) return open;
+  const validIds = youthPlayerIds(players);
+  return open.filter((item) => validIds.has(item.playerId));
 }
 
 export function inboxSummary(inbox: YouthInboxState): {
@@ -78,9 +103,13 @@ export function inboxSummary(inbox: YouthInboxState): {
   };
 }
 
-export function deliverDailyInbox(inbox: YouthInboxState): YouthInboxState {
-  const normalized = normalizeYouthInbox(inbox);
-  const pending = pendingInboxItems(normalized);
+export function deliverDailyInbox(
+  inbox: YouthInboxState,
+  players?: readonly Player[],
+): YouthInboxState {
+  let normalized = normalizeYouthInbox(inbox);
+  if (players) normalized = pruneYouthInbox(normalized, players);
+  const pending = pendingInboxItems(normalized, players);
   if (pending.length >= MAX_INBOX_ITEMS || normalized.queue.length === 0) {
     return normalized;
   }
@@ -93,10 +122,14 @@ export function deliverDailyInbox(inbox: YouthInboxState): YouthInboxState {
   };
 }
 
-export function deliverInboxForDays(inbox: YouthInboxState, days: number): YouthInboxState {
+export function deliverInboxForDays(
+  inbox: YouthInboxState,
+  days: number,
+  players?: readonly Player[],
+): YouthInboxState {
   let current = inbox;
   for (let index = 0; index < days; index += 1) {
-    current = deliverDailyInbox(current);
+    current = deliverDailyInbox(current, players);
   }
   return current;
 }
@@ -467,12 +500,29 @@ export function advanceInboxWeek(
 
   const remaining = players.filter((player) => !lost.includes(player.id));
   const fresh = generateWeeklyInbox(remaining, nextWeek, masterSeed, report);
+  const carriedOpen = inbox.items.filter(
+    (item) =>
+      !inbox.resolvedIds.includes(item.id) &&
+      remaining.some((player) => player.id === item.playerId),
+  );
   const carriedQueue = inbox.queue.filter(
-    (item) => !inbox.resolvedIds.includes(item.id) && !inbox.items.some((open) => open.id === item.id),
+    (item) =>
+      !inbox.resolvedIds.includes(item.id) &&
+      !carriedOpen.some((open) => open.id === item.id) &&
+      remaining.some((player) => player.id === item.playerId),
   );
 
   return {
-    inbox: { ...fresh, queue: [...carriedQueue, ...fresh.queue] },
+    inbox: pruneYouthInbox(
+      {
+        ...fresh,
+        items: carriedOpen,
+        queue: [...carriedQueue, ...fresh.queue],
+        resolvedIds: inbox.resolvedIds,
+        coachIcons: { ...inbox.coachIcons, ...fresh.coachIcons },
+      },
+      remaining,
+    ),
     players: remaining,
     lostPlayerIds: lost,
   };

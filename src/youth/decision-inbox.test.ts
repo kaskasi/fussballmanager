@@ -11,6 +11,7 @@ import {
   MAX_INBOX_ITEMS,
   normalizeYouthInbox,
   pendingInboxItems,
+  pruneYouthInbox,
   type YouthInboxState,
 } from "./decision-inbox.ts";
 
@@ -167,13 +168,14 @@ describe("decision inbox", () => {
   });
 
   it("carries undelivered queue items into the next week", () => {
+    const player = youthPlayer("p1", 16);
     const inbox: YouthInboxState = {
       week: 34,
       items: [],
       queue: [
         {
           id: "queued",
-          playerId: "p1",
+          playerId: player.id,
           kind: "promotion",
           week: 34,
           urgency: "now",
@@ -184,8 +186,42 @@ describe("decision inbox", () => {
       coachIcons: {},
       lastReport: null,
     };
-    const advanced = advanceInboxWeek(inbox, [], 35, 2026);
+    const advanced = advanceInboxWeek(inbox, [player], 35, 2026);
     expect(advanced.inbox.queue.some((item) => item.id === "queued")).toBe(true);
+  });
+
+  it("drops orphaned inbox rows for players no longer in youth", () => {
+    const inbox: YouthInboxState = {
+      week: 34,
+      items: [
+        {
+          id: "orphan",
+          playerId: "missing",
+          kind: "promotion",
+          week: 34,
+          urgency: "now",
+          reason: "ready_for_u19",
+        },
+      ],
+      queue: [
+        {
+          id: "queued_orphan",
+          playerId: "missing",
+          kind: "training_focus",
+          week: 34,
+          urgency: "future",
+          reason: "coach_focus",
+        },
+      ],
+      resolvedIds: [],
+      coachIcons: {},
+      lastReport: null,
+    };
+    const player = youthPlayer("pl_ok", 16);
+    const pruned = pruneYouthInbox(inbox, [player]);
+    expect(pruned.items).toHaveLength(0);
+    expect(pruned.queue).toHaveLength(0);
+    expect(pendingInboxItems(pruned, [player])).toHaveLength(0);
   });
 
   it("summarises open recommendations, departure risks, and queue depth", () => {

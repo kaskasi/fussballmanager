@@ -1,6 +1,7 @@
 import { applyMigrations, MIGRATIONS } from "./migrations/index.ts";
 import { saveFromSession, sessionFromSave, type GameSession } from "./game-session.ts";
 import { defaultPipelineState } from "./pipeline-state.ts";
+import { normalizeYouthInbox, pruneYouthInbox } from "../youth/decision-inbox.ts";
 import { SaveIncompleteError, SAVE_VERSION, type SaveGame } from "./savegame-model.ts";
 
 const STORAGE_PREFIX = "fm_save_slot_";
@@ -43,6 +44,26 @@ export function loadLocalSave(slot: number): SaveGame | null {
   }
   if (!save.state.pipeline) {
     throw new SaveIncompleteError("local save is missing pipeline state");
+  }
+  if (save.state.pipeline.youth_inbox) {
+    const pruned = pruneYouthInbox(
+      normalizeYouthInbox(save.state.pipeline.youth_inbox),
+      save.players,
+    );
+    const before = save.state.pipeline.youth_inbox;
+    if (before.items.length !== pruned.items.length || before.queue.length !== pruned.queue.length) {
+      save = {
+        ...save,
+        state: {
+          ...save.state,
+          pipeline: {
+            ...save.state.pipeline,
+            youth_inbox: pruned,
+          },
+        },
+      };
+      writeLocalSave(slot, save);
+    }
   }
   return save;
 }

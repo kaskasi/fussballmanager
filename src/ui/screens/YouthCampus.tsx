@@ -162,7 +162,10 @@ function YearGroup({
   const u17Count = useMemo(() => players.filter((player) => player.squad_status === "u17").length, [players]);
   const u19Count = useMemo(() => players.filter((player) => player.squad_status === "u19").length, [players]);
 
-  const rows = useMemo(() => enrichYouthRows(listYouthSquad(players, team), youthInbox), [players, youthInbox, team]);
+  const rows = useMemo(
+    () => enrichYouthRows(listYouthSquad(players, team), youthInbox, players),
+    [players, youthInbox, team],
+  );
   const positions = useMemo(() => positionsInRoster(rows), [rows]);
   const visible = useMemo(() => {
     const filtered = position === "all" ? rows : rows.filter((row) => row.position === position);
@@ -328,11 +331,15 @@ function formTone(form: number): "good" | "mid" | "low" {
   return "low";
 }
 
-function enrichYouthRows(rows: YouthSquadRow[], inbox: YouthInboxState): YouthSquadRow[] {
+function enrichYouthRows(
+  rows: YouthSquadRow[],
+  inbox: YouthInboxState,
+  players: readonly Player[],
+): YouthSquadRow[] {
   return rows.map((row) => ({
     ...row,
     coachIcon: coachIconForPlayer(inbox, row.playerId),
-    departureRisk: hasDepartureRisk(inbox, row.playerId),
+    departureRisk: hasDepartureRisk(inbox, row.playerId, players),
   }));
 }
 

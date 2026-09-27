@@ -40,7 +40,7 @@ export function HubInboxPanel({
   onOpenDecision: (itemId: string) => void;
   onSelectScoutTarget: (playerId: string) => void;
 }) {
-  const decisions = pendingInboxItems(youthInbox);
+  const decisions = pendingInboxItems(youthInbox, players);
   const reports = scoutReportsForWeek(scoutBoard, week);
   const totalEventPages = Math.max(1, Math.ceil(clubEvents.length / EVENTS_PER_PAGE));
   const [eventPage, setEventPage] = useState(0);

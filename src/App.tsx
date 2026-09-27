@@ -93,6 +93,7 @@ export default function App() {
   const [simulating, setSimulating] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState<string | null>(null);
   const [careerMatchSetup, setCareerMatchSetup] = useState<CareerMatchSetup | null>(null);
+  const [matchNavAction, setMatchNavAction] = useState<NavPrimaryAction | null>(null);
   const [marketFilters, setMarketFilters] = useState<MarketFilters>(DEFAULT_MARKET_FILTERS);
   const [marketSort, setMarketSort] = useState<MarketSort>(DEFAULT_MARKET_SORT);
 
@@ -138,7 +139,7 @@ export default function App() {
         ...result.session,
         weekday: MONDAY,
         matchPlayedThisWeek: false,
-        youthInbox: deliverDailyInbox(result.session.youthInbox),
+        youthInbox: deliverDailyInbox(result.session.youthInbox, result.session.players),
       };
       if (result.playerFixture) {
         nextSession = {
@@ -194,18 +195,18 @@ export default function App() {
 
   const openInbox = useCallback(
     (itemId?: string) => {
-      const pending = pendingInboxItems(youthInbox);
+      const pending = pendingInboxItems(youthInbox, players);
       if (!itemId && pending.length === 0) return;
       if (itemId && !pending.some((item) => item.id === itemId)) return;
       setInboxItemId(itemId ?? null);
       setInboxOpen(true);
     },
-    [youthInbox],
+    [youthInbox, players],
   );
 
   const handleNext = useCallback(() => {
     if (simulating) return;
-    const hasInbox = pendingInboxItems(youthInbox).length > 0;
+    const hasInbox = pendingInboxItems(youthInbox, players).length > 0;
     const skip = resolveSmartSkip(session, hasInbox);
 
     if (skip.action === "inbox") {
@@ -215,7 +216,7 @@ export default function App() {
 
     const inboxAfterDays =
       skip.daysAdvanced > 0
-        ? deliverInboxForDays(session.youthInbox, skip.daysAdvanced)
+        ? deliverInboxForDays(session.youthInbox, skip.daysAdvanced, session.players)
         : session.youthInbox;
     const sessionAtTarget = { ...session, weekday: skip.weekday, youthInbox: inboxAfterDays };
 
@@ -223,7 +224,7 @@ export default function App() {
       patchSession((current) => ({
         ...current,
         weekday: skip.weekday,
-        youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced),
+        youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced, current.players),
       }));
     }
 
@@ -253,7 +254,7 @@ export default function App() {
           action,
           current.season,
         );
-        if (pendingInboxItems(result.inbox).length === 0) {
+        if (pendingInboxItems(result.inbox, result.players).length === 0) {
           setInboxOpen(false);
           setInboxItemId(null);
         }
@@ -400,6 +401,7 @@ export default function App() {
     setInboxOpen(false);
     setProfileFeedback(null);
     setCareerMatchSetup(null);
+    setMatchNavAction(null);
     setMarketFilters(DEFAULT_MARKET_FILTERS);
     setMarketSort(DEFAULT_MARKET_SORT);
     setScreen("hub");
@@ -407,6 +409,14 @@ export default function App() {
 
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
   const foreignTarget = foreignPlayerId ? getBoardTarget(scoutBoard, foreignPlayerId) : null;
+  const navActions: HubNavActions = {
+    week,
+    weekday,
+    simulating,
+    onNext: () => void handleNext(),
+    onNewGame: resetGame,
+    primaryAction: careerMatchSetup ? matchNavAction : null,
+  };
 
   if (careerMatchSetup) {
     return (
@@ -416,13 +426,7 @@ export default function App() {
           week={week}
           onNavigate={setScreen}
           onCampusNavigate={() => setCampusYearOpen(false)}
-          hubActions={{
-            week,
-            weekday,
-            simulating,
-            onNext: () => void handleNext(),
-            onNewGame: resetGame,
-          }}
+          hubActions={navActions}
         />
         <CareerMatch
           setup={careerMatchSetup}
@@ -432,6 +436,7 @@ export default function App() {
           simulating={simulating}
           onComplete={() => void completeCareerMatch(false)}
           onSkip={() => void completeCareerMatch(true)}
+          onNavActionChange={setMatchNavAction}
         />
       </>
     );
@@ -446,6 +451,7 @@ export default function App() {
           onNavigate={setScreen}
           onCloseProfile={() => setForeignPlayerId(null)}
           onCampusNavigate={() => setCampusYearOpen(false)}
+          hubActions={navActions}
         />
         <PlayerProfile
           player={foreignTarget.player}
@@ -476,6 +482,7 @@ export default function App() {
           onNavigate={setScreen}
           onCloseProfile={() => setProfileId(null)}
           onCampusNavigate={() => setCampusYearOpen(false)}
+          hubActions={navActions}
         />
         <PlayerProfile
           player={profilePlayer}
@@ -509,17 +516,7 @@ export default function App() {
         week={week}
         onNavigate={setScreen}
         onCampusNavigate={() => setCampusYearOpen(false)}
-        hubActions={
-          screen === "hub"
-            ? {
-                week,
-                weekday,
-                simulating,
-                onNext: () => void handleNext(),
-                onNewGame: resetGame,
-              }
-            : undefined
-        }
+        hubActions={navActions}
       />
       <div hidden={screen !== "hub"}>
         <PipelineDashboard
@@ -549,7 +546,7 @@ export default function App() {
           clubEvents={clubEvents}
         />
       </div>
-      {inboxOpen && pendingInboxItems(youthInbox).length > 0 ? (
+      {inboxOpen && pendingInboxItems(youthInbox, players).length > 0 ? (
         <DecisionInboxModal
           inbox={youthInbox}
           players={players}
@@ -606,12 +603,15 @@ export default function App() {
   );
 }
 
+import type { NavPrimaryAction } from "./ui/nav-primary-action.ts";
+
 interface HubNavActions {
   week: number;
   weekday: number;
   simulating: boolean;
   onNext: () => void;
   onNewGame: () => void;
+  primaryAction?: NavPrimaryAction | null;
 }
 
 function AppChrome({
@@ -627,7 +627,7 @@ function AppChrome({
   onNavigate: (screen: Screen) => void;
   onCloseProfile?: () => void;
   onCampusNavigate?: () => void;
-  hubActions?: HubNavActions;
+  hubActions: HubNavActions;
 }) {
   return (
     <>
@@ -654,7 +654,7 @@ function AppNav({
   onNavigate: (screen: Screen) => void;
   onCloseProfile?: () => void;
   onCampusNavigate?: () => void;
-  hubActions?: HubNavActions;
+  hubActions: HubNavActions;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [resetAsk, setResetAsk] = useState(false);
@@ -727,87 +727,90 @@ function AppNav({
         💰
       </NavButton>
       </div>
-      {hubActions ? (
-        <div className="app-nav-actions">
-          <WeekdayStrip week={hubActions.week} weekday={hubActions.weekday} />
+      <div className="app-nav-actions">
+        <WeekdayStrip week={hubActions.week} weekday={hubActions.weekday} />
+        <button
+          type="button"
+          className="app-nav-next"
+          onClick={hubActions.primaryAction?.onClick ?? hubActions.onNext}
+          disabled={hubActions.primaryAction?.disabled ?? hubActions.simulating}
+          title={
+            hubActions.primaryAction?.title ??
+            (hubActions.primaryAction ? hubActions.primaryAction.label : "Smart Skip — zum nächsten Ereignis")
+          }
+        >
+          {hubActions.simulating && !hubActions.primaryAction
+            ? "…"
+            : hubActions.primaryAction?.label ?? "▶ Next"}
+        </button>
+        <div className="row-menu app-nav-menu" ref={menuRef}>
           <button
             type="button"
-            className="app-nav-next"
-            onClick={hubActions.onNext}
-            disabled={hubActions.simulating}
-            title="Smart Skip — zum nächsten Ereignis"
+            className="row-menu-trigger"
+            aria-label="Weitere Aktionen"
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            onClick={() => {
+              setMenuOpen((open) => !open);
+              if (menuOpen) setResetAsk(false);
+            }}
           >
-            {hubActions.simulating ? "…" : "▶ Next"}
+            ⋮
           </button>
-          <div className="row-menu app-nav-menu" ref={menuRef}>
-            <button
-              type="button"
-              className="row-menu-trigger"
-              aria-label="Weitere Aktionen"
-              aria-expanded={menuOpen}
-              aria-haspopup="menu"
-              onClick={() => {
-                setMenuOpen((open) => !open);
-                if (menuOpen) setResetAsk(false);
-              }}
-            >
-              ⋮
-            </button>
-            {menuOpen ? (
-              <div className="row-menu-popover pipeline-menu-popover" role="menu">
-                {resetAsk ? (
-                  <>
-                    <p className="pipeline-menu-note">Spielstand löschen und neu starten?</p>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="row-menu-item pipeline-menu-danger"
-                      onClick={() => {
-                        hubActions.onNewGame();
-                        setResetAsk(false);
-                        setMenuOpen(false);
-                      }}
-                    >
-                      Ja, neu starten
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="row-menu-item"
-                      onClick={() => setResetAsk(false)}
-                    >
-                      Abbrechen
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="row-menu-item"
-                      onClick={() => {
-                        onCloseProfile?.();
-                        onNavigate("matchday");
-                        setMenuOpen(false);
-                      }}
-                    >
-                      ⚽ Matchday Sandbox
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="row-menu-item pipeline-menu-danger"
-                      onClick={() => setResetAsk(true)}
-                    >
-                      Neues Spiel
-                    </button>
-                  </>
-                )}
-              </div>
-            ) : null}
-          </div>
+          {menuOpen ? (
+            <div className="row-menu-popover pipeline-menu-popover" role="menu">
+              {resetAsk ? (
+                <>
+                  <p className="pipeline-menu-note">Spielstand löschen und neu starten?</p>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="row-menu-item pipeline-menu-danger"
+                    onClick={() => {
+                      hubActions.onNewGame();
+                      setResetAsk(false);
+                      setMenuOpen(false);
+                    }}
+                  >
+                    Ja, neu starten
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="row-menu-item"
+                    onClick={() => setResetAsk(false)}
+                  >
+                    Abbrechen
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="row-menu-item"
+                    onClick={() => {
+                      onCloseProfile?.();
+                      onNavigate("matchday");
+                      setMenuOpen(false);
+                    }}
+                  >
+                    ⚽ Matchday Sandbox
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="row-menu-item pipeline-menu-danger"
+                    onClick={() => setResetAsk(true)}
+                  >
+                    Neues Spiel
+                  </button>
+                </>
+              )}
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      </div>
     </nav>
   );
 }

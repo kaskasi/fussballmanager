@@ -7,7 +7,7 @@ export function applyDepartureMoralePressure(
   inbox: YouthInboxState,
 ): Player[] {
   const pressured = new Set(
-    pendingInboxItems(inbox)
+    pendingInboxItems(inbox, players)
       .filter((item) => item.kind === "departure_risk")
       .map((item) => item.playerId),
   );

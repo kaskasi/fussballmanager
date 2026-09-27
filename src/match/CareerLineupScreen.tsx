@@ -1,10 +1,11 @@
 /** WIREFRAME: PRD 09.2 — pre-match lineup, formation pick + confirm suggested XI */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FORMATION_IDS, type FormationId, type Squad } from "@fussballmanager/shared";
+import type { NavPrimaryAction } from "../ui/nav-primary-action.ts";
 import type { Player } from "../types/player.ts";
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
 import { suggestCareerSquad } from "../sim/career-engine-squad.ts";
-import { WeekdayStrip } from "../ui/components/WeekdayStrip.tsx";
+import { MatchdayLineupAmbience } from "../ui/components/MatchdayLineupAmbience.tsx";
 
 type CareerLineupScreenProps = {
   setup: CareerMatchSetup;
@@ -12,11 +13,32 @@ type CareerLineupScreenProps = {
   week: number;
   weekday: number;
   onConfirm: (squad: Squad) => void;
+  onNavActionChange: (action: NavPrimaryAction | null) => void;
 };
 
-export function CareerLineupScreen({ setup, players, week, weekday, onConfirm }: CareerLineupScreenProps) {
+export function CareerLineupScreen({
+  setup,
+  players,
+  week,
+  weekday,
+  onConfirm,
+  onNavActionChange,
+}: CareerLineupScreenProps) {
   const [formation, setFormation] = useState<FormationId>("4-3-3");
   const squad = useMemo(() => suggestCareerSquad(players, formation), [players, formation]);
+
+  useEffect(() => {
+    if (!squad) {
+      onNavActionChange(null);
+      return;
+    }
+    onNavActionChange({
+      label: "Auswahl bestätigen",
+      onClick: () => onConfirm(squad),
+      title: "Startelf-Vorschlag übernehmen und Spiel starten",
+    });
+    return () => onNavActionChange(null);
+  }, [squad, formation, onConfirm, onNavActionChange]);
 
   if (!squad) {
     return (
@@ -28,16 +50,15 @@ export function CareerLineupScreen({ setup, players, week, weekday, onConfirm }:
 
   return (
     <main className="matchday career-lineup">
-      <WeekdayStrip week={week} weekday={weekday} />
-      <header className="scoreboard career-lineup-header">
-        <p className="eyebrow">Spieltag {setup.matchday}</p>
-        <h1>
-          {setup.isHome ? "Heim" : "Auswärts"} vs {setup.opponentShortName}
-        </h1>
-        <p className="career-lineup-sub">
-          Formation wählen und den automatischen Vorschlag bestätigen.
-        </p>
-      </header>
+      <MatchdayLineupAmbience setup={setup} />
+      <section className="career-lineup-panel" aria-label="Aufstellung">
+        <header className="career-lineup-header">
+          <p className="eyebrow">KW {week} · {weekdayLabel(weekday)}</p>
+          <h1>Aufstellung</h1>
+          <p className="career-lineup-sub">
+            Formation wählen und den automatischen Vorschlag bestätigen.
+          </p>
+        </header>
 
       <div className="career-lineup-toolbar">
         <label className="career-lineup-formation">
@@ -53,9 +74,6 @@ export function CareerLineupScreen({ setup, players, week, weekday, onConfirm }:
             ))}
           </select>
         </label>
-        <button type="button" className="career-lineup-confirm" onClick={() => onConfirm(squad)}>
-          Vorschlag bestätigen
-        </button>
       </div>
 
       <div className="squad-table-wrap">
@@ -80,6 +98,11 @@ export function CareerLineupScreen({ setup, players, week, weekday, onConfirm }:
           </tbody>
         </table>
       </div>
+      </section>
     </main>
   );
+}
+
+function weekdayLabel(weekday: number): string {
+  return ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][weekday - 1] ?? "—";
 }

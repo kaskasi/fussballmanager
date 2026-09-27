@@ -34,7 +34,7 @@ export function DecisionInboxModal({
   onClose: () => void;
   initialItemId?: string | null;
 }) {
-  const pending = useMemo(() => pendingInboxItems(inbox), [inbox]);
+  const pending = useMemo(() => pendingInboxItems(inbox, players), [inbox, players]);
   const [activeId, setActiveId] = useState<string | null>(initialItemId ?? pending[0]?.id ?? null);
 
   useEffect(() => {
@@ -104,7 +104,15 @@ export function DecisionInboxModal({
               ))}
             </nav>
 
-            {active && player ? (
+            {active && !player ? (
+              <section className="inbox-card inbox-card-orphan">
+                <p>Spieler nicht mehr im Jugendkader.</p>
+                <button type="button" className="inbox-action" onClick={() => onDecision(active.id, "dismiss")}>
+                  <span aria-hidden="true">✕</span>
+                  <span>Entfernen</span>
+                </button>
+              </section>
+            ) : active && player ? (
               <section className="inbox-card">
                 <div className="inbox-player">
                   <span className="inbox-portrait" aria-hidden="true">{positionGlyph(player.position)}</span>
@@ -166,8 +174,12 @@ export function coachIconForPlayer(inbox: YouthInboxState, playerId: string): Co
   return inbox.coachIcons[playerId] ?? "➡️";
 }
 
-export function hasDepartureRisk(inbox: YouthInboxState, playerId: string): boolean {
-  return pendingInboxItems(inbox).some(
+export function hasDepartureRisk(
+  inbox: YouthInboxState,
+  playerId: string,
+  players?: readonly Player[],
+): boolean {
+  return pendingInboxItems(inbox, players).some(
     (item) => item.playerId === playerId && item.kind === "departure_risk",
   );
 }

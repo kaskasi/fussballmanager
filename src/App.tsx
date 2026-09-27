@@ -368,6 +368,7 @@ export default function App() {
           action,
           current.clubId,
           current.season,
+          current.week,
         );
         if (!result) return current;
         const next = sessionWithEvent(
@@ -556,6 +557,8 @@ export default function App() {
           inbox={youthInbox}
           players={players}
           clubId={session.clubId}
+          season={season}
+          week={week}
           initialItemId={inboxItemId}
           onDecision={handleInboxDecision}
           onClose={() => {

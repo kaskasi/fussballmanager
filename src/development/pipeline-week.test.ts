@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { estimateCa } from "../transfers/market-value.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
-import { applyTrainingWeek, developmentScale, HUB_PLAN, projectWeek } from "./pipeline-week.ts";
+import { startProTrial } from "../youth/pro-trial.ts";
+import {
+  applyTrainingWeek,
+  developmentScale,
+  effectiveDevelopmentScale,
+  HUB_PLAN,
+  projectWeek,
+} from "./pipeline-week.ts";
 
 describe("pipeline week", () => {
   it("projects the age-19 passing gain from two technical focus sessions", () => {
@@ -11,6 +18,14 @@ describe("pipeline week", () => {
     expect(next.attributes.passing - player.attributes.passing).toBeCloseTo(passing, 5);
     expect(projectWeek(player, HUB_PLAN)).toBeGreaterThan(passing);
     expect(projectWeek(next, HUB_PLAN)).toBeCloseTo(projectWeek(player, HUB_PLAN), 5);
+  });
+
+  it("uses pro development scale during a pro trial week", () => {
+    const youth = clonePlayer();
+    youth.squad_status = "u19";
+    const onTrial = startProTrial(youth, 1, 8);
+    expect(effectiveDevelopmentScale(onTrial, { season: 1, week: 8 })).toBe(1);
+    expect(effectiveDevelopmentScale(youth, { season: 1, week: 8 })).toBe(0.55);
   });
 
   it("dampens U17 development versus the pro squad", () => {

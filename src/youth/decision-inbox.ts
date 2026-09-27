@@ -6,6 +6,7 @@ import { loanPlayerOut, type TransferRecord } from "../transfers/transfer-histor
 import type { Player } from "../types/player.ts";
 import type { CoachIcon } from "./academy.ts";
 import { departureReasonLabel, departureRiskReasons } from "./departure-risk.ts";
+import { hasActiveProTrial, startProTrial } from "./pro-trial.ts";
 import { canPromotePlayer } from "./promotion-gate.ts";
 import type { YouthReport } from "./youth-sim.ts";
 
@@ -180,12 +181,27 @@ export function allowedActions(
   if (item.kind !== "promotion" || !players || !clubId) return base;
 
   const player = players.find((entry) => entry.id === item.playerId);
-  if (!player || canPromotePlayer(players, clubId, player).allowed) return base;
+  if (!player) return base;
+  if (canPromotePlayer(players, clubId, player).allowed && !hasActiveProTrial(player)) {
+    return base;
+  }
 
   return base.filter((action) => action !== "promote");
 }
 
-export function actionLabel(action: DecisionAction): string {
+export interface DecisionActionContext {
+  item?: DecisionInboxItem;
+  player?: Player;
+}
+
+export function actionLabel(action: DecisionAction, context?: DecisionActionContext): string {
+  if (
+    action === "promote" &&
+    context?.player?.squad_status === "u19" &&
+    context?.item?.reason === "ready_for_pro"
+  ) {
+    return "Probewoche";
+  }
   switch (action) {
     case "loan":
       return "Leihen";
@@ -200,7 +216,14 @@ export function actionLabel(action: DecisionAction): string {
   }
 }
 
-export function actionIcon(action: DecisionAction): string {
+export function actionIcon(action: DecisionAction, context?: DecisionActionContext): string {
+  if (
+    action === "promote" &&
+    context?.player?.squad_status === "u19" &&
+    context?.item?.reason === "ready_for_pro"
+  ) {
+    return "🏃";
+  }
   switch (action) {
     case "loan":
       return "🔄";
@@ -244,6 +267,7 @@ function promotionAllowed(
   player: Player,
   reason: "ready_for_u19" | "ready_for_pro",
 ): boolean {
+  if (hasActiveProTrial(player)) return false;
   if (reason === "ready_for_u19") {
     return canPromotePlayer(players, clubId, player).allowed;
   }
@@ -469,9 +493,7 @@ export function applyInboxDecision(
         );
       } else if (player.squad_status === "u19") {
         nextPlayers = nextPlayers.map((entry) =>
-          entry.id === item.playerId
-            ? grantAchievement({ ...entry, squad_status: "pro" }, ACHIEVEMENT.promotedPro)
-            : entry,
+          entry.id === item.playerId ? startProTrial(entry, season, item.week) : entry,
         );
       }
       break;

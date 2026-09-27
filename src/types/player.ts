@@ -43,6 +43,8 @@ export interface Player {
     last_week_ca?: number;
     /** Last four weekly minute totals, oldest first (PRD 03.5). */
     recent_weekly_minutes: number[];
+    /** F3.5 — trains with pros for `ends_week` inclusive, then auto-promotion check. */
+    pro_trial?: ProTrialState;
     modifiers: TemporaryModifier[];
   };
 
@@ -96,6 +98,13 @@ export interface Attributes {
 
 /** Same keys as Attributes. Multipliers, not the 0–199 skill scale. */
 export type Anlage = Record<keyof Attributes, number>;
+
+export interface ProTrialState {
+  season: number;
+  started_week: number;
+  /** Inclusive last week training with the pro squad. */
+  ends_week: number;
+}
 
 export interface TemporaryModifier {
   source_event_id: string;

@@ -1433,6 +1433,16 @@ body {
   font-weight: 600;
 }
 
+.inbox-trial-hint {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.65rem;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
 .pipeline-go:disabled {
   opacity: 0.65;
   cursor: wait;

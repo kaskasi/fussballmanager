@@ -15,6 +15,7 @@ import {
   type YouthInboxState,
 } from "../../youth/decision-inbox.ts";
 import { canPromotePlayer, promotionGateLabel } from "../../youth/promotion-gate.ts";
+import { proTrialLabel } from "../../youth/pro-trial.ts";
 
 /**
  * WIREFRAME: PRD 09.2 Screen 2b — Decision Inbox
@@ -26,6 +27,8 @@ export function DecisionInboxModal({
   inbox,
   players,
   clubId,
+  season,
+  week,
   onDecision,
   onClose,
   initialItemId = null,
@@ -33,6 +36,8 @@ export function DecisionInboxModal({
   inbox: YouthInboxState;
   players: Player[];
   clubId: string;
+  season: number;
+  week: number;
   onDecision: (itemId: string, action: DecisionAction) => void;
   onClose: () => void;
   initialItemId?: string | null;
@@ -63,10 +68,12 @@ export function DecisionInboxModal({
   const active = pending.find((item) => item.id === activeId) ?? pending[0] ?? null;
   const player = active ? players.find((entry) => entry.id === active.playerId) : null;
   const coachIcon = active ? inbox.coachIcons[active.playerId] : undefined;
+  const actionContext = active && player ? { item: active, player } : undefined;
   const promotionBlock =
     active?.kind === "promotion" && player
       ? promotionGateLabel(canPromotePlayer(players, clubId, player), player.position)
       : null;
+  const trialHint = player ? proTrialLabel(player, season, week) : null;
 
   return (
     <div className="inbox-backdrop" onClick={onClose} role="presentation">
@@ -145,6 +152,14 @@ export function DecisionInboxModal({
                   <p className="inbox-promotion-block">🚫 {promotionBlock}</p>
                 ) : null}
 
+                {trialHint ? <p className="inbox-trial-hint">🏃 {trialHint}</p> : null}
+
+                {active.reason === "ready_for_pro" && !promotionBlock ? (
+                  <p className="inbox-contract-hint">
+                    🏃 Probewoche: eine Woche Profiteam, danach automatische Beförderung wenn Platz frei ist.
+                  </p>
+                ) : null}
+
                 <div className="inbox-actions" aria-label="Aktionen">
                   {allowedActions(active, players, clubId).map((action) => (
                     <button
@@ -153,8 +168,8 @@ export function DecisionInboxModal({
                       className="inbox-action"
                       onClick={() => onDecision(active.id, action)}
                     >
-                      <span aria-hidden="true">{actionIcon(action)}</span>
-                      <span>{actionLabel(action)}</span>
+                      <span aria-hidden="true">{actionIcon(action, actionContext)}</span>
+                      <span>{actionLabel(action, actionContext)}</span>
                     </button>
                   ))}
                 </div>

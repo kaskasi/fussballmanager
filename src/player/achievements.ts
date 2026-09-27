@@ -6,6 +6,7 @@ export const ACHIEVEMENT = {
   youthHeavyMinutes: "⚽ Dauereinsatz in der Jugend",
   promotedU19: "⬆️ Aufstieg in die U19",
   promotedPro: "⭐ Profikader",
+  proTrialWeek: "🏃 Probewoche im Profiteam",
   contractSigned: "✍️ Profivertrag unterschrieben",
   loanMove: "🔄 Ausleihe mit Spielzeit-Garantie",
   trainingFocus: "💪 Individueller Trainingsfokus",

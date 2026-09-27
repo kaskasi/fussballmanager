@@ -4,6 +4,8 @@ import { needsYouthContract, signYouthContract } from "./youth-contract.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
+import { canPromotePlayer } from "../youth/promotion-gate.ts";
+import { hasActiveProTrial, startProTrial } from "../youth/pro-trial.ts";
 
 export type PlayerProfileAction =
   | "praise"
@@ -88,8 +90,8 @@ export function profileMenuItems(
   } else if (player.squad_status === "u19") {
     items.push({
       action: "promote_pro",
-      label: "⭐ In Profikader",
-      hint: "Beförderung in die erste Elf.",
+      label: "🏃 Probewoche",
+      hint: "Eine Woche Profiteam — danach Beförderung, wenn Platz im Kader.",
     });
     items.push({
       action: "demote_u17",
@@ -161,6 +163,9 @@ export function applyProfileAction(
   player: Player,
   action: PlayerProfileAction,
   season = 1,
+  week = 1,
+  squad: readonly Player[] = [],
+  clubId: string = DEFAULT_CLUB_ID,
 ): ProfileActionResult {
   switch (action) {
     case "praise": {
@@ -196,9 +201,23 @@ export function applyProfileAction(
       if (player.squad_status !== "u17" && player.squad_status !== "u19") {
         return { player, message: "Nur Jugendspieler können befördert werden." };
       }
+      if (player.squad_status === "u19") {
+        if (hasActiveProTrial(player)) {
+          return { player, message: "Probewoche läuft bereits." };
+        }
+        const gate = canPromotePlayer(squad.length > 0 ? squad : [player], clubId, player);
+        if (!gate.allowed) {
+          return { player, message: "Kein Platz im Profikader für eine Probewoche." };
+        }
+        const next = startProTrial(player, season, week);
+        return {
+          player: next,
+          message: "Probewoche im Profiteam gestartet — Training wie bei den Profis.",
+        };
+      }
       const rating = ca(player);
-      const ready = player.squad_status === "u19" ? rating >= PRO_CA_READY : rating >= EARLY_PRO_CA;
-      const moraleDelta = ready ? 12 : player.squad_status === "u17" ? -15 : -10;
+      const ready = rating >= EARLY_PRO_CA;
+      const moraleDelta = ready ? 12 : -15;
       let next: Player = {
         ...withMorale(player, moraleDelta),
         squad_status: "pro",
@@ -207,7 +226,7 @@ export function applyProfileAction(
       return {
         player: next,
         message: ready
-          ? "Profibeförderung — große Motivation."
+          ? "Früher Sprung ins Profiteam — große Motivation."
           : "Zu früh im Profikader — Moral sinkt stark.",
       };
     }
@@ -258,6 +277,7 @@ export function applyProfileActionToSquad(
   action: PlayerProfileAction,
   clubId: string = DEFAULT_CLUB_ID,
   season = 1,
+  week = 1,
 ): { players: Player[]; result: ProfileActionResult | null } {
   const index = players.findIndex((player) => player.id === playerId);
   if (index < 0) return { players: [...players], result: null };
@@ -275,7 +295,7 @@ export function applyProfileActionToSquad(
     };
   }
 
-  const result = applyProfileAction(player, action, season);
+  const result = applyProfileAction(player, action, season, week, players, clubId);
   const next = [...players];
   next[index] = result.player;
   return { players: next, result };

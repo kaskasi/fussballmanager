@@ -1,7 +1,13 @@
 import type { Attributes, Player } from "../types/player.ts";
+import { isOnProTrial } from "../youth/pro-trial.ts";
 import { applyGrowth, calculateWeeklyGrowth } from "./growth-engine.ts";
 import { defaultTrainingPlan, planToSessions } from "./training-units.ts";
 import { focusSlotsFor, type TrainingSession } from "./weekly-plan.ts";
+
+export interface TrainingWeekContext {
+  season: number;
+  week: number;
+}
 
 /**
  * One development week for the pipeline dashboard.
@@ -22,6 +28,16 @@ export function developmentScale(status: Player["squad_status"]): number {
     default:
       return 1;
   }
+}
+
+export function effectiveDevelopmentScale(
+  player: Player,
+  context?: TrainingWeekContext,
+): number {
+  if (context && isOnProTrial(player, context.season, context.week)) {
+    return 1;
+  }
+  return developmentScale(player.squad_status);
 }
 
 /** Youth minutes count less toward match-practice growth than pro minutes. */
@@ -58,16 +74,25 @@ export function projectWeek(player: Player, sessions: readonly TrainingSession[]
   return SKILLS.reduce((sum, key) => sum + growthOf(player, key, sessions), 0);
 }
 
-export function applyTrainingWeek(player: Player, sessions: readonly TrainingSession[]): Player {
+export function applyTrainingWeek(
+  player: Player,
+  sessions: readonly TrainingSession[],
+  context?: TrainingWeekContext,
+): Player {
   const attributes = { ...player.attributes };
   for (const key of SKILLS) {
-    attributes[key] = applyGrowth(player.attributes[key], growthOf(player, key, sessions));
+    attributes[key] = applyGrowth(player.attributes[key], growthOf(player, key, sessions, context));
   }
   return { ...player, attributes };
 }
 
-function growthOf(player: Player, key: keyof Attributes, sessions: readonly TrainingSession[]): number {
-  const scale = developmentScale(player.squad_status);
+function growthOf(
+  player: Player,
+  key: keyof Attributes,
+  sessions: readonly TrainingSession[],
+  context?: TrainingWeekContext,
+): number {
+  const scale = effectiveDevelopmentScale(player, context);
   const raw = calculateWeeklyGrowth({
     age: player.age,
     maturityOffset: player.hidden.maturity_offset,

@@ -30,14 +30,14 @@ describe("profile actions", () => {
     expect(next.state.morale).toBeGreaterThan(50);
   });
 
-  it("promotes u19 to pro with morale hit when CA is low", () => {
+  it("starts a pro trial from the u19 profile menu", () => {
     const player = clonePlayer();
     player.squad_status = "u19";
     player.state.morale = 60;
-    player.attributes.passing = 40;
-    const { player: next } = applyProfileAction(player, "promote_pro");
-    expect(next.squad_status).toBe("pro");
-    expect(next.state.morale).toBeLessThan(60);
+    const { player: next } = applyProfileAction(player, "promote_pro", 1, 12, [player]);
+    expect(next.squad_status).toBe("u19");
+    expect(next.state.pro_trial?.started_week).toBe(12);
+    expect(next.state.morale).toBeGreaterThan(60);
   });
 
   it("demotes young pro back to u19", () => {

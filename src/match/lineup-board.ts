@@ -25,6 +25,22 @@ export interface MatchLineupState {
   plan: SandboxPlan;
 }
 
+export function clearPlayerFromLineup(
+  lineup: MatchLineupState | undefined,
+  playerId: string,
+): MatchLineupState | undefined {
+  if (!lineup) return lineup;
+  const assignments = { ...lineup.assignments };
+  let changed = false;
+  for (const [slot, id] of Object.entries(assignments)) {
+    if (id === playerId) {
+      delete assignments[slot as FormationSlotId];
+      changed = true;
+    }
+  }
+  return changed ? { ...lineup, assignments } : lineup;
+}
+
 export function defaultMatchLineup(
   players: readonly Player[],
   plan: SandboxPlan,

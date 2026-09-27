@@ -219,6 +219,15 @@ export function canAffordTransfer(finances: ClubFinances, fee: number): boolean 
   return transferBudget(finances) >= fee;
 }
 
+export function applyPlayerSaleIncome(finances: ClubFinances, fee: number, week?: number): ClubFinances {
+  const line: FinanceLine = { kind: "player_sale", amount: fee, week: week ?? 0 };
+  let next = applyFinanceLines(finances, [line]);
+  if (week !== undefined) {
+    next = appendPendingFinanceLines(next, [line]);
+  }
+  return next;
+}
+
 export function applyTransferFee(finances: ClubFinances, fee: number, week?: number): ClubFinances {
   const line: FinanceLine = { kind: "transfer_fee", amount: -fee, week: week ?? 0 };
   let next = normalizeFinances({

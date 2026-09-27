@@ -3,6 +3,7 @@ import { defaultLeagueState } from "../persistence/league-state.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import {
   advanceWeeklyClubFinances,
+  applyPlayerSaleIncome,
   applySeasonEndFinances,
   applyTransferFee,
   canAffordTransfer,
@@ -56,6 +57,13 @@ describe("club finances", () => {
         9_000 +
         matchdayTicketIncome("regionalliga-nord", true),
     );
+  });
+
+  it("credits player sales to cash and transfer pool", () => {
+    const finances = defaultClubFinances();
+    const afterSale = applyPlayerSaleIncome(finances, 1_000_000, 28);
+    expect(afterSale.cash).toBe(finances.cash + 1_000_000);
+    expect(afterSale.transfer_budget).toBe(finances.transfer_budget + 500_000);
   });
 
   it("uses transfer_budget for affordability and fees", () => {

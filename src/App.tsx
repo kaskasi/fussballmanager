@@ -24,11 +24,13 @@ import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
 import { simulateGameWeek } from "./sim/week-pipeline.ts";
 import { isTransferWindowOpen } from "./sim/transfer-windows.ts";
 import {
+  applyPlayerSaleIncome,
   applyTransferFee,
   canAffordTransfer,
   formatClubCash,
   transferBudget,
 } from "./economy/club-finances.ts";
+import { clearPlayerFromLineup } from "./match/lineup-board.ts";
 import { formatPlayerName } from "./types/player-display.ts";
 import {
   attemptPurchase,
@@ -39,10 +41,19 @@ import {
 import {
   appendTransferRecord,
   createPurchaseRecord,
+  createSaleRecord,
   loanOutMessage,
   loanReturnMessage,
 } from "./transfers/transfer-history.ts";
 import { recallLoanPlayer } from "./transfers/loans.ts";
+import { loanClubName } from "./transfers/loan-roster.ts";
+import {
+  attemptPlayerSale,
+  canSellPlayer,
+  completeSale,
+  estimateSaleOffer,
+  pickAiBuyerClub,
+} from "./transfers/player-sales.ts";
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
 import { FinancesScreen } from "./ui/screens/FinancesScreen.tsx";
 import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
@@ -463,6 +474,78 @@ export default function App() {
     [patchSession],
   );
 
+  const handleSell = useCallback(
+    (playerId: string) => {
+      patchSession((current) => {
+        const player = current.players.find((entry) => entry.id === playerId);
+        if (!player) return current;
+
+        const eligibility = canSellPlayer(
+          player,
+          current.players,
+          current.clubId,
+          current.week,
+        );
+        if (!eligibility.allowed) {
+          return sessionWithEvent(
+            current,
+            "transfer",
+            eligibility.reason ?? "Verkauf nicht möglich.",
+          );
+        }
+
+        const buyerClubId = pickAiBuyerClub(
+          current.league.club_ids,
+          playerId,
+          current.masterSeed,
+          current.season,
+          current.week,
+        );
+        const deal = attemptPlayerSale(
+          player,
+          current.season,
+          current.week,
+          current.masterSeed,
+        );
+        if (!deal.accepted) {
+          return sessionWithEvent(
+            current,
+            "transfer",
+            "Kein Liga-Verein zahlt den Wunschpreis — im nächsten Fenster erneut versuchen.",
+          );
+        }
+
+        const sold = completeSale(player, buyerClubId, current.season);
+        const saleRecord = createSaleRecord(
+          sold,
+          deal.fee,
+          current.season,
+          current.week,
+          current.clubId,
+          buyerClubId,
+        );
+        return sessionWithEvent(
+          {
+            ...current,
+            players: current.players.filter((entry) => entry.id !== playerId),
+            rivalPlayers: [
+              ...current.rivalPlayers.filter((entry) => entry.id !== playerId),
+              sold,
+            ],
+            matchLineup: clearPlayerFromLineup(current.matchLineup, playerId),
+            transferState: appendTransferRecord(current.transferState, saleRecord),
+            finances: applyPlayerSaleIncome(current.finances, deal.fee, current.week),
+          },
+          "transfer",
+          `Abgang ${formatPlayerName(player)} zu ${loanClubName(buyerClubId)} für ${formatClubCash(deal.fee)}.`,
+        );
+      });
+      setProfileId(null);
+      setProfileFeedback(null);
+    },
+    [patchSession],
+  );
+
   const handlePurchase = useCallback(
     (playerId: string) => {
       patchSession((current) => {
@@ -740,7 +823,14 @@ export default function App() {
           owned
           week={week}
           season={season}
+          transferWindowOpen={isTransferWindowOpen(week)}
+          saleOffer={estimateSaleOffer(profilePlayer, season)}
+          saleBlockedReason={(() => {
+            const eligibility = canSellPlayer(profilePlayer, players, session.clubId, week);
+            return eligibility.allowed ? null : eligibility.reason ?? null;
+          })()}
           actionFeedback={profileFeedback}
+          onSell={() => handleSell(profilePlayer.id)}
           onProfileAction={(action) => handleProfileAction(profilePlayer.id, action)}
           onBack={() => {
             setProfileId(null);

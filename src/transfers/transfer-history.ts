@@ -135,6 +135,27 @@ export function createAiTransferRecord(
   };
 }
 
+export function createSaleRecord(
+  player: Player,
+  fee: number,
+  season: number,
+  week: number,
+  fromClubId: string,
+  toClubId: string,
+): TransferRecord {
+  return {
+    id: `tr_${season}_${week}_out_${player.id}`,
+    season,
+    week,
+    kind: "out",
+    player_id: player.id,
+    player_name: formatPlayerName(player),
+    other_club_id: toClubId,
+    other_club_name: loanClubName(toClubId),
+    fee,
+  };
+}
+
 export function createPurchaseRecord(
   player: Player,
   fee: number,

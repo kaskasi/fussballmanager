@@ -57,12 +57,15 @@ export interface PlayerProfileProps {
   transferWindowOpen?: boolean;
   transferBudget?: number;
   purchasePrice?: number;
+  saleOffer?: number;
+  saleBlockedReason?: string | null;
   shortlisted?: boolean;
   onBack: () => void;
   onOpenYouth?: () => void;
   onAssignScout?: () => void;
   onToggleShortlist?: () => void;
   onPurchase?: () => void;
+  onSell?: () => void;
   onProfileAction?: (action: PlayerProfileAction) => void;
   actionFeedback?: string | null;
 }
@@ -76,6 +79,8 @@ export function PlayerProfile({
   season = 1,
   transferBudget,
   purchasePrice,
+  saleOffer,
+  saleBlockedReason = null,
   onBack,
   onOpenYouth,
   onAssignScout,
@@ -83,6 +88,7 @@ export function PlayerProfile({
   shortlisted = false,
   onToggleShortlist,
   onPurchase,
+  onSell,
   onProfileAction,
   actionFeedback = null,
 }: PlayerProfileProps) {
@@ -240,6 +246,29 @@ export function PlayerProfile({
               </button>
             </Hint>
           ) : null}
+        </div>
+      ) : null}
+
+      {owned && onSell ? (
+        <div className="profile-actions">
+          <Hint
+            text={
+              saleBlockedReason ??
+              (!transferWindowOpen
+                ? "Verkauf nur im Sommer- (KW 27–34) und Winterfenster (KW 2–4)."
+                : "Liga-Verein bietet nach Marktwert. 50 % der Ablöse fließen in den Transfer-Topf.")
+            }
+            block
+          >
+            <button
+              type="button"
+              className="profile-scout profile-sell"
+              onClick={onSell}
+              disabled={!transferWindowOpen || Boolean(saleBlockedReason)}
+            >
+              🔴 Verkaufen{saleOffer ? ` · ca. ${formatMoney(saleOffer)}` : ""}
+            </button>
+          </Hint>
         </div>
       ) : null}
 

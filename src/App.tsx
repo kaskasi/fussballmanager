@@ -5,12 +5,12 @@ import { appendMatchdayClubEvents } from "./match/post-match-events.ts";
 import { Matchday } from "./match/Matchday";
 import {
   DEFAULT_CLUB_ID,
-  DEFAULT_SLOT,
   newGameSession,
   saveFromSession,
   sessionFromSave,
 } from "./persistence/game-session.ts";
 import { loadLocalSave, removeLocalSave, writeLocalSave } from "./persistence/local-save.ts";
+import { getActiveSlot, setActiveSlot } from "./persistence/save-slots.ts";
 import type { SaveGame } from "./persistence/savegame-model.ts";
 import {
   activeScoutCount,
@@ -55,6 +55,7 @@ import {
 } from "./scouting/market-list.ts";
 import { ScoutingCenter } from "./ui/screens/ScoutingCenter";
 import { DecisionInboxModal } from "./ui/components/DecisionInbox.tsx";
+import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
 import { TransferWindowAmbience } from "./ui/components/TransferWindowAmbience.tsx";
 import { YouthCampus } from "./ui/screens/YouthCampus";
 import {
@@ -70,24 +71,53 @@ import {
   pendingInboxItems,
   type DecisionAction,
 } from "./youth/decision-inbox.ts";
+import type { NavPrimaryAction } from "./ui/nav-primary-action.ts";
 
 type Screen = "hub" | "campus" | "matchday" | "scouting" | "transfers" | "squad" | "finances" | "stadium";
 
-function bootstrapSave(): SaveGame {
+function bootstrapSave(slot: number): SaveGame {
   try {
-    const loaded = loadLocalSave(DEFAULT_SLOT);
+    const loaded = loadLocalSave(slot);
     if (loaded) return loaded;
   } catch {
-    removeLocalSave(DEFAULT_SLOT);
+    removeLocalSave(slot);
   }
   const fresh = saveFromSession(newGameSession());
-  writeLocalSave(DEFAULT_SLOT, fresh);
+  writeLocalSave(slot, fresh);
   return fresh;
+}
+
+function clearTransientUi(
+  setters: {
+    setProfileId: (value: string | null) => void;
+    setForeignPlayerId: (value: string | null) => void;
+    setCampusYearOpen: (value: boolean) => void;
+    setInboxOpen: (value: boolean) => void;
+    setProfileFeedback: (value: string | null) => void;
+    setCareerMatchSetup: (value: CareerMatchSetup | null) => void;
+    setMatchNavAction: (value: NavPrimaryAction | null) => void;
+    setMarketFilters: (value: MarketFilters) => void;
+    setMarketSort: (value: MarketSort) => void;
+    setScreen: (value: Screen) => void;
+  },
+) {
+  setters.setProfileId(null);
+  setters.setForeignPlayerId(null);
+  setters.setCampusYearOpen(false);
+  setters.setInboxOpen(false);
+  setters.setProfileFeedback(null);
+  setters.setCareerMatchSetup(null);
+  setters.setMatchNavAction(null);
+  setters.setMarketFilters(DEFAULT_MARKET_FILTERS);
+  setters.setMarketSort(DEFAULT_MARKET_SORT);
+  setters.setScreen("hub");
 }
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("hub");
-  const [save, setSave] = useState<SaveGame>(bootstrapSave);
+  const [activeSlot, setActiveSlotState] = useState(() => getActiveSlot());
+  const [save, setSave] = useState<SaveGame>(() => bootstrapSave(getActiveSlot()));
+  const [saveManagerOpen, setSaveManagerOpen] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [foreignPlayerId, setForeignPlayerId] = useState<string | null>(null);
   const [campusYearOpen, setCampusYearOpen] = useState(false);
@@ -130,10 +160,10 @@ export default function App() {
   const patchSession = useCallback((recipe: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>) => {
     setSave((current) => {
       const next = saveFromSession(recipe(sessionFromSave(current)), current);
-      writeLocalSave(DEFAULT_SLOT, next);
+      writeLocalSave(activeSlot, next);
       return next;
     });
-  }, []);
+  }, [activeSlot]);
 
   const finishWeekSimulation = useCallback(async () => {
     const snapshot = sessionFromSave(save);
@@ -159,10 +189,10 @@ export default function App() {
         };
       }
       const next = saveFromSession(nextSession, current);
-      writeLocalSave(DEFAULT_SLOT, next);
+      writeLocalSave(activeSlot, next);
       return next;
     });
-  }, [save]);
+  }, [activeSlot, save]);
 
   const simulateWeek = useCallback(async () => {
     if (simulating) return;
@@ -396,20 +426,78 @@ export default function App() {
   );
 
   const resetGame = useCallback(() => {
-    removeLocalSave(DEFAULT_SLOT);
+    removeLocalSave(activeSlot);
     const fresh = saveFromSession(newGameSession());
-    writeLocalSave(DEFAULT_SLOT, fresh);
+    writeLocalSave(activeSlot, fresh);
     setSave(fresh);
-    setProfileId(null);
-    setForeignPlayerId(null);
-    setCampusYearOpen(false);
-    setInboxOpen(false);
-    setProfileFeedback(null);
-    setCareerMatchSetup(null);
-    setMatchNavAction(null);
-    setMarketFilters(DEFAULT_MARKET_FILTERS);
-    setMarketSort(DEFAULT_MARKET_SORT);
-    setScreen("hub");
+    clearTransientUi({
+      setProfileId,
+      setForeignPlayerId,
+      setCampusYearOpen,
+      setInboxOpen,
+      setProfileFeedback,
+      setCareerMatchSetup,
+      setMatchNavAction,
+      setMarketFilters,
+      setMarketSort,
+      setScreen,
+    });
+  }, [activeSlot]);
+
+  const loadSaveSlot = useCallback(
+    (slot: number) => {
+      setActiveSlot(slot);
+      setActiveSlotState(slot);
+      try {
+        const loaded = loadLocalSave(slot);
+        if (loaded) {
+          setSave(loaded);
+        } else {
+          const fresh = saveFromSession(newGameSession());
+          writeLocalSave(slot, fresh);
+          setSave(fresh);
+        }
+      } catch {
+        removeLocalSave(slot);
+        const fresh = saveFromSession(newGameSession());
+        writeLocalSave(slot, fresh);
+        setSave(fresh);
+      }
+      clearTransientUi({
+        setProfileId,
+        setForeignPlayerId,
+        setCampusYearOpen,
+        setInboxOpen,
+        setProfileFeedback,
+        setCareerMatchSetup,
+        setMatchNavAction,
+        setMarketFilters,
+        setMarketSort,
+        setScreen,
+      });
+    },
+    [],
+  );
+
+  const newGameInSlot = useCallback((slot: number) => {
+    removeLocalSave(slot);
+    setActiveSlot(slot);
+    setActiveSlotState(slot);
+    const fresh = saveFromSession(newGameSession());
+    writeLocalSave(slot, fresh);
+    setSave(fresh);
+    clearTransientUi({
+      setProfileId,
+      setForeignPlayerId,
+      setCampusYearOpen,
+      setInboxOpen,
+      setProfileFeedback,
+      setCareerMatchSetup,
+      setMatchNavAction,
+      setMarketFilters,
+      setMarketSort,
+      setScreen,
+    });
   }, []);
 
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
@@ -420,8 +508,19 @@ export default function App() {
     simulating,
     onNext: () => void handleNext(),
     onNewGame: resetGame,
+    onOpenSaves: () => setSaveManagerOpen(true),
     primaryAction: careerMatchSetup ? matchNavAction : null,
   };
+
+  const saveManagerOverlay = saveManagerOpen ? (
+    <SaveManagerModal
+      activeSlot={activeSlot}
+      currentSave={save}
+      onClose={() => setSaveManagerOpen(false)}
+      onLoadSlot={loadSaveSlot}
+      onNewGameInSlot={newGameInSlot}
+    />
+  ) : null;
 
   if (careerMatchSetup) {
     return (
@@ -443,6 +542,7 @@ export default function App() {
           onSkip={() => void completeCareerMatch(true)}
           onNavActionChange={setMatchNavAction}
         />
+        {saveManagerOverlay}
       </>
     );
   }
@@ -474,6 +574,7 @@ export default function App() {
           onToggleShortlist={() => handleToggleShortlist(foreignTarget.player.id)}
           onPurchase={() => handlePurchase(foreignTarget.player.id)}
         />
+        {saveManagerOverlay}
       </>
     );
   }
@@ -510,6 +611,7 @@ export default function App() {
               : undefined
           }
         />
+        {saveManagerOverlay}
       </>
     );
   }
@@ -633,11 +735,10 @@ export default function App() {
         />
       ) : null}
       {screen === "matchday" ? <Matchday /> : null}
+      {saveManagerOverlay}
     </>
   );
 }
-
-import type { NavPrimaryAction } from "./ui/nav-primary-action.ts";
 
 interface HubNavActions {
   week: number;
@@ -645,6 +746,7 @@ interface HubNavActions {
   simulating: boolean;
   onNext: () => void;
   onNewGame: () => void;
+  onOpenSaves: () => void;
   primaryAction?: NavPrimaryAction | null;
 }
 
@@ -819,6 +921,17 @@ function AppNav({
                 </>
               ) : (
                 <>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="row-menu-item"
+                    onClick={() => {
+                      hubActions.onOpenSaves();
+                      setMenuOpen(false);
+                    }}
+                  >
+                    💾 Spielstände
+                  </button>
                   <button
                     type="button"
                     role="menuitem"

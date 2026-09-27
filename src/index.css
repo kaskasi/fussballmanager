@@ -4022,6 +4022,176 @@ body {
   outline: 2px solid #059669;
 }
 
+.save-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(15 23 42 / 45%);
+}
+
+.save-modal {
+  width: min(28rem, 100%);
+  max-height: min(90vh, 40rem);
+  overflow: auto;
+  padding: 1rem 1.1rem 1.1rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 20px 50px rgb(15 23 42 / 18%);
+}
+
+.save-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.save-modal-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.save-modal-close {
+  border: none;
+  background: #f1f5f9;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.save-modal-lead {
+  margin: 0.55rem 0 0.85rem;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.save-slot-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.save-slot-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.save-slot-card.is-active {
+  border-color: #059669;
+  background: #ecfdf5;
+}
+
+.save-slot-card.is-empty {
+  border-style: dashed;
+  color: #64748b;
+}
+
+.save-slot-card.is-corrupt {
+  border-color: #fecaca;
+  background: #fef2f2;
+  cursor: not-allowed;
+}
+
+.save-slot-card.is-pending {
+  display: block;
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.save-slot-card.is-pending p {
+  margin: 0 0 0.6rem;
+  font-size: 0.88rem;
+}
+
+.save-slot-card-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.save-slot-btn {
+  border: none;
+  border-radius: 0.55rem;
+  padding: 0.4rem 0.65rem;
+  background: #f1f5f9;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.save-slot-btn.is-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.save-slot-icon {
+  font-size: 1.25rem;
+}
+
+.save-slot-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.save-slot-body strong {
+  font-size: 0.9rem;
+}
+
+.save-slot-body span {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.save-slot-badge {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #047857;
+}
+
+.save-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+}
+
+.save-modal-btn {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.7rem;
+  padding: 0.55rem 0.65rem;
+  background: #f8fafc;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.save-modal-file {
+  display: none;
+}
+
+.save-modal-error {
+  margin: 0.65rem 0 0;
+  color: #b91c1c;
+  font-size: 0.8rem;
+}
+
 @media (max-width: 800px) {
   .lineups,
   .score-row,

@@ -17,54 +17,62 @@ export function hasLocalSave(slot: number): boolean {
   return localStorage.getItem(storageKey(slot)) !== null;
 }
 
-export function loadLocalSave(slot: number): SaveGame | null {
-  const raw = localStorage.getItem(storageKey(slot));
-  if (!raw) return null;
-  let save = JSON.parse(raw) as SaveGame;
-  const pending = MIGRATIONS.some((migration) => !save.manifest.migrations_applied.includes(migration.id));
-  if (pending || save.manifest.save_version < SAVE_VERSION) {
-    save = applyMigrations(save, MIGRATIONS);
-    writeLocalSave(slot, save);
+/** Migrate and validate a save without persisting (import preview). */
+export function normalizeSave(save: SaveGame): SaveGame {
+  let next = save;
+  const pending = MIGRATIONS.some((migration) => !next.manifest.migrations_applied.includes(migration.id));
+  if (pending || next.manifest.save_version < SAVE_VERSION) {
+    next = applyMigrations(next, MIGRATIONS);
   }
-  if (!save.state.pipeline) {
-    save = {
-      ...save,
-      state: { ...save.state, pipeline: defaultPipelineState() },
+  if (!next.state.pipeline) {
+    next = {
+      ...next,
+      state: { ...next.state, pipeline: defaultPipelineState(next.state.week) },
       manifest: {
-        ...save.manifest,
+        ...next.manifest,
         save_version: SAVE_VERSION,
-        migrations_applied: save.manifest.migrations_applied.includes("migration_002_pipeline_state")
-          ? save.manifest.migrations_applied
-          : [...save.manifest.migrations_applied, "migration_002_pipeline_state"],
+        migrations_applied: next.manifest.migrations_applied.includes("migration_002_pipeline_state")
+          ? next.manifest.migrations_applied
+          : [...next.manifest.migrations_applied, "migration_002_pipeline_state"],
       },
     };
   }
-  if (save.state.season !== save.manifest.current_week.season || save.state.week !== save.manifest.current_week.week) {
-    throw new SaveIncompleteError("local save state does not match manifest.current_week");
+  if (
+    next.state.season !== next.manifest.current_week.season ||
+    next.state.week !== next.manifest.current_week.week
+  ) {
+    throw new SaveIncompleteError("save state does not match manifest.current_week");
   }
-  if (!save.state.pipeline) {
-    throw new SaveIncompleteError("local save is missing pipeline state");
+  if (!next.state.pipeline) {
+    throw new SaveIncompleteError("save is missing pipeline state");
   }
-  if (save.state.pipeline.youth_inbox) {
+  if (next.state.pipeline.youth_inbox) {
     const pruned = pruneYouthInbox(
-      normalizeYouthInbox(save.state.pipeline.youth_inbox),
-      save.players,
+      normalizeYouthInbox(next.state.pipeline.youth_inbox),
+      next.players,
     );
-    const before = save.state.pipeline.youth_inbox;
+    const before = next.state.pipeline.youth_inbox;
     if (before.items.length !== pruned.items.length || before.queue.length !== pruned.queue.length) {
-      save = {
-        ...save,
+      next = {
+        ...next,
         state: {
-          ...save.state,
+          ...next.state,
           pipeline: {
-            ...save.state.pipeline,
+            ...next.state.pipeline,
             youth_inbox: pruned,
           },
         },
       };
-      writeLocalSave(slot, save);
     }
   }
+  return next;
+}
+
+export function loadLocalSave(slot: number): SaveGame | null {
+  const raw = localStorage.getItem(storageKey(slot));
+  if (!raw) return null;
+  const save = normalizeSave(JSON.parse(raw) as SaveGame);
+  writeLocalSave(slot, save);
   return save;
 }
 

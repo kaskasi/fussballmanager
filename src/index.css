@@ -6016,3 +6016,116 @@ body {
     text-align: left;
   }
 }
+
+/* Compact mobile chrome: two horizontal rows instead of a tall wrapped icon rail. */
+@media (max-width: 720px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .app-nav {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+    padding: 0.45rem max(0.55rem, env(safe-area-inset-right)) 0.4rem
+      max(0.55rem, env(safe-area-inset-left));
+    background: rgb(236 253 245 / 96%);
+    box-shadow: 0 1px 0 rgb(5 150 105 / 12%);
+    backdrop-filter: blur(10px);
+  }
+
+  .app-nav-actions {
+    order: 1;
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  .app-nav-tabs {
+    order: 2;
+    width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+    overflow-x: auto;
+    padding: 0.15rem 0.15rem 0.25rem;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .app-nav-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-nav-tabs button {
+    flex: 0 0 2.65rem;
+    width: 2.65rem;
+    height: 2.35rem;
+    padding: 0;
+    font-size: 1rem;
+  }
+
+  .weekday-strip {
+    min-width: 0;
+    gap: 0.08rem;
+    padding-inline: 0.25rem;
+  }
+
+  .weekday-strip-day {
+    min-width: 1.25rem;
+    padding-inline: 0.08rem;
+  }
+
+  .app-nav-next {
+    padding-inline: 0.7rem;
+    font-size: 0.82rem;
+  }
+
+  .app-nav-menu .row-menu-trigger {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .transfer-ambience {
+    min-height: 0.75rem;
+    padding: 0.1rem 0.75rem;
+  }
+
+  .pipeline,
+  .scouting,
+  .squad,
+  .loans,
+  .transfers,
+  .leagues-screen,
+  .stadium {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .stadium-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "pitch"
+      "north"
+      "west"
+      "east"
+      "south"
+      "vip";
+    padding: 0.75rem;
+  }
+
+  .stadium-block {
+    min-width: 0;
+  }
+
+  .league-table {
+    min-width: 35rem;
+  }
+
+  .league-table-wrap,
+  .squad-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+}

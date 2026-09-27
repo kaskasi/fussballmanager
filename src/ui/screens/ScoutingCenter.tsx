@@ -38,6 +38,12 @@ const CONFIDENCE_FILTERS: { bucket: ConfidenceBucket; label: string; title: stri
   { bucket: "unknown", label: "❓", title: "Unbekannt", hint: "Kaum Wissen — erst scouten und Wochen simulieren." },
 ];
 
+const AGE_FILTERS: Array<{ value: MarketFilters["age"]; label: string }> = [
+  { value: "u21", label: "U21" },
+  { value: "22-27", label: "22–27" },
+  { value: "28+", label: "28+" },
+];
+
 export function ScoutingCenter({
   targets,
   filters,
@@ -132,6 +138,20 @@ export function ScoutingCenter({
               {slot}
             </Chip>
           ))}
+          {AGE_FILTERS.map((filter) => (
+            <Chip
+              key={filter.value}
+              active={filters.age === filter.value}
+              onClick={() =>
+                onFiltersChange({
+                  ...filters,
+                  age: filters.age === filter.value ? "all" : filter.value,
+                })
+              }
+            >
+              {filter.label}
+            </Chip>
+          ))}
           {CONFIDENCE_FILTERS.map((filter) => (
             <Chip
               key={filter.bucket}
@@ -164,6 +184,7 @@ export function ScoutingCenter({
                 <SquadSortHeader label="Name" sortKey="name" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} align="left" />
                 <SquadSortHeader label="Pos" sortKey="position" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} />
                 <SquadSortHeader label="Alt" sortKey="age" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} />
+                <th scope="col">Verein</th>
                 <SquadSortHeader label="CA" sortKey="ca" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} />
                 <SquadSortHeader label="Wert" sortKey="marketValue" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} />
                 <th scope="col">Kenntnis</th>
@@ -185,6 +206,7 @@ export function ScoutingCenter({
                     </td>
                     <td>{row.position}</td>
                     <td>{row.age}</td>
+                    <td>{row.clubName ?? "—"}</td>
                     <td className="squad-col-ca">{ca}</td>
                     <td className="squad-col-value">{formatMarketValueShort(row.marketValue)}</td>
                     <td className="scouting-col-label">{targetLabel({ player: row.player, estimate: row.estimate })}</td>

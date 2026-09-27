@@ -34,10 +34,10 @@ function stripPlayer(player: Player): ExportPlayer {
 export function sanitizeForExport(save: SaveGame): ExportSave {
   const copy = structuredClone(save);
   const players = copy.players.map(stripPlayer);
-  if (copy.state.pipeline?.scout_board) {
-    for (const target of Object.values(copy.state.pipeline.scout_board.targets)) {
-      target.player = stripPlayer(target.player) as Player;
-    }
+  if (copy.state.pipeline?.rival_players) {
+    copy.state.pipeline.rival_players = copy.state.pipeline.rival_players.map(
+      (player) => stripPlayer(player) as Player,
+    );
   }
   const { chain_details: _chain, ...rng } = copy.rng_state;
   return {

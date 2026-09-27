@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { formatPlayerName } from "../types/player-display.ts";
 import {
+  generateWorld,
+  NORDSTERN_CLUB_ID,
+} from "../world/world-generator.ts";
+import {
   confidenceBucket,
   filterMarket,
   headlineCounts,
@@ -8,12 +12,14 @@ import {
 } from "./market-list.ts";
 
 describe("market list", () => {
-  const market = loadMarketList();
+  const world = generateWorld(2026);
+  const rivals = world.players.filter((player) => player.club_id !== NORDSTERN_CLUB_ID);
+  const market = loadMarketList(rivals, world.clubs);
 
   it("loads senior players from rival league clubs", () => {
     expect(market.length).toBeGreaterThan(40);
     expect(market.every((target) => target.player.squad_status === "pro")).toBe(true);
-    expect(market.every((target) => target.player.age >= 19)).toBe(true);
+    expect(market.every((target) => target.player.age >= 18)).toBe(true);
     expect(market.every((target) => target.player.club_id !== "cl_fc_nordstern")).toBe(true);
     const clubs = new Set(market.map((target) => target.player.club_id));
     expect(clubs.size).toBeGreaterThan(1);
@@ -30,12 +36,17 @@ describe("market list", () => {
     expect(counts.known).toBeGreaterThan(0);
   });
 
-  it("filters by position and confidence", () => {
-    const gk = filterMarket(market, { query: "", position: "GK", confidence: "all" });
-    const unknown = filterMarket(market, { query: "", position: "all", confidence: "unknown" });
+  it("filters by position, age, and confidence", () => {
+    const gk = filterMarket(market, { query: "", position: "GK", confidence: "all", age: "all" });
+    const youth = filterMarket(market, { query: "", position: "all", confidence: "all", age: "u21" });
+    const unknown = filterMarket(market, { query: "", position: "all", confidence: "unknown", age: "all" });
     expect(gk.every((target) => target.player.position === "GK")).toBe(true);
+    expect(youth.length).toBeGreaterThan(0);
+    expect(youth.every((target) => target.player.age <= 21)).toBe(true);
     expect(unknown.every((target) => target.estimate.uncertaintyRange >= 40)).toBe(true);
     const sampleName = formatPlayerName(market[0]!.player).split(" ")[0]!.toLowerCase();
-    expect(filterMarket(market, { query: sampleName, position: "all", confidence: "all" }).length).toBeGreaterThan(0);
+    expect(filterMarket(market, { query: sampleName, position: "all", confidence: "all", age: "all" }).length).toBeGreaterThan(0);
+    const clubName = market.find((target) => target.clubName)?.clubName ?? "";
+    expect(filterMarket(market, { query: clubName, position: "all", confidence: "all", age: "all" }).length).toBeGreaterThan(0);
   });
 });

@@ -106,10 +106,12 @@ describe("save folder", () => {
 describe("export sanitizer", () => {
   it("drops hidden values, drive snapshots, and chain details without touching the local save", () => {
     const save = sampleSave();
+    save.state.pipeline!.rival_players = [clonePlayer()];
     const exported = sanitizeForExport(save);
     expect(exported.manifest.sanitized).toBe(true);
     expect(save.players[0]?.hidden.drive).toBe(1);
     expect(save.rng_state.chain_details).toEqual({ secret: true });
+    expect(save.state.pipeline!.rival_players?.[0]?.hidden.drive).toBe(1);
     const names = collectKeys(exported);
     expect(names).not.toContain("hidden");
     expect(names).not.toContain("anlage");

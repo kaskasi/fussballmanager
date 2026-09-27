@@ -9,7 +9,10 @@ import type { GameSession } from "../persistence/game-session.ts";
 import { applyDepartureMoralePressure } from "../youth/departure-morale.ts";
 import { stampLastWeekCa } from "../player/ca-tracking.ts";
 import { stampWeeklyGrowthBatch } from "../player/growth-history.ts";
-import { advanceScoutWeek } from "../scouting/scout-board.ts";
+import {
+  advanceScoutWeek,
+  reconcileScoutBoard,
+} from "../scouting/scout-board.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
 import { withClubEvent } from "../inbox/club-events.ts";
 import { advanceAiTransferWeek } from "../transfers/ai-transfer-market.ts";
@@ -162,12 +165,16 @@ export async function simulateGameWeek(
     }
   }
 
+  const scoutBoard = reconcileScoutBoard(
+    advanceScoutWeek(session.scoutBoard, nextWeek, rivalPlayers),
+    rivalPlayers,
+  );
   let nextSession: GameSession = {
     ...session,
     season: seasonEnded ? session.season + 1 : session.season,
     week: nextWeek,
     players: playersWithCaStamp,
-    scoutBoard: advanceScoutWeek(session.scoutBoard, nextWeek),
+    scoutBoard,
     youthInbox: advanced.inbox,
     league: leagueWithCareerStats,
     finances,

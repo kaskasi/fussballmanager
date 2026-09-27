@@ -1,5 +1,9 @@
 import type { TrainingSlot } from "../development/training-units.ts";
-import type { ScoutBoard } from "../scouting/scout-board.ts";
+import {
+  createScoutBoard,
+  reconcileScoutBoard,
+  type ScoutBoard,
+} from "../scouting/scout-board.ts";
 import type { Player } from "../types/player.ts";
 import { loadDemoRoster } from "../ui/demo-roster.ts";
 import {
@@ -101,6 +105,13 @@ export function newGameSession(now = new Date()): GameSession {
     ],
   });
   save.state.world = persistedWorldState(world);
+  const rivalPlayers = world.players.filter(
+    (player) => player.club_id !== NORDSTERN_CLUB_ID,
+  );
+  if (save.state.pipeline) {
+    save.state.pipeline.rival_players = rivalPlayers;
+    save.state.pipeline.scout_board = createScoutBoard(rivalPlayers);
+  }
   return withFreshInbox(sessionFromSave(save));
 }
 
@@ -135,6 +146,10 @@ function syncManagerClubWithBoard(session: GameSession): GameSession {
 
 export function sessionFromSave(save: SaveGame): GameSession {
   const pipeline = save.state.pipeline ?? defaultPipelineState(save.state.week);
+  const rivalPlayers = normalizeRivalPlayers(
+    pipeline.rival_players,
+    save.rng_state.master_seed,
+  );
   const session: GameSession = {
     season: save.state.season,
     week: save.state.week,
@@ -144,7 +159,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     trainingPlan: migrateLegacyTrainingPlan(pipeline.training_plan),
     trainingIntensity: normalizeTrainingIntensity(pipeline.training_intensity),
     individualPrograms: pipeline.individual_programs ?? [],
-    scoutBoard: pipeline.scout_board,
+    scoutBoard: reconcileScoutBoard(pipeline.scout_board, rivalPlayers),
     youthInbox: pruneYouthInbox(
       normalizeYouthInbox(pipeline.youth_inbox ?? emptyInbox(save.state.week)),
       save.players,
@@ -160,7 +175,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
       save.state.season,
     ),
     clubEvents: pipeline.club_events ?? emptyClubEvents(),
-    rivalPlayers: normalizeRivalPlayers(pipeline.rival_players, save.rng_state.master_seed),
+    rivalPlayers,
     coachingStaff: normalizeCoachingStaff(pipeline.coaching_staff, save.state.season),
     clubId: save.manifest.player_club_id,
     managerName: save.manifest.manager_name,

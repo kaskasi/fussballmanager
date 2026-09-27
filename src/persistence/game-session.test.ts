@@ -28,6 +28,12 @@ afterEach(() => {
 describe("game session", () => {
   it("round-trips hub state through a save", () => {
     const session = newGameSession(new Date("2026-09-22T14:00:00Z"));
+    expect(Object.keys(session.scoutBoard.targets)).toHaveLength(session.rivalPlayers.length);
+    expect(
+      Object.values(session.scoutBoard.targets).every((target) =>
+        session.rivalPlayers.some((player) => player.id === target.playerId),
+      ),
+    ).toBe(true);
     const board = assignScout(session.scoutBoard, Object.keys(session.scoutBoard.targets)[0]!);
     const plan = createInitialTrainingPlan().map((slot, index) =>
       index === 0 ? { ...slot, focus: true } : slot,
@@ -56,7 +62,7 @@ describe("game session", () => {
     const session = newGameSession();
     persistSession(session, 1);
     const loaded = loadLocalSave(1);
-    expect(loaded?.state.pipeline?.scout_board).toEqual(createScoutBoard());
+    expect(loaded?.state.pipeline?.scout_board).toEqual(createScoutBoard(session.rivalPlayers));
     expect(loaded?.state.pipeline?.youth_inbox.queue.length).toBeGreaterThan(0);
     expect(loaded?.state.world?.generation_version).toBe(1);
     expect(sessionFromSave(loaded!)).toMatchObject({

@@ -1,53 +1,79 @@
 import { describe, expect, it } from "vitest";
+import { initializeRivalPlayers } from "../sim/rival-growth.ts";
 import {
   activeScoutCount,
   advanceScoutWeek,
   assignScout,
   createScoutBoard,
   getBoardTarget,
+  listBoardTargets,
+  reconcileScoutBoard,
 } from "./scout-board.ts";
 
 describe("scout board", () => {
+  const rivals = initializeRivalPlayers(2026);
+
   it("loads market targets and can assign a scout", () => {
-    const board = createScoutBoard();
+    const board = createScoutBoard(rivals);
     const first = listFirst(board);
     expect(first).not.toBeNull();
     const assigned = assignScout(board, first!.player.id);
-    expect(getBoardTarget(assigned, first!.player.id)?.assigned).toBe(true);
+    expect(getBoardTarget(assigned, first!.player.id, rivals)?.assigned).toBe(true);
     expect(activeScoutCount(assigned)).toBe(1);
   });
 
   it("narrows assigned targets each simulated week", () => {
-    const board = createScoutBoard();
+    const board = createScoutBoard(rivals);
     const first = listFirst(board)!;
     const startRange = first.estimate.uncertaintyRange;
     let current = assignScout(board, first.player.id);
-    current = advanceScoutWeek(current, 2);
-    const after = getBoardTarget(current, first.player.id)!;
+    current = advanceScoutWeek(current, 2, rivals);
+    const after = getBoardTarget(current, first.player.id, rivals)!;
     expect(after.estimate.uncertaintyRange).toBeLessThan(startRange);
     expect(after.estimate.sampleSize).toBeGreaterThan(first.estimate.sampleSize);
   });
 
   it("creates scout reports for assigned targets", () => {
-    const board = createScoutBoard();
+    const board = createScoutBoard(rivals);
     const first = listFirst(board)!;
     const assigned = assignScout(board, first.player.id);
-    const next = advanceScoutWeek(assigned, 5);
+    const next = advanceScoutWeek(assigned, 5, rivals);
     expect(next.recentReports?.length).toBe(1);
     expect(next.recentReports?.[0]?.week).toBe(5);
     expect(next.recentReports?.[0]?.playerId).toBe(first.player.id);
   });
 
   it("decays unassigned targets on a quiet week", () => {
-    const board = createScoutBoard();
+    const board = createScoutBoard(rivals);
     const watched = Object.values(board.targets).find((target) => target.estimate.uncertaintyRange < 40)!;
     const startRange = watched.estimate.uncertaintyRange;
-    const next = advanceScoutWeek(board, 2);
-    const after = getBoardTarget(next, watched.player.id)!;
+    const next = advanceScoutWeek(board, 2, rivals);
+    const after = getBoardTarget(next, watched.playerId, rivals)!;
     expect(after.estimate.uncertaintyRange).toBe(startRange + 0.25);
+  });
+
+  it("keeps knowledge while following authoritative roster changes", () => {
+    const board = createScoutBoard(rivals);
+    const first = listFirst(board)!;
+    const assigned = assignScout(board, first.player.id);
+    const moved = rivals.map((player) =>
+      player.id === first.player.id
+        ? { ...player, club_id: "cl_world_new_club" }
+        : player,
+    );
+    const reconciled = reconcileScoutBoard(assigned, moved);
+    const target = getBoardTarget(reconciled, first.player.id, moved);
+
+    expect(target?.assigned).toBe(true);
+    expect(target?.player.club_id).toBe("cl_world_new_club");
+    expect("player" in reconciled.targets[first.player.id]!).toBe(false);
+    expect(
+      reconcileScoutBoard(reconciled, moved.filter((player) => player.id !== first.player.id))
+        .targets[first.player.id],
+    ).toBeUndefined();
   });
 });
 
 function listFirst(board: ReturnType<typeof createScoutBoard>) {
-  return Object.values(board.targets)[0] ?? null;
+  return listBoardTargets(board, initializeRivalPlayers(2026))[0] ?? null;
 }

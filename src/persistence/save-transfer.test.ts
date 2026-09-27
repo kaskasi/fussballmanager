@@ -8,6 +8,7 @@ import {
   serializeSaveForExport,
 } from "./save-transfer.ts";
 import { SAVE_VERSION } from "./savegame-model.ts";
+import { APPLIED_MIGRATION_IDS } from "./migrations/ids.ts";
 
 const memory = new Map<string, string>();
 
@@ -47,6 +48,23 @@ describe("save transfer", () => {
     const imported = parseSaveJson(serializeSaveForExport(save));
     expect(imported.manifest.save_version).toBe(SAVE_VERSION);
     expect(imported.state.pipeline?.training_plan.length).toBeGreaterThan(0);
+  });
+
+  it("migrates scout snapshots to knowledge-only targets", () => {
+    const session = newGameSession();
+    const save = saveFromSession(session);
+    const player = session.rivalPlayers[0]!;
+    const target = save.state.pipeline!.scout_board.targets[player.id]!;
+    (target as typeof target & { player: typeof player }).player = player;
+    save.manifest.save_version = 35;
+    save.manifest.migrations_applied = APPLIED_MIGRATION_IDS.filter(
+      (id) => id !== "migration_036_scout_knowledge",
+    );
+
+    const imported = parseSaveJson(serializeSaveForExport(save));
+    const migrated = imported.state.pipeline!.scout_board.targets[player.id]!;
+    expect(migrated.playerId).toBe(player.id);
+    expect("player" in migrated).toBe(false);
   });
 
   it("builds a stable export filename", () => {

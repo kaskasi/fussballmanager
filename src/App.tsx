@@ -5,7 +5,6 @@ import { CareerMatch } from "./match/CareerMatch";
 import { appendMatchdayClubEvents } from "./match/post-match-events.ts";
 import { Matchday } from "./match/Matchday";
 import {
-  DEFAULT_CLUB_ID,
   newGameSession,
   saveFromSession,
   sessionFromSave,
@@ -17,6 +16,7 @@ import {
   activeScoutCount,
   assignScout,
   getBoardTarget,
+  listBoardTargets,
 } from "./scouting/scout-board.ts";
 import { WeekdayStrip } from "./ui/components/WeekdayStrip.tsx";
 import { prepareCareerMatch, type CareerMatchSetup } from "./sim/career-match-setup.ts";
@@ -230,6 +230,7 @@ export default function App() {
     rivalPlayers,
     coachingStaff,
     masterSeed,
+    world,
     lastSeasonAwards,
   } = session;
 
@@ -609,7 +610,7 @@ export default function App() {
   const handlePreContract = useCallback(
     (playerId: string) => {
       patchSession((current) => {
-        const target = getBoardTarget(current.scoutBoard, playerId);
+        const target = getBoardTarget(current.scoutBoard, playerId, current.rivalPlayers);
         if (!target) return current;
 
         const pending = current.transferState.pending_transfers ?? [];
@@ -671,7 +672,7 @@ export default function App() {
   const handlePurchase = useCallback(
     (playerId: string) => {
       patchSession((current) => {
-        const target = getBoardTarget(current.scoutBoard, playerId);
+        const target = getBoardTarget(current.scoutBoard, playerId, current.rivalPlayers);
         if (!target || !isTransferWindowOpen(current.week)) return current;
 
         const deal = attemptPurchase(current.transferState, target.player, current.season, current.week);
@@ -692,7 +693,7 @@ export default function App() {
           );
         }
 
-        const bought = completePurchase(target.player, DEFAULT_CLUB_ID, current.season);
+        const bought = completePurchase(target.player, current.clubId, current.season);
         const targets = { ...current.scoutBoard.targets };
         delete targets[playerId];
         const purchaseRecord = createPurchaseRecord(
@@ -701,14 +702,15 @@ export default function App() {
           current.season,
           current.week,
           target.player.club_id ?? "cl_rival_pool",
-          DEFAULT_CLUB_ID,
+          current.clubId,
         );
         return sessionWithEvent(
           {
             ...current,
             players: [...current.players, bought],
+            rivalPlayers: current.rivalPlayers.filter((player) => player.id !== playerId),
             transferState: appendTransferRecord(deal.state, purchaseRecord),
-            scoutBoard: { targets },
+            scoutBoard: { ...current.scoutBoard, targets },
             finances: applyTransferFee(current.finances, fee, current.week),
           },
           "transfer",
@@ -874,7 +876,9 @@ export default function App() {
 
   const jobOffers = listJobOffers(board.employer_club_id, season, league);
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
-  const foreignTarget = foreignPlayerId ? getBoardTarget(scoutBoard, foreignPlayerId) : null;
+  const foreignTarget = foreignPlayerId
+    ? getBoardTarget(scoutBoard, foreignPlayerId, rivalPlayers)
+    : null;
   const navActions: HubNavActions = {
     week,
     weekday,
@@ -1109,7 +1113,7 @@ export default function App() {
       ) : null}
       {screen === "scouting" ? (
         <ScoutingCenter
-          targets={Object.values(scoutBoard.targets)}
+          targets={listBoardTargets(scoutBoard, rivalPlayers, world.clubs)}
           filters={marketFilters}
           onFiltersChange={setMarketFilters}
           sort={marketSort}

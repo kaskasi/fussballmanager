@@ -24,6 +24,7 @@ import { mergeCareerLeagueStats, applyCareerMatchWeek } from "./career-match-syn
 import { advanceCalendarWeek, SEASON_END_WEEK } from "./game-calendar.ts";
 import { advanceLeagueWeek } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
+import { environmentFromCoachingStaff } from "../staff/coaching-staff.ts";
 import { advanceRivalGrowthWeek } from "./rival-growth.ts";
 
 export interface WeekSimResult {
@@ -51,6 +52,7 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     season: session.season,
     week: nextWeek,
     intensity: session.trainingIntensity,
+    environmentFactor: environmentFromCoachingStaff(session.coachingStaff),
   };
   let players = session.players.map((player) =>
     applyTrainingWeek(player, sessions, trainingContext),
@@ -117,6 +119,7 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     season: session.season,
     week: nextWeek,
     stadium,
+    coachingStaff: session.coachingStaff,
   });
   const finances = financeStep.finances;
   const playersWithGrowth = stampWeeklyGrowthBatch(playersAtWeekStart, playersWithMorale);

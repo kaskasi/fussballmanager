@@ -35,6 +35,11 @@ import type { IndividualProgram } from "../development/individual-training.ts";
 import { normalizeTrainingIntensity } from "../development/training-load.ts";
 import { migrateLegacyTrainingPlan } from "../development/training-units.ts";
 import { createSave, type SaveGame } from "./savegame-model.ts";
+import {
+  defaultCoachingStaff,
+  normalizeCoachingStaff,
+  type CoachingStaff,
+} from "../staff/coaching-staff.ts";
 import { normalizeRivalPlayers } from "../sim/rival-growth.ts";
 
 export const DEFAULT_SLOT = 1;
@@ -62,6 +67,7 @@ export interface GameSession {
   board: BoardState;
   clubEvents: ClubEvent[];
   rivalPlayers: Player[];
+  coachingStaff: CoachingStaff;
   clubId: string;
   managerName: string;
   masterSeed: number;
@@ -127,6 +133,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     ),
     clubEvents: pipeline.club_events ?? emptyClubEvents(),
     rivalPlayers: normalizeRivalPlayers(pipeline.rival_players, save.rng_state.master_seed),
+    coachingStaff: normalizeCoachingStaff(pipeline.coaching_staff, save.state.season),
     clubId: save.manifest.player_club_id,
     managerName: save.manifest.manager_name,
     masterSeed: save.rng_state.master_seed,
@@ -148,6 +155,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     board: session.board,
     club_events: session.clubEvents,
     rival_players: session.rivalPlayers,
+    coaching_staff: session.coachingStaff,
   };
   const iso = now.toISOString();
 

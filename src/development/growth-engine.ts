@@ -45,6 +45,8 @@ export interface WeeklyGrowthInput {
    * Draws below 0 are treated as 0.
    */
   noise?: number;
+  /** F8.1 coaching staff environment bonus. Default 1.0. */
+  environmentFactor?: number;
   random?: () => number;
 }
 
@@ -80,9 +82,9 @@ export function calculateMatchPractice(minutes: number, injured: boolean): numbe
   return 1 + (minutes / 90) * 0.15;
 }
 
-/** M1 environment is a constant. Callers must not fold minutes or focus into it. */
-export function environment(): number {
-  return 1;
+/** Coaching/building environment multiplier. Callers must not fold minutes or focus into it. */
+export function environment(factor = 1): number {
+  return factor;
 }
 
 /** Subtractive weekly decay. Leadership never decays. `gk_handling` uses `all_other`. */
@@ -125,7 +127,7 @@ export function calculateWeeklyGrowth(input: WeeklyGrowthInput): number {
     learningBase(age) *
       input.anlage *
       input.drive *
-      environment() *
+      environment(input.environmentFactor ?? 1) *
       noise *
       trainingFocus(input.focusSlots, input.injured) *
       calculateMatchPractice(input.minutes, input.injured) -

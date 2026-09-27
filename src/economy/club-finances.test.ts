@@ -15,6 +15,7 @@ import {
   weeklyWageBill,
 } from "./club-finances.ts";
 import { financeMonthForWeek } from "./finance-ledger.ts";
+import { defaultCoachingStaff, weeklyStaffWageBill } from "../staff/coaching-staff.ts";
 
 describe("club finances", () => {
   it("sums weekly wages for owned players", () => {
@@ -22,6 +23,22 @@ describe("club finances", () => {
     player.club_id = "cl_fc_nordstern";
     player.contract = { ...player.contract!, wage_weekly: 1_000 };
     expect(weeklyWageBill([player], "cl_fc_nordstern")).toBe(1_000);
+  });
+
+  it("uses coaching staff wages when staff is provided", () => {
+    const staff = defaultCoachingStaff(1);
+    const { finances } = advanceWeeklyClubFinances(defaultClubFinances(), {
+      players: [],
+      clubId: "cl_fc_nordstern",
+      divisionId: "regionalliga-nord",
+      isHomeMatchWeek: false,
+      season: 1,
+      week: 1,
+      coachingStaff: staff,
+    });
+    expect(finances.cash).toBe(
+      defaultClubFinances().cash + 55_000 + 12_000 - weeklyStaffWageBill(staff) - 9_000,
+    );
   });
 
   it("applies sponsorship, tv, wages, staff and maintenance each week", () => {

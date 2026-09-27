@@ -10,6 +10,8 @@ import {
   type FinanceLine,
   type FinanceMonthSnapshot,
 } from "./finance-ledger.ts";
+import type { CoachingStaff } from "../staff/coaching-staff.ts";
+import { weeklyStaffWageBill } from "../staff/coaching-staff.ts";
 import type { Player } from "../types/player.ts";
 
 export interface ClubFinances {
@@ -30,6 +32,7 @@ export interface WeeklyFinanceContext {
   season: number;
   week: number;
   stadium?: ClubStadium;
+  coachingStaff?: CoachingStaff;
 }
 
 export interface WeeklyFinanceResult {
@@ -148,7 +151,13 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
     { kind: "sponsorship", amount: economy.sponsorship_weekly, week },
     { kind: "tv_rights", amount: economy.tv_weekly, week },
     { kind: "player_wages", amount: -weeklyWageBill(context.players, context.clubId), week },
-    { kind: "staff_wages", amount: -economy.staff_wages_weekly, week },
+    {
+      kind: "staff_wages",
+      amount: -(context.coachingStaff
+        ? weeklyStaffWageBill(context.coachingStaff)
+        : economy.staff_wages_weekly),
+      week,
+    },
     { kind: "facility_maintenance", amount: -economy.maintenance_weekly, week },
   ];
   const tickets = matchdayTicketIncome(

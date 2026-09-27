@@ -54,6 +54,7 @@ import {
   estimateSaleOffer,
   pickAiBuyerClub,
 } from "./transfers/player-sales.ts";
+import { COACH_ROLE_LABELS, hireCoach, type Coach } from "./staff/coaching-staff.ts";
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
 import { FinancesScreen } from "./ui/screens/FinancesScreen.tsx";
 import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
@@ -185,6 +186,8 @@ export default function App() {
     board,
     clubEvents,
     rivalPlayers,
+    coachingStaff,
+    masterSeed,
   } = session;
 
   function sessionWithEvent(
@@ -634,6 +637,33 @@ export default function App() {
     [patchSession],
   );
 
+  const handleHireCoach = useCallback(
+    (coach: Coach) => {
+      patchSession((current) => {
+        if (current.finances.cash < coach.wage_weekly * 2) {
+          return sessionWithEvent(
+            current,
+            "finance",
+            `Zu wenig Cash für ${coach.name} (min. ${formatClubCash(coach.wage_weekly * 2)}).`,
+          );
+        }
+        const currentCoach = current.coachingStaff[coach.role];
+        if (currentCoach && coach.quality <= currentCoach.quality) {
+          return sessionWithEvent(current, "info", "Der Kandidat ist nicht besser als der aktuelle Trainer.");
+        }
+        return sessionWithEvent(
+          {
+            ...current,
+            coachingStaff: hireCoach(current.coachingStaff, coach),
+          },
+          "info",
+          `Neuer ${COACH_ROLE_LABELS[coach.role]}-Trainer: ${coach.name} (Q${coach.quality}).`,
+        );
+      });
+    },
+    [patchSession],
+  );
+
   const handleTrainingIntensityChange = useCallback(
     (intensity: number) => {
       patchSession((current) => ({ ...current, trainingIntensity: intensity }));
@@ -906,6 +936,10 @@ export default function App() {
           onProgramsChange={handleIndividualProgramsChange}
           players={players}
           clubId={session.clubId}
+          coachingStaff={coachingStaff}
+          masterSeed={masterSeed}
+          cash={finances.cash}
+          onHireCoach={handleHireCoach}
         />
       ) : null}
       {inboxOpen && pendingInboxItems(youthInbox, players).length > 0 ? (

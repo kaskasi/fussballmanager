@@ -9,6 +9,8 @@ export interface TrainingWeekContext {
   season: number;
   week: number;
   intensity?: number;
+  /** F8.1 — from coaching staff; default 1.0. */
+  environmentFactor?: number;
 }
 
 /**
@@ -111,6 +113,7 @@ function growthOf(
     minutes: developmentMinutes(player.squad_status, player.state.weekly_minutes),
     injured: player.state.injury !== null,
     focusSlots: focusSlotsFor(sessions, key),
+    environmentFactor: context?.environmentFactor ?? 1,
     noise: random ? undefined : 1,
     random,
   });

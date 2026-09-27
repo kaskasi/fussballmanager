@@ -40,9 +40,11 @@ import {
   TRAINING_INTENSITY_MIN,
 } from "../../development/training-load.ts";
 import type { PositionPrimary } from "../../types/player.ts";
+import { CoachingStaffPanel } from "../components/CoachingStaffPanel.tsx";
 import { Hint } from "../components/Hint.tsx";
+import type { Coach, CoachingStaff } from "../../staff/coaching-staff.ts";
 
-type TrainingTab = "team" | "individual";
+type TrainingTab = "team" | "individual" | "coaches";
 
 const GROUP_LABELS: Record<SessionGroup, string> = {
   technical: "Technik",
@@ -68,6 +70,10 @@ export function TrainingCenter({
   onProgramsChange,
   players,
   clubId,
+  coachingStaff,
+  masterSeed,
+  cash,
+  onHireCoach,
   onBack,
 }: {
   week: number;
@@ -80,6 +86,10 @@ export function TrainingCenter({
   onProgramsChange: (programs: IndividualProgram[]) => void;
   players: Player[];
   clubId: string;
+  coachingStaff: CoachingStaff;
+  masterSeed: number;
+  cash: number;
+  onHireCoach: (coach: Coach) => void;
   onBack?: () => void;
 }) {
   const [tab, setTab] = useState<TrainingTab>("team");
@@ -116,6 +126,13 @@ export function TrainingCenter({
         >
           Individuell · Extra
         </button>
+        <button
+          type="button"
+          className={tab === "coaches" ? "training-tab is-active" : "training-tab"}
+          onClick={() => setTab("coaches")}
+        >
+          Trainer · Stab
+        </button>
       </nav>
 
       {tab === "team" ? (
@@ -130,13 +147,22 @@ export function TrainingCenter({
           onPlanChange={onPlanChange}
           onIntensityChange={onIntensityChange}
         />
-      ) : (
+      ) : tab === "individual" ? (
         <IndividualPlan
           players={players}
           programs={individualPrograms}
           season={season}
           week={week}
           onProgramsChange={onProgramsChange}
+        />
+      ) : (
+        <CoachingStaffPanel
+          staff={coachingStaff}
+          season={season}
+          week={week}
+          masterSeed={masterSeed}
+          cash={cash}
+          onHire={onHireCoach}
         />
       )}
     </main>

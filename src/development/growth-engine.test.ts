@@ -19,6 +19,28 @@ function growth(overrides: Partial<WeeklyGrowthInput> & Pick<WeeklyGrowthInput, 
 }
 
 describe("PRD 02.7 growth invariants", () => {
+  it("applies coaching environment factor to growth", () => {
+    const baseline = growth({
+      age: 19,
+      attribute: "passing",
+      value: 100,
+      anlage: 1.2,
+      drive: 1.4,
+      minutes: 90,
+      environmentFactor: 1,
+    });
+    const boosted = growth({
+      age: 19,
+      attribute: "passing",
+      value: 100,
+      anlage: 1.2,
+      drive: 1.4,
+      minutes: 90,
+      environmentFactor: 1.08,
+    });
+    expect(boosted).toBeCloseTo(baseline * 1.08, 4);
+  });
+
   it("age 19, 90 minutes, grows by 2.898", () => {
     const delta = growth({
       age: 19,

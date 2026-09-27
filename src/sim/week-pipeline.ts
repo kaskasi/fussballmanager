@@ -7,7 +7,7 @@ import type { CareerLeagueStat } from "../persistence/league-state.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import { applyDepartureMoralePressure } from "../youth/departure-morale.ts";
 import { stampLastWeekCa } from "../player/ca-tracking.ts";
-import { accumulateWeeklyGrowth, weeklyAttributeGrowth } from "../player/growth-history.ts";
+import { stampWeeklyGrowthBatch } from "../player/growth-history.ts";
 import { advanceScoutWeek } from "../scouting/scout-board.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
 import { withClubEvent } from "../inbox/club-events.ts";
@@ -39,14 +39,12 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     session.players,
   );
 
+  const playersAtWeekStart = session.players;
   const sessions = planToSessions(session.trainingPlan);
   const trainingContext = { season: session.season, week: nextWeek };
-  let players = session.players.map((player) => {
-    const before = player.attributes;
-    const trained = applyTrainingWeek(player, sessions, trainingContext);
-    const growth = weeklyAttributeGrowth(before, trained.attributes);
-    return accumulateWeeklyGrowth(trained, growth);
-  });
+  let players = session.players.map((player) =>
+    applyTrainingWeek(player, sessions, trainingContext),
+  );
 
   const careerMatch = applyCareerMatchWeek(
     players,
@@ -100,7 +98,8 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     stadium,
   });
   const finances = financeStep.finances;
-  const playersWithCaStamp = playersWithMorale.map(stampLastWeekCa);
+  const playersWithGrowth = stampWeeklyGrowthBatch(playersAtWeekStart, playersWithMorale);
+  const playersWithCaStamp = playersWithGrowth.map(stampLastWeekCa);
 
   const seasonEnded = footballSeasonEnded;
   let nextSession: GameSession = {

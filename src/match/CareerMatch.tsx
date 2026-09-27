@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Squad } from "@fussballmanager/shared";
+import type { SandboxPlan, Squad } from "@fussballmanager/shared";
+import type { TacticsPresetId, TacticsPresetSlot } from "./tactics-presets.ts";
 import type { Player } from "../types/player.ts";
 import type { NavPrimaryAction } from "../ui/nav-primary-action.ts";
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
@@ -16,6 +17,8 @@ export function CareerMatch({
   players,
   week,
   weekday,
+  tacticsPresets,
+  onSaveTacticsPreset,
   simulating,
   onComplete,
   onSkip,
@@ -25,6 +28,8 @@ export function CareerMatch({
   players: readonly Player[];
   week: number;
   weekday: number;
+  tacticsPresets: readonly TacticsPresetSlot[];
+  onSaveTacticsPreset: (id: TacticsPresetId, plan: SandboxPlan) => void;
   simulating: boolean;
   onComplete: () => void;
   onSkip: () => void;
@@ -44,6 +49,8 @@ export function CareerMatch({
         players={players}
         week={week}
         weekday={weekday}
+        tacticsPresets={tacticsPresets}
+        onSaveTacticsPreset={onSaveTacticsPreset}
         onConfirm={setPlayerClubSquad}
         onNavActionChange={onNavActionChange}
       />

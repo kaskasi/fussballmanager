@@ -41,6 +41,8 @@ export interface Player {
     recent_growth_26w: number;
     /** CA at end of previous simulated week — for weekly Δ display. */
     last_week_ca?: number;
+    /** Net attribute growth from the last simulated week (PRD 02.1 / F2.7). */
+    last_week_growth?: number;
     /** Last four weekly minute totals, oldest first (PRD 03.5). */
     recent_weekly_minutes: number[];
     /** F3.5 — trains with pros for `ends_week` inclusive, then auto-promotion check. */

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { planToSessions } from "../../development/training-units.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
-import { projectWeek } from "../../development/pipeline-week.ts";
+import { formatGrowthDelta, weeklyGrowthDelta } from "../../player/growth-history.ts";
 import type { Player } from "../../types/player.ts";
 import { validateWeeklyPlan } from "../../development/weekly-plan.ts";
 import { totalSeasonMatchdays, type LeagueState } from "../../persistence/league-state.ts";
@@ -80,10 +80,15 @@ export function PipelineDashboard({
   const planOk = validateWeeklyPlan(sessions).valid;
   const focusCount = trainingPlan.filter((slot) => slot.focus).length;
   const cells = useMemo(
-    () => players.map((player) => ({ id: player.id, position: player.position, total: projectWeek(player, sessions) })),
-    [players, sessions],
+    () =>
+      players.map((player) => ({
+        id: player.id,
+        position: player.position,
+        delta: weeklyGrowthDelta(player),
+      })),
+    [players],
   );
-  const peak = Math.max(...cells.map((cell) => Math.abs(cell.total)), 0.01);
+  const peak = Math.max(...cells.map((cell) => Math.abs(cell.delta ?? 0)), 0.01);
   const stages = [
     { id: "u17", icon: "🏫", count: players.filter((player) => player.squad_status === "u17").length },
     { id: "u19", icon: "⬆️", count: players.filter((player) => player.squad_status === "u19").length },
@@ -238,7 +243,7 @@ export function PipelineDashboard({
           </button>
         </div>
         <div className="pipeline-heat-head">
-          <p className="pipeline-heat-label">Wochenzuwachs — Klick öffnet Profil</p>
+          <p className="pipeline-heat-label">Letzte Woche — Klick öffnet Profil</p>
           <button
             type="button"
             className="pipeline-legend-toggle"
@@ -251,19 +256,36 @@ export function PipelineDashboard({
           </button>
         </div>
         {legend ? <Legend /> : null}
-        <div className="pipeline-heat" aria-label="Wochenzuwachs">
-          {cells.map((cell) => (
-            <button
-              key={cell.id}
-              type="button"
-              className={cell.total < 0 ? "heat-cell is-down" : "heat-cell"}
-              title={`${cell.position} ${Math.round(cell.total)}`}
-              onClick={() => onSelectPlayer(cell.id)}
-            >
-              {cell.total < 0 ? "▼" : "▲"}
-              <small>{cell.position}</small>
-            </button>
-          ))}
+        <div className="pipeline-heat" aria-label="Wochenzuwachs letzte simulierte Woche">
+          {cells.map((cell) => {
+            const delta = cell.delta;
+            const intensity = delta === null ? 0.35 : 0.45 + (Math.abs(delta) / peak) * 0.55;
+            const title =
+              delta === null
+                ? `${cell.position} · noch keine Woche simuliert`
+                : `${cell.position} ${formatGrowthDelta(delta)}`;
+            return (
+              <button
+                key={cell.id}
+                type="button"
+                className={
+                  delta === null
+                    ? "heat-cell is-pending"
+                    : delta < 0
+                      ? "heat-cell is-down"
+                      : delta > 0
+                        ? "heat-cell"
+                        : "heat-cell is-flat"
+                }
+                style={{ opacity: intensity }}
+                title={title}
+                onClick={() => onSelectPlayer(cell.id)}
+              >
+                {delta === null ? "·" : delta < 0 ? "▼" : delta > 0 ? "▲" : "—"}
+                <small>{cell.position}</small>
+              </button>
+            );
+          })}
         </div>
       </section>
     </main>
@@ -280,7 +302,8 @@ function Legend() {
     "● Plan gültig",
     "▲ Plan prüfen",
     "🎯 Fokus-Einheit",
-    "▲/▼ Wochenzuwachs",
+    "▲/▼ Letzte Woche (echte Deltas)",
+    "· Noch keine Woche simuliert",
     "🏫 U17",
     "⬆️ U19",
     "⭐ Profi",

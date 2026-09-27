@@ -1,0 +1,45 @@
+{
+  "upgrades": [
+    {
+      "id": "standing_expansion",
+      "name": "Stehplatz-Erweiterung",
+      "description": "+800 Plätze in beiden Kurven",
+      "cost": 650000,
+      "icon": "🧍",
+      "max_level": 2,
+      "tier": "standing",
+      "capacity_bonus": 800
+    },
+    {
+      "id": "seating_expansion",
+      "name": "Sitzplatz-Tribüne",
+      "description": "+600 Sitzplätze West & Ost",
+      "cost": 980000,
+      "icon": "💺",
+      "max_level": 1,
+      "tier": "seating",
+      "capacity_bonus": 600
+    },
+    {
+      "id": "vip_expansion",
+      "name": "VIP-Lounge",
+      "description": "+75 Logenplätze, höhere Ticketpreise",
+      "cost": 1450000,
+      "icon": "🥂",
+      "max_level": 2,
+      "block": "vip",
+      "capacity_bonus": 75,
+      "ticket_price_bonus": 12
+    },
+    {
+      "id": "pitch_heating",
+      "name": "Rasenheizung",
+      "description": "+5 % Auslastung, Fanbase wirkt stärker",
+      "cost": 420000,
+      "icon": "🔥",
+      "max_level": 1,
+      "fill_rate_bonus": 0.05,
+      "fanbase_multiplier": 1.04
+    }
+  ]
+}

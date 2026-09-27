@@ -45,7 +45,10 @@ import { recallLoanPlayer } from "./transfers/loans.ts";
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
 import { FinancesScreen } from "./ui/screens/FinancesScreen.tsx";
 import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
-import { stadiumTotalCapacity } from "./stadium/club-stadium.ts";
+import type { SandboxPlan } from "@fussballmanager/shared";
+import { saveTacticsPreset, type TacticsPresetId } from "./match/tactics-presets.ts";
+import { STADIUM_BASE_BLOCKS, normalizeClubStadium, stadiumTotalCapacity } from "./stadium/club-stadium.ts";
+import { purchaseStadiumUpgrade } from "./stadium/stadium-upgrades.ts";
 import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
 import { PlayerProfile } from "./ui/screens/PlayerProfile";
@@ -145,6 +148,7 @@ export default function App() {
     transferState,
     finances,
     stadium,
+    tacticsPresets,
     clubEvents,
   } = session;
 
@@ -335,6 +339,36 @@ export default function App() {
         ...current,
         scoutBoard: assignScout(current.scoutBoard, playerId),
       }));
+    },
+    [patchSession],
+  );
+
+  const handleSaveTacticsPreset = useCallback(
+    (id: TacticsPresetId, plan: SandboxPlan) => {
+      patchSession((current) => ({
+        ...current,
+        tacticsPresets: saveTacticsPreset(current.tacticsPresets, id, plan),
+      }));
+    },
+    [patchSession],
+  );
+
+  const handlePurchaseStadiumUpgrade = useCallback(
+    (upgradeId: string) => {
+      patchSession((current) => {
+        const result = purchaseStadiumUpgrade(
+          current.stadium,
+          current.finances,
+          upgradeId,
+          STADIUM_BASE_BLOCKS,
+        );
+        if (!result.ok) return current;
+        return {
+          ...current,
+          stadium: normalizeClubStadium(result.stadium),
+          finances: result.finances,
+        };
+      });
     },
     [patchSession],
   );
@@ -572,6 +606,8 @@ export default function App() {
           players={players}
           week={week}
           weekday={weekday}
+          tacticsPresets={tacticsPresets}
+          onSaveTacticsPreset={handleSaveTacticsPreset}
           simulating={simulating}
           onComplete={() => void completeCareerMatch(false)}
           onSkip={() => void completeCareerMatch(true)}
@@ -762,12 +798,14 @@ export default function App() {
       {screen === "stadium" ? (
         <StadiumScreen
           stadium={stadium}
+          finances={finances}
           onStadiumChange={(next) =>
             patchSession((current) => ({
               ...current,
               stadium: next,
             }))
           }
+          onPurchaseUpgrade={handlePurchaseStadiumUpgrade}
           onBack={() => setScreen("finances")}
         />
       ) : null}

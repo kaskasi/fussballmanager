@@ -10,9 +10,8 @@ export interface TrainingWeekContext {
 }
 
 /**
- * One development week for the pipeline dashboard.
- * Noise is 1 so the heatmap repeats. Match minutes stay whatever the
- * player already has; this does not play a fixture.
+ * One development week for training projection and simulation.
+ * Match minutes stay whatever the player already has; this does not play a fixture.
  */
 
 /** Default demo plan — same as `defaultTrainingPlan()` in the training UI. */

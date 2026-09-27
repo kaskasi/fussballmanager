@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
+import { APPLIED_MIGRATION_IDS } from "./migrations/ids.ts";
 import { applyMigrations, assertMigrationOrder, type SaveMigration } from "./migrations/index.ts";
 import {
   createSave,
@@ -73,10 +74,7 @@ describe("save folder", () => {
     await saveToFolder(dir, save, { weekend: true, simulating: false });
     const loaded = await loadSave(dir);
     expect(loaded.manifest.save_version).toBe(SAVE_VERSION);
-    expect(loaded.manifest.migrations_applied).toEqual([
-      "migration_002_pipeline_state",
-      "migration_003_youth_inbox",
-    ]);
+    expect(loaded.manifest.migrations_applied).toEqual([...APPLIED_MIGRATION_IDS]);
     expect(loaded.players[0]?.hidden.drive).toBe(1);
     expect(loaded.players[0]?.hidden.anlage.passing).toBe(1.1);
     expect(loaded.history).toEqual(save.history);
@@ -143,8 +141,7 @@ describe("migrations", () => {
     const once = applyMigrations(save, migrations);
     const twice = applyMigrations(once, migrations);
     expect(twice.manifest.migrations_applied).toEqual([
-      "migration_002_pipeline_state",
-      "migration_003_youth_inbox",
+      ...APPLIED_MIGRATION_IDS,
       "migration_001_note",
       "migration_002_note",
     ]);
@@ -174,15 +171,9 @@ describe("migrations", () => {
     const original = JSON.parse(await readFile(path.join(dir, "manifest.json"), "utf8")) as {
       migrations_applied: string[];
     };
-    expect(original.migrations_applied).toEqual([
-      "migration_002_pipeline_state",
-      "migration_003_youth_inbox",
-    ]);
+    expect(original.migrations_applied).toEqual([...APPLIED_MIGRATION_IDS]);
     const backup = await loadSave(`${dir}.backup`);
-    expect(backup.manifest.migrations_applied).toEqual([
-      "migration_002_pipeline_state",
-      "migration_003_youth_inbox",
-    ]);
+    expect(backup.manifest.migrations_applied).toEqual([...APPLIED_MIGRATION_IDS]);
   });
 });
 

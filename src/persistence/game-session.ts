@@ -11,6 +11,7 @@ import {
 } from "../youth/decision-inbox.ts";
 import { emptyClubEvents, type ClubEvent } from "../inbox/club-events.ts";
 import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
+import { normalizeTacticsPresets, type TacticsPresetSlot } from "../match/tactics-presets.ts";
 import { defaultClubStadium, normalizeClubStadium, type ClubStadium } from "../stadium/club-stadium.ts";
 import { emptyTransferState, type TransferState } from "../transfers/negotiations.ts";
 
@@ -45,6 +46,7 @@ export interface GameSession {
   transferState: TransferState;
   finances: ClubFinances;
   stadium: ClubStadium;
+  tacticsPresets: TacticsPresetSlot[];
   clubEvents: ClubEvent[];
   clubId: string;
   managerName: string;
@@ -96,6 +98,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     transferState: normalizeTransferState(pipeline.transfer_state),
     finances: pipeline.club_finances ?? defaultClubFinances(),
     stadium: normalizeClubStadium(pipeline.club_stadium ?? defaultClubStadium()),
+    tacticsPresets: normalizeTacticsPresets(pipeline.tactics_presets),
     clubEvents: pipeline.club_events ?? emptyClubEvents(),
     clubId: save.manifest.player_club_id,
     managerName: save.manifest.manager_name,
@@ -111,6 +114,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     transfer_state: session.transferState,
     club_finances: session.finances,
     club_stadium: session.stadium,
+    tactics_presets: session.tacticsPresets,
     club_events: session.clubEvents,
   };
   const iso = now.toISOString();

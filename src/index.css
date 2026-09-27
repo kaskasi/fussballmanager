@@ -627,6 +627,66 @@ body {
   min-width: 7rem;
 }
 
+.career-lineup-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.75rem 0 0;
+}
+
+.career-preset-btn {
+  display: grid;
+  gap: 0.1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.55rem;
+  padding: 0.35rem 0.55rem;
+  background: #f8fafc;
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.career-preset-btn.is-active {
+  border-color: #059669;
+  background: #ecfdf5;
+}
+
+.career-preset-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.career-lineup-slider {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #334155;
+  min-width: 8rem;
+}
+
+.career-lineup-slider input {
+  width: 100%;
+}
+
+.career-lineup-save-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+}
+
+.career-preset-save {
+  border: 1px dashed #94a3b8;
+  border-radius: 0.45rem;
+  padding: 0.25rem 0.5rem;
+  background: #fff;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
 .career-lineup-confirm {
   margin-left: auto;
   border: 0;
@@ -1159,6 +1219,70 @@ body {
   font-size: 0.85rem;
 }
 
+.stadium-upgrades {
+  margin: 0 0 1rem;
+}
+
+.stadium-upgrades h2 {
+  margin: 0 0 0.55rem;
+  font-size: 1rem;
+}
+
+.stadium-upgrade-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.stadium-upgrade-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.65rem;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  background: #f8fafc;
+}
+
+.stadium-upgrade-icon {
+  font-size: 1.35rem;
+}
+
+.stadium-upgrade-body strong {
+  display: block;
+  font-size: 0.88rem;
+}
+
+.stadium-upgrade-body p {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.stadium-upgrade-meta {
+  font-weight: 600;
+  color: #334155 !important;
+}
+
+.stadium-upgrade-buy {
+  border: 0;
+  border-radius: 0.45rem;
+  padding: 0.35rem 0.6rem;
+  background: #059669;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stadium-upgrade-buy:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .stadium-fanbase {
   margin-bottom: 0.85rem;
 }
@@ -1642,6 +1766,15 @@ body {
 .heat-cell.is-down {
   border-radius: 0.2rem;
   background: #d97706;
+}
+
+.heat-cell.is-flat {
+  background: #94a3b8;
+}
+
+.heat-cell.is-pending {
+  background: #cbd5e1;
+  color: #475569;
 }
 
 .heat-cell small {

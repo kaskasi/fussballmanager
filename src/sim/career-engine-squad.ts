@@ -1,8 +1,11 @@
 import {
+  applySandboxPlan,
   buildCareerEngineSquad,
   nordsternSquad,
+  sandboxPlanFromFormation,
   type CareerPlayerInput,
   type FormationId,
+  type SandboxPlan,
   type Squad,
 } from "@fussballmanager/shared";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
@@ -27,20 +30,22 @@ function careerPlayerInputs(players: readonly Player[]): CareerPlayerInput[] {
 
 export function suggestCareerSquad(
   players: readonly Player[],
-  formation: FormationId = nordsternSquad.tactics.formation,
+  plan: SandboxPlan | FormationId = nordsternSquad.tactics.formation,
 ): Squad | undefined {
   const input = careerPlayerInputs(players);
   if (input.length === 0) return undefined;
 
+  const sandbox =
+    typeof plan === "string" ? sandboxPlanFromFormation(plan) : plan;
   const template =
-    formation === nordsternSquad.tactics.formation
+    sandbox.formation === nordsternSquad.tactics.formation
       ? nordsternSquad
       : {
           ...nordsternSquad,
-          tactics: { ...nordsternSquad.tactics, formation },
+          tactics: { ...nordsternSquad.tactics, formation: sandbox.formation },
         };
 
-  return buildCareerEngineSquad(template, input);
+  return applySandboxPlan(buildCareerEngineSquad(template, input), sandbox);
 }
 
 export function careerEngineSquadFromPlayers(players: readonly Player[]): Squad | undefined {

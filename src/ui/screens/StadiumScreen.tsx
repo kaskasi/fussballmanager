@@ -18,7 +18,13 @@ import {
   type StadiumBlock,
   type StadiumTier,
 } from "../../stadium/club-stadium.ts";
-import { formatClubCash } from "../../economy/club-finances.ts";
+import { formatClubCash, type ClubFinances } from "../../economy/club-finances.ts";
+import {
+  canPurchaseStadiumUpgrade,
+  stadiumUpgradeCatalog,
+  stadiumUpgradeCost,
+  stadiumUpgradeLevel,
+} from "../../stadium/stadium-upgrades.ts";
 import {
   fanbaseMood,
   fanbaseMoodIcon,
@@ -32,11 +38,15 @@ import { Hint } from "../components/Hint.tsx";
  */
 export function StadiumScreen({
   stadium,
+  finances,
   onStadiumChange,
+  onPurchaseUpgrade,
   onBack,
 }: {
   stadium: ClubStadium;
+  finances: ClubFinances;
   onStadiumChange: (stadium: ClubStadium) => void;
+  onPurchaseUpgrade: (upgradeId: string) => void;
   onBack: () => void;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -79,6 +89,40 @@ export function StadiumScreen({
             </span>
           ) : null}
         </div>
+      </section>
+
+      <section className="stadium-upgrades" aria-label="Stadionausbau">
+        <h2>🏗️ Ausbau</h2>
+        <ul className="stadium-upgrade-list">
+          {stadiumUpgradeCatalog().map((upgrade) => {
+            const level = stadiumUpgradeLevel(stadium, upgrade.id);
+            const maxed = level >= upgrade.max_level;
+            const nextCost = maxed ? null : stadiumUpgradeCost(upgrade, level + 1);
+            const check = canPurchaseStadiumUpgrade(stadium, finances, upgrade.id);
+            return (
+              <li key={upgrade.id} className="stadium-upgrade-card">
+                <span className="stadium-upgrade-icon" aria-hidden="true">{upgrade.icon}</span>
+                <div className="stadium-upgrade-body">
+                  <strong>{upgrade.name}</strong>
+                  <p>{upgrade.description}</p>
+                  <p className="stadium-upgrade-meta">
+                    Stufe {level}/{upgrade.max_level}
+                    {nextCost != null ? ` · ${formatClubCash(nextCost)}` : " · Max"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="stadium-upgrade-buy"
+                  disabled={!check.allowed}
+                  title={check.reason}
+                  onClick={() => onPurchaseUpgrade(upgrade.id)}
+                >
+                  {maxed ? "✓" : "Kaufen"}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <Hint text="Preise senken die Auslastung — Fanbase und Ergebnisse heben die Basis an." block>

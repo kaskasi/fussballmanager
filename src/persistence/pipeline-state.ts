@@ -1,4 +1,5 @@
 import { createInitialTrainingPlan, type TrainingSlot } from "../development/training-units.ts";
+import { defaultTacticsPresets, type TacticsPresetSlot } from "../match/tactics-presets.ts";
 import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
 import { createScoutBoard, type ScoutBoard } from "../scouting/scout-board.ts";
 import { defaultClubStadium, type ClubStadium } from "../stadium/club-stadium.ts";
@@ -15,6 +16,8 @@ export interface PipelineState {
   club_finances?: ClubFinances;
   club_stadium?: ClubStadium;
   club_events?: ClubEvent[];
+  /** F1.2 — three saved match tactic presets. */
+  tactics_presets?: TacticsPresetSlot[];
 }
 
 export function defaultPipelineState(week = 1): PipelineState {
@@ -26,5 +29,6 @@ export function defaultPipelineState(week = 1): PipelineState {
     club_finances: defaultClubFinances(),
     club_stadium: defaultClubStadium(),
     club_events: emptyClubEvents(),
+    tactics_presets: defaultTacticsPresets(),
   };
 }

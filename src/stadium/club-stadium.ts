@@ -1,4 +1,9 @@
 import { DIVISION_ECONOMY, type DivisionEconomyId } from "../economy/division-economy.ts";
+import {
+  rebuildStadiumWithUpgrades,
+  stadiumFanbaseMultiplier,
+  stadiumFillRateBonus,
+} from "./stadium-upgrades.ts";
 
 export type StadiumTier = "standing" | "seating" | "vip";
 
@@ -17,6 +22,8 @@ export interface ClubStadium {
   /** F7.5 — 25–95, drives baseline attendance before ticket pricing. */
   fanbase?: number;
   fanbase_last_delta?: number;
+  /** F7.2 — purchased upgrade levels keyed by upgrade id. */
+  upgrade_levels?: Record<string, number>;
 }
 
 export const DEFAULT_FANBASE = 52;
@@ -29,7 +36,7 @@ export const FILL_RATE_MAX = 0.95;
 /** Price sensitivity — prep for F7.5 fanbase curve. */
 export const PRICE_ELASTICITY = 0.42;
 
-const SEED_BLOCKS: StadiumBlock[] = [
+export const STADIUM_BASE_BLOCKS: StadiumBlock[] = [
   {
     id: "north",
     name: "Nordkurve",
@@ -73,7 +80,7 @@ const SEED_BLOCKS: StadiumBlock[] = [
 ];
 
 const DEFAULT_REFERENCE = Object.fromEntries(
-  SEED_BLOCKS.map((block) => [
+  STADIUM_BASE_BLOCKS.map((block) => [
     block.id,
     { ticket_price_eur: block.ticket_price_eur, fill_rate: block.fill_rate },
   ]),
@@ -100,10 +107,11 @@ export function tierIcon(tier: StadiumTier): string {
 }
 
 function defaultClubStadiumSeed(): ClubStadium {
-  return applyStadiumFillRates({
+  return normalizeClubStadium({
     name: "Nordstern Arena",
     fanbase: DEFAULT_FANBASE,
-    blocks: SEED_BLOCKS.map((block) => ({ ...block })),
+    upgrade_levels: {},
+    blocks: STADIUM_BASE_BLOCKS.map((block) => ({ ...block })),
   });
 }
 
@@ -114,11 +122,16 @@ export function defaultClubStadium(): ClubStadium {
 
 export function normalizeClubStadium(stadium: ClubStadium): ClubStadium {
   const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
-  return applyStadiumFillRates({
-    ...stadium,
-    fanbase,
-    blocks: stadium.blocks ?? [],
-  });
+  return applyStadiumFillRates(
+    rebuildStadiumWithUpgrades(
+      {
+        ...stadium,
+        fanbase,
+        upgrade_levels: stadium.upgrade_levels ?? {},
+      },
+      STADIUM_BASE_BLOCKS,
+    ),
+  );
 }
 
 export function referenceFillRate(blockId: string): number {
@@ -133,13 +146,16 @@ export function fillRateForTicketPrice(
   blockId: string,
   ticketPrice: number,
   fanbase: number = DEFAULT_FANBASE,
+  options?: { fillBonus?: number; fanbaseMultiplier?: number },
 ): number {
   const ref = DEFAULT_REFERENCE[blockId];
   if (!ref || ticketPrice <= 0) return FILL_RATE_MAX;
-  const fanbaseMultiplier = 1 + (normalizeFanbaseIndex(fanbase) - DEFAULT_FANBASE) * 0.004;
+  const fanbaseScale = options?.fanbaseMultiplier ?? 1;
+  const fanbaseMultiplier =
+    (1 + (normalizeFanbaseIndex(fanbase) - DEFAULT_FANBASE) * 0.004) * fanbaseScale;
   const adjustedRef = ref.fill_rate * fanbaseMultiplier;
   const ratio = ticketPrice / ref.ticket_price_eur;
-  const raw = adjustedRef / Math.pow(ratio, PRICE_ELASTICITY);
+  const raw = adjustedRef / Math.pow(ratio, PRICE_ELASTICITY) + (options?.fillBonus ?? 0);
   return Math.min(FILL_RATE_MAX, Math.max(FILL_RATE_MIN, raw));
 }
 
@@ -149,12 +165,17 @@ function normalizeFanbaseIndex(value: number): number {
 
 export function applyStadiumFillRates(stadium: ClubStadium): ClubStadium {
   const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
+  const fillBonus = stadiumFillRateBonus(stadium);
+  const fanbaseMultiplier = stadiumFanbaseMultiplier(stadium);
   return {
     ...stadium,
     fanbase,
     blocks: stadium.blocks.map((block) => ({
       ...block,
-      fill_rate: fillRateForTicketPrice(block.id, block.ticket_price_eur, fanbase),
+      fill_rate: fillRateForTicketPrice(block.id, block.ticket_price_eur, fanbase, {
+        fillBonus,
+        fanbaseMultiplier,
+      }),
     })),
   };
 }

@@ -28,10 +28,14 @@ export interface WorldClub {
   rivalry_ids: string[];
 }
 
-export interface GeneratedWorld {
-  generation_version: typeof WORLD_GENERATION_VERSION;
+export interface WorldState {
+  generation_version: 0 | typeof WORLD_GENERATION_VERSION;
   world_seed: number;
   clubs: WorldClub[];
+}
+
+export interface GeneratedWorld extends WorldState {
+  generation_version: typeof WORLD_GENERATION_VERSION;
   league_pools: Record<WorldDivisionId, string[]>;
   players: Player[];
 }
@@ -388,6 +392,22 @@ export function generateWorld(masterSeed: number): GeneratedWorld {
     clubs,
     league_pools,
     players,
+  };
+}
+
+export function persistedWorldState(world: GeneratedWorld): WorldState {
+  return {
+    generation_version: world.generation_version,
+    world_seed: world.world_seed,
+    clubs: world.clubs,
+  };
+}
+
+export function legacyWorldState(masterSeed: number): WorldState {
+  return {
+    generation_version: 0,
+    world_seed: masterSeed,
+    clubs: [],
   };
 }
 

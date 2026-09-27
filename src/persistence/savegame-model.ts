@@ -1,4 +1,5 @@
 import type { Player } from "../types/player.ts";
+import type { WorldState } from "../world/world-generator.ts";
 import { defaultLeagueState, type LeagueState } from "./league-state.ts";
 import { APPLIED_MIGRATION_IDS } from "./migrations/ids.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
@@ -8,7 +9,7 @@ import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
  * Folder I/O lives in `savegame-io.ts`.
  */
 
-export const SAVE_VERSION = 34;
+export const SAVE_VERSION = 35;
 export const GAME_VERSION = "0.1.0";
 
 export const SAVE_FILES = [
@@ -55,6 +56,7 @@ export interface SaveState {
   match_played_this_week?: boolean;
   pipeline?: PipelineState;
   league?: LeagueState;
+  world?: WorldState;
 }
 
 export interface RngState {

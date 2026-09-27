@@ -45,6 +45,9 @@ describe("game session", () => {
     expect(loaded.scoutBoard).toEqual(board);
     expect(save.state.pipeline?.training_plan).toEqual(plan);
     expect(save.state.pipeline?.youth_inbox).toEqual(updated.youthInbox);
+    expect(save.state.world).toEqual(session.world);
+    expect(loaded.world.generation_version).toBe(1);
+    expect(loaded.world.clubs).toHaveLength(36);
     expect(save.manifest.save_version).toBe(SAVE_VERSION);
   });
 
@@ -55,6 +58,7 @@ describe("game session", () => {
     const loaded = loadLocalSave(1);
     expect(loaded?.state.pipeline?.scout_board).toEqual(createScoutBoard());
     expect(loaded?.state.pipeline?.youth_inbox.queue.length).toBeGreaterThan(0);
+    expect(loaded?.state.world?.generation_version).toBe(1);
     expect(sessionFromSave(loaded!)).toMatchObject({
       week: session.week,
       season: session.season,
@@ -82,6 +86,11 @@ describe("game session", () => {
     expect(loaded?.manifest.save_version).toBe(SAVE_VERSION);
     expect(loaded?.state.pipeline?.training_plan).toHaveLength(5);
     expect(loaded?.state.pipeline?.youth_inbox.queue.length).toBeGreaterThan(0);
+    expect(loaded?.state.world).toMatchObject({
+      generation_version: 0,
+      world_seed: 2026,
+      clubs: [],
+    });
     removeLocalSave(1);
   });
 });

@@ -44,7 +44,13 @@ import {
 import { normalizeRivalPlayers } from "../sim/rival-growth.ts";
 import { switchManagerClub } from "../board/manager-club-switch.ts";
 import type { SeasonAwardsSnapshot } from "../sim/season-awards.ts";
-import { generateWorld, NORDSTERN_CLUB_ID } from "../world/world-generator.ts";
+import {
+  generateWorld,
+  legacyWorldState,
+  NORDSTERN_CLUB_ID,
+  persistedWorldState,
+  type WorldState,
+} from "../world/world-generator.ts";
 
 export const DEFAULT_SLOT = 1;
 export const DEFAULT_CLUB_ID = "cl_fc_nordstern";
@@ -75,6 +81,7 @@ export interface GameSession {
   clubId: string;
   managerName: string;
   masterSeed: number;
+  world: WorldState;
   lastSeasonAwards?: SeasonAwardsSnapshot;
 }
 
@@ -93,6 +100,7 @@ export function newGameSession(now = new Date()): GameSession {
       ...academy,
     ],
   });
+  save.state.world = persistedWorldState(world);
   return withFreshInbox(sessionFromSave(save));
 }
 
@@ -157,6 +165,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     clubId: save.manifest.player_club_id,
     managerName: save.manifest.manager_name,
     masterSeed: save.rng_state.master_seed,
+    world: save.state.world ?? legacyWorldState(save.rng_state.master_seed),
     lastSeasonAwards: pipeline.last_season_awards,
   };
   return syncManagerClubWithBoard(session);
@@ -198,6 +207,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
         match_played_this_week: session.matchPlayedThisWeek,
         pipeline,
         league: session.league,
+        world: session.world,
       },
       players: session.players,
       rng_state: {
@@ -229,6 +239,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
       match_played_this_week: session.matchPlayedThisWeek,
       pipeline,
       league: session.league,
+      world: session.world,
     },
   };
 }

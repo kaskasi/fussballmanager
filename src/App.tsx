@@ -1292,6 +1292,7 @@ function AppNav({
   onAccessibilityChange: (preferences: AccessibilityPreferences) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileTabsOpen, setMobileTabsOpen] = useState(false);
   const [resetAsk, setResetAsk] = useState(false);
   const [a11yOpen, setA11yOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -1310,13 +1311,17 @@ function AppNav({
 
   return (
     <nav className="app-nav" aria-label="Bereiche">
-      <div className="app-nav-tabs">
+      <div
+        id="app-nav-mobile-tabs"
+        className={`app-nav-tabs${mobileTabsOpen ? " is-mobile-open" : ""}`}
+      >
       <NavButton
         pressed={screen === "hub"}
         label="Pipeline"
         onClick={() => {
           onCloseProfile?.();
           onNavigate("hub");
+          setMobileTabsOpen(false);
         }}
       >
         ●
@@ -1327,6 +1332,7 @@ function AppNav({
         onClick={() => {
           onCloseProfile?.();
           onNavigate("squad");
+          setMobileTabsOpen(false);
         }}
       >
         ⭐
@@ -1337,6 +1343,7 @@ function AppNav({
         onClick={() => {
           onCloseProfile?.();
           onNavigate("training");
+          setMobileTabsOpen(false);
         }}
       >
         🏋️
@@ -1348,6 +1355,7 @@ function AppNav({
           onCloseProfile?.();
           onCampusNavigate?.();
           onNavigate("campus");
+          setMobileTabsOpen(false);
         }}
       >
         🏫
@@ -1358,6 +1366,7 @@ function AppNav({
         onClick={() => {
           onCloseProfile?.();
           onNavigate("scouting");
+          setMobileTabsOpen(false);
         }}
       >
         👁️
@@ -1368,6 +1377,7 @@ function AppNav({
         onClick={() => {
           onCloseProfile?.();
           onNavigate("transfers");
+          setMobileTabsOpen(false);
         }}
       >
         💰
@@ -1378,6 +1388,7 @@ function AppNav({
         onClick={() => {
           onCloseProfile?.();
           onNavigate("finances");
+          setMobileTabsOpen(false);
         }}
       >
         💶
@@ -1388,6 +1399,7 @@ function AppNav({
         onClick={() => {
           onCloseProfile?.();
           onNavigate("leagues");
+          setMobileTabsOpen(false);
         }}
       >
         🏆
@@ -1398,12 +1410,23 @@ function AppNav({
         onClick={() => {
           onCloseProfile?.();
           onNavigate("stadium");
+          setMobileTabsOpen(false);
         }}
       >
         🏟️
       </NavButton>
       </div>
       <div className="app-nav-actions">
+        <button
+          type="button"
+          className="app-nav-toggle"
+          aria-label={mobileTabsOpen ? "Bereiche schließen" : "Bereiche öffnen"}
+          aria-expanded={mobileTabsOpen}
+          aria-controls="app-nav-mobile-tabs"
+          onClick={() => setMobileTabsOpen((open) => !open)}
+        >
+          {mobileTabsOpen ? "×" : "☰"}
+        </button>
         <WeekdayStrip week={hubActions.week} weekday={hubActions.weekday} />
         <button
           type="button"
@@ -1415,9 +1438,12 @@ function AppNav({
             (hubActions.primaryAction ? hubActions.primaryAction.label : "Smart Skip — zum nächsten Ereignis")
           }
         >
-          {hubActions.simulating && !hubActions.primaryAction
-            ? "…"
-            : hubActions.primaryAction?.label ?? "▶ Next"}
+          <span className="app-nav-next-mobile">▶ Next</span>
+          <span className="app-nav-next-desktop">
+            {hubActions.simulating && !hubActions.primaryAction
+              ? "…"
+              : hubActions.primaryAction?.label ?? "▶ Next"}
+          </span>
         </button>
         <div className="row-menu app-nav-menu" ref={menuRef}>
           <button

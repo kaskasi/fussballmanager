@@ -5060,6 +5060,11 @@ body {
   flex-shrink: 0;
 }
 
+.app-nav-toggle,
+.app-nav-next-mobile {
+  display: none;
+}
+
 .weekday-strip {
   display: flex;
   gap: 0.2rem;
@@ -6038,7 +6043,7 @@ body {
     order: 1;
     width: 100%;
     min-width: 0;
-    justify-content: center;
+    justify-content: space-between;
     gap: 0.35rem;
   }
 
@@ -6046,38 +6051,62 @@ body {
     order: 2;
     width: 100%;
     min-width: 0;
-    flex-wrap: nowrap;
+    display: none;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0.35rem;
-    overflow-x: auto;
     padding: 0.15rem 0.15rem 0.25rem;
-    scrollbar-width: none;
-    overscroll-behavior-x: contain;
   }
 
-  .app-nav-tabs::-webkit-scrollbar {
-    display: none;
+  .app-nav-tabs.is-mobile-open {
+    display: grid;
   }
 
   .app-nav-tabs button {
-    flex: 0 0 2.65rem;
-    width: 2.65rem;
+    width: 100%;
     height: 2.35rem;
     padding: 0;
     font-size: 1rem;
   }
 
+  .app-nav-toggle {
+    display: inline-flex;
+    flex: 0 0 2.25rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #a7f3d0;
+    border-radius: 999px;
+    background: #fff;
+    color: #047857;
+    font-size: 1.15rem;
+    font-weight: 900;
+  }
+
+  .app-nav-next-mobile {
+    display: inline;
+  }
+
+  .app-nav-next-desktop {
+    display: none;
+  }
+
   .weekday-strip {
+    flex: 1 1 auto;
     min-width: 0;
     gap: 0.08rem;
     padding-inline: 0.25rem;
+    justify-content: center;
   }
 
   .weekday-strip-day {
-    min-width: 1.25rem;
+    min-width: 1.05rem;
     padding-inline: 0.08rem;
+    font-size: 0.62rem;
   }
 
   .app-nav-next {
+    flex: 0 0 auto;
     padding-inline: 0.7rem;
     font-size: 0.82rem;
   }

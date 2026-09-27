@@ -9,7 +9,10 @@ import {
   actionLabel,
   allowedActions,
   loanBlockReason,
+  inboxHeadline,
   inboxItemLabel,
+  inboxPipelineHint,
+  inboxWeekFocus,
   pendingInboxItems,
   type DecisionAction,
   type DecisionInboxItem,
@@ -43,7 +46,15 @@ export function DecisionInboxModal({
   onClose: () => void;
   initialItemId?: string | null;
 }) {
-  const pending = useMemo(() => pendingInboxItems(inbox, players), [inbox, players]);
+  const focus = useMemo(() => inboxWeekFocus(inbox, players), [inbox, players]);
+  const pending = focus.open;
+  const nextQueuedPlayer = focus.nextQueued
+    ? players.find((entry) => entry.id === focus.nextQueued?.playerId)
+    : undefined;
+  const pipelineHint = inboxPipelineHint(
+    focus,
+    nextQueuedPlayer ? formatPlayerName(nextQueuedPlayer) : undefined,
+  );
   const [activeId, setActiveId] = useState<string | null>(initialItemId ?? pending[0]?.id ?? null);
 
   useEffect(() => {
@@ -96,14 +107,15 @@ export function DecisionInboxModal({
           </button>
         </header>
 
-        {inbox.queue.length > 0 ? (
-          <p className="inbox-queue-note">
-            📥 {inbox.queue.length} weitere Hinweise in der Warteschlange · 1 pro Tag
-          </p>
-        ) : null}
+        <p className="inbox-focus-line">{inboxHeadline(focus)}</p>
+        {pipelineHint ? <p className="inbox-queue-note">{pipelineHint}</p> : null}
 
         {pending.length === 0 ? (
-          <p className="inbox-empty">Keine offenen Entscheidungen diese Woche.</p>
+          <p className="inbox-empty">
+            {focus.nextQueued && nextQueuedPlayer
+              ? `${formatPlayerName(nextQueuedPlayer)} · ${inboxItemLabel(focus.nextQueued)} kommt als Nächstes.`
+              : "Keine offenen Entscheidungen — weiter simulieren."}
+          </p>
         ) : (
           <>
             <nav className="inbox-queue" aria-label="Warteschlange">

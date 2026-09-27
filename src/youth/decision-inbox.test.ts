@@ -9,7 +9,10 @@ import {
   deliverDailyInbox,
   deliverInboxForDays,
   generateWeeklyInbox,
+  inboxHeadline,
+  inboxPipelineHint,
   inboxSummary,
+  inboxWeekFocus,
   MAX_INBOX_ITEMS,
   normalizeYouthInbox,
   pendingInboxItems,
@@ -277,6 +280,43 @@ describe("decision inbox", () => {
       reason: "ready_for_pro",
     };
     expect(allowedActions(item, [...pros, youth], "cl_fc_nordstern")).not.toContain("promote");
+  });
+
+  it("focuses the manager on open items without exposing backlog depth", () => {
+    const inbox: YouthInboxState = {
+      week: 34,
+      items: [
+        {
+          id: "a",
+          playerId: "p1",
+          kind: "departure_risk",
+          week: 34,
+          urgency: "now",
+          reason: "no_game_time",
+        },
+      ],
+      queue: Array.from({ length: 47 }, (_, index) => ({
+        id: `q${index}`,
+        playerId: `p${index + 2}`,
+        kind: "training_focus" as const,
+        week: 34,
+        urgency: "future" as const,
+        reason: "coach_focus",
+      })),
+      resolvedIds: [],
+      coachIcons: {},
+      lastReport: null,
+    };
+    const players = [
+      { id: "p1", squad_status: "u17" },
+      { id: "p2", squad_status: "u17" },
+    ] as const;
+    const focus = inboxWeekFocus(inbox, players as never);
+    expect(focus.openCount).toBe(1);
+    expect(focus.nextQueued?.playerId).toBe("p2");
+    expect(inboxHeadline(focus)).toBe("1 Entscheidung offen.");
+    expect(inboxPipelineHint(focus, "Next Kid")).toBe("Danach: Next Kid");
+    expect(inboxSummary(inbox).queued).toBe(47);
   });
 
   it("summarises open recommendations, departure risks, and queue depth", () => {

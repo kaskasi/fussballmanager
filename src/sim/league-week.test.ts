@@ -4,6 +4,7 @@ import { defaultLeagueState, totalSeasonMatchdays } from "../persistence/league-
 import {
   advanceLeagueWeek,
   leagueTable,
+  playerFixture,
   simulateQuickMatchday,
   weeklySeed,
 } from "./league-week.ts";
@@ -53,6 +54,26 @@ describe("league week", () => {
     expect(league.season_complete).toBe(true);
     const table = leagueTable(league);
     expect(table.every((row) => row.played === 30)).toBe(true);
+  });
+
+  it("applies a watched player fixture instead of re-simming", async () => {
+    const league = defaultLeagueState();
+    const scheduled = playerFixture(league, league.matchday);
+    expect(scheduled).toBeDefined();
+    const watched = {
+      homeTeamId: scheduled!.homeTeamId,
+      awayTeamId: scheduled!.awayTeamId,
+      homeGoals: 4,
+      awayGoals: 0,
+      matchday: league.matchday,
+    };
+    const advanced = await advanceLeagueWeek(league, 1, 1, 2026, [], [], watched);
+    expect(advanced.playerFixture).toEqual({
+      homeTeamId: watched.homeTeamId,
+      awayTeamId: watched.awayTeamId,
+      homeGoals: 4,
+      awayGoals: 0,
+    });
   });
 
   it("assigns pro minutes after a club fixture", () => {

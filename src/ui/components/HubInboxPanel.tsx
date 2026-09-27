@@ -4,8 +4,10 @@ import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import { scoutReportsForWeek, type ScoutBoard } from "../../scouting/scout-board.ts";
 import {
+  inboxHeadline,
   inboxItemLabel,
-  pendingInboxItems,
+  inboxPipelineHint,
+  inboxWeekFocus,
   type YouthInboxState,
 } from "../../youth/decision-inbox.ts";
 
@@ -40,7 +42,15 @@ export function HubInboxPanel({
   onOpenDecision: (itemId: string) => void;
   onSelectScoutTarget: (playerId: string) => void;
 }) {
-  const decisions = pendingInboxItems(youthInbox, players);
+  const focus = inboxWeekFocus(youthInbox, players);
+  const decisions = focus.open;
+  const nextQueuedPlayer = focus.nextQueued
+    ? players.find((entry) => entry.id === focus.nextQueued?.playerId)
+    : undefined;
+  const pipelineHint = inboxPipelineHint(
+    focus,
+    nextQueuedPlayer ? formatPlayerName(nextQueuedPlayer) : undefined,
+  );
   const reports = scoutReportsForWeek(scoutBoard, week);
   const totalEventPages = Math.max(1, Math.ceil(clubEvents.length / EVENTS_PER_PAGE));
   const [eventPage, setEventPage] = useState(0);
@@ -63,13 +73,14 @@ export function HubInboxPanel({
       <div className="hub-inbox-columns">
         <div className="hub-inbox-column">
           <p className="hub-inbox-column-title">Entscheidungen</p>
-          {youthInbox.queue.length > 0 ? (
-            <p className="hub-inbox-queue-note">
-              +{youthInbox.queue.length} in Warteschlange (1 pro Tag)
-            </p>
-          ) : null}
+          <p className="hub-inbox-focus-line">{inboxHeadline(focus)}</p>
+          {pipelineHint ? <p className="hub-inbox-queue-note">{pipelineHint}</p> : null}
           {decisions.length === 0 ? (
-            <p className="hub-inbox-empty">Keine offenen Jugend-Entscheidungen.</p>
+            <p className="hub-inbox-empty">
+              {focus.nextQueued && nextQueuedPlayer
+                ? `${formatPlayerName(nextQueuedPlayer)} · ${inboxItemLabel(focus.nextQueued)} steht als Nächstes an.`
+                : "Alles erledigt — neue Jugend-Hinweise kommen mit dem Spieltag."}
+            </p>
           ) : (
             <ul className="hub-inbox-list">
               {decisions.map((item) => {

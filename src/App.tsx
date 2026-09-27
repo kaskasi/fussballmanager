@@ -20,6 +20,7 @@ import {
 } from "./scouting/scout-board.ts";
 import { WeekdayStrip } from "./ui/components/WeekdayStrip.tsx";
 import { prepareCareerMatch, type CareerMatchSetup } from "./sim/career-match-setup.ts";
+import type { WatchedPlayerMatch } from "./sim/watched-player-match.ts";
 import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
 import { simulateGameWeek } from "./sim/week-pipeline.ts";
 import { isTransferWindowOpen } from "./sim/transfer-windows.ts";
@@ -186,6 +187,7 @@ export default function App() {
     loadAccessibilityPreferences(),
   );
   const [saveToastVisible, setSaveToastVisible] = useState(false);
+  const [pendingWatchedMatch, setPendingWatchedMatch] = useState<WatchedPlayerMatch | null>(null);
   const saveToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flashSaveToast = useCallback(() => {
@@ -250,9 +252,11 @@ export default function App() {
     flashSaveToast();
   }, [activeSlot, flashSaveToast]);
 
-  const finishWeekSimulation = useCallback(async () => {
+  const finishWeekSimulation = useCallback(async (watchedMatch?: WatchedPlayerMatch | null) => {
     const snapshot = sessionFromSave(save);
-    const result = await simulateGameWeek(snapshot);
+    const override = watchedMatch ?? pendingWatchedMatch;
+    const result = await simulateGameWeek(snapshot, override);
+    setPendingWatchedMatch(null);
     setSave((current) => {
       let nextSession = {
         ...result.session,
@@ -278,7 +282,7 @@ export default function App() {
       return next;
     });
     flashSaveToast();
-  }, [activeSlot, flashSaveToast, save]);
+  }, [activeSlot, flashSaveToast, pendingWatchedMatch, save]);
 
   const simulateWeek = useCallback(async () => {
     if (simulating) return;
@@ -291,13 +295,19 @@ export default function App() {
   }, [finishWeekSimulation, simulating]);
 
   const completeCareerMatch = useCallback(
-    async (skipPlayback = false) => {
+    async (outcome: WatchedPlayerMatch, skipPlayback = false) => {
       if (simulating) return;
+      setPendingWatchedMatch(outcome);
       if (skipPlayback) {
         setSimulating(true);
         try {
-          await finishWeekSimulation();
+          patchSession((current) => ({
+            ...current,
+            weekday: 7,
+            matchPlayedThisWeek: true,
+          }));
           setCareerMatchSetup(null);
+          await finishWeekSimulation(outcome);
         } finally {
           setSimulating(false);
         }
@@ -902,8 +912,8 @@ export default function App() {
           onSaveTacticsPreset={handleSaveTacticsPreset}
           onSaveMatchLineup={handleSaveMatchLineup}
           simulating={simulating}
-          onComplete={() => void completeCareerMatch(false)}
-          onSkip={() => void completeCareerMatch(true)}
+          onComplete={(outcome) => void completeCareerMatch(outcome, false)}
+          onSkip={(outcome) => void completeCareerMatch(outcome, true)}
           onNavActionChange={setMatchNavAction}
         />
         {saveManagerOverlay}

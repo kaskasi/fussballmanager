@@ -92,6 +92,64 @@ export function pendingInboxItems(
   return open.filter((item) => validIds.has(item.playerId));
 }
 
+export function queuedInboxItems(
+  inbox: YouthInboxState,
+  players?: readonly Player[],
+): DecisionInboxItem[] {
+  const openIds = new Set(inbox.items.map((item) => item.id));
+  const queued = inbox.queue.filter(
+    (item) => !inbox.resolvedIds.includes(item.id) && !openIds.has(item.id),
+  );
+  if (!players) return queued;
+  const validIds = youthPlayerIds(players);
+  return queued.filter((item) => validIds.has(item.playerId));
+}
+
+export interface InboxWeekFocus {
+  open: DecisionInboxItem[];
+  openCount: number;
+  slotsOpen: number;
+  nextQueued: DecisionInboxItem | null;
+}
+
+/** What the manager should act on now — not the full backlog depth. */
+export function inboxWeekFocus(
+  inbox: YouthInboxState,
+  players: readonly Player[],
+): InboxWeekFocus {
+  const open = pendingInboxItems(inbox, players);
+  const queue = queuedInboxItems(inbox, players);
+  return {
+    open,
+    openCount: open.length,
+    slotsOpen: Math.max(0, MAX_INBOX_ITEMS - open.length),
+    nextQueued: queue[0] ?? null,
+  };
+}
+
+export function inboxHeadline(focus: InboxWeekFocus): string {
+  if (focus.openCount === 0) return "Keine offenen Entscheidungen.";
+  if (focus.openCount === 1) return "1 Entscheidung offen.";
+  return `${focus.openCount} Entscheidungen offen (max. ${MAX_INBOX_ITEMS}).`;
+}
+
+export function inboxPipelineHint(
+  focus: InboxWeekFocus,
+  nextPlayerName?: string,
+): string | null {
+  if (focus.openCount >= MAX_INBOX_ITEMS) {
+    return "Erst diese lösen — dann kommen weitere Vorschläge.";
+  }
+  if (focus.nextQueued && nextPlayerName) {
+    if (focus.openCount > 0) return `Danach: ${nextPlayerName}`;
+    return `Nächster Vorschlag: ${nextPlayerName}`;
+  }
+  if (focus.openCount === 0 && focus.nextQueued) {
+    return "Nächster Vorschlag folgt mit dem nächsten Spieltag.";
+  }
+  return null;
+}
+
 export function inboxSummary(inbox: YouthInboxState): {
   pending: number;
   recommendations: number;
@@ -103,7 +161,7 @@ export function inboxSummary(inbox: YouthInboxState): {
     pending: open.length,
     recommendations: open.filter((item) => item.kind !== "departure_risk").length,
     departureRisks: open.filter((item) => item.kind === "departure_risk").length,
-    queued: inbox.queue.length,
+    queued: queuedInboxItems(inbox).length,
   };
 }
 

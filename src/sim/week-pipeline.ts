@@ -27,6 +27,7 @@ import { runSeasonEnd } from "./season-end.ts";
 import { environmentFromCoachingStaff } from "../staff/coaching-staff.ts";
 import { advanceRivalGrowthWeek } from "./rival-growth.ts";
 import { applyWeeklyFitnessBatch } from "../development/fitness-management.ts";
+import type { WatchedPlayerMatch } from "./watched-player-match.ts";
 
 export interface WeekSimResult {
   session: GameSession;
@@ -36,7 +37,10 @@ export interface WeekSimResult {
   matchdayStats: CareerLeagueStat[];
 }
 
-export async function simulateGameWeek(session: GameSession): Promise<WeekSimResult> {
+export async function simulateGameWeek(
+  session: GameSession,
+  watchedPlayerMatch?: WatchedPlayerMatch | null,
+): Promise<WeekSimResult> {
   const { nextWeek, footballSeasonEnded } = advanceCalendarWeek(session.week);
   const leagueStep = await advanceLeagueWeek(
     session.league,
@@ -45,6 +49,7 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     session.masterSeed,
     session.players,
     session.rivalPlayers,
+    watchedPlayerMatch,
   );
 
   const playersAtWeekStart = session.players;

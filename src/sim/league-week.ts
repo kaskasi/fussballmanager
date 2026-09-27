@@ -23,6 +23,7 @@ import type { Player } from "../types/player.ts";
 import { careerEngineSquadFromPlayers } from "./career-engine-squad.ts";
 import { isLeagueMatchWeek } from "./game-calendar.ts";
 import { squadForLeagueClub } from "./league-divisions.ts";
+import type { WatchedPlayerMatch } from "./watched-player-match.ts";
 
 export function weeklySeed(masterSeed: number, season: number, week: number): number {
   let hash = masterSeed ^ season ^ week;
@@ -285,6 +286,28 @@ function normalizeLeague(league: LeagueState): LeagueState {
   };
 }
 
+function applyWatchedPlayerFixture(
+  payload: MatchdayPayload,
+  scheduled: ScheduledFixture,
+  watched: WatchedPlayerMatch,
+  playerClubId: TeamId,
+): MatchdayPayload {
+  const override: FixtureResult = {
+    homeTeamId: watched.homeTeamId,
+    awayTeamId: watched.awayTeamId,
+    homeGoals: watched.homeGoals,
+    awayGoals: watched.awayGoals,
+  };
+  const results = payload.results.map((result) =>
+    result.homeTeamId === scheduled.homeTeamId && result.awayTeamId === scheduled.awayTeamId
+      ? override
+      : result,
+  );
+  // Drop engine stats for the player club — career sync derives minutes from the fixture.
+  const playerStats = payload.playerStats.filter((row) => row.teamId !== playerClubId);
+  return { results, playerStats };
+}
+
 export async function advanceLeagueWeek(
   league: LeagueState,
   season: number,
@@ -292,6 +315,7 @@ export async function advanceLeagueWeek(
   masterSeed: number,
   careerPlayers: readonly Player[] = [],
   rivalPlayers: readonly Player[] = [],
+  watchedPlayerMatch?: WatchedPlayerMatch | null,
 ): Promise<LeagueWeekAdvance> {
   const current = normalizeLeague(league);
 
@@ -312,7 +336,7 @@ export async function advanceLeagueWeek(
     current.player_club_id === NORDSTERN_ID
       ? careerEngineSquadFromPlayers(careerPlayers)
       : undefined;
-  const payload = await fetchMatchdayPayload(
+  let payload = await fetchMatchdayPayload(
     matchdayPlayed,
     baseSeed,
     current.club_ids,
@@ -320,11 +344,25 @@ export async function advanceLeagueWeek(
     rivalPlayers,
   );
   const scheduled = playerFixture(current, matchdayPlayed);
+  const watchedApplies =
+    watchedPlayerMatch != null &&
+    scheduled != null &&
+    watchedPlayerMatch.matchday === matchdayPlayed &&
+    watchedPlayerMatch.homeTeamId === scheduled.homeTeamId &&
+    watchedPlayerMatch.awayTeamId === scheduled.awayTeamId;
+  if (watchedApplies && scheduled) {
+    payload = applyWatchedPlayerFixture(
+      payload,
+      scheduled,
+      watchedPlayerMatch,
+      current.player_club_id,
+    );
+  }
   const playerResult = scheduled ? fixtureResult(payload.results, scheduled) ?? null : null;
   const seasonComplete = matchdayPlayed >= maxMatchday;
-  const clubPlayerStats = payload.playerStats.filter(
-    (row) => row.teamId === current.player_club_id,
-  );
+  const clubPlayerStats = watchedApplies
+    ? []
+    : payload.playerStats.filter((row) => row.teamId === current.player_club_id);
 
   return {
     league: {

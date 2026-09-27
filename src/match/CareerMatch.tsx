@@ -5,6 +5,10 @@ import type { Player } from "../types/player.ts";
 import type { NavPrimaryAction } from "../ui/nav-primary-action.ts";
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
 import { fetchCareerMatchView } from "./fetch-career-match.ts";
+import {
+  watchedMatchFromView,
+  type WatchedPlayerMatch,
+} from "../sim/watched-player-match.ts";
 import { CareerLineupScreen } from "./CareerLineupScreen.tsx";
 import type { MatchLineupState } from "./lineup-board.ts";
 import { CommentaryFeed } from "./CommentaryFeed.tsx";
@@ -36,8 +40,8 @@ export function CareerMatch({
   onSaveTacticsPreset: (id: TacticsPresetId, plan: SandboxPlan) => void;
   onSaveMatchLineup: (lineup: MatchLineupState) => void;
   simulating: boolean;
-  onComplete: () => void;
-  onSkip: () => void;
+  onComplete: (outcome: WatchedPlayerMatch) => void;
+  onSkip: (outcome: WatchedPlayerMatch) => void;
   onNavActionChange: (action: NavPrimaryAction | null) => void;
 }) {
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
@@ -93,8 +97,8 @@ function CareerMatchPlayback({
   week: number;
   weekday: number;
   simulating: boolean;
-  onComplete: () => void;
-  onSkip: () => void;
+  onComplete: (outcome: WatchedPlayerMatch) => void;
+  onSkip: (outcome: WatchedPlayerMatch) => void;
   onNavActionChange: (action: NavPrimaryAction | null) => void;
 }) {
   const [view, setView] = useState<Awaited<ReturnType<typeof fetchCareerMatchView>> | null>(null);
@@ -153,18 +157,23 @@ function CareerMatchPlayback({
   const finished = view ? playback.index >= view.frames.length - 1 : false;
 
   useEffect(() => {
+    const outcome = view ? watchedMatchFromView(setup, view) : null;
     onNavActionChange({
       label: simulating
         ? "…"
         : finished
           ? "Spieltag abschließen"
           : "Spiel simulieren",
-      onClick: finished ? onComplete : onSkip,
-      disabled: simulating || loading || !view,
+      onClick: () => {
+        if (!outcome) return;
+        if (finished) onComplete(outcome);
+        else onSkip(outcome);
+      },
+      disabled: simulating || loading || !outcome,
       title: finished ? "Ergebnis übernehmen und zum Sonntag" : "Spiel überspringen und Woche simulieren",
     });
     return () => onNavActionChange(null);
-  }, [finished, simulating, loading, view, onComplete, onSkip, onNavActionChange]);
+  }, [finished, simulating, loading, view, setup, onComplete, onSkip, onNavActionChange]);
 
   return (
     <main className="matchday career-match">

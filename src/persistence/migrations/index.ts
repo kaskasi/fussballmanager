@@ -19,6 +19,7 @@ import { migration018ClubStadium } from "./migration_018_club_stadium.ts";
 import { migration019Fanbase } from "./migration_019_fanbase.ts";
 import { migration020LastWeekGrowth } from "./migration_020_last_week_growth.ts";
 import { migration021TacticsStadium } from "./migration_021_tactics_stadium.ts";
+import { migration022Board } from "./migration_022_board.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -47,6 +48,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration019Fanbase,
   migration020LastWeekGrowth,
   migration021TacticsStadium,
+  migration022Board,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

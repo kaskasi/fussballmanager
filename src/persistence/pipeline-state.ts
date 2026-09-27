@@ -1,3 +1,6 @@
+import { defaultBoardState, type BoardState } from "../board/board-state.ts";
+import { startBoardSeason } from "../board/season-objectives.ts";
+import { defaultEmployerClubId } from "../board/job-offers.ts";
 import { createInitialTrainingPlan, type TrainingSlot } from "../development/training-units.ts";
 import { defaultTacticsPresets, type TacticsPresetSlot } from "../match/tactics-presets.ts";
 import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
@@ -18,6 +21,8 @@ export interface PipelineState {
   club_events?: ClubEvent[];
   /** F1.2 — three saved match tactic presets. */
   tactics_presets?: TacticsPresetSlot[];
+  /** F9.1 / F9.2 — board objectives and job status. */
+  board?: BoardState;
 }
 
 export function defaultPipelineState(week = 1): PipelineState {
@@ -30,5 +35,6 @@ export function defaultPipelineState(week = 1): PipelineState {
     club_stadium: defaultClubStadium(),
     club_events: emptyClubEvents(),
     tactics_presets: defaultTacticsPresets(),
+    board: startBoardSeason(defaultBoardState(defaultEmployerClubId()), defaultEmployerClubId(), 1),
   };
 }

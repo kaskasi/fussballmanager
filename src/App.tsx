@@ -45,8 +45,11 @@ import { recallLoanPlayer } from "./transfers/loans.ts";
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
 import { FinancesScreen } from "./ui/screens/FinancesScreen.tsx";
 import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
-import type { SandboxPlan } from "@fussballmanager/shared";
+import type { SandboxPlan, TeamId } from "@fussballmanager/shared";
+import { listJobOffers } from "./board/job-offers.ts";
+import { startBoardSeason } from "./board/season-objectives.ts";
 import { saveTacticsPreset, type TacticsPresetId } from "./match/tactics-presets.ts";
+import { JobOffersModal } from "./ui/components/JobOffersModal.tsx";
 import { STADIUM_BASE_BLOCKS, normalizeClubStadium, stadiumTotalCapacity } from "./stadium/club-stadium.ts";
 import { purchaseStadiumUpgrade } from "./stadium/stadium-upgrades.ts";
 import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
@@ -149,6 +152,7 @@ export default function App() {
     finances,
     stadium,
     tacticsPresets,
+    board,
     clubEvents,
   } = session;
 
@@ -339,6 +343,32 @@ export default function App() {
         ...current,
         scoutBoard: assignScout(current.scoutBoard, playerId),
       }));
+    },
+    [patchSession],
+  );
+
+  const handleAcceptJobOffer = useCallback(
+    (clubId: TeamId) => {
+      patchSession((current) => {
+        const offer = listJobOffers(current.board.employer_club_id, current.season).find(
+          (entry) => entry.clubId === clubId,
+        );
+        const bonus = offer?.signingBonus ?? 0;
+        const nextBoard = startBoardSeason(
+          { ...current.board, job_status: "employed", pressure: 0 },
+          clubId,
+          current.season,
+        );
+        return sessionWithEvent(
+          {
+            ...current,
+            board: nextBoard,
+            finances: { ...current.finances, cash: current.finances.cash + bonus },
+          },
+          "info",
+          `Neuer Job bei ${offer?.clubName ?? clubId} — Saisonziele gesetzt.`,
+        );
+      });
     },
     [patchSession],
   );
@@ -569,6 +599,7 @@ export default function App() {
     });
   }, []);
 
+  const jobOffers = listJobOffers(board.employer_club_id, season);
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
   const foreignTarget = foreignPlayerId ? getBoardTarget(scoutBoard, foreignPlayerId) : null;
   const navActions: HubNavActions = {
@@ -708,6 +739,7 @@ export default function App() {
           activeScouts={activeScoutCount(scoutBoard)}
           league={league}
           finances={finances}
+          board={board}
           clubId={session.clubId}
           onSelectPlayer={setProfileId}
           onOpenYouth={() => {
@@ -810,6 +842,9 @@ export default function App() {
         />
       ) : null}
       {screen === "matchday" ? <Matchday /> : null}
+      {board.job_status === "dismissed" ? (
+        <JobOffersModal offers={jobOffers} onAccept={handleAcceptJobOffer} />
+      ) : null}
       {saveManagerOverlay}
     </>
   );

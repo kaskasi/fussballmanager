@@ -20,6 +20,8 @@ import type { ClubEvent } from "../../inbox/club-events.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import { inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
 import { listDevelopmentMovers } from "../../player/ca-tracking.ts";
+import type { BoardState } from "../../board/board-state.ts";
+import { BoardObjectivesPanel } from "../components/BoardObjectivesPanel.tsx";
 import { DevelopmentHubPanel } from "../components/DevelopmentHubPanel.tsx";
 import { HubInboxPanel } from "../components/HubInboxPanel.tsx";
 import { LeagueHubPanel } from "../components/LeagueHubPanel.tsx";
@@ -49,6 +51,7 @@ export function PipelineDashboard({
   scoutBoard,
   league,
   finances,
+  board,
   clubId,
   clubEvents,
 }: {
@@ -71,6 +74,7 @@ export function PipelineDashboard({
   scoutBoard: ScoutBoard;
   league: LeagueState;
   finances: ClubFinances;
+  board: BoardState;
   clubId: string;
   clubEvents: readonly ClubEvent[];
 }) {
@@ -177,6 +181,7 @@ export function PipelineDashboard({
           </>
         )}
       </p>
+      <BoardObjectivesPanel board={board} league={league} finances={finances} />
       <HubInboxPanel
         week={week}
         season={season}

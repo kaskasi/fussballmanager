@@ -17,7 +17,7 @@ import { advanceClubFanbase, weeklyFanbaseDelta } from "../stadium/fanbase.ts";
 import { advanceProTrials } from "../youth/pro-trial.ts";
 import { simulateYouthWeek } from "../youth/youth-sim.ts";
 import { mergeCareerLeagueStats, applyCareerMatchWeek } from "./career-match-sync.ts";
-import { advanceCalendarWeek } from "./game-calendar.ts";
+import { advanceCalendarWeek, SEASON_END_WEEK } from "./game-calendar.ts";
 import { advanceLeagueWeek } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
 
@@ -125,6 +125,15 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
         record.week,
         "transfer",
         loanReturnMessage(record),
+      );
+    }
+    if (ended.boardEvaluation) {
+      clubEvents = withClubEvent(
+        clubEvents,
+        session.season,
+        SEASON_END_WEEK,
+        "info",
+        ended.boardEvaluation.summary,
       );
     }
     nextSession = { ...ended.session, clubEvents };

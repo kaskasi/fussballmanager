@@ -13,7 +13,9 @@ import {
   generateYouthIntake,
   type AcademyFacility,
 } from "../youth/intake-generator.ts";
+import { evaluateSeasonObjectives, startBoardSeason } from "../board/season-objectives.ts";
 import { applySeasonEndFinances } from "../economy/club-finances.ts";
+import type { SeasonObjectiveEvaluation } from "../board/board-state.ts";
 import { advanceClubFanbase, seasonEndFanbaseBonus } from "../stadium/fanbase.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 
@@ -21,6 +23,7 @@ export interface SeasonEndResult {
   session: GameSession;
   intakeCount: number;
   loanReturns: TransferRecord[];
+  boardEvaluation?: SeasonObjectiveEvaluation;
 }
 
 function nextIntakeIdStart(players: readonly Player[]): number {
@@ -64,12 +67,23 @@ export function runSeasonEnd(
   });
 
   const players = refreshAllMarketValues([...afterReturns, ...intake], session.season);
-  const finances = applySeasonEndFinances(
+  const financesAfterPrizes = applySeasonEndFinances(
     session.finances,
     session.league,
     endingSeason,
     SEASON_END_WEEK,
   );
+  const boardStep = evaluateSeasonObjectives(
+    session.board,
+    session.league,
+    financesAfterPrizes,
+    endingSeason,
+  );
+  let finances = boardStep.finances;
+  let board = boardStep.board;
+  if (!boardStep.evaluation.dismissed) {
+    board = startBoardSeason(board, board.employer_club_id, session.season);
+  }
   let transferState = session.transferState;
   for (const record of loanReturns) {
     transferState = appendTransferRecord(transferState, record);
@@ -82,10 +96,12 @@ export function runSeasonEnd(
       finances,
       transferState,
       stadium,
+      board,
       league: resetLeagueSeason(session.league),
     },
     intakeCount: intake.length,
     loanReturns,
+    boardEvaluation: boardStep.evaluation,
   };
 }
 

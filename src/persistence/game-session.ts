@@ -11,6 +11,9 @@ import {
 } from "../youth/decision-inbox.ts";
 import { emptyClubEvents, type ClubEvent } from "../inbox/club-events.ts";
 import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
+import { normalizeBoardState, type BoardState } from "../board/board-state.ts";
+import { startBoardSeason } from "../board/season-objectives.ts";
+import { defaultEmployerClubId } from "../board/job-offers.ts";
 import { normalizeTacticsPresets, type TacticsPresetSlot } from "../match/tactics-presets.ts";
 import { defaultClubStadium, normalizeClubStadium, type ClubStadium } from "../stadium/club-stadium.ts";
 import { emptyTransferState, type TransferState } from "../transfers/negotiations.ts";
@@ -47,6 +50,7 @@ export interface GameSession {
   finances: ClubFinances;
   stadium: ClubStadium;
   tacticsPresets: TacticsPresetSlot[];
+  board: BoardState;
   clubEvents: ClubEvent[];
   clubId: string;
   managerName: string;
@@ -64,6 +68,11 @@ export function newGameSession(now = new Date()): GameSession {
     players: loadDemoRoster(),
   });
   return withFreshInbox(sessionFromSave(save));
+}
+
+function ensureBoardObjectives(board: BoardState, season: number): BoardState {
+  if (board.objectives.length > 0 || board.job_status === "dismissed") return board;
+  return startBoardSeason(board, board.employer_club_id, season);
 }
 
 export function withFreshInbox(session: GameSession): GameSession {
@@ -99,6 +108,10 @@ export function sessionFromSave(save: SaveGame): GameSession {
     finances: pipeline.club_finances ?? defaultClubFinances(),
     stadium: normalizeClubStadium(pipeline.club_stadium ?? defaultClubStadium()),
     tacticsPresets: normalizeTacticsPresets(pipeline.tactics_presets),
+    board: ensureBoardObjectives(
+      normalizeBoardState(pipeline.board, defaultEmployerClubId()),
+      save.state.season,
+    ),
     clubEvents: pipeline.club_events ?? emptyClubEvents(),
     clubId: save.manifest.player_club_id,
     managerName: save.manifest.manager_name,
@@ -115,6 +128,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     club_finances: session.finances,
     club_stadium: session.stadium,
     tactics_presets: session.tacticsPresets,
+    board: session.board,
     club_events: session.clubEvents,
   };
   const iso = now.toISOString();

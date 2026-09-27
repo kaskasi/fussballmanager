@@ -24,4 +24,5 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_024_rival_growth",
   "migration_025_training_five_slots",
   "migration_026_training_intensity",
+  "migration_027_individual_training",
 ] as const;

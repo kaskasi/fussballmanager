@@ -1,6 +1,7 @@
 import { defaultBoardState, type BoardState } from "../board/board-state.ts";
 import { startBoardSeason } from "../board/season-objectives.ts";
 import { defaultEmployerClubId } from "../board/job-offers.ts";
+import type { IndividualProgram } from "../development/individual-training.ts";
 import { createInitialTrainingPlan, type TrainingSlot } from "../development/training-units.ts";
 import { defaultTacticsPresets, type TacticsPresetSlot } from "../match/tactics-presets.ts";
 import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
@@ -16,6 +17,8 @@ export interface PipelineState {
   training_plan: TrainingSlot[];
   /** F2.1 — weekly intensity (80–130, default 100). */
   training_intensity?: number;
+  /** F2.3 — individual extra programs per player. */
+  individual_programs?: IndividualProgram[];
   scout_board: ScoutBoard;
   youth_inbox: YouthInboxState;
   transfer_state?: TransferState;

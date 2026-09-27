@@ -25,6 +25,7 @@ import {
   listDevelopmentMovers,
   squadWeeklyCaDeltaSummary,
 } from "../../player/ca-tracking.ts";
+import type { IndividualProgram } from "../../development/individual-training.ts";
 import { fatigueAmpelClassName, squadTrainingLoad } from "../../development/training-load.ts";
 import { boardPressureTone } from "../../board/season-objectives.ts";
 import type { BoardState } from "../../board/board-state.ts";
@@ -45,6 +46,7 @@ export function PipelineDashboard({
   lastSaved,
   trainingPlan,
   trainingIntensity,
+  individualPrograms,
   onTrainingPlanChange,
   activeScouts,
   onSelectPlayer,
@@ -71,6 +73,7 @@ export function PipelineDashboard({
   lastSaved: string;
   trainingPlan: TrainingSlot[];
   trainingIntensity: number;
+  individualPrograms: IndividualProgram[];
   onTrainingPlanChange: (plan: TrainingSlot[]) => void;
   activeScouts: number;
   onSelectPlayer: (playerId: string) => void;
@@ -96,8 +99,8 @@ export function PipelineDashboard({
   const planOk = validateWeeklyPlan(sessions).valid;
   const focusCount = trainingPlan.filter((slot) => slot.focus).length;
   const trainingLoad = useMemo(
-    () => squadTrainingLoad(players, clubId, trainingIntensity, focusCount),
-    [players, clubId, trainingIntensity, focusCount],
+    () => squadTrainingLoad(players, clubId, trainingIntensity, focusCount, individualPrograms.length),
+    [players, clubId, trainingIntensity, focusCount, individualPrograms.length],
   );
   const caSummary = useMemo(
     () => squadWeeklyCaDeltaSummary(players, clubId),

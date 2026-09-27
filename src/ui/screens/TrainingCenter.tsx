@@ -18,12 +18,28 @@ import {
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import {
+  assignIndividualProgram,
+  cancelIndividualProgram,
+  canAssignIndividualProgram,
+  eligibleRetrainPositions,
+  MAX_INDIVIDUAL_PROGRAMS,
+  MAX_PROGRAM_WEEKS,
+  MIN_PROGRAM_WEEKS,
+  programForPlayer,
+  programKindLabel,
+  programLabel,
+  playerFatigueWarning,
+  type IndividualProgram,
+  type IndividualProgramKind,
+} from "../../development/individual-training.ts";
+import {
   clampTrainingIntensity,
   fatigueAmpelClassName,
   squadTrainingLoad,
   TRAINING_INTENSITY_MAX,
   TRAINING_INTENSITY_MIN,
 } from "../../development/training-load.ts";
+import type { PositionPrimary } from "../../types/player.ts";
 import { Hint } from "../components/Hint.tsx";
 
 type TrainingTab = "team" | "individual";
@@ -38,24 +54,30 @@ const GROUP_LABELS: Record<SessionGroup, string> = {
  * WIREFRAME: PRD 09.2 Screen 1 + 1a — Training
  *
  * Team: Wochenplan (Mo–Fr, 5 Slots). Fokus-Modus per Checkbox, Klick markiert Einheit.
- * Individuell: Extra-Programme pro Spieler (F2.3 Stub bis M2).
+ * Individuell: Extra-Programme pro Spieler (F2.3).
  */
 
 export function TrainingCenter({
   week,
+  season,
   plan,
   intensity,
+  individualPrograms,
   onPlanChange,
   onIntensityChange,
+  onProgramsChange,
   players,
   clubId,
   onBack,
 }: {
   week: number;
+  season: number;
   plan: TrainingSlot[];
   intensity: number;
+  individualPrograms: IndividualProgram[];
   onPlanChange: (plan: TrainingSlot[]) => void;
   onIntensityChange: (intensity: number) => void;
+  onProgramsChange: (programs: IndividualProgram[]) => void;
   players: Player[];
   clubId: string;
   onBack?: () => void;
@@ -65,8 +87,8 @@ export function TrainingCenter({
   const check = useMemo(() => validateWeeklyPlan(planToSessions(plan)), [plan]);
   const focusCount = plan.filter((slot) => slot.focus).length;
   const load = useMemo(
-    () => squadTrainingLoad(players, clubId, intensity, focusCount),
-    [players, clubId, intensity, focusCount],
+    () => squadTrainingLoad(players, clubId, intensity, focusCount, individualPrograms.length),
+    [players, clubId, intensity, focusCount, individualPrograms.length],
   );
 
   return (
@@ -109,7 +131,13 @@ export function TrainingCenter({
           onIntensityChange={onIntensityChange}
         />
       ) : (
-        <IndividualPlan players={players} />
+        <IndividualPlan
+          players={players}
+          programs={individualPrograms}
+          season={season}
+          week={week}
+          onProgramsChange={onProgramsChange}
+        />
       )}
     </main>
   );
@@ -362,26 +390,198 @@ function UnitPickerModal({
   );
 }
 
-function IndividualPlan({ players }: { players: Player[] }) {
+function IndividualPlan({
+  players,
+  programs,
+  season,
+  week,
+  onProgramsChange,
+}: {
+  players: Player[];
+  programs: IndividualProgram[];
+  season: number;
+  week: number;
+  onProgramsChange: (programs: IndividualProgram[]) => void;
+}) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const roster = players.filter((player) => player.squad_status !== "loaned_out");
+  const selected = roster.find((player) => player.id === selectedId) ?? null;
+
   return (
     <section className="training-individual">
       <Hint
-        text="Individuelle Extra-Einheiten (schwaches Bein, Position umbauen) kommen mit F2.3 in M2. Hier siehst du schon, wer ein Programm hätte."
+        text="Extra-Programme wirken zusätzlich zum Team-Plan. Max. 3 gleichzeitig · ab kommender Woche."
         block
       >
-        <p className="training-rules">Extra-Programme pro Spieler · wirken zusätzlich zum Team-Stundenplan</p>
+        <p className="training-rules">
+          {programs.length}/{MAX_INDIVIDUAL_PROGRAMS} Programme aktiv · Klick auf Spieler zum Planen
+        </p>
       </Hint>
       <ul className="training-roster">
-        {roster.map((player) => (
-          <li key={player.id}>
-            <span className="training-roster-name">{formatPlayerName(player)}</span>
-            <span className="training-roster-meta">{player.position} · {player.age} J.</span>
-            <span className="training-roster-program">Kein Programm · Stub (F2.3)</span>
-          </li>
-        ))}
+        {roster.map((player) => {
+          const program = programForPlayer(programs, player.id);
+          return (
+            <li key={player.id}>
+              <button type="button" className="training-roster-row" onClick={() => setSelectedId(player.id)}>
+                <span className="training-roster-name">{formatPlayerName(player)}</span>
+                <span className="training-roster-meta">{player.position} · {player.age} J.</span>
+                <span className={program ? "training-roster-program is-active" : "training-roster-program"}>
+                  {program ? programLabel(program) : "Kein Programm"}
+                </span>
+                {playerFatigueWarning(player) ? (
+                  <span className="training-roster-fatigue" title="Erhöhte Ermüdung — Extra-Training riskant">
+                    ⚡
+                  </span>
+                ) : null}
+              </button>
+            </li>
+          );
+        })}
       </ul>
+      {selected ? (
+        <IndividualProgramModal
+          player={selected}
+          programs={programs}
+          season={season}
+          week={week}
+          onClose={() => setSelectedId(null)}
+          onProgramsChange={onProgramsChange}
+        />
+      ) : null}
     </section>
+  );
+}
+
+function IndividualProgramModal({
+  player,
+  programs,
+  season,
+  week,
+  onClose,
+  onProgramsChange,
+}: {
+  player: Player;
+  programs: IndividualProgram[];
+  season: number;
+  week: number;
+  onClose: () => void;
+  onProgramsChange: (programs: IndividualProgram[]) => void;
+}) {
+  const active = programForPlayer(programs, player.id);
+  const [kind, setKind] = useState<IndividualProgramKind>(active?.kind ?? "weak_foot");
+  const [weeks, setWeeks] = useState(active?.weeksRemaining ?? 8);
+  const [targetPosition, setTargetPosition] = useState<PositionPrimary>(
+    active?.targetPosition ?? eligibleRetrainPositions(player)[0] ?? "AM",
+  );
+  const tired = playerFatigueWarning(player);
+  const check = canAssignIndividualProgram(player, kind, programs, targetPosition);
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  function handleAssign() {
+    if (!check.ok) return;
+    try {
+      const next = assignIndividualProgram(programs, player, kind, weeks, season, week, targetPosition);
+      onProgramsChange(next);
+      onClose();
+    } catch {
+      // validation surfaced in UI
+    }
+  }
+
+  function handleCancel() {
+    onProgramsChange(cancelIndividualProgram(programs, player.id));
+    onClose();
+  }
+
+  return (
+    <div className="training-modal-backdrop" onClick={onClose} role="presentation">
+      <div
+        className="training-modal training-modal-individual"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Individuelles Training für ${formatPlayerName(player)}`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="training-modal-head">
+          <div>
+            <p className="eyebrow">{player.position} · {player.age} J.</p>
+            <h2>{formatPlayerName(player)}</h2>
+          </div>
+          <button type="button" className="training-modal-close" onClick={onClose} aria-label="Schließen">
+            ✕
+          </button>
+        </header>
+
+        <div className="training-individual-body">
+          <p className="training-individual-stats">
+            Schwaches Bein {player.attributes.weak_foot}/100
+            {player.flexibility.length > 0
+              ? ` · Flex ${player.flexibility.map((slot) => `${slot.trained_as} ${Math.round(slot.proficiency * 100)}%`).join(", ")}`
+              : ""}
+          </p>
+
+          {tired ? (
+            <p className="training-individual-warn" role="status">
+              ⚡ Erhöhte Ermüdung — Extra-Einheit erhöht Belastung
+            </p>
+          ) : null}
+
+          <label className="training-individual-field">
+            <span>Programm</span>
+            <select value={kind} onChange={(event) => setKind(event.target.value as IndividualProgramKind)}>
+              <option value="weak_foot">{programKindLabel("weak_foot")}</option>
+              <option value="position_retrain">{programKindLabel("position_retrain")}</option>
+            </select>
+          </label>
+
+          {kind === "position_retrain" ? (
+            <label className="training-individual-field">
+              <span>Zielposition</span>
+              <select
+                value={targetPosition}
+                onChange={(event) => setTargetPosition(event.target.value as PositionPrimary)}
+              >
+                {eligibleRetrainPositions(player).map((position) => (
+                  <option key={position} value={position}>{position}</option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          <label className="training-individual-field">
+            <span>Dauer {weeks} Wochen</span>
+            <input
+              type="range"
+              min={MIN_PROGRAM_WEEKS}
+              max={MAX_PROGRAM_WEEKS}
+              step={1}
+              value={weeks}
+              onChange={(event) => setWeeks(Number(event.target.value))}
+            />
+          </label>
+
+          {!check.ok ? <p className="training-individual-error">{check.reason}</p> : null}
+
+          <div className="training-individual-actions">
+            {active ? (
+              <button type="button" className="training-individual-cancel" onClick={handleCancel}>
+                Programm beenden
+              </button>
+            ) : null}
+            <button type="button" className="training-individual-confirm" onClick={handleAssign} disabled={!check.ok}>
+              {active ? "Programm aktualisieren" : "Ab nächster Woche starten"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

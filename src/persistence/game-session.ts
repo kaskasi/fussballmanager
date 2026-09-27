@@ -29,6 +29,7 @@ function normalizeTransferState(state?: TransferState): TransferState {
 import { MONDAY } from "../sim/day-calendar.ts";
 import { defaultLeagueState, normalizeLeagueState, type LeagueState } from "./league-state.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
+import type { IndividualProgram } from "../development/individual-training.ts";
 import { normalizeTrainingIntensity } from "../development/training-load.ts";
 import { migrateLegacyTrainingPlan } from "../development/training-units.ts";
 import { createSave, type SaveGame } from "./savegame-model.ts";
@@ -47,6 +48,7 @@ export interface GameSession {
   players: Player[];
   trainingPlan: TrainingSlot[];
   trainingIntensity: number;
+  individualPrograms: IndividualProgram[];
   scoutBoard: ScoutBoard;
   youthInbox: YouthInboxState;
   league: LeagueState;
@@ -104,6 +106,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     players: save.players,
     trainingPlan: migrateLegacyTrainingPlan(pipeline.training_plan),
     trainingIntensity: normalizeTrainingIntensity(pipeline.training_intensity),
+    individualPrograms: pipeline.individual_programs ?? [],
     scoutBoard: pipeline.scout_board,
     youthInbox: pruneYouthInbox(
       normalizeYouthInbox(pipeline.youth_inbox ?? emptyInbox(save.state.week)),
@@ -130,6 +133,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
   const pipeline: PipelineState = {
     training_plan: session.trainingPlan,
     training_intensity: session.trainingIntensity,
+    individual_programs: session.individualPrograms,
     scout_board: session.scoutBoard,
     youth_inbox: session.youthInbox,
     transfer_state: session.transferState,

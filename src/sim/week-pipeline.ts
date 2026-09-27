@@ -1,4 +1,5 @@
 import { expireBreakoutModifiers, processWeeklyBreakoutChecks } from "../development/breakouts.ts";
+import { advanceIndividualTrainingWeek } from "../development/individual-training.ts";
 import { applyTrainingWeek } from "../development/pipeline-week.ts";
 import { planToSessions } from "../development/training-units.ts";
 import { advanceWeeklyClubFinances } from "../economy/club-finances.ts";
@@ -51,6 +52,13 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
   let players = session.players.map((player) =>
     applyTrainingWeek(player, sessions, trainingContext),
   );
+
+  const individualStep = advanceIndividualTrainingWeek(
+    players,
+    session.individualPrograms,
+    trainingContext,
+  );
+  players = individualStep.players;
 
   const careerMatch = applyCareerMatchWeek(
     players,
@@ -127,6 +135,7 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     finances,
     stadium,
     rivalPlayers,
+    individualPrograms: individualStep.programs,
   };
 
   let intakeCount = 0;

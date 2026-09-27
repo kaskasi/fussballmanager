@@ -53,6 +53,7 @@ export function squadTrainingLoad(
   clubId: string,
   intensity: number,
   focusCount: number,
+  individualProgramCount = 0,
 ): TrainingLoadSummary {
   const squad = proSquad(players, clubId);
   if (squad.length === 0) {
@@ -70,7 +71,9 @@ export function squadTrainingLoad(
     squad.reduce((sum, player) => sum + player.state.fitness, 0) / squad.length;
   const tiredRatio = tiredCount / squad.length;
   const loadIndex =
-    trainingIntensityMultiplier(intensity) * (1 + focusCount * 0.07) + tiredRatio * 0.55;
+    trainingIntensityMultiplier(intensity) *
+      (1 + focusCount * 0.07 + individualProgramCount * 0.05) +
+    tiredRatio * 0.55;
 
   if (loadIndex >= 1.28 || tiredCount >= 3 || (intensity >= 120 && tiredCount >= 2)) {
     return {

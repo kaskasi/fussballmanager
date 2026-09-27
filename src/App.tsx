@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { IndividualProgram } from "./development/individual-training.ts";
 import type { TrainingSlot } from "./development/training-units.ts";
 import { CareerMatch } from "./match/CareerMatch";
 import { appendMatchdayClubEvents } from "./match/post-match-events.ts";
@@ -160,6 +161,7 @@ export default function App() {
     players,
     trainingPlan,
     trainingIntensity,
+    individualPrograms,
     scoutBoard,
     youthInbox,
     league,
@@ -547,6 +549,13 @@ export default function App() {
     [patchSession],
   );
 
+  const handleIndividualProgramsChange = useCallback(
+    (programs: IndividualProgram[]) => {
+      patchSession((current) => ({ ...current, individualPrograms: programs }));
+    },
+    [patchSession],
+  );
+
   const resetGame = useCallback(() => {
     removeLocalSave(activeSlot);
     const fresh = saveFromSession(newGameSession());
@@ -759,6 +768,7 @@ export default function App() {
           lastSaved={save.manifest.last_played}
           trainingPlan={trainingPlan}
           trainingIntensity={trainingIntensity}
+          individualPrograms={individualPrograms}
           onTrainingPlanChange={handleTrainingPlanChange}
           activeScouts={activeScoutCount(scoutBoard)}
           league={league}
@@ -786,10 +796,13 @@ export default function App() {
       {screen === "training" ? (
         <TrainingCenter
           week={week}
+          season={season}
           plan={trainingPlan}
           intensity={trainingIntensity}
+          individualPrograms={individualPrograms}
           onPlanChange={handleTrainingPlanChange}
           onIntensityChange={handleTrainingIntensityChange}
+          onProgramsChange={handleIndividualProgramsChange}
           players={players}
           clubId={session.clubId}
         />

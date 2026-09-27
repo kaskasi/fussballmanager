@@ -17,6 +17,11 @@ import {
   monthNetTotal,
   seasonCashSparkline,
 } from "../../economy/finance-ledger.ts";
+import {
+  stadiumMatchdayIncome,
+  stadiumTotalCapacity,
+  type ClubStadium,
+} from "../../stadium/club-stadium.ts";
 import { Hint } from "../components/Hint.tsx";
 
 /**
@@ -28,14 +33,18 @@ export function FinancesScreen({
   clubId,
   season,
   week,
+  stadium,
   onBack,
+  onOpenStadium,
 }: {
   finances: ClubFinances;
   players: readonly Player[];
   clubId: string;
   season: number;
   week: number;
+  stadium: ClubStadium;
   onBack: () => void;
+  onOpenStadium: () => void;
 }) {
   const month = financeMonthForWeek(week);
   const wageBill = weeklyWageBill(players, clubId);
@@ -74,6 +83,17 @@ export function FinancesScreen({
           tone={wageStatus === "over" ? "bad" : wageStatus === "warn" ? "warn" : "good"}
           mark={wageStatus === "over" ? "◆" : wageStatus === "warn" ? "▲" : "●"}
         />
+      </section>
+
+      <section className="finances-stadium-link">
+        <button type="button" className="finances-stadium-btn" onClick={onOpenStadium}>
+          <span aria-hidden="true">🏟️</span>
+          <span>
+            {stadium.name} · {stadiumTotalCapacity(stadium).toLocaleString("de-DE")} Plätze · Heimspiel{" "}
+            {formatClubCash(stadiumMatchdayIncome(stadium))}
+          </span>
+          <span aria-hidden="true">→</span>
+        </button>
       </section>
 
       <section className="finances-waterfall" aria-label={`Cashflow Monat ${month}`}>

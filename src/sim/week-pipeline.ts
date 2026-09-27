@@ -63,7 +63,7 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     ),
   };
 
-  const youth = simulateYouthWeek(players, session.week, session.masterSeed);
+  const youth = simulateYouthWeek(players, session.week, session.masterSeed, session.clubId);
   players = youth.players;
 
   const breakouts = processWeeklyBreakoutChecks(players, nextWeek, session.masterSeed);
@@ -87,6 +87,7 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     isHomeMatchWeek,
     season: session.season,
     week: nextWeek,
+    stadium: session.stadium,
   });
   const finances = financeStep.finances;
   const playersWithCaStamp = playersWithMorale.map(stampLastWeekCa);

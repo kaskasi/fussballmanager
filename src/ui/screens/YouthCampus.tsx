@@ -23,7 +23,6 @@ import { coachIconForPlayer, hasDepartureRisk } from "../components/DecisionInbo
  */
 
 const OWNED: AcademyFacility = "academy_basic";
-const STADIUM_CAPACITY = 0;
 
 const POSITION_ORDER: PositionPrimary[] = [
   "GK",
@@ -48,6 +47,7 @@ const DEFAULT_YOUTH_SORT: { key: ProSquadSortKey; direction: ProSquadSortDirecti
 export function YouthCampus({
   players,
   youthInbox,
+  stadiumCapacity,
   onSelectPlayer,
   onDepartureRisk,
   yearOpen,
@@ -55,6 +55,7 @@ export function YouthCampus({
 }: {
   players: Player[];
   youthInbox: YouthInboxState;
+  stadiumCapacity: number;
   onSelectPlayer: (playerId: string) => void;
   onDepartureRisk: () => void;
   yearOpen: boolean;
@@ -72,13 +73,19 @@ export function YouthCampus({
           onSelectPlayer={onSelectPlayer}
         />
       ) : (
-        <CampusGround onOpenYear={() => onYearOpenChange(true)} />
+        <CampusGround stadiumCapacity={stadiumCapacity} onOpenYear={() => onYearOpenChange(true)} />
       )}
     </main>
   );
 }
 
-function CampusGround({ onOpenYear }: { onOpenYear: () => void }) {
+function CampusGround({
+  stadiumCapacity,
+  onOpenYear,
+}: {
+  stadiumCapacity: number;
+  onOpenYear: () => void;
+}) {
   const owned = facilityById(OWNED);
   return (
     <section>
@@ -88,7 +95,7 @@ function CampusGround({ onOpenYear }: { onOpenYear: () => void }) {
       </h1>
       <div className="campus-ground">
         {ACADEMY_FACILITIES.map((facility) => {
-          const gate = facilityGate(OWNED, facility.id, STADIUM_CAPACITY);
+          const gate = facilityGate(OWNED, facility.id, stadiumCapacity);
           const current = gate.status === "current";
           return (
             <button

@@ -11,6 +11,7 @@ import {
 } from "../youth/decision-inbox.ts";
 import { emptyClubEvents, type ClubEvent } from "../inbox/club-events.ts";
 import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
+import { defaultClubStadium, type ClubStadium } from "../stadium/club-stadium.ts";
 import { emptyTransferState, type TransferState } from "../transfers/negotiations.ts";
 
 function normalizeTransferState(state?: TransferState): TransferState {
@@ -43,6 +44,7 @@ export interface GameSession {
   league: LeagueState;
   transferState: TransferState;
   finances: ClubFinances;
+  stadium: ClubStadium;
   clubEvents: ClubEvent[];
   clubId: string;
   managerName: string;
@@ -66,7 +68,13 @@ export function withFreshInbox(session: GameSession): GameSession {
   if (session.youthInbox.items.length > 0) return session;
   return {
     ...session,
-    youthInbox: generateWeeklyInbox(session.players, session.week, session.masterSeed),
+    youthInbox: generateWeeklyInbox(
+      session.players,
+      session.week,
+      session.masterSeed,
+      null,
+      session.clubId,
+    ),
   };
 }
 
@@ -87,6 +95,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     league: save.state.league ?? defaultLeagueState(),
     transferState: normalizeTransferState(pipeline.transfer_state),
     finances: pipeline.club_finances ?? defaultClubFinances(),
+    stadium: pipeline.club_stadium ?? defaultClubStadium(),
     clubEvents: pipeline.club_events ?? emptyClubEvents(),
     clubId: save.manifest.player_club_id,
     managerName: save.manifest.manager_name,
@@ -101,6 +110,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     youth_inbox: session.youthInbox,
     transfer_state: session.transferState,
     club_finances: session.finances,
+    club_stadium: session.stadium,
     club_events: session.clubEvents,
   };
   const iso = now.toISOString();

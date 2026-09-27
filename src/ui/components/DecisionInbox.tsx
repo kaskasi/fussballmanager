@@ -14,6 +14,7 @@ import {
   type DecisionInboxItem,
   type YouthInboxState,
 } from "../../youth/decision-inbox.ts";
+import { canPromotePlayer, promotionGateLabel } from "../../youth/promotion-gate.ts";
 
 /**
  * WIREFRAME: PRD 09.2 Screen 2b — Decision Inbox
@@ -24,12 +25,14 @@ import {
 export function DecisionInboxModal({
   inbox,
   players,
+  clubId,
   onDecision,
   onClose,
   initialItemId = null,
 }: {
   inbox: YouthInboxState;
   players: Player[];
+  clubId: string;
   onDecision: (itemId: string, action: DecisionAction) => void;
   onClose: () => void;
   initialItemId?: string | null;
@@ -60,6 +63,10 @@ export function DecisionInboxModal({
   const active = pending.find((item) => item.id === activeId) ?? pending[0] ?? null;
   const player = active ? players.find((entry) => entry.id === active.playerId) : null;
   const coachIcon = active ? inbox.coachIcons[active.playerId] : undefined;
+  const promotionBlock =
+    active?.kind === "promotion" && player
+      ? promotionGateLabel(canPromotePlayer(players, clubId, player), player.position)
+      : null;
 
   return (
     <div className="inbox-backdrop" onClick={onClose} role="presentation">
@@ -134,8 +141,12 @@ export function DecisionInboxModal({
                   </p>
                 ) : null}
 
+                {promotionBlock ? (
+                  <p className="inbox-promotion-block">🚫 {promotionBlock}</p>
+                ) : null}
+
                 <div className="inbox-actions" aria-label="Aktionen">
-                  {allowedActions(active).map((action) => (
+                  {allowedActions(active, players, clubId).map((action) => (
                     <button
                       key={action}
                       type="button"

@@ -42,6 +42,8 @@ import {
 } from "./transfers/transfer-history.ts";
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
 import { FinancesScreen } from "./ui/screens/FinancesScreen.tsx";
+import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
+import { stadiumTotalCapacity } from "./stadium/club-stadium.ts";
 import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
 import { PlayerProfile } from "./ui/screens/PlayerProfile";
@@ -69,7 +71,7 @@ import {
   type DecisionAction,
 } from "./youth/decision-inbox.ts";
 
-type Screen = "hub" | "campus" | "matchday" | "scouting" | "transfers" | "squad" | "finances";
+type Screen = "hub" | "campus" | "matchday" | "scouting" | "transfers" | "squad" | "finances" | "stadium";
 
 function bootstrapSave(): SaveGame {
   try {
@@ -110,6 +112,7 @@ export default function App() {
     league,
     transferState,
     finances,
+    stadium,
     clubEvents,
   } = session;
 
@@ -552,6 +555,7 @@ export default function App() {
         <DecisionInboxModal
           inbox={youthInbox}
           players={players}
+          clubId={session.clubId}
           initialItemId={inboxItemId}
           onDecision={handleInboxDecision}
           onClose={() => {
@@ -564,6 +568,7 @@ export default function App() {
         <YouthCampus
           players={players}
           youthInbox={youthInbox}
+          stadiumCapacity={stadiumTotalCapacity(stadium)}
           yearOpen={campusYearOpen}
           onYearOpenChange={setCampusYearOpen}
           onSelectPlayer={setProfileId}
@@ -607,7 +612,21 @@ export default function App() {
           clubId={session.clubId}
           season={season}
           week={week}
+          stadium={stadium}
           onBack={() => setScreen("hub")}
+          onOpenStadium={() => setScreen("stadium")}
+        />
+      ) : null}
+      {screen === "stadium" ? (
+        <StadiumScreen
+          stadium={stadium}
+          onStadiumChange={(next) =>
+            patchSession((current) => ({
+              ...current,
+              stadium: next,
+            }))
+          }
+          onBack={() => setScreen("finances")}
         />
       ) : null}
       {screen === "matchday" ? <Matchday /> : null}

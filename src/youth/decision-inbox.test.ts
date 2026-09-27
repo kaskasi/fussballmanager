@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { ACHIEVEMENT } from "../player/achievements.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
+import { MAX_PRO_SQUAD_SIZE } from "./promotion-gate.ts";
 import {
   advanceInboxWeek,
+  allowedActions,
   applyInboxDecision,
   deliverDailyInbox,
   deliverInboxForDays,
@@ -222,6 +224,58 @@ describe("decision inbox", () => {
     expect(pruned.items).toHaveLength(0);
     expect(pruned.queue).toHaveLength(0);
     expect(pendingInboxItems(pruned, [player])).toHaveLength(0);
+  });
+
+  it("does not queue pro promotions when the senior squad is full", () => {
+    const pros = Array.from({ length: MAX_PRO_SQUAD_SIZE }, (_, index) => {
+      const player = clonePlayer();
+      player.id = `pro_${index}`;
+      player.club_id = "cl_fc_nordstern";
+      player.squad_status = "pro";
+      player.position = index % 2 === 0 ? "CB" : "DM";
+      return player;
+    });
+    const youth = youthPlayer("youth_rb", 18, "u19");
+    youth.position = "RB";
+    const inbox = generateWeeklyInbox(
+      [...pros, youth],
+      34,
+      2026,
+      {
+        week: 34,
+        u17_results: { wins: 0, draws: 0, losses: 0 },
+        u19_results: { wins: 0, draws: 0, losses: 0 },
+        standout_players: [],
+        promotion_recommendations: [
+          { player_id: youth.id, reason: "ready_for_first_team", urgency: "now" },
+        ],
+      },
+      "cl_fc_nordstern",
+    );
+    expect(inbox.queue.some((item) => item.playerId === youth.id && item.reason === "ready_for_pro")).toBe(
+      false,
+    );
+  });
+
+  it("hides promote when the position is blocked on an existing inbox item", () => {
+    const pros = [clonePlayer(), clonePlayer(), clonePlayer()].map((player, index) => {
+      player.id = `rb_${index}`;
+      player.club_id = "cl_fc_nordstern";
+      player.squad_status = "pro";
+      player.position = "RB";
+      return player;
+    });
+    const youth = youthPlayer("youth_rb", 18, "u19");
+    youth.position = "RB";
+    const item = {
+      id: "pro1_youth_rb_34",
+      playerId: youth.id,
+      kind: "promotion" as const,
+      week: 34,
+      urgency: "now" as const,
+      reason: "ready_for_pro",
+    };
+    expect(allowedActions(item, [...pros, youth], "cl_fc_nordstern")).not.toContain("promote");
   });
 
   it("summarises open recommendations, departure risks, and queue depth", () => {

@@ -1,5 +1,6 @@
 import type { LeagueState } from "../persistence/league-state.ts";
 import { leagueTable } from "../sim/league-week.ts";
+import { stadiumMatchdayIncome, type ClubStadium } from "../stadium/club-stadium.ts";
 import { DIVISION_ECONOMY, type DivisionEconomyId } from "./division-economy.ts";
 import {
   appendPendingFinanceLines,
@@ -28,6 +29,7 @@ export interface WeeklyFinanceContext {
   isHomeMatchWeek: boolean;
   season: number;
   week: number;
+  stadium?: ClubStadium;
 }
 
 export interface WeeklyFinanceResult {
@@ -96,10 +98,15 @@ export function wageBudgetStatus(
   return "good";
 }
 
-export function matchdayTicketIncome(divisionId: DivisionEconomyId, isHomeMatch: boolean): number {
+export function matchdayTicketIncome(
+  divisionId: DivisionEconomyId,
+  isHomeMatch: boolean,
+  stadium?: ClubStadium,
+): number {
   if (!isHomeMatch) return 0;
-  const stadium = divisionEconomy(divisionId).stadium_defaults;
-  return Math.round(stadium.capacity * stadium.fill_rate * stadium.avg_ticket_eur);
+  if (stadium) return stadiumMatchdayIncome(stadium);
+  const defaults = divisionEconomy(divisionId).stadium_defaults;
+  return Math.round(defaults.capacity * defaults.fill_rate * defaults.avg_ticket_eur);
 }
 
 function applyCashLine(finances: ClubFinances, line: FinanceLine): ClubFinances {
@@ -144,7 +151,11 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
     { kind: "staff_wages", amount: -economy.staff_wages_weekly, week },
     { kind: "facility_maintenance", amount: -economy.maintenance_weekly, week },
   ];
-  const tickets = matchdayTicketIncome(context.divisionId, context.isHomeMatchWeek);
+  const tickets = matchdayTicketIncome(
+    context.divisionId,
+    context.isHomeMatchWeek,
+    context.stadium,
+  );
   if (tickets > 0) {
     lines.push({ kind: "matchday_tickets", amount: tickets, week });
   }

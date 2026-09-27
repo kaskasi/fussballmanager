@@ -1,3 +1,4 @@
+import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { ACHIEVEMENT, grantAchievement } from "../player/achievements.ts";
 import { signYouthContract } from "../player/youth-contract.ts";
 import { estimateCa } from "../transfers/market-value.ts";
@@ -5,6 +6,7 @@ import { loanPlayerOut, type TransferRecord } from "../transfers/transfer-histor
 import type { Player } from "../types/player.ts";
 import type { CoachIcon } from "./academy.ts";
 import { departureReasonLabel, departureRiskReasons } from "./departure-risk.ts";
+import { canPromotePlayer } from "./promotion-gate.ts";
 import type { YouthReport } from "./youth-sim.ts";
 
 /** PRD 03.4 — max open decisions at once; extra candidates wait in queue. */
@@ -157,17 +159,30 @@ export function inboxItemLabel(item: DecisionInboxItem): string {
   }
 }
 
-export function allowedActions(item: DecisionInboxItem): DecisionAction[] {
-  switch (item.kind) {
-    case "departure_risk":
-      return ["loan", "contract", "dismiss"];
-    case "promotion":
-      return ["promote", "loan", "contract", "training_focus", "dismiss"];
-    case "contract_offer":
-      return ["contract", "dismiss"];
-    case "training_focus":
-      return ["training_focus", "dismiss"];
-  }
+export function allowedActions(
+  item: DecisionInboxItem,
+  players?: readonly Player[],
+  clubId?: string,
+): DecisionAction[] {
+  const base: DecisionAction[] = (() => {
+    switch (item.kind) {
+      case "departure_risk":
+        return ["loan", "contract", "dismiss"];
+      case "promotion":
+        return ["promote", "loan", "contract", "training_focus", "dismiss"];
+      case "contract_offer":
+        return ["contract", "dismiss"];
+      case "training_focus":
+        return ["training_focus", "dismiss"];
+    }
+  })();
+
+  if (item.kind !== "promotion" || !players || !clubId) return base;
+
+  const player = players.find((entry) => entry.id === item.playerId);
+  if (!player || canPromotePlayer(players, clubId, player).allowed) return base;
+
+  return base.filter((action) => action !== "promote");
 }
 
 export function actionLabel(action: DecisionAction): string {
@@ -218,12 +233,32 @@ export function coachIconsForYouth(
   return icons;
 }
 
+function resolveClubId(players: readonly Player[], clubId?: string): string {
+  if (clubId) return clubId;
+  return players.find((player) => player.club_id)?.club_id ?? DEFAULT_CLUB_ID;
+}
+
+function promotionAllowed(
+  players: readonly Player[],
+  clubId: string,
+  player: Player,
+  reason: "ready_for_u19" | "ready_for_pro",
+): boolean {
+  if (reason === "ready_for_u19") {
+    return canPromotePlayer(players, clubId, player).allowed;
+  }
+  if (player.squad_status !== "u19") return false;
+  return canPromotePlayer(players, clubId, player).allowed;
+}
+
 export function generateWeeklyInbox(
   players: readonly Player[],
   week: number,
   masterSeed: number,
   report: YouthReport | null = null,
+  clubId?: string,
 ): YouthInboxState {
+  const resolvedClubId = resolveClubId(players, clubId);
   const youth = players.filter((player) => player.squad_status === "u17" || player.squad_status === "u19");
   const coachIcons = report
     ? Object.fromEntries(report.standout_players.map((entry) => [entry.player_id, entry.coach_comment_icon]))
@@ -257,6 +292,7 @@ export function generateWeeklyInbox(
           reason: "contract_due",
         });
       } else if (player.squad_status === "u19" && recommendation.reason === "ready_for_first_team") {
+        if (!promotionAllowed(players, resolvedClubId, player, "ready_for_pro")) continue;
         candidates.push({
           id: `pro1_${player.id}_${week}`,
           playerId: player.id,
@@ -266,6 +302,7 @@ export function generateWeeklyInbox(
           reason: "ready_for_pro",
         });
       } else if (player.squad_status === "u17") {
+        if (!promotionAllowed(players, resolvedClubId, player, "ready_for_u19")) continue;
         candidates.push({
           id: `pro_${player.id}_${week}`,
           playerId: player.id,
@@ -304,7 +341,11 @@ export function generateWeeklyInbox(
 
     for (const player of youth.filter((entry) => entry.squad_status === "u17")) {
       const ca = estimateCa(player.attributes, player.position);
-      if (ca >= 58 && inboxRoll(masterSeed, week, player.id, "promotion") < 0.16) {
+      if (
+        ca >= 58 &&
+        inboxRoll(masterSeed, week, player.id, "promotion") < 0.16 &&
+        promotionAllowed(players, resolvedClubId, player, "ready_for_u19")
+      ) {
         candidates.push({
           id: `pro_${player.id}_${week}`,
           playerId: player.id,
@@ -318,7 +359,11 @@ export function generateWeeklyInbox(
 
     for (const player of youth.filter((entry) => entry.squad_status === "u19")) {
       const ca = estimateCa(player.attributes, player.position);
-      if (ca >= 68 && inboxRoll(masterSeed, week, player.id, "pro_promotion") < 0.16) {
+      if (
+        ca >= 68 &&
+        inboxRoll(masterSeed, week, player.id, "pro_promotion") < 0.16 &&
+        promotionAllowed(players, resolvedClubId, player, "ready_for_pro")
+      ) {
         candidates.push({
           id: `pro1_${player.id}_${week}`,
           playerId: player.id,
@@ -385,13 +430,14 @@ export function applyInboxDecision(
   if (!item || inbox.resolvedIds.includes(itemId)) {
     return { inbox, players: [...players] };
   }
-  if (!allowedActions(item).includes(action)) {
-    return { inbox, players: [...players] };
-  }
 
   let nextPlayers = [...players];
   let transferRecord: TransferRecord | undefined;
   const player = nextPlayers.find((entry) => entry.id === item.playerId);
+  const clubId = player?.club_id ?? resolveClubId(players);
+  if (!allowedActions(item, players, clubId).includes(action)) {
+    return { inbox, players: nextPlayers };
+  }
   if (!player) {
     return {
       inbox: { ...inbox, resolvedIds: [...inbox.resolvedIds, itemId] },
@@ -414,6 +460,7 @@ export function applyInboxDecision(
       break;
     }
     case "promote":
+      if (!canPromotePlayer(nextPlayers, clubId, player).allowed) break;
       if (player.squad_status === "u17") {
         nextPlayers = nextPlayers.map((entry) =>
           entry.id === item.playerId

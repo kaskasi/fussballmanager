@@ -1,8 +1,10 @@
+import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { ACHIEVEMENT, grantAchievements, type AchievementLabel } from "../player/achievements.ts";
 import { pushWeeklyMinutes } from "../player/minute-history.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
 import type { CoachIcon } from "./academy.ts";
+import { canPromotePlayer } from "./promotion-gate.ts";
 
 /**
  * Automatic U17/U19 week simulation (PRD 03.3, F3.3).
@@ -40,6 +42,7 @@ export function simulateYouthWeek(
   players: readonly Player[],
   week: number,
   masterSeed: number,
+  clubId: string = DEFAULT_CLUB_ID,
 ): { players: Player[]; report: YouthReport } {
   const u17 = players.filter((player) => player.squad_status === "u17");
   const u19 = players.filter((player) => player.squad_status === "u19");
@@ -59,7 +62,7 @@ export function simulateYouthWeek(
     });
     const ca = estimateCa(player.attributes, player.position);
     if (player.squad_status === "u17") {
-      if (ca >= 60 && ratingChange >= 0.4) {
+      if (ca >= 60 && ratingChange >= 0.4 && canPromotePlayer(players, clubId, player).allowed) {
         promotions.push({
           player_id: player.id,
           reason: ca >= 66 ? "ready_for_first_team" : "needs_more_experience",
@@ -72,7 +75,12 @@ export function simulateYouthWeek(
           urgency: "now",
         });
       }
-    } else if (player.squad_status === "u19" && ca >= 68 && ratingChange >= 0.25) {
+    } else if (
+      player.squad_status === "u19" &&
+      ca >= 68 &&
+      ratingChange >= 0.25 &&
+      canPromotePlayer(players, clubId, player).allowed
+    ) {
       promotions.push({
         player_id: player.id,
         reason: "ready_for_first_team",

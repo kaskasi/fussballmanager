@@ -41,10 +41,11 @@ import {
 } from "../../development/training-load.ts";
 import type { PositionPrimary } from "../../types/player.ts";
 import { CoachingStaffPanel } from "../components/CoachingStaffPanel.tsx";
+import { FitnessManagementPanel } from "../components/FitnessManagementPanel.tsx";
 import { Hint } from "../components/Hint.tsx";
 import type { Coach, CoachingStaff } from "../../staff/coaching-staff.ts";
 
-type TrainingTab = "team" | "individual" | "coaches";
+type TrainingTab = "team" | "individual" | "coaches" | "fitness";
 
 const GROUP_LABELS: Record<SessionGroup, string> = {
   technical: "Technik",
@@ -133,6 +134,13 @@ export function TrainingCenter({
         >
           Trainer · Stab
         </button>
+        <button
+          type="button"
+          className={tab === "fitness" ? "training-tab is-active" : "training-tab"}
+          onClick={() => setTab("fitness")}
+        >
+          Fitness · Belastung
+        </button>
       </nav>
 
       {tab === "team" ? (
@@ -155,7 +163,7 @@ export function TrainingCenter({
           week={week}
           onProgramsChange={onProgramsChange}
         />
-      ) : (
+      ) : tab === "coaches" ? (
         <CoachingStaffPanel
           staff={coachingStaff}
           season={season}
@@ -164,6 +172,8 @@ export function TrainingCenter({
           cash={cash}
           onHire={onHireCoach}
         />
+      ) : (
+        <FitnessManagementPanel players={players} clubId={clubId} intensity={intensity} />
       )}
     </main>
   );

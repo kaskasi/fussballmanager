@@ -8,8 +8,10 @@ import {
   type ProSquadSortKey,
 } from "../../squad/pro-roster.ts";
 import { caDeltaClassName, caDeltaMark, formatCaDelta } from "../../player/ca-tracking.ts";
+import { fatigueAmpelClassName } from "../../development/training-load.ts";
 import { Hint } from "../components/Hint.tsx";
 import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
+import { formMark, stateMark } from "../player-profile.ts";
 
 /**
  * WIREFRAME: PRD 09 — Profikader
@@ -31,12 +33,14 @@ export function FirstTeam({
   players,
   clubId,
   season,
+  trainingIntensity = 100,
   onBack,
   onSelectPlayer,
 }: {
   players: readonly Player[];
   clubId: string;
   season: number;
+  trainingIntensity?: number;
   onBack: () => void;
   onSelectPlayer: (playerId: string) => void;
 }) {
@@ -44,9 +48,9 @@ export function FirstTeam({
   const [sortDirection, setSortDirection] = useState<ProSquadSortDirection>(DEFAULT_SORT.direction);
 
   const rows = useMemo(() => {
-    const baseRows = listProSquad(players, clubId);
+    const baseRows = listProSquad(players, clubId, trainingIntensity);
     return sortProSquadRows(baseRows, sortKey, sortDirection);
-  }, [players, clubId, sortKey, sortDirection]);
+  }, [players, clubId, trainingIntensity, sortKey, sortDirection]);
 
   const avgCa =
     rows.length > 0 ? Math.round(rows.reduce((sum, row) => sum + row.ca, 0) / rows.length) : 0;
@@ -95,6 +99,9 @@ export function FirstTeam({
                 <SquadSortHeader label="CA" sortKey="ca" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
                 <SquadSortHeader label="Δ" sortKey="caDelta" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title="CA seit letzter Woche" />
                 <SquadSortHeader label="Wert" sortKey="marketValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Fit" sortKey="fitness" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title="Fitness %" />
+                <SquadSortHeader label="Min/Wo" sortKey="weeklyMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title="Einsatzzeit diese Woche" />
+                <SquadSortHeader label="Risiko" sortKey="injuryRisk" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title="Verletzungsrisiko" />
                 <SquadSortHeader label="Min" sortKey="seasonMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
                 <SquadSortHeader label="T" sortKey="goals" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
                 <SquadSortHeader label="A" sortKey="assists" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
@@ -117,6 +124,17 @@ export function FirstTeam({
                     {formatCaDelta(row.caDelta)}
                   </td>
                   <td className="squad-col-value">{formatMarketValueShort(row.marketValue)}</td>
+                  <td className={`squad-fitness is-${stateMark(row.fitness, 75, 50).tone}`} title={`Fitness ${row.fitness}%`}>
+                    <span className="squad-shape-mark" aria-hidden="true">{stateMark(row.fitness, 75, 50).mark}</span>
+                    {row.fitness}
+                  </td>
+                  <td>{row.weeklyMinutes}</td>
+                  <td className={`squad-risk is-${injuryRiskAmpel(row.injuryRisk)}`} title={`Verletzungsrisiko ${row.injuryRisk}`}>
+                    <span className={`pipeline-light ${fatigueAmpelClassName(injuryRiskAmpel(row.injuryRisk))}`} aria-hidden="true">
+                      {injuryRiskIcon(row.injuryRisk)}
+                    </span>
+                    {row.injuryRisk}
+                  </td>
                   <td>{row.seasonMinutes}</td>
                   <td>{row.goals}</td>
                   <td>{row.assists}</td>
@@ -124,8 +142,8 @@ export function FirstTeam({
                   <td>{row.tackles}</td>
                   <td>{row.headers}</td>
                   <td>{row.avgRating?.toFixed(1) ?? "—"}</td>
-                  <td className={`squad-form is-${formTone(row.form)}`} title={`Form ${row.form}`}>
-                    {formMark(row.form)}
+                  <td className={`squad-form is-${formMark(row.form).tone}`} title={`Form ${row.form}`}>
+                    <span className="squad-shape-mark" aria-hidden="true">{formMark(row.form).mark}</span>
                   </td>
                 </tr>
               ))}
@@ -137,14 +155,14 @@ export function FirstTeam({
   );
 }
 
-function formMark(form: number): string {
-  if (form >= 2) return "●";
-  if (form >= -1) return "▲";
-  return "◆";
+function injuryRiskAmpel(score: number): "good" | "watch" | "risk" {
+  if (score >= 70) return "risk";
+  if (score >= 40) return "watch";
+  return "good";
 }
 
-function formTone(form: number): "good" | "mid" | "low" {
-  if (form >= 2) return "good";
-  if (form >= -1) return "mid";
-  return "low";
+function injuryRiskIcon(score: number): string {
+  if (score >= 70) return "◆";
+  if (score >= 40) return "▲";
+  return "●";
 }

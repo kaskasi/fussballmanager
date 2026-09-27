@@ -97,6 +97,16 @@ import {
   type DecisionAction,
 } from "./youth/decision-inbox.ts";
 import type { NavPrimaryAction } from "./ui/nav-primary-action.ts";
+import {
+  applyAccessibilityPreferences,
+  COLOR_SCHEME_OPTIONS,
+  loadAccessibilityPreferences,
+  saveAccessibilityPreferences,
+  TEXT_SCALE_OPTIONS,
+  type AccessibilityPreferences,
+  type ColorSchemeId,
+  type TextScaleId,
+} from "./ui/accessibility.ts";
 
 type Screen =
   | "hub"
@@ -165,6 +175,14 @@ export default function App() {
   const [marketFilters, setMarketFilters] = useState<MarketFilters>(DEFAULT_MARKET_FILTERS);
   const [marketSort, setMarketSort] = useState<MarketSort>(DEFAULT_MARKET_SORT);
   const [clubProfileId, setClubProfileId] = useState<TeamId | null>(null);
+  const [accessibility, setAccessibility] = useState<AccessibilityPreferences>(() =>
+    loadAccessibilityPreferences(),
+  );
+
+  useEffect(() => {
+    applyAccessibilityPreferences(accessibility);
+    saveAccessibilityPreferences(accessibility);
+  }, [accessibility]);
 
   const session = sessionFromSave(save);
   const {
@@ -785,6 +803,8 @@ export default function App() {
           onNavigate={setScreen}
           onCampusNavigate={() => setCampusYearOpen(false)}
           hubActions={navActions}
+          accessibility={accessibility}
+          onAccessibilityChange={setAccessibility}
         />
         <CareerMatch
           setup={careerMatchSetup}
@@ -815,6 +835,8 @@ export default function App() {
           onCloseProfile={() => setForeignPlayerId(null)}
           onCampusNavigate={() => setCampusYearOpen(false)}
           hubActions={navActions}
+          accessibility={accessibility}
+          onAccessibilityChange={setAccessibility}
         />
         <PlayerProfile
           player={foreignTarget.player}
@@ -847,6 +869,8 @@ export default function App() {
           onCloseProfile={() => setProfileId(null)}
           onCampusNavigate={() => setCampusYearOpen(false)}
           hubActions={navActions}
+          accessibility={accessibility}
+          onAccessibilityChange={setAccessibility}
         />
         <PlayerProfile
           player={profilePlayer}
@@ -889,6 +913,8 @@ export default function App() {
         onNavigate={setScreen}
         onCampusNavigate={() => setCampusYearOpen(false)}
         hubActions={navActions}
+        accessibility={accessibility}
+        onAccessibilityChange={setAccessibility}
       />
       <div hidden={screen !== "hub"}>
         <PipelineDashboard
@@ -996,6 +1022,7 @@ export default function App() {
           players={players}
           clubId={session.clubId}
           season={season}
+          trainingIntensity={trainingIntensity}
           onBack={() => setScreen("hub")}
           onSelectPlayer={setProfileId}
         />
@@ -1076,6 +1103,8 @@ function AppChrome({
   onCloseProfile,
   onCampusNavigate,
   hubActions,
+  accessibility,
+  onAccessibilityChange,
 }: {
   week: number;
   screen: Screen;
@@ -1083,6 +1112,8 @@ function AppChrome({
   onCloseProfile?: () => void;
   onCampusNavigate?: () => void;
   hubActions: HubNavActions;
+  accessibility: AccessibilityPreferences;
+  onAccessibilityChange: (preferences: AccessibilityPreferences) => void;
 }) {
   return (
     <>
@@ -1092,6 +1123,8 @@ function AppChrome({
         onCloseProfile={onCloseProfile}
         onCampusNavigate={onCampusNavigate}
         hubActions={hubActions}
+        accessibility={accessibility}
+        onAccessibilityChange={onAccessibilityChange}
       />
       <TransferWindowAmbience week={week} />
     </>
@@ -1104,15 +1137,20 @@ function AppNav({
   onCloseProfile,
   onCampusNavigate,
   hubActions,
+  accessibility,
+  onAccessibilityChange,
 }: {
   screen: Screen;
   onNavigate: (screen: Screen) => void;
   onCloseProfile?: () => void;
   onCampusNavigate?: () => void;
   hubActions: HubNavActions;
+  accessibility: AccessibilityPreferences;
+  onAccessibilityChange: (preferences: AccessibilityPreferences) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [resetAsk, setResetAsk] = useState(false);
+  const [a11yOpen, setA11yOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1237,7 +1275,10 @@ function AppNav({
             aria-haspopup="menu"
             onClick={() => {
               setMenuOpen((open) => !open);
-              if (menuOpen) setResetAsk(false);
+              if (menuOpen) {
+                setResetAsk(false);
+                setA11yOpen(false);
+              }
             }}
           >
             ⋮
@@ -1268,6 +1309,50 @@ function AppNav({
                     Abbrechen
                   </button>
                 </>
+              ) : a11yOpen ? (
+                <>
+                  <p className="pipeline-menu-note">Anzeige · PRD F12.4</p>
+                  <label className="a11y-menu-field">
+                    <span>Textgröße</span>
+                    <select
+                      value={accessibility.textScale}
+                      onChange={(event) =>
+                        onAccessibilityChange({
+                          ...accessibility,
+                          textScale: event.target.value as TextScaleId,
+                        })
+                      }
+                    >
+                      {TEXT_SCALE_OPTIONS.map((option) => (
+                        <option key={option.id} value={option.id}>{option.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="a11y-menu-field">
+                    <span>Farbschema</span>
+                    <select
+                      value={accessibility.colorScheme}
+                      onChange={(event) =>
+                        onAccessibilityChange({
+                          ...accessibility,
+                          colorScheme: event.target.value as ColorSchemeId,
+                        })
+                      }
+                    >
+                      {COLOR_SCHEME_OPTIONS.map((option) => (
+                        <option key={option.id} value={option.id}>{option.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="row-menu-item"
+                    onClick={() => setA11yOpen(false)}
+                  >
+                    ← Zurück
+                  </button>
+                </>
               ) : (
                 <>
                   <button
@@ -1280,6 +1365,14 @@ function AppNav({
                     }}
                   >
                     💾 Spielstände
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="row-menu-item"
+                    onClick={() => setA11yOpen(true)}
+                  >
+                    ♿ Anzeige
                   </button>
                   <button
                     type="button"

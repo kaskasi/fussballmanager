@@ -1,4 +1,5 @@
 import type { Player } from "../types/player.ts";
+import { isPlayerTired } from "./fitness-management.ts";
 
 /** Same band as match tactics intensity (F2.1 — no dedicated PRD formula). */
 export const TRAINING_INTENSITY_MIN = 80;
@@ -35,15 +36,6 @@ function proSquad(players: readonly Player[], clubId: string): Player[] {
   );
 }
 
-function isTired(player: Player): boolean {
-  if (player.state.injury !== null) return true;
-  if (player.state.fitness < 65) return true;
-  if (player.state.weekly_minutes >= 80) return true;
-  const recent = player.state.recent_weekly_minutes ?? [];
-  const lastTwo = recent.slice(-2).reduce((sum, minutes) => sum + minutes, 0);
-  return lastTwo >= 140;
-}
-
 /**
  * Fatigue ampel for the coming training week (F2.1).
  * Icon-first per PRD 09: ● gut · ▲ beobachten · ◆ Risiko.
@@ -66,7 +58,7 @@ export function squadTrainingLoad(
     };
   }
 
-  const tiredCount = squad.filter(isTired).length;
+  const tiredCount = squad.filter(isPlayerTired).length;
   const avgFitness =
     squad.reduce((sum, player) => sum + player.state.fitness, 0) / squad.length;
   const tiredRatio = tiredCount / squad.length;

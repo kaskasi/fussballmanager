@@ -1,8 +1,44 @@
 :root {
+  --text-scale: 1;
   color: #0f172a;
   background: #ecfdf5;
   font-family: "Segoe UI", system-ui, sans-serif;
   line-height: 1.45;
+  font-size: calc(16px * var(--text-scale));
+}
+
+html[data-color-scheme="contrast"] {
+  color: #020617;
+  background: #f8fafc;
+}
+
+html[data-color-scheme="contrast"] .scoreboard,
+html[data-color-scheme="contrast"] .training,
+html[data-color-scheme="contrast"] .squad,
+html[data-color-scheme="contrast"] .fitness-panel {
+  border: 2px solid #0f172a;
+}
+
+html[data-color-scheme="contrast"] .pipeline-light.is-set,
+html[data-color-scheme="contrast"] .squad-form.is-good,
+html[data-color-scheme="contrast"] .squad-fitness.is-good,
+html[data-color-scheme="contrast"] .fitness-col-mark.is-good {
+  color: #065f46;
+}
+
+html[data-color-scheme="contrast"] .pipeline-light.is-watch,
+html[data-color-scheme="contrast"] .squad-form.is-mid,
+html[data-color-scheme="contrast"] .squad-fitness.is-mid,
+html[data-color-scheme="contrast"] .fitness-col-mark.is-mid {
+  color: #92400e;
+}
+
+html[data-color-scheme="contrast"] .pipeline-light.is-risk,
+html[data-color-scheme="contrast"] .squad-form.is-low,
+html[data-color-scheme="contrast"] .squad-fitness.is-low,
+html[data-color-scheme="contrast"] .fitness-col-mark.is-low,
+html[data-color-scheme="contrast"] .squad-risk.is-risk {
+  color: #991b1b;
 }
 
 * {
@@ -4171,6 +4207,123 @@ body {
 
 .squad-form.is-low {
   color: #dc2626;
+}
+
+.squad-shape-mark {
+  margin-right: 0.2rem;
+  font-weight: 800;
+}
+
+.squad-fitness,
+.squad-risk {
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.squad-fitness.is-good,
+.squad-risk.is-good {
+  color: #059669;
+}
+
+.squad-fitness.is-mid,
+.squad-risk.is-watch {
+  color: #d97706;
+}
+
+.squad-fitness.is-low,
+.squad-risk.is-risk {
+  color: #dc2626;
+}
+
+.fitness-panel {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1rem 1.1rem 1.2rem;
+  box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
+}
+
+.fitness-summary {
+  margin: 0 0 0.85rem;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.fitness-empty {
+  margin: 0;
+  color: #64748b;
+}
+
+.fitness-table-wrap {
+  overflow-x: auto;
+}
+
+.fitness-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.fitness-table th,
+.fitness-table td {
+  padding: 0.45rem 0.55rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.fitness-table th:first-child,
+.fitness-table td:first-child,
+.fitness-col-name {
+  text-align: left;
+}
+
+.fitness-col-mark,
+.fitness-col-risk {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.fitness-col-mark.is-good,
+.fitness-status.is-good,
+.fitness-col-risk.is-good {
+  color: #059669;
+}
+
+.fitness-col-mark.is-mid,
+.fitness-status.is-watch,
+.fitness-col-risk.is-watch {
+  color: #d97706;
+}
+
+.fitness-col-mark.is-low,
+.fitness-status.is-risk,
+.fitness-col-risk.is-risk {
+  color: #dc2626;
+}
+
+.fitness-row.is-tired {
+  background: #fffbeb;
+}
+
+.fitness-mark {
+  margin-right: 0.25rem;
+}
+
+.a11y-menu-field {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem 0.55rem;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.a11y-menu-field select {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.45rem;
+  padding: 0.35rem 0.45rem;
+  font: inherit;
+  background: #fff;
 }
 
 .loans-head {

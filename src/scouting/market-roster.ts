@@ -3,6 +3,7 @@ import { formatPlayerName } from "../types/player-display.ts";
 import { seasonMatchRating } from "../player/season-stats.ts";
 import type { ProSquadRow, ProSquadSortDirection, ProSquadSortKey } from "../squad/pro-roster.ts";
 import { sortProSquadRows } from "../squad/pro-roster.ts";
+import { injuryRiskScore } from "../development/fitness-management.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { AbilityEstimate } from "./estimate-model.ts";
 import type { ScoutedTarget } from "./market-list.ts";
@@ -25,6 +26,9 @@ export function listMarketRows(
     ca: Math.round(estimateCa(player.attributes, player.position)),
     caDelta: null,
     form: player.state.form,
+    fitness: player.state.fitness,
+    weeklyMinutes: player.state.weekly_minutes,
+    injuryRisk: injuryRiskScore(player, 100),
     seasonMinutes: player.state.season_minutes,
     marketValue: player.market_value,
     goals: player.state.season_goals ?? 0,

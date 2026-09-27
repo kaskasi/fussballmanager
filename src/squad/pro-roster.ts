@@ -2,6 +2,7 @@ import type { Player, PositionPrimary } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { seasonMatchRating } from "../player/season-stats.ts";
 import { weeklyCaDelta } from "../player/ca-tracking.ts";
+import { injuryRiskScore } from "../development/fitness-management.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 
 export interface ProSquadRow {
@@ -12,6 +13,9 @@ export interface ProSquadRow {
   ca: number;
   caDelta: number | null;
   form: number;
+  fitness: number;
+  weeklyMinutes: number;
+  injuryRisk: number;
   seasonMinutes: number;
   marketValue: number;
   goals: number;
@@ -36,7 +40,10 @@ export type ProSquadSortKey =
   | "tackles"
   | "headers"
   | "avgRating"
-  | "form";
+  | "form"
+  | "fitness"
+  | "weeklyMinutes"
+  | "injuryRisk";
 
 export type ProSquadSortDirection = "asc" | "desc";
 
@@ -55,7 +62,11 @@ const POSITION_ORDER: Record<PositionPrimary, number> = {
   CF: 11,
 };
 
-export function listProSquad(players: readonly Player[], clubId: string): ProSquadRow[] {
+export function listProSquad(
+  players: readonly Player[],
+  clubId: string,
+  trainingIntensity = 100,
+): ProSquadRow[] {
   return players
     .filter((player) => player.club_id === clubId && player.squad_status === "pro")
     .map((player) => ({
@@ -66,6 +77,9 @@ export function listProSquad(players: readonly Player[], clubId: string): ProSqu
       ca: Math.round(estimateCa(player.attributes, player.position)),
       caDelta: weeklyCaDelta(player),
       form: player.state.form,
+      fitness: player.state.fitness,
+      weeklyMinutes: player.state.weekly_minutes,
+      injuryRisk: injuryRiskScore(player, trainingIntensity),
       seasonMinutes: player.state.season_minutes,
       marketValue: player.market_value,
       goals: player.state.season_goals ?? 0,
@@ -127,6 +141,12 @@ function compareByKey(left: ProSquadRow, right: ProSquadRow, key: ProSquadSortKe
       return (left.avgRating ?? -1) - (right.avgRating ?? -1);
     case "form":
       return left.form - right.form;
+    case "fitness":
+      return left.fitness - right.fitness;
+    case "weeklyMinutes":
+      return left.weeklyMinutes - right.weeklyMinutes;
+    case "injuryRisk":
+      return left.injuryRisk - right.injuryRisk;
     default:
       return 0;
   }

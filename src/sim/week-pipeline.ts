@@ -26,6 +26,7 @@ import { advanceLeagueWeek } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
 import { environmentFromCoachingStaff } from "../staff/coaching-staff.ts";
 import { advanceRivalGrowthWeek } from "./rival-growth.ts";
+import { applyWeeklyFitnessBatch } from "../development/fitness-management.ts";
 
 export interface WeekSimResult {
   session: GameSession;
@@ -78,7 +79,10 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     leagueStep.clubPlayerStats,
     savedStarters,
   );
-  players = careerMatch.players;
+  players = applyWeeklyFitnessBatch(careerMatch.players, {
+    intensity: session.trainingIntensity,
+    coachingStaff: session.coachingStaff,
+  });
   const leagueWithCareerStats = {
     ...leagueStep.league,
     career_player_stats: mergeCareerLeagueStats(

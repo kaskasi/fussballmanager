@@ -3,6 +3,10 @@ import { matchdayTicketIncome } from "../economy/club-finances.ts";
 import {
   adjustBlockTicketPrice,
   defaultClubStadium,
+  fillRateForTicketPrice,
+  fillRateHeatColor,
+  FILL_RATE_MIN,
+  FILL_RATE_MAX,
   stadiumMatchdayIncome,
   stadiumTotalCapacity,
 } from "./club-stadium.ts";
@@ -22,10 +26,26 @@ describe("club stadium", () => {
     expect(Math.abs(fromBlocks - fromDivision)).toBeLessThan(15_000);
   });
 
-  it("raises matchday income when ticket prices increase", () => {
+  it("lowers fill rate when ticket prices rise", () => {
     const stadium = defaultClubStadium();
-    const before = stadiumMatchdayIncome(stadium);
-    const pricier = adjustBlockTicketPrice(stadium, "north", 10);
-    expect(stadiumMatchdayIncome(pricier)).toBeGreaterThan(before);
+    const north = stadium.blocks.find((block) => block.id === "north")!;
+    const pricier = adjustBlockTicketPrice(stadium, "north", 8);
+    const updated = pricier.blocks.find((block) => block.id === "north")!;
+    expect(updated.fill_rate).toBeLessThan(north.fill_rate);
+    expect(updated.fill_rate).toBe(fillRateForTicketPrice("north", updated.ticket_price_eur));
+  });
+
+  it("maps fill rate to a green-to-red heat color", () => {
+    expect(fillRateHeatColor(FILL_RATE_MAX)).toContain("128");
+    expect(fillRateHeatColor(FILL_RATE_MIN)).toContain("0");
+    expect(fillRateHeatColor(0.6)).not.toBe(fillRateHeatColor(FILL_RATE_MIN));
+  });
+
+  it("raises fill rate when ticket prices fall", () => {
+    const stadium = defaultClubStadium();
+    const west = stadium.blocks.find((block) => block.id === "west")!;
+    const cheaper = adjustBlockTicketPrice(stadium, "west", -6);
+    const updated = cheaper.blocks.find((block) => block.id === "west")!;
+    expect(updated.fill_rate).toBeGreaterThan(west.fill_rate);
   });
 });

@@ -1,11 +1,17 @@
+import { useState } from "react";
 import {
   adjustBlockTicketPrice,
+  fillRateDeltaFromReference,
+  fillRateHeatColor,
+  referenceFillRate,
   stadiumAverageTicket,
+  stadiumBlockAttendees,
   stadiumBlockIncome,
   stadiumMatchdayIncome,
   stadiumTotalCapacity,
   tierIcon,
   tierLabel,
+  FILL_RATE_MIN,
   TICKET_PRICE_MAX,
   TICKET_PRICE_MIN,
   type ClubStadium,
@@ -27,9 +33,12 @@ export function StadiumScreen({
   onStadiumChange: (stadium: ClubStadium) => void;
   onBack: () => void;
 }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const capacity = stadiumTotalCapacity(stadium);
   const matchdayIncome = stadiumMatchdayIncome(stadium);
   const avgTicket = stadiumAverageTicket(stadium);
+
+  const blockOrder = ["north", "west", "east", "south", "vip"] as const;
 
   return (
     <main className="stadium">
@@ -47,50 +56,141 @@ export function StadiumScreen({
         </div>
       </header>
 
-      <Hint text="Preise pro Block anpassen — Einnahmen wirken ab dem nächsten Heimspiel." block>
-        <section className="stadium-pitch" aria-label="Stadion-Grundriss">
-          <div className="stadium-pitch-field" aria-hidden="true">
-            <span className="stadium-pitch-line" />
-          </div>
-          <div className="stadium-blocks">
-            {stadium.blocks.map((block) => (
+      <Hint text="Preise pro Block anpassen — höhere Tickets senken die Auslastung (F7.5-Vorbereitung)." block>
+        <section className="stadium-layout" aria-label="Stadion-Grundriss">
+          <StadiumPitchPlan
+            blocks={stadium.blocks}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+          {blockOrder.map((blockId) => {
+            const block = stadium.blocks.find((entry) => entry.id === blockId);
+            if (!block) return null;
+            return (
               <StadiumBlockCard
                 key={block.id}
                 block={block}
+                area={block.id}
+                selected={selectedId === block.id}
+                onSelect={() => setSelectedId(block.id)}
                 onPriceChange={(delta) =>
                   onStadiumChange(adjustBlockTicketPrice(stadium, block.id, delta))
                 }
               />
-            ))}
-          </div>
+            );
+          })}
         </section>
       </Hint>
     </main>
   );
 }
 
+function StadiumPitchPlan({
+  blocks,
+  selectedId,
+  onSelect,
+}: {
+  blocks: readonly StadiumBlock[];
+  selectedId: string | null;
+  onSelect: (blockId: string) => void;
+}) {
+  const byId = Object.fromEntries(blocks.map((block) => [block.id, block]));
+
+  const zones: Array<{ id: string; x: number; y: number; w: number; h: number; label: string }> = [
+    { id: "north", x: 24, y: 8, w: 272, h: 44, label: "N" },
+    { id: "south", x: 24, y: 228, w: 200, h: 44, label: "S" },
+    { id: "west", x: 8, y: 58, w: 44, h: 164, label: "W" },
+    { id: "east", x: 268, y: 58, w: 44, h: 164, label: "O" },
+    { id: "vip", x: 232, y: 228, w: 64, h: 44, label: "VIP" },
+  ];
+
+  return (
+    <div className="stadium-pitch-map">
+      <svg className="stadium-plan" viewBox="0 0 320 280" role="img" aria-label="Stadion-Grundriss">
+        <rect x="58" y="58" width="204" height="164" rx="8" fill="#15803d" stroke="#ecfdf5" strokeWidth="2" />
+        <circle cx="160" cy="140" r="28" fill="none" stroke="rgb(255 255 255 / 35%)" strokeWidth="2" />
+        <line x1="160" y1="58" x2="160" y2="222" stroke="rgb(255 255 255 / 25%)" strokeWidth="2" />
+        {zones.map((zone) => {
+          const block = byId[zone.id];
+          const fillPct = block ? Math.round(block.fill_rate * 100) : 0;
+          const selected = selectedId === zone.id;
+          const zoneFill = block?.fill_rate ?? FILL_RATE_MIN;
+          return (
+            <g key={zone.id}>
+              <rect
+                x={zone.x}
+                y={zone.y}
+                width={zone.w}
+                height={zone.h}
+                rx={6}
+                fill={fillRateHeatColor(zoneFill)}
+                className={selected ? "stadium-plan-zone is-selected" : "stadium-plan-zone"}
+                onClick={() => onSelect(zone.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onSelect(zone.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={block ? `${block.name}, ${fillPct}% Auslastung` : zone.label}
+              >
+                <title>{block ? `${block.name} · ${fillPct}%` : zone.label}</title>
+              </rect>
+              <text
+                x={zone.x + zone.w / 2}
+                y={zone.y + zone.h / 2 + 4}
+                textAnchor="middle"
+                className="stadium-plan-label"
+                pointerEvents="none"
+              >
+                {zone.label}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+      <p className="stadium-plan-hint">Grundriss · Farbe = Auslastung (rot → grün)</p>
+    </div>
+  );
+}
+
 function StadiumBlockCard({
   block,
+  area,
+  selected,
+  onSelect,
   onPriceChange,
 }: {
   block: StadiumBlock;
+  area: string;
+  selected: boolean;
+  onSelect: () => void;
   onPriceChange: (delta: number) => void;
 }) {
-  const sold = Math.round(block.capacity * block.fill_rate);
+  const sold = stadiumBlockAttendees(block);
   const income = Math.round(stadiumBlockIncome(block));
+  const fillPct = Math.round(block.fill_rate * 100);
+  const refPct = Math.round(referenceFillRate(block.id) * 100);
+  const fillDeltaPts = Math.round(fillRateDeltaFromReference(block) * 100);
 
   return (
-    <article className={`stadium-block is-${block.tier}`}>
+    <article
+      className={`stadium-block is-${block.tier}${selected ? " is-selected" : ""}`}
+      data-area={area}
+      onClick={onSelect}
+    >
       <IsoStand tier={block.tier} />
       <div className="stadium-block-body">
         <h2>
           <span aria-hidden="true">{tierIcon(block.tier)}</span> {block.name}
         </h2>
         <p className="stadium-block-meta">
-          {tierLabel(block.tier)} · {block.capacity.toLocaleString("de-DE")} Plätze · ~{sold.toLocaleString("de-DE")}{" "}
-          Zuschauer
+          {tierLabel(block.tier)} · {block.capacity.toLocaleString("de-DE")} Plätze
         </p>
-        <div className="stadium-price">
+        <FillMeter fillPct={fillPct} refPct={refPct} deltaPts={fillDeltaPts} sold={sold} />
+        <div className="stadium-price" onClick={(event) => event.stopPropagation()}>
           <button
             type="button"
             aria-label={`${block.name} Ticketpreis senken`}
@@ -112,6 +212,43 @@ function StadiumBlockCard({
         <p className="stadium-block-income">Heimspiel {formatClubCash(income)}</p>
       </div>
     </article>
+  );
+}
+
+function FillMeter({
+  fillPct,
+  refPct,
+  deltaPts,
+  sold,
+}: {
+  fillPct: number;
+  refPct: number;
+  deltaPts: number;
+  sold: number;
+}) {
+  const tone = fillPct >= refPct - 2 ? "good" : fillPct >= refPct - 12 ? "warn" : "bad";
+  return (
+    <div className="stadium-fill">
+      <div className="stadium-fill-head">
+        <span>Auslastung</span>
+        <span className="stadium-fill-value">
+          {fillPct}%
+          {deltaPts !== 0 ? (
+            <span className={deltaPts > 0 ? "stadium-fill-delta is-up" : "stadium-fill-delta is-down"}>
+              {deltaPts > 0 ? "+" : ""}
+              {deltaPts}%
+            </span>
+          ) : (
+            <span className="stadium-fill-ref">Basis {refPct}%</span>
+          )}
+        </span>
+      </div>
+      <div className="stadium-fill-track" aria-hidden="true">
+        <span className="stadium-fill-ref-mark" style={{ left: `${refPct}%` }} />
+        <span className={`stadium-fill-bar is-${tone}`} style={{ width: `${fillPct}%` }} />
+      </div>
+      <p className="stadium-fill-sold">~{sold.toLocaleString("de-DE")} Zuschauer</p>
+    </div>
   );
 }
 

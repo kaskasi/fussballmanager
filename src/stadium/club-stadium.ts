@@ -19,6 +19,17 @@ export interface ClubStadium {
 export const TICKET_PRICE_MIN = 8;
 export const TICKET_PRICE_MAX = 95;
 export const TICKET_PRICE_STEP = 2;
+export const FILL_RATE_MIN = 0.35;
+export const FILL_RATE_MAX = 0.95;
+/** Price sensitivity — prep for F7.5 fanbase curve. */
+export const PRICE_ELASTICITY = 0.42;
+
+const DEFAULT_REFERENCE = Object.fromEntries(
+  defaultClubStadiumSeed().blocks.map((block) => [
+    block.id,
+    { ticket_price_eur: block.ticket_price_eur, fill_rate: block.fill_rate },
+  ]),
+) as Record<string, { ticket_price_eur: number; fill_rate: number }>;
 
 const TIER_LABEL: Record<StadiumTier, string> = {
   standing: "Stehplatz",
@@ -40,8 +51,7 @@ export function tierIcon(tier: StadiumTier): string {
   return TIER_ICON[tier];
 }
 
-/** Default layout — totals ~8k seats and matches division economy ticket yield. */
-export function defaultClubStadium(): ClubStadium {
+function defaultClubStadiumSeed(): ClubStadium {
   return {
     name: "Nordstern Arena",
     blocks: [
@@ -89,18 +99,59 @@ export function defaultClubStadium(): ClubStadium {
   };
 }
 
+/** Default layout — totals ~8k seats and matches division economy ticket yield. */
+export function defaultClubStadium(): ClubStadium {
+  return defaultClubStadiumSeed();
+}
+
+export function referenceFillRate(blockId: string): number {
+  return DEFAULT_REFERENCE[blockId]?.fill_rate ?? 0.72;
+}
+
+export function referenceTicketPrice(blockId: string): number {
+  return DEFAULT_REFERENCE[blockId]?.ticket_price_eur ?? 18;
+}
+
+export function fillRateForTicketPrice(blockId: string, ticketPrice: number): number {
+  const ref = DEFAULT_REFERENCE[blockId];
+  if (!ref || ticketPrice <= 0) return FILL_RATE_MAX;
+  const ratio = ticketPrice / ref.ticket_price_eur;
+  const raw = ref.fill_rate / Math.pow(ratio, PRICE_ELASTICITY);
+  return Math.min(FILL_RATE_MAX, Math.max(FILL_RATE_MIN, raw));
+}
+
+export function stadiumBlockAttendees(block: StadiumBlock): number {
+  return Math.round(block.capacity * block.fill_rate);
+}
+
+export function fillRateDeltaFromReference(block: StadiumBlock): number {
+  return block.fill_rate - referenceFillRate(block.id);
+}
+
+/** Heat color for pitch-plan zones: low fill = red, mid = amber, high = green. */
+export function fillRateHeatColor(fillRate: number): string {
+  const span = FILL_RATE_MAX - FILL_RATE_MIN;
+  const normalized = span <= 0 ? 1 : (fillRate - FILL_RATE_MIN) / span;
+  const clamped = Math.min(1, Math.max(0, normalized));
+  const hue = clamped * 128;
+  return `hsl(${hue.toFixed(1)} 58% 38%)`;
+}
+
 export function stadiumFromDivisionDefaults(divisionId: DivisionEconomyId): ClubStadium {
   const defaults = DIVISION_ECONOMY[divisionId].stadium_defaults;
-  const stadium = defaultClubStadium();
+  const stadium = defaultClubStadiumSeed();
   const scale = defaults.capacity / stadiumTotalCapacity(stadium);
   return {
     ...stadium,
-    blocks: stadium.blocks.map((block) => ({
-      ...block,
-      capacity: Math.round(block.capacity * scale),
-      ticket_price_eur: defaults.avg_ticket_eur,
-      fill_rate: defaults.fill_rate,
-    })),
+    blocks: stadium.blocks.map((block) => {
+      const ticket_price_eur = defaults.avg_ticket_eur;
+      return {
+        ...block,
+        capacity: Math.round(block.capacity * scale),
+        ticket_price_eur,
+        fill_rate: fillRateForTicketPrice(block.id, ticket_price_eur),
+      };
+    }),
   };
 }
 
@@ -131,11 +182,12 @@ export function adjustBlockTicketPrice(
     ...stadium,
     blocks: stadium.blocks.map((block) => {
       if (block.id !== blockId) return block;
-      const next = Math.min(
+      const ticket_price_eur = Math.min(
         TICKET_PRICE_MAX,
         Math.max(TICKET_PRICE_MIN, block.ticket_price_eur + delta),
       );
-      return { ...block, ticket_price_eur: next };
+      const fill_rate = fillRateForTicketPrice(block.id, ticket_price_eur);
+      return { ...block, ticket_price_eur, fill_rate };
     }),
   };
 }

@@ -29,6 +29,8 @@ import {
   type TacticsPresetSlot,
 } from "./tactics-presets.ts";
 import { MatchdayLineupAmbience } from "../ui/components/MatchdayLineupAmbience.tsx";
+import { buildOpponentLineupPreview } from "./opponent-lineup-preview.ts";
+import { clubShortName } from "../sim/league-week.ts";
 
 type CareerLineupScreenProps = {
   setup: CareerMatchSetup;
@@ -37,6 +39,7 @@ type CareerLineupScreenProps = {
   weekday: number;
   tacticsPresets: readonly TacticsPresetSlot[];
   matchLineup: MatchLineupState | undefined;
+  rivalPlayers: readonly Player[];
   onSaveTacticsPreset: (id: TacticsPresetId, plan: SandboxPlan) => void;
   onSaveMatchLineup: (lineup: MatchLineupState) => void;
   onConfirm: (squad: Squad) => void;
@@ -50,6 +53,7 @@ export function CareerLineupScreen({
   weekday,
   tacticsPresets,
   matchLineup,
+  rivalPlayers,
   onSaveTacticsPreset,
   onSaveMatchLineup,
   onConfirm,
@@ -68,6 +72,11 @@ export function CareerLineupScreen({
     [players],
   );
   const bench = useMemo(() => benchPlayers(players, assignments), [players, assignments]);
+  const opponentPreview = useMemo(
+    () => buildOpponentLineupPreview(setup, rivalPlayers),
+    [setup, rivalPlayers],
+  );
+  const playerTeamLabel = clubShortName(setup.playerClubId);
   const filledCount = lineupSlotCount(assignments, plan.formation);
   const squad = useMemo(
     () => buildSquadFromAssignments(players, plan, assignments),
@@ -264,6 +273,8 @@ export function CareerLineupScreen({
             assignments={assignments}
             playersById={playersById}
             dragPlayerId={dragPlayerId}
+            playerTeamLabel={playerTeamLabel}
+            opponent={opponentPreview}
             onAssign={setSlot}
             onDragPlayer={setDragPlayerId}
           />

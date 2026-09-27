@@ -24,6 +24,7 @@ export function CareerMatch({
   weekday,
   tacticsPresets,
   matchLineup,
+  rivalPlayers,
   onSaveTacticsPreset,
   onSaveMatchLineup,
   simulating,
@@ -37,6 +38,7 @@ export function CareerMatch({
   weekday: number;
   tacticsPresets: readonly TacticsPresetSlot[];
   matchLineup: MatchLineupState | undefined;
+  rivalPlayers: readonly Player[];
   onSaveTacticsPreset: (id: TacticsPresetId, plan: SandboxPlan) => void;
   onSaveMatchLineup: (lineup: MatchLineupState) => void;
   simulating: boolean;
@@ -60,6 +62,7 @@ export function CareerMatch({
         weekday={weekday}
         tacticsPresets={tacticsPresets}
         matchLineup={matchLineup}
+        rivalPlayers={rivalPlayers}
         onSaveTacticsPreset={onSaveTacticsPreset}
         onSaveMatchLineup={onSaveMatchLineup}
         onConfirm={setPlayerClubSquad}

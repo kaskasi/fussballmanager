@@ -909,6 +909,7 @@ export default function App() {
           weekday={weekday}
           tacticsPresets={tacticsPresets}
           matchLineup={matchLineup}
+          rivalPlayers={rivalPlayers}
           onSaveTacticsPreset={handleSaveTacticsPreset}
           onSaveMatchLineup={handleSaveMatchLineup}
           simulating={simulating}

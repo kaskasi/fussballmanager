@@ -1,10 +1,7 @@
-import {
-  NORDSTERN_ID,
-  squadAverageStrength,
-  type Squad,
-  type TeamId,
-} from "@fussballmanager/shared";
+import { NORDSTERN_ID, type Squad, type TeamId } from "@fussballmanager/shared";
 import type { Player } from "../types/player.ts";
+import { formatPlayerName } from "../types/player-display.ts";
+import { estimateCa } from "../transfers/market-value.ts";
 import { DIVISION_ECONOMY, type DivisionEconomyId } from "../economy/division-economy.ts";
 import type { ClubStadium } from "../stadium/club-stadium.ts";
 import { stadiumTotalCapacity } from "../stadium/club-stadium.ts";
@@ -12,11 +9,13 @@ import { DEFAULT_FANBASE } from "../stadium/club-stadium.ts";
 import { careerEngineSquadFromPlayers } from "./career-engine-squad.ts";
 import { clubIdsForDivision, defaultLeaguePools, squadForLeagueClub } from "./league-divisions.ts";
 import { divisionLabel } from "./league-divisions.ts";
+import { indexRivalRoster, resolveCareerPlayer } from "./rival-roster-match.ts";
+import { rivalPlayersForTeam } from "./rival-engine-squad.ts";
 
 export interface ClubProfilePlayer {
   name: string;
   role: string;
-  strength: number;
+  ca: number;
 }
 
 export interface ClubProfile {
@@ -141,15 +140,41 @@ export function divisionForClub(
   return "regionalliga-nord";
 }
 
-function topPlayersFromSquad(squad: Squad, limit = 3): ClubProfilePlayer[] {
-  return squad.starters
-    .map((place) => ({
-      name: place.player.name,
+function careerCaForStarter(
+  place: Squad["starters"][number],
+  rosterIndex: ReturnType<typeof indexRivalRoster>,
+): number | null {
+  const career = resolveCareerPlayer(place.player, rosterIndex);
+  if (!career) return null;
+  return Math.round(estimateCa(career.attributes, career.position));
+}
+
+function squadCaAverage(squad: Squad, careerRoster: readonly Player[]): number | null {
+  const rosterIndex = indexRivalRoster(careerRoster);
+  const values = squad.starters
+    .map((place) => careerCaForStarter(place, rosterIndex))
+    .filter((value): value is number => value !== null);
+  if (values.length === 0) return null;
+  return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+}
+
+function topPlayersFromSquad(
+  squad: Squad,
+  careerRoster: readonly Player[],
+  limit = 3,
+): ClubProfilePlayer[] {
+  const rosterIndex = indexRivalRoster(careerRoster);
+  const players: ClubProfilePlayer[] = [];
+  for (const place of squad.starters) {
+    const career = resolveCareerPlayer(place.player, rosterIndex);
+    if (!career) continue;
+    players.push({
+      name: formatPlayerName(career),
       role: place.player.role,
-      strength: Math.round(squadAverageStrength({ ...squad, starters: [place], bench: [] })),
-    }))
-    .sort((left, right) => right.strength - left.strength)
-    .slice(0, limit);
+      ca: Math.round(estimateCa(career.attributes, career.position)),
+    });
+  }
+  return players.sort((left, right) => right.ca - left.ca).slice(0, limit);
 }
 
 function squadForProfile(teamId: TeamId, careerPlayers?: readonly Player[]): Squad | undefined {
@@ -187,6 +212,9 @@ export function buildClubProfile(
     fanbase: DEFAULT_FANBASE,
   };
   const defaultCapacity = division.stadium_defaults.capacity;
+  const careerRoster = isPlayerClub
+    ? (options?.careerPlayers ?? [])
+    : rivalPlayersForTeam(options?.rivalPlayers ?? [], teamId);
 
   return {
     teamId,
@@ -201,8 +229,8 @@ export function buildClubProfile(
     stadiumName: isPlayerClub ? (options?.stadium?.name ?? flavor.stadium) : flavor.stadium,
     stadiumCapacity:
       isPlayerClub && options?.stadium ? stadiumTotalCapacity(options.stadium) : defaultCapacity,
-    squadStrength: profileSquad ? Math.round(squadAverageStrength(profileSquad)) : 48,
-    bestPlayers: profileSquad ? topPlayersFromSquad(profileSquad) : [],
+    squadStrength: profileSquad ? (squadCaAverage(profileSquad, careerRoster) ?? 0) : 0,
+    bestPlayers: profileSquad ? topPlayersFromSquad(profileSquad, careerRoster) : [],
     isPlayerClub,
   };
 }

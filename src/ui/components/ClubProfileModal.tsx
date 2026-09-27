@@ -74,7 +74,7 @@ export function ClubProfileModal({
                 <li key={player.name}>
                   <span className="club-profile-player-name">{player.name}</span>
                   <span className="club-profile-player-role">{player.role}</span>
-                  <strong>{player.strength}</strong>
+                  <strong>{player.ca}</strong>
                 </li>
               ))}
             </ol>

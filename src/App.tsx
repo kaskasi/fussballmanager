@@ -49,6 +49,7 @@ import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
 import type { SandboxPlan, TeamId } from "@fussballmanager/shared";
 import { listJobOffers } from "./board/job-offers.ts";
 import { startBoardSeason } from "./board/season-objectives.ts";
+import type { MatchLineupState } from "./match/lineup-board.ts";
 import { saveTacticsPreset, type TacticsPresetId } from "./match/tactics-presets.ts";
 import { JobOffersModal } from "./ui/components/JobOffersModal.tsx";
 import { STADIUM_BASE_BLOCKS, normalizeClubStadium, stadiumTotalCapacity } from "./stadium/club-stadium.ts";
@@ -169,6 +170,7 @@ export default function App() {
     finances,
     stadium,
     tacticsPresets,
+    matchLineup,
     board,
     clubEvents,
     rivalPlayers,
@@ -397,6 +399,13 @@ export default function App() {
         ...current,
         tacticsPresets: saveTacticsPreset(current.tacticsPresets, id, plan),
       }));
+    },
+    [patchSession],
+  );
+
+  const handleSaveMatchLineup = useCallback(
+    (lineup: MatchLineupState) => {
+      patchSession((current) => ({ ...current, matchLineup: lineup }));
     },
     [patchSession],
   );
@@ -670,7 +679,9 @@ export default function App() {
           week={week}
           weekday={weekday}
           tacticsPresets={tacticsPresets}
+          matchLineup={matchLineup}
           onSaveTacticsPreset={handleSaveTacticsPreset}
+          onSaveMatchLineup={handleSaveMatchLineup}
           simulating={simulating}
           onComplete={() => void completeCareerMatch(false)}
           onSkip={() => void completeCareerMatch(true)}

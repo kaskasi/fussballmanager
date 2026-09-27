@@ -39,6 +39,7 @@ export function applyCareerMatchWeek(
   masterSeed: number,
   season: number,
   engineClubStats?: readonly PlayerSeasonStat[],
+  starterIds?: readonly string[],
 ): CareerMatchWeekResult {
   if (!fixture) return { players: [...players], matchdayStats: [] };
 
@@ -51,7 +52,7 @@ export function applyCareerMatchWeek(
   );
   if (squad.length === 0) return { players: [...players], matchdayStats: [] };
 
-  const lineup = pickLineup(squad, masterSeed, season, matchday);
+  const lineup = pickLineup(squad, masterSeed, season, matchday, starterIds);
   const goalsFor =
     fixture.homeTeamId === playerClubEngineId ? fixture.homeGoals : fixture.awayGoals;
   const goalsAgainst =
@@ -135,14 +136,33 @@ interface LineupPick {
   minutes: Map<string, number>;
 }
 
-function pickLineup(squad: readonly Player[], masterSeed: number, season: number, matchday: number): LineupPick {
-  const ranked = [...squad].sort(
-    (left, right) => estimateCa(right.attributes, right.position) - estimateCa(left.attributes, left.position),
-  );
-  const goalkeeper = ranked.find((player) => player.position === "GK") ?? ranked[0]!;
-  const outfield = ranked.filter((player) => player.id !== goalkeeper.id);
-  const starters = [goalkeeper, ...outfield.slice(0, 10)];
-  const subs = outfield.slice(10, 15);
+function pickLineup(
+  squad: readonly Player[],
+  masterSeed: number,
+  season: number,
+  matchday: number,
+  starterIds?: readonly string[],
+): LineupPick {
+  const byId = new Map(squad.map((player) => [player.id, player]));
+  let starters: Player[];
+  let subs: Player[];
+
+  if (starterIds && starterIds.length >= 11) {
+    starters = starterIds
+      .slice(0, 11)
+      .map((id) => byId.get(id))
+      .filter((player): player is Player => Boolean(player));
+    const starterSet = new Set(starters.map((player) => player.id));
+    subs = squad.filter((player) => !starterSet.has(player.id));
+  } else {
+    const ranked = [...squad].sort(
+      (left, right) => estimateCa(right.attributes, right.position) - estimateCa(left.attributes, left.position),
+    );
+    const goalkeeper = ranked.find((player) => player.position === "GK") ?? ranked[0]!;
+    const outfield = ranked.filter((player) => player.id !== goalkeeper.id);
+    starters = [goalkeeper, ...outfield.slice(0, 10)];
+    subs = outfield.slice(10, 15);
+  }
 
   const minutes = new Map<string, number>();
   for (const player of starters) {

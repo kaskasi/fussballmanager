@@ -23,9 +23,36 @@ function clockLabel(clock: MatchClock): string {
 type ScoreboardProps = {
   view: MatchView;
   frame: MatchViewFrame;
+  compact?: boolean;
 };
 
-export function Scoreboard({ view, frame }: ScoreboardProps) {
+export function Scoreboard({ view, frame, compact = false }: ScoreboardProps) {
+  if (compact) {
+    return (
+      <header className="scoreboard scoreboard--compact">
+        <div className="scoreboard-compact-main">
+          <span className="side home">{view.home.shortName}</span>
+          <div className="scoreboard-compact-center">
+            <span className="score">
+              {frame.score.home}–{frame.score.away}
+            </span>
+            <span className="clock">
+              {clockLabel(frame.clock)} · {view.home.formation} vs {view.away.formation}
+            </span>
+          </div>
+          <span className="side away">{view.away.shortName}</span>
+        </div>
+        <details className="match-stats-drawer">
+          <summary>
+            Statistik · Tore {frame.stats.home.goals}–{frame.stats.away.goals} · Schüsse{" "}
+            {frame.stats.home.shots}–{frame.stats.away.shots}
+          </summary>
+          <MatchStats view={view} stats={frame.stats} compact />
+        </details>
+      </header>
+    );
+  }
+
   return (
     <header className="scoreboard">
       <p className="eyebrow">Matchday</p>

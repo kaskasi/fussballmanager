@@ -71,11 +71,15 @@ function rows(stats: MatchPairStats): Row[] {
 type MatchStatsProps = {
   view: MatchView;
   stats: MatchPairStats;
+  compact?: boolean;
 };
 
-export function MatchStats({ view, stats }: MatchStatsProps) {
+export function MatchStats({ view, stats, compact = false }: MatchStatsProps) {
   return (
-    <section className="match-stats" aria-label="Match statistics">
+    <section
+      className={compact ? "match-stats match-stats--compact" : "match-stats"}
+      aria-label="Match statistics"
+    >
       <div className="stat-teams">
         <span>{view.home.shortName}</span>
         <span>{view.away.shortName}</span>

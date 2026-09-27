@@ -14,6 +14,7 @@ import { defaultClubFinances, type ClubFinances } from "../economy/club-finances
 import { normalizeBoardState, type BoardState } from "../board/board-state.ts";
 import { startBoardSeason } from "../board/season-objectives.ts";
 import { defaultEmployerClubId } from "../board/job-offers.ts";
+import type { MatchLineupState } from "../match/lineup-board.ts";
 import { normalizeTacticsPresets, type TacticsPresetSlot } from "../match/tactics-presets.ts";
 import { defaultClubStadium, normalizeClubStadium, type ClubStadium } from "../stadium/club-stadium.ts";
 import { emptyTransferState, type TransferState } from "../transfers/negotiations.ts";
@@ -56,6 +57,7 @@ export interface GameSession {
   finances: ClubFinances;
   stadium: ClubStadium;
   tacticsPresets: TacticsPresetSlot[];
+  matchLineup?: MatchLineupState;
   board: BoardState;
   clubEvents: ClubEvent[];
   rivalPlayers: Player[];
@@ -117,6 +119,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     finances: pipeline.club_finances ?? defaultClubFinances(),
     stadium: normalizeClubStadium(pipeline.club_stadium ?? defaultClubStadium()),
     tacticsPresets: normalizeTacticsPresets(pipeline.tactics_presets),
+    matchLineup: pipeline.match_lineup,
     board: ensureBoardObjectives(
       normalizeBoardState(pipeline.board, defaultEmployerClubId()),
       save.state.season,
@@ -140,6 +143,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     club_finances: session.finances,
     club_stadium: session.stadium,
     tactics_presets: session.tacticsPresets,
+    match_lineup: session.matchLineup,
     board: session.board,
     club_events: session.clubEvents,
     rival_players: session.rivalPlayers,

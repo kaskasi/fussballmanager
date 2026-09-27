@@ -3,6 +3,7 @@ import { startBoardSeason } from "../board/season-objectives.ts";
 import { defaultEmployerClubId } from "../board/job-offers.ts";
 import type { IndividualProgram } from "../development/individual-training.ts";
 import { createInitialTrainingPlan, type TrainingSlot } from "../development/training-units.ts";
+import type { MatchLineupState } from "../match/lineup-board.ts";
 import { defaultTacticsPresets, type TacticsPresetSlot } from "../match/tactics-presets.ts";
 import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
 import { createScoutBoard, type ScoutBoard } from "../scouting/scout-board.ts";
@@ -27,6 +28,8 @@ export interface PipelineState {
   club_events?: ClubEvent[];
   /** F1.2 — three saved match tactic presets. */
   tactics_presets?: TacticsPresetSlot[];
+  /** F1.1 — last matchday lineup (formation, slots, tactics plan). */
+  match_lineup?: MatchLineupState;
   /** F9.1 / F9.2 — board objectives and job status. */
   board?: BoardState;
   /** F10.4 — rival clubs using the career growth engine. */

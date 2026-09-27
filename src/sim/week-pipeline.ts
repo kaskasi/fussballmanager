@@ -17,6 +17,7 @@ import { advanceInboxWeek } from "../youth/decision-inbox.ts";
 import { advanceClubFanbase, weeklyFanbaseDelta } from "../stadium/fanbase.ts";
 import { advanceProTrials } from "../youth/pro-trial.ts";
 import { simulateYouthWeek } from "../youth/youth-sim.ts";
+import { careerStarterIds } from "../match/lineup-board.ts";
 import { mergeCareerLeagueStats, applyCareerMatchWeek } from "./career-match-sync.ts";
 import { advanceCalendarWeek, SEASON_END_WEEK } from "./game-calendar.ts";
 import { advanceLeagueWeek } from "./league-week.ts";
@@ -60,6 +61,9 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
   );
   players = individualStep.players;
 
+  const savedStarters = session.matchLineup
+    ? careerStarterIds(session.matchLineup.assignments)
+    : undefined;
   const careerMatch = applyCareerMatchWeek(
     players,
     leagueStep.playerFixture,
@@ -68,6 +72,7 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     session.masterSeed,
     session.season,
     leagueStep.clubPlayerStats,
+    savedStarters,
   );
   players = careerMatch.players;
   const leagueWithCareerStats = {

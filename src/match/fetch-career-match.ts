@@ -17,7 +17,14 @@ export async function fetchCareerMatchView(input: {
         "Match-Server nicht erreichbar — bitte npm run dev:server im Projektroot starten.",
       );
     }
-    throw new Error(`Career match request failed (${response.status})`);
+    let detail = "";
+    try {
+      const body = (await response.json()) as { error?: string };
+      if (body.error) detail = `: ${body.error}`;
+    } catch {
+      // ignore non-JSON error bodies
+    }
+    throw new Error(`Career match request failed (${response.status})${detail}`);
   }
   return (await response.json()) as MatchView;
 }

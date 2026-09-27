@@ -6,6 +6,7 @@ import type { NavPrimaryAction } from "../ui/nav-primary-action.ts";
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
 import { fetchCareerMatchView } from "./fetch-career-match.ts";
 import { CareerLineupScreen } from "./CareerLineupScreen.tsx";
+import type { MatchLineupState } from "./lineup-board.ts";
 import { CommentaryFeed } from "./CommentaryFeed.tsx";
 import { Lineup } from "./Lineup.tsx";
 import { Pitch } from "./Pitch.tsx";
@@ -18,7 +19,9 @@ export function CareerMatch({
   week,
   weekday,
   tacticsPresets,
+  matchLineup,
   onSaveTacticsPreset,
+  onSaveMatchLineup,
   simulating,
   onComplete,
   onSkip,
@@ -29,7 +32,9 @@ export function CareerMatch({
   week: number;
   weekday: number;
   tacticsPresets: readonly TacticsPresetSlot[];
+  matchLineup: MatchLineupState | undefined;
   onSaveTacticsPreset: (id: TacticsPresetId, plan: SandboxPlan) => void;
+  onSaveMatchLineup: (lineup: MatchLineupState) => void;
   simulating: boolean;
   onComplete: () => void;
   onSkip: () => void;
@@ -50,7 +55,9 @@ export function CareerMatch({
         week={week}
         weekday={weekday}
         tacticsPresets={tacticsPresets}
+        matchLineup={matchLineup}
         onSaveTacticsPreset={onSaveTacticsPreset}
+        onSaveMatchLineup={onSaveMatchLineup}
         onConfirm={setPlayerClubSquad}
         onNavActionChange={onNavActionChange}
       />
@@ -161,58 +168,62 @@ function CareerMatchPlayback({
 
   return (
     <main className="matchday career-match">
-      {view && frame ? <Scoreboard view={view} frame={frame} /> : (
-        <header className="scoreboard">
-          <p className="eyebrow">Spieltag {setup.matchday}</p>
-          <h1>
-            {setup.isHome ? "Heim" : "Auswärts"} vs {setup.opponentShortName}
-          </h1>
-        </header>
-      )}
+      <div className="career-match-hud">
+        {view && frame ? (
+          <Scoreboard view={view} frame={frame} compact />
+        ) : (
+          <header className="scoreboard scoreboard--compact">
+            <p className="eyebrow">Spieltag {setup.matchday}</p>
+            <h1 className="career-match-placeholder-title">
+              {setup.isHome ? "Heim" : "Auswärts"} vs {setup.opponentShortName}
+            </h1>
+          </header>
+        )}
 
-      <div className="career-match-actions">
-        <div className="transport">
-          <button
-            type="button"
-            className="step"
-            onClick={playback.stepBack}
-            disabled={!view || loading}
-            aria-label="Schritt zurück"
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            className={`playpause ${playback.playing ? "is-playing" : ""}`}
-            onClick={playback.toggle}
-            disabled={!view || loading}
-          >
-            {playback.playing ? "Pause" : "Play"}
-          </button>
-          <button
-            type="button"
-            className="step"
-            onClick={playback.stepForward}
-            disabled={!view || loading}
-            aria-label="Schritt vor"
-          >
-            ›
-          </button>
+        <div className="career-match-actions career-match-actions--inline">
+          <div className="transport">
+            <button
+              type="button"
+              className="step"
+              onClick={playback.stepBack}
+              disabled={!view || loading}
+              aria-label="Schritt zurück"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className={`playpause ${playback.playing ? "is-playing" : ""}`}
+              onClick={playback.toggle}
+              disabled={!view || loading}
+            >
+              {playback.playing ? "Pause" : "Play"}
+            </button>
+            <button
+              type="button"
+              className="step"
+              onClick={playback.stepForward}
+              disabled={!view || loading}
+              aria-label="Schritt vor"
+            >
+              ›
+            </button>
+          </div>
+          <label className="career-match-speed">
+            Speed
+            <select
+              value={playback.speed}
+              onChange={(event) => playback.setSpeed(Number(event.target.value))}
+              disabled={!view || loading}
+            >
+              <option value={1}>1×</option>
+              <option value={2}>2×</option>
+              <option value={4}>4×</option>
+              <option value={8}>8×</option>
+              <option value={16}>16×</option>
+            </select>
+          </label>
         </div>
-        <label className="career-match-speed">
-          Speed
-          <select
-            value={playback.speed}
-            onChange={(event) => playback.setSpeed(Number(event.target.value))}
-            disabled={!view || loading}
-          >
-            <option value={1}>1×</option>
-            <option value={2}>2×</option>
-            <option value={4}>4×</option>
-            <option value={8}>8×</option>
-            <option value={16}>16×</option>
-          </select>
-        </label>
       </div>
 
       {loading ? <p className="status">Spiel wird vorbereitet…</p> : null}
@@ -220,7 +231,7 @@ function CareerMatchPlayback({
 
       {view && frame ? (
         <>
-          <div className="match-stage">
+          <div className="match-stage career-match-stage">
             <Pitch
               from={playback.previous ?? frame}
               to={frame}
@@ -235,7 +246,10 @@ function CareerMatchPlayback({
             />
             <CommentaryFeed lines={playback.visibleLines} />
           </div>
-          <Lineup view={view} frame={frame} />
+          <details className="career-match-lineups">
+            <summary>Aufstellungen</summary>
+            <Lineup view={view} frame={frame} />
+          </details>
         </>
       ) : null}
     </main>

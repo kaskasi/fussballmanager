@@ -403,12 +403,173 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.career-match {
+  padding-top: 0.65rem;
+  padding-bottom: 1.25rem;
+}
+
+.career-match-hud {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 0.55rem;
+}
+
 .career-match-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
   align-items: end;
   margin: 1rem 0;
+}
+
+.career-match-actions--inline {
+  margin: 0;
+  padding: 0 0.15rem;
+}
+
+.career-match-stage {
+  margin-bottom: 0.5rem;
+}
+
+.career-match-stage .pitch-wrap {
+  min-height: min(48vh, 20rem);
+}
+
+.career-match-lineups {
+  margin-top: 0.5rem;
+  border: 1px solid #d1fae5;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.career-match-lineups summary {
+  cursor: pointer;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #047857;
+  list-style: none;
+}
+
+.career-match-lineups summary::-webkit-details-marker {
+  display: none;
+}
+
+.career-match-lineups .lineups {
+  margin-top: 0;
+  padding: 0 0.5rem 0.5rem;
+  gap: 0.5rem;
+}
+
+.career-match-lineups .xi {
+  padding: 0.55rem 0.65rem 0.65rem;
+  box-shadow: none;
+  border: 1px solid #e2e8f0;
+}
+
+.career-match-lineups .xi h2 {
+  margin-bottom: 0.35rem;
+  font-size: 0.68rem;
+}
+
+.career-match-lineups .xi li {
+  font-size: 0.72rem;
+  padding: 0.1rem 0.25rem;
+}
+
+.scoreboard--compact {
+  padding: 0.55rem 0.75rem 0.45rem;
+}
+
+.scoreboard-compact-main {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.scoreboard-compact-main .side {
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.scoreboard-compact-main .side.away {
+  text-align: right;
+}
+
+.scoreboard-compact-center {
+  display: grid;
+  justify-items: center;
+  gap: 0.1rem;
+}
+
+.scoreboard--compact .score {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.scoreboard--compact .clock {
+  margin: 0;
+  font-size: 0.68rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.match-stats-drawer {
+  margin-top: 0.35rem;
+  border-top: 1px solid #ecfdf5;
+}
+
+.match-stats-drawer summary {
+  cursor: pointer;
+  padding: 0.35rem 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #047857;
+  list-style: none;
+}
+
+.match-stats-drawer summary::-webkit-details-marker {
+  display: none;
+}
+
+.match-stats-drawer[open] .match-stats {
+  margin-top: 0.35rem;
+  padding-top: 0.45rem;
+}
+
+.match-stats--compact {
+  margin: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.match-stats--compact ul {
+  gap: 0.22rem;
+}
+
+.match-stats--compact .stat-teams {
+  margin-bottom: 0.2rem;
+  font-size: 0.62rem;
+}
+
+.match-stats--compact .stat-home,
+.match-stats--compact .stat-away {
+  font-size: 0.78rem;
+}
+
+.match-stats--compact .stat-label {
+  font-size: 0.6rem;
+}
+
+.match-stats--compact .stat-track {
+  height: 0.32rem;
+}
+
+.career-match-placeholder-title {
+  margin: 0;
+  font-size: 1rem;
 }
 
 .career-match-actions .transport button {
@@ -469,6 +630,21 @@ body {
 
 .career-lineup {
   position: relative;
+}
+
+.career-lineup .matchday-lineup-ambience {
+  min-height: 4.5rem;
+  margin: 0 -0.25rem 0.5rem;
+  padding: 0.65rem 0.75rem 0.8rem;
+}
+
+.career-lineup .matchday-lineup-title {
+  font-size: 1.1rem;
+}
+
+.career-lineup .matchday-lineup-art {
+  max-height: 4.5rem;
+  opacity: 0.22;
 }
 
 .matchday-lineup-ambience {
@@ -590,32 +766,76 @@ body {
   backdrop-filter: blur(6px);
 }
 
-.career-lineup-header h1 {
+.career-lineup-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.career-lineup-header-main h1 {
   margin: 0;
+  font-size: 1.25rem;
 }
 
 .career-lineup-sub {
-  margin: 0.35rem 0 0;
+  margin: 0.15rem 0 0;
   color: #64748b;
-  font-size: 0.9rem;
+  font-size: 0.78rem;
+}
+
+.career-lineup-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.55rem;
+}
+
+.career-lineup-tactics {
+  margin-top: 0.45rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.55rem;
+  background: #f8fafc;
+}
+
+.career-lineup-tactics summary {
+  cursor: pointer;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #334155;
+  list-style: none;
+}
+
+.career-lineup-tactics summary::-webkit-details-marker {
+  display: none;
+}
+
+.career-lineup-tactics[open] summary {
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .career-lineup-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: end;
-  margin: 1rem 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(6rem, 1fr));
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem 0.65rem;
 }
 
 .career-lineup-formation {
   display: grid;
   gap: 0.2rem;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: #047857;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.career-lineup-formation--inline {
+  flex-shrink: 0;
 }
 
 .career-lineup-formation select {
@@ -630,20 +850,34 @@ body {
 .career-lineup-presets {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin: 0.75rem 0 0;
+  gap: 0.35rem;
+}
+
+.career-preset-group {
+  display: inline-flex;
+  align-items: stretch;
 }
 
 .career-preset-btn {
   display: grid;
-  gap: 0.1rem;
+  gap: 0.05rem;
   border: 1px solid #cbd5e1;
-  border-radius: 0.55rem;
-  padding: 0.35rem 0.55rem;
+  border-radius: 0.55rem 0 0 0.55rem;
+  padding: 0.28rem 0.45rem;
   background: #f8fafc;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   cursor: pointer;
   text-align: left;
+}
+
+.career-preset-save-mini {
+  border: 1px solid #cbd5e1;
+  border-left: 0;
+  border-radius: 0 0.55rem 0.55rem 0;
+  padding: 0 0.4rem;
+  background: #fff;
+  font-size: 0.72rem;
+  cursor: pointer;
 }
 
 .career-preset-btn.is-active {
@@ -660,11 +894,11 @@ body {
 
 .career-lineup-slider {
   display: grid;
-  gap: 0.2rem;
-  font-size: 0.72rem;
+  gap: 0.15rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: #334155;
-  min-width: 8rem;
+  min-width: 0;
 }
 
 .career-lineup-slider input {
@@ -700,6 +934,265 @@ body {
 
 .career-lineup-table tbody .squad-table-row {
   cursor: default;
+}
+
+.career-lineup-auto-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.career-auto-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.career-auto-btn:hover {
+  background: #d1fae5;
+}
+
+.career-lineup-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(10.5rem, 13rem);
+  gap: 0.6rem;
+  margin-top: 0.55rem;
+  align-items: start;
+}
+
+@media (max-width: 820px) {
+  .career-lineup-board {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lineup-pitch-wrap {
+  position: relative;
+  aspect-ratio: 105 / 68;
+  min-height: 13rem;
+  max-height: min(52vh, 22rem);
+  border-radius: 0.85rem;
+  overflow: hidden;
+  border: 1px solid #86efac;
+  background: linear-gradient(180deg, #166534, #15803d 45%, #16a34a);
+}
+
+.lineup-pitch-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.lineup-pitch-grass {
+  fill: #16a34a;
+}
+
+.lineup-pitch-line {
+  stroke: rgb(255 255 255 / 55%);
+  stroke-width: 0.35;
+}
+
+.lineup-pitch-slots {
+  position: absolute;
+  inset: 0;
+}
+
+.lineup-slot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 3.6rem;
+  z-index: 1;
+}
+
+.lineup-slot.is-target .lineup-slot-empty {
+  border-color: #fde68a;
+  background: rgb(254 243 199 / 35%);
+}
+
+.lineup-slot-label {
+  display: block;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: rgb(255 255 255 / 75%);
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+.lineup-slot-empty {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin: 0.1rem auto 0;
+  border: 1.5px dashed rgb(255 255 255 / 55%);
+  border-radius: 999px;
+  color: rgb(255 255 255 / 80%);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.lineup-slot-card {
+  display: grid;
+  gap: 0.1rem;
+  width: 100%;
+  margin-top: 0.1rem;
+  padding: 0.28rem 0.35rem;
+  border: 1px solid rgb(255 255 255 / 70%);
+  border-radius: 0.55rem;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 6px 18px rgb(15 23 42 / 18%);
+  cursor: grab;
+  text-align: center;
+}
+
+.lineup-slot-card:active {
+  cursor: grabbing;
+}
+
+.lineup-slot-name {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lineup-slot-icons,
+.lineup-player-icons {
+  display: inline-flex;
+  gap: 0.15rem;
+  justify-content: center;
+}
+
+.lineup-icon {
+  font-size: 0.58rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.lineup-icon.is-good {
+  color: #059669;
+}
+
+.lineup-icon.is-mid {
+  color: #d97706;
+}
+
+.lineup-icon.is-low {
+  color: #dc2626;
+}
+
+.lineup-icon-wa {
+  font-size: 0.5rem;
+  padding: 0.05rem 0.18rem;
+  border-radius: 0.2rem;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.lineup-bench {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.65rem;
+  background: #f8fafc;
+  max-height: min(52vh, 22rem);
+  overflow: hidden;
+}
+
+.lineup-bench-title {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.lineup-bench-hint {
+  margin: 0;
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+.lineup-bench-list {
+  display: grid;
+  gap: 0.3rem;
+  overflow: auto;
+  align-content: start;
+  min-height: 0;
+}
+
+.lineup-player-card {
+  display: grid;
+  grid-template-columns: 1.8rem 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 0.1rem 0.35rem;
+  align-items: center;
+  padding: 0.35rem 0.4rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: #fff;
+  cursor: grab;
+  font-size: 0.72rem;
+}
+
+.lineup-player-card:active {
+  cursor: grabbing;
+}
+
+.lineup-player-card--compact {
+  grid-template-columns: auto 1fr auto;
+}
+
+.lineup-player-pos {
+  grid-row: 1 / span 2;
+  font-weight: 800;
+  color: #047857;
+  font-size: 0.62rem;
+  align-self: center;
+}
+
+.lineup-player-name {
+  grid-column: 2;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.lineup-player-ca {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 0.62rem;
+  color: #64748b;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.lineup-player-icons {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.career-lineup-warning {
+  margin: 0.75rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.55rem;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  font-size: 0.82rem;
 }
 
 @keyframes incident-pop {

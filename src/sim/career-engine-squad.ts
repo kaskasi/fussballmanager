@@ -13,7 +13,7 @@ import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 
-function careerPlayerInputs(players: readonly Player[]): CareerPlayerInput[] {
+export function careerPlayerInputs(players: readonly Player[]): CareerPlayerInput[] {
   return players
     .filter((player) => player.club_id === DEFAULT_CLUB_ID && player.squad_status === "pro")
     .map((player) => ({

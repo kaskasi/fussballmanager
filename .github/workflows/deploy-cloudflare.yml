@@ -41,8 +41,39 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm run deploy:cloudflare
+
+      - name: Validate Cloudflare credentials
         env:
-          # API token must be a Secret (not a repo Variable).
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is missing. Add it under Settings → Secrets → Actions (not Variables)."
+            exit 1
+          fi
+          if printf '%s' "${CLOUDFLARE_API_TOKEN}" | grep -qE '[[:space:]]'; then
+            echo "::error::CLOUDFLARE_API_TOKEN contains whitespace. Recreate the secret and paste the raw token only (no quotes, no newline)."
+            exit 1
+          fi
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID}" ]; then
+            echo "::error::CLOUDFLARE_ACCOUNT_ID is missing. Add it as a repo Variable or Secret."
+            exit 1
+          fi
+          HTTP_CODE=$(curl -sS -o /tmp/cf-verify.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            https://api.cloudflare.com/client/v4/user/tokens/verify)
+          if [ "${HTTP_CODE}" != "200" ]; then
+            echo "::error::Cloudflare rejected the API token (HTTP ${HTTP_CODE}). Create a new token with template 'Edit Cloudflare Workers' and update the secret."
+            cat /tmp/cf-verify.json || true
+            exit 1
+          fi
+          echo "Cloudflare token verified."
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          command: deploy

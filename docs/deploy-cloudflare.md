@@ -195,6 +195,8 @@ Konfiguration: `worker/wrangler.toml` — `run_worker_first` schickt nur `/api/*
 | Worker-Name vergeben | `name` in `wrangler.toml` ändern |
 | CPU timeout bei Matchday | Cloudflare Paid Plan oder kürzere Test-Matchdays; Einzelmatches sind meist OK |
 | Alter Stand nach Deploy | Hard-Refresh (Cache) oder Worker-Version in Dashboard prüfen |
+| `Invalid format for Authorization header` (6111) | `CLOUDFLARE_API_TOKEN` neu anlegen: nur den Token-String einfügen (kein `Bearer`, keine Anführungszeichen, kein Zeilenumbruch). Muss ein **API Token** sein, nicht der Global API Key. |
+| `Authentication failed` (9106) | Token mit Template **Edit Cloudflare Workers** erstellen; Account im Token auf dein Konto beschränken; Secret in GitHub **Secrets** (nicht Variables) speichern |
 
 ---
 

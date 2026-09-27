@@ -20,4 +20,6 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_020_last_week_growth",
   "migration_021_tactics_stadium",
   "migration_022_board",
+  "migration_023_league_pools",
+  "migration_024_rival_growth",
 ] as const;

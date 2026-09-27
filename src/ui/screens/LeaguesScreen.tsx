@@ -19,6 +19,7 @@ export function LeaguesScreen({
   season,
   masterSeed,
   players,
+  rivalPlayers,
   stadium,
   onOpenStadium,
 }: {
@@ -26,6 +27,7 @@ export function LeaguesScreen({
   season: number;
   masterSeed: number;
   players: readonly Player[];
+  rivalPlayers: readonly Player[];
   stadium: ClubStadium;
   onOpenStadium?: () => void;
 }) {
@@ -33,8 +35,8 @@ export function LeaguesScreen({
   const [selectedClubId, setSelectedClubId] = useState<TeamId | null>(null);
 
   const standings = useMemo(
-    () => divisionStandings(league, divisionId, masterSeed, season),
-    [league, divisionId, masterSeed, season],
+    () => divisionStandings(league, divisionId, masterSeed, season, rivalPlayers),
+    [league, divisionId, masterSeed, season, rivalPlayers],
   );
   const leagueSlice = useMemo(
     () => leagueSliceForForm(standings.clubIds, standings.results),
@@ -93,6 +95,7 @@ export function LeaguesScreen({
           teamId={selectedClubId}
           league={league}
           players={players}
+          rivalPlayers={rivalPlayers}
           stadium={stadium}
           onClose={() => setSelectedClubId(null)}
           onOpenStadium={

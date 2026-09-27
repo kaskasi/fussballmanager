@@ -27,7 +27,6 @@ import { DevelopmentHubPanel } from "../components/DevelopmentHubPanel.tsx";
 import { HubInboxPanel } from "../components/HubInboxPanel.tsx";
 import { LeagueHubPanel } from "../components/LeagueHubPanel.tsx";
 import { SummerChecklistPanel } from "../components/SummerChecklistPanel.tsx";
-import { TrainingCenter } from "./TrainingCenter.tsx";
 
 /**
  * WIREFRAME: PRD 09.2 Screen 1 — Pipeline Dashboard
@@ -57,6 +56,7 @@ export function PipelineDashboard({
   clubId,
   clubEvents,
   onSelectClub,
+  onOpenTraining,
 }: {
   players: Player[];
   season: number;
@@ -81,8 +81,8 @@ export function PipelineDashboard({
   clubId: string;
   clubEvents: readonly ClubEvent[];
   onSelectClub?: (teamId: TeamId) => void;
+  onOpenTraining?: () => void;
 }) {
-  const [panel, setPanel] = useState<"hub" | "training">("hub");
   const [legend, setLegend] = useState(false);
   const sessions = useMemo(() => planToSessions(trainingPlan), [trainingPlan]);
   const planOk = validateWeeklyPlan(sessions).valid;
@@ -125,18 +125,6 @@ export function PipelineDashboard({
   const matchdayLabel = league.season_complete
     ? "Saison beendet"
     : `Spieltag ${Math.min(league.matchday, seasonMatchdays)}/${seasonMatchdays}`;
-
-  if (panel === "training") {
-    return (
-      <TrainingCenter
-        week={week}
-        plan={trainingPlan}
-        onPlanChange={onTrainingPlanChange}
-        players={players}
-        onBack={() => setPanel("hub")}
-      />
-    );
-  }
 
   return (
     <main className="pipeline">
@@ -219,7 +207,7 @@ export function PipelineDashboard({
           ))}
         </div>
         <div className="pipeline-tiles">
-          <button type="button" className="pipeline-tile" onClick={() => setPanel("training")}>
+          <button type="button" className="pipeline-tile" onClick={onOpenTraining}>
             <span className={planOk ? "pipeline-light is-set" : "pipeline-light is-watch"} aria-hidden="true">
               {planOk ? "●" : "▲"}
             </span>

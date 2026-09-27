@@ -56,6 +56,7 @@ import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
 import { LeaguesScreen } from "./ui/screens/LeaguesScreen.tsx";
 import { ClubProfileModal } from "./ui/components/ClubProfileModal.tsx";
+import { TrainingCenter } from "./ui/screens/TrainingCenter.tsx";
 import { PlayerProfile } from "./ui/screens/PlayerProfile";
 import {
   DEFAULT_MARKET_FILTERS,
@@ -83,7 +84,17 @@ import {
 } from "./youth/decision-inbox.ts";
 import type { NavPrimaryAction } from "./ui/nav-primary-action.ts";
 
-type Screen = "hub" | "campus" | "matchday" | "scouting" | "transfers" | "squad" | "finances" | "stadium" | "leagues";
+type Screen =
+  | "hub"
+  | "training"
+  | "campus"
+  | "matchday"
+  | "scouting"
+  | "transfers"
+  | "squad"
+  | "finances"
+  | "stadium"
+  | "leagues";
 
 function bootstrapSave(slot: number): SaveGame {
   try {
@@ -157,6 +168,7 @@ export default function App() {
     tacticsPresets,
     board,
     clubEvents,
+    rivalPlayers,
   } = session;
 
   function sessionWithEvent(
@@ -759,8 +771,17 @@ export default function App() {
           scoutBoard={scoutBoard}
           clubEvents={clubEvents}
           onSelectClub={setClubProfileId}
+          onOpenTraining={() => setScreen("training")}
         />
       </div>
+      {screen === "training" ? (
+        <TrainingCenter
+          week={week}
+          plan={trainingPlan}
+          onPlanChange={handleTrainingPlanChange}
+          players={players}
+        />
+      ) : null}
       {inboxOpen && pendingInboxItems(youthInbox, players).length > 0 ? (
         <DecisionInboxModal
           inbox={youthInbox}
@@ -837,6 +858,7 @@ export default function App() {
           season={season}
           masterSeed={session.masterSeed}
           players={players}
+          rivalPlayers={rivalPlayers}
           stadium={stadium}
           onOpenStadium={() => setScreen("stadium")}
         />
@@ -859,6 +881,7 @@ export default function App() {
           teamId={clubProfileId}
           league={league}
           players={players}
+          rivalPlayers={rivalPlayers}
           stadium={stadium}
           onClose={() => setClubProfileId(null)}
           onOpenStadium={() => {
@@ -966,6 +989,16 @@ function AppNav({
         }}
       >
         ⭐
+      </NavButton>
+      <NavButton
+        pressed={screen === "training"}
+        label="Training"
+        onClick={() => {
+          onCloseProfile?.();
+          onNavigate("training");
+        }}
+      >
+        🏋️
       </NavButton>
       <NavButton
         pressed={screen === "campus"}

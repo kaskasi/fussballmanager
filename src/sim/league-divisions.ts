@@ -1,6 +1,8 @@
-import { SEED_DIVISION, SEED_OBERLIGA, type Squad, type TeamId } from "@fussballmanager/shared";
+import { NORDSTERN_ID, SEED_DIVISION, SEED_OBERLIGA, type Squad, type TeamId } from "@fussballmanager/shared";
 import type { DivisionEconomyId } from "../economy/division-economy.ts";
 import { DIVISION_ECONOMY } from "../economy/division-economy.ts";
+import type { Player } from "../types/player.ts";
+import { squadWithRivalRoster } from "./rival-engine-squad.ts";
 
 export const REGIONALLIGA_ID: DivisionEconomyId = "regionalliga-nord";
 export const OBERLIGA_ID: DivisionEconomyId = "oberliga-nord";
@@ -18,8 +20,15 @@ export function divisionLabel(divisionId: DivisionEconomyId): string {
   return DIVISION_ECONOMY[divisionId].label;
 }
 
-export function squadForLeagueClub(teamId: TeamId): Squad | undefined {
-  return ALL_LEAGUE_SQUADS.find((entry) => entry.team.id === teamId);
+export function squadForLeagueClub(
+  teamId: TeamId,
+  rivalPlayers?: readonly Player[],
+): Squad | undefined {
+  const template = ALL_LEAGUE_SQUADS.find((entry) => entry.team.id === teamId);
+  if (!template || teamId === NORDSTERN_ID || !rivalPlayers?.length) {
+    return template;
+  }
+  return squadWithRivalRoster(template, rivalPlayers) ?? template;
 }
 
 export function clubIdsForDivision(

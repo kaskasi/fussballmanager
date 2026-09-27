@@ -46,7 +46,7 @@ export function TrainingCenter({
   plan: TrainingSlot[];
   onPlanChange: (plan: TrainingSlot[]) => void;
   players: Player[];
-  onBack: () => void;
+  onBack?: () => void;
 }) {
   const [tab, setTab] = useState<TrainingTab>("team");
   const [pickSlot, setPickSlot] = useState<number | null>(null);
@@ -56,9 +56,11 @@ export function TrainingCenter({
   return (
     <main className="training">
       <header className="training-head">
-        <button type="button" onClick={onBack} aria-label="Zurück zur Pipeline">
-          ←
-        </button>
+        {onBack ? (
+          <button type="button" onClick={onBack} aria-label="Zurück zur Pipeline">
+            ←
+          </button>
+        ) : null}
         <div>
           <p className="eyebrow">Woche {week}</p>
           <h1>🏋️ Training</h1>

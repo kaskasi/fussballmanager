@@ -9,6 +9,7 @@ export function ClubProfileModal({
   teamId,
   league,
   players,
+  rivalPlayers,
   stadium,
   onClose,
   onOpenStadium,
@@ -16,6 +17,7 @@ export function ClubProfileModal({
   teamId: TeamId;
   league: LeagueState;
   players: readonly Player[];
+  rivalPlayers: readonly Player[];
   stadium: ClubStadium;
   onClose: () => void;
   onOpenStadium?: () => void;
@@ -23,6 +25,7 @@ export function ClubProfileModal({
   const profile = buildClubProfile(teamId, {
     playerClubId: league.player_club_id,
     careerPlayers: players,
+    rivalPlayers,
     stadium,
     pools: league.league_pools,
   });

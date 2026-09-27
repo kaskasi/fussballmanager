@@ -14,6 +14,7 @@ import {
   leagueStateAfterMovement,
   type PromotionRelegationResult,
 } from "./promotion-relegation.ts";
+import { ageRivalPlayers } from "./rival-growth.ts";
 import { SEASON_END_WEEK } from "../sim/game-calendar.ts";
 import {
   generateYouthIntake,
@@ -103,6 +104,7 @@ export function runSeasonEnd(
     pools,
     session.masterSeed,
     endingSeason,
+    session.rivalPlayers,
   );
   const leagueAfterMovement = leagueStateAfterMovement(
     leagueNormalized,
@@ -117,6 +119,7 @@ export function runSeasonEnd(
       transferState,
       stadium,
       board,
+      rivalPlayers: ageRivalPlayers(session.rivalPlayers),
       league: resetLeagueSeason(leagueAfterMovement),
     },
     intakeCount: intake.length,

@@ -4,6 +4,7 @@ import type { LeagueState } from "../persistence/league-state.ts";
 import { totalSeasonMatchdays } from "../persistence/league-state.ts";
 import { clubIdsForDivision, defaultLeaguePools } from "./league-divisions.ts";
 import { simulatePartialDivisionSeason } from "./promotion-relegation.ts";
+import type { Player } from "../types/player.ts";
 
 export interface DivisionStandings {
   divisionId: DivisionEconomyId;
@@ -25,6 +26,7 @@ export function divisionStandings(
   divisionId: DivisionEconomyId,
   masterSeed: number,
   season: number,
+  rivalPlayers: readonly Player[] = [],
 ): DivisionStandings {
   const pools = league.league_pools ?? defaultLeaguePools();
   const clubIds = clubIdsForDivision(pools, divisionId);
@@ -52,6 +54,7 @@ export function divisionStandings(
           meetings,
           matchdaysPlayed,
           divisionSeed(masterSeed, season, divisionId),
+          rivalPlayers,
         )
       : [];
 

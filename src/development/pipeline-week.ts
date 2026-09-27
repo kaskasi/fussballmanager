@@ -77,10 +77,14 @@ export function applyTrainingWeek(
   player: Player,
   sessions: readonly TrainingSession[],
   context?: TrainingWeekContext,
+  random?: () => number,
 ): Player {
   const attributes = { ...player.attributes };
   for (const key of SKILLS) {
-    attributes[key] = applyGrowth(player.attributes[key], growthOf(player, key, sessions, context));
+    attributes[key] = applyGrowth(
+      player.attributes[key],
+      growthOf(player, key, sessions, context, random),
+    );
   }
   return { ...player, attributes };
 }
@@ -90,6 +94,7 @@ function growthOf(
   key: keyof Attributes,
   sessions: readonly TrainingSession[],
   context?: TrainingWeekContext,
+  random?: () => number,
 ): number {
   const scale = effectiveDevelopmentScale(player, context);
   const raw = calculateWeeklyGrowth({
@@ -102,7 +107,8 @@ function growthOf(
     minutes: developmentMinutes(player.squad_status, player.state.weekly_minutes),
     injured: player.state.injury !== null,
     focusSlots: focusSlotsFor(sessions, key),
-    noise: 1,
+    noise: random ? undefined : 1,
+    random,
   });
   return raw * scale;
 }

@@ -20,6 +20,7 @@ import { mergeCareerLeagueStats, applyCareerMatchWeek } from "./career-match-syn
 import { advanceCalendarWeek, SEASON_END_WEEK } from "./game-calendar.ts";
 import { advanceLeagueWeek } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
+import { advanceRivalGrowthWeek } from "./rival-growth.ts";
 
 export interface WeekSimResult {
   session: GameSession;
@@ -37,6 +38,7 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     nextWeek,
     session.masterSeed,
     session.players,
+    session.rivalPlayers,
   );
 
   const playersAtWeekStart = session.players;
@@ -102,6 +104,14 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
   const playersWithCaStamp = playersWithGrowth.map(stampLastWeekCa);
 
   const seasonEnded = footballSeasonEnded;
+  const rivalPlayers = advanceRivalGrowthWeek(
+    session.rivalPlayers,
+    session.season,
+    nextWeek,
+    session.masterSeed,
+    leagueStep.matchdayPlayed > 0,
+  );
+
   let nextSession: GameSession = {
     ...session,
     season: seasonEnded ? session.season + 1 : session.season,
@@ -112,6 +122,7 @@ export async function simulateGameWeek(session: GameSession): Promise<WeekSimRes
     league: leagueWithCareerStats,
     finances,
     stadium,
+    rivalPlayers,
   };
 
   let intakeCount = 0;

@@ -166,11 +166,14 @@ export function buildClubProfile(
     careerPlayers?: readonly Player[];
     stadium?: ClubStadium;
     pools?: Record<DivisionEconomyId, TeamId[]>;
+    rivalPlayers?: readonly Player[];
   },
 ): ClubProfile | null {
-  const squad = squadForProfile(teamId, options?.careerPlayers);
-  const seedSquad = squadForLeagueClub(teamId);
-  const team = squad?.team ?? seedSquad?.team;
+  const isPlayerClub = options?.playerClubId === teamId;
+  const profileSquad = isPlayerClub
+    ? squadForProfile(teamId, options?.careerPlayers)
+    : squadForLeagueClub(teamId, options?.rivalPlayers);
+  const team = profileSquad?.team;
   if (!team) return null;
 
   const pools = options?.pools ?? defaultLeaguePools();
@@ -183,8 +186,6 @@ export function buildClubProfile(
     stadium: `${team.shortName}-Arena`,
     fanbase: DEFAULT_FANBASE,
   };
-  const isPlayerClub = options?.playerClubId === teamId;
-  const profileSquad = squad ?? seedSquad;
   const defaultCapacity = division.stadium_defaults.capacity;
 
   return {

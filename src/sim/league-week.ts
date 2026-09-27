@@ -111,20 +111,28 @@ export function lastPlayerResult(league: LeagueState): FixtureResult | undefined
   return undefined;
 }
 
-function teamStrength(teamId: TeamId, playerClubSquad?: Squad): number {
+function teamStrength(
+  teamId: TeamId,
+  playerClubSquad?: Squad,
+  rivalPlayers?: readonly Player[],
+): number {
   if (playerClubSquad && teamId === playerClubSquad.team.id) {
     return squadAverageStrength(playerClubSquad);
   }
-  const squad = squadForTeam(teamId, playerClubSquad);
+  const squad = squadForTeam(teamId, playerClubSquad, rivalPlayers);
   if (!squad) return 48;
   return squadAverageStrength(squad);
 }
 
-function squadForTeam(teamId: TeamId, playerClubSquad?: Squad): Squad | undefined {
+function squadForTeam(
+  teamId: TeamId,
+  playerClubSquad?: Squad,
+  rivalPlayers?: readonly Player[],
+): Squad | undefined {
   if (playerClubSquad && teamId === playerClubSquad.team.id) {
     return playerClubSquad;
   }
-  return squadForLeagueClub(teamId);
+  return squadForLeagueClub(teamId, rivalPlayers);
 }
 
 function seededRoll(baseSeed: number, salt: number): number {
@@ -154,12 +162,13 @@ function simulateQuickPlayerStats(
   results: readonly FixtureResult[],
   baseSeed: number,
   playerClubSquad?: Squad,
+  rivalPlayers?: readonly Player[],
 ): PlayerSeasonStat[] {
   let stats: PlayerSeasonStat[] = [];
   for (let index = 0; index < results.length; index++) {
     const result = results[index]!;
-    const homeSquad = squadForTeam(result.homeTeamId, playerClubSquad);
-    const awaySquad = squadForTeam(result.awayTeamId, playerClubSquad);
+    const homeSquad = squadForTeam(result.homeTeamId, playerClubSquad, rivalPlayers);
+    const awaySquad = squadForTeam(result.awayTeamId, playerClubSquad, rivalPlayers);
     if (!homeSquad || !awaySquad) continue;
 
     let matchdayRows: PlayerSeasonStat[] = [];
@@ -200,11 +209,12 @@ export function simulateQuickMatchday(
   baseSeed: number,
   clubIds: readonly TeamId[],
   playerClubSquad?: Squad,
+  rivalPlayers?: readonly Player[],
 ): FixtureResult[] {
   const fixtures = matchdayFixtures(clubIds, matchday);
   return fixtures.map((fixture, index) => {
-    const homeStrength = teamStrength(fixture.homeTeamId, playerClubSquad);
-    const awayStrength = teamStrength(fixture.awayTeamId, playerClubSquad);
+    const homeStrength = teamStrength(fixture.homeTeamId, playerClubSquad, rivalPlayers);
+    const awayStrength = teamStrength(fixture.awayTeamId, playerClubSquad, rivalPlayers);
     const edge = (homeStrength - awayStrength) / 20;
     const homeGoals = Math.min(
       5,
@@ -233,6 +243,7 @@ export async function fetchMatchdayPayload(
   baseSeed: number,
   clubIds: readonly TeamId[],
   playerClubSquad?: Squad,
+  rivalPlayers?: readonly Player[],
 ): Promise<MatchdayPayload> {
   try {
     const response = await fetch("/api/matchday", {
@@ -249,10 +260,10 @@ export async function fetchMatchdayPayload(
       playerStats: body.playerStats ?? [],
     };
   } catch {
-    const results = simulateQuickMatchday(matchday, baseSeed, clubIds, playerClubSquad);
+    const results = simulateQuickMatchday(matchday, baseSeed, clubIds, playerClubSquad, rivalPlayers);
     return {
       results,
-      playerStats: simulateQuickPlayerStats(results, baseSeed, playerClubSquad),
+      playerStats: simulateQuickPlayerStats(results, baseSeed, playerClubSquad, rivalPlayers),
     };
   }
 }
@@ -280,6 +291,7 @@ export async function advanceLeagueWeek(
   calendarWeek: number,
   masterSeed: number,
   careerPlayers: readonly Player[] = [],
+  rivalPlayers: readonly Player[] = [],
 ): Promise<LeagueWeekAdvance> {
   const current = normalizeLeague(league);
 
@@ -305,6 +317,7 @@ export async function advanceLeagueWeek(
     baseSeed,
     current.club_ids,
     playerClubSquad,
+    rivalPlayers,
   );
   const scheduled = playerFixture(current, matchdayPlayed);
   const playerResult = scheduled ? fixtureResult(payload.results, scheduled) ?? null : null;

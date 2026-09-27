@@ -10,6 +10,7 @@ import { totalSeasonMatchdays } from "../persistence/league-state.ts";
 import { clubShortName } from "./league-week.ts";
 import { squadForLeagueClub } from "./league-divisions.ts";
 import { squadAverageStrength } from "@fussballmanager/shared";
+import type { Player } from "../types/player.ts";
 
 export interface PromotionMovement {
   teamId: TeamId;
@@ -37,8 +38,8 @@ function seededRoll(seed: number, salt: number): number {
   return ((hash >>> 0) % 10_000) / 10_000;
 }
 
-function teamStrength(teamId: TeamId): number {
-  const squad = squadForLeagueClub(teamId);
+function teamStrength(teamId: TeamId, rivalPlayers?: readonly Player[]): number {
+  const squad = squadForLeagueClub(teamId, rivalPlayers);
   return squad ? squadAverageStrength(squad) : 48;
 }
 
@@ -46,11 +47,12 @@ function simulateMatchdayResults(
   clubIds: readonly TeamId[],
   matchday: number,
   baseSeed: number,
+  rivalPlayers?: readonly Player[],
 ): FixtureResult[] {
   const fixtures = matchdayFixtures(clubIds, matchday);
   return fixtures.map((fixture, index) => {
-    const homeStrength = teamStrength(fixture.homeTeamId);
-    const awayStrength = teamStrength(fixture.awayTeamId);
+    const homeStrength = teamStrength(fixture.homeTeamId, rivalPlayers);
+    const awayStrength = teamStrength(fixture.awayTeamId, rivalPlayers);
     const edge = (homeStrength - awayStrength) / 20;
     const homeGoals = Math.min(
       5,
@@ -74,12 +76,13 @@ export function simulatePartialDivisionSeason(
   meetingsPerOpponent: number,
   matchdays: number,
   baseSeed: number,
+  rivalPlayers?: readonly Player[],
 ): FixtureResult[] {
   const maxMatchdays = (clubIds.length - 1) * meetingsPerOpponent;
   const limit = Math.max(0, Math.min(matchdays, maxMatchdays));
   const results: FixtureResult[] = [];
   for (let matchday = 1; matchday <= limit; matchday++) {
-    results.push(...simulateMatchdayResults(clubIds, matchday, baseSeed));
+    results.push(...simulateMatchdayResults(clubIds, matchday, baseSeed, rivalPlayers));
   }
   return results;
 }
@@ -88,14 +91,20 @@ export function simulateFullDivisionSeason(
   clubIds: readonly TeamId[],
   meetingsPerOpponent: number,
   baseSeed: number,
+  rivalPlayers?: readonly Player[],
 ): FixtureResult[] {
   const matchdays = (clubIds.length - 1) * meetingsPerOpponent;
-  return simulatePartialDivisionSeason(clubIds, meetingsPerOpponent, matchdays, baseSeed);
+  return simulatePartialDivisionSeason(clubIds, meetingsPerOpponent, matchdays, baseSeed, rivalPlayers);
 }
 
-function simulatePlayoffMatch(homeTeamId: TeamId, awayTeamId: TeamId, seed: number): FixtureResult {
-  const homeStrength = teamStrength(homeTeamId);
-  const awayStrength = teamStrength(awayTeamId);
+function simulatePlayoffMatch(
+  homeTeamId: TeamId,
+  awayTeamId: TeamId,
+  seed: number,
+  rivalPlayers?: readonly Player[],
+): FixtureResult {
+  const homeStrength = teamStrength(homeTeamId, rivalPlayers);
+  const awayStrength = teamStrength(awayTeamId, rivalPlayers);
   const edge = (homeStrength - awayStrength) / 18;
   const homeGoals = Math.min(
     4,
@@ -113,6 +122,7 @@ export function applyPromotionRelegation(
   pools: Record<DivisionEconomyId, TeamId[]>,
   masterSeed: number,
   season: number,
+  rivalPlayers?: readonly Player[],
 ): PromotionRelegationResult {
   const regionalligaId = "regionalliga-nord";
   const oberligaId = "oberliga-nord";
@@ -123,11 +133,11 @@ export function applyPromotionRelegation(
   const regResults =
     league.division_id === regionalligaId
       ? league.results
-      : simulateFullDivisionSeason(regIds, meetings, masterSeed ^ season ^ 11);
+      : simulateFullDivisionSeason(regIds, meetings, masterSeed ^ season ^ 11, rivalPlayers);
   const oberResults =
     league.division_id === oberligaId
       ? league.results
-      : simulateFullDivisionSeason(oberIds, meetings, masterSeed ^ season ^ 29);
+      : simulateFullDivisionSeason(oberIds, meetings, masterSeed ^ season ^ 29, rivalPlayers);
 
   const regTable = standings(regIds, regResults);
   const oberTable = standings(oberIds, oberResults);
@@ -158,7 +168,12 @@ export function applyPromotionRelegation(
 
   let playoff: PromotionRelegationResult["playoff"];
   if (regPlayoff && oberPlayoff) {
-    const playoffMatch = simulatePlayoffMatch(regPlayoff, oberPlayoff, masterSeed ^ season ^ 71);
+    const playoffMatch = simulatePlayoffMatch(
+      regPlayoff,
+      oberPlayoff,
+      masterSeed ^ season ^ 71,
+      rivalPlayers,
+    );
     const winnerId =
       playoffMatch.homeGoals >= playoffMatch.awayGoals
         ? playoffMatch.homeTeamId

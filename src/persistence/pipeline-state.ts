@@ -9,6 +9,7 @@ import { defaultClubStadium, type ClubStadium } from "../stadium/club-stadium.ts
 import { emptyTransferState, type TransferState } from "../transfers/negotiations.ts";
 import { emptyClubEvents, type ClubEvent } from "../inbox/club-events.ts";
 import { emptyInbox, type YouthInboxState } from "../youth/decision-inbox.ts";
+import type { Player } from "../types/player.ts";
 
 /** Dynamic hub state stored in `state.json` (PRD 08). */
 export interface PipelineState {
@@ -23,6 +24,8 @@ export interface PipelineState {
   tactics_presets?: TacticsPresetSlot[];
   /** F9.1 / F9.2 — board objectives and job status. */
   board?: BoardState;
+  /** F10.4 — rival clubs using the career growth engine. */
+  rival_players?: Player[];
 }
 
 export function defaultPipelineState(week = 1): PipelineState {

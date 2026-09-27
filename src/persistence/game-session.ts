@@ -30,6 +30,7 @@ import { MONDAY } from "../sim/day-calendar.ts";
 import { defaultLeagueState, normalizeLeagueState, type LeagueState } from "./league-state.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
 import { createSave, type SaveGame } from "./savegame-model.ts";
+import { normalizeRivalPlayers } from "../sim/rival-growth.ts";
 
 export const DEFAULT_SLOT = 1;
 export const DEFAULT_CLUB_ID = "cl_fc_nordstern";
@@ -52,6 +53,7 @@ export interface GameSession {
   tacticsPresets: TacticsPresetSlot[];
   board: BoardState;
   clubEvents: ClubEvent[];
+  rivalPlayers: Player[];
   clubId: string;
   managerName: string;
   masterSeed: number;
@@ -113,6 +115,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
       save.state.season,
     ),
     clubEvents: pipeline.club_events ?? emptyClubEvents(),
+    rivalPlayers: normalizeRivalPlayers(pipeline.rival_players, save.rng_state.master_seed),
     clubId: save.manifest.player_club_id,
     managerName: save.manifest.manager_name,
     masterSeed: save.rng_state.master_seed,
@@ -130,6 +133,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     tactics_presets: session.tacticsPresets,
     board: session.board,
     club_events: session.clubEvents,
+    rival_players: session.rivalPlayers,
   };
   const iso = now.toISOString();
 

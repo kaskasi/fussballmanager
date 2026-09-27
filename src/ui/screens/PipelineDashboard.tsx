@@ -33,7 +33,10 @@ import { BoardObjectivesPanel } from "../components/BoardObjectivesPanel.tsx";
 import { DevelopmentHubPanel } from "../components/DevelopmentHubPanel.tsx";
 import { HubInboxPanel } from "../components/HubInboxPanel.tsx";
 import { LeagueHubPanel } from "../components/LeagueHubPanel.tsx";
+import { SeasonAwardsGallery } from "../components/SeasonAwardsGallery.tsx";
 import { SummerChecklistPanel } from "../components/SummerChecklistPanel.tsx";
+import type { SeasonAwardsSnapshot } from "../../sim/season-awards.ts";
+import { showSummerChecklist } from "../../sim/summer-checklist.ts";
 
 /**
  * WIREFRAME: PRD 09.2 Screen 1 — Pipeline Dashboard
@@ -66,6 +69,7 @@ export function PipelineDashboard({
   clubEvents,
   onSelectClub,
   onOpenTraining,
+  lastSeasonAwards,
 }: {
   players: Player[];
   season: number;
@@ -93,6 +97,7 @@ export function PipelineDashboard({
   clubEvents: readonly ClubEvent[];
   onSelectClub?: (teamId: TeamId) => void;
   onOpenTraining?: () => void;
+  lastSeasonAwards?: SeasonAwardsSnapshot;
 }) {
   const [legend, setLegend] = useState(false);
   const sessions = useMemo(() => planToSessions(trainingPlan), [trainingPlan]);
@@ -207,6 +212,9 @@ export function PipelineDashboard({
         board={board}
         trainingPlan={trainingPlan}
       />
+      {lastSeasonAwards && showSummerChecklist(week, league) ? (
+        <SeasonAwardsGallery snapshot={lastSeasonAwards} />
+      ) : null}
       <BoardObjectivesPanel board={board} league={league} finances={finances} />
       <HubInboxPanel
         week={week}

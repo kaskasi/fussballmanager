@@ -28,6 +28,7 @@ import type { SeasonObjectiveEvaluation } from "../board/board-state.ts";
 import { advanceClubFanbase, seasonEndFanbaseBonus } from "../stadium/fanbase.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import { activatePendingPreContracts } from "../transfers/pre-contracts.ts";
+import { computeSeasonAwards } from "./season-awards.ts";
 
 export interface SeasonEndResult {
   session: GameSession;
@@ -115,6 +116,12 @@ export function runSeasonEnd(
   };
   const stadium = advanceClubFanbase(session.stadium, seasonEndFanbaseBonus(session.league));
   const leagueNormalized = normalizeLeagueState(session.league);
+  const lastSeasonAwards = computeSeasonAwards(
+    leagueNormalized,
+    preContractStep.players,
+    preContractStep.rivalPlayers,
+    endingSeason,
+  );
   const pools = leagueNormalized.league_pools ?? defaultLeaguePools();
   const promotionRelegation = applyPromotionRelegation(
     leagueNormalized,
@@ -137,6 +144,7 @@ export function runSeasonEnd(
       stadium,
       board,
       rivalPlayers: ageRivalPlayers(preContractStep.rivalPlayers),
+      lastSeasonAwards,
       league: resetLeagueSeason(leagueAfterMovement),
     },
     intakeCount: intake.length,

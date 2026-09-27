@@ -13,6 +13,7 @@ import { emptyClubEvents, type ClubEvent } from "../inbox/club-events.ts";
 import { emptyInbox, type YouthInboxState } from "../youth/decision-inbox.ts";
 import type { CoachingStaff } from "../staff/coaching-staff.ts";
 import type { Player } from "../types/player.ts";
+import type { SeasonAwardsSnapshot } from "../sim/season-awards.ts";
 
 /** Dynamic hub state stored in `state.json` (PRD 08). */
 export interface PipelineState {
@@ -37,6 +38,8 @@ export interface PipelineState {
   rival_players?: Player[];
   /** F8.1 — attack/defense/fitness coaches. */
   coaching_staff?: CoachingStaff;
+  /** F11.2 — last completed season award gallery. */
+  last_season_awards?: SeasonAwardsSnapshot;
 }
 
 export function defaultPipelineState(week = 1): PipelineState {

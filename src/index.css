@@ -4326,6 +4326,67 @@ body {
   background: #fff;
 }
 
+.season-awards {
+  margin: 1rem 0;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1rem 1.1rem 1.2rem;
+  box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
+}
+
+.season-awards-head h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.season-awards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.season-award-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  padding: 0.75rem 0.7rem;
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+  text-align: center;
+}
+
+.season-award-icon {
+  font-size: 1.6rem;
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.season-award-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.season-award-player {
+  margin: 0.35rem 0 0.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.season-award-club {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.season-award-value {
+  margin: 0.45rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #059669;
+}
+
 .loans-head {
   display: flex;
   gap: 0.75rem;

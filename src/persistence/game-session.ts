@@ -42,6 +42,7 @@ import {
   type CoachingStaff,
 } from "../staff/coaching-staff.ts";
 import { normalizeRivalPlayers } from "../sim/rival-growth.ts";
+import type { SeasonAwardsSnapshot } from "../sim/season-awards.ts";
 
 export const DEFAULT_SLOT = 1;
 export const DEFAULT_CLUB_ID = "cl_fc_nordstern";
@@ -72,6 +73,7 @@ export interface GameSession {
   clubId: string;
   managerName: string;
   masterSeed: number;
+  lastSeasonAwards?: SeasonAwardsSnapshot;
 }
 
 export function newGameSession(now = new Date()): GameSession {
@@ -138,6 +140,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     clubId: save.manifest.player_club_id,
     managerName: save.manifest.manager_name,
     masterSeed: save.rng_state.master_seed,
+    lastSeasonAwards: pipeline.last_season_awards,
   };
 }
 
@@ -157,6 +160,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     club_events: session.clubEvents,
     rival_players: session.rivalPlayers,
     coaching_staff: session.coachingStaff,
+    last_season_awards: session.lastSeasonAwards,
   };
   const iso = now.toISOString();
 

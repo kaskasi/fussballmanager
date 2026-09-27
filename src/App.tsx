@@ -212,6 +212,7 @@ export default function App() {
     rivalPlayers,
     coachingStaff,
     masterSeed,
+    lastSeasonAwards,
   } = session;
 
   function sessionWithEvent(
@@ -1034,6 +1035,7 @@ export default function App() {
           clubEvents={clubEvents}
           onSelectClub={setClubProfileId}
           onOpenTraining={() => setScreen("training")}
+          lastSeasonAwards={lastSeasonAwards}
         />
       </div>
       {screen === "training" ? (

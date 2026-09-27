@@ -4,13 +4,16 @@
   "type": "module",
   "workspaces": [
     "shared",
-    "server"
+    "server",
+    "worker"
   ],
   "scripts": {
     "dev": "vite",
     "dev:server": "npm run dev -w @fussballmanager/server",
+    "dev:worker": "npm run dev -w @fussballmanager/worker",
     "build": "vite build",
-    "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w @fussballmanager/shared && npm run typecheck -w @fussballmanager/server",
+    "deploy:cloudflare": "npm run build && npm run deploy -w @fussballmanager/worker",
+    "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w @fussballmanager/shared && npm run typecheck -w @fussballmanager/server && npm run typecheck -w @fussballmanager/worker",
     "test": "npm test -w @fussballmanager/shared && npm test -w @fussballmanager/server",
     "play-match": "npm run play-match -w @fussballmanager/server",
     "play-matchday": "npm run play-matchday -w @fussballmanager/server",

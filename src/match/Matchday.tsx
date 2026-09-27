@@ -184,7 +184,7 @@ export function Matchday() {
 
       {view && frame ? (
         <>
-          <div className="stage">
+          <div className="match-stage">
             <Pitch
               from={playback.previous ?? frame}
               to={frame}

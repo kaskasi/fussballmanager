@@ -1,26 +1,21 @@
-import { useEffect, useRef } from "react";
 import type { MatchViewLine } from "@fussballmanager/shared";
 
 type CommentaryFeedProps = {
   lines: MatchViewLine[];
 };
 
+/** Live commentary strip under the pitch — latest line only, ticker style. */
 export function CommentaryFeed({ lines }: CommentaryFeedProps) {
-  const end = useRef<HTMLLIElement | null>(null);
-
-  useEffect(() => {
-    end.current?.scrollIntoView({ block: "end" });
-  }, [lines.length]);
+  const latest = lines.at(-1);
 
   return (
-    <section className="feed" aria-live="polite">
-      <h2>Commentary</h2>
-      <ol>
-        {lines.map((line) => (
-          <li key={line.seq}>{line.text}</li>
-        ))}
-        <li ref={end} className="feed-end" aria-hidden="true" />
-      </ol>
-    </section>
+    <div className="commentary-ticker" aria-live="polite" aria-label="Live-Kommentar">
+      <span className="commentary-ticker-label" aria-hidden="true">📣</span>
+      {latest ? (
+        <p key={latest.seq} className="commentary-ticker-text">{latest.text}</p>
+      ) : (
+        <p className="commentary-ticker-text commentary-ticker-placeholder">Anpfiff…</p>
+      )}
+    </div>
   );
 }

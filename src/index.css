@@ -274,20 +274,67 @@ body {
   color: #b91c1c;
 }
 
-.stage {
+.match-stage {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
-  gap: 1rem;
-  align-items: stretch;
+  gap: 0;
+  margin-bottom: 1rem;
 }
 
 .pitch-wrap {
   margin: 0;
   background: #14532d;
-  border-radius: 1rem;
+  border-radius: 1rem 1rem 0 0;
   padding: 0.7rem;
   position: relative;
   overflow: hidden;
+}
+
+.commentary-ticker {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.65rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0 0 1rem 1rem;
+  background: rgb(15 23 42 / 90%);
+  color: #f8fafc;
+  box-shadow: 0 12px 40px rgb(15 23 42 / 12%);
+}
+
+.commentary-ticker-label {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.commentary-ticker-text {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: commentary-in 0.35s ease-out;
+}
+
+.commentary-ticker-placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+@keyframes commentary-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .incident-banner {
@@ -617,40 +664,12 @@ body {
   height: auto;
 }
 
-.feed {
-  background: #fff;
-  border-radius: 1rem;
-  padding: 0.9rem 1rem 1rem;
-  box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
-  min-height: 16rem;
-  display: flex;
-  flex-direction: column;
-}
-
-.feed h2,
 .xi h2 {
   margin: 0 0 0.6rem;
   font-size: 0.8rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #059669;
-}
-
-.feed ol {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  overflow: auto;
-  max-height: min(28rem, 55vh);
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  font-size: 0.92rem;
-}
-
-.feed-end {
-  height: 1px;
-  padding: 0;
 }
 
 .lineups {
@@ -3301,7 +3320,6 @@ body {
 }
 
 @media (max-width: 800px) {
-  .stage,
   .lineups,
   .score-row,
   .tactics-board,

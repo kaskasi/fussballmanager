@@ -156,14 +156,19 @@ Bei jedem **Push auf `main`** (oder manuell unter **Actions → Deploy Cloudflar
 
 ### Secrets einrichten (einmalig)
 
-GitHub → Repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**:
+GitHub → Repo → **Settings** → **Secrets and variables** → **Actions**:
 
-| Secret | Wert |
-|--------|------|
-| `CLOUDFLARE_API_TOKEN` | Cloudflare → **My Profile** → **API Tokens** → **Create** → Template **Edit Cloudflare Workers** |
-| `CLOUDFLARE_ACCOUNT_ID` | Dashboard-URL `dash.cloudflare.com/<ACCOUNT_ID>/…` oder lokal: `cd worker && npx wrangler whoami` |
+| Name | Typ | Wert |
+|------|-----|------|
+| `CLOUDFLARE_API_TOKEN` | **Secret** (Pflicht) | Cloudflare → **My Profile** → **API Tokens** → Template **Edit Cloudflare Workers** |
+| `CLOUDFLARE_ACCOUNT_ID` | **Variable** oder Secret | `cd worker && npx wrangler whoami` → Account ID |
 
-Danach: Push auf `main` → unter **Actions** den Lauf prüfen → Live-URL wie beim manuellen Deploy.
+> **Wichtig:** Der API-Token gehört unter **Secrets**, nicht unter **Variables** — Variables sind öffentlich lesbar im Workflow-Log-Kontext und Wrangler erwartet `CLOUDFLARE_API_TOKEN` als Secret.
+
+Danach: Push auf `main` → **Actions** → Workflow „Deploy Cloudflare“.  
+Wenn **verify** rot ist, läuft **deploy** nicht (auch bei korrekten Secrets).
+
+Manuell erneut starten: **Actions → Deploy Cloudflare → Run workflow**.
 
 ---
 

@@ -40,12 +40,18 @@ import {
   TRAINING_INTENSITY_MIN,
 } from "../../development/training-load.ts";
 import type { PositionPrimary } from "../../types/player.ts";
+import { AssistantDelegationPanel } from "../components/AssistantDelegationPanel.tsx";
 import { CoachingStaffPanel } from "../components/CoachingStaffPanel.tsx";
+import { MentoringPanel } from "../components/MentoringPanel.tsx";
 import { FitnessManagementPanel } from "../components/FitnessManagementPanel.tsx";
 import { Hint } from "../components/Hint.tsx";
 import type { Coach, CoachingStaff } from "../../staff/coaching-staff.ts";
+import type {
+  AssistantDelegation,
+  AssistantDelegationTask,
+} from "../../staff/assistant-delegation.ts";
 
-type TrainingTab = "team" | "individual" | "coaches" | "fitness";
+type TrainingTab = "team" | "individual" | "mentoring" | "coaches" | "fitness";
 
 const GROUP_LABELS: Record<SessionGroup, string> = {
   technical: "Technik",
@@ -75,6 +81,11 @@ export function TrainingCenter({
   masterSeed,
   cash,
   onHireCoach,
+  assistantName,
+  assistantDelegation,
+  onAssistantDelegationChange,
+  onAssignMentor,
+  onClearMentor,
   onBack,
 }: {
   week: number;
@@ -91,6 +102,11 @@ export function TrainingCenter({
   masterSeed: number;
   cash: number;
   onHireCoach: (coach: Coach) => void;
+  assistantName: string;
+  assistantDelegation: AssistantDelegation;
+  onAssistantDelegationChange: (task: AssistantDelegationTask, enabled: boolean) => void;
+  onAssignMentor: (menteeId: string, mentorId: string) => void;
+  onClearMentor: (menteeId: string) => void;
   onBack?: () => void;
 }) {
   const [tab, setTab] = useState<TrainingTab>("team");
@@ -129,6 +145,13 @@ export function TrainingCenter({
         </button>
         <button
           type="button"
+          className={tab === "mentoring" ? "training-tab is-active" : "training-tab"}
+          onClick={() => setTab("mentoring")}
+        >
+          Mentoring
+        </button>
+        <button
+          type="button"
           className={tab === "coaches" ? "training-tab is-active" : "training-tab"}
           onClick={() => setTab("coaches")}
         >
@@ -163,15 +186,32 @@ export function TrainingCenter({
           week={week}
           onProgramsChange={onProgramsChange}
         />
-      ) : tab === "coaches" ? (
-        <CoachingStaffPanel
-          staff={coachingStaff}
+      ) : tab === "mentoring" ? (
+        <MentoringPanel
+          players={players}
+          clubId={clubId}
           season={season}
           week={week}
-          masterSeed={masterSeed}
-          cash={cash}
-          onHire={onHireCoach}
+          onAssignMentor={onAssignMentor}
+          onClearMentor={onClearMentor}
         />
+      ) : tab === "coaches" ? (
+        <>
+          <AssistantDelegationPanel
+            assistantName={assistantName}
+            staff={coachingStaff}
+            delegation={assistantDelegation}
+            onChange={onAssistantDelegationChange}
+          />
+          <CoachingStaffPanel
+            staff={coachingStaff}
+            season={season}
+            week={week}
+            masterSeed={masterSeed}
+            cash={cash}
+            onHire={onHireCoach}
+          />
+        </>
       ) : (
         <FitnessManagementPanel players={players} clubId={clubId} intensity={intensity} />
       )}

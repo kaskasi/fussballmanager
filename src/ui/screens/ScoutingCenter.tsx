@@ -2,9 +2,10 @@ import { useMemo, useState } from "react";
 import type { PositionPrimary } from "../../types/player.ts";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
 import {
-  DEFAULT_SCOUT_CAPACITY,
   type ScoutAssignment,
 } from "../../scouting/scout-assignments.ts";
+import type { HiredScout, ScoutNetworkState } from "../../scouting/scout-network.ts";
+import { ScoutNetworkPanel } from "../components/ScoutNetworkPanel.tsx";
 import {
   filterMarket,
   headlineCounts,
@@ -62,6 +63,14 @@ export function ScoutingCenter({
   onToggleAssignment,
   onSelectTarget,
   onAssignScout,
+  scoutNetwork,
+  scoutCapacity,
+  masterSeed,
+  season,
+  week,
+  cash,
+  onHireScout,
+  onFireScout,
   onBack,
 }: {
   targets: BoardTarget[];
@@ -75,6 +84,14 @@ export function ScoutingCenter({
   onToggleAssignment: (assignmentId: string) => void;
   onSelectTarget: (playerId: string) => void;
   onAssignScout: (playerId: string) => void;
+  scoutNetwork: ScoutNetworkState;
+  scoutCapacity: number;
+  masterSeed: number;
+  season: number;
+  week: number;
+  cash: number;
+  onHireScout: (scout: HiredScout) => void;
+  onFireScout: (scoutId: string) => void;
   onBack: () => void;
 }) {
   const market = useMemo(
@@ -122,10 +139,20 @@ export function ScoutingCenter({
             </p>
           </Hint>
           <p className="scouting-scouts">
-            🟢 {assigned}/{DEFAULT_SCOUT_CAPACITY} Scout-Ziele · {assignments.filter((entry) => entry.active).length} Aufträge · {visible.length} Treffer
+            🟢 {assigned}/{scoutCapacity} Scout-Ziele · {assignments.filter((entry) => entry.active).length} Aufträge · {visible.length} Treffer
           </p>
         </div>
       </header>
+
+      <ScoutNetworkPanel
+        network={scoutNetwork}
+        season={season}
+        week={week}
+        masterSeed={masterSeed}
+        cash={cash}
+        onHire={onHireScout}
+        onFire={onFireScout}
+      />
 
       <section className="scouting-assignments" aria-label="Scout-Aufträge">
         <header className="scouting-assignments-head">

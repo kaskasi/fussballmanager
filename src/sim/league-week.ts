@@ -21,7 +21,8 @@ import {
 import type { Player } from "../types/player.ts";
 import { careerEngineSquadFromPlayers } from "./career-engine-squad.ts";
 import { isLeagueMatchWeek } from "./game-calendar.ts";
-import { squadForLeagueClub } from "./league-divisions.ts";
+import { clubShortLabel, squadForLeagueClub } from "./league-divisions.ts";
+import type { WorldClub } from "../world/world-generator.ts";
 import type { WatchedPlayerMatch } from "./watched-player-match.ts";
 
 export function weeklySeed(masterSeed: number, season: number, week: number): number {
@@ -30,9 +31,8 @@ export function weeklySeed(masterSeed: number, season: number, week: number): nu
   return hash >>> 0;
 }
 
-export function clubShortName(clubId: TeamId): string {
-  const squad = squadForLeagueClub(clubId);
-  return squad?.team.shortName ?? clubId;
+export function clubShortName(clubId: TeamId, worldClubs?: readonly WorldClub[]): string {
+  return clubShortLabel(clubId, worldClubs);
 }
 
 export function playerFixture(
@@ -156,6 +156,15 @@ function scorerPool(squad: Squad): PlayerSeasonStat[] {
     assists: 0,
     yellowCards: 0,
   }));
+}
+
+export function playerStatsFromResults(
+  results: readonly FixtureResult[],
+  baseSeed: number,
+  playerClubSquad?: Squad,
+  rivalPlayers?: readonly Player[],
+): PlayerSeasonStat[] {
+  return simulateQuickPlayerStats(results, baseSeed, playerClubSquad, rivalPlayers);
 }
 
 function simulateQuickPlayerStats(

@@ -66,8 +66,28 @@ export function templateSquadForClub(teamId: TeamId): Squad | undefined {
   );
 }
 
-export function worldClubForTeam(teamId: TeamId): WorldClub | undefined {
+export function worldClubForTeam(
+  teamId: TeamId,
+  worldClubs?: readonly WorldClub[],
+): WorldClub | undefined {
+  if (worldClubs) {
+    return worldClubs.find((club) => club.id === teamId);
+  }
   return WORLD_CLUBS.get(teamId);
+}
+
+export function clubDisplayName(teamId: TeamId, worldClubs?: readonly WorldClub[]): string {
+  const worldClub = worldClubForTeam(teamId, worldClubs);
+  if (worldClub) return worldClub.name;
+  const template = templateSquadForClub(teamId);
+  return template?.team.name ?? teamId;
+}
+
+export function clubShortLabel(teamId: TeamId, worldClubs?: readonly WorldClub[]): string {
+  const worldClub = worldClubForTeam(teamId, worldClubs);
+  if (worldClub) return worldClub.short_name;
+  const template = templateSquadForClub(teamId);
+  return template?.team.shortName ?? template?.team.name ?? teamId;
 }
 
 export function squadForLeagueClub(

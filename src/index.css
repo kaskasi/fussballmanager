@@ -3056,6 +3056,184 @@ body {
   color: #fff;
 }
 
+.assistant-delegation {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 10px 28px rgb(15 23 42 / 8%);
+  display: grid;
+  gap: 0.85rem;
+}
+
+.assistant-delegation-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.assistant-delegation-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.assistant-delegation-meta {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.assistant-delegation-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.assistant-delegation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.assistant-delegation-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.assistant-delegation-icon {
+  font-size: 1.1rem;
+}
+
+.assistant-delegation-copy {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.assistant-delegation-copy strong {
+  font-size: 0.95rem;
+}
+
+.assistant-delegation-copy small {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.mentoring-panel,
+.scout-network {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 10px 28px rgb(15 23 42 / 8%);
+  display: grid;
+  gap: 0.85rem;
+}
+
+.mentoring-head h2,
+.scout-network-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.mentoring-meta,
+.scout-network-meta {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.mentoring-list,
+.scout-network-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.mentoring-row,
+.scout-network-row {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.scout-network-row {
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.mentoring-player strong,
+.scout-network-copy strong {
+  display: block;
+}
+
+.mentoring-player small,
+.scout-network-copy small {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.mentoring-progress {
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.mentoring-select select {
+  width: 100%;
+}
+
+.scout-network-market {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.scout-network-tier {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.75rem;
+}
+
+.scout-network-tier h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.scout-network-tier ul {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.scout-network-tier li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.transfers-league-feed {
+  margin-top: 0.5rem;
+}
+
 .training-staff {
   display: grid;
   gap: 1rem;

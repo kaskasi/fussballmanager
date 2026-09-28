@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SandboxPlan, Squad } from "@fussballmanager/shared";
 import type { TacticsPresetId, TacticsPresetSlot } from "./tactics-presets.ts";
 import type { Player } from "../types/player.ts";
@@ -116,41 +116,50 @@ function CareerMatchPlayback({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const playback = useMatchPlayback(view);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const opponentId =
-        setup.homeTeamId === setup.playerClubId ? setup.awayTeamId : setup.homeTeamId;
-      const opponentSquad = squadForLeagueClub(opponentId, rivalPlayers);
-      if (!opponentSquad) {
-        throw new Error("Gegnerkader konnte nicht geladen werden.");
-      }
-      const homeSquad =
-        setup.homeTeamId === setup.playerClubId ? playerClubSquad : opponentSquad;
-      const awaySquad =
-        setup.awayTeamId === setup.playerClubId ? playerClubSquad : opponentSquad;
-      const next = await fetchCareerMatchView({
-        seed: setup.seed,
-        homeTeamId: setup.homeTeamId,
-        awayTeamId: setup.awayTeamId,
-        homeSquad,
-        awaySquad,
-        playerClubSquad,
-      });
-      setView(next);
-    } catch (caught) {
-      setView(null);
-      setError(caught instanceof Error ? caught.message : "Spiel konnte nicht geladen werden");
-    } finally {
-      setLoading(false);
-    }
-  }, [setup, playerClubSquad, rivalPlayers]);
+  const rivalPlayersRef = useRef(rivalPlayers);
+  rivalPlayersRef.current = rivalPlayers;
+  const matchFetchKey = `${setup.seed}:${setup.homeTeamId}:${setup.awayTeamId}:${setup.playerClubId}`;
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    void (async () => {
+      try {
+        const opponentId =
+          setup.homeTeamId === setup.playerClubId ? setup.awayTeamId : setup.homeTeamId;
+        const opponentSquad = squadForLeagueClub(opponentId, rivalPlayersRef.current);
+        if (!opponentSquad) {
+          throw new Error("Gegnerkader konnte nicht geladen werden.");
+        }
+        const homeSquad =
+          setup.homeTeamId === setup.playerClubId ? playerClubSquad : opponentSquad;
+        const awaySquad =
+          setup.awayTeamId === setup.playerClubId ? playerClubSquad : opponentSquad;
+        const next = await fetchCareerMatchView({
+          seed: setup.seed,
+          homeTeamId: setup.homeTeamId,
+          awayTeamId: setup.awayTeamId,
+          homeSquad,
+          awaySquad,
+          playerClubSquad,
+        });
+        if (cancelled) return;
+        setView(next);
+      } catch (caught) {
+        if (cancelled) return;
+        setView(null);
+        setError(caught instanceof Error ? caught.message : "Spiel konnte nicht geladen werden");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [matchFetchKey, playerClubSquad, setup.awayTeamId, setup.homeTeamId, setup.playerClubId, setup.seed]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

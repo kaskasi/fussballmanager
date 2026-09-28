@@ -136,13 +136,60 @@ export function buyerEstimatedValue(player: Player, season: number, noise: numbe
   });
 }
 
-function sellerWillSell(player: Player, season: number, offer: number, asking: number): boolean {
+export function contractSeasonsLeft(player: Player, season: number): number {
+  return player.contract ? Math.max(0, player.contract.until_season - season) : 0;
+}
+
+export function academyOverflowPlayers(squad: readonly Player[]): Player[] {
+  const youngByPosition = new Map<string, Player[]>();
+  for (const player of squad) {
+    if (player.age > 21) continue;
+    const list = youngByPosition.get(player.position) ?? [];
+    list.push(player);
+    youngByPosition.set(player.position, list);
+  }
+  const overflow: Player[] = [];
+  for (const group of youngByPosition.values()) {
+    if (group.length < 3) continue;
+    const sorted = [...group].sort(
+      (left, right) =>
+        estimateCa(left.attributes, left.position) -
+        estimateCa(right.attributes, right.position),
+    );
+    overflow.push(...sorted.slice(0, group.length - 2));
+  }
+  return overflow;
+}
+
+export function sellPressurePlayers(
+  squad: readonly Player[],
+  season: number,
+): Player[] {
+  const pressure: Player[] = [];
+  for (const player of squad) {
+    const seasonsLeft = contractSeasonsLeft(player, season);
+    if (seasonsLeft <= 1) pressure.push(player);
+    else if (player.age >= 32 && estimateCa(player.attributes, player.position) < 88) {
+      pressure.push(player);
+    }
+  }
+  return pressure;
+}
+
+function sellerWillSell(
+  player: Player,
+  season: number,
+  offer: number,
+  asking: number,
+  forced = false,
+): boolean {
+  if (forced && offer >= asking * 0.75) return true;
   const reaction = evaluateOffer(offer, asking);
   if (reaction === "accept" || reaction === "counter") return true;
-  const seasonsLeft = player.contract ? player.contract.until_season - season : 0;
-  if (seasonsLeft <= 1 && offer >= asking * 0.85) return true;
+  const seasonsLeft = contractSeasonsLeft(player, season);
+  if (seasonsLeft <= 1 && offer >= asking * 0.82) return true;
   const ca = estimateCa(player.attributes, player.position);
-  return player.age >= 31 && offer >= asking * 0.9 && ca < 95;
+  return player.age >= 31 && offer >= asking * 0.88 && ca < 95;
 }
 
 function negotiateFee(asking: number, maxFee: number, rng: () => number): number {
@@ -200,7 +247,7 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
   const records: TransferRecord[] = [];
   const messages: string[] = [];
 
-  const maxDeals = transferWindowKind(input.week) === "summer" ? 2 : 1;
+  const maxDeals = transferWindowKind(input.week) === "summer" ? 3 : 2;
   const rng = weekRng(input.masterSeed, input.season, input.week, 0x5f6);
 
   for (let attempt = 0; attempt < maxDeals; attempt++) {
@@ -218,24 +265,35 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
     const headroom = buyerBudget.transfer_budget - buyerBudget.spent;
     if (headroom < 80_000) continue;
 
-    const sellerClubId = pickSellerClub(careerClubIds, buyerClubId, squads, rng);
+    const sellerClubId = pickSellerClub(careerClubIds, buyerClubId, squads, input.season, rng);
     if (!sellerClubId) continue;
 
     const sellerSquad = squads.get(sellerClubId) ?? [];
+    const overflowIds = new Set(
+      [...academyOverflowPlayers(sellerSquad), ...sellPressurePlayers(sellerSquad, input.season)].map(
+        (player) => player.id,
+      ),
+    );
     const candidates = sellerSquad
       .filter((player) => player.position === targetPosition || needs.length === 0)
       .map((player) => ({
         player,
         asking: sellerAskingPrice(player, input.season),
+        forced: overflowIds.has(player.id),
       }))
-      .filter((entry) => entry.asking <= headroom * 1.12)
-      .sort((left, right) => left.asking - right.asking);
+      .filter((entry) => entry.asking <= headroom * 1.15)
+      .sort((left, right) => {
+        if (left.forced !== right.forced) return left.forced ? -1 : 1;
+        return left.asking - right.asking;
+      });
 
     let deal: { player: Player; fee: number } | null = null;
-    for (const candidate of candidates.slice(0, 8)) {
+    for (const candidate of candidates.slice(0, 10)) {
       const fee = negotiateFee(candidate.asking, headroom, rng);
       if (fee <= 0) continue;
-      if (!sellerWillSell(candidate.player, input.season, fee, candidate.asking)) continue;
+      if (!sellerWillSell(candidate.player, input.season, fee, candidate.asking, candidate.forced)) {
+        continue;
+      }
       deal = { player: candidate.player, fee };
       break;
     }
@@ -313,11 +371,27 @@ function pickSellerClub(
   clubIds: readonly string[],
   buyerClubId: string,
   squads: Map<string, Player[]>,
+  season: number,
   rng: () => number,
 ): string | null {
-  const eligible = clubIds.filter((clubId) => clubId !== buyerClubId && (squads.get(clubId)?.length ?? 0) >= 12);
+  const eligible = clubIds.filter((clubId) => {
+    if (clubId === buyerClubId) return false;
+    const squad = squads.get(clubId) ?? [];
+    if (squad.length < 12) return false;
+    const pressure = sellPressurePlayers(squad, season);
+    const overflow = academyOverflowPlayers(squad);
+    return pressure.length > 0 || overflow.length > 0 || squad.length >= 16;
+  });
   if (eligible.length === 0) return null;
-  return eligible[Math.floor(rng() * eligible.length)] ?? null;
+  const weighted = eligible.flatMap((clubId) => {
+    const squad = squads.get(clubId) ?? [];
+    const weight =
+      1 +
+      sellPressurePlayers(squad, season).length +
+      academyOverflowPlayers(squad).length;
+    return Array.from({ length: weight }, () => clubId);
+  });
+  return weighted[Math.floor(rng() * weighted.length)] ?? null;
 }
 
 function pickSurplusPosition(squad: readonly Player[], rng: () => number): PositionPrimary | null {

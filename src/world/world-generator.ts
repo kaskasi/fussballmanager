@@ -411,9 +411,26 @@ export function legacyWorldState(masterSeed: number): WorldState {
   };
 }
 
+function clubShortNameFromPlace(place: string, used: Set<string>, index: number): string {
+  const letters = place.replace(/[^a-zA-ZäöüÄÖÜß]/g, "");
+  let base = letters.slice(0, 3).toUpperCase();
+  if (base.length < 3) {
+    base = `C${String(index + 1).padStart(2, "0")}`;
+  }
+  let candidate = base;
+  let suffix = 2;
+  while (used.has(candidate)) {
+    candidate = `${base.slice(0, 2)}${suffix}`;
+    suffix += 1;
+  }
+  used.add(candidate);
+  return candidate;
+}
+
 export function generateClubs(masterSeed: number): WorldClub[] {
   const places = shuffled(PLACES, deriveWorldSeed(masterSeed, "club-places", 0));
   const clubs: WorldClub[] = [];
+  const usedShortNames = new Set<string>(["NOR"]);
 
   for (let index = 0; index < GENERATED_CLUB_COUNT; index++) {
     const division_id: WorldDivisionId =
@@ -443,7 +460,7 @@ export function generateClubs(masterSeed: number): WorldClub[] {
     clubs.push({
       id: `world-${idHash}-${index}`,
       name: `${prefix} ${place}${suffix ? ` ${suffix}` : ""}`,
-      short_name: `C${String(index + 1).padStart(2, "0")}`,
+      short_name: clubShortNameFromPlace(place, usedShortNames, index),
       region: pick(REGIONS, random),
       division_id,
       identity: pick(IDENTITIES, random),

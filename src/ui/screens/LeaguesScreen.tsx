@@ -5,11 +5,11 @@ import type { ClubStadium } from "../../stadium/club-stadium.ts";
 import type { DivisionEconomyId } from "../../economy/division-economy.ts";
 import { totalSeasonMatchdays, type LeagueState } from "../../persistence/league-state.ts";
 import { divisionLabel, REGIONALLIGA_ID, OBERLIGA_ID } from "../../sim/league-divisions.ts";
-import { divisionStandings, leagueSliceForForm } from "../../sim/league-standings.ts";
+import { divisionLeaderLists, divisionStandings, leagueSliceForForm } from "../../sim/league-standings.ts";
 import { ClubProfileModal } from "../components/ClubProfileModal.tsx";
 import { LeagueLeaderLists } from "../components/LeagueLeaderLists.tsx";
 import { LeagueTable } from "../components/LeagueTable.tsx";
-import { topAssists, topScorers, topYellowCards } from "../../sim/league-week.ts";
+import type { WorldClub } from "../../world/world-generator.ts";
 
 const DIVISIONS: DivisionEconomyId[] = [REGIONALLIGA_ID, OBERLIGA_ID];
 
@@ -22,6 +22,7 @@ export function LeaguesScreen({
   masterSeed,
   players,
   rivalPlayers,
+  worldClubs,
   stadium,
   onOpenStadium,
 }: {
@@ -30,6 +31,7 @@ export function LeaguesScreen({
   masterSeed: number;
   players: readonly Player[];
   rivalPlayers: readonly Player[];
+  worldClubs: readonly WorldClub[];
   stadium: ClubStadium;
   onOpenStadium?: () => void;
 }) {
@@ -45,7 +47,10 @@ export function LeaguesScreen({
     [standings.clubIds, standings.results],
   );
   const matchdays = totalSeasonMatchdays({ club_ids: standings.clubIds, meetings_per_opponent: league.meetings_per_opponent });
-  const showLeaders = divisionId === league.division_id;
+  const leaders = useMemo(
+    () => divisionLeaderLists(league, standings, masterSeed, season, rivalPlayers),
+    [league, standings, masterSeed, season, rivalPlayers],
+  );
 
   return (
     <main className="leagues-screen">
@@ -84,6 +89,7 @@ export function LeaguesScreen({
           table={standings.table}
           leagueSlice={leagueSlice}
           playerClubId={league.player_club_id}
+          worldClubs={worldClubs}
           onSelectClub={setSelectedClubId}
         />
         <div className="leagues-screen-legend" aria-label="Tabellenzonen">
@@ -93,16 +99,16 @@ export function LeaguesScreen({
         </div>
       </section>
 
-      {showLeaders ? (
-        <section className="leagues-screen-leaders" aria-label="Saisonstatistik">
-          <LeagueLeaderLists
-            scorers={topScorers(league)}
-            assists={topAssists(league)}
-            yellows={topYellowCards(league)}
-            playerClubId={league.player_club_id}
-          />
-        </section>
-      ) : null}
+      <section className="leagues-screen-leaders" aria-label="Saisonstatistik">
+        <LeagueLeaderLists
+          scorers={leaders.scorers}
+          assists={leaders.assists}
+          yellows={leaders.yellows}
+          playerClubId={league.player_club_id}
+          worldClubs={worldClubs}
+          simulated={standings.simulated}
+        />
+      </section>
 
       {selectedClubId ? (
         <ClubProfileModal

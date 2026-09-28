@@ -73,6 +73,20 @@ import {
   pickAiBuyerClub,
 } from "./transfers/player-sales.ts";
 import { COACH_ROLE_LABELS, hireCoach, type Coach } from "./staff/coaching-staff.ts";
+import {
+  applyAssistantDelegationWeek,
+  assistantQuality,
+  normalizeAssistantDelegation,
+  type AssistantDelegation,
+  type AssistantDelegationTask,
+} from "./staff/assistant-delegation.ts";
+import { assignMentor, clearMentor } from "./development/mentoring.ts";
+import {
+  fireScout,
+  hireScout,
+  scoutNetworkCapacity,
+  type HiredScout,
+} from "./scouting/scout-network.ts";
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
 import { FinancesScreen } from "./ui/screens/FinancesScreen.tsx";
 import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
@@ -252,7 +266,10 @@ export default function App() {
     world,
     lastSeasonAwards,
     storyState,
+    assistantDelegation,
+    scoutNetwork,
   } = session;
+  const scoutCapacity = scoutNetworkCapacity(scoutNetwork);
 
   function sessionWithEvent(
     current: ReturnType<typeof sessionFromSave>,
@@ -273,6 +290,30 @@ export default function App() {
     });
     flashSaveToast();
   }, [activeSlot, flashSaveToast]);
+
+  useEffect(() => {
+    if (!careerMatchSetup || !assistantDelegation.lineup) return;
+    patchSession((current) => {
+      const delegated = applyAssistantDelegationWeek({
+        delegation: { lineup: true, training: false, scouting: false },
+        assistantName: current.storyState.cast.assistant_name,
+        quality: assistantQuality(current.coachingStaff),
+        players: current.players,
+        clubId: current.clubId,
+        trainingPlan: current.trainingPlan,
+        scoutBoard: current.scoutBoard,
+        rivalPlayers: current.rivalPlayers,
+        tacticsPresets: current.tacticsPresets,
+        matchLineup: current.matchLineup,
+        season: current.season,
+        week: current.week,
+        masterSeed: current.masterSeed,
+        hasPlayerFixture: true,
+      });
+      if (!delegated.matchLineup) return current;
+      return { ...current, matchLineup: delegated.matchLineup };
+    });
+  }, [careerMatchSetup, assistantDelegation.lineup, patchSession]);
 
   const finishWeekSimulation = useCallback(async (watchedMatch?: WatchedPlayerMatch | null) => {
     const snapshot = sessionFromSave(save);
@@ -343,6 +384,14 @@ export default function App() {
       setCareerMatchSetup(null);
     },
     [finishWeekSimulation, patchSession, simulating],
+  );
+  const handleCareerMatchComplete = useCallback(
+    (outcome: WatchedPlayerMatch) => void completeCareerMatch(outcome, false),
+    [completeCareerMatch],
+  );
+  const handleCareerMatchSkip = useCallback(
+    (outcome: WatchedPlayerMatch) => void completeCareerMatch(outcome, true),
+    [completeCareerMatch],
   );
 
   const openInbox = useCallback(
@@ -467,7 +516,92 @@ export default function App() {
     (playerId: string) => {
       patchSession((current) => ({
         ...current,
-        scoutBoard: assignScout(current.scoutBoard, playerId),
+        scoutBoard: assignScout(
+          current.scoutBoard,
+          playerId,
+          scoutNetworkCapacity(current.scoutNetwork),
+        ),
+      }));
+    },
+    [patchSession],
+  );
+
+  const handleHireScout = useCallback(
+    (scout: HiredScout) => {
+      patchSession((current) => {
+        if (current.finances.cash < scout.wage_weekly * 4) {
+          return sessionWithEvent(
+            current,
+            "finance",
+            `Zu wenig Cash für Scout ${scout.name}.`,
+          );
+        }
+        return sessionWithEvent(
+          {
+            ...current,
+            scoutNetwork: hireScout(current.scoutNetwork, scout),
+          },
+          "info",
+          `Scout eingestellt: ${scout.name}.`,
+        );
+      });
+    },
+    [patchSession],
+  );
+
+  const handleFireScout = useCallback(
+    (scoutId: string) => {
+      patchSession((current) => {
+        const scout = current.scoutNetwork.scouts.find((entry) => entry.id === scoutId);
+        if (!scout) return current;
+        if (current.scoutNetwork.scouts.length <= 1) {
+          return sessionWithEvent(current, "info", "Mindestens ein Scout muss im Netzwerk bleiben.");
+        }
+        return sessionWithEvent(
+          {
+            ...current,
+            scoutNetwork: fireScout(current.scoutNetwork, scoutId),
+          },
+          "info",
+          `${scout.name} verlässt das Scout-Netzwerk.`,
+        );
+      });
+    },
+    [patchSession],
+  );
+
+  const handleAssignMentor = useCallback(
+    (menteeId: string, mentorId: string) => {
+      patchSession((current) => {
+        const mentee = current.players.find((player) => player.id === menteeId);
+        const mentor = current.players.find((player) => player.id === mentorId);
+        if (!mentee || !mentor) return current;
+        const result = assignMentor(mentee, mentor, current.season, current.week);
+        if ("error" in result) {
+          return sessionWithEvent(current, "info", result.error);
+        }
+        return sessionWithEvent(
+          {
+            ...current,
+            players: current.players.map((player) =>
+              player.id === menteeId ? result.player : player,
+            ),
+          },
+          "profile",
+          result.message,
+        );
+      });
+    },
+    [patchSession],
+  );
+
+  const handleClearMentor = useCallback(
+    (menteeId: string) => {
+      patchSession((current) => ({
+        ...current,
+        players: current.players.map((player) =>
+          player.id === menteeId ? clearMentor(player) : player,
+        ),
       }));
     },
     [patchSession],
@@ -911,6 +1045,19 @@ export default function App() {
     [patchSession],
   );
 
+  const handleAssistantDelegationChange = useCallback(
+    (task: AssistantDelegationTask, enabled: boolean) => {
+      patchSession((current) => ({
+        ...current,
+        assistantDelegation: normalizeAssistantDelegation({
+          ...current.assistantDelegation,
+          [task]: enabled,
+        }),
+      }));
+    },
+    [patchSession],
+  );
+
   const handleHireCoach = useCallback(
     (coach: Coach) => {
       patchSession((current) => {
@@ -1075,8 +1222,8 @@ export default function App() {
           onSaveTacticsPreset={handleSaveTacticsPreset}
           onSaveMatchLineup={handleSaveMatchLineup}
           simulating={simulating}
-          onComplete={(outcome) => void completeCareerMatch(outcome, false)}
-          onSkip={(outcome) => void completeCareerMatch(outcome, true)}
+          onComplete={handleCareerMatchComplete}
+          onSkip={handleCareerMatchSkip}
           onNavActionChange={setMatchNavAction}
         />
         {saveManagerOverlay}
@@ -1259,6 +1406,11 @@ export default function App() {
           masterSeed={masterSeed}
           cash={finances.cash}
           onHireCoach={handleHireCoach}
+          assistantName={storyState.cast.assistant_name}
+          assistantDelegation={assistantDelegation}
+          onAssistantDelegationChange={handleAssistantDelegationChange}
+          onAssignMentor={handleAssignMentor}
+          onClearMentor={handleClearMentor}
         />
       ) : null}
       {inboxOpen && pendingInboxItems(youthInbox, players).length > 0 ? (
@@ -1301,6 +1453,14 @@ export default function App() {
           onBack={() => setScreen("hub")}
           onSelectTarget={(playerId) => setForeignPlayerId(playerId)}
           onAssignScout={handleAssignScout}
+          scoutNetwork={scoutNetwork}
+          scoutCapacity={scoutCapacity}
+          masterSeed={masterSeed}
+          season={season}
+          week={week}
+          cash={finances.cash}
+          onHireScout={handleHireScout}
+          onFireScout={handleFireScout}
         />
       ) : null}
       {screen === "transfers" ? (
@@ -1343,6 +1503,7 @@ export default function App() {
           masterSeed={session.masterSeed}
           players={players}
           rivalPlayers={rivalPlayers}
+          worldClubs={world.clubs}
           stadium={stadium}
           onOpenStadium={() => setScreen("stadium")}
         />

@@ -1,23 +1,31 @@
 import type { PlayerSeasonStat, TeamId } from "@fussballmanager/shared";
 import type { LeagueState } from "../../persistence/league-state.ts";
-import { clubShortName } from "../../sim/league-week.ts";
+import { clubShortLabel } from "../../sim/league-divisions.ts";
+import type { WorldClub } from "../../world/world-generator.ts";
 
 export function LeagueLeaderLists({
   scorers,
   assists,
   yellows,
   playerClubId,
+  worldClubs,
+  simulated = false,
 }: {
   scorers: readonly PlayerSeasonStat[];
   assists: readonly PlayerSeasonStat[];
   yellows: readonly PlayerSeasonStat[];
   playerClubId: LeagueState["player_club_id"];
+  worldClubs?: readonly WorldClub[];
+  simulated?: boolean;
 }) {
   return (
     <div className="league-leaders" aria-label="Liga-Statistik">
-      <LeaderList title="⚽ Torschützen" rows={scorers} field="goals" playerClubId={playerClubId} />
-      <LeaderList title="🅰️ Assists" rows={assists} field="assists" playerClubId={playerClubId} />
-      <LeaderList title="🟨 Gelbe Karten" rows={yellows} field="yellowCards" playerClubId={playerClubId} />
+      {simulated ? (
+        <p className="leagues-screen-meta">Saisonstatistik aus Auto-Sim (Schätzwerte)</p>
+      ) : null}
+      <LeaderList title="⚽ Torschützen" rows={scorers} field="goals" playerClubId={playerClubId} worldClubs={worldClubs} />
+      <LeaderList title="🅰️ Assists" rows={assists} field="assists" playerClubId={playerClubId} worldClubs={worldClubs} />
+      <LeaderList title="🟨 Gelbe Karten" rows={yellows} field="yellowCards" playerClubId={playerClubId} worldClubs={worldClubs} />
     </div>
   );
 }
@@ -27,11 +35,13 @@ function LeaderList({
   rows,
   field,
   playerClubId,
+  worldClubs,
 }: {
   title: string;
   rows: readonly PlayerSeasonStat[];
   field: "goals" | "assists" | "yellowCards";
   playerClubId: LeagueState["player_club_id"];
+  worldClubs?: readonly WorldClub[];
 }) {
   return (
     <div className="league-leader-card">
@@ -44,7 +54,7 @@ function LeaderList({
               className={row.teamId === playerClubId ? "is-player-club" : undefined}
             >
               <span className="league-leader-name">{row.name}</span>
-              <span className="league-leader-club">{clubShortName(row.teamId)}</span>
+              <span className="league-leader-club">{clubShortLabel(row.teamId, worldClubs)}</span>
               <strong>{row[field]}</strong>
             </li>
           ))}

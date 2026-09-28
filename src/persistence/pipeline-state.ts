@@ -15,6 +15,11 @@ import type { CoachingStaff } from "../staff/coaching-staff.ts";
 import type { Player } from "../types/player.ts";
 import type { SeasonAwardsSnapshot } from "../sim/season-awards.ts";
 import { defaultStoryState, type StoryState } from "../narrative/story-state.ts";
+import {
+  DEFAULT_ASSISTANT_DELEGATION,
+  type AssistantDelegation,
+} from "../staff/assistant-delegation.ts";
+import type { ScoutNetworkState } from "../scouting/scout-network.ts";
 
 /** Dynamic hub state stored in `state.json` (PRD 08). */
 export interface PipelineState {
@@ -43,6 +48,10 @@ export interface PipelineState {
   last_season_awards?: SeasonAwardsSnapshot;
   /** PRD 13 — relegation narrative slice state. */
   story_state?: StoryState;
+  /** F8.5 — per-task assistant auto-delegation. */
+  assistant_delegation?: AssistantDelegation;
+  /** F4.3 — hired scout tiers and capacity. */
+  scout_network?: ScoutNetworkState;
 }
 
 export function defaultPipelineState(week = 1): PipelineState {

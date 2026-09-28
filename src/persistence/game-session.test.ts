@@ -93,10 +93,11 @@ describe("game session", () => {
     expect(loaded?.state.pipeline?.training_plan).toHaveLength(5);
     expect(loaded?.state.pipeline?.youth_inbox.queue.length).toBeGreaterThan(0);
     expect(loaded?.state.world).toMatchObject({
-      generation_version: 0,
+      generation_version: 1,
       world_seed: 2026,
-      clubs: [],
     });
+    expect(loaded?.state.world?.clubs).toHaveLength(36);
+    expect(loaded?.state.league?.league_pools?.["regionalliga-nord"]).toHaveLength(18);
     removeLocalSave(1);
   });
 });

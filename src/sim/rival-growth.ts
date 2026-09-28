@@ -198,7 +198,7 @@ export function normalizeRivalPlayers(
   masterSeed: number,
 ): Player[] {
   const existing = rivalPlayers ?? [];
-  if (existing.length > 0) return [...existing];
+  if (existing.length > 0) return existing as Player[];
   return initializeRivalPlayers(masterSeed);
 }
 

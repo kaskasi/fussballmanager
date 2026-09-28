@@ -57,6 +57,14 @@ import {
 } from "../world/world-generator.ts";
 import { normalizeStoryState, type StoryState } from "../narrative/story-state.ts";
 import { boardWithSurvivalArc, initializeStoryForNewGame } from "../narrative/opening.ts";
+import {
+  normalizeAssistantDelegation,
+  type AssistantDelegation,
+} from "../staff/assistant-delegation.ts";
+import {
+  normalizeScoutNetwork,
+  type ScoutNetworkState,
+} from "../scouting/scout-network.ts";
 
 export const DEFAULT_SLOT = 1;
 export const DEFAULT_CLUB_ID = "cl_fc_nordstern";
@@ -90,6 +98,8 @@ export interface GameSession {
   world: WorldState;
   lastSeasonAwards?: SeasonAwardsSnapshot;
   storyState: StoryState;
+  assistantDelegation: AssistantDelegation;
+  scoutNetwork: ScoutNetworkState;
 }
 
 export function newGameSession(now = new Date()): GameSession {
@@ -176,7 +186,10 @@ export function sessionFromSave(save: SaveGame): GameSession {
       normalizeYouthInbox(pipeline.youth_inbox ?? emptyInbox(save.state.week)),
       save.players,
     ),
-    league: normalizeLeagueState(save.state.league ?? defaultLeagueState()),
+    league: normalizeLeagueState(
+      save.state.league ?? defaultLeagueState(),
+      save.rng_state.master_seed,
+    ),
     transferState: normalizeTransferState(pipeline.transfer_state),
     finances: pipeline.club_finances ?? defaultClubFinances(),
     stadium: normalizeClubStadium(pipeline.club_stadium ?? defaultClubStadium()),
@@ -195,6 +208,12 @@ export function sessionFromSave(save: SaveGame): GameSession {
     world: save.state.world ?? legacyWorldState(save.rng_state.master_seed),
     lastSeasonAwards: pipeline.last_season_awards,
     storyState: normalizeStoryState(pipeline.story_state, save.state.week),
+    assistantDelegation: normalizeAssistantDelegation(pipeline.assistant_delegation),
+    scoutNetwork: normalizeScoutNetwork(
+      pipeline.scout_network,
+      save.state.season,
+      save.rng_state.master_seed,
+    ),
   };
   return syncManagerClubWithBoard(session);
 }
@@ -217,6 +236,8 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     coaching_staff: session.coachingStaff,
     last_season_awards: session.lastSeasonAwards,
     story_state: session.storyState,
+    assistant_delegation: session.assistantDelegation,
+    scout_network: session.scoutNetwork,
   };
   const iso = now.toISOString();
 

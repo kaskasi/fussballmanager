@@ -33,6 +33,7 @@ export interface WeeklyFinanceContext {
   week: number;
   stadium?: ClubStadium;
   coachingStaff?: CoachingStaff;
+  scoutWagesWeekly?: number;
 }
 
 export interface WeeklyFinanceResult {
@@ -153,9 +154,11 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
     { kind: "player_wages", amount: -weeklyWageBill(context.players, context.clubId), week },
     {
       kind: "staff_wages",
-      amount: -(context.coachingStaff
-        ? weeklyStaffWageBill(context.coachingStaff)
-        : economy.staff_wages_weekly),
+      amount: -(
+        (context.coachingStaff
+          ? weeklyStaffWageBill(context.coachingStaff)
+          : economy.staff_wages_weekly) + (context.scoutWagesWeekly ?? 0)
+      ),
       week,
     },
     { kind: "facility_maintenance", amount: -economy.maintenance_weekly, week },

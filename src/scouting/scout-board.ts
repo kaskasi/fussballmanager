@@ -5,7 +5,6 @@ import {
   type WorldClub,
 } from "../world/world-generator.ts";
 import {
-  applyObservation,
   applyQuietWeek,
   confidenceLabel,
   type AbilityEstimate,
@@ -23,6 +22,12 @@ import {
   type ScoutAssignment,
   type ScoutDiscoveryAlert,
 } from "./scout-assignments.ts";
+import {
+  applyObservationWithAccuracy,
+  scoutNetworkAccuracyModifier,
+  scoutNetworkCapacity,
+  type ScoutNetworkState,
+} from "./scout-network.ts";
 
 export interface BoardTarget extends ScoutedTarget {
   assigned: boolean;
@@ -150,11 +155,15 @@ export function getBoardTarget(
     : null;
 }
 
-export function assignScout(board: ScoutBoard, playerId: string): ScoutBoard {
+export function assignScout(
+  board: ScoutBoard,
+  playerId: string,
+  capacity = DEFAULT_SCOUT_CAPACITY,
+): ScoutBoard {
   const normalized = normalizeScoutBoard(board);
   const target = normalized.targets[playerId];
   if (!target || target.assigned) return normalized;
-  if (activeScoutCount(normalized) >= DEFAULT_SCOUT_CAPACITY) return normalized;
+  if (activeScoutCount(normalized) >= capacity) return normalized;
   return {
     ...normalized,
     targets: {
@@ -202,6 +211,7 @@ export function syncAssignmentTargets(
   board: ScoutBoard,
   rivalPlayers: readonly Player[],
   clubs: readonly WorldClub[] = [],
+  capacity = DEFAULT_SCOUT_CAPACITY,
 ): ScoutBoard {
   const normalized = normalizeScoutBoard(board);
   const targets = listBoardTargets(normalized, rivalPlayers, clubs);
@@ -209,7 +219,7 @@ export function syncAssignmentTargets(
   if (assignments.length === 0) return normalized;
 
   let nextTargets = { ...normalized.targets };
-  let slots = DEFAULT_SCOUT_CAPACITY - activeScoutCount(normalized);
+  let slots = capacity - activeScoutCount(normalized);
   for (const assignment of assignments) {
     const matches = targetsForAssignment(assignment, targets).filter(
       (target) => !nextTargets[target.player.id]?.assigned,
@@ -235,8 +245,11 @@ export function advanceScoutWeek(
   week: number,
   rivalPlayers: readonly Player[] = [],
   clubs: readonly WorldClub[] = [],
+  network?: ScoutNetworkState,
 ): ScoutBoard {
-  const synced = syncAssignmentTargets(board, rivalPlayers, clubs);
+  const capacity = network ? scoutNetworkCapacity(network) : DEFAULT_SCOUT_CAPACITY;
+  const accuracy = network ? scoutNetworkAccuracyModifier(network) : 1;
+  const synced = syncAssignmentTargets(board, rivalPlayers, clubs, capacity);
   const normalized = normalizeScoutBoard(synced);
   const targets: Record<string, ScoutKnowledgeTarget> = {};
   const reports: ScoutReport[] = [];
@@ -257,7 +270,7 @@ export function advanceScoutWeek(
     const knowledge: PlayerKnowledge = { status: "scouted", estimate: target.estimate };
     const beforeRange = target.estimate.uncertaintyRange;
     const next = target.assigned
-      ? applyObservation(knowledge, "scout_visit_report")
+      ? applyObservationWithAccuracy(knowledge, "scout_visit_report", accuracy)
       : applyQuietWeek(knowledge);
     const estimate = next.status === "scouted" ? next.estimate : target.estimate;
     targets[playerId] = { ...target, playerId, estimate };

@@ -1,7 +1,8 @@
 import { NORDSTERN_ID } from "@fussballmanager/shared";
 import type { FixtureResult, PlayerSeasonStat, TeamId } from "@fussballmanager/shared";
 import type { DivisionEconomyId } from "../economy/division-economy.ts";
-import { defaultLeaguePools } from "../sim/league-divisions.ts";
+import { CLUBS_PER_DIVISION } from "../world/world-generator.ts";
+import { DEFAULT_WORLD_SEED, defaultLeaguePools } from "../sim/league-divisions.ts";
 
 /** 18-team double round robin: 17 opponents × 2 = 34 league games. */
 export const LEAGUE_MEETINGS_PER_OPPONENT = 2;
@@ -52,16 +53,26 @@ export function resetLeagueSeason(league: LeagueState): LeagueState {
   };
 }
 
-export function normalizeLeagueState(league: LeagueState): LeagueState {
-  const pools = league.league_pools ?? defaultLeaguePools();
+export function normalizeLeagueState(
+  league: LeagueState,
+  masterSeed = DEFAULT_WORLD_SEED,
+): LeagueState {
   const division_id = league.division_id ?? "regionalliga-nord";
+  const storedPools = league.league_pools;
+  const regCount = storedPools?.["regionalliga-nord"]?.length ?? 0;
+  const oberCount = storedPools?.["oberliga-nord"]?.length ?? 0;
+  const poolsIncomplete = regCount < CLUBS_PER_DIVISION || oberCount < CLUBS_PER_DIVISION;
+  const pools = poolsIncomplete || !storedPools
+    ? defaultLeaguePools(masterSeed)
+    : storedPools;
+  const clubIdsIncomplete = (league.club_ids?.length ?? 0) < CLUBS_PER_DIVISION;
   return {
     ...league,
     division_id,
     league_pools: pools,
-    club_ids: league.club_ids?.length
-      ? [...league.club_ids]
-      : [...(pools[division_id] ?? [])],
+    club_ids: clubIdsIncomplete || !league.club_ids?.length
+      ? [...(pools[division_id] ?? [])]
+      : [...league.club_ids],
     meetings_per_opponent: league.meetings_per_opponent ?? LEAGUE_MEETINGS_PER_OPPONENT,
     player_stats: league.player_stats ?? [],
     career_player_stats: league.career_player_stats ?? [],

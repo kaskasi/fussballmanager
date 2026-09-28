@@ -35,4 +35,9 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_035_generated_world",
   "migration_036_scout_knowledge",
   "migration_037_growth_rebalance",
+  "migration_038_scout_negotiations",
+  "migration_039_story_state",
+  "migration_040_expand_generated_world",
+  "migration_041_assistant_delegation",
+  "migration_042_m2_features",
 ] as const;

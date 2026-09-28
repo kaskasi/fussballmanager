@@ -47,6 +47,8 @@ export interface Player {
     recent_weekly_minutes: number[];
     /** F3.5 — trains with pros for `ends_week` inclusive, then auto-promotion check. */
     pro_trial?: ProTrialState;
+    /** F2.4 — assigned veteran mentor for breakout eligibility (PRD 06.2). */
+    mentorship?: MentorshipState;
     modifiers: TemporaryModifier[];
   };
 
@@ -106,6 +108,12 @@ export interface ProTrialState {
   started_week: number;
   /** Inclusive last week training with the pro squad. */
   ends_week: number;
+}
+
+export interface MentorshipState {
+  mentor_player_id: string;
+  since_season: number;
+  since_week: number;
 }
 
 export interface TemporaryModifier {

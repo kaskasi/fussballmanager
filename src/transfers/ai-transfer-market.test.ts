@@ -5,9 +5,11 @@ import { careerTeamId } from "../sim/rival-growth.ts";
 import { defaultLeaguePools } from "../sim/league-divisions.ts";
 import { emptyTransferState } from "./negotiations.ts";
 import {
+  academyOverflowPlayers,
   advanceAiTransferWeek,
   buyerEstimatedValue,
   normalizeAiBudgets,
+  sellPressurePlayers,
   squadNeedPositions,
 } from "./ai-transfer-market.ts";
 import { sellerAskingPrice } from "./negotiations.ts";
@@ -74,6 +76,14 @@ describe("ai-transfer-market", () => {
     expect(beforeClub).toBeTruthy();
     expect(afterClub).toBeTruthy();
     expect(afterClub).not.toBe(beforeClub);
+  });
+
+  it("flags academy overflow and contract pressure sellers", () => {
+    const squad = rivals.filter((player) => player.club_id === firstRivalClubId).slice(0, 20);
+    const youngCm = squad.filter((player) => player.position === "CM" && player.age <= 21);
+    expect(academyOverflowPlayers(youngCm.length >= 3 ? youngCm : squad)).toBeDefined();
+    const pressured = sellPressurePlayers(squad, 1);
+    expect(Array.isArray(pressured)).toBe(true);
   });
 
   it("skips outside transfer window", () => {

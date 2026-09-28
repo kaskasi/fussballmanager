@@ -2,17 +2,20 @@ import type { TableRow, TeamId } from "@fussballmanager/shared";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { formSparkline, teamForm } from "../../sim/league-form.ts";
 import { promotionZoneRank } from "../../sim/promotion-relegation.ts";
-import { clubShortName } from "../../sim/league-week.ts";
+import { clubDisplayName } from "../../sim/league-divisions.ts";
+import type { WorldClub } from "../../world/world-generator.ts";
 
 export function LeagueTable({
   table,
   leagueSlice,
   playerClubId,
+  worldClubs,
   onSelectClub,
 }: {
   table: TableRow[];
   leagueSlice: Pick<LeagueState, "club_ids" | "results">;
   playerClubId: TeamId;
+  worldClubs?: readonly WorldClub[];
   onSelectClub?: (teamId: TeamId) => void;
 }) {
   return (
@@ -52,10 +55,10 @@ export function LeagueTable({
                       className="league-club-link"
                       onClick={() => onSelectClub(row.teamId)}
                     >
-                      {clubShortName(row.teamId)}
+                      {clubDisplayName(row.teamId, worldClubs)}
                     </button>
                   ) : (
-                    clubShortName(row.teamId)
+                    clubDisplayName(row.teamId, worldClubs)
                   )}
                 </td>
                 <td>{row.played}</td>

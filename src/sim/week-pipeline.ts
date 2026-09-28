@@ -37,6 +37,12 @@ import { advanceRivalGrowthWeek } from "./rival-growth.ts";
 import { applyWeeklyFitnessBatch } from "../development/fitness-management.ts";
 import type { WatchedPlayerMatch } from "./watched-player-match.ts";
 import { advanceNarrativeWeek } from "../narrative/pipeline-week.ts";
+import { advanceMentorshipWeek } from "../development/mentoring.ts";
+import { scoutNetworkWeeklyWage } from "../scouting/scout-network.ts";
+import {
+  applyAssistantDelegationWeek,
+  assistantQuality,
+} from "../staff/assistant-delegation.ts";
 
 export interface WeekSimResult {
   session: GameSession;
@@ -66,9 +72,10 @@ export function appendBreakoutNarrativesToEvents(
 }
 
 export async function simulateGameWeek(
-  session: GameSession,
+  sessionInput: GameSession,
   watchedPlayerMatch?: WatchedPlayerMatch | null,
 ): Promise<WeekSimResult> {
+  let session = sessionInput;
   const { nextWeek, footballSeasonEnded } = advanceCalendarWeek(session.week);
   const leagueStep = await advanceLeagueWeek(
     session.league,
@@ -79,6 +86,34 @@ export async function simulateGameWeek(
     session.rivalPlayers,
     watchedPlayerMatch,
   );
+
+  const delegationStep = applyAssistantDelegationWeek({
+    delegation: session.assistantDelegation,
+    assistantName: session.storyState.cast.assistant_name,
+    quality: assistantQuality(session.coachingStaff),
+    players: session.players,
+    clubId: session.clubId,
+    trainingPlan: session.trainingPlan,
+    scoutBoard: session.scoutBoard,
+    rivalPlayers: session.rivalPlayers,
+    tacticsPresets: session.tacticsPresets,
+    matchLineup: session.matchLineup,
+    season: session.season,
+    week: nextWeek,
+    masterSeed: session.masterSeed,
+    hasPlayerFixture: leagueStep.playerFixture != null,
+  });
+  let clubEvents = session.clubEvents;
+  for (const message of delegationStep.messages) {
+    clubEvents = withClubEvent(clubEvents, session.season, nextWeek, "info", message);
+  }
+  session = {
+    ...session,
+    trainingPlan: delegationStep.trainingPlan ?? session.trainingPlan,
+    scoutBoard: delegationStep.scoutBoard ?? session.scoutBoard,
+    matchLineup: delegationStep.matchLineup ?? session.matchLineup,
+    clubEvents,
+  };
 
   const playersAtWeekStart = session.players;
   const sessions = planToSessions(session.trainingPlan);
@@ -136,6 +171,7 @@ export async function simulateGameWeek(
   );
   players = expireBreakoutModifiers(breakouts.players, nextWeek);
   players = refreshAllMarketValues(players, session.season);
+  players = advanceMentorshipWeek(players, session.season, nextWeek);
 
   const advanced = advanceInboxWeek(
     session.youthInbox,
@@ -163,6 +199,7 @@ export async function simulateGameWeek(
     week: nextWeek,
     stadium,
     coachingStaff: session.coachingStaff,
+    scoutWagesWeekly: scoutNetworkWeeklyWage(session.scoutNetwork),
   });
   const finances = financeStep.finances;
   const playersWithGrowth = stampWeeklyGrowthBatch(playersAtWeekStart, playersWithMorale);
@@ -185,8 +222,8 @@ export async function simulateGameWeek(
   rivalPlayers = expireBreakoutModifiers(rivalBreakouts.players, nextWeek);
 
   let transferState = session.transferState;
-  let clubEvents = appendBreakoutNarrativesToEvents(
-    session.clubEvents,
+  clubEvents = appendBreakoutNarrativesToEvents(
+    clubEvents,
     breakouts.narratives,
     session.season,
     nextWeek,
@@ -209,7 +246,13 @@ export async function simulateGameWeek(
   }
 
   const scoutBoard = reconcileScoutBoard(
-    advanceScoutWeek(session.scoutBoard, nextWeek, rivalPlayers, session.world.clubs),
+    advanceScoutWeek(
+      session.scoutBoard,
+      nextWeek,
+      rivalPlayers,
+      session.world.clubs,
+      session.scoutNetwork,
+    ),
     rivalPlayers,
   );
   for (const alert of discoveryAlertsForWeek(scoutBoard, nextWeek)) {

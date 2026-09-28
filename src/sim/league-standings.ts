@@ -1,8 +1,21 @@
-import { standings, type FixtureResult, type TableRow, type TeamId } from "@fussballmanager/shared";
+import {
+  standings,
+  topByStat,
+  type FixtureResult,
+  type PlayerSeasonStat,
+  type TableRow,
+  type TeamId,
+} from "@fussballmanager/shared";
 import type { DivisionEconomyId } from "../economy/division-economy.ts";
 import type { LeagueState } from "../persistence/league-state.ts";
 import { totalSeasonMatchdays } from "../persistence/league-state.ts";
 import { clubIdsForDivision, defaultLeaguePools } from "./league-divisions.ts";
+import {
+  playerStatsFromResults,
+  topAssists,
+  topScorers,
+  topYellowCards,
+} from "./league-week.ts";
 import { simulatePartialDivisionSeason } from "./promotion-relegation.ts";
 import type { Player } from "../types/player.ts";
 
@@ -75,5 +88,40 @@ export function leagueSliceForForm(
   return {
     club_ids: [...clubIds],
     results: [...results],
+  };
+}
+
+export interface DivisionLeaderLists {
+  scorers: PlayerSeasonStat[];
+  assists: PlayerSeasonStat[];
+  yellows: PlayerSeasonStat[];
+}
+
+export function divisionLeaderLists(
+  league: LeagueState,
+  standings: DivisionStandings,
+  masterSeed: number,
+  season: number,
+  rivalPlayers: readonly Player[] = [],
+  limit = 3,
+): DivisionLeaderLists {
+  if (!standings.simulated) {
+    return {
+      scorers: topScorers(league, limit),
+      assists: topAssists(league, limit),
+      yellows: topYellowCards(league, limit),
+    };
+  }
+
+  const stats = playerStatsFromResults(
+    standings.results,
+    divisionSeed(masterSeed, season, standings.divisionId),
+    undefined,
+    rivalPlayers,
+  );
+  return {
+    scorers: topByStat(stats, "goals", limit),
+    assists: topByStat(stats, "assists", limit),
+    yellows: topByStat(stats, "yellowCards", limit),
   };
 }

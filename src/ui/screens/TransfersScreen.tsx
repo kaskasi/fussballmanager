@@ -53,6 +53,10 @@ export function TransfersScreen({
     () => recordsForSeason(history, selectedSeason),
     [history, selectedSeason],
   );
+  const leagueTransfers = useMemo(
+    () => seasonRecords.filter((record) => record.kind === "ai").slice(0, 8),
+    [seasonRecords],
+  );
 
   return (
     <main className="transfers">
@@ -130,6 +134,38 @@ export function TransfersScreen({
               </tbody>
             </table>
           </div>
+        )}
+      </section>
+
+      <section className="transfers-section" aria-label="Liga-Markt">
+        <h2>💱 Liga-Markt</h2>
+        <Hint text="KI-Clubs handeln untereinander in Transferfenstern — dieselben Marktwert-Formeln wie du (F5.6)." block>
+          <p className="transfers-window-hint">Aktuelle Liga-Deals dieser Saison</p>
+        </Hint>
+        {leagueTransfers.length === 0 ? (
+          <p className="transfers-empty-inline">Noch keine Liga-Transfers in S{selectedSeason}.</p>
+        ) : (
+          <ul className="transfers-history transfers-league-feed">
+            {leagueTransfers.map((record) => (
+              <li key={record.id}>
+                <button
+                  type="button"
+                  className="transfers-history-row"
+                  onClick={() => onSelectPlayer(record.player_id)}
+                >
+                  <span className="transfers-history-icon" aria-hidden="true">💱</span>
+                  <span className="transfers-history-main">
+                    <strong>{record.player_name}</strong>
+                    <small>
+                      {record.other_club_name}
+                      {record.fee != null ? ` · ${formatClubCash(record.fee)}` : ""}
+                      {" · "}KW {record.week}
+                    </small>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 

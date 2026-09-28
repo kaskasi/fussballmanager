@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MatchView, MatchViewFrame } from "@fussballmanager/shared";
 import { frameDurationMs } from "./lerp";
+import { compressGkCbRecycleFrames } from "./match-presentation.ts";
 
 export function frameAt(view: MatchView, index: number): MatchViewFrame {
   return view.frames[Math.min(Math.max(index, 0), view.frames.length - 1)] ??
@@ -8,6 +9,10 @@ export function frameAt(view: MatchView, index: number): MatchViewFrame {
 }
 
 export function useMatchPlayback(view: MatchView | null) {
+  const presented = useMemo(
+    () => (view ? compressGkCbRecycleFrames(view) : null),
+    [view],
+  );
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
@@ -16,13 +21,13 @@ export function useMatchPlayback(view: MatchView | null) {
   useEffect(() => {
     setIndex(0);
     setPlaying(false);
-  }, [view?.seed, view?.eventCount]);
+  }, [presented?.seed, presented?.eventCount]);
 
   useEffect(() => {
-    if (!view || !playing) {
+    if (!presented || !playing) {
       return;
     }
-    const last = view.frames.length - 1;
+    const last = presented.frames.length - 1;
     if (index >= last) {
       setPlaying(false);
       return;
@@ -31,40 +36,40 @@ export function useMatchPlayback(view: MatchView | null) {
       setIndex((current) => Math.min(current + 1, last));
     }, durationMs);
     return () => window.clearTimeout(timer);
-  }, [view, playing, index, durationMs]);
+  }, [presented, playing, index, durationMs]);
 
   const frame = useMemo(
-    () => (view ? frameAt(view, index) : null),
-    [view, index],
+    () => (presented ? frameAt(presented, index) : null),
+    [presented, index],
   );
 
   const previous = useMemo(() => {
-    if (!view) {
+    if (!presented) {
       return null;
     }
     if (index <= 0) {
-      return view.kickoff;
+      return presented.kickoff;
     }
-    return frameAt(view, index - 1);
-  }, [view, index]);
+    return frameAt(presented, index - 1);
+  }, [presented, index]);
 
   const visibleLines = useMemo(() => {
-    if (!view || !frame) {
+    if (!presented || !frame) {
       return [];
     }
     const seq = frame.seq;
-    return view.lines.filter((line) => line.seq <= seq);
-  }, [view, frame]);
+    return presented.lines.filter((line) => line.seq <= seq);
+  }, [presented, frame]);
 
   const play = useCallback(() => {
-    if (!view) {
+    if (!presented) {
       return;
     }
-    if (index >= view.frames.length - 1) {
+    if (index >= presented.frames.length - 1) {
       setIndex(0);
     }
     setPlaying(true);
-  }, [view, index]);
+  }, [presented, index]);
 
   const pause = useCallback(() => setPlaying(false), []);
 
@@ -74,30 +79,30 @@ export function useMatchPlayback(view: MatchView | null) {
   }, []);
 
   const toggle = useCallback(() => {
-    if (!view) {
+    if (!presented) {
       return;
     }
     if (playing) {
       setPlaying(false);
       return;
     }
-    if (index >= view.frames.length - 1) {
+    if (index >= presented.frames.length - 1) {
       setIndex(0);
     }
     setPlaying(true);
-  }, [view, playing, index]);
+  }, [presented, playing, index]);
 
   const stepBy = useCallback(
     (delta: number) => {
-      if (!view) {
+      if (!presented) {
         return;
       }
       setPlaying(false);
       setIndex((current) =>
-        Math.min(Math.max(current + delta, 0), view.frames.length - 1),
+        Math.min(Math.max(current + delta, 0), presented.frames.length - 1),
       );
     },
-    [view],
+    [presented],
   );
 
   return {

@@ -18,12 +18,30 @@ export interface PendingTransfer {
 
 export type OfferReaction = "accept" | "counter" | "reject";
 
+export const MAX_NEGOTIATION_ROUNDS = 4;
+
 export interface TransferOffer {
   id: string;
   player_id: string;
   fee_offer: number;
   week: number;
   status: "pending" | "accepted" | "rejected";
+}
+
+/** PRD 05.3 — multi-round club-to-club negotiation session. */
+export interface TransferNegotiation {
+  id: string;
+  player_id: string;
+  seller_club_id: string;
+  asking_price: number;
+  current_offer: number;
+  counter_offer?: number;
+  round: number;
+  patience_rounds_left: number;
+  status: "active" | "accepted" | "rejected" | "walked_away";
+  failed_lowball_count: number;
+  last_reaction: OfferReaction | null;
+  week: number;
 }
 
 export interface AiClubBudget {
@@ -36,6 +54,8 @@ export interface TransferState {
   shortlist: string[];
   offers: TransferOffer[];
   history: TransferRecord[];
+  /** Active player purchase negotiations (PRD 05.3). */
+  negotiations?: TransferNegotiation[];
   /** F5.6 — per-club AI transfer budgets (PRD 05.5). */
   ai_budgets?: Record<string, AiClubBudget>;
   /** F5.7 — pre-contracts effective at contract end (PRD 05.6). */
@@ -43,7 +63,14 @@ export interface TransferState {
 }
 
 export function emptyTransferState(): TransferState {
-  return { shortlist: [], offers: [], history: [], ai_budgets: {}, pending_transfers: [] };
+  return {
+    shortlist: [],
+    offers: [],
+    history: [],
+    negotiations: [],
+    ai_budgets: {},
+    pending_transfers: [],
+  };
 }
 
 export function toggleShortlist(state: TransferState, playerId: string): TransferState {
@@ -79,6 +106,198 @@ export function evaluateOffer(feeOffer: number, sellerValue: number): OfferReact
   if (ratio >= 1.0) return ratio >= 1.05 ? "accept" : "counter";
   if (ratio >= 0.85) return "counter";
   return "reject";
+}
+
+export function reactionMessage(
+  reaction: OfferReaction,
+  ratio: number,
+  counter?: number,
+): string {
+  if (reaction === "accept") {
+    return ratio >= 1.1
+      ? "Der Verein nimmt das Angebot an."
+      : "Nach kurzem Zögern stimmt der Verein zu.";
+  }
+  if (reaction === "reject") {
+    return ratio < 0.7
+      ? "Beleidigendes Angebot — Verhandlung beendet."
+      : "Angebot abgelehnt — Geduld sinkt.";
+  }
+  return counter
+    ? `Gegenangebot: ${Math.round(counter).toLocaleString("de-DE")} €.`
+    : "Gegenangebot liegt auf dem Tisch.";
+}
+
+export function startNegotiation(
+  state: TransferState,
+  player: Player,
+  sellerClubId: string,
+  season: number,
+  week: number,
+  openingOffer?: number,
+): { state: TransferState; negotiation: TransferNegotiation } {
+  const asking = sellerAskingPrice(player, season);
+  const offer = openingOffer ?? Math.round(asking * 0.92);
+  const negotiation: TransferNegotiation = {
+    id: `neg_${player.id}_${week}`,
+    player_id: player.id,
+    seller_club_id: sellerClubId,
+    asking_price: asking,
+    current_offer: offer,
+    round: 1,
+    patience_rounds_left: MAX_NEGOTIATION_ROUNDS,
+    status: "active",
+    failed_lowball_count: 0,
+    last_reaction: null,
+    week,
+  };
+  const negotiations = [
+    ...(state.negotiations ?? []).filter((entry) => entry.player_id !== player.id),
+    negotiation,
+  ];
+  return {
+    state: submitPurchaseOffer({ ...state, negotiations }, player.id, offer, week),
+    negotiation,
+  };
+}
+
+export function activeNegotiation(
+  state: TransferState,
+  playerId: string,
+): TransferNegotiation | null {
+  return (
+    (state.negotiations ?? []).find(
+      (entry) => entry.player_id === playerId && entry.status === "active",
+    ) ?? null
+  );
+}
+
+export interface NegotiationRoundResult {
+  state: TransferState;
+  negotiation: TransferNegotiation;
+  accepted: boolean;
+  message: string;
+  moralePenalty?: number;
+}
+
+export function submitNegotiationRound(
+  state: TransferState,
+  playerId: string,
+  feeOffer: number,
+): NegotiationRoundResult {
+  const current = activeNegotiation(state, playerId);
+  if (!current) {
+    throw new Error("No active negotiation for player");
+  }
+  const ratio = feeOffer / Math.max(1, current.asking_price);
+  const reaction = evaluateOffer(feeOffer, current.asking_price);
+  let patience = current.patience_rounds_left;
+  let failedLowballs = current.failed_lowball_count;
+  if (ratio < 0.7) {
+    failedLowballs += 1;
+    patience = Math.max(0, patience - 1);
+  } else if (reaction === "counter" && ratio < 0.85) {
+    patience = Math.max(0, patience - 1);
+  }
+
+  if (reaction === "accept") {
+    const accepted: TransferNegotiation = {
+      ...current,
+      current_offer: feeOffer,
+      status: "accepted",
+      last_reaction: "accept",
+      round: current.round,
+    };
+    const negotiations = (state.negotiations ?? []).map((entry) =>
+      entry.id === current.id ? accepted : entry,
+    );
+    const resolved = resolveOffer(
+      submitPurchaseOffer(state, playerId, feeOffer, current.week),
+      `offer_${playerId}_${current.week}`,
+      "accept",
+      current.asking_price,
+    );
+    return {
+      state: { ...resolved.state, negotiations },
+      negotiation: accepted,
+      accepted: true,
+      message: reactionMessage("accept", ratio),
+    };
+  }
+
+  if (reaction === "reject" && (patience <= 0 || ratio < 0.7)) {
+    const rejected: TransferNegotiation = {
+      ...current,
+      current_offer: feeOffer,
+      status: ratio < 0.7 ? "walked_away" : "rejected",
+      patience_rounds_left: patience,
+      failed_lowball_count: failedLowballs,
+      last_reaction: "reject",
+      round: current.round,
+    };
+    const negotiations = (state.negotiations ?? []).map((entry) =>
+      entry.id === current.id ? rejected : entry,
+    );
+    const resolved = resolveOffer(
+      submitPurchaseOffer(state, playerId, feeOffer, current.week),
+      `offer_${playerId}_${current.week}`,
+      "reject",
+      current.asking_price,
+    );
+    return {
+      state: { ...resolved.state, negotiations },
+      negotiation: rejected,
+      accepted: false,
+      message: reactionMessage("reject", ratio),
+      moralePenalty: failedLowballs >= 3 ? 10 : undefined,
+    };
+  }
+
+  const counter = counterFee(current.asking_price, ratio);
+  const nextRound = Math.min(MAX_NEGOTIATION_ROUNDS, current.round + 1);
+  const updated: TransferNegotiation = {
+    ...current,
+    current_offer: feeOffer,
+    counter_offer: counter,
+    round: nextRound,
+    patience_rounds_left: patience,
+    failed_lowball_count: failedLowballs,
+    last_reaction: "counter",
+    status: nextRound >= MAX_NEGOTIATION_ROUNDS && patience <= 0 ? "rejected" : "active",
+  };
+  if (updated.status === "rejected") {
+    const negotiations = (state.negotiations ?? []).map((entry) =>
+      entry.id === current.id ? updated : entry,
+    );
+    return {
+      state: { ...state, negotiations },
+      negotiation: updated,
+      accepted: false,
+      message: "Keine Einigung nach 4 Runden — Verhandlung beendet.",
+      moralePenalty: failedLowballs >= 3 ? 10 : undefined,
+    };
+  }
+  const negotiations = (state.negotiations ?? []).map((entry) =>
+    entry.id === current.id ? updated : entry,
+  );
+  const withOffer = submitPurchaseOffer({ ...state, negotiations }, playerId, feeOffer, current.week);
+  return {
+    state: withOffer,
+    negotiation: updated,
+    accepted: false,
+    message: reactionMessage("counter", ratio, counter),
+  };
+}
+
+export function acceptCounterOffer(
+  state: TransferState,
+  playerId: string,
+): NegotiationRoundResult {
+  const current = activeNegotiation(state, playerId);
+  if (!current?.counter_offer) {
+    throw new Error("No counter-offer to accept");
+  }
+  return submitNegotiationRound(state, playerId, current.counter_offer);
 }
 
 export function counterFee(sellerValue: number, ratio: number): number {

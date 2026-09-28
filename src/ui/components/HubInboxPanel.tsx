@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { clubEventIcon, type ClubEvent } from "../../inbox/club-events.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
-import { scoutReportsForWeek, type ScoutBoard } from "../../scouting/scout-board.ts";
+import {
+  discoveryAlertsForWeek,
+  scoutReportsForWeek,
+  type ScoutBoard,
+} from "../../scouting/scout-board.ts";
 import {
   inboxHeadline,
   inboxItemLabel,
@@ -52,6 +56,7 @@ export function HubInboxPanel({
     nextQueuedPlayer ? formatPlayerName(nextQueuedPlayer) : undefined,
   );
   const reports = scoutReportsForWeek(scoutBoard, week);
+  const discoveries = discoveryAlertsForWeek(scoutBoard, week);
   const totalEventPages = Math.max(1, Math.ceil(clubEvents.length / EVENTS_PER_PAGE));
   const [eventPage, setEventPage] = useState(0);
 
@@ -111,12 +116,30 @@ export function HubInboxPanel({
 
         <div className="hub-inbox-column">
           <p className="hub-inbox-column-title">Scout-Berichte</p>
-          {reports.length === 0 ? (
+          {reports.length === 0 && discoveries.length === 0 ? (
             <p className="hub-inbox-empty">
               Noch keine Berichte diese Woche — Scout im Markt zuweisen und Woche simulieren.
             </p>
           ) : (
             <ul className="hub-inbox-list">
+              {discoveries.map((alert) => (
+                <li key={alert.id}>
+                  <button
+                    type="button"
+                    className="hub-inbox-row hub-inbox-row-discovery"
+                    onClick={() => onSelectScoutTarget(alert.playerId)}
+                  >
+                    <span className="hub-inbox-icon" aria-hidden="true">🔔</span>
+                    <span className="hub-inbox-row-text">
+                      <strong>{alert.headline}</strong>
+                      <span className="hub-inbox-row-detail">
+                        {alert.playerName} · CA ~{alert.estimatedCa}
+                      </span>
+                    </span>
+                    <span className="hub-inbox-row-cta">→</span>
+                  </button>
+                </li>
+              ))}
               {reports.map((report) => (
                 <li key={report.id}>
                   <button

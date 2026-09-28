@@ -14,10 +14,16 @@ import { loadLocalSave, removeLocalSave, writeLocalSave } from "./persistence/lo
 import { getActiveSlot, setActiveSlot } from "./persistence/save-slots.ts";
 import type { SaveGame } from "./persistence/savegame-model.ts";
 import {
+  createScoutAssignment,
+} from "./scouting/scout-assignments.ts";
+import {
   activeScoutCount,
+  addScoutAssignment,
   assignScout,
   getBoardTarget,
   listBoardTargets,
+  removeScoutAssignment,
+  toggleScoutAssignment,
 } from "./scouting/scout-board.ts";
 import { WeekdayStrip } from "./ui/components/WeekdayStrip.tsx";
 import { prepareCareerMatch, type CareerMatchSetup } from "./sim/career-match-setup.ts";
@@ -35,11 +41,15 @@ import {
 import { clearPlayerFromLineup } from "./match/lineup-board.ts";
 import { formatPlayerName } from "./types/player-display.ts";
 import {
-  attemptPurchase,
+  acceptCounterOffer,
+  activeNegotiation,
   completePurchase,
   sellerAskingPrice,
+  startNegotiation,
+  submitNegotiationRound,
   toggleShortlist,
 } from "./transfers/negotiations.ts";
+import { TransferNegotiationModal } from "./ui/components/TransferNegotiationModal.tsx";
 import {
   attemptPreContract,
   canSignPreContract,
@@ -175,6 +185,8 @@ export default function App() {
   const [saveManagerOpen, setSaveManagerOpen] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [foreignPlayerId, setForeignPlayerId] = useState<string | null>(null);
+  const [negotiationPlayerId, setNegotiationPlayerId] = useState<string | null>(null);
+  const [negotiationMessage, setNegotiationMessage] = useState<string | null>(null);
   const [campusYearOpen, setCampusYearOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
   const [inboxItemId, setInboxItemId] = useState<string | null>(null);
@@ -436,6 +448,44 @@ export default function App() {
     [patchSession],
   );
 
+  const handleAddScoutAssignment = useCallback(() => {
+    patchSession((current) => {
+      const assignment = createScoutAssignment(
+        `assign_${current.week}_${(current.scoutBoard.assignments ?? []).length + 1}`,
+        {
+          position: marketFilters.position,
+          age: marketFilters.age,
+          region: marketFilters.query,
+          query: marketFilters.query,
+        },
+      );
+      return {
+        ...current,
+        scoutBoard: addScoutAssignment(current.scoutBoard, assignment),
+      };
+    });
+  }, [marketFilters, patchSession]);
+
+  const handleRemoveScoutAssignment = useCallback(
+    (assignmentId: string) => {
+      patchSession((current) => ({
+        ...current,
+        scoutBoard: removeScoutAssignment(current.scoutBoard, assignmentId),
+      }));
+    },
+    [patchSession],
+  );
+
+  const handleToggleScoutAssignment = useCallback(
+    (assignmentId: string) => {
+      patchSession((current) => ({
+        ...current,
+        scoutBoard: toggleScoutAssignment(current.scoutBoard, assignmentId),
+      }));
+    },
+    [patchSession],
+  );
+
   const handleAcceptJobOffer = useCallback(
     (clubId: TeamId) => {
       patchSession((current) => {
@@ -682,25 +732,14 @@ export default function App() {
     [patchSession],
   );
 
-  const handlePurchase = useCallback(
-    (playerId: string) => {
+  const finalizePurchase = useCallback(
+    (playerId: string, fee: number) => {
       patchSession((current) => {
         const target = getBoardTarget(current.scoutBoard, playerId, current.rivalPlayers);
         if (!target || !isTransferWindowOpen(current.week)) return current;
-
-        const deal = attemptPurchase(current.transferState, target.player, current.season, current.week);
-        if (!deal.accepted) {
-          return sessionWithEvent(
-            { ...current, transferState: deal.state },
-            "transfer",
-            "Angebot abgelehnt — höheres Gebot nötig.",
-          );
-        }
-
-        const fee = deal.fee ?? sellerAskingPrice(target.player, current.season);
         if (!canAffordTransfer(current.finances, fee)) {
           return sessionWithEvent(
-            { ...current, transferState: deal.state },
+            current,
             "finance",
             `Transfer-Budget zu niedrig (benötigt ca. ${formatClubCash(fee)}).`,
           );
@@ -730,7 +769,7 @@ export default function App() {
             ...current,
             players: [...current.players, finalized],
             rivalPlayers: current.rivalPlayers.filter((player) => player.id !== playerId),
-            transferState: appendTransferRecord(deal.state, purchaseRecord),
+            transferState: appendTransferRecord(current.transferState, purchaseRecord),
             scoutBoard: { ...current.scoutBoard, targets },
             finances: applyTransferFee(current.finances, fee, current.week),
           },
@@ -743,9 +782,73 @@ export default function App() {
         return next;
       });
       setForeignPlayerId(null);
+      setNegotiationPlayerId(null);
+      setNegotiationMessage(null);
     },
     [patchSession],
   );
+
+  const handleOpenNegotiation = useCallback(
+    (playerId: string) => {
+      patchSession((current) => {
+        const target = getBoardTarget(current.scoutBoard, playerId, current.rivalPlayers);
+        if (!target || !isTransferWindowOpen(current.week)) return current;
+        const started = startNegotiation(
+          current.transferState,
+          target.player,
+          target.player.club_id ?? "cl_rival_pool",
+          current.season,
+          current.week,
+        );
+        return { ...current, transferState: started.state };
+      });
+      setNegotiationPlayerId(playerId);
+      setNegotiationMessage(null);
+    },
+    [patchSession],
+  );
+
+  const handleNegotiationOffer = useCallback(
+    (fee: number) => {
+      if (!negotiationPlayerId) return;
+      let accepted = false;
+      patchSession((current) => {
+        const target = getBoardTarget(current.scoutBoard, negotiationPlayerId, current.rivalPlayers);
+        if (!target) return current;
+        const round = submitNegotiationRound(current.transferState, negotiationPlayerId, fee);
+        setNegotiationMessage(round.message);
+        accepted = round.accepted;
+        if (!round.accepted && round.negotiation.status !== "active") {
+          setNegotiationPlayerId(null);
+        }
+        if (round.moralePenalty) {
+          return sessionWithEvent(
+            { ...current, transferState: round.state },
+            "transfer",
+            `Verhandlung gescheitert — Spieler-Moral −${round.moralePenalty}.`,
+          );
+        }
+        return { ...current, transferState: round.state };
+      });
+      if (accepted) finalizePurchase(negotiationPlayerId, fee);
+    },
+    [finalizePurchase, negotiationPlayerId, patchSession],
+  );
+
+  const handleAcceptCounter = useCallback(() => {
+    if (!negotiationPlayerId) return;
+    let acceptedFee: number | null = null;
+    patchSession((current) => {
+      const round = acceptCounterOffer(current.transferState, negotiationPlayerId);
+      setNegotiationMessage(round.message);
+      if (round.accepted && round.negotiation.counter_offer) {
+        acceptedFee = round.negotiation.counter_offer;
+      }
+      setNegotiationPlayerId(null);
+      return { ...current, transferState: round.state };
+    });
+    if (acceptedFee !== null) finalizePurchase(negotiationPlayerId, acceptedFee);
+  }, [finalizePurchase, negotiationPlayerId, patchSession]);
 
   const handleProfileAction = useCallback(
     (playerId: string, action: PlayerProfileAction) => {
@@ -983,7 +1086,7 @@ export default function App() {
           onBack={() => setForeignPlayerId(null)}
           onAssignScout={() => handleAssignScout(foreignTarget.player.id)}
           onToggleShortlist={() => handleToggleShortlist(foreignTarget.player.id)}
-          onPurchase={() => handlePurchase(foreignTarget.player.id)}
+          onPurchase={() => handleOpenNegotiation(foreignTarget.player.id)}
           preContractBonus={preContractOffer(foreignTarget.player, season, week)?.signingBonus}
           preContractBlockedReason={(() => {
             const eligibility = canSignPreContract(
@@ -1003,6 +1106,20 @@ export default function App() {
           })()}
           onPreContract={() => handlePreContract(foreignTarget.player.id)}
         />
+        {negotiationPlayerId && activeNegotiation(transferState, negotiationPlayerId) ? (
+          <TransferNegotiationModal
+            player={foreignTarget.player}
+            negotiation={activeNegotiation(transferState, negotiationPlayerId)!}
+            transferBudget={transferBudget(finances)}
+            message={negotiationMessage}
+            onSubmitOffer={handleNegotiationOffer}
+            onAcceptCounter={handleAcceptCounter}
+            onWalkAway={() => {
+              setNegotiationPlayerId(null);
+              setNegotiationMessage(null);
+            }}
+          />
+        ) : null}
         {saveManagerOverlay}
       </>
     );
@@ -1143,6 +1260,10 @@ export default function App() {
           onFiltersChange={setMarketFilters}
           sort={marketSort}
           onSortChange={setMarketSort}
+          assignments={scoutBoard.assignments ?? []}
+          onAddAssignment={handleAddScoutAssignment}
+          onRemoveAssignment={handleRemoveScoutAssignment}
+          onToggleAssignment={handleToggleScoutAssignment}
           onBack={() => setScreen("hub")}
           onSelectTarget={(playerId) => setForeignPlayerId(playerId)}
           onAssignScout={handleAssignScout}

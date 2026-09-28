@@ -138,10 +138,9 @@ function pendingAfterShot(
 }
 
 function bylineMiss(mouth: { x: number; y: number }, yJitter: number) {
-  const postSide = yJitter < 0 ? -1 : 1;
   return {
     x: mouth.x >= 50 ? 102 : -2,
-    y: clampPitch({ x: mouth.x, y: mouth.y + postSide * 16 }).y,
+    y: 50 + yJitter * 1.6,
   };
 }
 
@@ -185,10 +184,7 @@ export function stepShot(state: MatchState): StepResult {
           ? defender.position
           : outcome === "woodwork"
             ? clampPitch({ x: mouth.x, y: mouth.y + (yJitter.n < 0 ? -6 : 6) })
-            : clampPitch({
-                x: mouth.x,
-                y: mouth.y + (yJitter.n < 0 ? -14 : 14),
-              });
+            : clampPitch({ x: mouth.x, y: yJitter.n < 0 ? 4 : 96 });
 
   if (outcome === "goal") {
     phase = "goal_restart";

@@ -352,34 +352,6 @@ function inferKind(
   return "short";
 }
 
-function recyclePenalty(input: {
-  passer: PlayerMatchStatus;
-  target: PlayerMatchStatus;
-  lastPasserId: PlayerMatchStatus["playerId"] | null | undefined;
-  ownGoal: { x: number; y: number };
-  attackSign: 1 | -1;
-}): number {
-  if (!input.lastPasserId || input.lastPasserId === input.passer.playerId) {
-    return 1;
-  }
-  const passerDepth = depthFromOwnGoal(
-    input.passer.position,
-    input.ownGoal,
-    input.attackSign,
-  );
-  const gkCbLoop =
-    passerDepth < 28 &&
-    ((input.passer.role === "CB" && input.target.role === "GK") ||
-      (input.passer.role === "GK" && input.target.role === "CB"));
-  if (!gkCbLoop) {
-    return 1;
-  }
-  if (input.lastPasserId === input.target.playerId) {
-    return 0.12;
-  }
-  return 1;
-}
-
 export function passTargetWeight(input: {
   passer: PlayerMatchStatus;
   target: PlayerMatchStatus;
@@ -391,7 +363,6 @@ export function passTargetWeight(input: {
   defenders?: readonly PlayerMatchStatus[];
   /** Through-ball collection point; defaults to the runner's current feet. */
   spot?: PitchPosition;
-  lastPasserId?: PlayerMatchStatus["playerId"] | null;
 }): number {
   const { passer, target, kind } = input;
   const dest = input.spot ?? target.position;
@@ -466,18 +437,10 @@ export function passTargetWeight(input: {
       target.role === "CB" || target.role === "FB" || target.role === "DM";
     const long = target.role === "W" || target.role === "ST";
     const tempo = input.tactics.tempo / 100;
-    const recycle = recyclePenalty({
-      passer,
-      target,
-      lastPasserId: input.lastPasserId,
-      ownGoal: input.ownGoal,
-      attackSign: input.attackSign,
-    });
     return (
       graph *
       (short ? 3.2 : long ? 0.9 + tempo : 0.25) *
       (1 / (1 + dist / (short ? 10 : 22))) *
-      recycle *
       space
     );
   }
@@ -497,20 +460,12 @@ export function passTargetWeight(input: {
     attacker && passerToGoal < 28 && drop > 10
       ? clamp(1 - (drop - 10) / 22, 0.1, 1)
       : 1;
-  const recycle = recyclePenalty({
-    passer,
-    target,
-    lastPasserId: input.lastPasserId,
-    ownGoal: input.ownGoal,
-    attackSign: input.attackSign,
-  });
   return (
     graph *
     feed *
     shortRangeFactor(dist) *
     offside *
     retreat *
-    recycle *
     space *
     lane
   );
@@ -602,7 +557,6 @@ export function pickPassTarget(
       tactics,
       defenders,
       spot: option.spot,
-      lastPasserId: state.lastPasserId,
       offside: isOffsideReceiver({
         receiver: option.target.position,
         ball: passer.position,

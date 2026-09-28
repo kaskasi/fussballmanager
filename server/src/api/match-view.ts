@@ -24,6 +24,7 @@ import {
   type CommentaryContext,
 } from "../commentary/index.ts";
 import { createInitialState, step } from "../engine/index.ts";
+import { applyFramePresentation } from "./match-presentation.ts";
 
 function rosterOf(squad: Squad): MatchViewRosterPlayer[] {
   return [
@@ -151,7 +152,12 @@ export function buildMatchView(input: {
     });
     current = result.state;
     running = applyMatchStatEvent(running, result.event, home.team.id);
-    frames.push(frameFrom(current, result.event.seq, result.event, running, ctx));
+    frames.push(
+      applyFramePresentation(
+        frameFrom(current, result.event.seq, result.event, running, ctx),
+        result.event,
+      ),
+    );
     if (isCommentaryWorthy(result.event, previousEvent)) {
       lines.push({
         seq: result.event.seq,

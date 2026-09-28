@@ -70,18 +70,9 @@ describe("step()", () => {
       return;
     }
     expect(state.ball).toEqual(last.ball);
-    const carrierId =
-      last.type === "carry"
-        ? last.player.playerId
-        : last.type === "pass"
-          ? last.to.playerId
-          : state.ballCarrierId;
-    if (carrierId) {
-      const live = state.players.find((p) => p.playerId === carrierId);
-      const eventCarrier = last.involved.find((p) => p.playerId === carrierId);
-      if (live && eventCarrier) {
-        expect(live.position.x).toBe(eventCarrier.position.x);
-      }
+    for (const involved of last.involved) {
+      const live = state.players.find((p) => p.playerId === involved.playerId);
+      expect(live?.position.x).toBe(involved.position.x);
     }
     if (last.type === "carry") {
       expect(state.ballCarrierId).toBe(last.player.playerId);

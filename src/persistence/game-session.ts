@@ -15,7 +15,7 @@ import {
 } from "../youth/decision-inbox.ts";
 import { emptyClubEvents, type ClubEvent } from "../inbox/club-events.ts";
 import { defaultClubFinances, type ClubFinances } from "../economy/club-finances.ts";
-import { normalizeBoardState, type BoardState } from "../board/board-state.ts";
+import { defaultBoardState, normalizeBoardState, type BoardState } from "../board/board-state.ts";
 import { startBoardSeason } from "../board/season-objectives.ts";
 import { defaultEmployerClubId } from "../board/job-offers.ts";
 import type { MatchLineupState } from "../match/lineup-board.ts";
@@ -55,6 +55,8 @@ import {
   persistedWorldState,
   type WorldState,
 } from "../world/world-generator.ts";
+import { normalizeStoryState, type StoryState } from "../narrative/story-state.ts";
+import { boardWithSurvivalArc, initializeStoryForNewGame } from "../narrative/opening.ts";
 
 export const DEFAULT_SLOT = 1;
 export const DEFAULT_CLUB_ID = "cl_fc_nordstern";
@@ -87,6 +89,7 @@ export interface GameSession {
   masterSeed: number;
   world: WorldState;
   lastSeasonAwards?: SeasonAwardsSnapshot;
+  storyState: StoryState;
 }
 
 export function newGameSession(now = new Date()): GameSession {
@@ -111,6 +114,15 @@ export function newGameSession(now = new Date()): GameSession {
   if (save.state.pipeline) {
     save.state.pipeline.rival_players = rivalPlayers;
     save.state.pipeline.scout_board = createScoutBoard(rivalPlayers);
+    save.state.pipeline.story_state = initializeStoryForNewGame(
+      DEFAULT_MASTER_SEED,
+      DEFAULT_MANAGER,
+      1,
+    );
+    save.state.pipeline.board = boardWithSurvivalArc(
+      save.state.pipeline.board ?? startBoardSeason(defaultBoardState(defaultEmployerClubId()), defaultEmployerClubId(), 1),
+      1,
+    );
   }
   return withFreshInbox(sessionFromSave(save));
 }
@@ -182,6 +194,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     masterSeed: save.rng_state.master_seed,
     world: save.state.world ?? legacyWorldState(save.rng_state.master_seed),
     lastSeasonAwards: pipeline.last_season_awards,
+    storyState: normalizeStoryState(pipeline.story_state, save.state.week),
   };
   return syncManagerClubWithBoard(session);
 }
@@ -203,6 +216,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     rival_players: session.rivalPlayers,
     coaching_staff: session.coachingStaff,
     last_season_awards: session.lastSeasonAwards,
+    story_state: session.storyState,
   };
   const iso = now.toISOString();
 
@@ -225,6 +239,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
         world: session.world,
       },
       players: session.players,
+      chronicle: session.storyState.chronicle_entries,
       rng_state: {
         ...base.rng_state,
         master_seed: session.masterSeed,

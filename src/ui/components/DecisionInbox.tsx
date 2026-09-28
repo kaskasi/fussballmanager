@@ -13,6 +13,7 @@ import {
   inboxItemLabel,
   inboxPipelineHint,
   inboxWeekFocus,
+  isStoryInboxItem,
   pendingInboxItems,
   type DecisionAction,
   type DecisionInboxItem,
@@ -99,8 +100,8 @@ export function DecisionInboxModal({
       >
         <header className="inbox-head">
           <div>
-            <p className="eyebrow">Jugend · Woche {inbox.week}</p>
-            <h2>Entscheidungs-Inbox</h2>
+            <p className="eyebrow">Inbox · Woche {inbox.week}</p>
+            <h2>Entscheidungen</h2>
           </div>
           <button type="button" className="inbox-close" onClick={onClose} aria-label="Schließen">
             ✕
@@ -127,12 +128,42 @@ export function DecisionInboxModal({
                   onClick={() => setActiveId(item.id)}
                 >
                   <span className="inbox-queue-index">{index + 1}</span>
-                  <span>{item.kind === "departure_risk" ? "🚩" : "⚠️"}</span>
+                  <span>
+                    {isStoryInboxItem(item)
+                      ? item.kind === "story_press"
+                        ? "📰"
+                        : item.kind === "story_fan"
+                          ? "👥"
+                          : "💬"
+                      : item.kind === "departure_risk"
+                        ? "🚩"
+                        : "⚠️"}
+                  </span>
                 </button>
               ))}
             </nav>
 
-            {active && !player ? (
+            {active && isStoryInboxItem(active) && active.narrative ? (
+              <section className="inbox-card inbox-card-story">
+                <div className="inbox-story">
+                  <strong>{active.narrative.title}</strong>
+                  <p>{active.narrative.body}</p>
+                </div>
+                <div className="inbox-actions" aria-label="Antworten">
+                  {allowedActions(active, players, clubId, week).map((action) => (
+                    <button
+                      key={action}
+                      type="button"
+                      className="inbox-action"
+                      onClick={() => onDecision(active.id, action)}
+                    >
+                      <span aria-hidden="true">{actionIcon(action, actionContext)}</span>
+                      <span>{actionLabel(action, actionContext)}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ) : active && !player ? (
               <section className="inbox-card inbox-card-orphan">
                 <p>Spieler nicht mehr im Jugendkader.</p>
                 <button type="button" className="inbox-action" onClick={() => onDecision(active.id, "dismiss")}>

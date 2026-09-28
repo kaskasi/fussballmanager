@@ -6,6 +6,7 @@ import {
   formatObjectiveProgress,
 } from "../../board/season-objectives.ts";
 import type { BoardState } from "../../board/board-state.ts";
+import { SURVIVAL_TARGET_PLACE } from "../../narrative/season-objectives.ts";
 import { clubShortName } from "../../sim/league-week.ts";
 
 /**
@@ -54,8 +55,19 @@ export function BoardObjectivesPanel({
         {board.objectives.map((objective) => {
           const entry = progress.find((item) => item.objectiveId === objective.id);
           const met = entry?.met ?? false;
+          const survival =
+            objective.id === "league_place" && objective.target === SURVIVAL_TARGET_PLACE;
           return (
-            <li key={objective.id} className={met ? "board-objective is-met" : "board-objective"}>
+            <li
+              key={objective.id}
+              className={
+                met
+                  ? "board-objective is-met"
+                  : survival
+                    ? "board-objective is-survival"
+                    : "board-objective"
+              }
+            >
               <span className="board-objective-icon" aria-hidden="true">{objective.icon}</span>
               <span className="board-objective-label">{objective.label}</span>
               <span className="board-objective-value">

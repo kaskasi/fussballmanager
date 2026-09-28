@@ -36,6 +36,7 @@ import { migration035GeneratedWorld } from "./migration_035_generated_world.ts";
 import { migration036ScoutKnowledge } from "./migration_036_scout_knowledge.ts";
 import { migration037GrowthRebalance } from "./migration_037_growth_rebalance.ts";
 import { migration038ScoutNegotiations } from "./migration_038_scout_negotiations.ts";
+import { migration039StoryState } from "./migration_039_story_state.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -81,6 +82,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration036ScoutKnowledge,
   migration037GrowthRebalance,
   migration038ScoutNegotiations,
+  migration039StoryState,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

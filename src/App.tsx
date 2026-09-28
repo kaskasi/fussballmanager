@@ -113,9 +113,15 @@ import {
   applyInboxDecision,
   deliverDailyInbox,
   deliverInboxForDays,
+  isStoryInboxItem,
   pendingInboxItems,
+  storyChoiceId,
   type DecisionAction,
 } from "./youth/decision-inbox.ts";
+import { completeOpening, openingBlocked } from "./narrative/opening.ts";
+import { resolveStoryInboxDecision } from "./narrative/pipeline-week.ts";
+import type { CareerOrigin } from "./narrative/story-state.ts";
+import { OpeningStoryModal } from "./ui/components/OpeningStoryModal.tsx";
 import type { NavPrimaryAction } from "./ui/nav-primary-action.ts";
 import {
   applyAccessibilityPreferences,
@@ -245,6 +251,7 @@ export default function App() {
     masterSeed,
     world,
     lastSeasonAwards,
+    storyState,
   } = session;
 
   function sessionWithEvent(
@@ -391,7 +398,9 @@ export default function App() {
     (itemId: string, action: DecisionAction) => {
       patchSession((current) => {
         const item = current.youthInbox.items.find((entry) => entry.id === itemId);
-        const player = item ? current.players.find((entry) => entry.id === item.playerId) : null;
+        const player = item?.playerId
+          ? current.players.find((entry) => entry.id === item.playerId)
+          : null;
         const result = applyInboxDecision(
           current.youthInbox,
           current.players,
@@ -404,12 +413,20 @@ export default function App() {
           setInboxOpen(false);
           setInboxItemId(null);
         }
-        const playerName = player ? formatPlayerName(player) : "Spieler";
         let next = {
           ...current,
           players: result.players,
           youthInbox: result.inbox,
         };
+        if (item && isStoryInboxItem(item)) {
+          const choiceId = storyChoiceId(action);
+          if (choiceId) {
+            next = resolveStoryInboxDecision(next, item, choiceId);
+          }
+          const title = item.narrative?.title ?? "Story";
+          const message = `${title}: ${actionLabel(action, { item })}`;
+          return sessionWithEvent(next, "inbox", message);
+        }
         if (result.transferRecord) {
           next = {
             ...next,
@@ -425,6 +442,7 @@ export default function App() {
             },
           };
         }
+        const playerName = player ? formatPlayerName(player) : "Spieler";
         const message =
           action === "loan" && result.transferRecord
             ? loanOutMessage(result.transferRecord)
@@ -434,6 +452,13 @@ export default function App() {
         const kind = action === "loan" ? "transfer" : "inbox";
         return sessionWithEvent(next, kind, message);
       });
+    },
+    [patchSession],
+  );
+
+  const handleOpeningComplete = useCallback(
+    (origin: CareerOrigin, captainPlayerId: string) => {
+      patchSession((current) => completeOpening(current, origin, captainPlayerId));
     },
     [patchSession],
   );
@@ -1207,8 +1232,17 @@ export default function App() {
           clubEvents={clubEvents}
           onOpenTraining={() => setScreen("training")}
           lastSeasonAwards={lastSeasonAwards}
+          storyState={storyState}
         />
       </div>
+      {openingBlocked(session) ? (
+        <OpeningStoryModal
+          managerName={session.managerName}
+          players={players}
+          clubId={session.clubId}
+          onComplete={handleOpeningComplete}
+        />
+      ) : null}
       {screen === "training" ? (
         <TrainingCenter
           week={week}

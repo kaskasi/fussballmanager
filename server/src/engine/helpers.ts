@@ -126,3 +126,36 @@ export function oppositionTeamId(
 export function goalMouth(homeTeamId: TeamId, attackingTeamId: TeamId): PitchPosition {
   return attackingTeamId === homeTeamId ? { x: 100, y: 50 } : { x: 0, y: 50 };
 }
+
+/**
+ * How well the keeper covers the shot line at the goal mouth (0 = open goal, 1 = set).
+ * Sweeper keepers caught upfield should score near zero even though they are on the pitch.
+ */
+export function keeperShotCoverage(
+  keeper: PitchPosition,
+  shooter: PitchPosition,
+  mouth: PitchPosition,
+): number {
+  const shotLength = distance(shooter, mouth);
+  if (shotLength < 0.5) {
+    return 1;
+  }
+  const toMouthX = mouth.x - shooter.x;
+  const toMouthY = mouth.y - shooter.y;
+  const along =
+    (toMouthX * (keeper.x - shooter.x) + toMouthY * (keeper.y - shooter.y)) /
+    (shotLength * shotLength);
+  if (along < 0.1) {
+    return 0;
+  }
+  const closest = {
+    x: shooter.x + clamp(along, 0, 1.12) * toMouthX,
+    y: shooter.y + clamp(along, 0, 1.12) * toMouthY,
+  };
+  const lineDist = distance(keeper, closest);
+  const mouthDist = distance(keeper, mouth);
+  const reach = shotLength < 14 ? 5.5 : shotLength < 24 ? 8 : 11;
+  const lineFactor = clamp(1 - lineDist / reach, 0, 1);
+  const mouthFactor = clamp(1 - (mouthDist - reach * 0.35) / (reach + 3), 0, 1);
+  return lineFactor * mouthFactor;
+}

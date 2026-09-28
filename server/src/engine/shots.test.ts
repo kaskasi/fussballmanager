@@ -89,7 +89,7 @@ describe("chances", () => {
           homeTactics: start.homeTactics,
           awayTactics: start.awayTactics,
         },
-        10,
+        14,
       );
       const goalIndex = events.findIndex((event) => event.type === "goal");
       if (goalIndex < 0) {

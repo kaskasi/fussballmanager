@@ -65,6 +65,32 @@ describe("pass graph", () => {
     expect(rolePassLink("ST", "CB")).toBeLessThan(rolePassLink("ST", "W"));
   });
 
+  it("penalizes GK-CB recycling in the defensive third", () => {
+    const gk = stub("GK", "GK", { x: 10, y: 50 });
+    const cb = stub("CB", "RCB", { x: 14, y: 52 });
+    const ownGoal = { x: 0, y: 50 };
+    const fresh = passTargetWeight({
+      passer: cb,
+      target: gk,
+      ownGoal,
+      attackSign: 1,
+      kind: "short",
+      offside: false,
+      tactics,
+    });
+    const recycle = passTargetWeight({
+      passer: cb,
+      target: gk,
+      ownGoal,
+      attackSign: 1,
+      kind: "short",
+      offside: false,
+      tactics,
+      lastPasserId: gk.playerId,
+    });
+    expect(recycle).toBeLessThan(fresh * 0.2);
+  });
+
   it("treats a GK short ball to a CB as a restart, not a 50/50", () => {
     const gk = stub("GK", "GK", { x: 6, y: 50 });
     const cb = stub("CB", "RCB", { x: 18, y: 62 });

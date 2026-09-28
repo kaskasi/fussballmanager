@@ -15,6 +15,7 @@ import { stampLastWeekCa } from "../player/ca-tracking.ts";
 import { stampWeeklyGrowthBatch } from "../player/growth-history.ts";
 import {
   advanceScoutWeek,
+  discoveryAlertsForWeek,
   reconcileScoutBoard,
 } from "../scouting/scout-board.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
@@ -207,9 +208,18 @@ export async function simulateGameWeek(
   }
 
   const scoutBoard = reconcileScoutBoard(
-    advanceScoutWeek(session.scoutBoard, nextWeek, rivalPlayers),
+    advanceScoutWeek(session.scoutBoard, nextWeek, rivalPlayers, session.world.clubs),
     rivalPlayers,
   );
+  for (const alert of discoveryAlertsForWeek(scoutBoard, nextWeek)) {
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "profile",
+      `${alert.headline}: ${alert.playerName} (CA ~${alert.estimatedCa})`,
+    );
+  }
   let nextSession: GameSession = {
     ...session,
     season: seasonEnded ? session.season + 1 : session.season,

@@ -5,6 +5,8 @@ import {
   emptyTransferState,
   evaluateOffer,
   sellerAskingPrice,
+  startNegotiation,
+  submitNegotiationRound,
 } from "./negotiations.ts";
 
 describe("transfer negotiations", () => {
@@ -22,5 +24,18 @@ describe("transfer negotiations", () => {
     const asking = sellerAskingPrice(player, 1);
     const deal = attemptPurchase(emptyTransferState(), player, 1, 30);
     expect(deal.accepted).toBe(asking > 0);
+  });
+
+  it("runs a multi-round negotiation with patience", () => {
+    const player = clonePlayer();
+    player.id = "pl_90002";
+    const asking = sellerAskingPrice(player, 1);
+    const started = startNegotiation(emptyTransferState(), player, "cl_rival", 1, 30);
+    expect(started.negotiation.patience_rounds_left).toBe(4);
+    const lowball = submitNegotiationRound(started.state, player.id, Math.round(asking * 0.5));
+    expect(lowball.accepted).toBe(false);
+    expect(lowball.negotiation.failed_lowball_count).toBe(1);
+    const generous = submitNegotiationRound(lowball.state, player.id, Math.round(asking * 1.12));
+    expect(generous.accepted).toBe(true);
   });
 });

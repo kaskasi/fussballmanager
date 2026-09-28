@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { initializeRivalPlayers } from "../sim/rival-growth.ts";
+import { createScoutAssignment } from "./scout-assignments.ts";
 import {
   activeScoutCount,
+  addScoutAssignment,
   advanceScoutWeek,
   assignScout,
   createScoutBoard,
   getBoardTarget,
   listBoardTargets,
   reconcileScoutBoard,
+  syncAssignmentTargets,
 } from "./scout-board.ts";
 
 describe("scout board", () => {
@@ -50,6 +53,18 @@ describe("scout board", () => {
     const next = advanceScoutWeek(board, 2, rivals);
     const after = getBoardTarget(next, watched.playerId, rivals)!;
     expect(after.estimate.uncertaintyRange).toBe(startRange + 0.25);
+  });
+
+  it("auto-assigns targets from criteria-based scout assignments", () => {
+    const board = createScoutBoard(rivals);
+    const young = rivals.find((player) => player.age <= 21);
+    expect(young).toBeDefined();
+    const withAssignment = addScoutAssignment(
+      board,
+      createScoutAssignment("assign_u21", { age: "u21" }),
+    );
+    const synced = syncAssignmentTargets(withAssignment, rivals);
+    expect(activeScoutCount(synced)).toBeGreaterThan(0);
   });
 
   it("keeps knowledge while following authoritative roster changes", () => {

@@ -2,6 +2,10 @@ import { useMemo, useState } from "react";
 import type { PositionPrimary } from "../../types/player.ts";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
 import {
+  DEFAULT_SCOUT_CAPACITY,
+  type ScoutAssignment,
+} from "../../scouting/scout-assignments.ts";
+import {
   filterMarket,
   headlineCounts,
   targetLabel,
@@ -44,12 +48,18 @@ const AGE_FILTERS: Array<{ value: MarketFilters["age"]; label: string }> = [
   { value: "28+", label: "28+" },
 ];
 
+const REGIONS = ["Schleswig-Holstein", "Fördeküste", "Hansestadt", "Nordfriesland"];
+
 export function ScoutingCenter({
   targets,
   filters,
   onFiltersChange,
   sort,
   onSortChange,
+  assignments,
+  onAddAssignment,
+  onRemoveAssignment,
+  onToggleAssignment,
   onSelectTarget,
   onAssignScout,
   onBack,
@@ -59,6 +69,10 @@ export function ScoutingCenter({
   onFiltersChange: (filters: MarketFilters) => void;
   sort: MarketSort;
   onSortChange: (sort: MarketSort) => void;
+  assignments: ScoutAssignment[];
+  onAddAssignment: () => void;
+  onRemoveAssignment: (assignmentId: string) => void;
+  onToggleAssignment: (assignmentId: string) => void;
   onSelectTarget: (playerId: string) => void;
   onAssignScout: (playerId: string) => void;
   onBack: () => void;
@@ -107,9 +121,49 @@ export function ScoutingCenter({
               <span>❓ Unbekannt: {counts.unknown}</span>
             </p>
           </Hint>
-          <p className="scouting-scouts">🟢 {assigned} Scout-Ziele aktiv · {visible.length} Treffer</p>
+          <p className="scouting-scouts">
+            🟢 {assigned}/{DEFAULT_SCOUT_CAPACITY} Scout-Ziele · {assignments.filter((entry) => entry.active).length} Aufträge · {visible.length} Treffer
+          </p>
         </div>
       </header>
+
+      <section className="scouting-assignments" aria-label="Scout-Aufträge">
+        <header className="scouting-assignments-head">
+          <h2>📋 Scout-Aufträge</h2>
+          <Hint text="Auftrag nutzt die Filter unten (Position, Alter, Region). Pro Woche werden passende Spieler automatisch beobachtet." block>
+            <button type="button" className="scouting-chip" onClick={onAddAssignment}>
+              + Auftrag aus Filtern
+            </button>
+          </Hint>
+        </header>
+        {assignments.length === 0 ? (
+          <p className="scouting-assignments-empty">Noch keine Aufträge — Filter setzen und Auftrag anlegen.</p>
+        ) : (
+          <ul className="scouting-assignments-list">
+            {assignments.map((assignment) => (
+              <li key={assignment.id} className="scouting-assignment-row">
+                <button
+                  type="button"
+                  className={assignment.active ? "scouting-assignment-toggle is-on" : "scouting-assignment-toggle"}
+                  onClick={() => onToggleAssignment(assignment.id)}
+                  aria-pressed={assignment.active}
+                >
+                  {assignment.active ? "🟢" : "⏸️"}
+                </button>
+                <span className="scouting-assignment-label">{assignment.label}</span>
+                <button
+                  type="button"
+                  className="scouting-assignment-remove"
+                  aria-label="Auftrag entfernen"
+                  onClick={() => onRemoveAssignment(assignment.id)}
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <Hint text="Suche nach Name, Position oder Region. ⋮ pro Zeile: scouten oder Profil. Zeile klicken = Profil." block>
         <label className="scouting-search">
@@ -166,6 +220,20 @@ export function ScoutingCenter({
               }
             >
               {filter.label}
+            </Chip>
+          ))}
+          {REGIONS.map((region) => (
+            <Chip
+              key={region}
+              active={filters.query.toLowerCase() === region.toLowerCase()}
+              onClick={() =>
+                onFiltersChange({
+                  ...filters,
+                  query: filters.query.toLowerCase() === region.toLowerCase() ? "" : region,
+                })
+              }
+            >
+              {region}
             </Chip>
           ))}
         </div>

@@ -10,7 +10,7 @@ const BANNERS: Record<
     alt: "Abseits",
   },
   throw_in: {
-    src: "/match/throw-in-banner.png",
+    src: "/match/throw-in-banner.svg",
     alt: "Einwurf",
   },
   goal: {

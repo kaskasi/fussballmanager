@@ -68,7 +68,19 @@ jobs:
             cat /tmp/cf-verify.json || true
             exit 1
           fi
-          echo "Cloudflare token verified."
+          WORKER_CODE=$(curl -sS -o /tmp/cf-worker.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/fussballmanager")
+          if [ "${WORKER_CODE}" = "403" ] || [ "${WORKER_CODE}" = "401" ]; then
+            echo "::error::Token cannot access Worker 'fussballmanager' (HTTP ${WORKER_CODE}). Use a custom token: Account → Workers Scripts → Edit on the whole account (not a single Worker scope)."
+            cat /tmp/cf-worker.json || true
+            exit 1
+          fi
+          if [ "${WORKER_CODE}" = "404" ]; then
+            echo "Worker 'fussballmanager' does not exist yet — first deploy needs account-level Workers Scripts Edit (Admin) on the account."
+          else
+            echo "Cloudflare token verified (worker HTTP ${WORKER_CODE})."
+          fi
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3

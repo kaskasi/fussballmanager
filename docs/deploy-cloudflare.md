@@ -160,8 +160,17 @@ GitHub → Repo → **Settings** → **Secrets and variables** → **Actions**:
 
 | Name | Typ | Wert |
 |------|-----|------|
-| `CLOUDFLARE_API_TOKEN` | **Secret** (Pflicht) | Cloudflare → **My Profile** → **API Tokens** → Template **Edit Cloudflare Workers** |
+| `CLOUDFLARE_API_TOKEN` | **Secret** (Pflicht) | Custom token (siehe unten) oder Template **Edit Cloudflare Workers** |
 | `CLOUDFLARE_ACCOUNT_ID` | **Variable** oder Secret | `cd worker && npx wrangler whoami` → Account ID |
+
+**Empfohlen für CI (Custom Token):**
+
+1. Cloudflare → **My Profile** → **API Tokens** → **Create Token** → **Create Custom Token**
+2. **Permissions:** `Account` → `Workers Scripts` → **Edit**
+3. **Account Resources:** *Include* → dein Account (`815ca2f9…` o. ä.) — **nicht** auf einen einzelnen Worker beschränken, wenn der Worker noch nicht existiert
+4. Token kopieren → GitHub Secret `CLOUDFLARE_API_TOKEN`
+
+> Erster Deploy eines neuen Workers (inkl. Static Assets) braucht **Account-weites** Workers Scripts Edit. Ein Token, der nur auf einen bestehenden Worker scoped ist, schlägt bei `assets-upload-session` mit *No access to the specified resource* fehl.
 
 > **Wichtig:** Der API-Token gehört unter **Secrets**, nicht unter **Variables** — Variables sind öffentlich lesbar im Workflow-Log-Kontext und Wrangler erwartet `CLOUDFLARE_API_TOKEN` als Secret.
 
@@ -197,6 +206,7 @@ Konfiguration: `worker/wrangler.toml` — `run_worker_first` schickt nur `/api/*
 | Alter Stand nach Deploy | Hard-Refresh (Cache) oder Worker-Version in Dashboard prüfen |
 | `Invalid format for Authorization header` (6111) | `CLOUDFLARE_API_TOKEN` neu anlegen: nur den Token-String einfügen (kein `Bearer`, keine Anführungszeichen, kein Zeilenumbruch). Muss ein **API Token** sein, nicht der Global API Key. |
 | `Authentication failed` (9106) | Token mit Template **Edit Cloudflare Workers** erstellen; Account im Token auf dein Konto beschränken; Secret in GitHub **Secrets** (nicht Variables) speichern |
+| `assets-upload-session` / *No access to the specified resource* | Token braucht **Workers Scripts → Edit** auf dem **gesamten Account**, nicht nur einen Worker. Custom Token neu anlegen (siehe Tabelle oben). Alternativ einmal lokal `npm run deploy:cloudflare` nach `wrangler login` |
 
 ---
 

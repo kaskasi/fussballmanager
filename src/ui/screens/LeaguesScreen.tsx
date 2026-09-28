@@ -106,7 +106,6 @@ export function LeaguesScreen({
           yellows={leaders.yellows}
           playerClubId={league.player_club_id}
           worldClubs={worldClubs}
-          simulated={standings.simulated}
         />
       </section>
 

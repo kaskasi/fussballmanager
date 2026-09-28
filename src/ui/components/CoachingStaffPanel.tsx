@@ -134,7 +134,7 @@ function CoachRoleCard({
                   </span>
                   <button
                     type="button"
-                    className="training-staff-hire"
+                    className="ui-btn ui-btn--primary"
                     disabled={!affordable || !upgrade}
                     title={
                       !upgrade

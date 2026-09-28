@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ComponentPropsWithoutRef } from "react";
 import {
   profileMenuItems,
   type PlayerProfileAction,
@@ -10,6 +10,7 @@ import { confidenceLabel, type AbilityEstimate } from "../../scouting/estimate-m
 import {
   formatScoutCa,
   formatScoutStateValue,
+  scoutMarketValueBounds,
   scoutReveal,
 } from "../../scouting/scout-visibility.ts";
 import { Hint } from "../components/Hint.tsx";
@@ -101,9 +102,44 @@ export function PlayerProfile({
   const [tab, setTab] = useState<ProfileTab>(owned ? "development" : "overview");
   const [menuOpen, setMenuOpen] = useState(false);
   const menuItems = profileMenuItems(player, owned, season);
-  const canAffordPurchase =
-    purchasePrice === undefined || transferBudget === undefined || transferBudget >= purchasePrice;
   const reveal = scoutEstimate ? scoutReveal(scoutEstimate.uncertaintyRange) : null;
+  const askingBounds =
+    !owned && scoutEstimate ? scoutMarketValueBounds(player, scoutEstimate, season, false) : null;
+  const purchaseAmountLabel =
+    purchasePrice === undefined
+      ? undefined
+      : owned
+        ? `ca. ${formatMoney(purchasePrice)}`
+        : askingBounds === null
+          ? undefined
+          : askingBounds.exact
+            ? `ca. ${formatMoney(purchasePrice)}`
+            : `ca. ${formatMoney(askingBounds.low)}–${formatMoney(askingBounds.high)}`;
+  const canAffordPurchase =
+    purchasePrice === undefined ||
+    transferBudget === undefined ||
+    askingBounds === null ||
+    (askingBounds.exact
+      ? transferBudget >= purchasePrice
+      : transferBudget >= askingBounds.high);
+  const purchaseBlockedReason =
+    !owned && askingBounds === null
+      ? "Marktwert unbekannt — erst scouten und Wochen simulieren."
+      : !transferWindowOpen
+        ? "Transfers nur im Sommer- (KW 27–34) und Winterfenster (KW 2–4)."
+        : !canAffordPurchase && purchasePrice !== undefined
+          ? `Transfer-Budget reicht nicht (${purchaseAmountLabel ?? "Schätzung unbekannt"} nötig).`
+          : null;
+  const preContractAmountLabel =
+    preContractBonus === undefined
+      ? undefined
+      : owned
+        ? `ca. ${formatMoney(preContractBonus)}`
+        : askingBounds?.exact
+          ? `ca. ${formatMoney(preContractBonus)}`
+          : askingBounds
+            ? `ca. ${formatMoney(Math.round(preContractBonus * 0.7))}–${formatMoney(Math.round(preContractBonus * 1.3))}`
+            : undefined;
   const fitness = stateMark(player.state.fitness);
   const morale = stateMark(player.state.morale);
   const form = formMark(player.state.form);
@@ -217,84 +253,113 @@ export function PlayerProfile({
         ) : null}
         {tab === "stats" ? <StatsTab stats={stats} owned={owned} /> : null}
         {tab === "contract" ? <ContractTab contract={contract} /> : null}
+
+        {!owned && onAssignScout ? (
+          <footer className="profile-card-footer" aria-label="Scouting und Transfer">
+            {scouting ? (
+              <p className="profile-status" role="status">
+                <span aria-hidden="true">🟢</span>
+                Scout aktiv · Bericht nach Wochensim
+              </p>
+            ) : null}
+            <div className="profile-actions">
+              {!scouting ? (
+                <div className="profile-action-cell">
+                  <Hint
+                    text="Scout beobachtet den Spieler jede Woche. Pipeline → Woche simulieren."
+                    block
+                  >
+                    <ProfileActionButton
+                      label="Scouten"
+                      className="ui-btn--primary"
+                      onClick={onAssignScout}
+                    />
+                  </Hint>
+                </div>
+              ) : null}
+              {onToggleShortlist ? (
+                <div className="profile-action-cell is-compact">
+                  <button
+                    type="button"
+                    className="ui-btn ui-btn--ghost profile-action-btn is-icon"
+                    aria-label={shortlisted ? "Von Merkliste entfernen" : "Auf Merkliste setzen"}
+                    aria-pressed={shortlisted}
+                    onClick={onToggleShortlist}
+                  >
+                    <span className="profile-action-icon" aria-hidden="true">
+                      {shortlisted ? "★" : "☆"}
+                    </span>
+                  </button>
+                </div>
+              ) : null}
+              {onPurchase ? (
+                <div className="profile-action-cell">
+                  <Hint
+                    text={
+                      purchaseBlockedReason ??
+                      "Angebot nach Marktwert — Gegenangebot möglich."
+                    }
+                    block
+                  >
+                    <ProfileActionButton
+                      label="Kaufen"
+                      amount={purchaseAmountLabel}
+                      className={scouting ? "ui-btn--primary" : "ui-btn--ghost"}
+                      onClick={onPurchase}
+                      disabled={!transferWindowOpen || !canAffordPurchase || askingBounds === null}
+                    />
+                  </Hint>
+                </div>
+              ) : null}
+              {onPreContract ? (
+                <div className="profile-action-cell">
+                  <Hint
+                    text={
+                      preContractBlockedReason ??
+                      "Vorvertrag ab 6 Monate vor Vertragsende. Signaturbonus 10–15 % der gesparten Ablöse — 1–3 Liga-Mitbieter."
+                    }
+                    block
+                  >
+                    <ProfileActionButton
+                      label="Vorvertrag"
+                      amount={preContractAmountLabel}
+                      className="ui-btn--ghost"
+                      onClick={onPreContract}
+                      disabled={Boolean(preContractBlockedReason) || askingBounds === null}
+                    />
+                  </Hint>
+                </div>
+              ) : null}
+            </div>
+          </footer>
+        ) : null}
+
+        {owned && onSell ? (
+          <footer className="profile-card-footer" aria-label="Transfer">
+            <div className="profile-actions profile-actions-single">
+              <div className="profile-action-cell">
+                <Hint
+                  text={
+                    saleBlockedReason ??
+                    (!transferWindowOpen
+                      ? "Verkauf nur im Sommer- (KW 27–34) und Winterfenster (KW 2–4)."
+                      : "Liga-Verein bietet nach Marktwert. 50 % der Ablöse fließen in den Transfer-Topf.")
+                  }
+                  block
+                >
+                  <ProfileActionButton
+                    label="Verkaufen"
+                    amount={saleOffer ? `ca. ${formatMoney(saleOffer)}` : undefined}
+                    className="ui-btn--danger"
+                    onClick={onSell}
+                    disabled={!transferWindowOpen || Boolean(saleBlockedReason)}
+                  />
+                </Hint>
+              </div>
+            </div>
+          </footer>
+        ) : null}
       </article>
-
-      {!owned && onAssignScout ? (
-        <div className="profile-actions">
-          <Hint text="Scout beobachtet den Spieler jede Woche. Pipeline → Woche simulieren." block>
-            <button type="button" className="profile-scout" onClick={onAssignScout} disabled={scouting}>
-              {scouting ? "🟢 Scout aktiv · Bericht nach Wochensim" : "👁️ Diesen Spieler scouten"}
-            </button>
-          </Hint>
-          {onToggleShortlist ? (
-            <button type="button" className="profile-scout" onClick={onToggleShortlist}>
-              {shortlisted ? "⭐ Merkliste" : "☆ Merken"}
-            </button>
-          ) : null}
-          {onPurchase ? (
-            <Hint
-              text={
-                !transferWindowOpen
-                  ? "Transfers nur im Sommer- (KW 27–34) und Winterfenster (KW 2–4)."
-                  : !canAffordPurchase
-                    ? `Transfer-Budget reicht nicht (ca. ${formatMoney(purchasePrice ?? 0)} nötig).`
-                    : "Angebot nach Marktwert — Gegenangebot möglich."
-              }
-              block
-            >
-              <button
-                type="button"
-                className="profile-scout"
-                onClick={onPurchase}
-                disabled={!transferWindowOpen || !canAffordPurchase}
-              >
-                💰 Kaufen{purchasePrice ? ` · ca. ${formatMoney(purchasePrice)}` : ""}
-              </button>
-            </Hint>
-          ) : null}
-          {onPreContract ? (
-            <Hint
-              text={
-                preContractBlockedReason ??
-                "Vorvertrag ab 6 Monate vor Vertragsende. Signaturbonus 10–15 % der gesparten Ablöse — 1–3 Liga-Mitbieter."
-              }
-              block
-            >
-              <button
-                type="button"
-                className="profile-scout"
-                onClick={onPreContract}
-                disabled={Boolean(preContractBlockedReason)}
-              >
-                ✍️ Vorvertrag{preContractBonus ? ` · ca. ${formatMoney(preContractBonus)}` : ""}
-              </button>
-            </Hint>
-          ) : null}
-        </div>
-      ) : null}
-
-      {owned && onSell ? (
-        <div className="profile-actions">
-          <Hint
-            text={
-              saleBlockedReason ??
-              (!transferWindowOpen
-                ? "Verkauf nur im Sommer- (KW 27–34) und Winterfenster (KW 2–4)."
-                : "Liga-Verein bietet nach Marktwert. 50 % der Ablöse fließen in den Transfer-Topf.")
-            }
-            block
-          >
-            <button
-              type="button"
-              className="profile-scout profile-sell"
-              onClick={onSell}
-              disabled={!transferWindowOpen || Boolean(saleBlockedReason)}
-            >
-              🔴 Verkaufen{saleOffer ? ` · ca. ${formatMoney(saleOffer)}` : ""}
-            </button>
-          </Hint>
-        </div>
-      ) : null}
 
       {onOpenYouth ? (
         <button type="button" className="profile-next" onClick={onOpenYouth}>
@@ -547,6 +612,24 @@ function StatItem({ icon, label, value }: { icon: string; label: string; value: 
       <span className="profile-stat-item-label">{label}</span>
       <strong>{value}</strong>
     </div>
+  );
+}
+
+function ProfileActionButton({
+  label,
+  amount,
+  className = "",
+  ...props
+}: {
+  label: string;
+  amount?: string;
+  className?: string;
+} & ComponentPropsWithoutRef<"button">) {
+  return (
+    <button type="button" className={`ui-btn profile-action-btn ${className}`.trim()} {...props}>
+      <span className="profile-action-label">{label}</span>
+      {amount ? <span className="profile-action-amount">{amount}</span> : null}
+    </button>
   );
 }
 

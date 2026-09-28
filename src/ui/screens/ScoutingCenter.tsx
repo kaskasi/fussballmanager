@@ -4,8 +4,11 @@ import type { BoardTarget } from "../../scouting/scout-board.ts";
 import {
   type ScoutAssignment,
 } from "../../scouting/scout-assignments.ts";
-import type { HiredScout, ScoutNetworkState } from "../../scouting/scout-network.ts";
-import { ScoutNetworkPanel } from "../components/ScoutNetworkPanel.tsx";
+import {
+  scoutNetworkAccuracyModifier,
+  scoutNetworkCapacity,
+  type ScoutNetworkState,
+} from "../../scouting/scout-network.ts";
 import {
   filterMarket,
   headlineCounts,
@@ -15,8 +18,7 @@ import {
   type MarketSort,
 } from "../../scouting/market-list.ts";
 import { listMarketRows, sortMarketRows } from "../../scouting/market-roster.ts";
-import { formatScoutCa } from "../../scouting/scout-visibility.ts";
-import { formatMarketValueShort } from "../../squad/pro-roster.ts";
+import { formatScoutCa, formatScoutMarketValue } from "../../scouting/scout-visibility.ts";
 import type { MarketSortKey } from "../../scouting/market-list.ts";
 import { Hint } from "../components/Hint.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
@@ -65,12 +67,8 @@ export function ScoutingCenter({
   onAssignScout,
   scoutNetwork,
   scoutCapacity,
-  masterSeed,
   season,
-  week,
-  cash,
-  onHireScout,
-  onFireScout,
+  onOpenNetwork,
   onBack,
 }: {
   targets: BoardTarget[];
@@ -86,12 +84,8 @@ export function ScoutingCenter({
   onAssignScout: (playerId: string) => void;
   scoutNetwork: ScoutNetworkState;
   scoutCapacity: number;
-  masterSeed: number;
   season: number;
-  week: number;
-  cash: number;
-  onHireScout: (scout: HiredScout) => void;
-  onFireScout: (scoutId: string) => void;
+  onOpenNetwork: () => void;
   onBack: () => void;
 }) {
   const market = useMemo(
@@ -106,10 +100,12 @@ export function ScoutingCenter({
   const counts = headlineCounts(market);
   const visible = useMemo(() => {
     const filtered = filterMarket(market, filters);
-    const rows = listMarketRows(filtered, assignedIds);
+    const rows = listMarketRows(filtered, assignedIds, season);
     return sortMarketRows(rows, sort.key, sort.direction);
-  }, [market, filters, assignedIds, sort]);
+  }, [market, filters, assignedIds, sort, season]);
   const assigned = assignedIds.size;
+  const networkCapacity = scoutNetworkCapacity(scoutNetwork);
+  const networkAccuracy = scoutNetworkAccuracyModifier(scoutNetwork);
 
   const toggleSort = (key: MarketSortKey) => {
     if (sort.key === key) {
@@ -144,15 +140,19 @@ export function ScoutingCenter({
         </div>
       </header>
 
-      <ScoutNetworkPanel
-        network={scoutNetwork}
-        season={season}
-        week={week}
-        masterSeed={masterSeed}
-        cash={cash}
-        onHire={onHireScout}
-        onFire={onFireScout}
-      />
+      <section className="scouting-network-card" aria-label="Scout-Netzwerk">
+        <button type="button" className="scouting-network-card-link" onClick={onOpenNetwork}>
+          <span className="scouting-network-card-icon" aria-hidden="true">🛰️</span>
+          <span className="scouting-network-card-copy">
+            <strong>Scout-Netzwerk</strong>
+            <span>
+              {scoutNetwork.scouts.length} Scouts · Kapazität {networkCapacity} · Genauigkeit ×
+              {networkAccuracy.toFixed(2)}
+            </span>
+          </span>
+          <span className="scouting-network-card-cta" aria-hidden="true">→</span>
+        </button>
+      </section>
 
       <section className="scouting-assignments" aria-label="Scout-Aufträge">
         <header className="scouting-assignments-head">
@@ -303,7 +303,9 @@ export function ScoutingCenter({
                     <td>{row.age}</td>
                     <td>{row.clubName ?? "—"}</td>
                     <td className="squad-col-ca">{ca}</td>
-                    <td className="squad-col-value">{formatMarketValueShort(row.marketValue)}</td>
+                    <td className="squad-col-value">
+                      {formatScoutMarketValue(row.player, row.estimate, season, false)}
+                    </td>
                     <td className="scouting-col-label">{targetLabel({ player: row.player, estimate: row.estimate })}</td>
                     <td className="scouting-col-menu" onClick={(event) => event.stopPropagation()}>
                       <RowMenu

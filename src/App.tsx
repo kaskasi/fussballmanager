@@ -112,6 +112,7 @@ import {
   type MarketSort,
 } from "./scouting/market-list.ts";
 import { ScoutingCenter } from "./ui/screens/ScoutingCenter";
+import { ScoutNetworkScreen } from "./ui/screens/ScoutNetworkScreen.tsx";
 import { DecisionInboxModal } from "./ui/components/DecisionInbox.tsx";
 import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
 import { SaveToast } from "./ui/components/SaveToast.tsx";
@@ -154,6 +155,7 @@ type Screen =
   | "campus"
   | "matchday"
   | "scouting"
+  | "scout-network"
   | "transfers"
   | "squad"
   | "finances"
@@ -1455,12 +1457,20 @@ export default function App() {
           onAssignScout={handleAssignScout}
           scoutNetwork={scoutNetwork}
           scoutCapacity={scoutCapacity}
-          masterSeed={masterSeed}
+          season={season}
+          onOpenNetwork={() => setScreen("scout-network")}
+        />
+      ) : null}
+      {screen === "scout-network" ? (
+        <ScoutNetworkScreen
+          network={scoutNetwork}
           season={season}
           week={week}
+          masterSeed={masterSeed}
           cash={finances.cash}
-          onHireScout={handleHireScout}
-          onFireScout={handleFireScout}
+          onHire={handleHireScout}
+          onFire={handleFireScout}
+          onBack={() => setScreen("scouting")}
         />
       ) : null}
       {screen === "transfers" ? (
@@ -1677,7 +1687,7 @@ function AppNav({
         🏫
       </NavButton>
       <NavButton
-        pressed={screen === "scouting"}
+        pressed={screen === "scouting" || screen === "scout-network"}
         label="Scouting"
         onClick={() => {
           onCloseProfile?.();

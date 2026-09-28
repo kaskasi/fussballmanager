@@ -23,6 +23,7 @@ export function ScoutNetworkPanel({
   cash,
   onHire,
   onFire,
+  showHead = true,
 }: {
   network: ScoutNetworkState;
   season: number;
@@ -31,6 +32,7 @@ export function ScoutNetworkPanel({
   cash: number;
   onHire: (scout: HiredScout) => void;
   onFire: (scoutId: string) => void;
+  showHead?: boolean;
 }) {
   const capacity = scoutNetworkCapacity(network);
   const accuracy = scoutNetworkAccuracyModifier(network);
@@ -38,17 +40,19 @@ export function ScoutNetworkPanel({
 
   return (
     <section className="scout-network" aria-label="Scout-Netzwerk">
-      <header className="scout-network-head">
-        <Hint
-          text="Mehr Scouts = mehr gleichzeitige Ziele und bessere Beobachtungsgenauigkeit (PRD 04.2)."
-          block
-        >
-          <h2>🛰️ Scout-Netzwerk</h2>
-        </Hint>
-        <p className="scout-network-meta">
-          Kapazität {capacity} · Genauigkeit ×{accuracy.toFixed(2)} · {formatClubCash(wage)}/Woche
-        </p>
-      </header>
+      {showHead ? (
+        <header className="scout-network-head">
+          <Hint
+            text="Mehr Scouts = mehr gleichzeitige Ziele und bessere Beobachtungsgenauigkeit (PRD 04.2)."
+            block
+          >
+            <h2>🛰️ Scout-Netzwerk</h2>
+          </Hint>
+          <p className="scout-network-meta">
+            Kapazität {capacity} · Genauigkeit ×{accuracy.toFixed(2)} · {formatClubCash(wage)}/Woche
+          </p>
+        </header>
+      ) : null}
 
       <ul className="scout-network-list">
         {network.scouts.map((scout) => {
@@ -62,7 +66,11 @@ export function ScoutNetworkPanel({
                   {tier.label} · Trust {scout.trust} ({formatTrust(scout.trust)}) · +{tier.capacity} Slots
                 </small>
               </div>
-              <button type="button" className="scout-network-fire" onClick={() => onFire(scout.id)}>
+              <button
+                type="button"
+                className="ui-btn ui-btn--danger"
+                onClick={() => onFire(scout.id)}
+              >
                 Entlassen
               </button>
             </li>
@@ -93,6 +101,7 @@ export function ScoutNetworkPanel({
                       </span>
                       <button
                         type="button"
+                        className="ui-btn ui-btn--primary"
                         disabled={!affordable}
                         onClick={() => onHire(candidate)}
                       >

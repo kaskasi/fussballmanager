@@ -88,6 +88,13 @@ export function DecisionInboxModal({
       : null;
   const trialHint = player ? proTrialLabel(player, season, week) : null;
   const loanBlock = active && player ? loanBlockReason(active, players, clubId, week) : null;
+  const activeActions =
+    active && player ? allowedActions(active, players, clubId, week) : [];
+  const showBlockedLoanAction =
+    Boolean(loanBlock) &&
+    active?.kind === "departure_risk" &&
+    !activeActions.includes("loan");
+  const primaryAction = active ? primaryInboxAction(active, activeActions) : null;
 
   return (
     <div className="inbox-backdrop" onClick={onClose} role="presentation">
@@ -120,27 +127,23 @@ export function DecisionInboxModal({
         ) : (
           <>
             <nav className="inbox-queue" aria-label="Warteschlange">
-              {pending.map((item, index) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={item.id === active?.id ? "inbox-queue-item is-active" : "inbox-queue-item"}
-                  onClick={() => setActiveId(item.id)}
-                >
-                  <span className="inbox-queue-index">{index + 1}</span>
-                  <span>
-                    {isStoryInboxItem(item)
-                      ? item.kind === "story_press"
-                        ? "📰"
-                        : item.kind === "story_fan"
-                          ? "👥"
-                          : "💬"
-                      : item.kind === "departure_risk"
-                        ? "🚩"
-                        : "⚠️"}
-                  </span>
-                </button>
-              ))}
+              {pending.map((item, index) => {
+                const preview = inboxQueuePreview(item, players);
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={item.id === active?.id ? "inbox-queue-item is-active" : "inbox-queue-item"}
+                    onClick={() => setActiveId(item.id)}
+                  >
+                    <span className="inbox-queue-index">{index + 1}</span>
+                    <span className="inbox-queue-label">
+                      <span className="inbox-queue-name">{preview.name}</span>
+                      <span className="inbox-queue-topic">{preview.topic}</span>
+                    </span>
+                  </button>
+                );
+              })}
             </nav>
 
             {active && isStoryInboxItem(active) && active.narrative ? (
@@ -175,20 +178,21 @@ export function DecisionInboxModal({
               <section className="inbox-card">
                 <div className="inbox-player">
                   <span className="inbox-portrait" aria-hidden="true">{positionGlyph(player.position)}</span>
-                  <div>
-                    <strong>{formatPlayerName(player)}</strong>
-                    <p>
+                  <div className="inbox-player-body">
+                    <p className="inbox-decision-headline">
+                      <strong>{formatPlayerName(player)}</strong>
+                      <span className="inbox-decision-sep" aria-hidden="true">—</span>
+                      <span>{inboxItemLabel(active)}</span>
+                    </p>
+                    <p className="inbox-player-meta">
                       {player.position} · {player.age} J. · CA {roundStat(estimateCa(player.attributes, player.position))}
                     </p>
-                    <p className="inbox-reason">
-                      {itemKindIcon(active.kind)} {inboxItemLabel(active)}
-                      {coachIcon ? (
-                        <span className="inbox-coach" title={coachIconLabel(coachIcon)}>
-                          {" "}
-                          · Coach {coachIcon}
-                        </span>
-                      ) : null}
-                    </p>
+                    {coachIcon ? (
+                      <p className="inbox-coach-line" title={coachIconLabel(coachIcon)}>
+                        <span className="inbox-coach-icon" aria-hidden="true">{coachIcon}</span>
+                        <span>Coach: {coachIconLabel(coachIcon)}</span>
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 
@@ -204,8 +208,6 @@ export function DecisionInboxModal({
 
                 {trialHint ? <p className="inbox-trial-hint">🏃 {trialHint}</p> : null}
 
-                {loanBlock ? <p className="inbox-promotion-block">🔄 {loanBlock}</p> : null}
-
                 {active.reason === "ready_for_pro" && !promotionBlock ? (
                   <p className="inbox-contract-hint">
                     🏃 Probewoche: eine Woche Profiteam, danach automatische Beförderung wenn Platz frei ist.
@@ -213,17 +215,28 @@ export function DecisionInboxModal({
                 ) : null}
 
                 <div className="inbox-actions" aria-label="Aktionen">
-                  {allowedActions(active, players, clubId, week).map((action) => (
+                  {activeActions.map((action) => (
                     <button
                       key={action}
                       type="button"
-                      className="inbox-action"
+                      className={action === primaryAction ? "inbox-action is-primary" : "inbox-action"}
                       onClick={() => onDecision(active.id, action)}
                     >
                       <span aria-hidden="true">{actionIcon(action, actionContext)}</span>
                       <span>{actionLabel(action, actionContext)}</span>
                     </button>
                   ))}
+                  {showBlockedLoanAction ? (
+                    <button
+                      type="button"
+                      className="inbox-action is-disabled"
+                      disabled
+                      title={loanBlock ?? undefined}
+                    >
+                      <span aria-hidden="true">🔄</span>
+                      <span>Leihen</span>
+                    </button>
+                  ) : null}
                 </div>
               </section>
             ) : null}
@@ -234,11 +247,39 @@ export function DecisionInboxModal({
   );
 }
 
-function itemKindIcon(kind: DecisionInboxItem["kind"]): string {
-  if (kind === "departure_risk") return "🚩";
-  if (kind === "promotion") return "⬆️";
-  if (kind === "contract_offer") return "✍️";
-  return "💪";
+function inboxQueuePreview(
+  item: DecisionInboxItem,
+  players: readonly Player[],
+): { name: string; topic: string } {
+  if (isStoryInboxItem(item)) {
+    const body = item.narrative?.body ?? "";
+    return {
+      name: inboxItemLabel(item),
+      topic: body.length > 48 ? `${body.slice(0, 48)}…` : body,
+    };
+  }
+  const player = players.find((entry) => entry.id === item.playerId);
+  return {
+    name: player ? formatPlayerName(player) : "Spieler",
+    topic: inboxItemLabel(item),
+  };
+}
+
+function primaryInboxAction(
+  item: DecisionInboxItem,
+  actions: readonly DecisionAction[],
+): DecisionAction | null {
+  const preferred: DecisionAction[] =
+    item.kind === "promotion"
+      ? ["promote", "contract", "training_focus", "dismiss"]
+      : item.kind === "contract_offer"
+        ? ["contract", "dismiss"]
+        : item.kind === "departure_risk"
+          ? ["contract", "loan", "dismiss"]
+          : item.kind === "training_focus"
+            ? ["training_focus", "dismiss"]
+            : [];
+  return preferred.find((action) => actions.includes(action)) ?? actions[0] ?? null;
 }
 
 function positionGlyph(position: Player["position"]): string {

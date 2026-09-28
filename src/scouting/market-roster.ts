@@ -7,6 +7,7 @@ import { injuryRiskScore } from "../development/fitness-management.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { AbilityEstimate } from "./estimate-model.ts";
 import type { ScoutedTarget } from "./market-list.ts";
+import { scoutMarketValueEstimate } from "./scout-visibility.ts";
 
 export interface MarketRow extends ProSquadRow {
   player: Player;
@@ -18,6 +19,7 @@ export interface MarketRow extends ProSquadRow {
 export function listMarketRows(
   targets: readonly ScoutedTarget[],
   assignedIds: ReadonlySet<string>,
+  season: number,
 ): MarketRow[] {
   return targets.map(({ player, estimate, clubName }) => ({
     playerId: player.id,
@@ -31,7 +33,7 @@ export function listMarketRows(
     weeklyMinutes: player.state.weekly_minutes,
     injuryRisk: injuryRiskScore(player, 100),
     seasonMinutes: player.state.season_minutes,
-    marketValue: player.market_value,
+    marketValue: scoutMarketValueEstimate(player, estimate, season, false),
     goals: player.state.season_goals ?? 0,
     assists: player.state.season_assists ?? 0,
     yellowCards: player.state.season_yellow_cards ?? 0,

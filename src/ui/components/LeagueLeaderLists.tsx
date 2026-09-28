@@ -9,20 +9,15 @@ export function LeagueLeaderLists({
   yellows,
   playerClubId,
   worldClubs,
-  simulated = false,
 }: {
   scorers: readonly PlayerSeasonStat[];
   assists: readonly PlayerSeasonStat[];
   yellows: readonly PlayerSeasonStat[];
   playerClubId: LeagueState["player_club_id"];
   worldClubs?: readonly WorldClub[];
-  simulated?: boolean;
 }) {
   return (
     <div className="league-leaders" aria-label="Liga-Statistik">
-      {simulated ? (
-        <p className="leagues-screen-meta">Saisonstatistik aus Auto-Sim (Schätzwerte)</p>
-      ) : null}
       <LeaderList title="⚽ Torschützen" rows={scorers} field="goals" playerClubId={playerClubId} worldClubs={worldClubs} />
       <LeaderList title="🅰️ Assists" rows={assists} field="assists" playerClubId={playerClubId} worldClubs={worldClubs} />
       <LeaderList title="🟨 Gelbe Karten" rows={yellows} field="yellowCards" playerClubId={playerClubId} worldClubs={worldClubs} />

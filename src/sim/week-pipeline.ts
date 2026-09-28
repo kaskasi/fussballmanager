@@ -36,6 +36,7 @@ import { environmentFromCoachingStaff } from "../staff/coaching-staff.ts";
 import { advanceRivalGrowthWeek } from "./rival-growth.ts";
 import { applyWeeklyFitnessBatch } from "../development/fitness-management.ts";
 import type { WatchedPlayerMatch } from "./watched-player-match.ts";
+import { advanceNarrativeWeek } from "../narrative/pipeline-week.ts";
 
 export interface WeekSimResult {
   session: GameSession;
@@ -220,20 +221,42 @@ export async function simulateGameWeek(
       `${alert.headline}: ${alert.playerName} (CA ~${alert.estimatedCa})`,
     );
   }
+  const narrativeStep = advanceNarrativeWeek(
+    {
+      ...session,
+      season: seasonEnded ? session.season + 1 : session.season,
+      week: nextWeek,
+      players: playersWithCaStamp,
+      scoutBoard,
+      youthInbox: advanced.inbox,
+      league: leagueWithCareerStats,
+      finances,
+      stadium,
+      rivalPlayers,
+      transferState,
+      clubEvents,
+      individualPrograms: individualStep.programs,
+      storyState: session.storyState,
+    },
+    leagueStep.playerFixture,
+  );
+
   let nextSession: GameSession = {
     ...session,
     season: seasonEnded ? session.season + 1 : session.season,
     week: nextWeek,
-    players: playersWithCaStamp,
+    players: narrativeStep.players,
     scoutBoard,
-    youthInbox: advanced.inbox,
+    youthInbox: narrativeStep.youthInbox,
     league: leagueWithCareerStats,
     finances,
-    stadium,
+    stadium: narrativeStep.stadium,
+    board: narrativeStep.board,
     rivalPlayers,
     transferState,
     clubEvents,
     individualPrograms: individualStep.programs,
+    storyState: narrativeStep.storyState,
   };
 
   let intakeCount = 0;

@@ -14,6 +14,7 @@ import { emptyInbox, type YouthInboxState } from "../youth/decision-inbox.ts";
 import type { CoachingStaff } from "../staff/coaching-staff.ts";
 import type { Player } from "../types/player.ts";
 import type { SeasonAwardsSnapshot } from "../sim/season-awards.ts";
+import { defaultStoryState, type StoryState } from "../narrative/story-state.ts";
 
 /** Dynamic hub state stored in `state.json` (PRD 08). */
 export interface PipelineState {
@@ -40,6 +41,8 @@ export interface PipelineState {
   coaching_staff?: CoachingStaff;
   /** F11.2 — last completed season award gallery. */
   last_season_awards?: SeasonAwardsSnapshot;
+  /** PRD 13 — relegation narrative slice state. */
+  story_state?: StoryState;
 }
 
 export function defaultPipelineState(week = 1): PipelineState {
@@ -53,5 +56,6 @@ export function defaultPipelineState(week = 1): PipelineState {
     club_events: emptyClubEvents(),
     tactics_presets: defaultTacticsPresets(),
     board: startBoardSeason(defaultBoardState(defaultEmployerClubId()), defaultEmployerClubId(), 1),
+    story_state: defaultStoryState(week),
   };
 }

@@ -29,6 +29,7 @@ import { advanceClubFanbase, seasonEndFanbaseBonus } from "../stadium/fanbase.ts
 import type { GameSession } from "../persistence/game-session.ts";
 import { activatePendingPreContracts } from "../transfers/pre-contracts.ts";
 import { computeSeasonAwards } from "./season-awards.ts";
+import { appendSeasonCoda } from "../narrative/season-end-narrative.ts";
 
 export interface SeasonEndResult {
   session: GameSession;
@@ -135,6 +136,13 @@ export function runSeasonEnd(
     promotionRelegation.pools,
     leagueNormalized.player_club_id,
   );
+  const storyState = appendSeasonCoda(
+    session.storyState,
+    session.league,
+    endingSeason,
+    SEASON_END_WEEK,
+  );
+
   return {
     session: {
       ...session,
@@ -146,6 +154,7 @@ export function runSeasonEnd(
       rivalPlayers: ageRivalPlayers(preContractStep.rivalPlayers),
       lastSeasonAwards,
       league: resetLeagueSeason(leagueAfterMovement),
+      storyState,
     },
     intakeCount: intake.length,
     loanReturns,

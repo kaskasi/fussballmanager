@@ -12,6 +12,7 @@ import {
   inboxItemLabel,
   inboxPipelineHint,
   inboxWeekFocus,
+  isStoryInboxItem,
   type YouthInboxState,
 } from "../../youth/decision-inbox.ts";
 
@@ -89,6 +90,37 @@ export function HubInboxPanel({
           ) : (
             <ul className="hub-inbox-list">
               {decisions.map((item) => {
+                if (isStoryInboxItem(item)) {
+                  const icon =
+                    item.kind === "story_press"
+                      ? "📰"
+                      : item.kind === "story_fan"
+                        ? "👥"
+                        : item.kind === "story_captain"
+                          ? "©️"
+                          : item.kind === "story_assistant"
+                            ? "🧑‍🏫"
+                            : "🤵";
+                  return (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        className="hub-inbox-row hub-inbox-row-story"
+                        onClick={() => onOpenDecision(item.id)}
+                      >
+                        <span className="hub-inbox-icon" aria-hidden="true">{icon}</span>
+                        <span className="hub-inbox-row-text">
+                          <strong>{inboxItemLabel(item)}</strong>
+                          <span className="hub-inbox-row-detail">
+                            {item.narrative?.body.slice(0, 72)}
+                            {(item.narrative?.body.length ?? 0) > 72 ? "…" : ""}
+                          </span>
+                        </span>
+                        <span className="hub-inbox-row-cta">→</span>
+                      </button>
+                    </li>
+                  );
+                }
                 const player = players.find((entry) => entry.id === item.playerId);
                 if (!player) return null;
                 return (

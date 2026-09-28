@@ -6307,3 +6307,195 @@ body {
     overscroll-behavior-x: contain;
   }
 }
+
+.fan-feed-strip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0 0 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.85rem;
+  background: linear-gradient(90deg, #f0fdf4, #fff);
+  border: 1px solid #bbf7d0;
+}
+
+.fan-feed-label {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.fan-feed-chips {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fan-feed-chip {
+  display: flex;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  color: #14532d;
+}
+
+.fan-feed-chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fan-feed-hype {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.chronicle-panel {
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
+}
+
+.chronicle-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.65rem;
+}
+
+.chronicle-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.chronicle-entry {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.chronicle-entry p {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.chronicle-meta {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.board-objective.is-survival {
+  background: #fff1f2;
+  border-radius: 0.5rem;
+}
+
+.opening-modal {
+  max-width: 40rem;
+}
+
+.opening-lead {
+  margin: 0 0 1rem;
+  color: #475569;
+}
+
+.opening-origin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.opening-origin-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.opening-origin-card.is-active {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 2px rgb(22 163 74 / 15%);
+}
+
+.opening-origin-icon {
+  font-size: 1.4rem;
+}
+
+.opening-captain h3 {
+  margin: 0 0 0.35rem;
+}
+
+.opening-captain-hint {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.opening-captain-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.opening-captain-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  background: #fff;
+  text-align: left;
+}
+
+.opening-captain-row.is-active {
+  border-color: #16a34a;
+}
+
+.opening-captain-stats span {
+  display: block;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.opening-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.opening-start-btn {
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: #16a34a;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.inbox-card-story .inbox-story p {
+  margin: 0.5rem 0 0;
+  color: #475569;
+}
+
+.hub-inbox-row-story {
+  border-left: 3px solid #16a34a;
+}

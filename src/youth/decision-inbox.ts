@@ -9,18 +9,31 @@ import type { CoachIcon } from "./academy.ts";
 import { departureReasonLabel, departureRiskReasons } from "./departure-risk.ts";
 import { hasActiveProTrial, startProTrial } from "./pro-trial.ts";
 import { canPromotePlayer } from "./promotion-gate.ts";
+import type { StoryInboxPayload } from "../narrative/story-state.ts";
 import type { YouthReport } from "./youth-sim.ts";
 
 /** PRD 03.4 — max open decisions at once; extra candidates wait in queue. */
 export const MAX_INBOX_ITEMS = 4;
 
-export type DecisionAction = "loan" | "promote" | "contract" | "training_focus" | "dismiss";
+export type StoryDecisionAction = `story:${string}`;
+export type DecisionAction =
+  | "loan"
+  | "promote"
+  | "contract"
+  | "training_focus"
+  | "dismiss"
+  | StoryDecisionAction;
 
 export type InboxItemKind =
   | "departure_risk"
   | "promotion"
   | "contract_offer"
-  | "training_focus";
+  | "training_focus"
+  | "story_press"
+  | "story_fan"
+  | "story_captain"
+  | "story_assistant"
+  | "story_board";
 
 export interface DecisionInboxItem {
   id: string;
@@ -29,6 +42,39 @@ export interface DecisionInboxItem {
   week: number;
   urgency: "now" | "next_window" | "future";
   reason: string;
+  narrative?: StoryInboxPayload;
+}
+
+const STORY_KINDS = new Set<InboxItemKind>([
+  "story_press",
+  "story_fan",
+  "story_captain",
+  "story_assistant",
+  "story_board",
+]);
+
+export function isStoryInboxKind(kind: InboxItemKind): boolean {
+  return STORY_KINDS.has(kind);
+}
+
+export function isStoryInboxItem(item: DecisionInboxItem): boolean {
+  return isStoryInboxKind(item.kind);
+}
+
+function storyKindForSource(source: StoryInboxPayload["source"]): InboxItemKind {
+  switch (source) {
+    case "press":
+      return "story_press";
+    case "fan":
+      return "story_fan";
+    case "captain":
+      return "story_captain";
+    case "assistant":
+      return "story_assistant";
+    case "board":
+    case "origin":
+      return "story_board";
+  }
 }
 
 export interface YouthInboxState {
@@ -43,9 +89,14 @@ export interface YouthInboxState {
 
 const KIND_PRIORITY: Record<InboxItemKind, number> = {
   departure_risk: 0,
-  promotion: 1,
-  contract_offer: 2,
-  training_focus: 3,
+  story_board: 0,
+  story_press: 1,
+  story_captain: 1,
+  promotion: 2,
+  story_assistant: 2,
+  story_fan: 3,
+  contract_offer: 3,
+  training_focus: 4,
 };
 
 export function emptyInbox(week: number): YouthInboxState {
@@ -71,10 +122,15 @@ function youthPlayerIds(players: readonly Player[]): Set<string> {
   );
 }
 
+function keepInboxItem(item: DecisionInboxItem, validIds: Set<string>): boolean {
+  if (isStoryInboxItem(item)) return true;
+  return validIds.has(item.playerId);
+}
+
 /** Drop inbox rows for players who left youth or the club. */
 export function pruneYouthInbox(inbox: YouthInboxState, players: readonly Player[]): YouthInboxState {
   const validIds = youthPlayerIds(players);
-  const keep = (item: DecisionInboxItem) => validIds.has(item.playerId);
+  const keep = (item: DecisionInboxItem) => keepInboxItem(item, validIds);
   return {
     ...inbox,
     items: inbox.items.filter(keep),
@@ -89,7 +145,7 @@ export function pendingInboxItems(
   const open = inbox.items.filter((item) => !inbox.resolvedIds.includes(item.id));
   if (!players) return open;
   const validIds = youthPlayerIds(players);
-  return open.filter((item) => validIds.has(item.playerId));
+  return open.filter((item) => keepInboxItem(item, validIds));
 }
 
 export function queuedInboxItems(
@@ -102,7 +158,7 @@ export function queuedInboxItems(
   );
   if (!players) return queued;
   const validIds = youthPlayerIds(players);
-  return queued.filter((item) => validIds.has(item.playerId));
+  return queued.filter((item) => keepInboxItem(item, validIds));
 }
 
 export interface InboxWeekFocus {
@@ -196,7 +252,38 @@ export function deliverInboxForDays(
   return current;
 }
 
+export function enqueueStoryInboxItem(
+  inbox: YouthInboxState,
+  week: number,
+  payload: StoryInboxPayload,
+  idSuffix: string,
+): YouthInboxState {
+  const item: DecisionInboxItem = {
+    id: `story_${idSuffix}_${week}`,
+    playerId: "",
+    kind: storyKindForSource(payload.source),
+    week,
+    urgency: "now",
+    reason: payload.beatId,
+    narrative: payload,
+  };
+  if (inbox.items.some((entry) => entry.id === item.id) || inbox.queue.some((entry) => entry.id === item.id)) {
+    return inbox;
+  }
+  const openCount = pendingInboxItems(inbox).length;
+  if (openCount >= MAX_INBOX_ITEMS) {
+    return { ...inbox, queue: [...inbox.queue, item] };
+  }
+  return { ...inbox, items: [...inbox.items, item] };
+}
+
+export function storyChoiceId(action: DecisionAction): string | null {
+  if (!action.startsWith("story:")) return null;
+  return action.slice("story:".length);
+}
+
 export function inboxItemLabel(item: DecisionInboxItem): string {
+  if (item.narrative) return item.narrative.title;
   switch (item.reason) {
     case "no_game_time":
       return departureReasonLabel("no_game_time");
@@ -225,6 +312,9 @@ export function allowedActions(
   clubId?: string,
   week?: number,
 ): DecisionAction[] {
+  if (item.narrative) {
+    return item.narrative.choices.map((choice) => `story:${choice.id}` as StoryDecisionAction);
+  }
   const base: DecisionAction[] = (() => {
     switch (item.kind) {
       case "departure_risk":
@@ -235,6 +325,12 @@ export function allowedActions(
         return ["contract", "dismiss"];
       case "training_focus":
         return ["training_focus", "dismiss"];
+      case "story_press":
+      case "story_fan":
+      case "story_captain":
+      case "story_assistant":
+      case "story_board":
+        return [];
     }
   })();
 
@@ -277,6 +373,11 @@ export interface DecisionActionContext {
 }
 
 export function actionLabel(action: DecisionAction, context?: DecisionActionContext): string {
+  if (action.startsWith("story:")) {
+    const choiceId = action.slice("story:".length);
+    const choice = context?.item?.narrative?.choices.find((entry) => entry.id === choiceId);
+    return choice?.label ?? choiceId;
+  }
   if (
     action === "promote" &&
     context?.player?.squad_status === "u19" &&
@@ -295,10 +396,17 @@ export function actionLabel(action: DecisionAction, context?: DecisionActionCont
       return "Trainingsfokus";
     case "dismiss":
       return "Später";
+    default:
+      return action;
   }
 }
 
 export function actionIcon(action: DecisionAction, context?: DecisionActionContext): string {
+  if (action.startsWith("story:")) {
+    const choiceId = action.slice("story:".length);
+    const choice = context?.item?.narrative?.choices.find((entry) => entry.id === choiceId);
+    return choice?.icon ?? "💬";
+  }
   if (
     action === "promote" &&
     context?.player?.squad_status === "u19" &&
@@ -317,6 +425,8 @@ export function actionIcon(action: DecisionAction, context?: DecisionActionConte
       return "💪";
     case "dismiss":
       return "⏭️";
+    default:
+      return "💬";
   }
 }
 
@@ -547,10 +657,18 @@ export function applyInboxDecision(
 
   let nextPlayers = [...players];
   let transferRecord: TransferRecord | undefined;
-  const player = nextPlayers.find((entry) => entry.id === item.playerId);
+  const player = item.playerId
+    ? nextPlayers.find((entry) => entry.id === item.playerId)
+    : undefined;
   const clubId = player?.club_id ?? resolveClubId(players);
   if (!allowedActions(item, players, clubId, currentWeek).includes(action)) {
     return { inbox, players: nextPlayers };
+  }
+  if (isStoryInboxItem(item)) {
+    return {
+      inbox: { ...inbox, resolvedIds: [...inbox.resolvedIds, itemId] },
+      players: nextPlayers,
+    };
   }
   if (!player) {
     return {
@@ -669,13 +787,13 @@ export function advanceInboxWeek(
   const carriedOpen = inbox.items.filter(
     (item) =>
       !inbox.resolvedIds.includes(item.id) &&
-      remaining.some((player) => player.id === item.playerId),
+      (isStoryInboxItem(item) || remaining.some((player) => player.id === item.playerId)),
   );
   const carriedQueue = inbox.queue.filter(
     (item) =>
       !inbox.resolvedIds.includes(item.id) &&
       !carriedOpen.some((open) => open.id === item.id) &&
-      remaining.some((player) => player.id === item.playerId),
+      (isStoryInboxItem(item) || remaining.some((player) => player.id === item.playerId)),
   );
 
   return {

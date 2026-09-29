@@ -1,7 +1,7 @@
 # /docs/prd/09_ui_screens.md
 
-**Version:** 1.1
-**Last Updated:** 2026-09-22
+**Version:** 1.2
+**Last Updated:** 2026-09-29
 **Status:** Final
 
 ---
@@ -28,6 +28,9 @@ UI-Screens für den Talent-Pipeline-Block. 8 Screens plus zwei Modals. Wireframe
 2. **2-Klick-Regel:** Von der Information zur Aktion in höchstens 2 Klicks.
 3. **Kein Dead-End:** Jeder Screen hat mindestens einen Next-Action-Button.
 4. **Wireframes vor Code:** ASCII-Wireframe als Kommentar, bevor gestylt wird.
+5. **Keine generative Bild-KI:** Grafik = SVG/CSS/Typografie, CC0 wo nötig.
+   Mood-Streifen (Spieltag, Transfer) sind text/CSS-first; siehe PRD 01
+   „Asset-Herkunft“. Cursor-Tasks, die Bildgeneratoren vorschlagen, sind out of scope.
 
 ---
 

@@ -1,7 +1,7 @@
 # /docs/prd/01_vision.md
 
-**Version:** 1.0
-**Last Updated:** 2026-09-27
+**Version:** 1.1
+**Last Updated:** 2026-09-29
 **Status:** Final
 
 ---
@@ -170,7 +170,26 @@ Damit bleiben Saves reproduzierbar und das Spiel ohne lokales Modell spielbar.
 - Orte verändern sich sichtbar durch bestehende Ausbau- und
   Fanbase-Systeme.
 - SVG und 2D-Iso bleiben Standard; kein 3D.
-- Generierte Bilder werden einmal erstellt und als statische Assets gecacht.
+
+### Asset-Herkunft (verbindlich)
+
+Keine generative Bild-KI (Midjourney, Stable Diffusion, DALL·E, img2img o. Ä.)
+in ausgelieferten Spiel-Assets. UI nutzt handgeschriebene **SVG**, **CSS**,
+Typografie, Emoji/Glyphs und Charts. Incident-Banner (Tor, Ecke, Elfmeter, …)
+sind SVG mit Text — kein generiertes Artwork.
+
+Stimmungs-Dekoration (Spieltag, Transferfenster) ist **optional** und darf durch
+reine Text/CSS-Ambience ersetzt werden; keine neuen generierten PNG-Streifen.
+
+Erlaubt: CC0-/Open-Source-Grafik und -SFX mit Quellenangabe im Repo.
+Erlaubt später: **modulare Sprachaufnahmen des Entwicklers** (kein TTS).
+Verboten ohne Produktentscheidung: Cloud-TTS, generative Musik, generative UI-Bilder.
+
+LLM (Ollama) nur für **Text** nach den Regeln unter „Lokale KI“ — kein Ersatz
+für Grafik oder Audio.
+
+Vor öffentlichen Aussagen zu „kein KI-Content“: Inventur unter `/public/` und
+Kommentare im Code (z. B. `img2img`) prüfen.
 
 ---
 
@@ -180,7 +199,8 @@ Damit bleiben Saves reproduzierbar und das Spiel ohne lokales Modell spielbar.
   Figuren.
 - Kein vorgegebenes Drehbuch, das Spielergebnisse überschreibt.
 - Kein Roguelike- oder Meta-Progressionssystem.
-- Kein spielbares Match, keine 3D-Sequenzen und keine Sprachausgabe.
+- Kein spielbares Match, keine 3D-Sequenzen und keine **generative**
+  Sprachsynthese (TTS).
 - Kein Multiplayer.
 - Keine private Lebenssimulation des Managers.
 - Keine Cloud-KI als Voraussetzung.

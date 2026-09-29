@@ -19,7 +19,9 @@ alwaysApply: false
   When adding a new generated-content type, consider whether it should
   feed back into morale/relationship state, not just render as flavor
   text.
-- Image generation (icons, backgrounds, placeholders) is generated once
-  per asset and cached as a static file — never regenerated on every
-  render or every request. Treat generated images as build-time or
-  first-use assets, not live per-request output.
+- **No generative image AI** for shipped game assets (PRD 01). Use SVG, CSS,
+  typography, emoji/glyphs, charts, or declared CC0 sources. If the user
+  asks to generate art, refuse and point to PRD 01 — do not call image
+  models or suggest Midjourney/SD pipelines.
+- Optional later: developer-recorded modular voice lines (not TTS). CC0 SFX
+  for matchday atmosphere is fine with attribution.

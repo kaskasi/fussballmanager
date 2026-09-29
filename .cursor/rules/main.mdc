@@ -171,6 +171,7 @@ Bei jedem Commit prüfen:
 | Situation | Action |
 |---|---|
 | Task fragt nach `potential`-Wert im Player-Objekt | STOPP — PRD 07 hat kein `potential` |
+| Task will generative Bild-KI / img2img / TTS für Assets | STOPP — PRD 01 Asset-Herkunft; SVG/CSS/CC0 oder Text |
 | Engine-Ordner `server/src/engine/` soll geändert werden | STOPP — Gesetz 4, nur Wrapper |
 | Jugend-Aufstellung konfigurieren gefragt | STOPP — Gesetz 6, vollautomatisch |
 | Text-first UI geplant | STOPP — Gesetz 3, Icon-first |

@@ -10,8 +10,8 @@ alwaysApply: true
 - Database: PostgreSQL
 - LLM: local via Ollama — do not add a cloud LLM API call unless explicitly
   asked to
-- Image generation: local, generate once and cache as a static asset —
-  never regenerate the same icon/background per session or per request
+- Visual assets: hand-authored SVG/CSS/typography or declared CC0 — no
+ generative image AI in shipped assets (PRD 01)
 
 # Non-negotiables
 - No 3D, anywhere (match rendering, stadium editor, anything else). If a

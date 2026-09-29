@@ -8,7 +8,7 @@ alwaysApply: false
 - Text is the default medium (squad lists, reports, inbox, dialogue), but
   it is not mandatory. Morale, financial health, match momentum,
   staff/player quality, and relationships should be represented visually
-  (color, icons, small charts, AI-generated imagery) rather than as raw
+  (color, icons, small charts, SVG/CSS) rather than as raw
   numbers in a table, wherever that communicates better.
 - Pitch and stadium-editor visuals: SVG components, 2D only. No 3D
   libraries, no WebGL unless explicitly requested.

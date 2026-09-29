@@ -1,7 +1,7 @@
 # /docs/prd/10_feature_list.md
 
-**Version:** 1.1
-**Last Updated:** 2026-09-27
+**Version:** 1.2
+**Last Updated:** 2026-09-29
 **Status:** Final  
 
 ---
@@ -208,7 +208,8 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | Manuelle Jugend-Aufstellungen | Mikromanagement, PRD 03 |
 | Nationaltrainer-Rolle | Scope |
 | Multiplayer/Online | Savegame-Export genügt |
-| 3D / Videosequenzen / Sprachausgabe | 2D + Icons sind Design-Grenze |
+| 3D / Videosequenzen | 2D + Icons sind Design-Grenze |
+| Generative Bild-KI / TTS-Kommentar | Asset-Herkunft PRD 01; eigene modulare Aufnahmen optional später |
 | Editor-Mode | Überflüssig durch absolutes Modell ohne versteckte Decke |
 
 ---

@@ -316,6 +316,86 @@ body {
   margin-bottom: 1rem;
 }
 
+.match-presentation-toggle {
+  margin: 0;
+}
+
+.events-feed {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: min(48vh, 20rem);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgb(15 23 42 / 92%);
+  color: #f8fafc;
+  box-shadow: 0 12px 40px rgb(15 23 42 / 12%);
+}
+
+.events-feed-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  border-bottom: 1px solid rgb(148 163 184 / 22%);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.events-feed-team:last-child {
+  text-align: right;
+}
+
+.events-feed-score {
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #f8fafc;
+}
+
+.events-feed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.55rem 0.45rem 0.65rem;
+  overflow-y: auto;
+  display: grid;
+  gap: 0.28rem;
+  align-content: start;
+}
+
+.events-feed-line {
+  margin: 0;
+  padding: 0.42rem 0.55rem;
+  border-radius: 0.55rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #cbd5e1;
+}
+
+.events-feed-line.is-placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.events-feed-line.is-latest {
+  background: rgb(30 41 59 / 88%);
+  color: #f8fafc;
+  animation: commentary-in 0.35s ease-out;
+}
+
+.events-feed-line.is-danger {
+  color: #fde68a;
+}
+
+.events-feed-line.is-goal {
+  color: #86efac;
+  font-weight: 800;
+}
+
 .pitch-wrap {
   margin: 0;
   background: #14532d;
@@ -461,6 +541,7 @@ body {
 .career-match-actions--inline {
   margin: 0;
   padding: 0 0.15rem;
+  align-items: center;
 }
 
 .career-match-stage {

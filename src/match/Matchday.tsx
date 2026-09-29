@@ -4,9 +4,10 @@ import {
   sandboxPlanFromTactics,
   SEED_MATCHUP,
 } from "@fussballmanager/shared";
-import { CommentaryFeed } from "./CommentaryFeed";
 import { Lineup } from "./Lineup";
-import { Pitch } from "./Pitch";
+import { MatchPresentationToggle } from "./MatchPresentationToggle";
+import { MatchStage } from "./MatchStage";
+import { useMatchPresentationMode } from "./match-presentation-mode";
 import { Scoreboard } from "./Scoreboard";
 import { TacticsBoard } from "./TacticsBoard";
 import { useMatchPlayback } from "./useMatchPlayback";
@@ -40,6 +41,7 @@ export function Matchday() {
     sandboxPlanFromTactics(SEED_MATCHUP.away.tactics),
   );
   const playback = useMatchPlayback(view);
+  const [presentationMode, setPresentationMode] = useMatchPresentationMode();
 
   const load = useCallback(
     async (nextSeed: number, home: SandboxPlan, away: SandboxPlan) => {
@@ -155,6 +157,11 @@ export function Matchday() {
         <button type="button" onClick={playback.restart} disabled={!view}>
           Restart
         </button>
+        <MatchPresentationToggle
+          value={presentationMode}
+          onChange={setPresentationMode}
+          disabled={!view || loading}
+        />
         <label>
           Speed
           <select
@@ -184,21 +191,15 @@ export function Matchday() {
 
       {view && frame ? (
         <>
-          <div className="match-stage">
-            <Pitch
-              from={playback.previous ?? frame}
-              to={frame}
-              playing={playback.playing}
-              durationMs={playback.frameDurationMs}
-              homeId={view.home.id}
-              home={view.home}
-              away={view.away}
-              roster={view.roster}
-              cue={frame.cue}
-              cueDetail={frame.cueDetail}
-            />
-            <CommentaryFeed lines={playback.visibleLines} />
-          </div>
+          <MatchStage
+            mode={presentationMode}
+            view={view}
+            frame={frame}
+            previous={playback.previous}
+            playing={playback.playing}
+            frameDurationMs={playback.frameDurationMs}
+            visibleLines={playback.visibleLines}
+          />
           <Lineup view={view} frame={frame} />
         </>
       ) : null}

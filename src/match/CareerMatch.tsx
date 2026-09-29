@@ -12,9 +12,10 @@ import {
 import { CareerLineupScreen } from "./CareerLineupScreen.tsx";
 import { squadForLeagueClub } from "../sim/league-divisions.ts";
 import type { MatchLineupState } from "./lineup-board.ts";
-import { CommentaryFeed } from "./CommentaryFeed.tsx";
 import { Lineup } from "./Lineup.tsx";
-import { Pitch } from "./Pitch.tsx";
+import { MatchPresentationToggle } from "./MatchPresentationToggle.tsx";
+import { MatchStage } from "./MatchStage.tsx";
+import { useMatchPresentationMode } from "./match-presentation-mode.ts";
 import { Scoreboard } from "./Scoreboard.tsx";
 import { useMatchPlayback } from "./useMatchPlayback.ts";
 
@@ -116,6 +117,7 @@ function CareerMatchPlayback({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const playback = useMatchPlayback(view);
+  const [presentationMode, setPresentationMode] = useMatchPresentationMode();
   const rivalPlayersRef = useRef(rivalPlayers);
   rivalPlayersRef.current = rivalPlayers;
   const matchFetchKey = `${setup.seed}:${setup.homeTeamId}:${setup.awayTeamId}:${setup.playerClubId}`;
@@ -250,6 +252,11 @@ function CareerMatchPlayback({
               ›
             </button>
           </div>
+          <MatchPresentationToggle
+            value={presentationMode}
+            onChange={setPresentationMode}
+            disabled={!view || loading}
+          />
           <label className="career-match-speed">
             Speed
             <select
@@ -272,21 +279,16 @@ function CareerMatchPlayback({
 
       {view && frame ? (
         <>
-          <div className="match-stage career-match-stage">
-            <Pitch
-              from={playback.previous ?? frame}
-              to={frame}
-              playing={playback.playing}
-              durationMs={playback.frameDurationMs}
-              homeId={view.home.id}
-              home={view.home}
-              away={view.away}
-              roster={view.roster}
-              cue={frame.cue}
-              cueDetail={frame.cueDetail}
-            />
-            <CommentaryFeed lines={playback.visibleLines} />
-          </div>
+          <MatchStage
+            mode={presentationMode}
+            view={view}
+            frame={frame}
+            previous={playback.previous}
+            playing={playback.playing}
+            frameDurationMs={playback.frameDurationMs}
+            visibleLines={playback.visibleLines}
+            className="career-match-stage"
+          />
           <details className="career-match-lineups">
             <summary>Aufstellungen</summary>
             <Lineup view={view} frame={frame} />

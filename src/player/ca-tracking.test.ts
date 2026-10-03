@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
+import { appendSeasonSnapshot } from "../ui/player-profile.ts";
 import {
   caDeltaMark,
   formatSquadCaDeltaSummary,
   listDevelopmentMovers,
   playerCa,
+  seasonCaDelta,
   squadWeeklyCaDeltaSummary,
   stampLastWeekCa,
   weeklyCaDelta,
@@ -56,5 +58,18 @@ describe("ca tracking", () => {
     const player = clonePlayer();
     const stamped = stampLastWeekCa(player);
     expect(stamped.state.last_week_ca).toBe(playerCa(player));
+  });
+
+  it("computes season CA delta from the prior season snapshot", () => {
+    const player = clonePlayer();
+    expect(seasonCaDelta(player, 1)).toBeNull();
+    const snapshotted = appendSeasonSnapshot(player, 1);
+    const baselineCa = playerCa(snapshotted);
+    const grown = {
+      ...snapshotted,
+      attributes: { ...snapshotted.attributes, passing: 99, vision: 99 },
+    };
+    expect(seasonCaDelta(grown, 2)).toBe(playerCa(grown) - baselineCa);
+    expect(seasonCaDelta(grown, 2)).toBeGreaterThan(0);
   });
 });

@@ -7,7 +7,13 @@ import {
   trainingUnit,
   type TrainingSlot,
 } from "../../development/training-units.ts";
-import { attributeLabel } from "../player-profile.ts";
+import { attributeLabel, growthPolyline, growthSeries } from "../player-profile.ts";
+import {
+  caDeltaClassName,
+  formatCaDelta,
+  playerCa,
+  seasonCaDelta,
+} from "../../player/ca-tracking.ts";
 import {
   MAX_FOCUS_PER_GROUP,
   MAX_FOCUS_SLOTS,
@@ -514,11 +520,40 @@ function IndividualPlan({
       <ul className="training-roster">
         {roster.map((player) => {
           const program = programForPlayer(programs, player.id);
+          const growth = growthSeries(player, season);
+          const ca = playerCa(player);
+          const seasonDelta = seasonCaDelta(player, season);
+          const sparkStroke =
+            seasonDelta === null || seasonDelta === 0
+              ? "#94a3b8"
+              : seasonDelta > 0
+                ? "#059669"
+                : "#dc2626";
           return (
             <li key={player.id}>
               <button type="button" className="training-roster-row" onClick={() => setSelectedId(player.id)}>
                 <span className="training-roster-name">{formatPlayerName(player)}</span>
-                <span className="training-roster-meta">{player.position} · {player.age} J.</span>
+                <span className="training-roster-spark" aria-hidden="true">
+                  <svg viewBox="0 0 64 24" role="presentation">
+                    <polyline
+                      points={growthPolyline(growth, 64, 24)}
+                      fill="none"
+                      stroke={sparkStroke}
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span className="training-roster-meta">
+                  <span>{player.position} · {ca}</span>
+                  <span
+                    className={caDeltaClassName(seasonDelta)}
+                    title="CA Δ diese Saison"
+                  >
+                    {formatCaDelta(seasonDelta)}
+                  </span>
+                </span>
                 <span className={program ? "training-roster-program is-active" : "training-roster-program"}>
                   {program ? programLabel(program) : "Kein Programm"}
                 </span>

@@ -237,6 +237,7 @@ export async function simulateGameWeek(
       season: session.season,
       week: nextWeek,
       masterSeed: session.masterSeed,
+      worldClubs: session.world.clubs,
     });
     rivalPlayers = aiTransfers.rivalPlayers;
     transferState = aiTransfers.transferState;

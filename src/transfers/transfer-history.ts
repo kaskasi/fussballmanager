@@ -2,6 +2,40 @@ import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { grantAchievement, ACHIEVEMENT } from "../player/achievements.ts";
 import { loanClubName } from "./loan-roster.ts";
+import type { WorldClub } from "../world/world-generator.ts";
+
+function looksLikeRawClubToken(text: string): boolean {
+  return text.includes("cl_world_") || /^cl_[a-z0-9_]+$/i.test(text.trim());
+}
+
+/** Fix legacy history lines that stored raw `cl_world_*` ids. */
+export function formatClubEventMessage(
+  message: string,
+  worldClubs?: readonly WorldClub[],
+): string {
+  if (!message.includes("cl_world_")) {
+    return message;
+  }
+  return message.replace(/\bcl_world_[a-z0-9_]+\b/gi, (token) =>
+    loanClubName(token, worldClubs),
+  );
+}
+
+export function displayTransferOtherClubs(
+  label: string,
+  worldClubs?: readonly WorldClub[],
+): string {
+  if (!label.includes("→")) {
+    return looksLikeRawClubToken(label) ? loanClubName(label.trim(), worldClubs) : label;
+  }
+  return label
+    .split("→")
+    .map((part) => {
+      const token = part.trim().replace(/\s*\([^)]*\)\s*$/, "").trim();
+      return looksLikeRawClubToken(token) ? loanClubName(token, worldClubs) : part.trim();
+    })
+    .join(" → ");
+}
 import type { TransferState } from "./negotiations.ts";
 
 export type TransferKind = "in" | "out" | "loan_out" | "loan_return" | "ai";
@@ -121,6 +155,7 @@ export function createAiTransferRecord(
   week: number,
   fromClubId: string,
   toClubId: string,
+  worldClubs?: readonly WorldClub[],
 ): TransferRecord {
   return {
     id: `tr_${season}_${week}_ai_${player.id}`,
@@ -130,7 +165,7 @@ export function createAiTransferRecord(
     player_id: player.id,
     player_name: formatPlayerName(player),
     other_club_id: toClubId,
-    other_club_name: `${loanClubName(fromClubId)} → ${loanClubName(toClubId)}`,
+    other_club_name: `${loanClubName(fromClubId, worldClubs)} → ${loanClubName(toClubId, worldClubs)}`,
     fee,
   };
 }

@@ -26,6 +26,7 @@ import { STARTING_TRANSFER_BUDGET } from "../economy/club-finances.ts";
 import { estimateCa, marketValue } from "./market-value.ts";
 import { refreshPlayerMarketValue } from "./refresh-market-values.ts";
 import { loanClubName } from "./loan-roster.ts";
+import type { WorldClub } from "../world/world-generator.ts";
 
 export interface AiClubBudget {
   transfer_budget: number;
@@ -214,6 +215,7 @@ export interface AiTransferWeekInput {
   season: number;
   week: number;
   masterSeed: number;
+  worldClubs?: readonly WorldClub[];
 }
 
 export interface AiTransferWeekResult {
@@ -333,11 +335,12 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
       input.week,
       sellerClubId,
       buyerClubId,
+      input.worldClubs,
     );
     transferState = appendTransferRecord(transferState, record);
     records.push(record);
 
-    const message = `Liga: ${formatPlayerName(valued)} · ${loanClubName(sellerClubId)} → ${loanClubName(buyerClubId)} (${formatFeeShort(deal.fee)})`;
+    const message = `Liga: ${formatPlayerName(valued)} · ${loanClubName(sellerClubId, input.worldClubs)} → ${loanClubName(buyerClubId, input.worldClubs)} (${formatFeeShort(deal.fee)})`;
     messages.push(message);
   }
 

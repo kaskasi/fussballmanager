@@ -36,11 +36,14 @@ import {
 } from "../../player/season-stats.ts";
 import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
 import { TRANSFER_WINDOW_HINT } from "../../sim/transfer-windows.ts";
+import { BlindPurchaseWarningModal } from "../components/BlindPurchaseWarningModal.tsx";
 import { ContractTalksModal } from "../components/ContractTalksModal.tsx";
+import { SaleConfirmModal } from "../components/SaleConfirmModal.tsx";
 import { formatPlayerName } from "../../types/player-display.ts";
 import { confidenceLabel, type AbilityEstimate } from "../../scouting/estimate-model.ts";
 import {
   formatScoutCa,
+  formatScoutMarketValue,
   formatScoutStateValue,
   scoutMarketValueBounds,
   scoutReveal,
@@ -117,6 +120,7 @@ export interface PlayerProfileProps {
   wageHeadroomWeekly?: number;
   weekday?: number;
   actionFeedback?: string | null;
+  onTransferNotice?: (message: string) => void;
 }
 
 export function PlayerProfile({
@@ -149,46 +153,86 @@ export function PlayerProfile({
   wageHeadroomWeekly,
   weekday = 1,
   actionFeedback = null,
+  onTransferNotice,
 }: PlayerProfileProps) {
   const [tab, setTab] = useState<ProfileTab>("attributes");
   const [menuOpen, setMenuOpen] = useState(false);
   const [talksOpen, setTalksOpen] = useState(false);
   const [offer, setOffer] = useState<ContractOffer | null>(null);
+  const [blindBuyOpen, setBlindBuyOpen] = useState(false);
+  const [saleConfirmOpen, setSaleConfirmOpen] = useState(false);
 
   useEffect(() => {
     setTalksOpen(false);
     setOffer(null);
     setTab("attributes");
+    setBlindBuyOpen(false);
+    setSaleConfirmOpen(false);
   }, [player.id]);
   const menuItems = profileMenuItems(player, owned, season);
   const reveal = scoutEstimate ? scoutReveal(scoutEstimate.uncertaintyRange) : null;
+  const hasScoutIntel = Boolean(scoutEstimate);
   const askingBounds =
     !owned && scoutEstimate ? scoutMarketValueBounds(player, scoutEstimate, season, false) : null;
+  const listPrice = purchasePrice;
   const purchaseAmountLabel =
-    purchasePrice === undefined
+    listPrice === undefined
       ? undefined
       : owned
-        ? `ca. ${formatMoney(purchasePrice)}`
-        : askingBounds === null
+        ? `ca. ${formatMoney(listPrice)}`
+        : !hasScoutIntel
           ? undefined
-          : askingBounds.exact
-            ? `ca. ${formatMoney(purchasePrice)}`
-            : `ca. ${formatMoney(askingBounds.low)}–${formatMoney(askingBounds.high)}`;
-  const canAffordPurchase =
-    purchasePrice === undefined ||
-    transferBudget === undefined ||
-    askingBounds === null ||
-    (askingBounds.exact
-      ? transferBudget >= purchasePrice
-      : transferBudget >= askingBounds.high);
-  const purchaseBlockedReason =
-    !owned && askingBounds === null
-      ? "Marktwert unbekannt — erst scouten und Wochen simulieren."
-      : !transferWindowOpen
-        ? `Transfers nur im ${TRANSFER_WINDOW_HINT}`
-        : !canAffordPurchase && purchasePrice !== undefined
-          ? `Transfer-Budget reicht nicht (${purchaseAmountLabel ?? "Schätzung unbekannt"} nötig).`
-          : null;
+          : askingBounds === null
+            ? undefined
+            : askingBounds.exact
+              ? formatMoney(listPrice)
+              : formatScoutMarketValue(player, scoutEstimate!, season, false);
+  const listPriceExceedsBudget =
+    hasScoutIntel &&
+    listPrice !== undefined &&
+    transferBudget !== undefined &&
+    transferBudget < listPrice;
+  const purchaseHardBlocked = !transferWindowOpen;
+  const purchaseBlockedReason = !transferWindowOpen
+    ? `Transfers nur im ${TRANSFER_WINDOW_HINT}`
+    : null;
+  const purchaseHintText =
+    purchaseBlockedReason ??
+    (!hasScoutIntel
+      ? "Kein Scout-Bericht — Kauf nur nach Warnung auf eigene Gefahr."
+      : listPriceExceedsBudget
+        ? `Listenpreis über Transfer-Topf (${formatClubCash(transferBudget ?? 0)} frei) — niedrigeres Angebot in der Verhandlung möglich.`
+        : "Angebot nach Marktwert — Gegenangebot möglich.");
+
+  function notifyTransfer(message: string) {
+    onTransferNotice?.(message);
+  }
+
+  function handlePurchaseClick() {
+    if (!onPurchase) return;
+    if (purchaseHardBlocked) {
+      notifyTransfer(purchaseBlockedReason ?? "Kauf nicht möglich.");
+      return;
+    }
+    if (!hasScoutIntel) {
+      setBlindBuyOpen(true);
+      return;
+    }
+    onPurchase();
+  }
+
+  function handleSaleClick() {
+    if (!onSell) return;
+    if (saleBlockedReason) {
+      notifyTransfer(saleBlockedReason);
+      return;
+    }
+    if (!transferWindowOpen) {
+      notifyTransfer(`Verkauf nur im ${TRANSFER_WINDOW_HINT}`);
+      return;
+    }
+    setSaleConfirmOpen(true);
+  }
   const preContractAmountLabel =
     preContractBonus === undefined
       ? undefined
@@ -541,19 +585,18 @@ export function PlayerProfile({
               ) : null}
               {onPurchase ? (
                 <div className="profile-action-cell">
-                  <Hint
-                    text={
-                      purchaseBlockedReason ??
-                      "Angebot nach Marktwert — Gegenangebot möglich."
-                    }
-                    block
-                  >
+                  <Hint text={purchaseHintText} block>
                     <ProfileActionButton
                       label="Kaufen"
                       amount={purchaseAmountLabel}
-                      className={scouting ? "ui-btn--primary" : "ui-btn--ghost"}
-                      onClick={onPurchase}
-                      disabled={!transferWindowOpen || !canAffordPurchase || askingBounds === null}
+                      className={[
+                        hasScoutIntel || scouting ? "ui-btn--primary" : "ui-btn--ghost",
+                        purchaseHardBlocked ? "is-blocked" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={handlePurchaseClick}
+                      aria-disabled={purchaseHardBlocked}
                     />
                   </Hint>
                 </div>
@@ -597,9 +640,14 @@ export function PlayerProfile({
                   <ProfileActionButton
                     label="Verkaufen"
                     amount={saleOffer ? `ca. ${formatMoney(saleOffer)}` : undefined}
-                    className="ui-btn--ghost"
-                    onClick={onSell}
-                    disabled={!transferWindowOpen || Boolean(saleBlockedReason)}
+                    className={[
+                      "ui-btn--ghost",
+                      !transferWindowOpen || saleBlockedReason ? "is-blocked" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    onClick={handleSaleClick}
+                    aria-disabled={!transferWindowOpen || Boolean(saleBlockedReason)}
                   />
                 </Hint>
               </div>
@@ -612,6 +660,29 @@ export function PlayerProfile({
         <button type="button" className="profile-next" onClick={onOpenYouth}>
           → Zur Jahrgangsliste
         </button>
+      ) : null}
+
+      {blindBuyOpen ? (
+        <BlindPurchaseWarningModal
+          player={player}
+          onCancel={() => setBlindBuyOpen(false)}
+          onConfirm={() => {
+            setBlindBuyOpen(false);
+            onPurchase?.();
+          }}
+        />
+      ) : null}
+
+      {saleConfirmOpen && saleOffer !== undefined && onSell ? (
+        <SaleConfirmModal
+          player={player}
+          offerEstimate={saleOffer}
+          onCancel={() => setSaleConfirmOpen(false)}
+          onConfirm={() => {
+            setSaleConfirmOpen(false);
+            onSell();
+          }}
+        />
       ) : null}
 
       {talksOpen && offer && onContractOffer ? (
@@ -785,8 +856,15 @@ function ProfileActionButton({
   amount?: string;
   className?: string;
 } & ComponentPropsWithoutRef<"button">) {
+  const blocked = className.includes("is-blocked");
+  const { disabled, ...rest } = props;
   return (
-    <button type="button" className={`ui-btn profile-action-btn ${className}`.trim()} {...props}>
+    <button
+      type="button"
+      className={`ui-btn profile-action-btn ${className}`.trim()}
+      disabled={blocked ? false : disabled}
+      {...rest}
+    >
       <span className="profile-action-label">{label}</span>
       {amount ? <span className="profile-action-amount">{amount}</span> : null}
     </button>

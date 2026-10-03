@@ -14,6 +14,7 @@ export function TransferNegotiationModal({
   negotiation,
   transferBudget,
   message,
+  scoutIntelKnown = true,
   onSubmitOffer,
   onAcceptCounter,
   onWalkAway,
@@ -22,6 +23,7 @@ export function TransferNegotiationModal({
   negotiation: TransferNegotiation;
   transferBudget: number;
   message: string | null;
+  scoutIntelKnown?: boolean;
   onSubmitOffer: (fee: number) => void;
   onAcceptCounter: () => void;
   onWalkAway: () => void;
@@ -29,7 +31,7 @@ export function TransferNegotiationModal({
   const [offerInput, setOfferInput] = useState(String(negotiation.current_offer));
   const offer = Number.parseInt(offerInput.replace(/\D/g, ""), 10) || 0;
   const canAfford = offer <= transferBudget;
-  const ratio = offer / Math.max(1, negotiation.asking_price);
+  const ratio = scoutIntelKnown ? offer / Math.max(1, negotiation.asking_price) : null;
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -38,7 +40,10 @@ export function TransferNegotiationModal({
           <p className="eyebrow">Transferverhandlung</p>
           <h2 id="negotiation-title">💰 {formatPlayerName(player)}</h2>
           <p className="negotiation-meta">
-            Marktwert Verein: {formatClubCash(negotiation.asking_price)} · Budget: {formatClubCash(transferBudget)}
+            {scoutIntelKnown
+              ? `Marktwert Verein: ${formatClubCash(negotiation.asking_price)} · `
+              : "Kein Scout-Bericht — Ablöse unbekannt bis zum Abschluss · "}
+            Budget: {formatClubCash(transferBudget)}
           </p>
         </header>
 
@@ -68,7 +73,14 @@ export function TransferNegotiationModal({
 
         {message ? <p className="negotiation-message" role="status">{message}</p> : null}
 
-        <Hint text="Angebot in % des Vereinswerts: unter 70 % = Ablehnung, 100–110 % = oft Zustimmung." block>
+        <Hint
+          text={
+            scoutIntelKnown
+              ? "Angebot in % des Vereinswerts: unter 70 % = Ablehnung, 100–110 % = oft Zustimmung."
+              : "Ohne Scout-Schätzung: nur dein Angebot zählt — Abbuchung erst bei Annahme."
+          }
+          block
+        >
           <label className="negotiation-offer">
             <span>Dein Angebot</span>
             <input
@@ -77,7 +89,11 @@ export function TransferNegotiationModal({
               value={offerInput}
               onChange={(event) => setOfferInput(event.target.value)}
             />
-            <span className="negotiation-ratio">{Math.round(ratio * 100)} %</span>
+            {ratio !== null ? (
+              <span className="negotiation-ratio">{Math.round(ratio * 100)} %</span>
+            ) : (
+              <span className="negotiation-ratio">?</span>
+            )}
           </label>
         </Hint>
 

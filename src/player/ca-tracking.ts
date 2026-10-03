@@ -12,6 +12,16 @@ export function weeklyCaDelta(player: Player): number | null {
   return playerCa(player) - previous;
 }
 
+/** CA change since the start of the given season (null in season 1 before first snapshot). */
+export function seasonCaDelta(player: Player, season: number): number | null {
+  const baseline = player.history.growth
+    .filter((entry) => entry.season < season)
+    .at(-1);
+  if (!baseline) return null;
+  const startCa = Math.round(estimateCa(baseline.attributes_snapshot, player.position));
+  return playerCa(player) - startCa;
+}
+
 export function formatCaDelta(delta: number | null): string {
   if (delta === null) return "—";
   if (delta > 0) return `+${delta}`;

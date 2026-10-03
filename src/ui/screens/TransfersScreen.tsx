@@ -7,10 +7,12 @@ import { transferWindowLabel } from "../../sim/transfer-windows.ts";
 import type { TransferRecord } from "../../transfers/transfer-history.ts";
 import {
   availableTransferSeasons,
+  displayTransferOtherClubs,
   recordsForSeason,
   transferKindIcon,
   transferKindLabel,
 } from "../../transfers/transfer-history.ts";
+import type { WorldClub } from "../../world/world-generator.ts";
 import { Hint } from "../components/Hint.tsx";
 import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
 import { formatCalendarWeek } from "../../sim/game-calendar.ts";
@@ -39,18 +41,20 @@ export function TransfersScreen({
   onBack,
   onSelectPlayer,
   onRecallLoan,
+  worldClubs,
 }: {
   players: readonly Player[];
   season: number;
   week: number;
   history: readonly TransferRecord[];
+  worldClubs?: readonly WorldClub[];
   onBack: () => void;
   onSelectPlayer: (playerId: string) => void;
   onRecallLoan: (playerId: string) => void;
 }) {
   const seasons = useMemo(() => availableTransferSeasons(history, season), [history, season]);
   const [selectedSeason, setSelectedSeason] = useState(season);
-  const activeLoans = listLoanedPlayers(players);
+  const activeLoans = listLoanedPlayers(players, worldClubs);
   const seasonRecords = useMemo(
     () => recordsForSeason(history, selectedSeason),
     [history, selectedSeason],
@@ -159,7 +163,7 @@ export function TransfersScreen({
                   <span className="transfers-history-main">
                     <strong>{record.player_name}</strong>
                     <small>
-                      {record.other_club_name}
+                      {displayTransferOtherClubs(record.other_club_name, worldClubs)}
                       {record.fee != null ? ` · ${formatClubCash(record.fee)}` : ""}
                       {" · "}{formatCalendarWeek(record.week)}
                     </small>
@@ -207,7 +211,7 @@ export function TransfersScreen({
                   <span className="transfers-history-main">
                     <strong>{transferKindLabel(record.kind)} · {record.player_name}</strong>
                     <small>
-                      {record.other_club_name}
+                      {displayTransferOtherClubs(record.other_club_name, worldClubs)}
                       {record.fee != null ? ` · ${formatClubCash(record.fee)}` : ""}
                       {" · "}{formatCalendarWeek(record.week)}
                     </small>

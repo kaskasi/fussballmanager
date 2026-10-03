@@ -1,6 +1,9 @@
-import { clubShortName } from "../sim/league-week.ts";
+import type { TeamId } from "@fussballmanager/shared";
+import { clubShortLabel } from "../sim/league-divisions.ts";
+import { engineTeamId } from "../sim/rival-growth.ts";
 import type { Player, PositionPrimary } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
+import type { WorldClub } from "../world/world-generator.ts";
 import { estimateCa } from "./market-value.ts";
 
 const CAREER_CLUB_NAMES: Record<string, string> = {
@@ -22,11 +25,33 @@ export interface LoanRow {
   minuteGuarantee?: number;
 }
 
-export function loanClubName(clubId: string): string {
-  return CAREER_CLUB_NAMES[clubId] ?? clubShortName(clubId as never) ?? clubId.replace(/^cl_/, "").replace(/_/g, " ");
+function teamIdFromClubId(clubId: string): TeamId {
+  if (clubId.startsWith("cl_")) {
+    return engineTeamId(clubId);
+  }
+  return clubId as TeamId;
 }
 
-export function listLoanedPlayers(players: readonly Player[]): LoanRow[] {
+/** Human-readable club label (`cl_world_*` → short name from world save). */
+export function loanClubName(
+  clubId: string,
+  worldClubs?: readonly WorldClub[],
+): string {
+  if (CAREER_CLUB_NAMES[clubId]) {
+    return CAREER_CLUB_NAMES[clubId];
+  }
+  const teamId = teamIdFromClubId(clubId);
+  const label = clubShortLabel(teamId, worldClubs);
+  if (label !== teamId && !label.startsWith("cl_")) {
+    return label;
+  }
+  return clubId.replace(/^cl_/, "").replace(/_/g, " ");
+}
+
+export function listLoanedPlayers(
+  players: readonly Player[],
+  worldClubs?: readonly WorldClub[],
+): LoanRow[] {
   return players
     .filter((player) => player.squad_status === "loaned_out" && player.current_loan)
     .map((player) => {
@@ -38,7 +63,7 @@ export function listLoanedPlayers(players: readonly Player[]): LoanRow[] {
         age: player.age,
         ca: Math.round(estimateCa(player.attributes, player.position)),
         toClubId: loan.to_club,
-        toClubName: loanClubName(loan.to_club),
+        toClubName: loanClubName(loan.to_club, worldClubs),
         untilSeason: loan.until_season,
         hasOption: loan.has_option,
         minuteGuarantee: loan.minute_guarantee,

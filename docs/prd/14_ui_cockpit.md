@@ -1,6 +1,6 @@
 # /docs/prd/14_ui_cockpit.md
 
-**Version:** 1.7
+**Version:** 1.8
 **Last Updated:** 2026-10-03
 **Status:** Final (Darstellung — kein Code in diesem Dokument)
 
@@ -42,7 +42,7 @@ Kalender, News), nicht die 40-Spalten-Identität.
 - Neue Component-Library als erstes Deliverable. Erst Räume, dann Tokens.
 - 3D, generative Bild-KI, relatives Potential, FM11-Enzyklopädie.
 
-**Dependencies:** PRD 01, 03.3–03.4, 09, 10, 11.5, 13, 15.
+**Dependencies:** PRD 01, 03.3–03.4, 09, 10, 11.5, 13, 15, 17.
 
 ---
 
@@ -64,6 +64,11 @@ Kalender, News), nicht die 40-Spalten-Identität.
    den Ton der Akte.
 7. **Leere Slots sind Hunger.** Offene Banden, fehlende Wurstbude, leere
    Stamp-Zeile — sichtbar, nicht weggelassen. Füllen ist Feature, nicht Deko.
+8. **Kern Browser/Deck, Mobile nicht vergessen.** Cockpit und Match-UI gelten
+   zuerst für **Desktop-Browser** und **Steam Deck** (PRD 17). Layout und
+   Interaktion trotzdem **mobile-tauglich** bauen (eine Spalte, große Tap-Ziele,
+   lesbare Dichte auf schmalen Screens) — für Tester unterwegs und spätere
+   Monetarisierung, ohne den PC-Kern zu verwässern.
 
 ---
 

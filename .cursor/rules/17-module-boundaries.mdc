@@ -1,0 +1,29 @@
+---
+description: "Segregated monolith — module imports and client-first engine (PRD 17)"
+alwaysApply: true
+---
+# Module boundaries (PRD 17)
+
+Full target architecture: `docs/prd/17_target_architecture.md`.
+
+## Product runtime
+
+- **Core platforms:** desktop browser + Steam Deck (Steam build later). Match and week sim run **in the client**.
+- **Mobile:** responsive UI always; optional PWA — bonus/test channel, not v1 product core.
+- **Do not** add production APIs that run full `buildMatchView` / matchday engine on Cloudflare for each user (CPU + 503). Save-sync backend later = blobs only, not gameplay.
+
+## Import direction (segregated monolith)
+
+Allowed dependency flow (only downward):
+
+```text
+src/ui, App          →  src/sim, src/persistence, facades → server/src/api or engine wrappers
+src/sim, economy, …  →  shared, src/types (not src/ui)
+server/src/api       →  server/src/engine, server/src/commentary, shared
+server/src/engine    →  shared only — no react, hono, wrangler, src/ui
+shared               →  (no imports from src/ or server/)
+```
+
+**Forbidden:** `server/src/engine` importing React or `src/ui`; `shared` importing app code; circular domain imports without a public facade (`index.ts`).
+
+New code: touch the **nearest domain folder**; cross-module access only through **exported facades**, not deep paths into another module's internals.

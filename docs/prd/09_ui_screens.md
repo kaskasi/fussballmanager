@@ -1,7 +1,7 @@
 # /docs/prd/09_ui_screens.md
 
-**Version:** 1.3
-**Last Updated:** 2026-09-29
+**Version:** 1.4
+**Last Updated:** 2026-10-03
 **Status:** Final  
 
 ---
@@ -23,7 +23,7 @@ gilt 14.
 - Wireframes als Code-Kommentare
 - Komponenten-Library (`/src/ui/components/`)
 
-**Dependencies:** PRD 02 (Growth Engine), PRD 03 (Youth), PRD 04 (Scouting), PRD 07 (Player-Schema)
+**Dependencies:** PRD 02 (Growth Engine), PRD 03 (Youth), PRD 04 (Scouting), PRD 07 (Player-Schema), PRD 17 (Plattform-Zielbild)
 
 ---
 
@@ -36,6 +36,11 @@ gilt 14.
 5. **Keine generative Bild-KI:** Grafik = SVG/CSS/Typografie, CC0 wo nötig.
    Mood-Streifen (Spieltag, Transfer) sind text/CSS-first; siehe PRD 01
    „Asset-Herkunft“. Cursor-Tasks, die Bildgeneratoren vorschlagen, sind out of scope.
+6. **Kern Desktop/Deck, Mobile mitdenken:** Primäre Zielplattform ist
+   **Browser am PC** und **Steam Deck** (PRD 17). Jede UI-Arbeit ist
+   **mobile-responsive** zu liefern (schmale Viewports, Touch, kein Hover-only),
+   damit Test unterwegs und optionale PWA funktionieren. Mobile ist **Bonus**,
+   kein separates v1-Produkt vor dem Steam-Kern.
 
 ---
 

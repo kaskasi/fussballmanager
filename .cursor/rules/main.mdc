@@ -30,6 +30,8 @@ Geschrieben und verbindlich:
 - `13_story_slice_relegation.md` — erster Story-Slice (Abstieg)
 - `14_ui_cockpit.md` — Club-Cockpit, Dichte, Räume vor Shell
 - `15_feature_gap.md` — Keep/Refuse vs. Referenz-DNA, Kandidaten C1/C2
+- `16_match_broadcast_beats.md` — Match-Kommentar, Beats, Director (Präsentation)
+- `17_target_architecture.md` — Zielbild: Engine-Modul, Client-Sim, Sync, Deploy
 
 Noch nicht geschrieben, nicht erfinden:
 
@@ -106,6 +108,10 @@ src/persistence/       savegame.ts, sanitizer.ts, migrations/
 src/ui/                screens/, components/
 src/types/             player.ts, contracts.ts (PRD 07)
 ```
+
+**Modul-Grenzen:** Segregated monolith — Import-Richtung und Client-first Engine
+laut PRD 17 und `.cursor/rules/17-module-boundaries.mdc` (kein UI in `engine`,
+kein Gameplay-Match-API in Produktion).
 
 ### Naming Conventions
 - TypeScript Interfaces: PascalCase (Player, Attributes, Contract)
@@ -226,3 +232,4 @@ Arbeite erst P0 ab, dann P1.
 - 2026-09-22: Initialversion erstellt. Design-Prinzipien festgeschrieben (kein Potential, Varianz, Icon-first). PRD-Struktur definiert. MVP-Priorisierung aufgenommen.
 - 2026-09-22: Querverweise korrigiert (Formel ist 02.1). Engine-Pfad `server/src/engine/`. Archiv-Hinweis für `PRD.md`. Offene Dateien 01, 11–13 als ungeschrieben markiert.
 - 2026-09-29: PRD 13 (Story-Slice), 14 (Cockpit-UI), 15 (Feature-Lücken) als geschrieben geführt. `13_meta.md` bleibt ungeschrieben.
+- 2026-10-03: PRD 17 (Target Architecture), Cursor-Regel `17-module-boundaries.mdc`; 16 in Dokumentenliste ergänzt.

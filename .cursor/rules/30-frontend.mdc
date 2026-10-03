@@ -17,3 +17,7 @@ alwaysApply: false
 - Match commentary feed and pitch visualization are two views of the same
   match-event stream; keep their data source shared (e.g. one hook/context
   feeding both), not two independently polled/fetched states.
+- **Platforms (PRD 09 / 14 / 17):** Ship for desktop browser and Steam Deck
+  first. Still design and test layouts **mobile-responsive** (narrow viewport,
+  touch targets) so PWA/phone testing works; mobile is bonus, not a separate
+  product fork.

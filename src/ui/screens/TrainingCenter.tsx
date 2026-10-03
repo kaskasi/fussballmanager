@@ -99,6 +99,7 @@ export function TrainingCenter({
   onSelectPlayer,
   onBack,
   focusIndividualPlayerId = null,
+  onClearIndividualFocus,
   hasTrainingHall = false,
 }: {
   week: number;
@@ -124,6 +125,7 @@ export function TrainingCenter({
   onBack?: () => void;
   /** Öffnet Tab „Individuell“ und Programm-Modal für diesen Spieler (z. B. aus Spielerakte). */
   focusIndividualPlayerId?: string | null;
+  onClearIndividualFocus?: () => void;
   hasTrainingHall?: boolean;
 }) {
   const [tab, setTab] = useState<TrainingTab>("overview");
@@ -222,6 +224,7 @@ export function TrainingCenter({
           week={week}
           onProgramsChange={onProgramsChange}
           openPlayerId={focusIndividualPlayerId}
+          onDismissOpenPlayer={onClearIndividualFocus}
         />
       ) : tab === "mentoring" ? (
         <MentoringPanel
@@ -574,6 +577,7 @@ function IndividualPlan({
   week,
   onProgramsChange,
   openPlayerId = null,
+  onDismissOpenPlayer,
 }: {
   players: Player[];
   programs: IndividualProgram[];
@@ -581,6 +585,7 @@ function IndividualPlan({
   week: number;
   onProgramsChange: (programs: IndividualProgram[]) => void;
   openPlayerId?: string | null;
+  onDismissOpenPlayer?: () => void;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const roster = players.filter((player) => player.squad_status !== "loaned_out");
@@ -588,9 +593,13 @@ function IndividualPlan({
 
   useEffect(() => {
     if (!openPlayerId) return;
-    const exists = roster.some((player) => player.id === openPlayerId);
-    if (exists) setSelectedId(openPlayerId);
-  }, [openPlayerId, roster]);
+    setSelectedId(openPlayerId);
+  }, [openPlayerId]);
+
+  function closeModal() {
+    setSelectedId(null);
+    onDismissOpenPlayer?.();
+  }
 
   return (
     <section className="training-individual">
@@ -658,7 +667,7 @@ function IndividualPlan({
           programs={programs}
           season={season}
           week={week}
-          onClose={() => setSelectedId(null)}
+          onClose={closeModal}
           onProgramsChange={onProgramsChange}
         />
       ) : null}
@@ -735,7 +744,7 @@ function IndividualProgramModal({
 
         <div className="training-individual-body">
           <p className="training-individual-stats">
-            Schwaches Bein {player.attributes.weak_foot}/100
+            Schwaches Bein {Math.round(player.attributes.weak_foot)}/100
             {player.flexibility.length > 0
               ? ` · Flex ${player.flexibility.map((slot) => `${slot.trained_as} ${Math.round(slot.proficiency * 100)}%`).join(", ")}`
               : ""}

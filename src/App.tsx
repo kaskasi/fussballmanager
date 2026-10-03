@@ -1649,6 +1649,7 @@ export default function App() {
           onSelectPlayer={setProfileId}
           onBack={() => setScreen("hub")}
           focusIndividualPlayerId={trainingFocusPlayerId}
+          onClearIndividualFocus={() => setTrainingFocusPlayerId(null)}
           hasTrainingHall={precinctHasTrainingHall(stadium.precinct)}
         />
       ) : null}

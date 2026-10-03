@@ -33,6 +33,8 @@ Geschrieben und verbindlich:
 - `16_match_broadcast_beats.md` — Match-Kommentar, Beats, Director (Präsentation)
 - `17_target_architecture.md` — Zielbild: Engine-Modul, Client-Sim, Sync, Deploy
 
+Tester-Hilfe (nicht PRD-Nummer): `docs/tester-save-m0.md` — Export/Import M0.
+
 Noch nicht geschrieben, nicht erfinden:
 
 - `13_meta.md` — nicht mit PRD 13 (Story-Slice) verwechseln

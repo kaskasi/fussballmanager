@@ -1,6 +1,6 @@
 # /docs/prd/17_target_architecture.md
 
-**Version:** 1.1  
+**Version:** 1.2  
 **Last Updated:** 2026-10-03  
 **Status:** Draft (Zielbild — PM-Entscheidungen 2026-10-03 eingetragen)
 
@@ -166,6 +166,18 @@ Ziel: **Ubahn-Handy, gleicher Stand** ohne Gameplay-Server.
 **PM (2026-10-03):** Erste Tester-Welle kann vorbei sein; für neue Kohorten
 reicht **M0 + klare Export-Anleitung** bis Steam-Traction. M1/M2 nicht vor
 Kern-Loop auf Browser/Deck drängen.
+
+### Tester-Kohorte (M0 — Kurzbriefing)
+
+Spiel und Match-Engine laufen **lokal im Browser**; wir hosten **keinen**
+Spielstand in der Cloud. Drei Slots pro Browser (`localStorage`). Um denselben
+Stand auf einem **zweiten Gerät** weiterzuspielen: im Hub-Menü **„💾
+Spielstände“** → **Export** (JSON-Datei) → Datei sicher ablegen (Mail, Drive,
+AirDrop) → auf dem anderen Gerät **dieselbe Deploy-URL** öffnen → **Import**
+in einen freien oder bewusst gewählten Slot. **Vor „Website-Daten löschen“
+oder Browser-Wechsel immer exportieren.** Gleiche **App-Version** (Deploy)
+wie beim Export empfohlen — Import migriert ältere Saves nach vorn, nicht
+neuere auf alte Builds. Vollständige Schritte: [`docs/tester-save-m0.md`](../tester-save-m0.md).
 
 **Kapazität ~200 gleichzeitige Nutzer (nur Sync):** Größenordnung
 wenige Requests/Minute, Speicher << 1 GB — ein kleiner Dienst oder

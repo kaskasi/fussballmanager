@@ -38,6 +38,7 @@ import {
   applyTransferFee,
   canAffordTransfer,
   formatClubCash,
+  normalizeFinances,
   transferBudget,
   wageBudgetHeadroom,
 } from "./economy/club-finances.ts";
@@ -107,6 +108,13 @@ import { saveTacticsPreset, type TacticsPresetId } from "./match/tactics-presets
 import { JobOffersModal } from "./ui/components/JobOffersModal.tsx";
 import { STADIUM_BASE_BLOCKS, normalizeClubStadium, stadiumTotalCapacity } from "./stadium/club-stadium.ts";
 import { purchaseStadiumUpgrade } from "./stadium/stadium-upgrades.ts";
+import {
+  buildingAt,
+  emptyPrecinct,
+  placePrecinctBuilding,
+  precinctPlacementCost,
+  type PrecinctBuilding,
+} from "./stadium/precinct.ts";
 import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
 import { LeaguesScreen } from "./ui/screens/LeaguesScreen.tsx";
@@ -416,13 +424,36 @@ export default function App() {
     [youthInbox, players],
   );
 
+  /** Post-Inbox lives on the Hub — leave overlays/other screens so the modal can mount. */
+  const openHubInbox = useCallback(
+    (itemId?: string) => {
+      const pending = pendingInboxItems(youthInbox, players);
+      const targetId = itemId ?? pending[0]?.id ?? null;
+      if (!targetId && pending.length === 0) return;
+      if (targetId && !pending.some((item) => item.id === targetId)) return;
+      setProfileId(null);
+      setForeignPlayerId(null);
+      setProfileFeedback(null);
+      setScreen("hub");
+      setInboxItemId(targetId);
+      setInboxOpen(true);
+    },
+    [youthInbox, players],
+  );
+
   const handleNext = useCallback(() => {
     if (simulating) return;
     const hasInbox = pendingInboxItems(youthInbox, players).length > 0;
     const skip = resolveSmartSkip(session, hasInbox);
 
     if (skip.action === "inbox") {
-      openInbox();
+      const inboxVisibleHere =
+        (screen === "hub" || screen === "squad") && !profileId && !foreignPlayerId;
+      if (inboxVisibleHere) {
+        openInbox();
+      } else {
+        openHubInbox();
+      }
       return;
     }
 
@@ -452,7 +483,19 @@ export default function App() {
     if (skip.action === "simulate_week") {
       void simulateWeek();
     }
-  }, [openInbox, patchSession, session, simulating, simulateWeek, youthInbox]);
+  }, [
+    foreignPlayerId,
+    openHubInbox,
+    openInbox,
+    patchSession,
+    profileId,
+    screen,
+    session,
+    simulating,
+    simulateWeek,
+    youthInbox,
+    players,
+  ]);
 
   const handleInboxDecision = useCallback(
     (itemId: string, action: DecisionAction) => {
@@ -717,6 +760,27 @@ export default function App() {
           ...current,
           stadium: normalizeClubStadium(result.stadium),
           finances: result.finances,
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handlePlacePrecinct = useCallback(
+    (building: PrecinctBuilding, x: number, y: number) => {
+      patchSession((current) => {
+        const precinct = current.stadium.precinct ?? emptyPrecinct();
+        const cost = precinctPlacementCost(precinct, building);
+        if (cost > current.finances.cash) return current;
+        const nextPrecinct = placePrecinctBuilding(precinct, x, y, building);
+        if (buildingAt(nextPrecinct, x, y) !== building) return current;
+        return {
+          ...current,
+          stadium: { ...current.stadium, precinct: nextPrecinct },
+          finances:
+            cost === 0
+              ? current.finances
+              : normalizeFinances({ ...current.finances, cash: current.finances.cash - cost }),
         };
       });
     },
@@ -1588,6 +1652,7 @@ export default function App() {
         <StadiumScreen
           stadium={stadium}
           finances={finances}
+          season={season}
           onStadiumChange={(next) =>
             patchSession((current) => ({
               ...current,
@@ -1595,6 +1660,7 @@ export default function App() {
             }))
           }
           onPurchaseUpgrade={handlePurchaseStadiumUpgrade}
+          onPlacePrecinct={handlePlacePrecinct}
         />
       ) : null}
       {clubProfileId && screen !== "leagues" ? (

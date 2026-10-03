@@ -26,6 +26,7 @@ import {
 import { evaluateSeasonObjectives, startBoardSeason } from "../board/season-objectives.ts";
 import { applySeasonEndFinances } from "../economy/club-finances.ts";
 import type { SeasonObjectiveEvaluation } from "../board/board-state.ts";
+import { expireSponsorDeals } from "../stadium/sponsor-deals.ts";
 import { advanceClubFanbase, seasonEndFanbaseBonus } from "../stadium/fanbase.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import { activatePendingPreContracts } from "../transfers/pre-contracts.ts";
@@ -94,6 +95,7 @@ export function runSeasonEnd(
     session.league,
     endingSeason,
     SEASON_END_WEEK,
+    session.stadium,
   );
   const boardStep = evaluateSeasonObjectives(
     session.board,
@@ -116,7 +118,11 @@ export function runSeasonEnd(
     ...transferState,
     ai_budgets: resetAiBudgetsForSeason(budgetClubIds, leagueNormalizedForBudgets.division_id),
   };
-  const stadium = advanceClubFanbase(session.stadium, seasonEndFanbaseBonus(session.league));
+  const stadiumAdvanced = advanceClubFanbase(session.stadium, seasonEndFanbaseBonus(session.league));
+  const stadium = {
+    ...stadiumAdvanced,
+    sponsor_deals: expireSponsorDeals(stadiumAdvanced.sponsor_deals, session.season),
+  };
   const leagueNormalized = normalizeLeagueState(session.league);
   const lastSeasonAwards = computeSeasonAwards(
     leagueNormalized,

@@ -1,6 +1,11 @@
 import type { LeagueState } from "../persistence/league-state.ts";
-import { leagueTable } from "../sim/league-week.ts";
+import { leagueTable, topScorers } from "../sim/league-week.ts";
 import { stadiumMatchdayIncome, type ClubStadium } from "../stadium/club-stadium.ts";
+import {
+  seasonSponsorBonusPayouts,
+  SPONSOR_BONUS_PAYOUT,
+  weeklySponsorInventoryIncome,
+} from "../stadium/sponsor-deals.ts";
 import { DIVISION_ECONOMY, type DivisionEconomyId } from "./division-economy.ts";
 import {
   appendPendingFinanceLines,
@@ -148,8 +153,9 @@ export function applyFinanceLines(
 export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceLine[] {
   const economy = divisionEconomy(context.divisionId);
   const week = context.week;
+  const boardIncome = weeklySponsorInventoryIncome(context.stadium?.sponsor_deals, context.season);
   const lines: FinanceLine[] = [
-    { kind: "sponsorship", amount: economy.sponsorship_weekly, week },
+    { kind: "sponsorship", amount: economy.sponsorship_weekly + boardIncome, week },
     { kind: "tv_rights", amount: economy.tv_weekly, week },
     { kind: "player_wages", amount: -weeklyWageBill(context.players, context.clubId), week },
     {
@@ -201,6 +207,7 @@ export function applySeasonEndFinances(
   league: LeagueState,
   endingSeason: number,
   week: number,
+  stadium?: ClubStadium,
 ): ClubFinances {
   if (!league.season_complete) return finances;
   const place = leagueTablePlace(league);
@@ -214,6 +221,20 @@ export function applySeasonEndFinances(
   if (tvBonus > 0) {
     lines.push({ kind: "tv_bonus", amount: tvBonus, week });
   }
+  const top = topScorers(league, 1)[0];
+  const clubWonTopScorer = Boolean(top && top.goals > 0 && top.teamId === league.player_club_id);
+  lines.push(
+    ...seasonSponsorBonusPayouts(
+      stadium?.sponsor_deals,
+      endingSeason,
+      place === 1,
+      clubWonTopScorer,
+    ).map(() => ({
+      kind: "other" as const,
+      amount: SPONSOR_BONUS_PAYOUT,
+      week,
+    })),
+  );
   if (lines.length === 0) return finances;
   let next = applyFinanceLines(finances, lines);
   next = appendPendingFinanceLines(next, lines);

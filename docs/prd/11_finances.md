@@ -1,8 +1,8 @@
 # /docs/prd/11_finances.md
 
-**Version:** 1.0  
-**Last Updated:** 2026-09-27  
-**Status:** Final (M1: F6.1–F6.4)
+**Version:** 1.1  
+**Last Updated:** 2026-10-03  
+**Status:** Final (M1: F6.1–F6.4; F6.5 Stadion-Inventar gezogen)
 
 ---
 
@@ -337,12 +337,23 @@ pipeline.club_finances = {
 - `transfer_budget` sinkt bei Ablöse, steigt bei 50 %-Regel auf Verkauf.
 - Monatsabschluss Woche 4: Snapshot mit korrekter Summe.
 - `wageBudgetHeadroom` bei vollem Kader.
+- Belegte Banden addieren auf die F6.2-Sponsoring-Zeile.
+- Saisonende: Torschützenkönig-/Meister-Staffel je +€ 1 Mio. als `other`.
+
+### 11.10 Sponsor-Inventar (F6.5)
+
+Slots am Stadion (PRD 14.7): Banden auf den Tribünen-Karten + ein Shirt-Slot.
+Modal: Marken-Auswahl (eine Marke nur an einem Slot), Laufzeit 1–4,
+Wochenbetrag, zwei Staffeln (Torschützenkönig, Meister) je +€ 1 Mio.
+Die Marke kann ablehnen: zu teuer, zu billig, falsche Laufzeit, unpassende
+Staffel. Keine Klausel-Enzyklopädie. Basis-Sponsoring F6.2 bleibt;
+belegte Slots addieren.
 
 ---
 
 ## References
 
-- Feature-IDs: F6.1–F6.4 in PRD 10
+- Feature-IDs: F6.1–F6.4 in PRD 10; F6.5 Inventar-Slice (11.10)
 - Transfers & Verträge: PRD 05
 - Stadion-Tickets (später dynamisch): F7.1, F7.5
 - Liga-Tabellenplatz: `src/persistence/league-state.ts`
@@ -351,5 +362,4 @@ pipeline.club_finances = {
 ## Offene Punkte (nicht M1-blockierend)
 
 - Mehrere Divisionen / TV-Skalierung: PRD 12
-- Sponsor-Verhandlungen: F6.5
-- Matchday-Commerce-Preise: F7 + PRD 11 Ergänzung v1.1
+- Matchday-Commerce-Preise: F7.3-Sim

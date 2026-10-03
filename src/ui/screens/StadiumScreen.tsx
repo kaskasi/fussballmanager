@@ -33,32 +33,67 @@ import {
 } from "../../stadium/fanbase.ts";
 import { DEFAULT_FANBASE } from "../../stadium/club-stadium.ts";
 import { Hint } from "../components/Hint.tsx";
+import { PrecinctGrid } from "../components/PrecinctGrid.tsx";
+import { SponsorDealModal } from "../components/SponsorDealModal.tsx";
+import { emptyPrecinct, type PrecinctBuilding } from "../../stadium/precinct.ts";
+import {
+  dealForSlot,
+  signSponsorDeal,
+  sponsorSlotsForStand,
+  takenSponsorBrandKeys,
+  SPONSOR_SLOTS,
+  type SponsorDeal,
+  type SponsorOffer,
+  type SponsorStand,
+} from "../../stadium/sponsor-deals.ts";
+
+type StadiumTab = "plan" | "precinct" | "upgrades";
 
 /**
- * WIREFRAME: PRD 10 F7.1 — Stadion 2D-Iso (Grundriss, Blöcke, Preiskategorien)
+ * WIREFRAME: PRD 14.7 — Stadion
+ * [Grundriss] [Gelände] [Ausbau]
+ * Banden sitzen auf den Tribünen-Karten um den Grundriss.
+ * Klick = F6.5-Modal. Gelände: 🏟️ in der Mitte, Palette → freie Zelle.
  */
 export function StadiumScreen({
   stadium,
   finances,
+  season,
   onStadiumChange,
   onPurchaseUpgrade,
+  onPlacePrecinct,
   onBack,
 }: {
   stadium: ClubStadium;
   finances: ClubFinances;
+  season: number;
   onStadiumChange: (stadium: ClubStadium) => void;
   onPurchaseUpgrade: (upgradeId: string) => void;
+  onPlacePrecinct: (building: PrecinctBuilding, x: number, y: number) => void;
   onBack?: () => void;
 }) {
+  const [tab, setTab] = useState<StadiumTab>("plan");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [openSlotId, setOpenSlotId] = useState<string | null>(null);
   const capacity = stadiumTotalCapacity(stadium);
   const matchdayIncome = stadiumMatchdayIncome(stadium);
   const avgTicket = stadiumAverageTicket(stadium);
   const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
   const mood = fanbaseMood(fanbase);
   const delta = stadium.fanbase_last_delta;
+  const precinct = stadium.precinct ?? emptyPrecinct();
+  const openSlot = SPONSOR_SLOTS.find((slot) => slot.id === openSlotId);
+  const openDeal = openSlot ? dealForSlot(stadium.sponsor_deals, openSlot.id, season) : undefined;
 
   const blockOrder = ["north", "west", "east", "south", "vip"] as const;
+
+  function signDeal(slotId: string, offer: SponsorOffer) {
+    onStadiumChange({
+      ...stadium,
+      sponsor_deals: signSponsorDeal(stadium.sponsor_deals, slotId, season, offer),
+    });
+    setOpenSlotId(null);
+  }
 
   return (
     <main className="stadium">
@@ -80,10 +115,12 @@ export function StadiumScreen({
 
       <section className="stadium-fanbase" aria-label="Fanbase">
         <div className={`stadium-fanbase-card is-${mood}`}>
-          <span className="stadium-fanbase-icon" aria-hidden="true">{fanbaseMoodIcon(mood)}</span>
+          <span className="stadium-fanbase-icon" aria-hidden="true">
+            {fanbaseMoodIcon(mood)}
+          </span>
           <div>
             <strong>Fanbase {formatFanbase(fanbase)}</strong>
-            <p>{fanbaseMoodLabel(mood)} · Erfolg &amp; Tabellenplatz steuern die Zuschauerzahl</p>
+            <p>Erfolg &amp; Tabellenplatz steuern die Zuschauerzahl</p>
           </div>
           {delta != null && delta !== 0 ? (
             <span className={delta > 0 ? "stadium-fanbase-delta is-up" : "stadium-fanbase-delta is-down"}>
@@ -94,79 +131,143 @@ export function StadiumScreen({
         </div>
       </section>
 
-      <section className="stadium-upgrades" aria-label="Stadionausbau">
-        <h2>🏗️ Ausbau</h2>
-        <ul className="stadium-upgrade-list">
-          {stadiumUpgradeCatalog().map((upgrade) => {
-            const level = stadiumUpgradeLevel(stadium, upgrade.id);
-            const maxed = level >= upgrade.max_level;
-            const nextCost = maxed ? null : stadiumUpgradeCost(upgrade, level + 1);
-            const check = canPurchaseStadiumUpgrade(stadium, finances, upgrade.id);
-            return (
-              <li key={upgrade.id} className="stadium-upgrade-card">
-                <span className="stadium-upgrade-icon" aria-hidden="true">{upgrade.icon}</span>
-                <div className="stadium-upgrade-body">
-                  <strong>{upgrade.name}</strong>
-                  <p>{upgrade.description}</p>
-                  <p className="stadium-upgrade-meta">
-                    Stufe {level}/{upgrade.max_level}
-                    {nextCost != null ? ` · ${formatClubCash(nextCost)}` : " · Max"}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="stadium-upgrade-buy"
-                  disabled={!check.allowed}
-                  title={check.reason}
-                  onClick={() => onPurchaseUpgrade(upgrade.id)}
-                >
-                  {maxed ? "✓" : "Kaufen"}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+      <nav className="stadium-tabs" aria-label="Stadionbereiche">
+        <button
+          type="button"
+          className={tab === "plan" ? "stadium-tab is-active" : "stadium-tab"}
+          onClick={() => setTab("plan")}
+        >
+          🗺️ Grundriss
+        </button>
+        <button
+          type="button"
+          className={tab === "precinct" ? "stadium-tab is-active" : "stadium-tab"}
+          onClick={() => setTab("precinct")}
+        >
+          🌭 Gelände
+        </button>
+        <button
+          type="button"
+          className={tab === "upgrades" ? "stadium-tab is-active" : "stadium-tab"}
+          onClick={() => setTab("upgrades")}
+        >
+          🏗️ Ausbau
+        </button>
+      </nav>
 
-      <Hint text="Preise senken die Auslastung — Fanbase und Ergebnisse heben die Basis an." block>
-        <section className="stadium-layout" aria-label="Stadion-Grundriss">
-          <StadiumPitchPlan
-            blocks={stadium.blocks}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
-          {blockOrder.map((blockId) => {
-            const block = stadium.blocks.find((entry) => entry.id === blockId);
-            if (!block) return null;
-            return (
-              <StadiumBlockCard
-                key={block.id}
-                block={block}
-                area={block.id}
-                selected={selectedId === block.id}
-                onSelect={() => setSelectedId(block.id)}
-                onPriceChange={(delta) =>
-                  onStadiumChange(adjustBlockTicketPrice(stadium, block.id, delta))
-                }
-              />
-            );
-          })}
+      {tab === "plan" ? (
+        <Hint text="Leere Banden auf den Tribünen-Karten klicken — Laufzeit und Geld im Modal." block>
+          <section className="stadium-layout" aria-label="Stadion-Grundriss">
+            <StadiumPitchPlan
+              blocks={stadium.blocks}
+              deals={stadium.sponsor_deals}
+              season={season}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              onOpenSlot={setOpenSlotId}
+            />
+            {blockOrder.map((blockId) => {
+              const block = stadium.blocks.find((entry) => entry.id === blockId);
+              if (!block) return null;
+              return (
+                <StadiumBlockCard
+                  key={block.id}
+                  block={block}
+                  area={block.id}
+                  selected={selectedId === block.id}
+                  deals={stadium.sponsor_deals}
+                  season={season}
+                  onSelect={() => setSelectedId(block.id)}
+                  onOpenSlot={setOpenSlotId}
+                  onPriceChange={(priceDelta) =>
+                    onStadiumChange(adjustBlockTicketPrice(stadium, block.id, priceDelta))
+                  }
+                />
+              );
+            })}
+          </section>
+        </Hint>
+      ) : null}
+
+      {tab === "precinct" ? (
+        <PrecinctGrid
+          precinct={precinct}
+          cash={finances.cash}
+          stadiumName={stadium.name}
+          onPlace={onPlacePrecinct}
+        />
+      ) : null}
+
+      {tab === "upgrades" ? (
+        <section className="stadium-upgrades" aria-label="Stadionausbau">
+          <h2>🏗️ Ausbau</h2>
+          <ul className="stadium-upgrade-list">
+            {stadiumUpgradeCatalog().map((upgrade) => {
+              const level = stadiumUpgradeLevel(stadium, upgrade.id);
+              const maxed = level >= upgrade.max_level;
+              const nextCost = maxed ? null : stadiumUpgradeCost(upgrade, level + 1);
+              const check = canPurchaseStadiumUpgrade(stadium, finances, upgrade.id);
+              return (
+                <li key={upgrade.id} className="stadium-upgrade-card">
+                  <span className="stadium-upgrade-icon" aria-hidden="true">
+                    {upgrade.icon}
+                  </span>
+                  <div className="stadium-upgrade-body">
+                    <strong>{upgrade.name}</strong>
+                    <p>{upgrade.description}</p>
+                    <p className="stadium-upgrade-meta">
+                      Stufe {level}/{upgrade.max_level}
+                      {nextCost != null ? ` · ${formatClubCash(nextCost)}` : " · Max"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="stadium-upgrade-buy"
+                    disabled={!check.allowed}
+                    title={check.reason}
+                    onClick={() => onPurchaseUpgrade(upgrade.id)}
+                  >
+                    {maxed ? "✓" : "Kaufen"}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </section>
-      </Hint>
+      ) : null}
+
+      {openSlot ? (
+        <SponsorDealModal
+          slot={openSlot}
+          deal={openDeal}
+          season={season}
+          takenBrandKeys={takenSponsorBrandKeys(stadium.sponsor_deals, season, openSlot.id)}
+          onSign={(offer) => signDeal(openSlot.id, offer)}
+          onClose={() => setOpenSlotId(null)}
+        />
+      ) : null}
     </main>
   );
 }
 
 function StadiumPitchPlan({
   blocks,
+  deals,
+  season,
   selectedId,
   onSelect,
+  onOpenSlot,
 }: {
   blocks: readonly StadiumBlock[];
+  deals: ClubStadium["sponsor_deals"];
+  season: number;
   selectedId: string | null;
   onSelect: (blockId: string) => void;
+  onOpenSlot: (slotId: string) => void;
 }) {
   const byId = Object.fromEntries(blocks.map((block) => [block.id, block]));
+  const shirt = SPONSOR_SLOTS.find((slot) => slot.kind === "shirt");
+  const shirtDeal = shirt ? dealForSlot(deals, shirt.id, season) : undefined;
 
   const zones: Array<{ id: string; x: number; y: number; w: number; h: number; label: string }> = [
     { id: "north", x: 24, y: 8, w: 272, h: 44, label: "N" },
@@ -223,7 +324,52 @@ function StadiumPitchPlan({
           );
         })}
       </svg>
-      <p className="stadium-plan-hint">Grundriss · Farbe = Auslastung (rot → grün)</p>
+      {shirt ? (
+        <aside className="stadium-commerce" aria-label="Trikotfläche">
+          <button
+            type="button"
+            className={shirtDeal ? "stadium-commerce-slot" : "stadium-commerce-slot is-empty"}
+            title={shirtDeal ? `${shirtDeal.brand} auf der Brust` : "Trikot ohne Brustlogo"}
+            onClick={() => onOpenSlot(shirt.id)}
+          >
+            <span aria-hidden="true">👕</span>
+            <span>{shirtDeal?.brand ?? "Shirt-Slot"}</span>
+          </button>
+        </aside>
+      ) : null}
+    </div>
+  );
+}
+
+function StandBoardSlots({
+  stand,
+  deals,
+  season,
+  onOpenSlot,
+}: {
+  stand: SponsorStand;
+  deals: readonly SponsorDeal[] | undefined;
+  season: number;
+  onOpenSlot: (slotId: string) => void;
+}) {
+  const slots = sponsorSlotsForStand(stand);
+  if (slots.length === 0) return null;
+  return (
+    <div className="stadium-card-boards" onClick={(event) => event.stopPropagation()}>
+      {slots.map((slot) => {
+        const deal = dealForSlot(deals, slot.id, season);
+        return (
+          <button
+            key={slot.id}
+            type="button"
+            className={deal ? "stadium-card-board" : "stadium-card-board is-empty"}
+            aria-label={deal ? `${slot.label}, ${deal.brand}` : `${slot.label}, Bande frei`}
+            onClick={() => onOpenSlot(slot.id)}
+          >
+            {deal ? deal.brand : "Bande frei"}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -232,13 +378,19 @@ function StadiumBlockCard({
   block,
   area,
   selected,
+  deals,
+  season,
   onSelect,
+  onOpenSlot,
   onPriceChange,
 }: {
   block: StadiumBlock;
   area: string;
   selected: boolean;
+  deals: ClubStadium["sponsor_deals"];
+  season: number;
   onSelect: () => void;
+  onOpenSlot: (slotId: string) => void;
   onPriceChange: (delta: number) => void;
 }) {
   const sold = stadiumBlockAttendees(block);
@@ -246,6 +398,7 @@ function StadiumBlockCard({
   const fillPct = Math.round(block.fill_rate * 100);
   const refPct = Math.round(referenceFillRate(block.id) * 100);
   const fillDeltaPts = Math.round(fillRateDeltaFromReference(block) * 100);
+  const stand = block.id as SponsorStand;
 
   return (
     <article
@@ -262,24 +415,27 @@ function StadiumBlockCard({
           {tierLabel(block.tier)} · {block.capacity.toLocaleString("de-DE")} Plätze
         </p>
         <FillMeter fillPct={fillPct} refPct={refPct} deltaPts={fillDeltaPts} sold={sold} />
-        <div className="stadium-price" onClick={(event) => event.stopPropagation()}>
-          <button
-            type="button"
-            aria-label={`${block.name} Ticketpreis senken`}
-            disabled={block.ticket_price_eur <= TICKET_PRICE_MIN}
-            onClick={() => onPriceChange(-2)}
-          >
-            −
-          </button>
-          <span>€ {block.ticket_price_eur}</span>
-          <button
-            type="button"
-            aria-label={`${block.name} Ticketpreis erhöhen`}
-            disabled={block.ticket_price_eur >= TICKET_PRICE_MAX}
-            onClick={() => onPriceChange(2)}
-          >
-            +
-          </button>
+        <div className="stadium-block-controls">
+          <div className="stadium-price" onClick={(event) => event.stopPropagation()}>
+            <button
+              type="button"
+              aria-label={`${block.name} Ticketpreis senken`}
+              disabled={block.ticket_price_eur <= TICKET_PRICE_MIN}
+              onClick={() => onPriceChange(-2)}
+            >
+              −
+            </button>
+            <span>€ {block.ticket_price_eur}</span>
+            <button
+              type="button"
+              aria-label={`${block.name} Ticketpreis erhöhen`}
+              disabled={block.ticket_price_eur >= TICKET_PRICE_MAX}
+              onClick={() => onPriceChange(2)}
+            >
+              +
+            </button>
+          </div>
+          <StandBoardSlots stand={stand} deals={deals} season={season} onOpenSlot={onOpenSlot} />
         </div>
         <p className="stadium-block-income">Heimspiel {formatClubCash(income)}</p>
       </div>

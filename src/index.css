@@ -2927,6 +2927,28 @@ body {
   font-size: 0.85rem;
 }
 
+.stadium-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.stadium-tab {
+  border: 0;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
+}
+
+.stadium-tab.is-active {
+  background: #047857;
+  color: #fff;
+}
+
 .board-panel {
   margin: 0 0 0.85rem;
   border: 1px solid #e2e8f0;
@@ -3220,17 +3242,86 @@ body {
 
 .stadium-pitch-map {
   grid-area: pitch;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "plan commerce";
   align-items: center;
-  justify-content: center;
+  gap: 0.4rem 0.5rem;
   min-height: 10rem;
 }
 
 .stadium-plan {
+  grid-area: plan;
   width: 100%;
   max-width: 18rem;
   height: auto;
+  justify-self: center;
+}
+
+.stadium-board-slot {
+  fill: rgb(253 224 71 / 88%);
+  stroke: #854d0e;
+  stroke-width: 1.2;
+}
+
+.stadium-board-slot.is-empty {
+  fill: rgb(255 255 255 / 18%);
+  stroke: #fde68a;
+  stroke-dasharray: 3 2;
+}
+
+.stadium-board-hit {
+  cursor: pointer;
+}
+
+.stadium-board-mark {
+  fill: #1e293b;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.stadium-board-mark.is-empty {
+  fill: #fde68a;
+  font-size: 11px;
+}
+
+.stadium-commerce {
+  grid-area: commerce;
+  display: grid;
+  gap: 0.4rem;
+  align-self: end;
+}
+
+.stadium-commerce-slot {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  min-width: 4.4rem;
+  padding: 0.4rem 0.3rem;
+  border-radius: 0.5rem;
+  border: 1.5px solid #cbd5e1;
+  background: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-align: center;
+  color: #334155;
+  cursor: pointer;
+}
+
+.stadium-commerce-slot.is-empty {
+  border-style: dashed;
+  border-color: #d97706;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.stadium-inventory-hunger {
+  grid-area: hunger;
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #b45309;
+  text-align: center;
 }
 
 .stadium-plan-zone {
@@ -3258,10 +3349,234 @@ body {
 }
 
 .stadium-plan-hint {
-  margin: 0.35rem 0 0;
+  grid-area: hint;
+  margin: 0;
   color: #64748b;
   font-size: 0.72rem;
   font-weight: 600;
+  text-align: center;
+}
+
+.stadium-precinct {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
+}
+
+.stadium-precinct-palette {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.stadium-precinct-hint {
+  margin: 0;
+  max-width: 6.5rem;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.stadium-precinct-grid {
+  display: grid;
+  gap: 0.28rem;
+  justify-content: start;
+}
+
+.stadium-precinct-tile {
+  position: relative;
+  box-sizing: border-box;
+  width: 3.75rem;
+  height: 3.75rem;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 0.4rem;
+  background: #f8fafc;
+  font-size: 1.35rem;
+  cursor: grab;
+}
+
+.stadium-precinct-tile.is-cell {
+  background: #f1f5f9;
+  cursor: pointer;
+}
+
+.stadium-precinct-tile.is-filled,
+.stadium-precinct-tile.is-owned,
+.stadium-precinct-tile.is-picked {
+  border-style: solid;
+  border-color: #047857;
+  background: #ecfdf5;
+}
+
+.stadium-precinct-tile.is-picked {
+  box-shadow: 0 0 0 2px rgb(4 120 87 / 28%);
+}
+
+.stadium-precinct-tile.is-locked {
+  opacity: 0.38;
+  cursor: not-allowed;
+  filter: grayscale(0.7);
+}
+
+.stadium-precinct-tile[data-tooltip]:hover::after,
+.stadium-precinct-tile[data-tooltip]:focus-visible::after,
+.stadium-precinct-arena[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.35rem);
+  transform: translateX(-50%);
+  z-index: 4;
+  padding: 0.28rem 0.5rem;
+  border-radius: 0.4rem;
+  background: #0f172a;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.stadium-precinct-arena {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 0.15rem;
+  padding: 0.35rem;
+  border-radius: 0.55rem;
+  background: #15803d;
+  color: #ecfdf5;
+  text-align: center;
+  pointer-events: auto;
+}
+
+.stadium-precinct-arena span {
+  font-size: 1.6rem;
+}
+
+.stadium-precinct-arena strong {
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.sponsor-deal-modal {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.sponsor-deal-facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.sponsor-deal-facts li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+}
+
+.sponsor-bonus-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.sponsor-bonus {
+  display: grid;
+  justify-items: start;
+  gap: 0.15rem;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 0.65rem;
+  padding: 0.5rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.sponsor-bonus.is-on {
+  border-color: #047857;
+  background: #ecfdf5;
+}
+
+.sponsor-brand-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: 0.35rem;
+}
+
+.sponsor-brand {
+  display: grid;
+  justify-items: center;
+  gap: 0.12rem;
+  padding: 0.4rem 0.3rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 0.55rem;
+  background: #f8fafc;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sponsor-brand span {
+  font-size: 1.15rem;
+}
+
+.sponsor-brand.is-on {
+  border-color: #047857;
+  background: #ecfdf5;
+}
+
+.sponsor-brand.is-taken {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sponsor-brand-hint {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.sponsor-deal-verdict {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.sponsor-deal-verdict.is-ok {
+  color: #047857;
+}
+
+.sponsor-deal-verdict.is-no {
+  color: #b45309;
+}
+
+.profile-talk-row em {
+  font-style: normal;
+  font-weight: 600;
+  color: #64748b;
+  font-size: 0.72rem;
 }
 
 .stadium-block {
@@ -3307,11 +3622,55 @@ body {
   font-size: 0.78rem;
 }
 
+.stadium-block-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+}
+
+.stadium-card-boards {
+  display: flex;
+  flex: 1;
+  gap: 0.35rem;
+  min-width: 5.5rem;
+}
+
+.stadium-card-board {
+  flex: 1;
+  min-height: 2.15rem;
+  padding: 0.25rem 0.4rem;
+  border: 1.5px dashed #d97706;
+  border-radius: 0.4rem;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.stadium-card-board:not(.is-empty) {
+  border-style: solid;
+  border-color: #ca8a04;
+  background: #fef08a;
+  color: #1e293b;
+}
+
+.stadium-block[data-area="west"] .stadium-card-boards,
+.stadium-block[data-area="east"] .stadium-card-boards {
+  flex-basis: 100%;
+}
+
+.stadium-block[data-area="west"] .stadium-card-board,
+.stadium-block[data-area="east"] .stadium-card-board {
+  min-height: 2.6rem;
+}
+
 .stadium-price {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  margin-top: 0.45rem;
   padding: 0.2rem 0.35rem;
   border-radius: 999px;
   background: #fff;
@@ -3424,6 +3783,23 @@ body {
       "north north"
       "west east"
       "south vip";
+  }
+
+  .stadium-pitch-map {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "plan"
+      "commerce";
+  }
+
+  .stadium-commerce {
+    grid-auto-flow: column;
+    justify-content: center;
+    align-self: center;
+  }
+
+  .stadium-precinct {
+    grid-template-columns: 1fr;
   }
 
   .stadium-block {

@@ -16,6 +16,8 @@ import {
 } from "./club-finances.ts";
 import { financeMonthForWeek } from "./finance-ledger.ts";
 import { defaultCoachingStaff, weeklyStaffWageBill } from "../staff/coaching-staff.ts";
+import { defaultClubStadium } from "../stadium/club-stadium.ts";
+import { defaultSponsorOffer, signSponsorDeal } from "../stadium/sponsor-deals.ts";
 
 describe("club finances", () => {
   it("sums weekly wages for owned players", () => {
@@ -129,6 +131,47 @@ describe("club finances", () => {
     const next = applySeasonEndFinances(defaultClubFinances(), league, 1, 30);
     expect(next.cash).toBeGreaterThan(defaultClubFinances().cash);
     expect(next.transfer_budget).toBeGreaterThan(defaultClubFinances().transfer_budget);
+  });
+
+  it("adds board sponsorship to the weekly F6.2 line", () => {
+    const offer = defaultSponsorOffer("board_west");
+    const stadium = defaultClubStadium();
+    stadium.sponsor_deals = signSponsorDeal([], "board_west", 1, offer);
+    const { finances } = advanceWeeklyClubFinances(defaultClubFinances(), {
+      players: [],
+      clubId: "cl_fc_nordstern",
+      divisionId: "regionalliga-nord",
+      isHomeMatchWeek: false,
+      season: 1,
+      week: 1,
+      stadium,
+    });
+    expect(finances.cash).toBe(
+      defaultClubFinances().cash + 55_000 + offer.weeklyAmount + 12_000 - 18_000 - 9_000,
+    );
+  });
+
+  it("pays the top-scorer staffel at season end", () => {
+    const league = defaultLeagueState();
+    league.season_complete = true;
+    league.career_player_stats = [
+      {
+        playerId: "p_test",
+        name: "Test",
+        goals: 18,
+        assists: 0,
+        yellowCards: 0,
+        minutes: 900,
+        apps: 10,
+      },
+    ];
+    const offer = { ...defaultSponsorOffer("shirt"), bonusTopScorer: true };
+    const stadium = defaultClubStadium();
+    stadium.sponsor_deals = signSponsorDeal([], "shirt", 1, offer);
+    const next = applySeasonEndFinances(defaultClubFinances(), league, 1, 30, stadium);
+    expect(next.pending_lines?.some((line) => line.kind === "other" && line.amount === 1_000_000)).toBe(
+      true,
+    );
   });
 
   it("formats cash for the UI", () => {

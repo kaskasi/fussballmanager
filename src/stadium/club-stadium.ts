@@ -1,4 +1,6 @@
 import { DIVISION_ECONOMY, type DivisionEconomyId } from "../economy/division-economy.ts";
+import { normalizePrecinct, type PrecinctState } from "./precinct.ts";
+import type { SponsorDeal } from "./sponsor-deals.ts";
 import {
   rebuildStadiumWithUpgrades,
   stadiumFanbaseMultiplier,
@@ -24,6 +26,10 @@ export interface ClubStadium {
   fanbase_last_delta?: number;
   /** F7.2 — purchased upgrade levels keyed by upgrade id. */
   upgrade_levels?: Record<string, number>;
+  /** F6.5 — board and shirt contracts. */
+  sponsor_deals?: SponsorDeal[];
+  /** Gelände-Raster (F7.3 furniture). */
+  precinct?: PrecinctState;
 }
 
 export const DEFAULT_FANBASE = 52;
@@ -128,6 +134,8 @@ export function normalizeClubStadium(stadium: ClubStadium): ClubStadium {
         ...stadium,
         fanbase,
         upgrade_levels: stadium.upgrade_levels ?? {},
+        sponsor_deals: stadium.sponsor_deals ?? [],
+        precinct: normalizePrecinct(stadium.precinct),
       },
       STADIUM_BASE_BLOCKS,
     ),

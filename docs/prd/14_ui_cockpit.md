@@ -1,6 +1,6 @@
 # /docs/prd/14_ui_cockpit.md
 
-**Version:** 1.5
+**Version:** 1.7
 **Last Updated:** 2026-10-03
 **Status:** Final (Darstellung — kein Code in diesem Dokument)
 
@@ -74,7 +74,7 @@ Kalender, News), nicht die 40-Spalten-Identität.
 | Raum | Feature-Stand | UI-Stand | Soll-Raum |
 |---|---|---|---|
 | Aufstellung | F1.1–F1.3 da | Bild, trifft 14 | behalten |
-| Stadion-Grundriss | F7.1 + Ticket-Stepper | Bild, ohne Banden | Ringe + Slots |
+| Stadion-Grundriss | F7.1 + Ticket-Stepper | Ringe + Hunger-Slots | behalten |
 | Origin-Modal | PRD 13 | drei Karten, gut | behalten |
 | Scouting-Wissen | F4.2 | ehrlich (Unbekannt/Unklar) | Balken+CI statt nur Text |
 | Spielerakte | CA, Vertrag, Flavor | vier SaaS-Tabs, ein Punkt | eine Karte |
@@ -209,29 +209,34 @@ Woche (Sponsoring, Gehälter, Unterhalt), nicht „Noch keine Buchungen“ als
 leere Kachel, wenn der Wochenabschluss bereits bucht. Sparkline darf flach
 sein. Drei Tiles allein reichen nicht.
 
-### 14.7 Stadion als Inventar (F7.1 jetzt, F6.5 / F7.3 später)
+### 14.7 Stadion als Inventar (F7.1, F6.5, Gelände-Tab)
 
 Den bestehenden 2D-Grundriss behalten. Ausbau-Shop darf nicht die Karte
-verdrängen.
+verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
 
 ```text
 /** WIREFRAME: PRD 14.7 — Stadion */
 
-┌──────────────┬──────────────┬──────────────┐
-│ Nordkurve    │    [N]       │ Osttribüne   │
-│ Auslastung   │  ▭▭▭ Banden │              │
-│ € Ticket ±   │ [W] Rasen [O]│              │
-│              │  ▭▭▭ Banden │              │
-│ Westtribüne  │    [S]  VIP  │ 🌭 Slot leer │
-│              │              │ 👕 Shirt-Slot│
-└──────────────┴──────────────┴──────────────┘
-  noch 3 Banden frei · Trikot ohne Brustlogo · Wurstbude unbesetzt
+  [Grundriss] [Gelände] [Ausbau]
+
+  Grundriss: Banden sitzen auf den *Tribünen-Karten* um den Plan,
+  nicht auf dem Rasen. Klick ▭ = Sponsor-Modal (F6.5).
+  👕 Shirt-Slot bleibt am Platz.
+
+  Gelände: 2D-Raster. 🏟️ Stadion steht fest in der Mitte (4×2).
+  Palette (Kachelgröße) → freie Zelle. Erstplatzieren kostet Cash.
+  🌭 Bude  👕 Fanshop  🅿️ Parkplatz  🚇 Bahn
 ```
 
-- Banden-Ringe und Shirt-Slot sind sichtbare Inventarplätze. Belegen ist
-  F6.5 (PRD 15). Unbelegt = Hunger, nicht versteckter Button.
-- Wurstbuden-Slot ist F7.3. Eine leere Fläche am Rand reicht in M1; kaufen
-  erst wenn 15 das Feature zur Implementation freigibt.
+- Pro Stand sichtbare Werbe-Slots **auf den Karten** um den Grundriss
+  (leer = Hunger, belegt = Marke). Nicht auf dem Rasen zeichnen.
+- F6.5-Modal: Marken-Chips (exklusiv), Laufzeit-Slider, Wochenbetrag-Slider,
+  zwei Erfolgsstaffeln (Torschützenkönig / Meister, je +€ 1 Mio.).
+  Die Marke sagt auch Nein. Keine Klausel-Enzyklopädie.
+- Gelände ist der Ort für F7.3-Möbel. Das Stadion belegt die Raster-Mitte
+  und ist nicht verschiebbar. Gebäude nur auf freie Felder; Erstplatzieren
+  zieht Cash. Wurst-Ökonomie, Hotel, Museum bleiben F7.3-Sim. Parkplatz
+  und Bahn sind Hunger-Fliesen, kein neues Feature in PRD 10.
 - Ticket-Stepper an Blöcken bleibt.
 
 ### 14.8 Transfers (F5.1, F5.4, F5.7)
@@ -286,7 +291,7 @@ Ein Raum pro Task, Pipeline-Features nicht nebenbei umbauen.
 2. Jugend-Report (14.4) — Gesetz 6 sichtbar machen. **gebaut**
 3. Inbox-Icons + Hub (14.5). **gebaut**
 4. Finanzen-Wasserfall (14.6) — Spec existiert. **gebaut**
-5. Stadion-Inventar-Slots (14.7) — Hunger zeichnen, Sim später.
+5. Stadion-Inventar-Slots (14.7) — Hunger zeichnen, Sim später. **gebaut**
 6. Transfers ohne Dead-End (14.8).
 7. Match-DE + Namen in der Zeile (14.10).
 8. Scouting-Balken (14.9).

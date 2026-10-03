@@ -1,6 +1,6 @@
 # /docs/prd/15_feature_gap.md
 
-**Version:** 1.4
+**Version:** 1.6
 **Last Updated:** 2026-10-03
 **Status:** Final (Analyse — keine neuen Shipping-Features ohne Eintrag in PRD 10)
 
@@ -96,12 +96,12 @@ per explizitem Katalog-Edit.
 | ID | M | Spec | Gebaut (2026-09-29) | Lücke |
 |---|---|---|---|---|
 | F5.4 | M2 | Gehalt, Prioritäten, Frust-Spirale (05.4) | Akte-Slider Gehalt/Jahre/Bonus + Frust; Jugend-Ein-Klick in Inbox | Dirichlet-Gewichte nicht auf Player — nur Advisor-Hint |
-| F6.5 | M2 | Sponsor-Laufzeit, Erfolgsstaffel | Wöchentliche Zahl aus Liga-Tabelle | **Kein Ort, kein Shirt, keine Bande** |
+| F6.5 | M2 | Sponsor-Laufzeit, Erfolgsstaffel | Modal am Slot, zwei Staffeln | Klausel-Enzyklopädie bleibt raus |
 | F6.7 | M3 | Merch × Popularität | — | Fanshop-SKU, nicht das Brustlogo |
 | F6.4 | M1 | Wasserfall 11.5 | Icon-Balken + 13-Mo-Sparkline | — |
-| F7.1 | M1 | 2D-Grundriss, Preise | da | ohne Inventar-Ringe |
-| F7.2 | M2 | Kapazität, VIP, Heizung | Shop-Liste + Levels | ok als Sim, UI-Shop verdeckt Karte |
-| F7.3 | M3 | Wurst, Fanshop, Hotel, Museum | NPC-Name Bratwurst in PRD 13 | **keine Bude** |
+| F7.1 | M1 | 2D-Grundriss, Preise | Grundriss + Banden auf Tribünen + Shirt | Gelände-Tab separat |
+| F7.2 | M2 | Kapazität, VIP, Heizung | Shop-Liste + Levels | Shop unter der Karte |
+| F7.3 | M3 | Wurst, Fanshop, Hotel, Museum | Gelände-Raster + Palette | Sim/Hotel/Museum offen |
 | F3.2 | M1 | Campus 2D-Iso | — | Grid statt Iso |
 | F3.3 | M1 | YouthReports | Report 14.4 + Auto-Sim; Grid sekundär | Campus-Iso F3.2 |
 | F3.4 | M1 | Icon-Inbox, Cap 4 | Post-Karte ●/▲, Jugend-Icons 03.4 | Hub-Ampel Jugend |
@@ -143,8 +143,8 @@ per explizitem Katalog-Edit.
 
 Ohne Meilensteine in PRD 10 zu verschieben:
 
-1. **F6.5** — als Inventar am Stadion (14.7): Banden-Slots + ein Shirt-Slot,
-   Laufzeit, Betrag. Keine Klausel-Enzyklopädie.
+1. **F6.5** — gezogen: Modal am Slot, Laufzeit, Wochenbetrag, zwei Staffeln.
+   Klausel-Enzyklopädie bleibt raus.
 2. Ein **F7.3-Slice** (eine Wurstbude) nur nach explizitem Katalog-Edit, der
    den Slice nach M2 zieht; sonst bleibt F7.3 M3. Empfohlen, nicht getan.
 3. **C1 / C2** erst nach 07/10.
@@ -178,7 +178,7 @@ Savegame. Vorstand/Entlassung aktiv.
 | F4.1 F4.2 | Marktliste, Wissensmodell | Wissen sichtbar |
 | F5.1–F5.3 F5.7 | Markt, MW, Leihen, Vorvertrag | Sim > Screen |
 | F6.1–F6.4 | Budgets, Streams, Ledger, Wasserfall | Wasserfall 11.5 gebaut |
-| F7.1 | Stadion 2D | da, ohne Banden-Hunger |
+| F7.1 | Stadion 2D | Grundriss + Inventar-Hunger 14.7 |
 | F8.1 | Trainer einstellen | vorhanden |
 | F9.1 F9.2 | Ziele, Jobgefahr | Origin/Vorstand sichtbar |
 | F10.1–F10.4 | Liga, Tabelle, Auf/Abstieg, KI-Growth | zwei Klassen |

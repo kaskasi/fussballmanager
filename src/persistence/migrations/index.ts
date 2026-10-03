@@ -42,6 +42,7 @@ import { migration041AssistantDelegation } from "./migration_041_assistant_deleg
 import { migration042M2Features } from "./migration_042_m2_features.ts";
 import { migration043ContractTalks } from "./migration_043_contract_talks.ts";
 import { migration044ContractTalkLocks } from "./migration_044_contract_talk_locks.ts";
+import { migration045SponsorPrecinct } from "./migration_045_sponsor_precinct.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -93,6 +94,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration042M2Features,
   migration043ContractTalks,
   migration044ContractTalkLocks,
+  migration045SponsorPrecinct,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

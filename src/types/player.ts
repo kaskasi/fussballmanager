@@ -63,6 +63,8 @@ export interface Player {
     clubs: ClubHistoryEntry[];
     achievements: string[];
     milestones: MilestoneEvent[];
+    /** Pre-C1 career flair for F1.5 hunger slots (veteran backstory). */
+    career_stamps?: string[];
   };
 
   portrait_seed: number;
@@ -154,6 +156,9 @@ export interface GrowthSnapshot {
   attributes_snapshot: Attributes;
   minutes_played: number;
   drive_at_snapshot: number;
+  season_apps?: number;
+  season_goals?: number;
+  season_assists?: number;
 }
 
 export interface LoanRecord {

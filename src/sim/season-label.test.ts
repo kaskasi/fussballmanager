@@ -7,5 +7,7 @@ describe("season calendar year", () => {
     expect(seasonCalendarYear(2)).toBe(2027);
     expect(seasonCalendarYear(4)).toBe(2029);
     expect(formatSeasonLabel(1)).toBe("Saison 2026");
+    expect(seasonCalendarYear(0)).toBe(2025);
+    expect(seasonCalendarYear(-6)).toBe(2019);
   });
 });

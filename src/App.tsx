@@ -231,6 +231,7 @@ export default function App() {
   const [matchNavAction, setMatchNavAction] = useState<NavPrimaryAction | null>(null);
   const [marketFilters, setMarketFilters] = useState<MarketFilters>(DEFAULT_MARKET_FILTERS);
   const [marketSort, setMarketSort] = useState<MarketSort>(DEFAULT_MARKET_SORT);
+  const [trainingFocusPlayerId, setTrainingFocusPlayerId] = useState<string | null>(null);
   const [clubProfileId, setClubProfileId] = useState<TeamId | null>(null);
   const [accessibility, setAccessibility] = useState<AccessibilityPreferences>(() =>
     loadAccessibilityPreferences(),
@@ -242,6 +243,12 @@ export default function App() {
   useEffect(() => {
     setProfileFeedback(null);
   }, [profileId]);
+
+  useEffect(() => {
+    if (screen !== "training") {
+      setTrainingFocusPlayerId(null);
+    }
+  }, [screen]);
 
   const flashSaveToast = useCallback(() => {
     if (saveToastTimerRef.current) clearTimeout(saveToastTimerRef.current);
@@ -1448,6 +1455,7 @@ export default function App() {
             setProfileFeedback(null);
           }}
           onOpenTraining={() => {
+            setTrainingFocusPlayerId(profilePlayer.id);
             setProfileId(null);
             setProfileFeedback(null);
             setScreen("training");
@@ -1536,6 +1544,7 @@ export default function App() {
           onAssistantDelegationChange={handleAssistantDelegationChange}
           onAssignMentor={handleAssignMentor}
           onClearMentor={handleClearMentor}
+          focusIndividualPlayerId={trainingFocusPlayerId}
         />
       ) : null}
       {inboxOpen && pendingInboxItems(youthInbox, players).length > 0 ? (

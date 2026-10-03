@@ -1,3 +1,4 @@
+import { applyVeteranBackstory, peakCaBaseAdjustment } from "../player/veteran-backstory.ts";
 import { estimateCa, marketValue } from "../transfers/market-value.ts";
 import type { Attributes, Player, PlayerName, PositionPrimary } from "../types/player.ts";
 
@@ -552,7 +553,7 @@ function generateProfessional(
   const hiddenRandom = mulberry32(deriveWorldSeed(masterSeed, "player-hidden", stableIndex));
   const contractRandom = mulberry32(deriveWorldSeed(masterSeed, "contract", stableIndex));
   const age = rosterAge(playerIndex, random);
-  const playerBase = clubStrength + sampleStandardNormal(random) * 5 + ageStrengthAdjustment(age);
+  const playerBase = clubStrength + sampleStandardNormal(random) * 5 + peakCaBaseAdjustment(age);
   const attributes = generateAttributes(position, playerBase, random);
   const ca = estimateCa(attributes, position);
   const untilSeason = 2 + Math.floor(contractRandom() * 4);
@@ -572,7 +573,7 @@ function generateProfessional(
   const portraitSeed = deriveWorldSeed(masterSeed, "portrait", stableIndex);
   const name = generatedPlayerName(masterSeed, stableIndex);
 
-  return {
+  const basePlayer: Player = {
     id: generatedPlayerId(masterSeed, stableIndex),
     name,
     birth: {
@@ -631,6 +632,11 @@ function generateProfessional(
     },
     portrait_seed: portraitSeed,
   };
+
+  return applyVeteranBackstory(
+    basePlayer,
+    deriveWorldSeed(masterSeed, "veteran-backstory", stableIndex),
+  );
 }
 
 function generateAttributes(
@@ -660,13 +666,6 @@ function rosterAge(playerIndex: number, random: () => number): number {
   if (playerIndex < 15) return 22 + Math.floor(random() * 6);
   if (playerIndex < 20) return 28 + Math.floor(random() * 5);
   return 33 + Math.floor(random() * 4);
-}
-
-function ageStrengthAdjustment(age: number): number {
-  if (age <= 21) return -4;
-  if (age <= 27) return 2;
-  if (age <= 32) return 1;
-  return -3;
 }
 
 function birthDate(age: number, random: () => number): string {

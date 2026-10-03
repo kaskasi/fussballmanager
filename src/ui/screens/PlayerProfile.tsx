@@ -12,9 +12,10 @@
  * │ TW ░  IV ▓▓▓     │ Vertrag  [✍️ Verhandeln] [⬆️ Profikader]  │
  * └──────────────────┴───────────────────────────────────────────┘
  *
- * Tabs nur für Verlauf und Saisonwerte. Stamps bleiben leer (PRD 15 C1).
+ * Eine Karte = Identität. Nur Verlauf und Saisonwerte als optionale Vertiefung.
+ * Stamps bleiben leer (PRD 15 C1).
  */
-import { useEffect, useState, type ComponentPropsWithoutRef } from "react";
+import { useEffect, useMemo, useState, type ComponentPropsWithoutRef } from "react";
 import type { IndividualProgram } from "../../development/individual-training.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
 import {
@@ -29,7 +30,11 @@ import {
   type ContractOffer,
 } from "../../transfers/contract-talks.ts";
 import type { Player } from "../../types/player.ts";
-import { formatSeasonLabel } from "../../sim/season-label.ts";
+import {
+  careerSeasonStatsForSeason,
+  listCareerStatSeasons,
+} from "../../player/season-stats.ts";
+import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
 import { TRANSFER_WINDOW_HINT } from "../../sim/transfer-windows.ts";
 import { ContractTalksModal } from "../components/ContractTalksModal.tsx";
 import { formatPlayerName } from "../../types/player-display.ts";
@@ -46,7 +51,6 @@ import {
   achievementBadges,
   contractView,
   flavorForScout,
-  seasonStatsStub,
 } from "../player-flavor.ts";
 import {
   formatCaDelta,
@@ -68,12 +72,14 @@ import {
   visibleBreakoutFlags,
 } from "../player-profile.ts";
 
-type ProfileTab = "akte" | "development" | "stats";
+type ProfileTab = "attributes" | "training" | "contract" | "development" | "stats";
 
-const TABS: { id: ProfileTab; label: string; icon: string }[] = [
-  { id: "akte", label: "Akte", icon: "🪪" },
+const PROFILE_TABS: { id: ProfileTab; label: string; icon: string }[] = [
+  { id: "attributes", label: "Attribute", icon: "📊" },
+  { id: "training", label: "Training", icon: "🏋️" },
+  { id: "contract", label: "Vertrag", icon: "✍️" },
   { id: "development", label: "Verlauf", icon: "📈" },
-  { id: "stats", label: "Statistik", icon: "⚽" },
+  { id: "stats", label: "Saisonwerte", icon: "⚽" },
 ];
 
 const CARD_ACTIONS: Partial<Record<PlayerProfileAction, { label: string; className: string }>> = {
@@ -144,7 +150,7 @@ export function PlayerProfile({
   weekday = 1,
   actionFeedback = null,
 }: PlayerProfileProps) {
-  const [tab, setTab] = useState<ProfileTab>("akte");
+  const [tab, setTab] = useState<ProfileTab>("attributes");
   const [menuOpen, setMenuOpen] = useState(false);
   const [talksOpen, setTalksOpen] = useState(false);
   const [offer, setOffer] = useState<ContractOffer | null>(null);
@@ -152,6 +158,7 @@ export function PlayerProfile({
   useEffect(() => {
     setTalksOpen(false);
     setOffer(null);
+    setTab("attributes");
   }, [player.id]);
   const menuItems = profileMenuItems(player, owned, season);
   const reveal = scoutEstimate ? scoutReveal(scoutEstimate.uncertaintyRange) : null;
@@ -215,7 +222,6 @@ export function PlayerProfile({
   const metaLine = facts.map((fact) => `${fact.icon} ${fact.value}`).join(" · ");
   const flavor = flavorForScout(player, owned, scoutEstimate);
   const achievements = achievementBadges(player, owned, scoutEstimate);
-  const stats = seasonStatsStub(player, owned, scoutEstimate);
   const contract = contractView(player, owned, scoutEstimate);
   const lanes = owned || reveal?.showExactSkills ? staerkeAlsLanes(player) : [];
   const trainingTarget = owned
@@ -279,194 +285,221 @@ export function PlayerProfile({
             <div className="profile-state profile-state-inline" aria-label="Zustand">
               <StateChip label="Fit" mark={fitness.mark} tone={fitness.tone} value={formatState(player.state.fitness, owned, scoutEstimate)} />
               <StateChip label="Form" mark={form.mark} tone={form.tone} value={formatState(player.state.form, owned, scoutEstimate, true)} />
-              <StateChip label="Morale" mark={morale.mark} tone={morale.tone} value={formatState(player.state.morale, owned, scoutEstimate)} />
+              <StateChip label="Moral" mark={morale.mark} tone={morale.tone} value={formatState(player.state.morale, owned, scoutEstimate)} />
             </div>
             <Hint text="Stammdaten auf einen Blick." block>
               <p className="profile-meta-line">{metaLine}</p>
             </Hint>
             {flavor ? (
-              <p className="profile-flavor-one">{flavor.headline}</p>
+              <Hint text={flavor.body ?? flavor.headline} block>
+                <p className="profile-flavor-one">{flavor.headline}</p>
+              </Hint>
             ) : (
               <p className="profile-flavor-one is-muted">Noch kaum Gerüchte.</p>
             )}
-          </div>
-        </div>
-
-        <div className="profile-dossier">
-          <div className="profile-dossier-col">
-            <Hint text="Die sechs wichtigsten Skills für diese Position." block>
-              <div className="profile-bars">
-                <p className="profile-section-label">Kernattribute</p>
-                {bars.map((bar) => (
-                  <div key={bar.key} className={bar.dimmed ? "profile-bar-row is-dimmed" : "profile-bar-row"}>
-                    <span className="profile-bar-label">{attributeLabel(bar.key)}</span>
-                    <div className="profile-bar-track">
-                      {bar.showCi && bar.low !== undefined && bar.high !== undefined ? (
-                        <span
-                          className="profile-bar-ci"
-                          style={{ left: `${(bar.low / 199) * 100}%`, width: `${((bar.high - bar.low) / 199) * 100}%` }}
-                        />
-                      ) : null}
-                      <span className="profile-bar-fill" style={{ width: `${(bar.value / 199) * 100}%` }} />
-                    </div>
-                    <span className="profile-bar-value">{bar.showValue ? bar.value : "?"}</span>
-                  </div>
-                ))}
-              </div>
-            </Hint>
-
-            {lanes.length > 0 ? (
-              <Hint text="Grobe Eignung aus Hauptposition und Umschulung — keine zweite Attributliste." block>
-                <div className="profile-staerke" aria-label="Stärke als">
-                  <p className="profile-section-label">Stärke als…</p>
-                  {lanes.map((lane) => (
-                    <div key={lane.lane} className="profile-staerke-row">
-                      <span className="profile-staerke-label">{lane.lane}</span>
-                      <div className="profile-staerke-track">
-                        <span className="profile-staerke-fill" style={{ width: `${lane.value * 100}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Hint>
-            ) : (
-              <p className="profile-empty">Stärke als… unbekannt — mehr scouting.</p>
-            )}
-          </div>
-
-          <div className="profile-dossier-col">
-            {owned && trainingTarget ? (
-              <Hint text="Individuelles Extra-Programm, sonst der Mannschaftsfokus. Kein Stempel-Effekt." block>
-                <div className="profile-ziel">
-                  <p className="profile-section-label">Aktuelles Ziel</p>
-                  <p className="profile-ziel-title">
-                    <span aria-hidden="true">{trainingTarget.icon}</span> {trainingTarget.title}
-                  </p>
-                  <p className="profile-ziel-detail">{trainingTarget.detail}</p>
-                  {trainingTarget.progress !== null ? (
-                    <div className="profile-ziel-track" aria-label={`Fortschritt ${Math.round(trainingTarget.progress * 100)} Prozent`}>
-                      <span className="profile-ziel-fill" style={{ width: `${trainingTarget.progress * 100}%` }} />
-                    </div>
-                  ) : (
-                    <p className="profile-ziel-hint">Kein persönlicher Fortschritt — Teamplan.</p>
-                  )}
-                  {onOpenTraining ? (
-                    <button type="button" className="ui-btn ui-btn--ghost profile-ziel-btn" onClick={onOpenTraining}>
-                      🏋️ Training
-                    </button>
-                  ) : null}
-                </div>
-              </Hint>
-            ) : null}
-
-            {owned ? (
-              <div className="profile-hunger" aria-label="Fähigkeiten">
-                <p className="profile-section-label">Fähigkeiten / Bonus</p>
-                {Array.from({ length: FAEHIGKEIT_HUNGER_SLOTS }, (_, index) => (
-                  <div key={index} className="profile-hunger-slot">
-                    <span>{index === FAEHIGKEIT_HUNGER_SLOTS - 1 ? "Bonus" : "Fähigkeit"}</span>
-                    <span className="profile-hunger-empty">—</span>
-                  </div>
-                ))}
-                <p className="profile-hunger-note">Noch leer — besondere Stempel wachsen über Saisons.</p>
-              </div>
-            ) : null}
-
-            <Hint text="Vertragsstatus auf der Karte. Verhandeln öffnet Gehalt, Jahre, Bonus, Minuten und Startplatz." block>
-              <div className="profile-vertrag">
-                <p className="profile-section-label">Vertrag</p>
-                <p className="profile-vertrag-status">{contract.status}</p>
-                <p className="profile-vertrag-line">{contract.wageWeekly} · bis {contract.untilSeason}</p>
-                <p className="profile-vertrag-line">{contract.minutesPromise}</p>
-                {talkLock.reason ? (
-                  <p className="profile-talk-warn">{talkLock.reason}</p>
-                ) : (player.state.contract_failed_offers ?? 0) > 0 ? (
-                  <p className="profile-talk-warn">
-                    {player.state.contract_failed_offers}/{FRUSTRATION_THRESHOLD} Fehlangebote
-                  </p>
-                ) : null}
-                {canTalk || (owned && onProfileAction && cardActions.length > 0) ? (
-                  <div className="profile-vertrag-actions">
-                    {canTalk ? (
-                      <Hint text={talkLock.reason ?? "Gehalt, Laufzeit, Bonus, Minuten und Startplatz."}>
-                        <button
-                          type="button"
-                          className="ui-btn profile-action-btn ui-btn--primary"
-                          disabled={!talkLock.allowed}
-                          onClick={() => {
-                            if (!talkLock.allowed) return;
-                            setOffer(defaultContractOffer(player, season));
-                            setTalksOpen(true);
-                          }}
-                        >
-                          ✍️ Verhandeln
-                        </button>
-                      </Hint>
-                    ) : null}
-                    {owned && onProfileAction
-                      ? cardActions.map((item) => {
-                          const spec = CARD_ACTIONS[item.action];
-                          if (!spec) return null;
-                          return (
-                            <Hint key={item.action} text={item.hint}>
-                              <button
-                                type="button"
-                                className={`ui-btn profile-action-btn ${spec.className}`}
-                                onClick={() => onProfileAction(item.action)}
-                              >
-                                {spec.label}
-                              </button>
-                            </Hint>
-                          );
-                        })
-                      : null}
-                  </div>
-                ) : null}
-              </div>
-            </Hint>
-          </div>
-        </div>
-
-        <nav className="profile-tabs" aria-label="Profil-Vertiefung">
-          {TABS.map((entry) => (
-            <button
-              key={entry.id}
-              type="button"
-              className={tab === entry.id ? "profile-tab is-active" : "profile-tab"}
-              aria-current={tab === entry.id ? "page" : undefined}
-              onClick={() => setTab(entry.id)}
-            >
-              <span aria-hidden="true">{entry.icon}</span>
-              {entry.label}
-            </button>
-          ))}
-        </nav>
-
-        {tab === "akte" ? (
-          <section className="profile-panel profile-panel-note" aria-label="Notiz">
-            {flavor?.body ? <p className="profile-flavor-body">{flavor.body}</p> : null}
             {achievements.length > 0 ? (
-              <ul className="profile-badge-list">
+              <ul className="profile-achievements" aria-label="Erfolge">
                 {achievements.map((badge) => (
                   <li key={badge}>{badge}</li>
                 ))}
               </ul>
-            ) : (
-              <p className="profile-empty">{owned ? "Noch keine Erfolgseinträge." : "Unbekannt — Scout-Berichte nötig."}</p>
-            )}
-          </section>
-        ) : null}
+            ) : null}
+          </div>
+        </div>
 
-        {tab === "development" ? (
-          <DevelopmentTab
-            player={player}
-            owned={owned}
-            growth={growth}
-            timeline={timeline}
-            reveal={reveal}
-          />
-        ) : null}
-        {tab === "stats" ? <StatsTab stats={stats} owned={owned} /> : null}
+        <nav className="profile-tabs" aria-label="Spielerakte">
+          {PROFILE_TABS.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              role="tab"
+              className={tab === entry.id ? "profile-tab is-active" : "profile-tab"}
+              aria-selected={tab === entry.id}
+              onClick={() => setTab(entry.id)}
+            >
+              <span className="profile-tab-icon" aria-hidden="true">{entry.icon}</span>
+              <span className="profile-tab-label">{entry.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="profile-tab-panels" role="tabpanel">
+          {tab === "attributes" ? (
+            <section className="profile-panel" aria-label="Attribute">
+              <Hint text="Die sechs wichtigsten Skills für diese Position." block>
+                <div className="profile-bars">
+                  <p className="profile-section-label">Kernattribute</p>
+                  {bars.map((bar) => (
+                    <div key={bar.key} className={bar.dimmed ? "profile-bar-row is-dimmed" : "profile-bar-row"}>
+                      <span className="profile-bar-label">{attributeLabel(bar.key)}</span>
+                      <div className="profile-bar-track">
+                        {bar.showCi && bar.low !== undefined && bar.high !== undefined ? (
+                          <span
+                            className="profile-bar-ci"
+                            style={{ left: `${(bar.low / 199) * 100}%`, width: `${((bar.high - bar.low) / 199) * 100}%` }}
+                          />
+                        ) : null}
+                        <span className="profile-bar-fill" style={{ width: `${(bar.value / 199) * 100}%` }} />
+                      </div>
+                      <span className="profile-bar-value">{bar.showValue ? bar.value : "?"}</span>
+                    </div>
+                  ))}
+                </div>
+              </Hint>
+
+              {lanes.length > 0 ? (
+                <Hint text="Grobe Eignung aus Hauptposition und Umschulung — keine zweite Attributliste." block>
+                  <div className="profile-staerke" aria-label="Stärke als">
+                    <p className="profile-section-label">Stärke als…</p>
+                    {lanes.map((lane) => (
+                      <div key={lane.lane} className="profile-staerke-row">
+                        <span className="profile-staerke-label">{lane.lane}</span>
+                        <div className="profile-staerke-track">
+                          <span className="profile-staerke-fill" style={{ width: `${lane.value * 100}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Hint>
+              ) : (
+                <p className="profile-empty">Stärke als… unbekannt — mehr scouting.</p>
+              )}
+            </section>
+          ) : null}
+
+          {tab === "training" ? (
+            <section className="profile-panel" aria-label="Training">
+              {owned && trainingTarget ? (
+                <Hint text="Individuelles Extra-Programm, sonst der Mannschaftsfokus. Kein Stempel-Effekt." block>
+                  <div className="profile-ziel">
+                    <p className="profile-section-label">Aktuelles Ziel</p>
+                    <p className="profile-ziel-title">
+                      <span aria-hidden="true">{trainingTarget.icon}</span> {trainingTarget.title}
+                    </p>
+                    <p className="profile-ziel-detail">{trainingTarget.detail}</p>
+                    {trainingTarget.progress !== null ? (
+                      <div
+                        className="profile-ziel-track"
+                        aria-label={`Fortschritt ${Math.round(trainingTarget.progress * 100)} Prozent`}
+                      >
+                        <span className="profile-ziel-fill" style={{ width: `${trainingTarget.progress * 100}%` }} />
+                      </div>
+                    ) : (
+                      <p className="profile-ziel-hint">Kein persönlicher Fortschritt — Teamplan.</p>
+                    )}
+                    {onOpenTraining ? (
+                      <button type="button" className="ui-btn ui-btn--ghost profile-ziel-btn" onClick={onOpenTraining}>
+                        🏋️ Einzeltraining
+                      </button>
+                    ) : null}
+                  </div>
+                </Hint>
+              ) : (
+                <p className="profile-empty">
+                  {owned ? "Kein Trainingsfokus gesetzt." : "Training nur für eigene Spieler sichtbar."}
+                </p>
+              )}
+
+              {owned ? (
+                <div className="profile-hunger" aria-label="Fähigkeiten">
+                  <p className="profile-section-label">Fähigkeiten / Bonus</p>
+                  {Array.from({ length: FAEHIGKEIT_HUNGER_SLOTS }, (_, index) => {
+                    const stamp = player.history.career_stamps?.[index];
+                    const slotLabel = index === FAEHIGKEIT_HUNGER_SLOTS - 1 ? "Bonus" : "Fähigkeit";
+                    return (
+                      <div key={index} className="profile-hunger-slot">
+                        <span>{slotLabel}</span>
+                        <span className={stamp ? "profile-hunger-stamp" : "profile-hunger-empty"}>
+                          {stamp ?? "—"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  <p className="profile-hunger-note">
+                    {(player.history.career_stamps?.length ?? 0) > 0
+                      ? "Karriere-Stempel — volle C1-Mechanik folgt in PRD 15."
+                      : "Noch leer — besondere Stempel wachsen über Saisons."}
+                  </p>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
+          {tab === "contract" ? (
+            <section className="profile-panel" aria-label="Vertrag">
+              <Hint text="Vertragsstatus. Verhandeln öffnet Gehalt, Jahre, Bonus, Minuten und Startplatz." block>
+                <div className="profile-vertrag">
+                  <p className="profile-vertrag-status">{contract.status}</p>
+                  <p className="profile-vertrag-line">{contract.wageWeekly} · bis {contract.untilSeason}</p>
+                  <p className="profile-vertrag-line">{contract.minutesPromise}</p>
+                  {talkLock.reason ? (
+                    <p className="profile-talk-warn">{talkLock.reason}</p>
+                  ) : (player.state.contract_failed_offers ?? 0) > 0 ? (
+                    <p className="profile-talk-warn">
+                      {player.state.contract_failed_offers}/{FRUSTRATION_THRESHOLD} Fehlangebote
+                    </p>
+                  ) : null}
+                  {canTalk || (owned && onProfileAction && cardActions.length > 0) ? (
+                    <div className="profile-vertrag-actions">
+                      {canTalk ? (
+                        <Hint text={talkLock.reason ?? "Gehalt, Laufzeit, Bonus, Minuten und Startplatz."}>
+                          <button
+                            type="button"
+                            className="ui-btn profile-action-btn ui-btn--primary"
+                            disabled={!talkLock.allowed}
+                            onClick={() => {
+                              if (!talkLock.allowed) return;
+                              setOffer(defaultContractOffer(player, season));
+                              setTalksOpen(true);
+                            }}
+                          >
+                            ✍️ Verhandeln
+                          </button>
+                        </Hint>
+                      ) : null}
+                      {owned && onProfileAction
+                        ? cardActions.map((item) => {
+                            const spec = CARD_ACTIONS[item.action];
+                            if (!spec) return null;
+                            return (
+                              <Hint key={item.action} text={item.hint}>
+                                <button
+                                  type="button"
+                                  className={`ui-btn profile-action-btn ${spec.className}`}
+                                  onClick={() => onProfileAction(item.action)}
+                                >
+                                  {spec.label}
+                                </button>
+                              </Hint>
+                            );
+                          })
+                        : null}
+                    </div>
+                  ) : null}
+                </div>
+              </Hint>
+            </section>
+          ) : null}
+
+          {tab === "development" ? (
+            <DevelopmentTab
+              player={player}
+              owned={owned}
+              growth={growth}
+              timeline={timeline}
+              reveal={reveal}
+            />
+          ) : null}
+
+          {tab === "stats" ? (
+            <StatsTab
+              player={player}
+              season={season}
+              owned={owned}
+              scoutEstimate={scoutEstimate}
+            />
+          ) : null}
+        </div>
 
         {!owned && onAssignScout ? (
           <footer className="profile-card-footer" aria-label="Scouting und Transfer">
@@ -666,15 +699,52 @@ function DevelopmentTab({
 }
 
 function StatsTab({
-  stats,
+  player,
+  season,
   owned,
+  scoutEstimate,
 }: {
-  stats: ReturnType<typeof seasonStatsStub>;
+  player: Player;
+  season: number;
   owned: boolean;
+  scoutEstimate?: AbilityEstimate;
 }) {
+  const seasons = useMemo(() => listCareerStatSeasons(player, season), [player, season]);
+  const [selectedSeason, setSelectedSeason] = useState(season);
+
+  useEffect(() => {
+    setSelectedSeason(season);
+  }, [player.id, season]);
+
+  const stats = useMemo(
+    () => careerSeasonStatsForSeason(player, selectedSeason, season, owned, scoutEstimate),
+    [player, selectedSeason, season, owned, scoutEstimate],
+  );
+  const archived = selectedSeason !== season;
+
   return (
     <section className="profile-panel" aria-label="Statistik">
-      <Hint text="Saisonwerte aus deinem Karriere-Kader — Minuten, Tore und Vorlagen nach Ligaspiel." block>
+      <nav className="profile-year-tabs" aria-label="Kalenderjahr">
+        {seasons.map((entry) => (
+          <button
+            key={entry}
+            type="button"
+            className={selectedSeason === entry ? "profile-year-tab is-active" : "profile-year-tab"}
+            aria-pressed={selectedSeason === entry}
+            onClick={() => setSelectedSeason(entry)}
+          >
+            {seasonCalendarYear(entry)}
+          </button>
+        ))}
+      </nav>
+      <Hint
+        text={
+          archived
+            ? "Abgeschlossene Saison — synthetische Karriere-Archive (Welt-Start)."
+            : "Saisonwerte aus Ligaspielen in der laufenden Saison."
+        }
+        block
+      >
         {stats ? (
           <dl className="profile-stat-grid">
             <StatItem icon="👕" label="Einsätze" value={String(stats.apps)} />
@@ -696,9 +766,11 @@ function StatsTab({
 function StatItem({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
     <div className="profile-stat-item">
-      <span aria-hidden="true">{icon}</span>
-      <span className="profile-stat-item-label">{label}</span>
-      <strong>{value}</strong>
+      <div className="profile-stat-item-head">
+        <span className="profile-stat-item-icon" aria-hidden="true">{icon}</span>
+        <span className="profile-stat-item-label">{label}</span>
+      </div>
+      <strong className="profile-stat-item-value">{value}</strong>
     </div>
   );
 }

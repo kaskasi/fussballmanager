@@ -87,6 +87,7 @@ export function TrainingCenter({
   onAssignMentor,
   onClearMentor,
   onBack,
+  focusIndividualPlayerId = null,
 }: {
   week: number;
   season: number;
@@ -108,6 +109,8 @@ export function TrainingCenter({
   onAssignMentor: (menteeId: string, mentorId: string) => void;
   onClearMentor: (menteeId: string) => void;
   onBack?: () => void;
+  /** Öffnet Tab „Individuell“ und Programm-Modal für diesen Spieler (z. B. aus Spielerakte). */
+  focusIndividualPlayerId?: string | null;
 }) {
   const [tab, setTab] = useState<TrainingTab>("team");
   const [pickSlot, setPickSlot] = useState<number | null>(null);
@@ -117,6 +120,12 @@ export function TrainingCenter({
     () => squadTrainingLoad(players, clubId, intensity, focusCount, individualPrograms.length),
     [players, clubId, intensity, focusCount, individualPrograms.length],
   );
+
+  useEffect(() => {
+    if (focusIndividualPlayerId) {
+      setTab("individual");
+    }
+  }, [focusIndividualPlayerId]);
 
   return (
     <main className="training">
@@ -185,6 +194,7 @@ export function TrainingCenter({
           season={season}
           week={week}
           onProgramsChange={onProgramsChange}
+          openPlayerId={focusIndividualPlayerId}
         />
       ) : tab === "mentoring" ? (
         <MentoringPanel
@@ -472,16 +482,24 @@ function IndividualPlan({
   season,
   week,
   onProgramsChange,
+  openPlayerId = null,
 }: {
   players: Player[];
   programs: IndividualProgram[];
   season: number;
   week: number;
   onProgramsChange: (programs: IndividualProgram[]) => void;
+  openPlayerId?: string | null;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const roster = players.filter((player) => player.squad_status !== "loaned_out");
   const selected = roster.find((player) => player.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (!openPlayerId) return;
+    const exists = roster.some((player) => player.id === openPlayerId);
+    if (exists) setSelectedId(openPlayerId);
+  }, [openPlayerId, roster]);
 
   return (
     <section className="training-individual">

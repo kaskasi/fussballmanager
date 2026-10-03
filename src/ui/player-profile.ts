@@ -289,12 +289,21 @@ export function dossierTrainingTarget(
 export const FAEHIGKEIT_HUNGER_SLOTS = 3;
 
 export function appendSeasonSnapshot(player: Player, season: number): Player {
+  const apps =
+    player.state.season_apps > 0
+      ? player.state.season_apps
+      : player.state.season_minutes > 0
+        ? Math.max(1, Math.round(player.state.season_minutes / 72))
+        : 0;
   const snapshot: GrowthSnapshot = {
     season,
     age: player.age,
     attributes_snapshot: { ...player.attributes },
     minutes_played: player.state.season_minutes,
     drive_at_snapshot: player.hidden.drive,
+    season_apps: apps,
+    season_goals: player.state.season_goals ?? 0,
+    season_assists: player.state.season_assists ?? 0,
   };
   return {
     ...player,

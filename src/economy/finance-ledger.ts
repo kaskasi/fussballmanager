@@ -103,7 +103,12 @@ export function aggregateFinanceLines(lines: readonly FinanceLine[]): FinanceLin
   return [...totals.entries()]
     .filter(([, amount]) => amount !== 0)
     .map(([kind, amount]) => ({ kind, amount, week: 0 }))
-    .sort((left, right) => right.amount - left.amount);
+    .sort((left, right) => {
+      const leftIn = left.amount >= 0;
+      const rightIn = right.amount >= 0;
+      if (leftIn !== rightIn) return leftIn ? -1 : 1;
+      return leftIn ? right.amount - left.amount : left.amount - right.amount;
+    });
 }
 
 export function monthNetTotal(lines: readonly FinanceLine[]): number {

@@ -1559,6 +1559,9 @@ export default function App() {
           season={season}
           week={week}
           stadium={stadium}
+          league={league}
+          coachingStaff={coachingStaff}
+          scoutNetwork={scoutNetwork}
           onBack={() => setScreen("hub")}
           onOpenStadium={() => setScreen("stadium")}
         />

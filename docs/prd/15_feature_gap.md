@@ -1,6 +1,6 @@
 # /docs/prd/15_feature_gap.md
 
-**Version:** 1.2
+**Version:** 1.3
 **Last Updated:** 2026-10-03
 **Status:** Final (Analyse — keine neuen Shipping-Features ohne Eintrag in PRD 10)
 
@@ -98,7 +98,7 @@ per explizitem Katalog-Edit.
 | F5.4 | M2 | Gehalt, Prioritäten, Frust-Spirale (05.4) | Akte-Slider Gehalt/Jahre/Bonus + Frust; Jugend-Ein-Klick in Inbox | Dirichlet-Gewichte nicht auf Player — nur Advisor-Hint |
 | F6.5 | M2 | Sponsor-Laufzeit, Erfolgsstaffel | Wöchentliche Zahl aus Liga-Tabelle | **Kein Ort, kein Shirt, keine Bande** |
 | F6.7 | M3 | Merch × Popularität | — | Fanshop-SKU, nicht das Brustlogo |
-| F6.4 | M1 | Wasserfall 11.5 | Drei Tiles | Wireframe nicht umgesetzt |
+| F6.4 | M1 | Wasserfall 11.5 | Icon-Balken + 13-Mo-Sparkline | — |
 | F7.1 | M1 | 2D-Grundriss, Preise | da | ohne Inventar-Ringe |
 | F7.2 | M2 | Kapazität, VIP, Heizung | Shop-Liste + Levels | ok als Sim, UI-Shop verdeckt Karte |
 | F7.3 | M3 | Wurst, Fanshop, Hotel, Museum | NPC-Name Bratwurst in PRD 13 | **keine Bude** |
@@ -145,10 +145,9 @@ Ohne Meilensteine in PRD 10 zu verschieben:
 
 1. **F6.5** — als Inventar am Stadion (14.7): Banden-Slots + ein Shirt-Slot,
    Laufzeit, Betrag. Keine Klausel-Enzyklopädie.
-2. **F6.4 UI** — Wasserfall laut 11.5 (M1-Rest).
-3. Ein **F7.3-Slice** (eine Wurstbude) nur nach explizitem Katalog-Edit, der
+2. Ein **F7.3-Slice** (eine Wurstbude) nur nach explizitem Katalog-Edit, der
    den Slice nach M2 zieht; sonst bleibt F7.3 M3. Empfohlen, nicht getan.
-4. **C1 / C2** erst nach 07/10.
+3. **C1 / C2** erst nach 07/10.
 
 Shirt-Verkauf (F6.7) bleibt M3 und folgt der Bude, nicht dem Brustlogo.
 
@@ -178,7 +177,7 @@ Savegame. Vorstand/Entlassung aktiv.
 | F3.1–F3.4 | Intake, Campus-Iso, Auto-Jugend, Inbox | Iso und Report-UI offen |
 | F4.1 F4.2 | Marktliste, Wissensmodell | Wissen sichtbar |
 | F5.1–F5.3 F5.7 | Markt, MW, Leihen, Vorvertrag | Sim > Screen |
-| F6.1–F6.4 | Budgets, Streams, Ledger, Wasserfall | F6.4 UI offen |
+| F6.1–F6.4 | Budgets, Streams, Ledger, Wasserfall | Wasserfall 11.5 gebaut |
 | F7.1 | Stadion 2D | da, ohne Banden-Hunger |
 | F8.1 | Trainer einstellen | vorhanden |
 | F9.1 F9.2 | Ziele, Jobgefahr | Origin/Vorstand sichtbar |

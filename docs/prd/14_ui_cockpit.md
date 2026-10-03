@@ -86,7 +86,7 @@ Kalender, News), nicht die 40-Spalten-Identität.
 | Jugend | Roster + Auto-Sim | 12-Spalten-Grid | Report (PRD 03.3) |
 | Inbox | Slice + Cap 4 | Modal, Text-Buttons | Karte + Icons (09.2 / 03.4) |
 | Finanzen | F6.1–F6.4 da | Wasserfall 11.5 | behalten |
-| Transfers | Fee-Runden im Code | leerer Raum | auslaufende Verträge |
+| Transfers | Fee-Runden im Code | Next-Action-Streifen | behalten |
 | Match-Log | Event-Stream | englisches Terminal | DE, Namen in der Zeile |
 
 Systeme ≈ M1.5. UI-Seele ≈ M0.7. Politur bereits zu hoch für die Seele.
@@ -246,11 +246,11 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
 
 ### 14.8 Transfers (F5.1, F5.4, F5.7)
 
-Kein Dead-End bei geschlossenem Fenster.
-
-Mindestens eine Next-Action: auslaufende Verträge, Vorvertrag-Fenster
-(F5.7), Jugend ohne Deal. Liga-Historie ist sekundär. Fee-Verhandlung bleibt
-im bestehenden Flow; Spielergehalt-Slider ist F5.4 und teilt die Akte (14.3).
+Kein Dead-End bei geschlossenem Fenster. Oben sitzt ein Streifen
+**Nächste Aktion**: auslaufende Verträge, Vorvertrag-Fenster (F5.7),
+Jugend ohne Deal. Klick öffnet die Akte (eigen) oder das Scout-Profil
+(fremd). Liga-Historie ist sekundär. Fee-Verhandlung bleibt im bestehenden
+Flow; Spielergehalt-Slider ist F5.4 und teilt die Akte (14.3).
 
 ### 14.9 Scouting (F4.1, F4.2; Karte F4.4 M2)
 
@@ -297,7 +297,7 @@ Ein Raum pro Task, Pipeline-Features nicht nebenbei umbauen.
 3. Inbox-Icons + Hub (14.5). **gebaut**
 4. Finanzen-Wasserfall (14.6) — Spec existiert. **gebaut**
 5. Stadion-Inventar-Slots (14.7) — Hunger zeichnen, Sim später. **gebaut**
-6. Transfers ohne Dead-End (14.8).
+6. Transfers ohne Dead-End (14.8). **gebaut**
 7. Match-DE + Namen in der Zeile (14.10).
 8. Scouting-Balken (14.9).
 

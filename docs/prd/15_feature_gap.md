@@ -111,7 +111,7 @@ per explizitem Katalog-Edit.
 | F4.3 | M2 | Scout-Netz 3 Tiers | Einstellungsliste | vorgezogen, keine Karte |
 | F4.4 | M2 | Scout-Karte | — | |
 | F1.5 | M1 | Profil Charts, Icons | Tabs + Flavor | Akte laut 14.3 |
-| F5.1 | M1 | Markt, Fenster | Code + leerer Screen | Dead-End-UI |
+| F5.1 | M1 | Markt, Fenster | Next-Action bei Fenster zu | Historie sekundär |
 | F1.9 | M3 | Live-Eingriff | Pause/Speed | nicht vorziehen |
 
 ### 15.4 Kandidaten (nicht in PRD 10 — nicht bauen)
@@ -176,7 +176,7 @@ Savegame. Vorstand/Entlassung aktiv.
 | F2.1 F2.2 F2.7 | Training, Growth, Heatmap | Engine stark; Heatmap/Akte dünn |
 | F3.1–F3.4 | Intake, Campus-Iso, Auto-Jugend, Inbox | Iso und Report-UI offen |
 | F4.1 F4.2 | Marktliste, Wissensmodell | Wissen sichtbar |
-| F5.1–F5.3 F5.7 | Markt, MW, Leihen, Vorvertrag | Sim > Screen |
+| F5.1–F5.3 F5.7 | Markt, MW, Leihen, Vorvertrag | Next-Action 14.8 |
 | F6.1–F6.4 | Budgets, Streams, Ledger, Wasserfall | Wasserfall 11.5 gebaut |
 | F7.1 | Stadion 2D | Grundriss + Inventar-Hunger 14.7 |
 | F8.1 | Trainer einstellen | vorhanden |

@@ -6422,6 +6422,73 @@ body {
   font-weight: 600;
 }
 
+.transfers-window-chip {
+  display: inline-flex;
+  margin: 0.35rem 0 0;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.transfers-window-chip.is-closed {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.transfers-next {
+  margin-bottom: 1.35rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
+}
+
+.transfers-next h2 {
+  margin: 0 0 0.7rem;
+  font-size: 1rem;
+}
+
+.transfers-next-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.45rem;
+}
+
+.transfers-next-card {
+  display: grid;
+  justify-items: start;
+  gap: 0.12rem;
+  width: 100%;
+  min-height: 5.4rem;
+  padding: 0.55rem 0.6rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  text-align: left;
+  cursor: pointer;
+}
+
+.transfers-next-card span {
+  font-size: 1.25rem;
+}
+
+.transfers-next-card strong {
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+.transfers-next-card small {
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
 .transfers-section {
   margin-bottom: 1.5rem;
 }

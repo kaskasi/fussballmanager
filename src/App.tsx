@@ -1612,11 +1612,17 @@ export default function App() {
       {screen === "transfers" ? (
         <TransfersScreen
           players={players}
+          rivalPlayers={rivalPlayers}
+          clubId={session.clubId}
           season={season}
           week={week}
           history={transferState.history}
+          scoutTargetIds={Object.keys(scoutBoard.targets)}
+          pending={transferState.pending_transfers ?? []}
+          worldClubs={world.clubs}
           onBack={() => setScreen("hub")}
           onSelectPlayer={setProfileId}
+          onSelectForeignPlayer={setForeignPlayerId}
           onRecallLoan={handleRecallLoan}
         />
       ) : null}

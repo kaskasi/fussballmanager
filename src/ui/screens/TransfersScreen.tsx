@@ -3,7 +3,7 @@ import type { Player } from "../../types/player.ts";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import { listLoanedPlayers } from "../../transfers/loan-roster.ts";
 import { canRecallLoan } from "../../transfers/loans.ts";
-import { transferWindowLabel } from "../../sim/transfer-windows.ts";
+import { isTransferWindowOpen, transferWindowLabel } from "../../sim/transfer-windows.ts";
 import type { TransferRecord } from "../../transfers/transfer-history.ts";
 import {
   availableTransferSeasons,
@@ -12,48 +12,73 @@ import {
   transferKindIcon,
   transferKindLabel,
 } from "../../transfers/transfer-history.ts";
+import {
+  listTransferNextActions,
+  type TransferNextAction,
+} from "../../transfers/transfer-next-actions.ts";
+import type { PendingTransfer } from "../../transfers/negotiations.ts";
 import type { WorldClub } from "../../world/world-generator.ts";
 import { Hint } from "../components/Hint.tsx";
 import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
 import { formatCalendarWeek } from "../../sim/game-calendar.ts";
 
 /**
- * WIREFRAME: PRD 09 — Transfers & Ausleihen
+ * WIREFRAME: PRD 14.8 — Transfers
  * ┌──────────────────────────────────────────────┐
- * │ ←  💰 Transfers · Saison 2                 │
- * │ [S2] [S1]                                   │
- * ├──────────────────────────────────────────────┤
- * │ 🔄 Aktive Ausleihen (diese Saison)           │
- * │ Müller · CM · TSV Heideweg · bis S2         │
- * ├──────────────────────────────────────────────┤
- * │ Saison 2                                     │
- * │ 🟢 Zugang Becker · 1.2M · Woche 8           │
- * │ 🔄 Verliehen Müller · TSV Heideweg · W8     │
- * │ ↩️ Rückkehr Schmidt · TSV Heideweg · W35    │
+ * │ 💰 Transfers · Fenster geschlossen           │
+ * │ Nächste Aktion                               │
+ * │ 🧒 Jugend · ohne Deal →                      │
+ * │ 📝 Vertrag · noch 4 Monate →                 │
+ * │ ✍️ Vorvertrag · Scout-Board →                │
+ * │ 🔄 Leihen · Historie sekundär                │
  * └──────────────────────────────────────────────┘
  */
 
 export function TransfersScreen({
   players,
+  rivalPlayers,
+  clubId,
   season,
   week,
   history,
+  scoutTargetIds,
+  pending,
   onBack,
   onSelectPlayer,
+  onSelectForeignPlayer,
   onRecallLoan,
   worldClubs,
 }: {
   players: readonly Player[];
+  rivalPlayers: readonly Player[];
+  clubId: string;
   season: number;
   week: number;
   history: readonly TransferRecord[];
+  scoutTargetIds: readonly string[];
+  pending: readonly PendingTransfer[];
   worldClubs?: readonly WorldClub[];
   onBack: () => void;
   onSelectPlayer: (playerId: string) => void;
+  onSelectForeignPlayer: (playerId: string) => void;
   onRecallLoan: (playerId: string) => void;
 }) {
   const seasons = useMemo(() => availableTransferSeasons(history, season), [history, season]);
   const [selectedSeason, setSelectedSeason] = useState(season);
+  const windowOpen = isTransferWindowOpen(week);
+  const nextActions = useMemo(
+    () =>
+      listTransferNextActions({
+        players,
+        rivalPlayers,
+        clubId,
+        season,
+        week,
+        scoutTargetIds,
+        pending,
+      }),
+    [players, rivalPlayers, clubId, season, week, scoutTargetIds, pending],
+  );
   const activeLoans = listLoanedPlayers(players, worldClubs);
   const seasonRecords = useMemo(
     () => recordsForSeason(history, selectedSeason),
@@ -64,6 +89,11 @@ export function TransfersScreen({
     [seasonRecords],
   );
 
+  function openAction(action: TransferNextAction) {
+    if (action.owned) onSelectPlayer(action.playerId);
+    else onSelectForeignPlayer(action.playerId);
+  }
+
   return (
     <main className="transfers">
       <header className="transfers-head">
@@ -73,22 +103,42 @@ export function TransfersScreen({
         <div>
           <p className="eyebrow">{formatSeasonLabel(season)}</p>
           <h1>💰 Transfers</h1>
+          <p className={windowOpen ? "transfers-window-chip" : "transfers-window-chip is-closed"}>
+            {transferWindowLabel(week)}
+          </p>
           <Hint
-            text="Recall im Winterfenster (KW 2–4). Sonst Rückkehr zum Saisonende. Leihgebühr bei Verleih: ~15 % Marktwert."
+            text="Fenster zu: Verträge und Vorverträge bleiben. Ablösen nur im Sommer (KW 35–36) und Winter (KW 2–4)."
             block
           >
             <p className="transfers-summary">
-              {activeLoans.length > 0
-                ? `${activeLoans.length} verliehen · ${seasonRecords.length} Einträge in S${selectedSeason}`
-                : `${seasonRecords.length} Einträge in S${selectedSeason}`}
+              {nextActions.length} nächste Aktionen
+              {activeLoans.length > 0 ? ` · ${activeLoans.length} verliehen` : ""}
             </p>
           </Hint>
         </div>
       </header>
 
+      <section className="transfers-next" aria-label="Nächste Aktion">
+        <h2>Nächste Aktion</h2>
+        <ul className="transfers-next-list">
+          {nextActions.map((action) => (
+            <li key={action.id}>
+              <button
+                type="button"
+                className="transfers-next-card"
+                onClick={() => openAction(action)}
+              >
+                <span aria-hidden="true">{action.icon}</span>
+                <strong>{action.title}</strong>
+                <small>{action.hint}</small>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       <section className="transfers-section" aria-label="Aktive Ausleihen">
         <h2>🔄 Aktive Ausleihen</h2>
-        <p className="transfers-window-hint">{transferWindowLabel(week)}</p>
         {activeLoans.length === 0 ? (
           <p className="transfers-empty-inline">Keine Spieler derzeit verliehen.</p>
         ) : (

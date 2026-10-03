@@ -1,9 +1,16 @@
 import type { MatchView, MatchViewFrame } from "@fussballmanager/shared";
-import { sandboxPlanFromFormation } from "@fussballmanager/shared";
+import { buildMatchConditions, sandboxPlanFromFormation } from "@fussballmanager/shared";
 import { describe, expect, it } from "vitest";
 import { compressGkCbRecycleFrames } from "./match-presentation.ts";
 
 const plan = sandboxPlanFromFormation("4-4-2");
+
+const emptyReport = {
+  conditions: buildMatchConditions(1),
+  goals: [],
+  cards: [],
+  playerStats: [],
+};
 
 function frame(
   seq: number,
@@ -66,6 +73,7 @@ describe("compressGkCbRecycleFrames", () => {
       lines: [],
       finalScore: { home: 0, away: 0 },
       eventCount: 6,
+      report: emptyReport,
     };
     const compressed = compressGkCbRecycleFrames(view);
     expect(compressed.frames.length).toBeLessThan(view.frames.length);
@@ -88,6 +96,7 @@ describe("compressGkCbRecycleFrames", () => {
       lines: [],
       finalScore: { home: 0, away: 0 },
       eventCount: 2,
+      report: emptyReport,
     };
     expect(compressGkCbRecycleFrames(view).frames).toHaveLength(2);
   });

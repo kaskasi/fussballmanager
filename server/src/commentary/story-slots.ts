@@ -104,18 +104,18 @@ function slotText(
   if (slot === "chronicle_ref" && ctx.chronicleHead) {
     const title = ctx.chronicleHead.title.trim();
     const variants = [`Zuletzt: ${title}.`, `Im Vereinsgedächtnis: ${title}.`];
-    return variants[hashPick(seed, seq, slot, variants.length)] ?? variants[0];
+    return variants[hashPick(seed, seq, slot, variants.length)]!;
   }
   if (slot === "derby" && ctx.opponentShortName) {
     const variants = [
       `Derby gegen ${ctx.opponentShortName} — die Stadt hört zu.`,
       `${ctx.opponentShortName} im Fokus: mehr als ein normales Spiel.`,
     ];
-    return variants[hashPick(seed, seq, slot, variants.length)] ?? variants[0];
+    return variants[hashPick(seed, seq, slot, variants.length)]!;
   }
   const options = SLOT_LINES[slot];
   const index = hashPick(seed, seq, slot, options.length);
-  return options[index] ?? options[0];
+  return options[index]!;
 }
 
 function slotAllowed(slot: StorySlotId, ctx: BroadcastStoryContext): boolean {

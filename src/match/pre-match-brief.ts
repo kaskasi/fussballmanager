@@ -51,7 +51,7 @@ function pickColorLine(
   ];
 
   const index = hashSeed([seed, "prematch-color", ctx.matchday, ctx.playerFormation]) % templates.length;
-  return templates[index] ?? templates[0];
+  return templates[index]!;
 }
 
 export function buildPreMatchBrief(

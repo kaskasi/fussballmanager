@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { asMatchId } from "./ids.ts";
 import { SEED_MATCHUP } from "./seed-clubs.ts";
 import { buildMatchReport } from "./match-report.ts";
 import type { MatchEvent } from "./match-event.ts";
@@ -14,7 +15,7 @@ describe("buildMatchReport", () => {
       {
         type: "goal",
         seq: 10,
-        matchId: "m1",
+        matchId: asMatchId("m1"),
         clock: { period: "first_half", minute: 23, second: 12, stoppageMinute: 0 },
         ball: { x: 0.9, y: 0.5 },
         involved: [],
@@ -33,7 +34,7 @@ describe("buildMatchReport", () => {
       {
         type: "card",
         seq: 20,
-        matchId: "m1",
+        matchId: asMatchId("m1"),
         clock: { period: "second_half", minute: 67, second: 0, stoppageMinute: 0 },
         ball: { x: 0.5, y: 0.5 },
         involved: [],

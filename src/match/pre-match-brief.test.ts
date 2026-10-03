@@ -10,7 +10,12 @@ const baseSetup: CareerMatchSetup = {
   seed: 4242,
   matchday: 7,
   calendarWeek: 28,
-  fixture: { homeTeamId: nordstern, awayTeamId: rheinwacht },
+  fixture: {
+    id: "md7-nordstern-rheinwacht",
+    matchday: 7,
+    homeTeamId: nordstern,
+    awayTeamId: rheinwacht,
+  },
   homeTeamId: nordstern,
   awayTeamId: rheinwacht,
   playerClubId: nordstern,

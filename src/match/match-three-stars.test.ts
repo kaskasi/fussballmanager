@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SEED_MATCHUP } from "@fussballmanager/shared";
+import { asPlayerId, asTeamId, SEED_MATCHUP } from "@fussballmanager/shared";
 import { pickMatchThreeStars, threeStarsDisplayOrder } from "./match-three-stars.ts";
 import type { MatchView } from "@fussballmanager/shared";
 import { buildMatchConditions } from "@fussballmanager/shared";
@@ -35,8 +35,22 @@ describe("pickMatchThreeStars", () => {
     const p1 = view.roster[0]!;
     const p2 = view.roster[1]!;
     const stars = pickMatchThreeStars(view, [
-      { playerId: p1.id, teamId: p1.teamId, name: p1.name, goals: 2, assists: 0, yellowCards: 0 },
-      { playerId: p2.id, teamId: p2.teamId, name: p2.name, goals: 0, assists: 2, yellowCards: 0 },
+      {
+        playerId: asPlayerId(p1.id),
+        teamId: asTeamId(p1.teamId),
+        name: p1.name,
+        goals: 2,
+        assists: 0,
+        yellowCards: 0,
+      },
+      {
+        playerId: asPlayerId(p2.id),
+        teamId: asTeamId(p2.teamId),
+        name: p2.name,
+        goals: 0,
+        assists: 2,
+        yellowCards: 0,
+      },
     ]);
     expect(stars[0]?.rank).toBe(1);
     expect(stars[0]?.name).toBe(p1.name);

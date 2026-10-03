@@ -247,6 +247,7 @@ function detectMacro(
       (past) =>
         seq - past.seq <= BOX_SIEGE_WINDOW &&
         (past.type === "pass" || past.type === "carry") &&
+        past.possessionTeamId != null &&
         past.possessionTeamId === event.possessionTeamId &&
         attackingThird(past.ball.x, past.possessionTeamId, homeTeamId),
     );
@@ -265,7 +266,7 @@ function colorTemplate(
 ): string {
   const options = COLOR_LINES[macroId];
   const index = hashPick(seed, seq, macroId, options.length);
-  return options[index] ?? options[0];
+  return options[index]!;
 }
 
 export function createInitialDirectorState(): DirectorState {

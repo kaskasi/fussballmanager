@@ -51,7 +51,8 @@ function hashPick(seed: number, salt: string, options: readonly string[]): strin
   for (let index = 0; index < salt.length; index += 1) {
     hash = Math.imul(hash ^ salt.charCodeAt(index), 0x9e3779b1);
   }
-  return options[Math.abs(hash) % options.length] ?? options[0];
+  const index = Math.abs(hash) % options.length;
+  return options[index]!;
 }
 
 export function formatMatchMinuteLabel(clock: MatchClock): string {

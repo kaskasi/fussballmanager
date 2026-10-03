@@ -8176,6 +8176,130 @@ body {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
   }
+
+  /* PRD 09.6 / 14.8 — Cockpit + Spieltag auf schmalen Viewports */
+  .matchday,
+  .career-match {
+    padding: 0.65rem 0.75rem 1.25rem;
+  }
+
+  .pipeline-head.pipeline-head-compact {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+  }
+
+  .pipeline-head-chips {
+    justify-content: flex-start;
+  }
+
+  .pipeline-tiles.pipeline-tiles-row {
+    flex-wrap: wrap;
+  }
+
+  .pipeline-tiles-row .pipeline-tile {
+    flex: 1 1 100%;
+    min-height: 2.85rem;
+  }
+
+  .fan-feed-strip {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fan-feed-chips {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .fan-feed-chip-text {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+  }
+
+  .career-lineup-panel {
+    padding: 0.75rem 0.7rem 0.9rem;
+  }
+
+  .career-lineup-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .career-match--events {
+    --career-match-nav-offset: 5.85rem;
+  }
+
+  .career-match-actions.career-match-actions--inline {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+    align-items: stretch;
+  }
+
+  .career-match-actions--inline .transport {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+
+  .career-match-actions--inline .transport button {
+    min-height: 2.5rem;
+    min-width: 2.75rem;
+  }
+
+  .career-match-actions--inline .transport button.playpause {
+    min-width: 5.5rem;
+  }
+
+  .career-match-actions--inline .match-presentation-toggle {
+    grid-column: 1 / -1;
+    display: flex;
+    width: 100%;
+  }
+
+  .career-match-actions--inline .match-presentation-toggle button {
+    flex: 1;
+    min-height: 2.5rem;
+    padding-inline: 0.5rem;
+  }
+
+  .career-match-actions--inline .career-match-speed {
+    grid-column: 1 / -1;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+
+  .scoreboard-compact-main .side {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.74rem;
+  }
+
+  .events-hud {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+    padding: 0.65rem 0.7rem 0.55rem;
+  }
+
+  .events-hud-panels {
+    grid-template-columns: 1fr;
+  }
+
+  .events-hud-shot {
+    justify-self: center;
+  }
+
+  .events-hud-zone {
+    font-size: 0.62rem;
+    letter-spacing: 0.02em;
+  }
+
+  .events-feed {
+    min-height: min(48vh, 22rem);
+    border-radius: 0.85rem;
+  }
 }
 
 .fan-feed-strip {
@@ -8187,6 +8311,8 @@ body {
   border-radius: 0.85rem;
   background: linear-gradient(90deg, #f0fdf4, #fff);
   border: 1px solid #bbf7d0;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .fan-feed-label {
@@ -8202,6 +8328,7 @@ body {
   margin: 0;
   padding: 0;
   list-style: none;
+  min-width: 0;
 }
 
 .fan-feed-chip {
@@ -8209,9 +8336,12 @@ body {
   gap: 0.45rem;
   font-size: 0.82rem;
   color: #14532d;
+  min-width: 0;
 }
 
 .fan-feed-chip-text {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

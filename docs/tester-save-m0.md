@@ -97,6 +97,8 @@ Zum **öffentlichen Teilen** von Saves (ohne Spoiler/Hidden-Werte) ist später e
 - [ ] Bug-Report: Browser (Chrome/Safari/Firefox), Desktop oder Mobile
 - [ ] Bei „Save weg“: ob Cache geleert / anderes Gerät ohne Import
 
+**Spieltag-Screenshots (optional, Mobile):** Wenn du am Handy oder in schmaler Browser-Breite (~390 px) testest, reichen drei kurze Screenshots fürs UI-Feedback: (1) **Club-Hub** nach Import — Kacheln untereinander, kein seitliches Wischen der ganzen Seite; (2) **Aufstellung** vor Anpfiff — Rasen + Bank lesbar; (3) **Livespiel** in **Ereignisse** (und einmal **Spielfeld**, falls du umschaltst) — Score, Steuerleiste und Drittel/Seite-HUD ohne abgeschnittene Buttons. Dateinamen mit Slot + KW reichen (`s1_kw41_hub.png`); kein neues Feature nötig, nur Dokumentation fürs Team.
+
 ---
 
 ## Fragen ans Team

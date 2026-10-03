@@ -10,7 +10,8 @@ Full target architecture: `docs/prd/17_target_architecture.md`.
 
 - **Core platforms:** desktop browser + Steam Deck (Steam build later). Match and week sim run **in the client**.
 - **Mobile:** responsive UI always; optional PWA — bonus/test channel, not v1 product core.
-- **Do not** add production APIs that run full `buildMatchView` / matchday engine on Cloudflare for each user (CPU + 503). Save-sync backend later = blobs only, not gameplay.
+- **Worker production:** static SPA + `/health` only — match APIs live on `dev:server` for debugging, not on Cloudflare.
+- **Do not** re-add Worker routes that run `buildMatchView` / `playMatchday` per request. Save-sync later = blobs only.
 
 ## Import direction (segregated monolith)
 

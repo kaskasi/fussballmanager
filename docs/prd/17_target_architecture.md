@@ -207,11 +207,11 @@ Serverless; **nicht** vergleichbar mit 200 Game-Servern.
 
 | Ist | Ziel | Slice |
 |-----|------|--------|
-| `POST /api/career-match` auf Worker | Client `buildMatchView` only | B — Match-Präsentation |
-| `POST /api/matchday` auf Worker | Client `playMatchday` | Liga-Woche |
+| `POST /api/career-match` auf Worker | Client `buildMatchView` only | **Done** (2026-10-03) |
+| `POST /api/matchday` auf Worker | Client `playMatchday` | **Done** (2026-10-03) |
+| Worker Match-Routen | Nur `/health` + Static Assets | **Done** (2026-10-03) |
 | Engine in `server/src/engine/` | `packages/engine` extract | Refactor ohne Verhaltensänderung |
-| Fallback 503 → Client | Client **primary**, API entfernen | Nach Stabilisierung |
-| `dev:server` Fastify | Dev/CI/CLI | Behalten |
+| `dev:server` Fastify | Dev/CI/CLI (+ optionale `/api/*` Legacy) | Behalten |
 
 Jeder Slice: Tests (Golden seed-2026, typecheck) grün; `save_version` nur
 bei Schema-Änderung (PRD 08).

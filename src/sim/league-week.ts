@@ -254,39 +254,14 @@ export async function fetchMatchdayPayload(
   playerClubSquad?: Squad,
   rivalPlayers?: readonly Player[],
 ): Promise<MatchdayPayload> {
-  try {
-    const squads = clubIds.map((teamId) =>
-      squadForTeam(teamId, playerClubSquad, rivalPlayers),
-    );
-    if (squads.some((squad) => squad === undefined)) {
-      throw new Error("Generated league squad is missing");
-    }
-    const response = await fetch("/api/matchday", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        matchday,
-        baseSeed,
-        clubIds,
-        squads: squads as Squad[],
-        playerClubSquad,
-      }),
-    });
-    if (!response.ok) {
-      throw new Error(`matchday ${response.status}`);
-    }
-    const body = (await response.json()) as MatchdayPayload;
-    return {
-      results: body.results,
-      playerStats: body.playerStats ?? [],
-    };
-  } catch {
-    const results = simulateQuickMatchday(matchday, baseSeed, clubIds, playerClubSquad, rivalPlayers);
-    return {
-      results,
-      playerStats: simulateQuickPlayerStats(results, baseSeed, playerClubSquad, rivalPlayers),
-    };
+  const squads = clubIds.map((teamId) =>
+    squadForTeam(teamId, playerClubSquad, rivalPlayers),
+  );
+  if (squads.some((squad) => squad === undefined)) {
+    throw new Error("Generated league squad is missing");
   }
+  const { runEngineMatchdayLocal } = await import("./run-matchday-local.ts");
+  return runEngineMatchdayLocal(matchday, baseSeed, squads as Squad[]);
 }
 
 export interface LeagueWeekAdvance {

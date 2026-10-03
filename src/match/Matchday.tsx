@@ -10,6 +10,7 @@ import { MatchStage } from "./MatchStage";
 import { useMatchPresentationMode } from "./match-presentation-mode";
 import { Scoreboard } from "./Scoreboard";
 import { TacticsBoard } from "./TacticsBoard";
+import { buildSandboxMatchView } from "./build-sandbox-match-view.ts";
 import { useMatchPlayback } from "./useMatchPlayback";
 
 async function loadMatch(input: {
@@ -17,15 +18,7 @@ async function loadMatch(input: {
   home: SandboxPlan;
   away: SandboxPlan;
 }): Promise<MatchView> {
-  const response = await fetch("/api/match", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  if (!response.ok) {
-    throw new Error(`Match request failed (${response.status})`);
-  }
-  return (await response.json()) as MatchView;
+  return buildSandboxMatchView(input);
 }
 
 export function Matchday() {

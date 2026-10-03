@@ -247,6 +247,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
       manifest: {
         ...base.manifest,
         player_club_id: session.clubId,
+        manager_name: session.managerName,
         last_played: iso,
         current_week: { season: session.season, week: session.week },
       },

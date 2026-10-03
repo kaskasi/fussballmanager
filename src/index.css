@@ -3469,45 +3469,136 @@ body {
 
 .stadium-precinct-palette {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.28rem;
+  width: 8.8rem;
   min-width: 0;
 }
 
+.stadium-precinct-palette-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.18rem;
+  width: 2.55rem;
+}
+
+.stadium-precinct-palette .stadium-precinct-tile {
+  width: 2.55rem;
+  height: 2.55rem;
+  font-size: 1.15rem;
+}
+
+.stadium-precinct-count,
+.stadium-precinct-level {
+  position: absolute;
+  right: 0.12rem;
+  bottom: 0.1rem;
+  min-width: 0.9rem;
+  padding: 0 0.12rem;
+  border-radius: 0.25rem;
+  background: #0f172a;
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.stadium-precinct-upgrade {
+  width: 100%;
+  padding: 0.08rem 0;
+  border: 0;
+  border-radius: 0.28rem;
+  background: #047857;
+  color: #ecfdf5;
+  font-size: 0.55rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.stadium-precinct-upgrade:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
 .stadium-precinct-hint {
-  margin: 0;
-  max-width: 6.5rem;
+  flex-basis: 100%;
+  margin: 0.2rem 0 0;
+  max-width: none;
   color: #64748b;
   font-size: 0.68rem;
   font-weight: 600;
   line-height: 1.35;
-  text-align: center;
+  text-align: left;
 }
 
 .stadium-precinct-grid {
   display: grid;
-  gap: 0.28rem;
+  gap: 0.12rem;
   justify-content: start;
 }
 
 .stadium-precinct-tile {
   position: relative;
   box-sizing: border-box;
-  width: 3.75rem;
-  height: 3.75rem;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
   padding: 0;
   display: grid;
   place-items: center;
   border: 1.5px dashed #cbd5e1;
-  border-radius: 0.4rem;
+  border-radius: 0.28rem;
   background: #f8fafc;
-  font-size: 1.35rem;
+  font-size: 1.05rem;
   cursor: grab;
 }
 
 .stadium-precinct-tile.is-cell {
   background: #f1f5f9;
+  cursor: pointer;
+}
+
+.stadium-precinct-tile.is-parcel {
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.stadium-precinct-tile.is-street {
+  background: #334155;
+  border-style: solid;
+  border-color: #1e293b;
+  color: #f8fafc;
+}
+
+.stadium-precinct-tile.is-patch {
+  cursor: pointer;
+}
+
+.stadium-precinct-grow {
+  position: absolute;
+  right: 0.08rem;
+  bottom: 0.08rem;
+  display: flex;
+  gap: 0.08rem;
+}
+
+.stadium-precinct-grow-btn {
+  width: 1.05rem;
+  height: 1.05rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.2rem;
+  background: #0f172a;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -3562,13 +3653,13 @@ body {
 }
 
 .stadium-precinct-arena span {
-  font-size: 1.6rem;
+  font-size: 1.15rem;
 }
 
 .stadium-precinct-arena strong {
-  font-size: 0.72rem;
+  font-size: 0.58rem;
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .sponsor-deal-modal {
@@ -3731,6 +3822,7 @@ body {
 .stadium-card-boards {
   display: flex;
   flex: 1;
+  flex-wrap: wrap;
   gap: 0.35rem;
   min-width: 5.5rem;
 }
@@ -5015,6 +5107,17 @@ body {
 
 .training-modal-unit:hover {
   background: #ecfdf5;
+}
+
+.training-modal-unit.is-locked,
+.training-modal-unit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+.training-modal-unit.is-locked:hover {
+  background: #f8fafc;
 }
 
 .training-modal-unit strong {
@@ -8283,6 +8386,7 @@ body {
 
 .hub-inbox-events-pagination {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.25rem;
   margin-top: 0.45rem;
@@ -8870,9 +8974,42 @@ body {
   max-width: 40rem;
 }
 
+.opening-step {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
 .opening-lead {
   margin: 0 0 1rem;
   color: #475569;
+}
+
+.opening-name-field {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.opening-name-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.85rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 0.75rem;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.opening-name-field input:focus {
+  outline: 2px solid #16a34a;
+  outline-offset: 2px;
+  border-color: #16a34a;
 }
 
 .opening-origin-grid {
@@ -8948,6 +9085,18 @@ body {
   margin-top: 1rem;
   display: flex;
   justify-content: flex-end;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.opening-back-btn {
+  padding: 0.65rem 0.9rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: #f1f5f9;
+  color: #334155;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .opening-start-btn {

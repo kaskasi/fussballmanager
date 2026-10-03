@@ -8,6 +8,8 @@ export interface TrainingUnit {
   group: TrainingSession["group"];
   /** Skills shown on the card — display only in M1. */
   skills: (keyof Attributes)[];
+  /** Campus gate — Hallentraining needs the upgraded training hall. */
+  requires?: "training_hall";
 }
 
 export interface TrainingSlot {
@@ -39,6 +41,13 @@ export const TRAINING_UNITS: readonly TrainingUnit[] = [
   { id: "phys_speed", label: "Schnelligkeit", group: "physical", skills: ["pace", "stamina"] },
   { id: "phys_power", label: "Kraft & Zweikampf", group: "physical", skills: ["strength", "stamina"] },
   { id: "phys_gk", label: "TW-Einheit", group: "physical", skills: ["gk_handling", "positioning"] },
+  {
+    id: "phys_hall",
+    label: "Hallentraining",
+    group: "physical",
+    skills: ["pace", "technique", "stamina"],
+    requires: "training_hall",
+  },
   { id: "ment_tactical", label: "Taktik", group: "mental", skills: ["positioning", "vision", "teamwork"] },
   { id: "ment_calm", label: "Ruhe & Fokus", group: "mental", skills: ["composure", "concentration"] },
   { id: "ment_leader", label: "Führung", group: "mental", skills: ["leadership", "teamwork"] },
@@ -80,8 +89,21 @@ export function planToSessions(plan: readonly TrainingSlot[]): TrainingSession[]
   }));
 }
 
-export function unitsForGroup(group: TrainingSession["group"]): TrainingUnit[] {
-  return TRAINING_UNITS.filter((unit) => unit.group === group);
+export function trainingUnitUnlocked(
+  unit: TrainingUnit,
+  unlocks?: { hasTrainingHall?: boolean },
+): boolean {
+  if (unit.requires === "training_hall") return unlocks?.hasTrainingHall === true;
+  return true;
+}
+
+export function unitsForGroup(
+  group: TrainingSession["group"],
+  unlocks?: { hasTrainingHall?: boolean },
+): TrainingUnit[] {
+  return TRAINING_UNITS.filter(
+    (unit) => unit.group === group && trainingUnitUnlocked(unit, unlocks ?? { hasTrainingHall: false }),
+  );
 }
 
 export function createInitialTrainingPlan(): TrainingSlot[] {

@@ -1,16 +1,17 @@
-import { dealForSlot, SPONSOR_SLOTS, type SponsorDeal } from "./sponsor-deals.ts";
-import { findBuildingCell, type PrecinctState } from "./precinct.ts";
+import { dealForSlot, unlockedSponsorSlots, type SponsorDeal } from "./sponsor-deals.ts";
+import { countBuilding, type PrecinctState } from "./precinct.ts";
 
 export function stadiumInventoryCaption(
   deals: readonly SponsorDeal[] | undefined,
   season: number,
   precinct?: PrecinctState,
+  upgradeLevels?: Record<string, number>,
 ): string {
-  const boardsFree = SPONSOR_SLOTS.filter(
+  const boardsFree = unlockedSponsorSlots(upgradeLevels).filter(
     (slot) => slot.kind === "board" && !dealForSlot(deals, slot.id, season),
   ).length;
   const shirtEmpty = !dealForSlot(deals, "shirt", season);
-  const kioskEmpty = !precinct || !findBuildingCell(precinct, "kiosk");
+  const kioskEmpty = !precinct || countBuilding(precinct, "kiosk") <= 0;
   return [
     `noch ${boardsFree} Banden frei`,
     shirtEmpty ? "Trikot ohne Brustlogo" : "Trikot mit Brustlogo",

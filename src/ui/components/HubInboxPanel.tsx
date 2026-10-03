@@ -30,6 +30,7 @@ import { InboxStanceButtons } from "./InboxStanceButtons.tsx";
  */
 
 const EVENTS_PER_PAGE = 4;
+const SCOUT_PER_PAGE = 4;
 
 export function HubInboxPanel({
   week,
@@ -63,16 +64,34 @@ export function HubInboxPanel({
   );
   const reports = scoutReportsForWeek(scoutBoard, week);
   const discoveries = discoveryAlertsForWeek(scoutBoard, week);
+  const scoutRows = [
+    ...discoveries.map((alert) => ({ kind: "discovery" as const, id: alert.id, alert })),
+    ...reports.map((report) => ({ kind: "report" as const, id: report.id, report })),
+  ];
   const totalEventPages = Math.max(1, Math.ceil(clubEvents.length / EVENTS_PER_PAGE));
+  const totalScoutPages = Math.max(1, Math.ceil(scoutRows.length / SCOUT_PER_PAGE));
   const [eventPage, setEventPage] = useState(0);
+  const [scoutPage, setScoutPage] = useState(0);
 
   useEffect(() => {
     setEventPage((current) => Math.min(current, totalEventPages - 1));
   }, [totalEventPages]);
 
+  useEffect(() => {
+    setScoutPage(0);
+  }, [week]);
+
+  useEffect(() => {
+    setScoutPage((current) => Math.min(current, totalScoutPages - 1));
+  }, [totalScoutPages]);
+
   const pageEvents = clubEvents.slice(
     eventPage * EVENTS_PER_PAGE,
     eventPage * EVENTS_PER_PAGE + EVENTS_PER_PAGE,
+  );
+  const pageScoutRows = scoutRows.slice(
+    scoutPage * SCOUT_PER_PAGE,
+    scoutPage * SCOUT_PER_PAGE + SCOUT_PER_PAGE,
   );
 
   return (
@@ -150,51 +169,72 @@ export function HubInboxPanel({
         </div>
 
         <div className="hub-inbox-column">
-          <p className="hub-inbox-column-title">Scout-Berichte</p>
-          {reports.length === 0 && discoveries.length === 0 ? (
+          <p className="hub-inbox-column-title">
+            Scout-Berichte
+            {scoutRows.length > 0 ? ` · ${scoutRows.length}` : ""}
+          </p>
+          {scoutRows.length === 0 ? (
             <p className="hub-inbox-empty">
               Noch keine Berichte diese Woche — Scout im Markt zuweisen und Woche simulieren.
             </p>
           ) : (
-            <ul className="hub-inbox-list">
-              {discoveries.map((alert) => (
-                <li key={alert.id}>
-                  <button
-                    type="button"
-                    className="hub-inbox-row hub-inbox-row-discovery"
-                    onClick={() => onSelectScoutTarget(alert.playerId)}
-                  >
-                    <span className="hub-inbox-icon" aria-hidden="true">🔔</span>
-                    <span className="hub-inbox-row-text">
-                      <strong>{alert.headline}</strong>
-                      <span className="hub-inbox-row-detail">
-                        {alert.playerName} · CA ~{alert.estimatedCa}
-                      </span>
-                    </span>
-                    <span className="hub-inbox-row-cta">→</span>
-                  </button>
-                </li>
-              ))}
-              {reports.map((report) => (
-                <li key={report.id}>
-                  <button
-                    type="button"
-                    className="hub-inbox-row"
-                    onClick={() => onSelectScoutTarget(report.playerId)}
-                  >
-                    <span className="hub-inbox-icon" aria-hidden="true">👁️</span>
-                    <span className="hub-inbox-row-text">
-                      <strong>{report.playerName}</strong>
-                      <span className="hub-inbox-row-detail">
-                        {report.position} · CA ~{report.estimatedCa} · {report.confidence}
-                        {report.uncertaintyDelta < 0 ? " · schärfer" : ""}
-                      </span>
-                    </span>
-                    <span className="hub-inbox-row-cta">→</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="hub-inbox-list">
+                {pageScoutRows.map((row) =>
+                  row.kind === "discovery" ? (
+                    <li key={row.id}>
+                      <button
+                        type="button"
+                        className="hub-inbox-row hub-inbox-row-discovery"
+                        onClick={() => onSelectScoutTarget(row.alert.playerId)}
+                      >
+                        <span className="hub-inbox-icon" aria-hidden="true">🔔</span>
+                        <span className="hub-inbox-row-text">
+                          <strong>{row.alert.headline}</strong>
+                          <span className="hub-inbox-row-detail">
+                            {row.alert.playerName} · CA ~{row.alert.estimatedCa}
+                          </span>
+                        </span>
+                        <span className="hub-inbox-row-cta">→</span>
+                      </button>
+                    </li>
+                  ) : (
+                    <li key={row.id}>
+                      <button
+                        type="button"
+                        className="hub-inbox-row"
+                        onClick={() => onSelectScoutTarget(row.report.playerId)}
+                      >
+                        <span className="hub-inbox-icon" aria-hidden="true">👁️</span>
+                        <span className="hub-inbox-row-text">
+                          <strong>{row.report.playerName}</strong>
+                          <span className="hub-inbox-row-detail">
+                            {row.report.position} · CA ~{row.report.estimatedCa} · {row.report.confidence}
+                            {row.report.uncertaintyDelta < 0 ? " · schärfer" : ""}
+                          </span>
+                        </span>
+                        <span className="hub-inbox-row-cta">→</span>
+                      </button>
+                    </li>
+                  ),
+                )}
+              </ul>
+              {totalScoutPages > 1 ? (
+                <nav className="hub-inbox-events-pagination" aria-label="Scout-Berichte Seiten">
+                  {Array.from({ length: totalScoutPages }, (_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className={index === scoutPage ? "hub-inbox-page is-active" : "hub-inbox-page"}
+                      aria-current={index === scoutPage ? "page" : undefined}
+                      onClick={() => setScoutPage(index)}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                </nav>
+              ) : null}
+            </>
           )}
         </div>
       </div>

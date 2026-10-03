@@ -53,7 +53,7 @@ type StadiumTab = "plan" | "precinct" | "upgrades";
  * WIREFRAME: PRD 14.7 — Stadion
  * [Grundriss] [Gelände] [Ausbau]
  * Banden sitzen auf den Tribünen-Karten um den Grundriss.
- * Klick = F6.5-Modal. Gelände: 🏟️ in der Mitte, Palette → freie Zelle.
+ * Klick = F6.5-Modal. Gelände: 🏟️ Mitte, Patches, Ring kaufbar.
  */
 export function StadiumScreen({
   stadium,
@@ -62,6 +62,10 @@ export function StadiumScreen({
   onStadiumChange,
   onPurchaseUpgrade,
   onPlacePrecinct,
+  onUpgradePrecinct,
+  onBuyParcel,
+  onPlaceStreet,
+  onExpandPrecinct,
   onBack,
 }: {
   stadium: ClubStadium;
@@ -69,7 +73,16 @@ export function StadiumScreen({
   season: number;
   onStadiumChange: (stadium: ClubStadium) => void;
   onPurchaseUpgrade: (upgradeId: string) => void;
-  onPlacePrecinct: (building: PrecinctBuilding, x: number, y: number) => void;
+  onPlacePrecinct: (
+    building: PrecinctBuilding,
+    x: number,
+    y: number,
+    from?: { x: number; y: number },
+  ) => void;
+  onUpgradePrecinct: (building: PrecinctBuilding) => void;
+  onBuyParcel: (x: number, y: number) => void;
+  onPlaceStreet: (x: number, y: number) => void;
+  onExpandPrecinct: (patchId: string, w: number, h: number) => void;
   onBack?: () => void;
 }) {
   const [tab, setTab] = useState<StadiumTab>("plan");
@@ -177,6 +190,7 @@ export function StadiumScreen({
                   selected={selectedId === block.id}
                   deals={stadium.sponsor_deals}
                   season={season}
+                  upgradeLevels={stadium.upgrade_levels}
                   onSelect={() => setSelectedId(block.id)}
                   onOpenSlot={setOpenSlotId}
                   onPriceChange={(priceDelta) =>
@@ -195,6 +209,10 @@ export function StadiumScreen({
           cash={finances.cash}
           stadiumName={stadium.name}
           onPlace={onPlacePrecinct}
+          onUpgrade={onUpgradePrecinct}
+          onBuyParcel={onBuyParcel}
+          onPlaceStreet={onPlaceStreet}
+          onExpand={onExpandPrecinct}
         />
       ) : null}
 
@@ -345,14 +363,16 @@ function StandBoardSlots({
   stand,
   deals,
   season,
+  upgradeLevels,
   onOpenSlot,
 }: {
   stand: SponsorStand;
   deals: readonly SponsorDeal[] | undefined;
   season: number;
+  upgradeLevels?: Record<string, number>;
   onOpenSlot: (slotId: string) => void;
 }) {
-  const slots = sponsorSlotsForStand(stand);
+  const slots = sponsorSlotsForStand(stand, upgradeLevels);
   if (slots.length === 0) return null;
   return (
     <div className="stadium-card-boards" onClick={(event) => event.stopPropagation()}>
@@ -380,6 +400,7 @@ function StadiumBlockCard({
   selected,
   deals,
   season,
+  upgradeLevels,
   onSelect,
   onOpenSlot,
   onPriceChange,
@@ -389,6 +410,7 @@ function StadiumBlockCard({
   selected: boolean;
   deals: ClubStadium["sponsor_deals"];
   season: number;
+  upgradeLevels?: Record<string, number>;
   onSelect: () => void;
   onOpenSlot: (slotId: string) => void;
   onPriceChange: (delta: number) => void;
@@ -435,7 +457,13 @@ function StadiumBlockCard({
               +
             </button>
           </div>
-          <StandBoardSlots stand={stand} deals={deals} season={season} onOpenSlot={onOpenSlot} />
+          <StandBoardSlots
+            stand={stand}
+            deals={deals}
+            season={season}
+            upgradeLevels={upgradeLevels}
+            onOpenSlot={onOpenSlot}
+          />
         </div>
         <p className="stadium-block-income">Heimspiel {formatClubCash(income)}</p>
       </div>

@@ -1,4 +1,5 @@
 import { DIVISION_ECONOMY, type DivisionEconomyId } from "../economy/division-economy.ts";
+import { precinctFillRateBonus } from "./precinct-effects.ts";
 import { normalizePrecinct, type PrecinctState } from "./precinct.ts";
 import type { SponsorDeal } from "./sponsor-deals.ts";
 import {
@@ -173,7 +174,7 @@ function normalizeFanbaseIndex(value: number): number {
 
 export function applyStadiumFillRates(stadium: ClubStadium): ClubStadium {
   const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
-  const fillBonus = stadiumFillRateBonus(stadium);
+  const fillBonus = stadiumFillRateBonus(stadium) + precinctFillRateBonus(stadium.precinct);
   const fanbaseMultiplier = stadiumFanbaseMultiplier(stadium);
   return {
     ...stadium,
@@ -247,7 +248,7 @@ export function adjustBlockTicketPrice(
   blockId: string,
   delta: number,
 ): ClubStadium {
-  return {
+  return applyStadiumFillRates({
     ...stadium,
     blocks: stadium.blocks.map((block) => {
       if (block.id !== blockId) return block;
@@ -255,12 +256,7 @@ export function adjustBlockTicketPrice(
         TICKET_PRICE_MAX,
         Math.max(TICKET_PRICE_MIN, block.ticket_price_eur + delta),
       );
-      const fill_rate = fillRateForTicketPrice(
-        block.id,
-        ticket_price_eur,
-        stadium.fanbase ?? DEFAULT_FANBASE,
-      );
-      return { ...block, ticket_price_eur, fill_rate };
+      return { ...block, ticket_price_eur };
     }),
-  };
+  });
 }

@@ -1,7 +1,7 @@
 # /docs/prd/13_story_slice_relegation.md
 
-**Version:** 1.0  
-**Last Updated:** 2026-09-28  
+**Version:** 1.1  
+**Last Updated:** 2026-10-03  
 **Status:** Final  
 **Parent:** PRD 01 § „Gemeinsam gegen den Abstieg“
 
@@ -16,6 +16,7 @@ First playable narrative slice for FC Tycoon. Templates only — no Ollama in th
 | Topic | Decision |
 |---|---|
 | Arc timing | Slow-burn from career start; opening origin story is mandatory |
+| Name | Player types manager name (2–24 chars). Never prefill a hardcoded “Jan”. |
 | Origin | Player picks: raffle win · passionate letter · community takeover |
 | Captain | Player picks; UI ranks by `leadership`, shows `teamwork` as hint (no engine wiring yet) |
 | Fans | Collective mood + named NPCs (Bratwurst vendor, groundskeeper, fan rep) |
@@ -42,7 +43,7 @@ Migration **039** when schema changes.
 
 ## UI surfaces
 
-1. Opening modal — origin + captain pick (week 1)
+1. Opening modal — name, then origin + captain (week 1)
 2. Fan feed strip on pipeline hub header
 3. Story items in unified decision inbox
 4. Survival objective highlighted on board panel

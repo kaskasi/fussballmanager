@@ -215,7 +215,7 @@ function squadGroupScores(
 }
 
 function unitsForGroup(group: SessionGroup): string[] {
-  return TRAINING_UNITS.filter((unit) => unit.group === group).map((unit) => unit.id);
+  return TRAINING_UNITS.filter((unit) => unit.group === group && !unit.requires).map((unit) => unit.id);
 }
 
 export function assistantTrainingPlan(

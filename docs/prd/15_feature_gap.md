@@ -1,6 +1,6 @@
 # /docs/prd/15_feature_gap.md
 
-**Version:** 1.6
+**Version:** 1.8
 **Last Updated:** 2026-10-03
 **Status:** Final (Analyse — keine neuen Shipping-Features ohne Eintrag in PRD 10)
 
@@ -100,8 +100,8 @@ per explizitem Katalog-Edit.
 | F6.7 | M3 | Merch × Popularität | — | Fanshop-SKU, nicht das Brustlogo |
 | F6.4 | M1 | Wasserfall 11.5 | Icon-Balken + 13-Mo-Sparkline | — |
 | F7.1 | M1 | 2D-Grundriss, Preise | Grundriss + Banden auf Tribünen + Shirt | Gelände-Tab separat |
-| F7.2 | M2 | Kapazität, VIP, Heizung | Shop-Liste + Levels | Shop unter der Karte |
-| F7.3 | M3 | Wurst, Fanshop, Hotel, Museum | Gelände-Raster + Palette | Sim/Hotel/Museum offen |
+| F7.2 | M2 | Kapazität, VIP, Heizung | Shop-Liste + Levels · extra Banden bei Steh/Sitz | Shop unter der Karte |
+| F7.3 | M3 | Wurst, Fanshop, Hotel, Museum | Gelände-v2: Footprints, Kern/Ring, Straße im Modell | Wurst-SKU, Hotel, Museum; Andocken-Feinschliff |
 | F3.2 | M1 | Campus 2D-Iso | — | Grid statt Iso |
 | F3.3 | M1 | YouthReports | Report 14.4 + Auto-Sim; Grid sekundär | Campus-Iso F3.2 |
 | F3.4 | M1 | Icon-Inbox, Cap 4 | Post-Karte ●/▲, Jugend-Icons 03.4 | Hub-Ampel Jugend |

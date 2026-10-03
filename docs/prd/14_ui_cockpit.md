@@ -1,6 +1,6 @@
 # /docs/prd/14_ui_cockpit.md
 
-**Version:** 1.10
+**Version:** 1.13
 **Last Updated:** 2026-10-03
 **Status:** Final (Darstellung — kein Code in diesem Dokument)
 
@@ -205,7 +205,8 @@ steht, ist der Report die Heimat, nicht die Tabelle.
 └─────────────────────────────────────────────┘
 ```
 
-Origin-Modal (Losgewinn / Brief / Gemeinschaft) bleibt. Hub-Kacheln tragen
+Origin-Modal: zuerst **Wie heißt du?** (kein Default-Jan), dann Losgewinn /
+Brief / Gemeinschaft plus Kapitän. Hub-Kacheln tragen
 einen Satz plus Ampel, wie PRD 09 Screen 1 — nicht drei leere Statuszeilen
 und ein Modal darüber.
 
@@ -230,20 +231,23 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
   nicht auf dem Rasen. Klick ▭ = Sponsor-Modal (F6.5).
   👕 Shirt-Slot bleibt am Platz.
 
-  Gelände: 2D-Raster. 🏟️ Stadion steht fest in der Mitte (4×2).
-  Palette (Kachelgröße) → freie Zelle. Erstplatzieren kostet Cash.
-  🌭 Bude  👕 Fanshop  🅿️ Parkplatz  🚇 Bahn
+  Gelände: 12×10. 🏟️ Stadion fest (4×2, Mitte). Kern owned, Ring kaufbar.
+  Gebäude = Rechteck (Mindestgröße), Kante ziehen. Straße = Zelle.
+  🌭 Bude (n)  🅿️ Park (n)  · Rest einmal, aber skalierbar.
 ```
 
 - Pro Stand sichtbare Werbe-Slots **auf den Karten** um den Grundriss
   (leer = Hunger, belegt = Marke). Nicht auf dem Rasen zeichnen.
+  **Steh-/Sitz-Ausbau** schaltet extra Banden frei (Nord/Süd C+D, West/Ost B).
 - F6.5-Modal: Marken-Chips (exklusiv), Laufzeit-Slider, Wochenbetrag-Slider,
   zwei Erfolgsstaffeln (Torschützenkönig / Meister, je +€ 1 Mio.).
   Die Marke sagt auch Nein. Keine Klausel-Enzyklopädie.
-- Gelände ist der Ort für F7.3-Möbel. Das Stadion belegt die Raster-Mitte
-  und ist nicht verschiebbar. Gebäude nur auf freie Felder; Erstplatzieren
-  zieht Cash. Wurst-Ökonomie, Hotel, Museum bleiben F7.3-Sim. Parkplatz
-  und Bahn sind Hunger-Fliesen, kein neues Feature in PRD 10.
+- Gelände-v2 (F7.3-Möbel, kein 3D): Patches mit Mindestgröße (z. B. Trainingsplatz
+  2×3, Gelände 3×3, Park 2×2). **Mehrfach nur** Würstchenbude und Parkplatz.
+  Effekt folgt belegter Fläche. Äußere Parzellen sind gesperrt und kosten Cash.
+  Straße ist eine Zelle; Bus und Bahn brauchen eine Straßenkante.
+  Fanshop und Trainingsgelände haben weiter Qualitäts-Level (Shop / Halle).
+  Wurst-SKU, Hotel, Museum bleiben F7.3-Sim.
 - Ticket-Stepper an Blöcken bleibt.
 
 ### 14.8 Transfers (F5.1, F5.4, F5.7)

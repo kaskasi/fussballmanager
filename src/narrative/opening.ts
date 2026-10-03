@@ -19,6 +19,20 @@ import { applySurvivalObjectivesToBoard } from "./season-objectives.ts";
 import { enqueueStoryInboxItem } from "../youth/decision-inbox.ts";
 import { markBeatFired } from "./story-state.ts";
 
+export const MANAGER_NAME_MIN = 2;
+export const MANAGER_NAME_MAX = 24;
+
+/** Bootstrap/test fallback — never prefill this in the onboarding field. */
+export const PLACEHOLDER_MANAGER_NAMES = new Set(["Jan", "Trainer"]);
+
+export function normalizeManagerName(raw: string): string {
+  return raw.replace(/\s+/g, " ").trim().slice(0, MANAGER_NAME_MAX);
+}
+
+export function isManagerNameReady(raw: string): boolean {
+  return normalizeManagerName(raw).length >= MANAGER_NAME_MIN;
+}
+
 export function initializeStoryForNewGame(
   masterSeed: number,
   managerName: string,
@@ -52,7 +66,11 @@ export function completeOpening(
   session: GameSession,
   origin: CareerOrigin,
   captainPlayerId: string,
+  managerName = session.managerName,
 ): GameSession {
+  const name = isManagerNameReady(managerName)
+    ? normalizeManagerName(managerName)
+    : session.managerName;
   const captain = session.players.find((player) => player.id === captainPlayerId);
   let story: StoryState = {
     ...session.storyState,
@@ -70,7 +88,7 @@ export function completeOpening(
     week: session.week,
     icon: origin === "raffle" ? "🎟️" : origin === "passionate_letter" ? "✉️" : "🏘️",
     title: originChronicleTitle(origin),
-    body: originOpeningBody(origin, session.managerName),
+    body: originOpeningBody(origin, name),
   };
   story = applyChronicleEntry(story, originEntry);
 
@@ -107,6 +125,7 @@ export function completeOpening(
 
   return {
     ...session,
+    managerName: name,
     storyState: story,
     board,
     players,

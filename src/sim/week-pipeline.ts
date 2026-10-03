@@ -33,6 +33,10 @@ import { advanceCalendarWeek, SEASON_END_WEEK } from "./game-calendar.ts";
 import { advanceLeagueWeek } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
 import { environmentFromCoachingStaff } from "../staff/coaching-staff.ts";
+import {
+  precinctTrainingEnvironment,
+  precinctWeeklyFanbaseBonus,
+} from "../stadium/precinct-effects.ts";
 import { advanceRivalGrowthWeek } from "./rival-growth.ts";
 import { applyWeeklyFitnessBatch } from "../development/fitness-management.ts";
 import type { WatchedPlayerMatch } from "./watched-player-match.ts";
@@ -122,7 +126,9 @@ export async function simulateGameWeek(
     week: nextWeek,
     masterSeed: session.masterSeed,
     intensity: session.trainingIntensity,
-    environmentFactor: environmentFromCoachingStaff(session.coachingStaff),
+    environmentFactor:
+      environmentFromCoachingStaff(session.coachingStaff) *
+      precinctTrainingEnvironment(session.stadium.precinct),
   };
   let players = session.players.map((player) =>
     applyTrainingWeek(player, sessions, trainingContext),
@@ -182,11 +188,12 @@ export async function simulateGameWeek(
   );
   const trialStep = advanceProTrials(advanced.players, session.clubId, session.season, nextWeek);
   const playersWithMorale = applyDepartureMoralePressure(trialStep.players, advanced.inbox);
-  const fanbaseDelta = weeklyFanbaseDelta(
-    leagueWithCareerStats,
-    session.clubId,
-    leagueStep.playerFixture != null,
-  );
+  const fanbaseDelta =
+    weeklyFanbaseDelta(
+      leagueWithCareerStats,
+      session.clubId,
+      leagueStep.playerFixture != null,
+    ) + precinctWeeklyFanbaseBonus(session.stadium.precinct);
   const stadium = advanceClubFanbase(session.stadium, fanbaseDelta);
   const isHomeMatchWeek =
     leagueStep.playerFixture?.homeTeamId === session.league.player_club_id;

@@ -44,4 +44,7 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_044_contract_talk_locks",
   "migration_045_sponsor_precinct",
   "migration_046_veteran_backstory",
+  "migration_047_pro_season_calendar",
+  "migration_048_precinct_campus",
+  "migration_049_precinct_patches",
 ] as const;

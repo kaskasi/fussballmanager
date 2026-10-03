@@ -109,10 +109,18 @@ import { JobOffersModal } from "./ui/components/JobOffersModal.tsx";
 import { STADIUM_BASE_BLOCKS, normalizeClubStadium, stadiumTotalCapacity } from "./stadium/club-stadium.ts";
 import { purchaseStadiumUpgrade } from "./stadium/stadium-upgrades.ts";
 import {
-  buildingAt,
+  buyPrecinctParcel,
+  canBuyPrecinctParcel,
+  canPlaceStreet,
+  canUpgradePrecinctBuilding,
   emptyPrecinct,
+  expandPrecinctPatch,
   placePrecinctBuilding,
+  placeStreet,
+  precinctExpandCost,
+  precinctHasTrainingHall,
   precinctPlacementCost,
+  upgradePrecinctBuilding,
   type PrecinctBuilding,
 } from "./stadium/precinct.ts";
 import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
@@ -567,8 +575,8 @@ export default function App() {
   );
 
   const handleOpeningComplete = useCallback(
-    (origin: CareerOrigin, captainPlayerId: string) => {
-      patchSession((current) => completeOpening(current, origin, captainPlayerId));
+    (origin: CareerOrigin, captainPlayerId: string, managerName: string) => {
+      patchSession((current) => completeOpening(current, origin, captainPlayerId, managerName));
     },
     [patchSession],
   );
@@ -774,16 +782,103 @@ export default function App() {
   );
 
   const handlePlacePrecinct = useCallback(
-    (building: PrecinctBuilding, x: number, y: number) => {
+    (building: PrecinctBuilding, x: number, y: number, from?: { x: number; y: number }) => {
       patchSession((current) => {
         const precinct = current.stadium.precinct ?? emptyPrecinct();
-        const cost = precinctPlacementCost(precinct, building);
+        const cost = precinctPlacementCost(precinct, building, from);
         if (cost > current.finances.cash) return current;
-        const nextPrecinct = placePrecinctBuilding(precinct, x, y, building);
-        if (buildingAt(nextPrecinct, x, y) !== building) return current;
+        const nextPrecinct = placePrecinctBuilding(precinct, x, y, building, from);
+        if (nextPrecinct === precinct) return current;
         return {
           ...current,
-          stadium: { ...current.stadium, precinct: nextPrecinct },
+          stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
+          finances:
+            cost === 0
+              ? current.finances
+              : normalizeFinances({ ...current.finances, cash: current.finances.cash - cost }),
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handleUpgradePrecinct = useCallback(
+    (building: PrecinctBuilding) => {
+      patchSession((current) => {
+        const precinct = current.stadium.precinct ?? emptyPrecinct();
+        const check = canUpgradePrecinctBuilding(precinct, building, current.finances.cash);
+        if (!check.allowed) return current;
+        const nextPrecinct = upgradePrecinctBuilding(precinct, building);
+        return {
+          ...current,
+          stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
+          finances: normalizeFinances({
+            ...current.finances,
+            cash: current.finances.cash - check.cost,
+          }),
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handleBuyParcel = useCallback(
+    (x: number, y: number) => {
+      patchSession((current) => {
+        const precinct = current.stadium.precinct ?? emptyPrecinct();
+        const check = canBuyPrecinctParcel(precinct, x, y, current.finances.cash);
+        if (!check.allowed) return current;
+        return {
+          ...current,
+          stadium: normalizeClubStadium({
+            ...current.stadium,
+            precinct: buyPrecinctParcel(precinct, x, y),
+          }),
+          finances: normalizeFinances({
+            ...current.finances,
+            cash: current.finances.cash - check.cost,
+          }),
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handlePlaceStreet = useCallback(
+    (x: number, y: number) => {
+      patchSession((current) => {
+        const precinct = current.stadium.precinct ?? emptyPrecinct();
+        const check = canPlaceStreet(precinct, x, y, current.finances.cash);
+        if (!check.allowed) return current;
+        return {
+          ...current,
+          stadium: normalizeClubStadium({
+            ...current.stadium,
+            precinct: placeStreet(precinct, x, y),
+          }),
+          finances: normalizeFinances({
+            ...current.finances,
+            cash: current.finances.cash - check.cost,
+          }),
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handleExpandPrecinct = useCallback(
+    (patchId: string, w: number, h: number) => {
+      patchSession((current) => {
+        const precinct = current.stadium.precinct ?? emptyPrecinct();
+        const patch = precinct.patches.find((entry) => entry.id === patchId);
+        if (!patch) return current;
+        const cost = precinctExpandCost(patch, w, h);
+        if (cost > current.finances.cash) return current;
+        const nextPrecinct = expandPrecinctPatch(precinct, patchId, w, h);
+        if (nextPrecinct === precinct) return current;
+        return {
+          ...current,
+          stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
           finances:
             cost === 0
               ? current.finances
@@ -1547,6 +1642,7 @@ export default function App() {
           onSelectPlayer={setProfileId}
           onBack={() => setScreen("hub")}
           focusIndividualPlayerId={trainingFocusPlayerId}
+          hasTrainingHall={precinctHasTrainingHall(stadium.precinct)}
         />
       ) : null}
       {inboxOpen && pendingInboxItems(youthInbox, players).length > 0 ? (
@@ -1678,6 +1774,10 @@ export default function App() {
           }
           onPurchaseUpgrade={handlePurchaseStadiumUpgrade}
           onPlacePrecinct={handlePlacePrecinct}
+          onUpgradePrecinct={handleUpgradePrecinct}
+          onBuyParcel={handleBuyParcel}
+          onPlaceStreet={handlePlaceStreet}
+          onExpandPrecinct={handleExpandPrecinct}
         />
       ) : null}
       {clubProfileId && screen !== "leagues" ? (

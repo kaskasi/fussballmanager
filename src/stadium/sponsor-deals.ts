@@ -44,7 +44,7 @@ export const SPONSOR_BONUS_PAYOUT = 1_000_000;
 export const SPONSOR_SEASON_MIN = 1;
 export const SPONSOR_SEASON_MAX = 4;
 
-export const SPONSOR_SLOTS: readonly SponsorSlot[] = [
+export const BASE_SPONSOR_SLOTS: readonly SponsorSlot[] = [
   { id: "board_north_a", kind: "board", stand: "north", label: "Nordkurve A" },
   { id: "board_north_b", kind: "board", stand: "north", label: "Nordkurve B" },
   { id: "board_west", kind: "board", stand: "west", label: "Westtribüne" },
@@ -54,17 +54,57 @@ export const SPONSOR_SLOTS: readonly SponsorSlot[] = [
   { id: "shirt", kind: "shirt", stand: "pitch", label: "Brustlogo" },
 ];
 
-export function sponsorSlotsForStand(stand: SponsorStand): SponsorSlot[] {
-  return SPONSOR_SLOTS.filter((slot) => slot.kind === "board" && slot.stand === stand);
+/** Extra boards unlocked by F7.2 standing/seating expansion. */
+export const EXPANSION_BOARD_SLOTS: readonly {
+  upgradeId: string;
+  minLevel: number;
+  slot: SponsorSlot;
+}[] = [
+  { upgradeId: "standing_expansion", minLevel: 1, slot: { id: "board_north_c", kind: "board", stand: "north", label: "Nordkurve C" } },
+  { upgradeId: "standing_expansion", minLevel: 1, slot: { id: "board_south_c", kind: "board", stand: "south", label: "Südkurve C" } },
+  { upgradeId: "standing_expansion", minLevel: 2, slot: { id: "board_north_d", kind: "board", stand: "north", label: "Nordkurve D" } },
+  { upgradeId: "standing_expansion", minLevel: 2, slot: { id: "board_south_d", kind: "board", stand: "south", label: "Südkurve D" } },
+  { upgradeId: "seating_expansion", minLevel: 1, slot: { id: "board_west_b", kind: "board", stand: "west", label: "Westtribüne B" } },
+  { upgradeId: "seating_expansion", minLevel: 1, slot: { id: "board_east_b", kind: "board", stand: "east", label: "Osttribüne B" } },
+];
+
+/** All known slots (for lookups). UI uses `unlockedSponsorSlots`. */
+export const SPONSOR_SLOTS: readonly SponsorSlot[] = [
+  ...BASE_SPONSOR_SLOTS,
+  ...EXPANSION_BOARD_SLOTS.map((entry) => entry.slot),
+];
+
+export function unlockedSponsorSlots(
+  upgradeLevels?: Record<string, number>,
+): SponsorSlot[] {
+  const extra = EXPANSION_BOARD_SLOTS.filter(
+    (entry) => (upgradeLevels?.[entry.upgradeId] ?? 0) >= entry.minLevel,
+  ).map((entry) => entry.slot);
+  return [...BASE_SPONSOR_SLOTS, ...extra];
+}
+
+export function sponsorSlotsForStand(
+  stand: SponsorStand,
+  upgradeLevels?: Record<string, number>,
+): SponsorSlot[] {
+  return unlockedSponsorSlots(upgradeLevels).filter(
+    (slot) => slot.kind === "board" && slot.stand === stand,
+  );
 }
 
 const SLOT_WEEKLY_BASE: Record<string, number> = {
   board_north_a: 9_000,
   board_north_b: 9_000,
+  board_north_c: 8_000,
+  board_north_d: 7_500,
   board_west: 7_000,
+  board_west_b: 6_200,
   board_east: 7_000,
+  board_east_b: 6_200,
   board_south_a: 8_000,
   board_south_b: 8_000,
+  board_south_c: 7_200,
+  board_south_d: 6_800,
   shirt: 22_000,
 };
 

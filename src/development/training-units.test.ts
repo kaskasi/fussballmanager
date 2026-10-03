@@ -4,6 +4,8 @@ import {
   migrateLegacyTrainingPlan,
   planToSessions,
   trainingUnit,
+  trainingUnitUnlocked,
+  unitsForGroup,
 } from "./training-units.ts";
 import { SLOT_COUNT, validateWeeklyPlan } from "./weekly-plan.ts";
 
@@ -38,5 +40,15 @@ describe("training units", () => {
     expect(sessions).toHaveLength(SLOT_COUNT);
     expect(validateWeeklyPlan(sessions).valid).toBe(true);
     expect(trainingUnit(plan[0]!.unitId).group).toBe("technical");
+  });
+
+  it("locks Hallentraining until the campus hall exists", () => {
+    const hall = trainingUnit("phys_hall");
+    expect(trainingUnitUnlocked(hall)).toBe(false);
+    expect(trainingUnitUnlocked(hall, { hasTrainingHall: true })).toBe(true);
+    expect(unitsForGroup("physical")).not.toContainEqual(expect.objectContaining({ id: "phys_hall" }));
+    expect(unitsForGroup("physical", { hasTrainingHall: true }).some((unit) => unit.id === "phys_hall")).toBe(
+      true,
+    );
   });
 });

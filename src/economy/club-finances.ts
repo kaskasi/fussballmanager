@@ -1,6 +1,7 @@
 import type { LeagueState } from "../persistence/league-state.ts";
 import { leagueTable, topScorers } from "../sim/league-week.ts";
 import { stadiumMatchdayIncome, type ClubStadium } from "../stadium/club-stadium.ts";
+import { weeklyFanshopIncome } from "../stadium/precinct-effects.ts";
 import {
   seasonSponsorBonusPayouts,
   SPONSOR_BONUS_PAYOUT,
@@ -176,6 +177,10 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
   );
   if (tickets > 0) {
     lines.push({ kind: "matchday_tickets", amount: tickets, week });
+  }
+  const merch = weeklyFanshopIncome(context.stadium?.precinct);
+  if (merch > 0) {
+    lines.push({ kind: "other", amount: merch, week });
   }
   return lines;
 }

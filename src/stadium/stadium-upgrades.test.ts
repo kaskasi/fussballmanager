@@ -11,6 +11,7 @@ import {
   purchaseStadiumUpgrade,
   stadiumUpgradeLevel,
 } from "./stadium-upgrades.ts";
+import { unlockedSponsorSlots } from "./sponsor-deals.ts";
 
 describe("stadium upgrades", () => {
   it("increases standing capacity when purchased", () => {
@@ -26,6 +27,9 @@ describe("stadium upgrades", () => {
     const normalized = normalizeClubStadium(result.stadium);
     expect(stadiumUpgradeLevel(normalized, "standing_expansion")).toBe(1);
     expect(stadiumTotalCapacity(normalized)).toBeGreaterThan(stadiumTotalCapacity(stadium));
+    expect(unlockedSponsorSlots(normalized.upgrade_levels).filter((slot) => slot.kind === "board")).toHaveLength(
+      8,
+    );
   });
 
   it("refuses purchase without enough cash", () => {

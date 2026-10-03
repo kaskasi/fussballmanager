@@ -7,9 +7,11 @@ import {
   fillRateHeatColor,
   FILL_RATE_MIN,
   FILL_RATE_MAX,
+  normalizeClubStadium,
   stadiumMatchdayIncome,
   stadiumTotalCapacity,
 } from "./club-stadium.ts";
+import { emptyPrecinct, normalizePrecinct, placePrecinctBuilding } from "./precinct.ts";
 
 describe("club stadium", () => {
   it("defaults to roughly 8k seats", () => {
@@ -49,5 +51,16 @@ describe("club stadium", () => {
     const cheaper = adjustBlockTicketPrice(stadium, "west", -6);
     const updated = cheaper.blocks.find((block) => block.id === "west")!;
     expect(updated.fill_rate).toBeGreaterThan(west.fill_rate);
+  });
+
+  it("raises fill when a rail stop is on the campus", () => {
+    const stadium = defaultClubStadium();
+    const north = stadium.blocks.find((block) => block.id === "north")!;
+    const withRail = normalizeClubStadium({
+      ...stadium,
+      precinct: normalizePrecinct(placePrecinctBuilding(emptyPrecinct(), 1, 1, "transit")),
+    });
+    const updated = withRail.blocks.find((block) => block.id === "north")!;
+    expect(updated.fill_rate).toBeGreaterThan(north.fill_rate);
   });
 });

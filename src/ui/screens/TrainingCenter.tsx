@@ -5,6 +5,7 @@ import {
   TRAINING_DAYS,
   TRAINING_UNITS,
   trainingUnit,
+  trainingUnitUnlocked,
   type TrainingSlot,
 } from "../../development/training-units.ts";
 import { attributeLabel, growthPolyline, growthSeries } from "../player-profile.ts";
@@ -98,6 +99,7 @@ export function TrainingCenter({
   onSelectPlayer,
   onBack,
   focusIndividualPlayerId = null,
+  hasTrainingHall = false,
 }: {
   week: number;
   season: number;
@@ -122,6 +124,7 @@ export function TrainingCenter({
   onBack?: () => void;
   /** Öffnet Tab „Individuell“ und Programm-Modal für diesen Spieler (z. B. aus Spielerakte). */
   focusIndividualPlayerId?: string | null;
+  hasTrainingHall?: boolean;
 }) {
   const [tab, setTab] = useState<TrainingTab>("overview");
   const [pickSlot, setPickSlot] = useState<number | null>(null);
@@ -206,6 +209,7 @@ export function TrainingCenter({
           check={check}
           intensity={intensity}
           load={load}
+          hasTrainingHall={hasTrainingHall}
           onPickSlot={setPickSlot}
           onPlanChange={onPlanChange}
           onIntensityChange={onIntensityChange}
@@ -305,6 +309,7 @@ function TeamPlan({
   check,
   intensity,
   load,
+  hasTrainingHall,
   onPickSlot,
   onPlanChange,
   onIntensityChange,
@@ -315,6 +320,7 @@ function TeamPlan({
   check: ReturnType<typeof validateWeeklyPlan>;
   intensity: number;
   load: ReturnType<typeof squadTrainingLoad>;
+  hasTrainingHall: boolean;
   onPickSlot: (slot: number | null) => void;
   onPlanChange: (plan: TrainingSlot[]) => void;
   onIntensityChange: (intensity: number) => void;
@@ -398,6 +404,7 @@ function TeamPlan({
       {pickSlot !== null && !focusMode ? (
         <UnitPickerModal
           day={slotLabel(pickSlot)}
+          hasTrainingHall={hasTrainingHall}
           onClose={() => onPickSlot(null)}
           onPick={(unitId) => {
             const next = [...plan];
@@ -489,10 +496,12 @@ const SESSION_GROUPS: SessionGroup[] = ["technical", "physical", "mental"];
 
 function UnitPickerModal({
   day,
+  hasTrainingHall,
   onClose,
   onPick,
 }: {
   day: string;
+  hasTrainingHall: boolean;
   onClose: () => void;
   onPick: (unitId: string) => void;
 }) {
@@ -528,14 +537,27 @@ function UnitPickerModal({
             <section key={group} className="training-modal-col" aria-label={GROUP_LABELS[group]}>
               <h3>{GROUP_LABELS[group]}</h3>
               <ul>
-                {TRAINING_UNITS.filter((unit) => unit.group === group).map((unit) => (
-                  <li key={unit.id}>
-                    <button type="button" className="training-modal-unit" onClick={() => onPick(unit.id)}>
-                      <strong>{unit.label}</strong>
-                      <span>{unit.skills.map((skill) => attributeLabel(skill)).join(" · ")}</span>
-                    </button>
-                  </li>
-                ))}
+                {TRAINING_UNITS.filter((unit) => unit.group === group).map((unit) => {
+                  const unlocked = trainingUnitUnlocked(unit, { hasTrainingHall });
+                  return (
+                    <li key={unit.id}>
+                      <button
+                        type="button"
+                        className={unlocked ? "training-modal-unit" : "training-modal-unit is-locked"}
+                        disabled={!unlocked}
+                        title={unlocked ? undefined : "Braucht Trainings-Halle"}
+                        onClick={() => onPick(unit.id)}
+                      >
+                        <strong>{unit.label}</strong>
+                        <span>
+                          {unlocked
+                            ? unit.skills.map((skill) => attributeLabel(skill)).join(" · ")
+                            : "Braucht Trainings-Halle"}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           ))}

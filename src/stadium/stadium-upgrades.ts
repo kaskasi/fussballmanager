@@ -23,7 +23,7 @@ const UPGRADE_CATALOG: StadiumUpgradeDef[] = [
   {
     id: "standing_expansion",
     name: "Stehplatz-Erweiterung",
-    description: "+800 Plätze in beiden Kurven",
+    description: "+800 Plätze in beiden Kurven · extra Werbebanden",
     cost: 650_000,
     icon: "🧍",
     max_level: 2,
@@ -33,7 +33,7 @@ const UPGRADE_CATALOG: StadiumUpgradeDef[] = [
   {
     id: "seating_expansion",
     name: "Sitzplatz-Tribüne",
-    description: "+600 Sitzplätze West & Ost",
+    description: "+600 Sitzplätze West & Ost · extra Werbebanden",
     cost: 980_000,
     icon: "💺",
     max_level: 1,

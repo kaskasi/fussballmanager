@@ -45,6 +45,8 @@ import { migration044ContractTalkLocks } from "./migration_044_contract_talk_loc
 import { migration045SponsorPrecinct } from "./migration_045_sponsor_precinct.ts";
 import { migration046VeteranBackstory } from "./migration_046_veteran_backstory.ts";
 import { migration047ProSeasonCalendar } from "./migration_047_pro_season_calendar.ts";
+import { migration048PrecinctCampus } from "./migration_048_precinct_campus.ts";
+import { migration049PrecinctPatches } from "./migration_049_precinct_patches.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -99,6 +101,8 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration045SponsorPrecinct,
   migration046VeteranBackstory,
   migration047ProSeasonCalendar,
+  migration048PrecinctCampus,
+  migration049PrecinctPatches,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

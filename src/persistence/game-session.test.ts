@@ -57,6 +57,15 @@ describe("game session", () => {
     expect(save.manifest.save_version).toBe(SAVE_VERSION);
   });
 
+  it("writes a renamed manager onto an existing save", () => {
+    const session = newGameSession(new Date("2026-09-22T14:00:00Z"));
+    const base = saveFromSession(session);
+    expect(base.manifest.manager_name).toBe("Jan");
+    const renamed = saveFromSession({ ...session, managerName: "Kim" }, base);
+    expect(renamed.manifest.manager_name).toBe("Kim");
+    expect(sessionFromSave(renamed).managerName).toBe("Kim");
+  });
+
   it("persists to localStorage and reloads with pipeline state", () => {
     removeLocalSave(1);
     const session = newGameSession();

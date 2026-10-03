@@ -119,8 +119,8 @@ describe("formatMatchLog", () => {
 
     expect(log).toContain("FC Nordstern vs SV Rheinwacht");
     expect(log).toContain("seed 2026");
-    expect(log).toContain("Theo Brandt finds Juri Holm.");
-    expect(log).toContain("GOAL! Juri Holm!  (1–0)");
+    expect(log).toContain("Theo Brandt findet Juri Holm.");
+    expect(log).toContain("TOR! Juri Holm!  (1–0)");
     expect(log).toContain("HT FC Nordstern 1–0 SV Rheinwacht");
     expect(log).toContain("FT FC Nordstern 1–0 SV Rheinwacht");
     expect(log).toContain("5 events");

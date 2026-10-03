@@ -80,8 +80,8 @@ describe("template commentary", () => {
       target: { x: 100, y: 48 },
       outcome: "save",
     };
-    expect(commentate(pass, ctx)).toBe("Theo Brandt finds Juri Holm.");
-    expect(commentate(shot, ctx)).toBe("Juri Holm forces a save.");
+    expect(commentate(pass, ctx)).toBe("Theo Brandt findet Juri Holm.");
+    expect(commentate(shot, ctx)).toBe("Juri Holm zwingt den Keeper zur Parade.");
   });
 
   it("covers every event type with a non-empty template", () => {
@@ -272,9 +272,9 @@ describe("template commentary", () => {
       expect(line).not.toContain("undefined");
     }
 
-    expect(commentate(events[9]!, ctx)).toContain("Second yellow");
+    expect(commentate(events[9]!, ctx)).toContain("Gelb-Rot");
     expect(commentate(events[14]!, ctx)).toBe(
-      "Full time. FC Nordstern 2–1 SV Rheinwacht.",
+      "Schlusspfiff. FC Nordstern 2–1 SV Rheinwacht.",
     );
     const restartKickoff: MatchEvent = {
       type: "kickoff",
@@ -287,7 +287,7 @@ describe("template commentary", () => {
       kickingTeamId: homeId,
     };
     expect(commentate(restartKickoff, ctx)).toBe(
-      "Theo Brandt restarts from the centre spot.",
+      "Theo Brandt spielt von der Mittellinie an.",
     );
   });
 

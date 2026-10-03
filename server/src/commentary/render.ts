@@ -71,69 +71,69 @@ export function commentate(event: MatchEvent, ctx: CommentaryContext): string {
         event.clock.stoppageMinute === 0 &&
         event.clock.second <= 5;
       if (opening && event.clock.second <= 5) {
-        return `${team} get the match underway. ${name} takes kickoff.`;
+        return `${team} stoßen an. ${name} nimmt den Anstoß.`;
       }
       if (secondHalf) {
-        return `The second half is underway. ${name} takes kickoff.`;
+        return `Die zweite Halbzeit läuft. ${name} nimmt den Anstoß.`;
       }
-      return `${name} restarts from the centre spot.`;
+      return `${name} spielt von der Mittellinie an.`;
     }
     case "pass": {
       const from = ctx.playerName(event.from.playerId);
       const to = ctx.playerName(event.to.playerId);
       if (!event.complete) {
         if (event.kind === "cross") {
-          return `${from}'s cross towards ${to} doesn't find him.`;
+          return `Die Flanke von ${from} auf ${to} kommt nicht an.`;
         }
         if (event.kind === "through") {
-          return `${from}'s ball into space for ${to} is cut out.`;
+          return `Der Steckpass von ${from} auf ${to} wird abgefangen.`;
         }
-        return `${from}'s pass towards ${to} doesn't come off.`;
+        return `Der Pass von ${from} zu ${to} geht daneben.`;
       }
       if (event.kind === "cross") {
-        return `${from} crosses towards ${to}.`;
+        return `${from} flankt auf ${to}.`;
       }
       if (event.kind === "through") {
-        return `${from} plays ${to} into space.`;
+        return `${from} steckt ${to} durch.`;
       }
       if (event.kind === "switch") {
-        return `${from} switches play to ${to}.`;
+        return `${from} verlagert das Spiel auf ${to}.`;
       }
-      return `${from} finds ${to}.`;
+      return `${from} findet ${to}.`;
     }
     case "carry":
-      return `${ctx.playerName(event.player.playerId)} drives forward.`;
+      return `${ctx.playerName(event.player.playerId)} geht nach vorne.`;
     case "duel": {
       const attacker = ctx.playerName(event.attacker.playerId);
       const defender = ctx.playerName(event.defender.playerId);
       const attackerWins = event.winnerId === event.attacker.playerId;
       if (event.kind === "aerial") {
         return attackerWins
-          ? `${attacker} wins the header against ${defender}.`
-          : `${defender} wins the aerial duel with ${attacker}.`;
+          ? `${attacker} gewinnt das Kopfballduell gegen ${defender}.`
+          : `${defender} setzt sich im Kopfballduell gegen ${attacker} durch.`;
       }
       if (event.kind === "dribble") {
         return attackerWins
-          ? `${attacker} takes ${defender} on and gets past.`
-          : `${defender} stands ${attacker} up and wins the ball.`;
+          ? `${attacker} geht an ${defender} vorbei.`
+          : `${defender} stoppt ${attacker}.`;
       }
       return attackerWins
-        ? `${attacker} rides the challenge from ${defender}.`
-        : `${defender} wins the tackle on ${attacker}.`;
+        ? `${attacker} setzt sich gegen ${defender} durch.`
+        : `${defender} gewinnt den Zweikampf gegen ${attacker}.`;
     }
     case "shot": {
       const shooter = ctx.playerName(event.shooter.playerId);
       switch (event.outcome) {
         case "goal":
-          return `${shooter} has a go — it's in!`;
+          return `${shooter} zieht ab — und trifft!`;
         case "save":
-          return `${shooter} forces a save.`;
+          return `${shooter} zwingt den Keeper zur Parade.`;
         case "block":
-          return `${shooter}'s shot is blocked.`;
+          return `Der Schuss von ${shooter} wird geblockt.`;
         case "wide":
-          return `${shooter} fires wide.`;
+          return `${shooter} schießt vorbei.`;
         case "woodwork":
-          return `${shooter} rattles the woodwork.`;
+          return `${shooter} trifft den Pfosten!`;
         default: {
           const _never: never = event.outcome;
           return _never;
@@ -143,74 +143,78 @@ export function commentate(event: MatchEvent, ctx: CommentaryContext): string {
     case "goal": {
       const scorer = ctx.playerName(event.scorer.playerId);
       if (event.assist) {
-        return `GOAL! ${scorer}, assisted by ${ctx.playerName(event.assist.playerId)}.`;
+        return `TOR! ${scorer}, vorbereitet von ${ctx.playerName(event.assist.playerId)}.`;
       }
-      return `GOAL! ${scorer}!`;
+      return `TOR! ${scorer}!`;
     }
     case "save":
-      return `${ctx.playerName(event.keeper.playerId)} keeps out ${ctx.playerName(event.shooter.playerId)}.`;
+      return `${ctx.playerName(event.keeper.playerId)} hält den Versuch von ${ctx.playerName(event.shooter.playerId)}!`;
     case "turnover":
       if (event.reason === "offside") {
-        return `Offside against ${ctx.teamName(event.fromTeamId)}. ${ctx.teamName(event.toTeamId)} will take the free kick.`;
+        return `Abseits gegen ${ctx.teamName(event.fromTeamId)}. Freistoß für ${ctx.teamName(event.toTeamId)}.`;
       }
-      return `${ctx.teamName(event.fromTeamId)} give it away. ${ctx.teamName(event.toTeamId)} are on the ball.`;
+      return `${ctx.teamName(event.fromTeamId)} verliert den Ball. ${ctx.teamName(event.toTeamId)} ist am Ball.`;
     case "foul": {
-      const line = `${ctx.playerName(event.fouler.playerId)} fouls ${ctx.playerName(event.fouled.playerId)}.`;
+      const line = `${ctx.playerName(event.fouler.playerId)} foult ${ctx.playerName(event.fouled.playerId)}.`;
       if (event.card === "red") {
-        return `${line} That could be a red.`;
+        return `${line} Das könnte Rot sein.`;
       }
       if (event.card === "second_yellow") {
-        return `${line} He's already on a yellow.`;
+        return `${line} Er hat Gelb bereits.`;
       }
       if (event.card === "yellow") {
-        return `${line} The referee reaches for a card.`;
+        return `${line} Der Schiedsrichter greift zur Karte.`;
       }
       return line;
     }
     case "card": {
       const player = ctx.playerName(event.player.playerId);
       if (event.color === "red") {
-        return `${player} is sent off.`;
+        return `${player} sieht Rot.`;
       }
       if (event.color === "second_yellow") {
-        return `Second yellow for ${player} — he's off.`;
+        return `Gelb-Rot für ${player}.`;
       }
-      return `${player} is booked.`;
+      return `${player} sieht Gelb.`;
     }
     case "injury": {
       const player = ctx.playerName(event.player.playerId);
       if (event.severity === "stretcher") {
-        return `${player} is carried off on a stretcher.`;
+        return `${player} muss mit der Bahre vom Platz.`;
       }
       if (event.severity === "off") {
-        return `${player} can't continue.`;
+        return `${player} kann nicht weiterspielen.`;
       }
-      return `${player} is down, but looks able to play on.`;
+      return `${player} liegt am Boden, kann aber weitermachen.`;
     }
     case "substitution":
-      return `${ctx.teamName(event.teamId)} replace ${ctx.playerName(event.playerOff.playerId)} with ${ctx.playerName(event.playerOn.playerId)}.`;
+      return `${ctx.teamName(event.teamId)} wechselt: ${ctx.playerName(event.playerOff.playerId)} raus, ${ctx.playerName(event.playerOn.playerId)} rein.`;
     case "restart": {
       const taker = event.involved[0]
         ? ctx.playerName(event.involved[0].playerId)
         : ctx.teamName(event.takingTeamId);
       const phase =
         event.phase === "goal_kick"
-          ? "goal kick"
+          ? "Abschlag"
           : event.phase === "free_kick"
-            ? "free kick"
+            ? "Freistoß"
             : event.phase === "throw_in"
-              ? "throw-in"
+              ? "Einwurf"
               : event.phase === "kickoff"
-                ? "kickoff"
-                : event.phase;
-      return `${taker} takes the ${phase}.`;
+                ? "Anstoß"
+                : event.phase === "corner"
+                  ? "Ecke"
+                  : event.phase === "penalty"
+                    ? "Elfmeter"
+                    : event.phase;
+      return `${taker} nimmt den ${phase}.`;
     }
     case "period_end":
       return event.period === "first_half"
-        ? "That's half-time."
-        : "The referee blows for full time.";
+        ? "Das war's zur Pause."
+        : "Pfiff! Spielende.";
     case "match_end":
-      return `Full time. ${ctx.homeName} ${event.homeGoals}–${event.awayGoals} ${ctx.awayName}.`;
+      return `Schlusspfiff. ${ctx.homeName} ${event.homeGoals}–${event.awayGoals} ${ctx.awayName}.`;
     default: {
       const _never: never = event;
       return _never;

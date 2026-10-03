@@ -32,14 +32,15 @@ export function useMatchPresentationMode(): readonly [
 export type EventLineTone = "goal" | "danger" | "default";
 
 export function eventLineTone(text: string): EventLineTone {
-  if (text.includes("GOAL!") || text.includes("it's in!")) {
+  if (text.includes("TOR!") || text.includes("und trifft!")) {
     return "goal";
   }
   if (
-    text.includes("forces a save") ||
-    text.includes("rattles the woodwork") ||
-    text.includes("penalty") ||
-    text.includes("sent off")
+    text.includes("zwingt den Keeper zur Parade") ||
+    text.includes("trifft den Pfosten") ||
+    text.includes("Elfmeter") ||
+    text.includes("sieht Rot") ||
+    text.includes("Gelb-Rot")
   ) {
     return "danger";
   }

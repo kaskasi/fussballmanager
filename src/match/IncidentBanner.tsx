@@ -6,7 +6,7 @@ const BANNERS: Record<
   { src: string; alt: string }
 > = {
   offside: {
-    src: "/match/offside-banner.png",
+    src: "/match/offside-banner.svg",
     alt: "Abseits",
   },
   throw_in: {

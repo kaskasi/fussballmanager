@@ -2270,10 +2270,65 @@ body {
   box-shadow: inset 3px 0 0 #dc2626;
 }
 
-.league-form {
-  font-family: ui-monospace, monospace;
-  letter-spacing: 0.05em;
-  color: #475569;
+.league-form-cell {
+  padding-inline: 0.35rem;
+}
+
+.league-form-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12rem;
+}
+
+.league-form-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.95rem;
+  font-size: 0.62rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.league-form-slot.is-win {
+  color: #16a34a;
+}
+
+.league-form-slot.is-draw {
+  color: #ca8a04;
+}
+
+.league-form-slot.is-loss {
+  color: #dc2626;
+}
+
+.league-form-slot.is-empty {
+  color: #cbd5e1;
+  font-size: 0.45rem;
+}
+
+.league-th-trend {
+  width: 3.25rem;
+  text-align: center;
+}
+
+.league-trend-cell {
+  width: 3.25rem;
+  padding-inline: 0.2rem;
+  color: #0f766e;
+}
+
+.league-points-spark {
+  display: block;
+  width: 100%;
+  max-width: 3.1rem;
+  height: 1.35rem;
+}
+
+.league-points-spark.is-empty {
+  text-align: center;
+  color: #cbd5e1;
+  font-size: 0.75rem;
 }
 
 .league-club-link {
@@ -2658,11 +2713,52 @@ body {
   font-weight: 700;
 }
 
-.league-leader-empty {
+.league-leader-empty-state {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
+  padding: 0.35rem 0.25rem 0.15rem;
+}
+
+.league-leader-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.league-leader-podium-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.55rem;
+  background: #e2e8f0;
+  opacity: 0.55;
+  filter: grayscale(0.35);
+}
+
+.league-leader-podium-slot.is-first {
+  width: 2.4rem;
+  height: 2.4rem;
+  font-size: 1.15rem;
+}
+
+.league-leader-podium-slot.is-second,
+.league-leader-podium-slot.is-third {
+  width: 1.85rem;
+  height: 1.85rem;
+  font-size: 0.95rem;
+}
+
+.league-leader-empty-line {
   margin: 0;
-  color: #94a3b8;
-  font-size: 0.78rem;
+  max-width: 16rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.74rem;
   font-weight: 700;
+  line-height: 1.35;
 }
 
 .pipeline-finance {

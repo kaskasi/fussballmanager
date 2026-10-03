@@ -104,6 +104,7 @@ export function LeaguesScreen({
           scorers={leaders.scorers}
           assists={leaders.assists}
           yellows={leaders.yellows}
+          matchdaysPlayed={standings.matchdaysPlayed}
           playerClubId={league.player_club_id}
           worldClubs={worldClubs}
         />

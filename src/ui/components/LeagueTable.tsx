@@ -1,6 +1,7 @@
 import type { TableRow, TeamId } from "@fussballmanager/shared";
 import type { LeagueState } from "../../persistence/league-state.ts";
-import { formSparkline, teamForm } from "../../sim/league-form.ts";
+import { teamFormPoints, teamFormSlots } from "../../sim/league-form.ts";
+import { LeagueFormStrip, LeaguePointsSparkline } from "./LeagueFormVisuals.tsx";
 import { promotionZoneRank } from "../../sim/promotion-relegation.ts";
 import { clubDisplayName } from "../../sim/league-divisions.ts";
 import type { WorldClub } from "../../world/world-generator.ts";
@@ -31,14 +32,16 @@ export function LeagueTable({
             <th>N</th>
             <th>Tore</th>
             <th>Diff</th>
-            <th>Form</th>
+            <th title="Letzte 5 Spiele (▲ Sieg · ■ Remis · ▼ Niederlage)">Form</th>
+            <th className="league-th-trend" title="Punkte der letzten 5 Spiele (0–3)">📈</th>
             <th>Pkt</th>
           </tr>
         </thead>
         <tbody>
           {table.map((row, index) => {
             const zone = promotionZoneRank(index, table.length);
-            const form = formSparkline(teamForm(leagueSlice, row.teamId));
+            const formSlots = teamFormSlots(leagueSlice, row.teamId);
+            const formPoints = teamFormPoints(leagueSlice, row.teamId);
             const rowClass = [
               row.teamId === playerClubId ? "is-player-club" : "",
               zone ? `league-zone-${zone}` : "",
@@ -67,7 +70,12 @@ export function LeagueTable({
                 <td>{row.lost}</td>
                 <td>{row.goalsFor}:{row.goalsAgainst}</td>
                 <td>{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td>
-                <td className="league-form" title="Letzte 5 Spiele">{form || "—"}</td>
+                <td className="league-form-cell">
+                  <LeagueFormStrip slots={formSlots} />
+                </td>
+                <td className="league-trend-cell">
+                  <LeaguePointsSparkline points={formPoints} />
+                </td>
                 <td><strong>{row.points}</strong></td>
               </tr>
             );

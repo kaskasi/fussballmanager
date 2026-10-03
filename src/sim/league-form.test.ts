@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { asTeamId } from "@fussballmanager/shared";
 import { defaultLeagueState } from "../persistence/league-state.ts";
-import { formSparkline, resultOutcome, teamForm } from "./league-form.ts";
+import { formSparkline, resultOutcome, teamForm, teamFormPoints, teamFormSlots } from "./league-form.ts";
 
 describe("league form", () => {
   it("derives last-five outcomes and sparkline glyphs", () => {
@@ -20,5 +20,7 @@ describe("league form", () => {
     expect(resultOutcome(league.results[2]!, home)).toBe("L");
     expect(teamForm(league, home)).toEqual(["W", "D", "L"]);
     expect(formSparkline(["W", "D", "L"])).toBe("▲■▼");
+    expect(teamFormSlots(league, home)).toEqual([null, null, "W", "D", "L"]);
+    expect(teamFormPoints(league, home)).toEqual([null, null, 3, 1, 0]);
   });
 });

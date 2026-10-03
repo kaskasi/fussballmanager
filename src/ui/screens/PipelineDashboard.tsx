@@ -22,8 +22,8 @@ import { scoutReportsForWeek } from "../../scouting/scout-board.ts";
 import { pendingInboxItems, inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
 import type { DecisionAction } from "../../youth/decision-inbox.ts";
 import { listDevelopmentMovers } from "../../player/ca-tracking.ts";
-import { pipelineStageFill, squadGrowthHeatmap } from "../../player/growth-heatmap.ts";
-import { GrowthHeatmap, PipelineFillChart } from "../components/GrowthHeatmap.tsx";
+import { weeklyTrainingExtremes, pipelineStageFill } from "../../player/growth-heatmap.ts";
+import { PipelineFillCard, WeeklyTrainingStrip } from "../components/GrowthHeatmap.tsx";
 import type { IndividualProgram } from "../../development/individual-training.ts";
 import { fatigueAmpelClassName, squadTrainingLoad } from "../../development/training-load.ts";
 import type { BoardState } from "../../board/board-state.ts";
@@ -42,10 +42,10 @@ import type { StoryState } from "../../narrative/story-state.ts";
  * WIREFRAME: PRD 09.2 Screen 1 — Pipeline Dashboard
  *
  * ┌────────────────────────────────────────────────────────┐
- * │ [Chart: Pipeline-Füllung nach Stufe]                  │
+ * │ 🌱16 🌿4 ⭐22  (kleine Pipeline-Karte)                 │
  * │ 🏋️ Training: [Ampel]  🎯 Fokus-Slots                   │
  * │ 🏫 Jugend · 👁️ Scouting                               │
- * │ Heatmap Wochenzuwachs (02.1)                          │
+ * │ ▲ 3 Beste · ■ 3 Schwächste (02.1) · Heatmap im Training│
  * └────────────────────────────────────────────────────────┘
  */
 
@@ -124,8 +124,11 @@ export function PipelineDashboard({
     () => listDevelopmentMovers(players, clubId),
     [players, clubId],
   );
+  const trainingExtremes = useMemo(
+    () => weeklyTrainingExtremes(players, clubId),
+    [players, clubId],
+  );
   const stageFill = useMemo(() => pipelineStageFill(players, clubId), [players, clubId]);
-  const heatCells = useMemo(() => squadGrowthHeatmap(players, clubId), [players, clubId]);
   const matchdayLabel = league.season_complete
     ? "Saison beendet"
     : `Spieltag ${Math.min(league.matchday, seasonMatchdays)}/${seasonMatchdays}`;
@@ -181,8 +184,6 @@ export function PipelineDashboard({
       ) : null}
 
       <section className="pipeline-core" aria-label="Aktionen">
-        <PipelineFillChart fill={stageFill} />
-        <GrowthHeatmap cells={heatCells} onSelectPlayer={onSelectPlayer} />
         <div className="pipeline-tiles pipeline-tiles-row">
           <button type="button" className="pipeline-tile" onClick={onOpenTraining}>
             <span
@@ -214,6 +215,14 @@ export function PipelineDashboard({
             <span>↔️</span>
             <span>{loanCount > 0 ? `Leihen · ${loanCount} verliehen` : "Leihen"}</span>
           </button>
+        </div>
+        <div className="pipeline-digest">
+          <PipelineFillCard fill={stageFill} onOpenJugend={onOpenJugend} />
+          <WeeklyTrainingStrip
+            extremes={trainingExtremes}
+            onSelectPlayer={onSelectPlayer}
+            onOpenTraining={onOpenTraining}
+          />
         </div>
       </section>
 

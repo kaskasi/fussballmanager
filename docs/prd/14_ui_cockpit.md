@@ -1,6 +1,6 @@
 # /docs/prd/14_ui_cockpit.md
 
-**Version:** 1.9
+**Version:** 1.10
 **Last Updated:** 2026-10-03
 **Status:** Final (Darstellung — kein Code in diesem Dokument)
 
@@ -82,7 +82,7 @@ Kalender, News), nicht die 40-Spalten-Identität.
 | Stadion-Grundriss | F7.1 + Ticket-Stepper | Ringe + Hunger-Slots | behalten |
 | Origin-Modal | PRD 13 | drei Karten, gut | behalten |
 | Scouting-Wissen | F4.2 | Balken + CI-Grauzone | behalten |
-| Training-Heatmap | F2.7 / 02.1 | Chart + Zellen (●/■) | behalten |
+| Training-Heatmap | F2.7 / 02.1 | Kleine Pipeline-Karte + Hub 3▲/3▼, volle Zellen im Training | behalten |
 | Spielerakte | CA, Vertrag, Flavor | vier SaaS-Tabs, ein Punkt | eine Karte |
 | Jugend | Roster + Auto-Sim | 12-Spalten-Grid | Report (PRD 03.3) |
 | Inbox | Slice + Cap 4 | Modal, Text-Buttons | Karte + Icons (09.2 / 03.4) |
@@ -100,6 +100,7 @@ Ergänzt PRD 09.1, ersetzt sie nicht.
 Club-Cockpit
 ├─ Hub (Kalender-Streifen + Kacheln, keine KPI-Wüste)
 │  ├─ Inbox / Post (max 4, PRD 03.4 + 13)
+│  ├─ Trainingswoche 3▲ / 3▼ + kleine Pipeline-Karte
 │  └─ Origin nur Woche 1 (PRD 13)
 ├─ Kader
 │  ├─ Aufstellung / Rasen          ← schon auf Zielniveau
@@ -301,7 +302,7 @@ Ein Raum pro Task, Pipeline-Features nicht nebenbei umbauen.
 6. Transfers ohne Dead-End (14.8). **gebaut**
 7. Match-DE + Namen in der Zeile (14.10).
 8. Scouting-Balken (14.9). **gebaut**
-9. Training-Heatmap / Pipeline-Chart (F2.7, 09 Screen 1). **gebaut**
+9. Training-Heatmap (F2.7): kleine Pipeline-Karte + Hub 3▲/3▼, volle Heatmap im Training. **gebaut**
 
 Politur (Abstände, Mint, neue Tokens) ist nachrangig, solange ein Raum noch
 Admin-Shell ist.

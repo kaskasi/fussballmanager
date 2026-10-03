@@ -6,6 +6,7 @@ import {
   heatmapCellsForStage,
   pipelineStageFill,
   squadGrowthHeatmap,
+  weeklyTrainingExtremes,
 } from "./growth-heatmap.ts";
 
 describe("growth heatmap (F2.7)", () => {
@@ -75,5 +76,24 @@ describe("growth heatmap (F2.7)", () => {
     player.name = {};
     player.portrait_seed = 0;
     expect(heatCellInitials(player).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("picks three best and three worst without repeating a player", () => {
+    const squad = [1.4, 1.1, 0.8, 0.2, -0.1, -0.4].map((growth, index) => {
+      const player = clonePlayer();
+      player.id = `pl_${index}`;
+      player.name = { first: "Max", last: `P${index}` };
+      player.state.last_week_growth = growth;
+      return player;
+    });
+    const report = weeklyTrainingExtremes(squad, "cl_fc_nordstern");
+    expect(report.hasData).toBe(true);
+    expect(report.best.map((cell) => cell.playerId)).toEqual(["pl_0", "pl_1", "pl_2"]);
+    expect(report.worst.map((cell) => cell.playerId)).toEqual(["pl_5", "pl_4", "pl_3"]);
+  });
+
+  it("stays empty before the first simulated week", () => {
+    const player = clonePlayer();
+    expect(weeklyTrainingExtremes([player], "cl_fc_nordstern").hasData).toBe(false);
   });
 });

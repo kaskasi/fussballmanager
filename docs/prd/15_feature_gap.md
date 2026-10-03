@@ -107,7 +107,7 @@ per explizitem Katalog-Edit.
 | F3.4 | M1 | Icon-Inbox, Cap 4 | Post-Karte ●/▲, Jugend-Icons 03.4 | Hub-Ampel Jugend |
 | F3.6 | M2 | Profi-Verträge, Spielzeit-Klauseln | Jugendvertrag-Default | Slider mit F5.4 teilen |
 | F2.3 | M2 | Individualprogramme | Gruppen-Fokus F2.1 | kein Spend-to-Stamp |
-| F2.7 | M1 | Wachstums-Heatmap | Chart + Zellen aus `last_week_growth` | 09 Screen 1 |
+| F2.7 | M1 | Wachstums-Heatmap | Hub 3▲/3▼; volle Zellen im Training | 09 Screen 1 |
 | F4.3 | M2 | Scout-Netz 3 Tiers | Einstellungsliste | vorgezogen, keine Karte |
 | F4.4 | M2 | Scout-Karte | — | |
 | F1.5 | M1 | Profil Charts, Icons | Tabs + Flavor | Akte laut 14.3 |

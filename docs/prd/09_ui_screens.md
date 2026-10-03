@@ -83,7 +83,7 @@ Pipeline Dashboard (Tab-Hub)
 Interaktion:
 
 - Klick auf eine Status-Kachel springt in den Sub-Screen.
-- Heatmap unter dem Chart zeigt die Wochenzuwächse aus PRD 02.1. Die Fokus-Slots selbst stehen in PRD 02.4 (bis zu 3 von 5 Trainingsslots).
+- Der Hub zeigt nur die drei stärksten und drei schwächsten Wochenzuwächse aus PRD 02.1 (Form plus Farbe). Die volle Heatmap sitzt in der Training-Übersicht. Die Fokus-Slots selbst stehen in PRD 02.4 (bis zu 3 von 5 Trainingsslots).
 - Keine Kachel hat mehr als einen Satz Fließtext.
 
 **Screen 1a — Individual Plan Modal**

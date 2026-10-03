@@ -118,3 +118,46 @@ export function heatmapCellsForStage(
 ): GrowthHeatCell[] {
   return cells.filter((cell) => cell.squadStatus === stage);
 }
+
+export const WEEKLY_TRAINING_EXTREME_COUNT = 3;
+
+export interface WeeklyTrainingExtremes {
+  hasData: boolean;
+  best: GrowthHeatCell[];
+  worst: GrowthHeatCell[];
+}
+
+/**
+ * Hub report: three strongest and three weakest last-week 02.1 results.
+ * Full squad heatmap stays on Training. Players in `best` are not repeated in `worst`.
+ */
+export function weeklyTrainingExtremes(
+  players: readonly Player[],
+  clubId: string,
+  limit = WEEKLY_TRAINING_EXTREME_COUNT,
+): WeeklyTrainingExtremes {
+  const ranked = squadGrowthHeatmap(players, clubId)
+    .filter((cell) => cell.growth !== null)
+    .sort((left, right) => {
+      const byGrowth = (right.growth ?? 0) - (left.growth ?? 0);
+      if (byGrowth !== 0) return byGrowth;
+      return left.label.localeCompare(right.label, "de");
+    });
+
+  if (ranked.length === 0) {
+    return { hasData: false, best: [], worst: [] };
+  }
+
+  const best = ranked.slice(0, limit);
+  const bestIds = new Set(best.map((cell) => cell.playerId));
+  const worst = ranked
+    .filter((cell) => !bestIds.has(cell.playerId))
+    .sort((left, right) => {
+      const byGrowth = (left.growth ?? 0) - (right.growth ?? 0);
+      if (byGrowth !== 0) return byGrowth;
+      return left.label.localeCompare(right.label, "de");
+    })
+    .slice(0, limit);
+
+  return { hasData: true, best, worst };
+}

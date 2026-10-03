@@ -6,6 +6,7 @@ import {
   PERFORMANCE_STADIUM_CAPACITY,
   facilityGate,
   groupCampusBadges,
+  academyStage,
   sortCampusBadges,
   type CampusBadge,
 } from "./academy.ts";
@@ -18,6 +19,12 @@ describe("coach icons", () => {
 });
 
 describe("academy facilities", () => {
+  it("numbers campus stages from the owned building", () => {
+    expect(academyStage("academy_basic")).toBe(1);
+    expect(academyStage("academy_performance")).toBe(2);
+    expect(academyStage("academy_elite")).toBe(3);
+  });
+
   it("matches the published campus catalogue", () => {
     const file = JSON.parse(
       readFileSync(new URL("../../data/infrastructure/stadium_upgrades.json", import.meta.url), "utf8"),

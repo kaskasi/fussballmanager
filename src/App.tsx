@@ -185,7 +185,6 @@ function clearTransientUi(
   setters: {
     setProfileId: (value: string | null) => void;
     setForeignPlayerId: (value: string | null) => void;
-    setCampusYearOpen: (value: boolean) => void;
     setInboxOpen: (value: boolean) => void;
     setProfileFeedback: (value: string | null) => void;
     setCareerMatchSetup: (value: CareerMatchSetup | null) => void;
@@ -197,7 +196,6 @@ function clearTransientUi(
 ) {
   setters.setProfileId(null);
   setters.setForeignPlayerId(null);
-  setters.setCampusYearOpen(false);
   setters.setInboxOpen(false);
   setters.setProfileFeedback(null);
   setters.setCareerMatchSetup(null);
@@ -216,7 +214,6 @@ export default function App() {
   const [foreignPlayerId, setForeignPlayerId] = useState<string | null>(null);
   const [negotiationPlayerId, setNegotiationPlayerId] = useState<string | null>(null);
   const [negotiationMessage, setNegotiationMessage] = useState<string | null>(null);
-  const [campusYearOpen, setCampusYearOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
   const [inboxItemId, setInboxItemId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
@@ -1153,7 +1150,6 @@ export default function App() {
     clearTransientUi({
       setProfileId,
       setForeignPlayerId,
-      setCampusYearOpen,
       setInboxOpen,
       setProfileFeedback,
       setCareerMatchSetup,
@@ -1186,7 +1182,6 @@ export default function App() {
       clearTransientUi({
         setProfileId,
         setForeignPlayerId,
-        setCampusYearOpen,
         setInboxOpen,
         setProfileFeedback,
         setCareerMatchSetup,
@@ -1209,7 +1204,6 @@ export default function App() {
     clearTransientUi({
       setProfileId,
       setForeignPlayerId,
-      setCampusYearOpen,
       setInboxOpen,
       setProfileFeedback,
       setCareerMatchSetup,
@@ -1252,7 +1246,7 @@ export default function App() {
           screen="hub"
           week={week}
           onNavigate={setScreen}
-          onCampusNavigate={() => setCampusYearOpen(false)}
+          onCampusNavigate={() => undefined}
           hubActions={navActions}
           accessibility={accessibility}
           onAccessibilityChange={setAccessibility}
@@ -1285,7 +1279,7 @@ export default function App() {
           week={week}
           onNavigate={setScreen}
           onCloseProfile={() => setForeignPlayerId(null)}
-          onCampusNavigate={() => setCampusYearOpen(false)}
+          onCampusNavigate={() => undefined}
           hubActions={navActions}
           accessibility={accessibility}
           onAccessibilityChange={setAccessibility}
@@ -1351,7 +1345,7 @@ export default function App() {
           week={week}
           onNavigate={setScreen}
           onCloseProfile={() => setProfileId(null)}
-          onCampusNavigate={() => setCampusYearOpen(false)}
+          onCampusNavigate={() => undefined}
           hubActions={navActions}
           accessibility={accessibility}
           onAccessibilityChange={setAccessibility}
@@ -1388,7 +1382,6 @@ export default function App() {
             profilePlayer.squad_status === "u17" || profilePlayer.squad_status === "u19"
               ? () => {
                   setProfileId(null);
-                  setCampusYearOpen(true);
                   setScreen("campus");
                 }
               : undefined
@@ -1405,7 +1398,7 @@ export default function App() {
         screen={screen}
         week={week}
         onNavigate={setScreen}
-        onCampusNavigate={() => setCampusYearOpen(false)}
+        onCampusNavigate={() => undefined}
         hubActions={navActions}
         accessibility={accessibility}
         onAccessibilityChange={setAccessibility}
@@ -1489,10 +1482,14 @@ export default function App() {
           players={players}
           youthInbox={youthInbox}
           stadiumCapacity={stadiumTotalCapacity(stadium)}
-          yearOpen={campusYearOpen}
-          onYearOpenChange={setCampusYearOpen}
+          season={season}
+          week={week}
+          clubId={session.clubId}
+          trainingPlan={trainingPlan}
+          individualPrograms={individualPrograms}
           onSelectPlayer={setProfileId}
-          onDepartureRisk={openInbox}
+          onOpenInbox={openInbox}
+          onInboxDecision={handleInboxDecision}
         />
       ) : null}
       {screen === "scouting" ? (

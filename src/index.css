@@ -6511,6 +6511,147 @@ body {
   color: #334155;
 }
 
+.youth-report-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.youth-report h1 {
+  margin: 0 0 0.35rem;
+}
+
+.youth-report-campus,
+.youth-report-match {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.85rem;
+  margin: 0;
+  font-weight: 800;
+  color: #334155;
+}
+
+.youth-report-match {
+  margin-top: 0.35rem;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.youth-report-campus-btn {
+  border: 0;
+  background: #ecfdf5;
+  color: #047857;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.youth-report-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.youth-report-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.youth-report-year {
+  border: 0;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
+}
+
+.youth-report-table {
+  min-width: 36rem;
+}
+
+.youth-report-empty {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.youth-report-badge,
+.youth-report-ziel,
+.youth-report-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 800;
+}
+
+.youth-report-badge {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.youth-report-status.is-risk {
+  color: #b91c1c;
+}
+
+.youth-report-status.is-contract {
+  color: #b45309;
+}
+
+.youth-progress {
+  display: inline-grid;
+  grid-template-columns: repeat(4, 0.55rem);
+  gap: 0.14rem;
+  vertical-align: middle;
+}
+
+.youth-progress i {
+  display: block;
+  height: 0.7rem;
+  border-radius: 0.12rem;
+  background: #cbd5e1;
+}
+
+.youth-progress i.is-on {
+  background: #059669;
+}
+
+.youth-report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+}
+
+.youth-report-drop {
+  width: 3rem;
+  height: 3rem;
+  border: 2px dashed #cbd5e1;
+  background: #fff;
+  border-radius: 0.85rem;
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.youth-report-drop.is-hot {
+  border-color: #059669;
+  background: #ecfdf5;
+}
+
 .campus-inbox-open {
   margin-left: auto;
   border: 0;

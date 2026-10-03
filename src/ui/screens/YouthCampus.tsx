@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type DragEvent } from "react";
+import type { IndividualProgram } from "../../development/individual-training.ts";
+import type { TrainingSlot } from "../../development/training-units.ts";
 import type { Player, PositionPrimary } from "../../types/player.ts";
 import { formatMarketValueShort, type ProSquadSortDirection, type ProSquadSortKey } from "../../squad/pro-roster.ts";
 import {
@@ -7,23 +9,46 @@ import {
   type YouthSquadRow,
 } from "../../squad/youth-roster.ts";
 import { caDeltaClassName, caDeltaMark, formatCaDelta } from "../../player/ca-tracking.ts";
+import { estimateCa } from "../../transfers/market-value.ts";
 import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 import {
   ACADEMY_FACILITIES,
-  facilityById,
+  academyStage,
+  COACH_ICON_ORDER,
   coachIconLabel,
+  facilityById,
   facilityGate,
 } from "../../youth/academy.ts";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
-import type { YouthInboxState } from "../../youth/decision-inbox.ts";
+import {
+  actionIcon,
+  actionLabel,
+  pendingInboxItems,
+  type DecisionAction,
+  type YouthInboxState,
+} from "../../youth/decision-inbox.ts";
 import type { YouthReport } from "../../youth/youth-sim.ts";
+import { formatCalendarWeek } from "../../sim/game-calendar.ts";
+import {
+  coachIconCounts,
+  formatYouthReportName,
+  resolveYouthReportDrop,
+  sortYouthReportPlayerIds,
+  YOUTH_REPORT_ACTIONS,
+  youthReportStatus,
+  youthReportTarget,
+  type YouthReportDropAction,
+} from "../../youth/youth-report-view.ts";
 import { coachIconForPlayer, hasDepartureRisk } from "../components/DecisionInbox.tsx";
 
 /**
- * WIREFRAME: PRD 09.2 Screen 2 — Youth Campus (2D iso)
+ * WIREFRAME: PRD 14.4 — Jugend-Report (Heimat)
+ * Jahrgangstabelle bleibt sekundär (PRD 09 Screen 2a).
  */
 
 const OWNED: AcademyFacility = "academy_basic";
+const DRAG_PLAYER = "text/plain";
+type CampusView = "report" | "year" | "campus";
 
 const POSITION_ORDER: PositionPrimary[] = [
   "GK",
@@ -49,32 +74,59 @@ export function YouthCampus({
   players,
   youthInbox,
   stadiumCapacity,
+  season,
+  week,
+  clubId,
+  trainingPlan,
+  individualPrograms,
   onSelectPlayer,
-  onDepartureRisk,
-  yearOpen,
-  onYearOpenChange,
+  onOpenInbox,
+  onInboxDecision,
 }: {
   players: Player[];
   youthInbox: YouthInboxState;
   stadiumCapacity: number;
+  season: number;
+  week: number;
+  clubId: string;
+  trainingPlan: readonly TrainingSlot[];
+  individualPrograms: readonly IndividualProgram[];
   onSelectPlayer: (playerId: string) => void;
-  onDepartureRisk: () => void;
-  yearOpen: boolean;
-  onYearOpenChange: (open: boolean) => void;
+  onOpenInbox: (itemId?: string) => void;
+  onInboxDecision: (itemId: string, action: DecisionAction) => void;
 }) {
+  const [view, setView] = useState<CampusView>("report");
+  const report = youthInbox.lastReport;
+
   return (
     <main className="campus">
-      {yearOpen ? (
+      {view === "year" ? (
         <YearGroup
           players={players}
           youthInbox={youthInbox}
-          report={youthInbox.lastReport}
-          onBack={() => onYearOpenChange(false)}
-          onDepartureRisk={onDepartureRisk}
+          report={report}
+          onBack={() => setView("report")}
+          onDepartureRisk={() => onOpenInbox()}
           onSelectPlayer={onSelectPlayer}
         />
+      ) : view === "campus" ? (
+        <CampusGround stadiumCapacity={stadiumCapacity} onBack={() => setView("report")} onOpenYear={() => setView("report")} />
       ) : (
-        <CampusGround stadiumCapacity={stadiumCapacity} onOpenYear={() => onYearOpenChange(true)} />
+        <YouthReportHome
+          players={players}
+          youthInbox={youthInbox}
+          report={report}
+          season={season}
+          week={week}
+          clubId={clubId}
+          trainingPlan={trainingPlan}
+          individualPrograms={individualPrograms}
+          onSelectPlayer={onSelectPlayer}
+          onOpenInbox={onOpenInbox}
+          onInboxDecision={onInboxDecision}
+          onOpenYear={() => setView("year")}
+          onOpenCampus={() => setView("campus")}
+        />
       )}
     </main>
   );
@@ -82,18 +134,25 @@ export function YouthCampus({
 
 function CampusGround({
   stadiumCapacity,
+  onBack,
   onOpenYear,
 }: {
   stadiumCapacity: number;
+  onBack: () => void;
   onOpenYear: () => void;
 }) {
   const owned = facilityById(OWNED);
   return (
     <section>
       <p className="eyebrow">Jugend</p>
-      <h1>
-        <span aria-hidden="true">{owned.icon}</span> {owned.name}
-      </h1>
+      <div className="campus-year-head">
+        <button type="button" onClick={onBack} aria-label="Zurück zum Report">
+          ←
+        </button>
+        <h1>
+          <span aria-hidden="true">{owned.icon}</span> {owned.name}
+        </h1>
+      </div>
       <div className="campus-ground">
         {ACADEMY_FACILITIES.map((facility) => {
           const gate = facilityGate(OWNED, facility.id, stadiumCapacity);
@@ -106,7 +165,7 @@ function CampusGround({
               disabled={!current}
               onClick={current ? onOpenYear : undefined}
               title={facility.effect}
-              aria-label={current ? `${facility.name}, Jahrgang öffnen` : facility.name}
+              aria-label={current ? `${facility.name}, Report öffnen` : facility.name}
             >
               <IsoBuilding facility={facility.id} />
               <span className="campus-building-name">
@@ -147,6 +206,229 @@ function formatResults(results: YouthReport["u17_results"]): string {
 }
 
 type YouthTeam = "u17" | "u19";
+
+function YouthReportHome({
+  players,
+  youthInbox,
+  report,
+  season,
+  week,
+  clubId,
+  trainingPlan,
+  individualPrograms,
+  onSelectPlayer,
+  onOpenInbox,
+  onInboxDecision,
+  onOpenYear,
+  onOpenCampus,
+}: {
+  players: readonly Player[];
+  youthInbox: YouthInboxState;
+  report: YouthReport | null;
+  season: number;
+  week: number;
+  clubId: string;
+  trainingPlan: readonly TrainingSlot[];
+  individualPrograms: readonly IndividualProgram[];
+  onSelectPlayer: (playerId: string) => void;
+  onOpenInbox: (itemId?: string) => void;
+  onInboxDecision: (itemId: string, action: DecisionAction) => void;
+  onOpenYear: () => void;
+  onOpenCampus: () => void;
+}) {
+  const [team, setTeam] = useState<YouthTeam>("u17");
+  const [dropAction, setDropAction] = useState<YouthReportDropAction | null>(null);
+  const owned = facilityById(OWNED);
+  const roster = useMemo(
+    () => sortYouthReportPlayerIds(players, youthInbox, report, team),
+    [players, youthInbox, report, team],
+  );
+  const counts = useMemo(
+    () => coachIconCounts(players, youthInbox, report, team),
+    [players, youthInbox, report, team],
+  );
+  const matchLine = report
+    ? `U17 ${formatResults(report.u17_results)} · U19 ${formatResults(report.u19_results)}`
+    : "Noch kein Spiel — Möbel trotzdem da";
+
+  const applyDrop = (playerId: string, action: YouthReportDropAction) => {
+    const result = resolveYouthReportDrop(youthInbox, players, clubId, week, playerId, action);
+    if (result.kind === "decide") {
+      onInboxDecision(result.itemId, result.action);
+      return;
+    }
+    if (result.kind === "inbox") {
+      onOpenInbox(result.itemId);
+      return;
+    }
+    onSelectPlayer(result.playerId);
+  };
+
+  const onRowClick = (playerId: string) => {
+    const item = pendingInboxItems(youthInbox, players).find((entry) => entry.playerId === playerId);
+    if (item?.kind === "departure_risk") {
+      onOpenInbox(item.id);
+      return;
+    }
+    onSelectPlayer(playerId);
+  };
+
+  return (
+    <section className="youth-report" aria-label="Jugend-Report">
+      <p className="eyebrow">Jugend</p>
+      <header className="youth-report-head">
+        <div>
+          <h1>
+            {team === "u17" ? "U17" : "U19"} Report {formatCalendarWeek(week)}
+          </h1>
+          <p className="youth-report-campus">
+            <button type="button" className="youth-report-campus-btn" onClick={onOpenCampus}>
+              <span aria-hidden="true">{owned.icon}</span> Campus-Stufe {academyStage(OWNED)}
+            </button>
+            {COACH_ICON_ORDER.map((icon) => (
+              <span key={icon} className="youth-report-count" title={coachIconLabel(icon)}>
+                <span aria-hidden="true">{icon}</span> {counts[icon]}
+              </span>
+            ))}
+          </p>
+          <p className="youth-report-match">{matchLine}</p>
+        </div>
+        <div className="youth-report-tools">
+          <div className="segmented-control" role="tablist" aria-label="Jugendteam wählen">
+            <button
+              type="button"
+              role="tab"
+              className={team === "u17" ? "is-active" : undefined}
+              aria-selected={team === "u17"}
+              onClick={() => setTeam("u17")}
+            >
+              U17
+            </button>
+            <button
+              type="button"
+              role="tab"
+              className={team === "u19" ? "is-active" : undefined}
+              aria-selected={team === "u19"}
+              onClick={() => setTeam("u19")}
+            >
+              U19
+            </button>
+          </div>
+          <button type="button" className="youth-report-year" onClick={onOpenYear}>
+            Jahrgang
+          </button>
+        </div>
+      </header>
+
+      <div className="squad-table-wrap">
+        <table className="squad-table youth-report-table" aria-label={`${team.toUpperCase()} Report`}>
+          <thead>
+            <tr>
+              <th scope="col" className="squad-col-name">Name</th>
+              <th scope="col">Pos</th>
+              <th scope="col">CA</th>
+              <th scope="col">Ziel</th>
+              <th scope="col">Fortschritt</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {roster.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="youth-report-empty">
+                  Keine Spieler in der {team === "u17" ? "U17" : "U19"}.
+                </td>
+              </tr>
+            ) : (
+              roster.map((player) => {
+                const target = youthReportTarget(player, individualPrograms, trainingPlan, week);
+                const status = youthReportStatus(player, youthInbox, season, report);
+                const risk = status.kind === "risk";
+                return (
+                  <tr
+                    key={player.id}
+                    className={risk ? "squad-table-row is-risk" : "squad-table-row"}
+                    draggable
+                    onDragStart={(event) => {
+                      event.dataTransfer.setData(DRAG_PLAYER, player.id);
+                      event.dataTransfer.effectAllowed = "move";
+                    }}
+                    onClick={() => onRowClick(player.id)}
+                  >
+                    <td className="squad-col-name">
+                      <button type="button" className="youth-report-badge">
+                        {risk ? <span aria-hidden="true">🚩</span> : null}
+                        {formatYouthReportName(player)}
+                      </button>
+                    </td>
+                    <td>{player.position}</td>
+                    <td className="squad-col-ca">{Math.round(estimateCa(player.attributes, player.position))}</td>
+                    <td>
+                      <span className="youth-report-ziel">
+                        <span aria-hidden="true">{target.icon}</span> {target.title}
+                      </span>
+                    </td>
+                    <td>
+                      {target.progress == null ? (
+                        "—"
+                      ) : (
+                        <ProgressPips value={target.progress} />
+                      )}
+                    </td>
+                    <td>
+                      <span className={`youth-report-status is-${status.kind}`}>
+                        {status.icon ? <span aria-hidden="true">{status.icon}</span> : null} {status.label}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <footer className="youth-report-actions" aria-label="Entscheidungen">
+        {YOUTH_REPORT_ACTIONS.map((action) => (
+          <button
+            key={action}
+            type="button"
+            className={
+              dropAction === action ? "youth-report-drop is-hot" : "youth-report-drop"
+            }
+            aria-label={actionLabel(action)}
+            onClick={() => onOpenInbox()}
+            onDragOver={(event) => {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "move";
+              setDropAction(action);
+            }}
+            onDragLeave={() => setDropAction((current) => (current === action ? null : current))}
+            onDrop={(event: DragEvent<HTMLButtonElement>) => {
+              event.preventDefault();
+              setDropAction(null);
+              const playerId = event.dataTransfer.getData(DRAG_PLAYER);
+              if (playerId) applyDrop(playerId, action);
+            }}
+          >
+            <span aria-hidden="true">{actionIcon(action)}</span>
+          </button>
+        ))}
+      </footer>
+    </section>
+  );
+}
+
+function ProgressPips({ value }: { value: number }) {
+  const filled = Math.round(Math.min(1, Math.max(0, value)) * 4);
+  return (
+    <span className="youth-progress" aria-label={`${Math.round(value * 100)} Prozent`}>
+      {Array.from({ length: 4 }, (_, index) => (
+        <i key={index} className={index < filled ? "is-on" : undefined} />
+      ))}
+    </span>
+  );
+}
 
 function YearGroup({
   players,
@@ -201,7 +483,7 @@ function YearGroup({
     <section className="campus-year">
       <p className="eyebrow">Jugend</p>
       <div className="campus-year-head">
-        <button type="button" onClick={onBack} aria-label="Zurück zum Campus">
+        <button type="button" onClick={onBack} aria-label="Zurück zum Report">
           ←
         </button>
         <h1>🏫 Jugendkader</h1>
@@ -230,7 +512,7 @@ function YearGroup({
 
       {report ? (
         <p className="campus-report">
-          Woche {report.week} · U17 {formatResults(report.u17_results)} · U19 {formatResults(report.u19_results)}
+          {formatCalendarWeek(report.week)} · U17 {formatResults(report.u17_results)} · U19 {formatResults(report.u19_results)}
         </p>
       ) : (
         <p className="campus-report">Noch kein Jugend-Report — Woche im Hub simulieren.</p>

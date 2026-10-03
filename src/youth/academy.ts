@@ -78,6 +78,12 @@ const RANK: Record<AcademyFacility, number> = {
   academy_elite: 2,
 };
 
+/** PRD 14.4 — Campus-Stufe 1/2/3 from the owned academy building. */
+export function academyStage(owned: AcademyFacility): number {
+  return RANK[owned] + 1;
+}
+
+
 export function facilityById(id: AcademyFacility): AcademyFacilityDef {
   const found = ACADEMY_FACILITIES.find((facility) => facility.id === id);
   if (!found) throw new Error(`Unknown academy facility ${id}`);

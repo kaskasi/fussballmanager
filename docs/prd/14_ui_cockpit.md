@@ -1,6 +1,6 @@
 # /docs/prd/14_ui_cockpit.md
 
-**Version:** 1.2
+**Version:** 1.3
 **Last Updated:** 2026-10-03
 **Status:** Final (Darstellung — kein Code in diesem Dokument)
 
@@ -282,8 +282,8 @@ Kacheln brauchen Möbel (leere Galerie mit Icon), nicht drei Caption-Zeilen
 
 Ein Raum pro Task, Pipeline-Features nicht nebenbei umbauen.
 
-1. Spielerakte (14.3) — größte Lücke Seele vs. System.
-2. Jugend-Report (14.4) — Gesetz 6 sichtbar machen.
+1. Spielerakte (14.3) — größte Lücke Seele vs. System. **gebaut**
+2. Jugend-Report (14.4) — Gesetz 6 sichtbar machen. **gebaut**
 3. Inbox-Icons + Hub (14.5).
 4. Finanzen-Wasserfall (14.6) — Spec existiert.
 5. Stadion-Inventar-Slots (14.7) — Hunger zeichnen, Sim später.

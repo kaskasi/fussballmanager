@@ -81,7 +81,7 @@ Kalender, News), nicht die 40-Spalten-Identität.
 | Aufstellung | F1.1–F1.3 da | Bild, trifft 14 | behalten |
 | Stadion-Grundriss | F7.1 + Ticket-Stepper | Ringe + Hunger-Slots | behalten |
 | Origin-Modal | PRD 13 | drei Karten, gut | behalten |
-| Scouting-Wissen | F4.2 | ehrlich (Unbekannt/Unklar) | Balken+CI statt nur Text |
+| Scouting-Wissen | F4.2 | Balken + CI-Grauzone | behalten |
 | Spielerakte | CA, Vertrag, Flavor | vier SaaS-Tabs, ein Punkt | eine Karte |
 | Jugend | Roster + Auto-Sim | 12-Spalten-Grid | Report (PRD 03.3) |
 | Inbox | Slice + Cap 4 | Modal, Text-Buttons | Karte + Icons (09.2 / 03.4) |
@@ -256,7 +256,7 @@ Flow; Spielergehalt-Slider ist F5.4 und teilt die Akte (14.3).
 
 Kopfzeile laut PRD 09 Screen 3 behalten (`Gut bekannt / Unklar / Unbekannt`).
 Zeile: Portrait, Name, zwei Balken, CI als Grauzone — nicht nur `58–86` als
-Text. Leerer Filter ist ehrlich; er braucht einen Chip-Reset als Aktion.
+Text. Leerer Filter ist ehrlich; Chip **Filter zurücksetzen**.
 Scout-Netzwerk als Einstellungsliste ist bis F4.4 akzeptabel; es ist ein
 Shop, keine Karte.
 
@@ -299,7 +299,7 @@ Ein Raum pro Task, Pipeline-Features nicht nebenbei umbauen.
 5. Stadion-Inventar-Slots (14.7) — Hunger zeichnen, Sim später. **gebaut**
 6. Transfers ohne Dead-End (14.8). **gebaut**
 7. Match-DE + Namen in der Zeile (14.10).
-8. Scouting-Balken (14.9).
+8. Scouting-Balken (14.9). **gebaut**
 
 Politur (Abstände, Mint, neue Tokens) ist nachrangig, solange ein Raum noch
 Admin-Shell ist.

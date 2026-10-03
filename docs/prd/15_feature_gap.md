@@ -175,7 +175,7 @@ Savegame. Vorstand/Entlassung aktiv.
 | F1.1–F1.5 | Aufstellung, Taktik-Presets, Auto-XI, Fitness, Profile | Rasen gut; Akte UI hinterher (14) |
 | F2.1 F2.2 F2.7 | Training, Growth, Heatmap | Engine stark; Heatmap/Akte dünn |
 | F3.1–F3.4 | Intake, Campus-Iso, Auto-Jugend, Inbox | Iso und Report-UI offen |
-| F4.1 F4.2 | Marktliste, Wissensmodell | Wissen sichtbar |
+| F4.1 F4.2 | Marktliste, Wissensmodell | Balken + CI 14.9 |
 | F5.1–F5.3 F5.7 | Markt, MW, Leihen, Vorvertrag | Next-Action 14.8 |
 | F6.1–F6.4 | Budgets, Streams, Ledger, Wasserfall | Wasserfall 11.5 gebaut |
 | F7.1 | Stadion 2D | Grundriss + Inventar-Hunger 14.7 |

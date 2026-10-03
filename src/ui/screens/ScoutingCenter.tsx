@@ -13,16 +13,20 @@ import {
   filterMarket,
   headlineCounts,
   targetLabel,
+  barBand,
+  barTrackPercents,
+  marketFiltersActive,
+  CA_BAR_MAX,
+  DEFAULT_MARKET_FILTERS,
   type ConfidenceBucket,
   type MarketFilters,
   type MarketSort,
+  type MarketSortKey,
 } from "../../scouting/market-list.ts";
 import { listMarketRows, sortMarketRows } from "../../scouting/market-roster.ts";
-import { formatScoutCa, formatScoutMarketValue } from "../../scouting/scout-visibility.ts";
-import type { MarketSortKey } from "../../scouting/market-list.ts";
+import { scoutMarketValueBounds } from "../../scouting/scout-visibility.ts";
 import { Hint } from "../components/Hint.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
-import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 
 const POSITIONS: PositionPrimary[] = [
   "GK",
@@ -53,6 +57,13 @@ const AGE_FILTERS: Array<{ value: MarketFilters["age"]; label: string }> = [
 
 const REGIONS = ["Schleswig-Holstein", "Fördeküste", "Hansestadt", "Nordfriesland"];
 
+/**
+ * WIREFRAME: PRD 14.9 / 09 Screen 3
+ *
+ * ✅ Gut bekannt · 🤷 Unklar · ❓ Unbekannt
+ * [Portrait] Name            [CA ▓░CI░] [€ ▓░CI░]
+ *            19 · CM · Club
+ */
 export function ScoutingCenter({
   targets,
   filters,
@@ -106,6 +117,15 @@ export function ScoutingCenter({
   const assigned = assignedIds.size;
   const networkCapacity = scoutNetworkCapacity(scoutNetwork);
   const networkAccuracy = scoutNetworkAccuracyModifier(scoutNetwork);
+
+  const valueScale = useMemo(() => {
+    let max = 1;
+    for (const row of visible) {
+      const bounds = scoutMarketValueBounds(row.player, row.estimate, season, false);
+      if (bounds) max = Math.max(max, bounds.high);
+    }
+    return max;
+  }, [visible, season]);
 
   const toggleSort = (key: MarketSortKey) => {
     if (sort.key === key) {
@@ -270,59 +290,107 @@ export function ScoutingCenter({
         <section className="squad-empty scouting-empty" aria-label="Leere Marktliste">
           <span className="squad-empty-icon" aria-hidden="true">👁️</span>
           <p>Keine Treffer für die aktuellen Filter.</p>
+          {marketFiltersActive(filters) ? (
+            <button
+              type="button"
+              className="scouting-chip"
+              onClick={() => onFiltersChange(DEFAULT_MARKET_FILTERS)}
+            >
+              Filter zurücksetzen
+            </button>
+          ) : null}
         </section>
       ) : (
-        <div className="squad-table-wrap">
-          <table className="squad-table scouting-table" aria-label="Marktliste">
-            <thead>
-              <tr>
-                <SquadSortHeader label="Name" sortKey="name" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} align="left" />
-                <SquadSortHeader label="Pos" sortKey="position" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} />
-                <SquadSortHeader label="Alt" sortKey="age" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} />
-                <th scope="col">Verein</th>
-                <SquadSortHeader label="CA" sortKey="ca" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} />
-                <SquadSortHeader label="Wert" sortKey="marketValue" activeKey={sort.key} direction={sort.direction} onSort={toggleSort} />
-                <th scope="col">Kenntnis</th>
-                <th scope="col" className="scouting-col-menu" aria-label="Aktionen" />
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((row) => {
-                const ca = formatScoutCa(row.player, row.estimate, false);
-                return (
-                  <tr
-                    key={row.playerId}
-                    className="squad-table-row scouting-table-row"
+        <>
+          <div className="scouting-sort" role="toolbar" aria-label="Sortierung">
+            {(["name", "ca", "marketValue"] as const).map((key) => {
+              const label = key === "name" ? "Name" : key === "ca" ? "CA" : "Wert";
+              const active = sort.key === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={active ? "scouting-chip is-active" : "scouting-chip"}
+                  aria-pressed={active}
+                  onClick={() => toggleSort(key)}
+                >
+                  {label}
+                  {active ? (sort.direction === "asc" ? " ▲" : " ▼") : ""}
+                </button>
+              );
+            })}
+          </div>
+          <ul className="scouting-list" aria-label="Marktliste">
+            {visible.map((row) => {
+              const band = barBand(row.estimate);
+              const caTrack = barTrackPercents(band.low, band.high, band.value, CA_BAR_MAX);
+              const bounds = scoutMarketValueBounds(row.player, row.estimate, season, false);
+              const valueTrack = bounds
+                ? barTrackPercents(bounds.low, bounds.high, (bounds.low + bounds.high) / 2, valueScale)
+                : null;
+              return (
+                <li key={row.playerId} className="scouting-item">
+                  <button
+                    type="button"
+                    className="scouting-item-main"
                     onClick={() => onSelectTarget(row.playerId)}
                   >
-                    <td className="squad-col-name">
-                      {row.assigned ? <span className="scouting-active" title="Scout aktiv">🟢 </span> : null}
-                      {row.displayName}
-                    </td>
-                    <td>{row.position}</td>
-                    <td>{row.age}</td>
-                    <td>{row.clubName ?? "—"}</td>
-                    <td className="squad-col-ca">{ca}</td>
-                    <td className="squad-col-value">
-                      {formatScoutMarketValue(row.player, row.estimate, season, false)}
-                    </td>
-                    <td className="scouting-col-label">{targetLabel({ player: row.player, estimate: row.estimate })}</td>
-                    <td className="scouting-col-menu" onClick={(event) => event.stopPropagation()}>
-                      <RowMenu
-                        open={openMenuId === row.playerId}
-                        assigned={row.assigned}
-                        onToggle={() => setOpenMenuId((current) => (current === row.playerId ? null : row.playerId))}
-                        onClose={() => setOpenMenuId(null)}
-                        onScout={() => onAssignScout(row.playerId)}
-                        onOpenProfile={() => onSelectTarget(row.playerId)}
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    <span className="scouting-portrait" aria-hidden="true">
+                      {positionGlyph(row.position)}
+                    </span>
+                    <span className="scouting-player-card">
+                      <span className="scouting-player-name">
+                        {row.assigned ? <span className="scouting-active" title="Scout aktiv">🟢 </span> : null}
+                        {row.displayName}
+                      </span>
+                      <span className="scouting-player-meta">
+                        {row.age} · {row.position}
+                        {row.clubName ? ` · ${row.clubName}` : ""}
+                      </span>
+                    </span>
+                    <span className="scouting-label">{targetLabel({ player: row.player, estimate: row.estimate })}</span>
+                    <div className="scouting-item-bars">
+                      <div className="scouting-bar">
+                        <small>CA</small>
+                        <div className="scouting-bar-track" aria-label={`CA ${Math.round(band.low)} bis ${Math.round(band.high)}`}>
+                          <span
+                            className="scouting-bar-ci"
+                            style={{ left: `${caTrack.ciLeft}%`, width: `${caTrack.ciWidth}%` }}
+                          />
+                          <span className="scouting-bar-fill" style={{ width: `${caTrack.fill}%` }} />
+                        </div>
+                      </div>
+                      <div className="scouting-bar">
+                        <small>€</small>
+                        <div className="scouting-bar-track" aria-label="Marktwert-Schätzung">
+                          {valueTrack ? (
+                            <>
+                              <span
+                                className="scouting-bar-ci"
+                                style={{ left: `${valueTrack.ciLeft}%`, width: `${valueTrack.ciWidth}%` }}
+                              />
+                              <span className="scouting-bar-fill" style={{ width: `${valueTrack.fill}%` }} />
+                            </>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                  <div onClick={(event) => event.stopPropagation()}>
+                    <RowMenu
+                      open={openMenuId === row.playerId}
+                      assigned={row.assigned}
+                      onToggle={() => setOpenMenuId((current) => (current === row.playerId ? null : row.playerId))}
+                      onClose={() => setOpenMenuId(null)}
+                      onScout={() => onAssignScout(row.playerId)}
+                      onOpenProfile={() => onSelectTarget(row.playerId)}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </>
       )}
     </main>
   );
@@ -353,5 +421,12 @@ function Chip({
   );
   if (!hint) return chip;
   return <Hint text={hint}>{chip}</Hint>;
+}
+
+function positionGlyph(position: PositionPrimary): string {
+  if (position === "GK") return "🧤";
+  if (position === "CB" || position === "LB" || position === "RB") return "🛡️";
+  if (position === "CF") return "⚽";
+  return "👟";
 }
 

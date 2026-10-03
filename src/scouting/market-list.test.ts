@@ -9,6 +9,10 @@ import {
   filterMarket,
   headlineCounts,
   loadMarketList,
+  barBand,
+  barTrackPercents,
+  marketFiltersActive,
+  DEFAULT_MARKET_FILTERS,
 } from "./market-list.ts";
 
 describe("market list", () => {
@@ -48,5 +52,20 @@ describe("market list", () => {
     expect(filterMarket(market, { query: sampleName, position: "all", confidence: "all", age: "all" }).length).toBeGreaterThan(0);
     const clubName = market.find((target) => target.clubName)?.clubName ?? "";
     expect(filterMarket(market, { query: clubName, position: "all", confidence: "all", age: "all" }).length).toBeGreaterThan(0);
+  });
+
+  it("places CI as a grey zone on the 0–199 bar", () => {
+    const band = barBand({ estimatedAbilityMean: 80, uncertaintyRange: 20, sampleSize: 1 });
+    expect(band.low).toBe(70);
+    expect(band.high).toBe(90);
+    const track = barTrackPercents(band.low, band.high, band.value, 199);
+    expect(track.fill).toBeCloseTo((80 / 199) * 100, 5);
+    expect(track.ciWidth).toBeGreaterThan(track.fill * 0.1);
+  });
+
+  it("flags any non-default market filter as active", () => {
+    expect(marketFiltersActive(DEFAULT_MARKET_FILTERS)).toBe(false);
+    expect(marketFiltersActive({ ...DEFAULT_MARKET_FILTERS, confidence: "unknown" })).toBe(true);
+    expect(marketFiltersActive({ ...DEFAULT_MARKET_FILTERS, query: "Nord" })).toBe(true);
   });
 });

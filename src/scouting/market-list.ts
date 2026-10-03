@@ -152,3 +152,32 @@ export function barBand(estimate: AbilityEstimate): { value: number; low: number
     high: Math.min(199, estimate.estimatedAbilityMean + half),
   };
 }
+
+/** 0–199 ability scale for market CA bars (PRD 02 hard cap). */
+export const CA_BAR_MAX = 199;
+
+export function barTrackPercents(
+  low: number,
+  high: number,
+  value: number,
+  max: number,
+): { ciLeft: number; ciWidth: number; fill: number } {
+  const span = Math.max(1, max);
+  const pct = (n: number) => Math.min(100, Math.max(0, (n / span) * 100));
+  const left = pct(Math.min(low, high));
+  const right = pct(Math.max(low, high));
+  return {
+    ciLeft: left,
+    ciWidth: Math.max(0, right - left),
+    fill: pct(value),
+  };
+}
+
+export function marketFiltersActive(filters: MarketFilters): boolean {
+  return (
+    filters.query.trim() !== "" ||
+    filters.position !== "all" ||
+    filters.confidence !== "all" ||
+    filters.age !== "all"
+  );
+}

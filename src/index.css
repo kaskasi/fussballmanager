@@ -6641,6 +6641,21 @@ body {
   margin-bottom: 1rem;
 }
 
+.scouting-sort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 0.75rem;
+}
+
+.scouting-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+
 .scouting-chip {
   border: 0;
   background: #fff;

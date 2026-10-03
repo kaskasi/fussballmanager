@@ -155,6 +155,18 @@ export type {
   MatchViewSide,
 } from "./match-view.ts";
 
+export type {
+  MatchReport,
+  MatchReportCard,
+  MatchReportConditions,
+  MatchReportGoal,
+} from "./match-report.ts";
+export {
+  buildMatchConditions,
+  buildMatchReport,
+  formatMatchMinuteLabel,
+} from "./match-report.ts";
+
 
 export { createRng, nextInt, nextRange, nextUnit, pickWeighted } from "./rng.ts";
 export type { RngState } from "./rng.ts";

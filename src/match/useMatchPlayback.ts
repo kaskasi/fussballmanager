@@ -139,6 +139,14 @@ export function useMatchPlayback(view: MatchView | null) {
     [presented],
   );
 
+  const goToEnd = useCallback(() => {
+    if (!presented || presented.frames.length === 0) {
+      return;
+    }
+    setPlaying(false);
+    setIndex(presented.frames.length - 1);
+  }, [presented]);
+
   return {
     index,
     frame,
@@ -154,5 +162,6 @@ export function useMatchPlayback(view: MatchView | null) {
     toggle,
     stepBack: () => stepBy(-1),
     stepForward: () => stepBy(1),
+    goToEnd,
   };
 }

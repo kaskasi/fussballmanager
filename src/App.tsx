@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { IndividualProgram } from "./development/individual-training.ts";
 import { processTransferBreakout } from "./development/breakouts.ts";
 import type { TrainingSlot } from "./development/training-units.ts";
@@ -1240,9 +1240,13 @@ export default function App() {
     />
   ) : null;
 
-  const careerBroadcastStory = careerMatchSetup
-    ? buildBroadcastStoryContext(session, careerMatchSetup, rivalPlayers)
-    : undefined;
+  const careerBroadcastStory = useMemo(
+    () =>
+      careerMatchSetup
+        ? buildBroadcastStoryContext(session, careerMatchSetup, rivalPlayers)
+        : undefined,
+    [careerMatchSetup, rivalPlayers, session.league, session.storyState, session.masterSeed, session.season],
+  );
 
   if (careerMatchSetup) {
     return (

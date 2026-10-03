@@ -13,6 +13,7 @@ import type {
 import {
   applySandboxPlan,
   applyMatchStatEvent,
+  buildMatchReport,
   emptyPairStats,
   parseSandboxPlan,
   sandboxPlanFromTactics,
@@ -148,6 +149,7 @@ export function buildMatchView(input: {
   const kickoff = frameFrom(initial, 0, undefined, stats, ctx);
   const frames: MatchViewFrame[] = [];
   const lines: MatchViewLine[] = [];
+  const events: MatchEvent[] = [];
   let current = initial;
   let previousEvent: MatchEvent | undefined;
   let running = stats;
@@ -159,6 +161,7 @@ export function buildMatchView(input: {
       awayTactics: current.awayTactics,
     });
     current = result.state;
+    events.push(result.event);
     running = applyMatchStatEvent(running, result.event, home.team.id);
     frames.push(
       applyFramePresentation(
@@ -206,6 +209,7 @@ export function buildMatchView(input: {
     lines,
     finalScore: current.score,
     eventCount: frames.length,
+    report: buildMatchReport(events, home, away, seed, ctx),
   };
 }
 

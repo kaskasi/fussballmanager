@@ -27,7 +27,7 @@ function rows(stats: MatchPairStats): Row[] {
   return [
     {
       id: "goals",
-      label: "Goals",
+      label: "Tore",
       home: String(stats.home.goals),
       away: String(stats.away.goals),
       homeBar: stats.home.goals,
@@ -35,7 +35,7 @@ function rows(stats: MatchPairStats): Row[] {
     },
     {
       id: "shots",
-      label: "Shots",
+      label: "Schüsse",
       home: String(stats.home.shots),
       away: String(stats.away.shots),
       homeBar: stats.home.shots,
@@ -43,7 +43,7 @@ function rows(stats: MatchPairStats): Row[] {
     },
     {
       id: "sot",
-      label: "On target",
+      label: "auf Tor",
       home: String(stats.home.shotsOnTarget),
       away: String(stats.away.shotsOnTarget),
       homeBar: stats.home.shotsOnTarget,
@@ -51,7 +51,7 @@ function rows(stats: MatchPairStats): Row[] {
     },
     {
       id: "corners",
-      label: "Corners",
+      label: "Ecken",
       home: String(stats.home.corners),
       away: String(stats.away.corners),
       homeBar: stats.home.corners,
@@ -59,7 +59,7 @@ function rows(stats: MatchPairStats): Row[] {
     },
     {
       id: "pass",
-      label: "Pass %",
+      label: "Pässe %",
       home: pctLabel(stats.home),
       away: pctLabel(stats.away),
       homeBar: passCompletionPct(stats.home) ?? 0,

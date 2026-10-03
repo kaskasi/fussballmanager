@@ -4,6 +4,7 @@ import type { PlayerRole } from "./player.ts";
 import type { Score } from "./match-state.ts";
 import type { SandboxPlan } from "./squad.ts";
 import type { MatchPairStats } from "./match-stats.ts";
+import type { MatchReport } from "./match-report.ts";
 
 export type MatchViewCue =
   | "offside"
@@ -83,4 +84,5 @@ export type MatchView = {
   lines: MatchViewLine[];
   finalScore: Score;
   eventCount: number;
+  report: MatchReport;
 };

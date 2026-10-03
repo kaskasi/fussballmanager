@@ -4,6 +4,7 @@ import type {
   Squad,
   TeamId,
 } from "@fussballmanager/shared";
+import { normalizeMatchView } from "./normalize-match-view.ts";
 
 export async function fetchCareerMatchView(input: {
   seed: number;
@@ -50,5 +51,6 @@ export async function fetchCareerMatchView(input: {
       : "";
     throw new Error(`Career match request failed (${response.status})${detail}${hint}`);
   }
-  return (await response.json()) as MatchView;
+  const view = (await response.json()) as MatchView;
+  return normalizeMatchView(view);
 }

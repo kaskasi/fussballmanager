@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BroadcastStoryContext, SandboxPlan, Squad } from "@fussballmanager/shared";
 import type { TacticsPresetId, TacticsPresetSlot } from "./tactics-presets.ts";
 import type { Player } from "../types/player.ts";
@@ -20,6 +20,7 @@ import { Scoreboard } from "./Scoreboard.tsx";
 import { buildPreMatchBrief } from "./pre-match-brief.ts";
 import { PreMatchBlock } from "./PreMatchBlock.tsx";
 import { useMatchPlayback } from "./useMatchPlayback.ts";
+import { MatchReportScreen } from "./MatchReportScreen.tsx";
 
 export function CareerMatch({
   setup,
@@ -123,10 +124,16 @@ function CareerMatchPlayback({
   const [view, setView] = useState<Awaited<ReturnType<typeof fetchCareerMatchView>> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [fastSim, setFastSim] = useState(false);
   const playback = useMatchPlayback(view);
   const [presentationMode, setPresentationMode] = useMatchPresentationMode();
   const rivalPlayersRef = useRef(rivalPlayers);
   rivalPlayersRef.current = rivalPlayers;
+  const broadcastStoryRef = useRef(broadcastStory);
+  broadcastStoryRef.current = broadcastStory;
+  const playerClubSquadRef = useRef(playerClubSquad);
+  playerClubSquadRef.current = playerClubSquad;
   const matchFetchKey = `${setup.seed}:${setup.homeTeamId}:${setup.awayTeamId}:${setup.playerClubId}`;
   const preMatch = useMemo(
     () => buildPreMatchBrief(setup, playerClubSquad.tactics.formation, rivalPlayers),
@@ -137,9 +144,12 @@ function CareerMatchPlayback({
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setReportOpen(false);
+    setFastSim(false);
 
     void (async () => {
       try {
+        const squad = playerClubSquadRef.current;
         const opponentId =
           setup.homeTeamId === setup.playerClubId ? setup.awayTeamId : setup.homeTeamId;
         const opponentSquad = squadForLeagueClub(opponentId, rivalPlayersRef.current);
@@ -147,17 +157,17 @@ function CareerMatchPlayback({
           throw new Error("Gegnerkader konnte nicht geladen werden.");
         }
         const homeSquad =
-          setup.homeTeamId === setup.playerClubId ? playerClubSquad : opponentSquad;
+          setup.homeTeamId === setup.playerClubId ? squad : opponentSquad;
         const awaySquad =
-          setup.awayTeamId === setup.playerClubId ? playerClubSquad : opponentSquad;
+          setup.awayTeamId === setup.playerClubId ? squad : opponentSquad;
         const next = await fetchCareerMatchView({
           seed: setup.seed,
           homeTeamId: setup.homeTeamId,
           awayTeamId: setup.awayTeamId,
           homeSquad,
           awaySquad,
-          playerClubSquad,
-          broadcastStory,
+          playerClubSquad: squad,
+          broadcastStory: broadcastStoryRef.current,
         });
         if (cancelled) return;
         setView(next);
@@ -173,15 +183,7 @@ function CareerMatchPlayback({
     return () => {
       cancelled = true;
     };
-  }, [
-    broadcastStory,
-    matchFetchKey,
-    playerClubSquad,
-    setup.awayTeamId,
-    setup.homeTeamId,
-    setup.playerClubId,
-    setup.seed,
-  ]);
+  }, [matchFetchKey]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -210,35 +212,70 @@ function CareerMatchPlayback({
   const frame = playback.frame;
   const finished = view ? playback.index >= view.frames.length - 1 : false;
 
+  const openReport = useCallback(
+    (simulated: boolean) => {
+      playback.goToEnd();
+      setFastSim(simulated);
+      setReportOpen(true);
+    },
+    [playback.goToEnd],
+  );
+
+  useEffect(() => {
+    if (finished && view && !reportOpen && !loading) {
+      setFastSim(false);
+      setReportOpen(true);
+    }
+  }, [finished, view, reportOpen, loading]);
+
   useEffect(() => {
     const outcome = view ? watchedMatchFromView(setup, view) : null;
     onNavActionChange({
       label: simulating
         ? "…"
-        : finished
+        : reportOpen
           ? "Spieltag abschließen"
           : "Spiel simulieren",
       onClick: () => {
         if (!outcome) return;
-        if (finished) onComplete(outcome);
-        else onSkip(outcome);
+        if (reportOpen) {
+          if (fastSim) onSkip(outcome);
+          else onComplete(outcome);
+          return;
+        }
+        openReport(true);
       },
       disabled: simulating || loading || !outcome,
-      title: finished ? "Ergebnis übernehmen und zum Sonntag" : "Spiel überspringen und Woche simulieren",
+      title: reportOpen
+        ? "Ergebnis übernehmen und zum Sonntag"
+        : "Spiel überspringen — Spielbericht anzeigen",
     });
     return () => onNavActionChange(null);
-  }, [finished, simulating, loading, view, setup, onComplete, onSkip, onNavActionChange]);
+  }, [
+    fastSim,
+    loading,
+    onComplete,
+    onNavActionChange,
+    onSkip,
+    openReport,
+    reportOpen,
+    simulating,
+    setup.seed,
+    view,
+  ]);
 
   return (
     <main
       className={[
         "matchday",
         "career-match",
-        presentationMode === "events" ? "career-match--events" : "",
+        reportOpen ? "career-match--report" : "",
+        !reportOpen && presentationMode === "events" ? "career-match--events" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
+      {!reportOpen ? (
       <div className="career-match-hud">
         {view && frame ? (
           <Scoreboard view={view} frame={frame} compact />
@@ -301,13 +338,23 @@ function CareerMatchPlayback({
           </label>
         </div>
       </div>
+      ) : null}
 
       {loading ? <p className="status">Spiel wird vorbereitet…</p> : null}
       {error ? <p className="status error">{error}</p> : null}
 
       {!view && !error ? <PreMatchBlock brief={preMatch} /> : null}
 
-      {view && frame ? (
+      {view && reportOpen ? (
+        <MatchReportScreen
+          view={view}
+          setup={setup}
+          week={week}
+          weekday={weekday}
+        />
+      ) : null}
+
+      {view && frame && !reportOpen ? (
         <>
           <MatchStage
             mode={presentationMode}

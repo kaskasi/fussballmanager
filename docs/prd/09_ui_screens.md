@@ -1,14 +1,19 @@
 # /docs/prd/09_ui_screens.md
 
-**Version:** 1.2
+**Version:** 1.3
 **Last Updated:** 2026-09-29
-**Status:** Final
+**Status:** Final  
 
 ---
 
 ## Purpose
 
 UI-Screens für den Talent-Pipeline-Block. 8 Screens plus zwei Modals. Wireframes als ASCII. Interaktion ist icon-first, mit der 2-Klick-Regel.
+
+**PRD 14** ist verbindlich für Club-Cockpit, Dichte und „Raum vor Shell“.
+Diese Datei bleibt die Inventarliste der acht Pipeline-Screens. Wo 09 und 14
+bei Darstellung kollidieren (Grid-first, Text-Buttons, leere SaaS-Tabs),
+gilt 14.
 
 ---
 
@@ -159,3 +164,5 @@ Der Wireframe-Kommentar steht in jeder neuen `.tsx`-Datei, bevor die Implementat
 - Scouting: PRD 04
 - Player-Schema: PRD 07
 - Breakouts: PRD 06.5
+- Club-Cockpit (Dichte, Räume, Spielerakte, Jugend-Report): PRD 14
+- Feature-Lücken vs. Referenz-DNA: PRD 15

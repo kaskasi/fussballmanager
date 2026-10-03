@@ -1,6 +1,6 @@
 # /docs/prd/10_feature_list.md
 
-**Version:** 1.2
+**Version:** 1.3
 **Last Updated:** 2026-09-29
 **Status:** Final  
 
@@ -14,7 +14,10 @@ Vollständiger, priorisierter Feature-Katalog aller Spielmodule. Source of Truth
 ## Scope
 Alle Module. Details der Implementierung liegen in den jeweiligen Modul-PRDs (References unten).
 
-**Dependencies:** PRD 01–09, PRD 11 und PRD 12
+**Dependencies:** PRD 01–09, PRD 11–15
+
+Darstellung der gebauten Systeme: PRD 14. Keep/Refuse und Lücken vs. 2002/FM11:
+PRD 15. PRD 15 darf Meilensteine in dieser Datei nicht still verschieben.
 
 ---
 
@@ -224,5 +227,6 @@ Tasks referenzieren Features via ID: „Implementiere F2.2 (Growth Engine) nach 
 
 ## References
 
-- PRD 01 (Vision), 02 (Growth), 03 (Jugend), 04 (Scouting), 05 (Transfers), 06 (Breakouts), 07 (Player-Schema), 08 (Savegame), 09 (UI), 11 (Finanzen), 12 (Liga/Welt)
-- Offene PRD: 13 (Meta) — vor Redaktion von Meta-Features erforderlich
+- PRD 01 (Vision), 02 (Growth), 03 (Jugend), 04 (Scouting), 05 (Transfers), 06 (Breakouts), 07 (Player-Schema), 08 (Savegame), 09 (Pipeline-UI), 11 (Finanzen), 12 (Liga/Welt)
+- PRD 13 (Story-Slice Abstieg), 14 (Club-Cockpit-UI), 15 (Feature-Lücken / Referenz-DNA)
+- Offene PRD: `13_meta.md` — vor Redaktion von Meta-Features (M4) erforderlich. Nicht mit PRD 13 verwechseln.

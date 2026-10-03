@@ -1,3 +1,9 @@
+import {
+  programKindLabel,
+  programLabel,
+  type IndividualProgram,
+} from "../development/individual-training.ts";
+import { trainingUnit, type TrainingSlot } from "../development/training-units.ts";
 import type { Attributes, GrowthSnapshot, Player, PositionPrimary } from "../types/player.ts";
 import { roundStat } from "../types/player-display.ts";
 import { caGroup, estimateCa } from "../transfers/market-value.ts";
@@ -194,6 +200,92 @@ export function growthPolyline(points: GrowthPoint[], width = 240, height = 72):
     .map((point) => `${point.x},${point.y}`)
     .join(" ");
 }
+
+export type StaerkeLane = "TW" | "IV" | "MF" | "ST";
+
+export interface StaerkeAlsBar {
+  lane: StaerkeLane;
+  label: string;
+  /** 0–1, primary position is 1. Flexibility fills other lanes. */
+  value: number;
+}
+
+const STAERKE_LABELS: Record<StaerkeLane, string> = {
+  TW: "Torhüter",
+  IV: "Verteidiger",
+  MF: "Mittelfeld",
+  ST: "Stürmer",
+};
+
+/** PRD 14.3 — four coarse lanes, not a second attribute encyclopedia. */
+export function positionLane(position: PositionPrimary): StaerkeLane {
+  if (position === "GK") return "TW";
+  if (position === "CB" || position === "LB" || position === "RB") return "IV";
+  if (position === "LW" || position === "RW" || position === "CF") return "ST";
+  return "MF";
+}
+
+export function staerkeAlsLanes(player: Player): StaerkeAlsBar[] {
+  const scores: Record<StaerkeLane, number> = { TW: 0, IV: 0, MF: 0, ST: 0 };
+  scores[positionLane(player.position)] = 1;
+  for (const slot of player.flexibility) {
+    const lane = positionLane(slot.trained_as);
+    scores[lane] = Math.max(scores[lane], slot.proficiency);
+  }
+  return (["TW", "IV", "MF", "ST"] as const).map((lane) => ({
+    lane,
+    label: STAERKE_LABELS[lane],
+    value: Math.min(1, Math.max(0, scores[lane])),
+  }));
+}
+
+export interface DossierTrainingTarget {
+  icon: string;
+  title: string;
+  detail: string;
+  /** 0–1 when an individual program is running; null for team-wide focus. */
+  progress: number | null;
+}
+
+/** PRD 14.3 — current Ziel: individual program, else team focus units. */
+export function dossierTrainingTarget(
+  player: Player,
+  programs: readonly IndividualProgram[],
+  plan: readonly TrainingSlot[],
+  week: number,
+): DossierTrainingTarget {
+  const program = programs.find((entry) => entry.playerId === player.id);
+  if (program) {
+    const elapsed = Math.max(0, week - program.startedWeek);
+    const total = Math.max(1, elapsed + program.weeksRemaining);
+    return {
+      icon: program.kind === "weak_foot" ? "🦶" : "🧭",
+      title: programKindLabel(program.kind),
+      detail: programLabel(program),
+      progress: Math.min(1, elapsed / total),
+    };
+  }
+  const focusSlots = plan.filter((slot) => slot.focus);
+  const first = focusSlots[0] ?? plan[0];
+  if (!first) {
+    return {
+      icon: "🏋️",
+      title: "Kein Plan",
+      detail: "Mannschaftstraining noch offen",
+      progress: null,
+    };
+  }
+  const unit = trainingUnit(first.unitId);
+  const extra = focusSlots.length > 1 ? ` · ${focusSlots.length} Fokus-Slots` : "";
+  return {
+    icon: "🏃",
+    title: unit.label,
+    detail: `Mannschaftsfokus${extra}`,
+    progress: null,
+  };
+}
+
+export const FAEHIGKEIT_HUNGER_SLOTS = 3;
 
 export function appendSeasonSnapshot(player: Player, season: number): Player {
   const snapshot: GrowthSnapshot = {

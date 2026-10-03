@@ -249,3 +249,5 @@ Simulationsfakten erfindet.
 - Feature-Scope: PRD 10, insbesondere F8.5, F9.1–F9.6 und F11.4–F11.6
 - Finanzen: PRD 11
 - Savegame und deterministische Events: PRD 08
+- Club-Cockpit (Räume): PRD 14
+- Keep/Refuse vs. Referenz-DNA: PRD 15

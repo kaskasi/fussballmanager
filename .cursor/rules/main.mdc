@@ -23,14 +23,17 @@ Geschrieben und verbindlich:
 - `06_breakouts.md` — Breakout-Events, Drive-Mutationen
 - `07_player_schema.md` — Vollständiges Player-Interface (TypeScript)
 - `08_savegame.md` — Savegame-Struktur, Versionierung, Sanitizer
-- `09_ui_screens.md` — UI-Screens, Wireframes, Interaktionsregeln
+- `09_ui_screens.md` — Pipeline-Screens, Wireframes, Interaktionsregeln
 - `10_feature_list.md` — Vollständiger Feature-Katalog
 - `11_finances.md` — Vereinsfinanzen, Budget-Split, Cashflow (F6.1–F6.4)
 - `12_league_world.md` — Prozedurale Welt, Ligagröße, Clubs und Kader
+- `13_story_slice_relegation.md` — erster Story-Slice (Abstieg)
+- `14_ui_cockpit.md` — Club-Cockpit, Dichte, Räume vor Shell
+- `15_feature_gap.md` — Keep/Refuse vs. Referenz-DNA, Kandidaten C1/C2
 
 Noch nicht geschrieben, nicht erfinden:
 
-- `13_meta.md`
+- `13_meta.md` — nicht mit PRD 13 (Story-Slice) verwechseln
 
 `PRD.md` in diesem Ordner ist Archiv und nicht verbindlich.
 
@@ -222,3 +225,4 @@ Arbeite erst P0 ab, dann P1.
 ## Update-History
 - 2026-09-22: Initialversion erstellt. Design-Prinzipien festgeschrieben (kein Potential, Varianz, Icon-first). PRD-Struktur definiert. MVP-Priorisierung aufgenommen.
 - 2026-09-22: Querverweise korrigiert (Formel ist 02.1). Engine-Pfad `server/src/engine/`. Archiv-Hinweis für `PRD.md`. Offene Dateien 01, 11–13 als ungeschrieben markiert.
+- 2026-09-29: PRD 13 (Story-Slice), 14 (Cockpit-UI), 15 (Feature-Lücken) als geschrieben geführt. `13_meta.md` bleibt ungeschrieben.

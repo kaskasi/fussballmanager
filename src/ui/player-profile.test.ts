@@ -4,11 +4,13 @@ import { UNKNOWN_PRIOR } from "../scouting/estimate-model.ts";
 import {
   appendSeasonSnapshot,
   attributeBars,
+  dossierTrainingTarget,
   formMark,
   growthPolyline,
   growthSeries,
   layoutGrowthChart,
   profileAttributeKeys,
+  staerkeAlsLanes,
   stateMark,
   visibleBreakoutFlags,
 } from "./player-profile.ts";
@@ -86,5 +88,42 @@ describe("player profile helpers", () => {
     const layout = layoutGrowthChart([{ season: 1, ca: 100 }], 320, 120);
     expect(layout[0]!.y).toBeGreaterThan(40);
     expect(layout[0]!.y).toBeLessThan(80);
+  });
+
+  it("maps primary position and flexibility into four Stärke-als lanes", () => {
+    const player = clonePlayer();
+    const lanes = staerkeAlsLanes(player);
+    expect(lanes.map((lane) => lane.lane)).toEqual(["TW", "IV", "MF", "ST"]);
+    expect(lanes.find((lane) => lane.lane === "MF")?.value).toBe(1);
+    expect(lanes.find((lane) => lane.lane === "ST")?.value).toBe(0);
+    const asWing = clonePlayer();
+    asWing.position = "CB";
+    asWing.flexibility = [{ trained_as: "AM", proficiency: 0.4, weeks_trained: 6 }];
+    const defender = staerkeAlsLanes(asWing);
+    expect(defender.find((lane) => lane.lane === "IV")?.value).toBe(1);
+    expect(defender.find((lane) => lane.lane === "MF")?.value).toBe(0.4);
+  });
+
+  it("prefers an individual program over team focus for the dossier target", () => {
+    const player = clonePlayer();
+    const teamOnly = dossierTrainingTarget(player, [], [{ unitId: "phys_speed", focus: true }], 4);
+    expect(teamOnly.title).toBe("Schnelligkeit");
+    expect(teamOnly.progress).toBeNull();
+    const withProgram = dossierTrainingTarget(
+      player,
+      [
+        {
+          playerId: player.id,
+          kind: "weak_foot",
+          weeksRemaining: 6,
+          startedWeek: 1,
+          season: 1,
+        },
+      ],
+      [{ unitId: "phys_speed", focus: true }],
+      4,
+    );
+    expect(withProgram.title).toBe("Schwaches Bein");
+    expect(withProgram.progress).toBeCloseTo(3 / 9);
   });
 });

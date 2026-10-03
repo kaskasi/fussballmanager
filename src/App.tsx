@@ -1323,12 +1323,19 @@ export default function App() {
             const eligibility = canSellPlayer(profilePlayer, players, session.clubId, week);
             return eligibility.allowed ? null : eligibility.reason ?? null;
           })()}
+          individualPrograms={individualPrograms}
+          trainingPlan={trainingPlan}
           actionFeedback={profileFeedback}
           onSell={() => handleSell(profilePlayer.id)}
           onProfileAction={(action) => handleProfileAction(profilePlayer.id, action)}
           onBack={() => {
             setProfileId(null);
             setProfileFeedback(null);
+          }}
+          onOpenTraining={() => {
+            setProfileId(null);
+            setProfileFeedback(null);
+            setScreen("training");
           }}
           onOpenYouth={
             profilePlayer.squad_status === "u17" || profilePlayer.squad_status === "u19"

@@ -1,4 +1,22 @@
+/**
+ * WIREFRAME: PRD 14.3 — Spielerakte
+ *
+ * ┌──────────────────────────────────────────────────────────────┐
+ * │ Felix Schröder · CB · 17 · 🇩🇪                               │
+ * │ CA 87  ● Fit  ◆ Form  ● Moral                                │
+ * ├──────────────────┬───────────────────────────────────────────┤
+ * │ Kernattribute    │ Aktuelles Ziel                            │
+ * │ ████████░░ 91    │ 🏃 Schnelligkeit                          │
+ * │                  │ ▓▓▓▓░░░░ 32 %                             │
+ * │ Stärke als…      │ Fähigkeiten / Bonus  — Hunger-Slots       │
+ * │ TW ░  IV ▓▓▓     │ Vertrag  [✍️ Verhandeln] [⬆️ Profikader]  │
+ * └──────────────────┴───────────────────────────────────────────┘
+ *
+ * Tabs nur für Verlauf und Saisonwerte. Stamps bleiben leer (PRD 15 C1).
+ */
 import { useState, type ComponentPropsWithoutRef } from "react";
+import type { IndividualProgram } from "../../development/individual-training.ts";
+import type { TrainingSlot } from "../../development/training-units.ts";
 import {
   profileMenuItems,
   type PlayerProfileAction,
@@ -24,29 +42,36 @@ import {
 import {
   formatCaDelta,
   formatRecentGrowth,
-  playerCa,
   weeklyCaDelta,
 } from "../../player/ca-tracking.ts";
 import {
   attributeBars,
   attributeLabel,
+  dossierTrainingTarget,
+  FAEHIGKEIT_HUNGER_SLOTS,
   formMark,
   growthPolyline,
   growthSeries,
   layoutGrowthChart,
   profileFacts,
+  staerkeAlsLanes,
   stateMark,
   visibleBreakoutFlags,
 } from "../player-profile.ts";
 
-type ProfileTab = "overview" | "development" | "stats" | "contract";
+type ProfileTab = "akte" | "development" | "stats";
 
 const TABS: { id: ProfileTab; label: string; icon: string }[] = [
-  { id: "overview", label: "Überblick", icon: "📋" },
-  { id: "development", label: "Entwicklung", icon: "📈" },
+  { id: "akte", label: "Akte", icon: "🪪" },
+  { id: "development", label: "Verlauf", icon: "📈" },
   { id: "stats", label: "Statistik", icon: "⚽" },
-  { id: "contract", label: "Vertrag", icon: "✍️" },
 ];
+
+const CARD_ACTIONS: Partial<Record<PlayerProfileAction, { label: string; className: string }>> = {
+  sign_contract: { label: "✍️ Verhandeln", className: "ui-btn--primary" },
+  promote_pro: { label: "⬆️ Profikader", className: "ui-btn--primary" },
+  promote_u19: { label: "⬆️ U19", className: "ui-btn--ghost" },
+};
 
 export interface PlayerProfileProps {
   player: Player;
@@ -61,8 +86,11 @@ export interface PlayerProfileProps {
   saleOffer?: number;
   saleBlockedReason?: string | null;
   shortlisted?: boolean;
+  individualPrograms?: readonly IndividualProgram[];
+  trainingPlan?: readonly TrainingSlot[];
   onBack: () => void;
   onOpenYouth?: () => void;
+  onOpenTraining?: () => void;
   onAssignScout?: () => void;
   onToggleShortlist?: () => void;
   onPurchase?: () => void;
@@ -79,7 +107,7 @@ export function PlayerProfile({
   owned,
   scoutEstimate,
   scouting = false,
-  week,
+  week = 1,
   season = 1,
   transferBudget,
   purchasePrice,
@@ -87,9 +115,12 @@ export function PlayerProfile({
   saleBlockedReason = null,
   onBack,
   onOpenYouth,
+  onOpenTraining,
   onAssignScout,
   transferWindowOpen = false,
   shortlisted = false,
+  individualPrograms = [],
+  trainingPlan = [],
   onToggleShortlist,
   onPurchase,
   preContractBonus,
@@ -99,7 +130,7 @@ export function PlayerProfile({
   onProfileAction,
   actionFeedback = null,
 }: PlayerProfileProps) {
-  const [tab, setTab] = useState<ProfileTab>(owned ? "development" : "overview");
+  const [tab, setTab] = useState<ProfileTab>("akte");
   const [menuOpen, setMenuOpen] = useState(false);
   const menuItems = profileMenuItems(player, owned, season);
   const reveal = scoutEstimate ? scoutReveal(scoutEstimate.uncertaintyRange) : null;
@@ -165,6 +196,12 @@ export function PlayerProfile({
   const achievements = achievementBadges(player, owned, scoutEstimate);
   const stats = seasonStatsStub(player, owned, scoutEstimate);
   const contract = contractView(player, owned, scoutEstimate);
+  const lanes = owned || reveal?.showExactSkills ? staerkeAlsLanes(player) : [];
+  const trainingTarget = owned
+    ? dossierTrainingTarget(player, individualPrograms, trainingPlan, week)
+    : null;
+  const cardActions = menuItems.filter((item) => CARD_ACTIONS[item.action]);
+  const caDelta = owned ? weeklyCaDelta(player) : null;
 
   return (
     <main className="profile">
@@ -205,19 +242,144 @@ export function PlayerProfile({
               <Hint text="Current Ability — geschätzte Gesamtstärke.">
                 <span className="profile-stat profile-stat-ca">CA {ca}</span>
               </Hint>
+              {owned && caDelta !== null ? (
+                <span className={`profile-stat ${caDelta > 0 ? "is-up" : caDelta < 0 ? "is-down" : ""}`}>
+                  {formatCaDelta(caDelta)}
+                </span>
+              ) : null}
               {scoutLabel ? (
                 <Hint text="Wie gut dein Verein diesen Spieler kennt.">
                   <span className="profile-scout-badge">{scoutLabel}</span>
                 </Hint>
               ) : null}
             </div>
+            <div className="profile-state profile-state-inline" aria-label="Zustand">
+              <StateChip label="Fit" mark={fitness.mark} tone={fitness.tone} value={formatState(player.state.fitness, owned, scoutEstimate)} />
+              <StateChip label="Form" mark={form.mark} tone={form.tone} value={formatState(player.state.form, owned, scoutEstimate, true)} />
+              <StateChip label="Morale" mark={morale.mark} tone={morale.tone} value={formatState(player.state.morale, owned, scoutEstimate)} />
+            </div>
             <Hint text="Stammdaten auf einen Blick." block>
               <p className="profile-meta-line">{metaLine}</p>
+            </Hint>
+            {flavor ? (
+              <p className="profile-flavor-one">{flavor.headline}</p>
+            ) : (
+              <p className="profile-flavor-one is-muted">Noch kaum Gerüchte.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="profile-dossier">
+          <div className="profile-dossier-col">
+            <Hint text="Die sechs wichtigsten Skills für diese Position." block>
+              <div className="profile-bars">
+                <p className="profile-section-label">Kernattribute</p>
+                {bars.map((bar) => (
+                  <div key={bar.key} className={bar.dimmed ? "profile-bar-row is-dimmed" : "profile-bar-row"}>
+                    <span className="profile-bar-label">{attributeLabel(bar.key)}</span>
+                    <div className="profile-bar-track">
+                      {bar.showCi && bar.low !== undefined && bar.high !== undefined ? (
+                        <span
+                          className="profile-bar-ci"
+                          style={{ left: `${(bar.low / 199) * 100}%`, width: `${((bar.high - bar.low) / 199) * 100}%` }}
+                        />
+                      ) : null}
+                      <span className="profile-bar-fill" style={{ width: `${(bar.value / 199) * 100}%` }} />
+                    </div>
+                    <span className="profile-bar-value">{bar.showValue ? bar.value : "?"}</span>
+                  </div>
+                ))}
+              </div>
+            </Hint>
+
+            {lanes.length > 0 ? (
+              <Hint text="Grobe Eignung aus Hauptposition und Umschulung — keine zweite Attributliste." block>
+                <div className="profile-staerke" aria-label="Stärke als">
+                  <p className="profile-section-label">Stärke als…</p>
+                  {lanes.map((lane) => (
+                    <div key={lane.lane} className="profile-staerke-row">
+                      <span className="profile-staerke-label">{lane.lane}</span>
+                      <div className="profile-staerke-track">
+                        <span className="profile-staerke-fill" style={{ width: `${lane.value * 100}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Hint>
+            ) : (
+              <p className="profile-empty">Stärke als… unbekannt — mehr scouting.</p>
+            )}
+          </div>
+
+          <div className="profile-dossier-col">
+            {owned && trainingTarget ? (
+              <Hint text="Individuelles Extra-Programm, sonst der Mannschaftsfokus. Kein Stempel-Effekt." block>
+                <div className="profile-ziel">
+                  <p className="profile-section-label">Aktuelles Ziel</p>
+                  <p className="profile-ziel-title">
+                    <span aria-hidden="true">{trainingTarget.icon}</span> {trainingTarget.title}
+                  </p>
+                  <p className="profile-ziel-detail">{trainingTarget.detail}</p>
+                  {trainingTarget.progress !== null ? (
+                    <div className="profile-ziel-track" aria-label={`Fortschritt ${Math.round(trainingTarget.progress * 100)} Prozent`}>
+                      <span className="profile-ziel-fill" style={{ width: `${trainingTarget.progress * 100}%` }} />
+                    </div>
+                  ) : (
+                    <p className="profile-ziel-hint">Kein persönlicher Fortschritt — Teamplan.</p>
+                  )}
+                  {onOpenTraining ? (
+                    <button type="button" className="ui-btn ui-btn--ghost profile-ziel-btn" onClick={onOpenTraining}>
+                      🏋️ Training
+                    </button>
+                  ) : null}
+                </div>
+              </Hint>
+            ) : null}
+
+            {owned ? (
+              <div className="profile-hunger" aria-label="Fähigkeiten">
+                <p className="profile-section-label">Fähigkeiten / Bonus</p>
+                {Array.from({ length: FAEHIGKEIT_HUNGER_SLOTS }, (_, index) => (
+                  <div key={index} className="profile-hunger-slot">
+                    <span>{index === FAEHIGKEIT_HUNGER_SLOTS - 1 ? "Bonus" : "Fähigkeit"}</span>
+                    <span className="profile-hunger-empty">—</span>
+                  </div>
+                ))}
+                <p className="profile-hunger-note">Noch leer — besondere Stempel wachsen über Saisons.</p>
+              </div>
+            ) : null}
+
+            <Hint text="Vertragsdetails aus dem Spielerobjekt. Gehalts-Slider kommt später; Jugendvertrag und Hochziehen sind die Aktionen jetzt." block>
+              <div className="profile-vertrag">
+                <p className="profile-section-label">Vertrag</p>
+                <p className="profile-vertrag-status">{contract.status}</p>
+                <p className="profile-vertrag-line">{contract.wageWeekly} · bis {contract.untilSeason}</p>
+                <p className="profile-vertrag-line">{contract.minutesPromise}</p>
+                {owned && onProfileAction && cardActions.length > 0 ? (
+                  <div className="profile-vertrag-actions">
+                    {cardActions.map((item) => {
+                      const spec = CARD_ACTIONS[item.action];
+                      if (!spec) return null;
+                      return (
+                        <Hint key={item.action} text={item.hint}>
+                          <button
+                            type="button"
+                            className={`ui-btn profile-action-btn ${spec.className}`}
+                            onClick={() => onProfileAction(item.action)}
+                          >
+                            {spec.label}
+                          </button>
+                        </Hint>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
             </Hint>
           </div>
         </div>
 
-        <nav className="profile-tabs" aria-label="Profil-Bereiche">
+        <nav className="profile-tabs" aria-label="Profil-Vertiefung">
           {TABS.map((entry) => (
             <button
               key={entry.id}
@@ -232,27 +394,31 @@ export function PlayerProfile({
           ))}
         </nav>
 
-        <div className="profile-card-divider" />
-
-        {tab === "overview" ? (
-          <OverviewTab flavor={flavor} achievements={achievements} owned={owned} />
+        {tab === "akte" ? (
+          <section className="profile-panel profile-panel-note" aria-label="Notiz">
+            {flavor?.body ? <p className="profile-flavor-body">{flavor.body}</p> : null}
+            {achievements.length > 0 ? (
+              <ul className="profile-badge-list">
+                {achievements.map((badge) => (
+                  <li key={badge}>{badge}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="profile-empty">{owned ? "Noch keine Erfolgseinträge." : "Unbekannt — Scout-Berichte nötig."}</p>
+            )}
+          </section>
         ) : null}
+
         {tab === "development" ? (
           <DevelopmentTab
             player={player}
             owned={owned}
-            scoutEstimate={scoutEstimate}
-            fitness={fitness}
-            morale={morale}
-            form={form}
-            bars={bars}
             growth={growth}
             timeline={timeline}
             reveal={reveal}
           />
         ) : null}
         {tab === "stats" ? <StatsTab stats={stats} owned={owned} /> : null}
-        {tab === "contract" ? <ContractTab contract={contract} /> : null}
 
         {!owned && onAssignScout ? (
           <footer className="profile-card-footer" aria-label="Scouting und Transfer">
@@ -335,7 +501,7 @@ export function PlayerProfile({
         ) : null}
 
         {owned && onSell ? (
-          <footer className="profile-card-footer" aria-label="Transfer">
+          <footer className="profile-card-footer profile-card-footer-secondary" aria-label="Transfer">
             <div className="profile-actions profile-actions-single">
               <div className="profile-action-cell">
                 <Hint
@@ -350,7 +516,7 @@ export function PlayerProfile({
                   <ProfileActionButton
                     label="Verkaufen"
                     amount={saleOffer ? `ca. ${formatMoney(saleOffer)}` : undefined}
-                    className="ui-btn--danger"
+                    className="ui-btn--ghost"
                     onClick={onSell}
                     disabled={!transferWindowOpen || Boolean(saleBlockedReason)}
                   />
@@ -370,169 +536,56 @@ export function PlayerProfile({
   );
 }
 
-function OverviewTab({
-  flavor,
-  achievements,
-  owned,
-}: {
-  flavor: ReturnType<typeof flavorForScout>;
-  achievements: string[];
-  owned: boolean;
-}) {
-  return (
-    <section className="profile-panel" aria-label="Überblick">
-      <Hint text="Kurzportrait — aus Region, Position und aktuellem Zustand. Rote Eigenschaften spiegeln Form, Moral oder Spielzeit wider." block>
-        {flavor ? (
-          <div className="profile-flavor">
-            <p className="profile-flavor-headline">{flavor.headline}</p>
-            <p className="profile-flavor-body">{flavor.body}</p>
-            <ul className="profile-trait-list">
-              {flavor.traits.map((trait) => (
-                <li key={trait.label} className={`profile-trait is-${trait.tone}`}>{trait.label}</li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="profile-empty">Noch kaum Gerüchte. Scouten und Wochen simulieren, um mehr zu erfahren.</p>
-        )}
-      </Hint>
-
-      <Hint text="Erfolge aus echten Vereinsereignissen — Jugendleistung, Aufstieg, Vertrag, Leihe. Fremde Spieler: erst nach Scout-Wissen sichtbar." block>
-        <div className="profile-achievements">
-          <p className="profile-section-label">Erfolge</p>
-          {achievements.length > 0 ? (
-            <ul className="profile-badge-list">
-              {achievements.map((badge) => (
-                <li key={badge}>{badge}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="profile-empty">{owned ? "Noch keine Einträge." : "Unbekannt — Scout-Berichte nötig."}</p>
-          )}
-        </div>
-      </Hint>
-    </section>
-  );
-}
-
 function DevelopmentTab({
   player,
   owned,
-  scoutEstimate,
-  fitness,
-  morale,
-  form,
-  bars,
   growth,
   timeline,
   reveal,
 }: {
   player: Player;
   owned: boolean;
-  scoutEstimate?: AbilityEstimate;
-  fitness: ReturnType<typeof stateMark>;
-  morale: ReturnType<typeof stateMark>;
-  form: ReturnType<typeof formMark>;
-  bars: ReturnType<typeof attributeBars>;
   growth: { season: number; ca: number }[];
   timeline: string[];
   reveal: ReturnType<typeof scoutReveal> | null;
 }) {
-  const caDelta = owned ? weeklyCaDelta(player) : null;
   const recentGrowth = player.state.recent_growth_26w ?? 0;
-  const chartPoints = layoutGrowthChart(growth, 320, 120);
+  const chartPoints = layoutGrowthChart(growth, 320, 56);
+  const singleSeason = growth.length < 2;
 
   return (
-    <section className="profile-panel" aria-label="Entwicklung">
+    <section className="profile-panel" aria-label="Verlauf">
       {owned ? (
-        <div className="profile-dev-hero">
-          <div className="profile-dev-momentum">
-            <div className="profile-dev-stat">
-              <span className="profile-dev-stat-label">CA</span>
-              <strong className="profile-dev-stat-value">{playerCa(player)}</strong>
-            </div>
-            <div className="profile-dev-stat">
-              <span className="profile-dev-stat-label">Δ Woche</span>
-              <strong className={`profile-dev-stat-value ${caDelta !== null && caDelta > 0 ? "is-up" : caDelta !== null && caDelta < 0 ? "is-down" : ""}`}>
-                {formatCaDelta(caDelta)}
-              </strong>
-            </div>
-            <div className="profile-dev-stat">
-              <span className="profile-dev-stat-label">26 Wochen</span>
-              <strong className="profile-dev-stat-value is-up">{formatRecentGrowth(recentGrowth)}</strong>
-            </div>
-          </div>
+        <p className="profile-growth-note">
+          26 Wochen {formatRecentGrowth(recentGrowth)}
+          {singleSeason ? ` · Saison ${growth[0]?.season ?? 1} · erster Stand` : ""}
+        </p>
+      ) : null}
 
-          {growth.length > 0 ? (
-            <Hint text="CA-Verlauf über die Saisons — zentral für die Talent-Entwicklung." block>
-              <div className="profile-growth profile-growth-hero">
-                <svg viewBox="0 0 320 120" role="img" aria-label="CA-Verlauf">
-                  {chartPoints.length > 1 ? (
-                    <polyline
-                      points={growthPolyline(growth, 320, 120)}
-                      fill="none"
-                      stroke="#059669"
-                      strokeWidth="4"
-                    />
-                  ) : null}
-                  {chartPoints.map((point) => (
-                    <circle key={`${point.season}-${point.ca}`} cx={point.x} cy={point.y} r="5" fill="#047857" />
-                  ))}
-                </svg>
-                <p className="profile-growth-note">
-                  {player.history.growth.length === 0
-                    ? `Saison ${growth[0]?.season ?? 1} · erster Stand`
-                    : `Saison ${growth[0]?.season ?? 1} → ${growth.at(-1)?.season ?? growth[0]?.season ?? 1}`}
-                </p>
-              </div>
-            </Hint>
-          ) : (
-            <p className="profile-growth-note profile-growth-empty">Noch kein Saisonverlauf — nach der ersten Saison sichtbar.</p>
-          )}
-        </div>
-      ) : growth.length > 0 ? (
-        <Hint text="Scout-Schätzung der Entwicklung." block>
-          <div className="profile-growth profile-growth-hero">
-            <svg viewBox="0 0 320 120" role="img" aria-label="Attributverlauf">
-              <polyline points={growthPolyline(growth, 320, 120)} fill="none" stroke="#059669" strokeWidth="4" />
+      {growth.length > 0 && !singleSeason ? (
+        <Hint text="CA-Verlauf über die Saisons." block>
+          <div className="profile-growth">
+            <svg viewBox="0 0 320 56" role="img" aria-label="CA-Verlauf">
+              <polyline
+                points={growthPolyline(growth, 320, 56)}
+                fill="none"
+                stroke="#059669"
+                strokeWidth="3"
+              />
+              {chartPoints.map((point) => (
+                <circle key={`${point.season}-${point.ca}`} cx={point.x} cy={point.y} r="4" fill="#047857" />
+              ))}
             </svg>
             <p className="profile-growth-note">
-              {reveal?.showExactCa ? "Scout-Schätzung" : "Noch kein belastbarer Verlauf"}
+              Saison {growth[0]?.season ?? 1} → {growth.at(-1)?.season ?? growth[0]?.season ?? 1}
             </p>
           </div>
         </Hint>
+      ) : owned ? null : growth.length > 0 ? (
+        <p className="profile-growth-note">{reveal?.showExactCa ? "Scout-Schätzung" : "Noch kein belastbarer Verlauf"}</p>
       ) : (
         <p className="profile-growth-note profile-growth-empty">Entwicklung noch unbekannt</p>
       )}
-
-      <Hint text="Aktueller Zustand. ● gut, ▲ mittel, ◆ schwach." block>
-        <div className="profile-state">
-          <StateChip label="Fit" mark={fitness.mark} tone={fitness.tone} value={formatState(player.state.fitness, owned, scoutEstimate)} />
-          <StateChip label="Form" mark={form.mark} tone={form.tone} value={formatState(player.state.form, owned, scoutEstimate, true)} />
-          <StateChip label="Morale" mark={morale.mark} tone={morale.tone} value={formatState(player.state.morale, owned, scoutEstimate)} />
-        </div>
-      </Hint>
-
-      <Hint text="Die sechs wichtigsten Skills für diese Position." block>
-        <div className="profile-bars">
-          <p className="profile-section-label">Kernattribute</p>
-          {bars.map((bar) => (
-            <div key={bar.key} className={bar.dimmed ? "profile-bar-row is-dimmed" : "profile-bar-row"}>
-              <span className="profile-bar-label">{attributeLabel(bar.key)}</span>
-              <div className="profile-bar-track">
-                {bar.showCi && bar.low !== undefined && bar.high !== undefined ? (
-                  <span
-                    className="profile-bar-ci"
-                    style={{ left: `${(bar.low / 199) * 100}%`, width: `${((bar.high - bar.low) / 199) * 100}%` }}
-                  />
-                ) : null}
-                <span className="profile-bar-fill" style={{ width: `${(bar.value / 199) * 100}%` }} />
-              </div>
-              <span className="profile-bar-value">{bar.showValue ? bar.value : "?"}</span>
-            </div>
-          ))}
-        </div>
-      </Hint>
 
       {owned && timeline.length > 0 ? (
         <div className="profile-timeline" aria-label="Breakouts">
@@ -568,38 +621,6 @@ function StatsTab({
             {owned ? "Noch keine Saison-Spiele." : "Statistik unbekannt — mehr Scouting nötig."}
           </p>
         )}
-      </Hint>
-    </section>
-  );
-}
-
-function ContractTab({ contract }: { contract: ReturnType<typeof contractView> }) {
-  return (
-    <section className="profile-panel" aria-label="Vertrag">
-      <Hint text="Vertragsdetails aus dem Spielerobjekt. Profi-Verhandlungen laufen über Transfers/Inbox." block>
-        <dl className="profile-contract-list">
-          <div className="profile-contract-row">
-            <dt>Status</dt>
-            <dd>{contract.status}</dd>
-          </div>
-          <div className="profile-contract-row">
-            <dt>Gehalt</dt>
-            <dd>{contract.wageWeekly}</dd>
-          </div>
-          <div className="profile-contract-row">
-            <dt>Laufzeit bis</dt>
-            <dd>{contract.untilSeason}</dd>
-          </div>
-          <div className="profile-contract-row">
-            <dt>Minuten</dt>
-            <dd>{contract.minutesPromise}</dd>
-          </div>
-        </dl>
-        <ul className="profile-clause-list">
-          {contract.clauses.map((clause) => (
-            <li key={clause}>{clause}</li>
-          ))}
-        </ul>
       </Hint>
     </section>
   );

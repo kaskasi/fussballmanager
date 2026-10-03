@@ -1,16 +1,19 @@
 import { useEffect, useRef } from "react";
 import type { MatchViewLine, Score } from "@fussballmanager/shared";
 import { eventLineTone } from "./match-presentation-mode.ts";
+import { PreMatchBlock } from "./PreMatchBlock.tsx";
+import type { PreMatchBrief } from "./pre-match-brief.ts";
 
 type EventsFeedProps = {
   lines: MatchViewLine[];
   score: Score;
   homeShort: string;
   awayShort: string;
+  preMatch?: PreMatchBrief | null;
 };
 
 /** Scrollable commentary log for the events-first matchday view. */
-export function EventsFeed({ lines, score, homeShort, awayShort }: EventsFeedProps) {
+export function EventsFeed({ lines, score, homeShort, awayShort, preMatch }: EventsFeedProps) {
   const endRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
@@ -26,6 +29,7 @@ export function EventsFeed({ lines, score, homeShort, awayShort }: EventsFeedPro
         </span>
         <span className="events-feed-team">{awayShort}</span>
       </header>
+      {preMatch ? <PreMatchBlock brief={preMatch} /> : null}
       <ol className="events-feed-list">
         {lines.length === 0 ? (
           <li className="events-feed-line is-placeholder">Anpfiff…</li>

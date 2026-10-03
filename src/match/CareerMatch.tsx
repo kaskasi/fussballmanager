@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { SandboxPlan, Squad } from "@fussballmanager/shared";
 import type { TacticsPresetId, TacticsPresetSlot } from "./tactics-presets.ts";
 import type { Player } from "../types/player.ts";
@@ -17,6 +17,8 @@ import { MatchPresentationToggle } from "./MatchPresentationToggle.tsx";
 import { MatchStage } from "./MatchStage.tsx";
 import { useMatchPresentationMode } from "./match-presentation-mode.ts";
 import { Scoreboard } from "./Scoreboard.tsx";
+import { buildPreMatchBrief } from "./pre-match-brief.ts";
+import { PreMatchBlock } from "./PreMatchBlock.tsx";
 import { useMatchPlayback } from "./useMatchPlayback.ts";
 
 export function CareerMatch({
@@ -121,6 +123,10 @@ function CareerMatchPlayback({
   const rivalPlayersRef = useRef(rivalPlayers);
   rivalPlayersRef.current = rivalPlayers;
   const matchFetchKey = `${setup.seed}:${setup.homeTeamId}:${setup.awayTeamId}:${setup.playerClubId}`;
+  const preMatch = useMemo(
+    () => buildPreMatchBrief(setup, playerClubSquad.tactics.formation, rivalPlayers),
+    [setup, playerClubSquad.tactics.formation, rivalPlayers],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -277,6 +283,8 @@ function CareerMatchPlayback({
       {loading ? <p className="status">Spiel wird vorbereitet…</p> : null}
       {error ? <p className="status error">{error}</p> : null}
 
+      {!view && !error ? <PreMatchBlock brief={preMatch} /> : null}
+
       {view && frame ? (
         <>
           <MatchStage
@@ -287,6 +295,7 @@ function CareerMatchPlayback({
             playing={playback.playing}
             frameDurationMs={playback.frameDurationMs}
             visibleLines={playback.visibleLines}
+            preMatch={preMatch}
             className="career-match-stage"
           />
           <details className="career-match-lineups">

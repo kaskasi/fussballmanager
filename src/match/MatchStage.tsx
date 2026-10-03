@@ -2,6 +2,8 @@ import type { MatchView, MatchViewFrame, MatchViewLine } from "@fussballmanager/
 import { CommentaryFeed } from "./CommentaryFeed.tsx";
 import { EventsFeed } from "./EventsFeed.tsx";
 import type { MatchPresentationMode } from "./match-presentation-mode.ts";
+import type { PreMatchBrief } from "./pre-match-brief.ts";
+import { PreMatchBlock } from "./PreMatchBlock.tsx";
 import { Pitch } from "./Pitch.tsx";
 
 type MatchStageProps = {
@@ -12,6 +14,7 @@ type MatchStageProps = {
   playing: boolean;
   frameDurationMs: number;
   visibleLines: MatchViewLine[];
+  preMatch?: PreMatchBrief | null;
   className?: string;
 };
 
@@ -23,6 +26,7 @@ export function MatchStage({
   playing,
   frameDurationMs,
   visibleLines,
+  preMatch,
   className,
 }: MatchStageProps) {
   const stageClass = ["match-stage", className, `match-stage--${mode}`]
@@ -37,6 +41,7 @@ export function MatchStage({
           score={frame.score}
           homeShort={view.home.shortName}
           awayShort={view.away.shortName}
+          preMatch={preMatch}
         />
       </div>
     );
@@ -56,6 +61,7 @@ export function MatchStage({
         cue={frame.cue}
         cueDetail={frame.cueDetail}
       />
+      {preMatch ? <PreMatchBlock brief={preMatch} /> : null}
       <CommentaryFeed lines={visibleLines} />
     </div>
   );

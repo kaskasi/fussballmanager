@@ -11,6 +11,7 @@ export type MatchViewCue =
   | "goal"
   | "corner"
   | "penalty"
+  | "shot"
   | "substitution"
   | null;
 

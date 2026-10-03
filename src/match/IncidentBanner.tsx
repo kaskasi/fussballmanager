@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { MatchViewCue, MatchViewCueDetail } from "@fussballmanager/shared";
 
 const BANNERS: Record<
-  Exclude<MatchViewCue, null | "substitution">,
+  Exclude<MatchViewCue, null | "substitution" | "shot">,
   { src: string; alt: string }
 > = {
   offside: {
@@ -30,7 +30,7 @@ const BANNERS: Record<
 const HOLD_MS = 2600;
 
 type Incident = {
-  cue: Exclude<MatchViewCue, null | "substitution">;
+  cue: Exclude<MatchViewCue, null | "substitution" | "shot">;
   seq: number;
   label?: string;
 };
@@ -45,7 +45,7 @@ export function IncidentBanner({ cue, cueDetail, seq }: IncidentBannerProps) {
   const [visible, setVisible] = useState<Incident | null>(null);
 
   useEffect(() => {
-    if (!cue || cue === "substitution") return;
+    if (!cue || cue === "substitution" || cue === "shot") return;
     setVisible({ cue, seq, label: cueDetail?.label });
   }, [cue, cueDetail, seq]);
 

@@ -408,14 +408,153 @@ body {
 }
 
 .events-feed {
-  display: grid;
-  grid-template-rows: auto auto 1fr;
-  min-height: min(48vh, 20rem);
+  display: flex;
+  flex-direction: column;
+  min-height: min(56vh, 26rem);
+  height: 100%;
   border-radius: 1rem;
   overflow: hidden;
   background: rgb(15 23 42 / 92%);
   color: #f8fafc;
   box-shadow: 0 12px 40px rgb(15 23 42 / 12%);
+}
+
+.events-feed-fixed {
+  flex-shrink: 0;
+}
+
+.events-hud {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 0.85rem;
+  align-items: center;
+  padding: 0.75rem 0.9rem 0.65rem;
+  border-bottom: 1px solid rgb(148 163 184 / 18%);
+  background: rgb(15 23 42 / 65%);
+}
+
+.events-hud-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.events-hud-panel-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.events-hud-thirds,
+.events-hud-lateral {
+  position: relative;
+  display: grid;
+  gap: 0.28rem;
+  min-height: 3.65rem;
+  border-radius: 0.55rem;
+  padding: 0.32rem;
+  background: rgb(30 41 59 / 75%);
+}
+
+.events-hud-thirds {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.events-hud-lateral {
+  grid-template-rows: repeat(3, 1fr);
+}
+
+.events-hud-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.38rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.events-hud-zone.is-active {
+  background: rgb(56 189 248 / 22%);
+  color: #e0f2fe;
+  box-shadow: inset 0 0 0 1px rgb(56 189 248 / 35%);
+}
+
+.events-hud-marker {
+  position: absolute;
+  width: 0.58rem;
+  height: 0.58rem;
+  border-radius: 50%;
+  background: #fbbf24;
+  box-shadow: 0 0 0 2.5px rgb(15 23 42 / 90%);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.events-hud-marker--third {
+  top: 50%;
+}
+
+.events-hud-marker--lateral {
+  left: 50%;
+}
+
+.events-hud-shot {
+  display: grid;
+  justify-items: center;
+  gap: 0.12rem;
+  color: #475569;
+  opacity: 0.35;
+  transform: scale(0.92);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+.events-hud-shot.is-active {
+  color: #fbbf24;
+  opacity: 1;
+  transform: scale(1);
+  animation: events-hud-shot-pulse 0.55s ease-out;
+}
+
+.events-hud-shot-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@keyframes events-hud-shot-pulse {
+  0% {
+    transform: scale(0.75);
+    filter: brightness(1.4);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+.events-hud-caption {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.events-hud-caption-meta {
+  font-weight: 600;
+  color: #64748b;
 }
 
 .events-feed-header {
@@ -447,10 +586,15 @@ body {
   list-style: none;
   margin: 0;
   padding: 0.55rem 0.45rem 0.65rem;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   display: grid;
   gap: 0.28rem;
   align-content: start;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .events-feed-line {
@@ -481,6 +625,18 @@ body {
 .events-feed-line.is-goal {
   color: #86efac;
   font-weight: 800;
+}
+
+.events-feed-line.is-shot {
+  color: #fde68a;
+}
+
+.events-feed-shot-icon {
+  display: inline-block;
+  margin-right: 0.35rem;
+  color: #fbbf24;
+  font-size: 0.72rem;
+  line-height: 1;
 }
 
 .pitch-wrap {
@@ -609,6 +765,40 @@ body {
 .career-match {
   padding-top: 0.65rem;
   padding-bottom: 1.25rem;
+}
+
+.career-match--events {
+  --career-match-nav-offset: 4.25rem;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - var(--career-match-nav-offset));
+  padding-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.career-match--events .career-match-hud {
+  flex-shrink: 0;
+  margin-bottom: 0.35rem;
+  padding-bottom: 0.25rem;
+}
+
+.career-match--events .career-match-stage.match-stage--events {
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 0.35rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.career-match--events .career-match-stage.match-stage--events .events-feed {
+  flex: 1;
+  min-height: 0;
+}
+
+.career-match--events .career-match-lineups {
+  flex-shrink: 0;
+  max-height: 9rem;
+  overflow: auto;
 }
 
 .career-match-hud {

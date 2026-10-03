@@ -73,6 +73,8 @@ function frameFrom(
     cue = "offside";
   } else if (event?.type === "restart" && event.phase === "throw_in") {
     cue = "throw_in";
+  } else if (event?.type === "shot") {
+    cue = "shot";
   }
   return {
     seq,

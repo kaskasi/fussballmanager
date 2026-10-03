@@ -9,5 +9,6 @@ describe("eventLineTone", () => {
       "danger",
     );
     expect(eventLineTone("22'10  Nordstern findet den Stürmer.")).toBe("default");
+    expect(eventLineTone("5'01  Lang zieht ab —")).toBe("shot");
   });
 });

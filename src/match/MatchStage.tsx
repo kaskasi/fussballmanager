@@ -41,6 +41,8 @@ export function MatchStage({
           score={frame.score}
           homeShort={view.home.shortName}
           awayShort={view.away.shortName}
+          frame={frame}
+          homeTeamId={view.home.id}
           preMatch={preMatch}
         />
       </div>

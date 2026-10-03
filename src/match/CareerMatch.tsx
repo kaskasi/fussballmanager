@@ -216,7 +216,15 @@ function CareerMatchPlayback({
   }, [finished, simulating, loading, view, setup, onComplete, onSkip, onNavActionChange]);
 
   return (
-    <main className="matchday career-match">
+    <main
+      className={[
+        "matchday",
+        "career-match",
+        presentationMode === "events" ? "career-match--events" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div className="career-match-hud">
         {view && frame ? (
           <Scoreboard view={view} frame={frame} compact />

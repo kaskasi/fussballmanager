@@ -12,6 +12,8 @@ import {
   transferKindLabel,
 } from "../../transfers/transfer-history.ts";
 import { Hint } from "../components/Hint.tsx";
+import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
+import { formatCalendarWeek } from "../../sim/game-calendar.ts";
 
 /**
  * WIREFRAME: PRD 09 — Transfers & Ausleihen
@@ -65,7 +67,7 @@ export function TransfersScreen({
           ←
         </button>
         <div>
-          <p className="eyebrow">Saison {season}</p>
+          <p className="eyebrow">{formatSeasonLabel(season)}</p>
           <h1>💰 Transfers</h1>
           <Hint
             text="Recall im Winterfenster (KW 2–4). Sonst Rückkehr zum Saisonende. Leihgebühr bei Verleih: ~15 % Marktwert."
@@ -159,7 +161,7 @@ export function TransfersScreen({
                     <small>
                       {record.other_club_name}
                       {record.fee != null ? ` · ${formatClubCash(record.fee)}` : ""}
-                      {" · "}KW {record.week}
+                      {" · "}{formatCalendarWeek(record.week)}
                     </small>
                   </span>
                 </button>
@@ -182,14 +184,14 @@ export function TransfersScreen({
                 aria-selected={selectedSeason === entry}
                 onClick={() => setSelectedSeason(entry)}
               >
-                S{entry}
+                {seasonCalendarYear(entry)}
               </button>
             ))}
           </div>
         </div>
 
         {seasonRecords.length === 0 ? (
-          <p className="transfers-empty-inline">Keine Transfers in Saison {selectedSeason}.</p>
+          <p className="transfers-empty-inline">Keine Transfers in {formatSeasonLabel(selectedSeason)}.</p>
         ) : (
           <ul className="transfers-history">
             {seasonRecords.map((record) => (
@@ -207,7 +209,7 @@ export function TransfersScreen({
                     <small>
                       {record.other_club_name}
                       {record.fee != null ? ` · ${formatClubCash(record.fee)}` : ""}
-                      {" · "}Woche {record.week}
+                      {" · "}{formatCalendarWeek(record.week)}
                     </small>
                   </span>
                 </button>

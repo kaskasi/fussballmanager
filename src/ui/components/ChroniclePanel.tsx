@@ -1,4 +1,5 @@
 import type { ChronicleEntry } from "../../narrative/story-state.ts";
+import { formatCalendarWeek } from "../../sim/game-calendar.ts";
 
 /**
  * WIREFRAME: PRD 09 / F11.4 — Vereinschronik rail
@@ -19,7 +20,7 @@ export function ChroniclePanel({ entries }: { entries: readonly ChronicleEntry[]
             <div>
               <strong>{entry.title}</strong>
               <p>{entry.body}</p>
-              <span className="chronicle-meta">S{entry.season} · KW {entry.week}</span>
+              <span className="chronicle-meta">S{entry.season} · {formatCalendarWeek(entry.week)}</span>
             </div>
           </li>
         ))}

@@ -32,6 +32,7 @@ import { MatchdayLineupAmbience } from "../ui/components/MatchdayLineupAmbience.
 import { buildOpponentLineupPreview } from "./opponent-lineup-preview.ts";
 import { clubShortName } from "../sim/league-week.ts";
 import { careerTeamId } from "../sim/rival-growth.ts";
+import { formatCalendarWeek } from "../sim/game-calendar.ts";
 
 type CareerLineupScreenProps = {
   setup: CareerMatchSetup;
@@ -168,7 +169,7 @@ export function CareerLineupScreen({
           <div className="career-lineup-header-main">
             <h1>Aufstellung</h1>
             <p className="career-lineup-sub">
-              {filledCount}/11 · KW {week} {weekdayLabel(weekday)}
+              {filledCount}/11 · {formatCalendarWeek(week)} {weekdayLabel(weekday)}
             </p>
           </div>
           <label className="career-lineup-formation career-lineup-formation--inline">

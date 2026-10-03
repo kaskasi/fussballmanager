@@ -4,7 +4,8 @@ import type { TrainingSlot } from "../../development/training-units.ts";
 import type { Player } from "../../types/player.ts";
 import { validateWeeklyPlan } from "../../development/weekly-plan.ts";
 import { totalSeasonMatchdays, type LeagueState } from "../../persistence/league-state.ts";
-import { calendarPhaseLabel } from "../../sim/game-calendar.ts";
+import { calendarPhaseLabel, formatCalendarWeek } from "../../sim/game-calendar.ts";
+import { formatSeasonLabel } from "../../sim/season-label.ts";
 import { transferWindowLabel } from "../../sim/transfer-windows.ts";
 import {
   clubShortName,
@@ -124,7 +125,7 @@ export function PipelineDashboard({
       <header className="pipeline-head pipeline-head-compact">
         <div className="pipeline-head-primary">
           <p className="pipeline-eyebrow">
-            Saison {season} · KW {week} · {calendarPhaseLabel(week)}
+            {formatSeasonLabel(season)} · {formatCalendarWeek(week)} · {calendarPhaseLabel(week)}
             {transferWindowLabel(week) !== "Fenster geschlossen" ? ` · ${transferWindowLabel(week)}` : ""}
           </p>
           <p className="pipeline-matchline">

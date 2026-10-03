@@ -40,6 +40,8 @@ import { migration039StoryState } from "./migration_039_story_state.ts";
 import { migration040ExpandGeneratedWorld } from "./migration_040_expand_generated_world.ts";
 import { migration041AssistantDelegation } from "./migration_041_assistant_delegation.ts";
 import { migration042M2Features } from "./migration_042_m2_features.ts";
+import { migration043ContractTalks } from "./migration_043_contract_talks.ts";
+import { migration044ContractTalkLocks } from "./migration_044_contract_talk_locks.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -89,6 +91,8 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration040ExpandGeneratedWorld,
   migration041AssistantDelegation,
   migration042M2Features,
+  migration043ContractTalks,
+  migration044ContractTalkLocks,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

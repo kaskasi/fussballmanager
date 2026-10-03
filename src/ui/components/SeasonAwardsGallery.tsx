@@ -1,4 +1,5 @@
 import type { SeasonAwardsSnapshot } from "../../sim/season-awards.ts";
+import { formatSeasonLabel } from "../../sim/season-label.ts";
 import { Hint } from "./Hint.tsx";
 
 /**
@@ -14,9 +15,9 @@ export function SeasonAwardsGallery({ snapshot }: { snapshot: SeasonAwardsSnapsh
   if (snapshot.awards.length === 0) return null;
 
   return (
-    <section className="season-awards" aria-label={`Saison-Awards ${snapshot.season}`}>
+    <section className="season-awards" aria-label={`Saison-Awards ${formatSeasonLabel(snapshot.season)}`}>
       <header className="season-awards-head">
-        <h3>🏆 Saison-Awards · Saison {snapshot.season}</h3>
+        <h3>🏆 Saison-Awards · {formatSeasonLabel(snapshot.season)}</h3>
       </header>
       <Hint text="Liga-Auszeichnungen der abgeschlossenen Saison — Karten statt Zahlenwand." block>
         <div className="season-awards-grid">

@@ -29,6 +29,7 @@ import { WeekdayStrip } from "./ui/components/WeekdayStrip.tsx";
 import { prepareCareerMatch, type CareerMatchSetup } from "./sim/career-match-setup.ts";
 import type { WatchedPlayerMatch } from "./sim/watched-player-match.ts";
 import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
+import { formatSeasonLabel } from "./sim/season-label.ts";
 import { simulateGameWeek } from "./sim/week-pipeline.ts";
 import { isTransferWindowOpen } from "./sim/transfer-windows.ts";
 import {
@@ -37,6 +38,7 @@ import {
   canAffordTransfer,
   formatClubCash,
   transferBudget,
+  wageBudgetHeadroom,
 } from "./economy/club-finances.ts";
 import { clearPlayerFromLineup } from "./match/lineup-board.ts";
 import { formatPlayerName } from "./types/player-display.ts";
@@ -64,6 +66,11 @@ import {
   loanReturnMessage,
 } from "./transfers/transfer-history.ts";
 import { recallLoanPlayer } from "./transfers/loans.ts";
+import {
+  submitContractOffer,
+  wageDeltaFitsBudget,
+  type ContractOffer,
+} from "./transfers/contract-talks.ts";
 import { loanClubName } from "./transfers/loan-roster.ts";
 import {
   attemptPlayerSale,
@@ -225,6 +232,10 @@ export default function App() {
   const [saveToastVisible, setSaveToastVisible] = useState(false);
   const [pendingWatchedMatch, setPendingWatchedMatch] = useState<WatchedPlayerMatch | null>(null);
   const saveToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setProfileFeedback(null);
+  }, [profileId]);
 
   const flashSaveToast = useCallback(() => {
     if (saveToastTimerRef.current) clearTimeout(saveToastTimerRef.current);
@@ -885,7 +896,7 @@ export default function App() {
             finances: applyTransferFee(current.finances, deal.pending.signing_bonus, current.week),
           },
           "transfer",
-          `Vorvertrag mit ${formatPlayerName(target.player)} — wirksam Saison ${deal.pending.effective_season}.`,
+          `Vorvertrag mit ${formatPlayerName(target.player)} — wirksam ${formatSeasonLabel(deal.pending.effective_season)}.`,
         );
       });
       setForeignPlayerId(null);
@@ -1021,6 +1032,7 @@ export default function App() {
           current.clubId,
           current.season,
           current.week,
+          current.weekday,
         );
         if (!result) return current;
         const next = sessionWithEvent(
@@ -1035,6 +1047,38 @@ export default function App() {
           setProfileFeedback(result.message);
         }
         return next;
+      });
+    },
+    [patchSession],
+  );
+
+  const handleContractOffer = useCallback(
+    (playerId: string, offer: ContractOffer) => {
+      patchSession((current) => {
+        const player = current.players.find((entry) => entry.id === playerId);
+        if (!player) return current;
+        const headroom = wageBudgetHeadroom(current.finances, current.players, current.clubId);
+        const currentWage = player.contract?.wage_weekly ?? 0;
+        if (!wageDeltaFitsBudget(headroom, currentWage, offer.wageWeekly)) {
+          setProfileFeedback(
+            `Gehalts-Cap: nur noch ${formatClubCash(Math.max(0, headroom))}/Woche frei.`,
+          );
+          return current;
+        }
+        const result = submitContractOffer(player, current.season, offer, {
+          season: current.season,
+          week: current.week,
+          weekday: current.weekday,
+        });
+        const nextPlayers = current.players.map((entry) =>
+          entry.id === playerId ? result.player : entry,
+        );
+        setProfileFeedback(result.message);
+        return sessionWithEvent(
+          { ...current, players: nextPlayers },
+          "profile",
+          result.message,
+        );
       });
     },
     [patchSession],
@@ -1317,6 +1361,7 @@ export default function App() {
           owned
           week={week}
           season={season}
+          weekday={weekday}
           transferWindowOpen={isTransferWindowOpen(week)}
           saleOffer={estimateSaleOffer(profilePlayer, season)}
           saleBlockedReason={(() => {
@@ -1328,6 +1373,8 @@ export default function App() {
           actionFeedback={profileFeedback}
           onSell={() => handleSell(profilePlayer.id)}
           onProfileAction={(action) => handleProfileAction(profilePlayer.id, action)}
+          onContractOffer={(offer) => handleContractOffer(profilePlayer.id, offer)}
+          wageHeadroomWeekly={wageBudgetHeadroom(finances, players, session.clubId)}
           onBack={() => {
             setProfileId(null);
             setProfileFeedback(null);

@@ -12,6 +12,7 @@ import { fatigueAmpelClassName } from "../../development/training-load.ts";
 import { Hint } from "../components/Hint.tsx";
 import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 import { formMark, stateMark } from "../player-profile.ts";
+import { formatSeasonLabel } from "../../sim/season-label.ts";
 
 /**
  * WIREFRAME: PRD 09 — Profikader
@@ -72,7 +73,7 @@ export function FirstTeam({
           ←
         </button>
         <div>
-          <p className="eyebrow">Saison {season}</p>
+          <p className="eyebrow">{formatSeasonLabel(season)}</p>
           <h1>⭐ Profikader</h1>
           <Hint text="Alle Spieler im Ersten Team. Klick öffnet das Profil." block>
             <p className="squad-summary">

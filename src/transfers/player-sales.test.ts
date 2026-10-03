@@ -27,12 +27,12 @@ describe("player-sales", () => {
       id: index === 0 ? pro.id : `pl_${index}`,
       position: index === 1 ? "GK" : pro.position,
     }));
-    const result = canSellPlayer(squad[0]!, squad, DEFAULT_CLUB_ID, 28);
+    const result = canSellPlayer(squad[0]!, squad, DEFAULT_CLUB_ID, 1);
     expect(result.allowed).toBe(true);
   });
 
   it("negotiates a sale fee in transfer window", () => {
-    const deal = attemptPlayerSale(pro, 1, 28, 4242);
+    const deal = attemptPlayerSale(pro, 1, 1, 4242);
     expect(deal.accepted).toBe(true);
     expect(deal.fee).toBeGreaterThan(0);
   });
@@ -43,7 +43,7 @@ describe("player-sales", () => {
       pro.id,
       99,
       1,
-      28,
+      1,
     );
     const sold = completeSale(pro, buyer, 1);
     expect(sold.club_id).toBe(buyer);

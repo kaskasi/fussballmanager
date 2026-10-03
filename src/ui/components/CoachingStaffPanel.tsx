@@ -13,6 +13,7 @@ import {
   type CoachingStaff,
 } from "../../staff/coaching-staff.ts";
 import { Hint } from "./Hint.tsx";
+import { formatSeasonLabel } from "../../sim/season-label.ts";
 
 /**
  * WIREFRAME: PRD 09 — F8.1 Trainerstab
@@ -109,7 +110,7 @@ function CoachRoleCard({
             Qualität {coach.quality} · Umfeld ×{coachEnvironmentFactor(coach.quality).toFixed(2)}
           </p>
           <p className="training-staff-meta">
-            {formatClubCash(coach.wage_weekly)}/Woche · bis Saison {coach.contract_until_season}
+            {formatClubCash(coach.wage_weekly)}/Woche · bis {formatSeasonLabel(coach.contract_until_season)}
           </p>
         </div>
       ) : (

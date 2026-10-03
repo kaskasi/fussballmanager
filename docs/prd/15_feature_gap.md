@@ -1,7 +1,7 @@
 # /docs/prd/15_feature_gap.md
 
-**Version:** 1.0
-**Last Updated:** 2026-09-29
+**Version:** 1.1
+**Last Updated:** 2026-10-03
 **Status:** Final (Analyse — keine neuen Shipping-Features ohne Eintrag in PRD 10)
 
 ---
@@ -95,7 +95,7 @@ per explizitem Katalog-Edit.
 
 | ID | M | Spec | Gebaut (2026-09-29) | Lücke |
 |---|---|---|---|---|
-| F5.4 | M2 | Gehalt, Prioritäten, Frust-Spirale (05.4) | Vertrag-Objekt + Jugend-Ein-Klick-Band; Fee-Runden existieren | **Kein Spieler-Slider** |
+| F5.4 | M2 | Gehalt, Prioritäten, Frust-Spirale (05.4) | Akte-Slider Gehalt/Jahre/Bonus + Frust; Jugend-Ein-Klick in Inbox | Dirichlet-Gewichte nicht auf Player — nur Advisor-Hint |
 | F6.5 | M2 | Sponsor-Laufzeit, Erfolgsstaffel | Wöchentliche Zahl aus Liga-Tabelle | **Kein Ort, kein Shirt, keine Bande** |
 | F6.7 | M3 | Merch × Popularität | — | Fanshop-SKU, nicht das Brustlogo |
 | F6.4 | M1 | Wasserfall 11.5 | Drei Tiles | Wireframe nicht umgesetzt |
@@ -143,14 +143,12 @@ per explizitem Katalog-Edit.
 
 Ohne Meilensteine in PRD 10 zu verschieben:
 
-1. **F5.4** — 2002-Slider (Gehalt, Laufzeit, ein Bonus). Jugend F3.6 nutzt
-   denselben Raum, nicht einen zweiten Flow.
-2. **F6.5** — als Inventar am Stadion (14.7): Banden-Slots + ein Shirt-Slot,
+1. **F6.5** — als Inventar am Stadion (14.7): Banden-Slots + ein Shirt-Slot,
    Laufzeit, Betrag. Keine Klausel-Enzyklopädie.
-3. **F6.4 UI** — Wasserfall laut 11.5 (M1-Rest).
-4. Ein **F7.3-Slice** (eine Wurstbude) nur nach explizitem Katalog-Edit, der
+2. **F6.4 UI** — Wasserfall laut 11.5 (M1-Rest).
+3. Ein **F7.3-Slice** (eine Wurstbude) nur nach explizitem Katalog-Edit, der
    den Slice nach M2 zieht; sonst bleibt F7.3 M3. Empfohlen, nicht getan.
-5. **C1 / C2** erst nach 07/10.
+4. **C1 / C2** erst nach 07/10.
 
 Shirt-Verkauf (F6.7) bleibt M3 und folgt der Bude, nicht dem Brustlogo.
 

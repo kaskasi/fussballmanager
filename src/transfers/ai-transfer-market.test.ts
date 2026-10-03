@@ -51,7 +51,7 @@ describe("ai-transfer-market", () => {
       leagueClubIds,
       divisionId: "regionalliga-nord",
       season: 1,
-      week: 28,
+      week: 1,
       masterSeed: 1,
     });
     for (let seed = 2; seed <= 100 && result.records.length === 0; seed++) {
@@ -64,7 +64,7 @@ describe("ai-transfer-market", () => {
         leagueClubIds,
         divisionId: "regionalliga-nord",
         season: 1,
-        week: 28,
+        week: 1,
         masterSeed: seed,
       });
     }

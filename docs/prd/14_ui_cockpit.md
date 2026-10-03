@@ -1,7 +1,7 @@
 # /docs/prd/14_ui_cockpit.md
 
-**Version:** 1.0
-**Last Updated:** 2026-09-29
+**Version:** 1.2
+**Last Updated:** 2026-10-03
 **Status:** Final (Darstellung — kein Code in diesem Dokument)
 
 ---
@@ -134,9 +134,9 @@ Eine Karte. Tabs sind sekundär (Verlauf, Saisonwerte), nicht die Identität.
 │                  │ Fähigkeiten / Bonus                       │
 │ Stärke als…      │ leer — Hunger-Slots (füllen = PRD 15 C1)  │
 │ TW ░             │                                           │
-│ IV ▓▓▓           │ Vertrag                                   │
-│ MF ▓▓            │ Jugend · € 80/Wo · bis S 4                │
-│ ST ░             │ [✍️ Verhandeln]  [⬆️ Profikader]          │
+│ ST ░             │ Vertrag                                   │
+│                  │ Jugend · € 80/Wo · bis Saison 2029        │
+│                  │ [✍️ Verhandeln]  [⬆️ Profikader]          │
 └──────────────────┴───────────────────────────────────────────┘
 ```
 
@@ -147,10 +147,15 @@ Regeln:
   steht — sie dürfen nicht die Karte dominieren.
 - `Stärke als…` vier grobe Balken aus Positions-Proficiency (PRD 07
   `flexibility` + Primärposition). Keine zweite Attribut-Enzyklopädie.
-- Vertrag ist sichtbar und hat eine Aktion. Slider-Verhandlung ist F5.4
-  (M2); bis dahin ist die Aktion das bestehende Inbox-/Profil-Signen, nicht
-  ein toter `Verkaufen`-only-Footer.
-- Entwicklungschart ohne zweite Saison: Sparkline oder „Saison 1, Start“,
+- Vertrag-Spalte zeigt Status. ✍️ Verhandeln öffnet ein Modal (Gehalt,
+  Jahre, Bonus, Minuten-Garantie, Startplatz). Jugend und Profis derselbe
+  Dialog. Inbox-Jugendvertrag bleibt Ein-Klick-Default.
+- Nach drei Fehlangeboten: Spieler ist sauer und redet erst mal nicht.
+  Danach, mit `desire_to_leave`: will zu einem größeren Verein. Nach
+  Unterschrift: hat gerade neu unterzeichnet. Keine Tageszahl in der UI.
+- Saison-Zahlen in der UI sind Kalenderjahre (2026 + abgeschlossene
+  Saisons), nicht `Saison 1`.
+- Entwicklungschart ohne zweite Saison: Sparkline oder „Saison 2026, Start“,
   kein leeres Plot mit einem Punkt als Heldenfläche.
 
 ### 14.4 Jugend-Report (F3.2, F3.3, Gesetz 6)

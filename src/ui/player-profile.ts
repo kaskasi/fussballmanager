@@ -9,6 +9,7 @@ import { roundStat } from "../types/player-display.ts";
 import { caGroup, estimateCa } from "../transfers/market-value.ts";
 import type { AbilityEstimate } from "../scouting/estimate-model.ts";
 import { scoutReveal } from "../scouting/scout-visibility.ts";
+import { formatSeasonLabel } from "../sim/season-label.ts";
 
 /** PRD 06.5: only `full` events get 💡. Generational flags stay off the timeline. */
 const VISIBLE_BREAKOUTS = new Set([
@@ -129,7 +130,7 @@ function nationalityLabel(code: string): string {
 
 function contractLabel(player: Player, owned: boolean): string {
   if (player.contract) {
-    return `bis Saison ${player.contract.until_season}`;
+    return `bis ${formatSeasonLabel(player.contract.until_season)}`;
   }
   if (player.squad_status === "u17" || player.squad_status === "u19") {
     return "Kein Vertrag";

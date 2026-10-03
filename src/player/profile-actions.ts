@@ -2,6 +2,8 @@ import { ACHIEVEMENT, grantAchievement } from "./achievements.ts";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { needsYouthContract, signYouthContract } from "./youth-contract.ts";
 import { estimateCa } from "../transfers/market-value.ts";
+import { CONTRACT_SIGN_COOLDOWN_DAYS, lockContractTalks } from "../transfers/contract-talks.ts";
+import { formatSeasonLabel } from "../sim/season-label.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { canPromotePlayer } from "../youth/promotion-gate.ts";
@@ -111,7 +113,7 @@ export function profileMenuItems(
     items.push({
       action: "sign_contract",
       label: "✍️ Jugendvertrag",
-      hint: `Vertrag bis Saison ${season + (player.age <= 16 ? 3 : 2)} · ca. € ${wageHint}/Woche`,
+      hint: `Vertrag bis ${formatSeasonLabel(season + (player.age <= 16 ? 3 : 2))} · ca. € ${wageHint}/Woche`,
     });
   }
 
@@ -166,6 +168,7 @@ export function applyProfileAction(
   week = 1,
   squad: readonly Player[] = [],
   clubId: string = DEFAULT_CLUB_ID,
+  weekday = 1,
 ): ProfileActionResult {
   switch (action) {
     case "praise": {
@@ -254,11 +257,12 @@ export function applyProfileAction(
       if (!needsYouthContract(player, season)) {
         return { player, message: "Für diesen Spieler ist kein neuer Jugendvertrag nötig." };
       }
-      const next = grantAchievement(signYouthContract(player, season, { moraleBoost: 8 }), ACHIEVEMENT.contractSigned);
+      const signed = grantAchievement(signYouthContract(player, season, { moraleBoost: 8 }), ACHIEVEMENT.contractSigned);
+      const next = lockContractTalks(signed, { season, week, weekday }, CONTRACT_SIGN_COOLDOWN_DAYS);
       const wage = next.contract?.wage_weekly ?? 0;
       return {
         player: next,
-        message: `Jugendvertrag bis Saison ${next.contract?.until_season} · € ${wage}/Woche · Moral steigt.`,
+        message: `Jugendvertrag bis ${formatSeasonLabel(next.contract?.until_season ?? season)} · € ${wage}/Woche · Moral steigt.`,
       };
     }
     case "release": {
@@ -278,6 +282,7 @@ export function applyProfileActionToSquad(
   clubId: string = DEFAULT_CLUB_ID,
   season = 1,
   week = 1,
+  weekday = 1,
 ): { players: Player[]; result: ProfileActionResult | null } {
   const index = players.findIndex((player) => player.id === playerId);
   if (index < 0) return { players: [...players], result: null };
@@ -295,7 +300,7 @@ export function applyProfileActionToSquad(
     };
   }
 
-  const result = applyProfileAction(player, action, season, week, players, clubId);
+  const result = applyProfileAction(player, action, season, week, players, clubId, weekday);
   const next = [...players];
   next[index] = result.player;
   return { players: next, result };

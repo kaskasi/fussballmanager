@@ -1,7 +1,7 @@
 # /docs/prd/07_player_schema.md
 
-**Version:** 1.1
-**Last Updated:** 2026-09-22
+**Version:** 1.2
+**Last Updated:** 2026-10-03
 **Status:** Final
 
 ---
@@ -76,6 +76,9 @@ interface Player {
     weekly_minutes: number;
     season_minutes: number;
     modifiers: TemporaryModifier[];
+    contract_failed_offers?: number; // F5.4, consecutive rejects
+    desire_to_leave?: boolean;       // F5.4 after 3 fails
+    contract_talks_locked_until_day?: number; // F5.4, calendar day index
   };
 
   // ── Geschichte & Analytics ──────────────────
@@ -250,3 +253,4 @@ function validatePlayer(p: Player, asOfIso: string): boolean {
 - Savegame Sanitizer: PRD 08.3
 - UI Player Profile: PRD 09.2 (Screen 4)
 - Market Value: PRD 05.1
+- Vertragsverhandlung: PRD 05.4 (`contract_failed_offers`, `desire_to_leave`)

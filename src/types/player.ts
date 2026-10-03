@@ -49,6 +49,12 @@ export interface Player {
     pro_trial?: ProTrialState;
     /** F2.4 — assigned veteran mentor for breakout eligibility (PRD 06.2). */
     mentorship?: MentorshipState;
+    /** F5.4 — consecutive rejected contract offers. */
+    contract_failed_offers?: number;
+    /** F5.4 — set after three failed talks (PRD 05.4). */
+    desire_to_leave?: boolean;
+    /** F5.4 — calendar day index; no new talks until this day. */
+    contract_talks_locked_until_day?: number;
     modifiers: TemporaryModifier[];
   };
 

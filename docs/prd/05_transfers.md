@@ -1,7 +1,7 @@
 # /docs/prd/05_transfers.md
 
-**Version:** 1.1
-**Last Updated:** 2026-09-22
+**Version:** 1.3
+**Last Updated:** 2026-10-03
 **Status:** Final
 
 ---
@@ -27,7 +27,10 @@ Transfersystem, Vertragsverhandlungen und den KI-Transfermarkt spezifizieren. Ze
 
 1. **Market Value ist deterministisch:** Eine Funktion aus Attributen, Alter, Vertrag und Reputation. Kein Random Walk. Verhandlungen bewegen sich um diesen Wert.
 2. **Der Eigentümer kennt seinen Spieler zu 100 %.** Käufer schätzen. Preisverhandlungen mit unbekannten Talenten sind Risk-Analytics.
-3. **Fenster-Disziplin:** Sommer (KW 27–34) und Winter (KW 2–4). Außerhalb: keine Transfers, nur Vertragsverhandlungen mit vereinslosen Spielern.
+3. **Fenster-Disziplin:** Deutsches Ligajahr. Spieltag 1 = KW 35 (Ende August).
+   Sommerfenster KW 35–36 (noch offen am Saisonstart), Winter KW 2–4 (Januar).
+   Intern bleibt `week` 1–34 der Spieltag. Außerhalb: keine Transfers, nur
+   Vertragsverhandlungen mit vereinslosen Spielern.
 4. **Verträge binden:** Gehalt, Bonus und Klauseln sind Wirtschaftsgrößen. Budget-Limits (Transfer-Topf, Gehalts-Cap) stehen in PRD 11.1; Ablösen und Gehälter buchen gegen `transfer_budget` bzw. `wage_budget_weekly`.
 5. **Verkauf ist erlaubt und normal:** Sell-On-Klauseln an Jugendspielern machen die Pipeline ökonomisch lohnend.
 
@@ -193,6 +196,26 @@ Runden-Modell:
 ```
 
 Frust-Spirale: 3 Fehlangebote in Folge → `morale` −10 und optional `desire_to_leave`.
+
+UI (Akte, F5.4): Verhandeln öffnet ein **Modal**, nicht die Karte. Slider:
+Gehalt, Laufzeit, Einsatzbonus, Minuten-Garantie, Startplatz
+(`none` / `rotation` / `starter`). Jugend und Profis derselbe Dialog.
+
+Sperre ohne Tageszähler in der UI (Akte zeigt den Grund, nicht die Dauer):
+
+- Nach **3 Fehlangeboten** kein Modal: Spieler ist sauer und will erst mal
+  nicht reden. Danach, solange `desire_to_leave`, will er zu einem größeren
+  Verein und unterzeichnet hier nicht mehr.
+- Nach Unterschrift: hat gerade einen neuen Vertrag unterzeichnet
+  (intern 60 Tage, ohne Zahl).
+- Ein oder zwei Fehlangebote sperren nicht. Abbrechen ohne Angebot zählt nicht.
+
+Intern: `state.contract_talks_locked_until_day` für die stille Frist nach
+Unterschrift und nach der dritten Absage.
+
+Saison-Anzeige in der UI ist das Kalenderjahr: Startjahr 2026 plus
+abgeschlossene Saisons (`Saison 1` → `Saison 2026`). Intern bleibt der
+Zähler 1, 2, 3.
 
 ### 05.5 KI-Transfermarkt
 

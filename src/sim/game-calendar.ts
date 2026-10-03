@@ -1,23 +1,40 @@
 /**
  * In-game calendar (PRD 05 transfer windows + PRD 03 intake timing).
- * Sportliche Saison: Wochen 1–34, Liga-Spieltage 1–34.
+ * Intern: Saisonwochen 1–34 = Spieltage 1–34.
+ * Anzeige-KW: deutsches Ligajahr, Spieltag 1 = Ende August (KW 35).
  */
 
 export const WEEKS_PER_YEAR = 52;
 export const SEASON_END_WEEK = 34;
 export const LEAGUE_FIRST_WEEK = 1;
 export const LEAGUE_LAST_WEEK = 34;
+/** ISO-style calendar week of Spieltag 1 (late August in Germany). */
+export const SEASON_START_CALENDAR_WEEK = 35;
+export const SUMMER_WINDOW_CALENDAR_WEEKS = [35, 36] as const;
+export const WINTER_WINDOW_CALENDAR_WEEKS = [2, 3, 4] as const;
+
+export function calendarWeek(seasonWeek: number): number {
+  const week = Math.max(1, Math.round(seasonWeek));
+  const raw = SEASON_START_CALENDAR_WEEK + week - 1;
+  return ((raw - 1) % WEEKS_PER_YEAR) + 1;
+}
+
+export function formatCalendarWeek(seasonWeek: number): string {
+  return `KW ${calendarWeek(seasonWeek)}`;
+}
 
 export function isLeagueMatchWeek(week: number): boolean {
   return week >= LEAGUE_FIRST_WEEK && week <= LEAGUE_LAST_WEEK;
 }
 
 export function isSummerTransferWindow(week: number): boolean {
-  return week >= 27 && week <= 34;
+  const kw = calendarWeek(week);
+  return (SUMMER_WINDOW_CALENDAR_WEEKS as readonly number[]).includes(kw);
 }
 
 export function isWinterTransferWindow(week: number): boolean {
-  return week >= 2 && week <= 4;
+  const kw = calendarWeek(week);
+  return (WINTER_WINDOW_CALENDAR_WEEKS as readonly number[]).includes(kw);
 }
 
 export function calendarPhaseLabel(week: number): string {

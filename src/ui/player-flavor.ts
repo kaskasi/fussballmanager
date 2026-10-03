@@ -5,6 +5,7 @@ import { careerSeasonStats } from "../player/season-stats.ts";
 import { defaultYouthContract } from "../player/youth-contract.ts";
 import type { AbilityEstimate } from "../scouting/estimate-model.ts";
 import { scoutReveal } from "../scouting/scout-visibility.ts";
+import { formatSeasonLabel } from "../sim/season-label.ts";
 
 export type FlavorTraitTone = "positive" | "negative" | "neutral";
 
@@ -205,7 +206,7 @@ export function contractView(player: Player, owned: boolean, estimate?: AbilityE
       wageWeekly: player.contract
         ? `€ ${youth.wage_weekly.toLocaleString("de-DE")} / Woche`
         : "Noch nicht unterzeichnet",
-      untilSeason: player.contract ? `Saison ${youth.until_season}` : "—",
+      untilSeason: player.contract ? formatSeasonLabel(youth.until_season) : "—",
       clauses: player.contract
         ? [
             youth.bonus_appearance > 0
@@ -223,7 +224,7 @@ export function contractView(player: Player, owned: boolean, estimate?: AbilityE
     return {
       status: "Profivertrag",
       wageWeekly: `€ ${player.contract.wage_weekly.toLocaleString("de-DE")} / Woche`,
-      untilSeason: String(player.contract.until_season),
+      untilSeason: formatSeasonLabel(player.contract.until_season),
       clauses: [
         player.contract.buyout_clause ? `Ausstiegsklausel € ${player.contract.buyout_clause.toLocaleString("de-DE")}` : "Keine Ausstiegsklausel",
         player.contract.sell_on_percentage ? `Weiterverkaufsbeteiligung ${player.contract.sell_on_percentage}%` : "Keine Sell-on-Klausel",

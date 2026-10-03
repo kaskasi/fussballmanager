@@ -4238,6 +4238,46 @@ body {
   margin-top: 0.4rem;
 }
 
+.profile-talk {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.profile-talk-row {
+  display: grid;
+  gap: 0.12rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #334155;
+}
+
+.profile-talk-row span {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.profile-talk-row input[type="range"] {
+  width: 100%;
+  accent-color: #059669;
+}
+
+.profile-talk-hint {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.profile-talk-warn {
+  margin: 0;
+  color: #b45309;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .profile-panel-note {
   margin-top: 0.65rem;
 }
@@ -5815,6 +5855,62 @@ body {
 
 .negotiation-btn-muted {
   color: #64748b;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(15 23 42 / 45%);
+}
+
+.contract-talk-modal {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.contract-talk-clause {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.contract-talk-roles,
+.contract-talk-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.contract-talk-roles button,
+.contract-talk-toggle button {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.65rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.contract-talk-roles button.is-active,
+.contract-talk-toggle button.is-active {
+  background: #059669;
+  border-color: #059669;
+  color: #fff;
+}
+
+.contract-talk-roles button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.profile-vertrag-actions .ui-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .app-nav {

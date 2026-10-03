@@ -15,6 +15,7 @@ import {
   isStoryInboxItem,
   type YouthInboxState,
 } from "../../youth/decision-inbox.ts";
+import { formatCalendarWeek } from "../../sim/game-calendar.ts";
 
 /**
  * WIREFRAME: PRD 09.2 — Hub Inbox (decisions + scout reports)
@@ -208,7 +209,7 @@ export function HubInboxPanel({
                   <div className="hub-inbox-event">
                     <span className="hub-inbox-icon" aria-hidden="true">{clubEventIcon(event.kind)}</span>
                     <span className="hub-inbox-event-message">{event.message}</span>
-                    <span className="hub-inbox-event-meta">KW {event.week}</span>
+                    <span className="hub-inbox-event-meta">{formatCalendarWeek(event.week)}</span>
                   </div>
                 </li>
               ))}

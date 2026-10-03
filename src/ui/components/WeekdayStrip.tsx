@@ -1,5 +1,6 @@
 /** WIREFRAME: PRD 09.2 — week day strip (Mo–So), match day highlighted */
 import { isMatchSaturday, SATURDAY, WEEKDAY_LABELS, weekdayLabel } from "../../sim/day-calendar.ts";
+import { formatCalendarWeek } from "../../sim/game-calendar.ts";
 
 export function WeekdayStrip({
   week,
@@ -11,7 +12,7 @@ export function WeekdayStrip({
   const matchWeek = isMatchSaturday(week);
 
   return (
-    <div className="weekday-strip" aria-label={`Kalenderwoche ${week}, ${weekdayLabel(weekday)}`}>
+    <div className="weekday-strip" aria-label={`${formatCalendarWeek(week)}, ${weekdayLabel(weekday)}`}>
       {WEEKDAY_LABELS.map((label, index) => {
         const day = index + 1;
         const isToday = day === weekday;

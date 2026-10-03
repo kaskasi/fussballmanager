@@ -1,6 +1,7 @@
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { ACHIEVEMENT, grantAchievement } from "../player/achievements.ts";
 import { signYouthContract } from "../player/youth-contract.ts";
+import { CONTRACT_SIGN_COOLDOWN_DAYS, lockContractTalks } from "../transfers/contract-talks.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import { canLoanPlayerOut, loanYouthPlayer } from "../transfers/loans.ts";
 import type { TransferRecord } from "../transfers/transfer-history.ts";
@@ -718,7 +719,12 @@ export function applyInboxDecision(
       nextPlayers = nextPlayers.map((entry) => {
         if (entry.id !== item.playerId) return entry;
         const signed = signYouthContract(entry, season, { moraleBoost });
-        return grantAchievement(signed, ACHIEVEMENT.contractSigned);
+        const locked = lockContractTalks(
+          signed,
+          { season, week: currentWeek, weekday: 1 },
+          CONTRACT_SIGN_COOLDOWN_DAYS,
+        );
+        return grantAchievement(locked, ACHIEVEMENT.contractSigned);
       });
       break;
     }

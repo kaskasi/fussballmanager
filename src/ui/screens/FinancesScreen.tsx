@@ -25,6 +25,7 @@ import {
 } from "../../stadium/club-stadium.ts";
 import { fanbaseMoodIcon, fanbaseMood, formatFanbase } from "../../stadium/fanbase.ts";
 import { Hint } from "../components/Hint.tsx";
+import { formatSeasonLabel } from "../../sim/season-label.ts";
 
 /**
  * WIREFRAME: PRD 11.5 — Finanzen
@@ -72,7 +73,7 @@ export function FinancesScreen({
         <div>
           <p className="eyebrow">Verein</p>
           <h1>💰 Finanzen</h1>
-          <p className="finances-sub">Saison {season} · Monat {month}</p>
+          <p className="finances-sub">{formatSeasonLabel(season)} · Monat {month}</p>
         </div>
       </header>
 
@@ -136,7 +137,7 @@ export function FinancesScreen({
 
       <section className="finances-sparkline" aria-label="Saison-Cash-Verlauf">
         <Hint text="Kassenstand nach jedem abgeschlossenen Monat in dieser Saison." block>
-          <h2>Saison {season}</h2>
+          <h2>{formatSeasonLabel(season)}</h2>
           <svg viewBox={`0 0 ${Math.max(sparkline.length * 24, 24)} 48`} role="img" aria-label="Cash-Verlauf">
             <polyline
               fill="none"

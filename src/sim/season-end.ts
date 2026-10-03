@@ -4,6 +4,7 @@ import { resetSeasonMinutes } from "../player/minute-history.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
 import { resetAiBudgetsForSeason } from "../transfers/ai-transfer-market.ts";
 import { careerTeamId } from "./rival-growth.ts";
+import { seasonCalendarYear } from "./season-label.ts";
 import {
   appendTransferRecord,
   processLoanReturns,
@@ -78,7 +79,7 @@ export function runSeasonEnd(
   const intake = generateYouthIntake({
     season: session.season,
     week: SEASON_END_WEEK,
-    seasonYear: 2025 + session.season,
+    seasonYear: seasonCalendarYear(session.season),
     clubId: session.clubId,
     nationality: "DE",
     region: "Schleswig-Holstein",

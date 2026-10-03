@@ -14,7 +14,7 @@
  *
  * Tabs nur für Verlauf und Saisonwerte. Stamps bleiben leer (PRD 15 C1).
  */
-import { useState, type ComponentPropsWithoutRef } from "react";
+import { useEffect, useState, type ComponentPropsWithoutRef } from "react";
 import type { IndividualProgram } from "../../development/individual-training.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
 import {
@@ -22,7 +22,16 @@ import {
   type PlayerProfileAction,
 } from "../../player/profile-actions.ts";
 import { formatClubCash } from "../../economy/club-finances.ts";
+import {
+  contractTalkLock,
+  defaultContractOffer,
+  FRUSTRATION_THRESHOLD,
+  type ContractOffer,
+} from "../../transfers/contract-talks.ts";
 import type { Player } from "../../types/player.ts";
+import { formatSeasonLabel } from "../../sim/season-label.ts";
+import { TRANSFER_WINDOW_HINT } from "../../sim/transfer-windows.ts";
+import { ContractTalksModal } from "../components/ContractTalksModal.tsx";
 import { formatPlayerName } from "../../types/player-display.ts";
 import { confidenceLabel, type AbilityEstimate } from "../../scouting/estimate-model.ts";
 import {
@@ -68,7 +77,6 @@ const TABS: { id: ProfileTab; label: string; icon: string }[] = [
 ];
 
 const CARD_ACTIONS: Partial<Record<PlayerProfileAction, { label: string; className: string }>> = {
-  sign_contract: { label: "✍️ Verhandeln", className: "ui-btn--primary" },
   promote_pro: { label: "⬆️ Profikader", className: "ui-btn--primary" },
   promote_u19: { label: "⬆️ U19", className: "ui-btn--ghost" },
 };
@@ -99,6 +107,9 @@ export interface PlayerProfileProps {
   onPreContract?: () => void;
   onSell?: () => void;
   onProfileAction?: (action: PlayerProfileAction) => void;
+  onContractOffer?: (offer: ContractOffer) => void;
+  wageHeadroomWeekly?: number;
+  weekday?: number;
   actionFeedback?: string | null;
 }
 
@@ -128,10 +139,20 @@ export function PlayerProfile({
   onPreContract,
   onSell,
   onProfileAction,
+  onContractOffer,
+  wageHeadroomWeekly,
+  weekday = 1,
   actionFeedback = null,
 }: PlayerProfileProps) {
   const [tab, setTab] = useState<ProfileTab>("akte");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [talksOpen, setTalksOpen] = useState(false);
+  const [offer, setOffer] = useState<ContractOffer | null>(null);
+
+  useEffect(() => {
+    setTalksOpen(false);
+    setOffer(null);
+  }, [player.id]);
   const menuItems = profileMenuItems(player, owned, season);
   const reveal = scoutEstimate ? scoutReveal(scoutEstimate.uncertaintyRange) : null;
   const askingBounds =
@@ -157,7 +178,7 @@ export function PlayerProfile({
     !owned && askingBounds === null
       ? "Marktwert unbekannt — erst scouten und Wochen simulieren."
       : !transferWindowOpen
-        ? "Transfers nur im Sommer- (KW 27–34) und Winterfenster (KW 2–4)."
+        ? `Transfers nur im ${TRANSFER_WINDOW_HINT}`
         : !canAffordPurchase && purchasePrice !== undefined
           ? `Transfer-Budget reicht nicht (${purchaseAmountLabel ?? "Schätzung unbekannt"} nötig).`
           : null;
@@ -202,6 +223,8 @@ export function PlayerProfile({
     : null;
   const cardActions = menuItems.filter((item) => CARD_ACTIONS[item.action]);
   const caDelta = owned ? weeklyCaDelta(player) : null;
+  const talkLock = contractTalkLock(player, { season, week, weekday });
+  const canTalk = owned && Boolean(onContractOffer) && player.squad_status !== "loaned_out";
 
   return (
     <main className="profile">
@@ -349,29 +372,54 @@ export function PlayerProfile({
               </div>
             ) : null}
 
-            <Hint text="Vertragsdetails aus dem Spielerobjekt. Gehalts-Slider kommt später; Jugendvertrag und Hochziehen sind die Aktionen jetzt." block>
+            <Hint text="Vertragsstatus auf der Karte. Verhandeln öffnet Gehalt, Jahre, Bonus, Minuten und Startplatz." block>
               <div className="profile-vertrag">
                 <p className="profile-section-label">Vertrag</p>
                 <p className="profile-vertrag-status">{contract.status}</p>
                 <p className="profile-vertrag-line">{contract.wageWeekly} · bis {contract.untilSeason}</p>
                 <p className="profile-vertrag-line">{contract.minutesPromise}</p>
-                {owned && onProfileAction && cardActions.length > 0 ? (
+                {talkLock.reason ? (
+                  <p className="profile-talk-warn">{talkLock.reason}</p>
+                ) : (player.state.contract_failed_offers ?? 0) > 0 ? (
+                  <p className="profile-talk-warn">
+                    {player.state.contract_failed_offers}/{FRUSTRATION_THRESHOLD} Fehlangebote
+                  </p>
+                ) : null}
+                {canTalk || (owned && onProfileAction && cardActions.length > 0) ? (
                   <div className="profile-vertrag-actions">
-                    {cardActions.map((item) => {
-                      const spec = CARD_ACTIONS[item.action];
-                      if (!spec) return null;
-                      return (
-                        <Hint key={item.action} text={item.hint}>
-                          <button
-                            type="button"
-                            className={`ui-btn profile-action-btn ${spec.className}`}
-                            onClick={() => onProfileAction(item.action)}
-                          >
-                            {spec.label}
-                          </button>
-                        </Hint>
-                      );
-                    })}
+                    {canTalk ? (
+                      <Hint text={talkLock.reason ?? "Gehalt, Laufzeit, Bonus, Minuten und Startplatz."}>
+                        <button
+                          type="button"
+                          className="ui-btn profile-action-btn ui-btn--primary"
+                          disabled={!talkLock.allowed}
+                          onClick={() => {
+                            if (!talkLock.allowed) return;
+                            setOffer(defaultContractOffer(player, season));
+                            setTalksOpen(true);
+                          }}
+                        >
+                          ✍️ Verhandeln
+                        </button>
+                      </Hint>
+                    ) : null}
+                    {owned && onProfileAction
+                      ? cardActions.map((item) => {
+                          const spec = CARD_ACTIONS[item.action];
+                          if (!spec) return null;
+                          return (
+                            <Hint key={item.action} text={item.hint}>
+                              <button
+                                type="button"
+                                className={`ui-btn profile-action-btn ${spec.className}`}
+                                onClick={() => onProfileAction(item.action)}
+                              >
+                                {spec.label}
+                              </button>
+                            </Hint>
+                          );
+                        })
+                      : null}
                   </div>
                 ) : null}
               </div>
@@ -508,7 +556,7 @@ export function PlayerProfile({
                   text={
                     saleBlockedReason ??
                     (!transferWindowOpen
-                      ? "Verkauf nur im Sommer- (KW 27–34) und Winterfenster (KW 2–4)."
+                      ? `Verkauf nur im ${TRANSFER_WINDOW_HINT}`
                       : "Liga-Verein bietet nach Marktwert. 50 % der Ablöse fließen in den Transfer-Topf.")
                   }
                   block
@@ -531,6 +579,25 @@ export function PlayerProfile({
         <button type="button" className="profile-next" onClick={onOpenYouth}>
           → Zur Jahrgangsliste
         </button>
+      ) : null}
+
+      {talksOpen && offer && onContractOffer ? (
+        <ContractTalksModal
+          player={player}
+          season={season}
+          offer={offer}
+          wageHeadroomWeekly={wageHeadroomWeekly}
+          onChange={setOffer}
+          onSubmit={() => {
+            onContractOffer(offer);
+            setTalksOpen(false);
+            setOffer(null);
+          }}
+          onCancel={() => {
+            setTalksOpen(false);
+            setOffer(null);
+          }}
+        />
       ) : null}
     </main>
   );
@@ -558,7 +625,7 @@ function DevelopmentTab({
       {owned ? (
         <p className="profile-growth-note">
           26 Wochen {formatRecentGrowth(recentGrowth)}
-          {singleSeason ? ` · Saison ${growth[0]?.season ?? 1} · erster Stand` : ""}
+          {singleSeason ? ` · ${formatSeasonLabel(growth[0]?.season ?? 1)} · erster Stand` : ""}
         </p>
       ) : null}
 
@@ -577,7 +644,7 @@ function DevelopmentTab({
               ))}
             </svg>
             <p className="profile-growth-note">
-              Saison {growth[0]?.season ?? 1} → {growth.at(-1)?.season ?? growth[0]?.season ?? 1}
+              {formatSeasonLabel(growth[0]?.season ?? 1)} → {formatSeasonLabel(growth.at(-1)?.season ?? growth[0]?.season ?? 1)}
             </p>
           </div>
         </Hint>

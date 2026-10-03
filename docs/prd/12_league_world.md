@@ -1,7 +1,7 @@
 # /docs/prd/12_league_world.md
 
-**Version:** 1.0
-**Last Updated:** 2026-09-27
+**Version:** 1.1
+**Last Updated:** 2026-10-03
 **Status:** Final (M1: zwei Spielklassen und prozedurale Welt)
 
 ---
@@ -134,8 +134,9 @@ Regeln:
 - Der Spielerclub kann auf- und absteigen. Kein Schutz.
 - Die Welt enthält in M1 genau diese zwei Spielklassen, entsprechend F10.3.
 
-Der Ligakalender umfasst 34 Spieltage. Saisonabschluss, Awards,
-Vorstandsauswertung und Intake laufen erst nach dem 34. Ligaspiel.
+Der Ligakalender umfasst 34 Spieltage. Spieltag 1 liegt Ende August (KW 35),
+nicht in KW 1. Saisonabschluss, Awards, Vorstandsauswertung und Intake laufen
+erst nach dem 34. Ligaspiel.
 
 ---
 

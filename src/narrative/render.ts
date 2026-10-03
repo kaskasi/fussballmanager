@@ -94,8 +94,8 @@ export function storyInboxPayload(
         body: "Der Fanrat erwartet kein Wunder — aber Überlebenskampf. Klassenerhalt ist das Saisonziel.",
         source: "board",
         choices: [
-          { id: "accept", label: "Verstanden", icon: "🤝" },
-          { id: "ambitious", label: "Wir schaffen mehr", icon: "🔥" },
+          { id: "accept", label: "Überleben", icon: "●" },
+          { id: "ambitious", label: "Anspruch", icon: "▲" },
         ],
       };
     case "press_hostile_bad_week":

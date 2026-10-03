@@ -8,6 +8,8 @@ import {
   applyInboxDecision,
   deliverDailyInbox,
   deliverInboxForDays,
+  emptyInbox,
+  enqueueStoryInboxItem,
   generateWeeklyInbox,
   inboxHeadline,
   inboxPipelineHint,
@@ -17,6 +19,9 @@ import {
   normalizeYouthInbox,
   pendingInboxItems,
   pruneYouthInbox,
+  actionIcon,
+  actionLabel,
+  storyChoiceStance,
   type YouthInboxState,
 } from "./decision-inbox.ts";
 
@@ -352,5 +357,39 @@ describe("decision inbox", () => {
       queued: 1,
     });
     expect(deliverDailyInbox(inbox).items).toHaveLength(3);
+  });
+});
+
+describe("story inbox stance (PRD 14.5)", () => {
+  it("never shows accept/ambitious as button copy", () => {
+    expect(actionLabel("story:accept")).toBe("Überleben");
+    expect(actionLabel("story:ambitious")).toBe("Anspruch");
+    expect(actionIcon("story:accept")).toBe("●");
+    expect(actionIcon("story:ambitious")).toBe("▲");
+    expect(storyChoiceStance("accept")).toBe("survive");
+    expect(storyChoiceStance("ambitious")).toBe("ambition");
+  });
+
+  it("applies board survival choices from the stored ids", () => {
+    const inbox = enqueueStoryInboxItem(
+      emptyInbox(1),
+      1,
+      {
+        beatId: "board_survival_intro",
+        title: "Vorstand · Klassenerhalt",
+        body: "Der Fanrat erwartet kein Wunder.",
+        source: "board",
+        choices: [
+          { id: "accept", label: "Verstanden", icon: "🤝" },
+          { id: "ambitious", label: "Wir schaffen mehr", icon: "🔥" },
+        ],
+      },
+      "board_survival_intro",
+    );
+    const item = inbox.items[0]!;
+    expect(allowedActions(item)).toEqual(["story:accept", "story:ambitious"]);
+    expect(actionLabel("story:accept", { item })).toBe("Überleben");
+    const after = applyInboxDecision(inbox, [], item.id, "story:ambitious", 1, 1);
+    expect(after.inbox.resolvedIds).toContain(item.id);
   });
 });

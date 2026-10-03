@@ -283,6 +283,23 @@ export function storyChoiceId(action: DecisionAction): string | null {
   return action.slice("story:".length);
 }
 
+/** PRD 14.5 / 09.3 — stance buttons use form, not the English choice id. */
+export type StoryStance = "survive" | "ambition" | "neutral";
+
+const STANCE_BY_CHOICE: Record<string, { stance: StoryStance; label: string; icon: string }> = {
+  accept: { stance: "survive", label: "Überleben", icon: "●" },
+  ambitious: { stance: "ambition", label: "Anspruch", icon: "▲" },
+};
+
+export function storyChoiceStance(choiceId: string | null, icon?: string): StoryStance {
+  if (!choiceId) return "neutral";
+  const mapped = STANCE_BY_CHOICE[choiceId];
+  if (mapped) return mapped.stance;
+  if (icon === "●") return "survive";
+  if (icon === "▲") return "ambition";
+  return "neutral";
+}
+
 export function inboxItemLabel(item: DecisionInboxItem): string {
   if (item.narrative) return item.narrative.title;
   switch (item.reason) {
@@ -376,6 +393,8 @@ export interface DecisionActionContext {
 export function actionLabel(action: DecisionAction, context?: DecisionActionContext): string {
   if (action.startsWith("story:")) {
     const choiceId = action.slice("story:".length);
+    const mapped = STANCE_BY_CHOICE[choiceId];
+    if (mapped) return mapped.label;
     const choice = context?.item?.narrative?.choices.find((entry) => entry.id === choiceId);
     return choice?.label ?? choiceId;
   }
@@ -405,6 +424,8 @@ export function actionLabel(action: DecisionAction, context?: DecisionActionCont
 export function actionIcon(action: DecisionAction, context?: DecisionActionContext): string {
   if (action.startsWith("story:")) {
     const choiceId = action.slice("story:".length);
+    const mapped = STANCE_BY_CHOICE[choiceId];
+    if (mapped) return mapped.icon;
     const choice = context?.item?.narrative?.choices.find((entry) => entry.id === choiceId);
     return choice?.icon ?? "💬";
   }

@@ -1,6 +1,6 @@
 # /docs/prd/14_ui_cockpit.md
 
-**Version:** 1.4
+**Version:** 1.5
 **Last Updated:** 2026-10-03
 **Status:** Final (Darstellung — kein Code in diesem Dokument)
 
@@ -284,7 +284,7 @@ Ein Raum pro Task, Pipeline-Features nicht nebenbei umbauen.
 
 1. Spielerakte (14.3) — größte Lücke Seele vs. System. **gebaut**
 2. Jugend-Report (14.4) — Gesetz 6 sichtbar machen. **gebaut**
-3. Inbox-Icons + Hub (14.5).
+3. Inbox-Icons + Hub (14.5). **gebaut**
 4. Finanzen-Wasserfall (14.6) — Spec existiert. **gebaut**
 5. Stadion-Inventar-Slots (14.7) — Hunger zeichnen, Sim später.
 6. Transfers ohne Dead-End (14.8).

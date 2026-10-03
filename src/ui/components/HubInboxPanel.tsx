@@ -13,18 +13,20 @@ import {
   inboxPipelineHint,
   inboxWeekFocus,
   isStoryInboxItem,
+  MAX_INBOX_ITEMS,
+  type DecisionAction,
   type YouthInboxState,
 } from "../../youth/decision-inbox.ts";
 import { formatCalendarWeek } from "../../sim/game-calendar.ts";
+import { InboxStanceButtons } from "./InboxStanceButtons.tsx";
 
 /**
- * WIREFRAME: PRD 09.2 — Hub Inbox (decisions + scout reports)
- * ┌────────────────────────────────────────────────────────┐
- * │ 📥 Inbox · KW 12                                       │
- * ├──────────────────────┬─────────────────────────────────┤
- * │ 🚩 Entscheidungen    │ 👁️ Scout-Berichte               │
- * │ K. Müller · Vertrag  │ L. Santos · CA ~74 · ✅         │
- * └──────────────────────┴─────────────────────────────────┘
+ * WIREFRAME: PRD 14.5 — Post
+ * ┌─────────────────────────────────────────────┐
+ * │ Post · 1/4                                  │
+ * │ 📋 Vorstand · Klassenerhalt                 │
+ * │ [● Überleben]   [▲ Anspruch]                │
+ * └─────────────────────────────────────────────┘
  */
 
 const EVENTS_PER_PAGE = 4;
@@ -37,6 +39,7 @@ export function HubInboxPanel({
   clubEvents,
   season,
   onOpenDecision,
+  onStoryChoice,
   onSelectScoutTarget,
 }: {
   week: number;
@@ -46,6 +49,7 @@ export function HubInboxPanel({
   scoutBoard: ScoutBoard;
   clubEvents: readonly ClubEvent[];
   onOpenDecision: (itemId: string) => void;
+  onStoryChoice: (itemId: string, action: DecisionAction) => void;
   onSelectScoutTarget: (playerId: string) => void;
 }) {
   const focus = inboxWeekFocus(youthInbox, players);
@@ -74,7 +78,7 @@ export function HubInboxPanel({
   return (
     <section className="hub-inbox" aria-label="Inbox">
       <header className="hub-inbox-head">
-        <h3>📥 Inbox</h3>
+        <h3>📥 Post · {decisions.length}/{MAX_INBOX_ITEMS}</h3>
       </header>
 
       <div className="hub-inbox-columns">
@@ -90,7 +94,7 @@ export function HubInboxPanel({
             </p>
           ) : (
             <ul className="hub-inbox-list">
-              {decisions.map((item) => {
+              {decisions.map((item, index) => {
                 if (isStoryInboxItem(item)) {
                   const icon =
                     item.kind === "story_press"
@@ -101,24 +105,22 @@ export function HubInboxPanel({
                           ? "©️"
                           : item.kind === "story_assistant"
                             ? "🧑‍🏫"
-                            : "🤵";
+                            : "📋";
                   return (
                     <li key={item.id}>
-                      <button
-                        type="button"
-                        className="hub-inbox-row hub-inbox-row-story"
-                        onClick={() => onOpenDecision(item.id)}
-                      >
-                        <span className="hub-inbox-icon" aria-hidden="true">{icon}</span>
-                        <span className="hub-inbox-row-text">
-                          <strong>{inboxItemLabel(item)}</strong>
-                          <span className="hub-inbox-row-detail">
-                            {item.narrative?.body.slice(0, 72)}
-                            {(item.narrative?.body.length ?? 0) > 72 ? "…" : ""}
-                          </span>
-                        </span>
-                        <span className="hub-inbox-row-cta">→</span>
-                      </button>
+                      <article className="hub-post" aria-label={item.narrative?.title ?? "Post"}>
+                        <p className="hub-post-count">
+                          Post · {index + 1}/{decisions.length}
+                        </p>
+                        <p className="hub-post-title">
+                          <span aria-hidden="true">{icon}</span> {inboxItemLabel(item)}
+                        </p>
+                        {item.narrative?.body ? <p className="hub-post-body">{item.narrative.body}</p> : null}
+                        <InboxStanceButtons
+                          item={item}
+                          onChoose={(action) => onStoryChoice(item.id, action)}
+                        />
+                      </article>
                     </li>
                   );
                 }

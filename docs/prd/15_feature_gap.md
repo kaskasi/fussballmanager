@@ -1,6 +1,6 @@
 # /docs/prd/15_feature_gap.md
 
-**Version:** 1.3
+**Version:** 1.4
 **Last Updated:** 2026-10-03
 **Status:** Final (Analyse — keine neuen Shipping-Features ohne Eintrag in PRD 10)
 
@@ -104,7 +104,7 @@ per explizitem Katalog-Edit.
 | F7.3 | M3 | Wurst, Fanshop, Hotel, Museum | NPC-Name Bratwurst in PRD 13 | **keine Bude** |
 | F3.2 | M1 | Campus 2D-Iso | — | Grid statt Iso |
 | F3.3 | M1 | YouthReports | Report 14.4 + Auto-Sim; Grid sekundär | Campus-Iso F3.2 |
-| F3.4 | M1 | Icon-Inbox, Cap 4 | Modal, Text-Buttons | Icons (09 / 03.4) |
+| F3.4 | M1 | Icon-Inbox, Cap 4 | Post-Karte ●/▲, Jugend-Icons 03.4 | Hub-Ampel Jugend |
 | F3.6 | M2 | Profi-Verträge, Spielzeit-Klauseln | Jugendvertrag-Default | Slider mit F5.4 teilen |
 | F2.3 | M2 | Individualprogramme | Gruppen-Fokus F2.1 | kein Spend-to-Stamp |
 | F2.7 | M1 | Wachstums-Heatmap | Hub-Kachel dünn | 09 Screen 1 |

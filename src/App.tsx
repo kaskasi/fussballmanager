@@ -1428,6 +1428,8 @@ export default function App() {
           onOpenScouting={() => setScreen("scouting")}
           onOpenTransfers={() => setScreen("transfers")}
           onOpenInbox={openInbox}
+          onStoryChoice={handleInboxDecision}
+          onOpenJugend={() => setScreen("campus")}
           onSelectScoutTarget={(playerId) => setForeignPlayerId(playerId)}
           youthInbox={youthInbox}
           scoutBoard={scoutBoard}

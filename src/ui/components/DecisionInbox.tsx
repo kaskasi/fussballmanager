@@ -21,6 +21,8 @@ import {
 } from "../../youth/decision-inbox.ts";
 import { canPromotePlayer, promotionGateLabel } from "../../youth/promotion-gate.ts";
 import { proTrialLabel } from "../../youth/pro-trial.ts";
+import { InboxStanceButtons } from "./InboxStanceButtons.tsx";
+import { formatCalendarWeek } from "../../sim/game-calendar.ts";
 
 /**
  * WIREFRAME: PRD 09.2 Screen 2b — Decision Inbox
@@ -81,7 +83,7 @@ export function DecisionInboxModal({
   const active = pending.find((item) => item.id === activeId) ?? pending[0] ?? null;
   const player = active ? players.find((entry) => entry.id === active.playerId) : null;
   const coachIcon = active ? inbox.coachIcons[active.playerId] : undefined;
-  const actionContext = active && player ? { item: active, player } : undefined;
+  const actionContext = active ? { item: active, player: player ?? undefined } : undefined;
   const promotionBlock =
     active?.kind === "promotion" && player
       ? promotionGateLabel(canPromotePlayer(players, clubId, player), player.position)
@@ -107,7 +109,7 @@ export function DecisionInboxModal({
       >
         <header className="inbox-head">
           <div>
-            <p className="eyebrow">Inbox · Woche {inbox.week}</p>
+            <p className="eyebrow">Post · {formatCalendarWeek(inbox.week)}</p>
             <h2>Entscheidungen</h2>
           </div>
           <button type="button" className="inbox-close" onClick={onClose} aria-label="Schließen">
@@ -149,22 +151,13 @@ export function DecisionInboxModal({
             {active && isStoryInboxItem(active) && active.narrative ? (
               <section className="inbox-card inbox-card-story">
                 <div className="inbox-story">
+                  <p className="inbox-post-count">
+                    Post · {(pending.findIndex((item) => item.id === active.id) ?? 0) + 1}/{pending.length}
+                  </p>
                   <strong>{active.narrative.title}</strong>
                   <p>{active.narrative.body}</p>
                 </div>
-                <div className="inbox-actions" aria-label="Antworten">
-                  {allowedActions(active, players, clubId, week).map((action) => (
-                    <button
-                      key={action}
-                      type="button"
-                      className="inbox-action"
-                      onClick={() => onDecision(active.id, action)}
-                    >
-                      <span aria-hidden="true">{actionIcon(action, actionContext)}</span>
-                      <span>{actionLabel(action, actionContext)}</span>
-                    </button>
-                  ))}
-                </div>
+                <InboxStanceButtons item={active} onChoose={(action) => onDecision(active.id, action)} />
               </section>
             ) : active && !player ? (
               <section className="inbox-card inbox-card-orphan">

@@ -7711,6 +7711,74 @@ body {
   color: #475569;
 }
 
+.inbox-post-count,
+.hub-post-count {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.inbox-stances {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.inbox-stance {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 2px solid #cbd5e1;
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 0.45rem 0.75rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.inbox-stance-form {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.inbox-stance.is-survive {
+  border-color: #059669;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.inbox-stance.is-ambition {
+  border-color: #d97706;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.hub-post {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.75rem 0.8rem;
+  background: #fff;
+  border-radius: 0.85rem;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
+}
+
+.hub-post-title {
+  margin: 0;
+  font-weight: 800;
+}
+
+.hub-post-body {
+  margin: 0;
+  color: #475569;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
 .hub-inbox-row-story {
   border-left: 3px solid #16a34a;
 }

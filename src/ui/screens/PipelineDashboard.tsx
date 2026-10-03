@@ -19,7 +19,8 @@ import type { ClubFinances } from "../../economy/club-finances.ts";
 import type { ClubEvent } from "../../inbox/club-events.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import { scoutReportsForWeek } from "../../scouting/scout-board.ts";
-import { pendingInboxItems, type YouthInboxState } from "../../youth/decision-inbox.ts";
+import { pendingInboxItems, inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
+import type { DecisionAction } from "../../youth/decision-inbox.ts";
 import { listDevelopmentMovers } from "../../player/ca-tracking.ts";
 import type { IndividualProgram } from "../../development/individual-training.ts";
 import { fatigueAmpelClassName, squadTrainingLoad } from "../../development/training-load.ts";
@@ -51,6 +52,8 @@ export function PipelineDashboard({
   onOpenScouting,
   onOpenTransfers,
   onOpenInbox,
+  onStoryChoice,
+  onOpenJugend,
   onSelectScoutTarget,
   youthInbox,
   scoutBoard,
@@ -76,6 +79,8 @@ export function PipelineDashboard({
   onOpenScouting: () => void;
   onOpenTransfers: () => void;
   onOpenInbox: (itemId?: string) => void;
+  onStoryChoice: (itemId: string, action: DecisionAction) => void;
+  onOpenJugend: () => void;
   onSelectScoutTarget: (playerId: string) => void;
   youthInbox: YouthInboxState;
   scoutBoard: ScoutBoard;
@@ -180,6 +185,15 @@ export function PipelineDashboard({
               {!planOk ? " · Plan prüfen" : ""}
             </span>
           </button>
+          <button type="button" className="pipeline-tile" onClick={onOpenJugend}>
+            <span
+              className={`pipeline-light ${youthAmpelClass(youthInbox)}`}
+              aria-hidden="true"
+            >
+              {youthAmpelMark(youthInbox)}
+            </span>
+            <span>{youthTileLabel(youthInbox)}</span>
+          </button>
           <button type="button" className="pipeline-tile" onClick={onOpenScouting}>
             <span>👁️</span>
             <span>Scouting · {activeScouts} aktiv</span>
@@ -201,6 +215,7 @@ export function PipelineDashboard({
             scoutBoard={scoutBoard}
             clubEvents={clubEvents}
             onOpenDecision={(itemId) => onOpenInbox(itemId)}
+            onStoryChoice={onStoryChoice}
             onSelectScoutTarget={onSelectScoutTarget}
           />
         ) : null}
@@ -217,4 +232,29 @@ export function PipelineDashboard({
 function leagueTablePlace(league: LeagueState): number {
   const index = leagueTable(league).findIndex((row) => row.teamId === league.player_club_id);
   return index >= 0 ? index + 1 : 0;
+}
+
+function youthAmpelMark(inbox: YouthInboxState): string {
+  const summary = inboxSummary(inbox);
+  if (summary.departureRisks > 0) return "◆";
+  if (summary.pending > 0) return "▲";
+  return "●";
+}
+
+function youthAmpelClass(inbox: YouthInboxState): string {
+  const summary = inboxSummary(inbox);
+  if (summary.departureRisks > 0) return "is-risk";
+  if (summary.pending > 0) return "is-watch";
+  return "is-set";
+}
+
+function youthTileLabel(inbox: YouthInboxState): string {
+  const summary = inboxSummary(inbox);
+  if (summary.departureRisks > 0) {
+    return `🏫 Jugend · 🚩 ${summary.departureRisks} Abgang`;
+  }
+  if (summary.pending > 0) {
+    return `🏫 Jugend · ⚠️ ${summary.pending} offen`;
+  }
+  return "🏫 Jugend · ruhig";
 }

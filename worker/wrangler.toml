@@ -3,6 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2025-02-14"
 compatibility_flags = ["nodejs_compat"]
 
+# Full match sim needs more than the free-tier CPU budget (~10ms). Paid Workers only.
+[limits]
+cpu_ms = 30_000
+
 # Build the Vite SPA before bundling the worker.
 [build]
 command = "npm run build --prefix .."

@@ -1,20 +1,13 @@
-import type {
-  BroadcastStoryContext,
-  MatchView,
-  Squad,
-  TeamId,
-} from "@fussballmanager/shared";
+import type { MatchView } from "@fussballmanager/shared";
+import {
+  buildCareerMatchViewLocally,
+  type CareerMatchBuildInput,
+} from "./build-career-match-view.ts";
 import { normalizeMatchView } from "./normalize-match-view.ts";
 
-export async function fetchCareerMatchView(input: {
-  seed: number;
-  homeTeamId: TeamId;
-  awayTeamId: TeamId;
-  homeSquad: Squad;
-  awaySquad: Squad;
-  playerClubSquad?: Squad;
-  broadcastStory?: BroadcastStoryContext;
-}): Promise<MatchView> {
+const WORKER_OVERLOAD_STATUSES = new Set([502, 503, 504]);
+
+export async function fetchCareerMatchView(input: CareerMatchBuildInput): Promise<MatchView> {
   if (
     input.playerClubSquad &&
     input.playerClubSquad.team.id !== input.homeTeamId &&
@@ -25,12 +18,20 @@ export async function fetchCareerMatchView(input: {
     );
   }
 
-  const response = await fetch("/api/career-match", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  if (!response.ok) {
+  try {
+    const response = await fetch("/api/career-match", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    if (response.ok) {
+      const view = (await response.json()) as MatchView;
+      return normalizeMatchView(view);
+    }
+    if (WORKER_OVERLOAD_STATUSES.has(response.status)) {
+      const view = await buildCareerMatchViewLocally(input);
+      return normalizeMatchView(view);
+    }
     if (response.status === 404) {
       throw new Error(
         "Match-Server nicht erreichbar — bitte npm run dev:server im Projektroot starten.",
@@ -50,7 +51,11 @@ export async function fetchCareerMatchView(input: {
       ? " — bitte npm run dev:server neu starten (alter Match-Server läuft noch)."
       : "";
     throw new Error(`Career match request failed (${response.status})${detail}${hint}`);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      const view = await buildCareerMatchViewLocally(input);
+      return normalizeMatchView(view);
+    }
+    throw error;
   }
-  const view = (await response.json()) as MatchView;
-  return normalizeMatchView(view);
 }

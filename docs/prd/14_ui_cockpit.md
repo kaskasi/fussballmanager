@@ -30,7 +30,7 @@ Kalender, News), nicht die 40-Spalten-Identität.
 - Alle Club-Räume: Hub, Inbox, Spielerakte, Jugend-Report, Scouting,
   Transfers, Finanzen, Stadion, Liga, Aufstellung.
 - Match-*Präsentation* (Textlog + 2D-Spielfeld), nicht die Engine
-  (`server/src/engine/` bleibt Gesetz 4).
+  (`server/src/engine/` bleibt Gesetz 4). Beat-Taxonomie und Director: PRD 16.
 - Leere Inventar-Slots als Hunger (Banden, Wurstbude), auch bevor F6.5 / F7.3
   simuliert sind — füllen darf nur das jeweilige Feature.
 
@@ -266,6 +266,7 @@ Shop, keine Karte.
 ```
 
 - Dieselbe Event-Quelle für Log und 2D-Pitch.
+- Später: Broadcast Director (PRD 16) — Beats, PBP/Color; heute 1:1-Templates.
 - Deutsch. Kein englisches Terminal als Default.
 - Live-Eingriff (F1.9) bleibt M3; Speed/Pause sind Pacing, kein Mitspielen.
 - Matchday-Text-Editor-DNA des parallelen Projekts nicht den Club-Chrome

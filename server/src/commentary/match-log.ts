@@ -1,9 +1,6 @@
 import type { MatchEvent, Squad } from "@fussballmanager/shared";
-import {
-  commentateLine,
-  commentaryContextFromSquads,
-  isCommentaryWorthy,
-} from "./render.ts";
+import { createBroadcastDirector } from "./director.ts";
+import { commentaryContextFromSquads } from "./render.ts";
 
 export type MatchLogInput = {
   home: Squad;
@@ -15,6 +12,10 @@ export type MatchLogInput = {
 
 export function formatMatchLog(input: MatchLogInput): string {
   const ctx = commentaryContextFromSquads(input.home, input.away);
+  const director = createBroadcastDirector({
+    seed: input.seed,
+    homeTeamId: input.home.team.id,
+  });
   const homeId = input.home.team.id;
   let home = 0;
   let away = 0;
@@ -26,19 +27,22 @@ export function formatMatchLog(input: MatchLogInput): string {
 
   for (let i = 0; i < input.events.length; i += 1) {
     const event = input.events[i];
-    if (!event || !isCommentaryWorthy(event, input.events[i - 1])) {
+    if (!event) {
       continue;
     }
-    let line = commentateLine(event, ctx);
-    if (event.type === "goal") {
-      if (event.scorer.teamId === homeId) {
-        home += 1;
-      } else {
-        away += 1;
+    const emitted = director.emit(event, input.events[i - 1], ctx);
+    for (const entry of emitted) {
+      let line = entry.text;
+      if (entry.voice === "pbp" && event.type === "goal") {
+        if (event.scorer.teamId === homeId) {
+          home += 1;
+        } else {
+          away += 1;
+        }
+        line += `  (${home}–${away})`;
       }
-      line += `  (${home}–${away})`;
+      lines.push(line);
     }
-    lines.push(line);
     if (event.type === "period_end" && event.period === "first_half") {
       lines.push(
         `HT ${input.home.team.name} ${home}–${away} ${input.away.team.name}`,

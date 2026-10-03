@@ -18,9 +18,8 @@ import {
   SEED_MATCHUP,
 } from "@fussballmanager/shared";
 import {
-  commentateLine,
+  createBroadcastDirector,
   commentaryContextFromSquads,
-  isCommentaryWorthy,
   type CommentaryContext,
 } from "../commentary/index.ts";
 import { createInitialState, step } from "../engine/index.ts";
@@ -138,6 +137,10 @@ export function buildMatchView(input: {
     humanTeamId: input.humanTeamId ?? home.team.id,
   });
   const ctx = commentaryContextFromSquads(home, away);
+  const director = createBroadcastDirector({
+    seed: initial.rng.seed,
+    homeTeamId: home.team.id,
+  });
   const stats = emptyPairStats();
   const kickoff = frameFrom(initial, 0, undefined, stats, ctx);
   const frames: MatchViewFrame[] = [];
@@ -160,10 +163,11 @@ export function buildMatchView(input: {
         result.event,
       ),
     );
-    if (isCommentaryWorthy(result.event, previousEvent)) {
+    for (const line of director.emit(result.event, previousEvent, ctx)) {
       lines.push({
-        seq: result.event.seq,
-        text: commentateLine(result.event, ctx),
+        seq: line.seq,
+        text: line.text,
+        voice: line.voice,
       });
     }
     previousEvent = result.event;

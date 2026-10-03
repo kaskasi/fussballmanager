@@ -631,6 +631,15 @@ body {
   color: #fde68a;
 }
 
+
+.events-feed-line.is-color {
+  color: #7dd3fc;
+  font-weight: 500;
+  font-style: italic;
+  padding-left: 0.85rem;
+  border-left: 2px solid rgb(56 189 248 / 45%);
+}
+
 .events-feed-shot-icon {
   display: inline-block;
   margin-right: 0.35rem;

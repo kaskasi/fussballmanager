@@ -54,9 +54,10 @@ export function EventsFeed({
             const tone = eventLineTone(line.text);
             return (
               <li
-                key={line.seq}
+                key={`${line.seq}-${line.voice ?? "pbp"}-${index}`}
                 className={[
                   "events-feed-line",
+                  line.voice === "color" ? "is-color" : "",
                   index === lines.length - 1 ? "is-latest" : "",
                   tone === "goal" ? "is-goal" : "",
                   tone === "shot" ? "is-shot" : "",

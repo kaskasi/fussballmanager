@@ -273,9 +273,9 @@ Wenn zwei Beats im selben Tick: **ein** PBP + höchstens **ein** Color.
 | Phase | Deliverable | Code-Ort |
 |-------|-------------|----------|
 | **B0** | DE-Templates, Events HUD, fixes Scroll | ✓ (14.10 Slice) |
-| **B1** | `beat_id` aus Event + Tests | `server/src/commentary/beats.ts` |
-| **B2** | Director IDLE/SET_PIECE/ATTACK + Macro-Fenster | `director.ts` |
-| **B3** | Doppelzeile PBP+Color in `MatchViewLine` (`voice` Feld) | `shared/match-view.ts` |
+| **B1** | `beat_id` aus Event + Tests | `server/src/commentary/beats.ts` ✓ |
+| **B2** | Director IDLE/SET_PIECE/ATTACK + Macro-Fenster | `server/src/commentary/director.ts` ✓ |
+| **B3** | Doppelzeile PBP+Color in `MatchViewLine` (`voice` Feld) | `shared/match-view.ts` ✓ (mit B2) |
 | **B4** | Story-Slots + Chronik | `director.ts` + `story-state` |
 | **B5** | Lokales LLM nur für `color` Slots mit Fallback | PRD 01 |
 

@@ -48,6 +48,8 @@ export type MatchViewFrame = {
 export type MatchViewLine = {
   seq: number;
   text: string;
+  /** Play-by-play vs analyst; omitted lines are PBP. */
+  voice?: "pbp" | "color";
 };
 
 export type MatchViewRosterPlayer = {

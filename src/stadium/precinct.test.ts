@@ -14,6 +14,7 @@ import {
   isOwnedCell,
   isPrecinctStadiumCell,
   normalizePrecinct,
+  nudgePrecinctPatch,
   occupiedCells,
   patchTouchesStreet,
   placePrecinctBuilding,
@@ -78,6 +79,24 @@ describe("precinct grid", () => {
     const shop = placePrecinctBuilding(emptyPrecinct(), 1, 1, "fanshop");
     const grown = expandPrecinctPatch(shop, shop.patches[0]!.id, 3, 2);
     expect(occupiedCells(grown, "fanshop")).toBe(6);
+  });
+
+  it("grows west and north, not only south-east", () => {
+    const shop = placePrecinctBuilding(emptyPrecinct(), 2, 2, "fanshop");
+    const west = nudgePrecinctPatch(shop, shop.patches[0]!.id, "w");
+    expect(findBuildingCell(west, "fanshop")).toEqual({ x: 1, y: 2 });
+    expect(occupiedCells(west, "fanshop")).toBe(6);
+    const north = nudgePrecinctPatch(west, west.patches[0]!.id, "n");
+    expect(findBuildingCell(north, "fanshop")).toEqual({ x: 1, y: 1 });
+    expect(occupiedCells(north, "fanshop")).toBe(9);
+  });
+
+  it("keeps buildings on purchased outer parcels after normalize", () => {
+    let grid = buyPrecinctParcel(emptyPrecinct(), 0, 1);
+    grid = placePrecinctBuilding(grid, 0, 1, "kiosk");
+    const next = normalizePrecinct(grid);
+    expect(findBuildingCell(next, "kiosk")).toEqual({ x: 0, y: 1 });
+    expect(isOwnedCell(next, 0, 1)).toBe(true);
   });
 
   it("sells adjacent locked parcels only", () => {

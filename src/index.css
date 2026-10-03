@@ -3004,8 +3004,14 @@ body {
 .stadium-head {
   display: flex;
   align-items: flex-start;
+  justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+.stadium-head .cash-chip {
+  margin-top: 0.35rem;
+  flex-shrink: 0;
 }
 
 .stadium-head button {
@@ -3194,6 +3200,10 @@ body {
 .stadium-upgrades h2 {
   margin: 0 0 0.55rem;
   font-size: 1rem;
+}
+
+.stadium-upgrades .cash-chip {
+  margin: 0 0 0.7rem;
 }
 
 .stadium-upgrade-list {
@@ -3465,6 +3475,7 @@ body {
   border-radius: 1rem;
   background: #fff;
   box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
+  overflow: visible;
 }
 
 .stadium-precinct-palette {
@@ -3533,12 +3544,88 @@ body {
   font-weight: 600;
   line-height: 1.35;
   text-align: left;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.stadium-precinct-hint p {
+  margin: 0;
 }
 
 .stadium-precinct-grid {
   display: grid;
   gap: 0.12rem;
   justify-content: start;
+  overflow: visible;
+}
+
+.stadium-precinct-tile.is-patch {
+  overflow: visible;
+  z-index: 1;
+}
+
+.stadium-precinct-tile.is-picked {
+  z-index: 3;
+}
+
+.stadium-precinct-tile.is-hungry {
+  border-style: dashed;
+  border-color: #d97706;
+  background: #fffbeb;
+}
+
+.stadium-precinct-dock {
+  position: absolute;
+  left: 0.1rem;
+  top: 0.08rem;
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.stadium-precinct-handle {
+  position: absolute;
+  z-index: 4;
+  width: 1.1rem;
+  height: 1.1rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.22rem;
+  background: #0f172a;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stadium-precinct-handle.is-n {
+  top: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.stadium-precinct-handle.is-s {
+  bottom: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.stadium-precinct-handle.is-w {
+  left: -0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.stadium-precinct-handle.is-e {
+  right: -0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.stadium-precinct-handle.is-blocked,
+.stadium-precinct-handle:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
 }
 
 .stadium-precinct-tile {
@@ -7448,6 +7535,55 @@ body {
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+}
+
+.cash-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  margin: 0;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  box-shadow: 0 0 0 1px rgb(15 23 42 / 8%);
+  transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.cash-chip strong {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cash-chip.is-pulse-down,
+.cash-chip.is-pulse-up {
+  font-weight: 800;
+}
+
+.cash-chip.is-pulse-down strong,
+.cash-chip.is-pulse-up strong {
+  font-weight: 800;
+}
+
+.cash-chip.is-pulse-down {
+  background: #fff7ed;
+  color: #9a3412;
+  box-shadow: 0 0 0 2px rgb(234 88 12 / 35%);
+}
+
+.cash-chip.is-pulse-up {
+  background: #ecfdf5;
+  color: #047857;
+  box-shadow: 0 0 0 2px rgb(4 120 87 / 35%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cash-chip {
+    transition: none;
+  }
 }
 
 .app-nav-toggle,

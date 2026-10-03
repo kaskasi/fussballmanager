@@ -27,6 +27,7 @@ import {
   toggleScoutAssignment,
 } from "./scouting/scout-board.ts";
 import { WeekdayStrip } from "./ui/components/WeekdayStrip.tsx";
+import { CashChip } from "./ui/components/CashChip.tsx";
 import { prepareCareerMatch, type CareerMatchSetup } from "./sim/career-match-setup.ts";
 import type { WatchedPlayerMatch } from "./sim/watched-player-match.ts";
 import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
@@ -111,17 +112,18 @@ import { purchaseStadiumUpgrade } from "./stadium/stadium-upgrades.ts";
 import {
   buyPrecinctParcel,
   canBuyPrecinctParcel,
+  canNudgePrecinctPatch,
   canPlaceStreet,
   canUpgradePrecinctBuilding,
   emptyPrecinct,
-  expandPrecinctPatch,
+  nudgePrecinctPatch,
   placePrecinctBuilding,
   placeStreet,
-  precinctExpandCost,
   precinctHasTrainingHall,
   precinctPlacementCost,
   upgradePrecinctBuilding,
   type PrecinctBuilding,
+  type PrecinctEdge,
 } from "./stadium/precinct.ts";
 import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
@@ -867,22 +869,23 @@ export default function App() {
   );
 
   const handleExpandPrecinct = useCallback(
-    (patchId: string, w: number, h: number) => {
+    (patchId: string, edge: PrecinctEdge) => {
       patchSession((current) => {
         const precinct = current.stadium.precinct ?? emptyPrecinct();
-        const patch = precinct.patches.find((entry) => entry.id === patchId);
-        if (!patch) return current;
-        const cost = precinctExpandCost(patch, w, h);
-        if (cost > current.finances.cash) return current;
-        const nextPrecinct = expandPrecinctPatch(precinct, patchId, w, h);
+        const check = canNudgePrecinctPatch(precinct, patchId, edge, current.finances.cash);
+        if (!check.allowed) return current;
+        const nextPrecinct = nudgePrecinctPatch(precinct, patchId, edge);
         if (nextPrecinct === precinct) return current;
         return {
           ...current,
           stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
           finances:
-            cost === 0
+            check.cost === 0
               ? current.finances
-              : normalizeFinances({ ...current.finances, cash: current.finances.cash - cost }),
+              : normalizeFinances({
+                  ...current.finances,
+                  cash: current.finances.cash - check.cost,
+                }),
         };
       });
     },
@@ -1420,6 +1423,7 @@ export default function App() {
         <AppChrome
           screen="hub"
           week={week}
+          cash={finances.cash}
           onNavigate={setScreen}
           onCampusNavigate={() => undefined}
           hubActions={navActions}
@@ -1453,6 +1457,7 @@ export default function App() {
         <AppChrome
           screen={screen}
           week={week}
+          cash={finances.cash}
           onNavigate={setScreen}
           onCloseProfile={() => setForeignPlayerId(null)}
           onCampusNavigate={() => undefined}
@@ -1519,6 +1524,7 @@ export default function App() {
         <AppChrome
           screen={screen}
           week={week}
+          cash={finances.cash}
           onNavigate={setScreen}
           onCloseProfile={() => setProfileId(null)}
           onCampusNavigate={() => undefined}
@@ -1574,6 +1580,7 @@ export default function App() {
       <AppChrome
         screen={screen}
         week={week}
+        cash={finances.cash}
         onNavigate={setScreen}
         onCampusNavigate={() => undefined}
         hubActions={navActions}
@@ -1816,6 +1823,7 @@ interface HubNavActions {
 
 function AppChrome({
   week,
+  cash,
   screen,
   onNavigate,
   onCloseProfile,
@@ -1825,6 +1833,7 @@ function AppChrome({
   onAccessibilityChange,
 }: {
   week: number;
+  cash: number;
   screen: Screen;
   onNavigate: (screen: Screen) => void;
   onCloseProfile?: () => void;
@@ -1837,6 +1846,7 @@ function AppChrome({
     <>
       <AppNav
         screen={screen}
+        cash={cash}
         onNavigate={onNavigate}
         onCloseProfile={onCloseProfile}
         onCampusNavigate={onCampusNavigate}
@@ -1851,6 +1861,7 @@ function AppChrome({
 
 function AppNav({
   screen,
+  cash,
   onNavigate,
   onCloseProfile,
   onCampusNavigate,
@@ -1859,6 +1870,7 @@ function AppNav({
   onAccessibilityChange,
 }: {
   screen: Screen;
+  cash: number;
   onNavigate: (screen: Screen) => void;
   onCloseProfile?: () => void;
   onCampusNavigate?: () => void;
@@ -2002,6 +2014,7 @@ function AppNav({
         >
           {mobileTabsOpen ? "×" : "☰"}
         </button>
+        <CashChip cash={cash} compact />
         <WeekdayStrip week={hubActions.week} weekday={hubActions.weekday} />
         <button
           type="button"

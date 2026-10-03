@@ -433,6 +433,12 @@ export function placePrecinctBuilding(
   return { ...state, patches, levels, streets };
 }
 
+export function extraCellCost(building: PrecinctBuilding): number {
+  const def = precinctBuildingDef(building);
+  const area = def.minW * def.minH;
+  return Math.max(8_000, Math.round(def.cost / Math.max(1, area)));
+}
+
 export function expandPrecinctPatch(
   state: PrecinctState,
   patchId: string,
@@ -468,10 +474,92 @@ export function precinctExpandCost(patch: PrecinctPatch, w: number, h: number): 
   return extra * extraCellCost(patch.building);
 }
 
-export function extraCellCost(building: PrecinctBuilding): number {
-  const def = precinctBuildingDef(building);
-  const area = def.minW * def.minH;
-  return Math.max(8_000, Math.round(def.cost / Math.max(1, area)));
+export type PrecinctEdge = "n" | "e" | "s" | "w";
+
+export function buildingNeedsStreetDock(building: PrecinctBuilding): boolean {
+  return building === "bus" || building === "transit";
+}
+
+export function patchRectOnEdge(
+  patch: PrecinctPatch,
+  edge: PrecinctEdge,
+  delta: 1 | -1,
+): PrecinctPatch | null {
+  const def = precinctBuildingDef(patch.building);
+  if (delta === 1) {
+    if (edge === "e") return { ...patch, w: patch.w + 1 };
+    if (edge === "s") return { ...patch, h: patch.h + 1 };
+    if (edge === "w") return { ...patch, x: patch.x - 1, w: patch.w + 1 };
+    return { ...patch, y: patch.y - 1, h: patch.h + 1 };
+  }
+  if (edge === "e" || edge === "w") {
+    if (patch.w <= def.minW) return null;
+    return edge === "e"
+      ? { ...patch, w: patch.w - 1 }
+      : { ...patch, x: patch.x + 1, w: patch.w - 1 };
+  }
+  if (patch.h <= def.minH) return null;
+  return edge === "s"
+    ? { ...patch, h: patch.h - 1 }
+    : { ...patch, y: patch.y + 1, h: patch.h - 1 };
+}
+
+export function precinctNudgeCost(patch: PrecinctPatch, edge: PrecinctEdge, delta: 1 | -1 = 1): number {
+  const next = patchRectOnEdge(patch, edge, delta);
+  if (!next) return 0;
+  const extra = next.w * next.h - patch.w * patch.h;
+  if (extra <= 0) return 0;
+  return extra * extraCellCost(patch.building);
+}
+
+export function canNudgePrecinctPatch(
+  state: PrecinctState,
+  patchId: string,
+  edge: PrecinctEdge,
+  cash: number,
+  delta: 1 | -1 = 1,
+): { allowed: boolean; cost: number; reason?: string } {
+  const patch = state.patches.find((entry) => entry.id === patchId);
+  if (!patch) return { allowed: false, cost: 0, reason: "Kein Gebäude." };
+  const next = patchRectOnEdge(patch, edge, delta);
+  if (!next) return { allowed: false, cost: 0, reason: "Mindestgröße." };
+  if (delta === 1 && !rectangleIsFree(state, next.x, next.y, next.w, next.h, patch.id)) {
+    return { allowed: false, cost: 0, reason: "Kein Platz." };
+  }
+  const cost = precinctNudgeCost(patch, edge, delta);
+  if (cost > cash) return { allowed: false, cost, reason: "Nicht genug Cash." };
+  return { allowed: true, cost };
+}
+
+export function nudgePrecinctPatch(
+  state: PrecinctState,
+  patchId: string,
+  edge: PrecinctEdge,
+  delta: 1 | -1 = 1,
+): PrecinctState {
+  const check = canNudgePrecinctPatch(state, patchId, edge, Number.POSITIVE_INFINITY, delta);
+  if (!check.allowed) return state;
+  const patch = state.patches.find((entry) => entry.id === patchId);
+  if (!patch) return state;
+  const next = patchRectOnEdge(patch, edge, delta);
+  if (!next) return state;
+  const streets = { ...state.streets };
+  for (const cell of rectangleCells(next.x, next.y, next.w, next.h)) {
+    delete streets[precinctCellKey(cell.x, cell.y)];
+  }
+  return {
+    ...state,
+    streets,
+    patches: state.patches.map((entry) => (entry.id === patchId ? { ...entry, ...next } : entry)),
+  };
+}
+
+export function edgeTowardCell(patch: PrecinctPatch, x: number, y: number): PrecinctEdge | null {
+  if (x === patch.x + patch.w && y >= patch.y && y < patch.y + patch.h) return "e";
+  if (x === patch.x - 1 && y >= patch.y && y < patch.y + patch.h) return "w";
+  if (y === patch.y + patch.h && x >= patch.x && x < patch.x + patch.w) return "s";
+  if (y === patch.y - 1 && x >= patch.x && x < patch.x + patch.w) return "n";
+  return null;
 }
 
 export function canBuyPrecinctParcel(
@@ -652,9 +740,15 @@ export function normalizePrecinct(state?: PrecinctState & { cells?: Record<strin
   } else if (offsetX || offsetY) {
     patches = patches.map((patch) => ({ ...patch, x: patch.x + offsetX, y: patch.y + offsetY }));
   }
+  const owned = { ...next.owned };
+  if (state.owned) {
+    for (const [key, value] of Object.entries(state.owned)) {
+      if (value) owned[key] = true;
+    }
+  }
   const valid: PrecinctPatch[] = [];
   const uniquePlaced = new Set<PrecinctBuilding>();
-  let seed: PrecinctState = { ...next, patches: [] };
+  let seed: PrecinctState = { ...next, owned, patches: [] };
   for (const patch of patches) {
     if (!BUILDING_BY_ID.has(patch.building)) continue;
     const def = precinctBuildingDef(patch.building);
@@ -673,13 +767,7 @@ export function normalizePrecinct(state?: PrecinctState & { cells?: Record<strin
       id: patch.id || newPatchId(patch.building, fit.x, fit.y),
     };
     valid.push(nextPatch);
-    seed = { ...seed, patches: valid };
-  }
-  const owned = { ...next.owned };
-  if (state.owned) {
-    for (const [key, value] of Object.entries(state.owned)) {
-      if (value) owned[key] = true;
-    }
+    seed = { ...seed, owned, patches: valid };
   }
   for (const patch of valid) {
     for (const cell of rectangleCells(patch.x, patch.y, patch.w, patch.h)) {

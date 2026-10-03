@@ -3,27 +3,31 @@
  *
  * Palette 🌭🍺👕🅿️🚌🚇🏃🟩🌱♿🏠 + 🛣️
  * 12×10 · Kern owned · Ring 🔒 kaufbar
- * Gebäude = Rechteck (min. Größe), Kante +→ +↓
+ * Gebäude = Rechteck (min. Größe), Kanten ↑↓←→
  */
 import { formatClubCash } from "../../economy/club-finances.ts";
+import { CashChip } from "./CashChip.tsx";
 import {
   PRECINCT_BUILDINGS,
   PRECINCT_PARCEL_COST,
   PRECINCT_STADIUM,
   PRECINCT_STREET_COST,
   canBuyPrecinctParcel,
+  canNudgePrecinctPatch,
   canPlaceStreet,
   canUpgradePrecinctBuilding,
   countBuilding,
-  extraCellCost,
+  edgeTowardCell,
   isOwnedCell,
   isPrecinctStadiumCell,
   isStreetCell,
   patchAt,
+  patchTouchesStreet,
   precinctBuildingLevel,
-  precinctExpandCost,
+  precinctNudgeCost,
   precinctPlacementCost,
   type PrecinctBuilding,
+  type PrecinctEdge,
   type PrecinctPatch,
   type PrecinctState,
 } from "../../stadium/precinct.ts";
@@ -51,7 +55,7 @@ export function PrecinctGrid({
   onUpgrade: (building: PrecinctBuilding) => void;
   onBuyParcel: (x: number, y: number) => void;
   onPlaceStreet: (x: number, y: number) => void;
-  onExpand: (patchId: string, w: number, h: number) => void;
+  onExpand: (patchId: string, edge: PrecinctEdge) => void;
 }) {
   const [picked, setPicked] = useState<PalettePick | null>(null);
   const [fromCell, setFromCell] = useState<{ x: number; y: number } | null>(null);
@@ -73,10 +77,10 @@ export function PrecinctGrid({
     setFromCell(null);
   }
 
-  function grow(patch: PrecinctPatch, dw: number, dh: number) {
-    const cost = precinctExpandCost(patch, patch.w + dw, patch.h + dh);
-    if (cost > cash) return;
-    onExpand(patch.id, patch.w + dw, patch.h + dh);
+  function grow(patch: PrecinctPatch, edge: PrecinctEdge) {
+    const check = canNudgePrecinctPatch(precinct, patch.id, edge, cash);
+    if (!check.allowed) return;
+    onExpand(patch.id, edge);
   }
 
   return (
@@ -171,11 +175,14 @@ export function PrecinctGrid({
             <span aria-hidden="true">🛣️</span>
           </button>
         </div>
-        <p className="stadium-precinct-hint">
-          Nur Bude und Park mehrfach. Rest einmal, aber größer ziehen. Äußerer Ring ist
-          gesperrt — Parzelle {formatClubCash(PRECINCT_PARCEL_COST)}. Bus und Bahn brauchen eine
-          Straßenkante.
-        </p>
+        <div className="stadium-precinct-hint">
+          <CashChip cash={cash} />
+          <p>
+            Nur Bude und Park mehrfach. Rest einmal, aber größer ziehen. Äußerer Ring ist
+            gesperrt — Parzelle {formatClubCash(PRECINCT_PARCEL_COST)}. Bus und Bahn brauchen eine
+            Straßenkante.
+          </p>
+        </div>
       </aside>
       <div
         className="stadium-precinct-grid"
@@ -213,17 +220,29 @@ export function PrecinctGrid({
               const meta = PRECINCT_BUILDINGS.find((entry) => entry.id === patch.building);
               const movingHere = selected?.id === patch.id;
               const level = precinctBuildingLevel(precinct, patch.building);
-              const growEast = extraCellCost(patch.building) * patch.h;
-              const growSouth = extraCellCost(patch.building) * patch.w;
+              const hungry =
+                patch.building === "bus" || patch.building === "transit"
+                  ? !patchTouchesStreet(precinct, patch.building)
+                  : false;
+              const handles: Array<{ edge: PrecinctEdge; icon: string; label: string }> = [
+                { edge: "n", icon: "↑", label: "Nach oben" },
+                { edge: "e", icon: "→", label: "Nach rechts" },
+                { edge: "s", icon: "↓", label: "Nach unten" },
+                { edge: "w", icon: "←", label: "Nach links" },
+              ];
               return (
                 <div
                   key={patch.id}
                   role="gridcell"
                   tabIndex={0}
                   className={
-                    movingHere
-                      ? "stadium-precinct-tile is-filled is-picked is-patch"
-                      : "stadium-precinct-tile is-filled is-patch"
+                    [
+                      "stadium-precinct-tile is-filled is-patch",
+                      movingHere ? "is-picked" : "",
+                      hungry ? "is-hungry" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")
                   }
                   style={{
                     gridColumn: `${patch.x + 1} / span ${patch.w}`,
@@ -254,32 +273,36 @@ export function PrecinctGrid({
                 >
                   {meta ? <span aria-hidden="true">{meta.icon}</span> : null}
                   {level > 1 ? <span className="stadium-precinct-level">Lv{level}</span> : null}
-                  {movingHere ? (
-                    <span className="stadium-precinct-grow">
-                      <button
-                        type="button"
-                        className="stadium-precinct-grow-btn"
-                        title={`Breiter · ${formatClubCash(growEast)}`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          grow(patch, 1, 0);
-                        }}
-                      >
-                        →
-                      </button>
-                      <button
-                        type="button"
-                        className="stadium-precinct-grow-btn"
-                        title={`Länger · ${formatClubCash(growSouth)}`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          grow(patch, 0, 1);
-                        }}
-                      >
-                        ↓
-                      </button>
+                  {hungry ? (
+                    <span className="stadium-precinct-dock" aria-label="Braucht Straße">
+                      ⚠️
                     </span>
                   ) : null}
+                  {movingHere
+                    ? handles.map((handle) => {
+                        const check = canNudgePrecinctPatch(precinct, patch.id, handle.edge, cash);
+                        const cost = precinctNudgeCost(patch, handle.edge);
+                        return (
+                          <button
+                            key={handle.edge}
+                            type="button"
+                            className={`stadium-precinct-handle is-${handle.edge}${check.allowed ? "" : " is-blocked"}`}
+                            disabled={!check.allowed}
+                            title={
+                              check.allowed
+                                ? `${handle.label} · ${formatClubCash(cost)}`
+                                : (check.reason ?? handle.label)
+                            }
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              grow(patch, handle.edge);
+                            }}
+                          >
+                            {handle.icon}
+                          </button>
+                        );
+                      })
+                    : null}
                 </div>
               );
             }
@@ -331,9 +354,15 @@ export function PrecinctGrid({
                   if (picked === "street") {
                     if (streetCheck.allowed) {
                       onPlaceStreet(x, y);
-                      setPicked(null);
                     }
                     return;
+                  }
+                  if (selected) {
+                    const edge = edgeTowardCell(selected, x, y);
+                    if (edge) {
+                      grow(selected, edge);
+                      return;
+                    }
                   }
                   if (picked) {
                     tryPlace(x, y, picked);

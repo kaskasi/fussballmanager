@@ -19,6 +19,7 @@ import {
   type StadiumTier,
 } from "../../stadium/club-stadium.ts";
 import { formatClubCash, type ClubFinances } from "../../economy/club-finances.ts";
+import { CashChip } from "../components/CashChip.tsx";
 import {
   canPurchaseStadiumUpgrade,
   stadiumUpgradeCatalog,
@@ -35,7 +36,7 @@ import { DEFAULT_FANBASE } from "../../stadium/club-stadium.ts";
 import { Hint } from "../components/Hint.tsx";
 import { PrecinctGrid } from "../components/PrecinctGrid.tsx";
 import { SponsorDealModal } from "../components/SponsorDealModal.tsx";
-import { emptyPrecinct, type PrecinctBuilding } from "../../stadium/precinct.ts";
+import { emptyPrecinct, type PrecinctBuilding, type PrecinctEdge } from "../../stadium/precinct.ts";
 import {
   dealForSlot,
   signSponsorDeal,
@@ -82,7 +83,7 @@ export function StadiumScreen({
   onUpgradePrecinct: (building: PrecinctBuilding) => void;
   onBuyParcel: (x: number, y: number) => void;
   onPlaceStreet: (x: number, y: number) => void;
-  onExpandPrecinct: (patchId: string, w: number, h: number) => void;
+  onExpandPrecinct: (patchId: string, edge: PrecinctEdge) => void;
   onBack?: () => void;
 }) {
   const [tab, setTab] = useState<StadiumTab>("plan");
@@ -124,6 +125,7 @@ export function StadiumScreen({
             {formatClubCash(matchdayIncome)}
           </p>
         </div>
+        <CashChip cash={finances.cash} />
       </header>
 
       <section className="stadium-fanbase" aria-label="Fanbase">
@@ -219,6 +221,7 @@ export function StadiumScreen({
       {tab === "upgrades" ? (
         <section className="stadium-upgrades" aria-label="Stadionausbau">
           <h2>🏗️ Ausbau</h2>
+          <CashChip cash={finances.cash} />
           <ul className="stadium-upgrade-list">
             {stadiumUpgradeCatalog().map((upgrade) => {
               const level = stadiumUpgradeLevel(stadium, upgrade.id);

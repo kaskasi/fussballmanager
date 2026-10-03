@@ -2,6 +2,7 @@ import type { MatchEvent, TeamId } from "@fussballmanager/shared";
 import { beatForCommentary, type BroadcastBeatId } from "./beats.ts";
 import type { CommentaryContext } from "./render.ts";
 import { commentateLine, formatClock } from "./render.ts";
+import { shouldEmitPlayByPlay } from "./suppression.ts";
 
 export type MacroBeatId =
   | "macro_press_turnover"
@@ -277,6 +278,31 @@ export function createInitialDirectorState(): DirectorState {
   };
 }
 
+function applyDirectorStateAfterBeat(
+  state: DirectorState,
+  beat: BroadcastBeatId,
+  event: MatchEvent,
+): void {
+  if (isShotBeat(beat)) {
+    state.pendingCounter = null;
+    state.pendingSetPiece = null;
+  }
+
+  state.mode = updateMode(state.mode, beat);
+  if (state.mode === "attack" && event.possessionTeamId) {
+    if (state.attackTeamId === event.possessionTeamId) {
+      state.chainDepth += 1;
+    } else {
+      state.attackTeamId = event.possessionTeamId;
+      state.chainDepth = 1;
+    }
+  } else if (state.mode === "idle") {
+    state.attackTeamId = null;
+    state.chainDepth = 0;
+  }
+  state.lastBeatId = beat;
+}
+
 export function createBroadcastDirector(input: {
   seed: number;
   homeTeamId: TeamId;
@@ -299,6 +325,11 @@ export function createBroadcastDirector(input: {
     notePendingFromEvent(state, event, beat, homeTeamId);
 
     const macroId = detectMacro(state, event, beat, homeTeamId);
+
+    if (!shouldEmitPlayByPlay(beat)) {
+      applyDirectorStateAfterBeat(state, beat, event);
+      return [];
+    }
 
     const lines: DirectorEmittedLine[] = [
       {
@@ -325,24 +356,7 @@ export function createBroadcastDirector(input: {
       state.cooldownColorUntilSeq = event.seq + COLOR_COOLDOWN_TICKS;
     }
 
-    if (isShotBeat(beat)) {
-      state.pendingCounter = null;
-      state.pendingSetPiece = null;
-    }
-
-    state.mode = updateMode(state.mode, beat);
-    if (state.mode === "attack" && event.possessionTeamId) {
-      if (state.attackTeamId === event.possessionTeamId) {
-        state.chainDepth += 1;
-      } else {
-        state.attackTeamId = event.possessionTeamId;
-        state.chainDepth = 1;
-      }
-    } else if (state.mode === "idle") {
-      state.attackTeamId = null;
-      state.chainDepth = 0;
-    }
-    state.lastBeatId = beat;
+    applyDirectorStateAfterBeat(state, beat, event);
 
     return lines;
   }

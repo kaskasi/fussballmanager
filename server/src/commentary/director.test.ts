@@ -89,6 +89,25 @@ describe("createBroadcastDirector", () => {
     expect(color?.text).toMatch(/Konter|Schneller Umschalt/);
   });
 
+  it("skips P3 pass_complete PBP while still tracking attack state", () => {
+    const director = createBroadcastDirector({ seed: 1, homeTeamId: homeId });
+    const pass: MatchEvent = {
+      type: "pass",
+      seq: 1,
+      matchId,
+      clock: { period: "first_half", minute: 5, second: 0, stoppageMinute: 0 },
+      ball: { x: 50, y: 50 },
+      involved: [player("p1")],
+      possessionTeamId: homeId,
+      from: player("p1", homeId, 40, 50),
+      to: player("p2", homeId, 45, 50),
+      complete: true,
+      kind: "short",
+    };
+    expect(director.emit(pass, undefined, ctx)).toHaveLength(0);
+    expect(director.snapshot().lastBeatId).toBe("pass_complete");
+  });
+
   it("adds color lines on a full simulated match without breaking PBP", () => {
     const initial = createInitialState({
       home: SEED_MATCHUP.home,
@@ -115,7 +134,8 @@ describe("createBroadcastDirector", () => {
         expect(line.text.length).toBeGreaterThan(5);
       }
     }
-    expect(pbp).toBeGreaterThan(80);
+    expect(pbp).toBeGreaterThan(500);
+    expect(pbp).toBeLessThan(700);
     expect(color).toBeGreaterThan(0);
   });
 });

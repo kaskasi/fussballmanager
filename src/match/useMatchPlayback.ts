@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MatchView, MatchViewFrame } from "@fussballmanager/shared";
 import { frameDurationMs } from "./lerp";
+import {
+  COLOR_LINE_DELAY_MS,
+  filterVisibleCommentaryLines,
+} from "./match-commentary-lines.ts";
 import { compressGkCbRecycleFrames } from "./match-presentation.ts";
 
 export function frameAt(view: MatchView, index: number): MatchViewFrame {
@@ -16,11 +20,13 @@ export function useMatchPlayback(view: MatchView | null) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
+  const [colorRevealSeq, setColorRevealSeq] = useState(-1);
   const durationMs = frameDurationMs(speed);
 
   useEffect(() => {
     setIndex(0);
     setPlaying(false);
+    setColorRevealSeq(-1);
   }, [presented?.seed, presented?.eventCount]);
 
   useEffect(() => {
@@ -53,13 +59,41 @@ export function useMatchPlayback(view: MatchView | null) {
     return frameAt(presented, index - 1);
   }, [presented, index]);
 
+  useEffect(() => {
+    if (!presented || !frame) {
+      return;
+    }
+    const seq = frame.seq;
+    setColorRevealSeq((current) => Math.min(current, seq));
+
+    const hasColor = presented.lines.some(
+      (line) => line.seq === seq && line.voice === "color",
+    );
+    if (!hasColor) {
+      return;
+    }
+
+    if (playing) {
+      const delay = Math.max(80, COLOR_LINE_DELAY_MS / speed);
+      const timer = window.setTimeout(() => {
+        setColorRevealSeq((current) => Math.max(current, seq));
+      }, delay);
+      return () => window.clearTimeout(timer);
+    }
+
+    setColorRevealSeq((current) => Math.max(current, seq));
+  }, [presented, frame, frame?.seq, playing, speed]);
+
   const visibleLines = useMemo(() => {
     if (!presented || !frame) {
       return [];
     }
-    const seq = frame.seq;
-    return presented.lines.filter((line) => line.seq <= seq);
-  }, [presented, frame]);
+    return filterVisibleCommentaryLines(
+      presented.lines,
+      frame.seq,
+      colorRevealSeq,
+    );
+  }, [presented, frame, colorRevealSeq]);
 
   const play = useCallback(() => {
     if (!presented) {

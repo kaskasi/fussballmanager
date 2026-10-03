@@ -31,7 +31,7 @@ export function EventsFeed({
     const list = listRef.current;
     if (!list) return;
     list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
-  }, [lines.length, lines.at(-1)?.seq]);
+  }, [lines.length, lines.at(-1)?.seq, lines.at(-1)?.voice]);
 
   return (
     <section className="events-feed" aria-label="Spielereignisse">
@@ -66,7 +66,10 @@ export function EventsFeed({
                   .filter(Boolean)
                   .join(" ")}
               >
-                {tone === "shot" ? (
+                {line.voice === "color" ? (
+                  <span className="events-feed-color-label">Experte</span>
+                ) : null}
+                {tone === "shot" && line.voice !== "color" ? (
                   <span className="events-feed-shot-icon" aria-hidden="true">◎</span>
                 ) : null}
                 {line.text}

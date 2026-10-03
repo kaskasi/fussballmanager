@@ -585,13 +585,13 @@ body {
 .events-feed-list {
   list-style: none;
   margin: 0;
-  padding: 0.55rem 0.45rem 0.65rem;
+  padding: 0.65rem 0.55rem 0.75rem;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   display: grid;
-  gap: 0.28rem;
+  gap: 0.42rem;
   align-content: start;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -599,12 +599,18 @@ body {
 
 .events-feed-line {
   margin: 0;
-  padding: 0.42rem 0.55rem;
+  padding: 0.5rem 0.62rem;
   border-radius: 0.55rem;
   font-size: 0.84rem;
   font-weight: 600;
-  line-height: 1.4;
-  color: #cbd5e1;
+  line-height: 1.45;
+  color: #94a3b8;
+  border: 1px solid transparent;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.events-feed-line:not(.is-latest):not(.is-goal):not(.is-placeholder) {
+  opacity: 0.88;
 }
 
 .events-feed-line.is-placeholder {
@@ -613,24 +619,42 @@ body {
 }
 
 .events-feed-line.is-latest {
-  background: rgb(30 41 59 / 88%);
-  color: #f8fafc;
+  background: rgb(30 41 59 / 55%);
+  border-color: rgb(148 163 184 / 12%);
+  color: #e2e8f0;
   animation: commentary-in 0.35s ease-out;
 }
 
+.events-feed-line.is-latest.is-goal {
+  background: rgb(34 197 94 / 11%);
+  border-color: rgb(34 197 94 / 22%);
+  color: #b8e6c8;
+}
+
+.events-feed-line.is-latest.is-shot,
+.events-feed-line.is-latest.is-danger {
+  background: rgb(251 191 36 / 9%);
+  border-color: rgb(251 191 36 / 18%);
+}
+
 .events-feed-line.is-danger {
-  color: #fde68a;
+  color: #d6d3a8;
+  background: rgb(251 191 36 / 7%);
+  border-color: rgb(251 191 36 / 14%);
 }
 
 .events-feed-line.is-goal {
-  color: #86efac;
-  font-weight: 800;
+  color: #9fd4b0;
+  font-weight: 700;
+  background: rgb(34 197 94 / 9%);
+  border-color: rgb(34 197 94 / 18%);
 }
 
 .events-feed-line.is-shot {
-  color: #fde68a;
+  color: #d6d3a8;
+  background: rgb(251 191 36 / 6%);
+  border-color: rgb(251 191 36 / 12%);
 }
-
 
 .events-feed-line.is-color {
   color: #7dd3fc;
@@ -643,9 +667,23 @@ body {
 .events-feed-shot-icon {
   display: inline-block;
   margin-right: 0.35rem;
-  color: #fbbf24;
+  color: rgb(251 191 36 / 72%);
   font-size: 0.72rem;
   line-height: 1;
+}
+
+.events-feed-color-label {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 0.25rem;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #0f172a;
+  background: rgb(56 189 248 / 88%);
+  vertical-align: baseline;
 }
 
 .pitch-wrap {
@@ -659,14 +697,46 @@ body {
 
 .commentary-ticker {
   display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  min-height: 2.65rem;
-  padding: 0.5rem 0.85rem;
+  align-items: flex-start;
+  gap: 0.65rem;
+  min-height: 3.35rem;
+  padding: 0.72rem 1rem 0.78rem;
   border-radius: 0 0 1rem 1rem;
   background: rgb(15 23 42 / 90%);
   color: #f8fafc;
   box-shadow: 0 12px 40px rgb(15 23 42 / 12%);
+}
+
+.commentary-ticker-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.42rem;
+}
+
+.commentary-ticker-color {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-style: italic;
+  line-height: 1.42;
+  color: rgb(125 211 252 / 88%);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  animation: commentary-in 0.35s ease-out;
+}
+
+.commentary-ticker-color-label {
+  display: inline-block;
+  margin-right: 0.4rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #38bdf8;
 }
 
 .commentary-ticker-label {
@@ -679,12 +749,13 @@ body {
   margin: 0;
   flex: 1;
   min-width: 0;
-  font-size: 0.86rem;
+  font-size: 0.92rem;
   font-weight: 600;
-  line-height: 1.35;
-  white-space: nowrap;
+  line-height: 1.48;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
   animation: commentary-in 0.35s ease-out;
 }
 

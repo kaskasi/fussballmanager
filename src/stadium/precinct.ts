@@ -45,17 +45,44 @@ export interface PrecinctState {
   levels: Partial<Record<PrecinctBuilding, number>>;
 }
 
-export const PRECINCT_WIDTH = 12;
+export const PRECINCT_WIDTH = 14;
 export const PRECINCT_HEIGHT = 10;
 
-/** Playable core around the stadium — the old 8×6 feel, offset onto 12×10. */
-export const PRECINCT_CORE = { x: 1, y: 1, w: 10, h: 8 } as const;
+/** Starting farm: 10×10 owned. Side expansions add 2×5 tiles. */
+export const PRECINCT_CORE = { x: 2, y: 0, w: 10, h: 10 } as const;
 
-/** Stadium footprint — not a placeable building. */
-export const PRECINCT_STADIUM = { x: 4, y: 4, w: 4, h: 2 } as const;
+/** Stadium footprint — not a placeable building. Centered in the starting farm. */
+export const PRECINCT_STADIUM = { x: 5, y: 4, w: 4, h: 2 } as const;
+
+/**
+ * Off-grid city highway, Sim City-style: sits on the north rim (y = -1)
+ * so the bus stop docks to the city, not to a gifted inner street.
+ */
+export const PRECINCT_CITY_LINK = { x: 6, y: -1, w: 2, h: 1 } as const;
 
 export const PRECINCT_PARCEL_COST = 90_000;
+export const PRECINCT_EXPANSION_COST = 240_000;
 export const PRECINCT_STREET_COST = 15_000;
+
+export type PrecinctExpansionSide = "left" | "right";
+
+export interface PrecinctExpansion {
+  id: "left_north" | "right_north" | "left_south" | "right_south";
+  side: PrecinctExpansionSide;
+  label: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** Rosenberg tiles: alternate left/right. Four buys → 2 extra columns × 10 rows per side. */
+export const PRECINCT_EXPANSIONS: readonly PrecinctExpansion[] = [
+  { id: "left_north", side: "left", label: "links oben", x: 0, y: 0, w: 2, h: 5 },
+  { id: "right_north", side: "right", label: "rechts oben", x: 12, y: 0, w: 2, h: 5 },
+  { id: "left_south", side: "left", label: "links unten", x: 0, y: 5, w: 2, h: 5 },
+  { id: "right_south", side: "right", label: "rechts unten", x: 12, y: 5, w: 2, h: 5 },
+];
 
 export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
   {
@@ -68,7 +95,7 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     minH: 1,
     maxLevel: 1,
     upgradeCost: 0,
-    hint: "Mehrere Buden · 1×1",
+    hint: "Mehrere Buden · 1×1 · Wurstverkauf + Zuschauer",
   },
   {
     id: "beer_tent",
@@ -80,7 +107,7 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     minH: 2,
     maxLevel: 1,
     upgradeCost: 0,
-    hint: "Nur eines · 2×2, skalierbar",
+    hint: "Nur eines · 2×2 · Bierverkauf + Zuschauer",
   },
   {
     id: "fanshop",
@@ -116,7 +143,7 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     minH: 2,
     maxLevel: 1,
     upgradeCost: 0,
-    hint: "Nur eine · dockt an Straße",
+    hint: "Nur eine · Zuschauer, dockt ans Netz",
   },
   {
     id: "transit",
@@ -128,19 +155,19 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     minH: 3,
     maxLevel: 1,
     upgradeCost: 0,
-    hint: "Nur eine · 2×3 · dockt an Straße",
+    hint: "Nur eine · 2×3 · Zuschauer, dockt ans Netz",
   },
   {
     id: "training_ground",
     icon: "🏃",
-    label: "Trainingsgelände",
+    label: "Trainingszentrum",
     cost: 450_000,
     cap: "unique",
     minW: 3,
     minH: 3,
     maxLevel: 2,
     upgradeCost: 720_000,
-    hint: "Nur eines · 3×3 · Ausbau zur Halle",
+    hint: "Gebäude · Fitness, Pool, Physio später · jetzt Training, Ausbau Halle",
   },
   {
     id: "training_pitch",
@@ -152,7 +179,7 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     minH: 3,
     maxLevel: 1,
     upgradeCost: 0,
-    hint: "Nur einer · min. 2×3",
+    hint: "Nur einer · min. 2×3 · extra Rasen, mehr Training",
   },
   {
     id: "youth_pitch",
@@ -164,7 +191,7 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     minH: 2,
     maxLevel: 1,
     upgradeCost: 0,
-    hint: "Nur einer · min. 2×2",
+    hint: "Nur einer · min. 2×2 · extra Jugend-Training",
   },
   {
     id: "fan_services",
@@ -176,7 +203,7 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     minH: 2,
     maxLevel: 1,
     upgradeCost: 0,
-    hint: "Nur einer · 1×2",
+    hint: "Nur einer · 1×2 · Fans + Zuschauer",
   },
   {
     id: "clubhouse",
@@ -220,6 +247,20 @@ export function isPrecinctCoreCell(x: number, y: number): boolean {
   );
 }
 
+export function isCityLinkCell(x: number, y: number): boolean {
+  return (
+    x >= PRECINCT_CITY_LINK.x &&
+    x < PRECINCT_CITY_LINK.x + PRECINCT_CITY_LINK.w &&
+    y >= PRECINCT_CITY_LINK.y &&
+    y < PRECINCT_CITY_LINK.y + PRECINCT_CITY_LINK.h
+  );
+}
+
+/** Grid cells on the north rim that share an edge with the off-grid highway. */
+export function isCityRampCell(x: number, y: number): boolean {
+  return y === 0 && x >= PRECINCT_CITY_LINK.x && x < PRECINCT_CITY_LINK.x + PRECINCT_CITY_LINK.w;
+}
+
 export function defaultOwnedCells(): Record<string, true> {
   const owned: Record<string, true> = {};
   for (let y = PRECINCT_CORE.y; y < PRECINCT_CORE.y + PRECINCT_CORE.h; y += 1) {
@@ -231,15 +272,80 @@ export function defaultOwnedCells(): Record<string, true> {
   return owned;
 }
 
+/** One road from the highway down to the arena's north edge. */
+export function precinctSpineCells(): Array<{ x: number; y: number }> {
+  const cells: Array<{ x: number; y: number }> = [];
+  for (let y = 0; y < PRECINCT_STADIUM.y; y += 1) {
+    cells.push({ x: PRECINCT_CITY_LINK.x, y });
+  }
+  return cells;
+}
+
+function defaultSpineStreets(): Record<string, true> {
+  const streets: Record<string, true> = {};
+  for (const cell of precinctSpineCells()) {
+    if (isPrecinctStadiumCell(cell.x, cell.y)) continue;
+    streets[precinctCellKey(cell.x, cell.y)] = true;
+  }
+  return streets;
+}
+
 export function emptyPrecinct(): PrecinctState {
   return {
     width: PRECINCT_WIDTH,
     height: PRECINCT_HEIGHT,
     patches: [],
     owned: defaultOwnedCells(),
-    streets: {},
+    streets: defaultSpineStreets(),
     levels: {},
   };
+}
+
+export function precinctExpansionAt(x: number, y: number): PrecinctExpansion | undefined {
+  return PRECINCT_EXPANSIONS.find(
+    (tile) => x >= tile.x && x < tile.x + tile.w && y >= tile.y && y < tile.y + tile.h,
+  );
+}
+
+export function precinctExpansionOwned(state: PrecinctState, tile: PrecinctExpansion): boolean {
+  return rectangleCells(tile.x, tile.y, tile.w, tile.h).every(
+    (cell) => isOwnedCell(state, cell.x, cell.y),
+  );
+}
+
+export function nextPrecinctExpansion(state: PrecinctState): PrecinctExpansion | null {
+  return PRECINCT_EXPANSIONS.find((tile) => !precinctExpansionOwned(state, tile)) ?? null;
+}
+
+export function canBuyPrecinctExpansion(
+  state: PrecinctState,
+  cash: number,
+): { allowed: boolean; cost: number; tile: PrecinctExpansion | null; reason?: string } {
+  const tile = nextPrecinctExpansion(state);
+  if (!tile) {
+    return { allowed: false, cost: 0, tile: null, reason: "Gelände ist voll." };
+  }
+  if (cash < PRECINCT_EXPANSION_COST) {
+    return {
+      allowed: false,
+      cost: PRECINCT_EXPANSION_COST,
+      tile,
+      reason: "Nicht genug Cash.",
+    };
+  }
+  return { allowed: true, cost: PRECINCT_EXPANSION_COST, tile };
+}
+
+export function buyPrecinctExpansion(state: PrecinctState): PrecinctState {
+  const tile = nextPrecinctExpansion(state);
+  if (!tile) return state;
+  const owned = { ...state.owned };
+  for (const cell of rectangleCells(tile.x, tile.y, tile.w, tile.h)) {
+    if (!isPrecinctStadiumCell(cell.x, cell.y)) {
+      owned[precinctCellKey(cell.x, cell.y)] = true;
+    }
+  }
+  return { ...state, owned };
 }
 
 export function isOwnedCell(state: PrecinctState, x: number, y: number): boolean {
@@ -361,16 +467,32 @@ export function findFreeRectangle(
   return null;
 }
 
-function parcelTouchesOwned(state: PrecinctState, x: number, y: number): boolean {
-  const neighbors = [
-    { x: x - 1, y },
-    { x: x + 1, y },
-    { x, y: y - 1 },
-    { x, y: y + 1 },
-  ];
-  return neighbors.some(
-    (cell) => isOwnedCell(state, cell.x, cell.y) || isPrecinctStadiumCell(cell.x, cell.y),
-  );
+function shiftTrueMap(
+  map: Record<string, true> | undefined,
+  offsetX: number,
+  offsetY: number,
+): Record<string, true> {
+  const shifted: Record<string, true> = {};
+  if (!map) return shifted;
+  for (const [key, value] of Object.entries(map)) {
+    if (!value) continue;
+    const [rawX, rawY] = key.split(",").map(Number);
+    if (rawX == null || rawY == null || Number.isNaN(rawX) || Number.isNaN(rawY)) continue;
+    shifted[precinctCellKey(rawX + offsetX, rawY + offsetY)] = true;
+  }
+  return shifted;
+}
+
+function grantTouchedExpansions(owned: Record<string, true>): void {
+  for (const tile of PRECINCT_EXPANSIONS) {
+    const touched = rectangleCells(tile.x, tile.y, tile.w, tile.h).some(
+      (cell) => owned[precinctCellKey(cell.x, cell.y)],
+    );
+    if (!touched) continue;
+    for (const cell of rectangleCells(tile.x, tile.y, tile.w, tile.h)) {
+      owned[precinctCellKey(cell.x, cell.y)] = true;
+    }
+  }
 }
 
 export function canPlacePrecinctBuilding(
@@ -476,8 +598,12 @@ export function precinctExpandCost(patch: PrecinctPatch, w: number, h: number): 
 
 export type PrecinctEdge = "n" | "e" | "s" | "w";
 
-export function buildingNeedsStreetDock(building: PrecinctBuilding): boolean {
+export function buildingNeedsCityDock(building: PrecinctBuilding): boolean {
   return building === "bus" || building === "transit";
+}
+
+export function buildingNeedsStreetDock(building: PrecinctBuilding): boolean {
+  return buildingNeedsCityDock(building);
 }
 
 export function patchRectOnEdge(
@@ -554,6 +680,23 @@ export function nudgePrecinctPatch(
   };
 }
 
+export function patchIsMinSize(patch: PrecinctPatch): boolean {
+  const def = precinctBuildingDef(patch.building);
+  return patch.w <= def.minW && patch.h <= def.minH;
+}
+
+export function shrinkPrecinctPatchToMin(state: PrecinctState, patchId: string): PrecinctState {
+  const patch = state.patches.find((entry) => entry.id === patchId);
+  if (!patch || patchIsMinSize(patch)) return state;
+  const def = precinctBuildingDef(patch.building);
+  return {
+    ...state,
+    patches: state.patches.map((entry) =>
+      entry.id === patchId ? { ...entry, w: def.minW, h: def.minH } : entry,
+    ),
+  };
+}
+
 export function edgeTowardCell(patch: PrecinctPatch, x: number, y: number): PrecinctEdge | null {
   if (x === patch.x + patch.w && y >= patch.y && y < patch.y + patch.h) return "e";
   if (x === patch.x - 1 && y >= patch.y && y < patch.y + patch.h) return "w";
@@ -568,27 +711,20 @@ export function canBuyPrecinctParcel(
   y: number,
   cash: number,
 ): { allowed: boolean; cost: number; reason?: string } {
-  if (x < 0 || y < 0 || x >= state.width || y >= state.height) {
-    return { allowed: false, cost: 0, reason: "Außerhalb." };
+  const tile = precinctExpansionAt(x, y);
+  if (!tile) return { allowed: false, cost: 0, reason: "Kein Plättchen." };
+  const next = nextPrecinctExpansion(state);
+  if (!next || next.id !== tile.id) {
+    return { allowed: false, cost: PRECINCT_EXPANSION_COST, reason: "Erst die nächste Erweiterung." };
   }
-  if (isPrecinctStadiumCell(x, y)) return { allowed: false, cost: 0, reason: "Stadion." };
-  if (isOwnedCell(state, x, y)) return { allowed: false, cost: 0, reason: "Schon Gelände." };
-  if (!parcelTouchesOwned(state, x, y)) {
-    return { allowed: false, cost: PRECINCT_PARCEL_COST, reason: "Nur an eigenes Gelände." };
-  }
-  if (cash < PRECINCT_PARCEL_COST) {
-    return { allowed: false, cost: PRECINCT_PARCEL_COST, reason: "Nicht genug Cash." };
-  }
-  return { allowed: true, cost: PRECINCT_PARCEL_COST };
+  return canBuyPrecinctExpansion(state, cash);
 }
 
 export function buyPrecinctParcel(state: PrecinctState, x: number, y: number): PrecinctState {
-  const check = canBuyPrecinctParcel(state, x, y, Number.POSITIVE_INFINITY);
-  if (!check.allowed) return state;
-  return {
-    ...state,
-    owned: { ...state.owned, [precinctCellKey(x, y)]: true },
-  };
+  const tile = precinctExpansionAt(x, y);
+  const next = nextPrecinctExpansion(state);
+  if (!tile || !next || tile.id !== next.id) return state;
+  return buyPrecinctExpansion(state);
 }
 
 export function canPlaceStreet(
@@ -616,14 +752,184 @@ export function placeStreet(state: PrecinctState, x: number, y: number): Precinc
   };
 }
 
-function patchEdgeCells(patch: PrecinctPatch): Array<{ x: number; y: number }> {
+export function manhattanStreetCells(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): Array<{ x: number; y: number }> {
+  const cells: Array<{ x: number; y: number }> = [{ x: from.x, y: from.y }];
+  const stepX = Math.sign(to.x - from.x);
+  const stepY = Math.sign(to.y - from.y);
+  let x = from.x;
+  let y = from.y;
+  while (x !== to.x) {
+    x += stepX;
+    cells.push({ x, y });
+  }
+  while (y !== to.y) {
+    y += stepY;
+    cells.push({ x, y });
+  }
+  return cells;
+}
+
+function isWalkableStreetCell(state: PrecinctState, x: number, y: number): boolean {
+  if (!inBounds(state, x, y, 1, 1)) return false;
+  if (isPrecinctStadiumCell(x, y)) return false;
+  if (!isOwnedCell(state, x, y)) return false;
+  if (patchAt(state, x, y)) return false;
+  return true;
+}
+
+const STREET_DIRS = [
+  { x: -1, y: 0 },
+  { x: 1, y: 0 },
+  { x: 0, y: -1 },
+  { x: 0, y: 1 },
+] as const;
+
+export function pathBuildingToCity(
+  state: PrecinctState,
+  building: PrecinctBuilding,
+): Array<{ x: number; y: number }> | null {
+  const patch = state.patches.find((entry) => entry.building === building);
+  if (!patch) return null;
+  return pathFootprintToCity(state, patch.x, patch.y, patch.w, patch.h);
+}
+
+export function pathFootprintToCity(
+  state: PrecinctState,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): Array<{ x: number; y: number }> | null {
+  if (footprintDocksStreetNetwork(state, x, y, w, h)) return [];
+  const starts = rectEdgeCells(x, y, w, h).filter((cell) => isWalkableStreetCell(state, cell.x, cell.y));
+  if (starts.length === 0) return null;
+  const connected = streetsConnectedToCityLink(state);
+  const cameFrom = new Map<string, string | null>();
+  const queue: Array<{ x: number; y: number }> = [];
+  for (const start of starts) {
+    const key = precinctCellKey(start.x, start.y);
+    if (cameFrom.has(key)) continue;
+    cameFrom.set(key, null);
+    queue.push(start);
+  }
+  let goal: { x: number; y: number } | null = null;
+  while (queue.length > 0) {
+    const cell = queue.shift()!;
+    const key = precinctCellKey(cell.x, cell.y);
+    if (isCityRampCell(cell.x, cell.y) || connected.has(key)) {
+      goal = cell;
+      break;
+    }
+    for (const dir of STREET_DIRS) {
+      const next = { x: cell.x + dir.x, y: cell.y + dir.y };
+      const nextKey = precinctCellKey(next.x, next.y);
+      if (cameFrom.has(nextKey)) continue;
+      if (!isWalkableStreetCell(state, next.x, next.y)) continue;
+      cameFrom.set(nextKey, key);
+      queue.push(next);
+    }
+  }
+  if (!goal) return null;
+  const path: Array<{ x: number; y: number }> = [];
+  let cursor: string | null = precinctCellKey(goal.x, goal.y);
+  while (cursor) {
+    const [cx, cy] = cursor.split(",").map(Number);
+    path.push({ x: cx!, y: cy! });
+    cursor = cameFrom.get(cursor) ?? null;
+  }
+  return path.reverse();
+}
+
+export function pathArenaToCity(state: PrecinctState): Array<{ x: number; y: number }> | null {
+  return pathFootprintToCity(
+    state,
+    PRECINCT_STADIUM.x,
+    PRECINCT_STADIUM.y,
+    PRECINCT_STADIUM.w,
+    PRECINCT_STADIUM.h,
+  );
+}
+
+export type StreetRunKind = "paint" | "exist" | "blocked";
+
+export function classifyStreetRun(
+  state: PrecinctState,
+  cells: Array<{ x: number; y: number }>,
+  cash: number,
+): { cells: Array<{ x: number; y: number; kind: StreetRunKind }>; cost: number } {
+  let remaining = cash;
+  let cost = 0;
+  const classified: Array<{ x: number; y: number; kind: StreetRunKind }> = [];
+  for (const cell of cells) {
+    if (isStreetCell(state, cell.x, cell.y)) {
+      classified.push({ ...cell, kind: "exist" });
+      continue;
+    }
+    const check = canPlaceStreet(state, cell.x, cell.y, remaining);
+    if (check.allowed) {
+      classified.push({ ...cell, kind: "paint" });
+      remaining -= check.cost;
+      cost += check.cost;
+      continue;
+    }
+    classified.push({ ...cell, kind: "blocked" });
+  }
+  return { cells: classified, cost };
+}
+
+export function placeStreetRun(
+  state: PrecinctState,
+  cells: Array<{ x: number; y: number }>,
+  cash: number,
+): { state: PrecinctState; spent: number } {
+  let next = state;
+  let remaining = cash;
+  let spent = 0;
+  for (const cell of cells) {
+    if (isStreetCell(next, cell.x, cell.y)) continue;
+    const check = canPlaceStreet(next, cell.x, cell.y, remaining);
+    if (check.reason === "Nicht genug Cash.") break;
+    if (!check.allowed) continue;
+    next = placeStreet(next, cell.x, cell.y);
+    remaining -= check.cost;
+    spent += check.cost;
+  }
+  return { state: next, spent };
+}
+
+export function streetLinks(
+  state: PrecinctState,
+  x: number,
+  y: number,
+): { n: boolean; e: boolean; s: boolean; w: boolean } {
+  return {
+    n: isStreetCell(state, x, y - 1) || isCityLinkCell(x, y - 1),
+    e: isStreetCell(state, x + 1, y),
+    s: isStreetCell(state, x, y + 1),
+    w: isStreetCell(state, x - 1, y),
+  };
+}
+
+function rectEdgeCells(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): Array<{ x: number; y: number }> {
   const neighbors = [
-    { x: patch.x - 1, y: patch.y, w: 1, h: patch.h },
-    { x: patch.x + patch.w, y: patch.y, w: 1, h: patch.h },
-    { x: patch.x, y: patch.y - 1, w: patch.w, h: 1 },
-    { x: patch.x, y: patch.y + patch.h, w: patch.w, h: 1 },
+    { x: x - 1, y, w: 1, h },
+    { x: x + w, y, w: 1, h },
+    { x, y: y - 1, w, h: 1 },
+    { x, y: y + h, w, h: 1 },
   ];
   return neighbors.flatMap((edge) => rectangleCells(edge.x, edge.y, edge.w, edge.h));
+}
+
+function patchEdgeCells(patch: PrecinctPatch): Array<{ x: number; y: number }> {
+  return rectEdgeCells(patch.x, patch.y, patch.w, patch.h);
 }
 
 export function patchTouchesStreet(state: PrecinctState, building: PrecinctBuilding): boolean {
@@ -632,34 +938,88 @@ export function patchTouchesStreet(state: PrecinctState, building: PrecinctBuild
   return patchEdgeCells(patch).some((cell) => isStreetCell(state, cell.x, cell.y));
 }
 
-function findDockStreetCell(
-  state: PrecinctState,
-  patch: PrecinctPatch,
-): { x: number; y: number } | null {
-  for (const cell of patchEdgeCells(patch)) {
-    if (!inBounds(state, cell.x, cell.y, 1, 1)) continue;
-    if (isPrecinctStadiumCell(cell.x, cell.y)) continue;
-    if (!isOwnedCell(state, cell.x, cell.y)) continue;
-    if (patchAt(state, cell.x, cell.y)) continue;
-    if (isStreetCell(state, cell.x, cell.y)) continue;
-    return cell;
-  }
-  return null;
+export function patchTouchesCityLink(patch: PrecinctPatch): boolean {
+  return patchEdgeCells(patch).some((cell) => isCityLinkCell(cell.x, cell.y));
 }
 
-function ensureDockStreets(state: PrecinctState): Record<string, true> {
-  const streets = { ...state.streets };
-  let seeded: PrecinctState = { ...state, streets };
-  for (const building of ["bus", "transit"] as const) {
-    if (patchTouchesStreet(seeded, building)) continue;
-    const patch = seeded.patches.find((entry) => entry.building === building);
-    if (!patch) continue;
-    const cell = findDockStreetCell(seeded, patch);
-    if (!cell) continue;
-    streets[precinctCellKey(cell.x, cell.y)] = true;
-    seeded = { ...seeded, streets };
+function streetsConnectedToCityLink(state: PrecinctState): Set<string> {
+  const seen = new Set<string>();
+  const queue: Array<{ x: number; y: number }> = [];
+  for (let y = 0; y < state.height; y += 1) {
+    for (let x = 0; x < state.width; x += 1) {
+      if (!isStreetCell(state, x, y)) continue;
+      if (!isCityRampCell(x, y)) continue;
+      const key = precinctCellKey(x, y);
+      seen.add(key);
+      queue.push({ x, y });
+    }
   }
-  return streets;
+  const dirs = [
+    { x: -1, y: 0 },
+    { x: 1, y: 0 },
+    { x: 0, y: -1 },
+    { x: 0, y: 1 },
+  ];
+  while (queue.length > 0) {
+    const cell = queue.pop()!;
+    for (const dir of dirs) {
+      const nx = cell.x + dir.x;
+      const ny = cell.y + dir.y;
+      const key = precinctCellKey(nx, ny);
+      if (seen.has(key)) continue;
+      if (!isStreetCell(state, nx, ny)) continue;
+      seen.add(key);
+      queue.push({ x: nx, y: ny });
+    }
+  }
+  return seen;
+}
+
+export function footprintDocksStreetNetwork(
+  state: PrecinctState,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): boolean {
+  const edges = rectEdgeCells(x, y, w, h);
+  if (edges.some((cell) => isCityLinkCell(cell.x, cell.y))) return true;
+  const connected = streetsConnectedToCityLink(state);
+  if (connected.size === 0) return false;
+  return edges.some((cell) => connected.has(precinctCellKey(cell.x, cell.y)));
+}
+
+export function patchDocksStreetNetwork(state: PrecinctState, patch: PrecinctPatch): boolean {
+  return footprintDocksStreetNetwork(state, patch.x, patch.y, patch.w, patch.h);
+}
+
+export function arenaDocksStreetNetwork(state: PrecinctState): boolean {
+  return footprintDocksStreetNetwork(
+    state,
+    PRECINCT_STADIUM.x,
+    PRECINCT_STADIUM.y,
+    PRECINCT_STADIUM.w,
+    PRECINCT_STADIUM.h,
+  );
+}
+
+export function buildingDocksStreetNetwork(
+  state: PrecinctState,
+  building: PrecinctBuilding,
+): boolean {
+  return state.patches.some(
+    (patch) => patch.building === building && patchDocksStreetNetwork(state, patch),
+  );
+}
+
+export function dockedOccupiedCells(state: PrecinctState, building: PrecinctBuilding): number {
+  return state.patches
+    .filter((patch) => patch.building === building && patchDocksStreetNetwork(state, patch))
+    .reduce((sum, patch) => sum + patch.w * patch.h, 0);
+}
+
+export function patchDocksCityLink(state: PrecinctState, building: PrecinctBuilding): boolean {
+  return buildingDocksStreetNetwork(state, building);
 }
 
 export function precinctUpgradeCost(state: PrecinctState, building: PrecinctBuilding): number {
@@ -740,12 +1100,8 @@ export function normalizePrecinct(state?: PrecinctState & { cells?: Record<strin
   } else if (offsetX || offsetY) {
     patches = patches.map((patch) => ({ ...patch, x: patch.x + offsetX, y: patch.y + offsetY }));
   }
-  const owned = { ...next.owned };
-  if (state.owned) {
-    for (const [key, value] of Object.entries(state.owned)) {
-      if (value) owned[key] = true;
-    }
-  }
+  const owned = { ...next.owned, ...shiftTrueMap(state.owned, offsetX, offsetY) };
+  if (legacyWidth === 12) grantTouchedExpansions(owned);
   const valid: PrecinctPatch[] = [];
   const uniquePlaced = new Set<PrecinctBuilding>();
   let seed: PrecinctState = { ...next, owned, patches: [] };
@@ -776,13 +1132,16 @@ export function normalizePrecinct(state?: PrecinctState & { cells?: Record<strin
       }
     }
   }
-  const streets: Record<string, true> = {};
-  for (const [key, value] of Object.entries(state.streets ?? {})) {
-    if (!value) continue;
+  const streets = { ...next.streets, ...shiftTrueMap(state.streets, offsetX, offsetY) };
+  for (const key of Object.keys(streets)) {
     const [sx, sy] = key.split(",").map(Number);
-    if (sx == null || sy == null || Number.isNaN(sx) || Number.isNaN(sy)) continue;
-    if (valid.some((patch) => patchCovers(patch, sx, sy))) continue;
-    streets[key] = true;
+    if (sx == null || sy == null || Number.isNaN(sx) || Number.isNaN(sy)) {
+      delete streets[key];
+      continue;
+    }
+    if (isPrecinctStadiumCell(sx, sy) || valid.some((patch) => patchCovers(patch, sx, sy))) {
+      delete streets[key];
+    }
   }
   const levels: PrecinctState["levels"] = {};
   for (const def of PRECINCT_BUILDINGS) {
@@ -791,6 +1150,5 @@ export function normalizePrecinct(state?: PrecinctState & { cells?: Record<strin
       levels[def.id] = Math.min(def.maxLevel, Math.max(1, stored));
     }
   }
-  const docked = ensureDockStreets({ ...next, patches: valid, owned, streets, levels });
-  return { ...next, patches: valid, owned, streets: docked, levels };
+  return { ...next, patches: valid, owned, streets, levels };
 }

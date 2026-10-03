@@ -165,7 +165,7 @@ export function fillRateForTicketPrice(
   const adjustedRef = ref.fill_rate * fanbaseMultiplier;
   const ratio = ticketPrice / ref.ticket_price_eur;
   const raw = adjustedRef / Math.pow(ratio, PRICE_ELASTICITY) + (options?.fillBonus ?? 0);
-  return Math.min(FILL_RATE_MAX, Math.max(FILL_RATE_MIN, raw));
+  return Math.max(FILL_RATE_MIN, raw);
 }
 
 function normalizeFanbaseIndex(value: number): number {

@@ -231,9 +231,14 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
   nicht auf dem Rasen. Klick ▭ = Sponsor-Modal (F6.5).
   👕 Shirt-Slot bleibt am Platz.
 
-  Gelände: 12×10. 🏟️ Stadion fest (4×2, Mitte). Kern owned, Ring kaufbar.
-  Gebäude = Rechteck (Mindestgröße), Kante ziehen. Straße = Zelle.
+  Gelände: 14×10. 🏟️ Stadion fest (4×2, Mitte). Start: 10×10 owned,
+  Straße von der Stadt zur Arena. 2×5-Plättchen links/rechts (abwechselnd).
+  Gebäude = Rechteck (Mindestgröße), Kante wachsen/schrumpfen, zurück auf min.
+  🛣️ Stadtanschluss außerhalb oben. Straße ziehen (Sim City): verbindet sich
+  automatisch. Gebäude ohne Netz (inkl. Arena) tragen ⚠️ wie die Bushaltestelle;
+  Klick mit 🛣️ legt den Weg zur Autobahn.
   🌭 Bude (n)  🅿️ Park (n)  · Rest einmal, aber skalierbar.
+  Rechts: Effekt-Buffs (Zuschauer/Stadt/Training/Kasse), Hunger = leer, ⚠️ = undocked.
 ```
 
 - Pro Stand sichtbare Werbe-Slots **auf den Karten** um den Grundriss
@@ -244,10 +249,25 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
   Die Marke sagt auch Nein. Keine Klausel-Enzyklopädie.
 - Gelände-v2 (F7.3-Möbel, kein 3D): Patches mit Mindestgröße (z. B. Trainingsplatz
   2×3, Gelände 3×3, Park 2×2). **Mehrfach nur** Würstchenbude und Parkplatz.
-  Effekt folgt belegter Fläche. Äußere Parzellen sind gesperrt und kosten Cash.
-  Straße ist eine Zelle; Bus und Bahn brauchen eine Straßenkante.
-  Fanshop und Trainingsgelände haben weiter Qualitäts-Level (Shop / Halle).
-  Wurst-SKU, Hotel, Museum bleiben F7.3-Sim.
+  Effekt folgt belegter Fläche, und nur wenn das Gebäude am Straßennetz hängt.
+  Startfarm ist 10×10, komplett owned, mit einer Straße von der Autobahn (oben
+  außen) zur Arena — wer daneben baut, verschenkt Buffs (⚠️).
+  Erweiterung wie bei Rosenberg: vier **2×5-Plättchen**, nur an den Seiten,
+  abwechselnd links/rechts über „Erweiterung kaufen“. Nach 4 Käufen sind
+  links und rechts je 2 Spalten × 10 Reihen dazugekommen (Board 14×10).
+  Kein Kranz aus 1×1-Schlössern.
+  Straße ziehen wie in Sim City — benachbarte Zellen verbinden sich zum Netz.
+  Stadtanschluss sitzt außerhalb oben (Autobahn).
+  Jedes Gebäude und die Arena docken an das Straßennetz — direkt an die Autobahn
+  oder über eine verbundene Straße dorthin. Isolierte Straßen zählen nicht.
+  Ohne Netz: gelbes ⚠️ (wie die Bushaltestelle); Buffs sind tot, bis die Straße
+  anschließt. Klick mit dem Straßen-Werkzeug auf ⚠️ legt den Weg.
+  Patches wachsen an jeder Kante und lassen sich auf die Mindestgröße
+  zurückziehen (sonst ist Umsetzen nach dem Ausbau unmöglich).
+  Fanshop und Trainingszentrum haben weiter Qualitäts-Level (Shop / Halle).
+  Imbiss (Bude/Zelt) und Fanshop zahlen wöchentlich auf die Kasse.
+  Trainingszentrum ist das Gebäude (Fitness, Pool, Physio als spätere Stufen);
+  Trainingsplatz ist extra Rasen. Beide buffen Training.
 - Ticket-Stepper an Blöcken bleibt.
 
 ### 14.8 Transfers (F5.1, F5.4, F5.7)

@@ -54,7 +54,7 @@ type StadiumTab = "plan" | "precinct" | "upgrades";
  * WIREFRAME: PRD 14.7 — Stadion
  * [Grundriss] [Gelände] [Ausbau]
  * Banden sitzen auf den Tribünen-Karten um den Grundriss.
- * Klick = F6.5-Modal. Gelände: 🏟️ Mitte, Patches, Ring kaufbar.
+ * Klick = F6.5-Modal. Gelände: 🏟️ Mitte, 2×5-Plättchen, Startstraße Stadt→Arena.
  */
 export function StadiumScreen({
   stadium,
@@ -67,6 +67,7 @@ export function StadiumScreen({
   onBuyParcel,
   onPlaceStreet,
   onExpandPrecinct,
+  onShrinkPrecinctToMin,
   onBack,
 }: {
   stadium: ClubStadium;
@@ -81,9 +82,10 @@ export function StadiumScreen({
     from?: { x: number; y: number },
   ) => void;
   onUpgradePrecinct: (building: PrecinctBuilding) => void;
-  onBuyParcel: (x: number, y: number) => void;
-  onPlaceStreet: (x: number, y: number) => void;
-  onExpandPrecinct: (patchId: string, edge: PrecinctEdge) => void;
+  onBuyParcel: () => void;
+  onPlaceStreet: (cells: Array<{ x: number; y: number }>) => void;
+  onExpandPrecinct: (patchId: string, edge: PrecinctEdge, delta?: 1 | -1) => void;
+  onShrinkPrecinctToMin: (patchId: string) => void;
   onBack?: () => void;
 }) {
   const [tab, setTab] = useState<StadiumTab>("plan");
@@ -125,7 +127,6 @@ export function StadiumScreen({
             {formatClubCash(matchdayIncome)}
           </p>
         </div>
-        <CashChip cash={finances.cash} />
       </header>
 
       <section className="stadium-fanbase" aria-label="Fanbase">
@@ -215,6 +216,7 @@ export function StadiumScreen({
           onBuyParcel={onBuyParcel}
           onPlaceStreet={onPlaceStreet}
           onExpand={onExpandPrecinct}
+          onShrinkToMin={onShrinkPrecinctToMin}
         />
       ) : null}
 

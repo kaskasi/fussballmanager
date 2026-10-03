@@ -11,6 +11,7 @@ export type FinanceLineKind =
   | "staff_wages"
   | "facility_maintenance"
   | "transfer_fee"
+  | "concessions"
   | "other";
 
 export interface FinanceLine {
@@ -64,6 +65,8 @@ export function financeLineLabel(kind: FinanceLineKind): string {
       return "Unterhalt";
     case "transfer_fee":
       return "Ablöse";
+    case "concessions":
+      return "Imbiss & Shop";
     default:
       return "Sonstiges";
   }
@@ -90,6 +93,8 @@ export function financeLineIcon(kind: FinanceLineKind): string {
       return "🏟️";
     case "transfer_fee":
       return "↔️";
+    case "concessions":
+      return "🌭";
     default:
       return "•";
   }

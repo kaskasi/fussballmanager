@@ -3467,7 +3467,7 @@ body {
 
 .stadium-precinct {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto auto minmax(11rem, 1fr);
   gap: 0.85rem;
   align-items: start;
   margin-bottom: 1.25rem;
@@ -3552,6 +3552,151 @@ body {
   margin: 0;
 }
 
+.stadium-precinct-status {
+  min-width: 11.5rem;
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+}
+
+.stadium-precinct-status-kicker {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stadium-precinct-status-sheet {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.28rem 0.4rem;
+  padding: 0.4rem 0.45rem;
+  border-radius: 0.55rem;
+  background: #0f172a;
+  color: #ecfdf5;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.stadium-precinct-status-group h3 {
+  margin: 0 0 0.28rem;
+  color: #64748b;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+}
+
+.stadium-precinct-status-group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.32rem;
+}
+
+.stadium-precinct-buff {
+  position: relative;
+  width: 2.7rem;
+  height: 2.85rem;
+  padding: 0.12rem;
+  display: grid;
+  place-items: center;
+  gap: 0;
+  border: 1.5px solid #047857;
+  border-radius: 0.45rem;
+  background: #ecfdf5;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.stadium-precinct-buff span {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.stadium-precinct-buff strong {
+  font-size: 0.52rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stadium-precinct-buff.is-hunger {
+  border-style: dashed;
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #94a3b8;
+  filter: grayscale(0.7);
+}
+
+.stadium-precinct-buff.is-warn {
+  border-color: #d97706;
+  background: #fffbeb;
+}
+
+.stadium-precinct-buff.is-active {
+  box-shadow: 0 0 0 2px rgb(4 120 87 / 28%);
+}
+
+.stadium-precinct-buff[data-tooltip]:hover::after,
+.stadium-precinct-buff[data-tooltip]:focus-visible::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.35rem);
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 0.28rem 0.5rem;
+  border-radius: 0.4rem;
+  background: #0f172a;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.stadium-precinct-map {
+  display: grid;
+  gap: 0.12rem;
+  justify-content: start;
+  overflow: visible;
+}
+
+.stadium-precinct-city-row {
+  display: grid;
+  gap: 0.12rem;
+  height: 1.7rem;
+}
+
+.stadium-precinct-city-link {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  border-radius: 0.4rem 0.4rem 0.15rem 0.15rem;
+  background: #1e293b;
+  color: #f8fafc;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.stadium-precinct-city-link span {
+  font-size: 0.85rem;
+}
+
+.stadium-precinct-city-spacer {
+  min-width: 0;
+}
+
 .stadium-precinct-grid {
   display: grid;
   gap: 0.12rem;
@@ -3566,6 +3711,66 @@ body {
 
 .stadium-precinct-tile.is-picked {
   z-index: 3;
+}
+
+.stadium-precinct-palette-item.is-wide {
+  width: 5.4rem;
+}
+
+.stadium-precinct-palette .stadium-precinct-tile.is-expansion {
+  background: #fef3c7;
+  border-style: solid;
+  border-color: #d97706;
+}
+
+.stadium-precinct-plate {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 0.1rem;
+  padding: 0.3rem;
+  border: 2px dashed #c4a574;
+  border-radius: 0.55rem;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgb(196 165 116 / 18%) 0 50%,
+      rgb(180 148 100 / 10%) 50% 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgb(196 165 116 / 16%) 0 20%,
+      transparent 20% 40%
+    ),
+    #f4e4c8;
+  color: #7c5a2a;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 35%);
+}
+
+.stadium-precinct-plate strong {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.stadium-precinct-plate em {
+  font-size: 0.58rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.stadium-precinct-plate.is-next {
+  border-style: solid;
+  border-color: #d97706;
+  box-shadow: 0 0 0 2px rgb(217 119 6 / 28%);
+}
+
+.stadium-precinct-plate:disabled {
+  cursor: default;
+  filter: grayscale(0.25);
+  opacity: 0.72;
 }
 
 .stadium-precinct-tile.is-hungry {
@@ -3622,6 +3827,52 @@ body {
   transform: translateY(-50%);
 }
 
+.stadium-precinct-handle.is-shrink {
+  width: 0.95rem;
+  height: 0.95rem;
+  background: #475569;
+  font-size: 0.62rem;
+}
+
+.stadium-precinct-handle.is-shrink.is-n {
+  top: 0.18rem;
+}
+
+.stadium-precinct-handle.is-shrink.is-s {
+  bottom: 0.18rem;
+}
+
+.stadium-precinct-handle.is-shrink.is-w {
+  left: 0.18rem;
+}
+
+.stadium-precinct-handle.is-shrink.is-e {
+  right: 0.18rem;
+}
+
+.stadium-precinct-min {
+  position: absolute;
+  z-index: 4;
+  right: 0.12rem;
+  bottom: 0.12rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.22rem;
+  background: #0f172a;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stadium-precinct-tile.is-ramp:not(.is-street) {
+  box-shadow: inset 0 3px 0 #1e293b;
+  color: #334155;
+}
+
 .stadium-precinct-handle.is-blocked,
 .stadium-precinct-handle:disabled {
   background: #94a3b8;
@@ -3656,11 +3907,85 @@ body {
   font-size: 0.72rem;
 }
 
+.stadium-precinct-map.is-paving {
+  cursor: crosshair;
+}
+
 .stadium-precinct-tile.is-street {
-  background: #334155;
+  background: #1e293b;
   border-style: solid;
-  border-color: #1e293b;
+  border-color: #0f172a;
   color: #f8fafc;
+  overflow: hidden;
+}
+
+.stadium-precinct-road {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.stadium-precinct-road .hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 42%;
+  height: 42%;
+  transform: translate(-50%, -50%);
+  border-radius: 0.12rem;
+  background: #64748b;
+  box-shadow: inset 0 0 0 1px #94a3b8;
+}
+
+.stadium-precinct-road .arm {
+  position: absolute;
+  background: #64748b;
+  box-shadow: inset 0 0 0 1px #94a3b8;
+}
+
+.stadium-precinct-road .arm.n,
+.stadium-precinct-road .arm.s {
+  left: 50%;
+  width: 28%;
+  height: 55%;
+  transform: translateX(-50%);
+}
+
+.stadium-precinct-road .arm.n {
+  top: 0;
+}
+
+.stadium-precinct-road .arm.s {
+  bottom: 0;
+}
+
+.stadium-precinct-road .arm.e,
+.stadium-precinct-road .arm.w {
+  top: 50%;
+  width: 55%;
+  height: 28%;
+  transform: translateY(-50%);
+}
+
+.stadium-precinct-road .arm.w {
+  left: 0;
+}
+
+.stadium-precinct-road .arm.e {
+  right: 0;
+}
+
+.stadium-precinct-tile.is-road-preview {
+  background: #facc15;
+  box-shadow: inset 0 0 0 2px #ca8a04;
+}
+
+.stadium-precinct-tile.is-road-blocked {
+  background: #fecaca;
+}
+
+.stadium-precinct-tile.is-road-exist {
+  box-shadow: inset 0 0 0 2px #facc15;
 }
 
 .stadium-precinct-tile.is-patch {
@@ -3737,6 +4062,13 @@ body {
   color: #ecfdf5;
   text-align: center;
   pointer-events: auto;
+  overflow: visible;
+}
+
+.stadium-precinct-arena.is-hungry {
+  outline: 2px dashed #d97706;
+  outline-offset: -2px;
+  box-shadow: inset 0 0 0 3px rgb(251 191 36 / 55%);
 }
 
 .stadium-precinct-arena span {

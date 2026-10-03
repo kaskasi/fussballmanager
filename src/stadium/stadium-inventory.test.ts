@@ -8,7 +8,7 @@ describe("stadium inventory furniture (PRD 14.7)", () => {
     expect(stadiumInventoryCaption([], 1)).toBe(
       "noch 6 Banden frei · Trikot ohne Brustlogo · Wurstbude unbesetzt",
     );
-    const withKiosk = placePrecinctBuilding(emptyPrecinct(), 1, 1, "kiosk");
+    const withKiosk = placePrecinctBuilding(emptyPrecinct(), 2, 1, "kiosk");
     expect(stadiumInventoryCaption([], 1, withKiosk)).toContain("Wurstbude offen");
   });
 

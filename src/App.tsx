@@ -110,17 +110,17 @@ import { JobOffersModal } from "./ui/components/JobOffersModal.tsx";
 import { STADIUM_BASE_BLOCKS, normalizeClubStadium, stadiumTotalCapacity } from "./stadium/club-stadium.ts";
 import { purchaseStadiumUpgrade } from "./stadium/stadium-upgrades.ts";
 import {
-  buyPrecinctParcel,
-  canBuyPrecinctParcel,
+  buyPrecinctExpansion,
+  canBuyPrecinctExpansion,
   canNudgePrecinctPatch,
-  canPlaceStreet,
   canUpgradePrecinctBuilding,
   emptyPrecinct,
   nudgePrecinctPatch,
   placePrecinctBuilding,
-  placeStreet,
+  placeStreetRun,
   precinctHasTrainingHall,
   precinctPlacementCost,
+  shrinkPrecinctPatchToMin,
   upgradePrecinctBuilding,
   type PrecinctBuilding,
   type PrecinctEdge,
@@ -825,16 +825,16 @@ export default function App() {
   );
 
   const handleBuyParcel = useCallback(
-    (x: number, y: number) => {
+    () => {
       patchSession((current) => {
         const precinct = current.stadium.precinct ?? emptyPrecinct();
-        const check = canBuyPrecinctParcel(precinct, x, y, current.finances.cash);
+        const check = canBuyPrecinctExpansion(precinct, current.finances.cash);
         if (!check.allowed) return current;
         return {
           ...current,
           stadium: normalizeClubStadium({
             ...current.stadium,
-            precinct: buyPrecinctParcel(precinct, x, y),
+            precinct: buyPrecinctExpansion(precinct),
           }),
           finances: normalizeFinances({
             ...current.finances,
@@ -847,20 +847,20 @@ export default function App() {
   );
 
   const handlePlaceStreet = useCallback(
-    (x: number, y: number) => {
+    (cells: Array<{ x: number; y: number }>) => {
       patchSession((current) => {
         const precinct = current.stadium.precinct ?? emptyPrecinct();
-        const check = canPlaceStreet(precinct, x, y, current.finances.cash);
-        if (!check.allowed) return current;
+        const result = placeStreetRun(precinct, cells, current.finances.cash);
+        if (result.spent <= 0) return current;
         return {
           ...current,
           stadium: normalizeClubStadium({
             ...current.stadium,
-            precinct: placeStreet(precinct, x, y),
+            precinct: result.state,
           }),
           finances: normalizeFinances({
             ...current.finances,
-            cash: current.finances.cash - check.cost,
+            cash: current.finances.cash - result.spent,
           }),
         };
       });
@@ -869,12 +869,12 @@ export default function App() {
   );
 
   const handleExpandPrecinct = useCallback(
-    (patchId: string, edge: PrecinctEdge) => {
+    (patchId: string, edge: PrecinctEdge, delta: 1 | -1 = 1) => {
       patchSession((current) => {
         const precinct = current.stadium.precinct ?? emptyPrecinct();
-        const check = canNudgePrecinctPatch(precinct, patchId, edge, current.finances.cash);
+        const check = canNudgePrecinctPatch(precinct, patchId, edge, current.finances.cash, delta);
         if (!check.allowed) return current;
-        const nextPrecinct = nudgePrecinctPatch(precinct, patchId, edge);
+        const nextPrecinct = nudgePrecinctPatch(precinct, patchId, edge, delta);
         if (nextPrecinct === precinct) return current;
         return {
           ...current,
@@ -886,6 +886,21 @@ export default function App() {
                   ...current.finances,
                   cash: current.finances.cash - check.cost,
                 }),
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handleShrinkPrecinctToMin = useCallback(
+    (patchId: string) => {
+      patchSession((current) => {
+        const precinct = current.stadium.precinct ?? emptyPrecinct();
+        const nextPrecinct = shrinkPrecinctPatchToMin(precinct, patchId);
+        if (nextPrecinct === precinct) return current;
+        return {
+          ...current,
+          stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
         };
       });
     },
@@ -1786,6 +1801,7 @@ export default function App() {
           onBuyParcel={handleBuyParcel}
           onPlaceStreet={handlePlaceStreet}
           onExpandPrecinct={handleExpandPrecinct}
+          onShrinkPrecinctToMin={handleShrinkPrecinctToMin}
         />
       ) : null}
       {clubProfileId && screen !== "leagues" ? (

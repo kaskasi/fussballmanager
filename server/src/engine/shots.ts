@@ -13,11 +13,9 @@ import { resolveDisciplinePending } from "./discipline.ts";
 import { withTime } from "./clock.ts";
 import {
   asInvolved,
-  clamp,
   clampPitch,
   distance,
   goalMouth,
-  keeperShotCoverage,
   nearest,
   onPitchFor,
   oppositionTeamId,
@@ -98,20 +96,8 @@ function resolveOutcome(
       rng: finish.rng,
     };
   }
-  const coverage = keeperShotCoverage(keeper.position, shooter.position, mouth);
-  if (coverage < 0.12) {
-    return {
-      outcome: finish.n < 0.94 ? "goal" : "wide",
-      rng: finish.rng,
-    };
-  }
-  const goalChance = clamp(
-    chances.goalGivenOnTarget + (1 - coverage) * 0.52,
-    chances.goalGivenOnTarget,
-    0.92,
-  );
   return {
-    outcome: finish.n < goalChance ? "goal" : "save",
+    outcome: finish.n < chances.goalGivenOnTarget ? "goal" : "save",
     rng: finish.rng,
   };
 }

@@ -27,7 +27,7 @@ function event(partial: MatchEvent): MatchEvent {
 }
 
 describe("formatMatchLog", () => {
-  it("prints every event, running score, HT and FT", () => {
+  it("prints broadcast lines, running score, HT and FT", () => {
     const events: MatchEvent[] = [
       event({
         type: "kickoff",
@@ -119,12 +119,12 @@ describe("formatMatchLog", () => {
 
     expect(log).toContain("FC Nordstern vs SV Rheinwacht");
     expect(log).toContain("seed 2026");
-    expect(log).toContain("Theo Brandt findet Juri Holm.");
+    expect(log).not.toContain("Theo Brandt findet Juri Holm.");
     expect(log).toContain("TOR! Juri Holm!  (1–0)");
     expect(log).toContain("HT FC Nordstern 1–0 SV Rheinwacht");
     expect(log).toContain("FT FC Nordstern 1–0 SV Rheinwacht");
     expect(log).toContain("5 events");
-    expect(log.split("\n").some((line) => line.includes("12'18"))).toBe(true);
+    expect(log.split("\n").some((line) => line.includes("12'22"))).toBe(true);
   });
 
   it("reads an optional seed from argv", () => {

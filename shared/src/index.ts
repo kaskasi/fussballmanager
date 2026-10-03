@@ -138,6 +138,13 @@ export {
 } from "./match-stats.ts";
 
 export type {
+  BroadcastStoryChronicleHead,
+  BroadcastStoryContext,
+  BroadcastStoryFanHead,
+  BroadcastStoryTable,
+} from "./broadcast-story.ts";
+
+export type {
   MatchView,
   MatchViewCue,
   MatchViewCueDetail,

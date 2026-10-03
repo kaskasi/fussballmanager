@@ -1,4 +1,5 @@
 import type {
+  BroadcastStoryContext,
   MatchEvent,
   MatchState,
   MatchView,
@@ -119,6 +120,7 @@ export function buildMatchView(input: {
   awayPlan?: SandboxPlan;
   humanTeamId?: TeamId;
   maxSteps?: number;
+  broadcastStory?: BroadcastStoryContext;
 }): MatchView {
   const homeBase = input.home ?? SEED_MATCHUP.home;
   const awayBase = input.away ?? SEED_MATCHUP.away;
@@ -140,6 +142,7 @@ export function buildMatchView(input: {
   const director = createBroadcastDirector({
     seed: initial.rng.seed,
     homeTeamId: home.team.id,
+    story: input.broadcastStory,
   });
   const stats = emptyPairStats();
   const kickoff = frameFrom(initial, 0, undefined, stats, ctx);
@@ -168,6 +171,7 @@ export function buildMatchView(input: {
         seq: line.seq,
         text: line.text,
         voice: line.voice,
+        storySlot: line.storySlot,
       });
     }
     previousEvent = result.event;

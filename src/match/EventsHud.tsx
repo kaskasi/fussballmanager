@@ -1,6 +1,6 @@
 /** WIREFRAME: PRD 14.10 — compact spatial HUD for events-first matchday view. */
 import { useEffect, useState } from "react";
-import type { MatchViewFrame } from "@fussballmanager/shared";
+import type { MatchClock, MatchViewFrame } from "@fussballmanager/shared";
 import {
   ballZone,
   pitchLateralLabel,
@@ -13,6 +13,14 @@ const THIRDS: PitchThird[] = ["defensive", "middle", "attacking"];
 const LATERALS: PitchLateral[] = ["left", "center", "right"];
 
 const SHOT_HOLD_MS = 900;
+
+function formatHudClock(clock: MatchClock): string {
+  const seconds = String(clock.second).padStart(2, "0");
+  if (clock.stoppageMinute > 0) {
+    return `${clock.minute}+${clock.stoppageMinute}'${seconds}`;
+  }
+  return `${clock.minute}'${seconds}`;
+}
 
 type EventsHudProps = {
   frame: MatchViewFrame;
@@ -106,7 +114,7 @@ export function EventsHud({ frame, homeTeamId }: EventsHudProps) {
         {pitchThirdLabel(third)} · {pitchLateralLabel(lateral)}
         <span className="events-hud-caption-meta">
           {" "}
-          · {frame.clock.minutes}&apos;{String(frame.clock.seconds).padStart(2, "0")}
+          · {formatHudClock(frame.clock)}
         </span>
       </p>
     </div>

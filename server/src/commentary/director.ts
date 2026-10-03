@@ -1,8 +1,9 @@
-import type { MatchEvent, TeamId } from "@fussballmanager/shared";
+import type { BroadcastStoryContext, MatchEvent, TeamId } from "@fussballmanager/shared";
 import { beatForCommentary, type BroadcastBeatId } from "./beats.ts";
 import type { CommentaryContext } from "./render.ts";
 import { commentateLine, formatClock } from "./render.ts";
 import { shouldEmitPlayByPlay } from "./suppression.ts";
+import { pickStoryColorLine, type StorySlotId } from "./story-slots.ts";
 
 export type MacroBeatId =
   | "macro_press_turnover"
@@ -20,6 +21,7 @@ export type DirectorEmittedLine = {
   voice: "pbp" | "color";
   text: string;
   macroId?: MacroBeatId;
+  storySlot?: StorySlotId;
 };
 
 type PendingCounter = { teamId: TeamId; startSeq: number };
@@ -34,6 +36,7 @@ export type DirectorState = {
   recent: MatchEvent[];
   pendingCounter: PendingCounter | null;
   pendingSetPiece: PendingSetPiece | null;
+  storySlotsFired: Set<StorySlotId>;
 };
 
 const RECENT_MAX = 12;
@@ -275,6 +278,7 @@ export function createInitialDirectorState(): DirectorState {
     recent: [],
     pendingCounter: null,
     pendingSetPiece: null,
+    storySlotsFired: new Set(),
   };
 }
 
@@ -306,9 +310,11 @@ function applyDirectorStateAfterBeat(
 export function createBroadcastDirector(input: {
   seed: number;
   homeTeamId: TeamId;
+  story?: BroadcastStoryContext;
 }) {
   const seed = input.seed;
   const homeTeamId = input.homeTeamId;
+  const story = input.story;
   let state = createInitialDirectorState();
 
   function emit(
@@ -354,6 +360,25 @@ export function createBroadcastDirector(input: {
         text: `${formatClock(event.clock)}  ${colorTemplate(seed, event.seq, macroId)}`,
       });
       state.cooldownColorUntilSeq = event.seq + COLOR_COOLDOWN_TICKS;
+    } else if (event.seq > state.cooldownColorUntilSeq) {
+      const storyLine = pickStoryColorLine({
+        beat,
+        ctx: story,
+        fired: state.storySlotsFired,
+        seed,
+        seq: event.seq,
+      });
+      if (storyLine) {
+        lines.push({
+          seq: event.seq,
+          beatId: beat,
+          voice: "color",
+          storySlot: storyLine.slot,
+          text: `${formatClock(event.clock)}  ${storyLine.text}`,
+        });
+        state.storySlotsFired.add(storyLine.slot);
+        state.cooldownColorUntilSeq = event.seq + COLOR_COOLDOWN_TICKS;
+      }
     }
 
     applyDirectorStateAfterBeat(state, beat, event);

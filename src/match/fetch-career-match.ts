@@ -1,4 +1,9 @@
-import type { MatchView, Squad, TeamId } from "@fussballmanager/shared";
+import type {
+  BroadcastStoryContext,
+  MatchView,
+  Squad,
+  TeamId,
+} from "@fussballmanager/shared";
 
 export async function fetchCareerMatchView(input: {
   seed: number;
@@ -7,6 +12,7 @@ export async function fetchCareerMatchView(input: {
   homeSquad: Squad;
   awaySquad: Squad;
   playerClubSquad?: Squad;
+  broadcastStory?: BroadcastStoryContext;
 }): Promise<MatchView> {
   if (
     input.playerClubSquad &&

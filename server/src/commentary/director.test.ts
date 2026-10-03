@@ -89,6 +89,30 @@ describe("createBroadcastDirector", () => {
     expect(color?.text).toMatch(/Konter|Schneller Umschalt/);
   });
 
+  it("adds story color on match_opening when fan facts are present", () => {
+    const director = createBroadcastDirector({
+      seed: 4,
+      homeTeamId: homeId,
+      story: {
+        fanFeedHead: { speaker: "Kurvenstand", message: "Heute drei Punkte!" },
+      },
+    });
+    const opening: MatchEvent = {
+      type: "kickoff",
+      seq: 0,
+      matchId,
+      clock: { period: "first_half", minute: 0, second: 1, stoppageMinute: 0 },
+      ball: { x: 50, y: 50 },
+      involved: [player("a")],
+      possessionTeamId: homeId,
+      kickingTeamId: homeId,
+    };
+    const lines = director.emit(opening, undefined, ctx);
+    const storyColor = lines.find((line) => line.storySlot === "fan_mood");
+    expect(storyColor?.voice).toBe("color");
+    expect(storyColor?.text).toContain("Kurvenstand");
+  });
+
   it("skips P3 pass_complete PBP while still tracking attack state", () => {
     const director = createBroadcastDirector({ seed: 1, homeTeamId: homeId });
     const pass: MatchEvent = {

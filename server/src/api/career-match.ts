@@ -1,5 +1,6 @@
 import {
   assertValidSquad,
+  type BroadcastStoryContext,
   type Squad,
   type TeamId,
 } from "@fussballmanager/shared";
@@ -12,6 +13,7 @@ export interface CareerMatchInput {
   homeSquad: Squad;
   awaySquad: Squad;
   playerClubSquad?: Squad;
+  broadcastStory?: BroadcastStoryContext;
 }
 
 export function parseCareerMatchBody(body: unknown): CareerMatchInput {
@@ -22,6 +24,7 @@ export function parseCareerMatchBody(body: unknown): CareerMatchInput {
     homeSquad?: Squad;
     awaySquad?: Squad;
     playerClubSquad?: Squad;
+    broadcastStory?: BroadcastStoryContext;
   };
   const seed = parseViewSeed(payload.seed);
   const homeTeamId = payload.homeTeamId;
@@ -51,7 +54,24 @@ export function parseCareerMatchBody(body: unknown): CareerMatchInput {
     }
   }
 
-  return { seed, homeTeamId, awayTeamId, homeSquad, awaySquad, playerClubSquad };
+  const broadcastStory = payload.broadcastStory;
+  if (
+    broadcastStory !== undefined &&
+    broadcastStory !== null &&
+    typeof broadcastStory !== "object"
+  ) {
+    throw new Error("broadcastStory must be an object when provided");
+  }
+
+  return {
+    seed,
+    homeTeamId,
+    awayTeamId,
+    homeSquad,
+    awaySquad,
+    playerClubSquad,
+    broadcastStory: broadcastStory ?? undefined,
+  };
 }
 
 export function runCareerMatch(input: CareerMatchInput) {
@@ -73,5 +93,6 @@ export function runCareerMatch(input: CareerMatchInput) {
     home,
     away,
     humanTeamId,
+    broadcastStory: input.broadcastStory,
   });
 }

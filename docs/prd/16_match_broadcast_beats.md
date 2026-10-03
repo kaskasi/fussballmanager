@@ -277,7 +277,7 @@ Wenn zwei Beats im selben Tick: **ein** PBP + höchstens **ein** Color.
 | **B2** | Director IDLE/SET_PIECE/ATTACK + Macro-Fenster | `server/src/commentary/director.ts` ✓ |
 | **B3** | P3-Unterdrückung (kein PBP für pass/carry/duel) | `server/src/commentary/suppression.ts` ✓ |
 | **B3b** | Doppelzeile PBP+Color + UI-Ticker (`voice`, Stagger) | `shared/match-view.ts`, `src/match/` ✓ |
-| **B4** | Story-Slots + Chronik | `director.ts` + `story-state` |
+| **B4** | Story-Slots + Chronik (fact-checked color) | `story-slots.ts`, `broadcast-story.ts` ✓ |
 | **B5** | Lokales LLM nur für `color` Slots mit Fallback | PRD 01 |
 
 ---

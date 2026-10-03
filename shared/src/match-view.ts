@@ -50,6 +50,8 @@ export type MatchViewLine = {
   text: string;
   /** Play-by-play vs analyst; omitted lines are PBP. */
   voice?: "pbp" | "color";
+  /** PRD 16 B4 — fact-checked story slot when voice is color. */
+  storySlot?: string;
 };
 
 export type MatchViewRosterPlayer = {

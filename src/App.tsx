@@ -3,6 +3,7 @@ import type { IndividualProgram } from "./development/individual-training.ts";
 import { processTransferBreakout } from "./development/breakouts.ts";
 import type { TrainingSlot } from "./development/training-units.ts";
 import { CareerMatch } from "./match/CareerMatch";
+import { buildBroadcastStoryContext } from "./match/broadcast-story-context.ts";
 import { appendMatchdayClubEvents } from "./match/post-match-events.ts";
 import { Matchday } from "./match/Matchday";
 import {
@@ -1239,6 +1240,10 @@ export default function App() {
     />
   ) : null;
 
+  const careerBroadcastStory = careerMatchSetup
+    ? buildBroadcastStoryContext(session, careerMatchSetup, rivalPlayers)
+    : undefined;
+
   if (careerMatchSetup) {
     return (
       <>
@@ -1265,6 +1270,7 @@ export default function App() {
           onComplete={handleCareerMatchComplete}
           onSkip={handleCareerMatchSkip}
           onNavActionChange={setMatchNavAction}
+          broadcastStory={careerBroadcastStory}
         />
         {saveManagerOverlay}
       </>

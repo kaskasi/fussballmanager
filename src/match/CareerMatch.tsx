@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { SandboxPlan, Squad } from "@fussballmanager/shared";
+import type { BroadcastStoryContext, SandboxPlan, Squad } from "@fussballmanager/shared";
 import type { TacticsPresetId, TacticsPresetSlot } from "./tactics-presets.ts";
 import type { Player } from "../types/player.ts";
 import type { NavPrimaryAction } from "../ui/nav-primary-action.ts";
@@ -35,6 +35,7 @@ export function CareerMatch({
   onComplete,
   onSkip,
   onNavActionChange,
+  broadcastStory,
 }: {
   setup: CareerMatchSetup;
   players: readonly Player[];
@@ -49,6 +50,7 @@ export function CareerMatch({
   onComplete: (outcome: WatchedPlayerMatch) => void;
   onSkip: (outcome: WatchedPlayerMatch) => void;
   onNavActionChange: (action: NavPrimaryAction | null) => void;
+  broadcastStory?: BroadcastStoryContext;
 }) {
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
 
@@ -90,6 +92,7 @@ export function CareerMatch({
       onComplete={onComplete}
       onSkip={onSkip}
       onNavActionChange={onNavActionChange}
+      broadcastStory={broadcastStory}
     />
   );
 }
@@ -104,6 +107,7 @@ function CareerMatchPlayback({
   onComplete,
   onSkip,
   onNavActionChange,
+  broadcastStory,
 }: {
   setup: CareerMatchSetup;
   playerClubSquad: Squad;
@@ -114,6 +118,7 @@ function CareerMatchPlayback({
   onComplete: (outcome: WatchedPlayerMatch) => void;
   onSkip: (outcome: WatchedPlayerMatch) => void;
   onNavActionChange: (action: NavPrimaryAction | null) => void;
+  broadcastStory?: BroadcastStoryContext;
 }) {
   const [view, setView] = useState<Awaited<ReturnType<typeof fetchCareerMatchView>> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -152,6 +157,7 @@ function CareerMatchPlayback({
           homeSquad,
           awaySquad,
           playerClubSquad,
+          broadcastStory,
         });
         if (cancelled) return;
         setView(next);
@@ -167,7 +173,15 @@ function CareerMatchPlayback({
     return () => {
       cancelled = true;
     };
-  }, [matchFetchKey, playerClubSquad, setup.awayTeamId, setup.homeTeamId, setup.playerClubId, setup.seed]);
+  }, [
+    broadcastStory,
+    matchFetchKey,
+    playerClubSquad,
+    setup.awayTeamId,
+    setup.homeTeamId,
+    setup.playerClubId,
+    setup.seed,
+  ]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

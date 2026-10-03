@@ -107,7 +107,7 @@ per explizitem Katalog-Edit.
 | F3.4 | M1 | Icon-Inbox, Cap 4 | Post-Karte ●/▲, Jugend-Icons 03.4 | Hub-Ampel Jugend |
 | F3.6 | M2 | Profi-Verträge, Spielzeit-Klauseln | Jugendvertrag-Default | Slider mit F5.4 teilen |
 | F2.3 | M2 | Individualprogramme | Gruppen-Fokus F2.1 | kein Spend-to-Stamp |
-| F2.7 | M1 | Wachstums-Heatmap | Hub-Kachel dünn | 09 Screen 1 |
+| F2.7 | M1 | Wachstums-Heatmap | Chart + Zellen aus `last_week_growth` | 09 Screen 1 |
 | F4.3 | M2 | Scout-Netz 3 Tiers | Einstellungsliste | vorgezogen, keine Karte |
 | F4.4 | M2 | Scout-Karte | — | |
 | F1.5 | M1 | Profil Charts, Icons | Tabs + Flavor | Akte laut 14.3 |
@@ -173,7 +173,7 @@ Savegame. Vorstand/Entlassung aktiv.
 | ID | Feature | Hinweis Stand 2026-09-29 |
 |---|---|---|
 | F1.1–F1.5 | Aufstellung, Taktik-Presets, Auto-XI, Fitness, Profile | Rasen gut; Akte UI hinterher (14) |
-| F2.1 F2.2 F2.7 | Training, Growth, Heatmap | Engine stark; Heatmap/Akte dünn |
+| F2.1 F2.2 F2.7 | Training, Growth, Heatmap | Heatmap 09 Screen 1; Akte 14.3 |
 | F3.1–F3.4 | Intake, Campus-Iso, Auto-Jugend, Inbox | Iso und Report-UI offen |
 | F4.1 F4.2 | Marktliste, Wissensmodell | Balken + CI 14.9 |
 | F5.1–F5.3 F5.7 | Markt, MW, Leihen, Vorvertrag | Next-Action 14.8 |

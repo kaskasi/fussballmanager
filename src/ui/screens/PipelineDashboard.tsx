@@ -22,6 +22,8 @@ import { scoutReportsForWeek } from "../../scouting/scout-board.ts";
 import { pendingInboxItems, inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
 import type { DecisionAction } from "../../youth/decision-inbox.ts";
 import { listDevelopmentMovers } from "../../player/ca-tracking.ts";
+import { pipelineStageFill, squadGrowthHeatmap } from "../../player/growth-heatmap.ts";
+import { GrowthHeatmap, PipelineFillChart } from "../components/GrowthHeatmap.tsx";
 import type { IndividualProgram } from "../../development/individual-training.ts";
 import { fatigueAmpelClassName, squadTrainingLoad } from "../../development/training-load.ts";
 import type { BoardState } from "../../board/board-state.ts";
@@ -38,7 +40,13 @@ import type { StoryState } from "../../narrative/story-state.ts";
 
 /**
  * WIREFRAME: PRD 09.2 Screen 1 — Pipeline Dashboard
- * Status strip · action tiles · attention queue (inbox/dev) · seasonal overlays.
+ *
+ * ┌────────────────────────────────────────────────────────┐
+ * │ [Chart: Pipeline-Füllung nach Stufe]                  │
+ * │ 🏋️ Training: [Ampel]  🎯 Fokus-Slots                   │
+ * │ 🏫 Jugend · 👁️ Scouting                               │
+ * │ Heatmap Wochenzuwachs (02.1)                          │
+ * └────────────────────────────────────────────────────────┘
  */
 
 export function PipelineDashboard({
@@ -116,6 +124,8 @@ export function PipelineDashboard({
     () => listDevelopmentMovers(players, clubId),
     [players, clubId],
   );
+  const stageFill = useMemo(() => pipelineStageFill(players, clubId), [players, clubId]);
+  const heatCells = useMemo(() => squadGrowthHeatmap(players, clubId), [players, clubId]);
   const matchdayLabel = league.season_complete
     ? "Saison beendet"
     : `Spieltag ${Math.min(league.matchday, seasonMatchdays)}/${seasonMatchdays}`;
@@ -171,6 +181,8 @@ export function PipelineDashboard({
       ) : null}
 
       <section className="pipeline-core" aria-label="Aktionen">
+        <PipelineFillChart fill={stageFill} />
+        <GrowthHeatmap cells={heatCells} onSelectPlayer={onSelectPlayer} />
         <div className="pipeline-tiles pipeline-tiles-row">
           <button type="button" className="pipeline-tile" onClick={onOpenTraining}>
             <span

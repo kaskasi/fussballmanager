@@ -51,13 +51,15 @@ import { CoachingStaffPanel } from "../components/CoachingStaffPanel.tsx";
 import { MentoringPanel } from "../components/MentoringPanel.tsx";
 import { FitnessManagementPanel } from "../components/FitnessManagementPanel.tsx";
 import { Hint } from "../components/Hint.tsx";
+import { GrowthHeatmap } from "../components/GrowthHeatmap.tsx";
+import { squadGrowthHeatmap } from "../../player/growth-heatmap.ts";
 import type { Coach, CoachingStaff } from "../../staff/coaching-staff.ts";
 import type {
   AssistantDelegation,
   AssistantDelegationTask,
 } from "../../staff/assistant-delegation.ts";
 
-type TrainingTab = "team" | "individual" | "mentoring" | "coaches" | "fitness";
+type TrainingTab = "overview" | "team" | "individual" | "mentoring" | "coaches" | "fitness";
 
 const GROUP_LABELS: Record<SessionGroup, string> = {
   technical: "Technik",
@@ -68,7 +70,8 @@ const GROUP_LABELS: Record<SessionGroup, string> = {
 /**
  * WIREFRAME: PRD 09.2 Screen 1 + 1a — Training
  *
- * Team: Wochenplan (Mo–Fr, 5 Slots). Fokus-Modus per Checkbox, Klick markiert Einheit.
+ * Übersicht: Ampel · 🎯 Fokus · Heatmap Wochenzuwachs (02.1)
+ * Team: Stundenplan (Mo–Fr, 5 Slots). Fokus-Modus per Checkbox.
  * Individuell: Extra-Programme pro Spieler (F2.3).
  */
 
@@ -92,6 +95,7 @@ export function TrainingCenter({
   onAssistantDelegationChange,
   onAssignMentor,
   onClearMentor,
+  onSelectPlayer,
   onBack,
   focusIndividualPlayerId = null,
 }: {
@@ -114,11 +118,12 @@ export function TrainingCenter({
   onAssistantDelegationChange: (task: AssistantDelegationTask, enabled: boolean) => void;
   onAssignMentor: (menteeId: string, mentorId: string) => void;
   onClearMentor: (menteeId: string) => void;
+  onSelectPlayer?: (playerId: string) => void;
   onBack?: () => void;
   /** Öffnet Tab „Individuell“ und Programm-Modal für diesen Spieler (z. B. aus Spielerakte). */
   focusIndividualPlayerId?: string | null;
 }) {
-  const [tab, setTab] = useState<TrainingTab>("team");
+  const [tab, setTab] = useState<TrainingTab>("overview");
   const [pickSlot, setPickSlot] = useState<number | null>(null);
   const check = useMemo(() => validateWeeklyPlan(planToSessions(plan)), [plan]);
   const focusCount = plan.filter((slot) => slot.focus).length;
@@ -148,6 +153,9 @@ export function TrainingCenter({
       </header>
 
       <nav className="training-tabs" aria-label="Trainingsarten">
+        <button type="button" className={tab === "overview" ? "training-tab is-active" : "training-tab"} onClick={() => setTab("overview")}>
+          Übersicht · Heatmap
+        </button>
         <button type="button" className={tab === "team" ? "training-tab is-active" : "training-tab"} onClick={() => setTab("team")}>
           Team · Stundenplan
         </button>
@@ -181,7 +189,16 @@ export function TrainingCenter({
         </button>
       </nav>
 
-      {tab === "team" ? (
+      {tab === "overview" ? (
+        <TrainingOverview
+          focusCount={focusCount}
+          load={load}
+          players={players}
+          clubId={clubId}
+          onOpenPlan={() => setTab("team")}
+          onSelectPlayer={onSelectPlayer}
+        />
+      ) : tab === "team" ? (
         <TeamPlan
           plan={plan}
           pickSlot={pickSlot}
@@ -232,6 +249,52 @@ export function TrainingCenter({
         <FitnessManagementPanel players={players} clubId={clubId} intensity={intensity} />
       )}
     </main>
+  );
+}
+
+function TrainingOverview({
+  focusCount,
+  load,
+  players,
+  clubId,
+  onOpenPlan,
+  onSelectPlayer,
+}: {
+  focusCount: number;
+  load: ReturnType<typeof squadTrainingLoad>;
+  players: Player[];
+  clubId: string;
+  onOpenPlan: () => void;
+  onSelectPlayer?: (playerId: string) => void;
+}) {
+  const heatCells = useMemo(() => squadGrowthHeatmap(players, clubId), [players, clubId]);
+  const focusOpen = focusCount < MAX_FOCUS_SLOTS;
+
+  return (
+    <section className="training-overview">
+      <div className="training-overview-strip">
+        <p
+          className={`training-fatigue is-${load.ampel}`}
+          title={load.label}
+          aria-label={`Fatigue-Ampel: ${load.label}`}
+        >
+          <span className={`pipeline-light ${fatigueAmpelClassName(load.ampel)}`} aria-hidden="true">
+            {load.icon}
+          </span>
+          <span>{load.label}</span>
+        </p>
+        <p className="training-overview-focus">
+          🎯 {focusCount}/{MAX_FOCUS_SLOTS} Fokus
+        </p>
+        <button type="button" className="training-overview-go" onClick={onOpenPlan}>
+          {focusOpen ? `Fokus setzen · ${focusCount}/${MAX_FOCUS_SLOTS}` : "Stundenplan öffnen"}
+        </button>
+      </div>
+      <GrowthHeatmap
+        cells={heatCells}
+        onSelectPlayer={(playerId) => onSelectPlayer?.(playerId)}
+      />
+    </section>
   );
 }
 

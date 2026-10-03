@@ -1,6 +1,6 @@
 # /docs/prd/14_ui_cockpit.md
 
-**Version:** 1.8
+**Version:** 1.9
 **Last Updated:** 2026-10-03
 **Status:** Final (Darstellung — kein Code in diesem Dokument)
 
@@ -82,6 +82,7 @@ Kalender, News), nicht die 40-Spalten-Identität.
 | Stadion-Grundriss | F7.1 + Ticket-Stepper | Ringe + Hunger-Slots | behalten |
 | Origin-Modal | PRD 13 | drei Karten, gut | behalten |
 | Scouting-Wissen | F4.2 | Balken + CI-Grauzone | behalten |
+| Training-Heatmap | F2.7 / 02.1 | Chart + Zellen (●/■) | behalten |
 | Spielerakte | CA, Vertrag, Flavor | vier SaaS-Tabs, ein Punkt | eine Karte |
 | Jugend | Roster + Auto-Sim | 12-Spalten-Grid | Report (PRD 03.3) |
 | Inbox | Slice + Cap 4 | Modal, Text-Buttons | Karte + Icons (09.2 / 03.4) |
@@ -300,6 +301,7 @@ Ein Raum pro Task, Pipeline-Features nicht nebenbei umbauen.
 6. Transfers ohne Dead-End (14.8). **gebaut**
 7. Match-DE + Namen in der Zeile (14.10).
 8. Scouting-Balken (14.9). **gebaut**
+9. Training-Heatmap / Pipeline-Chart (F2.7, 09 Screen 1). **gebaut**
 
 Politur (Abstände, Mint, neue Tokens) ist nachrangig, solange ein Raum noch
 Admin-Shell ist.

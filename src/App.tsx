@@ -1544,6 +1544,8 @@ export default function App() {
           onAssistantDelegationChange={handleAssistantDelegationChange}
           onAssignMentor={handleAssignMentor}
           onClearMentor={handleClearMentor}
+          onSelectPlayer={setProfileId}
+          onBack={() => setScreen("hub")}
           focusIndividualPlayerId={trainingFocusPlayerId}
         />
       ) : null}

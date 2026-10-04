@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   listPrecinctStatusEffects,
   precinctFillRateBonus,
+  precinctFitnessRegen,
   precinctMerchCogsMultiplier,
   precinctTrainingEnvironment,
   precinctWeeklyFanbaseBonus,
@@ -89,6 +90,17 @@ describe("precinct campus effects", () => {
     const outdoor = precinctTrainingEnvironment(ground);
     ground = upgradePrecinctBuilding(ground, "training_ground");
     expect(precinctTrainingEnvironment(ground)).toBeGreaterThan(outdoor);
+  });
+
+  it("adds fitness regen from Fitness/Pool/Physio, not from the hall", () => {
+    let ground = dockToCity(
+      placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "training_ground"),
+      "training_ground",
+    );
+    ground = upgradePrecinctBuilding(ground, "training_ground");
+    expect(precinctFitnessRegen(ground)).toBe(1);
+    ground = upgradePrecinctBuilding(ground, "training_ground");
+    expect(precinctFitnessRegen(ground)).toBeGreaterThan(1);
   });
 
   it("lists every campus building as a buff, hunger, or undocked warning", () => {

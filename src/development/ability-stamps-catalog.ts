@@ -1,4 +1,4 @@
-import type { Attributes, StampPath } from "../types/player.ts";
+import type { Attributes, PositionPrimary, StampPath } from "../types/player.ts";
 
 /**
  * F2.8 catalog — mirrored from `/data/development/ability_stamps.json`
@@ -12,6 +12,17 @@ export interface StampAttributeGates {
   career_apps?: number;
 }
 
+export interface StampSpawn {
+  chance: number;
+  positions?: readonly PositionPrimary[];
+}
+
+export interface StampClear {
+  career_apps?: number;
+  scoring_streak?: number;
+  hat_trick?: boolean;
+}
+
 export interface StampDefinition {
   id: string;
   label: string;
@@ -19,10 +30,32 @@ export interface StampDefinition {
   path: StampPath;
   weeks?: number;
   gates: StampAttributeGates;
+  spawn?: StampSpawn;
+  clear?: StampClear;
   applied: Partial<Record<keyof Attributes, number>>;
 }
 
 export const ABILITY_STAMPS: readonly StampDefinition[] = [
+  {
+    id: "gruenschnabel",
+    label: "Grünschnabel",
+    icon: "🌱",
+    path: "event",
+    gates: {},
+    spawn: { chance: 0.98 },
+    clear: { career_apps: 40 },
+    applied: { composure: -2, leadership: -1 },
+  },
+  {
+    id: "chancentod",
+    label: "Chancentod",
+    icon: "🙈",
+    path: "event",
+    gates: {},
+    spawn: { chance: 0.15, positions: ["AM", "LW", "RW", "CF"] },
+    clear: { hat_trick: true, scoring_streak: 5 },
+    applied: { shooting: -2, composure: -1 },
+  },
   {
     id: "kopfballungeheuer",
     label: "Kopfballungeheuer",
@@ -30,7 +63,7 @@ export const ABILITY_STAMPS: readonly StampDefinition[] = [
     path: "train",
     weeks: 10,
     gates: { attributes: { strength: 100, positioning: 90 } },
-    applied: { strength: 3, positioning: 2 },
+    applied: { strength: 3, positioning: 2, pace: -1 },
   },
   {
     id: "geolter_blitz",
@@ -39,7 +72,7 @@ export const ABILITY_STAMPS: readonly StampDefinition[] = [
     path: "train",
     weeks: 8,
     gates: { attributes: { pace: 100, stamina: 85 } },
-    applied: { pace: 3, stamina: 2 },
+    applied: { pace: 3, stamina: 2, technique: -1 },
   },
   {
     id: "spielmacher_blick",
@@ -48,7 +81,7 @@ export const ABILITY_STAMPS: readonly StampDefinition[] = [
     path: "train",
     weeks: 10,
     gates: { attributes: { vision: 100, passing: 95 } },
-    applied: { vision: 3, passing: 2 },
+    applied: { vision: 3, passing: 2, strength: -1 },
   },
   {
     id: "torjaeger_saison",
@@ -56,7 +89,7 @@ export const ABILITY_STAMPS: readonly StampDefinition[] = [
     icon: "⚽",
     path: "event",
     gates: { season_goals: 25 },
-    applied: { shooting: 3, composure: 2 },
+    applied: { shooting: 3, composure: 2, teamwork: -1 },
   },
   {
     id: "alter_recke",
@@ -64,7 +97,7 @@ export const ABILITY_STAMPS: readonly StampDefinition[] = [
     icon: "🛡",
     path: "event",
     gates: { career_apps: 300 },
-    applied: { leadership: 3, concentration: 2 },
+    applied: { leadership: 3, concentration: 2, pace: -1 },
   },
   {
     id: "treter",
@@ -72,7 +105,7 @@ export const ABILITY_STAMPS: readonly StampDefinition[] = [
     icon: "🟨",
     path: "event",
     gates: { season_yellow_cards: 13 },
-    applied: { strength: 2, composure: 2 },
+    applied: { strength: 2, composure: 2, passing: -1 },
   },
 ] as const;
 

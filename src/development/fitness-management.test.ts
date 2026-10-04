@@ -39,6 +39,22 @@ describe("fitness-management", () => {
     expect(next.state.fitness).toBeLessThan(75);
   });
 
+  it("recovers faster with a precinct regen bonus", () => {
+    const player = clonePlayer();
+    player.state.fitness = 70;
+    player.state.weekly_minutes = 20;
+    const plain = applyWeeklyFitness(player, {
+      intensity: 90,
+      coachingStaff: defaultCoachingStaff(2026),
+    });
+    const boosted = applyWeeklyFitness(player, {
+      intensity: 90,
+      coachingStaff: defaultCoachingStaff(2026),
+      precinctRegen: 1.18,
+    });
+    expect(boosted.state.fitness).toBeGreaterThan(plain.state.fitness);
+  });
+
   it("scores injury risk higher when tired and intense", () => {
     const rested = clonePlayer();
     rested.id = "rested";

@@ -1,4 +1,5 @@
 import { applyVeteranBackstory, peakCaBaseAdjustment } from "../player/veteran-backstory.ts";
+import { seedPhaseStamps } from "../development/ability-stamps.ts";
 import { estimateCa, marketValue } from "../transfers/market-value.ts";
 import type { Attributes, Player, PlayerName, PositionPrimary } from "../types/player.ts";
 
@@ -634,10 +635,11 @@ function generateProfessional(
     portrait_seed: portraitSeed,
   };
 
-  return applyVeteranBackstory(
+  const withStory = applyVeteranBackstory(
     basePlayer,
     deriveWorldSeed(masterSeed, "veteran-backstory", stableIndex),
   );
+  return seedPhaseStamps(withStory, 1, 1);
 }
 
 function generateAttributes(

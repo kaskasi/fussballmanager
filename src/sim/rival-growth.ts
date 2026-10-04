@@ -5,6 +5,7 @@ import {
   type TeamId,
 } from "@fussballmanager/shared";
 import { applyTrainingWeek } from "../development/pipeline-week.ts";
+import { recordAppearanceGoals, seedPhaseStamps } from "../development/ability-stamps.ts";
 import { defaultTrainingPlan, planToSessions } from "../development/training-units.ts";
 import type { Attributes, Player, PositionPrimary } from "../types/player.ts";
 import {
@@ -136,7 +137,7 @@ export function enginePlayerToCareer(
   const rng = mulberry32(hashString(`${masterSeed}:birth:${enginePlayer.id}`));
   const age = 19 + Math.floor(rng() * 10);
   const clubId = careerTeamId(enginePlayer.teamId);
-  return {
+  const built: Player = {
     id: rivalCareerId(enginePlayer),
     name: splitEngineName(enginePlayer.name),
     birth: {
@@ -186,6 +187,7 @@ export function enginePlayerToCareer(
     stamps: [],
     portrait_seed: hashString(enginePlayer.id),
   };
+  return seedPhaseStamps(built, 1, 1);
 }
 
 export function initializeRivalPlayers(masterSeed: number): Player[] {
@@ -220,14 +222,34 @@ export function advanceRivalGrowthWeek(
   const context = { season, week, masterSeed };
   const playedWeek = leagueMatchWeek && isLeagueMatchWeek(week);
   return rivalPlayers.map((player) => {
-    const withMinutes = {
-      ...player,
-      state: {
-        ...player.state,
-        weekly_minutes: rivalMinutesFromId(player.id, playedWeek),
+    const minutes = rivalMinutesFromId(player.id, playedWeek);
+    const appeared = playedWeek && minutes >= 45;
+    const scored = appeared && hashString(`${player.id}:${week}:goal`) % 5 === 0;
+    const hatTrick = scored && hashString(`${player.id}:${week}:hat`) % 8 === 0;
+    const goals = hatTrick ? 3 : scored ? 1 : 0;
+    const withMinutes = recordAppearanceGoals(
+      {
+        ...player,
+        state: {
+          ...player.state,
+          weekly_minutes: minutes,
+          season_apps: player.state.season_apps + (appeared ? 1 : 0),
+          season_goals: player.state.season_goals + goals,
+        },
       },
-    };
-    return applyTrainingWeek(withMinutes, AI_TRAINING, context);
+      appeared ? goals : (player.state.last_match_goals ?? 0),
+    );
+    const forTraining = appeared
+      ? withMinutes
+      : {
+          ...withMinutes,
+          state: {
+            ...withMinutes.state,
+            last_match_goals: player.state.last_match_goals ?? 0,
+            scoring_streak: player.state.scoring_streak ?? 0,
+          },
+        };
+    return applyTrainingWeek(forTraining, AI_TRAINING, context);
   });
 }
 

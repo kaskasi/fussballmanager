@@ -80,6 +80,24 @@ export function precinctTrainingEnvironment(state: PrecinctState | undefined): n
   return 1 + extra;
 }
 
+/** Fitness/Pool/Physio recovery on the Trainingszentrum (docked). Halle stays growth. */
+export function precinctFitnessRegen(state: PrecinctState | undefined): number {
+  if (!state) return 1;
+  if (dockedOccupiedCells(state, "training_ground") <= 0) return 1;
+  const level = precinctBuildingLevel(state, "training_ground");
+  if (level >= 5) return 1.18;
+  if (level >= 4) return 1.14;
+  if (level >= 3) return 1.08;
+  return 1;
+}
+
+/** Physio slightly cuts injury risk. */
+export function precinctInjuryRiskFactor(state: PrecinctState | undefined): number {
+  if (!state) return 1;
+  if (dockedOccupiedCells(state, "training_ground") <= 0) return 1;
+  return precinctBuildingLevel(state, "training_ground") >= 5 ? 0.88 : 1;
+}
+
 /** Merch COGS multiplier: fanshop upgrade buys cheaper. */
 export function precinctMerchCogsMultiplier(state: PrecinctState | undefined): number {
   if (!state) return 1;
@@ -232,6 +250,8 @@ export function listPrecinctStatusEffects(state: PrecinctState | undefined): Pre
             ? `Training ${formatPct(training.hall)} · Halle`
             : `Training ${formatPct(training.hall)}`,
         );
+        const regen = precinctFitnessRegen(state);
+        if (regen > 1) bits.push(`Fitness ×${regen.toFixed(2).replace(".", ",")}`);
       }
       if (def.id === "training_pitch" && training.extraPitches > 0) {
         bits.push(`Training ${formatPct(training.extraPitches)}`);

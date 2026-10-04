@@ -1,6 +1,6 @@
 # /docs/prd/07_player_schema.md
 
-**Version:** 1.3
+**Version:** 1.4
 **Last Updated:** 2026-10-04
 **Status:** Final
 
@@ -79,6 +79,8 @@ interface Player {
     contract_failed_offers?: number; // F5.4, consecutive rejects
     desire_to_leave?: boolean;       // F5.4 after 3 fails
     contract_talks_locked_until_day?: number; // F5.4, calendar day index
+    scoring_streak?: number;                 // F2.8 Chancentod
+    last_match_goals?: number;               // F2.8 hat-trick clear
   };
 
   // ── Geschichte & Analytics ──────────────────
@@ -269,7 +271,7 @@ function validatePlayer(p: Player, asOfIso: string): boolean {
     stampIds.add(stamp.id);
     if (stamp.path !== "train" && stamp.path !== "event") return false;
     for (const delta of Object.values(stamp.applied)) {
-      if (delta < 1 || delta > 4) return false;
+      if (delta === 0 || Math.abs(delta) > 4) return false;
     }
   }
   return true;
@@ -288,17 +290,21 @@ permanent attribute bump. Not a weekly loadout. Not hidden potential.
 | Path | How earned | Example |
 |---|---|---|
 | `train` | Attribute gate + individual program (shares F2.3 slot cap) | *Kopfballungeheuer* |
-| `event` | Season/career counter threshold, instant award | *Treter*, *Alter Recke* |
+| `event` | Season/career counter, or spawn-at-generation phase curse | *Treter*, *Grünschnabel* |
 
 `hybrid` (event unlocks eligibility, then train to seal) is **reserved for
 later** — not in the M2 catalog, not a valid `StampPath` until a PRD bump.
 
 #### Effect (M2)
 
-On award, apply `applied` once to `attributes` (2–3 keys, each **+2…+4**,
-then clamp 0–199). Soft Cap 180 still governs later weekly growth (PRD 02.1).
-No separate match-engine modifier layer in M2 — the bump is the effect.
+On award, apply `applied` once to `attributes` (2–3 keys, each **−4…−1 or
++1…+4**, then clamp 0–199). Soft Cap 180 still governs later weekly growth
+(PRD 02.1). No separate match-engine modifier layer — the bump is the effect.
 Engine stays hands-off; the wrapper sees normal attributes.
+
+Phase stamps (`spawn` in the catalog) can **clear**. Clearing **unbakes**
+`applied` (subtract the stored deltas, clamp 0–199) and removes the stamp
+from `stamps[]`. Not a weekly loadout.
 
 #### Caps
 
@@ -308,23 +314,25 @@ Engine stays hands-off; the wrapper sees normal attributes.
   budget as F2.3 (`kind: "stamp"` + `stampId`).
 - A player may hold each catalog `id` only once.
 
-#### Starter catalog (data, not code until F2.8 ships)
+#### Catalog
 
 There is no separate `heading` attribute — aerial gates use `strength` +
 `positioning`.
 
-| id | Label | Path | Gate | Weeks | applied |
+| id | Label | Path | Gate / spawn | Weeks | applied |
 |---|---|---|---|---|---|
-| `kopfballungeheuer` | Kopfballungeheuer | train | strength ≥ 100 ∧ positioning ≥ 90 | 10 | strength +3, positioning +2 |
-| `geolter_blitz` | Geölter Blitz | train | pace ≥ 100 ∧ stamina ≥ 85 | 8 | pace +3, stamina +2 |
-| `spielmacher_blick` | Spielmacher-Blick | train | vision ≥ 100 ∧ passing ≥ 95 | 10 | vision +3, passing +2 |
-| `torjaeger_saison` | Torjäger | event | season_goals ≥ 25 (same season) | — | shooting +3, composure +2 |
-| `alter_recke` | Alter Recke | event | career apps ≥ 300 | — | leadership +3, concentration +2 |
-| `treter` | Treter | event | season_yellow_cards ≥ 13 | — | strength +2, composure +2 |
+| `gruenschnabel` | Grünschnabel | event | spawn 98% of new gens; clear at 40 career apps | — | composure −2, leadership −1 |
+| `chancentod` | Chancentod | event | spawn 15% of AM/LW/RW/CF; clear hat-trick or 5-app scoring streak | — | shooting −2, composure −1 |
+| `kopfballungeheuer` | Kopfballungeheuer | train | strength ≥ 100 ∧ positioning ≥ 90 | 10 | strength +3, positioning +2, pace −1 |
+| `geolter_blitz` | Geölter Blitz | train | pace ≥ 100 ∧ stamina ≥ 85 | 8 | pace +3, stamina +2, technique −1 |
+| `spielmacher_blick` | Spielmacher-Blick | train | vision ≥ 100 ∧ passing ≥ 95 | 10 | vision +3, passing +2, strength −1 |
+| `torjaeger_saison` | Torjäger | event | season_goals ≥ 25 (same season) | — | shooting +3, composure +2, teamwork −1 |
+| `alter_recke` | Alter Recke | event | career apps ≥ 300 | — | leadership +3, concentration +2, pace −1 |
+| `treter` | Treter | event | season_yellow_cards ≥ 13 | — | strength +2, composure +2, passing −1 |
 
-Minus-stamps and spend-bar UX details (progress ring on the Akte) ship with
-the F2.8 implementation task. Catalog JSON lives under
-`data/development/ability_stamps.json` when coded.
+`hybrid` remains later. Spend-bar: progress ring on empty Fähigkeiten slots
+while a train stamp program runs; click an eligible empty slot to start it.
+Catalog JSON lives under `data/development/ability_stamps.json`.
 
 #### Relation to flavor
 

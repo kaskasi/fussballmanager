@@ -1,6 +1,8 @@
 # Spielstand Export/Import (M0) — Tester-Anleitung
 
-**Stand:** 2026-10-03 · **PRD:** [17_target_architecture.md](prd/17_target_architecture.md) (Save-Sync M0)
+**Stand:** 2026-10-04 · **PRD:** [17_target_architecture.md](prd/17_target_architecture.md) (Save-Sync M0)
+
+Vor einem Schema-Update (aktuell Save-Version 52, Stempel): einmal **Export** aus dem Hub, dann weiterspielen. Die Migration erhält den Kader; der Export ist das Backup für den Save, den du behalten willst.
 
 Kein Login, kein Server — nur eine JSON-Datei, die du selbst bewegst.
 

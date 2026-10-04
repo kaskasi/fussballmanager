@@ -1,6 +1,6 @@
 # /docs/prd/15_feature_gap.md
 
-**Version:** 1.9
+**Version:** 1.10
 **Last Updated:** 2026-10-04
 **Status:** Final (Analyse — keine neuen Shipping-Features ohne Eintrag in PRD 10)
 
@@ -96,14 +96,15 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 | F6.4 | M1 | Wasserfall 11.5 | Icon-Balken + 13-Mo-Sparkline | — |
 | F7.1 | M1 | 2D-Grundriss, Preise | Grundriss + Banden auf Tribünen + Shirt | Gelände-Tab separat |
 | F7.2 | M2 | Kapazität, VIP, Heizung | Shop-Liste + Levels · extra Banden bei Steh/Sitz | Shop unter der Karte |
-| F7.3 | M3 | Wurst, Fanshop, Hotel, Museum | Gelände-v2: Footprints, Kern/Ring, Straße im Modell | Wurst-SKU, Hotel, Museum; Andocken-Feinschliff |
+| F7.3 | M3 | Wurst, Fanshop, Hotel, Museum | Farm 14×10, 2×5-Platten, Docking ⚠️, Kiosk-Cash | Hotel, Museum, Wurst-SKU; 1×1-Deko später |
+| F7.4 | M3 | Trainingsgelände-Ausbau | TZ-Stufen Halle/Fitness/Pool/Physio am bestehenden Gebäude | Verletzungs-Sim bleibt leicht |
 | F3.2 | M1 | Campus 2D-Iso | — | Grid statt Iso |
 | F3.3 | M1 | YouthReports | Report 14.4 + Auto-Sim; Grid sekundär | Campus-Iso F3.2 |
 | F3.4 | M1 | Icon-Inbox, Cap 4 | Post-Karte ●/▲, Jugend-Icons 03.4 | Hub-Ampel Jugend |
 | F3.6 | M2 | Profi-Verträge, Spielzeit-Klauseln | Jugendvertrag-Default | Slider mit F5.4 teilen |
-| F2.3 | M2 | Individualprogramme | Gruppen-Fokus F2.1; weak foot / retrain | Stamp-kind folgt mit F2.8 |
+| F2.3 | M2 | Individualprogramme | Gruppen-Fokus F2.1; weak foot / retrain / stamp | Spend-Bar auf der Akte |
 | F2.7 | M1 | Wachstums-Heatmap | Team-Pixelbar Hub+Training (1□=1 Spieler) | 09 Screen 1 |
-| F2.8 | M2 | Bonus-Stamps | Schema + Katalog + Earn-Loop (train/event) + Akte-Badges | Hybrid path later; Minus-stamps later |
+| F2.8 | M2 | Bonus-Stamps | Katalog + Earn-Loop + Akte + Phase-Makel (Grünschnabel/Chancentod) + signed −1 | Hybrid later |
 | F4.3 | M2 | Scout-Netz 3 Tiers | Einstellungsliste | vorgezogen, keine Karte |
 | F4.4 | M2 | Scout-Karte | — | |
 | F1.5 | M1 | Profil Charts, Icons | Tabs + Flavor | Akte laut 14.3; Hex optional später |
@@ -116,9 +117,10 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 
 Aufgenommen in PRD 10 als **F2.8** (M2) und spezifiziert in PRD 07.5.
 
-Beschlossene Wirkung: kleiner permanenter Attribut-Bump (+2…+4 auf 2–3
-Keys), gebacken in `attributes` beim Award. Pfade M2: `train` | `event`.
-`hybrid` reserviert für später. Kein separates Match-Modifier-Layer in M2.
+Beschlossene Wirkung: kleiner permanenter Attribut-Bump (signed −4…−1 oder
++1…+4 auf 2–3 Keys), gebacken in `attributes` beim Award. Pfade M2: `train`
+| `event`. Phase-Makel mit `spawn`/`clear`. `hybrid` reserviert für später.
+Kein separates Match-Modifier-Layer in M2.
 
 #### C2 — Blutlinie in der Akademie
 
@@ -138,7 +140,7 @@ Ohne Meilensteine in PRD 10 zu verschieben:
    Klausel-Enzyklopädie bleibt raus.
 2. Ein **F7.3-Slice** (eine Wurstbude) nur nach explizitem Katalog-Edit, der
    den Slice nach M2 zieht; sonst bleibt F7.3 M3. Empfohlen, nicht getan.
-3. **F2.8** Implementierung (Katalog-JSON, Earn-Loop, Akte-Badges) — Spec steht.
+3. **F2.8** Phase-Makel + Spend-Bar auf der Akte — gebaut.
 4. **C2** erst nach 07/10.
 
 Shirt-Verkauf (F6.7) bleibt M3 und folgt der Bude, nicht dem Brustlogo.

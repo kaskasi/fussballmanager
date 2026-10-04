@@ -3,7 +3,7 @@ import {
   processWeeklyBreakoutChecks,
   type BreakoutNarrative,
 } from "../development/breakouts.ts";
-import { evaluateEventStamps } from "../development/ability-stamps.ts";
+import { evaluateClearStamps, evaluateEventStamps } from "../development/ability-stamps.ts";
 import { advanceIndividualTrainingWeek } from "../development/individual-training.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { applyTrainingWeek } from "../development/pipeline-week.ts";
@@ -36,6 +36,7 @@ import { advanceLeagueWeek } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
 import { environmentFromCoachingStaff } from "../staff/coaching-staff.ts";
 import {
+  precinctFitnessRegen,
   precinctTrainingEnvironment,
   precinctWeeklyFanbaseBonus,
 } from "../stadium/precinct-effects.ts";
@@ -170,7 +171,21 @@ export async function simulateGameWeek(
   players = applyWeeklyFitnessBatch(careerMatch.players, {
     intensity: session.trainingIntensity,
     coachingStaff: session.coachingStaff,
+    precinctRegen: precinctFitnessRegen(session.stadium.precinct),
   });
+  const clearedStamps = evaluateClearStamps(players);
+  players = clearedStamps.players;
+  for (const notice of clearedStamps.cleared) {
+    const named = players.find((entry) => entry.id === notice.playerId);
+    const who = named ? formatPlayerName(named) : notice.playerId;
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "profile",
+      `${notice.icon} ${who} legt ${notice.label} ab`,
+    );
+  }
   const eventStamps = evaluateEventStamps(players, session.season, nextWeek);
   players = eventStamps.players;
   for (const award of eventStamps.awards) {
@@ -253,6 +268,7 @@ export async function simulateGameWeek(
     session.season,
   );
   rivalPlayers = expireBreakoutModifiers(rivalBreakouts.players, nextWeek);
+  rivalPlayers = evaluateClearStamps(rivalPlayers).players;
 
   let transferState = session.transferState;
   clubEvents = appendBreakoutNarrativesToEvents(

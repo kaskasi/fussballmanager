@@ -21,17 +21,19 @@ export function FitnessManagementPanel({
   players,
   clubId,
   intensity,
+  injuryRiskFactor = 1,
 }: {
   players: readonly Player[];
   clubId: string;
   intensity: number;
+  injuryRiskFactor?: number;
 }) {
   const rows = useMemo(() => {
     return players
       .filter((player) => player.club_id === clubId && player.squad_status === "pro")
       .map((player) => {
         const fitness = stateMark(player.state.fitness, 75, 50);
-        const risk = playerInjuryRisk(player, intensity);
+        const risk = playerInjuryRisk(player, intensity, injuryRiskFactor);
         return {
           playerId: player.id,
           name: formatPlayerName(player),

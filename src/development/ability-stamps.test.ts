@@ -6,10 +6,13 @@ import {
   canEarnStamp,
   careerApps,
   eligibleTrainStamps,
+  evaluateClearStamps,
   evaluateEventStamps,
   formatStampEffects,
   formatStampGates,
   hasStamp,
+  recordAppearanceGoals,
+  seedPhaseStamps,
   stampDefinition,
 } from "./ability-stamps.ts";
 
@@ -35,6 +38,7 @@ describe("ability stamps (F2.8)", () => {
 
     expect(awarded.attributes.strength).toBe(108);
     expect(awarded.attributes.positioning).toBe(97);
+    expect(awarded.attributes.pace).toBe(player.attributes.pace - 1);
     expect(hasStamp(awarded, "kopfballungeheuer")).toBe(true);
     expect(awardStamp(awarded, "kopfballungeheuer", 1, 13).stamps).toHaveLength(1);
   });
@@ -69,7 +73,7 @@ describe("ability stamps (F2.8)", () => {
   it("formats gates and effects for the help catalog", () => {
     const train = stampDefinition("kopfballungeheuer")!;
     expect(formatStampGates(train)).toEqual(["Kraft ≥ 100", "Stellung ≥ 90"]);
-    expect(formatStampEffects(train)).toEqual(["Kraft +3", "Stellung +2"]);
+    expect(formatStampEffects(train)).toEqual(["Kraft +3", "Stellung +2", "Tempo -1"]);
     const event = stampDefinition("torjaeger_saison")!;
     expect(formatStampGates(event)).toEqual(["25+ Tore in einer Saison"]);
   });
@@ -90,5 +94,33 @@ describe("ability stamps (F2.8)", () => {
     const badges = activeStampBadges(player, 3);
     expect(badges).toHaveLength(3);
     expect(badges[0]?.id).toBe("treter");
+  });
+
+  it("seeds Grünschnabel for almost every new player and clears at 40 apps", () => {
+    const raw = clonePlayer();
+    raw.state.season_apps = 0;
+    const seeded = seedPhaseStamps(raw, 1, 1, () => 0);
+    expect(hasStamp(seeded, "gruenschnabel")).toBe(true);
+    expect(seeded.attributes.composure).toBe(raw.attributes.composure - 2);
+    seeded.state.season_apps = 40;
+    const cleared = evaluateClearStamps([seeded]);
+    expect(hasStamp(cleared.players[0]!, "gruenschnabel")).toBe(false);
+    expect(cleared.players[0]!.attributes.composure).toBe(raw.attributes.composure);
+  });
+
+  it("clears Chancentod after a hat-trick or a five-game scoring streak", () => {
+    const raw = clonePlayer();
+    raw.position = "CF";
+    const cursed = seedPhaseStamps(raw, 1, 1, () => 0);
+    expect(hasStamp(cursed, "chancentod")).toBe(true);
+    const hat = evaluateClearStamps([recordAppearanceGoals(cursed, 3)]);
+    expect(hasStamp(hat.players[0]!, "chancentod")).toBe(false);
+
+    let streak = seedPhaseStamps(raw, 1, 1, () => 0);
+    for (let game = 0; game < 5; game += 1) {
+      streak = recordAppearanceGoals(streak, 1);
+    }
+    const afterStreak = evaluateClearStamps([streak]);
+    expect(hasStamp(afterStreak.players[0]!, "chancentod")).toBe(false);
   });
 });

@@ -3,6 +3,7 @@ import { generatePlayerName } from "../types/player-display.ts";
 import { ensureYouthContract } from "../player/youth-contract.ts";
 import { SEASON_END_WEEK } from "../sim/game-calendar.ts";
 import { estimateCa, marketValue } from "../transfers/market-value.ts";
+import { seedPhaseStamps } from "../development/ability-stamps.ts";
 
 /**
  * Yearly academy intake (PRD 03.1, defaults from PRD 07.2).
@@ -255,7 +256,7 @@ function generateOne(
     stamps: [],
     portrait_seed: portraitSeed,
   };
-  return ensureYouthContract(player, input.season);
+  return seedPhaseStamps(ensureYouthContract(player, input.season), input.season, 1, input.random);
 }
 
 function drawAttributes(component: MixtureComponent, random: () => number): Attributes {

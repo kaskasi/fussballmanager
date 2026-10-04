@@ -2,6 +2,7 @@ import { estimateCa, marketValue } from "../transfers/market-value.ts";
 import type { Attributes, Player, PositionPrimary } from "../types/player.ts";
 import { generatePlayerName } from "../types/player-display.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
+import { seedPhaseStamps } from "../development/ability-stamps.ts";
 
 const PRO_ROSTER: readonly { position: PositionPrimary; age: number; scale: number }[] = [
   { position: "GK", age: 28, scale: 1.05 },
@@ -47,7 +48,7 @@ export function generateDemoProSquad(input: {
     const attributes = scaleAttributes(template.attributes, slot.scale);
     const position = slot.position;
     const birthYear = 2026 - slot.age;
-    return {
+    const built: Player = {
       ...template,
       id: `pl_${String(idNumber).padStart(5, "0")}`,
       name: generatePlayerName(portraitSeed),
@@ -106,5 +107,6 @@ export function generateDemoProSquad(input: {
       stamps: [],
       portrait_seed: portraitSeed,
     };
+    return seedPhaseStamps(built, 1, 1, input.random);
   });
 }

@@ -1,6 +1,6 @@
 # /docs/prd/14_ui_cockpit.md
 
-**Version:** 1.14
+**Version:** 1.15
 **Last Updated:** 2026-10-04
 **Status:** Final (Darstellung — kein Code in diesem Dokument)
 
@@ -272,9 +272,12 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
   anschließt. Klick mit dem Straßen-Werkzeug auf ⚠️ legt den Weg.
   Patches wachsen an jeder Kante und lassen sich auf die Mindestgröße
   zurückziehen (sonst ist Umsetzen nach dem Ausbau unmöglich).
-  Fanshop und Trainingszentrum haben weiter Qualitäts-Level (Shop / Halle).
+  Fanshop und Trainingszentrum haben weiter Qualitäts-Level (Shop / Halle /
+  Fitness / Pool / Physio). 1×1-Parzellen bleiben als Haken für späteres Deko
+  (Baum, Bank) ohne Buff — Landkauf ist 2×5-Plättchen.
   Imbiss (Bude/Zelt) und Fanshop zahlen wöchentlich auf die Kasse.
-  Trainingszentrum ist das Gebäude (Fitness, Pool, Physio als spätere Stufen);
+  Trainingszentrum: Halle bufft Training; Fitness, Pool, Physio buffen
+  Fitness-Regen und Müdigkeit (Physio senkt Verletzungsrisiko leicht).
   Trainingsplatz ist extra Rasen. Beide buffen Training.
 - Ticket-Stepper an Blöcken bleibt.
 

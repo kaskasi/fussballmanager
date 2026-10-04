@@ -60,6 +60,10 @@ export const PRECINCT_STADIUM = { x: 5, y: 4, w: 4, h: 2 } as const;
  */
 export const PRECINCT_CITY_LINK = { x: 6, y: -1, w: 2, h: 1 } as const;
 
+/**
+ * 1×1 decorative tiles (tree/bench/statue, zero buffs) — not land expansion.
+ * Expansion uses 2×5 Rosenberg plates (`PRECINCT_EXPANSION_COST`).
+ */
 export const PRECINCT_PARCEL_COST = 90_000;
 export const PRECINCT_EXPANSION_COST = 240_000;
 export const PRECINCT_STREET_COST = 15_000;
@@ -165,9 +169,9 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     cap: "unique",
     minW: 3,
     minH: 3,
-    maxLevel: 2,
+    maxLevel: 5,
     upgradeCost: 720_000,
-    hint: "Gebäude · Fitness, Pool, Physio später · jetzt Training, Ausbau Halle",
+    hint: "Gebäude · Halle, Fitness, Pool, Physio · Training + Erholung",
   },
   {
     id: "training_pitch",
@@ -398,6 +402,16 @@ export function precinctBuildingLevel(state: PrecinctState, building: PrecinctBu
 export function precinctHasTrainingHall(state: PrecinctState | undefined): boolean {
   if (!state) return false;
   return precinctBuildingLevel(state, "training_ground") >= 2;
+}
+
+export function precinctNextUpgradeLabel(building: PrecinctBuilding, currentLevel: number): string {
+  if (building === "training_ground") {
+    if (currentLevel === 1) return "Halle";
+    if (currentLevel === 2) return "Fitness";
+    if (currentLevel === 3) return "Pool";
+    if (currentLevel === 4) return "Physio";
+  }
+  return `Lv${currentLevel + 1}`;
 }
 
 export function precinctPlacementCost(

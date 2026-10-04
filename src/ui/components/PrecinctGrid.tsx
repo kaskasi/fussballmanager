@@ -36,6 +36,7 @@ import {
   precinctExpansionAt,
   precinctExpansionOwned,
   precinctNudgeCost,
+  precinctNextUpgradeLabel,
   precinctPlacementCost,
   streetLinks,
   type PrecinctBuilding,
@@ -230,7 +231,7 @@ export function PrecinctGrid({
                   title={upgrade.reason ?? `${building.label} ausbauen`}
                   onClick={() => onUpgrade(building.id)}
                 >
-                  {building.id === "training_ground" && level === 1 ? "Halle" : `Lv${level + 1}`}
+                  {precinctNextUpgradeLabel(building.id, level)}
                 </button>
               ) : null}
             </div>

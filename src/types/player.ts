@@ -55,6 +55,10 @@ export interface Player {
     desire_to_leave?: boolean;
     /** F5.4 — calendar day index; no new talks until this day. */
     contract_talks_locked_until_day?: number;
+    /** F2.8 — consecutive appearances with ≥1 goal (Chancentod clear). */
+    scoring_streak?: number;
+    /** F2.8 — goals in the last appearance (hat-trick clear). */
+    last_match_goals?: number;
     modifiers: TemporaryModifier[];
   };
 

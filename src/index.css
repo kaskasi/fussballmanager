@@ -6230,6 +6230,25 @@ body {
   text-align: right;
 }
 
+.profile-hunger-train {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.profile-hunger-start {
+  border: 1px dashed #10b981;
+  background: #ecfdf5;
+  color: #047857;
+  border-radius: 0.45rem;
+  padding: 0.2rem 0.45rem;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
 .profile-vertrag-status {
   margin: 0;
   font-weight: 800;

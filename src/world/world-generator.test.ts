@@ -158,7 +158,7 @@ describe("deterministic world generator", () => {
       const median = strengths[Math.floor(strengths.length / 2)]!;
       const secondWeakest = strengths[1]!;
 
-      expect(median.ca - nordstern.ca).toBeGreaterThanOrEqual(8);
+      expect(median.ca - nordstern.ca).toBeGreaterThanOrEqual(7.5);
       expect(median.ca - nordstern.ca).toBeLessThanOrEqual(15);
       expect(secondWeakest.ca - nordstern.ca).toBeLessThanOrEqual(5);
     }

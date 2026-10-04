@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { IndividualProgram } from "./development/individual-training.ts";
+import { assignIndividualProgram } from "./development/individual-training.ts";
 import { processTransferBreakout } from "./development/breakouts.ts";
 import type { TrainingSlot } from "./development/training-units.ts";
 import { CareerMatch } from "./match/CareerMatch";
@@ -125,6 +126,7 @@ import {
   type PrecinctBuilding,
   type PrecinctEdge,
 } from "./stadium/precinct.ts";
+import { precinctInjuryRiskFactor } from "./stadium/precinct-effects.ts";
 import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
 import { HelpScreen } from "./ui/screens/HelpScreen.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
@@ -1329,6 +1331,33 @@ export default function App() {
     [patchSession],
   );
 
+  const handleStartStampProgram = useCallback(
+    (playerId: string, stampId: string) => {
+      patchSession((current) => {
+        const player = current.players.find((entry) => entry.id === playerId);
+        if (!player) return current;
+        try {
+          return {
+            ...current,
+            individualPrograms: assignIndividualProgram(
+              current.individualPrograms,
+              player,
+              "stamp",
+              8,
+              current.season,
+              current.week,
+              undefined,
+              stampId,
+            ),
+          };
+        } catch {
+          return current;
+        }
+      });
+    },
+    [patchSession],
+  );
+
   const resetGame = useCallback(() => {
     removeLocalSave(activeSlot);
     const fresh = saveFromSession(newGameSession());
@@ -1578,6 +1607,7 @@ export default function App() {
             setProfileFeedback(null);
             setScreen("training");
           }}
+          onStartStampProgram={(stampId) => handleStartStampProgram(profilePlayer.id, stampId)}
           onOpenYouth={
             profilePlayer.squad_status === "u17" || profilePlayer.squad_status === "u19"
               ? () => {
@@ -1668,6 +1698,7 @@ export default function App() {
           focusIndividualPlayerId={trainingFocusPlayerId}
           onClearIndividualFocus={() => setTrainingFocusPlayerId(null)}
           hasTrainingHall={precinctHasTrainingHall(stadium.precinct)}
+          injuryRiskFactor={precinctInjuryRiskFactor(stadium.precinct)}
         />
       ) : null}
       {inboxOpen && pendingInboxItems(youthInbox, players).length > 0 ? (

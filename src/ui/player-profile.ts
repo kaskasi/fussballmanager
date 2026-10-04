@@ -3,6 +3,7 @@ import {
   programLabel,
   type IndividualProgram,
 } from "../development/individual-training.ts";
+import { stampIcon } from "../development/ability-stamps.ts";
 import { trainingUnit, type TrainingSlot } from "../development/training-units.ts";
 import type { Attributes, GrowthSnapshot, Player, PositionPrimary } from "../types/player.ts";
 import { roundStat } from "../types/player-display.ts";
@@ -260,7 +261,12 @@ export function dossierTrainingTarget(
     const elapsed = Math.max(0, week - program.startedWeek);
     const total = Math.max(1, elapsed + program.weeksRemaining);
     return {
-      icon: program.kind === "weak_foot" ? "🦶" : "🧭",
+      icon:
+        program.kind === "weak_foot"
+          ? "🦶"
+          : program.kind === "stamp"
+            ? stampIcon(program.stampId ?? "")
+            : "🧭",
       title: programKindLabel(program.kind),
       detail: programLabel(program),
       progress: Math.min(1, elapsed / total),

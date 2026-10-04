@@ -3,6 +3,7 @@ import { pushWeeklyMinutes } from "../player/minute-history.ts";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import type { CareerLeagueStat } from "../persistence/league-state.ts";
 import { estimateCa } from "../transfers/market-value.ts";
+import { recordAppearanceGoals } from "../development/ability-stamps.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 
@@ -98,7 +99,7 @@ export function applyCareerMatchWeek(
         form: adjustForm(withMinutes.state.form, goals, assists, goalsAgainst, minutes),
       },
     };
-    updated.set(player.id, next);
+    updated.set(player.id, recordAppearanceGoals(next, goals));
     matchdayStats.push({
       playerId: player.id,
       name: formatPlayerName(player),

@@ -7,6 +7,8 @@ import type { FatigueAmpel } from "./training-load.ts";
 export interface WeeklyFitnessContext {
   intensity: number;
   coachingStaff: CoachingStaff;
+  precinctRegen?: number;
+  injuryRiskFactor?: number;
 }
 
 export interface InjuryRiskSummary {
@@ -61,7 +63,9 @@ export function weeklyFitnessDelta(
 export function applyWeeklyFitness(player: Player, context: WeeklyFitnessContext): Player {
   if (player.state.injury !== null) return player;
   const regenFactor =
-    fitnessCoachRegenFactor(context.coachingStaff) * modifierFitnessRegenMultiplier(player);
+    fitnessCoachRegenFactor(context.coachingStaff) *
+    modifierFitnessRegenMultiplier(player) *
+    (context.precinctRegen ?? 1);
   const delta = weeklyFitnessDelta(
     player.state.fitness,
     player.state.weekly_minutes,
@@ -86,7 +90,11 @@ export function applyWeeklyFitnessBatch(
 }
 
 /** 0–100 — higher means more injury risk at current load. */
-export function injuryRiskScore(player: Player, intensity: number): number {
+export function injuryRiskScore(
+  player: Player,
+  intensity: number,
+  injuryRiskFactor = 1,
+): number {
   if (player.state.injury !== null) return 100;
   const fitnessGap = Math.max(0, 72 - player.state.fitness);
   const minuteLoad = Math.min(100, player.state.weekly_minutes * 0.9);
@@ -96,12 +104,19 @@ export function injuryRiskScore(player: Player, intensity: number): number {
   const tiredPenalty = isPlayerTired(player) ? 18 : 0;
   return Math.min(
     100,
-    Math.round(fitnessGap * 0.55 + minuteLoad * 0.35 + recentLoad + intensityLoad + tiredPenalty),
+    Math.round(
+      (fitnessGap * 0.55 + minuteLoad * 0.35 + recentLoad + intensityLoad + tiredPenalty) *
+        injuryRiskFactor,
+    ),
   );
 }
 
-export function playerInjuryRisk(player: Player, intensity: number): InjuryRiskSummary {
-  const score = injuryRiskScore(player, intensity);
+export function playerInjuryRisk(
+  player: Player,
+  intensity: number,
+  injuryRiskFactor = 1,
+): InjuryRiskSummary {
+  const score = injuryRiskScore(player, intensity, injuryRiskFactor);
   if (score >= 70) {
     return { ampel: "risk", icon: "◆", label: `Verletzungsrisiko hoch (${score})`, score };
   }

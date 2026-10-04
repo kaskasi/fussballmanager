@@ -103,6 +103,7 @@ export function TrainingCenter({
   focusIndividualPlayerId = null,
   onClearIndividualFocus,
   hasTrainingHall = false,
+  injuryRiskFactor = 1,
 }: {
   week: number;
   season: number;
@@ -129,6 +130,7 @@ export function TrainingCenter({
   focusIndividualPlayerId?: string | null;
   onClearIndividualFocus?: () => void;
   hasTrainingHall?: boolean;
+  injuryRiskFactor?: number;
 }) {
   const [tab, setTab] = useState<TrainingTab>("overview");
   const [pickSlot, setPickSlot] = useState<number | null>(null);
@@ -255,7 +257,12 @@ export function TrainingCenter({
           />
         </>
       ) : (
-        <FitnessManagementPanel players={players} clubId={clubId} intensity={intensity} />
+        <FitnessManagementPanel
+          players={players}
+          clubId={clubId}
+          intensity={intensity}
+          injuryRiskFactor={injuryRiskFactor}
+        />
       )}
     </main>
   );

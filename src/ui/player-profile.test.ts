@@ -125,5 +125,21 @@ describe("player profile helpers", () => {
     );
     expect(withProgram.title).toBe("Schwaches Bein");
     expect(withProgram.progress).toBeCloseTo(3 / 9);
+    const stampProgram = dossierTrainingTarget(
+      player,
+      [
+        {
+          playerId: player.id,
+          kind: "stamp",
+          stampId: "geolter_blitz",
+          weeksRemaining: 4,
+          startedWeek: 1,
+          season: 1,
+        },
+      ],
+      [{ unitId: "phys_speed", focus: true }],
+      4,
+    );
+    expect(stampProgram.icon).toBe("⚡");
   });
 });

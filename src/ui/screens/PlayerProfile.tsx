@@ -17,6 +17,7 @@
  */
 import { useEffect, useMemo, useState, type ComponentPropsWithoutRef } from "react";
 import type { IndividualProgram } from "../../development/individual-training.ts";
+import { programLabel } from "../../development/individual-training.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
 import {
   profileMenuItems,
@@ -76,6 +77,7 @@ import {
 } from "../player-profile.ts";
 import {
   activeStampBadges,
+  eligibleTrainStamps,
   stampIcon,
   stampLabel,
 } from "../../development/ability-stamps.ts";
@@ -114,6 +116,7 @@ export interface PlayerProfileProps {
   onBack: () => void;
   onOpenYouth?: () => void;
   onOpenTraining?: () => void;
+  onStartStampProgram?: (stampId: string) => void;
   onAssignScout?: () => void;
   onToggleShortlist?: () => void;
   onPurchase?: () => void;
@@ -143,6 +146,7 @@ export function PlayerProfile({
   onBack,
   onOpenYouth,
   onOpenTraining,
+  onStartStampProgram,
   onAssignScout,
   transferWindowOpen = false,
   shortlisted = false,
@@ -451,7 +455,12 @@ export function PlayerProfile({
               )}
 
               {owned ? (
-                <StampHungerSlots player={player} />
+                <StampHungerSlots
+                  player={player}
+                  programs={individualPrograms ?? []}
+                  week={week ?? 1}
+                  onStartStamp={onStartStampProgram}
+                />
               ) : null}
             </section>
           ) : null}
@@ -858,42 +867,100 @@ function ProfileActionButton({
   );
 }
 
-function StampHungerSlots({ player }: { player: Player }) {
+function StampHungerSlots({
+  player,
+  programs,
+  week,
+  onStartStamp,
+}: {
+  player: Player;
+  programs: readonly IndividualProgram[];
+  week: number;
+  onStartStamp?: (stampId: string) => void;
+}) {
   const badges = activeStampBadges(player, FAEHIGKEIT_HUNGER_SLOTS);
+  const stampProgram = programs.find((entry) => entry.playerId === player.id && entry.kind === "stamp");
+  const eligible = eligibleTrainStamps(player);
+  const elapsed = stampProgram ? Math.max(0, week - stampProgram.startedWeek) : 0;
+  const total = stampProgram ? Math.max(1, elapsed + stampProgram.weeksRemaining) : 1;
+  const progress = stampProgram ? Math.min(1, elapsed / total) : 0;
+  let usedProgress = false;
+
   return (
     <div className="profile-hunger" aria-label="Fähigkeiten">
       <p className="profile-section-label">Fähigkeiten / Bonus</p>
       {Array.from({ length: FAEHIGKEIT_HUNGER_SLOTS }, (_, index) => {
         const stamp = badges[index];
         const slotLabel = index === FAEHIGKEIT_HUNGER_SLOTS - 1 ? "Bonus" : "Fähigkeit";
-        const appliedHint = stamp
-          ? Object.entries(stamp.applied)
-              .map(([key, delta]) => {
-                const attr = key as Parameters<typeof attributeLabel>[0];
-                return `${attributeLabel(attr)} ${formatGrowthDelta(delta ?? null)}`;
-              })
-              .join(" · ")
-          : "";
+        if (stamp) {
+          const appliedHint = Object.entries(stamp.applied)
+            .map(([key, delta]) => {
+              const attr = key as Parameters<typeof attributeLabel>[0];
+              return `${attributeLabel(attr)} ${formatGrowthDelta(delta ?? null)}`;
+            })
+            .join(" · ");
+          return (
+            <div key={index} className="profile-hunger-slot">
+              <span>{slotLabel}</span>
+              <span
+                className="profile-hunger-stamp"
+                title={`${stampLabel(stamp.id)} · ${stamp.path} · ${appliedHint}`}
+              >
+                {stampIcon(stamp.id)} {stampLabel(stamp.id)}
+              </span>
+            </div>
+          );
+        }
+        if (stampProgram && !usedProgress) {
+          usedProgress = true;
+          return (
+            <div key={index} className="profile-hunger-slot">
+              <span>{slotLabel}</span>
+              <div className="profile-hunger-train" title={programLabel(stampProgram)}>
+                <span>
+                  {stampIcon(stampProgram.stampId ?? "")} {programLabel(stampProgram)}
+                </span>
+                <div
+                  className="profile-ziel-track"
+                  aria-label={`Fortschritt ${Math.round(progress * 100)} Prozent`}
+                >
+                  <span className="profile-ziel-fill" style={{ width: `${progress * 100}%` }} />
+                </div>
+              </div>
+            </div>
+          );
+        }
+        const nextStamp = eligible[0];
+        if (nextStamp && onStartStamp) {
+          return (
+            <div key={index} className="profile-hunger-slot">
+              <span>{slotLabel}</span>
+              <button
+                type="button"
+                className="profile-hunger-start"
+                onClick={() => onStartStamp(nextStamp.id)}
+                title={`${nextStamp.label} trainieren · ${nextStamp.weeks ?? "?"} Wochen`}
+              >
+                {nextStamp.icon} {nextStamp.label} starten
+              </button>
+            </div>
+          );
+        }
         return (
           <div key={index} className="profile-hunger-slot">
             <span>{slotLabel}</span>
-            <span
-              className={stamp ? "profile-hunger-stamp" : "profile-hunger-empty"}
-              title={
-                stamp
-                  ? `${stampLabel(stamp.id)} · ${stamp.path} · ${appliedHint}`
-                  : "Leerer Slot"
-              }
-            >
-              {stamp ? `${stampIcon(stamp.id)} ${stampLabel(stamp.id)}` : "—"}
+            <span className="profile-hunger-empty" title="Leerer Slot">
+              —
             </span>
           </div>
         );
       })}
       <p className="profile-hunger-note">
         {(player.stamps?.length ?? 0) > 0
-          ? `${player.stamps.length} Stempel verdient — Training oder Karriere-Meilenstein.`
-          : "Noch leer — trainiere freigeschaltete Stempel oder erreiche Meilensteine."}
+          ? `${player.stamps.length} Stempel — Training, Meilenstein oder Start-Makel.`
+          : eligible.length > 0
+            ? "Slot klicken startet ein Stempel-Programm."
+            : "Noch leer — trainiere freigeschaltete Stempel oder erreiche Meilensteine."}
       </p>
     </div>
   );

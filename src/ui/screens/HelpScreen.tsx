@@ -381,7 +381,7 @@ function PlayPanel() {
 function StampsPanel() {
   const stamps = stampCatalog();
   const trained = stamps.filter((entry) => entry.path === "train");
-  const events = stamps.filter((entry) => entry.path === "event");
+  const events = stamps.filter((entry) => entry.path === "event" && !entry.spawn);
 
   return (
     <div className="help-panel">
@@ -390,9 +390,10 @@ function StampsPanel() {
           <span aria-hidden="true">◆</span> Fähigkeiten / Bonus-Stempel
         </h2>
         <p>
-          Stempel sind benannte Boni auf der Spielerakte. Beim Verdienen steigen dauerhaft ein paar
-          Attribute (+2 bis +4). Maximal drei Badges sind prominent sichtbar; weitere bleiben in der
-          Historie.
+          Stempel sind benannte Boni — und manchmal Makel — auf der Spielerakte. Beim Verdienen
+          ändern sich dauerhaft ein paar Attribute (+ oder −). Maximal drei Badges sind prominent
+          sichtbar. Start-Makel (Grünschnabel, Chancentod) fallen von allein, wenn der Meilenstein
+          kommt.
         </p>
         <ul className="help-icon-list">
           <li>
@@ -407,9 +408,17 @@ function StampsPanel() {
               <strong>Ereignis:</strong> Meilenstein in der Saison/Karriere — sofortiger Award.
             </span>
           </li>
+          <li>
+            <span aria-hidden="true">🌱</span>
+            <span>
+              <strong>Start-Makel:</strong> fast jeder Neue trägt Grünschnabel; Angreifer können Chancentod
+              mitbringen. Beides geht wieder weg.
+            </span>
+          </li>
         </ul>
       </section>
 
+      <StampGroup title="Start-Makel" icon="🌱" stamps={stamps.filter((entry) => entry.spawn)} />
       <StampGroup title="Durch Training" icon="🏋️" stamps={trained} />
       <StampGroup title="Durch Ereignisse" icon="🏁" stamps={events} />
     </div>
@@ -441,7 +450,7 @@ function StampGroup({
               <div>
                 <strong>{stamp.label}</strong>
                 <p className="help-stamp-meta">
-                  {stampPathLabel(stamp.path)}
+                  {stampPathLabel(stamp.path, stamp)}
                   {stamp.weeks ? ` · ${stamp.weeks} Wochen` : ""}
                 </p>
               </div>

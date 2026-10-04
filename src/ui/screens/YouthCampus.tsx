@@ -51,6 +51,7 @@ import {
   type YouthReportDropAction,
 } from "../../youth/youth-report-view.ts";
 import { coachIconForPlayer, hasDepartureRisk } from "../components/DecisionInbox.tsx";
+import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 
 /**
  * WIREFRAME: PRD 14.4 — Jugend-Report (Heimat)
@@ -523,6 +524,11 @@ function YouthReportHome({
                     <td className="squad-col-name">
                       <button type="button" className="youth-report-badge">
                         {risk ? <span aria-hidden="true">🚩</span> : null}
+                        <PlayerPortrait
+                          seed={player.portrait_seed}
+                          size="sm"
+                          className="campus-portrait"
+                        />
                         {formatYouthReportName(player)}
                       </button>
                     </td>

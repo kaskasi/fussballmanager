@@ -23,6 +23,7 @@ import {
 import { canPromotePlayer, promotionGateLabel } from "../../youth/promotion-gate.ts";
 import { proTrialLabel } from "../../youth/pro-trial.ts";
 import { formatCalendarWeekDisplay } from "../../i18n/calendar-display.ts";
+import { PlayerPortrait } from "./PlayerPortrait.tsx";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { localizeStoryInbox } from "../../i18n/story-display.ts";
@@ -191,7 +192,7 @@ export function DecisionInboxModal({
             ) : active && player ? (
               <section className="inbox-card">
                 <div className="inbox-player">
-                  <span className="inbox-portrait" aria-hidden="true">{positionGlyph(player.position)}</span>
+                  <PlayerPortrait seed={player.portrait_seed} size="md" className="inbox-portrait" />
                   <div className="inbox-player-body">
                     <p className="inbox-decision-headline">
                       <strong>{formatPlayerName(player)}</strong>
@@ -295,13 +296,6 @@ function primaryInboxAction(
             ? ["training_focus", "dismiss"]
             : [];
   return preferred.find((action) => actions.includes(action)) ?? actions[0] ?? null;
-}
-
-function positionGlyph(position: Player["position"]): string {
-  if (position === "GK") return "🧤";
-  if (position === "CB" || position === "LB" || position === "RB") return "🛡️";
-  if (position === "CF") return "⚽";
-  return "👟";
 }
 
 export function coachIconForPlayer(inbox: YouthInboxState, playerId: string): CoachIcon {

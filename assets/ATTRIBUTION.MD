@@ -5,7 +5,8 @@
 - **License:** CC0 1.0 Universal
 - **Author:** Pablo Stanley
 - **Source:** https://www.openpeeps.com/
-- **Location:** `assets/open-peeps/`
+- **Location:** `assets/open-peeps/` (full vendor pack; read-only)
+- **Shipped in game:** Bust subset `public/assets/portraits/bust/peep-1.svg` … `peep-105.svg` baked from `Flat Assets/Templates/Bust/` via `npm run bake:portraits`; unknown-scout placeholder `public/assets/portraits/silhouette.svg` (game-authored)
 
 ## ambientCG textures
 

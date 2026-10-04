@@ -24,11 +24,12 @@ import {
   type MarketSortKey,
 } from "../../scouting/market-list.ts";
 import { listMarketRows, sortMarketRows } from "../../scouting/market-roster.ts";
-import { scoutMarketValueBounds } from "../../scouting/scout-visibility.ts";
+import { scoutMarketValueBounds, scoutReveal } from "../../scouting/scout-visibility.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { Hint } from "../components/Hint.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
+import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 
 const POSITIONS: PositionPrimary[] = [
   "GK",
@@ -349,9 +350,14 @@ export function ScoutingCenter({
                     className="scouting-item-main"
                     onClick={() => onSelectTarget(row.playerId)}
                   >
-                    <span className="scouting-portrait" aria-hidden="true">
-                      {positionGlyph(row.position)}
-                    </span>
+                    <PlayerPortrait
+                      seed={row.player.portrait_seed}
+                      size="sm"
+                      variant={
+                        scoutReveal(row.estimate.uncertaintyRange).showExactCa ? "known" : "silhouette"
+                      }
+                      className="scouting-portrait"
+                    />
                     <span className="scouting-player-card">
                       <span className="scouting-player-name">
                         {row.assigned ? <span className="scouting-active" title="Scout aktiv">🟢 </span> : null}
@@ -435,12 +441,5 @@ function Chip({
   );
   if (!hint) return chip;
   return <Hint text={hint}>{chip}</Hint>;
-}
-
-function positionGlyph(position: PositionPrimary): string {
-  if (position === "GK") return "🧤";
-  if (position === "CB" || position === "LB" || position === "RB") return "🛡️";
-  if (position === "CF") return "⚽";
-  return "👟";
 }
 

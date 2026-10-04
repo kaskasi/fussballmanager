@@ -54,6 +54,7 @@ import { CoachingStaffPanel } from "../components/CoachingStaffPanel.tsx";
 import { MentoringPanel } from "../components/MentoringPanel.tsx";
 import { FitnessManagementPanel } from "../components/FitnessManagementPanel.tsx";
 import { Hint } from "../components/Hint.tsx";
+import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { GrowthHeatmap } from "../components/GrowthHeatmap.tsx";
 import { squadGrowthHeatmap } from "../../player/growth-heatmap.ts";
 import type { Coach, CoachingStaff } from "../../staff/coaching-staff.ts";
@@ -762,9 +763,16 @@ function IndividualProgramModal({
         onClick={(event) => event.stopPropagation()}
       >
         <header className="training-modal-head">
-          <div>
-            <p className="eyebrow">{player.position} · {player.age} J.</p>
-            <h2>{formatPlayerName(player)}</h2>
+          <div className="training-modal-identity">
+            <PlayerPortrait
+              seed={player.portrait_seed}
+              size="lg"
+              className="training-modal-portrait"
+            />
+            <div>
+              <p className="eyebrow">{player.position} · {player.age} J.</p>
+              <h2>{formatPlayerName(player)}</h2>
+            </div>
           </div>
           <button type="button" className="training-modal-close" onClick={onClose} aria-label="Schließen">
             ✕

@@ -52,6 +52,7 @@ import {
   scoutReveal,
 } from "../../scouting/scout-visibility.ts";
 import { Hint } from "../components/Hint.tsx";
+import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { ProfileActionsMenu } from "../components/ProfileActionsMenu.tsx";
 import {
   achievementBadges,
@@ -337,7 +338,7 @@ export function PlayerProfile({
 
       <article className="profile-card">
         <div className="profile-identity">
-          <span className="profile-portrait" aria-hidden="true">{positionGlyph(player.position)}</span>
+          <PlayerPortrait seed={player.portrait_seed} size="md" className="profile-portrait" />
           <div className="profile-identity-body">
             <Hint text="Spielername. Fremde Spieler werden erst durch Scouting besser bekannt." block>
               <h1 className="profile-name">{formatPlayerName(player)}</h1>
@@ -1149,11 +1150,4 @@ function StateChip({
 
 function formatMoney(amount: number): string {
   return formatClubCash(amount);
-}
-
-function positionGlyph(position: Player["position"]): string {
-  if (position === "GK") return "🧤";
-  if (position === "CB" || position === "LB" || position === "RB") return "🛡️";
-  if (position === "CF") return "⚽";
-  return "👟";
 }

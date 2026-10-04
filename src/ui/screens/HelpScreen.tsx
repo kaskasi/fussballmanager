@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../../i18n/react.ts";
 import {
   formatStampEffects,
   formatStampGates,
@@ -19,26 +20,25 @@ import {
 
 type HelpTab = "story" | "play" | "stamps";
 
-const TABS: { id: HelpTab; label: string; icon: string }[] = [
-  { id: "story", label: "Welt & Story", icon: "🌍" },
-  { id: "play", label: "So funktioniert's", icon: "▶" },
-  { id: "stamps", label: "Fähigkeiten", icon: "◆" },
+const TABS: { id: HelpTab; labelKey: string; icon: string }[] = [
+  { id: "story", labelKey: "help.tab.story", icon: "🌍" },
+  { id: "play", labelKey: "help.tab.play", icon: "▶" },
+  { id: "stamps", labelKey: "help.tab.stamps", icon: "◆" },
 ];
 
 export function HelpScreen() {
   const [tab, setTab] = useState<HelpTab>("story");
+  const t = useT();
 
   return (
     <main className="help">
       <header className="help-head">
-        <p className="eyebrow">Dokumentation</p>
-        <h1>📖 Hilfe</h1>
-        <p className="help-lede">
-          Underdog-Verein, echte Folgen, keine Sterne-Potentiale — und Stempel, die man sich verdient.
-        </p>
+        <p className="eyebrow">{t("help.eyebrow")}</p>
+        <h1>{t("help.title")}</h1>
+        <p className="help-lede">{t("help.lede")}</p>
       </header>
 
-      <nav className="help-tabs" aria-label="Hilfe-Themen">
+      <nav className="help-tabs" aria-label={t("help.navLabel")}>
         {TABS.map((entry) => (
           <button
             key={entry.id}
@@ -46,7 +46,7 @@ export function HelpScreen() {
             className={tab === entry.id ? "help-tab is-active" : "help-tab"}
             onClick={() => setTab(entry.id)}
           >
-            <span aria-hidden="true">{entry.icon}</span> {entry.label}
+            <span aria-hidden="true">{entry.icon}</span> {t(entry.labelKey)}
           </button>
         ))}
       </nav>

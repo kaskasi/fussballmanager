@@ -1,6 +1,7 @@
 import type { BroadcastStoryContext, MatchEvent, TeamId } from "@fussballmanager/shared";
 import { beatForCommentary, type BroadcastBeatId } from "./beats.ts";
 import type { CommentaryContext } from "./render.ts";
+import { commentaryI18n, macroCommentaryI18n } from "./i18n-keys.ts";
 import { commentateLine, formatClock } from "./render.ts";
 import { shouldEmitPlayByPlay } from "./suppression.ts";
 import { pickStoryColorLine, type StorySlotId } from "./story-slots.ts";
@@ -22,6 +23,8 @@ export type DirectorEmittedLine = {
   text: string;
   macroId?: MacroBeatId;
   storySlot?: StorySlotId;
+  i18nKey?: string;
+  i18nParams?: Record<string, string>;
 };
 
 type PendingCounter = { teamId: TeamId; startSeq: number };
@@ -338,12 +341,15 @@ export function createBroadcastDirector(input: {
       return [];
     }
 
+    const pbpI18n = commentaryI18n(event, ctx, beat);
     const lines: DirectorEmittedLine[] = [
       {
         seq: event.seq,
         beatId: beat,
         voice: "pbp",
         text: commentateLine(event, ctx),
+        i18nKey: pbpI18n?.key,
+        i18nParams: pbpI18n?.params,
       },
     ];
 
@@ -353,12 +359,16 @@ export function createBroadcastDirector(input: {
       (macroId !== "macro_box_siege" || isShotBeat(beat));
 
     if (allowColor && macroId) {
+      const variant = hashPick(seed, event.seq, macroId, COLOR_LINES[macroId].length);
+      const macroI18n = macroCommentaryI18n(macroId, variant);
       lines.push({
         seq: event.seq,
         beatId: beat,
         voice: "color",
         macroId,
         text: `${formatClock(event.clock)}  ${colorTemplate(seed, event.seq, macroId)}`,
+        i18nKey: macroI18n.key,
+        i18nParams: macroI18n.params,
       });
       state.cooldownColorUntilSeq = event.seq + COLOR_COOLDOWN_TICKS;
     } else if (event.seq > state.cooldownColorUntilSeq) {

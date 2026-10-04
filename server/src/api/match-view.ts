@@ -175,6 +175,8 @@ export function buildMatchView(input: {
         text: line.text,
         voice: line.voice,
         storySlot: line.storySlot,
+        i18nKey: line.i18nKey,
+        i18nParams: line.i18nParams,
       });
     }
     previousEvent = result.event;

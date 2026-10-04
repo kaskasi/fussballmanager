@@ -36,7 +36,8 @@ import {
   listCareerStatSeasons,
 } from "../../player/season-stats.ts";
 import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
-import { TRANSFER_WINDOW_HINT } from "../../sim/transfer-windows.ts";
+import { transferWindowHint } from "../../i18n/index.ts";
+import { useT } from "../../i18n/react.ts";
 import { cannotOpenPurchaseReason } from "../../transfers/purchase-block.ts";
 import { BlindPurchaseWarningModal } from "../components/BlindPurchaseWarningModal.tsx";
 import { ContractTalksModal } from "../components/ContractTalksModal.tsx";
@@ -174,6 +175,7 @@ export function PlayerProfile({
   actionFeedback = null,
   onTransferNotice,
 }: PlayerProfileProps) {
+  const t = useT();
   const [tab, setTab] = useState<ProfileTab>("attributes");
   const [menuOpen, setMenuOpen] = useState(false);
   const [talksOpen, setTalksOpen] = useState(false);
@@ -216,10 +218,12 @@ export function PlayerProfile({
   const purchaseHintText =
     purchaseBlockedReason ??
     (!hasScoutIntel
-      ? "Kein Scout-Bericht — Kauf nur nach Warnung auf eigene Gefahr."
+      ? t("transfer.profile.noScoutBuy")
       : listPriceExceedsBudget
-        ? `Listenpreis über Transfer-Topf (${formatClubCash(transferBudget ?? 0)} frei) — niedrigeres Angebot in der Verhandlung möglich.`
-        : "Angebot nach Marktwert — Gegenangebot möglich.");
+        ? t("transfer.profile.listOverPot", {
+            pot: formatClubCash(transferBudget ?? 0),
+          })
+        : t("transfer.profile.offerMarket"));
   const transferNotice =
     purchaseBlockedReason ??
     (actionFeedback &&
@@ -234,7 +238,7 @@ export function PlayerProfile({
   function handlePurchaseClick() {
     if (!onPurchase) return;
     if (purchaseHardBlocked) {
-      notifyTransfer(purchaseBlockedReason ?? "Kauf nicht möglich.");
+      notifyTransfer(purchaseBlockedReason ?? t("transfer.profile.purchaseGeneric"));
       return;
     }
     if (!hasScoutIntel) {
@@ -251,7 +255,7 @@ export function PlayerProfile({
       return;
     }
     if (!transferWindowOpen) {
-      notifyTransfer(`Verkauf nur im ${TRANSFER_WINDOW_HINT}`);
+      notifyTransfer(t("transfer.profile.saleWindowOnly", { hint: transferWindowHint() }));
       return;
     }
     setSaleConfirmOpen(true);
@@ -624,7 +628,7 @@ export function PlayerProfile({
                 <div className="profile-action-cell">
                   <Hint text={purchaseHintText} block>
                     <ProfileActionButton
-                      label="Kaufen"
+                      label={t("transfer.profile.buy")}
                       amount={purchaseAmountLabel}
                       className={[
                         hasScoutIntel || scouting ? "ui-btn--primary" : "ui-btn--ghost",
@@ -669,13 +673,13 @@ export function PlayerProfile({
                   text={
                     saleBlockedReason ??
                     (!transferWindowOpen
-                      ? `Verkauf nur im ${TRANSFER_WINDOW_HINT}`
-                      : "Liga-Verein bietet nach Marktwert. 50 % der Ablöse fließen in den Transfer-Topf.")
+                      ? t("transfer.profile.saleWindowOnly", { hint: transferWindowHint() })
+                      : t("transfer.profile.saleHint"))
                   }
                   block
                 >
                   <ProfileActionButton
-                    label="Verkaufen"
+                    label={t("transfer.profile.sell")}
                     amount={saleOffer ? `ca. ${formatMoney(saleOffer)}` : undefined}
                     className={[
                       "ui-btn--ghost",

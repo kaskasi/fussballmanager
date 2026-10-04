@@ -45,7 +45,7 @@ Migration **039** when schema changes.
 
 ## UI surfaces
 
-1. Opening modal — name, then origin + captain (week 1)
+1. Opening modal — **display language (step 1)**, then name, then origin + captain (week 1). Skip language if locale already in F12.4 prefs.
 2. Fan feed strip on pipeline hub header
 3. Story items in unified decision inbox
 4. Survival objective highlighted on board panel

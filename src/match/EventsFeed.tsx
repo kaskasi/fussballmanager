@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { MatchViewFrame, MatchViewLine, Score } from "@fussballmanager/shared";
+import { useT } from "../i18n/react.ts";
+import { localizeMatchLine } from "./localize-match-line.ts";
 import { eventLineTone } from "./match-presentation-mode.ts";
 import { EventsHud } from "./EventsHud.tsx";
 import { PreMatchBlock } from "./PreMatchBlock.tsx";
@@ -25,6 +27,7 @@ export function EventsFeed({
   homeTeamId,
   preMatch,
 }: EventsFeedProps) {
+  const t = useT();
   const listRef = useRef<HTMLOListElement>(null);
 
   useEffect(() => {
@@ -34,7 +37,7 @@ export function EventsFeed({
   }, [lines.length, lines.at(-1)?.seq, lines.at(-1)?.voice]);
 
   return (
-    <section className="events-feed" aria-label="Spielereignisse">
+    <section className="events-feed" aria-label={t("match.events.label")}>
       <div className="events-feed-fixed">
         <header className="events-feed-header">
           <span className="events-feed-team">{homeShort}</span>
@@ -48,10 +51,11 @@ export function EventsFeed({
       </div>
       <ol ref={listRef} className="events-feed-list">
         {lines.length === 0 ? (
-          <li className="events-feed-line is-placeholder">Anpfiff…</li>
+          <li className="events-feed-line is-placeholder">{t("match.commentary.kickoff")}</li>
         ) : (
           lines.map((line, index) => {
-            const tone = eventLineTone(line.text);
+            const displayText = localizeMatchLine(line);
+            const tone = eventLineTone(displayText);
             return (
               <li
                 key={`${line.seq}-${line.voice ?? "pbp"}-${index}`}
@@ -67,12 +71,12 @@ export function EventsFeed({
                   .join(" ")}
               >
                 {line.voice === "color" ? (
-                  <span className="events-feed-color-label">Experte</span>
+                  <span className="events-feed-color-label">{t("match.commentary.expert")}</span>
                 ) : null}
                 {tone === "shot" && line.voice !== "color" ? (
                   <span className="events-feed-shot-icon" aria-hidden="true">◎</span>
                 ) : null}
-                {line.text}
+                {displayText}
               </li>
             );
           })

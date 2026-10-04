@@ -189,6 +189,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F12.5 | Screenshot-Modus | M3 | Spielermomente teilen |
 | F12.6 | Mod-Support | M4 | JSON-Austausch |
 | F12.7 | Hilfe & Doku | M1 | Eigener Screen: Welt/Story, Spielablauf, Stempel-Katalog (F2.8) |
+| F12.8 | Anzeigesprache | M1 | DE / EN / 简体 JSON-Packs; Sprache in Opening Schritt 1 + ⋮ Anzeige (PRD 18) |
 
 ---
 

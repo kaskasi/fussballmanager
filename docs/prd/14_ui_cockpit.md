@@ -57,8 +57,9 @@ Kalender, News), nicht die 40-Spalten-Identität.
    zeigen.
 4. **Icon/Visual First, 2 Klicks, kein Dead-End** — unverändert aus PRD 09.3.
    Inbox-Aktionen sind Icons, keine englischen Text-Buttons.
-5. **Deutsch in der Club-UI.** Match-Kommentarzeilen sind deutsch. Englishe
-   Chrome-Reste (`accept`, `Play`, `get the match underway`) sind Fehler.
+5. **Anzeigesprache (F12.8).** Default DE; EN und 简体 wählbar in Opening Schritt 1
+   und ⋮ → Anzeige. Spieler- und Vereinsnamen in der Welt bleiben generiert (nicht
+   übersetzt). Englische Chrome-Reste (`accept`, `Play`) sind Fehler.
 6. **Zwei Sprachen, ein Strom.** Match-Text und 2D-Spielfeld lesen dieselben
    Events. Der Club-Chrome setzt nicht den Ton des Spieltages, der Log nicht
    den Ton der Akte.

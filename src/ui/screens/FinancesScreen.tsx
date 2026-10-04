@@ -36,6 +36,7 @@ import {
 import { weekCommerceOccupancy } from "../../stadium/matchday-commerce.ts";
 import { weeklyPrecinctCash } from "../../stadium/precinct-effects.ts";
 import { fanbaseMoodIcon, fanbaseMood, formatFanbase } from "../../stadium/fanbase.ts";
+import { useT } from "../../i18n/react.ts";
 import { Hint } from "../components/Hint.tsx";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
 
@@ -74,6 +75,7 @@ export function FinancesScreen({
   onBack: () => void;
   onOpenStadium: () => void;
 }) {
+  const t = useT();
   const month = financeMonthForWeek(week);
   const wageBill = weeklyWageBill(players, clubId);
   const wageStatus = wageBudgetStatus(finances, players, clubId);
@@ -124,8 +126,8 @@ export function FinancesScreen({
           ←
         </button>
         <div>
-          <p className="eyebrow">Verein</p>
-          <h1>💰 Finanzen</h1>
+          <p className="eyebrow">{t("finances.eyebrow")}</p>
+          <h1>{t("finances.title")}</h1>
           <p className="finances-sub">
             {formatSeasonLabel(season)} · Monat {month}
           </p>

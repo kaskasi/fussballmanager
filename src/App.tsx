@@ -192,9 +192,13 @@ import { resolveStoryInboxDecision } from "./narrative/pipeline-week.ts";
 import type { CareerOrigin } from "./narrative/story-state.ts";
 import { OpeningStoryModal } from "./ui/components/OpeningStoryModal.tsx";
 import type { NavPrimaryAction } from "./ui/nav-primary-action.ts";
+import { t } from "./i18n/index.ts";
+import { useLocale, useT } from "./i18n/react.ts";
+import type { LocaleId } from "./i18n/locale-id.ts";
 import {
   applyAccessibilityPreferences,
   COLOR_SCHEME_OPTIONS,
+  LOCALE_OPTIONS,
   loadAccessibilityPreferences,
   saveAccessibilityPreferences,
   TEXT_SCALE_OPTIONS,
@@ -254,6 +258,7 @@ function clearTransientUi(
 }
 
 export default function App() {
+  useLocale();
   const [screen, setScreen] = useState<Screen>("hub");
   const [activeSlot, setActiveSlotState] = useState(() => getActiveSlot());
   const [save, setSave] = useState<SaveGame>(() => bootstrapSave(getActiveSlot()));
@@ -1317,7 +1322,7 @@ export default function App() {
         setNegotiationMessage(null);
         return;
       }
-      flashNotice(blocked ?? "Kauf nicht möglich: Verhandlung konnte nicht gestartet werden.");
+      flashNotice(blocked ?? t("transfer.purchase.negotiationFailed"));
     },
     [flashNotice, patchSession],
   );
@@ -1356,7 +1361,7 @@ export default function App() {
         return { ...current, transferState: round.state };
       });
       if (missingTarget) {
-        flashNotice(cannotOpenPurchaseReason(week, false) ?? "Kauf nicht möglich.");
+        flashNotice(cannotOpenPurchaseReason(week, false) ?? t("transfer.purchase.generic"));
         return;
       }
       if (accepted) finalizePurchase(negotiationPlayerId, fee);
@@ -1622,9 +1627,7 @@ export default function App() {
 
   useEffect(() => {
     if (!foreignPlayerId || foreignTarget) return;
-    flashNotice(
-      "Akte nicht verfügbar: Spieler ist kein Scout-Ziel oder nicht mehr auf dem Markt.",
-    );
+    flashNotice(t("transfer.purchase.profileUnavailable"));
     setForeignPlayerId(null);
   }, [flashNotice, foreignPlayerId, foreignTarget]);
   const navActions: HubNavActions = {
@@ -1902,6 +1905,14 @@ export default function App() {
           managerName={session.managerName}
           players={players}
           clubId={session.clubId}
+          localeChosen={Boolean(accessibility.localeChosen)}
+          onLocalePick={(locale: LocaleId) =>
+            setAccessibility((current) => ({
+              ...current,
+              locale,
+              localeChosen: true,
+            }))
+          }
           onComplete={handleOpeningComplete}
         />
       ) : null}
@@ -2177,6 +2188,7 @@ function AppNav({
   const [resetAsk, setResetAsk] = useState(false);
   const [a11yOpen, setA11yOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const tr = useT();
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -2191,14 +2203,14 @@ function AppNav({
   }, [menuOpen]);
 
   return (
-    <nav className="app-nav" aria-label="Bereiche">
+    <nav className="app-nav" aria-label={tr("shell.nav.areas")}>
       <div
         id="app-nav-mobile-tabs"
         className={`app-nav-tabs${mobileTabsOpen ? " is-mobile-open" : ""}`}
       >
       <NavButton
         pressed={screen === "hub"}
-        label="Pipeline"
+        label={tr("shell.nav.pipeline")}
         onClick={() => {
           onCloseProfile?.();
           onNavigate("hub");
@@ -2209,7 +2221,7 @@ function AppNav({
       </NavButton>
       <NavButton
         pressed={screen === "squad"}
-        label="Kader"
+        label={tr("shell.nav.squad")}
         onClick={() => {
           onCloseProfile?.();
           onNavigate("squad");
@@ -2220,7 +2232,7 @@ function AppNav({
       </NavButton>
       <NavButton
         pressed={screen === "training"}
-        label="Training"
+        label={tr("shell.nav.training")}
         onClick={() => {
           onCloseProfile?.();
           onNavigate("training");
@@ -2231,7 +2243,7 @@ function AppNav({
       </NavButton>
       <NavButton
         pressed={screen === "campus"}
-        label="Jugend"
+        label={tr("shell.nav.campus")}
         onClick={() => {
           onCloseProfile?.();
           onCampusNavigate?.();
@@ -2243,7 +2255,7 @@ function AppNav({
       </NavButton>
       <NavButton
         pressed={screen === "scouting" || screen === "scout-network"}
-        label="Scouting"
+        label={tr("shell.nav.scouting")}
         onClick={() => {
           onCloseProfile?.();
           onNavigate("scouting");
@@ -2254,7 +2266,7 @@ function AppNav({
       </NavButton>
       <NavButton
         pressed={screen === "transfers"}
-        label="Transfers"
+        label={tr("shell.nav.transfers")}
         onClick={() => {
           onCloseProfile?.();
           onNavigate("transfers");
@@ -2265,7 +2277,7 @@ function AppNav({
       </NavButton>
       <NavButton
         pressed={screen === "finances"}
-        label="Finanzen"
+        label={tr("shell.nav.finances")}
         onClick={() => {
           onCloseProfile?.();
           onNavigate("finances");
@@ -2276,7 +2288,7 @@ function AppNav({
       </NavButton>
       <NavButton
         pressed={screen === "leagues"}
-        label="Ligen"
+        label={tr("shell.nav.leagues")}
         onClick={() => {
           onCloseProfile?.();
           onNavigate("leagues");
@@ -2287,7 +2299,7 @@ function AppNav({
       </NavButton>
       <NavButton
         pressed={screen === "stadium"}
-        label="Stadion"
+        label={tr("shell.nav.stadium")}
         onClick={() => {
           onCloseProfile?.();
           onNavigate("stadium");
@@ -2298,7 +2310,7 @@ function AppNav({
       </NavButton>
       <NavButton
         pressed={screen === "help"}
-        label="Hilfe"
+        label={tr("shell.nav.help")}
         onClick={() => {
           onCloseProfile?.();
           onNavigate("help");
@@ -2312,7 +2324,7 @@ function AppNav({
         <button
           type="button"
           className="app-nav-toggle"
-          aria-label={mobileTabsOpen ? "Bereiche schließen" : "Bereiche öffnen"}
+          aria-label={mobileTabsOpen ? tr("shell.nav.mobileClose") : tr("shell.nav.mobileOpen")}
           aria-expanded={mobileTabsOpen}
           aria-controls="app-nav-mobile-tabs"
           onClick={() => setMobileTabsOpen((open) => !open)}
@@ -2328,21 +2340,21 @@ function AppNav({
           disabled={hubActions.primaryAction?.disabled ?? hubActions.simulating}
           title={
             hubActions.primaryAction?.title ??
-            (hubActions.primaryAction ? hubActions.primaryAction.label : "Smart Skip — zum nächsten Ereignis")
+            (hubActions.primaryAction ? hubActions.primaryAction.label : tr("shell.smartSkip"))
           }
         >
-          <span className="app-nav-next-mobile">▶ Next</span>
+          <span className="app-nav-next-mobile">{tr("shell.next")}</span>
           <span className="app-nav-next-desktop">
             {hubActions.simulating && !hubActions.primaryAction
               ? "…"
-              : hubActions.primaryAction?.label ?? "▶ Next"}
+              : hubActions.primaryAction?.label ?? tr("shell.next")}
           </span>
         </button>
         <div className="row-menu app-nav-menu" ref={menuRef}>
           <button
             type="button"
             className="row-menu-trigger"
-            aria-label="Weitere Aktionen"
+            aria-label={tr("shell.menu.moreActions")}
             aria-expanded={menuOpen}
             aria-haspopup="menu"
             onClick={() => {
@@ -2359,7 +2371,7 @@ function AppNav({
             <div className="row-menu-popover pipeline-menu-popover" role="menu">
               {resetAsk ? (
                 <>
-                  <p className="pipeline-menu-note">Spielstand löschen und neu starten?</p>
+                  <p className="pipeline-menu-note">{tr("shell.menu.newGameConfirm")}</p>
                   <button
                     type="button"
                     role="menuitem"
@@ -2370,7 +2382,7 @@ function AppNav({
                       setMenuOpen(false);
                     }}
                   >
-                    Ja, neu starten
+                    {tr("shell.menu.newGameYes")}
                   </button>
                   <button
                     type="button"
@@ -2378,14 +2390,33 @@ function AppNav({
                     className="row-menu-item"
                     onClick={() => setResetAsk(false)}
                   >
-                    Abbrechen
+                    {tr("shell.menu.cancel")}
                   </button>
                 </>
               ) : a11yOpen ? (
                 <>
-                  <p className="pipeline-menu-note">Anzeige · PRD F12.4</p>
+                  <p className="pipeline-menu-note">{tr("shell.menu.displayNote")}</p>
                   <label className="a11y-menu-field">
-                    <span>Textgröße</span>
+                    <span>{tr("shell.menu.language")}</span>
+                    <select
+                      value={accessibility.locale}
+                      onChange={(event) =>
+                        onAccessibilityChange({
+                          ...accessibility,
+                          locale: event.target.value as LocaleId,
+                          localeChosen: true,
+                        })
+                      }
+                    >
+                      {LOCALE_OPTIONS.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.nativeLabel}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="a11y-menu-field">
+                    <span>{tr("shell.menu.textScale")}</span>
                     <select
                       value={accessibility.textScale}
                       onChange={(event) =>
@@ -2396,12 +2427,14 @@ function AppNav({
                       }
                     >
                       {TEXT_SCALE_OPTIONS.map((option) => (
-                        <option key={option.id} value={option.id}>{option.label}</option>
+                        <option key={option.id} value={option.id}>
+                          {tr(option.labelKey)}
+                        </option>
                       ))}
                     </select>
                   </label>
                   <label className="a11y-menu-field">
-                    <span>Farbschema</span>
+                    <span>{tr("shell.menu.colorScheme")}</span>
                     <select
                       value={accessibility.colorScheme}
                       onChange={(event) =>
@@ -2412,7 +2445,9 @@ function AppNav({
                       }
                     >
                       {COLOR_SCHEME_OPTIONS.map((option) => (
-                        <option key={option.id} value={option.id}>{option.label}</option>
+                        <option key={option.id} value={option.id}>
+                          {tr(option.labelKey)}
+                        </option>
                       ))}
                     </select>
                   </label>
@@ -2422,7 +2457,7 @@ function AppNav({
                     className="row-menu-item"
                     onClick={() => setA11yOpen(false)}
                   >
-                    ← Zurück
+                    {tr("shell.menu.back")}
                   </button>
                 </>
               ) : (
@@ -2436,7 +2471,7 @@ function AppNav({
                       setMenuOpen(false);
                     }}
                   >
-                    💾 Spielstände
+                    {tr("shell.menu.saves")}
                   </button>
                   <button
                     type="button"
@@ -2444,7 +2479,7 @@ function AppNav({
                     className="row-menu-item"
                     onClick={() => setA11yOpen(true)}
                   >
-                    ♿ Anzeige
+                    {tr("shell.menu.display")}
                   </button>
                   <button
                     type="button"
@@ -2456,7 +2491,7 @@ function AppNav({
                       setMenuOpen(false);
                     }}
                   >
-                    ⚽ Matchday Sandbox
+                    {tr("shell.menu.matchdaySandbox")}
                   </button>
                   <button
                     type="button"
@@ -2464,7 +2499,7 @@ function AppNav({
                     className="row-menu-item pipeline-menu-danger"
                     onClick={() => setResetAsk(true)}
                   >
-                    Neues Spiel
+                    {tr("shell.menu.resetGame")}
                   </button>
                 </>
               )}

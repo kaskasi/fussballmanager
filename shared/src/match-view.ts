@@ -53,6 +53,9 @@ export type MatchViewLine = {
   voice?: "pbp" | "color";
   /** PRD 16 B4 — fact-checked story slot when voice is color. */
   storySlot?: string;
+  /** F12.8 — client locale pack key when presentation text is translatable. */
+  i18nKey?: string;
+  i18nParams?: Record<string, string>;
 };
 
 export type MatchViewRosterPlayer = {

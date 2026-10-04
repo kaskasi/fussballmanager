@@ -8,6 +8,7 @@ import {
   MAX_NEGOTIATION_ROUNDS,
   type TransferNegotiation,
 } from "../../transfers/negotiations.ts";
+import { useT } from "../../i18n/react.ts";
 import { Hint } from "./Hint.tsx";
 
 /** WIREFRAME: PRD 05.3 — 4-round transfer negotiation with patience bar. */
@@ -36,6 +37,7 @@ export function TransferNegotiationModal({
   onAcceptCounter: () => void;
   onWalkAway: () => void;
 }) {
+  const t = useT();
   const [offerInput, setOfferInput] = useState(String(negotiation.current_offer));
   const offer = Number.parseInt(offerInput.replace(/\D/g, ""), 10) || 0;
   const ratio = scoutIntelKnown ? offer / Math.max(1, negotiation.asking_price) : null;
@@ -49,18 +51,22 @@ export function TransferNegotiationModal({
     <div className="modal-backdrop" role="presentation">
       <dialog className="negotiation-modal" open aria-labelledby="negotiation-title">
         <header className="negotiation-head">
-          <p className="eyebrow">Transferverhandlung</p>
+          <p className="eyebrow">{t("transfer.negotiation.title")}</p>
           <h2 id="negotiation-title">💰 {formatPlayerName(player)}</h2>
           <p className="negotiation-meta">
             {scoutIntelKnown
-              ? `Marktwert Verein: ${formatClubCash(negotiation.asking_price)} · `
-              : "Kein Scout-Bericht — Ablöse unbekannt bis zum Abschluss · "}
-            Budget: {formatClubCash(transferBudget)}
+              ? t("transfer.negotiation.meta.scout", {
+                  asking: formatClubCash(negotiation.asking_price),
+                  budget: formatClubCash(transferBudget),
+                })
+              : t("transfer.negotiation.meta.blind", {
+                  budget: formatClubCash(transferBudget),
+                })}
           </p>
         </header>
 
-        <div className="negotiation-patience" aria-label="Geduld">
-          <span>Geduld</span>
+        <div className="negotiation-patience" aria-label={t("transfer.negotiation.patience")}>
+          <span>{t("transfer.negotiation.patience")}</span>
           <div className="negotiation-patience-bar">
             {Array.from({ length: MAX_NEGOTIATION_ROUNDS }, (_, index) => (
               <span
@@ -74,12 +80,19 @@ export function TransferNegotiationModal({
               />
             ))}
           </div>
-          <span>Runde {negotiation.round}/{MAX_NEGOTIATION_ROUNDS}</span>
+          <span>
+            {t("transfer.negotiation.round", {
+              round: negotiation.round,
+              max: MAX_NEGOTIATION_ROUNDS,
+            })}
+          </span>
         </div>
 
         {negotiation.counter_offer ? (
           <p className="negotiation-counter">
-            Gegenangebot: <strong>{formatClubCash(negotiation.counter_offer)}</strong>
+            {t("transfer.negotiation.counter", {
+              amount: formatClubCash(negotiation.counter_offer),
+            })}
           </p>
         ) : null}
 
@@ -88,13 +101,13 @@ export function TransferNegotiationModal({
         <Hint
           text={
             scoutIntelKnown
-              ? "Angebot in % des Vereinswerts: unter 70 % = Ablehnung, 100–110 % = oft Zustimmung."
-              : "Ohne Scout-Schätzung: nur dein Angebot zählt — Abbuchung erst bei Annahme."
+              ? t("transfer.negotiation.hint.scout")
+              : t("transfer.negotiation.hint.blind")
           }
           block
         >
           <label className="negotiation-offer">
-            <span>Dein Angebot</span>
+            <span>{t("transfer.negotiation.yourOffer")}</span>
             <input
               type="text"
               inputMode="numeric"
@@ -119,7 +132,7 @@ export function TransferNegotiationModal({
         </ul>
         {offerRunway.belowFloor ? (
           <p className="spend-confirm-warn" role="status">
-            Vorstand-Kasse verfehlt, wenn die Saison heute endet. Angebot trotzdem möglich.
+            {t("transfer.negotiation.floorWarn")}
           </p>
         ) : null}
         {payReason ? (
@@ -135,16 +148,20 @@ export function TransferNegotiationModal({
             disabled={offer <= 0}
             onClick={() => onSubmitOffer(offer)}
           >
-            Angebot senden
+            {t("transfer.negotiation.submit")}
           </button>
           {negotiation.counter_offer && counterRunway ? (
             <button type="button" className="negotiation-btn" onClick={onAcceptCounter}>
-              Gegenangebot annehmen ({formatClubCash(negotiation.counter_offer)}
-              {counterRunway.belowFloor ? " · unter Vorstand-Kasse" : ""})
+              {t("transfer.negotiation.acceptCounter", {
+                amount: formatClubCash(negotiation.counter_offer),
+                floorNote: counterRunway.belowFloor
+                  ? t("transfer.negotiation.acceptCounterFloor")
+                  : "",
+              })}
             </button>
           ) : null}
           <button type="button" className="negotiation-btn negotiation-btn-muted" onClick={onWalkAway}>
-            Abbrechen
+            {t("transfer.negotiation.walkAway")}
           </button>
         </div>
       </dialog>

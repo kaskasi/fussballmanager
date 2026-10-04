@@ -80,7 +80,11 @@ export function SponsorDealModal({
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
       <dialog
-        className="negotiation-modal sponsor-deal-modal"
+        className={
+          occupied
+            ? "negotiation-modal sponsor-deal-modal"
+            : "negotiation-modal sponsor-deal-modal sponsor-deal-modal--hunger"
+        }
         open
         aria-labelledby="sponsor-deal-title"
         onClick={(event) => event.stopPropagation()}

@@ -38,6 +38,7 @@ import { weeklyPrecinctCash } from "../../stadium/precinct-effects.ts";
 import { fanbaseMoodIcon, fanbaseMood, formatFanbase } from "../../stadium/fanbase.ts";
 import { useT } from "../../i18n/react.ts";
 import { Hint } from "../components/Hint.tsx";
+import { COMMERCE_KIOSK_PHOTO } from "../assets/hub-photos.ts";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
 
 const SPARK_W = 312;
@@ -203,7 +204,16 @@ export function FinancesScreen({
 
       <section className="finances-detail-cards" aria-label="Kasse im Detail">
         <article className={`finances-detail`}>
-          <h2>🌭 Imbiss & Shop</h2>
+          <h2>
+            <img
+              className="finances-commerce-thumb"
+              src={COMMERCE_KIOSK_PHOTO}
+              alt=""
+              aria-hidden="true"
+              decoding="async"
+            />
+            🌭 Imbiss & Shop
+          </h2>
           <p>
             <strong>{formatClubCash(merchWeek)}</strong>
             <span> diese Woche</span>

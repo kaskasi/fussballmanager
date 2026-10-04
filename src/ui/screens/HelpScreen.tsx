@@ -273,6 +273,10 @@ function StoryPanel() {
             <span>{t("help.credits.commons")}</span>
           </li>
           <li>
+            <span aria-hidden="true">🏢</span>
+            <span>{t("help.credits.hub")}</span>
+          </li>
+          <li>
             <span aria-hidden="true">✨</span>
             <span>
               {t("help.credits.magnific")}{" "}

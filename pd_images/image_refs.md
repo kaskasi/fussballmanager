@@ -101,6 +101,8 @@ Camera location	52° 32′ 26.71″ N, 13° 28′ 31.36″ E  Heading=118.743093
 
 
 OFFICE WINDOW
+Tags: HUB, SHIP-CROP
+Shipped: public/assets/photos/hub-office.jpg
 
 https://commons.wikimedia.org/wiki/File:Window_Merijal_Office_Oulu_20230225.jpg
 
@@ -150,6 +152,8 @@ Object location	53° 24′ 38.6″ N, 1° 30′ 00″ W Edit this at Structured 
 
 
 STAD_NIGHT
+Tags: HUB, STAD-L, SHIP-CROP
+Shipped: public/assets/photos/hub-stadium-dusk.jpg (hub hero alternate)
 
 https://commons.wikimedia.org/wiki/File:FirstEnergy_Stadium_Sunset_(50001489956).jpg
 
@@ -233,6 +237,9 @@ attribution – You must give appropriate credit, provide a link to the license,
 
 
 TICKET_BOOTH
+Tags: COMMERCE, SHIP-CROP
+Shipped: public/assets/photos/commerce-kiosk.jpg
+
 https://commons.wikimedia.org/wiki/File:Ticket_office_at_Moreton_(Merseyside)_railway_station.jpg
 
 English: The ticket office at the brow of the bridge carrying Pasture Road over the railway lines at Moreton railway station.
@@ -307,6 +314,9 @@ share alike – If you remix, transform, or build upon the material, you must di
 
 
 MATCH_TUNNEL
+Tags: MATCH-TUNNEL, TRANSFER, SHIP-CROP
+Shipped: public/assets/photos/transfer-tunnel.jpg (transfer-window ambience, interim)
+
 https://commons.wikimedia.org/wiki/File:As_One._Looking_back_up_the_players%27_tunnel_in_Murrayfield_Stadium_-_geograph.org.uk_-_8355555.jpg
 
 

@@ -43,6 +43,8 @@ import { showSummerChecklist } from "../../sim/summer-checklist.ts";
 import { FanFeedStrip } from "../components/FanFeedStrip.tsx";
 import { ChroniclePanel } from "../components/ChroniclePanel.tsx";
 import type { StoryState } from "../../narrative/story-state.ts";
+import { MoodPhotoBand } from "../components/MoodPhotoBand.tsx";
+import { hubHeroPhotoUrl } from "../assets/hub-photos.ts";
 
 /**
  * WIREFRAME: PRD 09.2 Screen 1 — Pipeline Dashboard
@@ -148,39 +150,41 @@ export function PipelineDashboard({
 
   return (
     <main className="pipeline">
-      <header className="pipeline-head pipeline-head-compact">
-        <div className="pipeline-head-primary">
-          <p className="pipeline-eyebrow">
-            {formatSeasonDisplay(season)} · {formatCalendarWeekDisplay(week)} · {calendarPhaseDisplay(week)}
-            {windowOpen ? ` · ${transferWindowDisplay(week)}` : ""}
-          </p>
-          <p className="pipeline-matchline">
-            {lastResult ? (
-              <span>
-                {t("hub.lastMatch", {
-                  result: formatFixtureResult(lastResult, league.player_club_id),
-                })}
-              </span>
-            ) : (
-              <span>{t("hub.noLeagueMatch")}</span>
-            )}
-            <span> · {matchdayLabel}</span>
-            {nextOpponent ? <span> · vs {nextOpponent}</span> : null}
-          </p>
-        </div>
-        <div className="pipeline-head-chips">
-          <span className="pipeline-chip pipeline-league" aria-label="Liga">
-            {tableRow ? (
-              <>
-                #{leagueTablePlace(league)} · {t("hub.league.points", { points: tableRow.points })} · {tableRow.goalDifference > 0 ? "+" : ""}
-                {tableRow.goalDifference}
-              </>
-            ) : (
-              t("hub.league.empty")
-            )}
-          </span>
-        </div>
-      </header>
+      <MoodPhotoBand src={hubHeroPhotoUrl(season, week)} className="pipeline-hub-band">
+        <header className="pipeline-head pipeline-head-compact">
+          <div className="pipeline-head-primary">
+            <p className="pipeline-eyebrow">
+              {formatSeasonDisplay(season)} · {formatCalendarWeekDisplay(week)} · {calendarPhaseDisplay(week)}
+              {windowOpen ? ` · ${transferWindowDisplay(week)}` : ""}
+            </p>
+            <p className="pipeline-matchline">
+              {lastResult ? (
+                <span>
+                  {t("hub.lastMatch", {
+                    result: formatFixtureResult(lastResult, league.player_club_id),
+                  })}
+                </span>
+              ) : (
+                <span>{t("hub.noLeagueMatch")}</span>
+              )}
+              <span> · {matchdayLabel}</span>
+              {nextOpponent ? <span> · vs {nextOpponent}</span> : null}
+            </p>
+          </div>
+          <div className="pipeline-head-chips">
+            <span className="pipeline-chip pipeline-league" aria-label="Liga">
+              {tableRow ? (
+                <>
+                  #{leagueTablePlace(league)} · {t("hub.league.points", { points: tableRow.points })} · {tableRow.goalDifference > 0 ? "+" : ""}
+                  {tableRow.goalDifference}
+                </>
+              ) : (
+                t("hub.league.empty")
+              )}
+            </span>
+          </div>
+        </header>
+      </MoodPhotoBand>
 
       <FanFeedStrip
         fanFeed={storyState.fan_feed}

@@ -24,7 +24,9 @@ Optional credit: `Created using <name> from ambientCG.com, licensed under CC0 1.
 
 **Git policy:** Only **1K** ZIPs are committed (~33 MB total). `2K`/`4K` ZIPs stay local (see `.gitignore`) — CC0, free to re-download from ambientCG.
 
-**Runtime note:** Ship only downscaled **Color** JPG tiles under `public/assets/textures/` when UI integration lands; extract from 1K source ZIPs.
+**Shipped tiles:** `public/assets/textures/paper003-color.jpg`, `public/assets/textures/wood066-color.jpg` (from 1K Color JPGs via `npm run bake:hub-photos` / manual extract).
+
+**Hub / economy photos (shipped):** `public/assets/photos/hub-office.jpg`, `hub-stadium-dusk.jpg`, `commerce-kiosk.jpg`, `transfer-tunnel.jpg` — sources and licenses in `pd_images/image_refs.md`; bake via `npm run bake:hub-photos`.
 
 ## Magnific (stock photos)
 

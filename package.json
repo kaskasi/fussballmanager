@@ -19,7 +19,8 @@
     "play-matchday": "npm run play-matchday -w @fussballmanager/server",
     "play-probe": "npm run play-probe -w @fussballmanager/server",
     "persist-match": "npm run persist-match -w @fussballmanager/server",
-    "bake:portraits": "node scripts/bake-open-peeps-busts.mjs"
+    "bake:portraits": "node scripts/bake-open-peeps-busts.mjs",
+    "bake:hub-photos": "node scripts/bake-hub-photos.mjs"
   },
   "dependencies": {
     "@fussballmanager/shared": "*",

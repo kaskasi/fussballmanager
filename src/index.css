@@ -1560,6 +1560,43 @@ body {
   );
 }
 
+.pipeline-hub-band {
+  max-height: 9rem;
+  margin: -0.75rem -1.25rem 0.65rem;
+  padding: 0.85rem 1.25rem 0.75rem;
+  border-radius: 0 0 1rem 1rem;
+  box-shadow: 0 10px 28px rgb(15 23 42 / 10%);
+}
+
+.pipeline-hub-band .mood-photo-band__scrim {
+  background: linear-gradient(
+    105deg,
+    rgb(15 23 42 / 62%) 0%,
+    rgb(15 23 42 / 38%) 50%,
+    rgb(15 23 42 / 58%) 100%
+  );
+}
+
+.pipeline-hub-band .pipeline-head-compact {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.pipeline-hub-band .pipeline-eyebrow {
+  color: #6ee7b7;
+}
+
+.pipeline-hub-band .pipeline-matchline {
+  color: #f1f5f9;
+  text-shadow: 0 1px 8px rgb(15 23 42 / 45%);
+}
+
+.pipeline-hub-band .pipeline-chip {
+  background: rgb(248 250 252 / 92%);
+  border-color: rgb(226 232 240 / 85%);
+}
+
 .matchday-lineup-hero {
   position: relative;
   z-index: 1;
@@ -3147,6 +3184,18 @@ body {
 .finances-detail h2 {
   margin: 0 0 0.25rem;
   font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.finances-commerce-thumb {
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border-radius: 0.35rem;
+  flex-shrink: 0;
+  border: 1px solid rgb(148 163 184 / 35%);
 }
 
 .finances-detail p {
@@ -4376,6 +4425,13 @@ body {
   gap: 0.7rem;
 }
 
+.sponsor-deal-modal--hunger {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 96%), rgb(255 255 255 / 96%)),
+    url("/assets/textures/wood066-color.jpg");
+  background-size: auto, 140px;
+}
+
 .sponsor-deal-facts {
   list-style: none;
   margin: 0;
@@ -4547,6 +4603,13 @@ body {
   font-size: 0.68rem;
   font-weight: 800;
   cursor: pointer;
+}
+
+.stadium-card-board.is-empty {
+  background-image:
+    linear-gradient(rgb(255 251 235 / 88%), rgb(255 251 235 / 88%)),
+    url("/assets/textures/wood066-color.jpg");
+  background-size: auto, 120px;
 }
 
 .stadium-card-board:not(.is-empty) {
@@ -8661,6 +8724,18 @@ body {
   justify-content: center;
   overflow: hidden;
   border-radius: 0 0 0.85rem 0.85rem;
+}
+
+.transfer-ambience--photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--transfer-ambience-photo);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.15;
+  filter: blur(1px);
+  pointer-events: none;
 }
 
 .transfer-ambience--summer {

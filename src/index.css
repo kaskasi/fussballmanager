@@ -4495,40 +4495,157 @@ body {
   color: #475569;
 }
 
-.pipeline-heat-block.is-full {
+.training-pixel-pack {
+  /* Desktop grid: ~3×8 blocks per stage; dim×dim cell. Mobile ignores these. */
+  --heat-pixel: 8px;
+  --heat-pixel-cols: 8;
+  --heat-pixel-gap: 2px;
   display: grid;
-  gap: 0.55rem;
-  padding: 0.75rem 0.9rem;
-  align-items: stretch;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
+  min-width: 0;
 }
 
-.pipeline-heat-block.is-full .pipeline-heat-head {
+.training-pixel-pack.is-full {
+  gap: 0.55rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.training-pixel-pack.is-compact {
+  align-content: start;
+}
+
+.training-pixel-pack .pipeline-heat-head {
   justify-content: space-between;
   width: 100%;
 }
 
-.pipeline-heat-block.is-full .pipeline-heat-legend {
+.training-pixel-pack .pipeline-heat-legend {
   flex: none;
 }
 
-.pipeline-heat-group {
+.training-pixel-bar {
   display: grid;
-  gap: 0.3rem;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
-.pipeline-heat-block.is-full .pipeline-heat {
+.training-pixel-pack.is-compact .training-pixel-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.training-pixel-stage {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.training-pixel-pack.is-compact .training-pixel-stage {
+  display: flex;
+  align-items: flex-start;
+}
+
+.training-pixel-pack.is-compact .training-pixel-stage + .training-pixel-stage {
+  border-left: 1px solid #e2e8f0;
+  padding-left: 0.35rem;
+}
+
+.training-pixel-stage-label {
+  margin: 0;
+}
+
+.training-pixel-row {
+  display: flex;
   flex-wrap: wrap;
   overflow: visible;
   flex: none;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 
-.pipeline-heat-block.is-full .heat-cell {
-  flex: 0 0 3.35rem;
-  width: 3.35rem;
-  height: 3.55rem;
-  font-size: 0.72rem;
-  padding: 0.2rem 0.15rem;
+.training-pixel-pack.is-compact .training-pixel-row {
+  flex-wrap: nowrap;
+  overflow: visible;
+}
+
+.training-pixel-hover {
+  margin: 0;
+  min-height: 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  align-items: baseline;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.training-pixel-hover span {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.training-pixel-hover.is-idle {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Mobile / touch: readable cells — one square per player. */
+.heat-pixel {
+  position: relative;
+  flex: 0 0 3.1rem;
+  width: 3.1rem;
+  height: 3.35rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: #059669;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0.15rem;
+  line-height: 1.05;
+}
+
+.training-pixel-pack.is-compact .heat-pixel {
+  flex: 0 0 2.45rem;
+  width: 2.45rem;
+  height: 2.45rem;
+}
+
+.heat-pixel.is-down {
+  border-radius: 0.2rem;
+  background: #d97706;
+}
+
+.heat-pixel.is-flat {
+  background: #94a3b8;
+}
+
+.heat-pixel.is-pending {
+  background: #cbd5e1;
+  color: #475569;
+}
+
+.heat-pixel-face {
+  display: grid;
+  place-items: center;
+  gap: 0.05rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.heat-pixel-face small {
+  font-size: 0.52rem;
+  font-weight: 700;
+  opacity: 0.9;
 }
 
 .week-train .heat-cell {
@@ -4536,6 +4653,67 @@ body {
   width: 2.45rem;
   height: 2.45rem;
   font-size: 0.62rem;
+}
+
+/*
+ * Desktop with fine pointer: ~3×8 grid per stage, cell = --heat-pixel² (default 8px).
+ * Profi (~22) → 3 rows; U17 (~18) → 3 rows; U19 (~6) → 1 row.
+ * Hover / focus reveals the name in .training-pixel-hover.
+ */
+@media (hover: hover) and (pointer: fine) {
+  .training-pixel-pack.is-compact .training-pixel-row,
+  .training-pixel-pack.is-full .training-pixel-row {
+    display: grid;
+    grid-template-columns: repeat(var(--heat-pixel-cols), var(--heat-pixel));
+    gap: var(--heat-pixel-gap);
+    width: max-content;
+    max-width: 100%;
+    flex-wrap: unset;
+    overflow: visible;
+    padding: 0.15rem 0;
+  }
+
+  .training-pixel-pack.is-compact .heat-pixel,
+  .training-pixel-pack.is-full .heat-pixel {
+    flex: none;
+    width: var(--heat-pixel);
+    height: var(--heat-pixel);
+    border-radius: 2px;
+    padding: 0;
+  }
+
+  .heat-pixel.is-down {
+    border-radius: 2px;
+  }
+
+  .heat-pixel:hover,
+  .heat-pixel:focus-visible {
+    outline: 2px solid #0f172a;
+    outline-offset: 1px;
+    z-index: 1;
+  }
+
+  .heat-pixel-face {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .training-pixel-hover.is-idle {
+    display: flex;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .training-pixel-hover.is-idle {
+    display: none;
+  }
 }
 
 .pipeline-legend-toggle {

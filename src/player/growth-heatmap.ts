@@ -43,6 +43,17 @@ export function heatTone(growth: number | null): HeatTone {
   return "flat";
 }
 
+/** Opacity for a pixel relative to the squad's peak |delta| this week. */
+export function heatIntensity(growth: number | null, peak: number): number {
+  if (growth === null) return 0.35;
+  const safePeak = Math.max(peak, 0.01);
+  return 0.45 + (Math.abs(growth) / safePeak) * 0.55;
+}
+
+export function heatmapPeak(cells: readonly GrowthHeatCell[]): number {
+  return Math.max(...cells.map((cell) => Math.abs(cell.growth ?? 0)), 0.01);
+}
+
 export function heatCellInitials(player: Pick<Player, "name" | "portrait_seed">): string {
   const name = formatPlayerName(player);
   const last = name.trim().split(/\s+/).at(-1) ?? "?";
@@ -128,8 +139,9 @@ export interface WeeklyTrainingExtremes {
 }
 
 /**
- * Hub report: three strongest and three weakest last-week 02.1 results.
- * Full squad heatmap stays on Training. Players in `best` are not repeated in `worst`.
+ * Optional extremes report (three strongest / weakest last-week 02.1 results).
+ * The Hub and Training UI use the full team pixel bar; this helper remains for
+ * digests. Players in `best` are not repeated in `worst`.
  */
 export function weeklyTrainingExtremes(
   players: readonly Player[],

@@ -22,8 +22,8 @@ import { scoutReportsForWeek } from "../../scouting/scout-board.ts";
 import { pendingInboxItems, inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
 import type { DecisionAction } from "../../youth/decision-inbox.ts";
 import { listDevelopmentMovers } from "../../player/ca-tracking.ts";
-import { weeklyTrainingExtremes, pipelineStageFill } from "../../player/growth-heatmap.ts";
-import { PipelineFillCard, WeeklyTrainingStrip } from "../components/GrowthHeatmap.tsx";
+import { pipelineStageFill, squadGrowthHeatmap } from "../../player/growth-heatmap.ts";
+import { GrowthHeatmap, PipelineFillCard } from "../components/GrowthHeatmap.tsx";
 import type { IndividualProgram } from "../../development/individual-training.ts";
 import { fatigueAmpelClassName, squadTrainingLoad } from "../../development/training-load.ts";
 import type { BoardState } from "../../board/board-state.ts";
@@ -45,7 +45,7 @@ import type { StoryState } from "../../narrative/story-state.ts";
  * │ 🌱16 🌿4 ⭐22  (kleine Pipeline-Karte)                 │
  * │ 🏋️ Training: [Ampel]  🎯 Fokus-Slots                   │
  * │ 🏫 Jugend · 👁️ Scouting                               │
- * │ ▲ 3 Beste · ■ 3 Schwächste (02.1) · Heatmap im Training│
+ * │ Team-Pixelbar: 1 Quadrat = 1 Spieler (02.1)           │
  * └────────────────────────────────────────────────────────┘
  */
 
@@ -124,10 +124,7 @@ export function PipelineDashboard({
     () => listDevelopmentMovers(players, clubId),
     [players, clubId],
   );
-  const trainingExtremes = useMemo(
-    () => weeklyTrainingExtremes(players, clubId),
-    [players, clubId],
-  );
+  const heatCells = useMemo(() => squadGrowthHeatmap(players, clubId), [players, clubId]);
   const stageFill = useMemo(() => pipelineStageFill(players, clubId), [players, clubId]);
   const matchdayLabel = league.season_complete
     ? "Saison beendet"
@@ -218,11 +215,7 @@ export function PipelineDashboard({
         </div>
         <div className="pipeline-digest">
           <PipelineFillCard fill={stageFill} onOpenJugend={onOpenJugend} />
-          <WeeklyTrainingStrip
-            extremes={trainingExtremes}
-            onSelectPlayer={onSelectPlayer}
-            onOpenTraining={onOpenTraining}
-          />
+          <GrowthHeatmap cells={heatCells} onSelectPlayer={onSelectPlayer} compact />
         </div>
       </section>
 

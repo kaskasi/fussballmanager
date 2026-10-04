@@ -82,7 +82,7 @@ Kalender, News), nicht die 40-Spalten-Identität.
 | Stadion-Grundriss | F7.1 + Ticket-Stepper | Ringe + Hunger-Slots | behalten |
 | Origin-Modal | PRD 13 | drei Karten, gut | behalten |
 | Scouting-Wissen | F4.2 | Balken + CI-Grauzone | behalten |
-| Training-Heatmap | F2.7 / 02.1 | Kleine Pipeline-Karte + Hub 3▲/3▼, volle Zellen im Training | behalten |
+| Training-Heatmap | F2.7 / 02.1 | Team-Raster ~3×8/Stufe (1□=1 Spieler, ~8px); Hover Desktop, große Zellen Mobile | behalten |
 | Spielerakte | CA, Vertrag, Flavor | vier SaaS-Tabs, ein Punkt | eine Karte |
 | Jugend | Roster + Auto-Sim | 12-Spalten-Grid | Report (PRD 03.3) |
 | Inbox | Slice + Cap 4 | Modal, Text-Buttons | Karte + Icons (09.2 / 03.4) |
@@ -326,7 +326,7 @@ Ein Raum pro Task, Pipeline-Features nicht nebenbei umbauen.
 6. Transfers ohne Dead-End (14.8). **gebaut**
 7. Match-DE + Namen in der Zeile (14.10).
 8. Scouting-Balken (14.9). **gebaut**
-9. Training-Heatmap (F2.7): kleine Pipeline-Karte + Hub 3▲/3▼, volle Heatmap im Training. **gebaut**
+9. Training-Heatmap (F2.7): Team-Pixelbar im Hub + Training (1 Quadrat = 1 Spieler). **gebaut**
 
 Politur (Abstände, Mint, neue Tokens) ist nachrangig, solange ein Raum noch
 Admin-Shell ist.

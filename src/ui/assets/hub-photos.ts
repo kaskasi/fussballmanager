@@ -7,6 +7,7 @@ export const HUB_OFFICE_PHOTO = "/assets/photos/hub-office.jpg";
 export const HUB_STADIUM_DUSK_PHOTO = "/assets/photos/hub-stadium-dusk.jpg";
 export const COMMERCE_KIOSK_PHOTO = "/assets/photos/commerce-kiosk.jpg";
 export const TRANSFER_AMBIENCE_PHOTO = "/assets/photos/transfer-tunnel.jpg";
+export const YOUTH_CAMPUS_HEADER_PHOTO = "/assets/photos/youth-campus-aerial.jpg";
 export const BANDEN_BOARD_TEXTURE = "/assets/textures/wood066-color.jpg";
 
 function hubHeroHash(season: number, week: number): number {

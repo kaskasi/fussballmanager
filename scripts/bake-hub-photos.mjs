@@ -30,6 +30,10 @@ const PHOTO_MAP = [
     src: "As_One._Looking_back_up_the_players'_tunnel_in_Murrayfield_Stadium_-_geograph.org.uk_-_8355555.jpg",
     dest: "transfer-tunnel.jpg",
   },
+  {
+    src: "Wroclaw_Olympic_Stadium_auxiliary_stadium_aerial_photograph_2017.jpg",
+    dest: "youth-campus-aerial.jpg",
+  },
 ];
 
 mkdirSync(photosOut, { recursive: true });

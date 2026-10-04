@@ -52,6 +52,8 @@ import {
 } from "../../youth/youth-report-view.ts";
 import { coachIconForPlayer, hasDepartureRisk } from "../components/DecisionInbox.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
+import { MoodPhotoBand } from "../components/MoodPhotoBand.tsx";
+import { YOUTH_CAMPUS_HEADER_PHOTO } from "../assets/hub-photos.ts";
 
 /**
  * WIREFRAME: PRD 14.4 — Jugend-Report (Heimat)
@@ -210,6 +212,7 @@ function CampusGround({
       <p className="youth-report-match">
         Intake {hqIntakeCount(ownedId)} · {owned.effect}
       </p>
+      <MoodPhotoBand src={YOUTH_CAMPUS_HEADER_PHOTO} className="youth-campus-band" />
       <div className="campus-ground">
         {ACADEMY_FACILITIES.map((facility) => {
           const gate = facilityGate(ownedId, facility.id, stadiumCapacity);

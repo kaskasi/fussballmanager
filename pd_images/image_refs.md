@@ -485,6 +485,9 @@ Author	Stephen Kennard
 Stephen Kennard (1963–)  wikidata:Q135411895
 
 PERI_PITCH
+Tags: STAD-PERI, YOUTH, SHIP-CROP
+Shipped: public/assets/photos/youth-campus-aerial.jpg
+
 https://commons.wikimedia.org/wiki/File:Wroclaw_Olympic_Stadium_auxiliary_stadium_aerial_photograph_2017.jpg
 
 Description	

@@ -59,5 +59,4 @@ export function matchAmbiencePhotoUrl(input: {
   }
 }
 
-/** ambientCG Paper003 — CC0 tile for future scout/hub chrome */
-export const UI_TEXTURE_PAPER = "/assets/textures/paper003-color.jpg";
+export { UI_TEXTURE_PAPER } from "./ui-textures.ts";

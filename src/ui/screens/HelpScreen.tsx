@@ -262,7 +262,7 @@ function StoryPanel() {
         </p>
       </section>
 
-      <section className="help-card" aria-labelledby="help-credits">
+      <section className="help-card help-credits" aria-labelledby="help-credits">
         <h2 id="help-credits">
           <span aria-hidden="true">🖼</span> {t("help.credits.title")}
         </h2>
@@ -275,6 +275,10 @@ function StoryPanel() {
           <li>
             <span aria-hidden="true">🏢</span>
             <span>{t("help.credits.hub")}</span>
+          </li>
+          <li>
+            <span aria-hidden="true">🌱</span>
+            <span>{t("help.credits.youth")}</span>
           </li>
           <li>
             <span aria-hidden="true">✨</span>

@@ -30,6 +30,7 @@ import { useT } from "../../i18n/react.ts";
 import { Hint } from "../components/Hint.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
+import { ScoutRegionMap } from "../components/ScoutRegionMap.tsx";
 
 const POSITIONS: PositionPrimary[] = [
   "GK",
@@ -187,6 +188,8 @@ export function ScoutingCenter({
           <span className="scouting-network-card-cta" aria-hidden="true">→</span>
         </button>
       </section>
+
+      <ScoutRegionMap targets={targets} />
 
       <section className="scouting-assignments" aria-label={t("scouting.assignments.aria")}>
         <header className="scouting-assignments-head">

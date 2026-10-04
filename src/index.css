@@ -1597,6 +1597,108 @@ body {
   border-color: rgb(226 232 240 / 85%);
 }
 
+.youth-campus-band {
+  min-height: 4.5rem;
+  margin: 0 0 1rem;
+  border-radius: 0.85rem;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
+}
+
+.youth-campus-band .mood-photo-band__scrim {
+  background: linear-gradient(
+    180deg,
+    rgb(15 23 42 / 40%),
+    rgb(15 23 42 / 55%)
+  );
+}
+
+.scout-region-map {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem 1rem;
+  border-radius: 1rem;
+  background-color: #fafaf9;
+  background-image:
+    linear-gradient(rgb(250 250 249 / 92%), rgb(250 250 249 / 92%)),
+    url("/assets/textures/paper003-color.jpg");
+  background-size: auto, 280px;
+  box-shadow: 0 10px 28px rgb(15 23 42 / 6%);
+}
+
+.scout-region-map-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.scout-region-map-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.scout-region-map-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.65rem;
+}
+
+.scout-region-map-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.scout-region-map-legend {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+}
+
+.scout-region-map-legend li {
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+}
+
+.scout-region-map-swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 0.2rem;
+  border: 1px solid #94a3b8;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.scout-region-map-swatch.is-strong {
+  background: #a7f3d0;
+}
+
+.scout-region-map-swatch.is-mixed {
+  background: #fde68a;
+}
+
+.scout-region-map-swatch.is-weak {
+  background: #cbd5e1;
+}
+
+.scout-region-map-swatch.is-empty {
+  background: #f1f5f9;
+}
+
+.scout-region-map-legend-label {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.scout-region-map-legend-meta {
+  color: #64748b;
+  font-weight: 600;
+}
+
 .matchday-lineup-hero {
   position: relative;
   z-index: 1;
@@ -9954,6 +10056,10 @@ body {
     padding: 0.1rem 0.75rem;
   }
 
+  .scout-region-map-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .pipeline,
   .scouting,
   .squad,
@@ -10175,8 +10281,20 @@ body {
 .chronicle-panel {
   padding: 0.85rem 1rem;
   border-radius: 1rem;
-  background: #fff;
+  background-color: #fff;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 90%), rgb(255 255 255 / 90%)),
+    url("/assets/textures/paper003-color.jpg");
+  background-size: auto, 240px;
   box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
+}
+
+.help-credits {
+  background-color: #fff;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 94%), rgb(255 255 255 / 94%)),
+    url("/assets/textures/paper003-color.jpg");
+  background-size: auto, 260px;
 }
 
 .chronicle-panel-head {

@@ -13,7 +13,9 @@ Pacing, Doppelstimme (Play-by-Play + Farbkommentar) und spätere Story-Slots —
 Engine (`server/src/engine/`) zu verändern (Gesetz 4, PRD 14.10).
 
 **Heute:** `commentate()` + `isCommentaryWorthy()` → eine Template-Zeile pro
-worthy Event.  
+worthy Event. Heimspiel-Spielbericht darf eine **Kasse** (Eintritt, Wurst,
+Zelt, Shop) zeigen — Stardew-Abrechnung, gleiche Formeln wie das Ledger.
+Auswärts-Tage in Finanzen später.  
 **Ziel:** **Broadcast Director** wählt Beats, füllt Slots aus Fakten, optional LLM
 nur in freigegebenen Slots (PRD 01 — Template-Fallback).
 

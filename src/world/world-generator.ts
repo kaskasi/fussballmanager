@@ -359,18 +359,18 @@ const ATTRIBUTE_KEYS = [
 ] as const satisfies readonly (keyof Attributes)[];
 
 const POSITION_BONUSES: Record<PositionPrimary, Partial<Record<keyof Attributes, number>>> = {
-  GK: { gk_handling: 22, concentration: 8, positioning: 9, shooting: -28, dribbling: -15 },
-  CB: { positioning: 11, strength: 10, concentration: 8, shooting: -13, dribbling: -7 },
-  LB: { pace: 10, stamina: 10, passing: 5, positioning: 5, shooting: -8 },
-  RB: { pace: 10, stamina: 10, passing: 5, positioning: 5, shooting: -8 },
-  DM: { positioning: 9, passing: 8, teamwork: 8, strength: 5, shooting: -5 },
-  CM: { passing: 10, vision: 9, stamina: 7, teamwork: 7 },
-  AM: { vision: 11, technique: 10, passing: 8, dribbling: 7, positioning: -4 },
-  LM: { pace: 9, dribbling: 8, passing: 6, stamina: 5 },
-  RM: { pace: 9, dribbling: 8, passing: 6, stamina: 5 },
-  LW: { pace: 12, dribbling: 11, technique: 7, strength: -7 },
-  RW: { pace: 12, dribbling: 11, technique: 7, strength: -7 },
-  CF: { shooting: 14, composure: 10, positioning: 9, strength: 5, passing: -6 },
+  GK: { gk_handling: 38, concentration: 14, positioning: 16, shooting: -42, dribbling: -26 },
+  CB: { positioning: 20, strength: 18, concentration: 14, shooting: -24, dribbling: -14, pace: -6 },
+  LB: { pace: 18, stamina: 16, passing: 9, positioning: 8, shooting: -14 },
+  RB: { pace: 18, stamina: 16, passing: 9, positioning: 8, shooting: -14 },
+  DM: { positioning: 16, passing: 14, teamwork: 14, strength: 9, shooting: -10, dribbling: -6 },
+  CM: { passing: 18, vision: 16, stamina: 12, teamwork: 12 },
+  AM: { vision: 20, technique: 18, passing: 14, dribbling: 12, positioning: -8 },
+  LM: { pace: 16, dribbling: 14, passing: 10, stamina: 9 },
+  RM: { pace: 16, dribbling: 14, passing: 10, stamina: 9 },
+  LW: { pace: 22, dribbling: 20, technique: 12, strength: -14 },
+  RW: { pace: 22, dribbling: 20, technique: 12, strength: -14 },
+  CF: { shooting: 24, composure: 18, positioning: 16, strength: 9, passing: -12 },
 };
 
 /**
@@ -480,8 +480,20 @@ export function generateClubRoster(
   clubIndex: number,
 ): Player[] {
   const clubStrength = startingClubStrength(masterSeed, club, clubIndex);
+  const ageSlots = shuffled(
+    Array.from({ length: PLAYERS_PER_CLUB }, (_, index) => index),
+    deriveWorldSeed(masterSeed, "roster-age-order", clubIndex),
+  );
   return ROSTER_POSITIONS.map((position, playerIndex) =>
-    generateProfessional(masterSeed, club, clubIndex, playerIndex, position, clubStrength),
+    generateProfessional(
+      masterSeed,
+      club,
+      clubIndex,
+      playerIndex,
+      position,
+      clubStrength,
+      ageSlots[playerIndex] ?? playerIndex,
+    ),
   );
 }
 
@@ -548,13 +560,14 @@ function generateProfessional(
   playerIndex: number,
   position: PositionPrimary,
   clubStrength: number,
+  ageSlot: number,
 ): Player {
   const stableIndex = clubIndex * PLAYERS_PER_CLUB + playerIndex;
   const random = mulberry32(deriveWorldSeed(masterSeed, "player", stableIndex));
   const hiddenRandom = mulberry32(deriveWorldSeed(masterSeed, "player-hidden", stableIndex));
   const contractRandom = mulberry32(deriveWorldSeed(masterSeed, "contract", stableIndex));
-  const age = rosterAge(playerIndex, random);
-  const playerBase = clubStrength + sampleStandardNormal(random) * 5 + peakCaBaseAdjustment(age);
+  const age = rosterAge(ageSlot, random);
+  const playerBase = clubStrength + sampleStandardNormal(random) * 6 + peakCaBaseAdjustment(age);
   const attributes = generateAttributes(position, playerBase, random);
   const ca = estimateCa(attributes, position);
   const untilSeason = 2 + Math.floor(contractRandom() * 4);
@@ -657,17 +670,17 @@ function generateAttributes(
         (bonuses[key] ?? 0) +
         weakFootAdjustment +
         nonKeeperHandling +
-        sampleStandardNormal(random) * 6;
+        sampleStandardNormal(random) * 12;
       const value = clampAttribute(Math.round(raw));
       return [key, key === "weak_foot" ? Math.min(100, value) : value];
     }),
   ) as unknown as Attributes;
 }
 
-function rosterAge(playerIndex: number, random: () => number): number {
-  if (playerIndex < 5) return 18 + Math.floor(random() * 4);
-  if (playerIndex < 15) return 22 + Math.floor(random() * 6);
-  if (playerIndex < 20) return 28 + Math.floor(random() * 5);
+function rosterAge(ageSlot: number, random: () => number): number {
+  if (ageSlot < 5) return 18 + Math.floor(random() * 4);
+  if (ageSlot < 15) return 22 + Math.floor(random() * 6);
+  if (ageSlot < 20) return 28 + Math.floor(random() * 5);
   return 33 + Math.floor(random() * 4);
 }
 

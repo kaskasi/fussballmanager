@@ -618,8 +618,13 @@ export function PrecinctGrid({
 }
 
 function RoadGlyph({ links }: { links: { n: boolean; e: boolean; s: boolean; w: boolean } }) {
+  const degree = Number(links.n) + Number(links.e) + Number(links.s) + Number(links.w);
+  const straight =
+    (links.n && links.s && !links.e && !links.w) || (links.e && links.w && !links.n && !links.s);
+  const shape =
+    degree <= 1 ? "is-end" : straight ? "is-straight" : degree >= 3 ? "is-junction" : "is-corner";
   return (
-    <span className="stadium-precinct-road" aria-hidden="true">
+    <span className={`stadium-precinct-road ${shape}`} aria-hidden="true">
       {links.n ? <i className="arm n" /> : null}
       {links.e ? <i className="arm e" /> : null}
       {links.s ? <i className="arm s" /> : null}

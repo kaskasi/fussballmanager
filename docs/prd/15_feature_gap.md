@@ -92,7 +92,7 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 
 | ID | M | Spec | Stand UI/Code | Lücke |
 |---|---|---|---|---|
-| F6.7 | M3 | Merch × Popularität | — | Fanshop-SKU, nicht das Brustlogo |
+| F6.7 | M3 | Merch × Popularität | — | Fanshop-SKU, nicht das Brustlogo. Besuch *wegen* neuem Shirt ist Story, nicht Imbiss-Fill. |
 | F6.4 | M1 | Wasserfall 11.5 | Icon-Balken + 13-Mo-Sparkline | — |
 | F7.1 | M1 | 2D-Grundriss, Preise | Grundriss + Banden auf Tribünen + Shirt | Gelände-Tab separat |
 | F7.2 | M2 | Kapazität, VIP, Heizung | Shop-Liste + Levels · extra Banden bei Steh/Sitz | Shop unter der Karte |

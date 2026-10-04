@@ -29,6 +29,7 @@ function normalizeTransferState(state?: TransferState): TransferState {
     shortlist: base.shortlist ?? [],
     offers: base.offers ?? [],
     history: base.history ?? [],
+    negotiations: base.negotiations ?? [],
     ai_budgets: base.ai_budgets ?? {},
     pending_transfers: base.pending_transfers ?? [],
   };

@@ -174,6 +174,8 @@ Regeln:
 - FC Nordsterns Startelf liegt 8–15 CA-Punkte unter dem
   Regionalliga-Median und höchstens 5 Punkte unter dem zweitschlechtesten
   Club. Dadurch ist Klassenerhalt schwer, aber nicht vorbestimmt.
+  Kader-Mittel (22) darf nach gemischten U21-Positionen 6–17 / ≤6.5
+  schwanken — derselbe Underdog, mehr Varianz.
 - Kein Club erhält eine feste langfristige Stärke. Entwicklung und Transfers
   verwenden dieselben Regeln wie beim Spielerclub.
 

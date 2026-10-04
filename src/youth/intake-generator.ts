@@ -11,10 +11,11 @@ import { YOUTH_SITE_HQ } from "./youth-site.ts";
  * File is kebab-case per the project naming rule.
  *
  * Not in this module: campus view (F3.2), youth match sim (F3.3), inbox (F3.4).
- * Position skill weights are named in PRD 07.2 and never tabulated, so every
- * 0–199 skill is an independent draw from the player's mixture component.
+ * Position skill weights (PRD 07.2): ±~10% of the mixture mean so a CF’s
+ * shooting is not the same draw as a CB’s. Camp intakes shuffle the position
+ * list before slicing 2/4 so they are not GK/CB-only.
  * Anlage is an independent uniform per key (PRD 07.2). The ±0.10 position
- * band in PRD 03.1 has no position means to vary around.
+ * band in PRD 03.1 has no tabulated position means to vary around.
  */
 
 export type AcademyFacility = "academy_basic" | "academy_performance" | "academy_elite";
@@ -112,6 +113,22 @@ export const INTAKE_POSITIONS: readonly PositionPrimary[] = [
   "RW",
 ];
 
+/** Signed weights in [-1, 1]; applied as ±10% of the mixture mean (PRD 07.2). */
+const YOUTH_POSITION_WEIGHTS: Record<PositionPrimary, Partial<Record<keyof Attributes, number>>> = {
+  GK: { gk_handling: 1, concentration: 0.6, positioning: 0.6, shooting: -1, dribbling: -0.7 },
+  CB: { positioning: 0.8, strength: 0.8, concentration: 0.6, shooting: -0.8, dribbling: -0.5, pace: -0.3 },
+  LB: { pace: 0.8, stamina: 0.7, passing: 0.4, positioning: 0.3, shooting: -0.5 },
+  RB: { pace: 0.8, stamina: 0.7, passing: 0.4, positioning: 0.3, shooting: -0.5 },
+  DM: { positioning: 0.7, passing: 0.6, teamwork: 0.6, strength: 0.4, shooting: -0.4 },
+  CM: { passing: 0.8, vision: 0.7, stamina: 0.5, teamwork: 0.5 },
+  AM: { vision: 0.8, technique: 0.7, passing: 0.6, dribbling: 0.5, positioning: -0.3 },
+  LM: { pace: 0.7, dribbling: 0.6, passing: 0.4, stamina: 0.4 },
+  RM: { pace: 0.7, dribbling: 0.6, passing: 0.4, stamina: 0.4 },
+  LW: { pace: 0.9, dribbling: 0.8, technique: 0.5, strength: -0.5 },
+  RW: { pace: 0.9, dribbling: 0.8, technique: 0.5, strength: -0.5 },
+  CF: { shooting: 1, composure: 0.7, positioning: 0.6, strength: 0.4, passing: -0.5 },
+};
+
 export interface GenerateIntakeInput {
   season: number;
   week: number;
@@ -189,9 +206,10 @@ export function buildAcademyCohort(input: GenerateIntakeInput): Player[] {
   }
 
   const mixture = academyMixture(input.facility, input.meanShift ?? 0);
+  const positions = intakePositionsForCount(count, input.random);
   const players: Player[] = [];
   for (let index = 0; index < count; index++) {
-    players.push(generateOne(input, mixture, index));
+    players.push(generateOne(input, mixture, index, positions[index] ?? "CM"));
   }
   return players;
 }
@@ -203,13 +221,30 @@ export function generateYouthIntake(input: GenerateIntakeInput): Player[] {
   return buildAcademyCohort(input);
 }
 
+function intakePositionsForCount(count: number, random: () => number): PositionPrimary[] {
+  if (count < INTAKE_COUNT) {
+    return shuffleCopy(INTAKE_POSITIONS, random).slice(0, count);
+  }
+  return INTAKE_POSITIONS.slice(0, count);
+}
+
+function shuffleCopy<T>(values: readonly T[], random: () => number): T[] {
+  const result = [...values];
+  for (let index = result.length - 1; index > 0; index--) {
+    const target = Math.floor(random() * (index + 1));
+    [result[index], result[target]] = [result[target]!, result[index]!];
+  }
+  return result;
+}
+
 function generateOne(
   input: GenerateIntakeInput,
   mixture: MixtureComponent[],
   index: number,
+  position: PositionPrimary,
 ): Player {
   const component = mixture[pickIndex(mixture, input.random)] ?? mixture[0]!;
-  const attributes = drawAttributes(component, input.random);
+  const attributes = drawAttributes(component, position, input.random);
   const anlage = drawAnlage(input.random);
   const skillMean = average(SKILLS.map((key) => attributes[key]));
   const meanAnlage = average(Object.values(anlage));
@@ -221,7 +256,6 @@ function generateOne(
   );
 
   const idNumber = input.idStart + index;
-  const position = INTAKE_POSITIONS[index] ?? "CM";
   const portraitSeed = Math.floor(input.random() * 1_000_000_000);
   const player: Player = {
     id: `pl_${String(idNumber).padStart(5, "0")}`,
@@ -285,27 +319,36 @@ function generateOne(
   return seedPhaseStamps(ensureYouthContract(player, input.season), input.season, 1, input.random);
 }
 
-function drawAttributes(component: MixtureComponent, random: () => number): Attributes {
-  const skill = (): number => {
-    const value = Math.round(component.mean + sampleStandardNormal(random) * component.stddev);
+function drawAttributes(
+  component: MixtureComponent,
+  position: PositionPrimary,
+  random: () => number,
+): Attributes {
+  const weights = YOUTH_POSITION_WEIGHTS[position];
+  const skill = (key: (typeof SKILLS)[number]): number => {
+    const positional = (weights[key] ?? 0) * 0.1 * component.mean;
+    const keeperDump = key === "gk_handling" && position !== "GK" ? -50 : 0;
+    const value = Math.round(
+      component.mean + positional + keeperDump + sampleStandardNormal(random) * component.stddev,
+    );
     return Math.min(199, Math.max(0, value));
   };
   return {
-    shooting: skill(),
-    passing: skill(),
-    dribbling: skill(),
-    technique: skill(),
-    pace: skill(),
-    strength: skill(),
-    stamina: skill(),
-    composure: skill(),
-    leadership: skill(),
-    positioning: skill(),
-    vision: skill(),
-    concentration: skill(),
-    teamwork: skill(),
+    shooting: skill("shooting"),
+    passing: skill("passing"),
+    dribbling: skill("dribbling"),
+    technique: skill("technique"),
+    pace: skill("pace"),
+    strength: skill("strength"),
+    stamina: skill("stamina"),
+    composure: skill("composure"),
+    leadership: skill("leadership"),
+    positioning: skill("positioning"),
+    vision: skill("vision"),
+    concentration: skill("concentration"),
+    teamwork: skill("teamwork"),
     weak_foot: 20 + Math.floor(random() * 61),
-    gk_handling: skill(),
+    gk_handling: skill("gk_handling"),
   };
 }
 

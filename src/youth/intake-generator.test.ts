@@ -162,6 +162,29 @@ describe("generateYouthIntake", () => {
     expect(performance - basic).toBeLessThan(14);
     expect(elite).toBeGreaterThan(performance);
   });
+
+  it("shuffles camp-sized intake so it is not only GK/CB", () => {
+    const positions = new Set<string>();
+    for (let seed = 1; seed <= 40; seed++) {
+      for (const player of generateYouthIntake(input({ random: mulberry32(seed), count: 4 }))) {
+        positions.add(player.position);
+      }
+    }
+    expect(positions.size).toBeGreaterThan(3);
+    expect([...positions].some((position) => position !== "GK" && position !== "CB")).toBe(true);
+  });
+
+  it("weights youth shooting toward strikers, not centre-backs", () => {
+    const forwards: number[] = [];
+    const defenders: number[] = [];
+    for (let seed = 1; seed <= 8; seed++) {
+      for (const player of generateYouthIntake(input({ random: mulberry32(seed) }))) {
+        if (player.position === "CF") forwards.push(player.attributes.shooting);
+        if (player.position === "CB") defenders.push(player.attributes.shooting);
+      }
+    }
+    expect(average(forwards) - average(defenders)).toBeGreaterThan(4);
+  });
 });
 
 describe("intakeBirthDate", () => {
@@ -177,6 +200,10 @@ describe("intakeBirthDate", () => {
 
 function averageSkill(players: ReturnType<typeof generateYouthIntake>): number {
   return players.reduce((sum, player) => sum + skillMean(player), 0) / players.length;
+}
+
+function average(values: readonly number[]): number {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
 function completedYears(birthIso: string, asOfIso: string): number {

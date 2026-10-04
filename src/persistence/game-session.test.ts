@@ -109,4 +109,33 @@ describe("game session", () => {
     expect(loaded?.state.league?.league_pools?.["regionalliga-nord"]).toHaveLength(18);
     removeLocalSave(1);
   });
+
+  it("keeps open purchase negotiations through sessionFromSave", () => {
+    const session = newGameSession(new Date("2026-09-22T14:00:00Z"));
+    const loaded = sessionFromSave(
+      saveFromSession({
+        ...session,
+        transferState: {
+          ...session.transferState,
+          negotiations: [
+            {
+              id: "neg_keep",
+              player_id: "pl_keep",
+              seller_club_id: "cl_rival",
+              asking_price: 400_000,
+              current_offer: 0,
+              round: 1,
+              patience_rounds_left: 3,
+              status: "active",
+              failed_lowball_count: 0,
+              last_reaction: null,
+              week: session.week,
+            },
+          ],
+        },
+      }),
+    );
+    expect(loaded.transferState.negotiations).toHaveLength(1);
+    expect(loaded.transferState.negotiations?.[0]?.player_id).toBe("pl_keep");
+  });
 });

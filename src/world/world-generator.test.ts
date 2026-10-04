@@ -95,6 +95,7 @@ describe("deterministic world generator", () => {
       expect(positionCounts).toEqual(expectedPositions);
       expect(roster.filter((player) => player.age <= 21).length).toBeGreaterThanOrEqual(2);
       expect(roster.filter((player) => player.age >= 30).length).toBeGreaterThanOrEqual(2);
+      expect(roster.some((player) => player.position === "GK")).toBe(true);
       for (const player of roster) {
         expect(validatePlayer(player), player.id).toEqual({ valid: true, errors: [] });
         expect(player.club_id).toBe(clubId);
@@ -122,6 +123,32 @@ describe("deterministic world generator", () => {
     expect(fixtures).toHaveLength(306);
     expect([...pairCounts.values()].every((count) => count === 2)).toBe(true);
     expect(ids.every((id) => homeCounts.get(id) === 17)).toBe(true);
+  });
+
+  it("spreads U21 ages across the 22, not only GK/CB", () => {
+    const world = generateWorld(411);
+    const young = world.players.filter((player) => player.age <= 21);
+    const youngOutfield = young.filter(
+      (player) => player.position !== "GK" && player.position !== "CB",
+    );
+    expect(youngOutfield.length).toBeGreaterThan(50);
+  });
+
+  it("spreads professional skills by position, not a 69–84 blob", () => {
+    const world = generateWorld(2026);
+    const nordstern = world.players.filter(
+      (player) => player.club_id === worldCareerClubId(NORDSTERN_TEAM_ID),
+    );
+    const outfield = nordstern.filter((player) => player.position !== "GK");
+    const shooting = outfield.map((player) => player.attributes.shooting);
+    expect(Math.max(...shooting) - Math.min(...shooting)).toBeGreaterThan(20);
+    const cfShoot = average(
+      nordstern.filter((player) => player.position === "CF").map((player) => player.attributes.shooting),
+    );
+    const cbShoot = average(
+      nordstern.filter((player) => player.position === "CB").map((player) => player.attributes.shooting),
+    );
+    expect(cfShoot - cbShoot).toBeGreaterThan(12);
   });
 
   it("keeps entity streams independent and roster generation addressable", () => {
@@ -158,9 +185,9 @@ describe("deterministic world generator", () => {
       const median = strengths[Math.floor(strengths.length / 2)]!;
       const secondWeakest = strengths[1]!;
 
-      expect(median.ca - nordstern.ca).toBeGreaterThanOrEqual(7.5);
-      expect(median.ca - nordstern.ca).toBeLessThanOrEqual(15);
-      expect(secondWeakest.ca - nordstern.ca).toBeLessThanOrEqual(5);
+      expect(median.ca - nordstern.ca).toBeGreaterThanOrEqual(6);
+      expect(median.ca - nordstern.ca).toBeLessThanOrEqual(17);
+      expect(secondWeakest.ca - nordstern.ca).toBeLessThanOrEqual(6.5);
     }
   });
 });

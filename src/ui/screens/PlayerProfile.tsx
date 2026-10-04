@@ -8,12 +8,12 @@
  * │ Kernattribute    │ Aktuelles Ziel                            │
  * │ ████████░░ 91    │ 🏃 Schnelligkeit                          │
  * │                  │ ▓▓▓▓░░░░ 32 %                             │
- * │ Stärke als…      │ Fähigkeiten / Bonus  — Hunger-Slots       │
+ * │ Stärke als…      │ Fähigkeiten / Bonus (F2.8 Badges)         │
  * │ TW ░  IV ▓▓▓     │ Vertrag  [✍️ Verhandeln] [⬆️ Profikader]  │
  * └──────────────────┴───────────────────────────────────────────┘
  *
  * Eine Karte = Identität. Nur Verlauf und Saisonwerte als optionale Vertiefung.
- * Stamps bleiben leer (PRD 15 C1).
+ * Stamps: Player.stamps (PRD 07.5 / F2.8).
  */
 import { useEffect, useMemo, useState, type ComponentPropsWithoutRef } from "react";
 import type { IndividualProgram } from "../../development/individual-training.ts";
@@ -74,6 +74,12 @@ import {
   stateMark,
   visibleBreakoutFlags,
 } from "../player-profile.ts";
+import {
+  activeStampBadges,
+  stampIcon,
+  stampLabel,
+} from "../../development/ability-stamps.ts";
+import { formatGrowthDelta } from "../../player/growth-history.ts";
 
 type ProfileTab = "attributes" | "training" | "contract" | "development" | "stats";
 
@@ -445,26 +451,7 @@ export function PlayerProfile({
               )}
 
               {owned ? (
-                <div className="profile-hunger" aria-label="Fähigkeiten">
-                  <p className="profile-section-label">Fähigkeiten / Bonus</p>
-                  {Array.from({ length: FAEHIGKEIT_HUNGER_SLOTS }, (_, index) => {
-                    const stamp = player.history.career_stamps?.[index];
-                    const slotLabel = index === FAEHIGKEIT_HUNGER_SLOTS - 1 ? "Bonus" : "Fähigkeit";
-                    return (
-                      <div key={index} className="profile-hunger-slot">
-                        <span>{slotLabel}</span>
-                        <span className={stamp ? "profile-hunger-stamp" : "profile-hunger-empty"}>
-                          {stamp ?? "—"}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  <p className="profile-hunger-note">
-                    {(player.history.career_stamps?.length ?? 0) > 0
-                      ? "Karriere-Stempel — volle C1-Mechanik folgt in PRD 15."
-                      : "Noch leer — besondere Stempel wachsen über Saisons."}
-                  </p>
-                </div>
+                <StampHungerSlots player={player} />
               ) : null}
             </section>
           ) : null}
@@ -868,6 +855,47 @@ function ProfileActionButton({
       <span className="profile-action-label">{label}</span>
       {amount ? <span className="profile-action-amount">{amount}</span> : null}
     </button>
+  );
+}
+
+function StampHungerSlots({ player }: { player: Player }) {
+  const badges = activeStampBadges(player, FAEHIGKEIT_HUNGER_SLOTS);
+  return (
+    <div className="profile-hunger" aria-label="Fähigkeiten">
+      <p className="profile-section-label">Fähigkeiten / Bonus</p>
+      {Array.from({ length: FAEHIGKEIT_HUNGER_SLOTS }, (_, index) => {
+        const stamp = badges[index];
+        const slotLabel = index === FAEHIGKEIT_HUNGER_SLOTS - 1 ? "Bonus" : "Fähigkeit";
+        const appliedHint = stamp
+          ? Object.entries(stamp.applied)
+              .map(([key, delta]) => {
+                const attr = key as Parameters<typeof attributeLabel>[0];
+                return `${attributeLabel(attr)} ${formatGrowthDelta(delta ?? null)}`;
+              })
+              .join(" · ")
+          : "";
+        return (
+          <div key={index} className="profile-hunger-slot">
+            <span>{slotLabel}</span>
+            <span
+              className={stamp ? "profile-hunger-stamp" : "profile-hunger-empty"}
+              title={
+                stamp
+                  ? `${stampLabel(stamp.id)} · ${stamp.path} · ${appliedHint}`
+                  : "Leerer Slot"
+              }
+            >
+              {stamp ? `${stampIcon(stamp.id)} ${stampLabel(stamp.id)}` : "—"}
+            </span>
+          </div>
+        );
+      })}
+      <p className="profile-hunger-note">
+        {(player.stamps?.length ?? 0) > 0
+          ? `${player.stamps.length} Stempel verdient — Training oder Karriere-Meilenstein.`
+          : "Noch leer — trainiere freigeschaltete Stempel oder erreiche Meilensteine."}
+      </p>
+    </div>
   );
 }
 

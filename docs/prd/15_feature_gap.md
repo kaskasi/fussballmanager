@@ -103,7 +103,7 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 | F3.6 | M2 | Profi-Verträge, Spielzeit-Klauseln | Jugendvertrag-Default | Slider mit F5.4 teilen |
 | F2.3 | M2 | Individualprogramme | Gruppen-Fokus F2.1; weak foot / retrain | Stamp-kind folgt mit F2.8 |
 | F2.7 | M1 | Wachstums-Heatmap | Team-Pixelbar Hub+Training (1□=1 Spieler) | 09 Screen 1 |
-| F2.8 | M2 | Bonus-Stamps | Schema `Player.stamps` (07.5); UI Hunger | Earn-Loop + Katalog-JSON |
+| F2.8 | M2 | Bonus-Stamps | Schema + Katalog + Earn-Loop (train/event) + Akte-Badges | Hybrid path later; Minus-stamps later |
 | F4.3 | M2 | Scout-Netz 3 Tiers | Einstellungsliste | vorgezogen, keine Karte |
 | F4.4 | M2 | Scout-Karte | — | |
 | F1.5 | M1 | Profil Charts, Icons | Tabs + Flavor | Akte laut 14.3; Hex optional später |

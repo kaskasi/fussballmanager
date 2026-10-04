@@ -3,7 +3,9 @@ import {
   processWeeklyBreakoutChecks,
   type BreakoutNarrative,
 } from "../development/breakouts.ts";
+import { evaluateEventStamps } from "../development/ability-stamps.ts";
 import { advanceIndividualTrainingWeek } from "../development/individual-training.ts";
+import { formatPlayerName } from "../types/player-display.ts";
 import { applyTrainingWeek } from "../development/pipeline-week.ts";
 import { planToSessions } from "../development/training-units.ts";
 import { advanceWeeklyClubFinances } from "../economy/club-finances.ts";
@@ -140,6 +142,17 @@ export async function simulateGameWeek(
     trainingContext,
   );
   players = individualStep.players;
+  for (const award of individualStep.awards) {
+    const named = players.find((entry) => entry.id === award.playerId);
+    const who = named ? formatPlayerName(named) : award.playerId;
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "profile",
+      `${award.icon} ${who} verdient ${award.label}`,
+    );
+  }
 
   const savedStarters = session.matchLineup
     ? careerStarterIds(session.matchLineup.assignments)
@@ -158,6 +171,19 @@ export async function simulateGameWeek(
     intensity: session.trainingIntensity,
     coachingStaff: session.coachingStaff,
   });
+  const eventStamps = evaluateEventStamps(players, session.season, nextWeek);
+  players = eventStamps.players;
+  for (const award of eventStamps.awards) {
+    const named = players.find((entry) => entry.id === award.playerId);
+    const who = named ? formatPlayerName(named) : award.playerId;
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "profile",
+      `${award.icon} ${who} verdient ${award.label}`,
+    );
+  }
   const leagueWithCareerStats = {
     ...leagueStep.league,
     career_player_stats: mergeCareerLeagueStats(

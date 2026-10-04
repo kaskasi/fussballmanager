@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
+import { hasStamp } from "./ability-stamps.ts";
 import {
   advanceIndividualTrainingWeek,
   assignIndividualProgram,
@@ -41,5 +42,36 @@ describe("individual training", () => {
     }
     const blocked = canAssignIndividualProgram(players[MAX_INDIVIDUAL_PROGRAMS]!, "weak_foot", programs);
     expect(blocked.ok).toBe(false);
+  });
+
+  it("awards a train stamp on the final program week", () => {
+    const player = clonePlayer();
+    player.attributes.strength = 110;
+    player.attributes.positioning = 100;
+    const programs = assignIndividualProgram(
+      [],
+      player,
+      "stamp",
+      10,
+      1,
+      1,
+      undefined,
+      "kopfballungeheuer",
+    );
+    expect(programs[0]?.weeksRemaining).toBe(10);
+
+    let squad = [player];
+    let active = programs;
+    for (let week = 1; week <= 10; week++) {
+      const step = advanceIndividualTrainingWeek(squad, active, { season: 1, week });
+      squad = step.players;
+      active = step.programs;
+      if (week < 10) {
+        expect(hasStamp(squad[0]!, "kopfballungeheuer")).toBe(false);
+      }
+    }
+    expect(hasStamp(squad[0]!, "kopfballungeheuer")).toBe(true);
+    expect(active).toHaveLength(0);
+    expect(squad[0]!.attributes.strength).toBe(113);
   });
 });

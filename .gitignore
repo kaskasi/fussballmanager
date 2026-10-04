@@ -7,3 +7,9 @@ coverage
 saves/
 *.tsbuildinfo
 .wrangler
+fm_screens/
+
+# ambientCG: commit *1K-JPG.zip only (~33 MB); 2K/4K are local cache (re-download from ambientcg.com)
+assets/textures/ambientcg/*_2K-*.zip
+assets/textures/ambientcg/*_4K-*.zip
+assets/textures/ambientcg/.DS_Store

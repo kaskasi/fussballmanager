@@ -12,7 +12,9 @@ import { fatigueAmpelClassName } from "../../development/training-load.ts";
 import { Hint } from "../components/Hint.tsx";
 import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 import { formMark, stateMark } from "../player-profile.ts";
-import { formatSeasonLabel } from "../../sim/season-label.ts";
+import { formatSeasonDisplay } from "../../i18n/calendar-display.ts";
+import { useT } from "../../i18n/react.ts";
+import { t } from "../../i18n/index.ts";
 
 /**
  * WIREFRAME: PRD 09 — Profikader
@@ -45,6 +47,7 @@ export function FirstTeam({
   onBack: () => void;
   onSelectPlayer: (playerId: string) => void;
 }) {
+  useT();
   const [sortKey, setSortKey] = useState<ProSquadSortKey>(DEFAULT_SORT.key);
   const [sortDirection, setSortDirection] = useState<ProSquadSortDirection>(DEFAULT_SORT.direction);
 
@@ -69,40 +72,44 @@ export function FirstTeam({
   return (
     <main className="squad">
       <header className="squad-head">
-        <button type="button" onClick={onBack} aria-label="Zurück zur Pipeline">
+        <button type="button" onClick={onBack} aria-label={t("squad.back")}>
           ←
         </button>
         <div>
-          <p className="eyebrow">{formatSeasonLabel(season)}</p>
-          <h1>⭐ Profikader</h1>
-          <Hint text="Alle Spieler im Ersten Team. Klick öffnet das Profil." block>
+          <p className="eyebrow">{formatSeasonDisplay(season)}</p>
+          <h1>{t("squad.title")}</h1>
+          <Hint text={t("squad.hint")} block>
             <p className="squad-summary">
-              {rows.length} Spieler · Ø CA {avgCa} · {formatMarketValueShort(totalValue)} Kaderwert
+              {t("squad.summary", {
+                count: rows.length,
+                avgCa,
+                value: formatMarketValueShort(totalValue),
+              })}
             </p>
           </Hint>
         </div>
       </header>
 
       {rows.length === 0 ? (
-        <section className="squad-empty" aria-label="Leerer Profikader">
+        <section className="squad-empty" aria-label={t("squad.empty.aria")}>
           <span className="squad-empty-icon" aria-hidden="true">⭐</span>
-          <p>Noch kein Profikader.</p>
-          <p className="squad-empty-hint">Talente aus U19 über die 📥 Inbox hochziehen.</p>
+          <p>{t("squad.empty")}</p>
+          <p className="squad-empty-hint">{t("squad.emptyHint")}</p>
         </section>
       ) : (
         <div className="squad-table-wrap">
           <table className="squad-table">
             <thead>
               <tr>
-                <SquadSortHeader label="Name" sortKey="name" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} align="left" />
-                <SquadSortHeader label="Pos" sortKey="position" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="Alt" sortKey="age" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label={t("squad.col.name")} sortKey="name" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} align="left" />
+                <SquadSortHeader label={t("squad.col.pos")} sortKey="position" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label={t("squad.col.age")} sortKey="age" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
                 <SquadSortHeader label="CA" sortKey="ca" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="Δ" sortKey="caDelta" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title="CA seit letzter Woche" />
-                <SquadSortHeader label="Wert" sortKey="marketValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="Fit" sortKey="fitness" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title="Fitness %" />
-                <SquadSortHeader label="Min/Wo" sortKey="weeklyMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title="Einsatzzeit diese Woche" />
-                <SquadSortHeader label="Risiko" sortKey="injuryRisk" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title="Verletzungsrisiko" />
+                <SquadSortHeader label="Δ" sortKey="caDelta" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title={t("squad.col.caDeltaTitle")} />
+                <SquadSortHeader label={t("squad.col.value")} sortKey="marketValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+                <SquadSortHeader label="Fit" sortKey="fitness" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title={t("squad.col.fitTitle")} />
+                <SquadSortHeader label="Min/Wo" sortKey="weeklyMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title={t("squad.col.minWeekTitle")} />
+                <SquadSortHeader label="Risiko" sortKey="injuryRisk" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title={t("squad.col.riskTitle")} />
                 <SquadSortHeader label="Min" sortKey="seasonMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
                 <SquadSortHeader label="T" sortKey="goals" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
                 <SquadSortHeader label="A" sortKey="assists" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />

@@ -61,6 +61,8 @@ import type {
   AssistantDelegation,
   AssistantDelegationTask,
 } from "../../staff/assistant-delegation.ts";
+import { t } from "../../i18n/index.ts";
+import { useT } from "../../i18n/react.ts";
 
 type TrainingTab = "overview" | "team" | "individual" | "mentoring" | "coaches" | "fitness";
 
@@ -132,6 +134,7 @@ export function TrainingCenter({
   hasTrainingHall?: boolean;
   injuryRiskFactor?: number;
 }) {
+  useT();
   const [tab, setTab] = useState<TrainingTab>("overview");
   const [pickSlot, setPickSlot] = useState<number | null>(null);
   const check = useMemo(() => validateWeeklyPlan(planToSessions(plan)), [plan]);
@@ -151,50 +154,50 @@ export function TrainingCenter({
     <main className="training">
       <header className="training-head">
         {onBack ? (
-          <button type="button" onClick={onBack} aria-label="Zurück zur Pipeline">
+          <button type="button" onClick={onBack} aria-label={t("training.back")}>
             ←
           </button>
         ) : null}
         <div>
-          <p className="eyebrow">Woche {week}</p>
-          <h1>🏋️ Training</h1>
+          <p className="eyebrow">{t("training.week", { week })}</p>
+          <h1>{t("training.title")}</h1>
         </div>
       </header>
 
-      <nav className="training-tabs" aria-label="Trainingsarten">
+      <nav className="training-tabs" aria-label={t("training.tabs.aria")}>
         <button type="button" className={tab === "overview" ? "training-tab is-active" : "training-tab"} onClick={() => setTab("overview")}>
-          Übersicht · Heatmap
+          {t("training.tab.overview")}
         </button>
         <button type="button" className={tab === "team" ? "training-tab is-active" : "training-tab"} onClick={() => setTab("team")}>
-          Team · Stundenplan
+          {t("training.tab.team")}
         </button>
         <button
           type="button"
           className={tab === "individual" ? "training-tab is-active" : "training-tab"}
           onClick={() => setTab("individual")}
         >
-          Individuell · Extra
+          {t("training.tab.individual")}
         </button>
         <button
           type="button"
           className={tab === "mentoring" ? "training-tab is-active" : "training-tab"}
           onClick={() => setTab("mentoring")}
         >
-          Mentoring
+          {t("training.tab.mentoring")}
         </button>
         <button
           type="button"
           className={tab === "coaches" ? "training-tab is-active" : "training-tab"}
           onClick={() => setTab("coaches")}
         >
-          Trainer · Stab
+          {t("training.tab.coaches")}
         </button>
         <button
           type="button"
           className={tab === "fitness" ? "training-tab is-active" : "training-tab"}
           onClick={() => setTab("fitness")}
         >
-          Fitness · Belastung
+          {t("training.tab.fitness")}
         </button>
       </nav>
 
@@ -283,6 +286,7 @@ function TrainingOverview({
   onOpenPlan: () => void;
   onSelectPlayer?: (playerId: string) => void;
 }) {
+  useT();
   const heatCells = useMemo(() => squadGrowthHeatmap(players, clubId), [players, clubId]);
   const focusOpen = focusCount < MAX_FOCUS_SLOTS;
 
@@ -292,7 +296,7 @@ function TrainingOverview({
         <p
           className={`training-fatigue is-${load.ampel}`}
           title={load.label}
-          aria-label={`Fatigue-Ampel: ${load.label}`}
+          aria-label={t("training.overview.fatigueAria", { label: load.label })}
         >
           <span className={`pipeline-light ${fatigueAmpelClassName(load.ampel)}`} aria-hidden="true">
             {load.icon}
@@ -300,10 +304,12 @@ function TrainingOverview({
           <span>{load.label}</span>
         </p>
         <p className="training-overview-focus">
-          🎯 {focusCount}/{MAX_FOCUS_SLOTS} Fokus
+          {t("training.overview.focus", { count: focusCount, max: MAX_FOCUS_SLOTS })}
         </p>
         <button type="button" className="training-overview-go" onClick={onOpenPlan}>
-          {focusOpen ? `Fokus setzen · ${focusCount}/${MAX_FOCUS_SLOTS}` : "Stundenplan öffnen"}
+          {focusOpen
+            ? t("training.overview.setFocus", { count: focusCount, max: MAX_FOCUS_SLOTS })
+            : t("training.overview.openPlan")}
         </button>
       </div>
       <GrowthHeatmap

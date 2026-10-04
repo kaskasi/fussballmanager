@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
+import { t } from "../../i18n/index.ts";
+import { pipelineStageDisplay } from "../../i18n/pipeline-display.ts";
+import { useT } from "../../i18n/react.ts";
 import { formatGrowthDelta } from "../../player/growth-history.ts";
 import {
   heatmapCellsForStage,
   heatmapPeak,
   heatIntensity,
   PIPELINE_STAGES,
-  pipelineStageLabel,
   type GrowthHeatCell,
   type PipelineStageFill,
   type WeeklyTrainingExtremes,
@@ -34,13 +36,14 @@ export function PipelineFillCard({
   fill: readonly PipelineStageFill[];
   onOpenJugend?: () => void;
 }) {
+  useT();
   const max = Math.max(1, ...fill.map((stage) => stage.count));
   return (
     <button
       type="button"
       className="pipeline-fill-card"
       onClick={onOpenJugend}
-      aria-label="Pipeline-Füllung nach Stufe"
+      aria-label={t("hub.fill.aria")}
     >
       {fill.map((stage) => (
         <span key={stage.stage} className="pipeline-fill-stage">
@@ -52,7 +55,7 @@ export function PipelineFillCard({
           <span className="pipeline-fill-count">
             {stage.icon} {stage.count}
           </span>
-          <small>{stage.label}</small>
+          <small>{pipelineStageDisplay(stage.stage)}</small>
         </span>
       ))}
     </button>
@@ -152,6 +155,7 @@ export function GrowthHeatmap({
   /** Hub package: one packed bar. Training keeps stage labels under the same pixels. */
   compact?: boolean;
 }) {
+  useT();
   const [legendOpen, setLegendOpen] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const peak = useMemo(() => heatmapPeak(cells), [cells]);
@@ -167,7 +171,7 @@ export function GrowthHeatmap({
     >
       <div className="pipeline-heat-head">
         <p className="pipeline-heat-label">
-          {compact ? "Kader · Wochenzuwachs" : "Wochenzuwachs"}
+          {compact ? t("hub.heat.compactTitle") : t("hub.heat.title")}
         </p>
         <button
           type="button"
@@ -196,11 +200,11 @@ export function GrowthHeatmap({
               key={stage}
               className="training-pixel-stage"
               role="group"
-              aria-label={`${pipelineStageLabel(stage)} · ${row.length}`}
+              aria-label={`${pipelineStageDisplay(stage)} · ${row.length}`}
             >
               {!compact ? (
                 <p className="pipeline-heat-label training-pixel-stage-label">
-                  {pipelineStageLabel(stage)} · {row.length}
+                  {pipelineStageDisplay(stage)} · {row.length}
                 </p>
               ) : null}
               <div className="pipeline-heat training-pixel-row">
@@ -235,13 +239,13 @@ export function GrowthHeatmap({
         <p className="training-pixel-hover" role="status">
           <strong>{hovered.label}</strong>
           <span>
-            {hovered.position} · {pipelineStageLabel(hovered.squadStatus)} ·{" "}
+            {hovered.position} · {pipelineStageDisplay(hovered.squadStatus)} ·{" "}
             {formatGrowthDelta(hovered.growth)}
           </span>
         </p>
       ) : (
         <p className="training-pixel-hover is-idle" aria-hidden="true">
-          {compact ? "Hover = Spieler" : "Hover zeigt den Spieler"}
+          {compact ? t("hub.heat.hoverCompact") : t("hub.heat.hover")}
         </p>
       )}
     </section>

@@ -17,7 +17,11 @@ import {
   type DecisionAction,
   type YouthInboxState,
 } from "../../youth/decision-inbox.ts";
-import { formatCalendarWeek } from "../../sim/game-calendar.ts";
+import { formatCalendarWeekDisplay } from "../../i18n/calendar-display.ts";
+import { t } from "../../i18n/index.ts";
+import { useT } from "../../i18n/react.ts";
+import { localizeStoryInbox } from "../../i18n/story-display.ts";
+import type { StoryCast } from "../../narrative/story-state.ts";
 import { InboxStanceButtons } from "./InboxStanceButtons.tsx";
 
 /**
@@ -42,9 +46,11 @@ export function HubInboxPanel({
   onOpenDecision,
   onStoryChoice,
   onSelectScoutTarget,
+  storyCast,
 }: {
   week: number;
   season: number;
+  storyCast: StoryCast;
   players: readonly Player[];
   youthInbox: YouthInboxState;
   scoutBoard: ScoutBoard;
@@ -53,6 +59,7 @@ export function HubInboxPanel({
   onStoryChoice: (itemId: string, action: DecisionAction) => void;
   onSelectScoutTarget: (playerId: string) => void;
 }) {
+  useT();
   const focus = inboxWeekFocus(youthInbox, players);
   const decisions = focus.open;
   const nextQueuedPlayer = focus.nextQueued
@@ -95,21 +102,24 @@ export function HubInboxPanel({
   );
 
   return (
-    <section className="hub-inbox" aria-label="Inbox">
+    <section className="hub-inbox" aria-label={t("hub.inbox.aria")}>
       <header className="hub-inbox-head">
-        <h3>📥 Post · {decisions.length}/{MAX_INBOX_ITEMS}</h3>
+        <h3>{t("hub.inbox.title", { current: decisions.length, max: MAX_INBOX_ITEMS })}</h3>
       </header>
 
       <div className="hub-inbox-columns">
         <div className="hub-inbox-column">
-          <p className="hub-inbox-column-title">Entscheidungen</p>
+          <p className="hub-inbox-column-title">{t("hub.inbox.decisions")}</p>
           <p className="hub-inbox-focus-line">{inboxHeadline(focus)}</p>
           {pipelineHint ? <p className="hub-inbox-queue-note">{pipelineHint}</p> : null}
           {decisions.length === 0 ? (
             <p className="hub-inbox-empty">
               {focus.nextQueued && nextQueuedPlayer
-                ? `${formatPlayerName(nextQueuedPlayer)} · ${inboxItemLabel(focus.nextQueued)} steht als Nächstes an.`
-                : "Alles erledigt — neue Jugend-Hinweise kommen mit dem Spieltag."}
+                ? t("hub.inbox.decisionsNext", {
+                    name: formatPlayerName(nextQueuedPlayer),
+                    label: inboxItemLabel(focus.nextQueued, storyCast),
+                  })
+                : t("hub.inbox.decisionsEmpty")}
             </p>
           ) : (
             <ul className="hub-inbox-list">
@@ -129,14 +139,19 @@ export function HubInboxPanel({
                     <li key={item.id}>
                       <article className="hub-post" aria-label={item.narrative?.title ?? "Post"}>
                         <p className="hub-post-count">
-                          Post · {index + 1}/{decisions.length}
+                          {t("hub.inbox.postItem", { index: index + 1, total: decisions.length })}
                         </p>
                         <p className="hub-post-title">
-                          <span aria-hidden="true">{icon}</span> {inboxItemLabel(item)}
+                          <span aria-hidden="true">{icon}</span> {inboxItemLabel(item, storyCast)}
                         </p>
-                        {item.narrative?.body ? <p className="hub-post-body">{item.narrative.body}</p> : null}
+                        {item.narrative ? (
+                          <p className="hub-post-body">
+                            {localizeStoryInbox(item.narrative, storyCast).body}
+                          </p>
+                        ) : null}
                         <InboxStanceButtons
                           item={item}
+                          storyCast={storyCast}
                           onChoose={(action) => onStoryChoice(item.id, action)}
                         />
                       </article>
@@ -157,7 +172,7 @@ export function HubInboxPanel({
                       </span>
                       <span className="hub-inbox-row-text">
                         <strong>{formatPlayerName(player)}</strong>
-                        <span className="hub-inbox-row-detail">{inboxItemLabel(item)}</span>
+                        <span className="hub-inbox-row-detail">{inboxItemLabel(item, storyCast)}</span>
                       </span>
                       <span className="hub-inbox-row-cta">→</span>
                     </button>
@@ -170,13 +185,11 @@ export function HubInboxPanel({
 
         <div className="hub-inbox-column">
           <p className="hub-inbox-column-title">
-            Scout-Berichte
+            {t("hub.inbox.scoutReports")}
             {scoutRows.length > 0 ? ` · ${scoutRows.length}` : ""}
           </p>
           {scoutRows.length === 0 ? (
-            <p className="hub-inbox-empty">
-              Noch keine Berichte diese Woche — Scout im Markt zuweisen und Woche simulieren.
-            </p>
+            <p className="hub-inbox-empty">{t("hub.inbox.scoutEmpty")}</p>
           ) : (
             <>
               <ul className="hub-inbox-list">
@@ -240,9 +253,9 @@ export function HubInboxPanel({
       </div>
 
       <div className="hub-inbox-events">
-        <p className="hub-inbox-column-title">Ereignisse</p>
+        <p className="hub-inbox-column-title">{t("hub.inbox.events")}</p>
         {clubEvents.length === 0 ? (
-          <p className="hub-inbox-empty">Noch keine Club-Ereignisse — Transfers, Profil-Aktionen und Inbox landen hier.</p>
+          <p className="hub-inbox-empty">{t("hub.inbox.eventsEmpty")}</p>
         ) : (
           <>
             <ul className="hub-inbox-list hub-inbox-list-events">
@@ -251,7 +264,7 @@ export function HubInboxPanel({
                   <div className="hub-inbox-event">
                     <span className="hub-inbox-icon" aria-hidden="true">{clubEventIcon(event.kind)}</span>
                     <span className="hub-inbox-event-message">{event.message}</span>
-                    <span className="hub-inbox-event-meta">{formatCalendarWeek(event.week)}</span>
+                    <span className="hub-inbox-event-meta">{formatCalendarWeekDisplay(event.week)}</span>
                   </div>
                 </li>
               ))}

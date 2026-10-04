@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import type { Player } from "../types/player.ts";
 import { isPlayerTired } from "./fitness-management.ts";
 
@@ -52,7 +53,7 @@ export function squadTrainingLoad(
     return {
       ampel: "good",
       icon: "●",
-      label: "Kein Profikader",
+      label: t("training.load.noSquad"),
       tiredCount: 0,
       avgFitness: 100,
     };
@@ -71,7 +72,10 @@ export function squadTrainingLoad(
     return {
       ampel: "risk",
       icon: "◆",
-      label: `Hohe Belastung · ${tiredCount} müde · Int. ${normalizeTrainingIntensity(intensity)}`,
+      label: t("training.load.high", {
+        tired: tiredCount,
+        intensity: normalizeTrainingIntensity(intensity),
+      }),
       tiredCount,
       avgFitness,
     };
@@ -81,7 +85,10 @@ export function squadTrainingLoad(
     return {
       ampel: "watch",
       icon: "▲",
-      label: `Beobachten · ${tiredCount} müde · Int. ${normalizeTrainingIntensity(intensity)}`,
+      label: t("training.load.watch", {
+        tired: tiredCount,
+        intensity: normalizeTrainingIntensity(intensity),
+      }),
       tiredCount,
       avgFitness,
     };
@@ -90,7 +97,7 @@ export function squadTrainingLoad(
   return {
     ampel: "good",
     icon: "●",
-    label: `Belastung ok · Ø Fitness ${Math.round(avgFitness)}`,
+    label: t("training.load.ok", { fitness: Math.round(avgFitness) }),
     tiredCount,
     avgFitness,
   };

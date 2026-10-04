@@ -188,6 +188,7 @@ import {
   type DecisionAction,
 } from "./youth/decision-inbox.ts";
 import { completeOpening, openingBlocked } from "./narrative/opening.ts";
+import { localizeStoryInbox } from "./i18n/story-display.ts";
 import { resolveStoryInboxDecision } from "./narrative/pipeline-week.ts";
 import type { CareerOrigin } from "./narrative/story-state.ts";
 import { OpeningStoryModal } from "./ui/components/OpeningStoryModal.tsx";
@@ -610,8 +611,11 @@ export default function App() {
           if (choiceId) {
             next = resolveStoryInboxDecision(next, item, choiceId);
           }
-          const title = item.narrative?.title ?? "Story";
-          const message = `${title}: ${actionLabel(action, { item })}`;
+          const localized = item.narrative
+            ? localizeStoryInbox(item.narrative, current.storyState.cast)
+            : null;
+          const title = localized?.title ?? "Story";
+          const message = `${title}: ${actionLabel(action, { item, cast: current.storyState.cast })}`;
           return sessionWithEvent(next, "inbox", message);
         }
         if (result.transferRecord) {
@@ -1952,6 +1956,7 @@ export default function App() {
           clubId={session.clubId}
           season={season}
           week={week}
+          storyCast={session.storyState.cast}
           initialItemId={inboxItemId}
           onDecision={handleInboxDecision}
           onClose={() => {

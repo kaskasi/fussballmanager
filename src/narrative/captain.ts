@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 
@@ -37,10 +38,10 @@ export function leadershipCandidates(
 }
 
 export function teamworkHint(teamwork: number): string {
-  if (teamwork >= 72) return "Spielt den Ball — hohes Teamwork";
-  if (teamwork >= 55) return "Solides Teamwork";
-  if (teamwork >= 40) return "Geht auch mal allein";
-  return "Egoistisch — wenig Teamwork";
+  if (teamwork >= 72) return t("opening.captain.teamwork.high");
+  if (teamwork >= 55) return t("opening.captain.teamwork.mid");
+  if (teamwork >= 40) return t("opening.captain.teamwork.solo");
+  return t("opening.captain.teamwork.low");
 }
 
 export function captainMoraleNeighbors(

@@ -1,3 +1,5 @@
+import { t } from "../../i18n/index.ts";
+import { useT } from "../../i18n/react.ts";
 import type { DevelopmentMover } from "../../player/ca-tracking.ts";
 import {
   caDeltaClassName,
@@ -16,13 +18,14 @@ export function DevelopmentHubPanel({
   movers: readonly DevelopmentMover[];
   onSelectPlayer: (playerId: string) => void;
 }) {
+  useT();
   if (movers.length === 0) return null;
 
   return (
-    <section className="dev-hub" aria-label="Entwicklung diese Saison">
+    <section className="dev-hub" aria-label={t("hub.dev.aria")}>
       <div className="dev-hub-head">
-        <h3>📈 Top-Entwicklung</h3>
-        <p className="dev-hub-sub">26-Wochen-Momentum · Klick öffnet Profil</p>
+        <h3>{t("hub.dev.title")}</h3>
+        <p className="dev-hub-sub">{t("hub.dev.sub")}</p>
       </div>
       <ul className="dev-hub-list dev-hub-list-horizontal">
         {movers.map((mover, index) => (

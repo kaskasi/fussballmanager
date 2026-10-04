@@ -10,7 +10,9 @@ import type { CoachIcon } from "./academy.ts";
 import { departureReasonLabel, departureRiskReasons } from "./departure-risk.ts";
 import { hasActiveProTrial, startProTrial } from "./pro-trial.ts";
 import { canPromotePlayer } from "./promotion-gate.ts";
-import type { StoryInboxPayload } from "../narrative/story-state.ts";
+import { localizeStoryInbox } from "../i18n/story-display.ts";
+import { t } from "../i18n/index.ts";
+import type { StoryCast, StoryInboxPayload } from "../narrative/story-state.ts";
 import { isHqYouth } from "./youth-site.ts";
 import type { YouthReport } from "./youth-sim.ts";
 
@@ -186,9 +188,9 @@ export function inboxWeekFocus(
 }
 
 export function inboxHeadline(focus: InboxWeekFocus): string {
-  if (focus.openCount === 0) return "Keine offenen Entscheidungen.";
-  if (focus.openCount === 1) return "1 Entscheidung offen.";
-  return `${focus.openCount} Entscheidungen offen (max. ${MAX_INBOX_ITEMS}).`;
+  if (focus.openCount === 0) return t("inbox.headline.none");
+  if (focus.openCount === 1) return t("inbox.headline.one");
+  return t("inbox.headline.many", { count: focus.openCount, max: MAX_INBOX_ITEMS });
 }
 
 export function inboxPipelineHint(
@@ -196,14 +198,14 @@ export function inboxPipelineHint(
   nextPlayerName?: string,
 ): string | null {
   if (focus.openCount >= MAX_INBOX_ITEMS) {
-    return "Erst diese lösen — dann kommen weitere Vorschläge.";
+    return t("inbox.hint.resolveFirst");
   }
   if (focus.nextQueued && nextPlayerName) {
-    if (focus.openCount > 0) return `Danach: ${nextPlayerName}`;
-    return `Nächster Vorschlag: ${nextPlayerName}`;
+    if (focus.openCount > 0) return t("inbox.hint.thenPlayer", { name: nextPlayerName });
+    return t("inbox.hint.nextPlayer", { name: nextPlayerName });
   }
   if (focus.openCount === 0 && focus.nextQueued) {
-    return "Nächster Vorschlag folgt mit dem nächsten Spieltag.";
+    return t("inbox.hint.nextOnMatchday");
   }
   return null;
 }
@@ -287,9 +289,9 @@ export function storyChoiceId(action: DecisionAction): string | null {
 /** PRD 14.5 / 09.3 — stance buttons use form, not the English choice id. */
 export type StoryStance = "survive" | "ambition" | "neutral";
 
-const STANCE_BY_CHOICE: Record<string, { stance: StoryStance; label: string; icon: string }> = {
-  accept: { stance: "survive", label: "Überleben", icon: "●" },
-  ambitious: { stance: "ambition", label: "Anspruch", icon: "▲" },
+const STANCE_BY_CHOICE: Record<string, { stance: StoryStance; labelKey: string; icon: string }> = {
+  accept: { stance: "survive", labelKey: "story.stance.survive", icon: "●" },
+  ambitious: { stance: "ambition", labelKey: "story.stance.ambition", icon: "▲" },
 };
 
 export function storyChoiceStance(choiceId: string | null, icon?: string): StoryStance {
@@ -301,7 +303,8 @@ export function storyChoiceStance(choiceId: string | null, icon?: string): Story
   return "neutral";
 }
 
-export function inboxItemLabel(item: DecisionInboxItem): string {
+export function inboxItemLabel(item: DecisionInboxItem, cast?: StoryCast): string {
+  if (item.narrative && cast) return localizeStoryInbox(item.narrative, cast).title;
   if (item.narrative) return item.narrative.title;
   switch (item.reason) {
     case "no_game_time":
@@ -313,13 +316,13 @@ export function inboxItemLabel(item: DecisionInboxItem): string {
     case "no_contract":
       return departureReasonLabel("no_contract");
     case "ready_for_u19":
-      return "Bereit für U19";
+      return t("inbox.reason.ready_for_u19");
     case "ready_for_pro":
-      return "Bereit für Profikader";
+      return t("inbox.reason.ready_for_pro");
     case "contract_due":
-      return "Vertrag fällig";
+      return t("inbox.reason.contract_due");
     case "coach_focus":
-      return "Coach empfiehlt Fokus";
+      return t("inbox.reason.coach_focus");
     default:
       return item.reason;
   }
@@ -389,14 +392,21 @@ export function loanBlockReason(
 export interface DecisionActionContext {
   item?: DecisionInboxItem;
   player?: Player;
+  cast?: StoryCast;
 }
 
 export function actionLabel(action: DecisionAction, context?: DecisionActionContext): string {
   if (action.startsWith("story:")) {
     const choiceId = action.slice("story:".length);
     const mapped = STANCE_BY_CHOICE[choiceId];
-    if (mapped) return mapped.label;
-    const choice = context?.item?.narrative?.choices.find((entry) => entry.id === choiceId);
+    if (mapped) return t(mapped.labelKey);
+    const narrative = context?.item?.narrative;
+    if (narrative && context?.cast) {
+      const localized = localizeStoryInbox(narrative, context.cast);
+      const choice = localized.choices.find((entry) => entry.id === choiceId);
+      if (choice) return choice.label;
+    }
+    const choice = narrative?.choices.find((entry) => entry.id === choiceId);
     return choice?.label ?? choiceId;
   }
   if (
@@ -404,19 +414,19 @@ export function actionLabel(action: DecisionAction, context?: DecisionActionCont
     context?.player?.squad_status === "u19" &&
     context?.item?.reason === "ready_for_pro"
   ) {
-    return "Probewoche";
+    return t("inbox.action.trialWeek");
   }
   switch (action) {
     case "loan":
-      return "Leihen";
+      return t("inbox.action.loan");
     case "promote":
-      return "Hochziehen";
+      return t("inbox.action.promote");
     case "contract":
-      return "Jugendvertrag";
+      return t("inbox.action.contract");
     case "training_focus":
-      return "Trainingsfokus";
+      return t("inbox.action.trainingFocus");
     case "dismiss":
-      return "Später";
+      return t("inbox.action.dismiss");
     default:
       return action;
   }

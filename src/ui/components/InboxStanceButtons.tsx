@@ -7,6 +7,8 @@ import {
   type DecisionAction,
   type DecisionInboxItem,
 } from "../../youth/decision-inbox.ts";
+import { t } from "../../i18n/index.ts";
+import type { StoryCast } from "../../narrative/story-state.ts";
 
 /**
  * WIREFRAME: PRD 14.5 — Post
@@ -15,14 +17,16 @@ import {
  */
 export function InboxStanceButtons({
   item,
+  storyCast,
   onChoose,
 }: {
   item: DecisionInboxItem;
+  storyCast?: StoryCast;
   onChoose: (action: DecisionAction) => void;
 }) {
-  const context = { item };
+  const context = { item, cast: storyCast };
   return (
-    <div className="inbox-stances" aria-label="Antworten">
+    <div className="inbox-stances" aria-label={t("inbox.stances.aria")}>
       {allowedActions(item).map((action) => {
         const choiceId = storyChoiceId(action);
         const choice = item.narrative?.choices.find((entry) => entry.id === choiceId);

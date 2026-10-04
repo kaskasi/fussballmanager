@@ -25,6 +25,8 @@ import {
 } from "../../scouting/market-list.ts";
 import { listMarketRows, sortMarketRows } from "../../scouting/market-roster.ts";
 import { scoutMarketValueBounds } from "../../scouting/scout-visibility.ts";
+import { t } from "../../i18n/index.ts";
+import { useT } from "../../i18n/react.ts";
 import { Hint } from "../components/Hint.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
 
@@ -43,10 +45,15 @@ const POSITIONS: PositionPrimary[] = [
   "CF",
 ];
 
-const CONFIDENCE_FILTERS: { bucket: ConfidenceBucket; label: string; title: string; hint: string }[] = [
-  { bucket: "known", label: "✅", title: "Gut bekannt", hint: "Spieler mit enger Scout-Schätzung." },
-  { bucket: "unclear", label: "🤷", title: "Unklar", hint: "Einige Infos, aber große Unsicherheit." },
-  { bucket: "unknown", label: "❓", title: "Unbekannt", hint: "Kaum Wissen — erst scouten und Wochen simulieren." },
+const CONFIDENCE_FILTERS: {
+  bucket: ConfidenceBucket;
+  label: string;
+  titleKey: string;
+  hintKey: string;
+}[] = [
+  { bucket: "known", label: "✅", titleKey: "scouting.confidence.known.title", hintKey: "scouting.confidence.known.hint" },
+  { bucket: "unclear", label: "🤷", titleKey: "scouting.confidence.unclear.title", hintKey: "scouting.confidence.unclear.hint" },
+  { bucket: "unknown", label: "❓", titleKey: "scouting.confidence.unknown.title", hintKey: "scouting.confidence.unknown.hint" },
 ];
 
 const AGE_FILTERS: Array<{ value: MarketFilters["age"]; label: string }> = [
@@ -99,6 +106,7 @@ export function ScoutingCenter({
   onOpenNetwork: () => void;
   onBack: () => void;
 }) {
+  useT();
   const market = useMemo(
     () => targets.map((target) => ({ player: target.player, estimate: target.estimate })),
     [targets],
@@ -138,53 +146,58 @@ export function ScoutingCenter({
   return (
     <main className="scouting">
       <header className="scouting-head">
-        <button type="button" onClick={onBack} aria-label="Zurück zur Pipeline">
+        <button type="button" onClick={onBack} aria-label={t("scouting.back")}>
           ←
         </button>
         <div>
-          <p className="eyebrow">Scouting</p>
-          <h1>👁️ Marktliste</h1>
-          <Hint
-            text="Übersicht wie gut dein Verein den Markt kennt. ✅ = genau, 🤷 = grob, ❓ = fast blind."
-            block
-          >
+          <p className="eyebrow">{t("scouting.eyebrow")}</p>
+          <h1>{t("scouting.title")}</h1>
+          <Hint text={t("scouting.hint")} block>
             <p className="scouting-summary">
-              <span>✅ Gut bekannt: {counts.known}</span>
-              <span>🤷 Unklar: {counts.unclear}</span>
-              <span>❓ Unbekannt: {counts.unknown}</span>
+              <span>{t("scouting.summary.known", { count: counts.known })}</span>
+              <span>{t("scouting.summary.unclear", { count: counts.unclear })}</span>
+              <span>{t("scouting.summary.unknown", { count: counts.unknown })}</span>
             </p>
           </Hint>
           <p className="scouting-scouts">
-            🟢 {assigned}/{scoutCapacity} Scout-Ziele · {assignments.filter((entry) => entry.active).length} Aufträge · {visible.length} Treffer
+            {t("scouting.headline", {
+              assigned,
+              capacity: scoutCapacity,
+              orders: assignments.filter((entry) => entry.active).length,
+              hits: visible.length,
+            })}
           </p>
         </div>
       </header>
 
-      <section className="scouting-network-card" aria-label="Scout-Netzwerk">
+      <section className="scouting-network-card" aria-label={t("scouting.network.aria")}>
         <button type="button" className="scouting-network-card-link" onClick={onOpenNetwork}>
           <span className="scouting-network-card-icon" aria-hidden="true">🛰️</span>
           <span className="scouting-network-card-copy">
-            <strong>Scout-Netzwerk</strong>
+            <strong>{t("scouting.network.title")}</strong>
             <span>
-              {scoutNetwork.scouts.length} Scouts · Kapazität {networkCapacity} · Genauigkeit ×
-              {networkAccuracy.toFixed(2)}
+              {t("scouting.network.meta", {
+                scouts: scoutNetwork.scouts.length,
+                capacity: networkCapacity,
+                accuracy: networkAccuracy.toFixed(2),
+              })}
             </span>
           </span>
           <span className="scouting-network-card-cta" aria-hidden="true">→</span>
         </button>
       </section>
 
-      <section className="scouting-assignments" aria-label="Scout-Aufträge">
+      <section className="scouting-assignments" aria-label={t("scouting.assignments.aria")}>
         <header className="scouting-assignments-head">
-          <h2>📋 Scout-Aufträge</h2>
-          <Hint text="Auftrag nutzt die Filter unten (Position, Alter, Region). Pro Woche werden passende Spieler automatisch beobachtet." block>
+          <h2>{t("scouting.assignments.title")}</h2>
+          <Hint text={t("scouting.assignments.hint")} block>
             <button type="button" className="scouting-chip" onClick={onAddAssignment}>
-              + Auftrag aus Filtern
+              {t("scouting.assignments.add")}
             </button>
           </Hint>
         </header>
         {assignments.length === 0 ? (
-          <p className="scouting-assignments-empty">Noch keine Aufträge — Filter setzen und Auftrag anlegen.</p>
+          <p className="scouting-assignments-empty">{t("scouting.assignments.empty")}</p>
         ) : (
           <ul className="scouting-assignments-list">
             {assignments.map((assignment) => (
@@ -201,7 +214,7 @@ export function ScoutingCenter({
                 <button
                   type="button"
                   className="scouting-assignment-remove"
-                  aria-label="Auftrag entfernen"
+                  aria-label={t("scouting.assignments.remove")}
                   onClick={() => onRemoveAssignment(assignment.id)}
                 >
                   ×
@@ -212,19 +225,19 @@ export function ScoutingCenter({
         )}
       </section>
 
-      <Hint text="Suche nach Name, Position oder Region. ⋮ pro Zeile: scouten oder Profil. Zeile klicken = Profil." block>
+      <Hint text={t("scouting.search.hint")} block>
         <label className="scouting-search">
-          <span className="sr-only">Suche</span>
+          <span className="sr-only">{t("scouting.search.placeholder")}</span>
           <input
             type="search"
             value={filters.query}
-            placeholder="Name, Position, Region"
+            placeholder={t("scouting.search.placeholder")}
             onChange={(event) => onFiltersChange({ ...filters, query: event.target.value })}
           />
         </label>
 
-        <div className="scouting-chips" role="toolbar" aria-label="Filter">
-          <Chip active={filters.position === "all"} onClick={() => onFiltersChange({ ...filters, position: "all" })}>Alle</Chip>
+        <div className="scouting-chips" role="toolbar" aria-label={t("scouting.filter.aria")}>
+          <Chip active={filters.position === "all"} onClick={() => onFiltersChange({ ...filters, position: "all" })}>{t("scouting.filter.all")}</Chip>
           {POSITIONS.map((slot) => (
             <Chip
               key={slot}
@@ -257,8 +270,8 @@ export function ScoutingCenter({
             <Chip
               key={filter.bucket}
               active={filters.confidence === filter.bucket}
-              title={filter.title}
-              hint={filter.hint}
+              title={t(filter.titleKey)}
+              hint={t(filter.hintKey)}
               onClick={() =>
                 onFiltersChange({
                   ...filters,
@@ -287,24 +300,25 @@ export function ScoutingCenter({
       </Hint>
 
       {visible.length === 0 ? (
-        <section className="squad-empty scouting-empty" aria-label="Leere Marktliste">
+        <section className="squad-empty scouting-empty" aria-label={t("scouting.empty.aria")}>
           <span className="squad-empty-icon" aria-hidden="true">👁️</span>
-          <p>Keine Treffer für die aktuellen Filter.</p>
+          <p>{t("scouting.empty")}</p>
           {marketFiltersActive(filters) ? (
             <button
               type="button"
               className="scouting-chip"
               onClick={() => onFiltersChange(DEFAULT_MARKET_FILTERS)}
             >
-              Filter zurücksetzen
+              {t("scouting.empty.reset")}
             </button>
           ) : null}
         </section>
       ) : (
         <>
-          <div className="scouting-sort" role="toolbar" aria-label="Sortierung">
+          <div className="scouting-sort" role="toolbar" aria-label={t("scouting.sort.aria")}>
             {(["name", "ca", "marketValue"] as const).map((key) => {
-              const label = key === "name" ? "Name" : key === "ca" ? "CA" : "Wert";
+              const label =
+                key === "name" ? t("squad.col.name") : key === "ca" ? "CA" : t("squad.col.value");
               const active = sort.key === key;
               return (
                 <button
@@ -320,7 +334,7 @@ export function ScoutingCenter({
               );
             })}
           </div>
-          <ul className="scouting-list" aria-label="Marktliste">
+          <ul className="scouting-list" aria-label={t("scouting.title")}>
             {visible.map((row) => {
               const band = barBand(row.estimate);
               const caTrack = barTrackPercents(band.low, band.high, band.value, CA_BAR_MAX);

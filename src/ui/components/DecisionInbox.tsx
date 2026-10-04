@@ -14,6 +14,7 @@ import {
   inboxPipelineHint,
   inboxWeekFocus,
   isStoryInboxItem,
+  MAX_INBOX_ITEMS,
   pendingInboxItems,
   type DecisionAction,
   type DecisionInboxItem,
@@ -21,8 +22,12 @@ import {
 } from "../../youth/decision-inbox.ts";
 import { canPromotePlayer, promotionGateLabel } from "../../youth/promotion-gate.ts";
 import { proTrialLabel } from "../../youth/pro-trial.ts";
+import { formatCalendarWeekDisplay } from "../../i18n/calendar-display.ts";
+import { t } from "../../i18n/index.ts";
+import { useT } from "../../i18n/react.ts";
+import { localizeStoryInbox } from "../../i18n/story-display.ts";
+import type { StoryCast } from "../../narrative/story-state.ts";
 import { InboxStanceButtons } from "./InboxStanceButtons.tsx";
-import { formatCalendarWeek } from "../../sim/game-calendar.ts";
 
 /**
  * WIREFRAME: PRD 09.2 Screen 2b — Decision Inbox
@@ -39,6 +44,7 @@ export function DecisionInboxModal({
   onDecision,
   onClose,
   initialItemId = null,
+  storyCast,
 }: {
   inbox: YouthInboxState;
   players: Player[];
@@ -48,7 +54,9 @@ export function DecisionInboxModal({
   onDecision: (itemId: string, action: DecisionAction) => void;
   onClose: () => void;
   initialItemId?: string | null;
+  storyCast: StoryCast;
 }) {
+  useT();
   const focus = useMemo(() => inboxWeekFocus(inbox, players), [inbox, players]);
   const pending = focus.open;
   const nextQueuedPlayer = focus.nextQueued
@@ -83,7 +91,9 @@ export function DecisionInboxModal({
   const active = pending.find((item) => item.id === activeId) ?? pending[0] ?? null;
   const player = active ? players.find((entry) => entry.id === active.playerId) : null;
   const coachIcon = active ? inbox.coachIcons[active.playerId] : undefined;
-  const actionContext = active ? { item: active, player: player ?? undefined } : undefined;
+  const actionContext = active
+    ? { item: active, player: player ?? undefined, cast: storyCast }
+    : undefined;
   const promotionBlock =
     active?.kind === "promotion" && player
       ? promotionGateLabel(canPromotePlayer(players, clubId, player), player.position)
@@ -104,15 +114,19 @@ export function DecisionInboxModal({
         className="inbox-modal"
         role="dialog"
         aria-modal="true"
-        aria-label="Entscheidungs-Inbox"
+        aria-label={t("inbox.modal.aria")}
         onClick={(event) => event.stopPropagation()}
       >
         <header className="inbox-head">
           <div>
-            <p className="eyebrow">Post · {formatCalendarWeek(inbox.week)}</p>
-            <h2>Entscheidungen</h2>
+            <p className="eyebrow">
+              {t("hub.inbox.title", { current: focus.openCount, max: MAX_INBOX_ITEMS })}
+              {" · "}
+              {formatCalendarWeekDisplay(inbox.week)}
+            </p>
+            <h2>{t("inbox.modal.decisions")}</h2>
           </div>
-          <button type="button" className="inbox-close" onClick={onClose} aria-label="Schließen">
+          <button type="button" className="inbox-close" onClick={onClose} aria-label={t("inbox.modal.close")}>
             ✕
           </button>
         </header>
@@ -123,14 +137,17 @@ export function DecisionInboxModal({
         {pending.length === 0 ? (
           <p className="inbox-empty">
             {focus.nextQueued && nextQueuedPlayer
-              ? `${formatPlayerName(nextQueuedPlayer)} · ${inboxItemLabel(focus.nextQueued)} kommt als Nächstes.`
-              : "Keine offenen Entscheidungen — weiter simulieren."}
+              ? t("inbox.modal.nextQueued", {
+                  name: formatPlayerName(nextQueuedPlayer),
+                  label: inboxItemLabel(focus.nextQueued, storyCast),
+                })
+              : t("inbox.modal.empty")}
           </p>
         ) : (
           <>
             <nav className="inbox-queue" aria-label="Warteschlange">
               {pending.map((item, index) => {
-                const preview = inboxQueuePreview(item, players);
+                const preview = inboxQueuePreview(item, players, storyCast);
                 return (
                   <button
                     key={item.id}
@@ -154,17 +171,21 @@ export function DecisionInboxModal({
                   <p className="inbox-post-count">
                     Post · {(pending.findIndex((item) => item.id === active.id) ?? 0) + 1}/{pending.length}
                   </p>
-                  <strong>{active.narrative.title}</strong>
-                  <p>{active.narrative.body}</p>
+                  <strong>{localizeStoryInbox(active.narrative, storyCast).title}</strong>
+                  <p>{localizeStoryInbox(active.narrative, storyCast).body}</p>
                 </div>
-                <InboxStanceButtons item={active} onChoose={(action) => onDecision(active.id, action)} />
+                <InboxStanceButtons
+                  item={active}
+                  storyCast={storyCast}
+                  onChoose={(action) => onDecision(active.id, action)}
+                />
               </section>
             ) : active && !player ? (
               <section className="inbox-card inbox-card-orphan">
-                <p>Spieler nicht mehr im Jugendkader.</p>
+                <p>{t("inbox.modal.orphan")}</p>
                 <button type="button" className="inbox-action" onClick={() => onDecision(active.id, "dismiss")}>
                   <span aria-hidden="true">✕</span>
-                  <span>Entfernen</span>
+                  <span>{t("inbox.modal.remove")}</span>
                 </button>
               </section>
             ) : active && player ? (
@@ -175,7 +196,7 @@ export function DecisionInboxModal({
                     <p className="inbox-decision-headline">
                       <strong>{formatPlayerName(player)}</strong>
                       <span className="inbox-decision-sep" aria-hidden="true">—</span>
-                      <span>{inboxItemLabel(active)}</span>
+                      <span>{inboxItemLabel(active, storyCast)}</span>
                     </p>
                     <p className="inbox-player-meta">
                       {player.position} · {player.age} J. · CA {roundStat(estimateCa(player.attributes, player.position))}
@@ -227,7 +248,7 @@ export function DecisionInboxModal({
                       title={loanBlock ?? undefined}
                     >
                       <span aria-hidden="true">🔄</span>
-                      <span>Leihen</span>
+                      <span>{t("inbox.action.loan")}</span>
                     </button>
                   ) : null}
                 </div>
@@ -243,18 +264,19 @@ export function DecisionInboxModal({
 function inboxQueuePreview(
   item: DecisionInboxItem,
   players: readonly Player[],
+  cast: StoryCast,
 ): { name: string; topic: string } {
-  if (isStoryInboxItem(item)) {
-    const body = item.narrative?.body ?? "";
+  if (isStoryInboxItem(item) && item.narrative) {
+    const body = localizeStoryInbox(item.narrative, cast).body;
     return {
-      name: inboxItemLabel(item),
+      name: inboxItemLabel(item, cast),
       topic: body.length > 48 ? `${body.slice(0, 48)}…` : body,
     };
   }
   const player = players.find((entry) => entry.id === item.playerId);
   return {
-    name: player ? formatPlayerName(player) : "Spieler",
-    topic: inboxItemLabel(item),
+    name: player ? formatPlayerName(player) : t("inbox.modal.playerFallback"),
+    topic: inboxItemLabel(item, cast),
   };
 }
 

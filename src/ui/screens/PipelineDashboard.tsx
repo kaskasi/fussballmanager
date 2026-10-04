@@ -4,9 +4,15 @@ import type { TrainingSlot } from "../../development/training-units.ts";
 import type { Player } from "../../types/player.ts";
 import { validateWeeklyPlan } from "../../development/weekly-plan.ts";
 import { totalSeasonMatchdays, type LeagueState } from "../../persistence/league-state.ts";
-import { calendarPhaseLabel, formatCalendarWeek } from "../../sim/game-calendar.ts";
-import { formatSeasonLabel } from "../../sim/season-label.ts";
-import { transferWindowLabel } from "../../sim/transfer-windows.ts";
+import {
+  calendarPhaseDisplay,
+  formatCalendarWeekDisplay,
+  formatSeasonDisplay,
+  transferWindowDisplay,
+} from "../../i18n/calendar-display.ts";
+import { t } from "../../i18n/index.ts";
+import { useT } from "../../i18n/react.ts";
+import { transferWindowKind } from "../../sim/transfer-windows.ts";
 import {
   clubShortName,
   formatFixtureResult,
@@ -101,6 +107,7 @@ export function PipelineDashboard({
   lastSeasonAwards?: SeasonAwardsSnapshot;
   storyState: StoryState;
 }) {
+  useT();
   const sessions = useMemo(() => planToSessions(trainingPlan), [trainingPlan]);
   const planOk = validateWeeklyPlan(sessions).valid;
   const focusCount = trainingPlan.filter((slot) => slot.focus).length;
@@ -126,9 +133,13 @@ export function PipelineDashboard({
   );
   const heatCells = useMemo(() => squadGrowthHeatmap(players, clubId), [players, clubId]);
   const stageFill = useMemo(() => pipelineStageFill(players, clubId), [players, clubId]);
+  const windowOpen = transferWindowKind(week) !== null;
   const matchdayLabel = league.season_complete
-    ? "Saison beendet"
-    : `Spieltag ${Math.min(league.matchday, seasonMatchdays)}/${seasonMatchdays}`;
+    ? t("hub.seasonComplete")
+    : t("hub.matchday", {
+        current: Math.min(league.matchday, seasonMatchdays),
+        total: seasonMatchdays,
+      });
   const scoutReports = scoutReportsForWeek(scoutBoard, week);
   const pendingDecisions = pendingInboxItems(youthInbox, players);
   const showInboxPanel =
@@ -140,14 +151,18 @@ export function PipelineDashboard({
       <header className="pipeline-head pipeline-head-compact">
         <div className="pipeline-head-primary">
           <p className="pipeline-eyebrow">
-            {formatSeasonLabel(season)} · {formatCalendarWeek(week)} · {calendarPhaseLabel(week)}
-            {transferWindowLabel(week) !== "Fenster geschlossen" ? ` · ${transferWindowLabel(week)}` : ""}
+            {formatSeasonDisplay(season)} · {formatCalendarWeekDisplay(week)} · {calendarPhaseDisplay(week)}
+            {windowOpen ? ` · ${transferWindowDisplay(week)}` : ""}
           </p>
           <p className="pipeline-matchline">
             {lastResult ? (
-              <span>Letztes Spiel: {formatFixtureResult(lastResult, league.player_club_id)}</span>
+              <span>
+                {t("hub.lastMatch", {
+                  result: formatFixtureResult(lastResult, league.player_club_id),
+                })}
+              </span>
             ) : (
-              <span>Noch kein Ligaspiel</span>
+              <span>{t("hub.noLeagueMatch")}</span>
             )}
             <span> · {matchdayLabel}</span>
             {nextOpponent ? <span> · vs {nextOpponent}</span> : null}
@@ -157,17 +172,21 @@ export function PipelineDashboard({
           <span className="pipeline-chip pipeline-league" aria-label="Liga">
             {tableRow ? (
               <>
-                #{leagueTablePlace(league)} · {tableRow.points} Pkt · {tableRow.goalDifference > 0 ? "+" : ""}
+                #{leagueTablePlace(league)} · {t("hub.league.points", { points: tableRow.points })} · {tableRow.goalDifference > 0 ? "+" : ""}
                 {tableRow.goalDifference}
               </>
             ) : (
-              "Liga —"
+              t("hub.league.empty")
             )}
           </span>
         </div>
       </header>
 
-      <FanFeedStrip fanFeed={storyState.fan_feed} mediaHype={storyState.media_hype} />
+      <FanFeedStrip
+        fanFeed={storyState.fan_feed}
+        mediaHype={storyState.media_hype}
+        storyCast={storyState.cast}
+      />
 
       <SummerChecklistPanel
         week={week}
@@ -180,7 +199,7 @@ export function PipelineDashboard({
         <SeasonAwardsGallery snapshot={lastSeasonAwards} />
       ) : null}
 
-      <section className="pipeline-core" aria-label="Aktionen">
+      <section className="pipeline-core" aria-label={t("hub.actions")}>
         <div className="pipeline-tiles pipeline-tiles-row">
           <button type="button" className="pipeline-tile" onClick={onOpenTraining}>
             <span
@@ -191,8 +210,8 @@ export function PipelineDashboard({
               {trainingLoad.icon}
             </span>
             <span>
-              🏋️ Training · {focusCount}/3 Fokus
-              {!planOk ? " · Plan prüfen" : ""}
+              {t("hub.training.tile", { focus: focusCount })}
+              {!planOk ? t("hub.training.planCheck") : ""}
             </span>
           </button>
           <button type="button" className="pipeline-tile" onClick={onOpenJugend}>
@@ -206,11 +225,13 @@ export function PipelineDashboard({
           </button>
           <button type="button" className="pipeline-tile" onClick={onOpenScouting}>
             <span>👁️</span>
-            <span>Scouting · {activeScouts} aktiv</span>
+            <span>{t("hub.scouting.active", { count: activeScouts })}</span>
           </button>
           <button type="button" className="pipeline-tile" onClick={onOpenTransfers}>
             <span>↔️</span>
-            <span>{loanCount > 0 ? `Leihen · ${loanCount} verliehen` : "Leihen"}</span>
+            <span>
+              {loanCount > 0 ? t("hub.loans.out", { count: loanCount }) : t("hub.loans")}
+            </span>
           </button>
         </div>
         <div className="pipeline-digest">
@@ -228,13 +249,14 @@ export function PipelineDashboard({
             youthInbox={youthInbox}
             scoutBoard={scoutBoard}
             clubEvents={clubEvents}
+            storyCast={storyState.cast}
             onOpenDecision={(itemId) => onOpenInbox(itemId)}
             onStoryChoice={onStoryChoice}
             onSelectScoutTarget={onSelectScoutTarget}
           />
         ) : null}
         {showObjectives ? (
-          <BoardObjectivesPanel board={board} league={league} finances={finances} />
+          <BoardObjectivesPanel board={board} league={league} finances={finances} season={season} />
         ) : null}
         <DevelopmentHubPanel movers={developmentMovers} onSelectPlayer={onSelectPlayer} />
         <ChroniclePanel entries={storyState.chronicle_entries} />
@@ -265,10 +287,10 @@ function youthAmpelClass(inbox: YouthInboxState): string {
 function youthTileLabel(inbox: YouthInboxState): string {
   const summary = inboxSummary(inbox);
   if (summary.departureRisks > 0) {
-    return `🏫 Jugend · 🚩 ${summary.departureRisks} Abgang`;
+    return t("hub.youth.departure", { count: summary.departureRisks });
   }
   if (summary.pending > 0) {
-    return `🏫 Jugend · ⚠️ ${summary.pending} offen`;
+    return t("hub.youth.open", { count: summary.pending });
   }
-  return "🏫 Jugend · ruhig";
+  return t("hub.youth.calm");
 }

@@ -20,7 +20,9 @@ Display language for club chrome and match commentary presentation. Three locale
 - Opening modal step 1: language pick before manager name (PRD 13).
 - In-game change: ⋮ → Anzeige → Sprache (F12.4 submenu).
 - JSON packs: `src/i18n/locales/de.json`, `en.json`, `zh-Hans.json`.
-- Shell, onboarding steps 2–3, transfer block copy, negotiation labels, hub nav, help screen chrome.
+- Shell, onboarding steps 2–3 (incl. captain teamwork hints, F12.8b), transfer block copy, negotiation labels, hub nav, help screen chrome.
+- **F12.8b:** global calendar chrome; screen titles/empty states (squad, scouting, training tabs); hub static labels (tiles, inbox columns, heatmap, board header).
+- **F12.8c:** Post/Inbox copy, story beat templates (display-time `beatId`), fan-feed quotes, board objective labels (from kind/target, not stored `label`), youth departure reasons.
 - Match PBP/color lines via `i18nKey` + params on `MatchViewLine`; client `t()` at render time.
 
 **Out (v1):**

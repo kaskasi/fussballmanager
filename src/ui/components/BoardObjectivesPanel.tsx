@@ -3,10 +3,15 @@ import type { LeagueState } from "../../persistence/league-state.ts";
 import {
   boardObjectiveProgress,
   boardPressureTone,
-  formatObjectiveProgress,
 } from "../../board/season-objectives.ts";
+import {
+  formatObjectiveProgressDisplay,
+  objectiveDisplayLabel,
+} from "../../i18n/board-display.ts";
 import type { BoardState } from "../../board/board-state.ts";
 import { SURVIVAL_TARGET_PLACE } from "../../narrative/season-objectives.ts";
+import { t } from "../../i18n/index.ts";
+import { useT } from "../../i18n/react.ts";
 import { clubShortName } from "../../sim/league-week.ts";
 
 /**
@@ -16,26 +21,29 @@ export function BoardObjectivesPanel({
   board,
   league,
   finances,
+  season,
 }: {
   board: BoardState;
   league: LeagueState;
   finances: ClubFinances;
+  season: number;
 }) {
+  useT();
   if (board.objectives.length === 0) return null;
   const progress = boardObjectiveProgress(board, league, finances);
   const tone = boardPressureTone(board.pressure);
   const employer = clubShortName(board.employer_club_id);
 
   return (
-    <section className={`board-panel is-${tone}`} aria-label="Vorstand-Saisonziele">
+    <section className={`board-panel is-${tone}`} aria-label={t("hub.board.aria")}>
       <header className="board-panel-head">
         <span aria-hidden="true">🤵</span>
         <div>
-          <strong>Vorstand · {employer}</strong>
+          <strong>{t("hub.board.title", { employer })}</strong>
           <p>
             {board.job_status === "dismissed"
-              ? "Entlassen — neuer Verein wählen"
-              : `Druck ${board.pressure}%`}
+              ? t("hub.board.dismissed")
+              : t("hub.board.pressure", { percent: board.pressure })}
           </p>
         </div>
         {board.job_status !== "dismissed" ? (
@@ -69,9 +77,9 @@ export function BoardObjectivesPanel({
               }
             >
               <span className="board-objective-icon" aria-hidden="true">{objective.icon}</span>
-              <span className="board-objective-label">{objective.label}</span>
+              <span className="board-objective-label">{objectiveDisplayLabel(objective, season)}</span>
               <span className="board-objective-value">
-                {entry ? formatObjectiveProgress(objective, entry) : "—"}
+                {entry ? formatObjectiveProgressDisplay(objective, entry) : "—"}
                 <span aria-hidden="true">{met ? " ✓" : ""}</span>
               </span>
             </li>

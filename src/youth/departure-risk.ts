@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import { minutesLast4Weeks } from "../player/minute-history.ts";
 import type { Player } from "../types/player.ts";
 
@@ -30,13 +31,13 @@ export function departureRiskReasons(
 export function departureReasonLabel(reason: DepartureReason): string {
   switch (reason) {
     case "no_game_time":
-      return "Wenig Spielzeit — Abgang droht";
+      return t("inbox.departure.no_game_time");
     case "rival_offer":
-      return "Rivale lockt mit besserer Akademie";
+      return t("inbox.departure.rival_offer");
     case "family_move":
-      return "Familie will umziehen";
+      return t("inbox.departure.family_move");
     case "no_contract":
-      return "Kein Jugendvertrag — Abgang droht";
+      return t("inbox.departure.no_contract");
   }
 }
 

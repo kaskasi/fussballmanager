@@ -1,6 +1,7 @@
 # /docs/prd/10_feature_list.md
 
-**Version:** 1.4
+**Version:** 1.5
+
 **Last Updated:** 2026-10-04
 **Status:** Final  
 
@@ -186,6 +187,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F12.4 | Barrierefreiheit | M1 | Textgrößen, Farb-Schemata, Shape-Indikatoren (PRD 09.3) |
 | F12.5 | Screenshot-Modus | M3 | Spielermomente teilen |
 | F12.6 | Mod-Support | M4 | JSON-Austausch |
+| F12.7 | Hilfe & Doku | M1 | Eigener Screen: Welt/Story, Spielablauf, Stempel-Katalog (F2.8) |
 
 ---
 
@@ -193,11 +195,11 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 
 | Meilenstein | Features | Fokus |
 |---|---|---|
-| M1 | 36 | Kern-Loop: Sim, Liga, Growth, Intake, Basis-Transfers, Save |
+| M1 | 37 | Kern-Loop: Sim, Liga, Growth, Intake, Basis-Transfers, Save, Hilfe |
 | M2 | 27 | USP-Ausbau: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps |
 | M3 | 24 | Imperium, Events, Staff, Storylines |
 | M4 | 6 | Legacy & Meta |
-| **Total** | **93** | |
+| **Total** | **94** | |
 
 **M1-Definition of Done:** Ein Spieler kann einen Verein führen, eine Saison simulieren (mit Auto-Matches), Jugendspieler hochziehen, Talente entwickeln und Transfers tätigen — gespeichert in versioniertem Savegame. Vorstand/Entlassung aktiv.
 
@@ -222,7 +224,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 
 Tasks referenzieren Features via ID: „Implementiere F2.2 (Growth Engine) nach PRD 02.1". Ein Task darf max. 1 Feature umfassen (Ausnahme: reine Typ-/Schema-Tasks).
 
-`F-TYP-1` ist der Schema-Task für PRD 07 (P0, vor F2.2) und zählt nicht in die 93 Features.
+`F-TYP-1` ist der Schema-Task für PRD 07 (P0, vor F2.2) und zählt nicht in die 94 Features.
 
 M2 list for F2.8: implement after F2.3 slot machinery exists. Schema fields in PRD 07.5.
 

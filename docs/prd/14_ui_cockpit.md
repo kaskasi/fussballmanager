@@ -82,7 +82,7 @@ Kalender, News), nicht die 40-Spalten-Identität.
 | Stadion-Grundriss | F7.1 + Ticket-Stepper | Ringe + Hunger-Slots | behalten |
 | Origin-Modal | PRD 13 | drei Karten, gut | behalten |
 | Scouting-Wissen | F4.2 | Balken + CI-Grauzone | behalten |
-| Training-Heatmap | F2.7 / 02.1 | Team-Pixelbar (1 Quadrat = 1 Spieler); Desktop 4×4 + Hover, Mobile große Zellen | behalten |
+| Training-Heatmap | F2.7 / 02.1 | Team-Raster ~3×8/Stufe (1□=1 Spieler, ~8px); Hover Desktop, große Zellen Mobile | behalten |
 | Spielerakte | CA, Vertrag, Flavor | vier SaaS-Tabs, ein Punkt | eine Karte |
 | Jugend | Roster + Auto-Sim | 12-Spalten-Grid | Report (PRD 03.3) |
 | Inbox | Slice + Cap 4 | Modal, Text-Buttons | Karte + Icons (09.2 / 03.4) |

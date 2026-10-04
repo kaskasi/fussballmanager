@@ -4496,6 +4496,10 @@ body {
 }
 
 .training-pixel-pack {
+  /* Desktop grid: ~3×8 blocks per stage; dim×dim cell. Mobile ignores these. */
+  --heat-pixel: 8px;
+  --heat-pixel-cols: 8;
+  --heat-pixel-gap: 2px;
   display: grid;
   gap: 0.4rem;
   margin: 0;
@@ -4546,7 +4550,7 @@ body {
 
 .training-pixel-pack.is-compact .training-pixel-stage {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .training-pixel-pack.is-compact .training-pixel-stage + .training-pixel-stage {
@@ -4559,6 +4563,7 @@ body {
 }
 
 .training-pixel-row {
+  display: flex;
   flex-wrap: wrap;
   overflow: visible;
   flex: none;
@@ -4651,30 +4656,34 @@ body {
 }
 
 /*
- * Desktop with fine pointer: pack every player into a 4×4 training-pixel bar.
- * Hover / focus reveals the name in .training-pixel-hover — no label inside the pixel.
+ * Desktop with fine pointer: ~3×8 grid per stage, cell = --heat-pixel² (default 8px).
+ * Profi (~22) → 3 rows; U17 (~18) → 3 rows; U19 (~6) → 1 row.
+ * Hover / focus reveals the name in .training-pixel-hover.
  */
 @media (hover: hover) and (pointer: fine) {
   .training-pixel-pack.is-compact .training-pixel-row,
   .training-pixel-pack.is-full .training-pixel-row {
-    flex-wrap: nowrap;
-    gap: 1px;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    padding: 0.2rem 0;
+    display: grid;
+    grid-template-columns: repeat(var(--heat-pixel-cols), var(--heat-pixel));
+    gap: var(--heat-pixel-gap);
+    width: max-content;
+    max-width: 100%;
+    flex-wrap: unset;
+    overflow: visible;
+    padding: 0.15rem 0;
   }
 
   .training-pixel-pack.is-compact .heat-pixel,
   .training-pixel-pack.is-full .heat-pixel {
-    flex: 0 0 4px;
-    width: 4px;
-    height: 4px;
-    border-radius: 1px;
+    flex: none;
+    width: var(--heat-pixel);
+    height: var(--heat-pixel);
+    border-radius: 2px;
     padding: 0;
   }
 
   .heat-pixel.is-down {
-    border-radius: 1px;
+    border-radius: 2px;
   }
 
   .heat-pixel:hover,

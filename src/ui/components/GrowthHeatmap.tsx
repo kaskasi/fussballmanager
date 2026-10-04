@@ -14,10 +14,12 @@ import {
 /**
  * WIREFRAME: PRD 09.2 / F2.7 — Team-Heatmap (1 Pixel = 1 Spieler)
  *
- * Desktop (Hover):
+ * Desktop (Hover) — ~3×8 Raster pro Stufe, Zelle dim×dim (~8px):
  * ┌──────────────────────────────────────────────────────┐
- * │ Wochenzuwachs · Kader                                │
- * │ ████░░██▓▓████░░██  ← 4×4 Trainingpixel, Hover=Name │
+ * │ Wochenzuwachs                                        │
+ * │ U17  ████████   U19 ██████   Profi ████████         │
+ * │      ████████               ████████   Hover=Name   │
+ * │      ██                     ██████                  │
  * └──────────────────────────────────────────────────────┘
  *
  * Mobile (Touch): größere Zellen mit Initialen — kein Zwischenschritt.

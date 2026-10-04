@@ -185,6 +185,13 @@ Erlaubt: CC0-/Open-Source-Grafik und -SFX mit Quellenangabe im Repo.
 Erlaubt später: **modulare Sprachaufnahmen des Entwicklers** (kein TTS).
 Verboten ohne Produktentscheidung: Cloud-TTS, generative Musik, generative UI-Bilder.
 
+**Raster-Mood-Assets (Stadion, Spieltag):** Kuratiert in `pd_images/` (Quellen in
+`image_refs.md`), Laufzeit-Kopien unter `public/assets/photos/`. Manifest:
+`src/ui/assets/mood-photos.ts`. CC0-Texturen: Quellen-ZIPs in
+`assets/textures/ambientcg/`, Ship-Extract nach `public/assets/textures/`.
+Avatare: Open Peeps in `assets/open-peeps/`. Spieler-Credits:
+`docs/ATTRIBUTION.md`.
+
 LLM (Ollama) nur für **Text** nach den Regeln unter „Lokale KI“ — kein Ersatz
 für Grafik oder Audio.
 

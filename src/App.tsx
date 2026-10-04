@@ -1711,6 +1711,7 @@ export default function App() {
           onNavActionChange={setMatchNavAction}
           broadcastStory={careerBroadcastStory}
           kasse={matchdayCashBreakdown(stadium, careerMatchSetup.isHome)}
+          homeStadiumCapacity={stadiumTotalCapacity(stadium)}
         />
         {saveManagerOverlay}
         {spendConfirmOverlay}

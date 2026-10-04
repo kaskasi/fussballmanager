@@ -36,6 +36,8 @@ import { DEFAULT_FANBASE } from "../../stadium/club-stadium.ts";
 import { Hint } from "../components/Hint.tsx";
 import { PrecinctGrid } from "../components/PrecinctGrid.tsx";
 import { SponsorDealModal } from "../components/SponsorDealModal.tsx";
+import { STADIUM_MOOD_PHOTOS, stadiumPhotoTierFromCapacity } from "../assets/mood-photos.ts";
+import { MoodPhotoBand } from "../components/MoodPhotoBand.tsx";
 import { emptyPrecinct, type PrecinctBuilding, type PrecinctEdge } from "../../stadium/precinct.ts";
 import {
   dealForSlot,
@@ -92,6 +94,7 @@ export function StadiumScreen({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openSlotId, setOpenSlotId] = useState<string | null>(null);
   const capacity = stadiumTotalCapacity(stadium);
+  const moodPhoto = STADIUM_MOOD_PHOTOS[stadiumPhotoTierFromCapacity(capacity)];
   const matchdayIncome = stadiumMatchdayIncome(stadium);
   const avgTicket = stadiumAverageTicket(stadium);
   const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
@@ -128,6 +131,8 @@ export function StadiumScreen({
           </p>
         </div>
       </header>
+
+      <MoodPhotoBand src={moodPhoto} className="stadium-hero" />
 
       <section className="stadium-fanbase" aria-label="Fanbase">
         <div className={`stadium-fanbase-card is-${mood}`}>

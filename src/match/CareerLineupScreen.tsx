@@ -46,6 +46,7 @@ type CareerLineupScreenProps = {
   onSaveMatchLineup: (lineup: MatchLineupState) => void;
   onConfirm: (squad: Squad) => void;
   onNavActionChange: (action: NavPrimaryAction | null) => void;
+  homeStadiumCapacity?: number;
 };
 
 export function CareerLineupScreen({
@@ -60,6 +61,7 @@ export function CareerLineupScreen({
   onSaveMatchLineup,
   onConfirm,
   onNavActionChange,
+  homeStadiumCapacity,
 }: CareerLineupScreenProps) {
   const managerClubId = careerTeamId(setup.playerClubId);
   const fallbackPlan = useMemo(() => loadTacticsPreset(tacticsPresets, 1), [tacticsPresets]);
@@ -163,7 +165,7 @@ export function CareerLineupScreen({
 
   return (
     <main className="matchday career-lineup">
-      <MatchdayLineupAmbience setup={setup} />
+      <MatchdayLineupAmbience setup={setup} homeStadiumCapacity={homeStadiumCapacity} />
       <section className="career-lineup-panel" aria-label="Aufstellung">
         <header className="career-lineup-header">
           <div className="career-lineup-header-main">

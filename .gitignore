@@ -8,6 +8,7 @@ saves/
 *.tsbuildinfo
 .wrangler
 fm_screens/
+fm_screeens/
 
 # ambientCG: commit *1K-JPG.zip only (~33 MB); 2K/4K are local cache (re-download from ambientcg.com)
 assets/textures/ambientcg/*_2K-*.zip

@@ -1435,6 +1435,26 @@ body {
   position: relative;
 }
 
+.mood-photo-band {
+  position: relative;
+  overflow: hidden;
+  background-color: #0f172a;
+  background-image: var(--mood-photo);
+  background-size: cover;
+  background-position: center;
+}
+
+.mood-photo-band__scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mood-photo-band__content {
+  position: relative;
+  z-index: 1;
+}
+
 .career-lineup .matchday-lineup-ambience {
   min-height: 4.5rem;
   margin: 0 -0.25rem 0.5rem;
@@ -1457,22 +1477,51 @@ body {
   border-radius: 1rem;
 }
 
-.matchday-lineup-ambience--home {
+.matchday-lineup-ambience--home .mood-photo-band__scrim {
   background: linear-gradient(
     180deg,
-    rgb(254 243 199 / 55%),
-    rgb(236 253 245 / 88%)
+    rgb(254 243 199 / 72%),
+    rgb(15 23 42 / 78%)
   );
+  box-shadow: inset 0 0 0 1px rgb(5 150 105 / 12%);
+}
+
+.matchday-lineup-ambience--away .mood-photo-band__scrim {
+  background: linear-gradient(
+    180deg,
+    rgb(219 234 254 / 65%),
+    rgb(15 23 42 / 80%)
+  );
+  box-shadow: inset 0 0 0 1px rgb(37 99 235 / 12%);
+}
+
+.matchday-lineup-ambience--home {
   box-shadow: 0 18px 48px rgb(5 150 105 / 10%);
 }
 
 .matchday-lineup-ambience--away {
-  background: linear-gradient(
-    180deg,
-    rgb(219 234 254 / 55%),
-    rgb(236 253 245 / 88%)
-  );
   box-shadow: 0 18px 48px rgb(37 99 235 / 10%);
+}
+
+.matchday-lineup-ambience .matchday-lineup-title {
+  color: #f8fafc;
+  text-shadow: 0 1px 12px rgb(15 23 42 / 55%);
+}
+
+.stadium-hero {
+  min-height: 8.5rem;
+  margin: 0 0 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 12px 36px rgb(15 23 42 / 12%);
+}
+
+.stadium-hero .mood-photo-band__scrim {
+  background: linear-gradient(
+    105deg,
+    rgb(15 23 42 / 55%) 0%,
+    rgb(15 23 42 / 25%) 45%,
+    rgb(15 23 42 / 50%) 100%
+  );
 }
 
 .matchday-lineup-hero {

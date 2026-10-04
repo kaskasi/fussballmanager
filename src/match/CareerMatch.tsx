@@ -39,6 +39,7 @@ export function CareerMatch({
   onNavActionChange,
   broadcastStory,
   kasse,
+  homeStadiumCapacity,
 }: {
   setup: CareerMatchSetup;
   players: readonly Player[];
@@ -55,6 +56,7 @@ export function CareerMatch({
   onNavActionChange: (action: NavPrimaryAction | null) => void;
   broadcastStory?: BroadcastStoryContext;
   kasse?: MatchdayCashBreakdown;
+  homeStadiumCapacity?: number;
 }) {
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
 
@@ -81,6 +83,7 @@ export function CareerMatch({
         onSaveMatchLineup={onSaveMatchLineup}
         onConfirm={setPlayerClubSquad}
         onNavActionChange={onNavActionChange}
+        homeStadiumCapacity={homeStadiumCapacity}
       />
     );
   }

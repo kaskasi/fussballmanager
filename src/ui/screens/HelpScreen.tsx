@@ -59,6 +59,7 @@ export function HelpScreen() {
 }
 
 function StoryPanel() {
+  const t = useT();
   return (
     <div className="help-panel">
       <section className="help-card" aria-labelledby="help-promise">
@@ -259,6 +260,46 @@ function StoryPanel() {
           Narrative erklärt und spitzt zu. Sie erfindet keine Tore, Transfers, Verletzungen oder
           Potential-Zahlen — und verhindert keinen Abstieg.
         </p>
+      </section>
+
+      <section className="help-card" aria-labelledby="help-credits">
+        <h2 id="help-credits">
+          <span aria-hidden="true">🖼</span> {t("help.credits.title")}
+        </h2>
+        <p>{t("help.credits.lede")}</p>
+        <ul className="help-icon-list">
+          <li>
+            <span aria-hidden="true">📷</span>
+            <span>{t("help.credits.commons")}</span>
+          </li>
+          <li>
+            <span aria-hidden="true">✨</span>
+            <span>
+              {t("help.credits.magnific")}{" "}
+              <a href="https://www.magnific.com/" rel="noopener noreferrer">
+                magnific.com
+              </a>
+            </span>
+          </li>
+          <li>
+            <span aria-hidden="true">👤</span>
+            <span>
+              {t("help.credits.openPeeps")}{" "}
+              <a href="https://www.openpeeps.com/" rel="noopener noreferrer">
+                openpeeps.com
+              </a>
+            </span>
+          </li>
+          <li>
+            <span aria-hidden="true">📄</span>
+            <span>
+              {t("help.credits.ambientcg")}{" "}
+              <a href="https://ambientcg.com/" rel="noopener noreferrer">
+                ambientCG.com
+              </a>
+            </span>
+          </li>
+        </ul>
       </section>
     </div>
   );

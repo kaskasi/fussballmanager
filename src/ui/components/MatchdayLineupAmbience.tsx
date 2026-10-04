@@ -1,4 +1,6 @@
 import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
+import { matchdayMoodPhotoUrl } from "../assets/mood-photos.ts";
+import { MoodPhotoBand } from "./MoodPhotoBand.tsx";
 
 const MOOD = {
   home: {
@@ -11,20 +13,24 @@ const MOOD = {
   },
 } as const;
 
-/** WIREFRAME: pre-match lineup mood — CSS gradient + text, no raster art. */
+/** WIREFRAME: PRD 14.10 — pre-match lineup mood (PD photo + gradient fallback). */
 export function MatchdayLineupAmbience({
   setup,
+  homeStadiumCapacity = 8_000,
 }: {
   setup: Pick<CareerMatchSetup, "isHome" | "opponentShortName" | "matchday">;
+  homeStadiumCapacity?: number;
 }) {
   const kind = setup.isHome ? "home" : "away";
   const mood = MOOD[kind];
+  const photo = matchdayMoodPhotoUrl(setup.isHome, homeStadiumCapacity);
 
   return (
-    <section
+    <MoodPhotoBand
+      src={photo}
       className={`matchday-lineup-ambience matchday-lineup-ambience--${kind}`}
-      aria-label={`Spieltag ${setup.matchday}`}
     >
+      <section aria-label={`Spieltag ${setup.matchday}`}>
       <div className="matchday-lineup-hero">
         <p className="matchday-lineup-kicker">
           <span className="matchday-lineup-dot" aria-hidden="true">●</span>
@@ -38,6 +44,7 @@ export function MatchdayLineupAmbience({
           <span className="matchday-lineup-mood-hint"> · {mood.hint}</span>
         </p>
       </div>
-    </section>
+      </section>
+    </MoodPhotoBand>
   );
 }

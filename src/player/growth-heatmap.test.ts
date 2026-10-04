@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import {
   heatCellInitials,
+  heatIntensity,
   heatTone,
   heatmapCellsForStage,
+  heatmapPeak,
   pipelineStageFill,
   squadGrowthHeatmap,
   weeklyTrainingExtremes,
@@ -38,6 +40,20 @@ describe("growth heatmap (F2.7)", () => {
     expect(heatTone(0.4)).toBe("up");
     expect(heatTone(-0.2)).toBe("down");
     expect(heatTone(0)).toBe("flat");
+  });
+
+  it("scales pixel intensity from the squad peak |delta|", () => {
+    expect(heatIntensity(null, 1)).toBe(0.35);
+    expect(heatIntensity(1, 1)).toBeCloseTo(1);
+    expect(heatIntensity(0, 1)).toBeCloseTo(0.45);
+
+    const hot = clonePlayer();
+    hot.id = "pl_a";
+    hot.state.last_week_growth = 1.2;
+    const mild = clonePlayer();
+    mild.id = "pl_b";
+    mild.state.last_week_growth = -0.4;
+    expect(heatmapPeak(squadGrowthHeatmap([hot, mild], "cl_fc_nordstern"))).toBe(1.2);
   });
 
   it("keeps week-1 furniture as pending cells", () => {

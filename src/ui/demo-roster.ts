@@ -40,11 +40,22 @@ export function loadDemoRoster(): Player[] {
     random,
   });
 
-  return [...pros, ...u19, ...u17].map((player) =>
-    player.squad_status === "u17" || player.squad_status === "u19"
-      ? ensureYouthContract(player, 1)
-      : player,
-  );
+  return [...pros, ...u19, ...u17].map((player, index) => {
+    const withContract =
+      player.squad_status === "u17" || player.squad_status === "u19"
+        ? ensureYouthContract(player, 1)
+        : player;
+    // Deterministic sample week so the team pixel heatmap has color in demos.
+    const sample = ((index * 17) % 23) / 10 - 0.6;
+    return {
+      ...withContract,
+      state: {
+        ...withContract.state,
+        last_week_growth: Math.round(sample * 10) / 10,
+        recent_growth_26w: Math.max(0, sample * 4),
+      },
+    };
+  });
 }
 
 function mulberry32(seed: number): () => number {

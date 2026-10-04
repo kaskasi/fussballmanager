@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { formatGrowthDelta } from "../../player/growth-history.ts";
 import {
   heatmapCellsForStage,
+  heatmapPeak,
+  heatIntensity,
   PIPELINE_STAGES,
   pipelineStageLabel,
   type GrowthHeatCell,
@@ -10,12 +12,15 @@ import {
 } from "../../player/growth-heatmap.ts";
 
 /**
- * WIREFRAME: PRD 14 / F2.7 — Hub Mini-Pipeline + 3▲/3▼, volle Heatmap im Training
+ * WIREFRAME: PRD 09.2 / F2.7 — Team-Heatmap (1 Pixel = 1 Spieler)
  *
- * ┌──────────┐  ┌──────────────────────────────────────────┐
- * │ 🌱16 🌿4 │  │ ▲ Beste ●●●   ■ Schwächste ■■■          │
- * │ ⭐22     │  │ Heatmap im Training                      │
- * └──────────┘  └──────────────────────────────────────────┘
+ * Desktop (Hover):
+ * ┌──────────────────────────────────────────────────────┐
+ * │ Wochenzuwachs · Kader                                │
+ * │ ████░░██▓▓████░░██  ← 4×4 Trainingpixel, Hover=Name │
+ * └──────────────────────────────────────────────────────┘
+ *
+ * Mobile (Touch): größere Zellen mit Initialen — kein Zwischenschritt.
  */
 
 const FILL_BAR_MAX_REM = 1.55;
@@ -52,6 +57,7 @@ export function PipelineFillCard({
   );
 }
 
+/** @deprecated Hub uses the team pixel bar directly; kept for tests / callers. */
 export function WeeklyTrainingStrip({
   extremes,
   onSelectPlayer,
@@ -137,16 +143,30 @@ function TrainingExtremeRow({
 export function GrowthHeatmap({
   cells,
   onSelectPlayer,
+  compact = false,
 }: {
   cells: readonly GrowthHeatCell[];
   onSelectPlayer: (playerId: string) => void;
+  /** Hub package: one packed bar. Training keeps stage labels under the same pixels. */
+  compact?: boolean;
 }) {
   const [legendOpen, setLegendOpen] = useState(false);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const peak = useMemo(() => heatmapPeak(cells), [cells]);
+  const hovered = useMemo(
+    () => cells.find((cell) => cell.playerId === hoveredId) ?? null,
+    [cells, hoveredId],
+  );
 
   return (
-    <section className="pipeline-heat-block is-full" aria-label="Wochenzuwachs">
+    <section
+      className={compact ? "training-pixel-pack is-compact" : "training-pixel-pack is-full"}
+      aria-label="Team-Trainingsheatmap"
+    >
       <div className="pipeline-heat-head">
-        <p className="pipeline-heat-label">Wochenzuwachs</p>
+        <p className="pipeline-heat-label">
+          {compact ? "Kader · Wochenzuwachs" : "Wochenzuwachs"}
+        </p>
         <button
           type="button"
           className="pipeline-legend-toggle"
@@ -160,41 +180,68 @@ export function GrowthHeatmap({
       </div>
       {legendOpen ? (
         <p className="pipeline-heat-legend" role="note">
-          ● Wachstum · ● gleich · ■ Rückgang · graue Zelle = noch keine Woche
+          Jedes Quadrat = ein Spieler · ● Wachstum · ● gleich · ■ Rückgang · grau = noch keine Woche
+          · Desktop: Hover zeigt Namen
         </p>
       ) : null}
-      {PIPELINE_STAGES.map((stage) => {
-        const row = heatmapCellsForStage(cells, stage);
-        return (
-          <div key={stage} className="pipeline-heat-group">
-            <p className="pipeline-heat-label">
-              {pipelineStageLabel(stage)} · {row.length}
-            </p>
-            <div className="pipeline-heat">
-              {row.length === 0 ? (
-                <span className="heat-cell is-empty" aria-hidden="true">
-                  ·
-                </span>
-              ) : (
-                row.map((cell) => (
+
+      <div className="training-pixel-bar" role="list" aria-label="Spieler nach Trainingsleistung">
+        {PIPELINE_STAGES.map((stage) => {
+          const row = heatmapCellsForStage(cells, stage);
+          if (row.length === 0) return null;
+          return (
+            <div
+              key={stage}
+              className="training-pixel-stage"
+              role="group"
+              aria-label={`${pipelineStageLabel(stage)} · ${row.length}`}
+            >
+              {!compact ? (
+                <p className="pipeline-heat-label training-pixel-stage-label">
+                  {pipelineStageLabel(stage)} · {row.length}
+                </p>
+              ) : null}
+              <div className="pipeline-heat training-pixel-row">
+                {row.map((cell) => (
                   <button
                     key={cell.playerId}
                     type="button"
-                    className={`heat-cell is-${cell.tone}`}
-                    title={`${cell.label} · ${cell.position} · ${formatGrowthDelta(cell.growth)}`}
-                    aria-label={`${cell.label}, ${formatGrowthDelta(cell.growth)}`}
+                    role="listitem"
+                    className={`heat-pixel is-${cell.tone}`}
+                    style={{ opacity: heatIntensity(cell.growth, peak) }}
+                    aria-label={`${cell.label}, ${cell.position}, ${formatGrowthDelta(cell.growth)}`}
                     onClick={() => onSelectPlayer(cell.playerId)}
+                    onMouseEnter={() => setHoveredId(cell.playerId)}
+                    onMouseLeave={() => setHoveredId((id) => (id === cell.playerId ? null : id))}
+                    onFocus={() => setHoveredId(cell.playerId)}
+                    onBlur={() => setHoveredId((id) => (id === cell.playerId ? null : id))}
                   >
-                    {cell.initials}
-                    <small>{cell.position}</small>
-                    <small>{formatGrowthDelta(cell.growth)}</small>
+                    <span className="heat-pixel-face">
+                      {cell.initials}
+                      <small>{cell.position}</small>
+                      <small>{formatGrowthDelta(cell.growth)}</small>
+                    </span>
                   </button>
-                ))
-              )}
+                ))}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+
+      {hovered ? (
+        <p className="training-pixel-hover" role="status">
+          <strong>{hovered.label}</strong>
+          <span>
+            {hovered.position} · {pipelineStageLabel(hovered.squadStatus)} ·{" "}
+            {formatGrowthDelta(hovered.growth)}
+          </span>
+        </p>
+      ) : (
+        <p className="training-pixel-hover is-idle" aria-hidden="true">
+          {compact ? "Hover = Spieler" : "Hover zeigt den Spieler"}
+        </p>
+      )}
     </section>
   );
 }

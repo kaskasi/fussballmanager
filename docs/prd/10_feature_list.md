@@ -58,7 +58,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F2.4 | Mentoring | M2 | Routinier → Talent, `drive`-Bonus (Trigger-Quelle für PRD 06.2) |
 | F2.5 | Trainingslager | M2 | Sichtbarkeits-Bonus auf Drive-Einschätzungen in Pausen |
 | F2.6 | Rehasystem | M3 | Verletzungsverlauf-Stufen, Reha-Trainer-Qualität |
-| F2.7 | Wachstums-Heatmap | M1 | Wochenübersicht Kader-Entwicklung, Icon-basiert (PRD 09 Screen 1) |
+| F2.7 | Wachstums-Heatmap | M1 | Team-Leiste: 1 Quadrat = 1 Spieler-Wochenzuwachs (PRD 09 Screen 1) |
 
 ### Modul 3 · Jugendakademie *(PRD 03)*
 

@@ -123,13 +123,13 @@ function StoryPanel() {
         </p>
         <ul className="help-ensemble">
           <li>
-            <strong>Losglück</strong> — unerwarteter Auftrag, skeptischer Vorstand
+            <strong>Losgewinn</strong> — Fanverein zog deinen Namen; skeptischer Vorstand
           </li>
           <li>
-            <strong>Leidenschaftlicher Brief</strong> — du hast dich selbst beworben
+            <strong>Der Brief</strong> — du hast geschrieben, was du fühlst
           </li>
           <li>
-            <strong>Community-Übernahme</strong> — Fans und Stadt haben dich geholt
+            <strong>Gemeinschaft</strong> — niemand wollte den Job; der Verein gehört euch
           </li>
         </ul>
         <p className="help-note">

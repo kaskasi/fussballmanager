@@ -9926,8 +9926,7 @@ body {
   gap: 0.45rem;
 }
 
-.help-icon-list li,
-.help-ensemble li {
+.help-icon-list li {
   display: grid;
   grid-template-columns: 1.4rem 1fr;
   gap: 0.45rem;
@@ -9935,6 +9934,15 @@ body {
   color: #334155;
   font-weight: 550;
   line-height: 1.4;
+}
+
+.help-ensemble li {
+  display: block;
+  color: #334155;
+  font-weight: 550;
+  line-height: 1.4;
+  padding-left: 0.85rem;
+  border-left: 2px solid #a7f3d0;
 }
 
 .help-steps {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { formatClubCash, type ClubFinances } from "../../economy/club-finances.ts";
 import { spendRunway, spendRunwayLines } from "../../economy/spend-runway.ts";
+import { cannotPayTransferFeeReason } from "../../transfers/purchase-block.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import {
@@ -37,12 +38,12 @@ export function TransferNegotiationModal({
 }) {
   const [offerInput, setOfferInput] = useState(String(negotiation.current_offer));
   const offer = Number.parseInt(offerInput.replace(/\D/g, ""), 10) || 0;
-  const canAfford = offer <= transferBudget;
   const ratio = scoutIntelKnown ? offer / Math.max(1, negotiation.asking_price) : null;
   const offerRunway = spendRunway(finances, weeklyWageBill, offer, boardCashFloor);
   const counterRunway = negotiation.counter_offer
     ? spendRunway(finances, weeklyWageBill, negotiation.counter_offer, boardCashFloor)
     : null;
+  const payReason = cannotPayTransferFeeReason(finances, offer);
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -121,12 +122,17 @@ export function TransferNegotiationModal({
             Vorstand-Kasse verfehlt, wenn die Saison heute endet. Angebot trotzdem möglich.
           </p>
         ) : null}
+        {payReason ? (
+          <p className="spend-confirm-warn" role="status">
+            {payReason}
+          </p>
+        ) : null}
 
         <div className="negotiation-actions">
           <button
             type="button"
             className="negotiation-btn negotiation-btn-primary"
-            disabled={!canAfford || offer <= 0}
+            disabled={offer <= 0}
             onClick={() => onSubmitOffer(offer)}
           >
             Angebot senden

@@ -37,6 +37,7 @@ import {
 } from "../../player/season-stats.ts";
 import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
 import { TRANSFER_WINDOW_HINT } from "../../sim/transfer-windows.ts";
+import { cannotOpenPurchaseReason } from "../../transfers/purchase-block.ts";
 import { BlindPurchaseWarningModal } from "../components/BlindPurchaseWarningModal.tsx";
 import { ContractTalksModal } from "../components/ContractTalksModal.tsx";
 import { SaleConfirmModal } from "../components/SaleConfirmModal.tsx";
@@ -210,10 +211,8 @@ export function PlayerProfile({
     listPrice !== undefined &&
     transferBudget !== undefined &&
     transferBudget < listPrice;
-  const purchaseHardBlocked = !transferWindowOpen;
-  const purchaseBlockedReason = !transferWindowOpen
-    ? `Transfers nur im ${TRANSFER_WINDOW_HINT}`
-    : null;
+  const purchaseBlockedReason = cannotOpenPurchaseReason(week, true);
+  const purchaseHardBlocked = Boolean(purchaseBlockedReason);
   const purchaseHintText =
     purchaseBlockedReason ??
     (!hasScoutIntel
@@ -221,6 +220,12 @@ export function PlayerProfile({
       : listPriceExceedsBudget
         ? `Listenpreis über Transfer-Topf (${formatClubCash(transferBudget ?? 0)} frei) — niedrigeres Angebot in der Verhandlung möglich.`
         : "Angebot nach Marktwert — Gegenangebot möglich.");
+  const transferNotice =
+    purchaseBlockedReason ??
+    (actionFeedback &&
+    /nicht möglich|zu niedrig|Fenster zu|nur im|Scout-Ziel|Transfer-Topf/.test(actionFeedback)
+      ? actionFeedback
+      : null);
 
   function notifyTransfer(message: string) {
     onTransferNotice?.(message);
@@ -314,7 +319,16 @@ export function PlayerProfile({
       </header>
 
       {actionFeedback ? (
-        <p className="profile-feedback" role="status">{actionFeedback}</p>
+        <p
+          className={
+            /nicht möglich|zu niedrig|Fenster zu|nur im|Scout-Ziel|Transfer-Topf/.test(actionFeedback)
+              ? "profile-feedback is-warn"
+              : "profile-feedback"
+          }
+          role="status"
+        >
+          {actionFeedback}
+        </p>
       ) : null}
 
       <article className="profile-card">
@@ -565,6 +579,11 @@ export function PlayerProfile({
 
         {!owned && onAssignScout ? (
           <footer className="profile-card-footer" aria-label="Scouting und Transfer">
+            {transferNotice ? (
+              <p className="profile-purchase-block" role="status">
+                {transferNotice}
+              </p>
+            ) : null}
             {scouting ? (
               <p className="profile-status" role="status">
                 <span aria-hidden="true">🟢</span>

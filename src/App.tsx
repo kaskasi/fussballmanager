@@ -34,7 +34,7 @@ import type { WatchedPlayerMatch } from "./sim/watched-player-match.ts";
 import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
 import { formatSeasonLabel } from "./sim/season-label.ts";
 import { simulateGameWeek } from "./sim/week-pipeline.ts";
-import { isTransferWindowOpen, TRANSFER_WINDOW_HINT } from "./sim/transfer-windows.ts";
+import { isTransferWindowOpen } from "./sim/transfer-windows.ts";
 import {
   applyPlayerSaleIncome,
   applyTransferFee,
@@ -157,7 +157,11 @@ import { ScoutingCenter } from "./ui/screens/ScoutingCenter";
 import { ScoutNetworkScreen } from "./ui/screens/ScoutNetworkScreen.tsx";
 import { DecisionInboxModal } from "./ui/components/DecisionInbox.tsx";
 import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
-import { SaveToast } from "./ui/components/SaveToast.tsx";
+import { NoticeToast, SaveToast } from "./ui/components/SaveToast.tsx";
+import {
+  cannotOpenPurchaseReason,
+  cannotPayTransferFeeReason,
+} from "./transfers/purchase-block.ts";
 import { TransferWindowAmbience } from "./ui/components/TransferWindowAmbience.tsx";
 import { YouthCampus } from "./ui/screens/YouthCampus";
 import { canBuyAcademyUpgrade, ACADEMY_FACILITIES } from "./youth/academy.ts";
@@ -272,6 +276,7 @@ export default function App() {
     loadAccessibilityPreferences(),
   );
   const [saveToastVisible, setSaveToastVisible] = useState(false);
+  const [notice, setNotice] = useState<{ text: string; tone: "ok" | "warn" } | null>(null);
   const [pendingWatchedMatch, setPendingWatchedMatch] = useState<WatchedPlayerMatch | null>(null);
   const [pendingSpend, setPendingSpend] = useState<{
     title: string;
@@ -296,9 +301,18 @@ export default function App() {
     saveToastTimerRef.current = setTimeout(() => setSaveToastVisible(false), 2000);
   }, []);
 
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flashNotice = useCallback((text: string, tone: "ok" | "warn" = "warn") => {
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    setNotice({ text, tone });
+    setProfileFeedback(text);
+    noticeTimerRef.current = setTimeout(() => setNotice(null), 4500);
+  }, []);
+
   useEffect(() => {
     return () => {
       if (saveToastTimerRef.current) clearTimeout(saveToastTimerRef.current);
+      if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
     };
   }, []);
 
@@ -1214,16 +1228,20 @@ export default function App() {
 
   const finalizePurchase = useCallback(
     (playerId: string, fee: number) => {
+      let blocked: string | null = null;
       patchSession((current) => {
         const target = getBoardTarget(current.scoutBoard, playerId, current.rivalPlayers);
-        if (!target || !isTransferWindowOpen(current.week)) return current;
-        if (!canAffordTransfer(current.finances, fee)) {
-          return sessionWithEvent(
-            current,
-            "finance",
-            `Transfer-Budget zu niedrig (benötigt ca. ${formatClubCash(fee)}).`,
-          );
+        const openReason = cannotOpenPurchaseReason(current.week, Boolean(target));
+        if (openReason) {
+          blocked = openReason;
+          return sessionWithEvent(current, "transfer", openReason);
         }
+        const payReason = cannotPayTransferFeeReason(current.finances, fee);
+        if (payReason) {
+          blocked = payReason;
+          return sessionWithEvent(current, "finance", payReason);
+        }
+        if (!target) return current;
 
         const bought = completePurchase(target.player, current.clubId, current.season);
         const shifted = processTransferBreakout(bought, {
@@ -1261,11 +1279,15 @@ export default function App() {
         }
         return next;
       });
+      if (blocked) {
+        flashNotice(blocked);
+        return;
+      }
       setForeignPlayerId(null);
       setNegotiationPlayerId(null);
       setNegotiationMessage(null);
     },
-    [patchSession],
+    [flashNotice, patchSession],
   );
 
   const handleOpenNegotiation = useCallback(
@@ -1274,14 +1296,12 @@ export default function App() {
       let blocked: string | null = null;
       patchSession((current) => {
         const target = getBoardTarget(current.scoutBoard, playerId, current.rivalPlayers);
-        if (!target) {
-          blocked = "Kein Scout-Ziel.";
-          return current;
+        const reason = cannotOpenPurchaseReason(current.week, Boolean(target));
+        if (reason) {
+          blocked = reason;
+          return sessionWithEvent(current, "transfer", reason);
         }
-        if (!isTransferWindowOpen(current.week)) {
-          blocked = `Transfers nur im ${TRANSFER_WINDOW_HINT}`;
-          return current;
-        }
+        if (!target) return current;
         const deal = startNegotiation(
           current.transferState,
           target.player,
@@ -1297,26 +1317,34 @@ export default function App() {
         setNegotiationMessage(null);
         return;
       }
-      if (blocked) {
-        setProfileFeedback(blocked);
-        patchSession((current) => sessionWithEvent(current, "transfer", blocked!));
-      }
+      flashNotice(blocked ?? "Kauf nicht möglich: Verhandlung konnte nicht gestartet werden.");
     },
-    [patchSession],
+    [flashNotice, patchSession],
   );
 
   const handleNegotiationOffer = useCallback(
     (fee: number) => {
       if (!negotiationPlayerId) return;
+      const payReason = cannotPayTransferFeeReason(finances, fee);
+      if (payReason) {
+        flashNotice(payReason);
+        setNegotiationMessage(payReason);
+        return;
+      }
       let accepted = false;
+      let missingTarget = false;
       patchSession((current) => {
         const target = getBoardTarget(current.scoutBoard, negotiationPlayerId, current.rivalPlayers);
-        if (!target) return current;
+        if (!target) {
+          missingTarget = true;
+          return current;
+        }
         const round = submitNegotiationRound(current.transferState, negotiationPlayerId, fee);
         setNegotiationMessage(round.message);
         accepted = round.accepted;
         if (!round.accepted && round.negotiation.status !== "active") {
           setNegotiationPlayerId(null);
+          flashNotice(round.message);
         }
         if (round.moralePenalty) {
           return sessionWithEvent(
@@ -1327,25 +1355,42 @@ export default function App() {
         }
         return { ...current, transferState: round.state };
       });
+      if (missingTarget) {
+        flashNotice(cannotOpenPurchaseReason(week, false) ?? "Kauf nicht möglich.");
+        return;
+      }
       if (accepted) finalizePurchase(negotiationPlayerId, fee);
     },
-    [finalizePurchase, negotiationPlayerId, patchSession],
+    [finalizePurchase, finances, flashNotice, negotiationPlayerId, patchSession, week],
   );
 
   const handleAcceptCounter = useCallback(() => {
     if (!negotiationPlayerId) return;
     let acceptedFee: number | null = null;
+    let failMessage: string | null = null;
     patchSession((current) => {
       const round = acceptCounterOffer(current.transferState, negotiationPlayerId);
       setNegotiationMessage(round.message);
       if (round.accepted && round.negotiation.counter_offer) {
         acceptedFee = round.negotiation.counter_offer;
+      } else if (!round.accepted) {
+        failMessage = round.message;
       }
       setNegotiationPlayerId(null);
       return { ...current, transferState: round.state };
     });
-    if (acceptedFee !== null) finalizePurchase(negotiationPlayerId, acceptedFee);
-  }, [finalizePurchase, negotiationPlayerId, patchSession]);
+    if (failMessage) {
+      flashNotice(failMessage);
+      return;
+    }
+    if (acceptedFee === null) return;
+    const payReason = cannotPayTransferFeeReason(finances, acceptedFee);
+    if (payReason) {
+      flashNotice(payReason);
+      return;
+    }
+    finalizePurchase(negotiationPlayerId, acceptedFee);
+  }, [finalizePurchase, finances, flashNotice, negotiationPlayerId, patchSession]);
 
   const handleProfileAction = useCallback(
     (playerId: string, action: PlayerProfileAction) => {
@@ -1574,6 +1619,14 @@ export default function App() {
   const foreignTarget = foreignPlayerId
     ? getBoardTarget(scoutBoard, foreignPlayerId, rivalPlayers)
     : null;
+
+  useEffect(() => {
+    if (!foreignPlayerId || foreignTarget) return;
+    flashNotice(
+      "Akte nicht verfügbar: Spieler ist kein Scout-Ziel oder nicht mehr auf dem Markt.",
+    );
+    setForeignPlayerId(null);
+  }, [flashNotice, foreignPlayerId, foreignTarget]);
   const navActions: HubNavActions = {
     week,
     weekday,
@@ -1611,6 +1664,8 @@ export default function App() {
       onCancel={() => setPendingSpend(null)}
     />
   ) : null;
+
+  const noticeOverlay = <NoticeToast message={notice?.text ?? null} tone={notice?.tone ?? "ok"} />;
 
   const careerBroadcastStory = useMemo(
     () =>
@@ -1652,6 +1707,7 @@ export default function App() {
         />
         {saveManagerOverlay}
         {spendConfirmOverlay}
+        {noticeOverlay}
       </>
     );
   }
@@ -1690,8 +1746,7 @@ export default function App() {
           onPurchase={() => handleOpenNegotiation(foreignTarget.player.id)}
           actionFeedback={profileFeedback}
           onTransferNotice={(message) => {
-            setProfileFeedback(message);
-            patchSession((current) => sessionWithEvent(current, "transfer", message));
+            flashNotice(message);
           }}
           preContractBonus={preContractOffer(foreignTarget.player, season, week)?.signingBonus}
           preContractBlockedReason={(() => {
@@ -1720,6 +1775,7 @@ export default function App() {
             finances={finances}
             weeklyWageBill={weeklyWageBill(players, session.clubId)}
             boardCashFloor={boardCashFloor(board)}
+            scoutIntelKnown={Boolean(foreignTarget.estimate)}
             message={negotiationMessage}
             onSubmitOffer={handleNegotiationOffer}
             onAcceptCounter={handleAcceptCounter}
@@ -1731,6 +1787,7 @@ export default function App() {
         ) : null}
         {saveManagerOverlay}
         {spendConfirmOverlay}
+        {noticeOverlay}
       </>
     );
   }
@@ -1764,6 +1821,9 @@ export default function App() {
           individualPrograms={individualPrograms}
           trainingPlan={trainingPlan}
           actionFeedback={profileFeedback}
+          onTransferNotice={(message) => {
+            flashNotice(message);
+          }}
           onSell={() => handleSell(profilePlayer.id)}
           onProfileAction={(action) => handleProfileAction(profilePlayer.id, action)}
           onContractOffer={(offer) => handleContractOffer(profilePlayer.id, offer)}
@@ -1790,6 +1850,7 @@ export default function App() {
         />
         {saveManagerOverlay}
         {spendConfirmOverlay}
+        {noticeOverlay}
       </>
     );
   }
@@ -2038,6 +2099,7 @@ export default function App() {
       ) : null}
       {saveManagerOverlay}
       {spendConfirmOverlay}
+      {noticeOverlay}
       <SaveToast visible={saveToastVisible} />
     </>
   );

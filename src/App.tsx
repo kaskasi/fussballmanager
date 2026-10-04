@@ -116,7 +116,15 @@ import { startBoardSeason } from "./board/season-objectives.ts";
 import type { MatchLineupState } from "./match/lineup-board.ts";
 import { saveTacticsPreset, type TacticsPresetId } from "./match/tactics-presets.ts";
 import { JobOffersModal } from "./ui/components/JobOffersModal.tsx";
-import { STADIUM_BASE_BLOCKS, normalizeClubStadium, stadiumTotalCapacity } from "./stadium/club-stadium.ts";
+import {
+  DEFAULT_FANBASE,
+  STADIUM_BASE_BLOCKS,
+  normalizeClubStadium,
+  stadiumTotalCapacity,
+} from "./stadium/club-stadium.ts";
+import { fanbaseMood } from "./stadium/fanbase.ts";
+import { teamForm } from "./sim/league-form.ts";
+import { teamPoorRecentForm } from "./ui/assets/mood-photos.ts";
 import {
   canPurchaseStadiumUpgrade,
   purchaseStadiumUpgrade,
@@ -1682,6 +1690,9 @@ export default function App() {
     [careerMatchSetup, rivalPlayers, session.league, session.storyState, session.masterSeed, session.season],
   );
 
+  const matchFanbaseMood = fanbaseMood(stadium.fanbase ?? DEFAULT_FANBASE);
+  const matchPoorForm = teamPoorRecentForm(teamForm(league, board.employer_club_id, 3));
+
   if (careerMatchSetup) {
     return (
       <>
@@ -1712,6 +1723,8 @@ export default function App() {
           broadcastStory={careerBroadcastStory}
           kasse={matchdayCashBreakdown(stadium, careerMatchSetup.isHome)}
           homeStadiumCapacity={stadiumTotalCapacity(stadium)}
+          fanbaseMood={matchFanbaseMood}
+          poorForm={matchPoorForm}
         />
         {saveManagerOverlay}
         {spendConfirmOverlay}

@@ -36,7 +36,11 @@ import { DEFAULT_FANBASE } from "../../stadium/club-stadium.ts";
 import { Hint } from "../components/Hint.tsx";
 import { PrecinctGrid } from "../components/PrecinctGrid.tsx";
 import { SponsorDealModal } from "../components/SponsorDealModal.tsx";
-import { STADIUM_MOOD_PHOTOS, stadiumPhotoTierFromCapacity } from "../assets/mood-photos.ts";
+import {
+  PRECINCT_HEADER_PHOTO,
+  STADIUM_MOOD_PHOTOS,
+  stadiumPhotoTierFromCapacity,
+} from "../assets/mood-photos.ts";
 import { MoodPhotoBand } from "../components/MoodPhotoBand.tsx";
 import { emptyPrecinct, type PrecinctBuilding, type PrecinctEdge } from "../../stadium/precinct.ts";
 import {
@@ -212,17 +216,20 @@ export function StadiumScreen({
       ) : null}
 
       {tab === "precinct" ? (
-        <PrecinctGrid
-          precinct={precinct}
-          cash={finances.cash}
-          stadiumName={stadium.name}
-          onPlace={onPlacePrecinct}
-          onUpgrade={onUpgradePrecinct}
-          onBuyParcel={onBuyParcel}
-          onPlaceStreet={onPlaceStreet}
-          onExpand={onExpandPrecinct}
-          onShrinkToMin={onShrinkPrecinctToMin}
-        />
+        <>
+          <MoodPhotoBand src={PRECINCT_HEADER_PHOTO} className="stadium-precinct-header" />
+          <PrecinctGrid
+            precinct={precinct}
+            cash={finances.cash}
+            stadiumName={stadium.name}
+            onPlace={onPlacePrecinct}
+            onUpgrade={onUpgradePrecinct}
+            onBuyParcel={onBuyParcel}
+            onPlaceStreet={onPlaceStreet}
+            onExpand={onExpandPrecinct}
+            onShrinkToMin={onShrinkPrecinctToMin}
+          />
+        </>
       ) : null}
 
       {tab === "upgrades" ? (

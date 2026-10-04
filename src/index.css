@@ -311,9 +311,31 @@ body {
 }
 
 .match-stage {
+  position: relative;
   display: grid;
   gap: 0;
   margin-bottom: 1rem;
+  overflow: hidden;
+  border-radius: 0.85rem;
+}
+
+.match-stage__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--match-backdrop);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.2;
+  filter: saturate(0.85);
+  pointer-events: none;
+}
+
+.match-stage__foreground {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0;
 }
 
 .match-presentation-toggle {
@@ -1521,6 +1543,20 @@ body {
     rgb(15 23 42 / 55%) 0%,
     rgb(15 23 42 / 25%) 45%,
     rgb(15 23 42 / 50%) 100%
+  );
+}
+
+.stadium-precinct-header {
+  min-height: 5.5rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0.85rem;
+}
+
+.stadium-precinct-header .mood-photo-band__scrim {
+  background: linear-gradient(
+    180deg,
+    rgb(15 23 42 / 35%),
+    rgb(15 23 42 / 65%)
   );
 }
 

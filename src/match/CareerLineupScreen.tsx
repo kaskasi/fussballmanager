@@ -10,6 +10,7 @@ import {
 } from "@fussballmanager/shared";
 import type { NavPrimaryAction } from "../ui/nav-primary-action.ts";
 import type { Player } from "../types/player.ts";
+import type { FanbaseMood } from "../stadium/fanbase.ts";
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
 import { AUTO_LINEUP_OPTIONS, autoLineupAssignments } from "./auto-lineup.ts";
 import { LineupPitch } from "./LineupPitch.tsx";
@@ -47,6 +48,8 @@ type CareerLineupScreenProps = {
   onConfirm: (squad: Squad) => void;
   onNavActionChange: (action: NavPrimaryAction | null) => void;
   homeStadiumCapacity?: number;
+  fanbaseMood?: FanbaseMood;
+  poorForm?: boolean;
 };
 
 export function CareerLineupScreen({
@@ -62,6 +65,8 @@ export function CareerLineupScreen({
   onConfirm,
   onNavActionChange,
   homeStadiumCapacity,
+  fanbaseMood,
+  poorForm,
 }: CareerLineupScreenProps) {
   const managerClubId = careerTeamId(setup.playerClubId);
   const fallbackPlan = useMemo(() => loadTacticsPreset(tacticsPresets, 1), [tacticsPresets]);
@@ -165,7 +170,12 @@ export function CareerLineupScreen({
 
   return (
     <main className="matchday career-lineup">
-      <MatchdayLineupAmbience setup={setup} homeStadiumCapacity={homeStadiumCapacity} />
+      <MatchdayLineupAmbience
+        setup={setup}
+        homeStadiumCapacity={homeStadiumCapacity}
+        fanbaseMood={fanbaseMood}
+        poorForm={poorForm}
+      />
       <section className="career-lineup-panel" aria-label="Aufstellung">
         <header className="career-lineup-header">
           <div className="career-lineup-header-main">

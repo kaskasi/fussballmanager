@@ -22,6 +22,8 @@ import { PreMatchBlock } from "./PreMatchBlock.tsx";
 import { useMatchPlayback } from "./useMatchPlayback.ts";
 import { MatchReportScreen } from "./MatchReportScreen.tsx";
 import type { MatchdayCashBreakdown } from "../stadium/matchday-commerce.ts";
+import type { FanbaseMood } from "../stadium/fanbase.ts";
+import { matchAmbiencePhotoUrl } from "../ui/assets/mood-photos.ts";
 
 export function CareerMatch({
   setup,
@@ -40,6 +42,8 @@ export function CareerMatch({
   broadcastStory,
   kasse,
   homeStadiumCapacity,
+  fanbaseMood,
+  poorForm,
 }: {
   setup: CareerMatchSetup;
   players: readonly Player[];
@@ -57,8 +61,18 @@ export function CareerMatch({
   broadcastStory?: BroadcastStoryContext;
   kasse?: MatchdayCashBreakdown;
   homeStadiumCapacity?: number;
+  fanbaseMood?: FanbaseMood;
+  poorForm?: boolean;
 }) {
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
+  const capacity = homeStadiumCapacity ?? 8_000;
+  const mood = fanbaseMood ?? "steady";
+  const backdropPhotoUrl = matchAmbiencePhotoUrl({
+    isHome: setup.isHome,
+    homeCapacity: capacity,
+    fanbaseMood: mood,
+    poorForm: poorForm ?? false,
+  });
 
   useEffect(() => {
     setPlayerClubSquad(null);
@@ -83,7 +97,9 @@ export function CareerMatch({
         onSaveMatchLineup={onSaveMatchLineup}
         onConfirm={setPlayerClubSquad}
         onNavActionChange={onNavActionChange}
-        homeStadiumCapacity={homeStadiumCapacity}
+        homeStadiumCapacity={capacity}
+        fanbaseMood={mood}
+        poorForm={poorForm}
       />
     );
   }
@@ -101,6 +117,7 @@ export function CareerMatch({
       onNavActionChange={onNavActionChange}
       broadcastStory={broadcastStory}
       kasse={kasse}
+      backdropPhotoUrl={backdropPhotoUrl}
     />
   );
 }
@@ -117,6 +134,7 @@ function CareerMatchPlayback({
   onNavActionChange,
   broadcastStory,
   kasse,
+  backdropPhotoUrl,
 }: {
   setup: CareerMatchSetup;
   playerClubSquad: Squad;
@@ -129,6 +147,7 @@ function CareerMatchPlayback({
   onNavActionChange: (action: NavPrimaryAction | null) => void;
   broadcastStory?: BroadcastStoryContext;
   kasse?: MatchdayCashBreakdown;
+  backdropPhotoUrl?: string;
 }) {
   const [view, setView] = useState<Awaited<ReturnType<typeof fetchCareerMatchView>> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -376,6 +395,7 @@ function CareerMatchPlayback({
             visibleLines={playback.visibleLines}
             preMatch={preMatch}
             className="career-match-stage"
+            backdropPhotoUrl={backdropPhotoUrl}
           />
           <details className="career-match-lineups">
             <summary>Aufstellungen</summary>

@@ -1,5 +1,6 @@
 import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
-import { matchdayMoodPhotoUrl } from "../assets/mood-photos.ts";
+import type { FanbaseMood } from "../../stadium/fanbase.ts";
+import { matchAmbiencePhotoUrl } from "../assets/mood-photos.ts";
 import { MoodPhotoBand } from "./MoodPhotoBand.tsx";
 
 const MOOD = {
@@ -17,13 +18,22 @@ const MOOD = {
 export function MatchdayLineupAmbience({
   setup,
   homeStadiumCapacity = 8_000,
+  fanbaseMood = "steady",
+  poorForm = false,
 }: {
   setup: Pick<CareerMatchSetup, "isHome" | "opponentShortName" | "matchday">;
   homeStadiumCapacity?: number;
+  fanbaseMood?: FanbaseMood;
+  poorForm?: boolean;
 }) {
   const kind = setup.isHome ? "home" : "away";
   const mood = MOOD[kind];
-  const photo = matchdayMoodPhotoUrl(setup.isHome, homeStadiumCapacity);
+  const photo = matchAmbiencePhotoUrl({
+    isHome: setup.isHome,
+    homeCapacity: homeStadiumCapacity,
+    fanbaseMood,
+    poorForm,
+  });
 
   return (
     <MoodPhotoBand

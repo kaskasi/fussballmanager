@@ -27,6 +27,11 @@ describe("stadium upgrades", () => {
     const normalized = normalizeClubStadium(result.stadium);
     expect(stadiumUpgradeLevel(normalized, "standing_expansion")).toBe(1);
     expect(stadiumTotalCapacity(normalized)).toBeGreaterThan(stadiumTotalCapacity(stadium));
+    expect(result.finances.pending_lines).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "infrastructure", amount: -650_000 }),
+      ]),
+    );
     expect(unlockedSponsorSlots(normalized.upgrade_levels).filter((slot) => slot.kind === "board")).toHaveLength(
       8,
     );

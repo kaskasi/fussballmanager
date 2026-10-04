@@ -49,15 +49,17 @@ describe("precinct campus effects", () => {
     expect(precinctMerchCogsMultiplier(shop)).toBeLessThan(firstCogs);
     expect(weeklyFanshopIncome(shop)).toBeGreaterThan(firstMargin);
     expect(precinctWeeklyFanbaseBonus(shop)).toBeGreaterThan(0);
+    expect(precinctWeeklyFanbaseBonus(shop, 0.5)).toBeCloseTo(precinctWeeklyFanbaseBonus(shop) * 0.5);
   });
 
-  it("pays weekly cash from docked kiosks and beer tents", () => {
+  it("pays docked kiosks independently — occupancy scales, stands do not share a sausage pie", () => {
     expect(weeklyKioskIncome(placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "kiosk"))).toBe(0);
     const kiosk = dockToCity(placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "kiosk"), "kiosk");
-    expect(weeklyKioskIncome(kiosk)).toBe(500);
+    expect(weeklyKioskIncome(kiosk)).toBe(1_000);
+    expect(weeklyKioskIncome(kiosk, 0.5)).toBe(500);
     const tent = dockToCity(placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "beer_tent"), "beer_tent");
-    expect(weeklyBeerIncome(tent)).toBe(1_800);
-    expect(listPrecinctStatusEffects(kiosk).find((entry) => entry.id === "kiosk")?.magnitude).toBe("€ 500");
+    expect(weeklyBeerIncome(tent)).toBe(3_600);
+    expect(listPrecinctStatusEffects(kiosk).find((entry) => entry.id === "kiosk")?.magnitude).toBe("€ 1k");
   });
 
   it("lets a grown parking lot keep adding fill without a cap", () => {

@@ -14,10 +14,16 @@ import {
   financeMonthForWeek,
 } from "../../economy/finance-ledger.ts";
 import {
+  FINANCE_FLOW_META,
+  FINANCE_FLOW_ORDER,
   resolveFinanceWaterfall,
   seasonCashSparkline13,
+  seasonCategorizedFlows,
   weekPreviewFinanceLines,
+  type FinanceFlowCategory,
+  type MonthlyCategoryFlow,
 } from "../../economy/finance-waterfall.ts";
+import { formatWeeksOfWages, weeksOfWages } from "../../economy/spend-runway.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { playerFixture } from "../../sim/league-week.ts";
 import { scoutNetworkWeeklyWage, type ScoutNetworkState } from "../../scouting/scout-network.ts";
@@ -27,12 +33,16 @@ import {
   stadiumMatchdayIncome,
   type ClubStadium,
 } from "../../stadium/club-stadium.ts";
+import { weekCommerceOccupancy } from "../../stadium/matchday-commerce.ts";
+import { weeklyPrecinctCash } from "../../stadium/precinct-effects.ts";
 import { fanbaseMoodIcon, fanbaseMood, formatFanbase } from "../../stadium/fanbase.ts";
 import { Hint } from "../components/Hint.tsx";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
 
 const SPARK_W = 312;
 const SPARK_H = 56;
+const FLOW_W = 312;
+const FLOW_H = 88;
 
 /**
  * WIREFRAME: PRD 11.5 — Finanzen
@@ -47,6 +57,7 @@ export function FinancesScreen({
   league,
   coachingStaff,
   scoutNetwork,
+  boardCashFloor = 0,
   onBack,
   onOpenStadium,
 }: {
@@ -59,6 +70,7 @@ export function FinancesScreen({
   league: LeagueState;
   coachingStaff: CoachingStaff;
   scoutNetwork: ScoutNetworkState;
+  boardCashFloor?: number;
   onBack: () => void;
   onOpenStadium: () => void;
 }) {
@@ -66,12 +78,13 @@ export function FinancesScreen({
   const wageBill = weeklyWageBill(players, clubId);
   const wageStatus = wageBudgetStatus(finances, players, clubId);
   const fixture = playerFixture(league, league.matchday);
+  const isHomeMatchWeek = fixture?.homeTeamId === league.player_club_id;
   const waterfall = useMemo(() => {
     const preview = weekPreviewFinanceLines({
       players,
       clubId,
       divisionId: league.division_id,
-      isHomeMatchWeek: fixture?.homeTeamId === league.player_club_id,
+      isHomeMatchWeek,
       season,
       week,
       stadium,
@@ -83,9 +96,8 @@ export function FinancesScreen({
     coachingStaff,
     clubId,
     finances,
-    fixture?.homeTeamId,
+    isHomeMatchWeek,
     league.division_id,
-    league.player_club_id,
     players,
     scoutNetwork,
     season,
@@ -96,6 +108,14 @@ export function FinancesScreen({
   const sparkMin = Math.min(...sparkline);
   const sparkMax = Math.max(...sparkline);
   const sparkSpan = Math.max(sparkMax - sparkMin, Math.abs(sparkMax) * 0.04, 1);
+  const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium);
+  const merchFull = weeklyPrecinctCash(stadium.precinct, 1);
+  const merchWeek = weeklyPrecinctCash(stadium.precinct, occupancy);
+  const tickets = stadiumMatchdayIncome(stadium);
+  const weeksLeft = weeksOfWages(finances.cash, wageBill);
+  const belowFloor = boardCashFloor > 0 && finances.cash < boardCashFloor;
+  const monthNegative = waterfall.net < 0;
+  const flows = seasonCategorizedFlows(finances, season, week);
 
   return (
     <main className="finances">
@@ -162,7 +182,7 @@ export function FinancesScreen({
           icon="🏦"
           label="Kasse"
           value={formatSignedCash(finances.cash)}
-          tone={finances.cash < 0 ? "bad" : "good"}
+          tone={finances.cash < 0 || belowFloor ? "bad" : "good"}
         />
         <BudgetCard
           icon="💼"
@@ -179,16 +199,40 @@ export function FinancesScreen({
         />
       </section>
 
-      <section className="finances-stadium-link">
-        <button type="button" className="finances-stadium-btn" onClick={onOpenStadium}>
-          <span aria-hidden="true">🏟️</span>
-          <span>
-            {fanbaseMoodIcon(fanbaseMood(stadium.fanbase ?? DEFAULT_FANBASE))} {stadium.name} ·
-            Fanbase {formatFanbase(stadium.fanbase ?? DEFAULT_FANBASE)} · Heimspiel{" "}
-            {formatClubCash(stadiumMatchdayIncome(stadium))}
-          </span>
-          <span aria-hidden="true">→</span>
+      <section className="finances-detail-cards" aria-label="Kasse im Detail">
+        <article className={`finances-detail`}>
+          <h2>🌭 Imbiss & Shop</h2>
+          <p>
+            <strong>{formatClubCash(merchWeek)}</strong>
+            <span> diese Woche</span>
+          </p>
+          <p className="finances-detail-sub">
+            voll {formatClubCash(merchFull)} · {Math.round(occupancy * 100)}% Auslastung
+          </p>
+        </article>
+        <button type="button" className="finances-detail is-button" onClick={onOpenStadium}>
+          <h2>🏟️ Stadion</h2>
+          <p>
+            <strong>{formatClubCash(isHomeMatchWeek ? tickets : 0)}</strong>
+            <span>{isHomeMatchWeek ? " Heimspiel-Eintritt" : " kein Heimspiel"}</span>
+          </p>
+          <p className="finances-detail-sub">
+            {fanbaseMoodIcon(fanbaseMood(stadium.fanbase ?? DEFAULT_FANBASE))}{" "}
+            Fanbase {formatFanbase(stadium.fanbase ?? DEFAULT_FANBASE)} · voll {formatClubCash(tickets)}
+          </p>
         </button>
+        <article className={`finances-detail${belowFloor || finances.cash < 0 || monthNegative ? " is-warn" : ""}`}>
+          <h2>🛤️ Runway</h2>
+          <p>
+            <strong>{formatWeeksOfWages(weeksLeft)}</strong>
+            <span> Gehälter</span>
+          </p>
+          <p className="finances-detail-sub">
+            {belowFloor
+              ? `unter Vorstand ${formatClubCash(boardCashFloor)}`
+              : `Puffer ${formatSignedCash(finances.cash - boardCashFloor)}`}
+          </p>
+        </article>
       </section>
 
       <section className="finances-sparkline" aria-label="Saison-Cash-Verlauf">
@@ -221,8 +265,74 @@ export function FinancesScreen({
             })}
           </svg>
         </Hint>
+        <CategoryFlowChart rows={flows} currentMonth={month} />
       </section>
     </main>
+  );
+}
+
+function CategoryFlowChart({
+  rows,
+  currentMonth,
+}: {
+  rows: readonly MonthlyCategoryFlow[];
+  currentMonth: number;
+}) {
+  const visible = rows.filter((row) => row.month <= currentMonth);
+  const peak = Math.max(
+    ...visible.flatMap((row) =>
+      FINANCE_FLOW_ORDER.map((key) => Math.abs(row[key])),
+    ),
+    1,
+  );
+  const group = (FLOW_W - 20) / 13;
+  const barW = Math.max(1.4, group / (FINANCE_FLOW_ORDER.length + 1));
+  const axis = FLOW_H / 2;
+  const colors: Record<FinanceFlowCategory, string> = {
+    matchday: "#059669",
+    operations: "#0ea5e9",
+    wages: "#e11d48",
+    transfers: "#7c3aed",
+    infrastructure: "#d97706",
+    other: "#94a3b8",
+  };
+
+  return (
+    <div className="finances-flows">
+      <h2>Ein / Aus nach Art</h2>
+      <svg viewBox={`0 0 ${FLOW_W} ${FLOW_H}`} role="img" aria-label="Kategorisierter Cashflow">
+        <line x1="8" x2={FLOW_W - 8} y1={axis} y2={axis} stroke="#e2e8f0" strokeWidth="1" />
+        {visible.map((row) => {
+          const x0 = 10 + (row.month - 1) * group;
+          return FINANCE_FLOW_ORDER.map((key, index) => {
+            const amount = row[key];
+            if (amount === 0) return null;
+            const height = Math.max(2, (Math.abs(amount) / peak) * (axis - 6));
+            const y = amount >= 0 ? axis - height : axis;
+            return (
+              <rect
+                key={`${row.month}-${key}`}
+                x={x0 + index * barW}
+                y={y}
+                width={barW}
+                height={height}
+                fill={colors[key]}
+              >
+                <title>{`${FINANCE_FLOW_META[key].label} M${row.month}: ${formatSignedCash(amount)}`}</title>
+              </rect>
+            );
+          });
+        })}
+      </svg>
+      <ul className="finances-flow-legend">
+        {FINANCE_FLOW_ORDER.map((key) => (
+          <li key={key}>
+            <i style={{ background: colors[key] }} aria-hidden="true" />
+            {FINANCE_FLOW_META[key].icon} {FINANCE_FLOW_META[key].label}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

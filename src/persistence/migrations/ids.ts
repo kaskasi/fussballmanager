@@ -52,4 +52,5 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_052_phase_stamps",
   "migration_053_hospitality_camps",
   "migration_054_hybrid_stamps",
+  "migration_055_infrastructure_ledger",
 ] as const;

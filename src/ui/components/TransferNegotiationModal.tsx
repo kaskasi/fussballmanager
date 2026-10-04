@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { formatClubCash } from "../../economy/club-finances.ts";
+import { formatClubCash, type ClubFinances } from "../../economy/club-finances.ts";
+import { spendRunway, spendRunwayLines } from "../../economy/spend-runway.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import {
@@ -13,6 +14,9 @@ export function TransferNegotiationModal({
   player,
   negotiation,
   transferBudget,
+  finances,
+  weeklyWageBill,
+  boardCashFloor,
   message,
   scoutIntelKnown = true,
   onSubmitOffer,
@@ -22,6 +26,9 @@ export function TransferNegotiationModal({
   player: Player;
   negotiation: TransferNegotiation;
   transferBudget: number;
+  finances: ClubFinances;
+  weeklyWageBill: number;
+  boardCashFloor: number;
   message: string | null;
   scoutIntelKnown?: boolean;
   onSubmitOffer: (fee: number) => void;
@@ -32,6 +39,10 @@ export function TransferNegotiationModal({
   const offer = Number.parseInt(offerInput.replace(/\D/g, ""), 10) || 0;
   const canAfford = offer <= transferBudget;
   const ratio = scoutIntelKnown ? offer / Math.max(1, negotiation.asking_price) : null;
+  const offerRunway = spendRunway(finances, weeklyWageBill, offer, boardCashFloor);
+  const counterRunway = negotiation.counter_offer
+    ? spendRunway(finances, weeklyWageBill, negotiation.counter_offer, boardCashFloor)
+    : null;
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -97,6 +108,20 @@ export function TransferNegotiationModal({
           </label>
         </Hint>
 
+        <ul className="spend-confirm-lines negotiation-runway">
+          {spendRunwayLines(offerRunway).map((line) => (
+            <li key={line.label} className={line.warn ? "is-warn" : undefined}>
+              <span>{line.label}</span>
+              <strong>{line.value}</strong>
+            </li>
+          ))}
+        </ul>
+        {offerRunway.belowFloor ? (
+          <p className="spend-confirm-warn" role="status">
+            Vorstand-Kasse verfehlt, wenn die Saison heute endet. Angebot trotzdem möglich.
+          </p>
+        ) : null}
+
         <div className="negotiation-actions">
           <button
             type="button"
@@ -106,9 +131,10 @@ export function TransferNegotiationModal({
           >
             Angebot senden
           </button>
-          {negotiation.counter_offer ? (
+          {negotiation.counter_offer && counterRunway ? (
             <button type="button" className="negotiation-btn" onClick={onAcceptCounter}>
-              Gegenangebot annehmen ({formatClubCash(negotiation.counter_offer)})
+              Gegenangebot annehmen ({formatClubCash(negotiation.counter_offer)}
+              {counterRunway.belowFloor ? " · unter Vorstand-Kasse" : ""})
             </button>
           ) : null}
           <button type="button" className="negotiation-btn negotiation-btn-muted" onClick={onWalkAway}>

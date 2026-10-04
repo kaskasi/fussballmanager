@@ -233,7 +233,11 @@ und ein Modal darüber.
 Wireframe in PRD 11.5 ist verbindlich. Woche 1: Wasserfall mit *dieser*
 Woche (Sponsoring, Gehälter, Unterhalt), nicht „Noch keine Buchungen“ als
 leere Kachel, wenn der Wochenabschluss bereits bucht. Sparkline darf flach
-sein. Drei Tiles allein reichen nicht.
+sein. Drei Tiles allein reichen nicht — Imbiss, Stadion und Runway sitzen
+unter dem Wasserfall, plus kategorisierter Ein/Aus-Graph (Matchday,
+Operations, Gehälter, Transfers, Ausbau). Kapital ≥ €100k (oder eine
+Gehaltswoche) öffnet das Runway-Sheet; Vorstand-Kasse warnen, nicht
+blocken. Gelände-Erweiterung kostet €320k.
 
 ### 14.7 Stadion als Inventar (F7.1, F6.5, Gelände-Tab)
 
@@ -285,7 +289,12 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
   Fanshop und Trainingszentrum haben weiter Qualitäts-Level (Shop / Halle /
   Fitness / Pool / Physio). 1×1-Parzellen bleiben als Haken für späteres Deko
   (Baum, Bank) ohne Buff — Landkauf ist 2×5-Plättchen.
-  Imbiss (Bude/Zelt) und Fanshop zahlen wöchentlich auf die Kasse.
+  Imbiss (Bude/Zelt) und Fanshop zahlen **jede Woche × Auslastung**: Heimspiel
+  nutzt die Ticket-Fill der Blöcke; Auswärts/kein Spiel eine kleine
+  Besucher-Quote (4–12 %, Fanbase + Gelände). Jeder Stand hat eigene
+  Vollhaus-Kapazität (z. B. €1000 je Würstchenbude-Zelle) — kein globaler
+  Wurst-Kuchen. Trainingseffekte skalieren nicht. Shirt-Besuch wegen neuem
+  Merch ist F6.7 (SKU, später).
   Hotel und Restaurant (einmal, docked-only) zahlen über **Auslastung**, nicht
   über Training: Hotel steigt in Heimspiel-Wochen mit der Fanbasis des Gasts;
   Restaurant mit der eigenen Fanbasis, Story kann 12 Wochen 100% pinnen.

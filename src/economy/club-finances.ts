@@ -1,6 +1,7 @@
 import type { LeagueState } from "../persistence/league-state.ts";
 import { leagueTable, topScorers } from "../sim/league-week.ts";
 import { stadiumMatchdayIncome, type ClubStadium } from "../stadium/club-stadium.ts";
+import { weekCommerceOccupancy } from "../stadium/matchday-commerce.ts";
 import { weeklyPrecinctCash } from "../stadium/precinct-effects.ts";
 import {
   seasonSponsorBonusPayouts,
@@ -14,6 +15,7 @@ import {
   isFinanceMonthStart,
   shouldCloseFinanceMonth,
   type FinanceLine,
+  type FinanceLineKind,
   type FinanceMonthSnapshot,
 } from "./finance-ledger.ts";
 import type { CoachingStaff } from "../staff/coaching-staff.ts";
@@ -43,6 +45,7 @@ export interface WeeklyFinanceContext {
   campUpkeepWeekly?: number;
   hospitalityIncome?: number;
   overtimeCost?: number;
+  commerceOccupancy?: number;
 }
 
 export interface WeeklyFinanceResult {
@@ -50,8 +53,8 @@ export interface WeeklyFinanceResult {
   lines: FinanceLine[];
 }
 
-export const STARTING_CLUB_CASH = 6_000_000;
-export const STARTING_TRANSFER_BUDGET = 2_500_000;
+export const STARTING_CLUB_CASH = 4_500_000;
+export const STARTING_TRANSFER_BUDGET = 1_800_000;
 export const STARTING_WAGE_BUDGET_WEEKLY = 85_000;
 /** @deprecated Use division economy sponsorship_weekly */
 export const WEEKLY_SPONSORSHIP = 55_000;
@@ -183,7 +186,11 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
   if (tickets > 0) {
     lines.push({ kind: "matchday_tickets", amount: tickets, week });
   }
-  const merch = weeklyPrecinctCash(context.stadium?.precinct) + (context.hospitalityIncome ?? 0);
+  const merch =
+    weeklyPrecinctCash(
+      context.stadium?.precinct,
+      context.commerceOccupancy ?? weekCommerceOccupancy(context.isHomeMatchWeek, context.stadium),
+    ) + (context.hospitalityIncome ?? 0);
   if (merch > 0) {
     lines.push({ kind: "concessions", amount: merch, week });
   }
@@ -287,11 +294,26 @@ export function applyTransferFee(finances: ClubFinances, fee: number, week?: num
   return next;
 }
 
+/** Capital spend: cash down and a pending ledger line (PRD 11). */
+export function spendClubCash(
+  finances: ClubFinances,
+  amount: number,
+  week: number,
+  kind: FinanceLineKind = "infrastructure",
+): ClubFinances {
+  if (!Number.isFinite(amount) || amount <= 0) return finances;
+  const line: FinanceLine = { kind, amount: -amount, week };
+  let next = applyFinanceLines(finances, [line]);
+  next = appendPendingFinanceLines(next, [line]);
+  return next;
+}
+
 export function formatClubCash(amount: number): string {
-  const value = Math.max(0, amount);
-  if (value >= 1_000_000) return `€ ${(value / 1_000_000).toFixed(2)} Mio.`;
-  if (value >= 1_000) return `€ ${Math.round(value / 1_000)}k`;
-  return `€ ${value}`;
+  if (!Number.isFinite(amount)) return "€ 0";
+  if (amount < 0) return formatSignedCash(amount);
+  if (amount >= 1_000_000) return `€ ${(amount / 1_000_000).toFixed(2)} Mio.`;
+  if (amount >= 1_000) return `€ ${Math.round(amount / 1_000)}k`;
+  return `€ ${amount}`;
 }
 
 export function formatSignedCash(amount: number): string {

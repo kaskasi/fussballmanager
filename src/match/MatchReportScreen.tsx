@@ -3,6 +3,8 @@ import type { MatchView } from "@fussballmanager/shared";
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
 import { formatCalendarWeek } from "../sim/game-calendar.ts";
 import { weekdayLabel } from "../sim/day-calendar.ts";
+import { formatClubCash } from "../economy/club-finances.ts";
+import type { MatchdayCashBreakdown } from "../stadium/matchday-commerce.ts";
 import { MatchStats } from "./MatchStats.tsx";
 import { MatchThreeStars } from "./MatchThreeStars.tsx";
 import { pickMatchThreeStars } from "./match-three-stars.ts";
@@ -13,11 +15,13 @@ export function MatchReportScreen({
   setup,
   week,
   weekday,
+  kasse,
 }: {
   view: MatchView;
   setup: CareerMatchSetup;
   week: number;
   weekday: number;
+  kasse?: MatchdayCashBreakdown;
 }) {
   const normalized = normalizeMatchView(view);
   const lastFrame = normalized.frames[normalized.frames.length - 1] ?? normalized.kickoff;
@@ -51,6 +55,36 @@ export function MatchReportScreen({
       </header>
 
       <MatchThreeStars stars={threeStars} />
+
+      {kasse?.home ? (
+        <section className="match-report-kasse" aria-label="Kasse">
+          <h2>💰 Kasse</h2>
+          <ul>
+            <li>
+              <span>🎟️ Eintritt</span>
+              <strong>{formatClubCash(kasse.tickets)}</strong>
+            </li>
+            <li>
+              <span>🌭 Wurst</span>
+              <strong>{formatClubCash(kasse.kiosk)}</strong>
+            </li>
+            <li>
+              <span>🍺 Bierzelt</span>
+              <strong>{formatClubCash(kasse.beer)}</strong>
+            </li>
+            <li>
+              <span>👕 Fanshop</span>
+              <strong>{formatClubCash(kasse.shop)}</strong>
+            </li>
+            <li className="match-report-kasse-total">
+              <span>Summe</span>
+              <strong>{formatClubCash(kasse.total)}</strong>
+            </li>
+          </ul>
+        </section>
+      ) : kasse && !kasse.home ? (
+        <p className="match-report-kasse-away">Imbiss läuft über die Woche in Finanzen.</p>
+      ) : null}
 
       <div className="match-report-grid">
         <section className="match-report-panel" aria-label="Tore">

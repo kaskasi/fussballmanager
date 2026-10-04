@@ -12,6 +12,7 @@ export type FinanceLineKind =
   | "facility_maintenance"
   | "transfer_fee"
   | "concessions"
+  | "infrastructure"
   | "other";
 
 export interface FinanceLine {
@@ -67,6 +68,8 @@ export function financeLineLabel(kind: FinanceLineKind): string {
       return "Ablöse";
     case "concessions":
       return "Imbiss & Shop";
+    case "infrastructure":
+      return "Ausbau";
     default:
       return "Sonstiges";
   }
@@ -95,6 +98,8 @@ export function financeLineIcon(kind: FinanceLineKind): string {
       return "↔️";
     case "concessions":
       return "🌭";
+    case "infrastructure":
+      return "🏗️";
     default:
       return "•";
   }

@@ -61,11 +61,12 @@ export function precinctFillRateBonus(state: PrecinctState | undefined): number 
   return Object.values(fillParts(state)).reduce((sum, value) => sum + value, 0);
 }
 
-/** Extra weekly fanbase from merch / clubhouse (PRD F7.5, light campus). */
-export function precinctWeeklyFanbaseBonus(state: PrecinctState | undefined): number {
+/** Extra weekly fanbase from merch / clubhouse (PRD F7.5). Scales with occupancy. */
+export function precinctWeeklyFanbaseBonus(state: PrecinctState | undefined, occupancy = 1): number {
   if (!state) return 0;
   const parts = fanbaseParts(state);
-  return parts.fanshop + parts.clubhouse + parts.beer + parts.services;
+  const full = parts.fanshop + parts.clubhouse + parts.beer + parts.services;
+  return full * clampOccupancy(occupancy);
 }
 
 /**
@@ -106,32 +107,50 @@ export function precinctMerchCogsMultiplier(state: PrecinctState | undefined): n
   return Math.max(0.82, 1 - shop * 0.06);
 }
 
-const KIOSK_WEEKLY_PER_CELL = 500;
-const BEER_WEEKLY_PER_CELL = 450;
+/** Full-house margin per docked kiosk cell (Heimspiel, 100% fill). */
+export const KIOSK_FULL_PER_CELL = 1000;
+/** Full-house margin per docked beer-tent cell. */
+export const BEER_FULL_PER_CELL = 900;
+const VISIT_FILL_MIN = 0.04;
+const VISIT_FILL_MAX = 0.12;
+
+function clampOccupancy(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(1, Math.max(0, value));
+}
 
 function formatCash(amount: number): string {
   if (amount >= 1000) return `€ ${Math.round(amount / 1000)}k`;
   return `€ ${amount}`;
 }
 
-/** Weekly sausage-stall margin. Scales with docked kiosk cells. */
-export function weeklyKioskIncome(state: PrecinctState | undefined): number {
+function scaleByOccupancy(full: number, occupancy = 1): number {
+  return Math.round(full * clampOccupancy(occupancy));
+}
+
+/** Sightseeing / midweek visitors — never a full match crowd. */
+export function precinctVisitFill(fanbase: number, state: PrecinctState | undefined): number {
+  const fans = Math.min(95, Math.max(25, fanbase));
+  const fromFans = VISIT_FILL_MIN + ((fans - 25) / 70) * 0.05;
+  const fromCampus = Math.min(0.03, precinctFillRateBonus(state) * 0.2);
+  return Math.min(VISIT_FILL_MAX, Math.max(VISIT_FILL_MIN, fromFans + fromCampus));
+}
+
+export function kioskFullCapacity(state: PrecinctState | undefined): number {
   if (!state) return 0;
   const cells = dockedOccupiedCells(state, "kiosk");
   if (cells <= 0) return 0;
-  return Math.round(cells * KIOSK_WEEKLY_PER_CELL);
+  return cells * KIOSK_FULL_PER_CELL;
 }
 
-/** Weekly beer-tent margin. Scales with docked tent area. */
-export function weeklyBeerIncome(state: PrecinctState | undefined): number {
+export function beerFullCapacity(state: PrecinctState | undefined): number {
   if (!state) return 0;
   const cells = dockedOccupiedCells(state, "beer_tent");
   if (cells <= 0) return 0;
-  return Math.round(cells * BEER_WEEKLY_PER_CELL);
+  return cells * BEER_FULL_PER_CELL;
 }
 
-/** Weekly merch margin after wholesale (fanshop upgrade = cheaper buying). */
-export function weeklyFanshopIncome(state: PrecinctState | undefined): number {
+export function fanshopFullCapacity(state: PrecinctState | undefined): number {
   if (!state) return 0;
   const shop = dockedOccupiedCells(state, "fanshop") > 0 ? precinctBuildingLevel(state, "fanshop") : 0;
   if (shop <= 0) return 0;
@@ -139,9 +158,24 @@ export function weeklyFanshopIncome(state: PrecinctState | undefined): number {
   return Math.round(4_000 * shop * (1.15 - cogs) * (1 + Math.max(0, dockedOccupiedCells(state, "fanshop") - 4) * 0.08));
 }
 
-/** Wurst + Bier + Shop, paid weekly. */
-export function weeklyPrecinctCash(state: PrecinctState | undefined): number {
-  return weeklyKioskIncome(state) + weeklyBeerIncome(state) + weeklyFanshopIncome(state);
+/** Weekly sausage-stall margin. Per-stand capacity × occupancy — no shared sausage pie. */
+export function weeklyKioskIncome(state: PrecinctState | undefined, occupancy = 1): number {
+  return scaleByOccupancy(kioskFullCapacity(state), occupancy);
+}
+
+/** Weekly beer-tent margin. Scales with docked tent area × occupancy. */
+export function weeklyBeerIncome(state: PrecinctState | undefined, occupancy = 1): number {
+  return scaleByOccupancy(beerFullCapacity(state), occupancy);
+}
+
+/** Weekly merch margin after wholesale (fanshop upgrade = cheaper buying). */
+export function weeklyFanshopIncome(state: PrecinctState | undefined, occupancy = 1): number {
+  return scaleByOccupancy(fanshopFullCapacity(state), occupancy);
+}
+
+/** Wurst + Bier + Shop, paid weekly × occupancy. */
+export function weeklyPrecinctCash(state: PrecinctState | undefined, occupancy = 1): number {
+  return weeklyKioskIncome(state, occupancy) + weeklyBeerIncome(state, occupancy) + weeklyFanshopIncome(state, occupancy);
 }
 
 export type PrecinctStatusTone = "buff" | "hunger" | "warn";
@@ -263,13 +297,13 @@ export function listPrecinctStatusEffects(state: PrecinctState | undefined): Pre
       }
     }
     if (placed && def.id === "kiosk" && kioskCash > 0) {
-      bits.push(`Kasse ${formatCash(kioskCash)}/Wo`);
+      bits.push(`Kasse ${formatCash(kioskCash)} bei voller Auslastung`);
     }
     if (placed && def.id === "beer_tent" && beerCash > 0) {
-      bits.push(`Kasse ${formatCash(beerCash)}/Wo`);
+      bits.push(`Kasse ${formatCash(beerCash)} bei voller Auslastung`);
     }
     if (placed && def.id === "fanshop" && merch > 0) {
-      bits.push(`Merch ${formatCash(merch)}/Wo`);
+      bits.push(`Merch ${formatCash(merch)} bei voller Auslastung`);
     }
     if (placed && (def.id === "hotel" || def.id === "restaurant")) {
       bits.push("Auslastung");

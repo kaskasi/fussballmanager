@@ -9,6 +9,7 @@ import {
   financeMonthSnapshot,
   monthNetTotal,
   type FinanceLine,
+  type FinanceLineKind,
   type FinanceMonthSnapshot,
 } from "./finance-ledger.ts";
 
@@ -130,4 +131,117 @@ export function seasonCashSparkline13(
 
 export function weekPreviewFinanceLines(context: WeeklyFinanceContext): FinanceLine[] {
   return buildWeeklyFinanceLines(context);
+}
+
+export type FinanceFlowCategory =
+  | "matchday"
+  | "operations"
+  | "wages"
+  | "transfers"
+  | "infrastructure"
+  | "other";
+
+export const FINANCE_FLOW_META: Record<FinanceFlowCategory, { icon: string; label: string }> = {
+  matchday: { icon: "🎟️", label: "Spieltag" },
+  operations: { icon: "📺", label: "Betrieb" },
+  wages: { icon: "👕", label: "Gehälter" },
+  transfers: { icon: "↔️", label: "Transfers" },
+  infrastructure: { icon: "🏗️", label: "Ausbau" },
+  other: { icon: "•", label: "Sonstiges" },
+};
+
+export const FINANCE_FLOW_ORDER: readonly FinanceFlowCategory[] = [
+  "matchday",
+  "operations",
+  "wages",
+  "transfers",
+  "infrastructure",
+  "other",
+];
+
+export function financeFlowCategory(kind: FinanceLineKind): FinanceFlowCategory {
+  switch (kind) {
+    case "matchday_tickets":
+    case "concessions":
+      return "matchday";
+    case "sponsorship":
+    case "tv_rights":
+    case "tv_bonus":
+    case "league_prize":
+    case "facility_maintenance":
+      return "operations";
+    case "player_wages":
+    case "staff_wages":
+      return "wages";
+    case "player_sale":
+    case "transfer_fee":
+      return "transfers";
+    case "infrastructure":
+      return "infrastructure";
+    default:
+      return "other";
+  }
+}
+
+export interface MonthlyCategoryFlow {
+  month: number;
+  cash: number;
+  matchday: number;
+  operations: number;
+  wages: number;
+  transfers: number;
+  infrastructure: number;
+  other: number;
+}
+
+function emptyCategoryTotals() {
+  return {
+    matchday: 0,
+    operations: 0,
+    wages: 0,
+    transfers: 0,
+    infrastructure: 0,
+    other: 0,
+  };
+}
+
+function addLineToCategories(
+  totals: ReturnType<typeof emptyCategoryTotals>,
+  line: FinanceLine,
+): void {
+  const category = financeFlowCategory(line.kind);
+  totals[category] += line.amount;
+}
+
+export function seasonCategorizedFlows(
+  finances: ClubFinances,
+  season: number,
+  week: number,
+): MonthlyCategoryFlow[] {
+  const currentMonth = financeMonthForWeek(week);
+  const byMonth = new Map<number, ReturnType<typeof emptyCategoryTotals>>();
+  const cashByMonth = new Map<number, number>();
+  for (const entry of finances.ledger ?? []) {
+    if (entry.season !== season) continue;
+    const totals = emptyCategoryTotals();
+    for (const line of entry.lines) addLineToCategories(totals, line);
+    byMonth.set(entry.month, totals);
+    cashByMonth.set(entry.month, entry.closing_cash);
+  }
+  const pending = finances.pending_lines ?? [];
+  if (pending.length > 0) {
+    const totals = byMonth.get(currentMonth) ?? emptyCategoryTotals();
+    for (const line of pending) addLineToCategories(totals, line);
+    byMonth.set(currentMonth, totals);
+    cashByMonth.set(currentMonth, finances.cash);
+  }
+  const rows: MonthlyCategoryFlow[] = [];
+  let lastCash = finances.month_opening_cash ?? finances.cash;
+  for (let month = 1; month <= SPARKLINE_MONTHS; month += 1) {
+    const totals = byMonth.get(month) ?? emptyCategoryTotals();
+    const cash = cashByMonth.get(month);
+    if (cash != null && month <= currentMonth) lastCash = cash;
+    rows.push({ month, cash: lastCash, ...totals });
+  }
+  return rows;
 }

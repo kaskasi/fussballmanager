@@ -21,6 +21,7 @@ import { buildPreMatchBrief } from "./pre-match-brief.ts";
 import { PreMatchBlock } from "./PreMatchBlock.tsx";
 import { useMatchPlayback } from "./useMatchPlayback.ts";
 import { MatchReportScreen } from "./MatchReportScreen.tsx";
+import type { MatchdayCashBreakdown } from "../stadium/matchday-commerce.ts";
 
 export function CareerMatch({
   setup,
@@ -37,6 +38,7 @@ export function CareerMatch({
   onSkip,
   onNavActionChange,
   broadcastStory,
+  kasse,
 }: {
   setup: CareerMatchSetup;
   players: readonly Player[];
@@ -52,6 +54,7 @@ export function CareerMatch({
   onSkip: (outcome: WatchedPlayerMatch) => void;
   onNavActionChange: (action: NavPrimaryAction | null) => void;
   broadcastStory?: BroadcastStoryContext;
+  kasse?: MatchdayCashBreakdown;
 }) {
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
 
@@ -94,6 +97,7 @@ export function CareerMatch({
       onSkip={onSkip}
       onNavActionChange={onNavActionChange}
       broadcastStory={broadcastStory}
+      kasse={kasse}
     />
   );
 }
@@ -109,6 +113,7 @@ function CareerMatchPlayback({
   onSkip,
   onNavActionChange,
   broadcastStory,
+  kasse,
 }: {
   setup: CareerMatchSetup;
   playerClubSquad: Squad;
@@ -120,6 +125,7 @@ function CareerMatchPlayback({
   onSkip: (outcome: WatchedPlayerMatch) => void;
   onNavActionChange: (action: NavPrimaryAction | null) => void;
   broadcastStory?: BroadcastStoryContext;
+  kasse?: MatchdayCashBreakdown;
 }) {
   const [view, setView] = useState<Awaited<ReturnType<typeof fetchCareerMatchView>> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -351,6 +357,7 @@ function CareerMatchPlayback({
           setup={setup}
           week={week}
           weekday={weekday}
+          kasse={kasse}
         />
       ) : null}
 

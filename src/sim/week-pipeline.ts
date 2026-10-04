@@ -35,6 +35,7 @@ import { advanceCalendarWeek, SEASON_END_WEEK } from "./game-calendar.ts";
 import { advanceLeagueWeek } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
 import { environmentFromCoachingStaff } from "../staff/coaching-staff.ts";
+import { weekCommerceOccupancy } from "../stadium/matchday-commerce.ts";
 import {
   precinctFitnessRegen,
   precinctTrainingEnvironment,
@@ -241,15 +242,16 @@ export async function simulateGameWeek(
   );
   const trialStep = advanceProTrials(advanced.players, session.clubId, session.season, nextWeek);
   const playersWithMorale = applyDepartureMoralePressure(trialStep.players, advanced.inbox);
+  const isHomeMatchWeek =
+    leagueStep.playerFixture?.homeTeamId === session.league.player_club_id;
+  const occupancy = weekCommerceOccupancy(isHomeMatchWeek, session.stadium);
   const fanbaseDelta =
     weeklyFanbaseDelta(
       leagueWithCareerStats,
       session.clubId,
       leagueStep.playerFixture != null,
-    ) + precinctWeeklyFanbaseBonus(session.stadium.precinct);
+    ) + precinctWeeklyFanbaseBonus(session.stadium.precinct, occupancy);
   const stadium = advanceClubFanbase(session.stadium, fanbaseDelta);
-  const isHomeMatchWeek =
-    leagueStep.playerFixture?.homeTeamId === session.league.player_club_id;
   const opponentId =
     isHomeMatchWeek && leagueStep.playerFixture
       ? leagueStep.playerFixture.awayTeamId
@@ -283,6 +285,7 @@ export async function simulateGameWeek(
     campUpkeepWeekly: weeklyCampUpkeep(session.youthCamps),
     hospitalityIncome,
     overtimeCost: overtimeDue,
+    commerceOccupancy: occupancy,
   });
   const finances = financeStep.finances;
   const playersWithGrowth = stampWeeklyGrowthBatch(playersAtWeekStart, playersWithMorale);

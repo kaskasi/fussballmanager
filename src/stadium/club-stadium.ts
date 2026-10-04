@@ -233,6 +233,14 @@ export function stadiumTotalCapacity(stadium: ClubStadium): number {
   return stadium.blocks.reduce((sum, block) => sum + block.capacity, 0);
 }
 
+/** Capacity-weighted attendance share (Heimspiel fill). */
+export function stadiumAttendanceFill(stadium: ClubStadium): number {
+  const capacity = stadiumTotalCapacity(stadium);
+  if (capacity <= 0) return 0;
+  const sold = stadium.blocks.reduce((sum, block) => sum + block.capacity * block.fill_rate, 0);
+  return Math.min(1, Math.max(0, sold / capacity));
+}
+
 export function stadiumBlockIncome(block: StadiumBlock): number {
   return block.capacity * block.fill_rate * block.ticket_price_eur;
 }

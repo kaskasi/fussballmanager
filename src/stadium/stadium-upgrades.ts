@@ -1,4 +1,4 @@
-import type { ClubFinances } from "../economy/club-finances.ts";
+import { spendClubCash, type ClubFinances } from "../economy/club-finances.ts";
 import type { ClubStadium, StadiumBlock, StadiumTier } from "./club-stadium.ts";
 
 const TICKET_PRICE_MAX = 95;
@@ -152,6 +152,7 @@ export function purchaseStadiumUpgrade(
   finances: ClubFinances,
   upgradeId: string,
   baseBlocks: StadiumBlock[],
+  week = 1,
 ): { stadium: ClubStadium; finances: ClubFinances; ok: boolean; reason?: string } {
   const check = canPurchaseStadiumUpgrade(stadium, finances, upgradeId);
   if (!check.allowed || check.cost === undefined) {
@@ -167,7 +168,7 @@ export function purchaseStadiumUpgrade(
   );
   return {
     stadium: upgraded,
-    finances: { ...finances, cash: finances.cash - check.cost },
+    finances: spendClubCash(finances, check.cost, week),
     ok: true,
   };
 }

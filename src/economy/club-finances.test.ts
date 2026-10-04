@@ -11,6 +11,7 @@ import {
   formatClubCash,
   matchdayTicketIncome,
   normalizeFinances,
+  spendClubCash,
   wageBudgetHeadroom,
   weeklyWageBill,
 } from "./club-finances.ts";
@@ -177,5 +178,22 @@ describe("club finances", () => {
   it("formats cash for the UI", () => {
     expect(formatClubCash(6_000_000)).toContain("Mio.");
     expect(formatClubCash(12_500)).toContain("k");
+    expect(formatClubCash(-40_000)).toContain("−");
+  });
+
+  it("starts new clubs with a tight cash stack", () => {
+    const finances = defaultClubFinances();
+    expect(finances.cash).toBe(4_500_000);
+    expect(finances.transfer_budget).toBe(1_800_000);
+  });
+
+  it("books infrastructure into the pending ledger", () => {
+    const next = spendClubCash(defaultClubFinances(), 320_000, 6);
+    expect(next.cash).toBe(defaultClubFinances().cash - 320_000);
+    expect(next.pending_lines).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "infrastructure", amount: -320_000, week: 6 }),
+      ]),
+    );
   });
 });

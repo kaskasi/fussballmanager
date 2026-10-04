@@ -52,6 +52,7 @@ import { migration051AbilityStamps } from "./migration_051_ability_stamps.ts";
 import { migration052PhaseStamps } from "./migration_052_phase_stamps.ts";
 import { migration053HospitalityCamps } from "./migration_053_hospitality_camps.ts";
 import { migration054HybridStamps } from "./migration_054_hybrid_stamps.ts";
+import { migration055InfrastructureLedger } from "./migration_055_infrastructure_ledger.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -113,6 +114,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration052PhaseStamps,
   migration053HospitalityCamps,
   migration054HybridStamps,
+  migration055InfrastructureLedger,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

@@ -67,7 +67,7 @@ export const PRECINCT_CITY_LINK = { x: 6, y: -1, w: 2, h: 1 } as const;
  * Expansion uses 2×5 Rosenberg plates (`PRECINCT_EXPANSION_COST`).
  */
 export const PRECINCT_PARCEL_COST = 90_000;
-export const PRECINCT_EXPANSION_COST = 240_000;
+export const PRECINCT_EXPANSION_COST = 320_000;
 export const PRECINCT_STREET_COST = 15_000;
 
 export type PrecinctExpansionSide = "left" | "right";

@@ -82,12 +82,14 @@ export interface ClubFinances {
 
 ```json
 {
-  "cash": 6000000,
-  "transfer_budget": 2500000,
+  "cash": 4500000,
+  "transfer_budget": 1800000,
   "wage_budget_weekly": 85000,
   "last_closed_month": 0
 }
 ```
+
+Bestehende Saves behalten ihren Kassenstand. Zwei bis drei Kapitalkäufe (Hotel, Camp, Leistungszentrum) bedrohen die Vorstand-Kasse (`min_cash` Nordstern €3,5 Mio.).
 
 **Invarianten:**
 
@@ -105,6 +107,8 @@ function weeklyWageBill(players, clubId): number;
 function transferBudgetAvailable(finances): number; // = finances.transfer_budget
 function wageBudgetHeadroom(finances, players, clubId): number;
 // wage_budget_weekly - weeklyWageBill
+function spendClubCash(finances, amount, week, kind = "infrastructure"): ClubFinances;
+// deducts cash and appends a pending FinanceLine — never raw `cash - cost`
 ```
 
 Transfers (PRD 05) prüfen `transfer_budget`, nicht rohes `cash`. Gehaltsverhandlungen prüfen `wageBudgetHeadroom`.
@@ -122,6 +126,7 @@ Alle Einnahmen laufen über `applyIncome(finances, line)` → erhöht `cash`. Tr
 | `sponsorship` | Jede Woche | `division.sponsorship_weekly` |
 | `tv_rights` | Jede Woche | `division.tv_weekly` |
 | `matchday_tickets` | Heimspiel-Woche (Sa) | `capacity × fill_rate × avg_ticket` |
+| `concessions` | Jede Woche | Imbiss/Shop × Occupancy (Heim = Ticket-Fill; sonst Visit-Fill 4–12 %). Hotel/Restaurant extra. Vollhaus z. B. €1000 je Kiosk-Zelle, nicht 1 Wurst pro Zuschauer geteilt durch Stände. |
 | `league_prize` | Saisonende | `division.prize_by_place[table_place]` |
 | `tv_bonus` | Saisonende | `division.tv_season_bonus[table_place]` |
 | `player_sale` | Transfer Verkauf | Ablöse (PRD 05) |
@@ -177,6 +182,8 @@ Die 50 %-Regel hält den Transfer-Topf spürbar, ohne ihn mit operativem Cash zu
 | `player_wages` | Jede Woche | `weeklyWageBill(pros + youth with contract, clubId)` |
 | `staff_wages` | Jede Woche | `division.staff_wages_weekly` (Flat bis F8.1) |
 | `facility_maintenance` | Jede Woche | `division.maintenance_weekly` |
+| `infrastructure` | Kapitalkauf | Gelände / Tribünen / Campus / Camps über `spendClubCash` — Kasse **und** Ledger |
+| `transfer_fee` | Transfer | Ablöse (PRD 05), nicht Ausbau |
 
 **Division-Defaults (ergänzend):**
 
@@ -218,6 +225,8 @@ export type FinanceLineKind =
   | "staff_wages"
   | "facility_maintenance"
   | "transfer_fee"
+  | "concessions"
+  | "infrastructure"
   | "other";
 
 export interface FinanceLine {
@@ -255,7 +264,7 @@ Neuer Screen **Finanzen**, erreichbar vom Pipeline-Hub (Kachel 💰 neben Cash-A
 │ ←  💰 Finanzen · Saison 2 · Monat 7                   │
 ├────────────────────────────────────────────────────────┤
 │  Kasse          Transfer-Topf      Gehalts-Cap         │
-│  € 4.82 Mio.    € 1.10 Mio.       85k / 72k ✓        │
+│  € 4.18 Mio.    € 1.80 Mio.       85k / 72k ✓        │
 ├────────────────────────────────────────────────────────┤
 │  [Wasserfall Monat 7 — Icon-Balken]                   │
 │  ▓▓ Sponsoring +220k                                  │
@@ -264,19 +273,29 @@ Neuer Screen **Finanzen**, erreichbar vom Pipeline-Hub (Kachel 💰 neben Cash-A
 │  ░░░ Gehälter -288k                                   │
 │  ░   Personal -72k                                    │
 │  ░   Unterhalt -36k                                   │
+│  ░   Ausbau -320k                                     │
 │  ─────────────────                                    │
-│  Saldo Monat: -24k                                    │
+│  Saldo Monat: -344k                                   │
 ├────────────────────────────────────────────────────────┤
-│  Saisonübersicht (Sparkline Cash, 13 Monate)          │
+│  🌭 Imbiss & Shop     🏟️ Stadion        🛤️ Runway     │
+│  diese Woche / voll   Heim-Eintritt     Gehälter-Wo    │
+│                       → öffnet Stadion  vs Vorstand    │
+├────────────────────────────────────────────────────────┤
+│  Sparkline Cash (13 Monate)                           │
+│  Ein/Aus nach Art: Matchday · Ops · Löhne · Transfers │
+│                    · Ausbau                           │
 └────────────────────────────────────────────────────────┘
 ```
 
 **Regeln:**
 
 - Wasserfall: grüne Balken = Einnahmen, rote = Ausgaben, Icons pro `FinanceLineKind`.
+- Drei Detail-Karten: Imbiss (Occupancy × Kapazität, kein SKU), Stadion (aktueller Heim-Eintritt, Link), Runway (Kasse in Gehaltswochen, Abstand zur Vorstand-Kasse). Rot wenn Monatsnetto < 0 oder Kasse unter Floor.
+- Graph: kategorisierte Balken (Matchday / Operations / Gehälter / Transfers / Ausbau) plus Sparkline `closing_cash`.
 - Keine Roh-Tabelle; Tooltip für exakte Beträge.
-- Hub-Zeile `💰 € X` bleibt; Klick öffnet Finanzscreen.
+- Hub-Zeile `💰 € X` bleibt; Klick öffnet Finanzscreen. Negative Kasse wird angezeigt (Warnung), kein Clamp auf 0.
 - Gehalts-Cap: ● grün wenn `wageBill ≤ cap`, ▲ gelb bei >90 %, ◆ rot bei Überschreitung.
+- Kapitalkauf ≥ €100k (oder ≥ eine Gehaltswoche): Runway-Sheet (Kosten, Kasse danach, Gehälter-Wochen, Vorstand-Delta). Warnen, nicht blocken. Straßen und Mini-Kioske bleiben Ein-Klick. Transfers: dieselben Zahlen im Verhandlungsmodal.
 
 ---
 
@@ -311,6 +330,8 @@ pipeline.club_finances = {
 ```
 
 `ledger` optional im Typ: `ledger?: FinanceMonthSnapshot[]`.
+
+**Später:** `save_version` 55, Migration `migration_055_infrastructure_ledger` — no-op. Kind `infrastructure` ist additiv; bestehende Ledgers und Kassenstände bleiben.
 
 **Sanitizer:** Finanzdaten bleiben im Export sichtbar (kein Hidden).
 

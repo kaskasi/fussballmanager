@@ -7,8 +7,10 @@ import {
 import {
   resolveFinanceWaterfall,
   seasonCashSparkline13,
+  seasonCategorizedFlows,
   weekPreviewFinanceLines,
 } from "./finance-waterfall.ts";
+import { spendClubCash } from "./club-finances.ts";
 
 function weekContext(week = 1) {
   const player = clonePlayer();
@@ -63,5 +65,11 @@ describe("finance waterfall", () => {
     const points = seasonCashSparkline13(defaultClubFinances(), 1, 1);
     expect(points).toHaveLength(13);
     expect(new Set(points).size).toBe(1);
+  });
+
+  it("groups infrastructure into the Ausbau category", () => {
+    const spent = spendClubCash(defaultClubFinances(), 320_000, 1);
+    const rows = seasonCategorizedFlows(spent, 1, 1);
+    expect(rows[0]?.infrastructure).toBe(-320_000);
   });
 });

@@ -97,7 +97,7 @@ export function canAssignIndividualProgram(
     if (!stampId) return { ok: false, reason: "Stempel wählen." };
     const earn = canEarnStamp(player, stampId);
     if (!earn.ok) return earn;
-    if (earn.definition.path !== "train") {
+    if (earn.definition.path !== "train" && earn.definition.path !== "hybrid") {
       return { ok: false, reason: "Dieser Stempel wird nicht trainiert — er kommt durch Leistung." };
     }
     return { ok: true };

@@ -9,6 +9,7 @@ import {
   contractTalkBounds,
   contractTalkLock,
   defaultContractOffer,
+  describeContractOffer,
   evaluateContractOffer,
   playerContractAsk,
   remainingContractYears,
@@ -86,6 +87,19 @@ describe("contract talks (PRD 05.4 / F5.4)", () => {
         minutesPromise: "rotation",
       }),
     ).toBe("reject");
+  });
+
+  it("explains a lowball wage after the first miss", () => {
+    const player = clonePlayer();
+    const ask = playerContractAsk(player, 1);
+    expect(
+      describeContractOffer(player, 1, {
+        wageWeekly: Math.floor(ask.wageWeekly * 0.8),
+        termYears: 5,
+        bonusAppearance: ask.bonusAppearance,
+        minutesPromise: "rotation",
+      }).reason,
+    ).toBe("Zu wenig Gehalt.");
   });
 
   it("rejects a minutes / startplatz downgrade", () => {

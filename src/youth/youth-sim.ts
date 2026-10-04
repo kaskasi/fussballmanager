@@ -5,6 +5,7 @@ import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
 import type { CoachIcon } from "./academy.ts";
 import { canPromotePlayer } from "./promotion-gate.ts";
+import { isHqYouth } from "./youth-site.ts";
 
 /**
  * Automatic U17/U19 week simulation (PRD 03.3, F3.3).
@@ -44,8 +45,8 @@ export function simulateYouthWeek(
   masterSeed: number,
   clubId: string = DEFAULT_CLUB_ID,
 ): { players: Player[]; report: YouthReport } {
-  const u17 = players.filter((player) => player.squad_status === "u17");
-  const u19 = players.filter((player) => player.squad_status === "u19");
+  const u17 = players.filter((player) => player.squad_status === "u17" && isHqYouth(player));
+  const u19 = players.filter((player) => player.squad_status === "u19" && isHqYouth(player));
   const standout: StandoutPlayer[] = [];
   const promotions: PromotionRecommendation[] = [];
 
@@ -54,14 +55,16 @@ export function simulateYouthWeek(
     const minutes = minutesForPlayer(player, week, masterSeed);
     const ratingChange = ratingDelta(player, minutes, week, masterSeed);
     const icon = coachIconForRating(ratingChange, player);
-    standout.push({
-      player_id: player.id,
-      rating_change: ratingChange,
-      minutes_played: minutes,
-      coach_comment_icon: icon,
-    });
+    if (isHqYouth(player)) {
+      standout.push({
+        player_id: player.id,
+        rating_change: ratingChange,
+        minutes_played: minutes,
+        coach_comment_icon: icon,
+      });
+    }
     const ca = estimateCa(player.attributes, player.position);
-    if (player.squad_status === "u17") {
+    if (isHqYouth(player) && player.squad_status === "u17") {
       if (ca >= 60 && ratingChange >= 0.4 && canPromotePlayer(players, clubId, player).allowed) {
         promotions.push({
           player_id: player.id,
@@ -76,6 +79,7 @@ export function simulateYouthWeek(
         });
       }
     } else if (
+      isHqYouth(player) &&
       player.squad_status === "u19" &&
       ca >= 68 &&
       ratingChange >= 0.25 &&

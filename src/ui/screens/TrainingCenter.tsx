@@ -820,7 +820,8 @@ function IndividualProgramModal({
               <select value={stampId} onChange={(event) => setStampId(event.target.value)}>
                 {trainStamps.map((stamp) => (
                   <option key={stamp.id} value={stamp.id}>
-                    {stamp.icon} {stamp.label} · {stamp.weeks ?? "?"} Wo.
+                    {stamp.icon} {stamp.label}
+                    {stamp.path === "hybrid" ? " · Hybrid" : ""} · {stamp.weeks ?? "?"} Wo.
                   </option>
                 ))}
               </select>

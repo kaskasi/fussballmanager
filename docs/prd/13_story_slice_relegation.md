@@ -1,6 +1,6 @@
 # /docs/prd/13_story_slice_relegation.md
 
-**Version:** 1.1  
+**Version:** 1.2  
 **Last Updated:** 2026-10-03  
 **Status:** Final  
 **Parent:** PRD 01 § „Gemeinsam gegen den Abstieg“
@@ -39,6 +39,8 @@ Migration **039** when schema changes.
 ## Effects (allowed only)
 
 - `board.pressure`, `stadium.fanbase`, player `state.morale`, `media_hype`
+- Hospitality (F7.3): Restaurant-Auslastung 12 Wochen 100% nach Viral-Beat;
+  Überstunden-Lohn als Kassen-Abzug. Keine erfundenen Tore oder Transfers.
 - No invented scores, transfers, or potentials
 
 ## UI surfaces

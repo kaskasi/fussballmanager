@@ -147,6 +147,13 @@ import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
 import { SaveToast } from "./ui/components/SaveToast.tsx";
 import { TransferWindowAmbience } from "./ui/components/TransferWindowAmbience.tsx";
 import { YouthCampus } from "./ui/screens/YouthCampus";
+import { canBuyAcademyUpgrade } from "./youth/academy.ts";
+import {
+  buyYouthCamp,
+  canBuyYouthCamp,
+  pullCampPlayerToHq,
+  setCampStaffed,
+} from "./youth/satellite-camps.ts";
 import {
   applyProfileActionToSquad,
   type PlayerProfileAction,
@@ -308,6 +315,8 @@ export default function App() {
     storyState,
     assistantDelegation,
     scoutNetwork,
+    academyFacility,
+    youthCamps,
   } = session;
   const scoutCapacity = scoutNetworkCapacity(scoutNetwork);
 
@@ -804,6 +813,59 @@ export default function App() {
               : normalizeFinances({ ...current.finances, cash: current.finances.cash - cost }),
         };
       });
+    },
+    [patchSession],
+  );
+
+  const handleUpgradeAcademy = useCallback(() => {
+    patchSession((current) => {
+      const check = canBuyAcademyUpgrade(
+        current.academyFacility,
+        stadiumTotalCapacity(current.stadium),
+        current.finances.cash,
+      );
+      if (!check.ok) return current;
+      return {
+        ...current,
+        academyFacility: check.target,
+        finances: normalizeFinances({ ...current.finances, cash: current.finances.cash - check.cost }),
+      };
+    });
+  }, [patchSession]);
+
+  const handleBuyYouthCamp = useCallback(
+    (nationId: string) => {
+      patchSession((current) => {
+        const check = canBuyYouthCamp(current.youthCamps, nationId, current.finances.cash);
+        if (!check.ok) return current;
+        return {
+          ...current,
+          youthCamps: buyYouthCamp(current.youthCamps, nationId, current.season),
+          finances: normalizeFinances({ ...current.finances, cash: current.finances.cash - check.cost }),
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handleToggleCampStaff = useCallback(
+    (nationId: string, staffed: boolean) => {
+      patchSession((current) => ({
+        ...current,
+        youthCamps: setCampStaffed(current.youthCamps, nationId, staffed),
+      }));
+    },
+    [patchSession],
+  );
+
+  const handlePullCampPlayer = useCallback(
+    (playerId: string) => {
+      patchSession((current) => ({
+        ...current,
+        players: current.players.map((player) =>
+          player.id === playerId ? pullCampPlayerToHq(player) : player,
+        ),
+      }));
     },
     [patchSession],
   );
@@ -1726,9 +1788,16 @@ export default function App() {
           clubId={session.clubId}
           trainingPlan={trainingPlan}
           individualPrograms={individualPrograms}
+          academyFacility={academyFacility}
+          youthCamps={youthCamps}
+          cash={finances.cash}
           onSelectPlayer={setProfileId}
           onOpenInbox={openInbox}
           onInboxDecision={handleInboxDecision}
+          onUpgradeAcademy={handleUpgradeAcademy}
+          onBuyCamp={handleBuyYouthCamp}
+          onToggleCampStaff={handleToggleCampStaff}
+          onPullCampPlayer={handlePullCampPlayer}
         />
       ) : null}
       {screen === "scouting" ? (

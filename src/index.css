@@ -6249,6 +6249,91 @@ body {
   cursor: pointer;
 }
 
+.profile-hunger-start.is-hybrid {
+  border-style: dashed;
+  border-width: 2px;
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #f59e0b;
+}
+
+.profile-hex {
+  width: min(100%, 16rem);
+  aspect-ratio: 1;
+  display: block;
+  margin: 0 auto 0.35rem;
+}
+
+.profile-hex-grid {
+  fill: none;
+  stroke: #cbd5e1;
+  stroke-width: 1;
+}
+
+.profile-hex-fill {
+  fill: rgb(5 150 105 / 32%);
+  stroke: #047857;
+  stroke-width: 1.6;
+}
+
+.profile-hex-ci-outer {
+  fill: rgb(100 116 139 / 22%);
+  stroke: #64748b;
+  stroke-width: 1.2;
+  stroke-dasharray: 4 3;
+}
+
+.profile-hex-ci-inner {
+  fill: #fff;
+  stroke: #94a3b8;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.profile-hex-label {
+  font-size: 8px;
+  font-weight: 700;
+  fill: #64748b;
+}
+
+.profile-sheet {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0.75rem 0 0;
+}
+
+.profile-sheet-group {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.profile-bar-row.is-footnote {
+  gap: 0.35rem;
+}
+
+.profile-bar-row.is-footnote .profile-bar-track {
+  height: 0.32rem;
+}
+
+.profile-gate-mark {
+  color: #b45309;
+  font-size: 0.7rem;
+}
+
+.profile-xp {
+  display: grid;
+  grid-template-columns: auto 1fr 2.2rem;
+  gap: 0.45rem;
+  align-items: center;
+  margin: 0.65rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.profile-xp-label {
+  color: #334155;
+}
+
 .profile-vertrag-status {
   margin: 0;
   font-weight: 800;
@@ -6618,6 +6703,9 @@ body {
 }
 
 .profile-bar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -8296,6 +8384,43 @@ body {
 .campus-building-name {
   display: block;
   font-weight: 700;
+}
+
+.campus-building-effect {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.campus-upgrade-row {
+  margin-top: 1rem;
+}
+
+.youth-camp-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.youth-camp-card {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
+}
+
+.youth-camp-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.youth-camp-roster {
+  list-style: none;
+  padding: 0.5rem 0 0;
+  margin: 0;
 }
 
 .campus-gate {

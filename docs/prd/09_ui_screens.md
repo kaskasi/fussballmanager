@@ -1,6 +1,6 @@
 # /docs/prd/09_ui_screens.md
 
-**Version:** 1.5
+**Version:** 1.6
 **Last Updated:** 2026-10-04
 **Status:** Final  
 
@@ -94,12 +94,13 @@ Interaktion:
   Stamp-Ziele (F2.8, `kind: "stamp"`) wenn das Gate erfüllt ist.
 - Bestätigen wirkt ab der kommenden Woche.
 
-**Screen 2 — Youth Campus (2D Iso)**
+**Screen 2 — Youth Campus (Grid)**
 
-- Gebäude nach Academy-Level visuell unterscheidbar.
-- Klick auf ein Gebäude wechselt nach 2a.
+- Gebäude nach Academy-Level visuell unterscheidbar (SVG-Glyphen, kein Iso-Stadtmodell).
+- Klick auf ein Gebäude wechselt nach 2a oder kauft die nächste Stufe.
 - Spieler-Badges im Grid, sortiert nach Coach-Icon (🚀 / ➡️ / ⚠️ / 😞).
 - Abgangsrisiko: roter Rand, Klick öffnet die Decision Inbox.
+- Camps: Nationen-Liste, kaufen, Betreuer, Übernehmen in die Zentrale.
 
 **Screen 2b — Decision Inbox Modal**
 

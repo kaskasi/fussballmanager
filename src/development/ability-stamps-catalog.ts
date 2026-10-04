@@ -10,6 +10,8 @@ export interface StampAttributeGates {
   season_goals?: number;
   season_yellow_cards?: number;
   career_apps?: number;
+  flexibility_lanes?: number;
+  positions?: readonly PositionPrimary[];
 }
 
 export interface StampSpawn {
@@ -106,6 +108,60 @@ export const ABILITY_STAMPS: readonly StampDefinition[] = [
     path: "event",
     gates: { season_yellow_cards: 13 },
     applied: { strength: 2, composure: 2, passing: -1 },
+  },
+  {
+    id: "anfuehrer",
+    label: "Anführer",
+    icon: "📣",
+    path: "hybrid",
+    weeks: 10,
+    gates: { career_apps: 80, attributes: { leadership: 90 } },
+    applied: { leadership: 3, composure: 2, pace: -1 },
+  },
+  {
+    id: "kuenstler",
+    label: "Künstler",
+    icon: "🎨",
+    path: "hybrid",
+    weeks: 10,
+    gates: { attributes: { dribbling: 100, technique: 95 } },
+    applied: { dribbling: 3, technique: 2, teamwork: -1 },
+  },
+  {
+    id: "krieger",
+    label: "Krieger",
+    icon: "⚔️",
+    path: "train",
+    weeks: 8,
+    gates: { attributes: { strength: 100, concentration: 85 } },
+    applied: { strength: 3, positioning: 2, passing: -1 },
+  },
+  {
+    id: "motor",
+    label: "Motor",
+    icon: "🔋",
+    path: "train",
+    weeks: 8,
+    gates: { attributes: { stamina: 100, teamwork: 90 } },
+    applied: { stamina: 3, teamwork: 2, shooting: -1 },
+  },
+  {
+    id: "taschenmesser",
+    label: "Taschenmesser",
+    icon: "🔧",
+    path: "hybrid",
+    weeks: 10,
+    gates: { flexibility_lanes: 2 },
+    applied: { positioning: 3, teamwork: 2, shooting: -1 },
+  },
+  {
+    id: "sweeper_keeper",
+    label: "Sweeper-Keeper",
+    icon: "🧤",
+    path: "train",
+    weeks: 10,
+    gates: { positions: ["GK"], attributes: { gk_handling: 100, positioning: 90 } },
+    applied: { gk_handling: 3, passing: 2, strength: -1 },
   },
 ] as const;
 

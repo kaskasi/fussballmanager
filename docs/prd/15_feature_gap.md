@@ -1,6 +1,6 @@
 # /docs/prd/15_feature_gap.md
 
-**Version:** 1.10
+**Version:** 1.11
 **Last Updated:** 2026-10-04
 **Status:** Final (Analyse — keine neuen Shipping-Features ohne Eintrag in PRD 10)
 
@@ -96,18 +96,20 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 | F6.4 | M1 | Wasserfall 11.5 | Icon-Balken + 13-Mo-Sparkline | — |
 | F7.1 | M1 | 2D-Grundriss, Preise | Grundriss + Banden auf Tribünen + Shirt | Gelände-Tab separat |
 | F7.2 | M2 | Kapazität, VIP, Heizung | Shop-Liste + Levels · extra Banden bei Steh/Sitz | Shop unter der Karte |
-| F7.3 | M3 | Wurst, Fanshop, Hotel, Museum | Farm 14×10, 2×5-Platten, Docking ⚠️, Kiosk-Cash | Hotel, Museum, Wurst-SKU; 1×1-Deko später |
+| F7.3 | M3 | Wurst, Fanshop, Hotel, Restaurant | Farm + Kiosk-Cash + Hotel/Restaurant-Auslastung | Museum, Wurst-SKU, 1×1-Deko später |
 | F7.4 | M3 | Trainingsgelände-Ausbau | TZ-Stufen Halle/Fitness/Pool/Physio am bestehenden Gebäude | Verletzungs-Sim bleibt leicht |
-| F3.2 | M1 | Campus 2D-Iso | — | Grid statt Iso |
-| F3.3 | M1 | YouthReports | Report 14.4 + Auto-Sim; Grid sekundär | Campus-Iso F3.2 |
+| F3.2 | M1 | Campus-Grid, Stufen | Report + Stufen-Grid | Iso-Stadtmodell gestrichen |
+| F3.3 | M1 | YouthReports | Report 14.4 + Auto-Sim; Grid sekundär | — |
+| F3.7 | M2 | Akademie 3 Stufen | Intake-Zahl 24/28/32 + Qualität | — |
+| F3.9 | M2 | Satelliten-Camps | Nation kaufen, Betreuer, Übernehmen | — |
 | F3.4 | M1 | Icon-Inbox, Cap 4 | Post-Karte ●/▲, Jugend-Icons 03.4 | Hub-Ampel Jugend |
 | F3.6 | M2 | Profi-Verträge, Spielzeit-Klauseln | Jugendvertrag-Default | Slider mit F5.4 teilen |
 | F2.3 | M2 | Individualprogramme | Gruppen-Fokus F2.1; weak foot / retrain / stamp | Spend-Bar auf der Akte |
 | F2.7 | M1 | Wachstums-Heatmap | Team-Pixelbar Hub+Training (1□=1 Spieler) | 09 Screen 1 |
-| F2.8 | M2 | Bonus-Stamps | Katalog + Earn-Loop + Akte + Phase-Makel (Grünschnabel/Chancentod) + signed −1 | Hybrid later |
+| F2.8 | M2 | Bonus-Stamps | Katalog + Earn-Loop + Akte + Phase-Makel + signed −1 + hybrid unlock→seal + six archetypes | False 9 / Raumdeuter / Box-to-Box later |
 | F4.3 | M2 | Scout-Netz 3 Tiers | Einstellungsliste | vorgezogen, keine Karte |
 | F4.4 | M2 | Scout-Karte | — | |
-| F1.5 | M1 | Profil Charts, Icons | Tabs + Flavor | Akte laut 14.3; Hex optional später |
+| F1.5 | M1 | Profil Charts, Icons | Tabs + Flavor | Akte: Hex + volle Skill-Liste (14.3) |
 | F5.1 | M1 | Markt, Fenster | Next-Action bei Fenster zu | Historie sekundär |
 | F1.9 | M3 | Live-Eingriff | Pause/Speed | nicht vorziehen |
 
@@ -118,9 +120,10 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 Aufgenommen in PRD 10 als **F2.8** (M2) und spezifiziert in PRD 07.5.
 
 Beschlossene Wirkung: kleiner permanenter Attribut-Bump (signed −4…−1 oder
-+1…+4 auf 2–3 Keys), gebacken in `attributes` beim Award. Pfade M2: `train`
-| `event`. Phase-Makel mit `spawn`/`clear`. `hybrid` reserviert für später.
-Kein separates Match-Modifier-Layer in M2.
++1…+4 auf 2–3 Keys), gebacken in `attributes` beim Award. Pfade: `train` |
+`event` | `hybrid` (Unlock, dann F2.3-Siegel). Phase-Makel mit `spawn`/`clear`.
+Kein separates Match-Modifier-Layer — Wrapper skaliert derived Erfahrung auf
+positioning/tackling/aerial. C2 bleibt blockiert.
 
 #### C2 — Blutlinie in der Akademie
 
@@ -138,10 +141,10 @@ Ohne Meilensteine in PRD 10 zu verschieben:
 
 1. **F6.5** — gezogen: Modal am Slot, Laufzeit, Wochenbetrag, zwei Staffeln.
    Klausel-Enzyklopädie bleibt raus.
-2. Ein **F7.3-Slice** (eine Wurstbude) nur nach explizitem Katalog-Edit, der
-   den Slice nach M2 zieht; sonst bleibt F7.3 M3. Empfohlen, nicht getan.
-3. **F2.8** Phase-Makel + Spend-Bar auf der Akte — gebaut.
-4. **C2** erst nach 07/10.
+2. **F7.3-Slice** Hotel + Restaurant (Auslastung + Story) — gezogen, Museum raus.
+3. **F2.8** Phase-Makel + Spend-Bar + Hybrid + Archetypen — gebaut.
+4. **F3.9** Satelliten-Camps — gebaut.
+5. **C2** erst nach 07/10.
 
 Shirt-Verkauf (F6.7) bleibt M3 und folgt der Bude, nicht dem Brustlogo.
 
@@ -152,10 +155,10 @@ Zählung und DoD sind die Source of Truth. Analyse verschiebt sie nicht.
 | Meilenstein | Features | Fokus |
 |---|---|---|
 | **M1** | 37 | Kern-Loop: Sim, Liga, Growth, Intake, Basis-Transfers, Save, Hilfe |
-| **M2** | 27 | USP: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps |
+| **M2** | 28 | USP: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps, Camps |
 | **M3** | 24 | Imperium, Events, Staff, Storylines, Merch, Nebengebäude |
 | **M4** | 6 | Legacy & Meta |
-| **Total** | **94** | plus `F-TYP-1` (Schema, zählt nicht) |
+| **Total** | **95** | plus `F-TYP-1` (Schema, zählt nicht) |
 
 **M1-Definition of Done (PRD 10, wörtlich):** Ein Spieler kann einen Verein
 führen, eine Saison simulieren (mit Auto-Matches), Jugendspieler hochziehen,
@@ -181,7 +184,7 @@ Savegame. Vorstand/Entlassung aktiv.
 
 #### M2 — USPs (Wirtschaft + Tiefe)
 
-F1.6–F1.8 · F2.3–F2.5 · **F2.8** · F3.5–F3.8 · F4.3 F4.4 F4.7 F4.8 · **F5.4** F5.5 F5.6 ·
+F1.6–F1.8 · F2.3–F2.5 · **F2.8** · F3.5–F3.9 · F4.3 F4.4 F4.7 F4.8 · **F5.4** F5.5 F5.6 ·
 **F6.5** · F7.2 · F8.2 F8.3 · F9.3 F9.4 · F10.5 F10.6 · F11.3
 
 Für die 2002-Kampagne sind **F5.4** und **F6.5** die wirtschaftlichen USPs,
@@ -193,7 +196,8 @@ F1.9 · F2.6 · F4.5 F4.6 F4.9 · F5.8 · F6.6 (nur wenn Stack-Regel fällt) ·
 **F6.7 F6.8** · **F7.3–F7.6 F7.8** · F8.4–F8.6 · F9.5 F9.6 · F10.7 ·
 F11.4–F11.6 · F12.5
 
-Bratwurst und Fanshop leben hier, solange 10 nicht editiert wird.
+Bratwurst, Hotel und Restaurant leben auf dem Gelände; Museum und Shirt-SKU
+bleiben M3.
 
 #### M4 — Legacy
 

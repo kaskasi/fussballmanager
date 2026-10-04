@@ -40,6 +40,9 @@ export interface WeeklyFinanceContext {
   stadium?: ClubStadium;
   coachingStaff?: CoachingStaff;
   scoutWagesWeekly?: number;
+  campUpkeepWeekly?: number;
+  hospitalityIncome?: number;
+  overtimeCost?: number;
 }
 
 export interface WeeklyFinanceResult {
@@ -164,7 +167,9 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
       amount: -(
         (context.coachingStaff
           ? weeklyStaffWageBill(context.coachingStaff)
-          : economy.staff_wages_weekly) + (context.scoutWagesWeekly ?? 0)
+          : economy.staff_wages_weekly) +
+        (context.scoutWagesWeekly ?? 0) +
+        (context.campUpkeepWeekly ?? 0)
       ),
       week,
     },
@@ -178,9 +183,12 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
   if (tickets > 0) {
     lines.push({ kind: "matchday_tickets", amount: tickets, week });
   }
-  const merch = weeklyPrecinctCash(context.stadium?.precinct);
+  const merch = weeklyPrecinctCash(context.stadium?.precinct) + (context.hospitalityIncome ?? 0);
   if (merch > 0) {
     lines.push({ kind: "concessions", amount: merch, week });
+  }
+  if ((context.overtimeCost ?? 0) > 0) {
+    lines.push({ kind: "other", amount: -context.overtimeCost!, week });
   }
   return lines;
 }

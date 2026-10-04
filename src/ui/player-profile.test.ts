@@ -6,10 +6,13 @@ import {
   attributeBars,
   dossierTrainingTarget,
   formMark,
+  fullSkillSheet,
   growthPolyline,
   growthSeries,
+  hexValuePoints,
   layoutGrowthChart,
   profileAttributeKeys,
+  profileExperienceBar,
   staerkeAlsLanes,
   stateMark,
   visibleBreakoutFlags,
@@ -141,5 +144,18 @@ describe("player profile helpers", () => {
       4,
     );
     expect(stampProgram.icon).toBe("⚡");
+  });
+
+  it("draws six hex vertices and groups the full skill sheet with gate keys", () => {
+    const player = clonePlayer();
+    const points = hexValuePoints([199, 199, 199, 199, 199, 199], 100, 100, 80);
+    expect(points.split(" ")).toHaveLength(6);
+    const sheet = fullSkillSheet(player, true);
+    expect(sheet.map((group) => group.id)).toEqual(["technik", "physis", "mental", "extra"]);
+    const physis = sheet.find((group) => group.id === "physis");
+    expect(physis?.bars.some((bar) => bar.key === "strength")).toBe(true);
+    const xp = profileExperienceBar(player);
+    expect(xp.label).toBe("Erfahrung");
+    expect(xp.fill).toBeGreaterThanOrEqual(0);
   });
 });

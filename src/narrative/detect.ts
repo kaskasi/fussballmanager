@@ -7,6 +7,7 @@ import type { WorldState } from "../world/world-generator.ts";
 import { clubShortName, lastPlayerResult, leagueTable, playerFixture } from "../sim/league-week.ts";
 import { proSquad } from "./captain.ts";
 import { isInRelegationZone, RELEGATION_ZONE_PLACE } from "./season-objectives.ts";
+import { hospitalityDocked } from "../stadium/hospitality.ts";
 import type { StoryState } from "./story-state.ts";
 
 export type NarrativeBeatKind = "fan_feed" | "inbox";
@@ -133,10 +134,12 @@ export interface DetectContext {
 }
 
 export function detectWeeklyBeats(context: DetectContext): DetectedBeat[] {
-  if (context.story.active_arc !== "relegation_battle") return [];
   if (!context.story.opening_complete) return [];
 
-  const beats: DetectedBeat[] = [];
+  const hospitality = detectHospitalityBeats(context);
+  if (context.story.active_arc !== "relegation_battle") return hospitality;
+
+  const beats: DetectedBeat[] = [...hospitality];
   const fired = new Set(context.story.beats_fired);
   const place = playerTablePlace(context.league);
   const roll = (beatId: string) => narrativeRoll(context.masterSeed, context.season, context.week, beatId);
@@ -287,4 +290,22 @@ export function detectWeeklyBeats(context: DetectContext): DetectedBeat[] {
   }
 
   return beats.filter((beat) => !fired.has(beat.beatId));
+}
+
+function detectHospitalityBeats(context: DetectContext): DetectedBeat[] {
+  const precinct = context.stadium.precinct;
+  if (!hospitalityDocked(precinct, "restaurant")) return [];
+  const fired = new Set(context.story.beats_fired);
+  const beats: DetectedBeat[] = [];
+  if (!fired.has("hospitality_engagement") && context.week >= 6) {
+    beats.push({ beatId: "hospitality_engagement", kind: "fan_feed", fanbaseDelta: 0.4 });
+  }
+  if (
+    fired.has("hospitality_engagement") &&
+    !fired.has("hospitality_overtime") &&
+    context.week >= 14
+  ) {
+    beats.push({ beatId: "hospitality_overtime", kind: "fan_feed" });
+  }
+  return beats;
 }

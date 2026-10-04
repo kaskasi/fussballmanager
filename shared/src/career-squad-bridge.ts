@@ -27,6 +27,8 @@ export interface CareerPlayerInput {
   fitness: number;
   portraitSeed: number;
   overall?: number;
+  /** Derived 0.62–1.0 match-greenness. Defaults to 1 (full sheet). */
+  experience?: number;
 }
 
 const ROLE_RANK: Record<PlayerRole, number> = {
@@ -87,9 +89,11 @@ export function mapCareerFatigue(fitness: number): number {
 export function mapCareerAttributes(
   attributes: CareerPlayerAttributes,
   role: PlayerRole,
+  experience = 1,
 ): PlayerAttributes {
   const scale = scaleCareerAttribute;
-  const tackling = scale(attributes.positioning * 0.55 + attributes.strength * 0.45);
+  const xp = Math.min(1, Math.max(0, experience));
+  const tackling = scale((attributes.positioning * 0.55 + attributes.strength * 0.45) * xp);
   const heightCm = Math.min(
     205,
     Math.max(165, 172 + Math.round(scaleCareerAttribute(attributes.strength) / 8)),
@@ -100,8 +104,8 @@ export function mapCareerAttributes(
     shooting: scale(attributes.shooting),
     pace: scale(attributes.pace),
     stamina: scale(attributes.stamina),
-    positioning: scale(attributes.positioning),
-    aerial: scale(attributes.strength),
+    positioning: scale(attributes.positioning * xp),
+    aerial: scale(attributes.strength * xp),
     dribbling: scale(attributes.dribbling),
     goalkeeping: role === "GK" ? scale(attributes.gk_handling) : 1,
     heightCm,
@@ -117,7 +121,7 @@ function toEnginePlayer(career: CareerPlayerInput, role: PlayerRole, teamId: Tea
     form: mapCareerForm(career.form),
     fatigue: mapCareerFatigue(career.fitness),
     shirt: (career.portraitSeed % 98) + 1,
-    attributes: mapCareerAttributes(career.attributes, role),
+    attributes: mapCareerAttributes(career.attributes, role, career.experience ?? 1),
   };
 }
 

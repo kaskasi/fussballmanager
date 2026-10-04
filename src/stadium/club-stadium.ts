@@ -31,6 +31,10 @@ export interface ClubStadium {
   sponsor_deals?: SponsorDeal[];
   /** Gelände-Raster (F7.3 furniture). */
   precinct?: PrecinctState;
+  /** F7.3 restaurant viral occupancy pin (career week index inclusive). */
+  restaurant_viral_until_week?: number;
+  /** Career week index that still owes overtime wages. */
+  restaurant_overtime_week?: number;
 }
 
 export const DEFAULT_FANBASE = 52;

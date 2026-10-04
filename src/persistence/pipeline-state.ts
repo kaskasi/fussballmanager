@@ -12,6 +12,8 @@ import { emptyTransferState, type TransferState } from "../transfers/negotiation
 import { emptyClubEvents, type ClubEvent } from "../inbox/club-events.ts";
 import { emptyInbox, type YouthInboxState } from "../youth/decision-inbox.ts";
 import type { CoachingStaff } from "../staff/coaching-staff.ts";
+import type { AcademyFacility } from "../youth/intake-generator.ts";
+import type { YouthCamp } from "../youth/satellite-camps.ts";
 import type { Player } from "../types/player.ts";
 import type { SeasonAwardsSnapshot } from "../sim/season-awards.ts";
 import { defaultStoryState, type StoryState } from "../narrative/story-state.ts";
@@ -44,6 +46,10 @@ export interface PipelineState {
   rival_players?: Player[];
   /** F8.1 — attack/defense/fitness coaches. */
   coaching_staff?: CoachingStaff;
+  /** F3.7 — HQ academy stage. */
+  academy_facility?: AcademyFacility;
+  /** F3.9 — owned satellite camps. */
+  youth_camps?: YouthCamp[];
   /** F11.2 — last completed season award gallery. */
   last_season_awards?: SeasonAwardsSnapshot;
   /** PRD 13 — relegation narrative slice state. */

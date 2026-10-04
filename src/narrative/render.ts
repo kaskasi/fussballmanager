@@ -72,6 +72,18 @@ export function fanFeedMessage(
         icon: "🚌",
         message: "Der Fanbus ist voll. Wir fahren mit — egal wie weit.",
       };
+    case "hospitality_engagement":
+      return {
+        speaker: cast.bratwurst_vendor_name,
+        icon: "💍",
+        message: "Verlobung im Restaurant — das Video geht viral. Zwölf Wochen lang kein freier Tisch.",
+      };
+    case "hospitality_overtime":
+      return {
+        speaker: cast.groundskeeper_name,
+        icon: "🍻",
+        message: "Die Feier wollte nicht nach Hause. Überstunden fürs Personal — das kostet extra.",
+      };
     default:
       return {
         speaker: cast.fan_rep_label,

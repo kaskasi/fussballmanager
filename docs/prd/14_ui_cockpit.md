@@ -1,6 +1,6 @@
 # /docs/prd/14_ui_cockpit.md
 
-**Version:** 1.15
+**Version:** 1.16
 **Last Updated:** 2026-10-04
 **Status:** Final (Darstellung — kein Code in diesem Dokument)
 
@@ -137,16 +137,16 @@ Eine Karte. Tabs sind sekundär (Verlauf, Saisonwerte), nicht die Identität.
 
 ┌──────────────────────────────────────────────────────────────┐
 │ Felix Schröder · CB · 17 · 🇩🇪                               │
-│ CA 87  ● Fit  ◆ Form  ● Moral                                │
+│ CA 87  ● Fit  ◆ Form  ● Moral  📚 Erfahrung · Roh            │
 ├──────────────────┬───────────────────────────────────────────┤
 │ Kernattribute    │ Aktuelles Ziel                            │
-│ ████████░░ 91    │ 🏃 Schnelligkeit                          │
-│ ███████░░░ 77    │ ▓▓▓▓░░░░ 32 % · 0.8 J. · Effekt sichtbar │
-│ …                │                                           │
-│                  │ Fähigkeiten / Bonus (F2.8)                │
-│ Stärke als…      │ [Kopfballungeheuer] [Treter] [·]          │
-│ TW ░             │ max 3 Badges · Klick = Quelle + applied   │
-│ ST ░             │ Vertrag                                   │
+│   ◇ SVG-Hex (6)  │ 🏃 Schnelligkeit                          │
+│   ░ footnote bars│ ▓▓▓▓░░░░ 32 % · 0.8 J. · Effekt sichtbar │
+│ Technik / Physis │                                           │
+│ Mental (+ TW)    │ Fähigkeiten / Bonus (F2.8)                │
+│ ⚑ Gate-Keys      │ [Kopfballungeheuer] [· dashed hybrid ·]   │
+│ Stärke als…      │ max 3 Badges · Klick = Quelle + applied   │
+│ TW ░  IV ▓▓▓     │ Vertrag                                   │
 │                  │ Jugend · € 80/Wo · bis Saison 2029        │
 │                  │ [✍️ Verhandeln]  [⬆️ Profikader]          │
 └──────────────────┴───────────────────────────────────────────┘
@@ -160,8 +160,18 @@ Regeln:
 - Fähigkeiten-Slots: bis zu 3 aktive Badge-Icons. Leere Slots bleiben
   Hunger (Underdog-Start). Stamp-Training startet über Individualprogramm
   (F2.3-Slot + `kind: "stamp"`).
+- Kernattribute: 6-Achsen-SVG-Hex (dieselben Keys wie `profileAttributeKeys`).
+  Eigene Spieler: gefülltes Polygon. Scouts: CI-Band (innerer/äußerer Ring),
+  kein exaktes Polygon. Dünne Balken darunter sind Fußnote, nicht Held.
+  Darunter die volle Skill-Liste gruppiert Technik / Physis / Mental
+  (plus TW-Handling / schwaches Bein). Stamp-Gate-Keys (z. B. Stärke +
+  Stellung für Kopfballungeheuer) tragen eine Markierung. Kein siebtes
+  „Potential“-Achs (Gesetz 1). Kein `heading`-Attribut.
+- Hybrid-Unlock (noch nicht gesiegelt) = gestrichelter Hunger-Slot, Klick
+  startet das F2.3-Siegel-Programm.
 - `Stärke als…` vier grobe Balken aus Positions-Proficiency (PRD 07
-  `flexibility` + Primärposition). Keine zweite Attribut-Enzyklopädie.
+  `flexibility` + Primärposition). Die gruppierte Skill-Liste ist die
+  Attribut-Enzyklopädie, nicht eine zweite Positionsmatrix.
 - Vertrag-Spalte zeigt Status. ✍️ Verhandeln öffnet ein Modal (Gehalt,
   Jahre, Bonus, Minuten-Garantie, Startplatz). Jugend und Profis derselbe
   Dialog. Inbox-Jugendvertrag bleibt Ein-Klick-Default.
@@ -195,8 +205,8 @@ laut 03.4.
 ```
 
 Das Grid darf als *sekundäre* Jahrgangs-Ansicht (09 Screen 2a) existieren,
-nicht als erster Eindruck. Campus-Iso (F3.2) bleibt M1-Soll; bis die Iso
-steht, ist der Report die Heimat, nicht die Tabelle.
+nicht als erster Eindruck. Campus-Tab (F3.2) ist das Stufen-Grid plus Camps;
+der Report bleibt die Heimat.
 
 ### 14.5 Inbox und Hub (F3.4, PRD 13)
 
@@ -276,6 +286,9 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
   Fitness / Pool / Physio). 1×1-Parzellen bleiben als Haken für späteres Deko
   (Baum, Bank) ohne Buff — Landkauf ist 2×5-Plättchen.
   Imbiss (Bude/Zelt) und Fanshop zahlen wöchentlich auf die Kasse.
+  Hotel und Restaurant (einmal, docked-only) zahlen über **Auslastung**, nicht
+  über Training: Hotel steigt in Heimspiel-Wochen mit der Fanbasis des Gasts;
+  Restaurant mit der eigenen Fanbasis, Story kann 12 Wochen 100% pinnen.
   Trainingszentrum: Halle bufft Training; Fitness, Pool, Physio buffen
   Fitness-Regen und Müdigkeit (Physio senkt Verletzungsrisiko leicht).
   Trainingsplatz ist extra Rasen. Beide buffen Training.

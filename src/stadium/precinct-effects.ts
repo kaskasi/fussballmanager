@@ -181,6 +181,8 @@ const BUILDING_GROUP: Record<PrecinctBuilding, PrecinctStatusGroup> = {
   training_ground: "training",
   training_pitch: "training",
   youth_pitch: "training",
+  hotel: "cash",
+  restaurant: "cash",
 };
 
 function formatPct(rate: number): string {
@@ -268,6 +270,9 @@ export function listPrecinctStatusEffects(state: PrecinctState | undefined): Pre
     }
     if (placed && def.id === "fanshop" && merch > 0) {
       bits.push(`Merch ${formatCash(merch)}/Wo`);
+    }
+    if (placed && (def.id === "hotel" || def.id === "restaurant")) {
+      bits.push("Auslastung");
     }
     if (placed && !buildingDocksStreetNetwork(state, def.id)) {
       tone = "warn";

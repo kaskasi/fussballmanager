@@ -21,6 +21,28 @@ describe("career squad bridge", () => {
     expect(scaleCareerAttribute(100)).toBe(50);
   });
 
+  it("scales positioning, tackling and aerial by derived experience", () => {
+    const attrs = {
+      shooting: 140,
+      passing: 140,
+      dribbling: 140,
+      pace: 140,
+      stamina: 140,
+      positioning: 140,
+      strength: 140,
+      technique: 140,
+      composure: 140,
+      gk_handling: 20,
+    };
+    const full = mapCareerAttributes(attrs, "CB", 1);
+    const green = mapCareerAttributes(attrs, "CB", 0.62);
+    expect(green.positioning).toBeLessThan(full.positioning);
+    expect(green.tackling).toBeLessThan(full.tackling);
+    expect(green.aerial).toBeLessThan(full.aerial);
+    expect(green.shooting).toBe(full.shooting);
+    expect(green.pace).toBe(full.pace);
+  });
+
   it("builds a valid engine squad from career players", () => {
     const careerPlayers = Array.from({ length: 16 }, (_, index) => ({
       id: `pl_test_${index}`,

@@ -14,6 +14,7 @@ import {
   type DecisionAction,
   type YouthInboxState,
 } from "./decision-inbox.ts";
+import { isHqYouth } from "./youth-site.ts";
 import type { YouthReport } from "./youth-sim.ts";
 
 export const YOUTH_REPORT_ACTIONS = ["loan", "promote", "contract", "training_focus"] as const;
@@ -46,7 +47,7 @@ export function coachIconCounts(
   team: "u17" | "u19",
 ): Record<CoachIcon, number> {
   const ids = new Set(
-    players.filter((player) => player.squad_status === team).map((player) => player.id),
+    players.filter((player) => player.squad_status === team && isHqYouth(player)).map((player) => player.id),
   );
   const counts = emptyCoachCounts();
   if (report) {
@@ -161,7 +162,7 @@ export function sortYouthReportPlayerIds(
     (report?.standout_players ?? []).map((entry) => [entry.player_id, entry.coach_comment_icon]),
   );
   return players
-    .filter((player) => player.squad_status === team)
+    .filter((player) => player.squad_status === team && isHqYouth(player))
     .slice()
     .sort((a, b) => {
       const iconA = standoutById.get(a.id) ?? inbox.coachIcons[a.id] ?? "➡️";

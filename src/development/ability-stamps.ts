@@ -30,7 +30,13 @@ export function isPhaseStamp(def: StampDefinition): boolean {
 
 export function stampPathLabel(path: StampPath, def?: StampDefinition): string {
   if (def && isPhaseStamp(def)) return "Start-Makel";
-  return path === "train" ? "Training" : "Ereignis";
+  if (path === "train") return "Training";
+  if (path === "hybrid") return "Hybrid";
+  return "Ereignis";
+}
+
+export function isTrainSealPath(path: StampPath): boolean {
+  return path === "train" || path === "hybrid";
 }
 
 /** Human-readable gate lines for help / tooltips (German UI). */
@@ -60,6 +66,12 @@ export function formatStampGates(def: StampDefinition): string[] {
   }
   if (def.gates.career_apps !== undefined) {
     lines.push(`${def.gates.career_apps}+ Karriere-Einsätze`);
+  }
+  if (def.gates.flexibility_lanes !== undefined) {
+    lines.push(`${def.gates.flexibility_lanes} ausgebildete Positions-Lanes`);
+  }
+  if (def.gates.positions && def.gates.positions.length > 0) {
+    lines.push(`Position ${def.gates.positions.join("/")}`);
   }
   if (def.clear?.career_apps !== undefined) {
     lines.push(`fällt nach ${def.clear.career_apps} Einsätzen`);
@@ -128,6 +140,36 @@ export function activeStampBadges(
     .slice(0, limit);
 }
 
+export function trainedFlexibilityLanes(player: Player): number {
+  const lanes = new Set<string>();
+  for (const slot of player.flexibility) {
+    if (slot.weeks_trained > 0 || slot.proficiency >= 0.4) {
+      lanes.add(slot.trained_as);
+    }
+  }
+  return lanes.size;
+}
+
+export function meetsPositionGates(player: Player, def: StampDefinition): boolean {
+  const positions = def.gates.positions;
+  if (!positions || positions.length === 0) return true;
+  return positions.includes(player.position);
+}
+
+export function meetsFlexibilityGates(player: Player, def: StampDefinition): boolean {
+  if (def.gates.flexibility_lanes === undefined) return true;
+  return trainedFlexibilityLanes(player) >= def.gates.flexibility_lanes;
+}
+
+export function meetsUnlockGates(player: Player, def: StampDefinition): boolean {
+  return (
+    meetsAttributeGates(player, def) &&
+    meetsEventGates(player, def) &&
+    meetsPositionGates(player, def) &&
+    meetsFlexibilityGates(player, def)
+  );
+}
+
 export function meetsAttributeGates(player: Player, def: StampDefinition): boolean {
   const attrs = def.gates.attributes;
   if (!attrs) return true;
@@ -153,10 +195,21 @@ export function meetsEventGates(player: Player, def: StampDefinition): boolean {
 export function eligibleTrainStamps(player: Player): StampDefinition[] {
   return ABILITY_STAMPS.filter(
     (def) =>
-      def.path === "train" &&
+      isTrainSealPath(def.path) &&
       !hasStamp(player, def.id) &&
-      meetsAttributeGates(player, def),
+      meetsUnlockGates(player, def),
   );
+}
+
+export function stampGateMarkers(player: Player): Partial<Record<keyof Attributes, string[]>> {
+  const marks: Partial<Record<keyof Attributes, string[]>> = {};
+  for (const def of ABILITY_STAMPS) {
+    if (hasStamp(player, def.id) || !def.gates.attributes) continue;
+    for (const key of Object.keys(def.gates.attributes) as (keyof Attributes)[]) {
+      marks[key] = [...(marks[key] ?? []), def.label];
+    }
+  }
+  return marks;
 }
 
 export function canEarnStamp(
@@ -173,8 +226,11 @@ export function canEarnStamp(
   if (isPhaseStamp(def)) {
     return { ok: false, reason: `${def.label} kommt mit der Generation, nicht durch Training.` };
   }
-  if (def.path === "train" && !meetsAttributeGates(player, def)) {
+  if (def.path === "train" && !meetsUnlockGates(player, def)) {
     return { ok: false, reason: `Voraussetzungen für ${def.label} nicht erfüllt.` };
+  }
+  if (def.path === "hybrid" && !meetsUnlockGates(player, def)) {
+    return { ok: false, reason: `${def.label} ist noch nicht freigeschaltet.` };
   }
   if (def.path === "event" && !meetsEventGates(player, def)) {
     return { ok: false, reason: `Meilenstein für ${def.label} noch nicht erreicht.` };

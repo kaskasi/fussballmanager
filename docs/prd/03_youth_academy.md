@@ -1,7 +1,7 @@
 # /docs/prd/03_youth_academy.md
 
-**Version:** 1.2
-**Last Updated:** 2026-09-27
+**Version:** 1.3
+**Last Updated:** 2026-10-04
 **Status:** Final
 
 ---
@@ -16,8 +16,9 @@ Spezifikation der Jugendakademie: Intake-Generierung, automatische Simulation, E
 
 - Modul 3: Jugendakademie
 - Intake-Generator (`/src/youth/intake_generator.ts`)
-- Academy-Visualisierung (2D Iso, `/src/ui/screens/`)
+- Academy-Visualisierung (Campus-Grid, `/src/ui/screens/`)
 - Youth-Simulation (`/src/youth/youth_sim.ts`)
+- Satelliten-Camps (F3.9, `/src/youth/satellite-camps.ts`)
 
 **Dependencies:** PRD 02 (Growth Engine), PRD 07 (Player-Schema), PRD 08 (Savegame), PRD 09 (UI Screens)
 
@@ -26,7 +27,7 @@ Spezifikation der Jugendakademie: Intake-Generierung, automatische Simulation, E
 ## Design-Grundsätze
 
 1. **Vollautomatische Jugendteams:** Manager stellt niemals U17/U19 Aufstellungen.
-2. **Jährlicher Intake:** 24 neue Spieler pro Jahr (U17-Start, Alter 15).
+2. **Jährlicher HQ-Intake:** 24 / 28 / 32 neue Spieler am Saisonende (U17, Alter 15), je Campus-Stufe.
 3. **Gaussian Mixture Distribution:** Erlaubt normale Talente und seltene Elite-Ausnahmen (Yamal-Typ).
 4. **Entscheidungs-Limitierung:** Max 4 offene Decision-Items gleichzeitig; weitere Kandidaten warten in einer Queue (1 Zustellung pro Spieltag), nichts wird verworfen.
 5. **Abgangsrisiko real:** Spieler können abspringen.
@@ -42,7 +43,7 @@ Spezifikation der Jugendakademie: Intake-Generierung, automatische Simulation, E
 ```json
 {
   "generation_config": {
-    "per_year_count": 24,
+    "per_year_count": "24 (Basis) / 28 (Leistung) / 32 (Elite)",
     "region_diversity": "national",
     "skill_distribution": {
       "method": "gaussian_mixture",
@@ -87,7 +88,10 @@ Die Gewichte summieren sich auf 1.
 
 „Intake-Base +10 / +25“ aus 03.2 verschiebt jeden Mixture-Mean um diesen Betrag. Die Verschiebungen stapeln nicht: Elite ersetzt Performance, Performance ersetzt Basis.
 
-### 03.2 Jugend-Campus (2D Iso-Visualisierung)
+### 03.2 Jugend-Campus (Grid + Stufen, F3.2 / F3.7)
+
+Kein isometrisches Stadtmodell. Heimat ist der Report (PRD 14.4); der Campus-Tab
+ist ein **Grid der drei Stufen** mit sichtbaren Effekten und Freischalt-Gates.
 
 Gebäude-Levels nach `/data/infrastructure/stadium_upgrades.json`:
 
@@ -98,7 +102,7 @@ Gebäude-Levels nach `/data/infrastructure/stadium_upgrades.json`:
       "id": "academy_basic",
       "name": "Jugendhaus (Basis)",
       "cost": 0,
-      "effect": "Standard Intake-Qualität",
+      "effect": "24 Intake, Standard-Qualität",
       "icon": "🏠"
     },
     {
@@ -106,7 +110,7 @@ Gebäude-Levels nach `/data/infrastructure/stadium_upgrades.json`:
       "name": "Leistungszentrum",
       "cost": 2500000,
       "requires": "stadion_min_capacity_20000",
-      "effect": "Intake-Means +10, Drive-Umfeld +0.15",
+      "effect": "28 Intake, Means +10, Drive-Umfeld +0.15",
       "icon": "🏋️"
     },
     {
@@ -114,7 +118,7 @@ Gebäude-Levels nach `/data/infrastructure/stadium_upgrades.json`:
       "name": "Elite-Akademie",
       "cost": 8500000,
       "requires": "academy_performance",
-      "effect": "Intake-Means +25, 1.5× Gewicht der Elite-Komponente (mean 120), Mentoren-Level steigt",
+      "effect": "32 Intake, Means +25, 1.5× Elite-Gewicht (mean 120), Mentoren-Level steigt",
       "icon": "⭐"
     }
   ]
@@ -201,11 +205,26 @@ Dieselben vier Icons gelten auf Screen 2b (PRD 09).
 
 Die Minuten-Garantie erfüllt die automatische Jugend-Sim, nicht eine manuelle Aufstellung.
 
-### 03.6 Invarianten
+### 03.6 Satelliten-Jugendcamps (F3.9)
+
+Kein Scout-Karten-Ersatz (F4.4) und keine Blutlinie (C2). Jedes Camp ist ein
+bezahlter Satellit der Zentrale.
+
+- Katalog: sechs Nationen (nicht DE). Kaufpreis + wöchentlicher Unterhalt.
+  Höchstens **3** Camps gleichzeitig, eine Nation nur einmal.
+- **Betreuer vor Ort** ist eine bezahlte Toggle-Stelle (Wochenlohn). Die drei
+  Profi-Gruppen-Trainer (F8.1) bleiben in der Zentrale.
+- Saisonende: unstaffed 2 Spieler / staffed 4, Nationalität des Camps, schwächere
+  Mischung ohne Betreuer. `state.youth_site = campId`.
+- Camp-Kids stehen nicht in der HQ-Jahrgangstabelle, bis **Übernehmen in die
+  Zentrale** (`youth_site = "hq"`). Keine Camp-XIs (Gesetz 6).
+
+### 03.7 Invarianten
 
 | Regel | Überprüfung |
 |---|---|
-| Intake nur am Saisonende | Aufruf während der Saison wirft |
+| HQ-Intake nur am Saisonende | Aufruf während der Saison wirft |
+| Camp-Kids nicht in HQ-Tabelle | `youth_site !== "hq"` |
 | Jugend-Simulation läuft vor der Entscheidungsinbox | Inbox ist der Folge-Step |
 | Max 4 offene Decision-Items gleichzeitig | Pending-Clamp; Queue liefert 1/Tag |
 | Keine verworfenen Kandidaten | Queue statt Overflow-Drop |

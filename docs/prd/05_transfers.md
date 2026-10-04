@@ -1,7 +1,7 @@
 # /docs/prd/05_transfers.md
 
-**Version:** 1.3
-**Last Updated:** 2026-10-03
+**Version:** 1.4
+**Last Updated:** 2026-10-04
 **Status:** Final
 
 ---
@@ -200,6 +200,12 @@ Frust-Spirale: 3 Fehlangebote in Folge → `morale` −10 und optional `desire_t
 UI (Akte, F5.4): Verhandeln öffnet ein **Modal**, nicht die Karte. Slider:
 Gehalt, Laufzeit, Einsatzbonus, Minuten-Garantie, Startplatz
 (`none` / `rotation` / `starter`). Jugend und Profis derselbe Dialog.
+
+**Fog of war:** Beim **ersten** Angebot kein Berater-Hinweis und kein Live-Verdikt
+(keine Zielvorgaben, keine 😤/🤝-Zeile). Nach **einer** Absage erscheint ein
+Sponsor-artiges Verdikt (z. B. „Zu wenig Gehalt“) live an den Slidern.
+**Anbieten bleibt aktiv**, solange die Frust-Sperre nicht greift — anders als
+beim Sponsor-Handschlag, der erst bei Fit klickbar ist.
 
 Sperre ohne Tageszähler in der UI (Akte zeigt den Grund, nicht die Dauer):
 

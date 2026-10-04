@@ -14,6 +14,7 @@ import {
   recordAppearanceGoals,
   seedPhaseStamps,
   stampDefinition,
+  stampGateMarkers,
 } from "./ability-stamps.ts";
 
 describe("ability stamps (F2.8)", () => {
@@ -122,5 +123,52 @@ describe("ability stamps (F2.8)", () => {
     }
     const afterStreak = evaluateClearStamps([streak]);
     expect(hasStamp(afterStreak.players[0]!, "chancentod")).toBe(false);
+  });
+
+  it("unlocks hybrid stamps without auto-awarding them", () => {
+    const player = clonePlayer();
+    player.attributes.leadership = 95;
+    player.state.season_apps = 80;
+    expect(canEarnStamp(player, "anfuehrer").ok).toBe(true);
+    expect(eligibleTrainStamps(player).map((entry) => entry.id)).toContain("anfuehrer");
+    const events = evaluateEventStamps([player], 1, 8);
+    expect(hasStamp(events.players[0]!, "anfuehrer")).toBe(false);
+    const sealed = awardStamp(player, "anfuehrer", 1, 8);
+    expect(hasStamp(sealed, "anfuehrer")).toBe(true);
+    expect(sealed.stamps[0]?.path).toBe("hybrid");
+    expect(sealed.attributes.leadership).toBe(player.attributes.leadership + 3);
+    expect(sealed.attributes.pace).toBe(player.attributes.pace - 1);
+  });
+
+  it("gates archetype stamps on position, concentration, and flexibility lanes", () => {
+    const outfield = clonePlayer();
+    outfield.attributes.gk_handling = 120;
+    outfield.attributes.positioning = 95;
+    expect(eligibleTrainStamps(outfield).map((entry) => entry.id)).not.toContain("sweeper_keeper");
+
+    const keeper = clonePlayer();
+    keeper.position = "GK";
+    keeper.attributes.gk_handling = 120;
+    keeper.attributes.positioning = 95;
+    expect(eligibleTrainStamps(keeper).map((entry) => entry.id)).toContain("sweeper_keeper");
+
+    const warrior = clonePlayer();
+    warrior.attributes.strength = 105;
+    warrior.attributes.concentration = 90;
+    expect(eligibleTrainStamps(warrior).map((entry) => entry.id)).toContain("krieger");
+
+    const utility = clonePlayer();
+    utility.flexibility = [
+      { trained_as: "AM", proficiency: 0.5, weeks_trained: 4 },
+      { trained_as: "CB", proficiency: 0.5, weeks_trained: 4 },
+    ];
+    expect(eligibleTrainStamps(utility).map((entry) => entry.id)).toContain("taschenmesser");
+  });
+
+  it("marks stamp-gate keys so Kopfballungeheuer shows Stärke and Stellung", () => {
+    const player = clonePlayer();
+    const marks = stampGateMarkers(player);
+    expect(marks.strength).toContain("Kopfballungeheuer");
+    expect(marks.positioning).toContain("Kopfballungeheuer");
   });
 });

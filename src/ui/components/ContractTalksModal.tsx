@@ -14,6 +14,7 @@
 import { formatClubCash } from "../../economy/club-finances.ts";
 import {
   contractTalkBounds,
+  describeContractOffer,
   playerContractAsk,
   wageDeltaFitsBudget,
   type ContractOffer,
@@ -47,6 +48,8 @@ export function ContractTalksModal({
 }) {
   const ask = playerContractAsk(player, season, offer.minutesPromise);
   const bounds = contractTalkBounds(player, season, offer.minutesPromise);
+  const verdict = describeContractOffer(player, season, offer);
+  const revealed = (player.state.contract_failed_offers ?? 0) > 0;
   const currentWage = player.contract?.wage_weekly ?? 0;
   const fitsBudget =
     wageHeadroomWeekly === undefined ||
@@ -75,7 +78,7 @@ export function ContractTalksModal({
           <p className="eyebrow">Vertragsgespräch</p>
           <h2 id="contract-talk-title">✍️ {formatPlayerName(player)}</h2>
         </header>
-        <p className="profile-talk-hint">{ask.advisorHint}</p>
+        {revealed ? <p className="profile-talk-hint">{ask.advisorHint}</p> : null}
 
         <label className="profile-talk-row">
           <span>
@@ -153,6 +156,13 @@ export function ContractTalksModal({
             ))}
           </div>
         </div>
+
+        {revealed ? (
+          <p className={verdict.accepted ? "sponsor-deal-verdict is-ok" : "sponsor-deal-verdict is-no"}>
+            {verdict.accepted ? "🤝 " : "😤 "}
+            {verdict.reason}
+          </p>
+        ) : null}
 
         {wageHeadroomWeekly !== undefined ? (
           <p className={fitsBudget ? "profile-talk-hint" : "profile-talk-warn"}>

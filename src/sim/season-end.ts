@@ -23,6 +23,13 @@ import {
   generateYouthIntake,
   type AcademyFacility,
 } from "../youth/intake-generator.ts";
+import {
+  campIntakeCount,
+  campMixtureShift,
+  campNationById,
+  generateCampPlayerName,
+  type YouthCamp,
+} from "../youth/satellite-camps.ts";
 import { evaluateSeasonObjectives, startBoardSeason } from "../board/season-objectives.ts";
 import { applySeasonEndFinances } from "../economy/club-finances.ts";
 import type { SeasonObjectiveEvaluation } from "../board/board-state.ts";
@@ -55,7 +62,7 @@ function nextIntakeIdStart(players: readonly Player[]): number {
 export function runSeasonEnd(
   session: GameSession,
   endingSeason: number,
-  facility: AcademyFacility = "academy_basic",
+  facility: AcademyFacility = session.academyFacility ?? "academy_basic",
 ): SeasonEndResult {
   const snapshotted = session.players.map((player) => appendSeasonSnapshot(player, endingSeason));
   const aged = snapshotted.map((player) => ({
@@ -88,8 +95,18 @@ export function runSeasonEnd(
     idStart,
     random: mulberry32(session.masterSeed ^ endingSeason),
   });
-
-  const players = refreshAllMarketValues([...preContractStep.players, ...intake], session.season);
+  const campIntake = generateCampIntakes(
+    session.youthCamps ?? [],
+    session.clubId,
+    session.season,
+    endingSeason,
+    session.masterSeed,
+    idStart + intake.length,
+  );
+  const players = refreshAllMarketValues(
+    [...preContractStep.players, ...intake, ...campIntake],
+    session.season,
+  );
   const financesAfterPrizes = applySeasonEndFinances(
     session.finances,
     session.league,
@@ -163,11 +180,45 @@ export function runSeasonEnd(
       league: resetLeagueSeason(leagueAfterMovement),
       storyState,
     },
-    intakeCount: intake.length,
+    intakeCount: intake.length + campIntake.length,
     loanReturns,
     boardEvaluation: boardStep.evaluation,
     promotionRelegation,
   };
+}
+
+function generateCampIntakes(
+  camps: readonly YouthCamp[],
+  clubId: string,
+  season: number,
+  endingSeason: number,
+  masterSeed: number,
+  idStart: number,
+) {
+  const players: Player[] = [];
+  let cursor = idStart;
+  for (const camp of camps) {
+    const nation = campNationById(camp.id);
+    if (!nation) continue;
+    const batch = generateYouthIntake({
+      season,
+      week: SEASON_END_WEEK,
+      seasonYear: seasonCalendarYear(season),
+      clubId,
+      nationality: nation.code,
+      region: nation.region,
+      facility: "academy_basic",
+      idStart: cursor,
+      random: mulberry32(masterSeed ^ endingSeason ^ cursor),
+      count: campIntakeCount(camp.staffed),
+      youthSite: camp.id,
+      meanShift: campMixtureShift(camp.staffed),
+      nameFor: (seed) => generateCampPlayerName(nation.code, seed),
+    });
+    cursor += batch.length;
+    players.push(...batch);
+  }
+  return players;
 }
 
 function mulberry32(seed: number): () => number {

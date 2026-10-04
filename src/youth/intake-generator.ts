@@ -1,9 +1,10 @@
-import type { Attributes, Player, PositionPrimary } from "../types/player.ts";
+import type { Attributes, Player, PlayerName, PositionPrimary } from "../types/player.ts";
 import { generatePlayerName } from "../types/player-display.ts";
 import { ensureYouthContract } from "../player/youth-contract.ts";
 import { SEASON_END_WEEK } from "../sim/game-calendar.ts";
 import { estimateCa, marketValue } from "../transfers/market-value.ts";
 import { seedPhaseStamps } from "../development/ability-stamps.ts";
+import { YOUTH_SITE_HQ } from "./youth-site.ts";
 
 /**
  * Yearly academy intake (PRD 03.1, defaults from PRD 07.2).
@@ -16,7 +17,18 @@ import { seedPhaseStamps } from "../development/ability-stamps.ts";
  * band in PRD 03.1 has no position means to vary around.
  */
 
+export type AcademyFacility = "academy_basic" | "academy_performance" | "academy_elite";
+
 export const INTAKE_COUNT = 24;
+export const HQ_INTAKE_BY_FACILITY: Record<AcademyFacility, number> = {
+  academy_basic: 24,
+  academy_performance: 28,
+  academy_elite: 32,
+};
+
+export function hqIntakeCount(facility: AcademyFacility): number {
+  return HQ_INTAKE_BY_FACILITY[facility];
+}
 /** Re-export for callers that already import from this module. */
 export { SEASON_END_WEEK } from "../sim/game-calendar.ts";
 
@@ -25,8 +37,6 @@ const ANLAGE_MIN = 0.85;
 const ANLAGE_MAX = 1.5;
 const ANLAGE_CENTER = (ANLAGE_MIN + ANLAGE_MAX) / 2;
 const DRIVE_CORRELATION = -0.15;
-
-export type AcademyFacility = "academy_basic" | "academy_performance" | "academy_elite";
 
 export class IntakeOutOfSeasonError extends Error {
   constructor(week: number) {
@@ -92,6 +102,14 @@ export const INTAKE_POSITIONS: readonly PositionPrimary[] = [
   "LW",
   "RW",
   "CF",
+  "CB",
+  "CM",
+  "AM",
+  "CF",
+  "LB",
+  "RB",
+  "LW",
+  "RW",
 ];
 
 export interface GenerateIntakeInput {
@@ -106,14 +124,19 @@ export interface GenerateIntakeInput {
   /** First numeric id. `1` yields `pl_00001`. */
   idStart: number;
   random: () => number;
+  count?: number;
+  youthSite?: string;
+  meanShift?: number;
+  nameFor?: (seed: number, index: number) => PlayerName;
 }
 
 /**
  * Facility shifts replace each other (PRD 03.1). Elite also boosts the
  * mean-120 weight by 1.5 and renormalises the rest so the weights still sum to 1.
  */
-export function academyMixture(facility: AcademyFacility): MixtureComponent[] {
-  const shift = facility === "academy_elite" ? 25 : facility === "academy_performance" ? 10 : 0;
+export function academyMixture(facility: AcademyFacility, meanShift = 0): MixtureComponent[] {
+  const shift =
+    (facility === "academy_elite" ? 25 : facility === "academy_performance" ? 10 : 0) + meanShift;
   const weights = BASE_COMPONENTS.map((component) => component.weight);
   if (facility === "academy_elite") {
     const eliteIndex = BASE_COMPONENTS.findIndex((component) => component.prodigy);
@@ -156,17 +179,18 @@ export function intakeBirthDate(seasonYear: number, random: () => number): strin
 
 /** Build intake players without the season-end week gate (demo roster seeding). */
 export function buildAcademyCohort(input: GenerateIntakeInput): Player[] {
-  if (INTAKE_POSITIONS.length !== INTAKE_COUNT) {
-    throw new Error(`Intake position list must contain ${INTAKE_COUNT} slots`);
+  const count = input.count ?? hqIntakeCount(input.facility);
+  if (INTAKE_POSITIONS.length < count) {
+    throw new Error(`Intake position list must cover ${count} slots`);
   }
-  const lastId = input.idStart + INTAKE_COUNT - 1;
+  const lastId = input.idStart + count - 1;
   if (input.idStart < 0 || lastId > 99_999) {
     throw new Error(`Intake ids must stay inside pl_00000–pl_99999 (start ${input.idStart})`);
   }
 
-  const mixture = academyMixture(input.facility);
+  const mixture = academyMixture(input.facility, input.meanShift ?? 0);
   const players: Player[] = [];
-  for (let index = 0; index < INTAKE_COUNT; index++) {
+  for (let index = 0; index < count; index++) {
     players.push(generateOne(input, mixture, index));
   }
   return players;
@@ -201,7 +225,7 @@ function generateOne(
   const portraitSeed = Math.floor(input.random() * 1_000_000_000);
   const player: Player = {
     id: `pl_${String(idNumber).padStart(5, "0")}`,
-    name: generatePlayerName(portraitSeed),
+    name: input.nameFor?.(portraitSeed, index) ?? generatePlayerName(portraitSeed),
     birth: {
       date: intakeBirthDate(input.seasonYear, input.random),
       place: input.region,
@@ -245,6 +269,8 @@ function generateOne(
       season_headers: 0,
       recent_growth_26w: 0,
       recent_weekly_minutes: [],
+      last_match_goals: 0,
+      youth_site: input.youthSite ?? YOUTH_SITE_HQ,
       modifiers: [],
     },
     history: {

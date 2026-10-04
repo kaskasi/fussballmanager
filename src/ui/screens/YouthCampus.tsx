@@ -14,12 +14,23 @@ import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 import {
   ACADEMY_FACILITIES,
   academyStage,
+  canBuyAcademyUpgrade,
   COACH_ICON_ORDER,
   coachIconLabel,
   facilityById,
   facilityGate,
 } from "../../youth/academy.ts";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
+import { hqIntakeCount } from "../../youth/intake-generator.ts";
+import {
+  campRoster,
+  canBuyYouthCamp,
+  MAX_YOUTH_CAMPS,
+  YOUTH_CAMP_NATIONS,
+  type YouthCamp,
+} from "../../youth/satellite-camps.ts";
+import { formatPlayerName } from "../../types/player-display.ts";
+import { formatClubCash } from "../../economy/club-finances.ts";
 import {
   actionIcon,
   actionLabel,
@@ -46,9 +57,8 @@ import { coachIconForPlayer, hasDepartureRisk } from "../components/DecisionInbo
  * Jahrgangstabelle bleibt sekundär (PRD 09 Screen 2a).
  */
 
-const OWNED: AcademyFacility = "academy_basic";
 const DRAG_PLAYER = "text/plain";
-type CampusView = "report" | "year" | "campus";
+type CampusView = "report" | "year" | "campus" | "camps";
 
 const POSITION_ORDER: PositionPrimary[] = [
   "GK",
@@ -79,9 +89,16 @@ export function YouthCampus({
   clubId,
   trainingPlan,
   individualPrograms,
+  academyFacility,
+  youthCamps,
+  cash,
   onSelectPlayer,
   onOpenInbox,
   onInboxDecision,
+  onUpgradeAcademy,
+  onBuyCamp,
+  onToggleCampStaff,
+  onPullCampPlayer,
 }: {
   players: Player[];
   youthInbox: YouthInboxState;
@@ -91,9 +108,16 @@ export function YouthCampus({
   clubId: string;
   trainingPlan: readonly TrainingSlot[];
   individualPrograms: readonly IndividualProgram[];
+  academyFacility: AcademyFacility;
+  youthCamps: readonly YouthCamp[];
+  cash: number;
   onSelectPlayer: (playerId: string) => void;
   onOpenInbox: (itemId?: string) => void;
   onInboxDecision: (itemId: string, action: DecisionAction) => void;
+  onUpgradeAcademy: () => void;
+  onBuyCamp: (nationId: string) => void;
+  onToggleCampStaff: (nationId: string, staffed: boolean) => void;
+  onPullCampPlayer: (playerId: string) => void;
 }) {
   const [view, setView] = useState<CampusView>("report");
   const report = youthInbox.lastReport;
@@ -110,7 +134,25 @@ export function YouthCampus({
           onSelectPlayer={onSelectPlayer}
         />
       ) : view === "campus" ? (
-        <CampusGround stadiumCapacity={stadiumCapacity} onBack={() => setView("report")} onOpenYear={() => setView("report")} />
+        <CampusGround
+          ownedId={academyFacility}
+          stadiumCapacity={stadiumCapacity}
+          cash={cash}
+          onBack={() => setView("report")}
+          onOpenYear={() => setView("report")}
+          onUpgrade={onUpgradeAcademy}
+          onOpenCamps={() => setView("camps")}
+        />
+      ) : view === "camps" ? (
+        <CampBoard
+          players={players}
+          camps={youthCamps}
+          cash={cash}
+          onBack={() => setView("campus")}
+          onBuy={onBuyCamp}
+          onToggleStaff={onToggleCampStaff}
+          onPull={onPullCampPlayer}
+        />
       ) : (
         <YouthReportHome
           players={players}
@@ -121,6 +163,7 @@ export function YouthCampus({
           clubId={clubId}
           trainingPlan={trainingPlan}
           individualPrograms={individualPrograms}
+          ownedId={academyFacility}
           onSelectPlayer={onSelectPlayer}
           onOpenInbox={onOpenInbox}
           onInboxDecision={onInboxDecision}
@@ -133,15 +176,24 @@ export function YouthCampus({
 }
 
 function CampusGround({
+  ownedId,
   stadiumCapacity,
+  cash,
   onBack,
   onOpenYear,
+  onUpgrade,
+  onOpenCamps,
 }: {
+  ownedId: AcademyFacility;
   stadiumCapacity: number;
+  cash: number;
   onBack: () => void;
   onOpenYear: () => void;
+  onUpgrade: () => void;
+  onOpenCamps: () => void;
 }) {
-  const owned = facilityById(OWNED);
+  const owned = facilityById(ownedId);
+  const buy = canBuyAcademyUpgrade(ownedId, stadiumCapacity, cash);
   return (
     <section>
       <p className="eyebrow">Jugend</p>
@@ -151,31 +203,142 @@ function CampusGround({
         </button>
         <h1>
           <span aria-hidden="true">{owned.icon}</span> {owned.name}
+          <span className="youth-report-count">Stufe {academyStage(ownedId)}/3</span>
         </h1>
       </div>
+      <p className="youth-report-match">
+        Intake {hqIntakeCount(ownedId)} · {owned.effect}
+      </p>
       <div className="campus-ground">
         {ACADEMY_FACILITIES.map((facility) => {
-          const gate = facilityGate(OWNED, facility.id, stadiumCapacity);
+          const gate = facilityGate(ownedId, facility.id, stadiumCapacity);
           const current = gate.status === "current";
+          const open = gate.status === "open";
           return (
             <button
               key={facility.id}
               type="button"
               className={current ? "campus-building" : "campus-building is-locked"}
-              disabled={!current}
-              onClick={current ? onOpenYear : undefined}
+              disabled={current ? false : !open}
+              onClick={current ? onOpenYear : open ? onUpgrade : undefined}
               title={facility.effect}
-              aria-label={current ? `${facility.name}, Report öffnen` : facility.name}
+              aria-label={
+                current
+                  ? `${facility.name}, Report öffnen`
+                  : open
+                    ? `${facility.name} kaufen`
+                    : facility.name
+              }
             >
               <IsoBuilding facility={facility.id} />
               <span className="campus-building-name">
                 <span aria-hidden="true">{facility.icon}</span> {facility.name}
               </span>
+              <span className="campus-building-effect">{facility.effect}</span>
               <GateMark gate={gate} />
             </button>
           );
         })}
       </div>
+      {buy.ok ? (
+        <p className="campus-upgrade-row">
+          <button type="button" className="negotiation-btn negotiation-btn-primary" onClick={onUpgrade}>
+            Ausbauen {formatClubCash(buy.cost)}
+          </button>
+        </p>
+      ) : (
+        <p className="youth-report-match">{buy.reason}</p>
+      )}
+      <p className="campus-upgrade-row">
+        <button type="button" className="negotiation-btn" onClick={onOpenCamps}>
+          🌍 Jugendcamps
+        </button>
+      </p>
+    </section>
+  );
+}
+
+function CampBoard({
+  players,
+  camps,
+  cash,
+  onBack,
+  onBuy,
+  onToggleStaff,
+  onPull,
+}: {
+  players: readonly Player[];
+  camps: readonly YouthCamp[];
+  cash: number;
+  onBack: () => void;
+  onBuy: (nationId: string) => void;
+  onToggleStaff: (nationId: string, staffed: boolean) => void;
+  onPull: (playerId: string) => void;
+}) {
+  return (
+    <section>
+      <p className="eyebrow">Jugend</p>
+      <div className="campus-year-head">
+        <button type="button" onClick={onBack} aria-label="Zurück zum Campus">
+          ←
+        </button>
+        <h1>🌍 Jugendcamps</h1>
+      </div>
+      <p className="youth-report-match">
+        Höchstens {MAX_YOUTH_CAMPS} · Betreuer vor Ort, nicht die Profi-Trainer
+      </p>
+      <ul className="youth-camp-list">
+        {YOUTH_CAMP_NATIONS.map((nation) => {
+          const owned = camps.find((camp) => camp.id === nation.id);
+          const buy = canBuyYouthCamp(camps, nation.id, cash);
+          const roster = owned ? campRoster(players, nation.id) : [];
+          return (
+            <li key={nation.id} className="youth-camp-card">
+              <header>
+                <strong>
+                  <span aria-hidden="true">{nation.flag}</span> {nation.label}
+                </strong>
+                <span>{nation.region}</span>
+              </header>
+              {owned ? (
+                <>
+                  <p>
+                    Unterhalt {formatClubCash(nation.upkeepWeekly)}/Wo
+                    {owned.staffed ? " · Betreuer an" : ""}
+                  </p>
+                  <button
+                    type="button"
+                    className="negotiation-btn"
+                    onClick={() => onToggleStaff(nation.id, !owned.staffed)}
+                  >
+                    {owned.staffed ? "Betreuer abziehen" : "Betreuer einstellen"}
+                  </button>
+                  <ul className="youth-camp-roster">
+                    {roster.length === 0 ? <li>Kein Jahrgang — Saisonende</li> : null}
+                    {roster.map((player) => (
+                      <li key={player.id}>
+                        <button type="button" onClick={() => onPull(player.id)}>
+                          {formatPlayerName(player)} · in die Zentrale
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="negotiation-btn negotiation-btn-primary"
+                  disabled={!buy.ok}
+                  onClick={() => onBuy(nation.id)}
+                >
+                  Kaufen {formatClubCash(nation.cost)}
+                  {buy.ok ? "" : ` — ${buy.reason}`}
+                </button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }
@@ -216,6 +379,7 @@ function YouthReportHome({
   clubId,
   trainingPlan,
   individualPrograms,
+  ownedId,
   onSelectPlayer,
   onOpenInbox,
   onInboxDecision,
@@ -230,6 +394,7 @@ function YouthReportHome({
   clubId: string;
   trainingPlan: readonly TrainingSlot[];
   individualPrograms: readonly IndividualProgram[];
+  ownedId: AcademyFacility;
   onSelectPlayer: (playerId: string) => void;
   onOpenInbox: (itemId?: string) => void;
   onInboxDecision: (itemId: string, action: DecisionAction) => void;
@@ -238,7 +403,7 @@ function YouthReportHome({
 }) {
   const [team, setTeam] = useState<YouthTeam>("u17");
   const [dropAction, setDropAction] = useState<YouthReportDropAction | null>(null);
-  const owned = facilityById(OWNED);
+  const owned = facilityById(ownedId);
   const roster = useMemo(
     () => sortYouthReportPlayerIds(players, youthInbox, report, team),
     [players, youthInbox, report, team],
@@ -283,7 +448,7 @@ function YouthReportHome({
           </h1>
           <p className="youth-report-campus">
             <button type="button" className="youth-report-campus-btn" onClick={onOpenCampus}>
-              <span aria-hidden="true">{owned.icon}</span> Campus-Stufe {academyStage(OWNED)}
+              <span aria-hidden="true">{owned.icon}</span> Campus-Stufe {academyStage(ownedId)}
             </button>
             {COACH_ICON_ORDER.map((icon) => (
               <span key={icon} className="youth-report-count" title={coachIconLabel(icon)}>

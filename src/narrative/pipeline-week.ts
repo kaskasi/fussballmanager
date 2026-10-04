@@ -74,7 +74,10 @@ export function advanceNarrativeWeek(
         speaker: rendered.speaker,
         message: rendered.message,
       };
-      const applied = applyFanFeedBeat(story, feedBeat, beat.fanbaseDelta ?? 0, stadium);
+      const applied = applyFanFeedBeat(story, feedBeat, beat.fanbaseDelta ?? 0, stadium, {
+        season: session.season,
+        week: session.week,
+      });
       story = markBeatFired(applied.story, id);
       if (applied.stadium) stadium = applied.stadium;
       continue;

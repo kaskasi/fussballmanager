@@ -50,6 +50,8 @@ import { migration049PrecinctPatches } from "./migration_049_precinct_patches.ts
 import { migration050PrecinctFarm } from "./migration_050_precinct_farm.ts";
 import { migration051AbilityStamps } from "./migration_051_ability_stamps.ts";
 import { migration052PhaseStamps } from "./migration_052_phase_stamps.ts";
+import { migration053HospitalityCamps } from "./migration_053_hospitality_camps.ts";
+import { migration054HybridStamps } from "./migration_054_hybrid_stamps.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -109,6 +111,8 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration050PrecinctFarm,
   migration051AbilityStamps,
   migration052PhaseStamps,
+  migration053HospitalityCamps,
+  migration054HybridStamps,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

@@ -45,6 +45,18 @@ import { applyWeeklyFitnessBatch } from "../development/fitness-management.ts";
 import type { WatchedPlayerMatch } from "./watched-player-match.ts";
 import { advanceNarrativeWeek } from "../narrative/pipeline-week.ts";
 import { advanceMentorshipWeek } from "../development/mentoring.ts";
+import {
+  careerWeekIndex,
+  hotelOccupancyPct,
+  restaurantOccupancyPct,
+  restaurantViralActive,
+  RESTAURANT_OVERTIME_COST,
+  weeklyHotelIncome,
+  weeklyRestaurantIncome,
+} from "../stadium/hospitality.ts";
+import { DEFAULT_FANBASE } from "../stadium/club-stadium.ts";
+import { clubFlavorFanbase } from "./club-profiles.ts";
+import { weeklyCampUpkeep } from "../youth/satellite-camps.ts";
 import { scoutNetworkWeeklyWage } from "../scouting/scout-network.ts";
 import {
   applyAssistantDelegationWeek,
@@ -238,6 +250,26 @@ export async function simulateGameWeek(
   const stadium = advanceClubFanbase(session.stadium, fanbaseDelta);
   const isHomeMatchWeek =
     leagueStep.playerFixture?.homeTeamId === session.league.player_club_id;
+  const opponentId =
+    isHomeMatchWeek && leagueStep.playerFixture
+      ? leagueStep.playerFixture.awayTeamId
+      : null;
+  const ownFans = stadium.fanbase ?? DEFAULT_FANBASE;
+  const hotelOcc = hotelOccupancyPct(
+    ownFans,
+    isHomeMatchWeek,
+    opponentId ? clubFlavorFanbase(opponentId) : DEFAULT_FANBASE,
+  );
+  const restOcc = restaurantOccupancyPct(
+    ownFans,
+    restaurantViralActive(stadium.restaurant_viral_until_week, session.season, nextWeek),
+  );
+  const hospitalityIncome =
+    weeklyHotelIncome(stadium.precinct, hotelOcc) + weeklyRestaurantIncome(stadium.precinct, restOcc);
+  const overtimeDue =
+    stadium.restaurant_overtime_week === careerWeekIndex(session.season, nextWeek)
+      ? RESTAURANT_OVERTIME_COST
+      : 0;
   const financeStep = advanceWeeklyClubFinances(session.finances, {
     players: playersWithMorale,
     clubId: session.clubId,
@@ -248,6 +280,9 @@ export async function simulateGameWeek(
     stadium,
     coachingStaff: session.coachingStaff,
     scoutWagesWeekly: scoutNetworkWeeklyWage(session.scoutNetwork),
+    campUpkeepWeekly: weeklyCampUpkeep(session.youthCamps),
+    hospitalityIncome,
+    overtimeCost: overtimeDue,
   });
   const finances = financeStep.finances;
   const playersWithGrowth = stampWeeklyGrowthBatch(playersAtWeekStart, playersWithMorale);

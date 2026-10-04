@@ -4,6 +4,7 @@ import {
   type Squad,
   type TeamId,
 } from "@fussballmanager/shared";
+import { derivedExperienceFactor } from "../development/experience.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
@@ -27,6 +28,7 @@ export function buildRivalEngineSquad(template: Squad, roster: readonly Player[]
     fitness: player.state.fitness,
     portraitSeed: player.portrait_seed,
     overall: estimateCa(player.attributes, player.position),
+    experience: derivedExperienceFactor(player),
   }));
   return buildCareerEngineSquad(template, input);
 }

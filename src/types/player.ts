@@ -59,6 +59,8 @@ export interface Player {
     scoring_streak?: number;
     /** F2.8 — goals in the last appearance (hat-trick clear). */
     last_match_goals?: number;
+    /** F3.9 — HQ vs satellite camp id. Missing means HQ. */
+    youth_site?: "hq" | string;
     modifiers: TemporaryModifier[];
   };
 
@@ -77,8 +79,8 @@ export interface Player {
   portrait_seed: number;
 }
 
-/** F2.8 — named bonus identity (PRD 07.5). `hybrid` reserved for later. */
-export type StampPath = "train" | "event";
+/** F2.8 — named bonus identity (PRD 07.5). Hybrid = unlock, then F2.3 seal. */
+export type StampPath = "train" | "event" | "hybrid";
 
 export interface AbilityStamp {
   id: string;

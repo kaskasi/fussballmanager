@@ -65,6 +65,8 @@ import {
   normalizeScoutNetwork,
   type ScoutNetworkState,
 } from "../scouting/scout-network.ts";
+import type { AcademyFacility } from "../youth/intake-generator.ts";
+import { normalizeYouthCamps, type YouthCamp } from "../youth/satellite-camps.ts";
 
 export const DEFAULT_SLOT = 1;
 export const DEFAULT_CLUB_ID = "cl_fc_nordstern";
@@ -100,6 +102,8 @@ export interface GameSession {
   storyState: StoryState;
   assistantDelegation: AssistantDelegation;
   scoutNetwork: ScoutNetworkState;
+  academyFacility: AcademyFacility;
+  youthCamps: YouthCamp[];
 }
 
 export function newGameSession(now = new Date()): GameSession {
@@ -214,6 +218,8 @@ export function sessionFromSave(save: SaveGame): GameSession {
       save.state.season,
       save.rng_state.master_seed,
     ),
+    academyFacility: pipeline.academy_facility ?? "academy_basic",
+    youthCamps: normalizeYouthCamps(pipeline.youth_camps),
   };
   return syncManagerClubWithBoard(session);
 }
@@ -238,6 +244,8 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     story_state: session.storyState,
     assistant_delegation: session.assistantDelegation,
     scout_network: session.scoutNetwork,
+    academy_facility: session.academyFacility,
+    youth_camps: session.youthCamps,
   };
   const iso = now.toISOString();
 

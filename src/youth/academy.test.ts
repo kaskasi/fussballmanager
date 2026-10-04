@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   ACADEMY_FACILITIES,
+  canBuyAcademyUpgrade,
   coachIconLabel,
   PERFORMANCE_STADIUM_CAPACITY,
   facilityGate,
@@ -46,6 +47,12 @@ describe("academy facilities", () => {
     });
     expect(facilityGate("academy_performance", "academy_elite", 0)).toEqual({ status: "open" });
     expect(facilityGate("academy_elite", "academy_elite", 0)).toEqual({ status: "current" });
+  });
+
+  it("sells the next HQ stage when cash and gates allow", () => {
+    expect(canBuyAcademyUpgrade("academy_basic", 20_000, 3_000_000).ok).toBe(true);
+    expect(canBuyAcademyUpgrade("academy_basic", 19_000, 3_000_000).ok).toBe(false);
+    expect(canBuyAcademyUpgrade("academy_elite", 40_000, 9_000_000).ok).toBe(false);
   });
 });
 

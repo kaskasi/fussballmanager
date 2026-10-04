@@ -123,6 +123,11 @@ describe("generateYouthIntake", () => {
     expect(players[23]?.id).toBe("pl_00024");
   });
 
+  it("grows HQ intake at performance and elite stages", () => {
+    expect(generateYouthIntake(input({ facility: "academy_performance" }))).toHaveLength(28);
+    expect(generateYouthIntake(input({ facility: "academy_elite" }))).toHaveLength(32);
+  });
+
   it("repeats exactly when the random sequence repeats", () => {
     const first = generateYouthIntake(input({ random: mulberry32(7) }));
     const second = generateYouthIntake(input({ random: mulberry32(7) }));

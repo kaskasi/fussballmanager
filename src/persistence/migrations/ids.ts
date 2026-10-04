@@ -50,4 +50,6 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_050_precinct_farm",
   "migration_051_ability_stamps",
   "migration_052_phase_stamps",
+  "migration_053_hospitality_camps",
+  "migration_054_hybrid_stamps",
 ] as const;

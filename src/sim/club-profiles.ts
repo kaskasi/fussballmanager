@@ -130,6 +130,10 @@ const CLUB_FLAVOR: Record<string, ClubFlavor> = {
   },
 };
 
+export function clubFlavorFanbase(teamId: string): number {
+  return CLUB_FLAVOR[teamId]?.fanbase ?? DEFAULT_FANBASE;
+}
+
 export function divisionForClub(
   pools: Record<DivisionEconomyId, TeamId[]>,
   teamId: TeamId,

@@ -1,5 +1,6 @@
 import type { BoardState } from "../board/board-state.ts";
 import type { ClubStadium } from "../stadium/club-stadium.ts";
+import { careerWeekIndex, RESTAURANT_VIRAL_WEEKS } from "../stadium/hospitality.ts";
 import { advanceClubFanbase } from "../stadium/fanbase.ts";
 import type { Player } from "../types/player.ts";
 import { captainMoraleNeighbors } from "./captain.ts";
@@ -158,12 +159,29 @@ export function applyFanFeedBeat(
   beat: FanFeedBeat,
   fanbaseDelta = 0,
   stadium?: ClubStadium,
+  calendar?: { season: number; week: number },
 ): { story: StoryState; stadium?: ClubStadium } {
-  let next = appendFanFeed(story, beat);
-  if (stadium && fanbaseDelta !== 0) {
-    return { story: next, stadium: advanceClubFanbase(stadium, fanbaseDelta) };
+  let nextStory = appendFanFeed(story, beat);
+  let nextStadium = stadium;
+  if (nextStadium && fanbaseDelta !== 0) {
+    nextStadium = advanceClubFanbase(nextStadium, fanbaseDelta);
   }
-  return { story: next, stadium };
+  if (nextStadium && calendar) {
+    const now = careerWeekIndex(calendar.season, calendar.week);
+    if (beat.id === "hospitality_engagement") {
+      nextStadium = {
+        ...nextStadium,
+        restaurant_viral_until_week: now + RESTAURANT_VIRAL_WEEKS,
+      };
+    }
+    if (beat.id === "hospitality_overtime") {
+      nextStadium = {
+        ...nextStadium,
+        restaurant_overtime_week: now + 1,
+      };
+    }
+  }
+  return { story: nextStory, stadium: nextStadium };
 }
 
 export function applyChronicleEntry(story: StoryState, entry: ChronicleEntry): StoryState {

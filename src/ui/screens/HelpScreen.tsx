@@ -332,6 +332,10 @@ function PlayPanel() {
             <span aria-hidden="true">⬆</span>
             <span>Eigene Spieler kennst du sofort. Talente hochziehen, leihen oder halten bleibt deine Wahl.</span>
           </li>
+          <li>
+            <span aria-hidden="true">🏫</span>
+            <span>Campus-Stufen: mehr Intake und bessere Qualität. Weltcamps liefern Nation-Jahrgänge in die Zentrale.</span>
+          </li>
         </ul>
       </section>
 
@@ -342,7 +346,7 @@ function PlayPanel() {
         <ul className="help-icon-list">
           <li>
             <span aria-hidden="true">💶</span>
-            <span>Finanzen und Stadion sind erste Klasse — Banden, Tribüne, Matchday.</span>
+            <span>Finanzen und Stadion sind erste Klasse — Banden, Tribüne, Matchday. Hotel/Restaurant leben von Auslastung, nicht von Training.</span>
           </li>
           <li>
             <span aria-hidden="true">📋</span>
@@ -381,6 +385,7 @@ function PlayPanel() {
 function StampsPanel() {
   const stamps = stampCatalog();
   const trained = stamps.filter((entry) => entry.path === "train");
+  const hybrid = stamps.filter((entry) => entry.path === "hybrid");
   const events = stamps.filter((entry) => entry.path === "event" && !entry.spawn);
 
   return (
@@ -409,6 +414,12 @@ function StampsPanel() {
             </span>
           </li>
           <li>
+            <span aria-hidden="true">🔗</span>
+            <span>
+              <strong>Hybrid:</strong> Gate oder Karriere-Beweis schaltet frei, dann Einzelprogramm siegelt.
+            </span>
+          </li>
+          <li>
             <span aria-hidden="true">🌱</span>
             <span>
               <strong>Start-Makel:</strong> fast jeder Neue trägt Grünschnabel; Angreifer können Chancentod
@@ -420,6 +431,7 @@ function StampsPanel() {
 
       <StampGroup title="Start-Makel" icon="🌱" stamps={stamps.filter((entry) => entry.spawn)} />
       <StampGroup title="Durch Training" icon="🏋️" stamps={trained} />
+      <StampGroup title="Hybrid · Unlock dann Siegel" icon="🔗" stamps={hybrid} />
       <StampGroup title="Durch Ereignisse" icon="🏁" stamps={events} />
     </div>
   );

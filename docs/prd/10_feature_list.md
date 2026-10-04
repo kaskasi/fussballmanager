@@ -1,6 +1,6 @@
 # /docs/prd/10_feature_list.md
 
-**Version:** 1.5
+**Version:** 1.6
 
 **Last Updated:** 2026-10-04
 **Status:** Final  
@@ -60,20 +60,21 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F2.5 | Trainingslager | M2 | Sichtbarkeits-Bonus auf Drive-Einschätzungen in Pausen |
 | F2.6 | Rehasystem | M3 | Verletzungsverlauf-Stufen, Reha-Trainer-Qualität |
 | F2.7 | Wachstums-Heatmap | M1 | Team-Leiste: 1 Quadrat = 1 Spieler-Wochenzuwachs (PRD 09 Screen 1) |
-| F2.8 | Fähigkeiten / Bonus-Stamps | M2 | Named bonuses: train-gate or career event; permanent +2…+4 on 2–3 attrs (PRD 07.5). Hybrid path later |
+| F2.8 | Fähigkeiten / Bonus-Stamps | M2 | Named bonuses: train / event / hybrid (unlock then F2.3 seal); signed −4…+4 on 2–3 attrs (PRD 07.5). Six archetype stamps in catalog |
 
 ### Modul 3 · Jugendakademie *(PRD 03)*
 
 | ID | Feature | M | Beschreibung |
 |---|---|---|---|
-| F3.1 | Jährlicher Intake | M1 | Gaussian-Mixture, 24 Spieler, Yamal-Exceptions (PRD 03.1) |
-| F3.2 | Jugend-Campus 2D | M1 | Iso-Ansicht, Gebäude-Levels, Badge-Gruppen |
+| F3.1 | Jährlicher Intake | M1 | Gaussian-Mixture, HQ 24/28/32, Yamal-Exceptions (PRD 03.1) |
+| F3.2 | Jugend-Campus 2D | M1 | Campus-Grid, Gebäude-Stufen, Badge-Gruppen — kein Iso-Stadtmodell |
 | F3.3 | Auto-Simulation U17/U19 | M1 | KEINE manuellen Aufstellungen — YouthReports (PRD 03.3) |
 | F3.4 | Decision Inbox | M1 | Max 4 Items/Woche: Leihen/Hochziehen/Vertrag/Fokus (PRD 03.4) |
 | F3.5 | Hochzieh-Workflow | M2 | Empfehlungen + Probewoche Profitraining |
-| F3.6 | Jugendverträge | M2 | Profi-Verträge, Spielzeit-Klauseln |
-| F3.7 | Akademie-Ausbau | M2 | 3 Stufen, Intake-Base +, Elite-Chance 1.5× (PRD 03.2) |
+| F3.6 | Jugendverträge | M2 | Profi-Verträge, Spielzeit-Klauseln — Dialog teilt F5.4 |
+| F3.7 | Akademie-Ausbau | M2 | 3 Stufen, Intake-Zahl + Qualität, Elite-Chance 1.5× (PRD 03.2) |
 | F3.8 | Abgangsrisiko | M2 | Trigger, 1-Wochen-Fenster, Gegenmaßnahmen (PRD 03.5) |
+| F3.9 | Jugendcamps | M2 | Satelliten pro Nation, Unterhalt, Betreuer, Übernehmen in HQ (PRD 03.6) |
 
 ### Modul 4 · Scouting *(PRD 04)*
 
@@ -96,7 +97,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F5.1 | Transfermarkt-Kern | M1 | Angebote, Reaktionsmatrix (PRD 05.3), Fenster-Schaltung |
 | F5.2 | Market Value Formel | M1 | Deterministisch, Schätzungs-basiert (PRD 05.1) — P0 |
 | F5.3 | Leihen | M1 | Wage-Split, Minute-Garantie, Recall (PRD 05.7) |
-| F5.4 | Vertragsverhandlungen | M2 | Player-Prioritäten, Frustr-Spirale (PRD 05.4) |
+| F5.4 | Vertragsverhandlungen | M2 | Player-Prioritäten, Fog beim 1. Angebot, Frustr-Spirale (PRD 05.4) |
 | F5.5 | Sell-On-Klauseln | M2 | Jugend-Anreiz, Track in fee_history |
 | F5.6 | KI-Transfermarkt | M2 | Dieselben Formeln, Budget-Disziplin (PRD 05.5) |
 | F5.7 | Ablösefreie | M1 | Vorverträge ab 6 Monate Restlaufzeit (PRD 05.6) |
@@ -122,7 +123,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 |---|---|---|---|
 | F7.1 | Stadion 2D-Iso-Ansicht | M1 | Grundriss, Blöcke, Preiskategorien |
 | F7.2 | Stadionausbau | M2 | Kapazität, VIP, Rasenheizung |
-| F7.3 | Nebengebäude platzieren | M3 | Würstchenbude, Fanshop, Hotel, Museum — Synergien |
+| F7.3 | Nebengebäude platzieren | M3 | Würstchenbude, Fanshop, Hotel, Restaurant (Auslastung+Story); Museum später |
 | F7.4 | Trainingsgelände-Ausbau | M3 | Verletzungsrate ↓, Physio-Boni |
 | F7.5 | Fanbase-Wachstum | M3 | Erfolgs-/Populäritätskurve → Zuschauerschnitt |
 | F7.6 | Ambiance-Effekte | M3 | Attraktivität für Spieler & Fans |
@@ -196,10 +197,10 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | Meilenstein | Features | Fokus |
 |---|---|---|
 | M1 | 37 | Kern-Loop: Sim, Liga, Growth, Intake, Basis-Transfers, Save, Hilfe |
-| M2 | 27 | USP-Ausbau: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps |
+| M2 | 28 | USP-Ausbau: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps, Camps |
 | M3 | 24 | Imperium, Events, Staff, Storylines |
 | M4 | 6 | Legacy & Meta |
-| **Total** | **94** | |
+| **Total** | **95** | |
 
 **M1-Definition of Done:** Ein Spieler kann einen Verein führen, eine Saison simulieren (mit Auto-Matches), Jugendspieler hochziehen, Talente entwickeln und Transfers tätigen — gespeichert in versioniertem Savegame. Vorstand/Entlassung aktiv.
 
@@ -224,7 +225,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 
 Tasks referenzieren Features via ID: „Implementiere F2.2 (Growth Engine) nach PRD 02.1". Ein Task darf max. 1 Feature umfassen (Ausnahme: reine Typ-/Schema-Tasks).
 
-`F-TYP-1` ist der Schema-Task für PRD 07 (P0, vor F2.2) und zählt nicht in die 94 Features.
+`F-TYP-1` ist der Schema-Task für PRD 07 (P0, vor F2.2) und zählt nicht in die 95 Features.
 
 M2 list for F2.8: implement after F2.3 slot machinery exists. Schema fields in PRD 07.5.
 

@@ -1,9 +1,14 @@
+import { careerApps, stampGateMarkers, stampIcon } from "../development/ability-stamps.ts";
+import {
+  derivedExperienceFactor,
+  EXPERIENCE_APPS_SOFT_CAP,
+  profileExperienceLabel,
+} from "../development/experience.ts";
 import {
   programKindLabel,
   programLabel,
   type IndividualProgram,
 } from "../development/individual-training.ts";
-import { stampIcon } from "../development/ability-stamps.ts";
 import { trainingUnit, type TrainingSlot } from "../development/training-units.ts";
 import type { Attributes, GrowthSnapshot, Player, PositionPrimary } from "../types/player.ts";
 import { roundStat } from "../types/player-display.ts";
@@ -116,17 +121,50 @@ export function attributeLabel(key: keyof Attributes): string {
 }
 
 export function profileFacts(player: Player, owned: boolean): ProfileFact[] {
+  const apps = careerApps(player);
   return [
     { icon: "🌍", label: "Nationalität", value: nationalityLabel(player.nationality) },
     { icon: "📍", label: "Region", value: player.birth.region },
     { icon: "🏟️", label: "Geburtsort", value: player.birth.place },
     { icon: "✍️", label: "Vertrag", value: contractLabel(player, owned) },
+    {
+      icon: "📚",
+      label: profileExperienceLabel(player),
+      value: owned ? `${apps} Einsätze` : "?",
+    },
   ];
 }
 
+export interface ExperienceBar {
+  label: string;
+  apps: number;
+  fill: number;
+  factor: number;
+  raw: boolean;
+}
+
+export function profileExperienceBar(player: Player): ExperienceBar {
+  const apps = careerApps(player);
+  return {
+    label: profileExperienceLabel(player),
+    apps,
+    fill: Math.min(1, apps / EXPERIENCE_APPS_SOFT_CAP),
+    factor: derivedExperienceFactor(player),
+    raw: profileExperienceLabel(player).includes("Roh"),
+  };
+}
+
 function nationalityLabel(code: string): string {
-  if (code === "DE") return "Deutschland";
-  return code;
+  const labels: Record<string, string> = {
+    DE: "Deutschland",
+    BR: "Brasilien",
+    NG: "Nigeria",
+    PL: "Polen",
+    FR: "Frankreich",
+    TR: "Türkei",
+    HR: "Kroatien",
+  };
+  return labels[code] ?? code;
 }
 
 function contractLabel(player: Player, owned: boolean): string {
@@ -293,6 +331,117 @@ export function dossierTrainingTarget(
 }
 
 export const FAEHIGKEIT_HUNGER_SLOTS = 3;
+
+export const ATTRIBUTE_GROUPS: { id: string; label: string; keys: (keyof Attributes)[] }[] = [
+  { id: "technik", label: "Technik", keys: ["shooting", "passing", "dribbling", "technique"] },
+  { id: "physis", label: "Physis", keys: ["pace", "strength", "stamina"] },
+  { id: "mental", label: "Mental", keys: ["composure", "leadership", "positioning", "vision", "concentration", "teamwork"] },
+];
+
+export const EXTRA_SKILL_KEYS: (keyof Attributes)[] = ["gk_handling", "weak_foot"];
+
+export interface SkillSheetGroup {
+  id: string;
+  label: string;
+  bars: AttributeBar[];
+}
+
+export function skillBarForKey(
+  player: Player,
+  key: keyof Attributes,
+  owned: boolean,
+  estimate?: AbilityEstimate,
+): AttributeBar {
+  const cap = key === "weak_foot" ? 100 : 199;
+  if (owned || !estimate) {
+    return {
+      key,
+      value: roundStat(player.attributes[key]),
+      showValue: true,
+      showCi: false,
+    };
+  }
+  const reveal = scoutReveal(estimate.uncertaintyRange);
+  const half = estimate.uncertaintyRange / 2;
+  const estimateFill = Math.round(estimate.estimatedAbilityMean * reveal.barFillRatio);
+  return {
+    key,
+    value: reveal.showExactSkills ? roundStat(player.attributes[key]) : Math.min(cap, estimateFill),
+    low: reveal.showCi ? Math.max(0, estimate.estimatedAbilityMean - half) : undefined,
+    high: reveal.showCi ? Math.min(cap, estimate.estimatedAbilityMean + half) : undefined,
+    showValue: reveal.showExactSkills,
+    showCi: reveal.showCi,
+    dimmed: !reveal.showExactSkills,
+  };
+}
+
+export function fullSkillSheet(
+  player: Player,
+  owned: boolean,
+  estimate?: AbilityEstimate,
+): SkillSheetGroup[] {
+  const groups = ATTRIBUTE_GROUPS.map((group) => ({
+    id: group.id,
+    label: group.label,
+    bars: group.keys.map((key) => skillBarForKey(player, key, owned, estimate)),
+  }));
+  groups.push({
+    id: "extra",
+    label: player.position === "GK" ? "Torwart" : "Extras",
+    bars: EXTRA_SKILL_KEYS.map((key) => skillBarForKey(player, key, owned, estimate)),
+  });
+  return groups;
+}
+
+export interface HexPoint {
+  x: number;
+  y: number;
+}
+
+export function hexVertex(cx: number, cy: number, radius: number, index: number, count = 6): HexPoint {
+  const angle = -Math.PI / 2 + (index * 2 * Math.PI) / count;
+  return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
+}
+
+export function hexPolygonPoints(cx: number, cy: number, radii: readonly number[]): string {
+  return radii
+    .map((radius, index) => {
+      const point = hexVertex(cx, cy, radius, index, radii.length);
+      return `${point.x.toFixed(1)},${point.y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+export function hexRegularPoints(cx: number, cy: number, radius: number, count = 6): string {
+  return hexPolygonPoints(cx, cy, Array.from({ length: count }, () => radius));
+}
+
+export function hexValuePoints(
+  values: readonly number[],
+  cx: number,
+  cy: number,
+  maxRadius: number,
+  cap = 199,
+): string {
+  return hexPolygonPoints(
+    cx,
+    cy,
+    values.map((value) => (Math.min(cap, Math.max(0, value)) / cap) * maxRadius),
+  );
+}
+
+export function stampGateTitle(
+  key: keyof Attributes,
+  markers: Partial<Record<keyof Attributes, string[]>>,
+): string | undefined {
+  const labels = markers[key];
+  if (!labels || labels.length === 0) return undefined;
+  return `Gate: ${labels.join(", ")}`;
+}
+
+export function playerStampGateMarkers(player: Player): Partial<Record<keyof Attributes, string[]>> {
+  return stampGateMarkers(player);
+}
 
 export function appendSeasonSnapshot(player: Player, season: number): Player {
   const apps =

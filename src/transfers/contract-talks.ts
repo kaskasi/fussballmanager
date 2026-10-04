@@ -128,14 +128,28 @@ export function evaluateContractOffer(
   season: number,
   offer: ContractOffer,
 ): "accept" | "reject" {
+  return describeContractOffer(player, season, offer).accepted ? "accept" : "reject";
+}
+
+export function describeContractOffer(
+  player: Player,
+  season: number,
+  offer: ContractOffer,
+): { accepted: boolean; reason: string } {
   const ask = playerContractAsk(player, season, offer.minutesPromise);
   if (PROMISE_RANK[offer.minutesPromise] < PROMISE_RANK[currentMinutesPromise(player)]) {
-    return "reject";
+    return { accepted: false, reason: "Will seinen Startplatz nicht aufgeben." };
   }
-  if (offer.termYears < ask.termYearsMin) return "reject";
-  if (offer.wageWeekly < ask.wageWeekly * ACCEPT_WAGE_RATIO) return "reject";
-  if (offer.bonusAppearance < ask.bonusAppearance * ACCEPT_BONUS_RATIO) return "reject";
-  return "accept";
+  if (offer.termYears < ask.termYearsMin) {
+    return { accepted: false, reason: `Laufzeit zu kurz — will mindestens ${ask.termYearsMin} Jahre.` };
+  }
+  if (offer.wageWeekly < ask.wageWeekly * ACCEPT_WAGE_RATIO) {
+    return { accepted: false, reason: "Zu wenig Gehalt." };
+  }
+  if (offer.bonusAppearance < ask.bonusAppearance * ACCEPT_BONUS_RATIO) {
+    return { accepted: false, reason: "Einsatzbonus zu klein." };
+  }
+  return { accepted: true, reason: "Handschlag." };
 }
 
 export function wageDeltaFitsBudget(

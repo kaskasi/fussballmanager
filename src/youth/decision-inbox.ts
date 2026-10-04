@@ -11,6 +11,7 @@ import { departureReasonLabel, departureRiskReasons } from "./departure-risk.ts"
 import { hasActiveProTrial, startProTrial } from "./pro-trial.ts";
 import { canPromotePlayer } from "./promotion-gate.ts";
 import type { StoryInboxPayload } from "../narrative/story-state.ts";
+import { isHqYouth } from "./youth-site.ts";
 import type { YouthReport } from "./youth-sim.ts";
 
 /** PRD 03.4 — max open decisions at once; extra candidates wait in queue. */
@@ -118,7 +119,7 @@ export function normalizeYouthInbox(inbox: YouthInboxState): YouthInboxState {
 function youthPlayerIds(players: readonly Player[]): Set<string> {
   return new Set(
     players
-      .filter((player) => player.squad_status === "u17" || player.squad_status === "u19")
+      .filter((player) => (player.squad_status === "u17" || player.squad_status === "u19") && isHqYouth(player))
       .map((player) => player.id),
   );
 }
@@ -497,7 +498,9 @@ export function generateWeeklyInbox(
   clubId?: string,
 ): YouthInboxState {
   const resolvedClubId = resolveClubId(players, clubId);
-  const youth = players.filter((player) => player.squad_status === "u17" || player.squad_status === "u19");
+  const youth = players.filter(
+    (player) => (player.squad_status === "u17" || player.squad_status === "u19") && isHqYouth(player),
+  );
   const coachIcons = report
     ? Object.fromEntries(report.standout_players.map((entry) => [entry.player_id, entry.coach_comment_icon]))
     : coachIconsForYouth(youth, masterSeed, week);

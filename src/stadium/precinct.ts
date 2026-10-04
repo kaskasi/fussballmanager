@@ -9,7 +9,9 @@ export type PrecinctBuilding =
   | "youth_pitch"
   | "beer_tent"
   | "fan_services"
-  | "clubhouse";
+  | "clubhouse"
+  | "hotel"
+  | "restaurant";
 
 export type PrecinctCap = "unique" | "many";
 
@@ -220,6 +222,30 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     maxLevel: 1,
     upgradeCost: 0,
     hint: "Nur eines · 2×2",
+  },
+  {
+    id: "hotel",
+    icon: "🏨",
+    label: "Hotel",
+    cost: 1_400_000,
+    cap: "unique",
+    minW: 3,
+    minH: 2,
+    maxLevel: 1,
+    upgradeCost: 0,
+    hint: "Nur eines · 3×2 · Auslastung, Heimspiel-Gäste",
+  },
+  {
+    id: "restaurant",
+    icon: "🍽️",
+    label: "Restaurant",
+    cost: 620_000,
+    cap: "unique",
+    minW: 2,
+    minH: 2,
+    maxLevel: 1,
+    upgradeCost: 0,
+    hint: "Nur eines · 2×2 · Auslastung + Story",
   },
 ];
 

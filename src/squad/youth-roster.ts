@@ -4,6 +4,7 @@ import { seasonMatchRating } from "../player/season-stats.ts";
 import { weeklyCaDelta } from "../player/ca-tracking.ts";
 import { injuryRiskScore } from "../development/fitness-management.ts";
 import { estimateCa } from "../transfers/market-value.ts";
+import { isHqYouth } from "../youth/youth-site.ts";
 import type { CoachIcon } from "../youth/academy.ts";
 import type { ProSquadRow, ProSquadSortDirection, ProSquadSortKey } from "./pro-roster.ts";
 import { sortProSquadRows } from "./pro-roster.ts";
@@ -16,7 +17,7 @@ export interface YouthSquadRow extends ProSquadRow {
 
 export function listYouthSquad(players: readonly Player[], team: "u17" | "u19"): YouthSquadRow[] {
   return players
-    .filter((player) => player.squad_status === team)
+    .filter((player) => player.squad_status === team && isHqYouth(player))
     .map((player) => ({
       playerId: player.id,
       displayName: formatPlayerName(player),

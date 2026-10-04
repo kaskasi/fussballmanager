@@ -11,6 +11,7 @@ import {
 } from "@fussballmanager/shared";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { estimateCa } from "../transfers/market-value.ts";
+import { derivedExperienceFactor } from "../development/experience.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { templateSquadForClub } from "./league-divisions.ts";
@@ -30,6 +31,7 @@ export function careerPlayerInputs(
       fitness: player.state.fitness,
       portraitSeed: player.portrait_seed,
       overall: estimateCa(player.attributes, player.position),
+      experience: derivedExperienceFactor(player),
     }));
 }
 

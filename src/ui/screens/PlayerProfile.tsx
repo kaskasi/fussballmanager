@@ -3,13 +3,13 @@
  *
  * ┌──────────────────────────────────────────────────────────────┐
  * │ Felix Schröder · CB · 17 · 🇩🇪                               │
- * │ CA 87  ● Fit  ◆ Form  ● Moral                                │
+ * │ CA 87  ● Fit  ◆ Form  ● Moral  📚 Erfahrung · Roh            │
  * ├──────────────────┬───────────────────────────────────────────┤
- * │ Kernattribute    │ Aktuelles Ziel                            │
- * │ ████████░░ 91    │ 🏃 Schnelligkeit                          │
- * │                  │ ▓▓▓▓░░░░ 32 %                             │
- * │ Stärke als…      │ Fähigkeiten / Bonus (F2.8 Badges)         │
- * │ TW ░  IV ▓▓▓     │ Vertrag  [✍️ Verhandeln] [⬆️ Profikader]  │
+ * │ Kernattribute hex │ Aktuelles Ziel                            │
+ * │ footnote bars     │ 🏃 Schnelligkeit                          │
+ * │ Technik/Physis/…  │ Fähigkeiten / Bonus (F2.8 Badges)         │
+ * │ ⚑ Gate-Keys       │ [Kopfball] [· dashed hybrid ·]            │
+ * │ Stärke als…       │ Vertrag  [✍️ Verhandeln] [⬆️ Profikader]  │
  * └──────────────────┴───────────────────────────────────────────┘
  *
  * Eine Karte = Identität. Nur Verlauf und Saisonwerte als optionale Vertiefung.
@@ -67,13 +67,21 @@ import {
   dossierTrainingTarget,
   FAEHIGKEIT_HUNGER_SLOTS,
   formMark,
+  fullSkillSheet,
   growthPolyline,
   growthSeries,
+  hexRegularPoints,
+  hexValuePoints,
+  hexVertex,
   layoutGrowthChart,
+  playerStampGateMarkers,
+  profileExperienceBar,
   profileFacts,
   staerkeAlsLanes,
+  stampGateTitle,
   stateMark,
   visibleBreakoutFlags,
+  type AttributeBar,
 } from "../player-profile.ts";
 import {
   activeStampBadges,
@@ -257,6 +265,7 @@ export function PlayerProfile({
   const morale = stateMark(player.state.morale);
   const form = formMark(player.state.form);
   const bars = attributeBars(player, owned, scoutEstimate);
+  const xpBar = owned ? profileExperienceBar(player) : null;
   const growth = owned
     ? growthSeries(player, season)
     : reveal?.showExactCa
@@ -380,11 +389,12 @@ export function PlayerProfile({
         <div className="profile-tab-panels" role="tabpanel">
           {tab === "attributes" ? (
             <section className="profile-panel" aria-label="Attribute">
-              <Hint text="Die sechs wichtigsten Skills für diese Position." block>
+              <Hint text="Sechs Kernattribute als Hex. Eigene Spieler: Fläche. Scouts: CI-Ring." block>
                 <div className="profile-bars">
                   <p className="profile-section-label">Kernattribute</p>
+                  <AttributeHex bars={bars} owned={owned} />
                   {bars.map((bar) => (
-                    <div key={bar.key} className={bar.dimmed ? "profile-bar-row is-dimmed" : "profile-bar-row"}>
+                    <div key={bar.key} className={bar.dimmed ? "profile-bar-row is-footnote is-dimmed" : "profile-bar-row is-footnote"}>
                       <span className="profile-bar-label">{attributeLabel(bar.key)}</span>
                       <div className="profile-bar-track">
                         {bar.showCi && bar.low !== undefined && bar.high !== undefined ? (
@@ -400,6 +410,18 @@ export function PlayerProfile({
                   ))}
                 </div>
               </Hint>
+
+              {xpBar ? (
+                <div className="profile-xp" aria-label={xpBar.label}>
+                  <span className="profile-xp-label">📚 {xpBar.label}</span>
+                  <div className="profile-bar-track" aria-hidden="true">
+                    <span className="profile-bar-fill" style={{ width: `${xpBar.fill * 100}%` }} />
+                  </div>
+                  <span className="profile-bar-value">{xpBar.apps}</span>
+                </div>
+              ) : null}
+
+              <FullSkillSheet player={player} owned={owned} estimate={scoutEstimate} />
 
               {lanes.length > 0 ? (
                 <Hint text="Grobe Eignung aus Hauptposition und Umschulung — keine zweite Attributliste." block>
@@ -867,6 +889,103 @@ function ProfileActionButton({
   );
 }
 
+function AttributeHex({ bars, owned }: { bars: AttributeBar[]; owned: boolean }) {
+  const cx = 100;
+  const cy = 100;
+  const maxR = 72;
+  const grid = [0.33, 0.66, 1].map((scale) => hexRegularPoints(cx, cy, maxR * scale, bars.length || 6));
+  const values = bars.map((bar) => bar.value);
+  const fill = hexValuePoints(values, cx, cy, maxR);
+  const ciLow = bars.every((bar) => bar.low !== undefined)
+    ? hexValuePoints(bars.map((bar) => bar.low ?? 0), cx, cy, maxR)
+    : null;
+  const ciHigh = bars.every((bar) => bar.high !== undefined)
+    ? hexValuePoints(bars.map((bar) => bar.high ?? 0), cx, cy, maxR)
+    : null;
+  const showRing = !owned && Boolean(ciLow && ciHigh);
+  return (
+    <svg className="profile-hex" viewBox="0 0 200 200" role="img" aria-label="Kernattribute Hexagon">
+      {grid.map((points) => (
+        <polygon key={points} className="profile-hex-grid" points={points} />
+      ))}
+      {owned ? <polygon className="profile-hex-fill" points={fill} /> : null}
+      {showRing && ciLow && ciHigh ? (
+        <g>
+          <polygon className="profile-hex-ci-outer" points={ciHigh} />
+          <polygon className="profile-hex-ci-inner" points={ciLow} />
+        </g>
+      ) : null}
+      {bars.map((bar, index) => {
+        const labelAt = hexVertex(cx, cy, maxR + 16, index, bars.length);
+        return (
+          <text
+            key={bar.key}
+            className="profile-hex-label"
+            x={labelAt.x}
+            y={labelAt.y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
+            {attributeLabel(bar.key)}
+          </text>
+        );
+      })}
+    </svg>
+  );
+}
+
+function FullSkillSheet({
+  player,
+  owned,
+  estimate,
+}: {
+  player: Player;
+  owned: boolean;
+  estimate?: AbilityEstimate;
+}) {
+  const groups = fullSkillSheet(player, owned, estimate);
+  const markers = playerStampGateMarkers(player);
+  return (
+    <div className="profile-sheet" aria-label="Alle Skills">
+      {groups.map((group) => (
+        <div key={group.id} className="profile-sheet-group">
+          <p className="profile-section-label">{group.label}</p>
+          {group.bars.map((bar) => {
+            const cap = bar.key === "weak_foot" ? 100 : 199;
+            const gate = stampGateTitle(bar.key, markers);
+            return (
+              <div
+                key={bar.key}
+                className={bar.dimmed ? "profile-bar-row is-footnote is-dimmed" : "profile-bar-row is-footnote"}
+                title={gate}
+              >
+                <span className="profile-bar-label">
+                  {attributeLabel(bar.key)}
+                  {gate ? (
+                    <span className="profile-gate-mark" aria-label={gate}>
+                      ⚑
+                    </span>
+                  ) : null}
+                </span>
+                <div className="profile-bar-track">
+                  {bar.showCi && bar.low !== undefined && bar.high !== undefined ? (
+                    <span
+                      className="profile-bar-ci"
+                      style={{ left: `${(bar.low / cap) * 100}%`, width: `${((bar.high - bar.low) / cap) * 100}%` }}
+                    />
+                  ) : null}
+                  <span className="profile-bar-fill" style={{ width: `${(bar.value / cap) * 100}%` }} />
+                </div>
+                <span className="profile-bar-value">{bar.showValue ? bar.value : "?"}</span>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function StampHungerSlots({
   player,
   programs,
@@ -880,7 +999,7 @@ function StampHungerSlots({
 }) {
   const badges = activeStampBadges(player, FAEHIGKEIT_HUNGER_SLOTS);
   const stampProgram = programs.find((entry) => entry.playerId === player.id && entry.kind === "stamp");
-  const eligible = eligibleTrainStamps(player);
+  const eligible = [...eligibleTrainStamps(player)];
   const elapsed = stampProgram ? Math.max(0, week - stampProgram.startedWeek) : 0;
   const total = stampProgram ? Math.max(1, elapsed + stampProgram.weeksRemaining) : 1;
   const progress = stampProgram ? Math.min(1, elapsed / total) : 0;
@@ -930,18 +1049,23 @@ function StampHungerSlots({
             </div>
           );
         }
-        const nextStamp = eligible[0];
+        const nextStamp = eligible.shift();
         if (nextStamp && onStartStamp) {
+          const hybrid = nextStamp.path === "hybrid";
           return (
             <div key={index} className="profile-hunger-slot">
               <span>{slotLabel}</span>
               <button
                 type="button"
-                className="profile-hunger-start"
+                className={hybrid ? "profile-hunger-start is-hybrid" : "profile-hunger-start"}
                 onClick={() => onStartStamp(nextStamp.id)}
-                title={`${nextStamp.label} trainieren · ${nextStamp.weeks ?? "?"} Wochen`}
+                title={
+                  hybrid
+                    ? `${nextStamp.label} siegeln · ${nextStamp.weeks ?? "?"} Wochen`
+                    : `${nextStamp.label} trainieren · ${nextStamp.weeks ?? "?"} Wochen`
+                }
               >
-                {nextStamp.icon} {nextStamp.label} starten
+                {nextStamp.icon} {nextStamp.label} {hybrid ? "siegeln" : "starten"}
               </button>
             </div>
           );
@@ -959,7 +1083,7 @@ function StampHungerSlots({
         {(player.stamps?.length ?? 0) > 0
           ? `${player.stamps.length} Stempel — Training, Meilenstein oder Start-Makel.`
           : eligible.length > 0
-            ? "Slot klicken startet ein Stempel-Programm."
+            ? "Slot klicken startet ein Stempel-Programm (Training oder Hybrid-Siegel)."
             : "Noch leer — trainiere freigeschaltete Stempel oder erreiche Meilensteine."}
       </p>
     </div>

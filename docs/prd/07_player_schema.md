@@ -1,6 +1,6 @@
 # /docs/prd/07_player_schema.md
 
-**Version:** 1.4
+**Version:** 1.5
 **Last Updated:** 2026-10-04
 **Status:** Final
 
@@ -81,6 +81,7 @@ interface Player {
     contract_talks_locked_until_day?: number; // F5.4, calendar day index
     scoring_streak?: number;                 // F2.8 Chancentod
     last_match_goals?: number;               // F2.8 hat-trick clear
+    youth_site?: "hq" | string;              // F3.9; missing = "hq"
   };
 
   // ── Geschichte & Analytics ──────────────────
@@ -133,7 +134,7 @@ interface TemporaryModifier {
 }
 
 /** F2.8 — named bonus identity. See 07.5. */
-type StampPath = "train" | "event"; // "hybrid" reserved, not in M2
+type StampPath = "train" | "event" | "hybrid";
 
 interface AbilityStamp {
   id: string;                    // catalog id, e.g. "kopfballungeheuer"
@@ -221,7 +222,7 @@ Die Korrelation −0.15 aus PRD 03.1 ist eine leichte Gegenbewegung von Drive zu
 | market_value | Deterministische Funktion (PRD 05.1), nie Random Walk. Bei `contract == null` ist der Vertragsterm 0 Monate |
 | squad_status `"loaned_out"` ↔ `current_loan` | Beide gesetzt oder beide leer. Ein Loan ohne Status ist ungültig, ein Status ohne Loan ebenfalls |
 | age | Entspricht den vollen Jahren zwischen `birth.date` und Spieldatum |
-| stamps | Jede `id` höchstens einmal. `applied` Werte ∈ [+1, +4] pro Schlüssel. Max 3 aktive Anzeige-Slots in der UI (alle earned stamps bleiben im Array) |
+| stamps | Jede `id` höchstens einmal. `applied` Werte ∈ [−4, −1] ∪ [+1, +4] pro Schlüssel. Max 3 aktive Anzeige-Slots in der UI (alle earned stamps bleiben im Array) |
 | stamps vs attributes | Beim Award werden `applied` einmalig auf `attributes` addiert (Clamp 0–199). Kein zweites Match-Modifier-System in M2 |
 
 ### 07.4 Validator-Funktionen
@@ -269,7 +270,7 @@ function validatePlayer(p: Player, asOfIso: string): boolean {
   for (const stamp of p.stamps ?? []) {
     if (stampIds.has(stamp.id)) return false;
     stampIds.add(stamp.id);
-    if (stamp.path !== "train" && stamp.path !== "event") return false;
+    if (stamp.path !== "train" && stamp.path !== "event" && stamp.path !== "hybrid") return false;
     for (const delta of Object.values(stamp.applied)) {
       if (delta === 0 || Math.abs(delta) > 4) return false;
     }
@@ -289,11 +290,13 @@ permanent attribute bump. Not a weekly loadout. Not hidden potential.
 
 | Path | How earned | Example |
 |---|---|---|
-| `train` | Attribute gate + individual program (shares F2.3 slot cap) | *Kopfballungeheuer* |
+| `train` | Attribute gate + individual program (shares F2.3 slot cap) | *Kopfballungeheuer*, *Krieger* |
 | `event` | Season/career counter, or spawn-at-generation phase curse | *Treter*, *Grünschnabel* |
+| `hybrid` | Gate / career proof **unlocks** eligibility; F2.3 stamp program **seals** and bakes `applied` | *Anführer*, *Künstler*, *Taschenmesser* |
 
-`hybrid` (event unlocks eligibility, then train to seal) is **reserved for
-later** — not in the M2 catalog, not a valid `StampPath` until a PRD bump.
+Unlocked-but-unsealed hybrids show as a dashed Fähigkeiten-Slot on the Akte
+(click-to-train), not as a finished badge. `evaluateEventStamps` does not
+auto-award `hybrid`.
 
 #### Effect (M2)
 
@@ -329,10 +332,29 @@ There is no separate `heading` attribute — aerial gates use `strength` +
 | `torjaeger_saison` | Torjäger | event | season_goals ≥ 25 (same season) | — | shooting +3, composure +2, teamwork −1 |
 | `alter_recke` | Alter Recke | event | career apps ≥ 300 | — | leadership +3, concentration +2, pace −1 |
 | `treter` | Treter | event | season_yellow_cards ≥ 13 | — | strength +2, composure +2, passing −1 |
+| `anfuehrer` | Anführer | hybrid | career apps ≥ 80 ∧ leadership ≥ 90 | 10 | leadership +3, composure +2, pace −1 |
+| `kuenstler` | Künstler | hybrid | dribbling ≥ 100 ∧ technique ≥ 95 | 10 | dribbling +3, technique +2, teamwork −1 |
+| `krieger` | Krieger | train | strength ≥ 100 ∧ concentration ≥ 85 | 8 | strength +3, positioning +2, passing −1 |
+| `motor` | Motor | train | stamina ≥ 100 ∧ teamwork ≥ 90 | 8 | stamina +3, teamwork +2, shooting −1 |
+| `taschenmesser` | Taschenmesser | hybrid | 2 trained flexibility lanes | 10 | positioning +3, teamwork +2, shooting −1 |
+| `sweeper_keeper` | Sweeper-Keeper | train | GK ∧ gk_handling ≥ 100 ∧ positioning ≥ 90 | 10 | gk_handling +3, passing +2, strength −1 |
 
-`hybrid` remains later. Spend-bar: progress ring on empty Fähigkeiten slots
-while a train stamp program runs; click an eligible empty slot to start it.
-Catalog JSON lives under `data/development/ability_stamps.json`.
+Spend-bar: progress ring on empty Fähigkeiten slots while a train/hybrid
+stamp program runs; click an eligible empty slot to start it. Hybrid slots
+use a dashed outline until sealed. Catalog JSON lives under
+`data/development/ability_stamps.json`.
+
+There is no stored `experience` attribute and no Erfahrung-stamp. Derive a
+match factor from Pro-Jahre (seasons with appearances) + `careerApps`
+(history + current season). Soft cap at Alter Recke’s 300 Einsätze — not a
+potential ceiling (Gesetz 1). Akte fact: „Erfahrung · Roh“ while
+*Grünschnabel* is on, else a short bar from apps. The career→engine wrapper
+scales **positioning / tackling / aerial** only
+(`shared/src/career-squad-bridge.ts`). Engine folder stays hands-off
+(Gesetz 4). Stacks with Grünschnabel (already baked into attributes).
+
+False 9 / Raumdeuter / Box-to-Box stay later (need match-event counters).
+C2 remains blocked (PRD 15).
 
 #### Relation to flavor
 

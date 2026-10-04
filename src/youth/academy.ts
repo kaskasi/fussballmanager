@@ -38,7 +38,7 @@ export const ACADEMY_FACILITIES: readonly AcademyFacilityDef[] = [
     id: "academy_basic",
     name: "Jugendhaus (Basis)",
     cost: 0,
-    effect: "Standard Intake-Qualität",
+    effect: "24 Intake, Standard-Qualität",
     icon: "🏠",
   },
   {
@@ -46,7 +46,7 @@ export const ACADEMY_FACILITIES: readonly AcademyFacilityDef[] = [
     name: "Leistungszentrum",
     cost: 2_500_000,
     requires: "stadion_min_capacity_20000",
-    effect: "Intake-Means +10, Drive-Umfeld +0.15",
+    effect: "28 Intake, Means +10, Drive-Umfeld +0.15",
     icon: "🏋️",
   },
   {
@@ -54,7 +54,7 @@ export const ACADEMY_FACILITIES: readonly AcademyFacilityDef[] = [
     name: "Elite-Akademie",
     cost: 8_500_000,
     requires: "academy_performance",
-    effect: "Intake-Means +25, 1.5× Gewicht der Elite-Komponente (mean 120), Mentoren-Level steigt",
+    effect: "32 Intake, Means +25, 1.5× Elite-Gewicht (mean 120), Mentoren-Level steigt",
     icon: "⭐",
   },
 ];
@@ -110,6 +110,23 @@ export function facilityGate(
     return { status: "needs_stadium", capacity: PERFORMANCE_STADIUM_CAPACITY };
   }
   return { status: "open" };
+}
+
+export function canBuyAcademyUpgrade(
+  owned: AcademyFacility,
+  stadiumCapacity: number,
+  cash: number,
+): { ok: true; target: AcademyFacility; cost: number } | { ok: false; reason: string } {
+  const target = nextFacility(owned);
+  if (!target) return { ok: false, reason: "Akademie ist ausgebaut." };
+  const gate = facilityGate(owned, target, stadiumCapacity);
+  if (gate.status === "needs_stadium") {
+    return { ok: false, reason: `Stadion ${gate.capacity.toLocaleString("de-DE")} Plätze.` };
+  }
+  if (gate.status !== "open") return { ok: false, reason: "Vorstufe fehlt." };
+  const cost = facilityById(target).cost;
+  if (cash < cost) return { ok: false, reason: "Zu wenig Kasse." };
+  return { ok: true, target, cost };
 }
 
 export function sortCampusBadges<T extends CampusBadge>(badges: readonly T[]): T[] {

@@ -1,7 +1,7 @@
 # /docs/prd/15_feature_gap.md
 
-**Version:** 1.8
-**Last Updated:** 2026-10-03
+**Version:** 1.9
+**Last Updated:** 2026-10-04
 **Status:** Final (Analyse — keine neuen Shipping-Features ohne Eintrag in PRD 10)
 
 ---
@@ -17,8 +17,8 @@ Trikotfläche, Wurstbude, blanke Spielerakte). Das Spiel füllt Slots über
 Jahre. Das ist nicht FM11-Vollständigkeit und nicht ein zweiter Story-Mode.
 
 Diese Datei erfindet keine Features zum Bauen. Lücken, die schon eine
-Feature-ID haben, bleiben auf ihrem Meilenstein. Kandidaten ohne ID (C1, C2)
-dürfen nicht in den Code, bevor PRD 07/10 sie aufnehmen.
+Feature-ID haben, bleiben auf ihrem Meilenstein. Kandidaten ohne ID (nur noch
+C2) dürfen nicht in den Code, bevor PRD 07/10 sie aufnehmen.
 
 ---
 
@@ -53,7 +53,7 @@ Lebenssimulation (PRD 01 Nicht-Ziele).
 
 | Spur | Inhalt | Katalog |
 |---|---|---|
-| Spieler | Wachstum, Fokus, später Stamps (C1) | F2.*, F1.5, C1 |
+| Spieler | Wachstum, Fokus, Stamps (F2.8) | F2.*, F1.5 |
 | Ort | Stadion, Banden, Trikot, Wurst, Merch | F7.*, F6.5, F6.7 |
 | Leute | Ensemble, Post, Chronik; Blutlinie nur als später Beat (C2) | PRD 13, F9, F11, C2 |
 
@@ -69,7 +69,7 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 | Einfacher Vertrags-Slider (Gehalt, Jahre, Bonus) | 2002 | F5.4 |
 | Banden + Trikotfläche als sichtbare Slots | 2002 Bandenwerbung | F6.5, UI in 14.7 |
 | Wurst/Bier/Imbiss als Ort | Economy-Säule; BMP/2002 | F7.3 (nicht FuMaFu-Skip) |
-| Spend-bar → benannter Bonus inkl. Minus | 2003 + Wolfensberger | **C1**, blockiert |
+| Spend-bar → benannter Bonus | 2003 + Wolfensberger | **F2.8** (ex-C1), PRD 07.5 |
 | Office/Kalender/News-Ton | FM11 | Hub + Inbox, nicht 40 Attribute |
 | Desk, leere Pokale als Hunger | BMP 1992 | F11.4 später; Stadion-Slots jetzt |
 | Nachvollziehbarer Hebel | FuMaFu | gilt für Slider und Preise |
@@ -88,15 +88,10 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 | Relatives 5-Sterne-Potential | Gesetz 1 |
 | Match selbst spielen | F1.9 ist M3-Eingriff, nicht Identität |
 
-### 15.3 Lücken mit bestehender Feature-ID
+### 15.3 Gebaut vs. Spec (Kurz)
 
-Priorität der *Empfehlung* ändert den Meilenstein in PRD 10 nicht. Ziehen nur
-per explizitem Katalog-Edit.
-
-| ID | M | Spec | Gebaut (2026-09-29) | Lücke |
+| ID | M | Spec | Stand UI/Code | Lücke |
 |---|---|---|---|---|
-| F5.4 | M2 | Gehalt, Prioritäten, Frust-Spirale (05.4) | Akte-Slider Gehalt/Jahre/Bonus + Frust; Jugend-Ein-Klick in Inbox | Dirichlet-Gewichte nicht auf Player — nur Advisor-Hint |
-| F6.5 | M2 | Sponsor-Laufzeit, Erfolgsstaffel | Modal am Slot, zwei Staffeln | Klausel-Enzyklopädie bleibt raus |
 | F6.7 | M3 | Merch × Popularität | — | Fanshop-SKU, nicht das Brustlogo |
 | F6.4 | M1 | Wasserfall 11.5 | Icon-Balken + 13-Mo-Sparkline | — |
 | F7.1 | M1 | 2D-Grundriss, Preise | Grundriss + Banden auf Tribünen + Shirt | Gelände-Tab separat |
@@ -106,28 +101,24 @@ per explizitem Katalog-Edit.
 | F3.3 | M1 | YouthReports | Report 14.4 + Auto-Sim; Grid sekundär | Campus-Iso F3.2 |
 | F3.4 | M1 | Icon-Inbox, Cap 4 | Post-Karte ●/▲, Jugend-Icons 03.4 | Hub-Ampel Jugend |
 | F3.6 | M2 | Profi-Verträge, Spielzeit-Klauseln | Jugendvertrag-Default | Slider mit F5.4 teilen |
-| F2.3 | M2 | Individualprogramme | Gruppen-Fokus F2.1 | kein Spend-to-Stamp |
+| F2.3 | M2 | Individualprogramme | Gruppen-Fokus F2.1; weak foot / retrain | Stamp-kind folgt mit F2.8 |
 | F2.7 | M1 | Wachstums-Heatmap | Team-Pixelbar Hub+Training (1□=1 Spieler) | 09 Screen 1 |
+| F2.8 | M2 | Bonus-Stamps | Schema `Player.stamps` (07.5); UI Hunger | Earn-Loop + Katalog-JSON |
 | F4.3 | M2 | Scout-Netz 3 Tiers | Einstellungsliste | vorgezogen, keine Karte |
 | F4.4 | M2 | Scout-Karte | — | |
-| F1.5 | M1 | Profil Charts, Icons | Tabs + Flavor | Akte laut 14.3 |
+| F1.5 | M1 | Profil Charts, Icons | Tabs + Flavor | Akte laut 14.3; Hex optional später |
 | F5.1 | M1 | Markt, Fenster | Next-Action bei Fenster zu | Historie sekundär |
 | F1.9 | M3 | Live-Eingriff | Pause/Speed | nicht vorziehen |
 
 ### 15.4 Kandidaten (nicht in PRD 10 — nicht bauen)
 
-#### C1 — Fähigkeiten / Bonus-Stamps
+#### C1 — Fähigkeiten / Bonus-Stamps — **promoted → F2.8**
 
-- **Wunsch:** Sichtbare Stempel auf der Akte (`+2 Antritt`, `Geölter Blitz 1.0`),
-  inkl. Minus, Spend-Bar (Fortschritt, Dauer, Effekt), max. wenige aktive
-  Stamps. 2003-Schicht + Wolfensberger 2002.
-- **Nicht:** FuMaFu-Wochen-Loadout gegen den Gegner; keine Restpotenzial-Sterne.
-- **Blocker:** PRD 07 hat keine Stamp-Felder. Flavor in der UI ist Wallpaper.
-  F2.3 deckt nur Weak Foot / Umschulung.
-- **Freigabe:** Schema in PRD 07, neue ID in PRD 10 (Vorschlag `F2.8`, M2),
-  `save_version` + Migration. Erst dann UI 14.3 füllen.
-- **Wirkung:** Modifier auf sichtbare Attribute oder Match-Wrapper-Input —
-  nie ein verstecktes `potential`.
+Aufgenommen in PRD 10 als **F2.8** (M2) und spezifiziert in PRD 07.5.
+
+Beschlossene Wirkung: kleiner permanenter Attribut-Bump (+2…+4 auf 2–3
+Keys), gebacken in `attributes` beim Award. Pfade M2: `train` | `event`.
+`hybrid` reserviert für später. Kein separates Match-Modifier-Layer in M2.
 
 #### C2 — Blutlinie in der Akademie
 
@@ -147,21 +138,22 @@ Ohne Meilensteine in PRD 10 zu verschieben:
    Klausel-Enzyklopädie bleibt raus.
 2. Ein **F7.3-Slice** (eine Wurstbude) nur nach explizitem Katalog-Edit, der
    den Slice nach M2 zieht; sonst bleibt F7.3 M3. Empfohlen, nicht getan.
-3. **C1 / C2** erst nach 07/10.
+3. **F2.8** Implementierung (Katalog-JSON, Earn-Loop, Akte-Badges) — Spec steht.
+4. **C2** erst nach 07/10.
 
 Shirt-Verkauf (F6.7) bleibt M3 und folgt der Bude, nicht dem Brustlogo.
 
-### 15.6 Roadmap laut PRD 10 (unverändert)
+### 15.6 Roadmap laut PRD 10 (unverändert außer F2.8-Zählung)
 
 Zählung und DoD sind die Source of Truth. Analyse verschiebt sie nicht.
 
 | Meilenstein | Features | Fokus |
 |---|---|---|
 | **M1** | 36 | Kern-Loop: Sim, Liga, Growth, Intake, Basis-Transfers, Save |
-| **M2** | 26 | USP: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Sponsoren |
+| **M2** | 27 | USP: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps |
 | **M3** | 24 | Imperium, Events, Staff, Storylines, Merch, Nebengebäude |
 | **M4** | 6 | Legacy & Meta |
-| **Total** | **92** | plus `F-TYP-1` (Schema, zählt nicht) |
+| **Total** | **93** | plus `F-TYP-1` (Schema, zählt nicht) |
 
 **M1-Definition of Done (PRD 10, wörtlich):** Ein Spieler kann einen Verein
 führen, eine Saison simulieren (mit Auto-Matches), Jugendspieler hochziehen,
@@ -187,11 +179,11 @@ Savegame. Vorstand/Entlassung aktiv.
 
 #### M2 — USPs (Wirtschaft + Tiefe)
 
-F1.6–F1.8 · F2.3–F2.5 · F3.5–F3.8 · F4.3 F4.4 F4.7 F4.8 · **F5.4** F5.5 F5.6 ·
+F1.6–F1.8 · F2.3–F2.5 · **F2.8** · F3.5–F3.8 · F4.3 F4.4 F4.7 F4.8 · **F5.4** F5.5 F5.6 ·
 **F6.5** · F7.2 · F8.2 F8.3 · F9.3 F9.4 · F10.5 F10.6 · F11.3
 
 Für die 2002-Kampagne sind **F5.4** und **F6.5** die wirtschaftlichen USPs,
-nicht F10.6 (Cup).
+nicht F10.6 (Cup). **F2.8** ist der Spieler-Identitäts-USP (2003-Stamps).
 
 #### M3 — Imperium
 
@@ -219,7 +211,8 @@ Stern-Potential, 3D, Match-als-Sportspiel.
 
 | Regel | Prüfung |
 |---|---|
-| Kein Code für C1/C2 | erst 07 + 10 |
+| Kein Code für C2 | erst 07 + 10 |
+| F2.8 Spec | PRD 07.5; Earn-Loop eigener Task |
 | F6.5 ≠ F6.7 | Ort/Logo vs. SKU |
 | F7.3 bleibt M3 | bis Katalog-Edit |
 | Kein Haushalt | PRD 01 |
@@ -232,7 +225,7 @@ Stern-Potential, 3D, Match-als-Sportspiel.
 
 - Vision / Nicht-Ziele: PRD 01
 - Verträge: PRD 05.4
-- Player-Schema: PRD 07
+- Player-Schema: PRD 07 (inkl. 07.5 Stamps)
 - Katalog und Meilensteine: PRD 10
 - Finanzen deferred: PRD 11 Scope-Out
 - Story-Ensemble (Bratwurst-NPC): PRD 13

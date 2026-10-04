@@ -65,6 +65,7 @@ function player(overrides: Partial<Player> & Pick<Player, "id" | "age">): Player
       ...overrides.state,
     },
     history: { growth: [], clubs: [], achievements: [], milestones: [] },
+    stamps: [],
     portrait_seed: 1,
   } as Player;
 }

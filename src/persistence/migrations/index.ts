@@ -48,6 +48,7 @@ import { migration047ProSeasonCalendar } from "./migration_047_pro_season_calend
 import { migration048PrecinctCampus } from "./migration_048_precinct_campus.ts";
 import { migration049PrecinctPatches } from "./migration_049_precinct_patches.ts";
 import { migration050PrecinctFarm } from "./migration_050_precinct_farm.ts";
+import { migration051AbilityStamps } from "./migration_051_ability_stamps.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -105,6 +106,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration048PrecinctCampus,
   migration049PrecinctPatches,
   migration050PrecinctFarm,
+  migration051AbilityStamps,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

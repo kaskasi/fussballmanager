@@ -1,7 +1,7 @@
 # /docs/prd/14_ui_cockpit.md
 
-**Version:** 1.13
-**Last Updated:** 2026-10-03
+**Version:** 1.14
+**Last Updated:** 2026-10-04
 **Status:** Final (Darstellung — kein Code in diesem Dokument)
 
 ---
@@ -83,6 +83,7 @@ Kalender, News), nicht die 40-Spalten-Identität.
 | Origin-Modal | PRD 13 | drei Karten, gut | behalten |
 | Scouting-Wissen | F4.2 | Balken + CI-Grauzone | behalten |
 | Training-Heatmap | F2.7 / 02.1 | Team-Raster ~3×8/Stufe (1□=1 Spieler, ~8px); Hover Desktop, große Zellen Mobile | behalten |
+| Fähigkeiten-Stamps | F2.8 / 07.5 | Hunger-Slots → echte Badges aus `Player.stamps` | füllen |
 | Spielerakte | CA, Vertrag, Flavor | vier SaaS-Tabs, ein Punkt | eine Karte |
 | Jugend | Roster + Auto-Sim | 12-Spalten-Grid | Report (PRD 03.3) |
 | Inbox | Slice + Cap 4 | Modal, Text-Buttons | Karte + Icons (09.2 / 03.4) |
@@ -138,9 +139,9 @@ Eine Karte. Tabs sind sekundär (Verlauf, Saisonwerte), nicht die Identität.
 │ ████████░░ 91    │ 🏃 Schnelligkeit                          │
 │ ███████░░░ 77    │ ▓▓▓▓░░░░ 32 % · 0.8 J. · Effekt sichtbar │
 │ …                │                                           │
-│                  │ Fähigkeiten / Bonus                       │
-│ Stärke als…      │ leer — Hunger-Slots (füllen = PRD 15 C1)  │
-│ TW ░             │                                           │
+│                  │ Fähigkeiten / Bonus (F2.8)                │
+│ Stärke als…      │ [Kopfballungeheuer] [Treter] [·]          │
+│ TW ░             │ max 3 Badges · Klick = Quelle + applied   │
 │ ST ░             │ Vertrag                                   │
 │                  │ Jugend · € 80/Wo · bis Saison 2029        │
 │                  │ [✍️ Verhandeln]  [⬆️ Profikader]          │
@@ -150,8 +151,11 @@ Eine Karte. Tabs sind sekundär (Verlauf, Saisonwerte), nicht die Identität.
 Regeln:
 
 - Flavor-Text (`Ruhiges Auftreten…`) ist sekundär, Tooltip oder eine Zeile.
-  Rote/grüne Pills ohne Mechanik bleiben Wallpaper, bis PRD 15 C1 in PRD 07
-  steht — sie dürfen nicht die Karte dominieren.
+  Mechanische Stamps kommen aus `Player.stamps` (PRD 07.5 / F2.8). Flavor
+  `history.career_stamps` darf die Slots nicht als echte Boni füllen.
+- Fähigkeiten-Slots: bis zu 3 aktive Badge-Icons. Leere Slots bleiben
+  Hunger (Underdog-Start). Stamp-Training startet über Individualprogramm
+  (F2.3-Slot + `kind: "stamp"`).
 - `Stärke als…` vier grobe Balken aus Positions-Proficiency (PRD 07
   `flexibility` + Primärposition). Keine zweite Attribut-Enzyklopädie.
 - Vertrag-Spalte zeigt Status. ✍️ Verhandeln öffnet ein Modal (Gehalt,

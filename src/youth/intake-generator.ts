@@ -252,6 +252,7 @@ function generateOne(
       achievements: [],
       milestones: [],
     },
+    stamps: [],
     portrait_seed: portraitSeed,
   };
   return ensureYouthContract(player, input.season);

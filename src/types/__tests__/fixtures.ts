@@ -87,6 +87,7 @@ export const validPlayer: Player = {
     achievements: [],
     milestones: [],
   },
+  stamps: [],
   portrait_seed: 42,
 };
 

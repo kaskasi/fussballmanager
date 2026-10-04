@@ -1,7 +1,7 @@
 # /docs/prd/10_feature_list.md
 
-**Version:** 1.3
-**Last Updated:** 2026-09-29
+**Version:** 1.4
+**Last Updated:** 2026-10-04
 **Status:** Final  
 
 ---
@@ -59,6 +59,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F2.5 | Trainingslager | M2 | Sichtbarkeits-Bonus auf Drive-Einschätzungen in Pausen |
 | F2.6 | Rehasystem | M3 | Verletzungsverlauf-Stufen, Reha-Trainer-Qualität |
 | F2.7 | Wachstums-Heatmap | M1 | Team-Leiste: 1 Quadrat = 1 Spieler-Wochenzuwachs (PRD 09 Screen 1) |
+| F2.8 | Fähigkeiten / Bonus-Stamps | M2 | Named bonuses: train-gate or career event; permanent +2…+4 on 2–3 attrs (PRD 07.5). Hybrid path later |
 
 ### Modul 3 · Jugendakademie *(PRD 03)*
 
@@ -193,10 +194,10 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | Meilenstein | Features | Fokus |
 |---|---|---|
 | M1 | 36 | Kern-Loop: Sim, Liga, Growth, Intake, Basis-Transfers, Save |
-| M2 | 26 | USP-Ausbau: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen |
+| M2 | 27 | USP-Ausbau: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps |
 | M3 | 24 | Imperium, Events, Staff, Storylines |
 | M4 | 6 | Legacy & Meta |
-| **Total** | **92** | |
+| **Total** | **93** | |
 
 **M1-Definition of Done:** Ein Spieler kann einen Verein führen, eine Saison simulieren (mit Auto-Matches), Jugendspieler hochziehen, Talente entwickeln und Transfers tätigen — gespeichert in versioniertem Savegame. Vorstand/Entlassung aktiv.
 
@@ -221,7 +222,9 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 
 Tasks referenzieren Features via ID: „Implementiere F2.2 (Growth Engine) nach PRD 02.1". Ein Task darf max. 1 Feature umfassen (Ausnahme: reine Typ-/Schema-Tasks).
 
-`F-TYP-1` ist der Schema-Task für PRD 07 (P0, vor F2.2) und zählt nicht in die 92 Features.
+`F-TYP-1` ist der Schema-Task für PRD 07 (P0, vor F2.2) und zählt nicht in die 93 Features.
+
+M2 list for F2.8: implement after F2.3 slot machinery exists. Schema fields in PRD 07.5.
 
 ---
 

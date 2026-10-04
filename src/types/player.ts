@@ -63,11 +63,26 @@ export interface Player {
     clubs: ClubHistoryEntry[];
     achievements: string[];
     milestones: MilestoneEvent[];
-    /** Pre-C1 career flair for F1.5 hunger slots (veteran backstory). */
+    /** Pre-F2.8 flavor labels only (veteran wallpaper). Not mechanical. */
     career_stamps?: string[];
   };
 
+  /** F2.8 — earned named bonuses. Effects baked into `attributes` on award. */
+  stamps: AbilityStamp[];
+
   portrait_seed: number;
+}
+
+/** F2.8 — named bonus identity (PRD 07.5). `hybrid` reserved for later. */
+export type StampPath = "train" | "event";
+
+export interface AbilityStamp {
+  id: string;
+  earned_season: number;
+  earned_week: number;
+  path: StampPath;
+  /** Deltas already applied to `attributes` when the stamp was awarded. */
+  applied: Partial<Record<keyof Attributes, number>>;
 }
 
 export type PositionPrimary =

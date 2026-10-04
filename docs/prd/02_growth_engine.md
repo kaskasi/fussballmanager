@@ -1,7 +1,7 @@
 # /docs/prd/02_growth_engine.md
 
-**Version:** 1.2
-**Last Updated:** 2026-09-27
+**Version:** 1.3
+**Last Updated:** 2026-10-04
 **Status:** Final
 
 ---
@@ -151,6 +151,10 @@ Die Woche hat **5 Trainingsslots**. Davon dürfen **bis zu 3 Fokus-Slots** sein 
 - Session-Typen treffen Gruppen: technical → shooting, passing, dribbling, technique, weak_foot.
 
 Die Heatmap der Wochenzuwächse ist Screen 1 in PRD 09. Sie hat keine eigene Formel. Sie zeichnet das Ergebnis von 02.1.
+
+F2.8 Bonus-Stamps (PRD 07.5) sind **kein** Wochen-Wachstumsfaktor. Sie vergeben
+einmalig feste Attribut-Bumps und laufen über Individualprogramm-Slots (F2.3),
+nicht über Fokus-Slots. Sie ändern `training_focus()` nicht.
 
 ### 02.5 Match-Practice-Bonus
 

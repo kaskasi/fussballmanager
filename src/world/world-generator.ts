@@ -630,6 +630,7 @@ function generateProfessional(
       achievements: [],
       milestones: [],
     },
+    stamps: [],
     portrait_seed: portraitSeed,
   };
 

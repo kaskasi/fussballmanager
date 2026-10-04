@@ -7,15 +7,25 @@ import {
 } from "./pipeline-week.ts";
 import { trainingIntensityMultiplier } from "./training-load.ts";
 import type { Player, PositionPrimary } from "../types/player.ts";
+import {
+  awardStamp,
+  canEarnStamp,
+  eligibleTrainStamps,
+  stampDefinition,
+  stampLabel,
+  type StampAwardNotice,
+} from "./ability-stamps.ts";
 
-/** F2.3 — extra programs on top of the team plan (PRD 09.2 Screen 1a). */
-export type IndividualProgramKind = "weak_foot" | "position_retrain";
+/** F2.3 + F2.8 — extra programs on top of the team plan (PRD 09.2 Screen 1a). */
+export type IndividualProgramKind = "weak_foot" | "position_retrain" | "stamp";
 
 export interface IndividualProgram {
   playerId: string;
   kind: IndividualProgramKind;
   weeksRemaining: number;
   targetPosition?: PositionPrimary;
+  /** F2.8 catalog id when kind === "stamp". */
+  stampId?: string;
   startedWeek: number;
   season: number;
 }
@@ -45,11 +55,16 @@ export function programLabel(program: IndividualProgram): string {
   if (program.kind === "weak_foot") {
     return `Schwaches Bein · ${program.weeksRemaining} Wo.`;
   }
+  if (program.kind === "stamp") {
+    return `${stampLabel(program.stampId ?? "?")} · ${program.weeksRemaining} Wo.`;
+  }
   return `${program.targetPosition ?? "?"} umbauen · ${program.weeksRemaining} Wo.`;
 }
 
 export function programKindLabel(kind: IndividualProgramKind): string {
-  return kind === "weak_foot" ? "Schwaches Bein" : "Position umbauen";
+  if (kind === "weak_foot") return "Schwaches Bein";
+  if (kind === "stamp") return "Fähigkeit / Stempel";
+  return "Position umbauen";
 }
 
 export function eligibleRetrainPositions(player: Player): PositionPrimary[] {
@@ -61,6 +76,7 @@ export function canAssignIndividualProgram(
   kind: IndividualProgramKind,
   programs: readonly IndividualProgram[],
   targetPosition?: PositionPrimary,
+  stampId?: string,
 ): { ok: true } | { ok: false; reason: string } {
   if (player.squad_status === "loaned_out") {
     return { ok: false, reason: "Ausgeliehene Spieler trainieren nicht beim Verein." };
@@ -74,6 +90,15 @@ export function canAssignIndividualProgram(
   if (kind === "weak_foot") {
     if (player.attributes.weak_foot >= 85) {
       return { ok: false, reason: "Schwaches Bein ist schon stark genug (≥ 85)." };
+    }
+    return { ok: true };
+  }
+  if (kind === "stamp") {
+    if (!stampId) return { ok: false, reason: "Stempel wählen." };
+    const earn = canEarnStamp(player, stampId);
+    if (!earn.ok) return earn;
+    if (earn.definition.path !== "train") {
+      return { ok: false, reason: "Dieser Stempel wird nicht trainiert — er kommt durch Leistung." };
     }
     return { ok: true };
   }
@@ -98,16 +123,23 @@ export function assignIndividualProgram(
   season: number,
   week: number,
   targetPosition?: PositionPrimary,
+  stampId?: string,
 ): IndividualProgram[] {
-  const duration = Math.min(MAX_PROGRAM_WEEKS, Math.max(MIN_PROGRAM_WEEKS, Math.round(weeks)));
-  const check = canAssignIndividualProgram(player, kind, programs, targetPosition);
+  const check = canAssignIndividualProgram(player, kind, programs, targetPosition, stampId);
   if (!check.ok) throw new Error(check.reason);
+
+  let duration = Math.min(MAX_PROGRAM_WEEKS, Math.max(MIN_PROGRAM_WEEKS, Math.round(weeks)));
+  if (kind === "stamp" && stampId) {
+    const def = stampDefinition(stampId);
+    duration = def?.weeks ?? duration;
+  }
 
   const next: IndividualProgram = {
     playerId: player.id,
     kind,
     weeksRemaining: duration,
     targetPosition: kind === "position_retrain" ? targetPosition : undefined,
+    stampId: kind === "stamp" ? stampId : undefined,
     startedWeek: week,
     season,
   };
@@ -215,22 +247,45 @@ function applyPositionRetrain(player: Player, target: PositionPrimary): Player {
   };
 }
 
-/** Apply one week of individual programs, then tick durations. */
+/** Apply one week of individual programs, then tick durations. Stamp awards on completion. */
 export function advanceIndividualTrainingWeek(
   players: readonly Player[],
   programs: readonly IndividualProgram[],
   context?: TrainingWeekContext,
   random?: () => number,
-): { players: Player[]; programs: IndividualProgram[] } {
+): { players: Player[]; programs: IndividualProgram[]; awards: StampAwardNotice[] } {
   const byId = new Map(programs.map((program) => [program.playerId, program]));
+  const awards: StampAwardNotice[] = [];
+  const season = context?.season ?? 1;
+  const week = context?.week ?? 1;
+
   const nextPlayers = players.map((player) => {
     const program = byId.get(player.id);
     if (!program || program.weeksRemaining <= 0) return player;
+
     if (program.kind === "weak_foot") {
       return applyWeakFootProgram(player, context, random);
     }
-    if (program.targetPosition) {
+    if (program.kind === "position_retrain" && program.targetPosition) {
       return applyPositionRetrain(player, program.targetPosition);
+    }
+    if (program.kind === "stamp" && program.stampId) {
+      // Spend weeks training toward the stamp; award on the final week.
+      if (program.weeksRemaining === 1) {
+        const before = player;
+        const awarded = awardStamp(player, program.stampId, season, week);
+        if (awarded.stamps.length > (before.stamps?.length ?? 0)) {
+          const def = stampDefinition(program.stampId);
+          awards.push({
+            playerId: player.id,
+            stampId: program.stampId,
+            label: def?.label ?? program.stampId,
+            icon: def?.icon ?? "◆",
+          });
+        }
+        return awarded;
+      }
+      return player;
     }
     return player;
   });
@@ -239,5 +294,7 @@ export function advanceIndividualTrainingWeek(
     .map((program) => ({ ...program, weeksRemaining: program.weeksRemaining - 1 }))
     .filter((program) => program.weeksRemaining > 0);
 
-  return { players: nextPlayers, programs: nextPrograms };
+  return { players: nextPlayers, programs: nextPrograms, awards };
 }
+
+export { eligibleTrainStamps };

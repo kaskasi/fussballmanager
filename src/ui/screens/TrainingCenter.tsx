@@ -29,6 +29,7 @@ import {
   cancelIndividualProgram,
   canAssignIndividualProgram,
   eligibleRetrainPositions,
+  eligibleTrainStamps,
   MAX_INDIVIDUAL_PROGRAMS,
   MAX_PROGRAM_WEEKS,
   MIN_PROGRAM_WEEKS,
@@ -39,6 +40,7 @@ import {
   type IndividualProgram,
   type IndividualProgramKind,
 } from "../../development/individual-training.ts";
+import { stampDefinition } from "../../development/ability-stamps.ts";
 import {
   clampTrainingIntensity,
   fatigueAmpelClassName,
@@ -691,13 +693,18 @@ function IndividualProgramModal({
   onProgramsChange: (programs: IndividualProgram[]) => void;
 }) {
   const active = programForPlayer(programs, player.id);
+  const trainStamps = eligibleTrainStamps(player);
   const [kind, setKind] = useState<IndividualProgramKind>(active?.kind ?? "weak_foot");
+  const [stampId, setStampId] = useState<string>(
+    active?.stampId ?? trainStamps[0]?.id ?? "",
+  );
   const [weeks, setWeeks] = useState(active?.weeksRemaining ?? 8);
   const [targetPosition, setTargetPosition] = useState<PositionPrimary>(
     active?.targetPosition ?? eligibleRetrainPositions(player)[0] ?? "AM",
   );
   const tired = playerFatigueWarning(player);
-  const check = canAssignIndividualProgram(player, kind, programs, targetPosition);
+  const check = canAssignIndividualProgram(player, kind, programs, targetPosition, stampId);
+  const stampWeeks = kind === "stamp" ? (stampDefinition(stampId)?.weeks ?? weeks) : weeks;
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -710,7 +717,16 @@ function IndividualProgramModal({
   function handleAssign() {
     if (!check.ok) return;
     try {
-      const next = assignIndividualProgram(programs, player, kind, weeks, season, week, targetPosition);
+      const next = assignIndividualProgram(
+        programs,
+        player,
+        kind,
+        stampWeeks,
+        season,
+        week,
+        targetPosition,
+        kind === "stamp" ? stampId : undefined,
+      );
       onProgramsChange(next);
       onClose();
     } catch {
@@ -758,9 +774,22 @@ function IndividualProgramModal({
 
           <label className="training-individual-field">
             <span>Programm</span>
-            <select value={kind} onChange={(event) => setKind(event.target.value as IndividualProgramKind)}>
+            <select
+              value={kind}
+              onChange={(event) => {
+                const nextKind = event.target.value as IndividualProgramKind;
+                setKind(nextKind);
+                if (nextKind === "stamp" && !stampId && trainStamps[0]) {
+                  setStampId(trainStamps[0].id);
+                }
+              }}
+            >
               <option value="weak_foot">{programKindLabel("weak_foot")}</option>
               <option value="position_retrain">{programKindLabel("position_retrain")}</option>
+              <option value="stamp" disabled={trainStamps.length === 0}>
+                {programKindLabel("stamp")}
+                {trainStamps.length === 0 ? " (keine freigeschaltet)" : ""}
+              </option>
             </select>
           </label>
 
@@ -778,17 +807,34 @@ function IndividualProgramModal({
             </label>
           ) : null}
 
-          <label className="training-individual-field">
-            <span>Dauer {weeks} Wochen</span>
-            <input
-              type="range"
-              min={MIN_PROGRAM_WEEKS}
-              max={MAX_PROGRAM_WEEKS}
-              step={1}
-              value={weeks}
-              onChange={(event) => setWeeks(Number(event.target.value))}
-            />
-          </label>
+          {kind === "stamp" ? (
+            <label className="training-individual-field">
+              <span>Stempel</span>
+              <select value={stampId} onChange={(event) => setStampId(event.target.value)}>
+                {trainStamps.map((stamp) => (
+                  <option key={stamp.id} value={stamp.id}>
+                    {stamp.icon} {stamp.label} · {stamp.weeks ?? "?"} Wo.
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          {kind === "stamp" ? (
+            <p className="training-individual-stats">Dauer fix {stampWeeks} Wochen (Katalog)</p>
+          ) : (
+            <label className="training-individual-field">
+              <span>Dauer {weeks} Wochen</span>
+              <input
+                type="range"
+                min={MIN_PROGRAM_WEEKS}
+                max={MAX_PROGRAM_WEEKS}
+                step={1}
+                value={weeks}
+                onChange={(event) => setWeeks(Number(event.target.value))}
+              />
+            </label>
+          )}
 
           {!check.ok ? <p className="training-individual-error">{check.reason}</p> : null}
 

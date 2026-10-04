@@ -1,7 +1,7 @@
 # /docs/prd/07_player_schema.md
 
-**Version:** 1.2
-**Last Updated:** 2026-10-03
+**Version:** 1.3
+**Last Updated:** 2026-10-04
 **Status:** Final
 
 ---
@@ -87,7 +87,13 @@ interface Player {
     clubs: ClubHistoryEntry[];
     achievements: string[];
     milestones: MilestoneEvent[];
+    /** Pre-F2.8 flavor labels only (veteran wallpaper). Not mechanical. */
+    career_stamps?: string[];
   };
+
+  // ── F2.8 Fähigkeiten / Bonus-Stamps ────────
+  /** Earned named bonuses. Effects are baked into `attributes` on award. */
+  stamps: AbilityStamp[];
 
   // ── Visualisierung ─────────────────────────
   portrait_seed: number;         // Seed für prozeduralen Sprite
@@ -122,6 +128,18 @@ interface TemporaryModifier {
   fitness_regen_multiplier?: number;
   until_week?: number;
   until_injury_end?: boolean;
+}
+
+/** F2.8 — named bonus identity. See 07.5. */
+type StampPath = "train" | "event"; // "hybrid" reserved, not in M2
+
+interface AbilityStamp {
+  id: string;                    // catalog id, e.g. "kopfballungeheuer"
+  earned_season: number;
+  earned_week: number;
+  path: StampPath;
+  /** Deltas already applied to `attributes` when the stamp was awarded. */
+  applied: Partial<Record<keyof Attributes, number>>;
 }
 
 interface Contract {
@@ -184,6 +202,7 @@ Positionsgruppen für PRD 05.1:
 | state.form | 0 |
 | state.morale | 70 |
 | state.modifiers | leeres Array |
+| stamps | leeres Array |
 | history.growth | leeres Array, erster Snapshot nach Saison 1 |
 
 Die Korrelation −0.15 aus PRD 03.1 ist eine leichte Gegenbewegung von Drive zu mittlerer Anlage, zusätzlich zur 15 %-Regel. Beide gelten bei der Generierung. Das Ergebnis wird auf [0.4, 1.6] geclamp.
@@ -200,6 +219,8 @@ Die Korrelation −0.15 aus PRD 03.1 ist eine leichte Gegenbewegung von Drive zu
 | market_value | Deterministische Funktion (PRD 05.1), nie Random Walk. Bei `contract == null` ist der Vertragsterm 0 Monate |
 | squad_status `"loaned_out"` ↔ `current_loan` | Beide gesetzt oder beide leer. Ein Loan ohne Status ist ungültig, ein Status ohne Loan ebenfalls |
 | age | Entspricht den vollen Jahren zwischen `birth.date` und Spieldatum |
+| stamps | Jede `id` höchstens einmal. `applied` Werte ∈ [+1, +4] pro Schlüssel. Max 3 aktive Anzeige-Slots in der UI (alle earned stamps bleiben im Array) |
+| stamps vs attributes | Beim Award werden `applied` einmalig auf `attributes` addiert (Clamp 0–199). Kein zweites Match-Modifier-System in M2 |
 
 ### 07.4 Validator-Funktionen
 
@@ -241,16 +262,82 @@ function validatePlayer(p: Player, asOfIso: string): boolean {
   }
 
   if (completedYears(p.birth.date, asOfIso) !== p.age) return false;
+
+  const stampIds = new Set<string>();
+  for (const stamp of p.stamps ?? []) {
+    if (stampIds.has(stamp.id)) return false;
+    stampIds.add(stamp.id);
+    if (stamp.path !== "train" && stamp.path !== "event") return false;
+    for (const delta of Object.values(stamp.applied)) {
+      if (delta < 1 || delta > 4) return false;
+    }
+  }
   return true;
 }
 ```
 
 `completedYears` zählt vollendete Jahre. Der Validator repariert nichts. Der Lade-Pfad setzt `age` neu und speichert danach.
 
+### 07.5 Fähigkeiten / Bonus-Stamps (F2.8)
+
+Named bonuses the player **wears** on the Akte. Roleplay identity + a small
+permanent attribute bump. Not a weekly loadout. Not hidden potential.
+
+#### Paths (M2)
+
+| Path | How earned | Example |
+|---|---|---|
+| `train` | Attribute gate + individual program (shares F2.3 slot cap) | *Kopfballungeheuer* |
+| `event` | Season/career counter threshold, instant award | *Treter*, *Alter Recke* |
+
+`hybrid` (event unlocks eligibility, then train to seal) is **reserved for
+later** — not in the M2 catalog, not a valid `StampPath` until a PRD bump.
+
+#### Effect (M2)
+
+On award, apply `applied` once to `attributes` (2–3 keys, each **+2…+4**,
+then clamp 0–199). Soft Cap 180 still governs later weekly growth (PRD 02.1).
+No separate match-engine modifier layer in M2 — the bump is the effect.
+Engine stays hands-off; the wrapper sees normal attributes.
+
+#### Caps
+
+- Max **3** stamps shown as active badges on the Akte (PRD 14.3). Further
+  earned stamps stay in `stamps[]` and appear in chronicle / development tab.
+- One program slot: stamp training uses the same `MAX_INDIVIDUAL_PROGRAMS`
+  budget as F2.3 (`kind: "stamp"` + `stampId`).
+- A player may hold each catalog `id` only once.
+
+#### Starter catalog (data, not code until F2.8 ships)
+
+There is no separate `heading` attribute — aerial gates use `strength` +
+`positioning`.
+
+| id | Label | Path | Gate | Weeks | applied |
+|---|---|---|---|---|---|
+| `kopfballungeheuer` | Kopfballungeheuer | train | strength ≥ 100 ∧ positioning ≥ 90 | 10 | strength +3, positioning +2 |
+| `geolter_blitz` | Geölter Blitz | train | pace ≥ 100 ∧ stamina ≥ 85 | 8 | pace +3, stamina +2 |
+| `spielmacher_blick` | Spielmacher-Blick | train | vision ≥ 100 ∧ passing ≥ 95 | 10 | vision +3, passing +2 |
+| `torjaeger_saison` | Torjäger | event | season_goals ≥ 25 (same season) | — | shooting +3, composure +2 |
+| `alter_recke` | Alter Recke | event | career apps ≥ 300 | — | leadership +3, concentration +2 |
+| `treter` | Treter | event | season_yellow_cards ≥ 13 | — | strength +2, composure +2 |
+
+Minus-stamps and spend-bar UX details (progress ring on the Akte) ship with
+the F2.8 implementation task. Catalog JSON lives under
+`data/development/ability_stamps.json` when coded.
+
+#### Relation to flavor
+
+`history.career_stamps` (veteran wallpaper strings) is **not** mechanical.
+Show real `stamps` in the Fähigkeiten slots once F2.8 UI lands; flavor
+strings may remain as chronicle crumbs.
+
 ## References
 
 - Growth Engine: PRD 02.1
+- Individual programmes: PRD 10 F2.3 / F2.8
 - Savegame Sanitizer: PRD 08.3
-- UI Player Profile: PRD 09.2 (Screen 4)
+- UI Player Profile: PRD 09.2 (Screen 4), PRD 14.3
 - Market Value: PRD 05.1
 - Vertragsverhandlung: PRD 05.4 (`contract_failed_offers`, `desire_to_leave`)
+- Former candidate C1: PRD 15 (promoted)

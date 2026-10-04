@@ -183,6 +183,7 @@ export function enginePlayerToCareer(
       achievements: [],
       milestones: [],
     },
+    stamps: [],
     portrait_seed: hashString(enginePlayer.id),
   };
 }

@@ -1,7 +1,7 @@
 # /docs/prd/09_ui_screens.md
 
-**Version:** 1.4
-**Last Updated:** 2026-10-03
+**Version:** 1.5
+**Last Updated:** 2026-10-04
 **Status:** Final  
 
 ---
@@ -90,6 +90,8 @@ Interaktion:
 
 - Links: Spielerkarte (Portrait, Position, 3 Kernattribute als Balken).
 - Rechts: Programm-Dropdown, Dauer-Slider, Fatigue-Warnung als Icon (⚡ rot).
+- Dropdown-Arten: Schwaches Bein, Positionsumschulung (F2.3), und freigeschaltete
+  Stamp-Ziele (F2.8, `kind: "stamp"`) wenn das Gate erfüllt ist.
 - Bestätigen wirkt ab der kommenden Woche.
 
 **Screen 2 — Youth Campus (2D Iso)**

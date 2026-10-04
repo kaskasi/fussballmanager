@@ -103,6 +103,7 @@ export function generateDemoProSquad(input: {
         achievements: [],
         milestones: [],
       },
+      stamps: [],
       portrait_seed: portraitSeed,
     };
   });

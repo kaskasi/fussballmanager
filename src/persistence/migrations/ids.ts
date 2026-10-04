@@ -48,4 +48,5 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_048_precinct_campus",
   "migration_049_precinct_patches",
   "migration_050_precinct_farm",
+  "migration_051_ability_stamps",
 ] as const;

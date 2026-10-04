@@ -29,7 +29,7 @@ Geschrieben und verbindlich:
 - `12_league_world.md` — Prozedurale Welt, Ligagröße, Clubs und Kader
 - `13_story_slice_relegation.md` — erster Story-Slice (Abstieg)
 - `14_ui_cockpit.md` — Club-Cockpit, Dichte, Räume vor Shell
-- `15_feature_gap.md` — Keep/Refuse vs. Referenz-DNA, Kandidaten C1/C2
+- `15_feature_gap.md` — Keep/Refuse vs. Referenz-DNA; C1 → F2.8, Kandidat C2
 - `16_match_broadcast_beats.md` — Match-Kommentar, Beats, Director (Präsentation)
 - `17_target_architecture.md` — Zielbild: Engine-Modul, Client-Sim, Sync, Deploy
 

@@ -1,7 +1,14 @@
-import de from "./locales/de.json";
-import en from "./locales/en.json";
-import zhHans from "./locales/zh-Hans.json";
+import de from "./locales/de.json" with { type: "json" };
+import en from "./locales/en.json" with { type: "json" };
+import zhHans from "./locales/zh-Hans.json" with { type: "json" };
 import { htmlLang, type LocaleId } from "./locale-id.ts";
+
+type BrowserDocument = {
+  documentElement: {
+    lang: string;
+    dataset: { locale?: string };
+  };
+};
 
 type MessageParams = Record<string, string | number>;
 
@@ -26,9 +33,10 @@ export function subscribeLocale(listener: () => void): () => void {
 export function setLocale(locale: LocaleId): void {
   if (activeLocale === locale) return;
   activeLocale = locale;
-  if (typeof document !== "undefined") {
-    document.documentElement.lang = htmlLang(locale);
-    document.documentElement.dataset.locale = locale;
+  const doc = (globalThis as { document?: BrowserDocument }).document;
+  if (doc) {
+    doc.documentElement.lang = htmlLang(locale);
+    doc.documentElement.dataset.locale = locale;
   }
   for (const listener of listeners) listener();
 }

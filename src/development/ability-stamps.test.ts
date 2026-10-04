@@ -7,7 +7,10 @@ import {
   careerApps,
   eligibleTrainStamps,
   evaluateEventStamps,
+  formatStampEffects,
+  formatStampGates,
   hasStamp,
+  stampDefinition,
 } from "./ability-stamps.ts";
 
 describe("ability stamps (F2.8)", () => {
@@ -61,6 +64,14 @@ describe("ability stamps (F2.8)", () => {
     expect(careerApps(player)).toBe(305);
     const result = evaluateEventStamps([player], 2, 10);
     expect(hasStamp(result.players[0]!, "alter_recke")).toBe(true);
+  });
+
+  it("formats gates and effects for the help catalog", () => {
+    const train = stampDefinition("kopfballungeheuer")!;
+    expect(formatStampGates(train)).toEqual(["Kraft ≥ 100", "Stellung ≥ 90"]);
+    expect(formatStampEffects(train)).toEqual(["Kraft +3", "Stellung +2"]);
+    const event = stampDefinition("torjaeger_saison")!;
+    expect(formatStampGates(event)).toEqual(["25+ Tore in einer Saison"]);
   });
 
   it("surfaces the three newest stamps as active badges", () => {

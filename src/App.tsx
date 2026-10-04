@@ -126,6 +126,7 @@ import {
   type PrecinctEdge,
 } from "./stadium/precinct.ts";
 import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
+import { HelpScreen } from "./ui/screens/HelpScreen.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
 import { LeaguesScreen } from "./ui/screens/LeaguesScreen.tsx";
 import { ClubProfileModal } from "./ui/components/ClubProfileModal.tsx";
@@ -186,7 +187,8 @@ type Screen =
   | "squad"
   | "finances"
   | "stadium"
-  | "leagues";
+  | "leagues"
+  | "help";
 
 function bootstrapSave(slot: number): SaveGame {
   try {
@@ -1818,6 +1820,7 @@ export default function App() {
           }}
         />
       ) : null}
+      {screen === "help" ? <HelpScreen /> : null}
       {screen === "matchday" ? <Matchday /> : null}
       {board.job_status === "dismissed" ? (
         <JobOffersModal offers={jobOffers} onAccept={handleAcceptJobOffer} />
@@ -2018,6 +2021,17 @@ function AppNav({
         }}
       >
         🏟️
+      </NavButton>
+      <NavButton
+        pressed={screen === "help"}
+        label="Hilfe"
+        onClick={() => {
+          onCloseProfile?.();
+          onNavigate("help");
+          setMobileTabsOpen(false);
+        }}
+      >
+        📖
       </NavButton>
       </div>
       <div className="app-nav-actions">

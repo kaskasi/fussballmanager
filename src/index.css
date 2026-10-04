@@ -9831,3 +9831,211 @@ body {
 .hub-inbox-row-story {
   border-left: 3px solid #16a34a;
 }
+
+/* ── F12.7 Hilfe & Doku ───────────────────────────── */
+
+.help {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1.1rem 1.25rem 2.5rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.help-head h1 {
+  margin: 0.15rem 0 0.35rem;
+  font-size: 1.65rem;
+}
+
+.help-lede {
+  margin: 0;
+  color: #475569;
+  font-weight: 650;
+  line-height: 1.4;
+  max-width: 36rem;
+}
+
+.help-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.help-tab {
+  border: 0;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  font-weight: 750;
+  font-size: 0.88rem;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
+}
+
+.help-tab.is-active {
+  outline: 2px solid #059669;
+  color: #047857;
+}
+
+.help-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.help-card {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 0.95rem 1.05rem;
+  box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
+  display: grid;
+  gap: 0.55rem;
+}
+
+.help-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.help-card p {
+  margin: 0;
+  color: #334155;
+  line-height: 1.45;
+  font-weight: 550;
+}
+
+.help-quote {
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  border-left: 3px solid #059669;
+  background: #ecfdf5;
+  border-radius: 0 0.65rem 0.65rem 0;
+  font-weight: 700;
+  color: #065f46;
+}
+
+.help-icon-list,
+.help-steps,
+.help-ensemble {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.help-icon-list li,
+.help-ensemble li {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr;
+  gap: 0.45rem;
+  align-items: start;
+  color: #334155;
+  font-weight: 550;
+  line-height: 1.4;
+}
+
+.help-steps {
+  counter-reset: help-step;
+}
+
+.help-steps li {
+  counter-increment: help-step;
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  gap: 0.45rem;
+  align-items: start;
+  color: #334155;
+  font-weight: 550;
+  line-height: 1.4;
+}
+
+.help-steps li::before {
+  content: counter(help-step);
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: #059669;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+.help-note {
+  font-size: 0.88rem;
+  color: #64748b !important;
+}
+
+.help-stamp-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.help-stamp {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  padding: 0.7rem 0.8rem;
+  display: grid;
+  gap: 0.55rem;
+  background: #f8fafc;
+}
+
+.help-stamp-head {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.help-stamp-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+  background: #ecfdf5;
+  display: grid;
+  place-items: center;
+  font-size: 1.15rem;
+}
+
+.help-stamp-meta {
+  margin: 0.1rem 0 0 !important;
+  font-size: 0.78rem;
+  color: #64748b !important;
+  font-weight: 650 !important;
+}
+
+.help-stamp-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.help-stamp-label {
+  margin: 0 0 0.25rem !important;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b !important;
+  font-weight: 800 !important;
+}
+
+.help-stamp-cols ul {
+  margin: 0;
+  padding-left: 1rem;
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .help-stamp-cols {
+    grid-template-columns: 1fr;
+  }
+}

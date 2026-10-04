@@ -149,11 +149,11 @@ Zählung und DoD sind die Source of Truth. Analyse verschiebt sie nicht.
 
 | Meilenstein | Features | Fokus |
 |---|---|---|
-| **M1** | 36 | Kern-Loop: Sim, Liga, Growth, Intake, Basis-Transfers, Save |
+| **M1** | 37 | Kern-Loop: Sim, Liga, Growth, Intake, Basis-Transfers, Save, Hilfe |
 | **M2** | 27 | USP: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps |
 | **M3** | 24 | Imperium, Events, Staff, Storylines, Merch, Nebengebäude |
 | **M4** | 6 | Legacy & Meta |
-| **Total** | **93** | plus `F-TYP-1` (Schema, zählt nicht) |
+| **Total** | **94** | plus `F-TYP-1` (Schema, zählt nicht) |
 
 **M1-Definition of Done (PRD 10, wörtlich):** Ein Spieler kann einen Verein
 führen, eine Saison simulieren (mit Auto-Matches), Jugendspieler hochziehen,
@@ -175,7 +175,7 @@ Savegame. Vorstand/Entlassung aktiv.
 | F9.1 F9.2 | Ziele, Jobgefahr | Origin/Vorstand sichtbar |
 | F10.1–F10.4 | Liga, Tabelle, Auf/Abstieg, KI-Growth | zwei Klassen |
 | F11.1 F11.2 | Sommer-Check, Awards | Checkliste existiert |
-| F12.1–F12.4 | Save, Seeds, Pacing, A11y | |
+| F12.1–F12.4 F12.7 | Save, Seeds, Pacing, A11y, Hilfe-Screen | |
 
 #### M2 — USPs (Wirtschaft + Tiefe)
 

@@ -116,6 +116,10 @@ Club-Cockpit
 │  └─ Transfers (nächste Aktion auch bei geschlossenem Fenster)
 ├─ Wettbewerb
 │  └─ Tabelle / Form (F10.2)
+├─ Hilfe (F12.7)
+│  ├─ Welt & Story (PRD 01)
+│  ├─ So funktioniert's
+│  └─ Fähigkeiten / Stempel (F2.8 Katalog)
 └─ Spieltag
    ├─ Ereignisse (DE, Namen in der Zeile)
    └─ Spielfeld (2D, gleicher Stream)

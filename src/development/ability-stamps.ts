@@ -1,4 +1,4 @@
-import type { AbilityStamp, Attributes, Player } from "../types/player.ts";
+import type { AbilityStamp, Attributes, Player, StampPath } from "../types/player.ts";
 import {
   ABILITY_STAMPS,
   ACTIVE_STAMP_BADGE_SLOTS,
@@ -22,6 +22,60 @@ export function stampLabel(id: string): string {
 
 export function stampIcon(id: string): string {
   return stampDefinition(id)?.icon ?? "◆";
+}
+
+export function stampPathLabel(path: StampPath): string {
+  return path === "train" ? "Training" : "Ereignis";
+}
+
+/** Human-readable gate lines for help / tooltips (German UI). */
+export function formatStampGates(def: StampDefinition): string[] {
+  const lines: string[] = [];
+  if (def.gates.attributes) {
+    for (const [key, minimum] of Object.entries(def.gates.attributes) as [
+      keyof Attributes,
+      number,
+    ][]) {
+      lines.push(`${attributeGateLabel(key)} ≥ ${minimum}`);
+    }
+  }
+  if (def.gates.season_goals !== undefined) {
+    lines.push(`${def.gates.season_goals}+ Tore in einer Saison`);
+  }
+  if (def.gates.season_yellow_cards !== undefined) {
+    lines.push(`${def.gates.season_yellow_cards}+ Gelbe Karten in einer Saison`);
+  }
+  if (def.gates.career_apps !== undefined) {
+    lines.push(`${def.gates.career_apps}+ Karriere-Einsätze`);
+  }
+  return lines;
+}
+
+export function formatStampEffects(def: StampDefinition): string[] {
+  return (Object.entries(def.applied) as [keyof Attributes, number][]).map(
+    ([key, delta]) => `${attributeGateLabel(key)} +${delta}`,
+  );
+}
+
+function attributeGateLabel(key: keyof Attributes): string {
+  const labels: Partial<Record<keyof Attributes, string>> = {
+    shooting: "Abschluss",
+    passing: "Passspiel",
+    dribbling: "Dribbling",
+    technique: "Technik",
+    pace: "Tempo",
+    strength: "Kraft",
+    stamina: "Ausdauer",
+    composure: "Ruhe",
+    leadership: "Führung",
+    positioning: "Stellung",
+    vision: "Übersicht",
+    concentration: "Konzentration",
+    teamwork: "Teamwork",
+    weak_foot: "Schwaches Bein",
+    gk_handling: "TW-Handling",
+  };
+  return labels[key] ?? key;
 }
 
 /** Career appearances = past season snapshots + current season. */

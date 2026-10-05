@@ -94,24 +94,7 @@ import {
   stampLabel,
 } from "../../development/ability-stamps.ts";
 import { formatGrowthDelta } from "../../player/growth-history.ts";
-import {
-  BarChart3,
-  Dumbbell,
-  FileSignature,
-  LineChart,
-  Shirt,
-  type LucideIcon,
-} from "lucide-react";
-
 type ProfileTab = "attributes" | "training" | "contract" | "development" | "stats";
-
-const PROFILE_TAB_ICONS: Record<ProfileTab, LucideIcon> = {
-  attributes: BarChart3,
-  training: Dumbbell,
-  contract: FileSignature,
-  development: LineChart,
-  stats: Shirt,
-};
 
 const PROFILE_TABS: { id: ProfileTab; label: string }[] = [
   { id: "attributes", label: "Attribute" },
@@ -141,7 +124,6 @@ export interface PlayerProfileProps {
   shortlisted?: boolean;
   individualPrograms?: readonly IndividualProgram[];
   trainingPlan?: readonly TrainingSlot[];
-  onBack: () => void;
   onOpenYouth?: () => void;
   onOpenTraining?: () => void;
   onStartStampProgram?: (stampId: string) => void;
@@ -171,7 +153,6 @@ export function PlayerProfile({
   purchasePrice,
   saleOffer,
   saleBlockedReason = null,
-  onBack,
   onOpenYouth,
   onOpenTraining,
   onStartStampProgram,
@@ -324,38 +305,49 @@ export function PlayerProfile({
 
   return (
     <main className="profile club-shell-card-body">
-      <header className="profile-toolbar">
-        <button type="button" onClick={onBack} aria-label="Zurück">
-          ←
-        </button>
-        <p className="profile-toolbar-title eyebrow">Spieler{week ? ` · Woche ${week}` : ""}</p>
-        {owned && onProfileAction ? (
-          <ProfileActionsMenu
-            open={menuOpen}
-            items={menuItems}
-            onToggle={() => setMenuOpen((open) => !open)}
-            onClose={() => setMenuOpen(false)}
-            onSelect={onProfileAction}
-          />
+      <div className="fm-tab-bar" role="tablist" aria-label="Spielerakte">
+        {PROFILE_TABS.map((entry) => (
+          <button
+            key={entry.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === entry.id}
+            className={tab === entry.id ? "fm-tab is-active" : "fm-tab"}
+            onClick={() => setTab(entry.id)}
+          >
+            {entry.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="fm-tab-panel">
+        {actionFeedback ? (
+          <p
+            className={
+              /nicht möglich|zu niedrig|Fenster zu|nur im|Scout-Ziel|Transfer-Topf/.test(actionFeedback)
+                ? "profile-feedback is-warn"
+                : "profile-feedback"
+            }
+            role="status"
+          >
+            {actionFeedback}
+          </p>
         ) : null}
-      </header>
 
-      {actionFeedback ? (
-        <p
-          className={
-            /nicht möglich|zu niedrig|Fenster zu|nur im|Scout-Ziel|Transfer-Topf/.test(actionFeedback)
-              ? "profile-feedback is-warn"
-              : "profile-feedback"
-          }
-          role="status"
-        >
-          {actionFeedback}
-        </p>
-      ) : null}
-
-      <article className="profile-card profile-hub">
-        <aside className="profile-identity-rail" aria-label="Identität">
-          <PlayerPortrait seed={player.portrait_seed} size="lg" className="profile-portrait profile-portrait-rail" />
+        <article className="profile-card profile-hub">
+          <aside className="profile-identity-rail" aria-label="Identität">
+            {owned && onProfileAction ? (
+              <div className="profile-rail-menu">
+                <ProfileActionsMenu
+                  open={menuOpen}
+                  items={menuItems}
+                  onToggle={() => setMenuOpen((open) => !open)}
+                  onClose={() => setMenuOpen(false)}
+                  onSelect={onProfileAction}
+                />
+              </div>
+            ) : null}
+            <PlayerPortrait seed={player.portrait_seed} size="lg" className="profile-portrait profile-portrait-rail" />
           <div className="profile-identity-body">
             <Hint text="Spielername. Fremde Spieler werden erst durch Scouting besser bekannt." block>
               <h1 className="profile-name">{formatPlayerName(player)}</h1>
@@ -514,27 +506,6 @@ export function PlayerProfile({
         </aside>
 
         <div className="profile-hub-spoke">
-        <nav className="profile-tabs" aria-label="Spielerakte">
-          {PROFILE_TABS.map((entry) => (
-            <button
-              key={entry.id}
-              type="button"
-              role="tab"
-              className={tab === entry.id ? "profile-tab is-active" : "profile-tab"}
-              aria-selected={tab === entry.id}
-              onClick={() => setTab(entry.id)}
-            >
-              <span className="profile-tab-icon" aria-hidden="true">
-                {(() => {
-                  const Icon = PROFILE_TAB_ICONS[entry.id];
-                  return <Icon size={18} strokeWidth={2.5} />;
-                })()}
-              </span>
-              <span className="profile-tab-label">{entry.label}</span>
-            </button>
-          ))}
-        </nav>
-
         <div className="profile-tab-panels" role="tabpanel">
           {tab === "attributes" ? (
             <section className="profile-panel" aria-label="Attribute">
@@ -712,13 +683,14 @@ export function PlayerProfile({
           ) : null}
         </div>
         </div>
-      </article>
+        </article>
 
-      {onOpenYouth ? (
-        <button type="button" className="profile-next" onClick={onOpenYouth}>
-          → Zur Jahrgangsliste
-        </button>
-      ) : null}
+        {onOpenYouth ? (
+          <button type="button" className="profile-next" onClick={onOpenYouth}>
+            → Zur Jahrgangsliste
+          </button>
+        ) : null}
+      </div>
 
       {blindBuyOpen ? (
         <BlindPurchaseWarningModal

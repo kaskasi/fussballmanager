@@ -1793,10 +1793,6 @@ export default function App() {
           transferBudget={transferBudget(finances)}
           purchasePrice={sellerAskingPrice(foreignTarget.player, season)}
           shortlisted={transferState.shortlist.includes(foreignTarget.player.id)}
-          onBack={() => {
-            setForeignPlayerId(null);
-            setProfileFeedback(null);
-          }}
           onAssignScout={() => handleAssignScout(foreignTarget.player.id)}
           onToggleShortlist={() => handleToggleShortlist(foreignTarget.player.id)}
           onPurchase={() => handleOpenNegotiation(foreignTarget.player.id)}
@@ -1887,10 +1883,6 @@ export default function App() {
           onProfileAction={(action) => handleProfileAction(profilePlayer.id, action)}
           onContractOffer={(offer) => handleContractOffer(profilePlayer.id, offer)}
           wageHeadroomWeekly={wageBudgetHeadroom(finances, players, session.clubId)}
-          onBack={() => {
-            setProfileId(null);
-            setProfileFeedback(null);
-          }}
           onOpenTraining={() => {
             setTrainingFocusPlayerId(profilePlayer.id);
             setProfileId(null);

@@ -6382,7 +6382,7 @@ body {
   pointer-events: none;
 }
 
-.profile {
+.profile:not(.club-shell-card-body) {
   max-width: 54rem;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 2.5rem;

@@ -779,6 +779,20 @@ main.scouting.club-shell-card-body {
   border-top: 1px solid rgba(62, 49, 40, 0.15);
 }
 
+.profile-rail-menu {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 0.15rem;
+}
+
+main.profile.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
 @media (max-width: 860px) {
   .profile-card.profile-hub {
     grid-template-columns: 1fr;

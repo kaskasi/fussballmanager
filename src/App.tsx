@@ -28,6 +28,7 @@ import {
   toggleScoutAssignment,
 } from "./scouting/scout-board.ts";
 import { ClubCrest } from "./ui/components/ClubCrest.tsx";
+import { joinDocumentTitle, useDocumentTitle } from "./ui/document-title.ts";
 import { prepareCareerMatch, type CareerMatchSetup } from "./sim/career-match-setup.ts";
 import type { WatchedPlayerMatch } from "./sim/watched-player-match.ts";
 import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
@@ -232,6 +233,22 @@ type Screen =
   | "club-events"
   | "calendar";
 
+const SCREEN_DOCUMENT_TITLE_KEYS: Record<Screen, string> = {
+  hub: "shell.nav.pipeline",
+  training: "shell.nav.training",
+  campus: "shell.nav.campus",
+  matchday: "shell.menu.matchdaySandbox",
+  scouting: "shell.nav.scouting",
+  transfers: "shell.nav.transfers",
+  squad: "shell.nav.squad",
+  finances: "shell.nav.finances",
+  stadium: "shell.nav.stadium",
+  leagues: "shell.nav.leagues",
+  help: "shell.nav.help",
+  "club-events": "shell.nav.clubEvents",
+  calendar: "shell.nav.calendar",
+};
+
 function bootstrapSave(slot: number): SaveGame {
   try {
     const loaded = loadLocalSave(slot);
@@ -269,7 +286,7 @@ function clearTransientUi(
 }
 
 export default function App() {
-  useLocale();
+  const locale = useLocale();
   const [screen, setScreen] = useState<Screen>("hub");
   const [activeSlot, setActiveSlotState] = useState(() => getActiveSlot());
   const [save, setSave] = useState<SaveGame>(() => bootstrapSave(getActiveSlot()));
@@ -1710,6 +1727,36 @@ export default function App() {
 
   const matchFanbaseMood = fanbaseMood(stadium.fanbase ?? DEFAULT_FANBASE);
   const matchPoorForm = teamPoorRecentForm(teamForm(league, board.employer_club_id, 3));
+
+  const browserDocumentTitle = useMemo(() => {
+    const product = t("shell.productName");
+    if (careerMatchSetup) {
+      const fixtureLabel = careerMatchSetup.isHome
+        ? `${shellClub.name} – ${careerMatchSetup.opponentShortName}`
+        : `${careerMatchSetup.opponentShortName} – ${shellClub.name}`;
+      return joinDocumentTitle(t("shell.documentTitle.live"), fixtureLabel, product);
+    }
+    if (profilePlayer) {
+      return joinDocumentTitle(formatPlayerName(profilePlayer), shellClub.name, product);
+    }
+    if (foreignTarget) {
+      return joinDocumentTitle(formatPlayerName(foreignTarget.player), t("shell.nav.scouting"), product);
+    }
+    if (screen === "hub") {
+      return joinDocumentTitle(shellClub.name, formatSeasonLabel(season), product);
+    }
+    return joinDocumentTitle(t(SCREEN_DOCUMENT_TITLE_KEYS[screen]), shellClub.name, product);
+  }, [
+    careerMatchSetup,
+    foreignTarget,
+    profilePlayer,
+    screen,
+    season,
+    shellClub.name,
+    locale,
+  ]);
+
+  useDocumentTitle(browserDocumentTitle);
 
   if (careerMatchSetup) {
     return (

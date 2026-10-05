@@ -14,7 +14,7 @@
 - **Author:** Pablo Stanley
 - **Source:** https://www.openpeeps.com/
 - **Location:** `assets/open-peeps/` (full vendor pack; read-only)
-- **Shipped in game:** Bust subset `public/assets/portraits/bust/peep-1.svg` … `peep-105.svg` baked from `Flat Assets/Templates/Bust/` via `npm run bake:portraits`; unknown-scout placeholder `public/assets/portraits/silhouette.svg` (game-authored)
+- **Shipped in game:** Bust subset `public/assets/portraits/bust/peep-1.svg` … `peep-105.svg` baked from `Flat Assets/Templates/Bust/` via `npm run bake:portraits` (Flat source, token-aligned recolor: tinte ink, warm skin, rasen-hell on kit bodies); catalog `src/ui/portraits/portrait-bust-catalog.json` (`mens_squad` / `mixed` / `womens_squad` pools); unknown-scout placeholder `public/assets/portraits/silhouette.svg` (game-authored)
 
 ## ambientCG textures
 

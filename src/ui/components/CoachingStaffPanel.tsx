@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { formatClubCash } from "../../economy/club-finances.ts";
+import { Dumbbell, Shield, Swords, type LucideIcon } from "lucide-react";
+import { formatClubCash, formatClubCashWeekly } from "../../economy/club-finances.ts";
 import {
-  COACH_ROLE_ICONS,
   COACH_ROLE_LABELS,
   COACH_ROLES,
   coachCandidates,
@@ -14,6 +14,7 @@ import {
 } from "../../staff/coaching-staff.ts";
 import { Hint } from "./Hint.tsx";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
+import { PlayerPortrait } from "./PlayerPortrait.tsx";
 
 /**
  * WIREFRAME: PRD 09 — F8.1 Trainerstab
@@ -25,6 +26,12 @@ import { formatSeasonLabel } from "../../sim/season-label.ts";
  * │ Kandidaten · Einstellen                     │
  * └──────────────────────────────────────────────┘
  */
+
+const COACH_ROLE_TAB_ICONS: Record<CoachRole, LucideIcon> = {
+  attack: Swords,
+  defense: Shield,
+  fitness: Dumbbell,
+};
 
 export function CoachingStaffPanel({
   staff,
@@ -100,17 +107,26 @@ function CoachRoleCard({
   return (
     <article className="training-staff-card">
       <header className="training-staff-card-head">
-        <h2>{COACH_ROLE_ICONS[role]} {COACH_ROLE_LABELS[role]}</h2>
+        <h2 className="training-staff-role-title">
+          {(() => {
+            const Icon = COACH_ROLE_TAB_ICONS[role];
+            return <Icon size={18} strokeWidth={2.5} aria-hidden="true" />;
+          })()}{" "}
+          {COACH_ROLE_LABELS[role]}
+        </h2>
       </header>
 
       {coach ? (
         <div className="training-staff-current">
-          <p className="training-staff-name">{coach.name}</p>
+          <div className="training-staff-identity">
+            <PlayerPortrait seed={coach.portrait_seed} size="sm" pool="mixed" className="training-staff-portrait" />
+            <p className="training-staff-name">{coach.name}</p>
+          </div>
           <p className="training-staff-meta">
             Qualität {coach.quality} · Umfeld ×{coachEnvironmentFactor(coach.quality).toFixed(2)}
           </p>
           <p className="training-staff-meta">
-            {formatClubCash(coach.wage_weekly)}/Woche · bis {formatSeasonLabel(coach.contract_until_season)}
+            {formatClubCashWeekly(coach.wage_weekly)} · bis {formatSeasonLabel(coach.contract_until_season)}
           </p>
         </div>
       ) : (
@@ -126,11 +142,12 @@ function CoachRoleCard({
             return (
               <li key={candidate.id}>
                 <div className="training-staff-candidate">
+                  <PlayerPortrait seed={candidate.portrait_seed} size="sm" pool="mixed" className="training-staff-portrait" />
                   <span>
                     <strong>{candidate.name}</strong>
                     <small>
                       Q{candidate.quality} · ×{coachEnvironmentFactor(candidate.quality).toFixed(2)} ·{" "}
-                      {formatClubCash(candidate.wage_weekly)}/Wo
+                      {formatClubCashWeekly(candidate.wage_weekly)}
                     </small>
                   </span>
                   <button

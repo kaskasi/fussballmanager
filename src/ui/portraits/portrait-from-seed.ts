@@ -1,9 +1,20 @@
 /** Open Peeps bust templates baked under public/assets/portraits/bust/ (see scripts/bake-open-peeps-busts.mjs). */
-export const PORTRAIT_BUST_COUNT = 105;
+import {
+  DEFAULT_PLAYER_PORTRAIT_POOL,
+  PORTRAIT_BUST_COUNT,
+  portraitPoolIds,
+  type PortraitPool,
+} from "./portrait-pools.ts";
 
-export function bustIdFromPortraitSeed(portraitSeed: number): number {
+export { PORTRAIT_BUST_COUNT, DEFAULT_PLAYER_PORTRAIT_POOL, type PortraitPool };
+
+export function bustIdFromPortraitSeed(
+  portraitSeed: number,
+  pool: PortraitPool = DEFAULT_PLAYER_PORTRAIT_POOL,
+): number {
+  const ids = portraitPoolIds(pool);
   const u = portraitSeed >>> 0;
-  return (u % PORTRAIT_BUST_COUNT) + 1;
+  return ids[u % ids.length] ?? 1;
 }
 
 export function portraitBustUrl(bustId: number): string {
@@ -13,6 +24,9 @@ export function portraitBustUrl(bustId: number): string {
 
 export const PORTRAIT_SILHOUETTE_URL = "/assets/portraits/silhouette.svg";
 
-export function portraitUrlFromSeed(portraitSeed: number): string {
-  return portraitBustUrl(bustIdFromPortraitSeed(portraitSeed));
+export function portraitUrlFromSeed(
+  portraitSeed: number,
+  pool: PortraitPool = DEFAULT_PLAYER_PORTRAIT_POOL,
+): string {
+  return portraitBustUrl(bustIdFromPortraitSeed(portraitSeed, pool));
 }

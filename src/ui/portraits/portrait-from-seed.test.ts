@@ -5,28 +5,39 @@ import {
   portraitBustUrl,
   portraitUrlFromSeed,
 } from "./portrait-from-seed.ts";
+import { portraitPoolIds } from "./portrait-pools.ts";
+
+const mensIds = portraitPoolIds("mens_squad");
+const mixedIds = portraitPoolIds("mixed");
 
 describe("bustIdFromPortraitSeed", () => {
-  it("maps seed 42 to a stable bust id", () => {
-    expect(bustIdFromPortraitSeed(42)).toBe(43);
+  it("maps seed 42 to a stable bust id in mens_squad pool", () => {
+    expect(bustIdFromPortraitSeed(42)).toBe(mensIds[42 % mensIds.length]);
   });
 
   it("coerces negative seeds via unsigned conversion", () => {
-    expect(bustIdFromPortraitSeed(-1)).toBe(46);
-    expect(bustIdFromPortraitSeed(-1)).toBeGreaterThanOrEqual(1);
-    expect(bustIdFromPortraitSeed(-1)).toBeLessThanOrEqual(PORTRAIT_BUST_COUNT);
+    const id = bustIdFromPortraitSeed(-1);
+    expect(id).toBe(mensIds[(-1 >>> 0) % mensIds.length]);
+    expect(id).toBeGreaterThanOrEqual(1);
+    expect(id).toBeLessThanOrEqual(PORTRAIT_BUST_COUNT);
   });
 
-  it("maps 0 to bust 1", () => {
-    expect(bustIdFromPortraitSeed(0)).toBe(1);
+  it("maps 0 to first mens_squad bust", () => {
+    expect(bustIdFromPortraitSeed(0)).toBe(mensIds[0]);
   });
 
-  it("maps 104 to bust 105", () => {
-    expect(bustIdFromPortraitSeed(104)).toBe(105);
+  it("uses full catalog for mixed pool", () => {
+    expect(bustIdFromPortraitSeed(42, "mixed")).toBe(mixedIds[42 % mixedIds.length]);
+    expect(bustIdFromPortraitSeed(42, "mixed")).toBe(43);
   });
 
-  it("wraps at bust count", () => {
-    expect(bustIdFromPortraitSeed(105)).toBe(1);
+  it("never picks non-mens pitch busts (dress, killer, hijab heads, …)", () => {
+    const forbidden = new Set([1, 16, 56, 70, 87, 89]); // dress + killer examples
+    for (let seed = 0; seed < 2000; seed++) {
+      const id = bustIdFromPortraitSeed(seed);
+      expect(forbidden.has(id)).toBe(false);
+      expect(mensIds).toContain(id);
+    }
   });
 });
 
@@ -43,6 +54,7 @@ describe("portraitBustUrl", () => {
 
 describe("portraitUrlFromSeed", () => {
   it("combines seed mapping and url", () => {
-    expect(portraitUrlFromSeed(42)).toBe("/assets/portraits/bust/peep-43.svg");
+    const id = bustIdFromPortraitSeed(42);
+    expect(portraitUrlFromSeed(42)).toBe(`/assets/portraits/bust/peep-${id}.svg`);
   });
 });

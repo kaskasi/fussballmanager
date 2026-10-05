@@ -1,0 +1,913 @@
+{
+  "version": 2,
+  "mens_allowed_bodies": [
+    "Sporty-Tee",
+    "Gym-Shirt",
+    "Thunder-T-Shirt",
+    "Shirt-and-Coat",
+    "Hoodie",
+    "Striped-Tee",
+    "Tee-1",
+    "Tee-2",
+    "Tee-Arms-Crossed",
+    "Button-Shirt-1",
+    "Striped-Pocket-Tee"
+  ],
+  "mens_excluded_heads": [
+    "Bangs",
+    "Bangs-2",
+    "Bun",
+    "Bun-2",
+    "Buns",
+    "Gray-Bun",
+    "Long-Bangs",
+    "Long-Curly",
+    "Medium-Bangs",
+    "Medium-Bangs-2",
+    "Medium-Bangs-3",
+    "Pomp",
+    "Hijab"
+  ],
+  "busts": [
+    {
+      "id": 1,
+      "body": "Dress",
+      "head": "Bangs",
+      "pools": [
+        "mixed",
+        "womens_squad"
+      ]
+    },
+    {
+      "id": 2,
+      "body": "Whatever",
+      "head": "hat-beanie",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 3,
+      "body": "Striped-Pocket-Tee",
+      "head": "Bantu-Knots",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 4,
+      "body": "Explaining",
+      "head": "No-Hair-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 5,
+      "body": "Sweater-Dots",
+      "head": "Turban",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 6,
+      "body": "Tee-Arms-Crossed",
+      "head": "Hijab",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 7,
+      "body": "Whatever",
+      "head": "Flat-Top-Long",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 8,
+      "body": "Hoodie",
+      "head": "Short-3",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 9,
+      "body": "Tee-1",
+      "head": "Medium-Bangs-3",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 10,
+      "body": "Paper",
+      "head": "No-Hair-1",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 11,
+      "body": "Button-Shirt-1",
+      "head": "Long",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 12,
+      "body": "Striped-Tee",
+      "head": "Short-5",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 13,
+      "body": "Button-Shirt-1",
+      "head": "Medium-2",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 14,
+      "body": "Striped-Pocket-Tee",
+      "head": "Buns",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 15,
+      "body": "Gym-Shirt",
+      "head": "Cornrows",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 16,
+      "body": "Killer",
+      "head": "Bun",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 17,
+      "body": "Shirt-and-Coat",
+      "head": "hat-hip",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 18,
+      "body": "Fur-Jacket",
+      "head": "Short-4",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 19,
+      "body": "Polo-and-Sweater",
+      "head": "Afro",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 20,
+      "body": "Striped-Pocket-Tee",
+      "head": "Bun",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 21,
+      "body": "Striped-Pocket-Tee",
+      "head": "Flat-Top-Long",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 22,
+      "body": "Sporty-Tee",
+      "head": "Bangs-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 23,
+      "body": "Tee-Selena",
+      "head": "Long-Curly",
+      "pools": [
+        "mixed",
+        "womens_squad"
+      ]
+    },
+    {
+      "id": 24,
+      "body": "Striped-Tee",
+      "head": "Bun",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 25,
+      "body": "Gaming",
+      "head": "Mohawk-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 26,
+      "body": "Sweater-Dots",
+      "head": "Hijab",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 27,
+      "body": "Hoodie",
+      "head": "Medium-3",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 28,
+      "body": "Tee-1",
+      "head": "Bantu-Knots",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 29,
+      "body": "Gym-Shirt",
+      "head": "Medium-3",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 30,
+      "body": "Tee-Arms-Crossed",
+      "head": "Hijab",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 31,
+      "body": "Tee-1",
+      "head": "Cornrows-2",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 32,
+      "body": "Paper",
+      "head": "Long-Afro",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 33,
+      "body": "Tee-2",
+      "head": "Twists",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 34,
+      "body": "Coffee",
+      "head": "hat-hip",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 35,
+      "body": "Tee-Arms-Crossed",
+      "head": "Bun",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 36,
+      "body": "Blazer-Black-Tee",
+      "head": "No-Hair-3",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 37,
+      "body": "Button-Shirt-1",
+      "head": "Medium-2",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 38,
+      "body": "Coffee",
+      "head": "Hijab",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 39,
+      "body": "Paper",
+      "head": "Cornrows-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 40,
+      "body": "Striped-Tee",
+      "head": "Turban",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 41,
+      "body": "Fur-Jacket",
+      "head": "hat-hip",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 42,
+      "body": "Fur-Jacket",
+      "head": "No-Hair-3",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 43,
+      "body": "Device",
+      "head": "Twists-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 44,
+      "body": "Whatever",
+      "head": "Shaved-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 45,
+      "body": "Device",
+      "head": "Afro",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 46,
+      "body": "Macbook",
+      "head": "Short-5",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 47,
+      "body": "Tee-Arms-Crossed",
+      "head": "Twists",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 48,
+      "body": "Sporty-Tee",
+      "head": "Bun-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 49,
+      "body": "Blazer-Black-Tee",
+      "head": "Medium-Bangs-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 50,
+      "body": "Shirt-and-Coat",
+      "head": "Short-4",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 51,
+      "body": "Hoodie",
+      "head": "No-Hair-1",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 52,
+      "body": "Polka-Dot-Jacket",
+      "head": "Shaved-3",
+      "pools": [
+        "mixed",
+        "womens_squad"
+      ]
+    },
+    {
+      "id": 53,
+      "body": "Tee-2",
+      "head": "Mohawk",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 54,
+      "body": "Tee-1",
+      "head": "Twists",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 55,
+      "body": "Gym-Shirt",
+      "head": "Mohawk-2",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 56,
+      "body": "Dress",
+      "head": "Medium-2",
+      "pools": [
+        "mixed",
+        "womens_squad"
+      ]
+    },
+    {
+      "id": 57,
+      "body": "Explaining",
+      "head": "Long-Curly",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 58,
+      "body": "Fur-Jacket",
+      "head": "hat-hip",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 59,
+      "body": "Coffee",
+      "head": "Twists-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 60,
+      "body": "Pointing-Up",
+      "head": "Bun-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 61,
+      "body": "Thunder-T-Shirt",
+      "head": "Long-Bangs",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 62,
+      "body": "Explaining",
+      "head": "Medium-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 63,
+      "body": "Blazer-Black-Tee",
+      "head": "Hijab",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 64,
+      "body": "Paper",
+      "head": "Medium-Bangs-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 65,
+      "body": "Fur-Jacket",
+      "head": "hat-hip",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 66,
+      "body": "Tee-Arms-Crossed",
+      "head": "Buns",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 67,
+      "body": "Paper",
+      "head": "Medium-1",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 68,
+      "body": "Whatever",
+      "head": "Flat-Top",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 69,
+      "body": "Sporty-Tee",
+      "head": "Cornrows-2",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 70,
+      "body": "Dress",
+      "head": "Bun",
+      "pools": [
+        "mixed",
+        "womens_squad"
+      ]
+    },
+    {
+      "id": 71,
+      "body": "Whatever",
+      "head": "Cornrows-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 72,
+      "body": "Sporty-Tee",
+      "head": "Hijab",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 73,
+      "body": "Blazer-Black-Tee",
+      "head": "hat-beanie",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 74,
+      "body": "Polka-Dot-Jacket",
+      "head": "No-Hair-3",
+      "pools": [
+        "mixed",
+        "womens_squad"
+      ]
+    },
+    {
+      "id": 75,
+      "body": "Tee-Selena",
+      "head": "hat-beanie",
+      "pools": [
+        "mixed",
+        "womens_squad"
+      ]
+    },
+    {
+      "id": 76,
+      "body": "Button-Shirt-1",
+      "head": "hat-beanie",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 77,
+      "body": "Killer",
+      "head": "Afro",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 78,
+      "body": "Device",
+      "head": "Short-3",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 79,
+      "body": "Hoodie",
+      "head": "Bun-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 80,
+      "body": "Tee-2",
+      "head": "Cornrows",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 81,
+      "body": "Blazer-Black-Tee",
+      "head": "Medium-Bangs-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 82,
+      "body": "Tee-1",
+      "head": "Medium-Bangs-3",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 83,
+      "body": "Shirt-and-Coat",
+      "head": "No-Hair-1",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 84,
+      "body": "Polo-and-Sweater",
+      "head": "Bangs-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 85,
+      "body": "Sweater-Dots",
+      "head": "Turban",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 86,
+      "body": "Gym-Shirt",
+      "head": "Medium-Straight",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 87,
+      "body": "Dress",
+      "head": "Medium-Bangs-3",
+      "pools": [
+        "mixed",
+        "womens_squad"
+      ]
+    },
+    {
+      "id": 88,
+      "body": "Button-Shirt-1",
+      "head": "Medium-Bangs",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 89,
+      "body": "Killer",
+      "head": "Bun",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 90,
+      "body": "Polka-Dot-Jacket",
+      "head": "Hijab",
+      "pools": [
+        "mixed",
+        "womens_squad"
+      ]
+    },
+    {
+      "id": 91,
+      "body": "Tee-1",
+      "head": "Twists-2",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 92,
+      "body": "Button-Shirt-1",
+      "head": "Twists",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 93,
+      "body": "Sporty-Tee",
+      "head": "Bun",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 94,
+      "body": "Tee-1",
+      "head": "Bun-2",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 95,
+      "body": "Striped-Pocket-Tee",
+      "head": "Pomp",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 96,
+      "body": "Shirt-and-Coat",
+      "head": "Long-Curly",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 97,
+      "body": "Sweater-Dots",
+      "head": "Bear",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 98,
+      "body": "Gym-Shirt",
+      "head": "Long-Afro",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 99,
+      "body": "Polo-and-Sweater",
+      "head": "Gray-Short",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 100,
+      "body": "Button-Shirt-1",
+      "head": "No-Hair-3",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 101,
+      "body": "Blazer-Black-Tee",
+      "head": "Gray-Medium",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 102,
+      "body": "Coffee",
+      "head": "Gray-Bun",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 103,
+      "body": "Gaming",
+      "head": "No-Hair-1",
+      "pools": [
+        "mixed"
+      ]
+    },
+    {
+      "id": 104,
+      "body": "Thunder-T-Shirt",
+      "head": "Gray-Short",
+      "pools": [
+        "mixed",
+        "mens_squad"
+      ]
+    },
+    {
+      "id": 105,
+      "body": "Blazer-Black-Tee",
+      "head": "Gray-Bun",
+      "pools": [
+        "mixed"
+      ]
+    }
+  ]
+}

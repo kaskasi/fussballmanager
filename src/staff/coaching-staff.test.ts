@@ -35,6 +35,7 @@ describe("coaching-staff", () => {
       id: "coach_attack_new",
       name: "Test Coach",
       role: "attack" as const,
+      portrait_seed: 4242,
       quality: 82,
       wage_weekly: coachWeeklyWage(82),
       contract_until_season: 3,

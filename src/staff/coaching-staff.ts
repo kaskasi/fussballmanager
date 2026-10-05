@@ -8,6 +8,8 @@ export interface Coach {
   id: string;
   name: string;
   role: CoachRole;
+  /** Stable seed for Open Peeps portrait (mixed pool in UI). */
+  portrait_seed: number;
   /** 35–92 — maps to environment bonus via coachEnvironmentFactor. */
   quality: number;
   wage_weekly: number;
@@ -26,12 +28,6 @@ export const COACH_ROLE_LABELS: Record<CoachRole, string> = {
   attack: "Angriff",
   defense: "Verteidigung",
   fitness: "Fitness",
-};
-
-export const COACH_ROLE_ICONS: Record<CoachRole, string> = {
-  attack: "⚔️",
-  defense: "🛡️",
-  fitness: "💪",
 };
 
 /** Scouts, medical, admin overhead until F8.2. */
@@ -124,14 +120,27 @@ function makeCoach(
   const first = FIRST_NAMES[Math.floor(rng() * FIRST_NAMES.length)] ?? "Coach";
   const last = LAST_NAMES[Math.floor(rng() * LAST_NAMES.length)] ?? "Team";
   const contractLength = 2 + Math.floor(rng() * 2);
+  const id = `coach_${role}_${season}_${salt}`;
   return {
-    id: `coach_${role}_${season}_${salt}`,
+    id,
     name: `${first} ${last}`,
     role,
+    portrait_seed: hashSeed([id, first, last, role]),
     quality,
     wage_weekly: coachWeeklyWage(quality),
     contract_until_season: season + contractLength,
   };
+}
+
+export function coachPortraitSeed(coach: Pick<Coach, "id" | "name" | "role">): number {
+  return hashSeed([coach.id, coach.name, coach.role]);
+}
+
+export function withCoachPortraitSeed(coach: Coach): Coach {
+  if (Number.isFinite(coach.portrait_seed)) {
+    return coach;
+  }
+  return { ...coach, portrait_seed: coachPortraitSeed(coach) };
 }
 
 export function defaultCoachingStaff(season: number): CoachingStaff {
@@ -149,9 +158,9 @@ export function normalizeCoachingStaff(
 ): CoachingStaff {
   if (!staff) return defaultCoachingStaff(season);
   return {
-    attack: staff.attack ?? null,
-    defense: staff.defense ?? null,
-    fitness: staff.fitness ?? null,
+    attack: staff.attack ? withCoachPortraitSeed(staff.attack) : null,
+    defense: staff.defense ? withCoachPortraitSeed(staff.defense) : null,
+    fitness: staff.fitness ? withCoachPortraitSeed(staff.fitness) : null,
   };
 }
 

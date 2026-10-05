@@ -22,4 +22,12 @@
   --font-display: "Baloo 2", "Fredoka", system-ui, sans-serif;
   --font-body: "Nunito", system-ui, sans-serif;
   --club-header-height: 56px;
+  --club-shell-inset: 1.5rem;
+  --club-shell-outer-gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --club-shell-outer-gap: 1.5rem;
+  }
 }

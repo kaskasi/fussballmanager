@@ -32,7 +32,6 @@
   max-width: 80rem;
   margin-left: auto;
   margin-right: auto;
-  padding: 0.65rem 1rem;
   background: var(--panel) !important;
   border: var(--outline);
   border-bottom: none;
@@ -234,40 +233,8 @@
   padding: 1rem 1.1rem 1.15rem;
 }
 
-main.finances.club-shell-card-body .fm-tab-panel {
-  padding: 1rem 1.1rem 1.15rem;
-}
-
-main.training.club-shell-card-body {
-  max-width: 80rem;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0;
-}
-
-main.squad.club-shell-card-body {
-  max-width: 80rem;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0;
-}
-
-main.campus.club-shell-card-body {
-  max-width: 80rem;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0;
-}
-
 main.campus.club-shell-card-body .youth-strip {
   margin: 0 0 0.75rem;
-}
-
-main.stadium.club-shell-card-body {
-  max-width: 80rem;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0;
 }
 
 main.stadium.club-shell-card-body .stadium-scoreboard {
@@ -288,20 +255,6 @@ main.stadium.club-shell-card-body .stadium-hero {
 
 main.stadium.club-shell-card-body .stadium-fanbase {
   margin-bottom: 0.85rem;
-}
-
-main.transfers.club-shell-card-body {
-  max-width: 80rem;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0;
-}
-
-main.scouting.club-shell-card-body {
-  max-width: 80rem;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0;
 }
 
 .finances-shell .finances-hero {
@@ -786,13 +739,6 @@ main.scouting.club-shell-card-body {
   margin-bottom: 0.15rem;
 }
 
-main.profile.club-shell-card-body {
-  max-width: 80rem;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0;
-}
-
 @media (max-width: 860px) {
   .profile-card.profile-hub {
     grid-template-columns: 1fr;
@@ -1005,13 +951,6 @@ main.profile.club-shell-card-body {
   font-weight: 700;
   min-width: 10rem;
   text-align: center;
-}
-
-main.calendar.club-shell-card-body {
-  max-width: 80rem;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0;
 }
 
 /* §9.12 Jugend */

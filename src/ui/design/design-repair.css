@@ -13,24 +13,24 @@ body,
   background-color: var(--bg-sand) !important;
 }
 
-.pipeline,
-.training,
-.squad,
-.finances,
-.campus,
-.transfers,
-.leagues,
-.help,
+.pipeline:not(.club-shell-card-body),
+.training:not(.club-shell-card-body),
+.squad:not(.club-shell-card-body),
+.finances:not(.club-shell-card-body),
+.campus:not(.club-shell-card-body),
+.transfers:not(.club-shell-card-body),
+.leagues:not(.club-shell-card-body),
+.leagues-screen:not(.club-shell-card-body),
+.help:not(.club-shell-card-body),
 .matchday,
-.scouting,
-.stadium,
-.profile,
-.screen-shell,
+.scouting:not(.club-shell-card-body),
+.stadium:not(.club-shell-card-body),
+.profile:not(.club-shell-card-body),
+.screen-shell:not(.club-shell-card-body),
 .hub-cockpit-grid,
 .career-lineup,
 .career-match,
-.help,
-.scouting {
+.calendar:not(.club-shell-card-body) {
   background-color: var(--bg-sand);
 }
 

@@ -300,8 +300,22 @@ export default function App() {
   const [simulating, setSimulating] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState<string | null>(null);
   const [careerMatchSetup, setCareerMatchSetup] = useState<CareerMatchSetup | null>(null);
-  const [matchNavAction, setMatchNavAction] = useState<NavPrimaryAction | null>(null);
+  const [matchNavAction, setMatchNavActionState] = useState<NavPrimaryAction | null>(null);
+  const matchNavActionRef = useRef<NavPrimaryAction | null>(null);
+  const careerMatchFlowRef = useRef(false);
+  const setMatchNavAction = useCallback((action: NavPrimaryAction | null) => {
+    matchNavActionRef.current = action;
+    setMatchNavActionState(action);
+  }, []);
   const [matchSkipToReport, setMatchSkipToReport] = useState<(() => void) | null>(null);
+  /** Store skip handler in state — never pass it raw to setState (React treats functions as updaters). */
+  const registerMatchSkipToReport = useCallback((handler: (() => void) | null) => {
+    if (handler === null) {
+      setMatchSkipToReport(null);
+      return;
+    }
+    setMatchSkipToReport(() => handler);
+  }, []);
   const [marketFilters, setMarketFilters] = useState<MarketFilters>(DEFAULT_MARKET_FILTERS);
   const [marketSort, setMarketSort] = useState<MarketSort>(DEFAULT_MARKET_SORT);
   const [trainingFocusPlayerId, setTrainingFocusPlayerId] = useState<string | null>(null);
@@ -512,6 +526,7 @@ export default function App() {
             weekday: 7,
             matchPlayedThisWeek: true,
           }));
+          careerMatchFlowRef.current = false;
           setCareerMatchSetup(null);
           await finishWeekSimulation(outcome);
         } finally {
@@ -524,6 +539,7 @@ export default function App() {
         weekday: 7,
         matchPlayedThisWeek: true,
       }));
+      careerMatchFlowRef.current = false;
       setCareerMatchSetup(null);
     },
     [finishWeekSimulation, patchSession, simulating],
@@ -598,6 +614,7 @@ export default function App() {
     if (skip.action === "match") {
       const setup = prepareCareerMatch(sessionAtTarget);
       if (setup) {
+        careerMatchFlowRef.current = true;
         setCareerMatchSetup(setup);
         setScreen("hub");
       }
@@ -608,6 +625,7 @@ export default function App() {
       void simulateWeek();
     }
   }, [
+    careerMatchSetup,
     foreignPlayerId,
     openHubInbox,
     openInbox,
@@ -1675,14 +1693,32 @@ export default function App() {
   }, [flashNotice, foreignPlayerId, foreignTarget]);
   const openDecisionCount = pendingInboxItems(youthInbox, players).length;
 
+  careerMatchFlowRef.current = careerMatchSetup != null;
+  matchNavActionRef.current = matchNavAction;
+
+  const handleHeaderPrimaryClick = useCallback(() => {
+    const action = matchNavActionRef.current;
+    const inMatchFlow = careerMatchFlowRef.current;
+    if (action?.onClick && !action.disabled) {
+      action.onClick();
+      return;
+    }
+    if (inMatchFlow) {
+      return;
+    }
+    handleNext();
+  }, [handleNext]);
+
   const navActions: HubNavActions = {
     week,
     weekday,
     simulating,
     openDecisionCount,
     onNext: () => void handleNext(),
+    onHeaderPrimaryClick: handleHeaderPrimaryClick,
     onNewGame: resetGame,
     onOpenSaves: () => setSaveManagerOpen(true),
+    matchFlowActive: careerMatchSetup != null,
     primaryAction: careerMatchSetup ? matchNavAction : null,
     matchSkipToReport: careerMatchSetup ? matchSkipToReport : null,
   };
@@ -1798,7 +1834,7 @@ export default function App() {
               setProfileId(null);
             }
           }}
-          onRegisterSkipToReport={setMatchSkipToReport}
+          onRegisterSkipToReport={registerMatchSkipToReport}
           broadcastStory={careerBroadcastStory}
           kasse={matchdayCashBreakdown(stadium, careerMatchSetup.isHome)}
           homeStadiumCapacity={stadiumTotalCapacity(stadium)}
@@ -2229,8 +2265,11 @@ interface HubNavActions {
   simulating: boolean;
   openDecisionCount: number;
   onNext: () => void;
+  onHeaderPrimaryClick?: () => void;
   onNewGame: () => void;
   onOpenSaves: () => void;
+  /** When true, header NEXT must never fall back to smart-skip (match lineup / live). */
+  matchFlowActive?: boolean;
   primaryAction?: NavPrimaryAction | null;
   matchSkipToReport?: (() => void) | null;
 }
@@ -2562,11 +2601,25 @@ function AppNav({
         <button
           type="button"
           className="app-nav-next"
-          onClick={hubActions.primaryAction?.onClick ?? hubActions.onNext}
-          disabled={hubActions.primaryAction?.disabled ?? hubActions.simulating}
+          onClick={() => {
+            if (hubActions.onHeaderPrimaryClick) {
+              hubActions.onHeaderPrimaryClick();
+              return;
+            }
+            hubActions.primaryAction?.onClick?.() ?? hubActions.onNext();
+          }}
+          disabled={
+            hubActions.matchFlowActive
+              ? hubActions.primaryAction?.disabled ?? !hubActions.primaryAction?.onClick
+              : (hubActions.primaryAction?.disabled ?? hubActions.simulating)
+          }
           title={
             hubActions.primaryAction?.title ??
-            (hubActions.primaryAction ? hubActions.primaryAction.label : tr("shell.smartSkip"))
+            (hubActions.primaryAction
+              ? hubActions.primaryAction.label
+              : hubActions.matchFlowActive
+                ? tr("shell.next")
+                : tr("shell.smartSkip"))
           }
         >
           <span className="app-nav-next-mobile">{tr("shell.next")}</span>

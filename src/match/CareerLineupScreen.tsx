@@ -1,5 +1,5 @@
 /** WIREFRAME: docs/prd/design.md §9.1 — Aufstellung */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   FORMATION_IDS,
   sandboxPlanFromFormation,
@@ -183,15 +183,17 @@ export function CareerLineupScreen({
     [assignments, persistLineup, plan, tacticsPresets],
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!squad || filledCount < 11) {
       onNavActionChange(null);
       return;
     }
     onNavActionChange({
       label: "Auswahl bestätigen",
-      onClick: () => onConfirm(squad),
-      title: "Startelf übernehmen und Spiel starten",
+      onClick: () => {
+        onConfirm(squad);
+      },
+      title: "Startelf übernehmen — Simulation startest du im nächsten Schritt",
     });
     return () => onNavActionChange(null);
   }, [squad, filledCount, onConfirm, onNavActionChange]);

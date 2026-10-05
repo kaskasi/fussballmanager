@@ -147,6 +147,10 @@ export function useMatchPlayback(view: MatchView | null) {
     setIndex(presented.frames.length - 1);
   }, [presented]);
 
+  const presentedFrameCount = presented?.frames.length ?? 0;
+  const atEnd =
+    presentedFrameCount > 0 ? index >= presentedFrameCount - 1 : false;
+
   return {
     index,
     frame,
@@ -156,6 +160,8 @@ export function useMatchPlayback(view: MatchView | null) {
     speed,
     setSpeed,
     visibleLines,
+    presentedFrameCount,
+    atEnd,
     play,
     pause,
     restart,

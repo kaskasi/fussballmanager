@@ -4,7 +4,7 @@ Committed READMEs only; PNG captures stay local (see `.gitignore`).
 
 ## Primary targets
 
-- **design.md wireframes:** [docs/prd/design.md](../docs/prd/design.md) §9.1–§9.16
+- **design.md wireframes:** [docs/prd/design.md](../docs/prd/design.md) §9.1–§9.15 (Gelände → §9.3)
 - **Lumo mood/layout:** [docs/design-refs/lumo/](../docs/design-refs/lumo/)
 - **Master board:** [docs/design-refs/design.png](../docs/design-refs/design.png)
 
@@ -24,5 +24,6 @@ See [fm2001/README.md](./fm2001/README.md). Drop PNGs into `fmscreens/fm2001/` �
 | 9.6 | Transfers | — | — |
 | 9.7 | Tabellen | — | team_stats |
 | 9.8 | Spielerprofil | — | — |
-| 9.10 | Hub | hub_menu_shell | menu_open |
-| 9.11–9.16 | Training … Matchday | — | — |
+| 9.9 | Hub | hub_menu_shell | menu_open |
+| 9.10 | Training | — | — |
+| 9.11–9.15 | Kader … Matchday | — | — |

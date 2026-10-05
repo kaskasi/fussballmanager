@@ -9,7 +9,7 @@ These files guide UI layout and mood. They are **not** runtime assets (PRD 01: n
 | [lumo/aufstellung_taktik_context.png](./lumo/aufstellung_taktik_context.png) | §9.1 | Tactics pills + opponent card |
 | [lumo/aufstellung_compact.png](./lumo/aufstellung_compact.png) | §9.1 | Variant pitch + list |
 | [lumo/finanzen_balken_kpi.png](./lumo/finanzen_balken_kpi.png) | §9.2 | Bar rows + KPI stack |
-| [lumo/hub_menu_shell.png](./lumo/hub_menu_shell.png) | §6, §9.10 | Shell + TEAM nav |
+| [lumo/hub_menu_shell.png](./lumo/hub_menu_shell.png) | §6, §9.9 | Shell + TEAM nav |
 
 **Prompt snippet:** *Implement screen X per `docs/prd/design.md` §9.x; layout ref `docs/design-refs/lumo/…` or FM2001 `fmscreens/fm2001/…`.*
 

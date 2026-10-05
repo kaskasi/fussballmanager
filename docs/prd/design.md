@@ -2,7 +2,7 @@
 
 **Projekt:** Fußball-Manager ("Nordstern")
 **Datei:** `docs/prd/design.md`
-**Version:** 0.2 · Status: verbindliche Design-Referenz
+**Version:** 0.3 · Status: verbindliche Design-Referenz
 **Referenzbilder:** `docs/design-refs/design.png`, `docs/design-refs/lumo/` (Layout only, not shipped)
 **Ziel:** Dieses Dokument ist die alleinige Design-Wahrheit. Cursor baut jeden Screen ausschließlich aus den hier definierten Tokens, Komponenten und Wireframes. Bei Konflikten gilt: dieses Dokument > bestehender Code > improvisierte Lösungen.
 
@@ -210,6 +210,8 @@ Mobile ist bewusst Afterthought: gleiche Komponenten, nur gestapelt. Keine eigen
 
 ## 9. Wireframes pro Screen
 
+**Index §9.1–§9.15** (lückenlos). Gelände-Editor lebt nur unter **§9.3 Tab Gelände** — kein eigenes §9.9.
+
 Allgemeine Regeln: `[...]` = anklickbar, `●` = aktiver Zustand, Wireframes definieren **Proportionen und Nachbarschaften, keine Pixelmaße** – die kommen aus den Tokens.
 
 ### 9.1 Aufstellung
@@ -331,7 +333,7 @@ Orientierungs-Labels (links oben / rechts unten …) ersetzt durch dezente Kompa
 └─────────────────────────────────────────────────────────┘
 ```
 
-- Karten als vertikale Liste (volle Breite unter dem Stat-Strip), gleiche Struktur wie Jugend-Abausbau (jetzt inklusive der Nachwuchs-Kategorie Jugendhaus/Leistungszentrum/Elite-Akademie aus §9.13, die du dort verlangt hattest – und zwar als eigene Kategorie-Zwischenüberschrift "NACHWUCHS" zwischen den Stadion-Upgrades und den Rasenheizung & Co.-Upgrades).
+- Karten als vertikale Liste (volle Breite unter dem Stat-Strip), gleiche Struktur wie Jugend-Abausbau (jetzt inklusive der Nachwuchs-Kategorie Jugendhaus/Leistungszentrum/Elite-Akademie aus §9.12 (Jugend) – und zwar als eigene Kategorie-Zwischenüberschrift "NACHWUCHS" zwischen den Stadion-Upgrades und den Rasenheizung & Co.-Upgrades).
 - Max-Level: Karte kollabiert zu kompakter Zeile mit ✓-Badge, kein Kaufen-Button.
 - Ungleich finanzielle Lage: Button --rasen-hell, Preis --terra.
 
@@ -548,7 +550,7 @@ Damit ist das Profil von einer 3-Box-Skizze zu einem echten Screen geworden, der
 
 
 
-### §9.10 Hub (Start-Screen)
+### 9.9 Hub (Start-Screen)
 
 - Spaltenlogik: LINKS Handlungsqueue / MITTE Status / RECHTS Kontext. Neu
   eingehende Inhalte werden einer dieser drei Rollen zugeordnet – niemals
@@ -589,7 +591,7 @@ Die Lösung ist keine Kürzung, sondern Hierarchie nach Dringlichkeit. Ein Hub i
 │               │ │ PRO) · Chart─────────-┐ │ │ (Klick=Profil)│ │
 │ ┌EVENTS KW46┐ │ └───────────────────────┘ │ └──────────────-┘ │
 │ │4 ближайшие ││                           │ ┌CHRONIK─────--─┐ │
-│ │[Alle 38 ▶] ││ [NEXT ▶ auch hier unten?] │ │Kapitän gewählt│ │
+│ │[Alle 38 ▶] ││ (kein NEXT im Content — nur Header) │ │Kapitän gewählt│ │
 │ └────────────┘│                           │ │Gemeinschaft…  │ │
 └──────────────-┴───────────────────────────┴──────────────────-┘
 
@@ -602,45 +604,28 @@ Rechts = Kontext. Board-Pressure (eine Kompaktkarte mit Icon-Checkliste), Top-De
 Was verschwindet: Die Icon-Leiste im oberen Header (die gehört ins Menü), die Scout-Report-Leerzeile (Scouting-Modulkarte sagt "0 aktiv" schon), und die Pagination auf Seite 1 – das "Alle 38"-Muster ersetzt zehn Seitenzahlen.
 
 
-### §9.11 Training
+### 9.10 Training
 
-- **Tabs:** `[Overview ●][Wochenplan][Individuell]` — Overview (Heatmap + Status) ist Default beim Betreten; Wochenplan = Slot-Aktionen; Individuell = Fein-Tuning (Modal erlaubt).
-- **Overview/Heatmap:** Tab Overview zeigt:
+- **Kein Overview-Tab.** Beim Betreten ist automatisch der **Default-View** sichtbar (Status-Zeile + Heatmap + Warnbanner + Intensitäts-Slider) — das ist kein Tab, sondern der Ruhezustand des Screens.
+- **Tabs (nur zwei):** `[Wochenplan]` und `[Individuell]`. Kein dritter Tab; der Nutzer sieht sofort den Status, wechselt optional in Planung oder Fein-Tuning.
+- **Default-View (beim Öffnen):**
   - Status-Zeile (Gesamtfitness, Müdigkeit, aktuelle Intensität).
   - Heatmap der wöchentlichen Belastung nach Altersgruppe (U17/U19/PRO).
-  - Warnbanner, wenn >8 Spieler müde oder Intensität zu hoch.
+  - Warnbanner, wenn >8 Spieler müde oder Intensität zu hoch (Lucide + `--terra`, kein Emoji).
   - Intensitäts-Slider (global für die Woche).
-- **Wochenplan-Tab:**
-  - Zeigt die 5 Trainingsslots (Mo–Fr) als Karten-Grid.
-  - Jede Karte: Tag, Übungstitel, Kategorie (Technik/Athletik/Mental), Unterpunkte.
-  - Fokus setzen: Checkbox oder Klick auf Karte (visuelles Feedback: grüner Rahmen).
-  - Max. 2 Fokus pro Bereich (Technik/Athletik/Mental) – Validierung beim Speichern.
-- **Individual-Tab:**
-  - Liste aller Spieler mit "Kein Programm" / "Programm aktiv".
-  - Klick auf Spieler öffnet Modal zum Erstellen/Bearbeiten des individuellen Programms.
-- **Entfernte Tabs:**
-  - "Mentoring": Wandert in den Kader-Screen als Tab "Mentoring" (Liste der Talente mit Dropdown "Mentor wählen").
-  - "Coaches/Staff": Wandert in den Kader-Staff-Screen.
-  - "Fitness/Load": Wird zur Status-Zeile im Overview, kein eigener Tab.
-- **Warnungen:** Immer sichtbar, wenn kritisch (rote Hintergrundfarbe, Icon).
-
-Der "Coaches" Tab gehört nicht ins Training, sondern ist Personalverwaltung (Kader-Staff). Die fünf Tabs verwässern den Kern des Trainings: Planung (was trainieren wir diese Woche?) und Überwachung (wer ist müde/weniger fit?).ie Lösung ist eine Reduktion auf drei klare Ansichten, wobei Mentoring als eigenständiger Screen unter dem Kader lebt:
-
-Die neue Struktur:
-Overview (Heatmap) – Der Status-Screen. Zeigt sofort: Wie viele Spieler sind müde? Wo ist die Belastung? (Die Heatmap ist hier das Hero-Element).
-Team Schedule (Wochenplan) – Der Aktions-Screen. Hier setzt du die Intensität und wählst die 5 Slots (Mo–Fr) mit Fokus.
-Individual (Extra) – Der Fein-Tuning-Screen. Individuelle Programme für einzelne Spieler (nicht alle müssen eines haben).
-Mentoring wird aus dem Training entfernt und als Tab im Kader-Screen hinzugefügt (dort, wo die Spielerprofile sind). Coaches/Staff wandert komplett in den Kader-Staff-Screen. Fitness/Load wird zur Status-Zeile im Overview, kein eigener Tab mehr.
-
-Hier ist der Wireframe für den neuen, fokussierten Trainingsscreen:
+- **Tab Wochenplan:**
+  - 5 Trainingsslots (Mo–Fr) als Karten-Grid; Fokus per Klick (grüner Rahmen); max. 2 Fokus pro Bereich (Technik/Athletik/Mental).
+- **Tab Individuell:**
+  - Spielerliste; Modal zum Erstellen/Bearbeiten individueller Programme (Modal hier erlaubt).
+- **Ausgelagert:** Mentoring → Kader §9.11; Coaches/Staff → Kader §9.11 Tab Staff.
 
 ┌─[Header]──────────────────────────────────────────────────┐
 │ H1 "Training"              [Wochenplan][Individuell]      │
 ├───────────────────────────────────────────────────────────┤
-│ STATUS-ZEILE (über allem):                                │
+│ STATUS-ZEILE (Default-View, kein Tab):                    │
 │ 19 Profis · Ø Fitness 68 · 11 müde · Intensität 85        │
 ├───────────────────────────────────────────┬───────────────┤
-│ OVERVIEW (Tab aktiv)                      │ HEATMAP       │
+│ DEFAULT-VIEW (beim Öffnen)                │ HEATMAP       │
 │ ┌───────────────────────────────────────┐ │               │
 │ │ WÖCHENTLICHE BELASTUNG (Heatmap)      │ │ (Farb-Grid)   │
 │ │ U17 · 1 [■]                           │ │ U17/U19/PRO   │
@@ -648,8 +633,8 @@ Hier ist der Wireframe für den neuen, fokussierten Trainingsscreen:
 │ │ PRO · 19 [■■■■■■■■■■■■■■■■]           │ │               │
 │ └───────────────────────────────────────┘ │               │
 │                                           │               │
-│ WARNUNGEN (rot, wenn >8 müde):            │               │
-│ ⚠️ 11 Spieler müde · Int. 100 (High Load) │               │
+│ WARNUNGEN (--terra, wenn >8 müde):        │               │
+│ 11 Spieler müde · Int. 100 (High Load)    │               │
 │                                           │               │
 │ [Intensität Slider 100]                   │               │
 │ [Fokus setzen] Checkbox                   │               │
@@ -672,7 +657,7 @@ Hier ist der Wireframe für den neuen, fokussierten Trainingsscreen:
 │ [Fokus setzen] → Klick auf Karte setzt/entfernt Fokus     │
 └───────────────────────────────────────────────────────────┘
 
-### 9.12 Kader (Squad)
+### 9.11 Kader (Squad)
 
 Der Kader-Screen ist der zentrale Hub für alle Spieler- und Personalentscheidungen. Er ist in drei Hauptbereiche unterteilt: Aufstellung/Liste, Mentoring und Staff.
 ```
@@ -761,7 +746,7 @@ Der Hub-Link "Jugend" führt zum Jugend-Screen, nicht mehr zum Training.
 Diese Struktur trennt klar zwischen Spielermanagement (Liste, Mentoring) und Personalmanagement (Staff) und macht den Kader-Screen zum umfassenden Zentrum für alle menschlichen Ressourcen des Vereins.
 
 
-### §9.13 Jugend
+### 9.12 Jugend
 
 Aktuell:
 Doppelt: "Jugendkader" (Sortier-Tabelle mit MIN/T/A/TKL/Ø...) und der "U17/U19-Report KW xx" (Tabelle mit ZIEL/FORTSCHRITT/STATUS) sind zwei fast identische Listen desselben Jahrgangs – eine mit Daten ohne Avatare, eine mit Peeps-Bildern ohne Daten. Das ist eine Tabelle, die sich als zwei verkleidet hat.
@@ -832,7 +817,7 @@ Der Kern des Fixes ist die Erkenntnis aus deinen zwei Screenshots: Daten und Ava
 
 
 
-### §9.14 Scouting
+### 9.13 Scouting
 
 #### Aktuell:
 
@@ -919,7 +904,7 @@ Fokus: Du wirst nicht von 200 Spielern erschlagen, sondern bekommst die besten 5
 Interaktion: Klick auf eine Region → sofortige Trefferliste. Kein Scrollen.
 
 
-### §9.15 Spiel Zusammenfassung
+### 9.14 Spiel Zusammenfassung
 
 
 ┌─[Header]──────────────────────────────────────────────────────-┐
@@ -983,7 +968,7 @@ Interaktion: Klick auf eine Region → sofortige Trefferliste. Kein Scrollen.
 - **Mobile:** Hero oben, Sterne darunter horizontal (1-card-Breite),
   Statistik, Kasse, dann Tabs.
 
-### 9.16 Matchday
+### 9.15 Matchday
 
 Er ist der emotionale Höhepunkt des Wochenzyklus — eigenes Cockpit mit zwei Zuständen: **Vorschau** (vor Anpfiff) und **Live** (Simulation läuft).
 
@@ -1065,8 +1050,9 @@ Ein Screen gilt erst als fertig, wenn:
 - [ ] Desktop ≥1024px voll funktional, Mobile <768px gestapelt nutzbar
 - [ ] Dunkelmodus: **nicht implementieren** (bewusst außer Scope)
 - [ ] Kenney-Assets nur remapped in `public/assets/kenney/` (siehe `assets/kenney-color-map.json`)
-- [ ] Header-NEXT: ein gelber Button; Label kontextabhängig (§9.15/§9.16), kein zweiter Abschluss-Button im Content
-- [ ] Match-Skip nur im ⋮-Menü (§9.16), nicht als prominenter Button
+- [ ] **Kein zweiter Fortschritts-CTA** im Content (kein „Weiter“, „Nächster Schritt“, „Abschließen“). Einziger zyklussteuernder Button: Header-NEXT (Labels §9.14/§9.15).
+- [ ] Header-NEXT: ein gelber Button; Label kontextabhängig (`NEXT` / `Spiel simulieren` / `Spieltag abschließen`).
+- [ ] Match-Skip nur im ⋮-Menü (§9.15), nicht als prominenter Button
 
 ---
 

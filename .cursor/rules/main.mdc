@@ -50,12 +50,12 @@ Noch nicht geschrieben, nicht erfinden:
 
 ## Design-System (`docs/prd/design.md`)
 
-Vor UI-Code **design.md** lesen. Bei Konflikt Darstellung vs. PRD 09/14: **design.md** für Tokens, Header, Layout §9, Emojis, Gelb-Regel.
+Vor UI-Code **design.md** lesen. Bei Konflikt Darstellung vs. PRD 09/14: **design.md** für Tokens, Header, Layout §9.1–§9.15, Emojis, Gelb-Regel.
 
 - **Tokens only** in Screens (CSS-Variablen §2) — keine ad-hoc-Hex-Farben.
 - **Emojis verboten** in UI (§4); Lucide + Kenney remapped (§12).
-- **NEXT:** genau ein gelber Header-Button (`--sonnengelb`); Label kontextabhängig (NEXT / Spiel simulieren / Spieltag abschließen). Kein zweiter Abschluss-CTA im Content.
-- **Match-Skip:** nur ⋮-Menü (§9.16), v1 erlaubt.
+- **NEXT:** genau ein gelber Header-Button (`--sonnengelb`); Label kontextabhängig (NEXT / Spiel simulieren / Spieltag abschließen). **Kein zweiter Fortschritts-CTA** im Content (§10 DoD).
+- **Match-Skip:** nur ⋮-Menü (§9.15), v1 erlaubt.
 - **Menü §6:** volle TEAM-Liste (Hub, Kader, Training, …); Navigation nicht duplizieren in Header-Icon-Leisten.
 - **Komponenten (Soll):** `<Crest>`, Header, Panel, StatTable — importieren, nicht kopieren.
 - **Wireframes:** `/** WIREFRAME: design.md §9.x */` plus PRD 09 wo Pipeline.
@@ -207,6 +207,7 @@ Bei jedem Commit prüfen:
 | Emoji als UI-Icon/Decor | STOPP — design.md §4 |
 | Gelb außer Header-NEXT | STOPP — design.md §1 Regel 2 |
 | Rohe Kenney-Farben im Shipped UI | STOPP — remap §2 |
+| Zweiter Fortschritts-CTA im Screen-Content | STOPP — design.md §10 (nur Header-NEXT) |
 
 ### Data Flow (Wichtig für Debugging)
 

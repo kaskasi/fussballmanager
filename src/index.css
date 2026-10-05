@@ -1088,7 +1088,7 @@ body {
   border: 1px solid #e2e8f0;
 }
 
-.career-match--report .match-report {
+.career-match--report .match-report:not(.match-report--compact) {
   margin-top: 0;
   padding: 1.35rem clamp(1rem, 3vw, 2rem) 1.5rem;
 }
@@ -1264,7 +1264,7 @@ body {
   text-transform: uppercase;
 }
 
-.match-report-stars {
+.match-report:not(.match-report--compact) .match-report-stars {
   margin-bottom: 1rem;
   padding: 0.85rem 1rem 1rem;
   border-radius: 14px;
@@ -1272,7 +1272,7 @@ body {
   border: 1px solid #a7f3d0;
 }
 
-.match-report-stars-title {
+.match-report:not(.match-report--compact) .match-report-stars-title {
   margin: 0 0 0.75rem;
   text-align: center;
   font-size: 0.82rem;
@@ -1282,7 +1282,7 @@ body {
   color: #047857;
 }
 
-.match-report-stars-row {
+.match-report:not(.match-report--compact) .match-report-stars-row {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1292,7 +1292,7 @@ body {
   gap: clamp(0.5rem, 2vw, 1.25rem);
 }
 
-.match-report-star {
+.match-report:not(.match-report--compact) .match-report-star {
   flex: 1;
   min-width: 0;
   max-width: 11rem;
@@ -1307,7 +1307,7 @@ body {
   box-shadow: 0 1px 2px rgb(15 23 42 / 6%);
 }
 
-.match-report-star.is-first {
+.match-report:not(.match-report--compact) .match-report-star.is-first {
   max-width: 13rem;
   padding: 0.85rem 0.55rem 0.95rem;
   border-color: #6ee7b7;
@@ -1315,7 +1315,7 @@ body {
   transform: translateY(-0.35rem);
 }
 
-.match-report-star-rank {
+.match-report:not(.match-report--compact) .match-report-star-rank {
   display: grid;
   place-items: center;
   width: 1.65rem;
@@ -1328,39 +1328,39 @@ body {
   margin-bottom: 0.35rem;
 }
 
-.match-report-star.is-first .match-report-star-rank {
+.match-report:not(.match-report--compact) .match-report-star.is-first .match-report-star-rank {
   width: 2rem;
   height: 2rem;
   font-size: 0.92rem;
   background: linear-gradient(145deg, #fbbf24, #d97706);
 }
 
-.match-report-star.is-rank-2 .match-report-star-rank {
+.match-report:not(.match-report--compact) .match-report-star.is-rank-2 .match-report-star-rank {
   background: #94a3b8;
 }
 
-.match-report-star-shirt {
+.match-report:not(.match-report--compact) .match-report-star-shirt {
   font-size: 1.35rem;
   font-weight: 800;
   color: #0f172a;
   line-height: 1;
 }
 
-.match-report-star.is-first .match-report-star-shirt {
+.match-report:not(.match-report--compact) .match-report-star.is-first .match-report-star-shirt {
   font-size: 1.65rem;
 }
 
-.match-report-star-name {
+.match-report:not(.match-report--compact) .match-report-star-name {
   margin-top: 0.2rem;
   font-size: 0.82rem;
   line-height: 1.2;
 }
 
-.match-report-star.is-first .match-report-star-name {
+.match-report:not(.match-report--compact) .match-report-star.is-first .match-report-star-name {
   font-size: 0.92rem;
 }
 
-.match-report-star-meta {
+.match-report:not(.match-report--compact) .match-report-star-meta {
   margin-top: 0.15rem;
   font-size: 0.65rem;
   font-weight: 700;
@@ -1369,7 +1369,7 @@ body {
   letter-spacing: 0.03em;
 }
 
-.match-report-star-line {
+.match-report:not(.match-report--compact) .match-report-star-line {
   margin-top: 0.35rem;
   font-size: 0.72rem;
   color: #334155;
@@ -2631,28 +2631,7 @@ body {
   font-size: 0.85rem;
 }
 
-.leagues-screen-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1rem 0 0.75rem;
-}
-
-.leagues-screen-tabs button {
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  border-radius: 999px;
-  padding: 0.4rem 0.85rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.leagues-screen-tabs button.is-active {
-  border-color: #059669;
-  background: #ecfdf5;
-  color: #047857;
-}
+/* leagues-screen-tabs — see design-consolidation.css (fm-tab semantics) */
 
 .leagues-screen-own {
   font-weight: 600;
@@ -5868,6 +5847,17 @@ body {
   font-size: 1rem;
 }
 
+.training-staff-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.15rem;
+}
+
+.training-staff-portrait.player-portrait.is-sm {
+  flex-shrink: 0;
+}
+
 .training-staff-name {
   margin: 0;
   font-weight: 800;
@@ -5877,8 +5867,14 @@ body {
 .training-staff-empty,
 .training-staff-market-label {
   margin: 0.2rem 0 0;
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.9rem;
+}
+
+.training-staff-role-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .training-staff-candidates {

@@ -1015,71 +1015,111 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 /* §9.14 — Spiel-Zusammenfassung */
 .career-match--report .match-report {
   margin-top: 0;
-  padding: 1rem 1.1rem 1.25rem;
+  padding: 0.75rem 0.9rem 0.9rem;
   background: var(--panel);
   border: var(--outline);
   border-radius: var(--radius);
 }
 
-.match-report-kicker {
-  margin: 0 0 0.65rem;
+.match-report--compact .match-report-kicker {
+  margin: 0 0 0.45rem;
 }
 
-.match-report-hero-grid {
+.match-report-inline-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0 0 0.25rem;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinte-weich);
+}
+
+.match-report-body-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.9fr);
-  gap: 0.85rem;
+  grid-template-columns: minmax(0, 1fr) minmax(200px, 240px);
+  gap: 0.65rem;
   align-items: start;
-  margin-bottom: 0.85rem;
+}
+
+.match-report-main {
+  min-width: 0;
+}
+
+.match-report-meta-line {
+  margin: 0 0 0.45rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(62, 49, 40, 0.12);
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--tinte-weich);
+}
+
+.match-report-stats-block {
+  margin-bottom: 0.5rem;
+}
+
+.match-report-events-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  margin-bottom: 0.45rem;
+}
+
+.match-report-goals-col,
+.match-report-cards-col {
+  min-width: 0;
+}
+
+.match-report-cards-empty {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--tinte-weich);
 }
 
 .match-report-scoreline {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  margin: 0 0 0.35rem;
+  gap: 0.55rem;
+  margin: 0 0 0.55rem;
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .match-report-scoreline strong {
-  font-size: clamp(1.75rem, 5vw, 2.35rem);
+  font-size: clamp(1.55rem, 4.5vw, 2.05rem);
   letter-spacing: 0.04em;
 }
 
-.match-report-atmosphere,
-.match-report-formations {
-  margin: 0 0 0.35rem;
-  text-align: center;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--tinte-weich);
-}
-
-.match-report-formations {
+.match-report-aside {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.35rem;
+  flex-direction: column;
+  gap: 0.45rem;
+  position: sticky;
+  top: 0.5rem;
 }
 
-.match-formation-chip {
+.match-report-ambience {
+  margin: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
   border: var(--outline);
-  border-radius: var(--radius-klein);
-  padding: 0.2rem 0.45rem;
+  aspect-ratio: 4 / 3;
   background: var(--panel-muted);
 }
 
-.match-report-section-title {
-  margin: 0 0 0.45rem;
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-}
-
-.match-report-timeline-box {
-  margin-top: 0.65rem;
-  padding: 0.55rem 0.65rem;
+.match-report-ambience img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .match-goal-timeline {
@@ -1115,73 +1155,99 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   color: var(--tinte-weich);
 }
 
-.match-report-stars-title {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin: 0 0 0.5rem;
-  font-family: var(--font-display);
-  font-size: 0.95rem;
+/* §9.14 — Drei Sterne: vertikal, #1 --terra, 2/3 dezenter Rand */
+.match-report--compact .match-report-stars {
+  margin: 0 0 0.35rem;
+  padding: 0.45rem 0 0;
+  border: none;
+  border-top: 1px solid rgba(62, 49, 40, 0.1);
+  background: transparent;
 }
 
-.match-report-stars-col {
+.match-report--compact .match-report-stars-label {
+  margin-bottom: 0.35rem;
+}
+
+.match-report--compact .match-report-stars-col {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  align-items: stretch;
+}
+
+.match-report--compact .match-report-star {
+  border: var(--outline-weich);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.45rem;
+  background: var(--panel);
+  min-width: 0;
+  max-width: none;
+  transform: none;
+  box-shadow: none;
+}
+
+.match-report--compact .match-report-star.is-first {
+  border: 2px solid var(--terra);
+  box-shadow: 0 0 0 1px rgba(224, 122, 63, 0.22);
+  padding: 0.45rem 0.55rem;
+}
+
+.match-report--compact .match-report-star-btn {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-}
-
-.match-report-star {
-  border: 2px solid rgba(62, 49, 40, 0.2);
-  border-radius: var(--radius);
-  padding: 0.45rem 0.55rem;
-  background: #fff;
-}
-
-.match-report-star.is-first {
-  border-color: var(--terra);
-  box-shadow: 0 0 0 1px rgba(196, 92, 62, 0.25);
-}
-
-.match-report-star-btn {
-  display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.25rem;
   width: 100%;
   border: none;
   background: transparent;
   padding: 0;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
   color: inherit;
   font: inherit;
 }
 
-.match-report-star-rank {
+.match-report--compact .match-report-star-rank {
   font-family: var(--font-display);
   font-weight: 800;
-  min-width: 1.1rem;
+  font-size: 0.95rem;
+  min-width: 1.25rem;
+  color: var(--tinte-weich);
+  background: none;
+  width: auto;
+  height: auto;
+  margin: 0;
+  border-radius: 0;
 }
 
-.match-report-star-body {
+.match-report--compact .match-report-star.is-first .match-report-star-rank {
+  color: var(--terra-dunkel);
+  font-size: 1.05rem;
+}
+
+.match-report--compact .match-report-star-body {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0.08rem;
   min-width: 0;
+  width: 100%;
+  align-items: center;
 }
 
-.match-report-star-meta,
-.match-report-star-line {
-  font-size: 0.78rem;
+.match-report--compact .match-report-star-name {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.match-report--compact .match-report-star-meta,
+.match-report--compact .match-report-star-line {
+  font-size: 0.75rem;
   color: var(--tinte-weich);
   font-weight: 600;
-}
-
-.match-report-cards-box {
-  margin-top: 0.65rem;
-  padding: 0.55rem 0.65rem;
+  margin: 0;
 }
 
 .match-card-list {
@@ -1210,59 +1276,60 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   fill: var(--terra);
 }
 
-.match-report-stats-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(200px, 280px);
-  gap: 0.75rem;
-  margin-bottom: 0.85rem;
-}
-
-.match-report-kasse-widget {
-  padding: 0.65rem 0.75rem;
+.match-report-kasse-compact {
+  align-self: stretch;
+  padding: 0.35rem 0.45rem;
   background: var(--panel-muted);
   border: var(--outline);
-  border-radius: var(--radius);
+  border-radius: var(--radius-klein);
 }
 
-.match-report-kasse-widget ul {
-  list-style: none;
+.match-report-kasse-oneline {
   margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.28rem;
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   font-weight: 600;
+  line-height: 1.45;
+  color: var(--tinte);
 }
 
-.match-report-kasse-widget li {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  justify-content: space-between;
-}
-
-.match-report-kasse-widget li span:nth-child(2) {
-  flex: 1;
-}
-
-.match-report-kasse-total {
-  margin-top: 0.25rem;
-  padding-top: 0.35rem;
-  border-top: 1px dashed rgba(62, 49, 40, 0.2);
-  font-weight: 800;
+.match-report-kasse-away.match-report-kasse-compact {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--tinte-weich);
 }
 
 .match-report-kasse-hint {
-  margin: 0.45rem 0 0;
-  font-size: 0.72rem;
+  margin: 0.25rem 0 0;
+  font-size: 0.65rem;
   color: var(--tinte-weich);
+}
+
+.match-report-roster-details {
+  border-top: var(--outline);
+  padding-top: 0.15rem;
+}
+
+.match-report-roster-details summary {
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 0.82rem;
+  padding: 0.35rem 0;
+  list-style: none;
+  color: var(--tinte);
+}
+
+.match-report-roster-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.match-report-roster-details[open] summary {
+  margin-bottom: 0.35rem;
 }
 
 .match-report-roster-tabs {
   display: flex;
   gap: 0.35rem;
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.35rem;
 }
 
 .match-report-roster-tabs button {
@@ -1287,7 +1354,7 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 
 .match-report-roster-table th,
 .match-report-roster-table td {
-  padding: 0.35rem 0.45rem;
+  padding: 0.28rem 0.4rem;
   border-bottom: 1px solid rgba(62, 49, 40, 0.12);
   text-align: left;
 }
@@ -1333,18 +1400,35 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 }
 
 @media (max-width: 860px) {
-  .match-report-hero-grid,
-  .match-report-stats-row {
+  .match-report-body-grid {
     grid-template-columns: 1fr;
   }
 
-  .match-report-stars-col {
+  .match-report-aside {
+    position: static;
     flex-direction: row;
-    overflow-x: auto;
+    flex-wrap: wrap;
   }
 
-  .match-report-star {
-    min-width: min(280px, 85vw);
+  .match-report-kasse-compact {
+    flex: 1;
+    min-width: min(100%, 280px);
+  }
+
+  .match-report-ambience {
+    flex: 1;
+    min-width: min(100%, 200px);
+    max-width: 240px;
+  }
+
+  .match-report-events-row {
+    grid-template-columns: 1fr;
+  }
+
+  .match-report--compact .match-report-stars-col {
+    grid-template-columns: repeat(3, minmax(7.5rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
   }
 }
 

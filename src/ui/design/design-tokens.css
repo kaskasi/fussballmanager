@@ -24,6 +24,32 @@
   --club-header-height: 56px;
   --club-shell-inset: 1.5rem;
   --club-shell-outer-gap: 1rem;
+
+  /* Semantic aliases (cleaning pass — map to Fernsehnachmittag, not ad-hoc hex elsewhere) */
+  --bg-page: var(--bg-sand);
+  --bg-card: var(--panel);
+  --bg-inactive: var(--panel-muted);
+  --accent-primary: var(--sonnengelb);
+  --accent-positive: var(--rasen);
+  --accent-negative: var(--terra);
+  --accent-warning: var(--terra);
+  --text-primary: var(--tinte);
+  --text-secondary: var(--tinte-weich);
+  --text-muted: var(--tinte-weich);
+  --radius-card: var(--radius);
+  --radius-button: 999px;
+  --radius-chip: 999px;
+  --outline: 2px solid var(--tinte);
+  --outline-weich: 1px solid rgba(107, 93, 79, 0.35);
+
+  /* Spacing rhythm (4px scale) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
 }
 
 @media (min-width: 768px) {

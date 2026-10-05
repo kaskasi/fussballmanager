@@ -1,4 +1,3 @@
-import { Star } from "lucide-react";
 import type { MatchStarPick } from "./match-three-stars.ts";
 import { PlayerPortrait } from "../ui/components/PlayerPortrait.tsx";
 
@@ -17,10 +16,7 @@ export function MatchThreeStars({
 
   return (
     <section className="match-report-stars" aria-label="Drei Sterne des Spiels">
-      <h2 className="match-report-stars-title">
-        <Star size={18} strokeWidth={2.5} aria-hidden />
-        Drei Sterne
-      </h2>
+      <p className="match-report-inline-label match-report-stars-label">Drei Sterne</p>
       <ol className="match-report-stars-col">
         {ordered.map((star) => {
           const body = (
@@ -54,7 +50,7 @@ export function MatchThreeStars({
                   {body}
                 </button>
               ) : (
-                body
+                <div className="match-report-star-btn">{body}</div>
               )}
             </li>
           );

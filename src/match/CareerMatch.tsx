@@ -387,6 +387,7 @@ function CareerMatchPlayback({
           week={week}
           weekday={weekday}
           kasse={kasse}
+          stadiumPhotoUrl={backdropPhotoUrl}
           onSelectPlayer={onSelectMatchPlayer}
         />
       ) : (

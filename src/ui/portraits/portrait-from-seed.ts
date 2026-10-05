@@ -1,4 +1,5 @@
-/** Open Peeps bust templates baked under public/assets/portraits/bust/ (see scripts/bake-open-peeps-busts.mjs). */
+/** Open Peeps bust templates under public/assets/portraits/bust/ (+ charge2/); see scripts/bake-open-peeps-bust*.mjs. */
+import catalog from "./portrait-bust-catalog.json";
 import {
   DEFAULT_PLAYER_PORTRAIT_POOL,
   PORTRAIT_BUST_COUNT,
@@ -7,6 +8,8 @@ import {
 } from "./portrait-pools.ts";
 
 export { PORTRAIT_BUST_COUNT, DEFAULT_PLAYER_PORTRAIT_POOL, type PortraitPool };
+
+const bustFileById = new Map(catalog.busts.map((b) => [b.id, b.file]));
 
 export function bustIdFromPortraitSeed(
   portraitSeed: number,
@@ -19,6 +22,10 @@ export function bustIdFromPortraitSeed(
 
 export function portraitBustUrl(bustId: number): string {
   const id = Math.min(PORTRAIT_BUST_COUNT, Math.max(1, Math.floor(bustId)));
+  const file = bustFileById.get(id);
+  if (file) {
+    return `/assets/portraits/bust/${file}`;
+  }
   return `/assets/portraits/bust/peep-${id}.svg`;
 }
 

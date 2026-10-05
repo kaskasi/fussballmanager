@@ -1,5 +1,29 @@
 {
-  "version": 2,
+  "version": 3,
+  "vendor_max": 105,
+  "charge2_vendor_ids": [
+    1,
+    16,
+    22,
+    38,
+    48,
+    56,
+    57,
+    60,
+    61,
+    63,
+    64,
+    70,
+    72,
+    82,
+    87,
+    88,
+    89,
+    90,
+    93,
+    102,
+    105
+  ],
   "mens_allowed_bodies": [
     "Sporty-Tee",
     "Gym-Shirt",
@@ -31,6 +55,8 @@
   "busts": [
     {
       "id": 1,
+      "file": "charge2/peep-1.svg",
+      "charge": 2,
       "body": "Dress",
       "head": "Bangs",
       "pools": [
@@ -40,6 +66,8 @@
     },
     {
       "id": 2,
+      "file": "peep-2.svg",
+      "charge": 1,
       "body": "Whatever",
       "head": "hat-beanie",
       "pools": [
@@ -48,6 +76,8 @@
     },
     {
       "id": 3,
+      "file": "peep-3.svg",
+      "charge": 1,
       "body": "Striped-Pocket-Tee",
       "head": "Bantu-Knots",
       "pools": [
@@ -57,6 +87,8 @@
     },
     {
       "id": 4,
+      "file": "peep-4.svg",
+      "charge": 1,
       "body": "Explaining",
       "head": "No-Hair-2",
       "pools": [
@@ -65,6 +97,8 @@
     },
     {
       "id": 5,
+      "file": "peep-5.svg",
+      "charge": 1,
       "body": "Sweater-Dots",
       "head": "Turban",
       "pools": [
@@ -73,6 +107,8 @@
     },
     {
       "id": 6,
+      "file": "peep-6.svg",
+      "charge": 1,
       "body": "Tee-Arms-Crossed",
       "head": "Hijab",
       "pools": [
@@ -81,6 +117,8 @@
     },
     {
       "id": 7,
+      "file": "peep-7.svg",
+      "charge": 1,
       "body": "Whatever",
       "head": "Flat-Top-Long",
       "pools": [
@@ -89,6 +127,8 @@
     },
     {
       "id": 8,
+      "file": "peep-8.svg",
+      "charge": 1,
       "body": "Hoodie",
       "head": "Short-3",
       "pools": [
@@ -98,6 +138,8 @@
     },
     {
       "id": 9,
+      "file": "peep-9.svg",
+      "charge": 1,
       "body": "Tee-1",
       "head": "Medium-Bangs-3",
       "pools": [
@@ -106,6 +148,8 @@
     },
     {
       "id": 10,
+      "file": "peep-10.svg",
+      "charge": 1,
       "body": "Paper",
       "head": "No-Hair-1",
       "pools": [
@@ -113,16 +157,9 @@
       ]
     },
     {
-      "id": 11,
-      "body": "Button-Shirt-1",
-      "head": "Long",
-      "pools": [
-        "mixed",
-        "mens_squad"
-      ]
-    },
-    {
       "id": 12,
+      "file": "peep-12.svg",
+      "charge": 1,
       "body": "Striped-Tee",
       "head": "Short-5",
       "pools": [
@@ -132,6 +169,8 @@
     },
     {
       "id": 13,
+      "file": "peep-13.svg",
+      "charge": 1,
       "body": "Button-Shirt-1",
       "head": "Medium-2",
       "pools": [
@@ -141,6 +180,8 @@
     },
     {
       "id": 14,
+      "file": "peep-14.svg",
+      "charge": 1,
       "body": "Striped-Pocket-Tee",
       "head": "Buns",
       "pools": [
@@ -148,24 +189,20 @@
       ]
     },
     {
-      "id": 15,
-      "body": "Gym-Shirt",
-      "head": "Cornrows",
-      "pools": [
-        "mixed",
-        "mens_squad"
-      ]
-    },
-    {
       "id": 16,
+      "file": "charge2/peep-16.svg",
+      "charge": 2,
       "body": "Killer",
       "head": "Bun",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 17,
+      "file": "peep-17.svg",
+      "charge": 1,
       "body": "Shirt-and-Coat",
       "head": "hat-hip",
       "pools": [
@@ -175,6 +212,8 @@
     },
     {
       "id": 18,
+      "file": "peep-18.svg",
+      "charge": 1,
       "body": "Fur-Jacket",
       "head": "Short-4",
       "pools": [
@@ -183,6 +222,8 @@
     },
     {
       "id": 19,
+      "file": "peep-19.svg",
+      "charge": 1,
       "body": "Polo-and-Sweater",
       "head": "Afro",
       "pools": [
@@ -191,6 +232,8 @@
     },
     {
       "id": 20,
+      "file": "peep-20.svg",
+      "charge": 1,
       "body": "Striped-Pocket-Tee",
       "head": "Bun",
       "pools": [
@@ -199,6 +242,8 @@
     },
     {
       "id": 21,
+      "file": "peep-21.svg",
+      "charge": 1,
       "body": "Striped-Pocket-Tee",
       "head": "Flat-Top-Long",
       "pools": [
@@ -208,14 +253,19 @@
     },
     {
       "id": 22,
+      "file": "charge2/peep-22.svg",
+      "charge": 2,
       "body": "Sporty-Tee",
       "head": "Bangs-2",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 23,
+      "file": "peep-23.svg",
+      "charge": 1,
       "body": "Tee-Selena",
       "head": "Long-Curly",
       "pools": [
@@ -225,6 +275,8 @@
     },
     {
       "id": 24,
+      "file": "peep-24.svg",
+      "charge": 1,
       "body": "Striped-Tee",
       "head": "Bun",
       "pools": [
@@ -233,6 +285,8 @@
     },
     {
       "id": 25,
+      "file": "peep-25.svg",
+      "charge": 1,
       "body": "Gaming",
       "head": "Mohawk-2",
       "pools": [
@@ -241,6 +295,8 @@
     },
     {
       "id": 26,
+      "file": "peep-26.svg",
+      "charge": 1,
       "body": "Sweater-Dots",
       "head": "Hijab",
       "pools": [
@@ -249,6 +305,8 @@
     },
     {
       "id": 27,
+      "file": "peep-27.svg",
+      "charge": 1,
       "body": "Hoodie",
       "head": "Medium-3",
       "pools": [
@@ -258,6 +316,8 @@
     },
     {
       "id": 28,
+      "file": "peep-28.svg",
+      "charge": 1,
       "body": "Tee-1",
       "head": "Bantu-Knots",
       "pools": [
@@ -267,6 +327,8 @@
     },
     {
       "id": 29,
+      "file": "peep-29.svg",
+      "charge": 1,
       "body": "Gym-Shirt",
       "head": "Medium-3",
       "pools": [
@@ -276,6 +338,8 @@
     },
     {
       "id": 30,
+      "file": "peep-30.svg",
+      "charge": 1,
       "body": "Tee-Arms-Crossed",
       "head": "Hijab",
       "pools": [
@@ -283,16 +347,9 @@
       ]
     },
     {
-      "id": 31,
-      "body": "Tee-1",
-      "head": "Cornrows-2",
-      "pools": [
-        "mixed",
-        "mens_squad"
-      ]
-    },
-    {
       "id": 32,
+      "file": "peep-32.svg",
+      "charge": 1,
       "body": "Paper",
       "head": "Long-Afro",
       "pools": [
@@ -301,6 +358,8 @@
     },
     {
       "id": 33,
+      "file": "peep-33.svg",
+      "charge": 1,
       "body": "Tee-2",
       "head": "Twists",
       "pools": [
@@ -310,6 +369,8 @@
     },
     {
       "id": 34,
+      "file": "peep-34.svg",
+      "charge": 1,
       "body": "Coffee",
       "head": "hat-hip",
       "pools": [
@@ -318,6 +379,8 @@
     },
     {
       "id": 35,
+      "file": "peep-35.svg",
+      "charge": 1,
       "body": "Tee-Arms-Crossed",
       "head": "Bun",
       "pools": [
@@ -326,6 +389,8 @@
     },
     {
       "id": 36,
+      "file": "peep-36.svg",
+      "charge": 1,
       "body": "Blazer-Black-Tee",
       "head": "No-Hair-3",
       "pools": [
@@ -333,24 +398,20 @@
       ]
     },
     {
-      "id": 37,
-      "body": "Button-Shirt-1",
-      "head": "Medium-2",
-      "pools": [
-        "mixed",
-        "mens_squad"
-      ]
-    },
-    {
       "id": 38,
+      "file": "charge2/peep-38.svg",
+      "charge": 2,
       "body": "Coffee",
       "head": "Hijab",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 39,
+      "file": "peep-39.svg",
+      "charge": 1,
       "body": "Paper",
       "head": "Cornrows-2",
       "pools": [
@@ -359,6 +420,8 @@
     },
     {
       "id": 40,
+      "file": "peep-40.svg",
+      "charge": 1,
       "body": "Striped-Tee",
       "head": "Turban",
       "pools": [
@@ -368,6 +431,8 @@
     },
     {
       "id": 41,
+      "file": "peep-41.svg",
+      "charge": 1,
       "body": "Fur-Jacket",
       "head": "hat-hip",
       "pools": [
@@ -376,6 +441,8 @@
     },
     {
       "id": 42,
+      "file": "peep-42.svg",
+      "charge": 1,
       "body": "Fur-Jacket",
       "head": "No-Hair-3",
       "pools": [
@@ -384,6 +451,8 @@
     },
     {
       "id": 43,
+      "file": "peep-43.svg",
+      "charge": 1,
       "body": "Device",
       "head": "Twists-2",
       "pools": [
@@ -392,6 +461,8 @@
     },
     {
       "id": 44,
+      "file": "peep-44.svg",
+      "charge": 1,
       "body": "Whatever",
       "head": "Shaved-2",
       "pools": [
@@ -400,6 +471,8 @@
     },
     {
       "id": 45,
+      "file": "peep-45.svg",
+      "charge": 1,
       "body": "Device",
       "head": "Afro",
       "pools": [
@@ -408,6 +481,8 @@
     },
     {
       "id": 46,
+      "file": "peep-46.svg",
+      "charge": 1,
       "body": "Macbook",
       "head": "Short-5",
       "pools": [
@@ -416,6 +491,8 @@
     },
     {
       "id": 47,
+      "file": "peep-47.svg",
+      "charge": 1,
       "body": "Tee-Arms-Crossed",
       "head": "Twists",
       "pools": [
@@ -425,14 +502,19 @@
     },
     {
       "id": 48,
+      "file": "charge2/peep-48.svg",
+      "charge": 2,
       "body": "Sporty-Tee",
       "head": "Bun-2",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 49,
+      "file": "peep-49.svg",
+      "charge": 1,
       "body": "Blazer-Black-Tee",
       "head": "Medium-Bangs-2",
       "pools": [
@@ -441,6 +523,8 @@
     },
     {
       "id": 50,
+      "file": "peep-50.svg",
+      "charge": 1,
       "body": "Shirt-and-Coat",
       "head": "Short-4",
       "pools": [
@@ -450,6 +534,8 @@
     },
     {
       "id": 51,
+      "file": "peep-51.svg",
+      "charge": 1,
       "body": "Hoodie",
       "head": "No-Hair-1",
       "pools": [
@@ -459,6 +545,8 @@
     },
     {
       "id": 52,
+      "file": "peep-52.svg",
+      "charge": 1,
       "body": "Polka-Dot-Jacket",
       "head": "Shaved-3",
       "pools": [
@@ -468,6 +556,8 @@
     },
     {
       "id": 53,
+      "file": "peep-53.svg",
+      "charge": 1,
       "body": "Tee-2",
       "head": "Mohawk",
       "pools": [
@@ -477,6 +567,8 @@
     },
     {
       "id": 54,
+      "file": "peep-54.svg",
+      "charge": 1,
       "body": "Tee-1",
       "head": "Twists",
       "pools": [
@@ -486,6 +578,8 @@
     },
     {
       "id": 55,
+      "file": "peep-55.svg",
+      "charge": 1,
       "body": "Gym-Shirt",
       "head": "Mohawk-2",
       "pools": [
@@ -495,6 +589,8 @@
     },
     {
       "id": 56,
+      "file": "charge2/peep-56.svg",
+      "charge": 2,
       "body": "Dress",
       "head": "Medium-2",
       "pools": [
@@ -504,14 +600,19 @@
     },
     {
       "id": 57,
+      "file": "charge2/peep-57.svg",
+      "charge": 2,
       "body": "Explaining",
       "head": "Long-Curly",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 58,
+      "file": "peep-58.svg",
+      "charge": 1,
       "body": "Fur-Jacket",
       "head": "hat-hip",
       "pools": [
@@ -520,6 +621,8 @@
     },
     {
       "id": 59,
+      "file": "peep-59.svg",
+      "charge": 1,
       "body": "Coffee",
       "head": "Twists-2",
       "pools": [
@@ -528,46 +631,52 @@
     },
     {
       "id": 60,
+      "file": "charge2/peep-60.svg",
+      "charge": 2,
       "body": "Pointing-Up",
       "head": "Bun-2",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 61,
+      "file": "charge2/peep-61.svg",
+      "charge": 2,
       "body": "Thunder-T-Shirt",
       "head": "Long-Bangs",
       "pools": [
-        "mixed"
-      ]
-    },
-    {
-      "id": 62,
-      "body": "Explaining",
-      "head": "Medium-2",
-      "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 63,
+      "file": "charge2/peep-63.svg",
+      "charge": 2,
       "body": "Blazer-Black-Tee",
       "head": "Hijab",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 64,
+      "file": "charge2/peep-64.svg",
+      "charge": 2,
       "body": "Paper",
       "head": "Medium-Bangs-2",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 65,
+      "file": "peep-65.svg",
+      "charge": 1,
       "body": "Fur-Jacket",
       "head": "hat-hip",
       "pools": [
@@ -576,6 +685,8 @@
     },
     {
       "id": 66,
+      "file": "peep-66.svg",
+      "charge": 1,
       "body": "Tee-Arms-Crossed",
       "head": "Buns",
       "pools": [
@@ -584,6 +695,8 @@
     },
     {
       "id": 67,
+      "file": "peep-67.svg",
+      "charge": 1,
       "body": "Paper",
       "head": "Medium-1",
       "pools": [
@@ -592,6 +705,8 @@
     },
     {
       "id": 68,
+      "file": "peep-68.svg",
+      "charge": 1,
       "body": "Whatever",
       "head": "Flat-Top",
       "pools": [
@@ -599,16 +714,9 @@
       ]
     },
     {
-      "id": 69,
-      "body": "Sporty-Tee",
-      "head": "Cornrows-2",
-      "pools": [
-        "mixed",
-        "mens_squad"
-      ]
-    },
-    {
       "id": 70,
+      "file": "charge2/peep-70.svg",
+      "charge": 2,
       "body": "Dress",
       "head": "Bun",
       "pools": [
@@ -617,23 +725,20 @@
       ]
     },
     {
-      "id": 71,
-      "body": "Whatever",
-      "head": "Cornrows-2",
-      "pools": [
-        "mixed"
-      ]
-    },
-    {
       "id": 72,
+      "file": "charge2/peep-72.svg",
+      "charge": 2,
       "body": "Sporty-Tee",
       "head": "Hijab",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 73,
+      "file": "peep-73.svg",
+      "charge": 1,
       "body": "Blazer-Black-Tee",
       "head": "hat-beanie",
       "pools": [
@@ -642,6 +747,8 @@
     },
     {
       "id": 74,
+      "file": "peep-74.svg",
+      "charge": 1,
       "body": "Polka-Dot-Jacket",
       "head": "No-Hair-3",
       "pools": [
@@ -651,6 +758,8 @@
     },
     {
       "id": 75,
+      "file": "peep-75.svg",
+      "charge": 1,
       "body": "Tee-Selena",
       "head": "hat-beanie",
       "pools": [
@@ -660,6 +769,8 @@
     },
     {
       "id": 76,
+      "file": "peep-76.svg",
+      "charge": 1,
       "body": "Button-Shirt-1",
       "head": "hat-beanie",
       "pools": [
@@ -669,6 +780,8 @@
     },
     {
       "id": 77,
+      "file": "peep-77.svg",
+      "charge": 1,
       "body": "Killer",
       "head": "Afro",
       "pools": [
@@ -677,6 +790,8 @@
     },
     {
       "id": 78,
+      "file": "peep-78.svg",
+      "charge": 1,
       "body": "Device",
       "head": "Short-3",
       "pools": [
@@ -685,6 +800,8 @@
     },
     {
       "id": 79,
+      "file": "peep-79.svg",
+      "charge": 1,
       "body": "Hoodie",
       "head": "Bun-2",
       "pools": [
@@ -692,16 +809,9 @@
       ]
     },
     {
-      "id": 80,
-      "body": "Tee-2",
-      "head": "Cornrows",
-      "pools": [
-        "mixed",
-        "mens_squad"
-      ]
-    },
-    {
       "id": 81,
+      "file": "peep-81.svg",
+      "charge": 1,
       "body": "Blazer-Black-Tee",
       "head": "Medium-Bangs-2",
       "pools": [
@@ -710,14 +820,19 @@
     },
     {
       "id": 82,
+      "file": "charge2/peep-82.svg",
+      "charge": 2,
       "body": "Tee-1",
       "head": "Medium-Bangs-3",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 83,
+      "file": "peep-83.svg",
+      "charge": 1,
       "body": "Shirt-and-Coat",
       "head": "No-Hair-1",
       "pools": [
@@ -727,6 +842,8 @@
     },
     {
       "id": 84,
+      "file": "peep-84.svg",
+      "charge": 1,
       "body": "Polo-and-Sweater",
       "head": "Bangs-2",
       "pools": [
@@ -735,6 +852,8 @@
     },
     {
       "id": 85,
+      "file": "peep-85.svg",
+      "charge": 1,
       "body": "Sweater-Dots",
       "head": "Turban",
       "pools": [
@@ -743,6 +862,8 @@
     },
     {
       "id": 86,
+      "file": "peep-86.svg",
+      "charge": 1,
       "body": "Gym-Shirt",
       "head": "Medium-Straight",
       "pools": [
@@ -752,6 +873,8 @@
     },
     {
       "id": 87,
+      "file": "charge2/peep-87.svg",
+      "charge": 2,
       "body": "Dress",
       "head": "Medium-Bangs-3",
       "pools": [
@@ -761,22 +884,30 @@
     },
     {
       "id": 88,
+      "file": "charge2/peep-88.svg",
+      "charge": 2,
       "body": "Button-Shirt-1",
       "head": "Medium-Bangs",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 89,
+      "file": "charge2/peep-89.svg",
+      "charge": 2,
       "body": "Killer",
       "head": "Bun",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 90,
+      "file": "charge2/peep-90.svg",
+      "charge": 2,
       "body": "Polka-Dot-Jacket",
       "head": "Hijab",
       "pools": [
@@ -786,6 +917,8 @@
     },
     {
       "id": 91,
+      "file": "peep-91.svg",
+      "charge": 1,
       "body": "Tee-1",
       "head": "Twists-2",
       "pools": [
@@ -795,6 +928,8 @@
     },
     {
       "id": 92,
+      "file": "peep-92.svg",
+      "charge": 1,
       "body": "Button-Shirt-1",
       "head": "Twists",
       "pools": [
@@ -804,14 +939,19 @@
     },
     {
       "id": 93,
+      "file": "charge2/peep-93.svg",
+      "charge": 2,
       "body": "Sporty-Tee",
       "head": "Bun",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 94,
+      "file": "peep-94.svg",
+      "charge": 1,
       "body": "Tee-1",
       "head": "Bun-2",
       "pools": [
@@ -820,6 +960,8 @@
     },
     {
       "id": 95,
+      "file": "peep-95.svg",
+      "charge": 1,
       "body": "Striped-Pocket-Tee",
       "head": "Pomp",
       "pools": [
@@ -828,6 +970,8 @@
     },
     {
       "id": 96,
+      "file": "peep-96.svg",
+      "charge": 1,
       "body": "Shirt-and-Coat",
       "head": "Long-Curly",
       "pools": [
@@ -836,6 +980,8 @@
     },
     {
       "id": 97,
+      "file": "peep-97.svg",
+      "charge": 1,
       "body": "Sweater-Dots",
       "head": "Bear",
       "pools": [
@@ -843,16 +989,9 @@
       ]
     },
     {
-      "id": 98,
-      "body": "Gym-Shirt",
-      "head": "Long-Afro",
-      "pools": [
-        "mixed",
-        "mens_squad"
-      ]
-    },
-    {
       "id": 99,
+      "file": "peep-99.svg",
+      "charge": 1,
       "body": "Polo-and-Sweater",
       "head": "Gray-Short",
       "pools": [
@@ -861,6 +1000,8 @@
     },
     {
       "id": 100,
+      "file": "peep-100.svg",
+      "charge": 1,
       "body": "Button-Shirt-1",
       "head": "No-Hair-3",
       "pools": [
@@ -870,6 +1011,8 @@
     },
     {
       "id": 101,
+      "file": "peep-101.svg",
+      "charge": 1,
       "body": "Blazer-Black-Tee",
       "head": "Gray-Medium",
       "pools": [
@@ -878,14 +1021,19 @@
     },
     {
       "id": 102,
+      "file": "charge2/peep-102.svg",
+      "charge": 2,
       "body": "Coffee",
       "head": "Gray-Bun",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     },
     {
       "id": 103,
+      "file": "peep-103.svg",
+      "charge": 1,
       "body": "Gaming",
       "head": "No-Hair-1",
       "pools": [
@@ -894,6 +1042,8 @@
     },
     {
       "id": 104,
+      "file": "peep-104.svg",
+      "charge": 1,
       "body": "Thunder-T-Shirt",
       "head": "Gray-Short",
       "pools": [
@@ -903,10 +1053,13 @@
     },
     {
       "id": 105,
+      "file": "charge2/peep-105.svg",
+      "charge": 2,
       "body": "Blazer-Black-Tee",
       "head": "Gray-Bun",
       "pools": [
-        "mixed"
+        "mixed",
+        "womens_squad"
       ]
     }
   ]

@@ -2,7 +2,11 @@ import catalog from "./portrait-bust-catalog.json";
 
 export type PortraitPool = "mens_squad" | "mixed" | "womens_squad";
 
-export const PORTRAIT_BUST_COUNT = catalog.busts.length;
+/** Open Peeps vendor id range (stable portrait_seed → bust id). */
+export const PORTRAIT_BUST_COUNT =
+  "vendor_max" in catalog && typeof catalog.vendor_max === "number"
+    ? catalog.vendor_max
+    : catalog.busts.length;
 
 const poolIds: Record<PortraitPool, readonly number[]> = {
   mens_squad: catalog.busts.filter((b) => b.pools.includes("mens_squad")).map((b) => b.id),

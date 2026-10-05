@@ -1,15 +1,19 @@
 #!/usr/bin/env node
 /**
- * Scan baked bust SVGs and emit portrait-bust-catalog.json (pools for pitch vs staff).
- * mens_squad = strict allowlist for men's football on the pitch (staff uses mixed).
+ * Scan baked bust SVGs (charge 1 in bust/, charge 2 in bust/charge2/) and emit portrait-bust-catalog.json.
+ * Catalog id = Open Peeps vendor id (1..105) so portrait_seed mapping stays stable.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import charge2VendorIds from "../src/ui/portraits/portrait-charge2-vendor-ids.json" with { type: "json" };
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const charge2Set = new Set(charge2VendorIds);
 const bustDir = join(root, "public/assets/portraits/bust");
 const outPath = join(root, "src/ui/portraits/portrait-bust-catalog.json");
+
+const VENDOR_MAX = 105;
 
 /** Bodies that read as matchday / casual mens sportswear in Open Peeps. */
 const MENS_ALLOWED_BODIES = new Set([
@@ -45,6 +49,15 @@ const MENS_EXCLUDED_HEADS = new Set([
 
 const WOMENS_INCLUDE_BODIES = new Set(["Dress", "Tee-Selena", "Polka-Dot-Jacket"]);
 
+function resolveBustFile(vendorId) {
+  const primary = join(bustDir, `peep-${vendorId}.svg`);
+  if (existsSync(primary)) return { file: `peep-${vendorId}.svg`, charge: 1 };
+  if (!charge2Set.has(vendorId)) return null;
+  const charge2 = join(bustDir, "charge2", `peep-${vendorId}.svg`);
+  if (existsSync(charge2)) return { file: `charge2/peep-${vendorId}.svg`, charge: 2 };
+  return null;
+}
+
 function parseLayers(svg) {
   const body = svg.match(/id="body\/([^"]+)"/)?.[1] ?? "Unknown";
   const head = svg.match(/id="head\/([^"]+)"/)?.[1] ?? "Unknown";
@@ -58,21 +71,27 @@ function qualifiesForMensSquad(body, head) {
 }
 
 const busts = [];
-for (let id = 1; id <= 105; id++) {
-  const svg = readFileSync(join(bustDir, `peep-${id}.svg`), "utf8");
+for (let id = 1; id <= VENDOR_MAX; id++) {
+  const resolved = resolveBustFile(id);
+  if (!resolved) continue;
+
+  const { file, charge } = resolved;
+  const svg = readFileSync(join(bustDir, file), "utf8");
   const { body, head } = parseLayers(svg);
   const pools = ["mixed"];
-  if (qualifiesForMensSquad(body, head)) {
+  if (charge === 1 && qualifiesForMensSquad(body, head)) {
     pools.push("mens_squad");
   }
-  if (WOMENS_INCLUDE_BODIES.has(body)) {
+  if (charge === 2 || WOMENS_INCLUDE_BODIES.has(body)) {
     pools.push("womens_squad");
   }
-  busts.push({ id, body, head, pools });
+  busts.push({ id, file, charge, body, head, pools });
 }
 
 const catalog = {
-  version: 2,
+  version: 3,
+  vendor_max: VENDOR_MAX,
+  charge2_vendor_ids: [...charge2VendorIds],
   mens_allowed_bodies: [...MENS_ALLOWED_BODIES],
   mens_excluded_heads: [...MENS_EXCLUDED_HEADS],
   busts,
@@ -80,4 +99,6 @@ const catalog = {
 
 writeFileSync(outPath, `${JSON.stringify(catalog, null, 2)}\n`, "utf8");
 const mensCount = busts.filter((b) => b.pools.includes("mens_squad")).length;
-console.log(`Wrote ${outPath} (${busts.length} busts, mens_squad=${mensCount})`);
+const c1 = busts.filter((b) => b.charge === 1).length;
+const c2 = busts.filter((b) => b.charge === 2).length;
+console.log(`Wrote ${outPath} (${busts.length} busts, charge1=${c1}, charge2=${c2}, mens_squad=${mensCount})`);

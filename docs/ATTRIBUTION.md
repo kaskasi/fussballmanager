@@ -10,7 +10,7 @@ Mood photos, textures, and avatars use **CC0 / open licenses** — no generative
 | Scout map / chronicle paper | [Paper003 from ambientCG.com](https://ambientcg.com/a/Paper003) (CC0) — tiled UI chrome |
 | Banden board texture | [Wood066 from ambientCG.com](https://ambientcg.com/a/Wood066) (CC0) — `public/assets/textures/wood066-color.jpg` |
 | Magnific stock (when used) | Photo from [Magnific](https://www.magnific.com/) |
-| Player portraits (Open Peeps busts, token-recolored) | [Open Peeps](https://www.openpeeps.com/) by Pablo Stanley (CC0) — `public/assets/portraits/bust/`; pitch players use `mens_squad` pool |
+| Player portraits (Open Peeps busts, token-recolored) | [Open Peeps](https://www.openpeeps.com/) by Pablo Stanley (CC0) — charge 1 `bust/` (mens pitch pool), charge 2 `bust/charge2/` (female busts, `womens_squad`); ids in `portrait-charge2-vendor-ids.json` |
 | Kenney tiles / patterns / icons (when shipped) | [Kenney.nl](https://www.kenney.nl) (CC0) — remapped only; source zips in `assets/kenney.nl/` |
 | UI paper texture | [Paper003 from ambientCG.com](https://ambientcg.com/a/Paper003) (CC0) — `public/assets/textures/paper003-color.jpg` |
 | Browser favicon & PWA icons | Project-authored SVG/PNG (`public/favicon.svg`, `public/apple-touch-icon.png`) — Nordstern mark, design tokens §2 |

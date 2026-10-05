@@ -28,7 +28,6 @@ describe("bustIdFromPortraitSeed", () => {
 
   it("uses full catalog for mixed pool", () => {
     expect(bustIdFromPortraitSeed(42, "mixed")).toBe(mixedIds[42 % mixedIds.length]);
-    expect(bustIdFromPortraitSeed(42, "mixed")).toBe(43);
   });
 
   it("never picks non-mens pitch busts (dress, killer, hijab heads, …)", () => {
@@ -42,19 +41,19 @@ describe("bustIdFromPortraitSeed", () => {
 });
 
 describe("portraitBustUrl", () => {
-  it("returns public path for bust 1", () => {
-    expect(portraitBustUrl(1)).toBe("/assets/portraits/bust/peep-1.svg");
+  it("returns public path for bust 1 (charge1 or charge2 file)", () => {
+    expect(portraitBustUrl(1)).toMatch(/^\/assets\/portraits\/bust\/(peep-1\.svg|charge2\/peep-1\.svg)$/);
   });
 
   it("clamps out-of-range ids", () => {
-    expect(portraitBustUrl(999)).toBe("/assets/portraits/bust/peep-105.svg");
-    expect(portraitBustUrl(0)).toBe("/assets/portraits/bust/peep-1.svg");
+    expect(portraitBustUrl(999)).toBe(portraitBustUrl(PORTRAIT_BUST_COUNT));
+    expect(portraitBustUrl(0)).toBe(portraitBustUrl(1));
   });
 });
 
 describe("portraitUrlFromSeed", () => {
   it("combines seed mapping and url", () => {
     const id = bustIdFromPortraitSeed(42);
-    expect(portraitUrlFromSeed(42)).toBe(`/assets/portraits/bust/peep-${id}.svg`);
+    expect(portraitUrlFromSeed(42)).toBe(portraitBustUrl(id));
   });
 });

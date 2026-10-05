@@ -1,5 +1,5 @@
 /** WIREFRAME: docs/prd/design.md §9.15 — Matchday live */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { BroadcastStoryContext, SandboxPlan, Squad } from "@fussballmanager/shared";
 import type { TacticsPresetId, TacticsPresetSlot } from "./tactics-presets.ts";
 import type { Player } from "../types/player.ts";
@@ -13,8 +13,6 @@ import {
 import { CareerLineupScreen } from "./CareerLineupScreen.tsx";
 import { squadForLeagueClub } from "../sim/league-divisions.ts";
 import type { MatchLineupState } from "./lineup-board.ts";
-import { Lineup } from "./Lineup.tsx";
-import { MatchPresentationToggle } from "./MatchPresentationToggle.tsx";
 import { MatchStage } from "./MatchStage.tsx";
 import { useMatchPresentationMode } from "./match-presentation-mode.ts";
 import { Scoreboard } from "./Scoreboard.tsx";
@@ -22,6 +20,7 @@ import { buildPreMatchBrief } from "./pre-match-brief.ts";
 import { PreMatchBlock } from "./PreMatchBlock.tsx";
 import { useMatchPlayback } from "./useMatchPlayback.ts";
 import { MatchReportScreen } from "./MatchReportScreen.tsx";
+import { MatchdayLivePanel } from "./MatchdayLivePanel.tsx";
 import type { MatchdayCashBreakdown } from "../stadium/matchday-commerce.ts";
 import type { FanbaseMood } from "../stadium/fanbase.ts";
 import { matchAmbiencePhotoUrl } from "../ui/assets/mood-photos.ts";
@@ -40,6 +39,8 @@ export function CareerMatch({
   onComplete,
   onSkip,
   onNavActionChange,
+  onSelectMatchPlayer,
+  onRegisterSkipToReport,
   broadcastStory,
   kasse,
   homeStadiumCapacity,
@@ -59,6 +60,8 @@ export function CareerMatch({
   onComplete: (outcome: WatchedPlayerMatch) => void;
   onSkip: (outcome: WatchedPlayerMatch) => void;
   onNavActionChange: (action: NavPrimaryAction | null) => void;
+  onSelectMatchPlayer?: (playerId: string) => void;
+  onRegisterSkipToReport?: (fn: (() => void) | null) => void;
   broadcastStory?: BroadcastStoryContext;
   kasse?: MatchdayCashBreakdown;
   homeStadiumCapacity?: number;
@@ -116,6 +119,8 @@ export function CareerMatch({
       onComplete={onComplete}
       onSkip={onSkip}
       onNavActionChange={onNavActionChange}
+      onSelectMatchPlayer={onSelectMatchPlayer}
+      onRegisterSkipToReport={onRegisterSkipToReport}
       broadcastStory={broadcastStory}
       kasse={kasse}
       backdropPhotoUrl={backdropPhotoUrl}
@@ -133,6 +138,8 @@ function CareerMatchPlayback({
   onComplete,
   onSkip,
   onNavActionChange,
+  onSelectMatchPlayer,
+  onRegisterSkipToReport,
   broadcastStory,
   kasse,
   backdropPhotoUrl,
@@ -146,6 +153,8 @@ function CareerMatchPlayback({
   onComplete: (outcome: WatchedPlayerMatch) => void;
   onSkip: (outcome: WatchedPlayerMatch) => void;
   onNavActionChange: (action: NavPrimaryAction | null) => void;
+  onSelectMatchPlayer?: (playerId: string) => void;
+  onRegisterSkipToReport?: (fn: (() => void) | null) => void;
   broadcastStory?: BroadcastStoryContext;
   kasse?: MatchdayCashBreakdown;
   backdropPhotoUrl?: string;
@@ -241,15 +250,6 @@ function CareerMatchPlayback({
   const frame = playback.frame;
   const finished = view ? playback.index >= view.frames.length - 1 : false;
 
-  const openReport = useCallback(
-    (simulated: boolean) => {
-      playback.goToEnd();
-      setFastSim(simulated);
-      setReportOpen(true);
-    },
-    [playback.goToEnd],
-  );
-
   useEffect(() => {
     if (finished && view && !reportOpen && !loading) {
       setFastSim(false);
@@ -258,13 +258,32 @@ function CareerMatchPlayback({
   }, [finished, view, reportOpen, loading]);
 
   useEffect(() => {
+    if (!onRegisterSkipToReport) return;
+    if (reportOpen || !view || loading) {
+      onRegisterSkipToReport(null);
+      return;
+    }
+    onRegisterSkipToReport(() => {
+      playback.goToEnd();
+      setFastSim(true);
+      setReportOpen(true);
+    });
+    return () => onRegisterSkipToReport(null);
+  }, [loading, onRegisterSkipToReport, playback.goToEnd, reportOpen, view]);
+
+  useEffect(() => {
     const outcome = view ? watchedMatchFromView(setup, view) : null;
+    const atKickoff = playback.index === 0 && !playback.playing;
     onNavActionChange({
       label: simulating
         ? "…"
         : reportOpen
           ? "Spieltag abschließen"
-          : "Spiel simulieren",
+          : playback.playing
+            ? "Pause"
+            : atKickoff
+              ? "Spiel simulieren"
+              : "Fortsetzen",
       onClick: () => {
         if (!outcome) return;
         if (reportOpen) {
@@ -272,12 +291,18 @@ function CareerMatchPlayback({
           else onComplete(outcome);
           return;
         }
-        openReport(true);
+        if (playback.playing) {
+          playback.pause();
+          return;
+        }
+        playback.play();
       },
       disabled: simulating || loading || !outcome,
       title: reportOpen
         ? "Ergebnis übernehmen und zum Sonntag"
-        : "Spiel überspringen — Spielbericht anzeigen",
+        : playback.playing
+          ? "Simulation pausieren"
+          : "Simulation starten oder fortsetzen",
     });
     return () => onNavActionChange(null);
   }, [
@@ -286,7 +311,10 @@ function CareerMatchPlayback({
     onComplete,
     onNavActionChange,
     onSkip,
-    openReport,
+    playback.index,
+    playback.pause,
+    playback.play,
+    playback.playing,
     reportOpen,
     simulating,
     setup.seed,
@@ -304,75 +332,8 @@ function CareerMatchPlayback({
         .filter(Boolean)
         .join(" ")}
     >
-      {!reportOpen ? (
-      <div className="career-match-hud">
-        {view && frame ? (
-          <Scoreboard view={view} frame={frame} compact />
-        ) : (
-          <header className="scoreboard scoreboard--compact">
-            <p className="eyebrow">Spieltag {setup.matchday}</p>
-            <h1 className="career-match-placeholder-title">
-              {setup.isHome ? "Heim" : "Auswärts"} vs {setup.opponentShortName}
-            </h1>
-          </header>
-        )}
-
-        <div className="career-match-actions career-match-actions--inline">
-          <div className="transport">
-            <button
-              type="button"
-              className="step"
-              onClick={playback.stepBack}
-              disabled={!view || loading}
-              aria-label="Schritt zurück"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              className={`playpause ${playback.playing ? "is-playing" : ""}`}
-              onClick={playback.toggle}
-              disabled={!view || loading}
-            >
-              {playback.playing ? "Pause" : "Play"}
-            </button>
-            <button
-              type="button"
-              className="step"
-              onClick={playback.stepForward}
-              disabled={!view || loading}
-              aria-label="Schritt vor"
-            >
-              ›
-            </button>
-          </div>
-          <MatchPresentationToggle
-            value={presentationMode}
-            onChange={setPresentationMode}
-            disabled={!view || loading}
-          />
-          <label className="career-match-speed">
-            Speed
-            <select
-              value={playback.speed}
-              onChange={(event) => playback.setSpeed(Number(event.target.value))}
-              disabled={!view || loading}
-            >
-              <option value={1}>1×</option>
-              <option value={2}>2×</option>
-              <option value={4}>4×</option>
-              <option value={8}>8×</option>
-              <option value={16}>16×</option>
-            </select>
-          </label>
-        </div>
-      </div>
-      ) : null}
-
       {loading ? <p className="status">Spiel wird vorbereitet…</p> : null}
       {error ? <p className="status error">{error}</p> : null}
-
-      {!view && !error ? <PreMatchBlock brief={preMatch} /> : null}
 
       {view && reportOpen ? (
         <MatchReportScreen
@@ -381,29 +342,67 @@ function CareerMatchPlayback({
           week={week}
           weekday={weekday}
           kasse={kasse}
+          onSelectPlayer={onSelectMatchPlayer}
         />
-      ) : null}
+      ) : (
+        <div className="matchday-cockpit">
+          <div className="matchday-cockpit-hero">
+            {view && frame ? (
+              <Scoreboard view={view} frame={frame} compact />
+            ) : (
+              <header className="scoreboard scoreboard--compact matchday-preview-score">
+                <p className="eyebrow">Spieltag {setup.matchday}</p>
+                <h1 className="career-match-placeholder-title">
+                  {setup.isHome ? "Heim" : "Auswärts"} vs {setup.opponentShortName}
+                </h1>
+              </header>
+            )}
 
-      {view && frame && !reportOpen ? (
-        <>
-          <MatchStage
-            mode={presentationMode}
-            view={view}
-            frame={frame}
-            previous={playback.previous}
-            playing={playback.playing}
-            frameDurationMs={playback.frameDurationMs}
-            visibleLines={playback.visibleLines}
-            preMatch={preMatch}
-            className="career-match-stage"
-            backdropPhotoUrl={backdropPhotoUrl}
-          />
-          <details className="career-match-lineups">
-            <summary>Aufstellungen</summary>
-            <Lineup view={view} frame={frame} />
-          </details>
-        </>
-      ) : null}
+            {view && frame && !reportOpen ? (
+              <MatchStage
+                mode={presentationMode}
+                view={view}
+                frame={frame}
+                previous={playback.previous}
+                playing={playback.playing}
+                frameDurationMs={playback.frameDurationMs}
+                visibleLines={playback.visibleLines}
+                preMatch={null}
+                className="career-match-stage"
+                backdropPhotoUrl={backdropPhotoUrl}
+              />
+            ) : null}
+
+            {!view && !error ? <PreMatchBlock brief={preMatch} /> : null}
+          </div>
+
+          {view && frame && !reportOpen ? (
+            <MatchdayLivePanel
+              view={view}
+              frame={frame}
+              visibleLines={playback.visibleLines}
+              preMatch={preMatch}
+              presentationMode={presentationMode}
+              onPresentationModeChange={setPresentationMode}
+              playing={playback.playing}
+              onTogglePlay={playback.toggle}
+              onStepBack={playback.stepBack}
+              onStepForward={playback.stepForward}
+              speed={playback.speed}
+              onSpeedChange={playback.setSpeed}
+              disabled={loading}
+            />
+          ) : !view && !error ? (
+            <aside className="matchday-cockpit-side matchday-cockpit-side--preview game-panel" aria-label="Vorschau">
+              <h2 className="match-report-section-title">Vorschau</h2>
+              <p className="matchday-preview-copy">
+                Aufstellung bestätigt — Header startet die Simulation. Steuerung und Log erscheinen rechts nach dem
+                Anpfiff.
+              </p>
+            </aside>
+          ) : null}
+        </div>
+      )}
     </main>
   );
 }

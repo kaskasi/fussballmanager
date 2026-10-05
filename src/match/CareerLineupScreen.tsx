@@ -40,6 +40,8 @@ import { buildOpponentLineupPreview } from "./opponent-lineup-preview.ts";
 import { clubShortName } from "../sim/league-week.ts";
 import { careerTeamId } from "../sim/rival-growth.ts";
 import { formatCalendarWeek } from "../sim/game-calendar.ts";
+import { listProSquad, sortProSquadRows } from "../squad/pro-roster.ts";
+import { formMark } from "../ui/player-profile.ts";
 
 type CareerLineupScreenProps = {
   setup: CareerMatchSetup;
@@ -100,6 +102,14 @@ export function CareerLineupScreen({
   );
   const playerTeamLabel = clubShortName(setup.playerClubId);
   const filledCount = lineupSlotCount(assignments, plan.formation);
+  const squadTableRows = useMemo(() => {
+    const assigned = new Set(Object.values(assignments).filter(Boolean));
+    const rows = listProSquad(players, managerClubId);
+    return sortProSquadRows(rows, "position", "asc").map((row) => ({
+      ...row,
+      role: assigned.has(row.playerId) ? "Start" : "Bank",
+    }));
+  }, [players, managerClubId, assignments]);
   const squad = useMemo(
     () => buildSquadFromAssignments(players, plan, assignments, setup.playerClubId, managerClubId),
     [players, plan, assignments, setup.playerClubId, managerClubId],
@@ -369,6 +379,39 @@ export function CareerLineupScreen({
             Spieler ziehen.
           </p>
         ) : null}
+
+        <section className="lineup-squad-table-wrap game-panel" aria-label="Kaderübersicht">
+          <h2 className="lineup-squad-table-title">Kader</h2>
+          <table className="lineup-squad-table">
+            <thead>
+              <tr>
+                <th scope="col">Pos</th>
+                <th scope="col">Name</th>
+                <th scope="col">Alter</th>
+                <th scope="col">CA</th>
+                <th scope="col">Form</th>
+                <th scope="col">Einsatz</th>
+              </tr>
+            </thead>
+            <tbody>
+              {squadTableRows.map((row) => {
+                const form = formMark(row.form);
+                return (
+                  <tr key={row.playerId}>
+                    <td>{row.position}</td>
+                    <td>{row.displayName}</td>
+                    <td>{row.age}</td>
+                    <td>{row.ca}</td>
+                    <td className={`lineup-squad-form is-${form.tone}`}>
+                      <span aria-hidden="true">{form.mark}</span> {row.form.toFixed(2)}
+                    </td>
+                    <td>{row.role}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </section>
       </section>
     </main>
   );

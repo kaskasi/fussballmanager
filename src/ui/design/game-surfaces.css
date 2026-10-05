@@ -1456,6 +1456,40 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   font-weight: 600;
 }
 
+.matchday-preview-kicker {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinte-weich);
+}
+
+.matchday-preview-lineups {
+  max-height: min(22rem, 45dvh);
+}
+
+.matchday-preview-hint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--tinte-weich);
+  font-weight: 600;
+}
+
+.matchday-preview-hint-em {
+  font-weight: 800;
+  color: var(--tinte);
+}
+
+.matchday-hero-voice {
+  margin: 0;
+  padding: 0.35rem 0.15rem 0;
+  font-size: 0.82rem;
+  color: var(--tinte-weich);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .career-match .career-match-stage {
   min-height: 0;
 }

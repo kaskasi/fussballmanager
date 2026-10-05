@@ -18,9 +18,10 @@ import { useMatchPresentationMode } from "./match-presentation-mode.ts";
 import { Scoreboard } from "./Scoreboard.tsx";
 import { buildPreMatchBrief } from "./pre-match-brief.ts";
 import { PreMatchBlock } from "./PreMatchBlock.tsx";
-import { useMatchPlayback } from "./useMatchPlayback.ts";
+import { frameAt, useMatchPlayback } from "./useMatchPlayback.ts";
 import { MatchReportScreen } from "./MatchReportScreen.tsx";
 import { MatchdayLivePanel } from "./MatchdayLivePanel.tsx";
+import { MatchdayPreviewPanel } from "./MatchdayPreviewPanel.tsx";
 import type { MatchdayCashBreakdown } from "../stadium/matchday-commerce.ts";
 import type { FanbaseMood } from "../stadium/fanbase.ts";
 import { matchAmbiencePhotoUrl } from "../ui/assets/mood-photos.ts";
@@ -245,25 +246,42 @@ function CareerMatchPlayback({
       ) {
         return;
       }
+      if (!userStartedPlaybackRef.current) {
+        if (event.code === "Space" && view && !loading && !reportOpen) {
+          event.preventDefault();
+          markUserStartedPlayback();
+          playback.play();
+        }
+        return;
+      }
       if (event.code === "Space") {
         event.preventDefault();
-        markUserStartedPlayback();
         playback.toggle();
       } else if (event.code === "ArrowRight") {
         event.preventDefault();
-        markUserStartedPlayback();
         playback.stepForward();
       } else if (event.code === "ArrowLeft") {
         event.preventDefault();
-        markUserStartedPlayback();
         playback.stepBack();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [markUserStartedPlayback, playback.toggle, playback.stepForward, playback.stepBack]);
+  }, [
+    loading,
+    markUserStartedPlayback,
+    playback.play,
+    playback.stepBack,
+    playback.stepForward,
+    playback.toggle,
+    reportOpen,
+    view,
+  ]);
 
   const frame = playback.frame;
+  const inPreview = Boolean(view && !loading && !reportOpen && !userStartedPlayback);
+  const kickoffFrame = view ? frameAt(view, 0) : null;
+  const heroFrame = inPreview && kickoffFrame ? kickoffFrame : frame;
   const finished = playback.atEnd;
 
   useEffect(() => {
@@ -353,7 +371,8 @@ function CareerMatchPlayback({
         "matchday",
         "career-match",
         reportOpen ? "career-match--report" : "",
-        !reportOpen && presentationMode === "events" ? "career-match--events" : "",
+        inPreview ? "career-match--preview" : "",
+        !reportOpen && !inPreview && presentationMode === "events" ? "career-match--events" : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -373,8 +392,8 @@ function CareerMatchPlayback({
       ) : (
         <div className="matchday-cockpit">
           <div className="matchday-cockpit-hero">
-            {view && frame ? (
-              <Scoreboard view={view} frame={frame} compact />
+            {view && heroFrame ? (
+              <Scoreboard view={view} frame={heroFrame} compact />
             ) : (
               <header className="scoreboard scoreboard--compact matchday-preview-score">
                 <p className="eyebrow">Spieltag {setup.matchday}</p>
@@ -383,6 +402,21 @@ function CareerMatchPlayback({
                 </h1>
               </header>
             )}
+
+            {view && heroFrame && !reportOpen && inPreview ? (
+              <MatchStage
+                mode="pitch"
+                view={view}
+                frame={heroFrame}
+                previous={heroFrame}
+                playing={false}
+                frameDurationMs={playback.frameDurationMs}
+                visibleLines={[]}
+                preMatch={null}
+                className="career-match-stage"
+                backdropPhotoUrl={backdropPhotoUrl}
+              />
+            ) : null}
 
             {view && frame && !reportOpen && userStartedPlayback ? (
               <MatchStage
@@ -400,8 +434,12 @@ function CareerMatchPlayback({
             ) : null}
 
             {!view && !error ? <PreMatchBlock brief={preMatch} /> : null}
-            {view && !reportOpen && !userStartedPlayback && !loading ? (
-              <PreMatchBlock brief={preMatch} />
+
+            {inPreview ? (
+              <p className="matchday-hero-voice">
+                <span className="match-voice-badge">Experte</span>
+                {preMatch.colorLine}
+              </p>
             ) : null}
           </div>
 
@@ -438,14 +476,8 @@ function CareerMatchPlayback({
                 Anpfiff.
               </p>
             </aside>
-          ) : view && !reportOpen && !userStartedPlayback && !loading ? (
-            <aside className="matchday-cockpit-side matchday-cockpit-side--preview game-panel" aria-label="Vorschau">
-              <h2 className="match-report-section-title">Anpfiff</h2>
-              <p className="matchday-preview-copy">
-                Gelber Header: <strong>Spiel simulieren</strong>. Danach laufen Spielfeld, Ereignisse und Steuerung
-                hier rechts.
-              </p>
-            </aside>
+          ) : view && inPreview ? (
+            <MatchdayPreviewPanel view={view} />
           ) : null}
         </div>
       )}

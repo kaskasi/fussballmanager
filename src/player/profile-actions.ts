@@ -3,6 +3,7 @@ import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { needsYouthContract, signYouthContract } from "./youth-contract.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import { CONTRACT_SIGN_COOLDOWN_DAYS, lockContractTalks } from "../transfers/contract-talks.ts";
+import { LEAGUE_LAST_WEEK } from "../sim/game-calendar.ts";
 import { formatSeasonLabel } from "../sim/season-label.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
@@ -20,6 +21,20 @@ export type PlayerProfileAction =
   | "release";
 
 const MIN_PRO_SQUAD = 11;
+export const PRAISE_COOLDOWN_WEEKS = 4;
+
+function seasonWeekOrdinal(season: number, week: number): number {
+  return (Math.max(1, season) - 1) * LEAGUE_LAST_WEEK + Math.max(1, week);
+}
+
+/** Whole weeks until praise is allowed again (0 = now). */
+export function praiseCooldownWeeksRemaining(player: Player, season: number, week: number): number {
+  const lastSeason = player.state.last_praise_season;
+  const lastWeek = player.state.last_praise_week;
+  if (lastSeason === undefined || lastWeek === undefined) return 0;
+  const elapsed = seasonWeekOrdinal(season, week) - seasonWeekOrdinal(lastSeason, lastWeek);
+  return Math.max(0, PRAISE_COOLDOWN_WEEKS - elapsed);
+}
 
 export interface ProfileMenuItem {
   action: PlayerProfileAction;
@@ -54,27 +69,31 @@ export function profileMenuItems(
   player: Player,
   owned: boolean,
   season = 1,
+  week = 1,
 ): ProfileMenuItem[] {
   if (!owned || player.squad_status === "loaned_out") return [];
 
   const items: ProfileMenuItem[] = [];
+  const praiseLocked = praiseCooldownWeeksRemaining(player, season, week);
   if (player.state.form >= 2) {
-    items.push({
-      action: "praise",
-      label: "Loben",
-      hint: "Gute Form bestätigen — Moral steigt.",
-    });
+    if (praiseLocked === 0) {
+      items.push({
+        action: "praise",
+        label: "Loben",
+        hint: "Gute Form bestätigen — Moral steigt. Max. einmal alle 4 Wochen.",
+      });
+    }
   } else if (player.state.form <= -1) {
     items.push({
       action: "criticize",
       label: "Kritisieren",
       hint: "Schwache Form ansprechen — Moral sinkt.",
     });
-  } else {
+  } else if (praiseLocked === 0) {
     items.push({
       action: "praise",
       label: "Ermutigen",
-      hint: "Kleiner Moral-Schub bei stabiler Form.",
+      hint: "Kleiner Moral-Schub bei stabiler Form. Max. einmal alle 4 Wochen.",
     });
   }
 
@@ -172,8 +191,23 @@ export function applyProfileAction(
 ): ProfileActionResult {
   switch (action) {
     case "praise": {
+      const locked = praiseCooldownWeeksRemaining(player, season, week);
+      if (locked > 0) {
+        return {
+          player,
+          message:
+            locked === 1
+              ? "Ermutigen/Loben erst wieder nächste Woche möglich."
+              : `Ermutigen/Loben erst wieder in ${locked} Wochen möglich.`,
+        };
+      }
       const boost = player.state.form >= 2 ? 10 : 5;
       const next = withMorale(player, boost);
+      next.state = {
+        ...next.state,
+        last_praise_season: season,
+        last_praise_week: week,
+      };
       return { player: next, message: `Moral ${boost > 8 ? "deutlich" : ""} gestiegen (+${boost}).` };
     }
     case "criticize": {

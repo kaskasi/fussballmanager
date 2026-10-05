@@ -203,7 +203,7 @@ export function PlayerProfile({
     setBlindBuyOpen(false);
     setSaleConfirmOpen(false);
   }, [player.id]);
-  const menuItems = profileMenuItems(player, owned, season);
+  const menuItems = profileMenuItems(player, owned, season, week ?? 1);
   const reveal = scoutEstimate ? scoutReveal(scoutEstimate.uncertaintyRange) : null;
   const hasScoutIntel = Boolean(scoutEstimate);
   const askingBounds =

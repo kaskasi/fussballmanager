@@ -55,6 +55,9 @@ export interface Player {
     desire_to_leave?: boolean;
     /** F5.4 — calendar day index; no new talks until this day. */
     contract_talks_locked_until_day?: number;
+    /** Manager praise / encourage — last use (4-week cooldown). */
+    last_praise_season?: number;
+    last_praise_week?: number;
     /** F2.8 — consecutive appearances with ≥1 goal (Chancentod clear). */
     scoring_streak?: number;
     /** F2.8 — goals in the last appearance (hat-trick clear). */

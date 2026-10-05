@@ -26,8 +26,23 @@ describe("profile actions", () => {
     const player = clonePlayer();
     player.state.form = 3;
     player.state.morale = 50;
-    const { player: next } = applyProfileAction(player, "praise");
+    const { player: next } = applyProfileAction(player, "praise", 1, 5);
     expect(next.state.morale).toBeGreaterThan(50);
+    expect(next.state.last_praise_week).toBe(5);
+  });
+
+  it("blocks praise within a four-week cooldown", () => {
+    const player = clonePlayer();
+    player.state.form = 0;
+    player.state.morale = 50;
+    player.state.last_praise_season = 1;
+    player.state.last_praise_week = 5;
+    const { player: next, message } = applyProfileAction(player, "praise", 1, 7);
+    expect(next.state.morale).toBe(50);
+    expect(message).toContain("Wochen");
+    expect(profileMenuItems(player, true, 1, 7).some((item) => item.action === "praise")).toBe(false);
+    const { player: ready } = applyProfileAction(player, "praise", 1, 9);
+    expect(ready.state.morale).toBeGreaterThan(50);
   });
 
   it("starts a pro trial from the u19 profile menu", () => {

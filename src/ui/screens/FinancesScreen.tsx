@@ -1,4 +1,15 @@
-import { useMemo } from "react";
+import { useMemo, type ComponentType } from "react";
+import {
+  Briefcase,
+  Flame,
+  Landmark,
+  Shirt,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Utensils,
+  Wallet,
+} from "lucide-react";
 import type { Player } from "../../types/player.ts";
 import {
   formatClubCash,
@@ -32,7 +43,7 @@ import {
 } from "../../stadium/club-stadium.ts";
 import { weekCommerceOccupancy } from "../../stadium/matchday-commerce.ts";
 import { weeklyPrecinctCash } from "../../stadium/precinct-effects.ts";
-import { fanbaseMoodIcon, fanbaseMood, formatFanbase } from "../../stadium/fanbase.ts";
+import { fanbaseMood, formatFanbase, type FanbaseMood } from "../../stadium/fanbase.ts";
 import { useT } from "../../i18n/react.ts";
 import { Hint } from "../components/Hint.tsx";
 import { COMMERCE_KIOSK_PHOTO } from "../assets/hub-photos.ts";
@@ -117,86 +128,103 @@ export function FinancesScreen({
   const monthNegative = waterfall.net < 0;
   const flows = seasonCategorizedFlows(finances, season, week);
 
+  const wageCapRatio =
+    finances.wage_budget_weekly > 0
+      ? Math.min(1, wageBill / finances.wage_budget_weekly)
+      : 0;
+
   return (
     <main className="finances screen-shell">
-      <header className="finances-head">
-        <button type="button" onClick={onBack} aria-label="Zurück zur Pipeline">
-          ←
-        </button>
+      <header className="finances-head screen-title-row">
         <div>
-          <p className="eyebrow">{t("finances.eyebrow")}</p>
-          <h1>{t("finances.title")}</h1>
-          <p className="finances-sub">
-            {formatSeasonLabel(season)} · Monat {month}
-          </p>
+          <button type="button" className="screen-back-link" onClick={onBack} aria-label="Zurück zur Pipeline">
+            ←
+          </button>
+          <h1>
+            {t("finances.title")} · Monat {month}
+          </h1>
+          <p className="finances-sub">{formatSeasonLabel(season)}</p>
+        </div>
+        <div className="finances-month-nav" aria-label="Monat">
+          <button type="button" disabled title="Folgt mit der Wochensimulation">
+            ◀
+          </button>
+          <button type="button" disabled title="Folgt mit der Wochensimulation">
+            ▶
+          </button>
         </div>
       </header>
 
-      <section className="finances-waterfall" aria-label={`Cashflow ${waterfall.title}`}>
-        <div className="finances-waterfall-head">
-          <div>
-            <h2>{waterfall.title}</h2>
-            {waterfall.caption ? <p className="finances-caption">{waterfall.caption}</p> : null}
-          </div>
-          <p className={waterfall.net >= 0 ? "finances-net is-up" : "finances-net is-down"}>
-            Saldo {formatSignedCash(waterfall.net)}
-          </p>
-        </div>
-        {waterfall.streams.length === 0 ? (
-          <p className="finances-empty">Keine Ströme in dieser Woche.</p>
-        ) : (
-          <ul className="finances-bars">
-            {waterfall.streams.map((line) => {
-              const peak = Math.max(...waterfall.streams.map((entry) => Math.abs(entry.amount)), 1);
-              const width = Math.max(10, (Math.abs(line.amount) / peak) * 100);
-              const income = line.amount > 0;
-              return (
-                <li
-                  key={line.kind}
-                  className={income ? "finances-bar is-income" : "finances-bar is-expense"}
-                  title={formatSignedCash(line.amount)}
-                >
-                  <span className="finances-bar-icon" aria-hidden="true">
-                    <FinanceLineIcon kind={line.kind} />
-                  </span>
-                  <span className="finances-bar-label">{financeLineLabel(line.kind)}</span>
-                  <span className="finances-bar-track" aria-hidden="true">
-                    <span className="finances-bar-fill" style={{ width: `${width}%` }} />
-                  </span>
-                  <span className="finances-bar-value">
-                    {line.amount > 0 ? `+${formatSignedCash(line.amount)}` : formatSignedCash(line.amount)}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        <p className="finances-range">
-          {formatClubCash(waterfall.snapshot.opening_cash)} →{" "}
-          {formatSignedCash(waterfall.snapshot.closing_cash)}
-        </p>
-      </section>
+      <section className="finances-hero game-panel" aria-label="Cashflow und Budget">
+        <div className="finances-hero-grid">
+          <section className="finances-waterfall" aria-label={`Cashflow ${waterfall.title}`}>
+            <div className="finances-waterfall-head">
+              <div>
+                <h2>{waterfall.title}</h2>
+                {waterfall.caption ? <p className="finances-caption">{waterfall.caption}</p> : null}
+              </div>
+              <p className={waterfall.net >= 0 ? "finances-net is-up" : "finances-net is-down"}>
+                Saldo {formatSignedCash(waterfall.net)}
+              </p>
+            </div>
+            {waterfall.streams.length === 0 ? (
+              <p className="finances-empty">Keine Ströme in dieser Woche.</p>
+            ) : (
+              <ul className="finances-bars">
+                {waterfall.streams.map((line) => {
+                  const peak = Math.max(...waterfall.streams.map((entry) => Math.abs(entry.amount)), 1);
+                  const width = Math.max(10, (Math.abs(line.amount) / peak) * 100);
+                  const income = line.amount > 0;
+                  return (
+                    <li
+                      key={line.kind}
+                      className={income ? "finances-bar is-income" : "finances-bar is-expense"}
+                      title={formatSignedCash(line.amount)}
+                    >
+                      <span className="finances-bar-icon" aria-hidden="true">
+                        <FinanceLineIcon kind={line.kind} />
+                      </span>
+                      <span className="finances-bar-label">{financeLineLabel(line.kind)}</span>
+                      <span className="finances-bar-track" aria-hidden="true">
+                        <span className="finances-bar-fill" style={{ width: `${width}%` }} />
+                      </span>
+                      <span className="finances-bar-value">
+                        {line.amount > 0 ? `+${formatSignedCash(line.amount)}` : formatSignedCash(line.amount)}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <p className="finances-range">
+              {formatClubCash(waterfall.snapshot.opening_cash)} →{" "}
+              {formatSignedCash(waterfall.snapshot.closing_cash)}
+            </p>
+          </section>
 
-      <section className="finances-summary" aria-label="Budget-Übersicht">
-        <BudgetCard
-          icon="🏦"
-          label="Kasse"
-          value={formatSignedCash(finances.cash)}
-          tone={finances.cash < 0 || belowFloor ? "bad" : "good"}
-        />
-        <BudgetCard
-          icon="💼"
-          label="Transfer-Topf"
-          value={formatClubCash(transferBudget(finances))}
-          tone="neutral"
-        />
-        <BudgetCard
-          icon="👕"
-          label="Gehalts-Cap"
-          value={`${formatClubCash(wageBill).replace("€ ", "")} / ${formatClubCash(finances.wage_budget_weekly).replace("€ ", "")}`}
-          tone={wageStatus === "over" ? "bad" : wageStatus === "warn" ? "warn" : "good"}
-          mark={wageStatus === "over" ? "◆" : wageStatus === "warn" ? "▲" : "●"}
-        />
+          <section className="finances-summary" aria-label="Budget-Übersicht">
+            <BudgetCard
+              icon={Wallet}
+              label="Kasse"
+              value={formatSignedCash(finances.cash)}
+              tone={finances.cash < 0 || belowFloor ? "bad" : "good"}
+            />
+            <BudgetCard
+              icon={Briefcase}
+              label="Transfer-Topf"
+              value={formatClubCash(transferBudget(finances))}
+              tone="neutral"
+            />
+            <BudgetCard
+              icon={Shirt}
+              label="Gehalts-Cap"
+              value={`${formatClubCash(wageBill).replace("€ ", "")} / ${formatClubCash(finances.wage_budget_weekly).replace("€ ", "")}`}
+              tone={wageStatus === "over" ? "bad" : wageStatus === "warn" ? "warn" : "good"}
+              wageCapRatio={wageCapRatio}
+              wageCapTone={wageStatus}
+            />
+          </section>
+        </div>
       </section>
 
       <section className="finances-detail-cards" aria-label="Kasse im Detail">
@@ -209,7 +237,8 @@ export function FinancesScreen({
               aria-hidden="true"
               decoding="async"
             />
-            🌭 Imbiss & Shop
+            <Utensils size={18} strokeWidth={2.5} aria-hidden />
+            Imbiss & Shop
           </h2>
           <p>
             <strong>{formatClubCash(merchWeek)}</strong>
@@ -220,18 +249,24 @@ export function FinancesScreen({
           </p>
         </article>
         <button type="button" className="finances-detail is-button" onClick={onOpenStadium}>
-          <h2>🏟️ Stadion</h2>
+          <h2>
+            <Landmark size={18} strokeWidth={2.5} aria-hidden />
+            Stadion
+          </h2>
           <p>
             <strong>{formatClubCash(isHomeMatchWeek ? tickets : 0)}</strong>
             <span>{isHomeMatchWeek ? " Heimspiel-Eintritt" : " kein Heimspiel"}</span>
           </p>
           <p className="finances-detail-sub">
-            {fanbaseMoodIcon(fanbaseMood(stadium.fanbase ?? DEFAULT_FANBASE))}{" "}
-            Fanbase {formatFanbase(stadium.fanbase ?? DEFAULT_FANBASE)} · voll {formatClubCash(tickets)}
+            <FanbaseMoodIcon mood={fanbaseMood(stadium.fanbase ?? DEFAULT_FANBASE)} /> Fanbase{" "}
+            {formatFanbase(stadium.fanbase ?? DEFAULT_FANBASE)} · voll {formatClubCash(tickets)}
           </p>
         </button>
         <article className={`finances-detail${belowFloor || finances.cash < 0 || monthNegative ? " is-warn" : ""}`}>
-          <h2>🛤️ Runway</h2>
+          <h2>
+            <TrendingDown size={18} strokeWidth={2.5} aria-hidden />
+            Runway
+          </h2>
           <p>
             <strong>{formatWeeksOfWages(weeksLeft)}</strong>
             <span> Gehälter</span>
@@ -255,7 +290,7 @@ export function FinancesScreen({
           >
             <polyline
               fill="none"
-              stroke="#047857"
+              stroke="currentColor"
               strokeWidth="3"
               strokeLinejoin="round"
               strokeLinecap="round"
@@ -270,7 +305,7 @@ export function FinancesScreen({
             {sparkline.map((value, index) => {
               const x = 10 + (index / (sparkline.length - 1)) * (SPARK_W - 20);
               const y = SPARK_H - 10 - ((value - sparkMin) / sparkSpan) * (SPARK_H - 20);
-              return <circle key={index} cx={x} cy={y} r="2.4" fill="#047857" />;
+              return <circle key={index} cx={x} cy={y} r="2.4" fill="currentColor" />;
             })}
           </svg>
         </Hint>
@@ -345,33 +380,50 @@ function CategoryFlowChart({
   );
 }
 
+function FanbaseMoodIcon({ mood }: { mood: FanbaseMood }) {
+  const props = { size: 16, strokeWidth: 2.5, "aria-hidden": true as const };
+  switch (mood) {
+    case "strong":
+      return <Flame {...props} />;
+    case "growing":
+      return <TrendingUp {...props} />;
+    case "steady":
+      return <Users {...props} />;
+    case "weak":
+      return <TrendingDown {...props} />;
+  }
+}
+
 function BudgetCard({
-  icon,
+  icon: Icon,
   label,
   value,
   tone,
-  mark,
+  wageCapRatio,
+  wageCapTone,
 }: {
-  icon: string;
+  icon: ComponentType<{ size?: number; strokeWidth?: number; "aria-hidden"?: boolean }>;
   label: string;
   value: string;
   tone: "good" | "warn" | "bad" | "neutral";
-  mark?: string;
+  wageCapRatio?: number;
+  wageCapTone?: "good" | "warn" | "over";
 }) {
   return (
     <div className={`finances-card is-${tone}`}>
       <span className="finances-card-label">
-        <span aria-hidden="true">{icon} </span>
+        <Icon size={16} strokeWidth={2.5} aria-hidden />
         {label}
       </span>
-      <strong className="finances-card-value">
-        {mark ? (
-          <span className="finances-card-mark" aria-hidden="true">
-            {mark}{" "}
-          </span>
-        ) : null}
-        {value}
-      </strong>
+      <strong className="finances-card-value">{value}</strong>
+      {wageCapRatio !== undefined ? (
+        <span className="finances-wage-cap-bar" aria-hidden="true">
+          <span
+            className={`finances-wage-cap-fill${wageCapTone === "over" ? " is-over" : wageCapTone === "warn" ? " is-warn" : ""}`}
+            style={{ width: `${Math.round(wageCapRatio * 100)}%` }}
+          />
+        </span>
+      ) : null}
     </div>
   );
 }

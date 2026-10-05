@@ -1,0 +1,408 @@
+/**
+ * Game surfaces — overrides legacy SaaS styling in index.css (Finanzen, Aufstellung)
+ * WIREFRAME: docs/prd/design.md §2, §9.1, §9.2
+ */
+
+:root {
+  --outline: 2px solid var(--tinte);
+}
+
+.game-panel {
+  background: var(--panel);
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-flat);
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+.finances-hero.game-panel {
+  margin-bottom: 1rem;
+}
+
+.finances-hero .finances-waterfall {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+
+.finances-waterfall,
+.finances-sparkline {
+  background: var(--panel);
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-flat) !important;
+}
+
+.finances-sparkline {
+  color: var(--rasen);
+}
+
+.finances-sparkline svg polyline,
+.finances-sparkline svg circle {
+  stroke: var(--rasen);
+  fill: var(--rasen);
+}
+
+.finances-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.finances-hero .finances-summary {
+  gap: 0.45rem;
+}
+
+.finances-card {
+  background: var(--panel-muted);
+  border: 2px solid rgba(62, 49, 40, 0.2);
+  border-radius: var(--radius-klein);
+  padding: 0.55rem 0.65rem;
+}
+
+.finances-card-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--tinte-weich);
+}
+
+.finances-card-value {
+  font-family: var(--font-display);
+  color: var(--tinte);
+}
+
+.finances-card.is-good .finances-card-value {
+  color: var(--rasen-dunkel);
+}
+
+.finances-card.is-warn .finances-card-value {
+  color: var(--terra-dunkel);
+}
+
+.finances-card.is-bad .finances-card-value {
+  color: var(--terra-dunkel);
+}
+
+.finances-wage-cap-bar {
+  margin-top: 0.45rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid rgba(62, 49, 40, 0.2);
+  overflow: hidden;
+}
+
+.finances-wage-cap-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--rasen);
+}
+
+.finances-wage-cap-fill.is-warn {
+  background: var(--terra);
+}
+
+.finances-wage-cap-fill.is-over {
+  background: var(--terra-dunkel);
+}
+
+.finances-sub,
+.finances-caption,
+.finances-range,
+.finances-empty {
+  color: var(--tinte-weich);
+}
+
+.finances-net {
+  font-family: var(--font-display);
+}
+
+.finances-net.is-up {
+  color: var(--rasen-dunkel);
+}
+
+.finances-net.is-down {
+  color: var(--terra-dunkel);
+}
+
+.finances-bar-track {
+  background: var(--panel-muted);
+}
+
+.finances-bar.is-income .finances-bar-fill {
+  background: var(--rasen);
+}
+
+.finances-bar.is-expense .finances-bar-fill {
+  background: var(--terra);
+}
+
+.finances-bar-value {
+  font-family: var(--font-display);
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(62, 49, 40, 0.15);
+}
+
+.finances-bar.is-income .finances-bar-value {
+  background: var(--rasen-hell);
+  color: var(--tinte);
+}
+
+.finances-bar.is-expense .finances-bar-value {
+  background: rgba(224, 122, 63, 0.25);
+  color: var(--tinte);
+}
+
+.finances-detail,
+.finances-detail.is-button {
+  background: var(--panel);
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-flat) !important;
+}
+
+.finances-detail h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.finances-month-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.finances-month-nav button {
+  width: 2rem;
+  height: 2rem;
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  background: #fff;
+  color: var(--tinte);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.finances-month-nav button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.career-lineup-panel {
+  background: var(--panel);
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-flat) !important;
+  backdrop-filter: none;
+}
+
+.career-lineup-sub {
+  color: var(--tinte-weich);
+}
+
+.career-lineup-hero {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+}
+
+@media (min-width: 900px) {
+  .career-lineup-hero {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+}
+
+.career-lineup-board {
+  margin-top: 0;
+}
+
+.lineup-bench {
+  background: var(--panel);
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-flat);
+  padding: 0.55rem 0.5rem;
+}
+
+.lineup-pitch-panel.game-panel-inner {
+  padding: 0.5rem;
+  background: var(--panel);
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-flat);
+}
+
+.lineup-pitch-wrap {
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  background: var(--rasen) !important;
+  box-shadow: none;
+}
+
+.lineup-pitch-grass {
+  fill: var(--rasen);
+}
+
+.lineup-pitch-tab.is-active {
+  border-color: var(--tinte);
+  background: var(--rasen);
+  color: var(--tinte);
+}
+
+.lineup-pitch-tab.is-opponent.is-active {
+  border-color: var(--tinte);
+  background: var(--staubblau);
+  color: var(--tinte);
+}
+
+.career-lineup-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.career-lineup-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: var(--outline);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  background: #fff;
+  color: var(--tinte);
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+  cursor: pointer;
+}
+
+.career-lineup-pill.is-active {
+  background: var(--rasen);
+  color: var(--tinte);
+}
+
+.career-lineup-context {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.lineup-opponent-card,
+.lineup-tactics-card {
+  background: var(--panel-muted);
+  border: 2px solid rgba(62, 49, 40, 0.25);
+  border-radius: var(--radius);
+  padding: 0.65rem 0.75rem;
+}
+
+.lineup-opponent-card h2,
+.lineup-tactics-card h2 {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--tinte);
+}
+
+.lineup-opponent-meta {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--tinte-weich);
+  font-weight: 600;
+}
+
+.lineup-tactics-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.lineup-tactics-pill-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.3rem;
+}
+
+.lineup-tactics-pill-row .lineup-tactics-pill {
+  flex: 1;
+}
+
+.lineup-tactics-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  padding: 0.4rem 0.55rem;
+  background: #fff;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: var(--tinte);
+}
+
+.lineup-tactics-pill.is-active {
+  background: var(--rasen);
+}
+
+.lineup-tactics-score {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--tinte);
+  text-align: center;
+}
+
+.lineup-tactics-save {
+  border: 2px solid rgba(62, 49, 40, 0.25);
+  border-radius: var(--radius-klein);
+  background: #fff;
+  padding: 0.35rem;
+  cursor: pointer;
+  color: var(--tinte);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.career-lineup-tactics {
+  border: 2px solid rgba(62, 49, 40, 0.2);
+  background: var(--panel-muted);
+}
+
+.career-lineup-tactics summary {
+  color: var(--tinte);
+}
+
+.career-lineup-formation {
+  color: var(--tinte-weich);
+}
+
+.career-lineup-formation select {
+  border: var(--outline);
+  color: var(--tinte);
+}
+
+.career-auto-btn,
+.career-preset-btn {
+  border: var(--outline);
+  background: #fff;
+  color: var(--tinte);
+}
+
+.career-preset-btn.is-active {
+  background: var(--rasen);
+  border-color: var(--tinte);
+}

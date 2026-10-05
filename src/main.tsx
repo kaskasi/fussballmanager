@@ -5,6 +5,7 @@ import "./ui/design/design-tokens.css";
 import "./ui/layout/screen-layout.css";
 import "./index.css";
 import "./ui/design/design-repair.css";
+import "./ui/design/game-surfaces.css";
 
 const root = document.getElementById("root");
 if (!root) {

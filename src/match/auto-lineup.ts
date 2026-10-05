@@ -7,28 +7,30 @@ import type { LineupAssignments } from "./lineup-board.ts";
 /** F1.3 — auto-lineup assistant modes. */
 export type AutoLineupMode = "best_eleven" | "rotation" | "youth";
 
+export type AutoLineupIcon = "star" | "refresh" | "rocket";
+
 export const AUTO_LINEUP_OPTIONS: {
   mode: AutoLineupMode;
   label: string;
-  icon: string;
+  icon: AutoLineupIcon;
   title: string;
 }[] = [
   {
     mode: "best_eleven",
     label: "Best XI",
-    icon: "⭐",
+    icon: "star",
     title: "Stärkste Elf nach CA und Positions-Fit",
   },
   {
     mode: "rotation",
     label: "Rotation",
-    icon: "🔄",
+    icon: "refresh",
     title: "Frische Spieler — hohe Fitness, wenig Minuten",
   },
   {
     mode: "youth",
     label: "Talente",
-    icon: "🚀",
+    icon: "rocket",
     title: "Junge Spieler mit Entwicklungspotenzial",
   },
 ];

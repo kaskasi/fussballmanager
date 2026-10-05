@@ -8,11 +8,17 @@ import {
   type SandboxPlan,
   type Squad,
 } from "@fussballmanager/shared";
+import { RefreshCw, Rocket, Save, Star } from "lucide-react";
 import type { NavPrimaryAction } from "../ui/nav-primary-action.ts";
 import type { Player } from "../types/player.ts";
 import type { FanbaseMood } from "../stadium/fanbase.ts";
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
-import { AUTO_LINEUP_OPTIONS, autoLineupAssignments } from "./auto-lineup.ts";
+import {
+  AUTO_LINEUP_OPTIONS,
+  autoLineupAssignments,
+  type AutoLineupIcon,
+  type AutoLineupMode,
+} from "./auto-lineup.ts";
 import { LineupPitch } from "./LineupPitch.tsx";
 import { LineupPlayerCard } from "./LineupPlayerCard.tsx";
 import {
@@ -52,6 +58,8 @@ type CareerLineupScreenProps = {
   poorForm?: boolean;
 };
 
+const TACTICS_STYLE_IDS: TacticsPresetId[] = [1, 2, 3];
+
 export function CareerLineupScreen({
   setup,
   players,
@@ -72,6 +80,7 @@ export function CareerLineupScreen({
   const fallbackPlan = useMemo(() => loadTacticsPreset(tacticsPresets, 1), [tacticsPresets]);
   const [plan, setPlan] = useState<SandboxPlan>(() => matchLineup?.plan ?? fallbackPlan);
   const [activePreset, setActivePreset] = useState<TacticsPresetId | null>(matchLineup ? null : 1);
+  const [activeAutoMode, setActiveAutoMode] = useState<AutoLineupMode | null>(null);
   const [assignments, setAssignments] = useState<LineupAssignments>(() =>
     normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId).assignments,
   );
@@ -123,12 +132,13 @@ export function CareerLineupScreen({
         return next;
       });
     },
-    [plan, persistLineup],
+    [persistLineup, plan],
   );
 
   const applyAuto = useCallback(
-    (mode: "best_eleven" | "rotation" | "youth") => {
+    (mode: AutoLineupMode) => {
       const next = autoLineupAssignments(players, plan.formation, mode, managerClubId);
+      setActiveAutoMode(mode);
       setAssignments(next);
       persistLineup(next, plan);
     },
@@ -145,6 +155,22 @@ export function CareerLineupScreen({
       persistLineup(nextAssignments, nextPlan);
     },
     [players, persistLineup, managerClubId],
+  );
+
+  const applyStylePreset = useCallback(
+    (presetId: TacticsPresetId) => {
+      const loaded = loadTacticsPreset(tacticsPresets, presetId);
+      const next = {
+        ...plan,
+        mentality: loaded.mentality,
+        pressing: loaded.pressing,
+        lineHeight: loaded.lineHeight,
+      };
+      setPlan(next);
+      setActivePreset(presetId);
+      persistLineup(assignments, next);
+    },
+    [assignments, persistLineup, plan, tacticsPresets],
   );
 
   useEffect(() => {
@@ -167,6 +193,8 @@ export function CareerLineupScreen({
       </main>
     );
   }
+
+  const matchdayLabel = setup.isHome ? "Heim" : "Auswärts";
 
   return (
     <main className="matchday career-lineup">
@@ -191,135 +219,171 @@ export function CareerLineupScreen({
               onChange={(event) => changeFormation(event.target.value as FormationId)}
             >
               {FORMATION_IDS.map((id) => (
-                <option key={id} value={id}>{id}</option>
+                <option key={id} value={id}>
+                  {id}
+                </option>
               ))}
             </select>
           </label>
         </header>
 
-        <div className="career-lineup-controls" aria-label="Schnellwahl">
-          <div className="career-lineup-auto-row">
-            {AUTO_LINEUP_OPTIONS.map((option) => (
-              <button
-                key={option.mode}
-                type="button"
-                className="career-auto-btn"
-                title={option.title}
-                onClick={() => applyAuto(option.mode)}
-              >
-                <span aria-hidden="true">{option.icon}</span>
-                {option.label}
-              </button>
-            ))}
-          </div>
-          <div className="career-lineup-presets" aria-label="Taktik-Presets">
-            {tacticsPresets.map((preset) => (
-              <div key={preset.id} className="career-preset-group">
-                <button
-                  type="button"
-                  className={activePreset === preset.id ? "career-preset-btn is-active" : "career-preset-btn"}
-                  title={`${preset.label} laden`}
-                  onClick={() => {
-                    const loaded = loadTacticsPreset(tacticsPresets, preset.id);
-                    setPlan(loaded);
-                    setActivePreset(preset.id);
-                    const next = fillMissingAssignments(players, loaded.formation, assignments, managerClubId);
-                    setAssignments(next);
-                    persistLineup(next, loaded);
-                  }}
-                >
-                  <span className="career-preset-label">{preset.id}</span>
-                  <span>{preset.label}</span>
-                </button>
-                <button
-                  type="button"
-                  className="career-preset-save-mini"
-                  title={`Aktuelle Taktik in Slot ${preset.id} speichern`}
-                  onClick={() => {
-                    onSaveTacticsPreset(preset.id, plan);
-                    setActivePreset(preset.id);
-                  }}
-                >
-                  💾
-                </button>
-              </div>
-            ))}
-          </div>
+        <div className="career-lineup-pills" aria-label="Schnellwahl">
+          {AUTO_LINEUP_OPTIONS.map((option) => (
+            <button
+              key={option.mode}
+              type="button"
+              className={
+                activeAutoMode === option.mode ? "career-lineup-pill is-active" : "career-lineup-pill"
+              }
+              title={option.title}
+              onClick={() => applyAuto(option.mode)}
+            >
+              <AutoLineupIcon kind={option.icon} />
+              {option.label}
+            </button>
+          ))}
         </div>
 
-        <details className="career-lineup-tactics">
-          <summary>Taktik · {plan.mentality} / {plan.pressing} / {plan.lineHeight}</summary>
-          <div className="career-lineup-toolbar">
-            <TacticSlider
-              label="Men"
-              value={plan.mentality}
-              onChange={(mentality) => {
-                setActivePreset(null);
-                const next = { ...plan, mentality };
-                setPlan(next);
-                persistLineup(assignments, next);
-              }}
-            />
-            <TacticSlider
-              label="Prs"
-              value={plan.pressing}
-              onChange={(pressing) => {
-                setActivePreset(null);
-                const next = { ...plan, pressing };
-                setPlan(next);
-                persistLineup(assignments, next);
-              }}
-            />
-            <TacticSlider
-              label="Lin"
-              value={plan.lineHeight}
-              min={25}
-              max={90}
-              onChange={(lineHeight) => {
-                setActivePreset(null);
-                const next = { ...plan, lineHeight };
-                setPlan(next);
-                persistLineup(assignments, next);
-              }}
-            />
-          </div>
-        </details>
-
-        <div className="career-lineup-board">
-          <LineupPitch
-            formation={plan.formation}
-            assignments={assignments}
-            playersById={playersById}
-            dragPlayerId={dragPlayerId}
-            playerTeamLabel={playerTeamLabel}
-            opponent={opponentPreview}
-            onAssign={setSlot}
-            onDragPlayer={setDragPlayerId}
-          />
-          <aside className="lineup-bench" aria-label="Ersatzbank">
-            <h2 className="lineup-bench-title">Bank · {bench.length}</h2>
-            <p className="lineup-bench-hint">Ziehen · ●/▲/◆ Form/Fit · WA</p>
-            <div className="lineup-bench-list">
-              {bench.map((player) => (
-                <LineupPlayerCard
-                  key={player.id}
-                  player={player}
-                  onDragStart={setDragPlayerId}
-                  onDragEnd={() => setDragPlayerId(null)}
-                />
-              ))}
+        <div className="career-lineup-hero">
+          <div className="career-lineup-board">
+            <div className="lineup-pitch-panel game-panel-inner">
+              <LineupPitch
+                formation={plan.formation}
+                assignments={assignments}
+                playersById={playersById}
+                dragPlayerId={dragPlayerId}
+                playerTeamLabel={playerTeamLabel}
+                opponent={opponentPreview}
+                onAssign={setSlot}
+                onDragPlayer={setDragPlayerId}
+              />
             </div>
+            <aside className="lineup-bench" aria-label="Ersatzbank">
+              <h2 className="lineup-bench-title">Bank · {bench.length}</h2>
+              <p className="lineup-bench-hint">Ziehen · Form/Fit · WA</p>
+              <div className="lineup-bench-list">
+                {bench.map((player) => (
+                  <LineupPlayerCard
+                    key={player.id}
+                    player={player}
+                    onDragStart={setDragPlayerId}
+                    onDragEnd={() => setDragPlayerId(null)}
+                  />
+                ))}
+              </div>
+            </aside>
+          </div>
+
+          <aside className="career-lineup-context" aria-label="Gegner und Taktik">
+            <article className="lineup-opponent-card">
+              <h2>{opponentPreview?.teamShortName ?? setup.opponentShortName}</h2>
+              <p className="lineup-opponent-meta">
+                {opponentPreview?.formation ?? "—"} · Spieltag {setup.matchday} · {matchdayLabel}
+              </p>
+              <p className="lineup-opponent-meta">vs {setup.opponentShortName}</p>
+            </article>
+
+            <article className="lineup-tactics-card">
+              <h2>Taktik</h2>
+              <div className="lineup-tactics-pills" role="group" aria-label="Spielstil">
+                {TACTICS_STYLE_IDS.map((presetId) => {
+                  const preset = tacticsPresets.find((entry) => entry.id === presetId);
+                  const label = preset?.label ?? `Preset ${presetId}`;
+                  return (
+                    <div key={presetId} className="lineup-tactics-pill-row">
+                      <button
+                        type="button"
+                        className={
+                          activePreset === presetId
+                            ? "lineup-tactics-pill is-active"
+                            : "lineup-tactics-pill"
+                        }
+                        onClick={() => applyStylePreset(presetId)}
+                      >
+                        {label}
+                      </button>
+                      <button
+                        type="button"
+                        className="lineup-tactics-save"
+                        title={`Aktuelle Taktik in „${label}“ speichern`}
+                        onClick={() => {
+                          onSaveTacticsPreset(presetId, plan);
+                          setActivePreset(presetId);
+                        }}
+                      >
+                        <Save size={16} strokeWidth={2.5} aria-hidden />
+                        <span className="sr-only">Speichern</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="lineup-tactics-score">
+                {plan.mentality} / {plan.pressing} / {plan.lineHeight}
+              </p>
+            </article>
+
+            <details className="career-lineup-tactics">
+              <summary>Feintuning</summary>
+              <div className="career-lineup-toolbar">
+                <TacticSlider
+                  label="Men"
+                  value={plan.mentality}
+                  onChange={(mentality) => {
+                    setActivePreset(null);
+                    const next = { ...plan, mentality };
+                    setPlan(next);
+                    persistLineup(assignments, next);
+                  }}
+                />
+                <TacticSlider
+                  label="Prs"
+                  value={plan.pressing}
+                  onChange={(pressing) => {
+                    setActivePreset(null);
+                    const next = { ...plan, pressing };
+                    setPlan(next);
+                    persistLineup(assignments, next);
+                  }}
+                />
+                <TacticSlider
+                  label="Lin"
+                  value={plan.lineHeight}
+                  min={25}
+                  max={90}
+                  onChange={(lineHeight) => {
+                    setActivePreset(null);
+                    const next = { ...plan, lineHeight };
+                    setPlan(next);
+                    persistLineup(assignments, next);
+                  }}
+                />
+              </div>
+            </details>
           </aside>
         </div>
 
         {filledCount < 11 ? (
           <p className="career-lineup-warning" role="status">
-            Noch {11 - filledCount} Position{11 - filledCount === 1 ? "" : "en"} offen — Auto-Aufstellung oder Spieler ziehen.
+            Noch {11 - filledCount} Position{11 - filledCount === 1 ? "" : "en"} offen — Auto-Aufstellung oder
+            Spieler ziehen.
           </p>
         ) : null}
       </section>
     </main>
   );
+}
+
+function AutoLineupIcon({ kind }: { kind: AutoLineupIcon }) {
+  const props = { size: 16, strokeWidth: 2.5, "aria-hidden": true as const };
+  switch (kind) {
+    case "star":
+      return <Star {...props} />;
+    case "refresh":
+      return <RefreshCw {...props} />;
+    case "rocket":
+      return <Rocket {...props} />;
+  }
 }
 
 function TacticSlider({

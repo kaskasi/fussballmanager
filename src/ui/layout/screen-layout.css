@@ -151,3 +151,15 @@
   cursor: pointer;
   margin-bottom: 0.25rem;
 }
+
+.finances-hero-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .finances-hero-grid {
+    grid-template-columns: minmax(0, 1fr) min(320px, 32%);
+    align-items: start;
+  }
+}

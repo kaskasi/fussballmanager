@@ -75,34 +75,9 @@ export function financeLineLabel(kind: FinanceLineKind): string {
   }
 }
 
-export function financeLineIcon(kind: FinanceLineKind): string {
-  switch (kind) {
-    case "sponsorship":
-      return "🤝";
-    case "tv_rights":
-    case "tv_bonus":
-      return "📺";
-    case "matchday_tickets":
-      return "🎟️";
-    case "league_prize":
-      return "🏆";
-    case "player_sale":
-      return "💰";
-    case "player_wages":
-      return "👕";
-    case "staff_wages":
-      return "🧑‍💼";
-    case "facility_maintenance":
-      return "🏟️";
-    case "transfer_fee":
-      return "↔️";
-    case "concessions":
-      return "🌭";
-    case "infrastructure":
-      return "🏗️";
-    default:
-      return "•";
-  }
+/** @deprecated Use FinanceLineIcon in UI — kept for non-React callers. */
+export function financeLineIcon(_kind: FinanceLineKind): string {
+  return "";
 }
 
 export function aggregateFinanceLines(lines: readonly FinanceLine[]): FinanceLine[] {

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Users } from "lucide-react";
 import { MentoringPanel } from "../components/MentoringPanel.tsx";
 import { CoachingStaffPanel } from "../components/CoachingStaffPanel.tsx";
 import { AssistantDelegationPanel } from "../components/AssistantDelegationPanel.tsx";
@@ -141,7 +142,9 @@ export function FirstTeam({
         )
       ) : rows.length === 0 ? (
         <section className="squad-empty" aria-label={t("squad.empty.aria")}>
-          <span className="squad-empty-icon" aria-hidden="true">⭐</span>
+          <span className="squad-empty-icon" aria-hidden="true">
+            <Users size={28} strokeWidth={2.5} />
+          </span>
           <p>{t("squad.empty")}</p>
           <p className="squad-empty-hint">{t("squad.emptyHint")}</p>
         </section>

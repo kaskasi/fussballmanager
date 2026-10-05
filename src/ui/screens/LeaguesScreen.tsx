@@ -57,7 +57,7 @@ export function LeaguesScreen({
       <header className="leagues-screen-head">
         <div>
           <p className="eyebrow">Wettbewerb</p>
-          <h1>🏆 Ligen</h1>
+          <h1>Ligen</h1>
           <p className="leagues-screen-sub">
             Klick auf einen Verein für Kurzprofil · {standings.simulated ? "Fremdliga simuliert" : "Deine Liga live"}
           </p>

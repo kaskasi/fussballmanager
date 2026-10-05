@@ -92,10 +92,10 @@
 }
 .design-panel {
   background: var(--panel);
-  border: 2px solid rgba(62, 49, 40, 0.25);
+  border: 2px solid #3e3128;
   border-radius: var(--radius);
   padding: 0.75rem;
-  box-shadow: var(--shadow-flat);
+  box-shadow: none;
 }
 .app-nav-next-badge {
   display: inline-flex;

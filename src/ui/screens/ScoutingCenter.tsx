@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { PositionPrimary } from "../../types/player.ts";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
 import {
@@ -31,6 +31,8 @@ import { Hint } from "../components/Hint.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { ScoutRegionMap } from "../components/ScoutRegionMap.tsx";
+import { ScoutConfidenceIcon } from "../components/ScoutConfidenceIcon.tsx";
+import { Circle, Pause, Radar, Search } from "lucide-react";
 
 const POSITIONS: PositionPrimary[] = [
   "GK",
@@ -49,13 +51,12 @@ const POSITIONS: PositionPrimary[] = [
 
 const CONFIDENCE_FILTERS: {
   bucket: ConfidenceBucket;
-  label: string;
   titleKey: string;
   hintKey: string;
 }[] = [
-  { bucket: "known", label: "✅", titleKey: "scouting.confidence.known.title", hintKey: "scouting.confidence.known.hint" },
-  { bucket: "unclear", label: "🤷", titleKey: "scouting.confidence.unclear.title", hintKey: "scouting.confidence.unclear.hint" },
-  { bucket: "unknown", label: "❓", titleKey: "scouting.confidence.unknown.title", hintKey: "scouting.confidence.unknown.hint" },
+  { bucket: "known", titleKey: "scouting.confidence.known.title", hintKey: "scouting.confidence.known.hint" },
+  { bucket: "unclear", titleKey: "scouting.confidence.unclear.title", hintKey: "scouting.confidence.unclear.hint" },
+  { bucket: "unknown", titleKey: "scouting.confidence.unknown.title", hintKey: "scouting.confidence.unknown.hint" },
 ];
 
 const AGE_FILTERS: Array<{ value: MarketFilters["age"]; label: string }> = [
@@ -175,7 +176,9 @@ export function ScoutingCenter({
 
       <section className="scouting-network-card" aria-label={t("scouting.network.aria")}>
         <button type="button" className="scouting-network-card-link" onClick={onOpenNetwork}>
-          <span className="scouting-network-card-icon" aria-hidden="true">🛰️</span>
+          <span className="scouting-network-card-icon" aria-hidden="true">
+            <Radar size={20} strokeWidth={2.5} />
+          </span>
           <span className="scouting-network-card-copy">
             <strong>{t("scouting.network.title")}</strong>
             <span>
@@ -213,7 +216,11 @@ export function ScoutingCenter({
                   onClick={() => onToggleAssignment(assignment.id)}
                   aria-pressed={assignment.active}
                 >
-                  {assignment.active ? "🟢" : "⏸️"}
+                  {assignment.active ? (
+                    <Circle size={14} fill="var(--rasen)" strokeWidth={2.5} />
+                  ) : (
+                    <Pause size={14} strokeWidth={2.5} />
+                  )}
                 </button>
                 <span className="scouting-assignment-label">{assignment.label}</span>
                 <button
@@ -284,7 +291,7 @@ export function ScoutingCenter({
                 })
               }
             >
-              {filter.label}
+              <ScoutConfidenceIcon bucket={filter.bucket} size={16} />
             </Chip>
           ))}
           {REGIONS.map((region) => (
@@ -306,7 +313,9 @@ export function ScoutingCenter({
 
       {visible.length === 0 ? (
         <section className="squad-empty scouting-empty" aria-label={t("scouting.empty.aria")}>
-          <span className="squad-empty-icon" aria-hidden="true">👁️</span>
+          <span className="squad-empty-icon" aria-hidden="true">
+            <Search size={28} strokeWidth={2.5} />
+          </span>
           <p>{t("scouting.empty")}</p>
           {marketFiltersActive(filters) ? (
             <button
@@ -364,7 +373,11 @@ export function ScoutingCenter({
                     />
                     <span className="scouting-player-card">
                       <span className="scouting-player-name">
-                        {row.assigned ? <span className="scouting-active" title="Scout aktiv">🟢 </span> : null}
+                        {row.assigned ? (
+                          <span className="scouting-active" title="Scout aktiv">
+                            <Circle size={12} fill="var(--rasen)" strokeWidth={2.5} />
+                          </span>
+                        ) : null}
                         {row.displayName}
                       </span>
                       <span className="scouting-player-meta">
@@ -431,7 +444,7 @@ function Chip({
   onClick: () => void;
   title?: string;
   hint?: string;
-  children: string;
+  children: ReactNode;
 }) {
   const chip = (
     <button

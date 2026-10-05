@@ -58,6 +58,7 @@ import type {
   AssistantDelegation,
   AssistantDelegationTask,
 } from "../../staff/assistant-delegation.ts";
+import { Target } from "lucide-react";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 
@@ -438,7 +439,11 @@ function SlotCard({
         onClick={onSelect}
         aria-pressed={focusMode ? slot.focus : undefined}
       >
-        {slot.focus ? <span className="training-focus-badge" aria-hidden="true">🎯</span> : null}
+        {slot.focus ? (
+          <span className="training-focus-badge" aria-hidden="true">
+            <Target size={14} strokeWidth={2.5} />
+          </span>
+        ) : null}
         <span className="training-day">{period}</span>
         <strong className="training-unit-name">{unit.label}</strong>
         <span className="training-group">{GROUP_LABELS[unit.group]}</span>

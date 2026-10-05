@@ -1,0 +1,95 @@
+/**
+ * Design repair P0 — sand screen, comic outlines, nav pills
+ */
+
+:root {
+  --bg-sand: #f5efe0 !important;
+  --outline-tinte: 2px solid #3e3128;
+}
+
+html,
+body,
+#root {
+  background-color: var(--bg-sand) !important;
+}
+
+.pipeline,
+.training,
+.squad,
+.finances,
+.campus,
+.transfers,
+.leagues,
+.help,
+.matchday,
+.scouting,
+.stadium,
+.profile,
+.screen-shell,
+.hub-cockpit-grid,
+.career-lineup,
+.career-match,
+.help,
+.scouting {
+  background-color: var(--bg-sand);
+}
+
+.design-panel,
+.pipeline-tile,
+.hub-inbox,
+.hub-decisions-panel,
+.hub-events-preview,
+.hub-post-summary,
+.board-panel,
+.dev-hub,
+.chronicle-panel,
+.chronicle-panel,
+.panel,
+.card,
+.widget,
+.scoreboard,
+.finances-panel,
+.finances-card,
+.training-overview,
+.squad-table-wrap,
+.hub-modules-grid .pipeline-tile {
+  background: var(--panel, #fdfbf4);
+  border: var(--outline-tinte);
+  border-radius: var(--radius, 12px);
+  box-shadow: none !important;
+}
+
+.app-nav,
+.club-shell-header {
+  background: transparent !important;
+}
+
+.app-nav-tabs button {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--outline-tinte) !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  color: var(--tinte, #3e3128) !important;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 800;
+  box-shadow: none !important;
+}
+
+.app-nav-tabs button[aria-pressed="true"] {
+  background: var(--rasen, #2e9e46) !important;
+  color: var(--tinte, #3e3128) !important;
+  outline: none !important;
+}
+
+.app-nav-next {
+  background: var(--sonnengelb, #ffc933) !important;
+  color: var(--tinte, #3e3128) !important;
+  border: var(--outline-tinte) !important;
+}

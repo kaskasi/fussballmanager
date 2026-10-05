@@ -8,11 +8,8 @@ import {
   weeklyWageBill,
   type ClubFinances,
 } from "../../economy/club-finances.ts";
-import {
-  financeLineIcon,
-  financeLineLabel,
-  financeMonthForWeek,
-} from "../../economy/finance-ledger.ts";
+import { financeLineLabel, financeMonthForWeek } from "../../economy/finance-ledger.ts";
+import { FinanceLineIcon } from "../components/FinanceLineIcon.tsx";
 import {
   FINANCE_FLOW_META,
   FINANCE_FLOW_ORDER,
@@ -160,7 +157,7 @@ export function FinancesScreen({
                   title={formatSignedCash(line.amount)}
                 >
                   <span className="finances-bar-icon" aria-hidden="true">
-                    {financeLineIcon(line.kind)}
+                    <FinanceLineIcon kind={line.kind} />
                   </span>
                   <span className="finances-bar-label">{financeLineLabel(line.kind)}</span>
                   <span className="finances-bar-track" aria-hidden="true">

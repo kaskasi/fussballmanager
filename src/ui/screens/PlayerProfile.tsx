@@ -94,15 +94,31 @@ import {
   stampLabel,
 } from "../../development/ability-stamps.ts";
 import { formatGrowthDelta } from "../../player/growth-history.ts";
+import {
+  BarChart3,
+  Dumbbell,
+  FileSignature,
+  LineChart,
+  Shirt,
+  type LucideIcon,
+} from "lucide-react";
 
 type ProfileTab = "attributes" | "training" | "contract" | "development" | "stats";
 
-const PROFILE_TABS: { id: ProfileTab; label: string; icon: string }[] = [
-  { id: "attributes", label: "Attribute", icon: "📊" },
-  { id: "training", label: "Training", icon: "🏋️" },
-  { id: "contract", label: "Vertrag", icon: "✍️" },
-  { id: "development", label: "Verlauf", icon: "📈" },
-  { id: "stats", label: "Saisonwerte", icon: "⚽" },
+const PROFILE_TAB_ICONS: Record<ProfileTab, LucideIcon> = {
+  attributes: BarChart3,
+  training: Dumbbell,
+  contract: FileSignature,
+  development: LineChart,
+  stats: Shirt,
+};
+
+const PROFILE_TABS: { id: ProfileTab; label: string }[] = [
+  { id: "attributes", label: "Attribute" },
+  { id: "training", label: "Training" },
+  { id: "contract", label: "Vertrag" },
+  { id: "development", label: "Verlauf" },
+  { id: "stats", label: "Saisonwerte" },
 ];
 
 const CARD_ACTIONS: Partial<Record<PlayerProfileAction, { label: string; className: string }>> = {
@@ -400,7 +416,12 @@ export function PlayerProfile({
               aria-selected={tab === entry.id}
               onClick={() => setTab(entry.id)}
             >
-              <span className="profile-tab-icon" aria-hidden="true">{entry.icon}</span>
+              <span className="profile-tab-icon" aria-hidden="true">
+                {(() => {
+                  const Icon = PROFILE_TAB_ICONS[entry.id];
+                  return <Icon size={18} strokeWidth={2.5} />;
+                })()}
+              </span>
               <span className="profile-tab-label">{entry.label}</span>
             </button>
           ))}
@@ -433,7 +454,7 @@ export function PlayerProfile({
 
               {xpBar ? (
                 <div className="profile-xp" aria-label={xpBar.label}>
-                  <span className="profile-xp-label">📚 {xpBar.label}</span>
+                  <span className="profile-xp-label">{xpBar.label}</span>
                   <div className="profile-bar-track" aria-hidden="true">
                     <span className="profile-bar-fill" style={{ width: `${xpBar.fill * 100}%` }} />
                   </div>
@@ -861,11 +882,11 @@ function StatsTab({
       >
         {stats ? (
           <dl className="profile-stat-grid">
-            <StatItem icon="👕" label="Einsätze" value={String(stats.apps)} />
-            <StatItem icon="⚽" label="Tore" value={String(stats.goals)} />
-            <StatItem icon="🅰️" label="Vorlagen" value={String(stats.assists)} />
-            <StatItem icon="⏱️" label="Minuten" value={String(stats.minutes)} />
-            <StatItem icon="★" label="Ø Note" value={stats.rating} />
+            <StatItem label="Einsätze" value={String(stats.apps)} />
+            <StatItem label="Tore" value={String(stats.goals)} />
+            <StatItem label="Vorlagen" value={String(stats.assists)} />
+            <StatItem label="Minuten" value={String(stats.minutes)} />
+            <StatItem label="Ø Note" value={stats.rating} />
           </dl>
         ) : (
           <p className="profile-empty">
@@ -877,11 +898,10 @@ function StatsTab({
   );
 }
 
-function StatItem({ icon, label, value }: { icon: string; label: string; value: string }) {
+function StatItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="profile-stat-item">
       <div className="profile-stat-item-head">
-        <span className="profile-stat-item-icon" aria-hidden="true">{icon}</span>
         <span className="profile-stat-item-label">{label}</span>
       </div>
       <strong className="profile-stat-item-value">{value}</strong>

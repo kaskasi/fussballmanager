@@ -2,7 +2,7 @@
  * WIREFRAME: docs/prd/design.md §2 — Fernsehnachmittag tokens
  */
 :root {
-  --bg-sand: #f5efe0;
+  --bg-sand: #f5efe0 !important;
   --panel: #fdfbf4;
   --panel-muted: #efebe0;
   --rasen: #2e9e46;

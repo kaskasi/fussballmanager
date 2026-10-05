@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Globe, Play, Sparkles } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useT } from "../../i18n/react.ts";
 import {
   formatStampEffects,
@@ -20,10 +22,16 @@ import {
 
 type HelpTab = "story" | "play" | "stamps";
 
-const TABS: { id: HelpTab; labelKey: string; icon: string }[] = [
-  { id: "story", labelKey: "help.tab.story", icon: "🌍" },
-  { id: "play", labelKey: "help.tab.play", icon: "▶" },
-  { id: "stamps", labelKey: "help.tab.stamps", icon: "◆" },
+const TAB_ICONS: Record<HelpTab, LucideIcon> = {
+  story: Globe,
+  play: Play,
+  stamps: Sparkles,
+};
+
+const TABS: { id: HelpTab; labelKey: string }[] = [
+  { id: "story", labelKey: "help.tab.story" },
+  { id: "play", labelKey: "help.tab.play" },
+  { id: "stamps", labelKey: "help.tab.stamps" },
 ];
 
 export function HelpScreen() {
@@ -46,7 +54,11 @@ export function HelpScreen() {
             className={tab === entry.id ? "help-tab is-active" : "help-tab"}
             onClick={() => setTab(entry.id)}
           >
-            <span aria-hidden="true">{entry.icon}</span> {t(entry.labelKey)}
+            {(() => {
+              const Icon = TAB_ICONS[entry.id];
+              return <Icon size={18} aria-hidden="true" strokeWidth={2.5} />;
+            })()}{" "}
+            {t(entry.labelKey)}
           </button>
         ))}
       </nav>

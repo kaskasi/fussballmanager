@@ -8683,7 +8683,7 @@ body {
   margin: 0 auto;
   padding: 0 1.5rem;
   min-height: var(--club-header-height, 56px);
-  background: var(--bg-sand);
+  background: transparent;
   border: 0;
 }
 

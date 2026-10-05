@@ -103,7 +103,7 @@ export function TransfersScreen({
         </button>
         <div>
           <p className="eyebrow">{formatSeasonLabel(season)}</p>
-          <h1>💰 Transfers</h1>
+          <h1>Transfers</h1>
           <p className={windowOpen ? "transfers-window-chip" : "transfers-window-chip is-closed"}>
             {transferWindowLabel(week)}
           </p>
@@ -139,7 +139,7 @@ export function TransfersScreen({
       </section>
 
       <section className="transfers-section" aria-label="Aktive Ausleihen">
-        <h2>🔄 Aktive Ausleihen</h2>
+        <h2>Aktive Ausleihen</h2>
         {activeLoans.length === 0 ? (
           <p className="transfers-empty-inline">Keine Spieler derzeit verliehen.</p>
         ) : (
@@ -195,7 +195,7 @@ export function TransfersScreen({
       </section>
 
       <section className="transfers-section" aria-label="Liga-Markt">
-        <h2>💱 Liga-Markt</h2>
+        <h2>Liga-Markt</h2>
         <Hint text="KI-Clubs handeln untereinander in Transferfenstern — dieselben Marktwert-Formeln wie du (F5.6)." block>
           <p className="transfers-window-hint">Aktuelle Liga-Deals dieser Saison</p>
         </Hint>
@@ -210,7 +210,7 @@ export function TransfersScreen({
                   className="transfers-history-row"
                   onClick={() => onSelectPlayer(record.player_id)}
                 >
-                  <span className="transfers-history-icon" aria-hidden="true">💱</span>
+                  <span className="transfers-history-icon" aria-hidden="true" />
                   <span className="transfers-history-main">
                     <strong>{record.player_name}</strong>
                     <small>

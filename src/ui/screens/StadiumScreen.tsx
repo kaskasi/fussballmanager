@@ -128,7 +128,7 @@ export function StadiumScreen({
         ) : null}
         <div>
           <p className="eyebrow">Verein</p>
-          <h1>🏟️ {stadium.name}</h1>
+          <h1>{stadium.name}</h1>
           <p className="stadium-sub">
             {capacity.toLocaleString("de-DE")} Plätze · Ø Ticket € {avgTicket.toFixed(0)} · Heimspiel{" "}
             {formatClubCash(matchdayIncome)}
@@ -162,21 +162,21 @@ export function StadiumScreen({
           className={tab === "plan" ? "stadium-tab is-active" : "stadium-tab"}
           onClick={() => setTab("plan")}
         >
-          🗺️ Grundriss
+          Grundriss
         </button>
         <button
           type="button"
           className={tab === "precinct" ? "stadium-tab is-active" : "stadium-tab"}
           onClick={() => setTab("precinct")}
         >
-          🌭 Gelände
+          Gelände
         </button>
         <button
           type="button"
           className={tab === "upgrades" ? "stadium-tab is-active" : "stadium-tab"}
           onClick={() => setTab("upgrades")}
         >
-          🏗️ Ausbau
+          Ausbau
         </button>
       </nav>
 

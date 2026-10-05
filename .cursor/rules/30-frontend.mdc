@@ -5,6 +5,7 @@ alwaysApply: false
 ---
 # Frontend
 
+- **Design source of truth:** [docs/prd/design.md](../../docs/prd/design.md) — tokens (Baloo 2 / Nunito), Lucide-first icons, Fernsehnachmittag layout §9, desktop-first + stacked mobile.
 - Text is the default medium (squad lists, reports, inbox, dialogue), but
   it is not mandatory. Morale, financial health, match momentum,
   staff/player quality, and relationships should be represented visually
@@ -12,8 +13,7 @@ alwaysApply: false
   numbers in a table, wherever that communicates better.
 - Pitch and stadium-editor visuals: SVG components, 2D only. No 3D
   libraries, no WebGL unless explicitly requested.
-- Aim for a clean, colorful interface — not a dense spreadsheet and not a
-  terminal look.
+- Aim for a game cockpit — hero panels (pitch, charts, heatmaps) before naked tables where design §9 shows it; FM2001 density still allowed for league/transfer tables.
 - Match commentary feed and pitch visualization are two views of the same
   match-event stream; keep their data source shared (e.g. one hook/context
   feeding both), not two independently polled/fetched states.

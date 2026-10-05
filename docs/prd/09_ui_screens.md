@@ -11,9 +11,10 @@
 UI-Screens für den Talent-Pipeline-Block. 8 Screens plus zwei Modals. Wireframes als ASCII. Interaktion ist icon-first, mit der 2-Klick-Regel.
 
 **PRD 14** ist verbindlich für Club-Cockpit, Dichte und „Raum vor Shell“.
+**design.md** (`docs/prd/design.md`) ist verbindlich für Tokens, Header, Menü und Wireframes §9 (Club-UI-Zielbild).
 Diese Datei bleibt die Inventarliste der acht Pipeline-Screens. Wo 09 und 14
 bei Darstellung kollidieren (Grid-first, Text-Buttons, leere SaaS-Tabs),
-gilt 14.
+gilt 14; wo 14/09 und design.md bei Farben/Layout kollidieren, gilt design.md.
 
 ---
 

@@ -1,5 +1,13 @@
 # Asset attribution (shipped / source packs)
 
+## Kenney.nl
+
+- **License:** CC0 1.0 (Public Domain)
+- **Source:** https://www.kenney.nl
+- **Location:** `assets/kenney.nl/*.zip` (source packs; read-only)
+- **Shipped in game:** None until remapped and baked to `public/assets/kenney/` per `docs/prd/design.md` §2 and `assets/kenney-color-map.json`
+- **Optional credit:** Kenney.nl
+
 ## Open Peeps
 
 - **License:** CC0 1.0 Universal

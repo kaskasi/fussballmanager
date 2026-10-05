@@ -17,6 +17,8 @@ Dichte, Icon-First und „kein Dead-End“. Widerspricht eine Pipeline-Ansicht
 dieser PRD (12-Spalten-Tabelle als Hauptansicht, Text-Buttons `accept` /
 `ambitious`, leere SaaS-Tabs), gilt 14.
 
+**design.md** (`docs/prd/design.md`) definiert die umgesetzte visuelle Sprache (Tokens, Header, §9-Wireframes). Referenzbilder: `docs/design-refs/`, FM2001: `fmscreens/fm2001/`. Bei Konflikt Tokens/Header/Gelb-Regel vs. ältere Cockpit-Skizzen in 14 gilt design.md.
+
 Referenz-DNA (nicht 1:1 kopieren): EA Fußball Manager 2002 (Cockpit,
 Stadion-als-Ort, Spielerakte, Jugend-Report), FIFA Manager 11 (Büro als Ort,
 Kalender, News), nicht die 40-Spalten-Identität.

@@ -14,3 +14,7 @@ fm_screeens/
 assets/textures/ambientcg/*_2K-*.zip
 assets/textures/ambientcg/*_4K-*.zip
 assets/textures/ambientcg/.DS_Store
+
+# FM2001 PNG captures (README committed)
+fmscreens/**/*.png
+!fmscreens/**/README.md

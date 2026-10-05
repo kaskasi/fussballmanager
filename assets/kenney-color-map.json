@@ -1,0 +1,21 @@
+{
+  "$schema": "design.md §2 — map Kenney source hex to CSS token names before shipping",
+  "tokens": {
+    "rasen": "#2E9E46",
+    "rasen-hell": "#BFDEC2",
+    "staubblau": "#9DBFD0",
+    "terra": "#E07A3F",
+    "tinte": "#3E3128",
+    "panel": "#FDFBF4"
+  },
+  "rules": [
+    "Never map to sonnengelb — reserved for header NEXT only",
+    "Replace fills in SVG/PNG bake step; do not reference Kenney defaults in TSX/CSS"
+  ],
+  "examples": [
+    { "sourceHint": "kenney grass green", "token": "rasen" },
+    { "sourceHint": "kenney line white", "token": "rasen-hell" },
+    { "sourceHint": "kenney tribune blue", "token": "staubblau" },
+    { "sourceHint": "kenney accent warm", "token": "terra" }
+  ]
+}

@@ -32,6 +32,7 @@ Geschrieben und verbindlich:
 - `15_feature_gap.md` — Keep/Refuse vs. Referenz-DNA; C1 → F2.8, Kandidat C2
 - `16_match_broadcast_beats.md` — Match-Kommentar, Beats, Director (Präsentation)
 - `17_target_architecture.md` — Zielbild: Engine-Modul, Client-Sim, Sync, Deploy
+- `design.md` — Visuelle Sprache, Tokens, Header, Wireframes §9 (UI-Darstellung)
 
 Tester-Hilfe (nicht PRD-Nummer): `docs/tester-save-m0.md` — Export/Import M0.
 
@@ -46,6 +47,21 @@ Noch nicht geschrieben, nicht erfinden:
 **Regel 2:** Bei Änderungen der PRDs **bump `save_version`** in `manifest.json` und eine Migrations-Datei schreiben (`/src/persistence/migrations/`).
 
 ---
+
+## Design-System (`docs/prd/design.md`)
+
+Vor UI-Code **design.md** lesen. Bei Konflikt Darstellung vs. PRD 09/14: **design.md** für Tokens, Header, Layout §9, Emojis, Gelb-Regel.
+
+- **Tokens only** in Screens (CSS-Variablen §2) — keine ad-hoc-Hex-Farben.
+- **Emojis verboten** in UI (§4); Lucide + Kenney remapped (§12).
+- **NEXT:** genau ein gelber Header-Button (`--sonnengelb`); Label kontextabhängig (NEXT / Spiel simulieren / Spieltag abschließen). Kein zweiter Abschluss-CTA im Content.
+- **Match-Skip:** nur ⋮-Menü (§9.16), v1 erlaubt.
+- **Menü §6:** volle TEAM-Liste (Hub, Kader, Training, …); Navigation nicht duplizieren in Header-Icon-Leisten.
+- **Komponenten (Soll):** `<Crest>`, Header, Panel, StatTable — importieren, nicht kopieren.
+- **Wireframes:** `/** WIREFRAME: design.md §9.x */` plus PRD 09 wo Pipeline.
+- **Kenney:** nie rohe Pack-Farben; remap vor `public/assets/kenney/`.
+- **Referenzbilder:** `docs/design-refs/`, `fmscreens/fm2001/` (lokal).
+
 
 ## Design-Gesetze
 
@@ -64,7 +80,7 @@ Noch nicht geschrieben, nicht erfinden:
 ### Gesetz 3: Icon/Visual First
 - Jede UI-Entscheidung priorisiert **Icons, Bilder, Charts vor Text**.
 - Tooltips nur als sekundäre Vertiefung.
-- ASCII-Wireframes stehen vor der Implementation als `/** WIREFRAME: PRD 09.2 */` Kommentar im Code.
+- ASCII-Wireframes: `/** WIREFRAME: design.md §9.x */` (Club-UI) bzw. PRD 09 (Pipeline-Inventar). Icon-first + Dichte erlaubt (design §1).
 
 ### Gesetz 4: Engine Hands-Off
 - Der bestehende Match-Engine-Ordner `server/src/engine/` wird **nie geändert**.
@@ -188,6 +204,9 @@ Bei jedem Commit prüfen:
 | Text-first UI geplant | STOPP — Gesetz 3, Icon-first |
 | `drive` im Export sichtbar bleiben | STOPP — PRD 08.3, Sanitizer entfernen |
 | Relativer 5-Sterne-Wert für Spieler-Potential vorgeschlagen | STOPP — Absolute Werte, PRD 02.1 |
+| Emoji als UI-Icon/Decor | STOPP — design.md §4 |
+| Gelb außer Header-NEXT | STOPP — design.md §1 Regel 2 |
+| Rohe Kenney-Farben im Shipped UI | STOPP — remap §2 |
 
 ### Data Flow (Wichtig für Debugging)
 
@@ -235,3 +254,4 @@ Arbeite erst P0 ab, dann P1.
 - 2026-09-22: Querverweise korrigiert (Formel ist 02.1). Engine-Pfad `server/src/engine/`. Archiv-Hinweis für `PRD.md`. Offene Dateien 01, 11–13 als ungeschrieben markiert.
 - 2026-09-29: PRD 13 (Story-Slice), 14 (Cockpit-UI), 15 (Feature-Lücken) als geschrieben geführt. `13_meta.md` bleibt ungeschrieben.
 - 2026-10-03: PRD 17 (Target Architecture), Cursor-Regel `17-module-boundaries.mdc`; 16 in Dokumentenliste ergänzt.
+- 2026-10-05: design.md Design-System-Sektion; Referenz `docs/design-refs/`.

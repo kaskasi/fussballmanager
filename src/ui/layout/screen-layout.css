@@ -6,6 +6,166 @@
   margin: 0 auto;
   padding: 0 1.5rem 1.5rem;
 }
+
+.screen-shell--flush-top {
+  padding-top: 0.5rem;
+}
+
+.club-shell-grid {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding-inline: 1.5rem;
+}
+
+/** Split-card shell: nav = top cap, main = body (design.md §6 + fm2001). */
+.club-shell-card-head {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0.65rem 1rem;
+  background: var(--panel);
+  border: 2px solid var(--tinte);
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.club-shell-card-body {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 1rem 1.1rem 1.15rem;
+  background: var(--panel);
+  border: 2px solid var(--tinte);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: var(--shadow-flat);
+}
+
+main.finances.club-shell-card-body {
+  /* Override legacy index.css `.finances { max-width: 42rem }` for split-card alignment */
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.training.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.training.club-shell-card-body .fm-tab-panel {
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+main.squad.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.squad.club-shell-card-body .fm-tab-panel {
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+main.campus.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.campus.club-shell-card-body .fm-tab-panel {
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+main.stadium.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.stadium.club-shell-card-body .fm-tab-panel {
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+main.transfers.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.transfers.club-shell-card-body .fm-tab-panel {
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+main.transfers.club-shell-card-body .transfers-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  margin: 0 0 1rem;
+}
+
+main.calendar.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.calendar.club-shell-card-body .fm-tab-panel {
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+main.scouting.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.scouting.club-shell-card-body .fm-tab-panel {
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+main.scouting.club-shell-card-body .scouting-summary,
+main.scouting.club-shell-card-body .scouting-scouts {
+  margin: 0 0 0.65rem;
+}
+
+main.help.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  display: block;
+}
+
+main.help.club-shell-card-body .help-head {
+  padding: 1rem 1.1rem 0.65rem;
+}
+
+main.help.club-shell-card-body .help-panel {
+  padding: 0 1.1rem 1.15rem;
+}
+
+.club-shell-card-body.screen-shell {
+  padding: 0;
+}
+
+.club-shell-card-body .hub-cockpit-grid {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
 .screen-title-row {
   display: flex;
   flex-wrap: wrap;

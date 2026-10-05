@@ -122,8 +122,8 @@ const PROFILE_TABS: { id: ProfileTab; label: string }[] = [
 ];
 
 const CARD_ACTIONS: Partial<Record<PlayerProfileAction, { label: string; className: string }>> = {
-  promote_pro: { label: "⬆️ Profikader", className: "ui-btn--primary" },
-  promote_u19: { label: "⬆️ U19", className: "ui-btn--ghost" },
+  promote_pro: { label: "Profikader", className: "ui-btn--primary" },
+  promote_u19: { label: "U19", className: "ui-btn--ghost" },
 };
 
 export interface PlayerProfileProps {
@@ -323,7 +323,7 @@ export function PlayerProfile({
   const canTalk = owned && Boolean(onContractOffer) && player.squad_status !== "loaned_out";
 
   return (
-    <main className="profile">
+    <main className="profile club-shell-card-body">
       <header className="profile-toolbar">
         <button type="button" onClick={onBack} aria-label="Zurück">
           ←
@@ -353,9 +353,9 @@ export function PlayerProfile({
         </p>
       ) : null}
 
-      <article className="profile-card">
-        <div className="profile-identity">
-          <PlayerPortrait seed={player.portrait_seed} size="md" className="profile-portrait" />
+      <article className="profile-card profile-hub">
+        <aside className="profile-identity-rail" aria-label="Identität">
+          <PlayerPortrait seed={player.portrait_seed} size="lg" className="profile-portrait profile-portrait-rail" />
           <div className="profile-identity-body">
             <Hint text="Spielername. Fremde Spieler werden erst durch Scouting besser bekannt." block>
               <h1 className="profile-name">{formatPlayerName(player)}</h1>
@@ -404,8 +404,116 @@ export function PlayerProfile({
               </ul>
             ) : null}
           </div>
-        </div>
 
+          {owned && onSell ? (
+            <footer className="profile-rail-actions" aria-label="Transfer">
+              <div className="profile-actions profile-actions-single">
+                <div className="profile-action-cell">
+                  <Hint
+                    text={
+                      saleBlockedReason ??
+                      (!transferWindowOpen
+                        ? t("transfer.profile.saleWindowOnly", { hint: transferWindowHint() })
+                        : t("transfer.profile.saleHint"))
+                    }
+                    block
+                  >
+                    <ProfileActionButton
+                      label={t("transfer.profile.sell")}
+                      amount={saleOffer ? `ca. ${formatMoney(saleOffer)}` : undefined}
+                      className={[
+                        "ui-btn--ghost",
+                        !transferWindowOpen || saleBlockedReason ? "is-blocked" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={handleSaleClick}
+                      aria-disabled={!transferWindowOpen || Boolean(saleBlockedReason)}
+                    />
+                  </Hint>
+                </div>
+              </div>
+            </footer>
+          ) : null}
+
+          {!owned && onAssignScout ? (
+            <footer className="profile-rail-actions" aria-label="Scouting und Transfer">
+              {transferNotice ? (
+                <p className="profile-purchase-block" role="status">
+                  {transferNotice}
+                </p>
+              ) : null}
+              {scouting ? (
+                <p className="profile-status" role="status">
+                  Scout aktiv · Bericht nach Wochensim
+                </p>
+              ) : null}
+              <div className="profile-actions">
+                {!scouting ? (
+                  <div className="profile-action-cell">
+                    <Hint text="Scout beobachtet den Spieler jede Woche. Pipeline → Woche simulieren." block>
+                      <ProfileActionButton label="Scouten" className="ui-btn--primary" onClick={onAssignScout} />
+                    </Hint>
+                  </div>
+                ) : null}
+                {onToggleShortlist ? (
+                  <div className="profile-action-cell is-compact">
+                    <button
+                      type="button"
+                      className="ui-btn ui-btn--ghost profile-action-btn is-icon"
+                      aria-label={shortlisted ? "Von Merkliste entfernen" : "Auf Merkliste setzen"}
+                      aria-pressed={shortlisted}
+                      onClick={onToggleShortlist}
+                    >
+                      <span className="profile-action-icon" aria-hidden="true">
+                        {shortlisted ? "★" : "☆"}
+                      </span>
+                    </button>
+                  </div>
+                ) : null}
+                {onPurchase ? (
+                  <div className="profile-action-cell">
+                    <Hint text={purchaseHintText} block>
+                      <ProfileActionButton
+                        label={t("transfer.profile.buy")}
+                        amount={purchaseAmountLabel}
+                        className={[
+                          hasScoutIntel || scouting ? "ui-btn--primary" : "ui-btn--ghost",
+                          purchaseHardBlocked ? "is-blocked" : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        onClick={handlePurchaseClick}
+                        aria-disabled={purchaseHardBlocked}
+                      />
+                    </Hint>
+                  </div>
+                ) : null}
+                {onPreContract ? (
+                  <div className="profile-action-cell">
+                    <Hint
+                      text={
+                        preContractBlockedReason ??
+                        "Vorvertrag ab 6 Monate vor Vertragsende. Signaturbonus 10–15 % der gesparten Ablöse — 1–3 Liga-Mitbieter."
+                      }
+                      block
+                    >
+                      <ProfileActionButton
+                        label="Vorvertrag"
+                        amount={preContractAmountLabel}
+                        className="ui-btn--ghost"
+                        onClick={onPreContract}
+                        disabled={Boolean(preContractBlockedReason) || askingBounds === null}
+                      />
+                    </Hint>
+                  </div>
+                ) : null}
+              </div>
+            </footer>
+          ) : null}
+        </aside>
+
+        <div className="profile-hub-spoke">
         <nav className="profile-tabs" aria-label="Spielerakte">
           {PROFILE_TABS.map((entry) => (
             <button
@@ -603,121 +711,7 @@ export function PlayerProfile({
             />
           ) : null}
         </div>
-
-        {!owned && onAssignScout ? (
-          <footer className="profile-card-footer" aria-label="Scouting und Transfer">
-            {transferNotice ? (
-              <p className="profile-purchase-block" role="status">
-                {transferNotice}
-              </p>
-            ) : null}
-            {scouting ? (
-              <p className="profile-status" role="status">
-                <span aria-hidden="true">🟢</span>
-                Scout aktiv · Bericht nach Wochensim
-              </p>
-            ) : null}
-            <div className="profile-actions">
-              {!scouting ? (
-                <div className="profile-action-cell">
-                  <Hint
-                    text="Scout beobachtet den Spieler jede Woche. Pipeline → Woche simulieren."
-                    block
-                  >
-                    <ProfileActionButton
-                      label="Scouten"
-                      className="ui-btn--primary"
-                      onClick={onAssignScout}
-                    />
-                  </Hint>
-                </div>
-              ) : null}
-              {onToggleShortlist ? (
-                <div className="profile-action-cell is-compact">
-                  <button
-                    type="button"
-                    className="ui-btn ui-btn--ghost profile-action-btn is-icon"
-                    aria-label={shortlisted ? "Von Merkliste entfernen" : "Auf Merkliste setzen"}
-                    aria-pressed={shortlisted}
-                    onClick={onToggleShortlist}
-                  >
-                    <span className="profile-action-icon" aria-hidden="true">
-                      {shortlisted ? "★" : "☆"}
-                    </span>
-                  </button>
-                </div>
-              ) : null}
-              {onPurchase ? (
-                <div className="profile-action-cell">
-                  <Hint text={purchaseHintText} block>
-                    <ProfileActionButton
-                      label={t("transfer.profile.buy")}
-                      amount={purchaseAmountLabel}
-                      className={[
-                        hasScoutIntel || scouting ? "ui-btn--primary" : "ui-btn--ghost",
-                        purchaseHardBlocked ? "is-blocked" : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      onClick={handlePurchaseClick}
-                      aria-disabled={purchaseHardBlocked}
-                    />
-                  </Hint>
-                </div>
-              ) : null}
-              {onPreContract ? (
-                <div className="profile-action-cell">
-                  <Hint
-                    text={
-                      preContractBlockedReason ??
-                      "Vorvertrag ab 6 Monate vor Vertragsende. Signaturbonus 10–15 % der gesparten Ablöse — 1–3 Liga-Mitbieter."
-                    }
-                    block
-                  >
-                    <ProfileActionButton
-                      label="Vorvertrag"
-                      amount={preContractAmountLabel}
-                      className="ui-btn--ghost"
-                      onClick={onPreContract}
-                      disabled={Boolean(preContractBlockedReason) || askingBounds === null}
-                    />
-                  </Hint>
-                </div>
-              ) : null}
-            </div>
-          </footer>
-        ) : null}
-
-        {owned && onSell ? (
-          <footer className="profile-card-footer profile-card-footer-secondary" aria-label="Transfer">
-            <div className="profile-actions profile-actions-single">
-              <div className="profile-action-cell">
-                <Hint
-                  text={
-                    saleBlockedReason ??
-                    (!transferWindowOpen
-                      ? t("transfer.profile.saleWindowOnly", { hint: transferWindowHint() })
-                      : t("transfer.profile.saleHint"))
-                  }
-                  block
-                >
-                  <ProfileActionButton
-                    label={t("transfer.profile.sell")}
-                    amount={saleOffer ? `ca. ${formatMoney(saleOffer)}` : undefined}
-                    className={[
-                      "ui-btn--ghost",
-                      !transferWindowOpen || saleBlockedReason ? "is-blocked" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    onClick={handleSaleClick}
-                    aria-disabled={!transferWindowOpen || Boolean(saleBlockedReason)}
-                  />
-                </Hint>
-              </div>
-            </div>
-          </footer>
-        ) : null}
+        </div>
       </article>
 
       {onOpenYouth ? (

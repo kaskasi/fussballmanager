@@ -39,19 +39,21 @@ export function HelpScreen() {
   const t = useT();
 
   return (
-    <main className="help">
+    <main className="help club-shell-card-body">
       <header className="help-head">
         <p className="eyebrow">{t("help.eyebrow")}</p>
         <h1>{t("help.title")}</h1>
         <p className="help-lede">{t("help.lede")}</p>
       </header>
 
-      <nav className="help-tabs" aria-label={t("help.navLabel")}>
+      <div className="fm-tab-bar" role="tablist" aria-label={t("help.navLabel")}>
         {TABS.map((entry) => (
           <button
             key={entry.id}
             type="button"
-            className={tab === entry.id ? "help-tab is-active" : "help-tab"}
+            role="tab"
+            aria-selected={tab === entry.id}
+            className={tab === entry.id ? "fm-tab is-active" : "fm-tab"}
             onClick={() => setTab(entry.id)}
           >
             {(() => {
@@ -61,7 +63,7 @@ export function HelpScreen() {
             {t(entry.labelKey)}
           </button>
         ))}
-      </nav>
+      </div>
 
       {tab === "story" ? <StoryPanel /> : null}
       {tab === "play" ? <PlayPanel /> : null}

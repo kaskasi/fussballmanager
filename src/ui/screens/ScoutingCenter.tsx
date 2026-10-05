@@ -7,6 +7,8 @@ import {
 import {
   scoutNetworkAccuracyModifier,
   scoutNetworkCapacity,
+  scoutNetworkWeeklyWage,
+  type HiredScout,
   type ScoutNetworkState,
 } from "../../scouting/scout-network.ts";
 import {
@@ -23,7 +25,7 @@ import {
   type MarketSort,
   type MarketSortKey,
 } from "../../scouting/market-list.ts";
-import { listMarketRows, sortMarketRows } from "../../scouting/market-roster.ts";
+import { listMarketRows, sortMarketRows, type MarketRow } from "../../scouting/market-roster.ts";
 import { scoutMarketValueBounds, scoutReveal } from "../../scouting/scout-visibility.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
@@ -31,8 +33,12 @@ import { Hint } from "../components/Hint.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { ScoutRegionMap } from "../components/ScoutRegionMap.tsx";
+import { ScoutNetworkPanel } from "../components/ScoutNetworkPanel.tsx";
 import { ScoutConfidenceIcon } from "../components/ScoutConfidenceIcon.tsx";
-import { Circle, Pause, Radar, Search } from "lucide-react";
+import { formatClubCash } from "../../economy/club-finances.ts";
+import { Circle, Pause, Search, Star } from "lucide-react";
+
+type ScoutingTab = "network" | "hits" | "watchlist";
 
 const POSITIONS: PositionPrimary[] = [
   "GK",
@@ -90,8 +96,13 @@ export function ScoutingCenter({
   scoutNetwork,
   scoutCapacity,
   season,
-  onOpenNetwork,
-  onBack,
+  week,
+  masterSeed,
+  cash,
+  onHireScout,
+  onFireScout,
+  shortlistIds,
+  onToggleShortlist,
 }: {
   targets: BoardTarget[];
   filters: MarketFilters;
@@ -107,10 +118,16 @@ export function ScoutingCenter({
   scoutNetwork: ScoutNetworkState;
   scoutCapacity: number;
   season: number;
-  onOpenNetwork: () => void;
-  onBack: () => void;
+  week: number;
+  masterSeed: number;
+  cash: number;
+  onHireScout: (scout: HiredScout) => void;
+  onFireScout: (scoutId: string) => void;
+  shortlistIds: readonly string[];
+  onToggleShortlist: (playerId: string) => void;
 }) {
   useT();
+  const [tab, setTab] = useState<ScoutingTab>("hits");
   const market = useMemo(
     () => targets.map((target) => ({ player: target.player, estimate: target.estimate })),
     [targets],
@@ -126,6 +143,30 @@ export function ScoutingCenter({
     const rows = listMarketRows(filtered, assignedIds, season);
     return sortMarketRows(rows, sort.key, sort.direction);
   }, [market, filters, assignedIds, sort, season]);
+  const topHits = useMemo(() => visible.slice(0, 5), [visible]);
+  const allMarketRows = useMemo(
+    () => listMarketRows(market, assignedIds, season),
+    [market, assignedIds, season],
+  );
+  const watchlistRows = useMemo(() => {
+    if (shortlistIds.length === 0) return [];
+    const byId = new Map(allMarketRows.map((row) => [row.playerId, row]));
+    return shortlistIds
+      .map((id) => byId.get(id))
+      .filter((row): row is MarketRow => row != null);
+  }, [allMarketRows, shortlistIds]);
+  const watchlistVisible = useMemo(
+    () => sortMarketRows(watchlistRows, sort.key, sort.direction),
+    [watchlistRows, sort],
+  );
+  const watchlistValueScale = useMemo(() => {
+    let max = 1;
+    for (const row of watchlistVisible) {
+      const bounds = scoutMarketValueBounds(row.player, row.estimate, season, false);
+      if (bounds) max = Math.max(max, bounds.high);
+    }
+    return max;
+  }, [watchlistVisible, season]);
   const assigned = assignedIds.size;
   const networkCapacity = scoutNetworkCapacity(scoutNetwork);
   const networkAccuracy = scoutNetworkAccuracyModifier(scoutNetwork);
@@ -147,15 +188,105 @@ export function ScoutingCenter({
     onSortChange({ key, direction: key === "name" || key === "position" ? "asc" : "desc" });
   };
 
+  const scoutingTabs: { id: ScoutingTab; labelKey: string; suffix?: string }[] = [
+    { id: "network", labelKey: "scouting.tab.network" },
+    { id: "hits", labelKey: "scouting.tab.hits" },
+    {
+      id: "watchlist",
+      labelKey: "scouting.tab.watchlist",
+      suffix: shortlistIds.length > 0 ? ` · ${shortlistIds.length}` : undefined,
+    },
+  ];
+
   return (
-    <main className="scouting">
-      <header className="scouting-head">
-        <button type="button" onClick={onBack} aria-label={t("scouting.back")}>
-          ←
-        </button>
-        <div>
-          <p className="eyebrow">{t("scouting.eyebrow")}</p>
-          <h1>{t("scouting.title")}</h1>
+    <main className="scouting club-shell-card-body">
+      <div className="fm-tab-bar" role="tablist" aria-label={t("scouting.tabs.aria")}>
+        {scoutingTabs.map(({ id, labelKey, suffix }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            className={tab === id ? "fm-tab is-active" : "fm-tab"}
+            onClick={() => setTab(id)}
+          >
+            {t(labelKey)}
+            {suffix ?? ""}
+          </button>
+        ))}
+      </div>
+
+      {tab === "network" ? (
+        <div className="fm-tab-panel">
+          <p className="scouting-scouts">
+            {t("scouting.network.meta", {
+              scouts: scoutNetwork.scouts.length,
+              capacity: networkCapacity,
+              accuracy: networkAccuracy.toFixed(2),
+            })}
+            {" · "}
+            {formatClubCash(scoutNetworkWeeklyWage(scoutNetwork))}/Woche
+          </p>
+          <section className="game-panel scouting-section" aria-label={t("scouting.network.aria")}>
+            <ScoutRegionMap targets={targets} />
+          </section>
+          <ScoutNetworkPanel
+            network={scoutNetwork}
+            season={season}
+            week={week}
+            masterSeed={masterSeed}
+            cash={cash}
+            onHire={onHireScout}
+            onFire={onFireScout}
+            showHead={false}
+          />
+        </div>
+      ) : null}
+
+      {tab === "hits" ? (
+        <div className="fm-tab-panel">
+          <section className="scouting-assignments game-panel scouting-section" aria-label={t("scouting.assignments.aria")}>
+            <header className="scouting-assignments-head">
+              <h2>{t("scouting.assignments.title")}</h2>
+              <Hint text={t("scouting.assignments.hint")} block>
+                <button type="button" className="scouting-chip" onClick={onAddAssignment}>
+                  {t("scouting.assignments.add")}
+                </button>
+              </Hint>
+            </header>
+            {assignments.length === 0 ? (
+              <p className="scouting-assignments-empty">{t("scouting.assignments.empty")}</p>
+            ) : (
+              <ul className="scouting-assignments-list">
+                {assignments.map((assignment) => (
+                  <li key={assignment.id} className="scouting-assignment-row">
+                    <button
+                      type="button"
+                      className={assignment.active ? "scouting-assignment-toggle is-on" : "scouting-assignment-toggle"}
+                      onClick={() => onToggleAssignment(assignment.id)}
+                      aria-pressed={assignment.active}
+                    >
+                      {assignment.active ? (
+                        <Circle size={14} fill="var(--rasen)" strokeWidth={2.5} />
+                      ) : (
+                        <Pause size={14} strokeWidth={2.5} />
+                      )}
+                    </button>
+                    <span className="scouting-assignment-label">{assignment.label}</span>
+                    <button
+                      type="button"
+                      className="scouting-assignment-remove"
+                      aria-label={t("scouting.assignments.remove")}
+                      onClick={() => onRemoveAssignment(assignment.id)}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
           <Hint text={t("scouting.hint")} block>
             <p className="scouting-summary">
               <span>{t("scouting.summary.known", { count: counts.known })}</span>
@@ -171,71 +302,6 @@ export function ScoutingCenter({
               hits: visible.length,
             })}
           </p>
-        </div>
-      </header>
-
-      <section className="scouting-network-card" aria-label={t("scouting.network.aria")}>
-        <button type="button" className="scouting-network-card-link" onClick={onOpenNetwork}>
-          <span className="scouting-network-card-icon" aria-hidden="true">
-            <Radar size={20} strokeWidth={2.5} />
-          </span>
-          <span className="scouting-network-card-copy">
-            <strong>{t("scouting.network.title")}</strong>
-            <span>
-              {t("scouting.network.meta", {
-                scouts: scoutNetwork.scouts.length,
-                capacity: networkCapacity,
-                accuracy: networkAccuracy.toFixed(2),
-              })}
-            </span>
-          </span>
-          <span className="scouting-network-card-cta" aria-hidden="true">→</span>
-        </button>
-      </section>
-
-      <ScoutRegionMap targets={targets} />
-
-      <section className="scouting-assignments" aria-label={t("scouting.assignments.aria")}>
-        <header className="scouting-assignments-head">
-          <h2>{t("scouting.assignments.title")}</h2>
-          <Hint text={t("scouting.assignments.hint")} block>
-            <button type="button" className="scouting-chip" onClick={onAddAssignment}>
-              {t("scouting.assignments.add")}
-            </button>
-          </Hint>
-        </header>
-        {assignments.length === 0 ? (
-          <p className="scouting-assignments-empty">{t("scouting.assignments.empty")}</p>
-        ) : (
-          <ul className="scouting-assignments-list">
-            {assignments.map((assignment) => (
-              <li key={assignment.id} className="scouting-assignment-row">
-                <button
-                  type="button"
-                  className={assignment.active ? "scouting-assignment-toggle is-on" : "scouting-assignment-toggle"}
-                  onClick={() => onToggleAssignment(assignment.id)}
-                  aria-pressed={assignment.active}
-                >
-                  {assignment.active ? (
-                    <Circle size={14} fill="var(--rasen)" strokeWidth={2.5} />
-                  ) : (
-                    <Pause size={14} strokeWidth={2.5} />
-                  )}
-                </button>
-                <span className="scouting-assignment-label">{assignment.label}</span>
-                <button
-                  type="button"
-                  className="scouting-assignment-remove"
-                  aria-label={t("scouting.assignments.remove")}
-                  onClick={() => onRemoveAssignment(assignment.id)}
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
 
       <Hint text={t("scouting.search.hint")} block>
         <label className="scouting-search">
@@ -348,88 +414,198 @@ export function ScoutingCenter({
               );
             })}
           </div>
-          <ul className="scouting-list" aria-label={t("scouting.title")}>
-            {visible.map((row) => {
-              const band = barBand(row.estimate);
-              const caTrack = barTrackPercents(band.low, band.high, band.value, CA_BAR_MAX);
-              const bounds = scoutMarketValueBounds(row.player, row.estimate, season, false);
-              const valueTrack = bounds
-                ? barTrackPercents(bounds.low, bounds.high, (bounds.low + bounds.high) / 2, valueScale)
-                : null;
-              return (
-                <li key={row.playerId} className="scouting-item">
-                  <button
-                    type="button"
-                    className="scouting-item-main"
-                    onClick={() => onSelectTarget(row.playerId)}
-                  >
-                    <PlayerPortrait
-                      seed={row.player.portrait_seed}
-                      size="sm"
-                      variant={
-                        scoutReveal(row.estimate.uncertaintyRange).showExactCa ? "known" : "silhouette"
-                      }
-                      className="scouting-portrait"
-                    />
-                    <span className="scouting-player-card">
-                      <span className="scouting-player-name">
-                        {row.assigned ? (
-                          <span className="scouting-active" title="Scout aktiv">
-                            <Circle size={12} fill="var(--rasen)" strokeWidth={2.5} />
-                          </span>
-                        ) : null}
-                        {row.displayName}
-                      </span>
-                      <span className="scouting-player-meta">
-                        {row.age} · {row.position}
-                        {row.clubName ? ` · ${row.clubName}` : ""}
-                      </span>
-                    </span>
-                    <span className="scouting-label">{targetLabel({ player: row.player, estimate: row.estimate })}</span>
-                    <div className="scouting-item-bars">
-                      <div className="scouting-bar">
-                        <small>CA</small>
-                        <div className="scouting-bar-track" aria-label={`CA ${Math.round(band.low)} bis ${Math.round(band.high)}`}>
-                          <span
-                            className="scouting-bar-ci"
-                            style={{ left: `${caTrack.ciLeft}%`, width: `${caTrack.ciWidth}%` }}
-                          />
-                          <span className="scouting-bar-fill" style={{ width: `${caTrack.fill}%` }} />
-                        </div>
-                      </div>
-                      <div className="scouting-bar">
-                        <small>€</small>
-                        <div className="scouting-bar-track" aria-label="Marktwert-Schätzung">
-                          {valueTrack ? (
-                            <>
-                              <span
-                                className="scouting-bar-ci"
-                                style={{ left: `${valueTrack.ciLeft}%`, width: `${valueTrack.ciWidth}%` }}
-                              />
-                              <span className="scouting-bar-fill" style={{ width: `${valueTrack.fill}%` }} />
-                            </>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                  <div onClick={(event) => event.stopPropagation()}>
-                    <RowMenu
-                      open={openMenuId === row.playerId}
-                      assigned={row.assigned}
-                      onToggle={() => setOpenMenuId((current) => (current === row.playerId ? null : row.playerId))}
-                      onClose={() => setOpenMenuId(null)}
-                      onScout={() => onAssignScout(row.playerId)}
-                      onOpenProfile={() => onSelectTarget(row.playerId)}
-                    />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          <ScoutingPlayerList
+            rows={topHits}
+            season={season}
+            valueScale={valueScale}
+            sectionTitle={t("scouting.hits.sectionTitle")}
+            listAriaLabel={t("scouting.title")}
+            openMenuId={openMenuId}
+            setOpenMenuId={setOpenMenuId}
+            onSelectTarget={onSelectTarget}
+            onAssignScout={onAssignScout}
+          />
         </>
       )}
+        </div>
+      ) : null}
+
+      {tab === "watchlist" ? (
+        <div className="fm-tab-panel">
+          <Hint text={t("scouting.watchlist.hint")} block>
+            <p className="scouting-scouts">{t("scouting.watchlist.summary", { count: shortlistIds.length })}</p>
+          </Hint>
+          {watchlistVisible.length === 0 ? (
+            <section className="squad-empty scouting-empty" aria-label={t("scouting.watchlist.empty.aria")}>
+              <span className="squad-empty-icon" aria-hidden="true">
+                <Star size={28} strokeWidth={2.5} />
+              </span>
+              <p>{t("scouting.watchlist.empty")}</p>
+            </section>
+          ) : (
+            <>
+              <div className="scouting-sort" role="toolbar" aria-label={t("scouting.sort.aria")}>
+                {(["name", "ca", "marketValue"] as const).map((key) => {
+                  const label =
+                    key === "name" ? t("squad.col.name") : key === "ca" ? "CA" : t("squad.col.value");
+                  const active = sort.key === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      className={active ? "scouting-chip is-active" : "scouting-chip"}
+                      aria-pressed={active}
+                      onClick={() => toggleSort(key)}
+                    >
+                      {label}
+                      {active ? (sort.direction === "asc" ? " ▲" : " ▼") : ""}
+                    </button>
+                  );
+                })}
+              </div>
+              <ScoutingPlayerList
+                rows={watchlistVisible}
+                season={season}
+                valueScale={watchlistValueScale}
+                sectionTitle={t("scouting.watchlist.sectionTitle")}
+                listAriaLabel={t("scouting.watchlist.aria")}
+                openMenuId={openMenuId}
+                setOpenMenuId={setOpenMenuId}
+                onSelectTarget={onSelectTarget}
+                onAssignScout={onAssignScout}
+                starred
+                onToggleShortlist={onToggleShortlist}
+              />
+            </>
+          )}
+        </div>
+      ) : null}
     </main>
+  );
+}
+
+function ScoutingPlayerList({
+  rows,
+  season,
+  valueScale,
+  sectionTitle,
+  listAriaLabel,
+  openMenuId,
+  setOpenMenuId,
+  onSelectTarget,
+  onAssignScout,
+  starred = false,
+  onToggleShortlist,
+}: {
+  rows: readonly MarketRow[];
+  season: number;
+  valueScale: number;
+  sectionTitle: string;
+  listAriaLabel: string;
+  openMenuId: string | null;
+  setOpenMenuId: (value: string | null | ((current: string | null) => string | null)) => void;
+  onSelectTarget: (playerId: string) => void;
+  onAssignScout: (playerId: string) => void;
+  starred?: boolean;
+  onToggleShortlist?: (playerId: string) => void;
+}) {
+  return (
+    <>
+      <h2 className="scouting-section-title">{sectionTitle}</h2>
+      <ul className="scouting-list" aria-label={listAriaLabel}>
+        {rows.map((row) => {
+          const band = barBand(row.estimate);
+          const caTrack = barTrackPercents(band.low, band.high, band.value, CA_BAR_MAX);
+          const bounds = scoutMarketValueBounds(row.player, row.estimate, season, false);
+          const valueTrack = bounds
+            ? barTrackPercents(bounds.low, bounds.high, (bounds.low + bounds.high) / 2, valueScale)
+            : null;
+          return (
+            <li key={row.playerId} className="scouting-item">
+              <button
+                type="button"
+                className="scouting-item-main"
+                onClick={() => onSelectTarget(row.playerId)}
+              >
+                <PlayerPortrait
+                  seed={row.player.portrait_seed}
+                  size="sm"
+                  variant={scoutReveal(row.estimate.uncertaintyRange).showExactCa ? "known" : "silhouette"}
+                  className="scouting-portrait"
+                />
+                <span className="scouting-player-card">
+                  <span className="scouting-player-name">
+                    {!starred && row.assigned ? (
+                      <span className="scouting-active" title="Scout aktiv">
+                        <Circle size={12} fill="var(--rasen)" strokeWidth={2.5} />
+                      </span>
+                    ) : null}
+                    {starred ? (
+                      <Star size={14} fill="var(--sonnengelb)" strokeWidth={2.5} className="scouting-watchlist-star" aria-hidden />
+                    ) : null}
+                    {row.displayName}
+                  </span>
+                  <span className="scouting-player-meta">
+                    {row.age} · {row.position}
+                    {row.clubName ? ` · ${row.clubName}` : ""}
+                  </span>
+                </span>
+                <span className="scouting-label">{targetLabel({ player: row.player, estimate: row.estimate })}</span>
+                <div className="scouting-item-bars">
+                  <div className="scouting-bar">
+                    <small>CA</small>
+                    <div
+                      className="scouting-bar-track"
+                      aria-label={`CA ${Math.round(band.low)} bis ${Math.round(band.high)}`}
+                    >
+                      <span
+                        className="scouting-bar-ci"
+                        style={{ left: `${caTrack.ciLeft}%`, width: `${caTrack.ciWidth}%` }}
+                      />
+                      <span className="scouting-bar-fill" style={{ width: `${caTrack.fill}%` }} />
+                    </div>
+                  </div>
+                  <div className="scouting-bar">
+                    <small>€</small>
+                    <div className="scouting-bar-track" aria-label="Marktwert-Schätzung">
+                      {valueTrack ? (
+                        <>
+                          <span
+                            className="scouting-bar-ci"
+                            style={{ left: `${valueTrack.ciLeft}%`, width: `${valueTrack.ciWidth}%` }}
+                          />
+                          <span className="scouting-bar-fill" style={{ width: `${valueTrack.fill}%` }} />
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              </button>
+              <div className="scouting-item-actions" onClick={(event) => event.stopPropagation()}>
+                {starred && onToggleShortlist ? (
+                  <button
+                    type="button"
+                    className="scouting-watchlist-star-btn"
+                    aria-label={t("scouting.watchlist.remove")}
+                    onClick={() => onToggleShortlist(row.playerId)}
+                  >
+                    <Star size={16} fill="var(--sonnengelb)" strokeWidth={2.5} />
+                  </button>
+                ) : null}
+                <RowMenu
+                  open={openMenuId === row.playerId}
+                  assigned={row.assigned}
+                  onToggle={() => setOpenMenuId((current) => (current === row.playerId ? null : row.playerId))}
+                  onClose={() => setOpenMenuId(null)}
+                  onScout={() => onAssignScout(row.playerId)}
+                  onOpenProfile={() => onSelectTarget(row.playerId)}
+                />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }
 

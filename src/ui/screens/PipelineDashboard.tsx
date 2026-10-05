@@ -154,7 +154,7 @@ export function PipelineDashboard({
     .join(" · ");
 
   return (
-    <main className="pipeline">
+    <main className="pipeline club-shell-card-body">
       <SummerChecklistPanel
         week={week}
         season={season}

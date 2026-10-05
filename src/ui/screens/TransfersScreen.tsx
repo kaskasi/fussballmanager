@@ -44,7 +44,6 @@ export function TransfersScreen({
   history,
   scoutTargetIds,
   pending,
-  onBack,
   onSelectPlayer,
   onSelectForeignPlayer,
   onRecallLoan,
@@ -59,7 +58,6 @@ export function TransfersScreen({
   scoutTargetIds: readonly string[];
   pending: readonly PendingTransfer[];
   worldClubs?: readonly WorldClub[];
-  onBack: () => void;
   onSelectPlayer: (playerId: string) => void;
   onSelectForeignPlayer: (playerId: string) => void;
   onRecallLoan: (playerId: string) => void;
@@ -96,14 +94,9 @@ export function TransfersScreen({
   }
 
   return (
-    <main className="transfers screen-shell">
-      <header className="transfers-head">
-        <button type="button" onClick={onBack} aria-label="Zurück zur Pipeline">
-          ←
-        </button>
-        <div>
-          <p className="eyebrow">{formatSeasonLabel(season)}</p>
-          <h1>Transfers</h1>
+    <main className="transfers club-shell-card-body">
+      <div className="fm-tab-panel">
+        <header className="transfers-meta" aria-label="Transferfenster">
           <p className={windowOpen ? "transfers-window-chip" : "transfers-window-chip is-closed"}>
             {transferWindowLabel(week)}
           </p>
@@ -116,10 +109,9 @@ export function TransfersScreen({
               {activeLoans.length > 0 ? ` · ${activeLoans.length} verliehen` : ""}
             </p>
           </Hint>
-        </div>
-      </header>
+        </header>
 
-      <section className="transfers-next" aria-label="Nächste Aktion">
+        <section className="transfers-next" aria-label="Nächste Aktion">
         <h2>Nächste Aktion</h2>
         <ul className="transfers-next-list">
           {nextActions.map((action) => (
@@ -272,7 +264,8 @@ export function TransfersScreen({
             ))}
           </ul>
         )}
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

@@ -3046,7 +3046,7 @@ body {
   color: #1e40af;
 }
 
-.finances {
+.finances:not(.club-shell-card-body) {
   max-width: 42rem;
   margin: 0 auto;
   padding: 0 1rem 2rem;
@@ -3415,7 +3415,7 @@ body {
   background: #e2e8f0;
 }
 
-.stadium {
+.stadium:not(.club-shell-card-body) {
   max-width: 56rem;
   margin: 0 auto;
   padding: 0 1rem 2rem;
@@ -5540,7 +5540,7 @@ body {
   font-weight: 800;
 }
 
-.training {
+.training:not(.club-shell-card-body) {
   max-width: 52rem;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 2.5rem;
@@ -7513,15 +7513,15 @@ body {
   border: 0;
 }
 
-.scouting {
+.scouting:not(.club-shell-card-body) {
   max-width: 52rem;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 2.5rem;
 }
 
-.squad,
+.squad:not(.club-shell-card-body),
 .loans,
-.transfers {
+.transfers:not(.club-shell-card-body) {
   max-width: 52rem;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 2.5rem;
@@ -8968,7 +8968,7 @@ body {
   }
 }
 
-.campus {
+.campus:not(.club-shell-card-body) {
   max-width: 72rem;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 2.5rem;
@@ -10178,7 +10178,13 @@ body {
     font-size: 0.82rem;
   }
 
-  .app-nav-menu .row-menu-trigger {
+  .app-nav-menu .row-menu-trigger.app-nav-menu-trigger,
+  .app-nav-actions .app-nav-next {
+    height: 2.35rem;
+    min-height: 2.35rem;
+  }
+
+  .app-nav-menu .row-menu-trigger:not(.app-nav-menu-trigger) {
     width: 2.25rem;
     height: 2.25rem;
   }
@@ -10683,7 +10689,7 @@ body {
 
 /* ── F12.7 Hilfe & Doku ───────────────────────────── */
 
-.help {
+.help:not(.club-shell-card-body) {
   max-width: 48rem;
   margin: 0 auto;
   padding: 1.1rem 1.25rem 2.5rem;

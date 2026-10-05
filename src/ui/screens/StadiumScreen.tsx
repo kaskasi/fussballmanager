@@ -1,4 +1,14 @@
 import { useState } from "react";
+import { Construction, Dumbbell, Home, Star } from "lucide-react";
+import type { AcademyFacility } from "../../youth/intake-generator.ts";
+import {
+  ACADEMY_FACILITIES,
+  academyStage,
+  canBuyAcademyUpgrade,
+  facilityById,
+  facilityGate,
+} from "../../youth/academy.ts";
+import { hqIntakeCount } from "../../youth/intake-generator.ts";
 import {
   adjustBlockTicketPrice,
   fillRateDeltaFromReference,
@@ -74,11 +84,14 @@ export function StadiumScreen({
   onPlaceStreet,
   onExpandPrecinct,
   onShrinkPrecinctToMin,
-  onBack,
+  academyFacility,
+  onUpgradeAcademy,
 }: {
   stadium: ClubStadium;
   finances: ClubFinances;
   season: number;
+  academyFacility?: AcademyFacility;
+  onUpgradeAcademy?: () => void;
   onStadiumChange: (stadium: ClubStadium) => void;
   onPurchaseUpgrade: (upgradeId: string) => void;
   onPlacePrecinct: (
@@ -92,7 +105,6 @@ export function StadiumScreen({
   onPlaceStreet: (cells: Array<{ x: number; y: number }>) => void;
   onExpandPrecinct: (patchId: string, edge: PrecinctEdge, delta?: 1 | -1) => void;
   onShrinkPrecinctToMin: (patchId: string) => void;
-  onBack?: () => void;
 }) {
   const [tab, setTab] = useState<StadiumTab>("plan");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -118,26 +130,22 @@ export function StadiumScreen({
     setOpenSlotId(null);
   }
 
-  return (
-    <main className="stadium">
-      <header className="stadium-head">
-        {onBack ? (
-          <button type="button" onClick={onBack} aria-label="Zurück">
-            ←
-          </button>
-        ) : null}
-        <div>
-          <p className="eyebrow">Verein</p>
-          <h1>{stadium.name}</h1>
-          <p className="stadium-sub">
-            {capacity.toLocaleString("de-DE")} Plätze · Ø Ticket € {avgTicket.toFixed(0)} · Heimspiel{" "}
-            {formatClubCash(matchdayIncome)}
-          </p>
-        </div>
+  const stadiumTabs: { id: StadiumTab; label: string }[] = [
+    { id: "plan", label: "Grundriss" },
+    { id: "precinct", label: "Gelände" },
+    { id: "upgrades", label: "Ausbau" },
+  ];
+
+  const stadiumContext = (
+    <>
+      <header className="stadium-scoreboard">
+        <h2 className="stadium-scoreboard-name">{stadium.name}</h2>
+        <p className="stadium-sub">
+          {capacity.toLocaleString("de-DE")} Plätze · Ø Ticket € {avgTicket.toFixed(0)} · Heimspiel{" "}
+          {formatClubCash(matchdayIncome)}
+        </p>
       </header>
-
       <MoodPhotoBand src={moodPhoto} className="stadium-hero" />
-
       <section className="stadium-fanbase" aria-label="Fanbase">
         <div className={`stadium-fanbase-card is-${mood}`}>
           <span className="stadium-fanbase-icon" aria-hidden="true">
@@ -155,34 +163,31 @@ export function StadiumScreen({
           ) : null}
         </div>
       </section>
+    </>
+  );
 
-      <nav className="stadium-tabs" aria-label="Stadionbereiche">
-        <button
-          type="button"
-          className={tab === "plan" ? "stadium-tab is-active" : "stadium-tab"}
-          onClick={() => setTab("plan")}
-        >
-          Grundriss
-        </button>
-        <button
-          type="button"
-          className={tab === "precinct" ? "stadium-tab is-active" : "stadium-tab"}
-          onClick={() => setTab("precinct")}
-        >
-          Gelände
-        </button>
-        <button
-          type="button"
-          className={tab === "upgrades" ? "stadium-tab is-active" : "stadium-tab"}
-          onClick={() => setTab("upgrades")}
-        >
-          Ausbau
-        </button>
-      </nav>
+  return (
+    <main className="stadium club-shell-card-body">
+      <div className="fm-tab-bar" role="tablist" aria-label="Stadionbereiche">
+        {stadiumTabs.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            className={tab === id ? "fm-tab is-active" : "fm-tab"}
+            onClick={() => setTab(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       {tab === "plan" ? (
-        <Hint text="Leere Banden auf den Tribünen-Karten klicken — Laufzeit und Geld im Modal." block>
-          <section className="stadium-layout" aria-label="Stadion-Grundriss">
+        <div className="fm-tab-panel">
+          {stadiumContext}
+          <Hint text="Leere Banden auf den Tribünen-Karten klicken — Laufzeit und Geld im Modal." block>
+            <section className="stadium-layout" aria-label="Stadion-Grundriss">
             <StadiumPitchPlan
               blocks={stadium.blocks}
               deals={stadium.sponsor_deals}
@@ -211,12 +216,14 @@ export function StadiumScreen({
                 />
               );
             })}
-          </section>
-        </Hint>
+            </section>
+          </Hint>
+        </div>
       ) : null}
 
       {tab === "precinct" ? (
-        <>
+        <div className="fm-tab-panel">
+          {stadiumContext}
           <MoodPhotoBand src={PRECINCT_HEADER_PHOTO} className="stadium-precinct-header" />
           <PrecinctGrid
             precinct={precinct}
@@ -229,13 +236,23 @@ export function StadiumScreen({
             onExpand={onExpandPrecinct}
             onShrinkToMin={onShrinkPrecinctToMin}
           />
-        </>
+        </div>
       ) : null}
 
       {tab === "upgrades" ? (
-        <section className="stadium-upgrades" aria-label="Stadionausbau">
-          <h2>🏗️ Ausbau</h2>
-          <CashChip cash={finances.cash} />
+        <div className="fm-tab-panel">
+          {stadiumContext}
+          <section className="stadium-upgrades" aria-label="Stadionausbau">
+            <CashChip cash={finances.cash} />
+          {academyFacility && onUpgradeAcademy ? (
+            <AcademyUpgradeSection
+              ownedId={academyFacility}
+              stadiumCapacity={capacity}
+              cash={finances.cash}
+              onUpgrade={onUpgradeAcademy}
+            />
+          ) : null}
+          <h3 className="stadium-upgrade-category">Stadion</h3>
           <ul className="stadium-upgrade-list">
             {stadiumUpgradeCatalog().map((upgrade) => {
               const level = stadiumUpgradeLevel(stadium, upgrade.id);
@@ -245,7 +262,7 @@ export function StadiumScreen({
               return (
                 <li key={upgrade.id} className="stadium-upgrade-card">
                   <span className="stadium-upgrade-icon" aria-hidden="true">
-                    {upgrade.icon}
+                    <Construction size={20} strokeWidth={2.5} />
                   </span>
                   <div className="stadium-upgrade-body">
                     <strong>{upgrade.name}</strong>
@@ -268,7 +285,8 @@ export function StadiumScreen({
               );
             })}
           </ul>
-        </section>
+          </section>
+        </div>
       ) : null}
 
       {openSlot ? (
@@ -522,6 +540,74 @@ function FillMeter({
       </div>
       <p className="stadium-fill-sold">~{sold.toLocaleString("de-DE")} Zuschauer</p>
     </div>
+  );
+}
+
+function AcademyUpgradeSection({
+  ownedId,
+  stadiumCapacity,
+  cash,
+  onUpgrade,
+}: {
+  ownedId: AcademyFacility;
+  stadiumCapacity: number;
+  cash: number;
+  onUpgrade: () => void;
+}) {
+  const owned = facilityById(ownedId);
+  const buy = canBuyAcademyUpgrade(ownedId, stadiumCapacity, cash);
+  const icons: Record<AcademyFacility, typeof Home> = {
+    academy_basic: Home,
+    academy_performance: Dumbbell,
+    academy_elite: Star,
+  };
+
+  return (
+    <>
+      <h3 className="stadium-upgrade-category">Nachwuchs</h3>
+      <p className="stadium-academy-strip">
+        Campus Stufe {academyStage(ownedId)}/3 · Intake {hqIntakeCount(ownedId)} · {owned.name}
+      </p>
+      <ul className="stadium-upgrade-list">
+        {ACADEMY_FACILITIES.map((facility) => {
+          const gate = facilityGate(ownedId, facility.id, stadiumCapacity);
+          const Icon = icons[facility.id];
+          const isOwned = facility.id === ownedId;
+          const isNext = buy.ok && buy.target === facility.id;
+          return (
+            <li key={facility.id} className="stadium-upgrade-card">
+              <span className="stadium-upgrade-icon" aria-hidden="true">
+                <Icon size={20} strokeWidth={2.5} />
+              </span>
+              <div className="stadium-upgrade-body">
+                <strong>{facility.name}</strong>
+                <p>{facility.effect}</p>
+                <p className="stadium-upgrade-meta">
+                  {isOwned
+                    ? "Aktuell"
+                    : gate.status === "needs_stadium"
+                      ? `Stadion ${gate.capacity.toLocaleString("de-DE")} Plätze nötig`
+                      : gate.status === "needs_performance"
+                        ? "Leistungszentrum zuerst"
+                        : facility.cost > 0
+                          ? formatClubCash(facility.cost)
+                          : "Basis"}
+                </p>
+              </div>
+              {isNext ? (
+                <button type="button" className="stadium-upgrade-buy" onClick={onUpgrade}>
+                  Ausbauen
+                </button>
+              ) : isOwned ? (
+                <span className="stadium-upgrade-owned">●</span>
+              ) : (
+                <span className="stadium-upgrade-owned">—</span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }
 

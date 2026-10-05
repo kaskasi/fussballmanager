@@ -17,11 +17,9 @@ import {
   type ProSquadSortKey,
 } from "../../squad/pro-roster.ts";
 import { caDeltaClassName, caDeltaMark, formatCaDelta } from "../../player/ca-tracking.ts";
-import { fatigueAmpelClassName } from "../../development/training-load.ts";
 import { Hint } from "../components/Hint.tsx";
-import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
+import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { formMark, stateMark } from "../player-profile.ts";
-import { formatSeasonDisplay } from "../../i18n/calendar-display.ts";
 import { useT } from "../../i18n/react.ts";
 import { t } from "../../i18n/index.ts";
 
@@ -46,7 +44,6 @@ export function FirstTeam({
   clubId,
   season,
   trainingIntensity = 100,
-  onBack,
   onSelectPlayer,
   week = 1,
   coachingStaff,
@@ -64,7 +61,7 @@ export function FirstTeam({
   clubId: string;
   season: number;
   trainingIntensity?: number;
-  onBack: () => void;
+  onBack?: () => void;
   onSelectPlayer: (playerId: string) => void;
   week?: number;
   coachingStaff?: CoachingStaff;
@@ -101,128 +98,175 @@ export function FirstTeam({
     setSortDirection(key === "name" || key === "position" ? "asc" : "desc");
   };
 
+  const squadTabs: { id: SquadTab; label: string }[] = [
+    { id: "list", label: t("shell.nav.squad") },
+    { id: "mentoring", label: "Mentoring" },
+    { id: "staff", label: "Staff" },
+  ];
+
   return (
-    <main className="squad screen-shell">
-      <header className="squad-head">
-        <button type="button" onClick={onBack} aria-label={t("squad.back")}>
-          ←
-        </button>
-        <div>
-          <p className="eyebrow">{formatSeasonDisplay(season)}</p>
-          <h1>{t("squad.title")}</h1>
-          <Hint text={t("squad.hint")} block>
-            <p className="squad-summary">
-              {t("squad.summary", {
-                count: rows.length,
-                avgCa,
-                value: formatMarketValueShort(totalValue),
-              })}
-            </p>
-          </Hint>
-        </div>
-      </header>
+    <main className="squad club-shell-card-body">
+      <div className="fm-tab-bar" role="tablist" aria-label="Kader-Bereiche">
+        {squadTabs.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={squadTab === id}
+            className={squadTab === id ? "fm-tab is-active" : "fm-tab"}
+            onClick={() => setSquadTab(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
-      <nav className="training-tabs squad-tabs" aria-label="Kader-Bereiche">
-        <button type="button" className={squadTab === "list" ? "training-tab is-active" : "training-tab"} onClick={() => setSquadTab("list")}>Liste</button>
-        <button type="button" className={squadTab === "mentoring" ? "training-tab is-active" : "training-tab"} onClick={() => setSquadTab("mentoring")}>Mentoring</button>
-        <button type="button" className={squadTab === "staff" ? "training-tab is-active" : "training-tab"} onClick={() => setSquadTab("staff")}>Staff</button>
-      </nav>
-
-      {squadTab !== "list" ? (
-        squadTab === "mentoring" && onAssignMentor && onClearMentor ? (
-          <MentoringPanel players={players} clubId={clubId} season={season} week={week} onAssignMentor={onAssignMentor} onClearMentor={onClearMentor} />
-        ) : squadTab === "staff" && coachingStaff && onHireCoach && assistantDelegation && onAssistantDelegationChange ? (
-          <>
-            <AssistantDelegationPanel assistantName={assistantName} staff={coachingStaff} delegation={assistantDelegation} onChange={onAssistantDelegationChange} />
-            <CoachingStaffPanel staff={coachingStaff} season={season} week={week} masterSeed={masterSeed} cash={cash} onHire={onHireCoach} />
-            <FitnessManagementPanel players={players} clubId={clubId} intensity={trainingIntensity} injuryRiskFactor={injuryRiskFactor} />
-          </>
-        ) : (
-          <p className="hub-inbox-empty">Staff-Bereich im Kader — Daten aus Training migriert.</p>
-        )
-      ) : rows.length === 0 ? (
-        <section className="squad-empty" aria-label={t("squad.empty.aria")}>
-          <span className="squad-empty-icon" aria-hidden="true">
-            <Users size={28} strokeWidth={2.5} />
-          </span>
-          <p>{t("squad.empty")}</p>
-          <p className="squad-empty-hint">{t("squad.emptyHint")}</p>
-        </section>
-      ) : (
-        <div className="squad-table-wrap">
-          <table className="squad-table">
-            <thead>
-              <tr>
-                <SquadSortHeader label={t("squad.col.name")} sortKey="name" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} align="left" />
-                <SquadSortHeader label={t("squad.col.pos")} sortKey="position" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label={t("squad.col.age")} sortKey="age" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="CA" sortKey="ca" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="Δ" sortKey="caDelta" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title={t("squad.col.caDeltaTitle")} />
-                <SquadSortHeader label={t("squad.col.value")} sortKey="marketValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="Fit" sortKey="fitness" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title={t("squad.col.fitTitle")} />
-                <SquadSortHeader label="Min/Wo" sortKey="weeklyMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title={t("squad.col.minWeekTitle")} />
-                <SquadSortHeader label="Risiko" sortKey="injuryRisk" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} title={t("squad.col.riskTitle")} />
-                <SquadSortHeader label="Min" sortKey="seasonMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="T" sortKey="goals" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="A" sortKey="assists" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="K" sortKey="yellowCards" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="Tkl" sortKey="tackles" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="Kop" sortKey="headers" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="Ø" sortKey="avgRating" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-                <SquadSortHeader label="Form" sortKey="form" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.playerId} className="squad-table-row" onClick={() => onSelectPlayer(row.playerId)}>
-                  <td className="squad-col-name">{row.displayName}</td>
-                  <td>{row.position}</td>
-                  <td>{row.age}</td>
-                  <td className="squad-col-ca">{row.ca}</td>
-                  <td className={caDeltaClassName(row.caDelta)} title="CA seit letzter Woche">
-                    <span className="squad-delta-mark" aria-hidden="true">{caDeltaMark(row.caDelta)}</span>
-                    {formatCaDelta(row.caDelta)}
-                  </td>
-                  <td className="squad-col-value">{formatMarketValueShort(row.marketValue)}</td>
-                  <td className={`squad-fitness is-${stateMark(row.fitness, 75, 50).tone}`} title={`Fitness ${row.fitness}%`}>
-                    <span className="squad-shape-mark" aria-hidden="true">{stateMark(row.fitness, 75, 50).mark}</span>
-                    {row.fitness}
-                  </td>
-                  <td>{row.weeklyMinutes}</td>
-                  <td className={`squad-risk is-${injuryRiskAmpel(row.injuryRisk)}`} title={`Verletzungsrisiko ${row.injuryRisk}`}>
-                    <span className={`pipeline-light ${fatigueAmpelClassName(injuryRiskAmpel(row.injuryRisk))}`} aria-hidden="true">
-                      {injuryRiskIcon(row.injuryRisk)}
-                    </span>
-                    {row.injuryRisk}
-                  </td>
-                  <td>{row.seasonMinutes}</td>
-                  <td>{row.goals}</td>
-                  <td>{row.assists}</td>
-                  <td>{row.yellowCards}</td>
-                  <td>{row.tackles}</td>
-                  <td>{row.headers}</td>
-                  <td>{row.avgRating?.toFixed(1) ?? "—"}</td>
-                  <td className={`squad-form is-${formMark(row.form).tone}`} title={`Form ${row.form}`}>
-                    <span className="squad-shape-mark" aria-hidden="true">{formMark(row.form).mark}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {squadTab === "list" ? (
+        <div className="fm-tab-panel">
+          {rows.length === 0 ? (
+            <section className="squad-empty" aria-label={t("squad.empty.aria")}>
+              <span className="squad-empty-icon" aria-hidden="true">
+                <Users size={28} strokeWidth={2.5} />
+              </span>
+              <p>{t("squad.empty")}</p>
+              <p className="squad-empty-hint">{t("squad.emptyHint")}</p>
+            </section>
+          ) : (
+            <>
+              <div className="squad-list-head">
+                <div className="squad-list-toolbar" role="toolbar" aria-label={t("squad.sort.aria", { defaultValue: "Sortieren" })}>
+                  {(
+                    [
+                      ["name", t("squad.col.name")],
+                      ["position", t("squad.col.pos")],
+                      ["ca", "CA"],
+                      ["form", "Form"],
+                      ["age", t("squad.col.age")],
+                    ] as const
+                  ).map(([key, label]) => {
+                    const active = sortKey === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        className={active ? "squad-sort-chip is-active" : "squad-sort-chip"}
+                        aria-pressed={active}
+                        onClick={() => toggleSort(key)}
+                      >
+                        {label}
+                        {active ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}
+                      </button>
+                    );
+                  })}
+                </div>
+                <Hint text={t("squad.hint")}>
+                  <p className="squad-summary squad-summary--head">
+                    {t("squad.summaryHead", {
+                      avgCa,
+                      value: formatMarketValueShort(totalValue),
+                    })}
+                  </p>
+                </Hint>
+              </div>
+              <ul className="squad-player-cards" aria-label={t("squad.title")}>
+                {rows.map((row) => {
+                  const player = players.find((entry) => entry.id === row.playerId);
+                  const fit = stateMark(row.fitness, 75, 50);
+                  const form = formMark(row.form);
+                  return (
+                    <li key={row.playerId} className="squad-player-card game-panel">
+                      {player ? (
+                        <PlayerPortrait seed={player.portrait_seed} size="sm" className="squad-player-card-portrait" />
+                      ) : null}
+                      <div className="squad-player-card-body">
+                        <button type="button" className="squad-player-card-main" onClick={() => onSelectPlayer(row.playerId)}>
+                          <strong>{row.displayName}</strong>
+                          <span className="squad-player-card-meta">
+                            {row.position} · {row.age} J. · CA {row.ca}
+                            <span className={caDeltaClassName(row.caDelta)} title="CA Δ">
+                              {" "}
+                              {caDeltaMark(row.caDelta)}
+                              {formatCaDelta(row.caDelta)}
+                            </span>
+                          </span>
+                          <span className="squad-player-card-status">
+                            <span className={`squad-fitness is-${fit.tone}`}>
+                              Fit {row.fitness}
+                              <span className="squad-shape-mark" aria-hidden="true">
+                                {fit.mark}
+                              </span>
+                            </span>
+                            · {formatMarketValueShort(row.marketValue)}
+                            <span className={`squad-form is-${form.tone}`} title={`Form ${row.form}`}>
+                              <span className="squad-shape-mark" aria-hidden="true">
+                                {form.mark}
+                              </span>
+                            </span>
+                          </span>
+                        </button>
+                        <div className="squad-player-card-actions">
+                          <button type="button" className="ui-btn ui-btn--ghost ui-btn--sm" onClick={() => onSelectPlayer(row.playerId)}>
+                            Profil
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
         </div>
-      )}
+      ) : null}
+
+      {squadTab === "mentoring" ? (
+        <div className="fm-tab-panel">
+          {onAssignMentor && onClearMentor ? (
+            <MentoringPanel
+              players={players}
+              clubId={clubId}
+              season={season}
+              week={week}
+              onAssignMentor={onAssignMentor}
+              onClearMentor={onClearMentor}
+            />
+          ) : (
+            <p className="hub-inbox-empty">Mentoring nicht verfügbar.</p>
+          )}
+        </div>
+      ) : null}
+
+      {squadTab === "staff" ? (
+        <div className="fm-tab-panel">
+          {coachingStaff && onHireCoach && assistantDelegation && onAssistantDelegationChange ? (
+            <>
+              <AssistantDelegationPanel
+                assistantName={assistantName}
+                staff={coachingStaff}
+                delegation={assistantDelegation}
+                onChange={onAssistantDelegationChange}
+              />
+              <CoachingStaffPanel
+                staff={coachingStaff}
+                season={season}
+                week={week}
+                masterSeed={masterSeed}
+                cash={cash}
+                onHire={onHireCoach}
+              />
+              <FitnessManagementPanel
+                players={players}
+                clubId={clubId}
+                intensity={trainingIntensity}
+                injuryRiskFactor={injuryRiskFactor}
+              />
+            </>
+          ) : (
+            <p className="hub-inbox-empty">Staff-Bereich im Kader — Daten aus Training migriert.</p>
+          )}
+        </div>
+      ) : null}
     </main>
   );
 }
 
-function injuryRiskAmpel(score: number): "good" | "watch" | "risk" {
-  if (score >= 70) return "risk";
-  if (score >= 40) return "watch";
-  return "good";
-}
-
-function injuryRiskIcon(score: number): string {
-  if (score >= 70) return "◆";
-  if (score >= 40) return "▲";
-  return "●";
-}

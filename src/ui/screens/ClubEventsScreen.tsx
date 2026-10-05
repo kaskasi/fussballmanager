@@ -16,7 +16,7 @@ export function ClubEventsScreen({
 }) {
   useT();
   return (
-    <main className="screen-shell">
+    <main className="club-shell-card-body">
       <header className="screen-title-row">
         <div>
           <button type="button" className="screen-back-link" onClick={onBack}>

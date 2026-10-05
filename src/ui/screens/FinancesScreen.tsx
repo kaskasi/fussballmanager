@@ -1,4 +1,4 @@
-import { useMemo, type ComponentType } from "react";
+import { useMemo, useState, type ComponentType } from "react";
 import {
   Briefcase,
   Flame,
@@ -49,6 +49,8 @@ import { Hint } from "../components/Hint.tsx";
 import { COMMERCE_KIOSK_PHOTO } from "../assets/hub-photos.ts";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
 
+type FinancePanelTab = "overview" | "commerce" | "runway" | "season";
+
 const SPARK_W = 312;
 const SPARK_H = 56;
 const FLOW_W = 312;
@@ -68,7 +70,6 @@ export function FinancesScreen({
   coachingStaff,
   scoutNetwork,
   boardCashFloor = 0,
-  onBack,
   onOpenStadium,
 }: {
   finances: ClubFinances;
@@ -81,10 +82,10 @@ export function FinancesScreen({
   coachingStaff: CoachingStaff;
   scoutNetwork: ScoutNetworkState;
   boardCashFloor?: number;
-  onBack: () => void;
   onOpenStadium: () => void;
 }) {
   const t = useT();
+  const [panelTab, setPanelTab] = useState<FinancePanelTab>("overview");
   const month = financeMonthForWeek(week);
   const wageBill = weeklyWageBill(players, clubId);
   const wageStatus = wageBudgetStatus(finances, players, clubId);
@@ -134,28 +135,32 @@ export function FinancesScreen({
       : 0;
 
   return (
-    <main className="finances screen-shell">
-      <header className="finances-head screen-title-row">
-        <div>
-          <button type="button" className="screen-back-link" onClick={onBack} aria-label="Zurück zur Pipeline">
-            ←
-          </button>
-          <h1>
-            {t("finances.title")} · Monat {month}
-          </h1>
-          <p className="finances-sub">{formatSeasonLabel(season)}</p>
+    <main className="finances club-shell-card-body">
+      <section className="finances-shell game-panel" aria-label={t("finances.title")}>
+        <div className="fm-tab-bar" role="tablist" aria-label="Finanz-Bereiche">
+          {(
+            [
+              ["overview", "Übersicht"],
+              ["commerce", "Commerce"],
+              ["runway", "Runway"],
+              ["season", "Saison"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={panelTab === id}
+              className={panelTab === id ? "fm-tab is-active" : "fm-tab"}
+              onClick={() => setPanelTab(id)}
+            >
+              {label}
+            </button>
+          ))}
         </div>
-        <div className="finances-month-nav" aria-label="Monat">
-          <button type="button" disabled title="Folgt mit der Wochensimulation">
-            ◀
-          </button>
-          <button type="button" disabled title="Folgt mit der Wochensimulation">
-            ▶
-          </button>
-        </div>
-      </header>
 
-      <section className="finances-hero game-panel" aria-label="Cashflow und Budget">
+        {panelTab === "overview" ? (
+          <div className="fm-tab-panel finances-hero" aria-label="Cashflow und Budget">
         <div className="finances-hero-grid">
           <section className="finances-waterfall" aria-label={`Cashflow ${waterfall.title}`}>
             <div className="finances-waterfall-head">
@@ -225,8 +230,11 @@ export function FinancesScreen({
             />
           </section>
         </div>
-      </section>
+          </div>
+        ) : null}
 
+        {panelTab === "commerce" ? (
+          <div className="fm-tab-panel" aria-label="Commerce">
       <section className="finances-detail-cards" aria-label="Kasse im Detail">
         <article className={`finances-detail`}>
           <h2>
@@ -262,7 +270,13 @@ export function FinancesScreen({
             {formatFanbase(stadium.fanbase ?? DEFAULT_FANBASE)} · voll {formatClubCash(tickets)}
           </p>
         </button>
-        <article className={`finances-detail${belowFloor || finances.cash < 0 || monthNegative ? " is-warn" : ""}`}>
+      </section>
+          </div>
+        ) : null}
+
+        {panelTab === "runway" ? (
+          <div className="fm-tab-panel" aria-label="Runway">
+        <article className={`finances-detail finances-detail--solo${belowFloor || finances.cash < 0 || monthNegative ? " is-warn" : ""}`}>
           <h2>
             <TrendingDown size={18} strokeWidth={2.5} aria-hidden />
             Runway
@@ -277,8 +291,11 @@ export function FinancesScreen({
               : `Puffer ${formatSignedCash(finances.cash - boardCashFloor)}`}
           </p>
         </article>
-      </section>
+          </div>
+        ) : null}
 
+        {panelTab === "season" ? (
+          <div className="fm-tab-panel" aria-label="Saison">
       <section className="finances-sparkline" aria-label="Saison-Cash-Verlauf">
         <Hint text="Kassenstand über 13 Monate. Flach in Woche 1 ist ehrlich." block>
           <h2>{formatSeasonLabel(season)}</h2>
@@ -310,6 +327,9 @@ export function FinancesScreen({
           </svg>
         </Hint>
         <CategoryFlowChart rows={flows} currentMonth={month} />
+      </section>
+          </div>
+        ) : null}
       </section>
     </main>
   );

@@ -15,6 +15,307 @@
   padding: 1rem 1.1rem 1.15rem;
 }
 
+/* — Shell header (design.md §6) — */
+.app-nav.club-shell-grid {
+  width: 100%;
+}
+
+.app-nav.club-shell-card-head,
+.app-nav.club-shell-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.app-nav.club-shell-card-head {
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0.65rem 1rem;
+  background: var(--panel) !important;
+  border: var(--outline);
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.app-nav .club-shell-identity {
+  justify-self: start;
+  min-width: 0;
+}
+
+.app-nav .app-nav-center {
+  justify-self: center;
+  min-width: 0;
+  max-width: 100%;
+  text-align: center;
+}
+
+.app-nav .app-nav-actions {
+  justify-self: end;
+}
+
+.transfer-ambience-header {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #92400e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.transfer-ambience-header--winter {
+  color: #1e40af;
+}
+
+.transfer-ambience-header .transfer-ambience-hint {
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.85;
+}
+
+.club-shell-card-body .finances-shell.game-panel {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.app-nav-cash {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinte);
+  white-space: nowrap;
+}
+
+.app-nav-menu .row-menu-trigger.app-nav-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 2.75rem;
+  height: 2.5rem;
+  padding: 0 0.9rem;
+  border: var(--outline);
+  border-radius: 999px;
+  background: #fff !important;
+  color: var(--tinte);
+  line-height: 1;
+}
+
+.app-nav-menu-trigger .app-nav-menu-link {
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  line-height: 1;
+  color: inherit;
+  cursor: inherit;
+}
+
+.app-nav-menu-trigger:hover,
+.app-nav-menu-trigger[aria-expanded="true"] {
+  background: var(--panel-muted) !important;
+  color: var(--tinte);
+}
+
+.app-nav-menu .row-menu-popover.pipeline-menu-popover {
+  right: 0;
+  left: auto;
+  width: 240px;
+  margin-top: 0.35rem;
+}
+
+.app-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+/* row-menu defaults (index.css) top-align ⋮ triggers — breaks header pairing with NEXT */
+.app-nav-actions .app-nav-menu.row-menu {
+  align-items: center;
+  padding: 0;
+  margin: 0;
+}
+
+.app-nav-actions .app-nav-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  margin: 0;
+  padding: 0 1rem;
+  line-height: 1;
+}
+
+.app-nav-actions .app-nav-next-mobile {
+  display: none;
+  align-items: center;
+  line-height: 1;
+}
+
+.app-nav-actions .app-nav-next-desktop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  line-height: 1;
+}
+
+@media (max-width: 720px) {
+  .app-nav-actions .app-nav-next-mobile {
+    display: inline-flex;
+  }
+
+  .app-nav-actions .app-nav-next-desktop {
+    display: none;
+  }
+}
+
+/* — Finanzen tab panel (fm2001) — */
+.finances-shell {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* fm2001 tab band — square segments, not bookmark ears (see fmscreens/fm2001/squad.png) */
+.fm-tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  background: var(--panel-muted);
+  border-bottom: var(--outline);
+}
+
+.fm-tab {
+  position: relative;
+  flex: 0 1 auto;
+  margin: 0;
+  padding: 0.5rem 1.15rem;
+  border: 0;
+  border-right: var(--outline);
+  border-radius: 0;
+  background: var(--panel-muted);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--tinte-weich);
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.fm-tab:last-child {
+  border-right: none;
+}
+
+.fm-tab.is-active {
+  background: var(--sonnengelb);
+  color: var(--tinte);
+}
+
+.fm-tab:not(.is-active):hover {
+  background: var(--panel);
+}
+
+.fm-tab-panel {
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+main.finances.club-shell-card-body .fm-tab-panel {
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+main.training.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.squad.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.campus.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.campus.club-shell-card-body .youth-strip {
+  margin: 0 0 0.75rem;
+}
+
+main.stadium.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.stadium.club-shell-card-body .stadium-scoreboard {
+  margin: 0 0 0.75rem;
+}
+
+main.stadium.club-shell-card-body .stadium-scoreboard-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--tinte);
+}
+
+main.stadium.club-shell-card-body .stadium-hero {
+  margin-bottom: 0.75rem;
+}
+
+main.stadium.club-shell-card-body .stadium-fanbase {
+  margin-bottom: 0.85rem;
+}
+
+main.transfers.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+main.scouting.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.finances-shell .finances-hero {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.finances-detail--solo {
+  max-width: 28rem;
+}
+
 .finances-hero.game-panel {
   margin-bottom: 1rem;
 }
@@ -405,4 +706,814 @@
 .career-preset-btn.is-active {
   background: var(--rasen);
   border-color: var(--tinte);
+}
+
+/* §9.1 — Kader-Tabelle unter Pitch */
+.lineup-squad-table-wrap {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.lineup-squad-table-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+}
+
+.lineup-squad-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.lineup-squad-table th,
+.lineup-squad-table td {
+  padding: 0.35rem 0.45rem;
+  border-bottom: 1px solid rgba(62, 49, 40, 0.15);
+  text-align: left;
+}
+
+.lineup-squad-table th {
+  color: var(--tinte-weich);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* §9.8 — Profil Hub-and-Spoke */
+.profile-card.profile-hub {
+  display: grid;
+  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.profile-identity-rail {
+  position: sticky;
+  top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  background: var(--panel-muted);
+  border: var(--outline);
+  border-radius: var(--radius);
+}
+
+.profile-identity-rail .profile-identity-body {
+  width: 100%;
+}
+
+.profile-portrait-rail {
+  align-self: center;
+}
+
+.profile-hub-spoke {
+  min-width: 0;
+}
+
+.profile-rail-actions {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(62, 49, 40, 0.15);
+}
+
+@media (max-width: 860px) {
+  .profile-card.profile-hub {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-identity-rail {
+    position: static;
+  }
+}
+
+/* §9.11 — Kader-Karten */
+.squad-list-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.65rem;
+}
+
+.squad-list-head .squad-list-toolbar {
+  margin-bottom: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.squad-summary--head {
+  margin: 0;
+  flex: 0 0 auto;
+  text-align: right;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--tinte-weich);
+  white-space: nowrap;
+}
+
+.squad-list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+}
+
+.squad-sort-chip {
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  padding: 0.35rem 0.55rem;
+  background: #fff;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+  color: var(--tinte);
+}
+
+.squad-sort-chip.is-active {
+  background: var(--rasen);
+}
+
+.squad-player-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.squad-player-card {
+  display: flex;
+  align-items: stretch;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.squad-player-card-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.squad-player-card-main {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  color: var(--tinte);
+  font: inherit;
+}
+
+.squad-player-card-main strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.squad-player-card-meta,
+.squad-player-card-status {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--tinte-weich);
+  font-weight: 600;
+}
+
+.scouting-section-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--tinte);
+}
+
+.scouting-section {
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.scouting-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.scouting-watchlist-star {
+  vertical-align: middle;
+  margin-right: 0.2rem;
+}
+
+.scouting-watchlist-star-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-klein);
+}
+
+/* §9.5 Kalender */
+.calendar-grid-wrap {
+  padding: 0.65rem;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--tinte-weich);
+  text-align: center;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.35rem;
+}
+
+.calendar-cell {
+  min-height: 4.5rem;
+  padding: 0.35rem;
+  background: var(--panel-muted);
+  border: 2px solid rgba(62, 49, 40, 0.12);
+  border-radius: var(--radius-klein);
+  font-size: 0.78rem;
+}
+
+.calendar-cell.is-today {
+  border-color: var(--tinte);
+  box-shadow: 0 0 0 1px var(--tinte);
+}
+
+.calendar-cell.has-match {
+  background: #fff;
+}
+
+.calendar-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 0 0 0.85rem;
+}
+
+.calendar-month-nav button {
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  background: var(--panel);
+  padding: 0.35rem 0.55rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.calendar-month-nav button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.calendar-month-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  min-width: 10rem;
+  text-align: center;
+}
+
+main.calendar.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* §9.12 Jugend */
+.youth-strip {
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.65rem;
+  font-weight: 700;
+}
+
+.youth-camps-split {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.65rem;
+}
+
+.youth-camps-list,
+.youth-camps-players {
+  min-width: 0;
+}
+
+.youth-camps-empty {
+  margin: 0;
+  color: var(--tinte-weich);
+  font-weight: 600;
+}
+
+/* §9.7 Tabellen */
+.leagues-screen-view-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+}
+
+.leagues-screen-view-tabs button {
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  padding: 0.4rem 0.65rem;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--tinte);
+}
+
+.leagues-screen-view-tabs button.is-active {
+  background: var(--rasen);
+}
+
+.league-table-wrap {
+  max-height: min(70vh, 520px);
+  overflow: auto;
+}
+
+.league-table tr.is-player-club td {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--sonnengelb);
+  box-shadow: 0 1px 0 rgba(62, 49, 40, 0.2);
+}
+
+/* §9.14 — Spiel-Zusammenfassung */
+.career-match--report .match-report {
+  margin-top: 0;
+  padding: 1rem 1.1rem 1.25rem;
+  background: var(--panel);
+  border: var(--outline);
+  border-radius: var(--radius);
+}
+
+.match-report-kicker {
+  margin: 0 0 0.65rem;
+}
+
+.match-report-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.9fr);
+  gap: 0.85rem;
+  align-items: start;
+  margin-bottom: 0.85rem;
+}
+
+.match-report-scoreline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.match-report-scoreline strong {
+  font-size: clamp(1.75rem, 5vw, 2.35rem);
+  letter-spacing: 0.04em;
+}
+
+.match-report-atmosphere,
+.match-report-formations {
+  margin: 0 0 0.35rem;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--tinte-weich);
+}
+
+.match-report-formations {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.match-formation-chip {
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  padding: 0.2rem 0.45rem;
+  background: var(--panel-muted);
+}
+
+.match-report-section-title {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+}
+
+.match-report-timeline-box {
+  margin-top: 0.65rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.match-goal-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.match-goal-timeline li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.match-goal-minute {
+  min-width: 2.2rem;
+  color: var(--tinte-weich);
+  font-variant-numeric: tabular-nums;
+}
+
+.match-goal-marker {
+  font-size: 0.75rem;
+}
+
+.match-timeline-empty {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--tinte-weich);
+}
+
+.match-report-stars-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+}
+
+.match-report-stars-col {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.match-report-star {
+  border: 2px solid rgba(62, 49, 40, 0.2);
+  border-radius: var(--radius);
+  padding: 0.45rem 0.55rem;
+  background: #fff;
+}
+
+.match-report-star.is-first {
+  border-color: var(--terra);
+  box-shadow: 0 0 0 1px rgba(196, 92, 62, 0.25);
+}
+
+.match-report-star-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.match-report-star-rank {
+  font-family: var(--font-display);
+  font-weight: 800;
+  min-width: 1.1rem;
+}
+
+.match-report-star-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.match-report-star-meta,
+.match-report-star-line {
+  font-size: 0.78rem;
+  color: var(--tinte-weich);
+  font-weight: 600;
+}
+
+.match-report-cards-box {
+  margin-top: 0.65rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.match-card-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+}
+
+.match-card-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.match-card-icon.is-yellow {
+  color: var(--sonnengelb);
+  fill: var(--sonnengelb);
+}
+
+.match-card-icon.is-red {
+  color: var(--terra);
+  fill: var(--terra);
+}
+
+.match-report-stats-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(200px, 280px);
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.match-report-kasse-widget {
+  padding: 0.65rem 0.75rem;
+  background: var(--panel-muted);
+  border: var(--outline);
+  border-radius: var(--radius);
+}
+
+.match-report-kasse-widget ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.match-report-kasse-widget li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: space-between;
+}
+
+.match-report-kasse-widget li span:nth-child(2) {
+  flex: 1;
+}
+
+.match-report-kasse-total {
+  margin-top: 0.25rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed rgba(62, 49, 40, 0.2);
+  font-weight: 800;
+}
+
+.match-report-kasse-hint {
+  margin: 0.45rem 0 0;
+  font-size: 0.72rem;
+  color: var(--tinte-weich);
+}
+
+.match-report-roster-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.45rem;
+}
+
+.match-report-roster-tabs button {
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  padding: 0.35rem 0.55rem;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.match-report-roster-tabs button.is-active {
+  background: var(--rasen);
+}
+
+.match-report-roster-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.match-report-roster-table th,
+.match-report-roster-table td {
+  padding: 0.35rem 0.45rem;
+  border-bottom: 1px solid rgba(62, 49, 40, 0.12);
+  text-align: left;
+}
+
+.match-roster-name-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: var(--tinte);
+}
+
+.match-event-badges {
+  display: inline-flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.match-event-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: var(--radius-klein);
+  background: var(--panel-muted);
+}
+
+.match-event-badge.is-muted {
+  color: var(--tinte-weich);
+}
+
+.match-stats .stat-fill.home {
+  background: var(--rasen);
+}
+
+.match-stats .stat-fill.away {
+  background: var(--staubblau);
+}
+
+@media (max-width: 860px) {
+  .match-report-hero-grid,
+  .match-report-stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .match-report-stars-col {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .match-report-star {
+    min-width: min(280px, 85vw);
+  }
+}
+
+/* §9.15 — Matchday-Cockpit */
+.matchday-cockpit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.matchday-cockpit-hero {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.matchday-cockpit-side {
+  position: sticky;
+  top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  max-height: calc(100dvh - 5rem);
+  overflow: auto;
+}
+
+.matchday-side-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.matchday-side-transport {
+  justify-content: center;
+}
+
+.matchday-side-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.matchday-side-tab {
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  padding: 0.3rem 0.5rem;
+  background: #fff;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.matchday-side-tab.is-active {
+  background: var(--rasen);
+}
+
+.matchday-side-panel {
+  min-height: 8rem;
+  max-height: 16rem;
+  overflow: auto;
+}
+
+.match-timeline-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.match-timeline-log-line.is-goal {
+  color: var(--tinte);
+  font-weight: 800;
+}
+
+.match-timeline-log-line.is-expert {
+  color: var(--tinte-weich);
+}
+
+.match-voice-badge {
+  display: inline-block;
+  margin-right: 0.35rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: var(--radius-klein);
+  background: var(--panel-muted);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.matchday-fan-voice {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--tinte-weich);
+  font-weight: 600;
+}
+
+.matchday-preview-copy {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--tinte-weich);
+  font-weight: 600;
+}
+
+.career-match .career-match-stage {
+  min-height: 0;
+}
+
+@media (max-width: 960px) {
+  .matchday-cockpit {
+    grid-template-columns: 1fr;
+  }
+
+  .matchday-cockpit-side {
+    position: static;
+    max-height: none;
+  }
 }

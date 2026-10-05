@@ -36,6 +36,7 @@ export function LeaguesScreen({
   onOpenStadium?: () => void;
 }) {
   const [divisionId, setDivisionId] = useState<DivisionEconomyId>(league.division_id);
+  const [viewTab, setViewTab] = useState<"table" | "scorers">("table");
   const [selectedClubId, setSelectedClubId] = useState<TeamId | null>(null);
 
   const standings = useMemo(
@@ -53,7 +54,7 @@ export function LeaguesScreen({
   );
 
   return (
-    <main className="leagues-screen">
+    <main className="leagues-screen club-shell-card-body">
       <header className="leagues-screen-head">
         <div>
           <p className="eyebrow">Wettbewerb</p>
@@ -80,35 +81,58 @@ export function LeaguesScreen({
         ))}
       </div>
 
-      <section className="leagues-screen-table" aria-label={divisionLabel(divisionId)}>
-        <p className="leagues-screen-meta">
-          Spieltag {standings.matchdaysPlayed}/{matchdays}
-          {standings.simulated ? " · Auto-Sim" : ""}
-        </p>
-        <LeagueTable
-          table={standings.table}
-          leagueSlice={leagueSlice}
-          playerClubId={league.player_club_id}
-          worldClubs={worldClubs}
-          onSelectClub={setSelectedClubId}
-        />
-        <div className="leagues-screen-legend" aria-label="Tabellenzonen">
-          <span><i className="zone-promoted" /> Aufstieg</span>
-          <span><i className="zone-playoff" /> Relegation</span>
-          <span><i className="zone-relegated" /> Abstieg</span>
-        </div>
-      </section>
+      <div className="leagues-screen-view-tabs" role="tablist" aria-label="Liga-Ansicht">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={viewTab === "table"}
+          className={viewTab === "table" ? "is-active" : undefined}
+          onClick={() => setViewTab("table")}
+        >
+          Tabelle
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={viewTab === "scorers"}
+          className={viewTab === "scorers" ? "is-active" : undefined}
+          onClick={() => setViewTab("scorers")}
+        >
+          Torschützen
+        </button>
+      </div>
 
-      <section className="leagues-screen-leaders" aria-label="Saisonstatistik">
-        <LeagueLeaderLists
-          scorers={leaders.scorers}
-          assists={leaders.assists}
-          yellows={leaders.yellows}
-          matchdaysPlayed={standings.matchdaysPlayed}
-          playerClubId={league.player_club_id}
-          worldClubs={worldClubs}
-        />
-      </section>
+      {viewTab === "table" ? (
+        <section className="leagues-screen-table" aria-label={divisionLabel(divisionId)}>
+          <p className="leagues-screen-meta">
+            Spieltag {standings.matchdaysPlayed}/{matchdays}
+            {standings.simulated ? " · Auto-Sim" : ""}
+          </p>
+          <LeagueTable
+            table={standings.table}
+            leagueSlice={leagueSlice}
+            playerClubId={league.player_club_id}
+            worldClubs={worldClubs}
+            onSelectClub={setSelectedClubId}
+          />
+          <div className="leagues-screen-legend" aria-label="Tabellenzonen">
+            <span><i className="zone-promoted" /> Aufstieg</span>
+            <span><i className="zone-playoff" /> Relegation</span>
+            <span><i className="zone-relegated" /> Abstieg</span>
+          </div>
+        </section>
+      ) : (
+        <section className="leagues-screen-leaders" aria-label="Saisonstatistik">
+          <LeagueLeaderLists
+            scorers={leaders.scorers}
+            assists={leaders.assists}
+            yellows={leaders.yellows}
+            matchdaysPlayed={standings.matchdaysPlayed}
+            playerClubId={league.player_club_id}
+            worldClubs={worldClubs}
+          />
+        </section>
+      )}
 
       {selectedClubId ? (
         <ClubProfileModal

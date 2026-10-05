@@ -99,7 +99,6 @@ export function TrainingCenter({
   onAssignMentor,
   onClearMentor,
   onSelectPlayer,
-  onBack,
   focusIndividualPlayerId = null,
   onClearIndividualFocus,
   hasTrainingHall = false,
@@ -148,66 +147,70 @@ export function TrainingCenter({
     }
   }, [focusIndividualPlayerId]);
 
-  return (
-    <main className="training">
-      <header className="training-head">
-        {onBack ? (
-          <button type="button" onClick={onBack} aria-label={t("training.back")}>
-            ←
-          </button>
-        ) : null}
-        <div>
-          <p className="eyebrow">{t("training.week", { week })}</p>
-          <h1>{t("training.title")}</h1>
-        </div>
-      </header>
+  const trainingTabs: { id: TrainingTab; labelKey: string }[] = [
+    { id: "status", labelKey: "training.tab.overview" },
+    { id: "team", labelKey: "training.tab.team" },
+    { id: "individual", labelKey: "training.tab.individual" },
+  ];
 
-      <nav className="training-tabs" aria-label={t("training.tabs.aria")}>
-        <button type="button" className={tab === "team" ? "training-tab is-active" : "training-tab"} onClick={() => setTab("team")}>
-          {t("training.tab.team")}
-        </button>
-        <button
-          type="button"
-          className={tab === "individual" ? "training-tab is-active" : "training-tab"}
-          onClick={() => setTab("individual")}
-        >
-          {t("training.tab.individual")}
-        </button>
-      </nav>
+  return (
+    <main className="training club-shell-card-body">
+      <div className="fm-tab-bar" role="tablist" aria-label={t("training.tabs.aria")}>
+        {trainingTabs.map(({ id, labelKey }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            className={tab === id ? "fm-tab is-active" : "fm-tab"}
+            onClick={() => setTab(id)}
+          >
+            {t(labelKey)}
+          </button>
+        ))}
+      </div>
 
       {tab === "status" ? (
-        <TrainingOverview
-          focusCount={focusCount}
-          load={load}
-          players={players}
-          clubId={clubId}
-          onOpenPlan={() => setTab("team")}
-          onSelectPlayer={onSelectPlayer}
-        />
-      ) : tab === "team" ? (
-        <TeamPlan
-          plan={plan}
-          pickSlot={pickSlot}
-          focusCount={focusCount}
-          check={check}
-          intensity={intensity}
-          load={load}
-          hasTrainingHall={hasTrainingHall}
-          onPickSlot={setPickSlot}
-          onPlanChange={onPlanChange}
-          onIntensityChange={onIntensityChange}
-        />
-      ) : (
-        <IndividualPlan
-          players={players}
-          programs={individualPrograms}
-          season={season}
-          week={week}
-          onProgramsChange={onProgramsChange}
-          openPlayerId={focusIndividualPlayerId}
-          onDismissOpenPlayer={onClearIndividualFocus}
-        />
-      )}
+        <div className="fm-tab-panel">
+          <TrainingOverview
+            focusCount={focusCount}
+            load={load}
+            players={players}
+            clubId={clubId}
+            onOpenPlan={() => setTab("team")}
+            onSelectPlayer={onSelectPlayer}
+          />
+        </div>
+      ) : null}
+      {tab === "team" ? (
+        <div className="fm-tab-panel">
+          <TeamPlan
+            plan={plan}
+            pickSlot={pickSlot}
+            focusCount={focusCount}
+            check={check}
+            intensity={intensity}
+            load={load}
+            hasTrainingHall={hasTrainingHall}
+            onPickSlot={setPickSlot}
+            onPlanChange={onPlanChange}
+            onIntensityChange={onIntensityChange}
+          />
+        </div>
+      ) : null}
+      {tab === "individual" ? (
+        <div className="fm-tab-panel">
+          <IndividualPlan
+            players={players}
+            programs={individualPrograms}
+            season={season}
+            week={week}
+            onProgramsChange={onProgramsChange}
+            openPlayerId={focusIndividualPlayerId}
+            onDismissOpenPlayer={onClearIndividualFocus}
+          />
+        </div>
+      ) : null}
     </main>
   );
 }

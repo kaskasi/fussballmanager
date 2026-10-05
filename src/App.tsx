@@ -122,7 +122,7 @@ import {
   normalizeClubStadium,
   stadiumTotalCapacity,
 } from "./stadium/club-stadium.ts";
-import { clubShortLabel } from "./sim/league-divisions.ts";
+import { clubDisplayName, clubShortLabel } from "./sim/league-divisions.ts";
 import { fanbaseMood } from "./stadium/fanbase.ts";
 import { teamForm } from "./sim/league-form.ts";
 import { teamPoorRecentForm } from "./ui/assets/mood-photos.ts";
@@ -163,7 +163,6 @@ import {
   type MarketSort,
 } from "./scouting/market-list.ts";
 import { ScoutingCenter } from "./ui/screens/ScoutingCenter";
-import { ScoutNetworkScreen } from "./ui/screens/ScoutNetworkScreen.tsx";
 import { DecisionInboxModal } from "./ui/components/DecisionInbox.tsx";
 import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
 import { NoticeToast, SaveToast } from "./ui/components/SaveToast.tsx";
@@ -173,6 +172,7 @@ import {
 } from "./transfers/purchase-block.ts";
 import { TransferWindowAmbience } from "./ui/components/TransferWindowAmbience.tsx";
 import { YouthCampus } from "./ui/screens/YouthCampus";
+import { CalendarScreen } from "./ui/screens/CalendarScreen.tsx";
 import { canBuyAcademyUpgrade, ACADEMY_FACILITIES } from "./youth/academy.ts";
 import {
   buyYouthCamp,
@@ -223,14 +223,14 @@ type Screen =
   | "campus"
   | "matchday"
   | "scouting"
-  | "scout-network"
   | "transfers"
   | "squad"
   | "finances"
   | "stadium"
   | "leagues"
   | "help"
-  | "club-events";
+  | "club-events"
+  | "calendar";
 
 function bootstrapSave(slot: number): SaveGame {
   try {
@@ -284,6 +284,7 @@ export default function App() {
   const [profileFeedback, setProfileFeedback] = useState<string | null>(null);
   const [careerMatchSetup, setCareerMatchSetup] = useState<CareerMatchSetup | null>(null);
   const [matchNavAction, setMatchNavAction] = useState<NavPrimaryAction | null>(null);
+  const [matchSkipToReport, setMatchSkipToReport] = useState<(() => void) | null>(null);
   const [marketFilters, setMarketFilters] = useState<MarketFilters>(DEFAULT_MARKET_FILTERS);
   const [marketSort, setMarketSort] = useState<MarketSort>(DEFAULT_MARKET_SORT);
   const [trainingFocusPlayerId, setTrainingFocusPlayerId] = useState<string | null>(null);
@@ -368,16 +369,15 @@ export default function App() {
     youthCamps,
   } = session;
   const shellClub = useMemo(() => {
-    const club = world.clubs.find((entry) => entry.id === session.clubId);
+    const teamId = league.player_club_id;
     const table = standings(league.club_ids, league.results);
-    const placeIndex = table.findIndex((row) => row.teamId === session.clubId);
-    const name = club?.name ?? session.clubId;
+    const placeIndex = table.findIndex((row) => row.teamId === teamId);
     return {
-      name,
-      initials: clubShortLabel(session.clubId as TeamId, world.clubs),
+      name: clubDisplayName(teamId, world.clubs),
+      initials: clubShortLabel(teamId, world.clubs),
       leaguePlace: placeIndex >= 0 ? placeIndex + 1 : null,
     };
-  }, [world.clubs, session.clubId, league.club_ids, league.results]);
+  }, [world.clubs, league.player_club_id, league.club_ids, league.results]);
 
   const scoutCapacity = scoutNetworkCapacity(scoutNetwork);
 
@@ -1667,6 +1667,7 @@ export default function App() {
     onNewGame: resetGame,
     onOpenSaves: () => setSaveManagerOpen(true),
     primaryAction: careerMatchSetup ? matchNavAction : null,
+    matchSkipToReport: careerMatchSetup ? matchSkipToReport : null,
   };
 
   const saveManagerOverlay = saveManagerOpen ? (
@@ -1725,6 +1726,7 @@ export default function App() {
           hubActions={navActions}
           accessibility={accessibility}
           onAccessibilityChange={setAccessibility}
+          shellChrome="plain"
         />
         <CareerMatch
           setup={careerMatchSetup}
@@ -1740,6 +1742,16 @@ export default function App() {
           onComplete={handleCareerMatchComplete}
           onSkip={handleCareerMatchSkip}
           onNavActionChange={setMatchNavAction}
+          onSelectMatchPlayer={(playerId) => {
+            if (players.some((player) => player.id === playerId)) {
+              setProfileId(playerId);
+              setForeignPlayerId(null);
+            } else {
+              setForeignPlayerId(playerId);
+              setProfileId(null);
+            }
+          }}
+          onRegisterSkipToReport={setMatchSkipToReport}
           broadcastStory={careerBroadcastStory}
           kasse={matchdayCashBreakdown(stadium, careerMatchSetup.isHome)}
           homeStadiumCapacity={stadiumTotalCapacity(stadium)}
@@ -1916,8 +1928,9 @@ export default function App() {
         hubActions={navActions}
         accessibility={accessibility}
         onAccessibilityChange={setAccessibility}
+        shellChrome="card"
       />
-      <div hidden={screen !== "hub"}>
+      {screen === "hub" ? (
         <PipelineDashboard
           key={save.manifest.created}
           players={players}
@@ -1947,7 +1960,7 @@ export default function App() {
           lastSeasonAwards={lastSeasonAwards}
           storyState={storyState}
         />
-      </div>
+      ) : null}
       {openingBlocked(session) ? (
         <OpeningStoryModal
           managerName={session.managerName}
@@ -2025,7 +2038,6 @@ export default function App() {
           onSelectPlayer={setProfileId}
           onOpenInbox={openInbox}
           onInboxDecision={handleInboxDecision}
-          onUpgradeAcademy={handleUpgradeAcademy}
           onBuyCamp={handleBuyYouthCamp}
           onToggleCampStaff={handleToggleCampStaff}
           onPullCampPlayer={handlePullCampPlayer}
@@ -2042,25 +2054,18 @@ export default function App() {
           onAddAssignment={handleAddScoutAssignment}
           onRemoveAssignment={handleRemoveScoutAssignment}
           onToggleAssignment={handleToggleScoutAssignment}
-          onBack={() => setScreen("hub")}
           onSelectTarget={(playerId) => setForeignPlayerId(playerId)}
           onAssignScout={handleAssignScout}
           scoutNetwork={scoutNetwork}
           scoutCapacity={scoutCapacity}
           season={season}
-          onOpenNetwork={() => setScreen("scout-network")}
-        />
-      ) : null}
-      {screen === "scout-network" ? (
-        <ScoutNetworkScreen
-          network={scoutNetwork}
-          season={season}
           week={week}
           masterSeed={masterSeed}
           cash={finances.cash}
-          onHire={handleHireScout}
-          onFire={handleFireScout}
-          onBack={() => setScreen("scouting")}
+          onHireScout={handleHireScout}
+          onFireScout={handleFireScout}
+          shortlistIds={transferState.shortlist}
+          onToggleShortlist={handleToggleShortlist}
         />
       ) : null}
       {screen === "transfers" ? (
@@ -2074,7 +2079,6 @@ export default function App() {
           scoutTargetIds={Object.keys(scoutBoard.targets)}
           pending={transferState.pending_transfers ?? []}
           worldClubs={world.clubs}
-          onBack={() => setScreen("hub")}
           onSelectPlayer={setProfileId}
           onSelectForeignPlayer={setForeignPlayerId}
           onRecallLoan={handleRecallLoan}
@@ -2113,7 +2117,6 @@ export default function App() {
           coachingStaff={coachingStaff}
           scoutNetwork={scoutNetwork}
           boardCashFloor={boardCashFloor(board)}
-          onBack={() => setScreen("hub")}
           onOpenStadium={() => setScreen("stadium")}
         />
       ) : null}
@@ -2147,7 +2150,12 @@ export default function App() {
           onPlaceStreet={handlePlaceStreet}
           onExpandPrecinct={handleExpandPrecinct}
           onShrinkPrecinctToMin={handleShrinkPrecinctToMin}
+          academyFacility={academyFacility}
+          onUpgradeAcademy={handleUpgradeAcademy}
         />
+      ) : null}
+      {screen === "calendar" ? (
+        <CalendarScreen season={season} week={week} league={league} />
       ) : null}
       {clubProfileId && screen !== "leagues" ? (
         <ClubProfileModal
@@ -2185,6 +2193,7 @@ interface HubNavActions {
   onNewGame: () => void;
   onOpenSaves: () => void;
   primaryAction?: NavPrimaryAction | null;
+  matchSkipToReport?: (() => void) | null;
 }
 
 function AppChrome({
@@ -2200,6 +2209,7 @@ function AppChrome({
   hubActions,
   accessibility,
   onAccessibilityChange,
+  shellChrome = "card",
 }: {
   week: number;
   cash: number;
@@ -2213,6 +2223,7 @@ function AppChrome({
   hubActions: HubNavActions;
   accessibility: AccessibilityPreferences;
   onAccessibilityChange: (preferences: AccessibilityPreferences) => void;
+  shellChrome?: "card" | "plain";
 }) {
   return (
     <>
@@ -2228,14 +2239,16 @@ function AppChrome({
         hubActions={hubActions}
         accessibility={accessibility}
         onAccessibilityChange={onAccessibilityChange}
+        shellChrome={shellChrome}
+        week={week}
       />
-      <TransferWindowAmbience week={week} />
     </>
   );
 }
 
 function AppNav({
   screen,
+  week,
   cash,
   clubName,
   clubInitials,
@@ -2246,8 +2259,10 @@ function AppNav({
   hubActions,
   accessibility,
   onAccessibilityChange,
+  shellChrome = "card",
 }: {
   screen: Screen;
+  week: number;
   cash: number;
   clubName: string;
   clubInitials: string;
@@ -2258,9 +2273,9 @@ function AppNav({
   hubActions: HubNavActions;
   accessibility: AccessibilityPreferences;
   onAccessibilityChange: (preferences: AccessibilityPreferences) => void;
+  shellChrome?: "card" | "plain";
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileTabsOpen, setMobileTabsOpen] = useState(false);
   const [resetAsk, setResetAsk] = useState(false);
   const [a11yOpen, setA11yOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -2278,188 +2293,47 @@ function AppNav({
     return () => document.removeEventListener("mousedown", handlePointer);
   }, [menuOpen]);
 
-  const teamMenu: { screen: Screen; labelKey: string; onClick?: () => void }[] = [
+  const teamMenu: {
+    screen: Screen;
+    labelKey: string;
+    labelSuffix?: string;
+    onClick?: () => void;
+  }[] = [
     { screen: "hub", labelKey: "shell.nav.pipeline" },
     { screen: "squad", labelKey: "shell.nav.squad" },
     { screen: "training", labelKey: "shell.nav.training" },
     { screen: "campus", labelKey: "shell.nav.campus" },
     { screen: "scouting", labelKey: "shell.nav.scouting" },
     { screen: "transfers", labelKey: "shell.nav.transfers" },
-    { screen: "finances", labelKey: "shell.nav.finances" },
+    { screen: "calendar", labelKey: "shell.nav.calendar" },
     { screen: "leagues", labelKey: "shell.nav.leagues" },
+    { screen: "finances", labelKey: "shell.nav.finances" },
     { screen: "stadium", labelKey: "shell.nav.stadium" },
     { screen: "help", labelKey: "shell.nav.help" },
   ];
 
-  const metaLine = [
-    leaguePlace != null ? `${leaguePlace}.` : null,
-    formatClubCash(cash),
-  ]
-    .filter(Boolean)
-    .join(" · ");
-
   return (
-    <nav className="app-nav club-shell-header" aria-label={tr("shell.nav.areas")}>
+    <nav
+      className={`app-nav club-shell-header ${shellChrome === "card" ? "club-shell-card-head" : "club-shell-grid"}`}
+      aria-label={tr("shell.nav.areas")}
+    >
       <div className="club-shell-identity">
         <ClubCrest initials={clubInitials} />
         <div className="club-shell-identity-text">
           <p className="club-shell-name">{clubName}</p>
-          <p className="club-shell-meta">{metaLine}</p>
         </div>
       </div>
-      <div
-        id="app-nav-mobile-tabs"
-        className={`app-nav-tabs${mobileTabsOpen ? " is-mobile-open" : ""}`}
-      >
-      <NavButton
-        pressed={screen === "hub"}
-        label={tr("shell.nav.pipeline")}
-        onClick={() => {
-          onCloseProfile?.();
-          onNavigate("hub");
-          setMobileTabsOpen(false);
-        }}
-      >
-        Hub
-      </NavButton>
-      <NavButton
-        pressed={screen === "squad"}
-        label={tr("shell.nav.squad")}
-        onClick={() => {
-          onCloseProfile?.();
-          onNavigate("squad");
-          setMobileTabsOpen(false);
-        }}
-      >
-        Kd
-      </NavButton>
-      <NavButton
-        pressed={screen === "training"}
-        label={tr("shell.nav.training")}
-        onClick={() => {
-          onCloseProfile?.();
-          onNavigate("training");
-          setMobileTabsOpen(false);
-        }}
-      >
-        Tr
-      </NavButton>
-      <NavButton
-        pressed={screen === "campus"}
-        label={tr("shell.nav.campus")}
-        onClick={() => {
-          onCloseProfile?.();
-          onCampusNavigate?.();
-          onNavigate("campus");
-          setMobileTabsOpen(false);
-        }}
-      >
-        Jg
-      </NavButton>
-      <NavButton
-        pressed={screen === "scouting" || screen === "scout-network"}
-        label={tr("shell.nav.scouting")}
-        onClick={() => {
-          onCloseProfile?.();
-          onNavigate("scouting");
-          setMobileTabsOpen(false);
-        }}
-      >
-        Sc
-      </NavButton>
-      <NavButton
-        pressed={screen === "transfers"}
-        label={tr("shell.nav.transfers")}
-        onClick={() => {
-          onCloseProfile?.();
-          onNavigate("transfers");
-          setMobileTabsOpen(false);
-        }}
-      >
-        Tf
-      </NavButton>
-      <NavButton
-        pressed={screen === "finances"}
-        label={tr("shell.nav.finances")}
-        onClick={() => {
-          onCloseProfile?.();
-          onNavigate("finances");
-          setMobileTabsOpen(false);
-        }}
-      >
-        💶
-      </NavButton>
-      <NavButton
-        pressed={screen === "leagues"}
-        label={tr("shell.nav.leagues")}
-        onClick={() => {
-          onCloseProfile?.();
-          onNavigate("leagues");
-          setMobileTabsOpen(false);
-        }}
-      >
-        Lg
-      </NavButton>
-      <NavButton
-        pressed={screen === "stadium"}
-        label={tr("shell.nav.stadium")}
-        onClick={() => {
-          onCloseProfile?.();
-          onNavigate("stadium");
-          setMobileTabsOpen(false);
-        }}
-      >
-        St
-      </NavButton>
-      <NavButton
-        pressed={screen === "help"}
-        label={tr("shell.nav.help")}
-        onClick={() => {
-          onCloseProfile?.();
-          onNavigate("help");
-          setMobileTabsOpen(false);
-        }}
-      >
-        Hp
-      </NavButton>
+      <div className="app-nav-center" aria-live="polite">
+        <TransferWindowAmbience week={week} placement="header" />
       </div>
       <div className="app-nav-actions">
-        <button
-          type="button"
-          className="app-nav-toggle"
-          aria-label={mobileTabsOpen ? tr("shell.nav.mobileClose") : tr("shell.nav.mobileOpen")}
-          aria-expanded={mobileTabsOpen}
-          aria-controls="app-nav-mobile-tabs"
-          onClick={() => setMobileTabsOpen((open) => !open)}
-        >
-          {mobileTabsOpen ? "×" : "☰"}
-        </button>
-        <button
-          type="button"
-          className="app-nav-next"
-          onClick={hubActions.primaryAction?.onClick ?? hubActions.onNext}
-          disabled={hubActions.primaryAction?.disabled ?? hubActions.simulating}
-          title={
-            hubActions.primaryAction?.title ??
-            (hubActions.primaryAction ? hubActions.primaryAction.label : tr("shell.smartSkip"))
-          }
-        >
-          <span className="app-nav-next-mobile">{tr("shell.next")}</span>
-          <span className="app-nav-next-desktop">
-            {hubActions.simulating && !hubActions.primaryAction
-              ? "…"
-              : hubActions.primaryAction?.label ?? tr("shell.next")}
-            {hubActions.openDecisionCount > 0 && !hubActions.primaryAction ? (
-              <span className="app-nav-next-badge" aria-label={tr("hub.inbox.decisions")}>
-                {hubActions.openDecisionCount}
-              </span>
-            ) : null}
-          </span>
-        </button>
+        <span className="app-nav-cash" aria-label="Kasse">
+          {formatClubCash(cash)}
+        </span>
         <div className="row-menu app-nav-menu" ref={menuRef}>
           <button
             type="button"
-            className="row-menu-trigger"
+            className="row-menu-trigger app-nav-menu-trigger"
             aria-label={tr("shell.menu.moreActions")}
             aria-expanded={menuOpen}
             aria-haspopup="menu"
@@ -2471,8 +2345,7 @@ function AppNav({
               }
             }}
           >
-            <span className="app-nav-menu-link" aria-hidden="false">Menu</span>
-            <span className="app-nav-menu-glyph" aria-hidden="true">⋮</span>
+            <span className="app-nav-menu-link">Menu</span>
           </button>
           {menuOpen ? (
             <div className="row-menu-popover pipeline-menu-popover" role="menu">
@@ -2569,15 +2442,19 @@ function AppNav({
                 </>
               ) : (
                 <>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="row-menu-item"
-                    onClick={() => {
-                      hubActions.onOpenSaves();
-                      setMenuOpen(false);
-                    }}
-                  >
+                  {hubActions.matchSkipToReport ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="row-menu-item"
+                      onClick={() => {
+                        hubActions.matchSkipToReport?.();
+                        setMenuOpen(false);
+                      }}
+                    >
+                      Direkt zur Zusammenfassung
+                    </button>
+                  ) : null}
                   <p className="pipeline-menu-section-title">TEAM</p>
                   {teamMenu.map((item) => (
                     <button
@@ -2595,9 +2472,19 @@ function AppNav({
                       }}
                     >
                       {tr(item.labelKey)}
+                      {item.labelSuffix ?? ""}
                     </button>
                   ))}
                   <p className="pipeline-menu-section-title">{tr("shell.menu.options")}</p>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="row-menu-item"
+                    onClick={() => {
+                      hubActions.onOpenSaves();
+                      setMenuOpen(false);
+                    }}
+                  >
                     {tr("shell.menu.saves")}
                   </button>
                   <button
@@ -2633,25 +2520,29 @@ function AppNav({
             </div>
           ) : null}
         </div>
+        <button
+          type="button"
+          className="app-nav-next"
+          onClick={hubActions.primaryAction?.onClick ?? hubActions.onNext}
+          disabled={hubActions.primaryAction?.disabled ?? hubActions.simulating}
+          title={
+            hubActions.primaryAction?.title ??
+            (hubActions.primaryAction ? hubActions.primaryAction.label : tr("shell.smartSkip"))
+          }
+        >
+          <span className="app-nav-next-mobile">{tr("shell.next")}</span>
+          <span className="app-nav-next-desktop">
+            {hubActions.simulating && !hubActions.primaryAction
+              ? "…"
+              : hubActions.primaryAction?.label ?? tr("shell.next")}
+            {hubActions.openDecisionCount > 0 && !hubActions.primaryAction ? (
+              <span className="app-nav-next-badge" aria-label={tr("hub.inbox.decisions")}>
+                {hubActions.openDecisionCount}
+              </span>
+            ) : null}
+          </span>
+        </button>
       </div>
     </nav>
-  );
-}
-
-function NavButton({
-  pressed,
-  label,
-  onClick,
-  children,
-}: {
-  pressed: boolean;
-  label: string;
-  onClick: () => void;
-  children: string;
-}) {
-  return (
-    <button type="button" aria-pressed={pressed} aria-label={label} title={label} onClick={onClick}>
-      {children}
-    </button>
   );
 }

@@ -1,3 +1,4 @@
+import { TrendingUp } from "lucide-react";
 import type { TableRow, TeamId } from "@fussballmanager/shared";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { teamFormPoints, teamFormSlots } from "../../sim/league-form.ts";
@@ -33,7 +34,10 @@ export function LeagueTable({
             <th>Tore</th>
             <th>Diff</th>
             <th title="Letzte 5 Spiele (▲ Sieg · ■ Remis · ▼ Niederlage)">Form</th>
-            <th className="league-th-trend" title="Punkte der letzten 5 Spiele (0–3)">📈</th>
+            <th className="league-th-trend" title="Punkte der letzten 5 Spiele (0–3)">
+              <TrendingUp size={14} strokeWidth={2.5} aria-hidden="true" />
+              <span className="sr-only">Trend</span>
+            </th>
             <th>Pkt</th>
           </tr>
         </thead>

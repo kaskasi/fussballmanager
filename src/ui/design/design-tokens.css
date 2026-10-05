@@ -1,0 +1,25 @@
+/**
+ * WIREFRAME: docs/prd/design.md §2 — Fernsehnachmittag tokens
+ */
+:root {
+  --bg-sand: #f5efe0;
+  --panel: #fdfbf4;
+  --panel-muted: #efebe0;
+  --rasen: #2e9e46;
+  --rasen-dunkel: #1d6b31;
+  --rasen-hell: #bfdec2;
+  --sonnengelb: #ffc933;
+  --terra: #e07a3f;
+  --terra-dunkel: #b85a28;
+  --tinte: #3e3128;
+  --tinte-weich: #6b5d4f;
+  --staubblau: #9dbfd0;
+  --erfolg: var(--rasen);
+  --fehler: var(--terra);
+  --radius: 12px;
+  --radius-klein: 8px;
+  --shadow-flat: 0 2px 0 rgba(62, 49, 40, 0.15);
+  --font-display: "Baloo 2", "Fredoka", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, sans-serif;
+  --club-header-height: 56px;
+}

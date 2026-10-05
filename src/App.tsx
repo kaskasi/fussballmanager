@@ -27,8 +27,7 @@ import {
   removeScoutAssignment,
   toggleScoutAssignment,
 } from "./scouting/scout-board.ts";
-import { WeekdayStrip } from "./ui/components/WeekdayStrip.tsx";
-import { CashChip } from "./ui/components/CashChip.tsx";
+import { ClubCrest } from "./ui/components/ClubCrest.tsx";
 import { prepareCareerMatch, type CareerMatchSetup } from "./sim/career-match-setup.ts";
 import type { WatchedPlayerMatch } from "./sim/watched-player-match.ts";
 import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
@@ -109,7 +108,7 @@ import {
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
 import { FinancesScreen } from "./ui/screens/FinancesScreen.tsx";
 import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
-import type { SandboxPlan, TeamId } from "@fussballmanager/shared";
+import { standings, type SandboxPlan, type TeamId } from "@fussballmanager/shared";
 import { listJobOffers } from "./board/job-offers.ts";
 import { switchManagerClub } from "./board/manager-club-switch.ts";
 import { startBoardSeason } from "./board/season-objectives.ts";
@@ -122,6 +121,7 @@ import {
   normalizeClubStadium,
   stadiumTotalCapacity,
 } from "./stadium/club-stadium.ts";
+import { clubShortLabel } from "./sim/league-divisions.ts";
 import { fanbaseMood } from "./stadium/fanbase.ts";
 import { teamForm } from "./sim/league-form.ts";
 import { teamPoorRecentForm } from "./ui/assets/mood-photos.ts";
@@ -365,6 +365,18 @@ export default function App() {
     academyFacility,
     youthCamps,
   } = session;
+  const shellClub = useMemo(() => {
+    const club = world.clubs.find((entry) => entry.id === session.clubId);
+    const table = standings(league.club_ids, league.results);
+    const placeIndex = table.findIndex((row) => row.teamId === session.clubId);
+    const name = club?.name ?? session.clubId;
+    return {
+      name,
+      initials: clubShortLabel(session.clubId as TeamId, world.clubs),
+      leaguePlace: placeIndex >= 0 ? placeIndex + 1 : null,
+    };
+  }, [world.clubs, session.clubId, league.club_ids, league.results]);
+
   const scoutCapacity = scoutNetworkCapacity(scoutNetwork);
 
   function sessionWithEvent(
@@ -1700,6 +1712,9 @@ export default function App() {
           screen="hub"
           week={week}
           cash={finances.cash}
+          clubName={shellClub.name}
+          clubInitials={shellClub.initials}
+          leaguePlace={shellClub.leaguePlace}
           onNavigate={setScreen}
           onCampusNavigate={() => undefined}
           hubActions={navActions}
@@ -1740,6 +1755,9 @@ export default function App() {
           screen={screen}
           week={week}
           cash={finances.cash}
+          clubName={shellClub.name}
+          clubInitials={shellClub.initials}
+          leaguePlace={shellClub.leaguePlace}
           onNavigate={setScreen}
           onCloseProfile={() => setForeignPlayerId(null)}
           onCampusNavigate={() => undefined}
@@ -1820,6 +1838,9 @@ export default function App() {
           screen={screen}
           week={week}
           cash={finances.cash}
+          clubName={shellClub.name}
+          clubInitials={shellClub.initials}
+          leaguePlace={shellClub.leaguePlace}
           onNavigate={setScreen}
           onCloseProfile={() => setProfileId(null)}
           onCampusNavigate={() => undefined}
@@ -1882,6 +1903,9 @@ export default function App() {
         screen={screen}
         week={week}
         cash={finances.cash}
+        clubName={shellClub.name}
+        clubInitials={shellClub.initials}
+        leaguePlace={shellClub.leaguePlace}
         onNavigate={setScreen}
         onCampusNavigate={() => undefined}
         hubActions={navActions}
@@ -2148,6 +2172,9 @@ interface HubNavActions {
 function AppChrome({
   week,
   cash,
+  clubName,
+  clubInitials,
+  leaguePlace,
   screen,
   onNavigate,
   onCloseProfile,
@@ -2158,6 +2185,9 @@ function AppChrome({
 }: {
   week: number;
   cash: number;
+  clubName: string;
+  clubInitials: string;
+  leaguePlace: number | null;
   screen: Screen;
   onNavigate: (screen: Screen) => void;
   onCloseProfile?: () => void;
@@ -2171,6 +2201,9 @@ function AppChrome({
       <AppNav
         screen={screen}
         cash={cash}
+        clubName={clubName}
+        clubInitials={clubInitials}
+        leaguePlace={leaguePlace}
         onNavigate={onNavigate}
         onCloseProfile={onCloseProfile}
         onCampusNavigate={onCampusNavigate}
@@ -2186,6 +2219,9 @@ function AppChrome({
 function AppNav({
   screen,
   cash,
+  clubName,
+  clubInitials,
+  leaguePlace,
   onNavigate,
   onCloseProfile,
   onCampusNavigate,
@@ -2195,6 +2231,9 @@ function AppNav({
 }: {
   screen: Screen;
   cash: number;
+  clubName: string;
+  clubInitials: string;
+  leaguePlace: number | null;
   onNavigate: (screen: Screen) => void;
   onCloseProfile?: () => void;
   onCampusNavigate?: () => void;
@@ -2221,8 +2260,35 @@ function AppNav({
     return () => document.removeEventListener("mousedown", handlePointer);
   }, [menuOpen]);
 
+  const teamMenu: { screen: Screen; labelKey: string; onClick?: () => void }[] = [
+    { screen: "hub", labelKey: "shell.nav.pipeline" },
+    { screen: "squad", labelKey: "shell.nav.squad" },
+    { screen: "training", labelKey: "shell.nav.training" },
+    { screen: "campus", labelKey: "shell.nav.campus" },
+    { screen: "scouting", labelKey: "shell.nav.scouting" },
+    { screen: "transfers", labelKey: "shell.nav.transfers" },
+    { screen: "finances", labelKey: "shell.nav.finances" },
+    { screen: "leagues", labelKey: "shell.nav.leagues" },
+    { screen: "stadium", labelKey: "shell.nav.stadium" },
+    { screen: "help", labelKey: "shell.nav.help" },
+  ];
+
+  const metaLine = [
+    leaguePlace != null ? `${leaguePlace}.` : null,
+    formatClubCash(cash),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <nav className="app-nav" aria-label={tr("shell.nav.areas")}>
+    <nav className="app-nav club-shell-header" aria-label={tr("shell.nav.areas")}>
+      <div className="club-shell-identity">
+        <ClubCrest initials={clubInitials} />
+        <div className="club-shell-identity-text">
+          <p className="club-shell-name">{clubName}</p>
+          <p className="club-shell-meta">{metaLine}</p>
+        </div>
+      </div>
       <div
         id="app-nav-mobile-tabs"
         className={`app-nav-tabs${mobileTabsOpen ? " is-mobile-open" : ""}`}
@@ -2236,7 +2302,7 @@ function AppNav({
           setMobileTabsOpen(false);
         }}
       >
-        ●
+        Hub
       </NavButton>
       <NavButton
         pressed={screen === "squad"}
@@ -2247,7 +2313,7 @@ function AppNav({
           setMobileTabsOpen(false);
         }}
       >
-        ⭐
+        Kd
       </NavButton>
       <NavButton
         pressed={screen === "training"}
@@ -2258,7 +2324,7 @@ function AppNav({
           setMobileTabsOpen(false);
         }}
       >
-        🏋️
+        Tr
       </NavButton>
       <NavButton
         pressed={screen === "campus"}
@@ -2270,7 +2336,7 @@ function AppNav({
           setMobileTabsOpen(false);
         }}
       >
-        🏫
+        Jg
       </NavButton>
       <NavButton
         pressed={screen === "scouting" || screen === "scout-network"}
@@ -2281,7 +2347,7 @@ function AppNav({
           setMobileTabsOpen(false);
         }}
       >
-        👁️
+        Sc
       </NavButton>
       <NavButton
         pressed={screen === "transfers"}
@@ -2292,7 +2358,7 @@ function AppNav({
           setMobileTabsOpen(false);
         }}
       >
-        💰
+        Tf
       </NavButton>
       <NavButton
         pressed={screen === "finances"}
@@ -2314,7 +2380,7 @@ function AppNav({
           setMobileTabsOpen(false);
         }}
       >
-        🏆
+        Lg
       </NavButton>
       <NavButton
         pressed={screen === "stadium"}
@@ -2325,7 +2391,7 @@ function AppNav({
           setMobileTabsOpen(false);
         }}
       >
-        🏟️
+        St
       </NavButton>
       <NavButton
         pressed={screen === "help"}
@@ -2336,7 +2402,7 @@ function AppNav({
           setMobileTabsOpen(false);
         }}
       >
-        📖
+        Hp
       </NavButton>
       </div>
       <div className="app-nav-actions">
@@ -2350,8 +2416,6 @@ function AppNav({
         >
           {mobileTabsOpen ? "×" : "☰"}
         </button>
-        <CashChip cash={cash} compact />
-        <WeekdayStrip week={hubActions.week} weekday={hubActions.weekday} />
         <button
           type="button"
           className="app-nav-next"
@@ -2384,7 +2448,8 @@ function AppNav({
               }
             }}
           >
-            ⋮
+            <span className="app-nav-menu-link" aria-hidden="false">Menu</span>
+            <span className="app-nav-menu-glyph" aria-hidden="true">⋮</span>
           </button>
           {menuOpen ? (
             <div className="row-menu-popover pipeline-menu-popover" role="menu">
@@ -2490,6 +2555,26 @@ function AppNav({
                       setMenuOpen(false);
                     }}
                   >
+                  <p className="pipeline-menu-section-title">TEAM</p>
+                  {teamMenu.map((item) => (
+                    <button
+                      key={item.screen}
+                      type="button"
+                      role="menuitem"
+                      className={`row-menu-item pipeline-menu-item${screen === item.screen ? " is-active" : ""}`}
+                      onClick={() => {
+                        onCloseProfile?.();
+                        if (item.screen === "campus") {
+                          onCampusNavigate?.();
+                        }
+                        onNavigate(item.screen);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      {tr(item.labelKey)}
+                    </button>
+                  ))}
+                  <p className="pipeline-menu-section-title">{tr("shell.menu.options")}</p>
                     {tr("shell.menu.saves")}
                   </button>
                   <button

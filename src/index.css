@@ -1,8 +1,8 @@
 :root {
   --text-scale: 1;
-  color: #0f172a;
-  background: #ecfdf5;
-  font-family: "Segoe UI", system-ui, sans-serif;
+  color: var(--tinte, #3e3128);
+  background: var(--bg-sand, #f5efe0);
+  font-family: var(--font-body, "Nunito", system-ui, sans-serif);
   line-height: 1.45;
   font-size: calc(16px * var(--text-scale));
 }
@@ -8674,15 +8674,81 @@ body {
 .app-nav {
   position: sticky;
   top: 0;
-  z-index: 40;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  max-width: 72rem;
+  max-width: 80rem;
   margin: 0 auto;
-  padding: 0.75rem 1.5rem 0.35rem;
-  background: linear-gradient(180deg, #ecfdf5 70%, rgb(236 253 245 / 0));
+  padding: 0 1.5rem;
+  min-height: var(--club-header-height, 56px);
+  background: var(--bg-sand);
+  border: 0;
+}
+
+.club-shell-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.club-shell-identity-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.club-shell-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--tinte);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.club-shell-meta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--tinte-weich);
+  font-variant-numeric: tabular-nums;
+}
+
+.app-nav-menu-link {
+  border: 0;
+  background: transparent;
+  color: var(--tinte);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
+}
+
+.pipeline-menu-section-title {
+  margin: 0.35rem 0 0.15rem;
+  padding: 0 0.65rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinte-weich);
+}
+
+.pipeline-menu-item.is-active {
+  background: var(--rasen);
+  color: var(--tinte);
+  font-weight: 700;
+}
+
+@media (min-width: 1024px) {
+  .app-nav-tabs {
+    display: none;
+  }
 }
 
 .app-nav-tabs {
@@ -8782,9 +8848,11 @@ body {
 }
 
 .app-nav-next {
-  border: 0;
-  background: #059669;
-  color: #fff;
+  border: var(--outline-width, 2px) solid var(--tinte);
+  background: var(--sonnengelb);
+  color: var(--tinte);
+  box-shadow: var(--shadow-flat);
+  font-family: var(--font-display);
   border-radius: 999px;
   padding: 0.4rem 0.9rem;
   font-size: 0.88rem;
@@ -9982,7 +10050,71 @@ body {
     gap: 0.35rem;
   }
 
+  .club-shell-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.club-shell-identity-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.club-shell-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--tinte);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.club-shell-meta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--tinte-weich);
+  font-variant-numeric: tabular-nums;
+}
+
+.app-nav-menu-link {
+  border: 0;
+  background: transparent;
+  color: var(--tinte);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
+}
+
+.pipeline-menu-section-title {
+  margin: 0.35rem 0 0.15rem;
+  padding: 0 0.65rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinte-weich);
+}
+
+.pipeline-menu-item.is-active {
+  background: var(--rasen);
+  color: var(--tinte);
+  font-weight: 700;
+}
+
+@media (min-width: 1024px) {
   .app-nav-tabs {
+    display: none;
+  }
+}
+
+.app-nav-tabs {
     order: 2;
     width: 100%;
     min-width: 0;

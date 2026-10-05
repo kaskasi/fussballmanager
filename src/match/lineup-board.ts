@@ -14,6 +14,7 @@ import {
 } from "@fussballmanager/shared";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { estimateCa } from "../transfers/market-value.ts";
+import { isPlayerMatchEligible } from "../development/injury-roll.ts";
 import type { Player } from "../types/player.ts";
 import { careerPlayerInputs, suggestCareerSquad } from "../sim/career-engine-squad.ts";
 import { templateSquadForClub } from "../sim/league-divisions.ts";
@@ -70,7 +71,12 @@ export function normalizeMatchLineup(
   const slots = getFormation(plan.formation);
   const proIds = new Set(
     players
-      .filter((player) => player.club_id === managerClubId && player.squad_status === "pro")
+      .filter(
+        (player) =>
+          player.club_id === managerClubId &&
+          player.squad_status === "pro" &&
+          isPlayerMatchEligible(player),
+      )
       .map((player) => player.id),
   );
   const assignments: LineupAssignments = {};
@@ -115,6 +121,7 @@ export function fillMissingAssignments(
       (player) =>
         player.club_id === managerClubId &&
         player.squad_status === "pro" &&
+        isPlayerMatchEligible(player) &&
         !used.has(player.id),
     )
     .sort(

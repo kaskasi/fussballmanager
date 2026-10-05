@@ -29,6 +29,7 @@ export function listYouthSquad(players: readonly Player[], team: "u17" | "u19"):
       fitness: player.state.fitness,
       weeklyMinutes: player.state.weekly_minutes,
       injuryRisk: injuryRiskScore(player, 100),
+      injuryWeeks: player.state.injury?.weeks_remaining ?? null,
       seasonMinutes: player.state.season_minutes,
       marketValue: player.market_value,
       goals: player.state.season_goals ?? 0,

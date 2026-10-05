@@ -190,12 +190,18 @@ export function FirstTeam({
                             </span>
                           </span>
                           <span className="squad-player-card-status">
-                            <span className={`squad-fitness is-${fit.tone}`}>
-                              Fit {row.fitness}
-                              <span className="squad-shape-mark" aria-hidden="true">
-                                {fit.mark}
+                            {row.injuryWeeks !== null ? (
+                              <span className="squad-injury" title="Verletzt — kein Einsatz">
+                                Verletzt · {row.injuryWeeks} Wo.
                               </span>
-                            </span>
+                            ) : (
+                              <span className={`squad-fitness is-${fit.tone}`}>
+                                Fit {row.fitness}
+                                <span className="squad-shape-mark" aria-hidden="true">
+                                  {fit.mark}
+                                </span>
+                              </span>
+                            )}
                             · {formatMarketValueShort(row.marketValue)}
                             <span className={`squad-form is-${form.tone}`} title={`Form ${row.form}`}>
                               <span className="squad-shape-mark" aria-hidden="true">

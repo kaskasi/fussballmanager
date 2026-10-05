@@ -12,6 +12,7 @@ import {
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import { derivedExperienceFactor } from "../development/experience.ts";
+import { isPlayerMatchEligible } from "../development/injury-roll.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { templateSquadForClub } from "./league-divisions.ts";
@@ -21,7 +22,10 @@ export function careerPlayerInputs(
   clubId: string = DEFAULT_CLUB_ID,
 ): CareerPlayerInput[] {
   return players
-    .filter((player) => player.club_id === clubId && player.squad_status === "pro")
+    .filter(
+      (player) =>
+        player.club_id === clubId && player.squad_status === "pro" && isPlayerMatchEligible(player),
+    )
     .map((player) => ({
       id: player.id,
       displayName: formatPlayerName(player),

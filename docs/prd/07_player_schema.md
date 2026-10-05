@@ -99,7 +99,8 @@ interface Player {
   stamps: AbilityStamp[];
 
   // ── Visualisierung ─────────────────────────
-  portrait_seed: number;         // Seed für prozeduralen Sprite
+  /** Seed für Open-Peeps-Bust (Abbildung über Pool `mens_squad` in der UI — kein Gender-Feld in v1). */
+  portrait_seed: number;
 }
 
 type PositionPrimary =
@@ -161,6 +162,15 @@ interface Injury {
   severity: "minor" | "moderate" | "severe";
   sustained_week: number;
 }
+
+### 07.6 Verletzungen (F1.4 v1, leicht)
+
+- **Risiko:** `injuryRiskScore` (Fitness, Minuten, Trainingsintensität, Müdigkeit, Physio-Faktor) — bereits in UI.
+- **Roll:** Nach Ligaspiel-Woche, nur **eigener Profikader**, `weekly_minutes > 0`, nicht bereits verletzt. Score &lt; 40 → keine Chance; ab ~90 spürbar (~12 % Cap/Woche). Deterministisch: `hash(master_seed, season, week, player_id)`.
+- **Outcome:** `Injury` mit `type_id` (Text-Labels), `severity`, `weeks_remaining` (minor 1–2, moderate 2–4, severe 4–7), `sustained_week`.
+- **Heilung:** Zu Wochenbeginn `weeks_remaining -= 1`, bei 0 `injury = null`. Während Verletzung kein Fitness-Update, kein Einsatz (Aufstellung/Auto-XI).
+- **Reha-Tiefe:** F2.6 / F8.2 bleiben M2/M3 — v1 ohne Stufen-Sim.
+- **Engine:** Match-Engine unverändert; keine Sync-Pflicht zu Engine-`injury`-Events in v1.
 
 interface GrowthSnapshot {
   season: number;

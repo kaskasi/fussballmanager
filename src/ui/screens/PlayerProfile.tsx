@@ -64,6 +64,7 @@ import {
   scoutReveal,
 } from "../../scouting/scout-visibility.ts";
 import { EXPERIENCE_APPS_SOFT_CAP } from "../../development/experience.ts";
+import { injuryTypeLabel } from "../../development/injury-roll.ts";
 import { Hint } from "../components/Hint.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import {
@@ -380,7 +381,16 @@ export function PlayerProfile({
               ) : null}
             </div>
             <div className="profile-state profile-state-inline" aria-label="Zustand">
-              <StateChip label="Fit" mark={fitness.mark} tone={fitness.tone} value={formatState(player.state.fitness, owned, scoutEstimate)} />
+              {player.state.injury ? (
+                <StateChip
+                  label="Verletzt"
+                  mark="◆"
+                  tone="low"
+                  value={`${injuryTypeLabel(player.state.injury.type_id)} · ${player.state.injury.weeks_remaining} Wo.`}
+                />
+              ) : (
+                <StateChip label="Fit" mark={fitness.mark} tone={fitness.tone} value={formatState(player.state.fitness, owned, scoutEstimate)} />
+              )}
               <StateChip label="Form" mark={form.mark} tone={form.tone} value={formatState(player.state.form, owned, scoutEstimate, true)} />
               <StateChip label="Moral" mark={morale.mark} tone={morale.tone} value={formatState(player.state.morale, owned, scoutEstimate)} />
             </div>

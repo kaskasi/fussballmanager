@@ -32,6 +32,7 @@ export function listMarketRows(
     fitness: player.state.fitness,
     weeklyMinutes: player.state.weekly_minutes,
     injuryRisk: injuryRiskScore(player, 100),
+    injuryWeeks: player.state.injury?.weeks_remaining ?? null,
     seasonMinutes: player.state.season_minutes,
     marketValue: scoutMarketValueEstimate(player, estimate, season, false),
     goals: player.state.season_goals ?? 0,

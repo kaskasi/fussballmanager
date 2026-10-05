@@ -16,6 +16,7 @@ export interface ProSquadRow {
   fitness: number;
   weeklyMinutes: number;
   injuryRisk: number;
+  injuryWeeks: number | null;
   seasonMinutes: number;
   marketValue: number;
   goals: number;
@@ -80,6 +81,7 @@ export function listProSquad(
       fitness: player.state.fitness,
       weeklyMinutes: player.state.weekly_minutes,
       injuryRisk: injuryRiskScore(player, trainingIntensity),
+      injuryWeeks: player.state.injury?.weeks_remaining ?? null,
       seasonMinutes: player.state.season_minutes,
       marketValue: player.market_value,
       goals: player.state.season_goals ?? 0,

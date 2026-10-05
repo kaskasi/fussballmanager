@@ -43,6 +43,11 @@ import {
 } from "../stadium/precinct-effects.ts";
 import { advanceRivalGrowthWeek } from "./rival-growth.ts";
 import { applyWeeklyFitnessBatch } from "../development/fitness-management.ts";
+import {
+  rollWeeklyInjuries,
+  tickInjuryRecoveryBatch,
+} from "../development/injury-roll.ts";
+import { precinctInjuryRiskFactor } from "../stadium/precinct-effects.ts";
 import type { WatchedPlayerMatch } from "./watched-player-match.ts";
 import { advanceNarrativeWeek } from "../narrative/pipeline-week.ts";
 import { advanceMentorshipWeek } from "../development/mentoring.ts";
@@ -146,7 +151,7 @@ export async function simulateGameWeek(
       environmentFromCoachingStaff(session.coachingStaff) *
       precinctTrainingEnvironment(session.stadium.precinct),
   };
-  let players = session.players.map((player) =>
+  let players = tickInjuryRecoveryBatch(session.players).map((player) =>
     applyTrainingWeek(player, sessions, trainingContext),
   );
 
@@ -186,6 +191,24 @@ export async function simulateGameWeek(
     coachingStaff: session.coachingStaff,
     precinctRegen: precinctFitnessRegen(session.stadium.precinct),
   });
+  const injuryRoll = rollWeeklyInjuries(players, {
+    masterSeed: session.masterSeed,
+    season: session.season,
+    week: nextWeek,
+    intensity: session.trainingIntensity,
+    injuryRiskFactor: precinctInjuryRiskFactor(session.stadium.precinct),
+    managerClubId: session.clubId,
+  });
+  players = injuryRoll.players;
+  for (const notice of injuryRoll.notices) {
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "profile",
+      `Verletzt: ${notice.playerName} — ${notice.label}, ${notice.weeks} Wo.`,
+    );
+  }
   const clearedStamps = evaluateClearStamps(players);
   players = clearedStamps.players;
   for (const notice of clearedStamps.cleared) {

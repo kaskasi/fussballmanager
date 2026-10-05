@@ -1,6 +1,7 @@
 import { getFormation, type FormationId, type FormationSlotId } from "@fussballmanager/shared";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { estimateCa } from "../transfers/market-value.ts";
+import { isPlayerMatchEligible } from "../development/injury-roll.ts";
 import type { Player } from "../types/player.ts";
 import type { LineupAssignments } from "./lineup-board.ts";
 
@@ -60,7 +61,10 @@ export function autoLineupAssignments(
 
 function proSquad(players: readonly Player[], managerClubId: string): Player[] {
   return players.filter(
-    (player) => player.club_id === managerClubId && player.squad_status === "pro",
+    (player) =>
+      player.club_id === managerClubId &&
+      player.squad_status === "pro" &&
+      isPlayerMatchEligible(player),
   );
 }
 

@@ -1050,6 +1050,11 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   min-width: 0;
 }
 
+.squad-injury {
+  font-weight: 800;
+  color: var(--terra-dunkel);
+}
+
 .squad-summary--head {
   margin: 0;
   flex: 0 0 auto;

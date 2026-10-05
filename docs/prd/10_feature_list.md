@@ -42,7 +42,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F1.1 | Drag&Drop-Aufstellung | M1 | Spieler-Cards auf 2D-Pitch ziehen, Fitness/Form-Icons, WA per PRD 09 |
 | F1.2 | Taktik-Voreinstellungen | M1 | 3 Preset-Slots, fließen in Engine-Input (Engine-Wrapper) |
 | F1.3 | Auto-Aufstellung | M1 | Assistent: „Best Eleven" / „Rotation" / „Talente einbauen" |
-| F1.4 | Fitness-Management | M1 | Einsatzzeiten → Ermüdung, Verletzungsrisiko-Anzeige |
+| F1.4 | Fitness-Management | M1 | Einsatzzeiten → Ermüdung, Risiko-Anzeige, leichte Verletzungs-Rolls (PRD 07.6) |
 | F1.5 | Spielerprofile | M1 | Attribute-Charts, Icon-Stimmung/Form/Fitness (PRD 09 Screen 4) |
 | F1.6 | Formation-Editor | M2 | Freie Positionen statt festes Raster |
 | F1.7 | Spieler-Gespräche | M2 | Spielzeit-Zusagen beeinflussen `drive`-Wahrnehmung & Moral |

@@ -234,6 +234,7 @@ H1 "Aufstellung"                    [Best XI ●][Rotation][Talente]
 └─────────────────────────────────────────────-┘
 ```
 - Pitch: Vollflächiges `--rasen` mit weißen Feldlinien (CSS/SVG), Player-Chips = `--panel`-Karten mit Mini-Avatar (Open Peeps) + Name + Rating (Display-Font).
+- **Portraits:** Open Peeps Busts (CC0), gebacken mit design-Tokens (tinte, warme Haut, rasen-hell auf Kit-Bodies). `portrait_seed` → Bust-ID über **Pool**: `mens_squad` (Spieler auf dem Platz — **Allowlist** sportlicher Bodies + ohne klar weiblich codierte Heads im Katalog-Script), `mixed` (Trainer/Staff), `womens_squad` (reserviert). Katalog: `src/ui/portraits/portrait-bust-catalog.json` via `npm run bake:portraits`. Kein Gender-Feld am Player in v1 — nur visuelle Pools.
 - Talent-Marker: kleines `--terra`-Dreieck oben rechts am Chip.
 - Context-Spalte hier: Pflicht (Gegner + Taktik).
 
@@ -535,7 +536,7 @@ Das alte Wireframe mit drei gleichhohen Boxen hält das nicht aus – das Profil
 Regeln:
 
 Hub-and-Spoke: Die linke Identitäts-Schiene (280px, sticky) bleibt beim Tab-Wechsel stehen – Name, Avatar, CA/PA, die drei Status-Chips, Bio-Metadaten, Story-Zitat und Verkauf/Actions. Alles, was den Spieler definiert, ist immer sichtbar; alles, was man analysiert, lebt in den Tabs.
-Attribute-Tab: Radar als Hero, darunter Positionsstärken als 4 Mini-Balken, dann die vier Kategorie-Spalten im 2×2-Grid (nicht 4 nebeneinander – sonst Squeeze). Einzelwerte 0–100 mit Mini-Balken; Ausbildungswerte >100 (Übersicht 119) sind erlaubt und benötigen die Balkenskala bis ~130.
+Attribute-Tab: Radar als Hero (Werte an den Ecken, keine redundanten Fußnoten-Balken), Erfahrung daneben; Positionsstärken „Stärke als…“ als kompakte Highlight-Zeile (Hauptposition markiert). Die volle Attribut-Enzyklopädie (2×2-Kategorien, Zahlen statt Balken) ist standardmäßig eingeklappt (`Alle Attribute`). Einzelwerte 0–199 (weak foot 0–100); Werte >100 sind erlaubt.
 Status-Chips: ▲/● Lucide-Chips, nie Emoji. Fit unter 60 = terra, 60–80 staubblau, >80 rasen. Form immer mit Vorzeichen, Moral als 0–100 mit farbigem Chip.
 PA: Balken-Kategorie (██░), nie exakte Zahl (bleibt).
 Training-Tab: Ziel-Karte oben, Fähigkeiten/Stempel als Badge-Liste. Der Stempel-Tooltip erklärt Herkunft.

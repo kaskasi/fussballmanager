@@ -1,4 +1,4 @@
-import { careerApps, stampGateMarkers, stampIcon } from "../development/ability-stamps.ts";
+import { careerApps, stampGateMarkers } from "../development/ability-stamps.ts";
 import {
   derivedExperienceFactor,
   EXPERIENCE_APPS_SOFT_CAP,
@@ -54,7 +54,6 @@ export interface AttributeBar {
 }
 
 export interface ProfileFact {
-  icon: string;
   label: string;
   value: string;
 }
@@ -123,12 +122,11 @@ export function attributeLabel(key: keyof Attributes): string {
 export function profileFacts(player: Player, owned: boolean): ProfileFact[] {
   const apps = careerApps(player);
   return [
-    { icon: "🌍", label: "Nationalität", value: nationalityLabel(player.nationality) },
-    { icon: "📍", label: "Region", value: player.birth.region },
-    { icon: "🏟️", label: "Geburtsort", value: player.birth.place },
-    { icon: "✍️", label: "Vertrag", value: contractLabel(player, owned) },
+    { label: "Nationalität", value: nationalityLabel(player.nationality) },
+    { label: "Region", value: player.birth.region },
+    { label: "Geburtsort", value: player.birth.place },
+    { label: "Vertrag", value: contractLabel(player, owned) },
     {
-      icon: "📚",
       label: profileExperienceLabel(player),
       value: owned ? `${apps} Einsätze` : "?",
     },
@@ -279,8 +277,10 @@ export function staerkeAlsLanes(player: Player): StaerkeAlsBar[] {
   }));
 }
 
+export type DossierTrainingAccent = "team" | "individual" | "stamp" | "weak_foot" | "empty";
+
 export interface DossierTrainingTarget {
-  icon: string;
+  accent: DossierTrainingAccent;
   title: string;
   detail: string;
   /** 0–1 when an individual program is running; null for team-wide focus. */
@@ -299,12 +299,12 @@ export function dossierTrainingTarget(
     const elapsed = Math.max(0, week - program.startedWeek);
     const total = Math.max(1, elapsed + program.weeksRemaining);
     return {
-      icon:
+      accent:
         program.kind === "weak_foot"
-          ? "🦶"
+          ? "weak_foot"
           : program.kind === "stamp"
-            ? stampIcon(program.stampId ?? "")
-            : "🧭",
+            ? "stamp"
+            : "individual",
       title: programKindLabel(program.kind),
       detail: programLabel(program),
       progress: Math.min(1, elapsed / total),
@@ -314,7 +314,7 @@ export function dossierTrainingTarget(
   const first = focusSlots[0] ?? plan[0];
   if (!first) {
     return {
-      icon: "🏋️",
+      accent: "empty",
       title: "Kein Plan",
       detail: "Mannschaftstraining noch offen",
       progress: null,
@@ -323,11 +323,16 @@ export function dossierTrainingTarget(
   const unit = trainingUnit(first.unitId);
   const extra = focusSlots.length > 1 ? ` · ${focusSlots.length} Fokus-Slots` : "";
   return {
-    icon: "🏃",
+    accent: "team",
     title: unit.label,
     detail: `Mannschaftsfokus${extra}`,
     progress: null,
   };
+}
+
+/** Count of rows in the attribute encyclopedia (all skill keys for this player). */
+export function attributeEncyclopediaCount(player: Player): number {
+  return fullSkillSheet(player, true).reduce((total, group) => total + group.bars.length, 0);
 }
 
 export const FAEHIGKEIT_HUNGER_SLOTS = 3;

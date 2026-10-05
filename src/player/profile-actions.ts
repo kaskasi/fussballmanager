@@ -61,19 +61,19 @@ export function profileMenuItems(
   if (player.state.form >= 2) {
     items.push({
       action: "praise",
-      label: "👏 Loben",
+      label: "Loben",
       hint: "Gute Form bestätigen — Moral steigt.",
     });
   } else if (player.state.form <= -1) {
     items.push({
       action: "criticize",
-      label: "📢 Kritisieren",
+      label: "Kritisieren",
       hint: "Schwache Form ansprechen — Moral sinkt.",
     });
   } else {
     items.push({
       action: "praise",
-      label: "👏 Ermutigen",
+      label: "Ermutigen",
       hint: "Kleiner Moral-Schub bei stabiler Form.",
     });
   }
@@ -81,29 +81,29 @@ export function profileMenuItems(
   if (player.squad_status === "u17") {
     items.push({
       action: "promote_u19",
-      label: "⬆️ In U19",
+      label: "In U19",
       hint: "Standard-Aufstieg in die U19.",
     });
     items.push({
       action: "promote_pro",
-      label: "⭐ In Profikader",
+      label: "Profikader",
       hint: "Früher Sprung ins erste Team — riskant ohne CA.",
     });
   } else if (player.squad_status === "u19") {
     items.push({
       action: "promote_pro",
-      label: "🏃 Probewoche",
+      label: "Probewoche",
       hint: "Eine Woche Profiteam — danach Beförderung, wenn Platz im Kader.",
     });
     items.push({
       action: "demote_u17",
-      label: "⬇️ Zurück U17",
+      label: "Zurück U17",
       hint: "Zu früh für U19 — Moral leidet.",
     });
   } else if (player.squad_status === "pro" && player.age <= 22) {
     items.push({
       action: "demote_u19",
-      label: "⬇️ Zurück U19",
+      label: "Zurück U19",
       hint: "Kein Durchbruch — zurück in die Jugend.",
     });
   }
@@ -112,14 +112,14 @@ export function profileMenuItems(
     const wageHint = player.age <= 15 ? 80 : player.age === 16 ? 120 : 175;
     items.push({
       action: "sign_contract",
-      label: "✍️ Jugendvertrag",
+      label: "Jugendvertrag",
       hint: `Vertrag bis ${formatSeasonLabel(season + (player.age <= 16 ? 3 : 2))} · ca. € ${wageHint}/Woche`,
     });
   }
 
   items.push({
     action: "release",
-    label: "🚪 Aus Kader entfernen",
+    label: "Entfernen",
     hint: "Spieler verlässt den Verein und ist vereinslos.",
   });
 

@@ -17,12 +17,23 @@
  * Stamps: Player.stamps (PRD 07.5 / F2.8).
  */
 import { useEffect, useMemo, useState, type ComponentPropsWithoutRef } from "react";
+import {
+  ChevronDown,
+  Dumbbell,
+  Flag,
+  Footprints,
+  Lightbulb,
+  PenLine,
+  Star,
+  Users,
+} from "lucide-react";
 import type { IndividualProgram } from "../../development/individual-training.ts";
 import { programLabel } from "../../development/individual-training.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
 import {
   profileMenuItems,
   type PlayerProfileAction,
+  type ProfileMenuItem,
 } from "../../player/profile-actions.ts";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import {
@@ -52,9 +63,9 @@ import {
   scoutMarketValueBounds,
   scoutReveal,
 } from "../../scouting/scout-visibility.ts";
+import { EXPERIENCE_APPS_SOFT_CAP } from "../../development/experience.ts";
 import { Hint } from "../components/Hint.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
-import { ProfileActionsMenu } from "../components/ProfileActionsMenu.tsx";
 import {
   achievementBadges,
   contractView,
@@ -67,6 +78,7 @@ import {
 } from "../../player/ca-tracking.ts";
 import {
   attributeBars,
+  attributeEncyclopediaCount,
   attributeLabel,
   dossierTrainingTarget,
   FAEHIGKEIT_HUNGER_SLOTS,
@@ -79,6 +91,7 @@ import {
   hexVertex,
   layoutGrowthChart,
   playerStampGateMarkers,
+  positionLane,
   profileExperienceBar,
   profileFacts,
   staerkeAlsLanes,
@@ -86,6 +99,8 @@ import {
   stateMark,
   visibleBreakoutFlags,
   type AttributeBar,
+  type DossierTrainingAccent,
+  type ExperienceBar,
 } from "../player-profile.ts";
 import {
   activeStampBadges,
@@ -176,7 +191,6 @@ export function PlayerProfile({
 }: PlayerProfileProps) {
   const t = useT();
   const [tab, setTab] = useState<ProfileTab>("attributes");
-  const [menuOpen, setMenuOpen] = useState(false);
   const [talksOpen, setTalksOpen] = useState(false);
   const [offer, setOffer] = useState<ContractOffer | null>(null);
   const [blindBuyOpen, setBlindBuyOpen] = useState(false);
@@ -290,7 +304,8 @@ export function PlayerProfile({
       ? formatScoutCa(player, scoutEstimate, false)
       : "?";
   const facts = profileFacts(player, owned);
-  const metaLine = facts.map((fact) => `${fact.icon} ${fact.value}`).join(" · ");
+  const encyclopediaCount = attributeEncyclopediaCount(player);
+  const primaryLane = positionLane(player.position);
   const flavor = flavorForScout(player, owned, scoutEstimate);
   const achievements = achievementBadges(player, owned, scoutEstimate);
   const contract = contractView(player, owned, scoutEstimate);
@@ -336,17 +351,6 @@ export function PlayerProfile({
 
         <article className="profile-card profile-hub">
           <aside className="profile-identity-rail" aria-label="Identität">
-            {owned && onProfileAction ? (
-              <div className="profile-rail-menu">
-                <ProfileActionsMenu
-                  open={menuOpen}
-                  items={menuItems}
-                  onToggle={() => setMenuOpen((open) => !open)}
-                  onClose={() => setMenuOpen(false)}
-                  onSelect={onProfileAction}
-                />
-              </div>
-            ) : null}
             <PlayerPortrait seed={player.portrait_seed} size="lg" className="profile-portrait profile-portrait-rail" />
           <div className="profile-identity-body">
             <Hint text="Spielername. Fremde Spieler werden erst durch Scouting besser bekannt." block>
@@ -362,10 +366,12 @@ export function PlayerProfile({
               <Hint text="Current Ability — geschätzte Gesamtstärke.">
                 <span className="profile-stat profile-stat-ca">CA {ca}</span>
               </Hint>
-              {owned && caDelta !== null ? (
-                <span className={`profile-stat ${caDelta > 0 ? "is-up" : caDelta < 0 ? "is-down" : ""}`}>
-                  {formatCaDelta(caDelta)}
-                </span>
+              {owned && caDelta !== null && caDelta !== 0 ? (
+                <Hint text="CA-Änderung seit der letzten simulierten Woche.">
+                  <span className={`profile-stat ${caDelta > 0 ? "is-up" : "is-down"}`}>
+                    {formatCaDelta(caDelta)}
+                  </span>
+                </Hint>
               ) : null}
               {scoutLabel ? (
                 <Hint text="Wie gut dein Verein diesen Spieler kennt.">
@@ -379,7 +385,16 @@ export function PlayerProfile({
               <StateChip label="Moral" mark={morale.mark} tone={morale.tone} value={formatState(player.state.morale, owned, scoutEstimate)} />
             </div>
             <Hint text="Stammdaten auf einen Blick." block>
-              <p className="profile-meta-line">{metaLine}</p>
+              <p className="profile-meta-line">
+                {facts.map((fact, index) => (
+                  <span key={fact.label}>
+                    {index > 0 ? " · " : null}
+                    <abbr className="profile-meta-abbr" title={fact.label}>
+                      {fact.value}
+                    </abbr>
+                  </span>
+                ))}
+              </p>
             </Hint>
             {flavor ? (
               <Hint text={flavor.body ?? flavor.headline} block>
@@ -397,33 +412,48 @@ export function PlayerProfile({
             ) : null}
           </div>
 
-          {owned && onSell ? (
-            <footer className="profile-rail-actions" aria-label="Transfer">
-              <div className="profile-actions profile-actions-single">
-                <div className="profile-action-cell">
-                  <Hint
-                    text={
-                      saleBlockedReason ??
-                      (!transferWindowOpen
-                        ? t("transfer.profile.saleWindowOnly", { hint: transferWindowHint() })
-                        : t("transfer.profile.saleHint"))
-                    }
-                    block
-                  >
-                    <ProfileActionButton
-                      label={t("transfer.profile.sell")}
-                      amount={saleOffer ? `ca. ${formatMoney(saleOffer)}` : undefined}
-                      className={[
-                        "ui-btn--ghost",
-                        !transferWindowOpen || saleBlockedReason ? "is-blocked" : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      onClick={handleSaleClick}
-                      aria-disabled={!transferWindowOpen || Boolean(saleBlockedReason)}
-                    />
-                  </Hint>
-                </div>
+          {owned && (onSell || (onProfileAction && menuItems.length > 0)) ? (
+            <footer className="profile-rail-actions" aria-label="Aktionen">
+              <div className="profile-actions profile-actions-rail">
+                {onSell ? (
+                  <div className="profile-action-cell profile-action-cell--span">
+                    <Hint
+                      text={
+                        saleBlockedReason ??
+                        (!transferWindowOpen
+                          ? t("transfer.profile.saleWindowOnly", { hint: transferWindowHint() })
+                          : t("transfer.profile.saleHint"))
+                      }
+                      block
+                    >
+                      <ProfileActionButton
+                        label={t("transfer.profile.sell")}
+                        amount={saleOffer ? `ca. ${formatMoney(saleOffer)}` : undefined}
+                        className={[
+                          "ui-btn--ghost",
+                          !transferWindowOpen || saleBlockedReason ? "is-blocked" : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        onClick={handleSaleClick}
+                        aria-disabled={!transferWindowOpen || Boolean(saleBlockedReason)}
+                      />
+                    </Hint>
+                  </div>
+                ) : null}
+                {onProfileAction
+                  ? menuItems.map((item) => (
+                      <div key={item.action} className="profile-action-cell">
+                        <Hint text={item.hint} block>
+                          <ProfileActionButton
+                            label={item.label}
+                            className={railProfileActionClass(item)}
+                            onClick={() => onProfileAction(item.action)}
+                          />
+                        </Hint>
+                      </div>
+                    ))
+                  : null}
               </div>
             </footer>
           ) : null}
@@ -457,9 +487,12 @@ export function PlayerProfile({
                       aria-pressed={shortlisted}
                       onClick={onToggleShortlist}
                     >
-                      <span className="profile-action-icon" aria-hidden="true">
-                        {shortlisted ? "★" : "☆"}
-                      </span>
+                      <Star
+                        className={shortlisted ? "profile-action-icon is-filled" : "profile-action-icon"}
+                        aria-hidden="true"
+                        size={18}
+                        fill={shortlisted ? "currentColor" : "none"}
+                      />
                     </button>
                   </div>
                 ) : null}
@@ -510,56 +543,49 @@ export function PlayerProfile({
           {tab === "attributes" ? (
             <section className="profile-panel" aria-label="Attribute">
               <Hint text="Sechs Kernattribute als Hex. Eigene Spieler: Fläche. Scouts: CI-Ring." block>
-                <div className="profile-bars">
-                  <p className="profile-section-label">Kernattribute</p>
-                  <AttributeHex bars={bars} owned={owned} />
-                  {bars.map((bar) => (
-                    <div key={bar.key} className={bar.dimmed ? "profile-bar-row is-footnote is-dimmed" : "profile-bar-row is-footnote"}>
-                      <span className="profile-bar-label">{attributeLabel(bar.key)}</span>
-                      <div className="profile-bar-track">
-                        {bar.showCi && bar.low !== undefined && bar.high !== undefined ? (
-                          <span
-                            className="profile-bar-ci"
-                            style={{ left: `${(bar.low / 199) * 100}%`, width: `${((bar.high - bar.low) / 199) * 100}%` }}
-                          />
-                        ) : null}
-                        <span className="profile-bar-fill" style={{ width: `${(bar.value / 199) * 100}%` }} />
+                <div className="profile-attr-hero">
+                  <div className="profile-attr-hex-wrap">
+                    <p className="profile-section-label">Kernattribute</p>
+                    <AttributeHex bars={bars} owned={owned} />
+                  </div>
+                  {xpBar ? (
+                    <Hint
+                      text={`Karriere-Einsätze (${xpBar.apps}). Der Balken skaliert bis ${EXPERIENCE_APPS_SOFT_CAP} Spiele — beeinflusst Match-Reife, kein Potential.`}
+                      block
+                    >
+                      <div className="profile-xp profile-xp--hero" aria-label={xpBar.label}>
+                        <p className="profile-section-label">Erfahrung</p>
+                        <div
+                          className="profile-xp-track"
+                          role="meter"
+                          aria-valuemin={0}
+                          aria-valuemax={EXPERIENCE_APPS_SOFT_CAP}
+                          aria-valuenow={xpBar.apps}
+                          aria-label={`${experienceTierLabel(xpBar)} · ${xpBar.apps} Einsätze`}
+                        >
+                          <span className="profile-xp-fill" style={{ width: `${xpBar.fill * 100}%` }} />
+                        </div>
+                        <p className="profile-xp-caption">{experienceCaption(xpBar)}</p>
                       </div>
-                      <span className="profile-bar-value">{bar.showValue ? bar.value : "?"}</span>
-                    </div>
-                  ))}
+                    </Hint>
+                  ) : null}
                 </div>
               </Hint>
 
-              {xpBar ? (
-                <div className="profile-xp" aria-label={xpBar.label}>
-                  <span className="profile-xp-label">{xpBar.label}</span>
-                  <div className="profile-bar-track" aria-hidden="true">
-                    <span className="profile-bar-fill" style={{ width: `${xpBar.fill * 100}%` }} />
-                  </div>
-                  <span className="profile-bar-value">{xpBar.apps}</span>
-                </div>
-              ) : null}
-
-              <FullSkillSheet player={player} owned={owned} estimate={scoutEstimate} />
-
               {lanes.length > 0 ? (
                 <Hint text="Grobe Eignung aus Hauptposition und Umschulung — keine zweite Attributliste." block>
-                  <div className="profile-staerke" aria-label="Stärke als">
-                    <p className="profile-section-label">Stärke als…</p>
-                    {lanes.map((lane) => (
-                      <div key={lane.lane} className="profile-staerke-row">
-                        <span className="profile-staerke-label">{lane.lane}</span>
-                        <div className="profile-staerke-track">
-                          <span className="profile-staerke-fill" style={{ width: `${lane.value * 100}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <StaerkeAlsCompact lanes={lanes} primaryLane={primaryLane} />
                 </Hint>
               ) : (
                 <p className="profile-empty">Stärke als… unbekannt — mehr scouting.</p>
               )}
+
+              <SkillEncyclopediaDetails
+                player={player}
+                owned={owned}
+                estimate={scoutEstimate}
+                count={encyclopediaCount}
+              />
             </section>
           ) : null}
 
@@ -570,7 +596,8 @@ export function PlayerProfile({
                   <div className="profile-ziel">
                     <p className="profile-section-label">Aktuelles Ziel</p>
                     <p className="profile-ziel-title">
-                      <span aria-hidden="true">{trainingTarget.icon}</span> {trainingTarget.title}
+                      <TrainingTargetAccentIcon accent={trainingTarget.accent} />
+                      {trainingTarget.title}
                     </p>
                     <p className="profile-ziel-detail">{trainingTarget.detail}</p>
                     {trainingTarget.progress !== null ? (
@@ -585,7 +612,8 @@ export function PlayerProfile({
                     )}
                     {onOpenTraining ? (
                       <button type="button" className="ui-btn ui-btn--ghost profile-ziel-btn" onClick={onOpenTraining}>
-                        🏋️ Einzeltraining
+                        <Dumbbell aria-hidden size={16} />
+                        Einzeltraining
                       </button>
                     ) : null}
                   </div>
@@ -635,7 +663,8 @@ export function PlayerProfile({
                               setTalksOpen(true);
                             }}
                           >
-                            ✍️ Verhandeln
+                            <PenLine aria-hidden size={16} />
+                            Verhandeln
                           </button>
                         </Hint>
                       ) : null}
@@ -791,7 +820,9 @@ function DevelopmentTab({
       {owned && timeline.length > 0 ? (
         <div className="profile-timeline" aria-label="Breakouts">
           {timeline.map((flag) => (
-            <span key={flag} title={flag}>💡</span>
+            <span key={flag} title={flag}>
+              <Lightbulb className="profile-timeline-icon" size={16} aria-label={flag} />
+            </span>
           ))}
         </div>
       ) : null}
@@ -875,6 +906,16 @@ function StatItem({ label, value }: { label: string; value: string }) {
   );
 }
 
+function railProfileActionClass(item: ProfileMenuItem): string {
+  if (item.action === "release") {
+    return "ui-btn--ghost profile-action-btn is-danger";
+  }
+  if (item.action === "promote_pro" || item.action === "sign_contract") {
+    return "ui-btn--primary profile-action-btn";
+  }
+  return "ui-btn--ghost profile-action-btn";
+}
+
 function ProfileActionButton({
   label,
   amount,
@@ -928,24 +969,129 @@ function AttributeHex({ bars, owned }: { bars: AttributeBar[]; owned: boolean })
       ) : null}
       {bars.map((bar, index) => {
         const labelAt = hexVertex(cx, cy, maxR + 16, index, bars.length);
+        const valueLabel = bar.showValue
+          ? String(bar.value)
+          : bar.showCi && bar.low !== undefined && bar.high !== undefined
+            ? `${bar.low}–${bar.high}`
+            : "?";
         return (
-          <text
-            key={bar.key}
-            className="profile-hex-label"
-            x={labelAt.x}
-            y={labelAt.y}
-            textAnchor="middle"
-            dominantBaseline="middle"
-          >
-            {attributeLabel(bar.key)}
-          </text>
+          <g key={bar.key}>
+            <text
+              className="profile-hex-label"
+              x={labelAt.x}
+              y={labelAt.y - 5}
+              textAnchor="middle"
+              dominantBaseline="middle"
+            >
+              {attributeLabel(bar.key)}
+            </text>
+            <text
+              className="profile-hex-value"
+              x={labelAt.x}
+              y={labelAt.y + 7}
+              textAnchor="middle"
+              dominantBaseline="middle"
+            >
+              {valueLabel}
+            </text>
+          </g>
         );
       })}
     </svg>
   );
 }
 
-function FullSkillSheet({
+function experienceTierLabel(bar: ExperienceBar): string {
+  if (bar.raw) return "Roh";
+  if (bar.fill >= 0.85) return "Erfahren";
+  if (bar.fill >= 0.35) return "Etabliert";
+  return "Jung";
+}
+
+function experienceCaption(bar: ExperienceBar): string {
+  return `${experienceTierLabel(bar)} · ${bar.apps}`;
+}
+
+function formatSkillDisplayValue(bar: AttributeBar): string {
+  if (bar.showValue) return String(bar.value);
+  if (bar.showCi && bar.low !== undefined && bar.high !== undefined) {
+    return `${bar.low}–${bar.high}`;
+  }
+  return "?";
+}
+
+function TrainingTargetAccentIcon({ accent }: { accent: DossierTrainingAccent }) {
+  const className = "profile-ziel-accent-icon";
+  switch (accent) {
+    case "team":
+      return <Users className={className} size={18} aria-hidden />;
+    case "weak_foot":
+      return <Footprints className={className} size={18} aria-hidden />;
+    case "stamp":
+      return <Flag className={className} size={18} aria-hidden />;
+    case "individual":
+      return <Dumbbell className={className} size={18} aria-hidden />;
+    default:
+      return <Dumbbell className={className} size={18} aria-hidden />;
+  }
+}
+
+function StaerkeAlsCompact({
+  lanes,
+  primaryLane,
+}: {
+  lanes: ReturnType<typeof staerkeAlsLanes>;
+  primaryLane: ReturnType<typeof positionLane>;
+}) {
+  return (
+    <div className="profile-staerke profile-staerke--compact" aria-label="Stärke als">
+      <p className="profile-section-label">Stärke als…</p>
+      <div className="profile-staerke-slots">
+        {lanes.map((lane) => {
+          const isPrimary = lane.lane === primaryLane;
+          const score =
+            lane.value > 0 ? `${Math.round(lane.value * 100)}` : "—";
+          return (
+            <div
+              key={lane.lane}
+              className={
+                isPrimary ? "profile-staerke-slot is-primary" : "profile-staerke-slot"
+              }
+              title={lane.label}
+            >
+              <span className="profile-staerke-label">{lane.lane}</span>
+              <span className="profile-staerke-value">{score}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SkillEncyclopediaDetails({
+  player,
+  owned,
+  estimate,
+  count,
+}: {
+  player: Player;
+  owned: boolean;
+  estimate?: AbilityEstimate;
+  count: number;
+}) {
+  return (
+    <details className="profile-attr-encyclopedia">
+      <summary className="profile-attr-encyclopedia-summary">
+        <span>Alle Attribute ({count})</span>
+        <ChevronDown className="profile-attr-encyclopedia-chevron" size={16} aria-hidden />
+      </summary>
+      <SkillEncyclopediaTable player={player} owned={owned} estimate={estimate} />
+    </details>
+  );
+}
+
+function SkillEncyclopediaTable({
   player,
   owned,
   estimate,
@@ -957,40 +1103,34 @@ function FullSkillSheet({
   const groups = fullSkillSheet(player, owned, estimate);
   const markers = playerStampGateMarkers(player);
   return (
-    <div className="profile-sheet" aria-label="Alle Skills">
+    <div className="profile-encyclopedia-grid" aria-label="Attribut-Enzyklopädie">
       {groups.map((group) => (
-        <div key={group.id} className="profile-sheet-group">
+        <div key={group.id} className="profile-encyclopedia-col">
           <p className="profile-section-label">{group.label}</p>
-          {group.bars.map((bar) => {
-            const cap = bar.key === "weak_foot" ? 100 : 199;
-            const gate = stampGateTitle(bar.key, markers);
-            return (
-              <div
-                key={bar.key}
-                className={bar.dimmed ? "profile-bar-row is-footnote is-dimmed" : "profile-bar-row is-footnote"}
-                title={gate}
-              >
-                <span className="profile-bar-label">
-                  {attributeLabel(bar.key)}
-                  {gate ? (
-                    <span className="profile-gate-mark" aria-label={gate}>
-                      ⚑
-                    </span>
-                  ) : null}
-                </span>
-                <div className="profile-bar-track">
-                  {bar.showCi && bar.low !== undefined && bar.high !== undefined ? (
-                    <span
-                      className="profile-bar-ci"
-                      style={{ left: `${(bar.low / cap) * 100}%`, width: `${((bar.high - bar.low) / cap) * 100}%` }}
-                    />
-                  ) : null}
-                  <span className="profile-bar-fill" style={{ width: `${(bar.value / cap) * 100}%` }} />
-                </div>
-                <span className="profile-bar-value">{bar.showValue ? bar.value : "?"}</span>
-              </div>
-            );
-          })}
+          <table className="profile-encyclopedia-table">
+            <tbody>
+              {group.bars.map((bar) => {
+                const gate = stampGateTitle(bar.key, markers);
+                return (
+                  <tr
+                    key={bar.key}
+                    className={bar.dimmed ? "is-dimmed" : undefined}
+                    title={gate}
+                  >
+                    <th scope="row" className="profile-encyclopedia-attr">
+                      {attributeLabel(bar.key)}
+                      {gate ? (
+                        <span title={gate}>
+                          <Flag className="profile-encyclopedia-gate" size={12} aria-label={gate} />
+                        </span>
+                      ) : null}
+                    </th>
+                    <td className="profile-encyclopedia-value">{formatSkillDisplayValue(bar)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       ))}
     </div>

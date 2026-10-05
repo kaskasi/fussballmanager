@@ -143,7 +143,7 @@ describe("player profile helpers", () => {
       [{ unitId: "phys_speed", focus: true }],
       4,
     );
-    expect(stampProgram.icon).toBe("⚡");
+    expect(stampProgram.accent).toBe("stamp");
   });
 
   it("draws six hex vertices and groups the full skill sheet with gate keys", () => {

@@ -1430,6 +1430,28 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   color: var(--tinte-weich);
 }
 
+.match-timeline-log-line.is-latest {
+  font-weight: 800;
+}
+
+.match-timeline-log-line.is-shot,
+.match-timeline-log-line.is-danger {
+  color: var(--tinte);
+}
+
+.matchday-cockpit--events-focus {
+  grid-template-columns: minmax(0, 0.95fr) minmax(300px, 360px);
+}
+
+.matchday-cockpit--events-focus .matchday-side-panel {
+  max-height: min(28rem, 52dvh);
+}
+
+.matchday-cockpit-side--stream-events .matchday-side-panel {
+  flex: 1;
+  min-height: 12rem;
+}
+
 .match-voice-badge {
   display: inline-block;
   margin-right: 0.35rem;
@@ -1492,6 +1514,36 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 
 .career-match .career-match-stage {
   min-height: 0;
+}
+
+/* §9.15 — goal moment (~800ms): ball pulse + terra scorer ring */
+.pitch-wrap--goal-highlight [data-ball] {
+  animation: pitch-goal-ball-pulse 800ms ease-out;
+}
+
+.pitch-player--goal-scorer > circle:first-of-type {
+  stroke: var(--terra) !important;
+  animation: pitch-goal-scorer-ring 800ms ease-out;
+}
+
+@keyframes pitch-goal-ball-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  45% {
+    filter: drop-shadow(0 0 0.35rem var(--terra));
+  }
+}
+
+@keyframes pitch-goal-scorer-ring {
+  0%,
+  100% {
+    stroke-width: 0.35;
+  }
+  50% {
+    stroke-width: 0.85;
+  }
 }
 
 @media (max-width: 960px) {

@@ -51,6 +51,7 @@ export function MatchStage({
     </div>
   );
 
+  /** Full-page log — dev sandbox (`Matchday`) only; career match keeps pitch hero (design §9.15). */
   if (mode === "events") {
     return wrap(
         <EventsFeed

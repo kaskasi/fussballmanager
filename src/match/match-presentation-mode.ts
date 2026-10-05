@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 
+/** Career match: pitch hero + side log vs taller events column. Sandbox `Matchday` may still use full-page events via `MatchStage`. */
 export type MatchPresentationMode = "pitch" | "events";
 
 const STORAGE_KEY = "fc-tycoon-match-presentation";

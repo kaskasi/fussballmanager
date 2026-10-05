@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { GOAL_HIGHLIGHT_MS } from "./goal-highlight.ts";
 import type { MatchView, MatchViewFrame } from "@fussballmanager/shared";
 import { frameDurationMs } from "./lerp";
 import {
@@ -22,12 +23,35 @@ export function useMatchPlayback(view: MatchView | null) {
   const [speed, setSpeed] = useState(1);
   const [colorRevealSeq, setColorRevealSeq] = useState(-1);
   const durationMs = frameDurationMs(speed);
+  const playingRef = useRef(playing);
+  playingRef.current = playing;
+  const lastGoalHoldSeq = useRef(-1);
 
   useEffect(() => {
     setIndex(0);
     setPlaying(false);
     setColorRevealSeq(-1);
+    lastGoalHoldSeq.current = -1;
   }, [presented?.seed, presented?.eventCount]);
+
+  useEffect(() => {
+    if (!presented) {
+      return;
+    }
+    const tick = frameAt(presented, index);
+    if (tick.cue !== "goal" || tick.seq === lastGoalHoldSeq.current) {
+      return;
+    }
+    lastGoalHoldSeq.current = tick.seq;
+    if (!playingRef.current) {
+      return;
+    }
+    setPlaying(false);
+    const resume = window.setTimeout(() => {
+      setPlaying(true);
+    }, GOAL_HIGHLIGHT_MS);
+    return () => window.clearTimeout(resume);
+  }, [presented, index]);
 
   useEffect(() => {
     if (!presented || !playing) {

@@ -18,6 +18,7 @@ import { useMatchPresentationMode } from "./match-presentation-mode.ts";
 import { Scoreboard } from "./Scoreboard.tsx";
 import { buildPreMatchBrief } from "./pre-match-brief.ts";
 import { PreMatchBlock } from "./PreMatchBlock.tsx";
+import { clampCareerMatchSpeed } from "./match-playback-speed.ts";
 import { frameAt, useMatchPlayback } from "./useMatchPlayback.ts";
 import { MatchReportScreen } from "./MatchReportScreen.tsx";
 import { MatchdayLivePanel } from "./MatchdayLivePanel.tsx";
@@ -372,7 +373,6 @@ function CareerMatchPlayback({
         "career-match",
         reportOpen ? "career-match--report" : "",
         inPreview ? "career-match--preview" : "",
-        !reportOpen && !inPreview && presentationMode === "events" ? "career-match--events" : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -390,7 +390,16 @@ function CareerMatchPlayback({
           onSelectPlayer={onSelectMatchPlayer}
         />
       ) : (
-        <div className="matchday-cockpit">
+        <div
+          className={[
+            "matchday-cockpit",
+            !inPreview && userStartedPlayback && presentationMode === "events"
+              ? "matchday-cockpit--events-focus"
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           <div className="matchday-cockpit-hero">
             {view && heroFrame ? (
               <Scoreboard view={view} frame={heroFrame} compact />
@@ -420,7 +429,7 @@ function CareerMatchPlayback({
 
             {view && frame && !reportOpen && userStartedPlayback ? (
               <MatchStage
-                mode={presentationMode}
+                mode="pitch"
                 view={view}
                 frame={frame}
                 previous={playback.previous}
@@ -448,7 +457,6 @@ function CareerMatchPlayback({
               view={view}
               frame={frame}
               visibleLines={playback.visibleLines}
-              preMatch={preMatch}
               presentationMode={presentationMode}
               onPresentationModeChange={setPresentationMode}
               playing={playback.playing}
@@ -465,7 +473,7 @@ function CareerMatchPlayback({
                 playback.stepForward();
               }}
               speed={playback.speed}
-              onSpeedChange={playback.setSpeed}
+              onSpeedChange={(next) => playback.setSpeed(clampCareerMatchSpeed(next))}
               disabled={loading}
             />
           ) : !view && !error ? (

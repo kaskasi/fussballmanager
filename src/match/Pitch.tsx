@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { GOAL_HIGHLIGHT_MS } from "./goal-highlight.ts";
 import type {
   MatchViewCueDetail,
   MatchViewFrame,
@@ -79,7 +80,26 @@ export function Pitch({
   cueDetail,
 }: PitchProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [goalHighlightSeq, setGoalHighlightSeq] = useState<number | null>(null);
+  const [goalScorerId, setGoalScorerId] = useState<string | null>(null);
   const shirts = new Map(roster.map((player) => [player.id, player]));
+
+  useEffect(() => {
+    if (to.cue !== "goal") {
+      return;
+    }
+    const scorerId =
+      to.ballCarrierId ??
+      roster.find((player) => player.name === cueDetail?.label)?.id ??
+      null;
+    setGoalHighlightSeq(to.seq);
+    setGoalScorerId(scorerId);
+    const clear = window.setTimeout(() => {
+      setGoalHighlightSeq(null);
+      setGoalScorerId(null);
+    }, GOAL_HIGHLIGHT_MS);
+    return () => window.clearTimeout(clear);
+  }, [cueDetail?.label, roster, to.ballCarrierId, to.cue, to.seq]);
   const roleOf = (playerId: string) => shirts.get(playerId)?.role;
   const poseAt = (t: number) => mixFrame(from, to, t, homeId, roleOf);
   const start = poseAt(playing ? 0 : 1);
@@ -107,8 +127,17 @@ export function Pitch({
     return () => window.cancelAnimationFrame(raf);
   }, [from, to, playing, durationMs, homeId, roster]);
 
+  const highlightActive = goalHighlightSeq === to.seq && to.cue === "goal";
+
   return (
-    <figure className="pitch-wrap">
+    <figure
+      className={[
+        "pitch-wrap",
+        highlightActive ? "pitch-wrap--goal-highlight" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <IncidentBanner cue={cue} cueDetail={cueDetail} seq={to.seq} />
       <MatchSubstitutionTicker cue={cue} cueDetail={cueDetail} seq={to.seq} />
       <svg
@@ -200,7 +229,15 @@ export function Pitch({
           const cx = mapX(dot.x);
           const cy = mapY(dot.y);
           return (
-            <g key={dot.playerId} data-player={dot.playerId}>
+            <g
+              key={dot.playerId}
+              data-player={dot.playerId}
+              className={
+                highlightActive && goalScorerId === dot.playerId
+                  ? "pitch-player--goal-scorer"
+                  : undefined
+              }
+            >
               <title>
                 {player
                   ? `${player.shirt} ${player.name}`

@@ -1,14 +1,14 @@
 /** WIREFRAME: docs/prd/design.md §9.15 — Live-Regeln (rechte Spalte) */
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { MatchView, MatchViewFrame, MatchViewLine } from "@fussballmanager/shared";
 import { EventsHud } from "./EventsHud.tsx";
 import { Lineup } from "./Lineup.tsx";
 import { MatchPresentationToggle } from "./MatchPresentationToggle.tsx";
 import { MatchStats } from "./MatchStats.tsx";
 import type { MatchPresentationMode } from "./match-presentation-mode.ts";
-import type { PreMatchBrief } from "./pre-match-brief.ts";
 import { localizeMatchLine } from "./localize-match-line.ts";
 import { eventLineTone } from "./match-presentation-mode.ts";
+import { CAREER_MATCH_SPEED_OPTIONS } from "./match-playback-speed.ts";
 
 type SideTab = "events" | "stats" | "lineups";
 
@@ -16,7 +16,6 @@ export function MatchdayLivePanel({
   view,
   frame,
   visibleLines,
-  preMatch,
   presentationMode,
   onPresentationModeChange,
   playing,
@@ -30,7 +29,6 @@ export function MatchdayLivePanel({
   view: MatchView;
   frame: MatchViewFrame;
   visibleLines: MatchViewLine[];
-  preMatch?: PreMatchBrief | null;
   presentationMode: MatchPresentationMode;
   onPresentationModeChange: (mode: MatchPresentationMode) => void;
   playing: boolean;
@@ -42,9 +40,48 @@ export function MatchdayLivePanel({
   disabled?: boolean;
 }) {
   const [sideTab, setSideTab] = useState<SideTab>("events");
+  const eventLogRef = useRef<HTMLOListElement>(null);
+
+  const handlePresentationChange = useCallback(
+    (mode: MatchPresentationMode) => {
+      onPresentationModeChange(mode);
+      if (mode === "events") {
+        setSideTab("events");
+      }
+    },
+    [onPresentationModeChange],
+  );
+
+  const selectSideTab = useCallback(
+    (id: SideTab) => {
+      setSideTab(id);
+      onPresentationModeChange(id === "events" ? "events" : "pitch");
+    },
+    [onPresentationModeChange],
+  );
+
+  useEffect(() => {
+    if (sideTab !== "events") {
+      return;
+    }
+    const list = eventLogRef.current;
+    if (!list) {
+      return;
+    }
+    list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
+  }, [sideTab, visibleLines.length, visibleLines.at(-1)?.seq, visibleLines.at(-1)?.voice]);
 
   return (
-    <aside className="matchday-cockpit-side game-panel" aria-label="Live-Regeln">
+    <aside
+      className={[
+        "matchday-cockpit-side",
+        "game-panel",
+        presentationMode === "events" ? "matchday-cockpit-side--stream-events" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria-label="Live-Regeln"
+    >
       <div className="matchday-side-toolbar">
         <div className="transport matchday-side-transport">
           <button type="button" className="step" onClick={onStepBack} disabled={disabled} aria-label="Schritt zurück">
@@ -64,7 +101,7 @@ export function MatchdayLivePanel({
         </div>
         <MatchPresentationToggle
           value={presentationMode}
-          onChange={onPresentationModeChange}
+          onChange={handlePresentationChange}
           disabled={disabled}
         />
         <label className="career-match-speed">
@@ -74,10 +111,11 @@ export function MatchdayLivePanel({
             onChange={(event) => onSpeedChange(Number(event.target.value))}
             disabled={disabled}
           >
-            <option value={1}>1×</option>
-            <option value={2}>2×</option>
-            <option value={4}>4×</option>
-            <option value={8}>8×</option>
+            {CAREER_MATCH_SPEED_OPTIONS.map((rate) => (
+              <option key={rate} value={rate}>
+                {rate}×
+              </option>
+            ))}
           </select>
         </label>
       </div>
@@ -96,7 +134,7 @@ export function MatchdayLivePanel({
             role="tab"
             aria-selected={sideTab === id}
             className={sideTab === id ? "matchday-side-tab is-active" : "matchday-side-tab"}
-            onClick={() => setSideTab(id)}
+            onClick={() => selectSideTab(id)}
           >
             {label}
           </button>
@@ -105,20 +143,24 @@ export function MatchdayLivePanel({
 
       <div className="matchday-side-panel" role="tabpanel">
         {sideTab === "events" ? (
-          <ol className="match-timeline-log">
+          <ol ref={eventLogRef} className="match-timeline-log">
             {visibleLines.length === 0 ? (
               <li className="match-timeline-log-line is-muted">Anpfiff steht bevor.</li>
             ) : (
               visibleLines.map((line, index) => {
                 const text = localizeMatchLine(line);
                 const tone = eventLineTone(text);
+                const isLatest = index === visibleLines.length - 1;
                 return (
                   <li
                     key={`${line.seq}-${index}`}
                     className={[
                       "match-timeline-log-line",
                       tone === "goal" ? "is-goal" : "",
+                      tone === "shot" ? "is-shot" : "",
+                      tone === "danger" ? "is-danger" : "",
                       line.voice === "color" ? "is-expert" : "",
+                      isLatest ? "is-latest" : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
@@ -142,13 +184,6 @@ export function MatchdayLivePanel({
           </div>
         ) : null}
       </div>
-
-      {preMatch ? (
-        <p className="matchday-fan-voice">
-          <span className="match-voice-badge">Experte</span>
-          {preMatch.colorLine}
-        </p>
-      ) : null}
 
       <EventsHud frame={frame} homeTeamId={view.home.id} />
     </aside>

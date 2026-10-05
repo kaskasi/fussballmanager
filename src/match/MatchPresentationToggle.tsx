@@ -15,7 +15,7 @@ export function MatchPresentationToggle({
     <div
       className="segmented-control match-presentation-toggle"
       role="tablist"
-      aria-label="Spieldarstellung"
+      aria-label="Stream-Schwerpunkt: Spielfeld oder Ereignis-Log"
     >
       <button
         type="button"

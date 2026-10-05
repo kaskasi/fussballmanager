@@ -47,7 +47,7 @@ const FLOW_W = 312;
 const FLOW_H = 88;
 
 /**
- * WIREFRAME: PRD 11.5 — Finanzen
+ * WIREFRAME: docs/prd/design.md §9.2 — Finanzen
  */
 export function FinancesScreen({
   finances,
@@ -121,7 +121,7 @@ export function FinancesScreen({
   const flows = seasonCategorizedFlows(finances, season, week);
 
   return (
-    <main className="finances">
+    <main className="finances screen-shell">
       <header className="finances-head">
         <button type="button" onClick={onBack} aria-label="Zurück zur Pipeline">
           ←

@@ -49,10 +49,6 @@ import {
   TRAINING_INTENSITY_MIN,
 } from "../../development/training-load.ts";
 import type { PositionPrimary } from "../../types/player.ts";
-import { AssistantDelegationPanel } from "../components/AssistantDelegationPanel.tsx";
-import { CoachingStaffPanel } from "../components/CoachingStaffPanel.tsx";
-import { MentoringPanel } from "../components/MentoringPanel.tsx";
-import { FitnessManagementPanel } from "../components/FitnessManagementPanel.tsx";
 import { Hint } from "../components/Hint.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { GrowthHeatmap } from "../components/GrowthHeatmap.tsx";
@@ -65,7 +61,7 @@ import type {
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 
-type TrainingTab = "overview" | "team" | "individual" | "mentoring" | "coaches" | "fitness";
+type TrainingTab = "status" | "team" | "individual";
 
 const GROUP_LABELS: Record<SessionGroup, string> = {
   technical: "Technik",
@@ -74,7 +70,7 @@ const GROUP_LABELS: Record<SessionGroup, string> = {
 };
 
 /**
- * WIREFRAME: PRD 09.2 Screen 1 + 1a — Training
+ * WIREFRAME: docs/prd/design.md §9.10 — Training
  *
  * Übersicht: Ampel · 🎯 Fokus · Heatmap Wochenzuwachs (02.1)
  * Team: Stundenplan (Mo–Fr, 5 Slots). Fokus-Modus per Checkbox.
@@ -136,7 +132,7 @@ export function TrainingCenter({
   injuryRiskFactor?: number;
 }) {
   useT();
-  const [tab, setTab] = useState<TrainingTab>("overview");
+  const [tab, setTab] = useState<TrainingTab>("status");
   const [pickSlot, setPickSlot] = useState<number | null>(null);
   const check = useMemo(() => validateWeeklyPlan(planToSessions(plan)), [plan]);
   const focusCount = plan.filter((slot) => slot.focus).length;
@@ -166,9 +162,6 @@ export function TrainingCenter({
       </header>
 
       <nav className="training-tabs" aria-label={t("training.tabs.aria")}>
-        <button type="button" className={tab === "overview" ? "training-tab is-active" : "training-tab"} onClick={() => setTab("overview")}>
-          {t("training.tab.overview")}
-        </button>
         <button type="button" className={tab === "team" ? "training-tab is-active" : "training-tab"} onClick={() => setTab("team")}>
           {t("training.tab.team")}
         </button>
@@ -179,30 +172,9 @@ export function TrainingCenter({
         >
           {t("training.tab.individual")}
         </button>
-        <button
-          type="button"
-          className={tab === "mentoring" ? "training-tab is-active" : "training-tab"}
-          onClick={() => setTab("mentoring")}
-        >
-          {t("training.tab.mentoring")}
-        </button>
-        <button
-          type="button"
-          className={tab === "coaches" ? "training-tab is-active" : "training-tab"}
-          onClick={() => setTab("coaches")}
-        >
-          {t("training.tab.coaches")}
-        </button>
-        <button
-          type="button"
-          className={tab === "fitness" ? "training-tab is-active" : "training-tab"}
-          onClick={() => setTab("fitness")}
-        >
-          {t("training.tab.fitness")}
-        </button>
       </nav>
 
-      {tab === "overview" ? (
+      {tab === "status" ? (
         <TrainingOverview
           focusCount={focusCount}
           load={load}
@@ -224,7 +196,7 @@ export function TrainingCenter({
           onPlanChange={onPlanChange}
           onIntensityChange={onIntensityChange}
         />
-      ) : tab === "individual" ? (
+      ) : (
         <IndividualPlan
           players={players}
           programs={individualPrograms}
@@ -233,39 +205,6 @@ export function TrainingCenter({
           onProgramsChange={onProgramsChange}
           openPlayerId={focusIndividualPlayerId}
           onDismissOpenPlayer={onClearIndividualFocus}
-        />
-      ) : tab === "mentoring" ? (
-        <MentoringPanel
-          players={players}
-          clubId={clubId}
-          season={season}
-          week={week}
-          onAssignMentor={onAssignMentor}
-          onClearMentor={onClearMentor}
-        />
-      ) : tab === "coaches" ? (
-        <>
-          <AssistantDelegationPanel
-            assistantName={assistantName}
-            staff={coachingStaff}
-            delegation={assistantDelegation}
-            onChange={onAssistantDelegationChange}
-          />
-          <CoachingStaffPanel
-            staff={coachingStaff}
-            season={season}
-            week={week}
-            masterSeed={masterSeed}
-            cash={cash}
-            onHire={onHireCoach}
-          />
-        </>
-      ) : (
-        <FitnessManagementPanel
-          players={players}
-          clubId={clubId}
-          intensity={intensity}
-          injuryRiskFactor={injuryRiskFactor}
         />
       )}
     </main>

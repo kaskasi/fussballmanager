@@ -1,4 +1,12 @@
 import { useMemo, useState } from "react";
+import { MentoringPanel } from "../components/MentoringPanel.tsx";
+import { CoachingStaffPanel } from "../components/CoachingStaffPanel.tsx";
+import { AssistantDelegationPanel } from "../components/AssistantDelegationPanel.tsx";
+import { FitnessManagementPanel } from "../components/FitnessManagementPanel.tsx";
+import type { Coach, CoachingStaff } from "../../staff/coaching-staff.ts";
+import type { AssistantDelegation, AssistantDelegationTask } from "../../staff/assistant-delegation.ts";
+
+type SquadTab = "list" | "mentoring" | "staff";
 import type { Player } from "../../types/player.ts";
 import {
   formatMarketValueShort,
@@ -17,7 +25,7 @@ import { useT } from "../../i18n/react.ts";
 import { t } from "../../i18n/index.ts";
 
 /**
- * WIREFRAME: PRD 09 — Profikader
+ * WIREFRAME: docs/prd/design.md §9.11 — Kader
  * ┌──────────────────────────────────────────────┐
  * │ ←  ⭐ Profikader · 14 Spieler                │
  * │ Ø CA 74 · Marktwert 18.2M                    │
@@ -39,6 +47,17 @@ export function FirstTeam({
   trainingIntensity = 100,
   onBack,
   onSelectPlayer,
+  week = 1,
+  coachingStaff,
+  masterSeed = 0,
+  cash = 0,
+  onHireCoach,
+  assistantName = "",
+  assistantDelegation,
+  onAssistantDelegationChange,
+  onAssignMentor,
+  onClearMentor,
+  injuryRiskFactor = 1,
 }: {
   players: readonly Player[];
   clubId: string;
@@ -46,8 +65,20 @@ export function FirstTeam({
   trainingIntensity?: number;
   onBack: () => void;
   onSelectPlayer: (playerId: string) => void;
+  week?: number;
+  coachingStaff?: CoachingStaff;
+  masterSeed?: number;
+  cash?: number;
+  onHireCoach?: (coach: Coach) => void;
+  assistantName?: string;
+  assistantDelegation?: AssistantDelegation;
+  onAssistantDelegationChange?: (task: AssistantDelegationTask, enabled: boolean) => void;
+  onAssignMentor?: (menteeId: string, mentorId: string) => void;
+  onClearMentor?: (menteeId: string) => void;
+  injuryRiskFactor?: number;
 }) {
   useT();
+  const [squadTab, setSquadTab] = useState<SquadTab>("list");
   const [sortKey, setSortKey] = useState<ProSquadSortKey>(DEFAULT_SORT.key);
   const [sortDirection, setSortDirection] = useState<ProSquadSortDirection>(DEFAULT_SORT.direction);
 
@@ -70,7 +101,7 @@ export function FirstTeam({
   };
 
   return (
-    <main className="squad">
+    <main className="squad screen-shell">
       <header className="squad-head">
         <button type="button" onClick={onBack} aria-label={t("squad.back")}>
           ←
@@ -90,7 +121,25 @@ export function FirstTeam({
         </div>
       </header>
 
-      {rows.length === 0 ? (
+      <nav className="training-tabs squad-tabs" aria-label="Kader-Bereiche">
+        <button type="button" className={squadTab === "list" ? "training-tab is-active" : "training-tab"} onClick={() => setSquadTab("list")}>Liste</button>
+        <button type="button" className={squadTab === "mentoring" ? "training-tab is-active" : "training-tab"} onClick={() => setSquadTab("mentoring")}>Mentoring</button>
+        <button type="button" className={squadTab === "staff" ? "training-tab is-active" : "training-tab"} onClick={() => setSquadTab("staff")}>Staff</button>
+      </nav>
+
+      {squadTab !== "list" ? (
+        squadTab === "mentoring" && onAssignMentor && onClearMentor ? (
+          <MentoringPanel players={players} clubId={clubId} season={season} week={week} onAssignMentor={onAssignMentor} onClearMentor={onClearMentor} />
+        ) : squadTab === "staff" && coachingStaff && onHireCoach && assistantDelegation && onAssistantDelegationChange ? (
+          <>
+            <AssistantDelegationPanel assistantName={assistantName} staff={coachingStaff} delegation={assistantDelegation} onChange={onAssistantDelegationChange} />
+            <CoachingStaffPanel staff={coachingStaff} season={season} week={week} masterSeed={masterSeed} cash={cash} onHire={onHireCoach} />
+            <FitnessManagementPanel players={players} clubId={clubId} intensity={trainingIntensity} injuryRiskFactor={injuryRiskFactor} />
+          </>
+        ) : (
+          <p className="hub-inbox-empty">Staff-Bereich im Kader — Daten aus Training migriert.</p>
+        )
+      ) : rows.length === 0 ? (
         <section className="squad-empty" aria-label={t("squad.empty.aria")}>
           <span className="squad-empty-icon" aria-hidden="true">⭐</span>
           <p>{t("squad.empty")}</p>

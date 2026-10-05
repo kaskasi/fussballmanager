@@ -1,3 +1,4 @@
+/** WIREFRAME: docs/prd/design.md §9.15 — Matchday live */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BroadcastStoryContext, SandboxPlan, Squad } from "@fussballmanager/shared";
 import type { TacticsPresetId, TacticsPresetSlot } from "./tactics-presets.ts";

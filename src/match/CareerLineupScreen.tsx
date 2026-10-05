@@ -1,4 +1,4 @@
-/** WIREFRAME: PRD 09.2 — F1.1 Drag&Drop + F1.3 Auto-Aufstellung */
+/** WIREFRAME: docs/prd/design.md §9.1 — Aufstellung */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FORMATION_IDS,

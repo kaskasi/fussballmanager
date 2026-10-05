@@ -24,8 +24,7 @@ import {
 import type { ClubFinances } from "../../economy/club-finances.ts";
 import type { ClubEvent } from "../../inbox/club-events.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
-import { scoutReportsForWeek } from "../../scouting/scout-board.ts";
-import { pendingInboxItems, inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
+import { inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
 import type { DecisionAction } from "../../youth/decision-inbox.ts";
 import { listDevelopmentMovers } from "../../player/ca-tracking.ts";
 import { pipelineStageFill, squadGrowthHeatmap } from "../../player/growth-heatmap.ts";
@@ -35,19 +34,17 @@ import { fatigueAmpelClassName, squadTrainingLoad } from "../../development/trai
 import type { BoardState } from "../../board/board-state.ts";
 import { BoardObjectivesPanel } from "../components/BoardObjectivesPanel.tsx";
 import { DevelopmentHubPanel } from "../components/DevelopmentHubPanel.tsx";
-import { HubInboxPanel } from "../components/HubInboxPanel.tsx";
+import { HubActionColumn } from "../components/HubActionColumn.tsx";
+import { Eye, ArrowLeftRight } from "lucide-react";
 import { SeasonAwardsGallery } from "../components/SeasonAwardsGallery.tsx";
 import { SummerChecklistPanel } from "../components/SummerChecklistPanel.tsx";
 import type { SeasonAwardsSnapshot } from "../../sim/season-awards.ts";
 import { showSummerChecklist } from "../../sim/summer-checklist.ts";
-import { FanFeedStrip } from "../components/FanFeedStrip.tsx";
 import { ChroniclePanel } from "../components/ChroniclePanel.tsx";
 import type { StoryState } from "../../narrative/story-state.ts";
-import { MoodPhotoBand } from "../components/MoodPhotoBand.tsx";
-import { hubHeroPhotoUrl } from "../assets/hub-photos.ts";
 
 /**
- * WIREFRAME: PRD 09.2 Screen 1 — Pipeline Dashboard
+ * WIREFRAME: docs/prd/design.md §9.9 — Hub cockpit
  *
  * ┌────────────────────────────────────────────────────────┐
  * │ 🌱16 🌿4 ⭐22  (kleine Pipeline-Karte)                 │
@@ -79,6 +76,7 @@ export function PipelineDashboard({
   clubId,
   clubEvents,
   onOpenTraining,
+  onViewAllEvents,
   lastSeasonAwards,
   activeScouts,
   storyState,
@@ -106,6 +104,7 @@ export function PipelineDashboard({
   clubId: string;
   clubEvents: readonly ClubEvent[];
   onOpenTraining?: () => void;
+  onViewAllEvents: () => void;
   lastSeasonAwards?: SeasonAwardsSnapshot;
   storyState: StoryState;
 }) {
@@ -142,56 +141,20 @@ export function PipelineDashboard({
         current: Math.min(league.matchday, seasonMatchdays),
         total: seasonMatchdays,
       });
-  const scoutReports = scoutReportsForWeek(scoutBoard, week);
-  const pendingDecisions = pendingInboxItems(youthInbox, players);
-  const showInboxPanel =
-    pendingDecisions.length > 0 || scoutReports.length > 0 || clubEvents.length > 0;
   const showObjectives = board.objectives.length > 0 && board.job_status !== "dismissed";
+
+  const tablePlace = leagueTablePlace(league);
+  const matchdayStrip = [
+    formatCalendarWeekDisplay(week),
+    matchdayLabel,
+    nextOpponent ? `vs ${nextOpponent}` : null,
+    tableRow ? `#${tablePlace} · ${t("hub.league.points", { points: tableRow.points })}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <main className="pipeline">
-      <MoodPhotoBand src={hubHeroPhotoUrl(season, week)} className="pipeline-hub-band">
-        <header className="pipeline-head pipeline-head-compact">
-          <div className="pipeline-head-primary">
-            <p className="pipeline-eyebrow">
-              {formatSeasonDisplay(season)} · {formatCalendarWeekDisplay(week)} · {calendarPhaseDisplay(week)}
-              {windowOpen ? ` · ${transferWindowDisplay(week)}` : ""}
-            </p>
-            <p className="pipeline-matchline">
-              {lastResult ? (
-                <span>
-                  {t("hub.lastMatch", {
-                    result: formatFixtureResult(lastResult, league.player_club_id),
-                  })}
-                </span>
-              ) : (
-                <span>{t("hub.noLeagueMatch")}</span>
-              )}
-              <span> · {matchdayLabel}</span>
-              {nextOpponent ? <span> · vs {nextOpponent}</span> : null}
-            </p>
-          </div>
-          <div className="pipeline-head-chips">
-            <span className="pipeline-chip pipeline-league" aria-label="Liga">
-              {tableRow ? (
-                <>
-                  #{leagueTablePlace(league)} · {t("hub.league.points", { points: tableRow.points })} · {tableRow.goalDifference > 0 ? "+" : ""}
-                  {tableRow.goalDifference}
-                </>
-              ) : (
-                t("hub.league.empty")
-              )}
-            </span>
-          </div>
-        </header>
-      </MoodPhotoBand>
-
-      <FanFeedStrip
-        fanFeed={storyState.fan_feed}
-        mediaHype={storyState.media_hype}
-        storyCast={storyState.cast}
-      />
-
       <SummerChecklistPanel
         week={week}
         season={season}
@@ -203,68 +166,75 @@ export function PipelineDashboard({
         <SeasonAwardsGallery snapshot={lastSeasonAwards} />
       ) : null}
 
-      <section className="pipeline-core" aria-label={t("hub.actions")}>
-        <div className="pipeline-tiles pipeline-tiles-row">
-          <button type="button" className="pipeline-tile" onClick={onOpenTraining}>
-            <span
-              className={`pipeline-light ${fatigueAmpelClassName(trainingLoad.ampel)}`}
-              aria-hidden="true"
-              title={trainingLoad.label}
-            >
-              {trainingLoad.icon}
-            </span>
-            <span>
-              {t("hub.training.tile", { focus: focusCount })}
-              {!planOk ? t("hub.training.planCheck") : ""}
-            </span>
-          </button>
-          <button type="button" className="pipeline-tile" onClick={onOpenJugend}>
-            <span
-              className={`pipeline-light ${youthAmpelClass(youthInbox)}`}
-              aria-hidden="true"
-            >
-              {youthAmpelMark(youthInbox)}
-            </span>
-            <span>{youthTileLabel(youthInbox)}</span>
-          </button>
-          <button type="button" className="pipeline-tile" onClick={onOpenScouting}>
-            <span>👁️</span>
-            <span>{t("hub.scouting.active", { count: activeScouts })}</span>
-          </button>
-          <button type="button" className="pipeline-tile" onClick={onOpenTransfers}>
-            <span>↔️</span>
-            <span>
-              {loanCount > 0 ? t("hub.loans.out", { count: loanCount }) : t("hub.loans")}
-            </span>
-          </button>
-        </div>
-        <div className="pipeline-digest">
-          <PipelineFillCard fill={stageFill} onOpenJugend={onOpenJugend} />
-          <GrowthHeatmap cells={heatCells} onSelectPlayer={onSelectPlayer} compact />
-        </div>
-      </section>
-
-      <section className="pipeline-secondary" aria-label="Details">
-        {showInboxPanel ? (
-          <HubInboxPanel
-            week={week}
-            season={season}
+      <div className="hub-cockpit-grid">
+        <div className="hub-col-action">
+          <HubActionColumn
             players={players}
             youthInbox={youthInbox}
-            scoutBoard={scoutBoard}
             clubEvents={clubEvents}
             storyCast={storyState.cast}
             onOpenDecision={(itemId) => onOpenInbox(itemId)}
             onStoryChoice={onStoryChoice}
-            onSelectScoutTarget={onSelectScoutTarget}
+            onViewAllEvents={onViewAllEvents}
           />
-        ) : null}
-        {showObjectives ? (
-          <BoardObjectivesPanel board={board} league={league} finances={finances} season={season} />
-        ) : null}
-        <DevelopmentHubPanel movers={developmentMovers} onSelectPlayer={onSelectPlayer} />
-        <ChroniclePanel entries={storyState.chronicle_entries} />
-      </section>
+        </div>
+
+        <div className="hub-col-status">
+          <p className="hub-col-label">{t("hub.column.status")}</p>
+          <div className="hub-matchday-strip">
+            <p className="hub-matchday-kicker">
+              {formatSeasonDisplay(season)}
+              {windowOpen ? ` · ${transferWindowDisplay(week)}` : ""}
+              {lastResult
+                ? ` · ${t("hub.lastMatch", { result: formatFixtureResult(lastResult, league.player_club_id) })}`
+                : ""}
+            </p>
+            <p className="hub-matchday-main">{matchdayStrip}</p>
+          </div>
+
+          <div className="hub-modules-grid" aria-label={t("hub.actions")}>
+            <button type="button" className="pipeline-tile" onClick={onOpenTraining}>
+              <span
+                className={`pipeline-light ${fatigueAmpelClassName(trainingLoad.ampel)}`}
+                aria-hidden="true"
+                title={trainingLoad.label}
+              >
+                {trainingLoad.icon}
+              </span>
+              <span>
+                {t("hub.training.tile", { focus: focusCount })}
+                {!planOk ? t("hub.training.planCheck") : ""}
+              </span>
+            </button>
+            <button type="button" className="pipeline-tile" onClick={onOpenJugend}>
+              <span className={`pipeline-light ${youthAmpelClass(youthInbox)}`} aria-hidden="true">
+                {youthAmpelMark(youthInbox)}
+              </span>
+              <span>{youthTileLabel(youthInbox)}</span>
+            </button>
+            <button type="button" className="pipeline-tile" onClick={onOpenScouting}>
+              <Eye size={18} aria-hidden="true" />
+              <span>{t("hub.scouting.active", { count: activeScouts })}</span>
+            </button>
+            <button type="button" className="pipeline-tile" onClick={onOpenTransfers}>
+              <ArrowLeftRight size={18} aria-hidden="true" />
+              <span>{loanCount > 0 ? t("hub.loans.out", { count: loanCount }) : t("hub.loans")}</span>
+            </button>
+          </div>
+
+          <PipelineFillCard fill={stageFill} onOpenJugend={onOpenJugend} />
+          <GrowthHeatmap cells={heatCells} onSelectPlayer={onSelectPlayer} compact />
+        </div>
+
+        <div className="hub-col-context">
+          <p className="hub-col-label">{t("hub.column.context")}</p>
+          {showObjectives ? (
+            <BoardObjectivesPanel board={board} league={league} finances={finances} season={season} />
+          ) : null}
+          <DevelopmentHubPanel movers={developmentMovers} onSelectPlayer={onSelectPlayer} />
+          <ChroniclePanel entries={storyState.chronicle_entries} />
+        </div>
+      </div>
     </main>
   );
 }

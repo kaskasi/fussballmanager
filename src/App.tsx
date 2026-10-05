@@ -107,6 +107,7 @@ import {
 } from "./scouting/scout-network.ts";
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
 import { FinancesScreen } from "./ui/screens/FinancesScreen.tsx";
+import { ClubEventsScreen } from "./ui/screens/ClubEventsScreen.tsx";
 import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
 import { standings, type SandboxPlan, type TeamId } from "@fussballmanager/shared";
 import { listJobOffers } from "./board/job-offers.ts";
@@ -228,7 +229,8 @@ type Screen =
   | "finances"
   | "stadium"
   | "leagues"
-  | "help";
+  | "help"
+  | "club-events";
 
 function bootstrapSave(slot: number): SaveGame {
   try {
@@ -1654,10 +1656,13 @@ export default function App() {
     flashNotice(t("transfer.purchase.profileUnavailable"));
     setForeignPlayerId(null);
   }, [flashNotice, foreignPlayerId, foreignTarget]);
+  const openDecisionCount = pendingInboxItems(youthInbox, players).length;
+
   const navActions: HubNavActions = {
     week,
     weekday,
     simulating,
+    openDecisionCount,
     onNext: () => void handleNext(),
     onNewGame: resetGame,
     onOpenSaves: () => setSaveManagerOpen(true),
@@ -1938,6 +1943,7 @@ export default function App() {
           scoutBoard={scoutBoard}
           clubEvents={clubEvents}
           onOpenTraining={() => setScreen("training")}
+          onViewAllEvents={() => setScreen("club-events")}
           lastSeasonAwards={lastSeasonAwards}
           storyState={storyState}
         />
@@ -2079,7 +2085,18 @@ export default function App() {
           players={players}
           clubId={session.clubId}
           season={season}
+          week={week}
           trainingIntensity={trainingIntensity}
+          coachingStaff={coachingStaff}
+          masterSeed={masterSeed}
+          cash={finances.cash}
+          onHireCoach={handleHireCoach}
+          assistantName={storyState.cast.assistant_name}
+          assistantDelegation={assistantDelegation}
+          onAssistantDelegationChange={handleAssistantDelegationChange}
+          onAssignMentor={handleAssignMentor}
+          onClearMentor={handleClearMentor}
+          injuryRiskFactor={precinctInjuryRiskFactor(stadium.precinct)}
           onBack={() => setScreen("hub")}
           onSelectPlayer={setProfileId}
         />
@@ -2163,6 +2180,7 @@ interface HubNavActions {
   week: number;
   weekday: number;
   simulating: boolean;
+  openDecisionCount: number;
   onNext: () => void;
   onNewGame: () => void;
   onOpenSaves: () => void;
@@ -2431,6 +2449,11 @@ function AppNav({
             {hubActions.simulating && !hubActions.primaryAction
               ? "…"
               : hubActions.primaryAction?.label ?? tr("shell.next")}
+            {hubActions.openDecisionCount > 0 && !hubActions.primaryAction ? (
+              <span className="app-nav-next-badge" aria-label={tr("hub.inbox.decisions")}>
+                {hubActions.openDecisionCount}
+              </span>
+            ) : null}
           </span>
         </button>
         <div className="row-menu app-nav-menu" ref={menuRef}>

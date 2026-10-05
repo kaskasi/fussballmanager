@@ -57,7 +57,7 @@ import {
 type StadiumTab = "plan" | "precinct" | "upgrades";
 
 /**
- * WIREFRAME: PRD 14.7 — Stadion
+ * WIREFRAME: docs/prd/design.md §9.3 — Stadion
  * [Grundriss] [Gelände] [Ausbau]
  * Banden sitzen auf den Tribünen-Karten um den Grundriss.
  * Klick = F6.5-Modal. Gelände: 🏟️ Mitte, 2×5-Plättchen, Startstraße Stadt→Arena.

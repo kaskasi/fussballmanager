@@ -34,6 +34,7 @@ import { formatCalendarWeek } from "../../sim/game-calendar.ts";
  * └──────────────────────────────────────────────┘
  */
 
+/** WIREFRAME: docs/prd/design.md §9.6 — Transfers */
 export function TransfersScreen({
   players,
   rivalPlayers,
@@ -95,7 +96,7 @@ export function TransfersScreen({
   }
 
   return (
-    <main className="transfers">
+    <main className="transfers screen-shell">
       <header className="transfers-head">
         <button type="button" onClick={onBack} aria-label="Zurück zur Pipeline">
           ←

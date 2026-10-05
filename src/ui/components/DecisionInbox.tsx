@@ -31,7 +31,7 @@ import type { StoryCast } from "../../narrative/story-state.ts";
 import { InboxStanceButtons } from "./InboxStanceButtons.tsx";
 
 /**
- * WIREFRAME: PRD 09.2 Screen 2b — Decision Inbox
+ * WIREFRAME: docs/prd/design.md §9.4 — Postfach (modal; hub column §9.9) — Decision Inbox
  *
  * Queue (max 4) · player card · icon actions per PRD 03.4.
  */

@@ -14,7 +14,7 @@ import type { WorldClub } from "../../world/world-generator.ts";
 const DIVISIONS: DivisionEconomyId[] = [REGIONALLIGA_ID, OBERLIGA_ID];
 
 /**
- * WIREFRAME: PRD 09.2 / F10 — Ligen & Tabellen
+ * WIREFRAME: docs/prd/design.md §9.7 — Tabellen
  */
 export function LeaguesScreen({
   league,

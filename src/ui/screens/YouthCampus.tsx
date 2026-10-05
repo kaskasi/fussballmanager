@@ -83,6 +83,7 @@ const DEFAULT_YOUTH_SORT: { key: ProSquadSortKey; direction: ProSquadSortDirecti
   direction: "asc",
 };
 
+/** WIREFRAME: docs/prd/design.md §9.12 — Jugend */
 export function YouthCampus({
   players,
   youthInbox,
@@ -126,7 +127,7 @@ export function YouthCampus({
   const report = youthInbox.lastReport;
 
   return (
-    <main className="campus">
+    <main className="campus screen-shell">
       {view === "year" ? (
         <YearGroup
           players={players}

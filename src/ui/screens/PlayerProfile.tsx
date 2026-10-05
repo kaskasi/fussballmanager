@@ -1,3 +1,4 @@
+/** WIREFRAME: docs/prd/design.md §9.8 — Spielerprofil (hub-and-spoke target) */
 /**
  * WIREFRAME: PRD 14.3 — Spielerakte
  *

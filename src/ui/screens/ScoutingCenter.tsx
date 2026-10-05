@@ -73,6 +73,7 @@ const REGIONS = ["Schleswig-Holstein", "Fördeküste", "Hansestadt", "Nordfriesl
  * [Portrait] Name            [CA ▓░CI░] [€ ▓░CI░]
  *            19 · CM · Club
  */
+/** WIREFRAME: docs/prd/design.md §9.13 — Scouting (list v1) */
 export function ScoutingCenter({
   targets,
   filters,

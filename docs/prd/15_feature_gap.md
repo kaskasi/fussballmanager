@@ -148,6 +148,23 @@ Ohne Meilensteine in PRD 10 zu verschieben:
 
 Shirt-Verkauf (F6.7) bleibt M3 und folgt der Bude, nicht dem Brustlogo.
 
+### 15.7 Playtest-Backlog (Rohnotizen: `playtest_ideas.md`)
+
+Priorität aus intensivem Playtest — **kein Ersatz** für nummerierte PRDs.
+
+| Prio | Thema | Stand / nächster Schritt |
+|---|---|---|
+| **P0** | Kalender: ein Ligaspiel-Chip pro Spieltag (Sa), nicht täglich | Done 2026-10-06 — `month-grid.ts`, `CalendarScreen` |
+| **P0** | Transfer Kauf Saisonwoche 2 (Sommerfenster) | Done 2026-10-06 — `resolve-purchase-target.ts`, `purchase-flow.test.ts` |
+| **P1** | Economy-Pacing (Infra/Stadion in ~5 Min voll) | Balancing `club-finances` / Precinct — eigene Session |
+| **P1** | Umtrainieren als Slider + Roll (F2.3) | PRD-Schnipsel vor Mechanik; heute nur linear `position_retrain` |
+| **P1** | Portraits: `mens_squad` vs charge2; Match-UI `portrait_seed` | Charge2 erledigt; Match-Report-Portraits vereinheitlichen |
+| **P2** | Training-Camp 3×2-Grid (F3.9-Slice + Assets) | M2 |
+| **P2** | Echte Club-Logos | Research/Legal mit Jan |
+| **P2** | Kalender als Tages-Fortschritt (Mo→Sa→Spiel) | Smart-Skip existiert; Monatsgrid folgt |
+| **P2** | Mobile Layout | Screenshots in `playtest_ideas.md` ergänzen |
+| **Later** | Regionale Ligen / Story-Events / Director+Kommentar | PRD 12/13/16 — Meta-Fokus Playtest |
+
 ### 15.6 Roadmap laut PRD 10 (unverändert außer F2.8-Zählung)
 
 Zählung und DoD sind die Source of Truth. Analyse verschiebt sie nicht.

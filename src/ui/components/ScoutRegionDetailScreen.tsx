@@ -2,6 +2,7 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { ArrowLeft, MapPin } from "lucide-react";
 import {
+  buildClubRoutingEdges,
   buildZoneMapNodes,
   edgeBetween,
   lastScoutableClubOnPath,
@@ -43,9 +44,14 @@ export function ScoutRegionDetailScreen({
     [activeClubScout?.club_id, layout, zone.clubs],
   );
 
+  const routingEdges = useMemo(
+    () => (mapNodes.length > 0 ? buildClubRoutingEdges(mapNodes) : []),
+    [mapNodes],
+  );
+
   const score = useMemo(
-    () => (layout ? scoreScoutRoute(pathEdgeIds, layout.edges) : null),
-    [layout, pathEdgeIds],
+    () => (routingEdges.length > 0 ? scoreScoutRoute(pathEdgeIds, routingEdges) : null),
+    [pathEdgeIds, routingEdges],
   );
 
   const targetClubId = useMemo(
@@ -75,7 +81,7 @@ export function ScoutRegionDetailScreen({
       setSelectedNode(null);
       return;
     }
-    const edge = edgeBetween(layout, selectedNode, nodeId);
+    const edge = edgeBetween(routingEdges, selectedNode, nodeId);
     if (edge) {
       setPathEdgeIds((prev) => [...prev, edge.id]);
     }
@@ -83,9 +89,9 @@ export function ScoutRegionDetailScreen({
   };
 
   const handleAutopilot = () => {
-    const path = defaultAutopilotRoute(layout.edges);
+    const path = defaultAutopilotRoute(routingEdges);
     setPathEdgeIds(path);
-    const autopilotScore = scoreScoutRoute(path, layout.edges);
+    const autopilotScore = scoreScoutRoute(path, routingEdges);
     const clubId =
       mapNodes.find((node) => node.scoutable)?.careerClubId ?? targetClubId;
     if (clubId) onStartClubScout(clubId, autopilotScore);
@@ -101,6 +107,7 @@ export function ScoutRegionDetailScreen({
     mapNodes.some((node) => node.careerClubId === activeClubScout.club_id);
 
   const [vbX, vbY, vbW, vbH] = layout.reliefViewBox.split(/\s+/).map(Number);
+  const isCityMap = layout.mapMode === "city";
 
   return (
     <section className="scout-region-detail" aria-label={zoneLabel}>
@@ -131,26 +138,54 @@ export function ScoutRegionDetailScreen({
           role="img"
           aria-label={t("scouting.map.routeGraphAria")}
         >
-          <image
-            href={SCOUT_RELIEF_MAP_ASSET}
-            x={0}
-            y={0}
-            width={SCOUT_RELIEF_WIDTH}
-            height={SCOUT_RELIEF_HEIGHT}
-            preserveAspectRatio="xMidYMid meet"
-          />
-          <image
-            href={layout.flavorAsset}
-            x={vbX}
-            y={vbY}
-            width={vbW}
-            height={vbH}
-            preserveAspectRatio="xMidYMid slice"
-            opacity={0.32}
-          />
+          {isCityMap ? (
+            <image
+              href={layout.flavorAsset}
+              x={vbX}
+              y={vbY}
+              width={vbW}
+              height={vbH}
+              preserveAspectRatio="xMidYMid slice"
+            />
+          ) : (
+            <>
+              <image
+                href={SCOUT_RELIEF_MAP_ASSET}
+                x={0}
+                y={0}
+                width={SCOUT_RELIEF_WIDTH}
+                height={SCOUT_RELIEF_HEIGHT}
+                preserveAspectRatio="xMidYMid meet"
+              />
+              <image
+                href={layout.flavorAsset}
+                x={vbX}
+                y={vbY}
+                width={vbW}
+                height={vbH}
+                preserveAspectRatio="xMidYMid slice"
+                opacity={0.32}
+              />
+            </>
+          )}
           {layout.edges.map((edge) => {
             const a = layout.anchorNodes.find((n) => n.id === edge.a);
             const b = layout.anchorNodes.find((n) => n.id === edge.b);
+            if (!a || !b) return null;
+            return (
+              <line
+                key={edge.id}
+                x1={a.x}
+                y1={a.y}
+                x2={b.x}
+                y2={b.y}
+                className="scout-route-edge is-infrastructure"
+              />
+            );
+          })}
+          {routingEdges.map((edge) => {
+            const a = mapNodes.find((n) => n.id === edge.a);
+            const b = mapNodes.find((n) => n.id === edge.b);
             if (!a || !b) return null;
             const used = pathEdgeIds.filter((id) => id === edge.id).length;
             return (

@@ -143,6 +143,7 @@ export function LeaguesScreen({
           players={players}
           rivalPlayers={rivalPlayers}
           stadium={stadium}
+          worldClubs={worldClubs}
           onClose={() => setSelectedClubId(null)}
           onOpenStadium={
             selectedClubId === league.player_club_id && onOpenStadium

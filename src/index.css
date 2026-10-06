@@ -1678,17 +1678,15 @@ body {
   pointer-events: none;
 }
 
-.scout-discovery-zone-card.has-flavor .scout-discovery-zone-head,
-.scout-discovery-zone-card .scout-discovery-zone-card-lead {
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-head {
   position: relative;
   z-index: 1;
   color: inherit;
 }
 
-.scout-discovery-zone-card-lead {
-  margin: 0.35rem 0 0;
-  font-size: 0.72rem;
-  font-weight: 600;
+.scout-discovery-zone-pool {
+  flex-basis: 100%;
+  font-size: 0.7rem;
 }
 
 .scout-route-node.is-done {
@@ -1784,6 +1782,12 @@ body {
 .scout-route-edge {
   stroke: rgb(15 23 42 / 35%);
   stroke-width: 0.65;
+}
+
+.scout-route-edge.is-infrastructure {
+  stroke: rgb(15 23 42 / 18%);
+  stroke-width: 0.45;
+  stroke-dasharray: 2 2;
 }
 
 .scout-route-edge.is-active {
@@ -2786,8 +2790,16 @@ body {
 }
 
 .league-table th:nth-child(2),
-.league-table td:nth-child(2) {
+.league-table td:nth-child(2),
+.league-table th:nth-child(3),
+.league-table td:nth-child(3) {
   text-align: left;
+}
+
+.league-table .league-place-cell {
+  color: var(--text-muted, #64748b);
+  font-weight: 700;
+  font-size: 0.72rem;
 }
 
 .league-table thead th {

@@ -65,7 +65,8 @@ function zoneLabel(zoneId: string): string {
 
 function clubDisplayName(careerClubId: string, clubs: readonly WorldClub[]): string {
   const club = clubs.find((entry) => worldCareerClubId(entry.id) === careerClubId);
-  return club?.name ?? careerClubId;
+  if (!club) return careerClubId;
+  return club.place ? `${club.name} (${club.place})` : club.name;
 }
 
 function poolDelta(before: ScoutDiscoveryState, after: ScoutDiscoveryState): string[] {

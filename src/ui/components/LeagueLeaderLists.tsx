@@ -1,6 +1,6 @@
 import type { PlayerSeasonStat, TeamId } from "@fussballmanager/shared";
 import type { LeagueState } from "../../persistence/league-state.ts";
-import { clubShortLabel } from "../../sim/league-divisions.ts";
+import { clubPlaceName, clubShortLabel } from "../../sim/league-divisions.ts";
 import type { WorldClub } from "../../world/world-generator.ts";
 
 export function LeagueLeaderLists({
@@ -100,7 +100,9 @@ function LeaderList({
               className={row.teamId === playerClubId ? "is-player-club" : undefined}
             >
               <span className="league-leader-name">{row.name}</span>
-              <span className="league-leader-club">{clubShortLabel(row.teamId, worldClubs)}</span>
+              <span className="league-leader-club">
+                {clubPlaceName(row.teamId, worldClubs) || clubShortLabel(row.teamId, worldClubs)}
+              </span>
               <strong>{row[field]}</strong>
             </li>
           ))}

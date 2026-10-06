@@ -7,8 +7,9 @@ import type { ClubStadium } from "../stadium/club-stadium.ts";
 import { stadiumTotalCapacity } from "../stadium/club-stadium.ts";
 import { DEFAULT_FANBASE } from "../stadium/club-stadium.ts";
 import { careerEngineSquadFromPlayers } from "./career-engine-squad.ts";
-import { clubIdsForDivision, defaultLeaguePools, squadForLeagueClub } from "./league-divisions.ts";
+import { clubPlaceName, clubIdsForDivision, defaultLeaguePools, squadForLeagueClub } from "./league-divisions.ts";
 import { divisionLabel } from "./league-divisions.ts";
+import type { WorldClub } from "../world/world-generator.ts";
 import { indexRivalRoster, resolveCareerPlayer } from "./rival-roster-match.ts";
 import { rivalPlayersForTeam } from "./rival-engine-squad.ts";
 
@@ -21,6 +22,7 @@ export interface ClubProfilePlayer {
 export interface ClubProfile {
   teamId: TeamId;
   name: string;
+  place: string;
   shortName: string;
   divisionId: DivisionEconomyId;
   divisionLabel: string;
@@ -201,6 +203,7 @@ export function buildClubProfile(
     stadium?: ClubStadium;
     pools?: Record<DivisionEconomyId, TeamId[]>;
     rivalPlayers?: readonly Player[];
+    worldClubs?: readonly WorldClub[];
   },
 ): ClubProfile | null {
   const isPlayerClub = options?.playerClubId === teamId;
@@ -210,6 +213,11 @@ export function buildClubProfile(
     : squadForLeagueClub(teamId, options?.rivalPlayers, playerClubId);
   const team = profileSquad?.team;
   if (!team) return null;
+
+  const worldClub = options?.worldClubs?.find((club) => club.id === teamId);
+  const displayName = worldClub?.name ?? team.name;
+  const shortName = worldClub?.short_name ?? team.shortName;
+  const place = clubPlaceName(teamId, options?.worldClubs) || worldClub?.place || "";
 
   const pools = options?.pools ?? defaultLeaguePools();
   const divisionId = divisionForClub(pools, teamId);
@@ -228,8 +236,9 @@ export function buildClubProfile(
 
   return {
     teamId,
-    name: team.name,
-    shortName: team.shortName,
+    name: displayName,
+    place,
+    shortName,
     divisionId,
     divisionLabel: divisionLabel(divisionId),
     founded: flavor.founded,

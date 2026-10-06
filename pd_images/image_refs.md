@@ -932,3 +932,84 @@ https://commons.wikimedia.org/wiki/File:Market_-_Ikija,_Lagos,_Nigeria.jpg
 
 I, the copyright holder of this work, release this work into the public domain. This applies worldwide.
 
+
+SCOUTING_REGION SCHLESWIG_HOLSTEIN
+
+https://commons.wikimedia.org/wiki/File:Eidersperrwerk_Luftaufnahme_landwaerts.jpg
+
+This file is licensed under the Creative Commons Attribution-Share Alike 3.0 Unported license.
+
+
+Camera location	54° 15′ 52.78″ N, 8° 50′ 43.78″ E Kartographer map based on OpenStreetMap.	View this and other nearby images on: OpenStreetMap	info
+Description	
+Deutsch: Luftaufnahme des Eidersperrwerks von der Wasserseite
+Date	16 September 2006
+Source	Own work
+Author	Ulf Jungjohann
+
+
+SCOUTING_REGION Fördeküste
+
+https://commons.wikimedia.org/wiki/File:K%C3%BCstenbereiche_der_Flensburger_F%C3%B6rde-13.jpg
+
+This file is licensed under the Creative Commons Attribution-Share Alike 4.0 International license.
+
+Description	
+Deutsch: Haberniser Au
+Date	11 July 2023, 12:26:58
+Source	Own work
+Author	Kommentator1989
+Camera location	54° 47′ 47.07″ N, 9° 46′ 04.01″ E  Heading=45° Kartographer map based on OpenStreetMap.
+
+
+SCOUTING_REGION NORDFRIESLAND
+
+https://commons.wikimedia.org/wiki/File:Gesamtansicht_des_Schlosses_%C3%BCber_den_Schlossgraben_hinweg_01.jpg
+
+This file is licensed under the Creative Commons Attribution-Share Alike 4.0 International license.
+
+
+Description	
+Deutsch: Gesamtansicht des Schlosses über den Schlossgraben hinweg
+English: General view of the castle across the moat
+Date	18 July 2025, 10:34:29
+Source	Own work
+Author	JensKunstfreund
+
+
+SCOUTING REGION HANSESTADT
+
+https://commons.wikimedia.org/wiki/File:Bremen,_Rathaus_--_2021_--_6354.jpg
+
+Dietmar Rabich (https://commons.wikimedia.org/wiki/File:Bremen,_Rathaus_--_2021_--_6354.jpg), size by Jan Kettner, https://creativecommons.org/licenses/by-sa/4.0/legalcode
+
+from https://lizenzhinweisgenerator.de/?lang=en&url=https://commons.wikimedia.org/wiki/File:Bremen,_Rathaus_--_2021_--_6354.jpg
+
+MAP REGIONS IN DEUTSCHLAND
+
+https://commons.wikimedia.org/wiki/File:Relief_Map_of_Germany.svg
+
+https://commons.wikimedia.org/wiki/File:Relief_Map_of_Germany.svg
+
+This file is licensed under the Creative Commons Attribution-Share Alike 3.0 Unported license.
+
+Description	
+Deutsch: Positionskarte von Deutschland mit Gewässern
+Quadratische Plattkarte, N-S-Streckung 150 %. Geographische Begrenzung der Karte:
+
+N: 55.1° N
+S: 47.2° N
+W: 5.5° O
+O: 15.5° O
+English: Location map of Germany with waterbodies
+Equirectangular projection, N/S stretching 150 %. Geographic limits of the map:
+
+N: 55.1° N
+S: 47.2° N
+W: 5.5° E
+E: 15.5° E
+Date	30 November 2011
+Source	Own work
+ This vector image includes elements that have been taken or adapted from this file: Germany2 location map.svg (by NordNordWest).
+ This vector image includes elements that have been taken or adapted from this file: Relief Map of Germany.png (by Виктор В).
+Author	TUBS Gallery

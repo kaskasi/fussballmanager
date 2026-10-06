@@ -14,6 +14,12 @@ import type { DivisionEconomyId } from "../economy/division-economy.ts";
 import { DIVISION_ECONOMY } from "../economy/division-economy.ts";
 import type { Player } from "../types/player.ts";
 import {
+  clubNameFromWorld,
+  clubPlaceName,
+  clubShortNameFromWorld,
+  resolveWorldClub,
+} from "../world/club-display.ts";
+import {
   generateClubs,
   generateWorld,
   type ClubIdentity,
@@ -70,13 +76,16 @@ export function worldClubForTeam(
   teamId: TeamId,
   worldClubs?: readonly WorldClub[],
 ): WorldClub | undefined {
-  if (worldClubs) {
-    return worldClubs.find((club) => club.id === teamId);
-  }
+  const fromSave = resolveWorldClub(teamId, worldClubs);
+  if (fromSave) return fromSave;
   return WORLD_CLUBS.get(teamId);
 }
 
+export { clubPlaceName } from "../world/club-display.ts";
+
 export function clubDisplayName(teamId: TeamId, worldClubs?: readonly WorldClub[]): string {
+  const fromWorld = clubNameFromWorld(teamId, worldClubs);
+  if (fromWorld) return fromWorld;
   const worldClub = worldClubForTeam(teamId, worldClubs);
   if (worldClub) return worldClub.name;
   const template = templateSquadForClub(teamId);
@@ -84,6 +93,8 @@ export function clubDisplayName(teamId: TeamId, worldClubs?: readonly WorldClub[
 }
 
 export function clubShortLabel(teamId: TeamId, worldClubs?: readonly WorldClub[]): string {
+  const fromWorld = clubShortNameFromWorld(teamId, worldClubs);
+  if (fromWorld) return fromWorld;
   const worldClub = worldClubForTeam(teamId, worldClubs);
   if (worldClub) return worldClub.short_name;
   const template = templateSquadForClub(teamId);

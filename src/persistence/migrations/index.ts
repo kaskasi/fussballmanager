@@ -59,6 +59,7 @@ import { migration059TrainingAccountability } from "./migration_059_training_acc
 import { migration060ScoutDiscovery } from "./migration_060_scout_discovery.ts";
 import { migration061ScoutJobPostfach } from "./migration_061_scout_job_postfach.ts";
 import { migration062RegionScoutTier } from "./migration_062_region_scout_tier.ts";
+import { migration063ClubPlaceGeo } from "./migration_063_club_place_geo.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -127,6 +128,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration060ScoutDiscovery,
   migration061ScoutJobPostfach,
   migration062RegionScoutTier,
+  migration063ClubPlaceGeo,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

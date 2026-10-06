@@ -133,6 +133,7 @@ export function proSquadCountsByCareerClubId(
 export interface ScoutMapClubPin {
   careerClubId: string;
   name: string;
+  place: string;
   shortName: string;
   directoryVisible: boolean;
   discovered: boolean;
@@ -203,6 +204,7 @@ export function buildScoutDiscoveryMapModel(input: {
       return {
         careerClubId,
         name: club.name,
+        place: club.place,
         shortName: club.short_name,
         directoryVisible,
         discovered,

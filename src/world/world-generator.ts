@@ -2,6 +2,7 @@ import { applyVeteranBackstory, peakCaBaseAdjustment } from "../player/veteran-b
 import { seedPhaseStamps } from "../development/ability-stamps.ts";
 import { estimateCa, marketValue } from "../transfers/market-value.ts";
 import type { Attributes, Player, PlayerName, PositionPrimary } from "../types/player.ts";
+import { realCityForWorldRegion } from "./real-cities.ts";
 
 export const WORLD_GENERATION_VERSION = 1;
 export const CLUBS_PER_DIVISION = 18;
@@ -23,6 +24,8 @@ export interface WorldClub {
   id: string;
   name: string;
   short_name: string;
+  /** Real-world city label (WGS84 catalog in `real-cities.ts`). */
+  place: string;
   region: string;
   division_id: WorldDivisionId;
   identity: ClubIdentity;
@@ -430,7 +433,8 @@ function clubShortNameFromPlace(place: string, used: Set<string>, index: number)
 }
 
 export function generateClubs(masterSeed: number): WorldClub[] {
-  const places = shuffled(PLACES, deriveWorldSeed(masterSeed, "club-places", 0));
+  const regionOrder = shuffled(REGIONS, deriveWorldSeed(masterSeed, "club-regions", 0));
+  const regionPickIndex = new Map<string, number>();
   const clubs: WorldClub[] = [];
   const usedShortNames = new Set<string>(["NOR"]);
 
@@ -443,6 +447,7 @@ export function generateClubs(masterSeed: number): WorldClub[] {
         id: NORDSTERN_TEAM_ID,
         name: "FC Nordstern",
         short_name: "NOR",
+        place: "Kiel",
         region: "Fördeküste",
         division_id,
         identity: "community",
@@ -453,7 +458,11 @@ export function generateClubs(masterSeed: number): WorldClub[] {
     }
 
     const random = mulberry32(deriveWorldSeed(masterSeed, "club", index));
-    const place = places[index - 1] ?? `Nordort ${index}`;
+    const region = regionOrder[(index - 1) % regionOrder.length] ?? "Fördeküste";
+    const regionIndex = regionPickIndex.get(region) ?? 0;
+    regionPickIndex.set(region, regionIndex + 1);
+    const city = realCityForWorldRegion(region, regionIndex);
+    const place = city?.name ?? PLACES[(index - 1) % PLACES.length] ?? `Nordort ${index}`;
     const prefix = pick(CLUB_PREFIXES, random);
     const suffix = pick(CLUB_SUFFIXES, random);
     const idHash = deriveWorldSeed(masterSeed, "club-id", index).toString(16).padStart(8, "0");
@@ -463,7 +472,8 @@ export function generateClubs(masterSeed: number): WorldClub[] {
       id: `world-${idHash}-${index}`,
       name: `${prefix} ${place}${suffix ? ` ${suffix}` : ""}`,
       short_name: clubShortNameFromPlace(place, usedShortNames, index),
-      region: pick(REGIONS, random),
+      place,
+      region,
       division_id,
       identity: pick(IDENTITIES, random),
       reputation: reputationBase + Math.floor(random() * 21),

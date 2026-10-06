@@ -1,3 +1,14 @@
+import { realCityByName } from "../world/real-cities.ts";
+import {
+  extractPlaceFromClubName,
+  geoToLocalMap,
+  geoToReliefSvg,
+  HANSE_CITY_MAP_BOUNDS,
+  mapCoordsForPlace,
+  SCOUT_RELIEF_HEIGHT,
+  SCOUT_RELIEF_WIDTH,
+  type GeoBounds,
+} from "./scout-map-geo.ts";
 import type { ScoutMapClubPin } from "./scout-region-map.ts";
 import type { ScoutMapEdge } from "./scout-route-puzzle.ts";
 
@@ -12,18 +23,57 @@ export interface ScoutMapNode {
   scoutable?: boolean;
 }
 
+export type ScoutZoneMapMode = "relief" | "city";
+
 export interface ScoutZoneMapLayout {
   zoneId: string;
+  mapMode: ScoutZoneMapMode;
   flavorAsset: string;
   reliefViewBox: string;
+  cityMapBounds?: GeoBounds;
   /** Road junctions / cities in relief coordinates. */
   anchorNodes: readonly Omit<ScoutMapNode, "careerClubId" | "discovered" | "scoutable">[];
   edges: readonly ScoutMapEdge[];
 }
 
 export const SCOUT_RELIEF_MAP_ASSET = "/assets/scout-maps/scout-germany-relief.svg";
-export const SCOUT_RELIEF_WIDTH = 1073.381;
-export const SCOUT_RELIEF_HEIGHT = 1271.953;
+export { SCOUT_RELIEF_HEIGHT, SCOUT_RELIEF_WIDTH };
+
+function cityNodeId(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function anchorFromCityName(
+  name: string,
+  layout: Pick<ScoutZoneMapLayout, "mapMode" | "cityMapBounds">,
+): Omit<ScoutMapNode, "careerClubId" | "discovered" | "scoutable"> | null {
+  const city = realCityByName(name);
+  if (!city) return null;
+  const coords =
+    layout.mapMode === "city" && layout.cityMapBounds
+      ? geoToLocalMap(city.lat, city.lon, layout.cityMapBounds)
+      : geoToReliefSvg(city.lat, city.lon);
+  return { id: cityNodeId(name), label: name, x: coords.x, y: coords.y };
+}
+
+function buildAnchors(
+  cityNames: readonly string[],
+  layout: Pick<ScoutZoneMapLayout, "mapMode" | "cityMapBounds">,
+): Omit<ScoutMapNode, "careerClubId" | "discovered" | "scoutable">[] {
+  const nodes: Omit<ScoutMapNode, "careerClubId" | "discovered" | "scoutable">[] = [];
+  for (const name of cityNames) {
+    const node = anchorFromCityName(name, layout);
+    if (node) nodes.push(node);
+  }
+  return nodes;
+}
 
 function parseViewBox(viewBox: string): { x: number; y: number; w: number; h: number } {
   const [x, y, w, h] = viewBox.split(/\s+/).map(Number);
@@ -48,75 +98,86 @@ export function clubPositionInZone(
   return { x: vb.x + cx * vb.w, y: vb.y + cy * vb.h };
 }
 
+const FOERDE_LAYOUT: Omit<ScoutZoneMapLayout, "anchorNodes"> = {
+  zoneId: "foerde",
+  mapMode: "relief",
+  flavorAsset: "/assets/scout-maps/flavor/foerde.jpg",
+  reliefViewBox: "520 80 220 200",
+  edges: [
+    { id: "e1", a: "flensburg", b: "schleswig", length: 12 },
+    { id: "e2", a: "schleswig", b: "rendsburg", length: 18 },
+    { id: "e3", a: "rendsburg", b: "eckernfoerde", length: 16 },
+    { id: "e4", a: "rendsburg", b: "kiel", length: 20 },
+    { id: "e5", a: "kiel", b: "neumuenster", length: 14 },
+    { id: "e6", a: "eckernfoerde", b: "kiel", length: 11 },
+    { id: "e7", a: "flensburg", b: "rendsburg", length: 28 },
+  ],
+};
+
+const SH_LAYOUT: Omit<ScoutZoneMapLayout, "anchorNodes"> = {
+  zoneId: "sh",
+  mapMode: "relief",
+  flavorAsset: "/assets/scout-maps/flavor/sh.jpg",
+  reliefViewBox: "560 320 120 80",
+  edges: [
+    { id: "s1", a: "elmshorn", b: "glueckstadt", length: 15 },
+    { id: "s2", a: "elmshorn", b: "kaltenkirchen", length: 18 },
+    { id: "s3", a: "kaltenkirchen", b: "hasloh", length: 12 },
+    { id: "s4", a: "hasloh", b: "pinneberg", length: 14 },
+  ],
+};
+
+const HANSE_LAYOUT: Omit<ScoutZoneMapLayout, "anchorNodes"> = {
+  zoneId: "hanse",
+  mapMode: "city",
+  flavorAsset: "/assets/scout-maps/flavor/hanse.jpg",
+  reliefViewBox: "0 0 100 100",
+  cityMapBounds: HANSE_CITY_MAP_BOUNDS,
+  edges: [
+    { id: "h1", a: "bremen", b: "bremerhaven", length: 22 },
+    { id: "h2", a: "bremen", b: "hamburg", length: 26 },
+    { id: "h3", a: "hamburg", b: "stade", length: 18 },
+  ],
+};
+
+const NORDFRIES_LAYOUT: Omit<ScoutZoneMapLayout, "anchorNodes"> = {
+  zoneId: "nordfries",
+  mapMode: "relief",
+  flavorAsset: "/assets/scout-maps/flavor/nordfries.jpg",
+  reliefViewBox: "470 60 260 180",
+  edges: [
+    { id: "n1", a: "westerland", b: "niebuell", length: 20 },
+    { id: "n2", a: "niebuell", b: "husum", length: 16 },
+    { id: "n3", a: "husum", b: "toenning", length: 16 },
+    { id: "n4", a: "toenning", b: "busum", length: 14 },
+  ],
+};
+
 export const SCOUT_ZONE_MAP_LAYOUTS: Record<string, ScoutZoneMapLayout> = {
   foerde: {
-    zoneId: "foerde",
-    flavorAsset: "/assets/scout-maps/flavor/foerde.jpg",
-    reliefViewBox: "520 80 220 200",
-    anchorNodes: [
-      { id: "flensburg", label: "Flensburg", x: 545, y: 95 },
-      { id: "gluecksburg", label: "Glücksburg", x: 560, y: 110 },
-      { id: "kappeln", label: "Kappeln", x: 610, y: 130 },
-      { id: "eckernfoerde", label: "Eckernförde", x: 680, y: 175 },
-      { id: "kiel", label: "Kiel", x: 620, y: 210 },
-      { id: "laboe", label: "Laboe", x: 665, y: 245 },
-    ],
-    edges: [
-      { id: "e1", a: "flensburg", b: "gluecksburg", length: 12 },
-      { id: "e2", a: "gluecksburg", b: "kappeln", length: 18 },
-      { id: "e3", a: "kappeln", b: "eckernfoerde", length: 16 },
-      { id: "e4", a: "kappeln", b: "kiel", length: 20 },
-      { id: "e5", a: "kiel", b: "laboe", length: 14 },
-      { id: "e6", a: "eckernfoerde", b: "laboe", length: 11 },
-      { id: "e7", a: "flensburg", b: "kappeln", length: 28 },
-    ],
+    ...FOERDE_LAYOUT,
+    anchorNodes: buildAnchors(
+      ["Flensburg", "Schleswig", "Rendsburg", "Eckernförde", "Kiel", "Neumünster"],
+      FOERDE_LAYOUT,
+    ),
   },
   sh: {
-    zoneId: "sh",
-    flavorAsset: "/assets/scout-maps/flavor/sh.jpg",
-    reliefViewBox: "480 200 280 260",
-    anchorNodes: [
-      { id: "husum", label: "Husum", x: 500, y: 320 },
-      { id: "heide", label: "Heide", x: 560, y: 280 },
-      { id: "itzehoe", label: "Itzehoe", x: 620, y: 240 },
-      { id: "meldorf", label: "Meldorf", x: 530, y: 350 },
-    ],
-    edges: [
-      { id: "s1", a: "husum", b: "heide", length: 15 },
-      { id: "s2", a: "heide", b: "itzehoe", length: 18 },
-      { id: "s3", a: "husum", b: "meldorf", length: 12 },
-      { id: "s4", a: "heide", b: "meldorf", length: 14 },
-    ],
+    ...SH_LAYOUT,
+    anchorNodes: buildAnchors(
+      ["Elmshorn", "Glückstadt", "Kaltenkirchen", "Hasloh", "Pinneberg"],
+      SH_LAYOUT,
+    ),
   },
   hanse: {
-    zoneId: "hanse",
-    flavorAsset: "/assets/scout-maps/flavor/hanse.jpg",
-    reliefViewBox: "520 420 240 220",
-    anchorNodes: [
-      { id: "bremen", label: "Bremen", x: 580, y: 500 },
-      { id: "bremerhaven", label: "Bremerhaven", x: 540, y: 560 },
-      { id: "hamburg", label: "Hamburg", x: 680, y: 460 },
-    ],
-    edges: [
-      { id: "h1", a: "bremen", b: "bremerhaven", length: 22 },
-      { id: "h2", a: "bremen", b: "hamburg", length: 26 },
-    ],
+    ...HANSE_LAYOUT,
+    anchorNodes: buildAnchors(["Bremen", "Bremerhaven", "Hamburg", "Stade"], HANSE_LAYOUT),
   },
   nordfries: {
-    zoneId: "nordfries",
-    flavorAsset: "/assets/scout-maps/flavor/nordfries.jpg",
-    reliefViewBox: "470 60 260 180",
-    anchorNodes: [
-      { id: "sylt", label: "Sylt", x: 490, y: 75 },
-      { id: "westerland", label: "Westerland", x: 505, y: 95 },
-      { id: "niebuell", label: "Niebüll", x: 560, y: 120 },
-      { id: "tondern", label: "Tönning", x: 620, y: 160 },
-    ],
-    edges: [
-      { id: "n1", a: "sylt", b: "westerland", length: 8 },
-      { id: "n2", a: "westerland", b: "niebuell", length: 20 },
-      { id: "n3", a: "niebuell", b: "tondern", length: 16 },
-    ],
+    ...NORDFRIES_LAYOUT,
+    anchorNodes: buildAnchors(
+      ["Westerland", "Niebüll", "Husum", "Tönning", "Büsum"],
+      NORDFRIES_LAYOUT,
+    ),
   },
 };
 
@@ -125,17 +186,43 @@ export function layoutForZone(zoneId: string): ScoutZoneMapLayout | undefined {
 }
 
 export function edgeBetween(
-  layout: ScoutZoneMapLayout,
+  edges: readonly ScoutMapEdge[],
   nodeA: string,
   nodeB: string,
 ): ScoutMapEdge | undefined {
-  return layout.edges.find(
+  return edges.find(
     (edge) =>
       (edge.a === nodeA && edge.b === nodeB) || (edge.a === nodeB && edge.b === nodeA),
   );
 }
 
-/** Visible clubs on relief map; extras get hashed positions and connect to nearest anchor. */
+/** Roads between visible club pins (deterministic mesh by distance). */
+export function buildClubRoutingEdges(nodes: readonly ScoutMapNode[]): ScoutMapEdge[] {
+  const maxDist = nodes.every((node) => node.x <= 100 && node.y <= 100) ? 35 : 85;
+  const edges: ScoutMapEdge[] = [];
+  for (let i = 0; i < nodes.length; i += 1) {
+    for (let j = i + 1; j < nodes.length; j += 1) {
+      const left = nodes[i]!;
+      const right = nodes[j]!;
+      const dist = Math.hypot(left.x - right.x, left.y - right.y);
+      if (dist > maxDist) continue;
+      edges.push({
+        id: `r-${left.id}-${right.id}`,
+        a: left.id,
+        b: right.id,
+        length: Math.max(8, Math.round(dist / 8)),
+      });
+    }
+  }
+  return edges;
+}
+
+function placeForClubPin(club: ScoutMapClubPin): string | null {
+  if (club.place) return club.place;
+  return extractPlaceFromClubName(club.name);
+}
+
+/** Visible clubs on map; GPS-backed when `place` matches catalog, else hashed fallback. */
 export function buildZoneMapNodes(
   layout: ScoutZoneMapLayout,
   clubs: readonly ScoutMapClubPin[],
@@ -148,16 +235,17 @@ export function buildZoneMapNodes(
   const nodes: ScoutMapNode[] = [];
   for (let index = 0; index < sorted.length; index += 1) {
     const club = sorted[index]!;
-    const anchor = layout.anchorNodes[index];
-    const coords = anchor
-      ? { x: anchor.x, y: anchor.y }
-      : clubPositionInZone(club.careerClubId, layout.reliefViewBox, index, sorted.length);
+    const place = placeForClubPin(club);
+    const geoCoords = place ? mapCoordsForPlace(place, layout) : null;
+    const coords =
+      geoCoords ??
+      clubPositionInZone(club.careerClubId, layout.reliefViewBox, index, sorted.length);
     const scoutable =
       !club.discovered &&
       club.directoryVisible &&
       (activeClubScoutId == null || activeClubScoutId === club.careerClubId);
     nodes.push({
-      id: anchor?.id ?? club.careerClubId,
+      id: club.careerClubId,
       label: club.shortName,
       x: coords.x,
       y: coords.y,

@@ -4,7 +4,7 @@ import type { LeagueState } from "../../persistence/league-state.ts";
 import { teamFormPoints, teamFormSlots } from "../../sim/league-form.ts";
 import { LeagueFormStrip, LeaguePointsSparkline } from "./LeagueFormVisuals.tsx";
 import { promotionZoneRank } from "../../sim/promotion-relegation.ts";
-import { clubDisplayName } from "../../sim/league-divisions.ts";
+import { clubDisplayName, clubPlaceName } from "../../sim/league-divisions.ts";
 import type { WorldClub } from "../../world/world-generator.ts";
 
 export function LeagueTable({
@@ -26,6 +26,7 @@ export function LeagueTable({
         <thead>
           <tr>
             <th>#</th>
+            <th>Ort</th>
             <th>Verein</th>
             <th>Sp</th>
             <th>S</th>
@@ -55,6 +56,7 @@ export function LeagueTable({
             return (
               <tr key={row.teamId} className={rowClass || undefined}>
                 <td>{index + 1}</td>
+                <td className="league-place-cell">{clubPlaceName(row.teamId, worldClubs) || "—"}</td>
                 <td>
                   {onSelectClub ? (
                     <button

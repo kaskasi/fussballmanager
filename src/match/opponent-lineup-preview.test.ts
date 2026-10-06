@@ -24,7 +24,10 @@ describe("opponent lineup preview", () => {
     expect(setup).not.toBeNull();
     const opponentId = setup!.isHome ? setup!.awayTeamId : setup!.homeTeamId;
     const preview = buildOpponentLineupPreview(setup!, session.rivalPlayers);
-    const profile = buildClubProfile(opponentId, { rivalPlayers: session.rivalPlayers });
+    const profile = buildClubProfile(opponentId, {
+      rivalPlayers: session.rivalPlayers,
+      worldClubs: session.world.clubs,
+    });
     expect(preview).not.toBeNull();
     expect(profile).not.toBeNull();
 

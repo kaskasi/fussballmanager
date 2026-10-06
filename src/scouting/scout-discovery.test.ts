@@ -12,6 +12,7 @@ import type { ScoutBoard } from "./scout-board.ts";
 import type { Player } from "../types/player.ts";
 import type { WorldClub } from "../world/world-generator.ts";
 const sampleClub = (overrides: Partial<WorldClub> = {}): WorldClub => ({
+  place: "Kiel",
   id: "cl_test",
   name: "Test FC",
   short_name: "TFC",

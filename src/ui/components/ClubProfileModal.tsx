@@ -4,6 +4,7 @@ import type { Player } from "../../types/player.ts";
 import type { ClubStadium } from "../../stadium/club-stadium.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { buildClubProfile } from "../../sim/club-profiles.ts";
+import type { WorldClub } from "../../world/world-generator.ts";
 
 /** WIREFRAME: PRD 09.2 — Vereins-Kurzprofil aus Ligatabelle */
 export function ClubProfileModal({
@@ -12,6 +13,7 @@ export function ClubProfileModal({
   players,
   rivalPlayers,
   stadium,
+  worldClubs,
   onClose,
   onOpenStadium,
 }: {
@@ -20,6 +22,7 @@ export function ClubProfileModal({
   players: readonly Player[];
   rivalPlayers: readonly Player[];
   stadium: ClubStadium;
+  worldClubs: readonly WorldClub[];
   onClose: () => void;
   onOpenStadium?: () => void;
 }) {
@@ -29,6 +32,7 @@ export function ClubProfileModal({
     rivalPlayers,
     stadium,
     pools: league.league_pools,
+    worldClubs,
   });
 
   if (!profile) return null;
@@ -47,6 +51,7 @@ export function ClubProfileModal({
             <p className="eyebrow">{profile.divisionLabel}</p>
             <h2>{profile.name}</h2>
             <p className="club-profile-sub">
+              {profile.place ? `${profile.place} · ` : ""}
               Gegründet {profile.founded} · {profile.members.toLocaleString("de-DE")} Mitglieder
             </p>
           </div>

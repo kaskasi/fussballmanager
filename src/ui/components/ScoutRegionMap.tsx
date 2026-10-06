@@ -114,18 +114,16 @@ export function ScoutRegionMap({
                       : t("scouting.map.regionComplete")}
                   </span>
                 )}
+                {zone.regionDirectoryOpen && zone.regionTier < zone.regionTierMax && zone.poolExpected > 0 ? (
+                  <span className="scout-discovery-zone-meta scout-discovery-zone-pool">
+                    {t("scouting.map.poolCoverage", {
+                      found: zone.poolPlayers,
+                      expected: zone.poolExpected,
+                      pct: zone.poolCoveragePct,
+                    })}
+                  </span>
+                ) : null}
               </header>
-              <p className="scout-discovery-zone-card-lead">
-                {zone.regionDirectoryOpen
-                  ? canOpenDetail
-                    ? t("scouting.map.cardOpenDetail")
-                    : t("scouting.map.poolCoverage", {
-                        found: zone.poolPlayers,
-                        expected: zone.poolExpected,
-                        pct: zone.poolCoveragePct,
-                      })
-                  : t("scouting.map.regionLocked")}
-              </p>
             </article>
           );
         })}

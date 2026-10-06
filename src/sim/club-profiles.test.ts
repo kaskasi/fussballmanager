@@ -13,8 +13,10 @@ describe("club profiles", () => {
       playerClubId: league.player_club_id,
       careerPlayers: session.players,
       pools: league.league_pools,
+      worldClubs: session.world.clubs,
     });
     expect(profile?.name).toContain("Nordstern");
+    expect(profile?.place).toBe("Kiel");
     expect(profile?.coach).toBeTruthy();
     expect(profile?.bestPlayers.length).toBeGreaterThan(0);
     expect(profile?.isPlayerClub).toBe(true);
@@ -25,7 +27,11 @@ describe("club profiles", () => {
   it("uses career CA for rival clubs", () => {
     const session = newGameSession();
     const rivalId = defaultLeaguePools()["regionalliga-nord"][1]!;
-    const profile = buildClubProfile(rivalId, { rivalPlayers: session.rivalPlayers });
+    const profile = buildClubProfile(rivalId, {
+      rivalPlayers: session.rivalPlayers,
+      worldClubs: session.world.clubs,
+    });
+    expect(profile?.place.length).toBeGreaterThan(0);
     expect(profile?.squadStrength).toBeGreaterThan(50);
     expect(profile?.bestPlayers[0]?.ca).toBeGreaterThan(50);
   });

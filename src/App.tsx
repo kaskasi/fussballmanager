@@ -2461,6 +2461,7 @@ export default function App() {
           players={players}
           rivalPlayers={rivalPlayers}
           stadium={stadium}
+          worldClubs={world.clubs}
           onClose={() => setClubProfileId(null)}
           onOpenStadium={() => {
             setClubProfileId(null);

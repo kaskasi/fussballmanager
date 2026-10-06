@@ -28,6 +28,8 @@ describe("opponent scout report", () => {
     const lowWidth = low.recommendations[0]!.goalsForBand[1] - low.recommendations[0]!.goalsForBand[0];
     const highWidth = high.recommendations[0]!.goalsForBand[1] - high.recommendations[0]!.goalsForBand[0];
     expect(lowWidth).toBeGreaterThanOrEqual(highWidth);
+    expect(low.recommendations[0]!.winPct).toBeGreaterThanOrEqual(0);
+    expect(low.recommendations[0]!.avgGoalDiff).toBeDefined();
   });
 
   it("builds deterministic tactic hashes and 10 variant plans", () => {

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { SandboxPlan } from "@fussballmanager/shared";
 import { X } from "lucide-react";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName, roundStat } from "../../types/player-display.ts";
@@ -66,8 +67,7 @@ export function DecisionInboxPanel({
   onDismissScoutJob,
   onOpenScoutingNetwork,
   onOpenScoutingHits,
-  onOpenOpponentScoutTactics,
-  onOpenCalendarFromPostfach,
+  onApplyOpponentScoutPlan,
 }: {
   inbox: YouthInboxState;
   players: Player[];
@@ -86,8 +86,7 @@ export function DecisionInboxPanel({
   onDismissScoutJob?: (itemId: string) => void;
   onOpenScoutingNetwork?: () => void;
   onOpenScoutingHits?: () => void;
-  onOpenOpponentScoutTactics?: () => void;
-  onOpenCalendarFromPostfach?: () => void;
+  onApplyOpponentScoutPlan?: (plan: SandboxPlan) => void;
 }) {
   useT();
   const focus = useMemo(() => inboxWeekFocus(inbox, players), [inbox, players]);
@@ -237,8 +236,7 @@ export function DecisionInboxPanel({
               postIndex={postfachQueueIds.indexOf(activeId ?? "") + 1}
               postTotal={postfachOpenTotal}
               onDismiss={() => onDismissScoutJob(activeScoutJob.id)}
-              onOpenTactics={onOpenOpponentScoutTactics}
-              onOpenCalendar={onOpenCalendarFromPostfach}
+              onApplyPlan={onApplyOpponentScoutPlan}
             />
           ) : activeScoutJob && onDismissScoutJob ? (
             <ScoutJobInboxCard

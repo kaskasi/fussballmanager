@@ -1,6 +1,8 @@
 /** WIREFRAME: PRD 22 + design.md §9.4 — Gegner-Scout Report */
-import { Calendar, Shield, Swords } from "lucide-react";
+import { Shield, Swords } from "lucide-react";
+import type { SandboxPlan } from "@fussballmanager/shared";
 import type { ScoutJobCompleteNotice } from "../../scouting/scout-job-postfach.ts";
+import type { OpponentScoutRecommendation } from "../../scouting/opponent-scout-bundle.ts";
 import type { OpponentScoutRiskTag } from "../../scouting/opponent-scout-sims.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
@@ -8,8 +10,72 @@ import { OpponentScoutSummaryGrid } from "./OpponentScoutSummaryGrid.tsx";
 
 function RiskIcon({ risk }: { risk: OpponentScoutRiskTag }) {
   if (risk === "high_line") return <Swords size={14} aria-hidden />;
-  if (risk === "low_block") return <Shield size={14} aria-hidden />;
-  return <Shield size={14} aria-hidden className="opponent-scout-risk-balanced" />;
+  return <Shield size={14} aria-hidden className={risk === "balanced" ? "opponent-scout-risk-balanced" : undefined} />;
+}
+
+function formatGoalDiff(value: number): string {
+  const rounded = value.toFixed(1);
+  if (value > 0) return `+${rounded}`;
+  return rounded;
+}
+
+function TacticResultsTable({
+  rows,
+  onApplyPlan,
+}: {
+  rows: readonly OpponentScoutRecommendation[];
+  onApplyPlan?: (plan: SandboxPlan) => void;
+}) {
+  return (
+    <div className="opponent-scout-tactic-table-wrap">
+      <p className="opponent-scout-tactic-table-title">{t("postfach.opponentScout.table.title")}</p>
+      <table className="opponent-scout-tactic-table">
+        <thead>
+          <tr>
+            <th scope="col">{t("postfach.opponentScout.table.tactic")}</th>
+            <th scope="col">{t("postfach.opponentScout.table.winPct")}</th>
+            <th scope="col">{t("postfach.opponentScout.table.goalDiff")}</th>
+            <th scope="col">{t("postfach.opponentScout.table.goals")}</th>
+            {onApplyPlan ? (
+              <th scope="col" className="opponent-scout-tactic-action">
+                {t("postfach.opponentScout.table.apply")}
+              </th>
+            ) : null}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.formationLabel}>
+              <td>
+                <span className="opponent-scout-tactic-name">
+                  <RiskIcon risk={row.risk} />
+                  {row.formationLabel}
+                </span>
+              </td>
+              <td className="opponent-scout-tactic-num">{row.winPct}%</td>
+              <td className="opponent-scout-tactic-num">{formatGoalDiff(row.avgGoalDiff)}</td>
+              <td className="opponent-scout-tactic-num">
+                {row.avgGoalsFor.toFixed(1)}–{row.avgGoalsAgainst.toFixed(1)}
+              </td>
+              {onApplyPlan ? (
+                <td className="opponent-scout-tactic-apply">
+                  {row.applyPlan ? (
+                    <button
+                      type="button"
+                      className="inbox-action opponent-scout-apply-btn"
+                      onClick={() => onApplyPlan(row.applyPlan!)}
+                    >
+                      {t("postfach.opponentScout.apply")}
+                    </button>
+                  ) : null}
+                </td>
+              ) : null}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 export function OpponentScoutInboxCard({
@@ -17,15 +83,13 @@ export function OpponentScoutInboxCard({
   postIndex,
   postTotal,
   onDismiss,
-  onOpenTactics,
-  onOpenCalendar,
+  onApplyPlan,
 }: {
   notice: ScoutJobCompleteNotice;
   postIndex: number;
   postTotal: number;
   onDismiss: () => void;
-  onOpenTactics?: () => void;
-  onOpenCalendar?: () => void;
+  onApplyPlan?: (plan: SandboxPlan) => void;
 }) {
   useT();
   const report = notice.report;
@@ -60,39 +124,11 @@ export function OpponentScoutInboxCard({
             {t("postfach.opponentScout.modeScore", { score: report.modeScoreline })}
           </p>
         ) : null}
-        {rows.length > 0 ? (
-          <ul className="opponent-scout-reco-list">
-            {rows.map((row) => (
-              <li key={row.formationLabel}>
-                <RiskIcon risk={row.risk} />
-                <span className="opponent-scout-reco-formation">{row.formationLabel}</span>
-                <span className="opponent-scout-reco-band">
-                  {t("postfach.opponentScout.scoreBand", {
-                    forLow: row.goalsForBand[0],
-                    forHigh: row.goalsForBand[1],
-                    againstLow: row.goalsAgainstBand[0],
-                    againstHigh: row.goalsAgainstBand[1],
-                  })}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+        {rows.length > 0 ? <TacticResultsTable rows={rows} onApplyPlan={onApplyPlan} /> : null}
       </div>
       <div className="inbox-actions inbox-scout-job-actions">
-        {onOpenTactics ? (
-          <button type="button" className="inbox-action" onClick={onOpenTactics}>
-            {t("postfach.opponentScout.ctaTactics")}
-          </button>
-        ) : null}
-        {onOpenCalendar ? (
-          <button type="button" className="inbox-action" onClick={onOpenCalendar}>
-            <Calendar size={14} aria-hidden />
-            {t("postfach.opponentScout.ctaCalendar")}
-          </button>
-        ) : null}
         <button type="button" className="inbox-action is-primary" onClick={onDismiss}>
-          {t("postfach.scoutJob.dismiss")}
+          {t("postfach.opponentScout.dismissReport")}
         </button>
       </div>
     </section>

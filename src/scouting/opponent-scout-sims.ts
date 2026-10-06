@@ -1,4 +1,5 @@
 /** PRD 22 — headless opponent prep sims (engine wrapper only). */
+import type { SandboxPlan } from "@fussballmanager/shared";
 
 export const OPPONENT_SCOUT_SIM_COUNT = 10;
 export const OPPONENT_SCOUT_WORKING_DAYS = 4;
@@ -23,6 +24,8 @@ export interface OpponentScoutSimVariant {
   cornersFor?: number;
   cornersAgainst?: number;
   passCompletionPctFor?: number | null;
+  /** Player tactic used for this sim (for “apply to lineup”). */
+  plan?: SandboxPlan;
 }
 
 export interface OpponentScoutBundleResult {

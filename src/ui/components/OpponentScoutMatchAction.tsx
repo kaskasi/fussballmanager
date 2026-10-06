@@ -33,10 +33,9 @@ export function OpponentScoutMatchAction({
   if (!setup) return null;
 
   const matchId = opponentScoutMatchIdFromSetup(season, setup);
+  const notice = opponentScoutNoticeForMatch(scoutBoard, matchId);
 
-  if (mode === "lineup") {
-    const notice = opponentScoutNoticeForMatch(scoutBoard, matchId);
-    if (!notice || !onViewReport) return null;
+  if (notice && onViewReport) {
     return (
       <div className="opponent-scout-action">
         <button
@@ -49,6 +48,10 @@ export function OpponentScoutMatchAction({
         </button>
       </div>
     );
+  }
+
+  if (mode === "lineup") {
+    return null;
   }
 
   const job = scoutBoard.active_opponent_scout;

@@ -43,6 +43,7 @@ export function CalendarScreen({
   scoutBoard,
   scoutNetwork,
   onStartOpponentScout,
+  onViewOpponentScoutReport,
 }: {
   season: number;
   week: number;
@@ -53,6 +54,7 @@ export function CalendarScreen({
   scoutBoard?: ScoutBoard;
   scoutNetwork?: ScoutNetworkState;
   onStartOpponentScout?: () => void;
+  onViewOpponentScoutReport?: (postfachItemId: string) => void;
 }) {
   const t = useT();
   const [monthIndex, setMonthIndex] = useState(() => sessionMonthIndex(season, week, weekday));
@@ -124,6 +126,7 @@ export function CalendarScreen({
               scoutBoard={scoutBoard}
               scoutNetwork={scoutNetwork}
               onStart={onStartOpponentScout}
+              onViewReport={onViewOpponentScoutReport}
             />
           </section>
         ) : null}

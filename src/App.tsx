@@ -142,7 +142,7 @@ import { standings, type SandboxPlan, type TeamId } from "@fussballmanager/share
 import { listJobOffers } from "./board/job-offers.ts";
 import { switchManagerClub } from "./board/manager-club-switch.ts";
 import { startBoardSeason } from "./board/season-objectives.ts";
-import type { MatchLineupState } from "./match/lineup-board.ts";
+import { applyScoutPlanToMatchLineup, type MatchLineupState } from "./match/lineup-board.ts";
 import { saveTacticsPreset, type TacticsPresetId } from "./match/tactics-presets.ts";
 import { JobOffersModal } from "./ui/components/JobOffersModal.tsx";
 import {
@@ -768,15 +768,6 @@ export default function App() {
     flashNotice(t("scouting.opponent.started"), "ok");
   }, [flashNotice, patchSession, session]);
 
-  const handleOpenOpponentScoutLineup = useCallback(() => {
-    const setup = prepareCareerMatch(session);
-    if (!setup) return;
-    careerMatchFlowRef.current = true;
-    setCareerMatchUiVisible(true);
-    setCareerMatchSetup(setup);
-    setScreen("hub");
-  }, [session]);
-
   const handleOpenOpponentScoutReport = useCallback(
     (itemId: string) => {
       if (careerMatchSetup && careerMatchUiVisible) {
@@ -785,6 +776,24 @@ export default function App() {
       openPostfach(itemId);
     },
     [careerMatchSetup, careerMatchUiVisible, openPostfach],
+  );
+
+  const handleApplyOpponentScoutPlan = useCallback(
+    (plan: SandboxPlan) => {
+      const managerClubId = careerTeamId(session.league.player_club_id);
+      patchSession((current) => ({
+        ...current,
+        matchLineup: applyScoutPlanToMatchLineup(
+          current.matchLineup,
+          plan,
+          current.players,
+          managerClubId,
+          current.league.player_club_id,
+        ),
+      }));
+      flashNotice(t("postfach.opponentScout.applied"), "ok");
+    },
+    [flashNotice, patchSession, session.league.player_club_id],
   );
 
   const handleNext = useCallback(() => {
@@ -2446,8 +2455,7 @@ export default function App() {
             setScoutingInitialTab("hits");
             setScreen("scouting");
           }}
-          onOpenOpponentScoutTactics={handleOpenOpponentScoutLineup}
-          onOpenCalendarFromPostfach={() => setScreen("calendar")}
+          onApplyOpponentScoutPlan={handleApplyOpponentScoutPlan}
         />
       ) : null}
       {openingBlocked(session) ? (
@@ -2667,6 +2675,7 @@ export default function App() {
           scoutBoard={scoutBoard}
           scoutNetwork={scoutNetwork}
           onStartOpponentScout={handleStartOpponentScout}
+          onViewOpponentScoutReport={handleOpenOpponentScoutReport}
         />
       ) : null}
       {clubProfileId && screen !== "leagues" ? (

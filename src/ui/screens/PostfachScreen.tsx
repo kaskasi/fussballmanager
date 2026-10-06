@@ -1,4 +1,5 @@
 /** WIREFRAME: docs/prd/design.md §9.4 — Postfach (voller Screen; Zurück im Shell-Header) */
+import type { SandboxPlan } from "@fussballmanager/shared";
 import type { Player } from "../../types/player.ts";
 import type { CampLeaderCandidate } from "../../youth/camp-leader-hire.ts";
 import type { YouthCamp } from "../../youth/satellite-camps.ts";
@@ -26,8 +27,7 @@ export function PostfachScreen({
   onDismissScoutJob,
   onOpenScoutingNetwork,
   onOpenScoutingHits,
-  onOpenOpponentScoutTactics,
-  onOpenCalendarFromPostfach,
+  onApplyOpponentScoutPlan,
 }: {
   players: Player[];
   youthInbox: YouthInboxState;
@@ -45,8 +45,7 @@ export function PostfachScreen({
   onDismissScoutJob: (itemId: string) => void;
   onOpenScoutingNetwork: () => void;
   onOpenScoutingHits: () => void;
-  onOpenOpponentScoutTactics?: () => void;
-  onOpenCalendarFromPostfach?: () => void;
+  onApplyOpponentScoutPlan?: (plan: SandboxPlan) => void;
 }) {
   useT();
 
@@ -70,8 +69,7 @@ export function PostfachScreen({
           onDismissScoutJob={onDismissScoutJob}
           onOpenScoutingNetwork={onOpenScoutingNetwork}
           onOpenScoutingHits={onOpenScoutingHits}
-          onOpenOpponentScoutTactics={onOpenOpponentScoutTactics}
-          onOpenCalendarFromPostfach={onOpenCalendarFromPostfach}
+          onApplyOpponentScoutPlan={onApplyOpponentScoutPlan}
         />
       </section>
     </main>

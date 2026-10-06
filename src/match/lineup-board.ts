@@ -58,6 +58,28 @@ export function defaultMatchLineup(
   };
 }
 
+/** Apply scout-sim tactic to saved match lineup (weekend Aufstellung uses matchLineup.plan). */
+export function applyScoutPlanToMatchLineup(
+  saved: MatchLineupState | undefined,
+  plan: SandboxPlan,
+  players: readonly Player[],
+  managerClubId: string,
+  playerClubId?: TeamId,
+): MatchLineupState {
+  const fallback = defaultMatchLineup(players, plan, managerClubId, playerClubId);
+  if (!saved) return fallback;
+  const keepAssignments = saved.formation === plan.formation;
+  const assignments = keepAssignments
+    ? saved.assignments
+    : fillMissingAssignments(players, plan.formation, {}, managerClubId);
+  const filled = fillMissingAssignments(players, plan.formation, assignments, managerClubId);
+  return {
+    formation: plan.formation,
+    plan: { ...plan },
+    assignments: filled,
+  };
+}
+
 export function normalizeMatchLineup(
   saved: MatchLineupState | undefined,
   players: readonly Player[],

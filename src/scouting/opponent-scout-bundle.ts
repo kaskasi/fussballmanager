@@ -39,6 +39,13 @@ export interface OpponentScoutRecommendation {
   goalsForBand: [number, number];
   goalsAgainstBand: [number, number];
   variantCount: number;
+  winPct: number;
+  drawPct: number;
+  lossPct: number;
+  avgGoalDiff: number;
+  avgGoalsFor: number;
+  avgGoalsAgainst: number;
+  applyPlan?: SandboxPlan;
 }
 
 export interface OpponentScoutReport extends OpponentScoutBundleResult {
@@ -161,6 +168,7 @@ export function buildOpponentScoutVariants(input: {
       cornersFor: snap.cornersFor,
       cornersAgainst: snap.cornersAgainst,
       passCompletionPctFor: snap.passCompletionPctFor,
+      plan: { ...entry.plan },
     });
   }
   return { variants, variantPlans };
@@ -204,19 +212,48 @@ export function buildOpponentScoutReport(
     const p25Against = percentile(goalsAgainst, 0.25);
     const p75Against = percentile(goalsAgainst, 0.75);
     const risk = group[0]?.risk ?? "balanced";
+    let wins = 0;
+    let draws = 0;
+    let losses = 0;
+    const goalDiffs: number[] = [];
+    for (const variant of group) {
+      const gf = variant.goalsFor ?? 0;
+      const ga = variant.goalsAgainst ?? 0;
+      goalDiffs.push(gf - ga);
+      if (gf > ga) wins += 1;
+      else if (gf === ga) draws += 1;
+      else losses += 1;
+    }
+    const n = group.length;
+    const pct = (count: number) => (n === 0 ? 0 : Math.round((100 * count) / n));
+    const mean = (values: number[]) =>
+      values.length === 0 ? 0 : values.reduce((sum, value) => sum + value, 0) / values.length;
+    const bestVariant = group.reduce((best, variant) => {
+      const diff = (variant.goalsFor ?? 0) - (variant.goalsAgainst ?? 0);
+      const bestDiff = (best.goalsFor ?? 0) - (best.goalsAgainst ?? 0);
+      return diff > bestDiff ? variant : best;
+    }, group[0]!);
     recommendations.push({
       formationLabel,
       risk,
       goalsForBand: [Math.max(0, p25For - pad), p75For + pad],
       goalsAgainstBand: [Math.max(0, p25Against - pad), p75Against + pad],
       variantCount: group.length,
+      winPct: pct(wins),
+      drawPct: pct(draws),
+      lossPct: pct(losses),
+      avgGoalDiff: mean(goalDiffs),
+      avgGoalsFor: mean(goalsFor),
+      avgGoalsAgainst: mean(goalsAgainst),
+      applyPlan: bestVariant.plan ? { ...bestVariant.plan } : undefined,
     });
   }
 
   recommendations.sort((left, right) => {
-    const leftMid = (left.goalsForBand[0] + left.goalsForBand[1]) / 2 - left.goalsAgainstBand[1];
-    const rightMid = (right.goalsForBand[0] + right.goalsForBand[1]) / 2 - right.goalsAgainstBand[1];
-    return rightMid - leftMid;
+    if (right.avgGoalDiff !== left.avgGoalDiff) {
+      return right.avgGoalDiff - left.avgGoalDiff;
+    }
+    return right.winPct - left.winPct;
   });
 
   return {

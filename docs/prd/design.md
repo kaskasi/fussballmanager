@@ -1,6 +1,6 @@
 # Design-PRD: Visuelle Sprache & Komponenten
 
-**Projekt:** Fußball-Manager ("Nordstern")
+**Projekt:** The Club (Fußball-Manager)
 **Datei:** `docs/prd/design.md`
 **Version:** 0.3 · Status: verbindliche Design-Referenz
 **Referenzbilder:** `docs/design-refs/design.png`, `docs/design-refs/lumo/` (Layout only, not shipped)

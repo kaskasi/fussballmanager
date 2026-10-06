@@ -4,7 +4,7 @@ alwaysApply: true
 # .cursorrules — Fußball-Manager PRD & Regeln
 
 ## Projekt-Identität
-- **Projektname**: FC Tycoon (Arbeitstitel)
+- **Projektname**: The Club
 - **Vision**: 2D Fußball-Manager mit Fokus auf **Talent-Entwicklung** statt Matches selbst zu spielen
 - **Referenz**: FIFA Manager 14 DNA + absolute Attribute (kein relatives Potential) + Varianz im Wachstum
 - **Match-Engine**: Bereits vorhanden unter `server/src/engine/`, **NICHT ANFASSEN** — nur Wrapper umschließen (Gesetz 4)

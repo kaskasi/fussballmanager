@@ -9,7 +9,7 @@
 
 ## Scope
 
-First playable narrative slice for FC Tycoon. Templates only — no Ollama in this milestone.
+First playable narrative slice for The Club. Templates only — no Ollama in this milestone.
 
 ## Player decisions (binding)
 

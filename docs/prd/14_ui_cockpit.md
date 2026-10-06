@@ -8,7 +8,7 @@
 
 ## Purpose
 
-Club-Cockpit für FC Tycoon: Räume statt Admin-Shell. Die Simulation ist weiter
+Club-Cockpit für The Club: Räume statt Admin-Shell. Die Simulation ist weiter
 als die Screens (Stand 2026-09-29). Diese PRD legt fest, wie gebaute Systeme
 *aussehen*, damit Feature-Stand und UI-Stand wieder zusammenfallen.
 

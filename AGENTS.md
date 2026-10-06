@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Project: Football Manager Game (working title). Full PRD: `docs/PRD.md` — check it before major architecture decisions.
+Project: **The Club** (football management sim). Full PRD: `docs/PRD.md` — check it before major architecture decisions.
 
 ## What this is
 A text- and event-driven football management sim (no 3D). An event-driven match engine is the single source of truth, consumed by both a live text commentary feed and a 2D top-down pitch visualization (SVG, icons/dots + ball).

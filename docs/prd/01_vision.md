@@ -8,7 +8,7 @@
 
 ## Purpose
 
-Produktvision, Ton und Erzählregeln für FC Tycoon. Das Spiel verbindet eine
+Produktvision, Ton und Erzählregeln für **The Club**. Das Spiel verbindet eine
 harte Fußball-Management-Simulation mit der menschlichen Geschichte eines
 fiktionalen Underdog-Vereins und seiner lokalen Gemeinschaft.
 
@@ -30,7 +30,7 @@ verlorene Talente echte Folgen haben.
 
 Die Referenz ist das Zusammenspiel aus Fußball-Management und
 Ensemble-Erzählung, wie es gute Fußball-Dokumentationen und Sportgeschichten
-leisten. FC Tycoon übernimmt weder reale Clubs noch geschützte Figuren,
+leisten. The Club übernimmt weder reale Clubs noch geschützte Figuren,
 Handlungen, Namen, Dialoge oder visuelle Identitäten.
 
 ---

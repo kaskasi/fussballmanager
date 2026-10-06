@@ -12,6 +12,7 @@
     "dev:server": "npm run dev -w @fussballmanager/server",
     "dev:worker": "npm run dev -w @fussballmanager/worker",
     "build": "vite build",
+    "check:worker-assets": "node scripts/check-worker-asset-sizes.mjs",
     "deploy:cloudflare": "npm run build && npm run deploy -w @fussballmanager/worker",
     "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w @fussballmanager/shared && npm run typecheck -w @fussballmanager/server && npm run typecheck -w @fussballmanager/worker",
     "test": "npm test -w @fussballmanager/shared && npm test -w @fussballmanager/server",

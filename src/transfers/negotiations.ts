@@ -161,6 +161,28 @@ export function startNegotiation(
   };
 }
 
+/** UI shell when negotiation state is not persisted yet (preview / open error). */
+export function draftNegotiationPreview(
+  player: Player,
+  season: number,
+  week: number,
+): TransferNegotiation {
+  const asking = sellerAskingPrice(player, season);
+  return {
+    id: `neg_preview_${player.id}`,
+    player_id: player.id,
+    seller_club_id: player.club_id ?? "cl_rival_pool",
+    asking_price: asking,
+    current_offer: Math.round(asking * 0.92),
+    round: 1,
+    patience_rounds_left: MAX_NEGOTIATION_ROUNDS,
+    status: "active",
+    failed_lowball_count: 0,
+    last_reaction: null,
+    week,
+  };
+}
+
 export function activeNegotiation(
   state: TransferState,
   playerId: string,
@@ -289,6 +311,42 @@ export function submitNegotiationRound(
   };
 }
 
+function acceptNegotiationAtFee(
+  state: TransferState,
+  playerId: string,
+  feeOffer: number,
+): NegotiationRoundResult {
+  const current = activeNegotiation(state, playerId);
+  if (!current) {
+    throw new Error("No active negotiation for player");
+  }
+  const ratio = feeOffer / Math.max(1, current.asking_price);
+  const accepted: TransferNegotiation = {
+    ...current,
+    current_offer: feeOffer,
+    counter_offer: undefined,
+    status: "accepted",
+    last_reaction: "accept",
+    round: current.round,
+  };
+  const negotiations = (state.negotiations ?? []).map((entry) =>
+    entry.id === current.id ? accepted : entry,
+  );
+  const resolved = resolveOffer(
+    submitPurchaseOffer(state, playerId, feeOffer, current.week),
+    `offer_${playerId}_${current.week}`,
+    "accept",
+    current.asking_price,
+  );
+  return {
+    state: { ...resolved.state, negotiations },
+    negotiation: accepted,
+    accepted: true,
+    message: reactionMessage("accept", ratio),
+  };
+}
+
+/** Player explicitly accepts the seller counter — always closes at counter fee (PRD 05.3). */
 export function acceptCounterOffer(
   state: TransferState,
   playerId: string,
@@ -297,7 +355,7 @@ export function acceptCounterOffer(
   if (!current?.counter_offer) {
     throw new Error("No counter-offer to accept");
   }
-  return submitNegotiationRound(state, playerId, current.counter_offer);
+  return acceptNegotiationAtFee(state, playerId, current.counter_offer);
 }
 
 export function counterFee(sellerValue: number, ratio: number): number {

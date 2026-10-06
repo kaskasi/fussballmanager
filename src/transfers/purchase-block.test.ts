@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { defaultClubFinances } from "../economy/club-finances.ts";
-import { cannotOpenPurchaseReason, cannotPayTransferFeeReason } from "./purchase-block.ts";
+import {
+  cannotOpenPurchaseReason,
+  cannotPayTransferFeeReason,
+  cannotSubmitPurchaseOfferReason,
+} from "./purchase-block.ts";
 
 describe("purchase block reasons", () => {
-  it("names a closed transfer window", () => {
-    expect(cannotOpenPurchaseReason(6, true)).toMatch(/Transferfenster zu/);
-    expect(cannotOpenPurchaseReason(1, true)).toBeNull();
+  it("names a closed transfer window only when submitting", () => {
+    expect(cannotOpenPurchaseReason(6, true)).toBeNull();
+    expect(cannotSubmitPurchaseOfferReason(6, true)).toMatch(/Transferfenster zu/);
+    expect(cannotSubmitPurchaseOfferReason(1, true)).toBeNull();
   });
 
   it("names a missing scout target", () => {

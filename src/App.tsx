@@ -59,16 +59,8 @@ import {
 } from "./economy/club-finances.ts";
 import { clearPlayerFromLineup } from "./match/lineup-board.ts";
 import { formatPlayerName } from "./types/player-display.ts";
-import {
-  acceptCounterOffer,
-  activeNegotiation,
-  completePurchase,
-  sellerAskingPrice,
-  startNegotiation,
-  submitNegotiationRound,
-  toggleShortlist,
-} from "./transfers/negotiations.ts";
-import { TransferNegotiationModal } from "./ui/components/TransferNegotiationModal.tsx";
+import { sellerAskingPrice, toggleShortlist } from "./transfers/negotiations.ts";
+import { useTransferNegotiation } from "./ui/components/TransferNegotiationHost.tsx";
 import { SpendConfirmSheet } from "./ui/components/SpendConfirmSheet.tsx";
 import {
   infrastructureCostForWeek,
@@ -186,13 +178,9 @@ import { postfachOpenCount } from "./inbox/postfach-open-count.ts";
 import { PostfachScreen } from "./ui/screens/PostfachScreen.tsx";
 import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
 import { NoticeToast, SaveToast } from "./ui/components/SaveToast.tsx";
-import {
-  cannotOpenPurchaseReason,
-  cannotPayTransferFeeReason,
-} from "./transfers/purchase-block.ts";
-import { resolvePurchaseTarget } from "./transfers/resolve-purchase-target.ts";
 import { YouthCampus } from "./ui/screens/YouthCampus";
 import { CalendarScreen } from "./ui/screens/CalendarScreen.tsx";
+import { collectCalendarMilestones } from "./ui/calendar/calendar-milestones.ts";
 import { canBuyAcademyUpgrade, ACADEMY_FACILITIES } from "./youth/academy.ts";
 import {
   buyYouthCamp,
@@ -325,8 +313,6 @@ export default function App() {
   const [saveManagerOpen, setSaveManagerOpen] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [foreignPlayerId, setForeignPlayerId] = useState<string | null>(null);
-  const [negotiationPlayerId, setNegotiationPlayerId] = useState<string | null>(null);
-  const [negotiationMessage, setNegotiationMessage] = useState<string | null>(null);
   const [postfachItemId, setPostfachItemId] = useState<string | null>(null);
   const [campLeaderDismissCampId, setCampLeaderDismissCampId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
@@ -446,6 +432,20 @@ export default function App() {
   }, [world.clubs, league.player_club_id, league.club_ids, league.results]);
 
   const scoutCapacity = scoutNetworkCapacity(scoutNetwork);
+  const calendarMilestones = useMemo(
+    () =>
+      collectCalendarMilestones({
+        season,
+        week,
+        weekday,
+        clubId: session.clubId,
+        players,
+        individualPrograms,
+        youthCamps,
+        stadium,
+      }),
+    [season, week, weekday, session.clubId, players, individualPrograms, youthCamps, stadium],
+  );
 
   function sessionWithEvent(
     current: ReturnType<typeof sessionFromSave>,
@@ -466,6 +466,29 @@ export default function App() {
     });
     flashSaveToast();
   }, [activeSlot, flashSaveToast]);
+
+  const {
+    handleOpenNegotiation,
+    negotiationOverlay,
+    negotiationUiPhase,
+    foreignProfileTarget,
+  } = useTransferNegotiation({
+    session,
+    patchSession,
+    sessionWithEvent,
+    finances,
+    board,
+    players,
+    scoutBoard,
+    rivalPlayers,
+    transferState,
+    season,
+    week,
+    foreignPlayerId,
+    setForeignPlayerId,
+    setProfileId,
+    flashNotice,
+  });
 
   const requestClubSpend = useCallback(
     (
@@ -1474,186 +1497,6 @@ export default function App() {
     [patchSession],
   );
 
-  const finalizePurchase = useCallback(
-    (playerId: string, fee: number) => {
-      let blocked: string | null = null;
-      patchSession((current) => {
-        const target = resolvePurchaseTarget(current.scoutBoard, playerId, current.rivalPlayers);
-        const openReason = cannotOpenPurchaseReason(current.week, Boolean(target));
-        if (openReason) {
-          blocked = openReason;
-          return sessionWithEvent(current, "transfer", openReason);
-        }
-        const payReason = cannotPayTransferFeeReason(current.finances, fee);
-        if (payReason) {
-          blocked = payReason;
-          return sessionWithEvent(current, "finance", payReason);
-        }
-        if (!target) {
-          blocked = t("transfer.purchase.targetUnavailable");
-          return sessionWithEvent(current, "transfer", blocked);
-        }
-        if (current.players.some((player) => player.id === playerId)) {
-          blocked = t("transfer.purchase.alreadySigned");
-          return sessionWithEvent(current, "transfer", blocked);
-        }
-
-        const bought = completePurchase(target.player, current.clubId, current.season);
-        const shifted = processTransferBreakout(bought, {
-          masterSeed: current.masterSeed,
-          worldEventId: `purchase_${current.season}_${current.week}_${playerId}_${current.clubId}`,
-          week: current.week,
-          previousMorale: target.player.state.morale,
-          matchFitPoor: false,
-        });
-        const finalized = shifted.player;
-        const targets = { ...current.scoutBoard.targets };
-        delete targets[playerId];
-        const purchaseRecord = createPurchaseRecord(
-          finalized,
-          fee,
-          current.season,
-          current.week,
-          target.player.club_id ?? "cl_rival_pool",
-          current.clubId,
-        );
-        let next = sessionWithEvent(
-          {
-            ...current,
-            players: [...current.players, finalized],
-            rivalPlayers: current.rivalPlayers.filter((player) => player.id !== playerId),
-            transferState: appendTransferRecord(current.transferState, purchaseRecord),
-            scoutBoard: { ...current.scoutBoard, targets },
-            finances: applyTransferFee(current.finances, fee, current.week),
-          },
-          "transfer",
-          `Zugang ${formatPlayerName(finalized)} für ${formatClubCash(fee)}.`,
-        );
-        for (const narrative of shifted.narratives) {
-          next = sessionWithEvent(next, "profile", `💡 ${narrative.narrative}`);
-        }
-        return next;
-      });
-      if (blocked) {
-        flashNotice(blocked);
-        return;
-      }
-      setForeignPlayerId(null);
-      setNegotiationPlayerId(null);
-      setNegotiationMessage(null);
-    },
-    [flashNotice, patchSession],
-  );
-
-  const handleOpenNegotiation = useCallback(
-    (playerId: string) => {
-      let started = false;
-      let blocked: string | null = null;
-      patchSession((current) => {
-        const target = resolvePurchaseTarget(current.scoutBoard, playerId, current.rivalPlayers);
-        const reason = cannotOpenPurchaseReason(current.week, Boolean(target));
-        if (reason) {
-          blocked = reason;
-          return sessionWithEvent(current, "transfer", reason);
-        }
-        if (!target) {
-          blocked = t("transfer.purchase.targetUnavailable");
-          return sessionWithEvent(current, "transfer", blocked);
-        }
-        const deal = startNegotiation(
-          current.transferState,
-          target.player,
-          target.player.club_id ?? "cl_rival_pool",
-          current.season,
-          current.week,
-        );
-        started = true;
-        return { ...current, transferState: deal.state };
-      });
-      if (started) {
-        setNegotiationPlayerId(playerId);
-        setNegotiationMessage(null);
-        return;
-      }
-      flashNotice(blocked ?? t("transfer.purchase.negotiationFailed"));
-    },
-    [flashNotice, patchSession],
-  );
-
-  const handleNegotiationOffer = useCallback(
-    (fee: number) => {
-      if (!negotiationPlayerId) return;
-      const payReason = cannotPayTransferFeeReason(finances, fee);
-      if (payReason) {
-        flashNotice(payReason);
-        setNegotiationMessage(payReason);
-        return;
-      }
-      let accepted = false;
-      let missingTarget = false;
-      patchSession((current) => {
-        const target = resolvePurchaseTarget(
-          current.scoutBoard,
-          negotiationPlayerId,
-          current.rivalPlayers,
-        );
-        if (!target) {
-          missingTarget = true;
-          return current;
-        }
-        const round = submitNegotiationRound(current.transferState, negotiationPlayerId, fee);
-        setNegotiationMessage(round.message);
-        accepted = round.accepted;
-        if (!round.accepted && round.negotiation.status !== "active") {
-          setNegotiationPlayerId(null);
-          flashNotice(round.message);
-        }
-        if (round.moralePenalty) {
-          return sessionWithEvent(
-            { ...current, transferState: round.state },
-            "transfer",
-            `Verhandlung gescheitert — Spieler-Moral −${round.moralePenalty}.`,
-          );
-        }
-        return { ...current, transferState: round.state };
-      });
-      if (missingTarget) {
-        flashNotice(t("transfer.purchase.targetUnavailable"));
-        return;
-      }
-      if (accepted) finalizePurchase(negotiationPlayerId, fee);
-    },
-    [finalizePurchase, finances, flashNotice, negotiationPlayerId, patchSession, week],
-  );
-
-  const handleAcceptCounter = useCallback(() => {
-    if (!negotiationPlayerId) return;
-    let acceptedFee: number | null = null;
-    let failMessage: string | null = null;
-    patchSession((current) => {
-      const round = acceptCounterOffer(current.transferState, negotiationPlayerId);
-      setNegotiationMessage(round.message);
-      if (round.accepted && round.negotiation.counter_offer) {
-        acceptedFee = round.negotiation.counter_offer;
-      } else if (!round.accepted) {
-        failMessage = round.message;
-      }
-      setNegotiationPlayerId(null);
-      return { ...current, transferState: round.state };
-    });
-    if (failMessage) {
-      flashNotice(failMessage);
-      return;
-    }
-    if (acceptedFee === null) return;
-    const payReason = cannotPayTransferFeeReason(finances, acceptedFee);
-    if (payReason) {
-      flashNotice(payReason);
-      return;
-    }
-    finalizePurchase(negotiationPlayerId, acceptedFee);
-  }, [finalizePurchase, finances, flashNotice, negotiationPlayerId, patchSession]);
-
   const handleProfileAction = useCallback(
     (playerId: string, action: PlayerProfileAction) => {
       patchSession((current) => {
@@ -1878,15 +1721,6 @@ export default function App() {
 
   const jobOffers = listJobOffers(board.employer_club_id, season, league);
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
-  const foreignTarget = foreignPlayerId
-    ? resolvePurchaseTarget(scoutBoard, foreignPlayerId, rivalPlayers)
-    : null;
-
-  useEffect(() => {
-    if (!foreignPlayerId || foreignTarget) return;
-    flashNotice(t("transfer.purchase.profileUnavailable"));
-    setForeignPlayerId(null);
-  }, [flashNotice, foreignPlayerId, foreignTarget]);
   const openDecisionCount = postfachOpenCount(youthInbox, players, youthCamps);
 
   const closePlayerProfile = useCallback(() => {
@@ -1902,8 +1736,8 @@ export default function App() {
     if (profilePlayer) {
       return { title: formatPlayerName(profilePlayer), onBack: closePlayerProfile };
     }
-    if (foreignTarget) {
-      return { title: formatPlayerName(foreignTarget.player), onBack: closeForeignProfile };
+    if (foreignProfileTarget) {
+      return { title: formatPlayerName(foreignProfileTarget.player), onBack: closeForeignProfile };
     }
     const hubDrilldownTitle: Partial<Record<Screen, string>> = {
       postfach: t("shell.nav.postfach"),
@@ -1916,7 +1750,7 @@ export default function App() {
       return { title: drillTitle, onBack: () => setScreen("hub") };
     }
     return null;
-  }, [closeForeignProfile, closePlayerProfile, foreignTarget, profilePlayer, screen, locale]);
+  }, [closeForeignProfile, closePlayerProfile, foreignProfileTarget, profilePlayer, screen, locale]);
 
   careerMatchFlowRef.current = careerMatchSetup != null;
   matchNavActionRef.current = matchNavAction;
@@ -2010,8 +1844,8 @@ export default function App() {
     if (profilePlayer) {
       return joinDocumentTitle(formatPlayerName(profilePlayer), shellClub.name, product);
     }
-    if (foreignTarget) {
-      return joinDocumentTitle(formatPlayerName(foreignTarget.player), t("shell.nav.scouting"), product);
+    if (foreignProfileTarget) {
+      return joinDocumentTitle(formatPlayerName(foreignProfileTarget.player), t("shell.nav.scouting"), product);
     }
     if (screen === "hub") {
       return joinDocumentTitle(shellClub.name, formatSeasonLabel(season), product);
@@ -2019,7 +1853,7 @@ export default function App() {
     return joinDocumentTitle(t(SCREEN_DOCUMENT_TITLE_KEYS[screen]), shellClub.name, product);
   }, [
     careerMatchSetup,
-    foreignTarget,
+    foreignProfileTarget,
     profilePlayer,
     screen,
     season,
@@ -2084,7 +1918,9 @@ export default function App() {
     );
   }
 
-  if (foreignTarget) {
+  if (foreignProfileTarget) {
+    const foreignView = foreignProfileTarget;
+    const purchaseCelebration = negotiationUiPhase === "won";
     return (
       <>
         <AppChrome
@@ -2104,60 +1940,45 @@ export default function App() {
           onAccessibilityChange={setAccessibility}
         />
         <PlayerProfile
-          player={foreignTarget.player}
-          owned={false}
-          scoutEstimate={foreignTarget.estimate}
-          scouting={foreignTarget.assigned}
+          player={foreignView.player}
+          owned={purchaseCelebration}
+          scoutEstimate={foreignView.estimate}
+          scouting={foreignView.assigned}
           week={week}
           season={season}
           transferWindowOpen={isTransferWindowOpen(week)}
           transferBudget={transferBudget(finances)}
-          purchasePrice={sellerAskingPrice(foreignTarget.player, season)}
-          shortlisted={transferState.shortlist.includes(foreignTarget.player.id)}
-          onAssignScout={() => handleAssignScout(foreignTarget.player.id)}
-          onToggleShortlist={() => handleToggleShortlist(foreignTarget.player.id)}
-          onPurchase={() => handleOpenNegotiation(foreignTarget.player.id)}
+          purchasePrice={sellerAskingPrice(foreignView.player, season)}
+          shortlisted={transferState.shortlist.includes(foreignView.player.id)}
+          onAssignScout={() => handleAssignScout(foreignView.player.id)}
+          onToggleShortlist={() => handleToggleShortlist(foreignView.player.id)}
+          onPurchase={
+            purchaseCelebration ? undefined : () => handleOpenNegotiation(foreignView.player.id)
+          }
           actionFeedback={profileFeedback}
           onTransferNotice={(message) => {
             flashNotice(message);
           }}
-          preContractBonus={preContractOffer(foreignTarget.player, season, week)?.signingBonus}
+          preContractBonus={preContractOffer(foreignView.player, season, week)?.signingBonus}
           preContractBlockedReason={(() => {
             const eligibility = canSignPreContract(
-              foreignTarget.player,
+              foreignView.player,
               session.clubId,
               season,
               week,
               transferState.pending_transfers ?? [],
             );
             if (!eligibility.allowed) return eligibility.reason ?? null;
-            const offer = preContractOffer(foreignTarget.player, season, week);
+            const offer = preContractOffer(foreignView.player, season, week);
             if (!offer) return "Kein Vertrag.";
             if (!canAffordTransfer(finances, offer.signingBonus)) {
               return `Signaturbonus ca. ${formatClubCash(offer.signingBonus)} — Budget zu niedrig.`;
             }
             return null;
           })()}
-          onPreContract={() => handlePreContract(foreignTarget.player.id)}
+          onPreContract={() => handlePreContract(foreignView.player.id)}
         />
-        {negotiationPlayerId && activeNegotiation(transferState, negotiationPlayerId) ? (
-          <TransferNegotiationModal
-            player={foreignTarget.player}
-            negotiation={activeNegotiation(transferState, negotiationPlayerId)!}
-            transferBudget={transferBudget(finances)}
-            finances={finances}
-            weeklyWageBill={weeklyWageBill(players, session.clubId)}
-            boardCashFloor={boardCashFloor(board)}
-            scoutIntelKnown={Boolean(foreignTarget.estimate)}
-            message={negotiationMessage}
-            onSubmitOffer={handleNegotiationOffer}
-            onAcceptCounter={handleAcceptCounter}
-            onWalkAway={() => {
-              setNegotiationPlayerId(null);
-              setNegotiationMessage(null);
-            }}
-          />
-        ) : null}
+        {negotiationOverlay}
         {saveManagerOverlay}
         {spendConfirmOverlay}
         {noticeOverlay}
@@ -2222,6 +2043,7 @@ export default function App() {
               : undefined
           }
         />
+        {negotiationOverlay}
         {saveManagerOverlay}
         {spendConfirmOverlay}
         {noticeOverlay}
@@ -2485,7 +2307,13 @@ export default function App() {
         />
       ) : null}
       {screen === "calendar" ? (
-        <CalendarScreen season={season} week={week} weekday={weekday} league={league} />
+        <CalendarScreen
+          season={season}
+          week={week}
+          weekday={weekday}
+          league={league}
+          milestones={calendarMilestones}
+        />
       ) : null}
       {clubProfileId && screen !== "leagues" ? (
         <ClubProfileModal

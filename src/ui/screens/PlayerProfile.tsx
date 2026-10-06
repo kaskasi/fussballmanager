@@ -50,8 +50,7 @@ import {
 import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
 import { transferWindowHint } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
-import { cannotOpenPurchaseReason } from "../../transfers/purchase-block.ts";
-import { BlindPurchaseWarningModal } from "../components/BlindPurchaseWarningModal.tsx";
+import { transferWindowClosedReason } from "../../transfers/purchase-block.ts";
 import { ContractTalksModal } from "../components/ContractTalksModal.tsx";
 import { SaleConfirmModal } from "../components/SaleConfirmModal.tsx";
 import { formatPlayerName } from "../../types/player-display.ts";
@@ -194,14 +193,12 @@ export function PlayerProfile({
   const [tab, setTab] = useState<ProfileTab>("attributes");
   const [talksOpen, setTalksOpen] = useState(false);
   const [offer, setOffer] = useState<ContractOffer | null>(null);
-  const [blindBuyOpen, setBlindBuyOpen] = useState(false);
   const [saleConfirmOpen, setSaleConfirmOpen] = useState(false);
 
   useEffect(() => {
     setTalksOpen(false);
     setOffer(null);
     setTab("attributes");
-    setBlindBuyOpen(false);
     setSaleConfirmOpen(false);
   }, [player.id]);
   const menuItems = profileMenuItems(player, owned, season, week ?? 1);
@@ -227,10 +224,9 @@ export function PlayerProfile({
     listPrice !== undefined &&
     transferBudget !== undefined &&
     transferBudget < listPrice;
-  const purchaseBlockedReason = cannotOpenPurchaseReason(week, true);
-  const purchaseHardBlocked = Boolean(purchaseBlockedReason);
+  const windowClosedHint = !transferWindowOpen ? transferWindowClosedReason(week) : null;
   const purchaseHintText =
-    purchaseBlockedReason ??
+    windowClosedHint ??
     (!hasScoutIntel
       ? t("transfer.profile.noScoutBuy")
       : listPriceExceedsBudget
@@ -239,7 +235,6 @@ export function PlayerProfile({
           })
         : t("transfer.profile.offerMarket"));
   const transferNotice =
-    purchaseBlockedReason ??
     (actionFeedback &&
     /nicht möglich|zu niedrig|Fenster zu|nur im|Scout-Ziel|Transfer-Topf/.test(actionFeedback)
       ? actionFeedback
@@ -251,14 +246,6 @@ export function PlayerProfile({
 
   function handlePurchaseClick() {
     if (!onPurchase) return;
-    if (purchaseHardBlocked) {
-      notifyTransfer(purchaseBlockedReason ?? t("transfer.profile.purchaseGeneric"));
-      return;
-    }
-    if (!hasScoutIntel) {
-      setBlindBuyOpen(true);
-      return;
-    }
     onPurchase();
   }
 
@@ -512,14 +499,8 @@ export function PlayerProfile({
                       <ProfileActionButton
                         label={t("transfer.profile.buy")}
                         amount={purchaseAmountLabel}
-                        className={[
-                          hasScoutIntel || scouting ? "ui-btn--primary" : "ui-btn--ghost",
-                          purchaseHardBlocked ? "is-blocked" : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
+                        className={hasScoutIntel || scouting ? "ui-btn--primary" : "ui-btn--ghost"}
                         onClick={handlePurchaseClick}
-                        aria-disabled={purchaseHardBlocked}
                       />
                     </Hint>
                   </div>
@@ -730,17 +711,6 @@ export function PlayerProfile({
           </button>
         ) : null}
       </div>
-
-      {blindBuyOpen ? (
-        <BlindPurchaseWarningModal
-          player={player}
-          onCancel={() => setBlindBuyOpen(false)}
-          onConfirm={() => {
-            setBlindBuyOpen(false);
-            onPurchase?.();
-          }}
-        />
-      ) : null}
 
       {saleConfirmOpen && saleOffer !== undefined && onSell ? (
         <SaleConfirmModal

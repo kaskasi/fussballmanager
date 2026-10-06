@@ -2631,7 +2631,7 @@ body {
   font-size: 0.85rem;
 }
 
-/* leagues-screen-tabs — see design-consolidation.css (fm-tab semantics) */
+/* leagues-screen-tabs — see game-surfaces.css (fm-tab semantics) */
 
 .leagues-screen-own {
   font-weight: 600;
@@ -6318,6 +6318,119 @@ body {
   font-weight: 700;
 }
 
+.training-retrain-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  border-radius: 6px;
+  background: var(--panel-inset, rgba(0, 0, 0, 0.15));
+}
+
+.training-retrain-chance {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 0.25rem 0.5rem;
+  align-items: center;
+}
+
+.training-retrain-chance-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+.training-retrain-chance-value {
+  font-size: 1.25rem;
+  justify-self: end;
+}
+
+.training-retrain-chance-meter {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 0.5rem;
+}
+
+.training-retrain-lanes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.training-retrain-lanes.is-good .training-retrain-lane-chip {
+  border-color: var(--state-good, #6ecf8a);
+}
+
+.training-retrain-lanes.is-mid .training-retrain-lane-chip {
+  border-color: var(--state-mid, #d4b85c);
+}
+
+.training-retrain-lanes.is-low .training-retrain-lane-chip {
+  border-color: var(--state-low, #c97a6a);
+}
+
+.training-retrain-lane-chip {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  min-width: 4.5rem;
+}
+
+.training-retrain-lane-code {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.training-retrain-lane-name {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.training-retrain-lanes-arrow {
+  opacity: 0.65;
+  font-weight: 700;
+}
+
+.training-retrain-mental {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.training-retrain-mental li {
+  display: grid;
+  grid-template-columns: 1.25rem 1fr;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.training-retrain-mental-bar {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  letter-spacing: -0.05em;
+  opacity: 0.9;
+}
+
+.training-retrain-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.training-retrain-hint.is-muted {
+  opacity: 0.65;
+}
+
 .training-individual-actions {
   display: flex;
   flex-wrap: wrap;
@@ -8571,11 +8684,13 @@ body {
   gap: 0.35rem;
 }
 
-.negotiation-offer input {
+.negotiation-offer-amount {
+  font-size: 1.05rem;
+}
+
+.negotiation-offer-slider {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 0.5rem;
+  accent-color: var(--waldgruen, #059669);
 }
 
 .negotiation-ratio {
@@ -8605,6 +8720,117 @@ body {
   background: #059669;
   border-color: #059669;
   color: #fff;
+}
+
+.negotiation-btn-primary.is-disabled {
+  background: #94a3b8;
+  border-color: #94a3b8;
+  color: #f8fafc;
+  cursor: not-allowed;
+  opacity: 0.92;
+}
+
+.negotiation-btn.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+  color: #64748b;
+}
+
+.negotiation-open-error {
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.9rem;
+}
+
+.negotiation-resolution {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.negotiation-resolution.is-success {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #6ee7b7;
+}
+
+.negotiation-resolution.is-failure {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.negotiation-rules {
+  margin: 1rem 0 0;
+  padding: 0.75rem;
+  border-radius: 0.65rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.negotiation-rules-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.negotiation-rules-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.negotiation-rule {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  font-size: 0.85rem;
+}
+
+.negotiation-rule-body {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.negotiation-rule-body strong {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.negotiation-rule-body span {
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.negotiation-rule-icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.negotiation-rule.is-ok .negotiation-rule-icon {
+  color: #059669;
+}
+
+.negotiation-rule.is-blocked .negotiation-rule-icon {
+  color: #b91c1c;
+}
+
+.negotiation-rules-footnote {
+  margin: 0.65rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
 }
 
 .negotiation-btn-muted {
@@ -8671,16 +8897,20 @@ body {
   position: sticky;
   top: 0;
   z-index: 50;
+  gap: 0.75rem;
+  background: transparent;
+  border: 0;
+}
+
+/* Layout/padding: game-surfaces.css (.app-nav.club-shell-header) */
+.app-nav:not(.club-shell-header) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
   max-width: 80rem;
   margin: 0 auto;
   padding: 0 1.5rem;
   min-height: var(--club-header-height, 56px);
-  background: transparent;
-  border: 0;
 }
 
 .club-shell-identity {

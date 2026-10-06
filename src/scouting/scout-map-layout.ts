@@ -1,9 +1,10 @@
 import { realCityByName } from "../world/real-cities.ts";
 import {
+  BREMEN_CITY_GEO_BOUNDS,
+  BREMEN_CITY_SVG_VIEWBOX,
   extractPlaceFromClubName,
   geoToLocalMap,
   geoToReliefSvg,
-  HANSE_CITY_MAP_BOUNDS,
   mapCoordsForPlace,
   SCOUT_RELIEF_HEIGHT,
   SCOUT_RELIEF_WIDTH,
@@ -25,12 +26,17 @@ export interface ScoutMapNode {
 
 export type ScoutZoneMapMode = "relief" | "city";
 
+export const SCOUT_BREMEN_CITY_MAP_ASSET = "/assets/scout-maps/bremen-city.svg";
+
 export interface ScoutZoneMapLayout {
   zoneId: string;
   mapMode: ScoutZoneMapMode;
   flavorAsset: string;
+  /** Detail map base layer (city SVG); flavor JPEG is grid-only. */
+  cityMapAsset?: string;
   reliefViewBox: string;
   cityMapBounds?: GeoBounds;
+  citySvgViewBox?: string;
   /** Road junctions / cities in relief coordinates. */
   anchorNodes: readonly Omit<ScoutMapNode, "careerClubId" | "discovered" | "scoutable">[];
   edges: readonly ScoutMapEdge[];
@@ -131,8 +137,10 @@ const HANSE_LAYOUT: Omit<ScoutZoneMapLayout, "anchorNodes"> = {
   zoneId: "hanse",
   mapMode: "city",
   flavorAsset: "/assets/scout-maps/flavor/hanse.jpg",
-  reliefViewBox: "0 0 100 100",
-  cityMapBounds: HANSE_CITY_MAP_BOUNDS,
+  cityMapAsset: SCOUT_BREMEN_CITY_MAP_ASSET,
+  reliefViewBox: BREMEN_CITY_SVG_VIEWBOX,
+  cityMapBounds: BREMEN_CITY_GEO_BOUNDS,
+  citySvgViewBox: BREMEN_CITY_SVG_VIEWBOX,
   edges: [
     { id: "h1", a: "bremen", b: "bremerhaven", length: 22 },
     { id: "h2", a: "bremen", b: "hamburg", length: 26 },
@@ -227,7 +235,9 @@ export function buildZoneMapNodes(
   layout: ScoutZoneMapLayout,
   clubs: readonly ScoutMapClubPin[],
   activeClubScoutId?: string | null,
+  reliefViewBox?: string,
 ): ScoutMapNode[] {
+  const viewBox = reliefViewBox ?? layout.reliefViewBox;
   const visible = clubs.filter((club) => club.directoryVisible);
   const sorted = [...visible].sort((left, right) =>
     left.careerClubId.localeCompare(right.careerClubId),
@@ -239,9 +249,8 @@ export function buildZoneMapNodes(
     const geoCoords = place ? mapCoordsForPlace(place, layout) : null;
     const coords =
       geoCoords ??
-      clubPositionInZone(club.careerClubId, layout.reliefViewBox, index, sorted.length);
+      clubPositionInZone(club.careerClubId, viewBox, index, sorted.length);
     const scoutable =
-      !club.discovered &&
       club.directoryVisible &&
       (activeClubScoutId == null || activeClubScoutId === club.careerClubId);
     nodes.push({
@@ -266,7 +275,7 @@ export function clubsOnPath(
   const out: string[] = [];
   for (const nodeId of pathNodeIds) {
     const node = byId.get(nodeId);
-    if (!node?.careerClubId || node.discovered || !node.scoutable) continue;
+    if (!node?.careerClubId || !node.scoutable) continue;
     if (!out.includes(node.careerClubId)) out.push(node.careerClubId);
   }
   return out;
@@ -278,4 +287,19 @@ export function lastScoutableClubOnPath(
 ): string | null {
   const list = clubsOnPath(pathNodeIds, nodes);
   return list.length > 0 ? list[list.length - 1]! : null;
+}
+
+/** Career club ids visited in path order (for trip completion). */
+export function careerClubsOnPath(
+  pathNodeIds: readonly string[],
+  nodes: readonly ScoutMapNode[],
+): string[] {
+  const byId = new Map(nodes.map((node) => [node.id, node] as const));
+  const out: string[] = [];
+  for (const nodeId of pathNodeIds) {
+    const node = byId.get(nodeId);
+    if (!node?.careerClubId || out.includes(node.careerClubId)) continue;
+    out.push(node.careerClubId);
+  }
+  return out;
 }

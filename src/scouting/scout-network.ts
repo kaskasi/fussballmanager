@@ -1,7 +1,7 @@
 /**
  * F4.3 — Scout network tiers, capacity and observation accuracy (PRD 04.2).
  */
-import type { ObservationKind } from "./estimate-model.ts";
+import { applyObservation, type ObservationKind } from "./estimate-model.ts";
 import type { AbilityEstimate, PlayerKnowledge } from "./estimate-model.ts";
 import { DEFAULT_SCOUT_CAPACITY } from "./scout-assignments.ts";
 
@@ -160,7 +160,7 @@ export function fireScout(network: ScoutNetworkState, scoutId: string): ScoutNet
   return { scouts: network.scouts.filter((scout) => scout.id !== scoutId) };
 }
 
-const OBSERVATION_REDUCTION: Record<ObservationKind, number> = {
+const OBSERVATION_REDUCTION: Record<Exclude<ObservationKind, "map_club_visit">, number> = {
   live_match_view: 15,
   scout_visit_report: 8,
   video_review: 5,
@@ -174,7 +174,8 @@ export function applyObservationWithAccuracy(
   accuracyModifier: number,
 ): PlayerKnowledge {
   if (knowledge.status === "owned") return knowledge;
-  const base = OBSERVATION_REDUCTION[kind];
+  if (kind === "map_club_visit") return applyObservation(knowledge, kind);
+  const base = OBSERVATION_REDUCTION[kind satisfies Exclude<ObservationKind, "map_club_visit">];
   const reducesUncertaintyBy = Math.max(1, Math.round(base * accuracyModifier));
   return {
     status: "scouted",

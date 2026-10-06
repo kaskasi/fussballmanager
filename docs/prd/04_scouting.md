@@ -49,6 +49,7 @@ Scouting-System spezifizieren, das **Unsicherheit schätzt statt Werte zu leaken
   "observation_update_rule": {
     "live_match_view": { "reduces_uncertainty_by": 15, "samples": 1 },
     "scout_visit_report": { "reduces_uncertainty_by": 8, "samples": 1 },
+    "map_club_visit": { "multiplies_uncertainty_by": 0.667, "floor": 5, "samples": 1 },
     "video_review": { "reduces_uncertainty_by": 5, "samples": 1 },
     "trial_period": { "reduces_uncertainty_by": 25, "samples": 3 }
   },
@@ -173,7 +174,8 @@ Neue Spiele starten mit leerem Pool; Käufe und Verhandlungen sind ohne Pool-Ein
 | Schritt | Aktion | Ergebnis |
 |---|---|---|
 | Region | Bis zu **3** abgeschlossene **Regions-Scouts** pro Zone (Netzwerk-Tab / Karte) | `region_scout_tier` 1→3: Fremd-Verzeichnis wächst in Dritteln; Tier 3 = `discovered_region_ids` |
-| Verein | **Vereins-Scout** (nur sichtbare Clubs) | Profikader des Vereins → `scout_pool` + `discovered_club_ids` |
+| Verein | **Vereins-Scout** oder **Karten-Reise** (sichtbare Clubs) | Erster Besuch: Profikader → `scout_pool` + `visited_club_ids` (Crest auf Karte). Wiederholbesuche erlaubt. |
+| Map-Besuch | Jeder Stopp auf abgeschlossener Route | `uncertainty_range ← max(5, floor(range × 2/3))` für alle Pool-Spieler des Vereins |
 | Beobachten | Scout-Zuweisung / Aufträge wie bisher | CI-Bänder enger (04.1), nur für Pool-Spieler |
 
 **Sichtbarkeit Vereinsverzeichnis (36-Clubs-Welt, v1):**
@@ -182,7 +184,7 @@ Neue Spiele starten mit leerem Pool; Käufe und Verhandlungen sind ohne Pool-Ein
 - Clubs anderer Divisionen erscheinen **stückweise** nach Regions-Scout (⅓ / ⅔ / alle bei Tier 1–3).
 - Unbekannte Regionen ohne Liga-Gegner: keine Club-Liste, nur „Region scouten (0/3)“.
 
-Persistenz (`scout_board.discovery`): `region_scout_tier`, `discovered_region_ids`, `discovered_club_ids`, `scout_pool`.
+Persistenz (`scout_board.discovery`): `region_scout_tier`, `discovered_region_ids`, `visited_club_ids`, `discovered_club_ids` (Legacy-Alias), `scout_pool`.
 Aktive Jobs: `active_region_scout`, `active_club_scout` (Fortschritt 0–100, Wochen-Ticks in `advanceScoutWeek`).
 Migration: bestehende `targets`-Keys werden in den Pool übernommen; alle Karten-Zonen gelten als entdeckt (Save ≥ 60). Legacy `discovered_region_ids` → Tier 3 pro Zone (Save ≥ 62).
 

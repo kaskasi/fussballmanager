@@ -1013,3 +1013,23 @@ Source	Own work
  This vector image includes elements that have been taken or adapted from this file: Germany2 location map.svg (by NordNordWest).
  This vector image includes elements that have been taken or adapted from this file: Relief Map of Germany.png (by Виктор В).
 Author	TUBS Gallery
+
+
+
+MAP REGION HANSESTADT
+https://commons.wikimedia.org/wiki/File:Bremen_Germany_street_map_SVG.svg
+
+This file is made available under the Creative Commons CC0 1.0 Universal Public Domain Dedication.
+
+Description	
+English: Editable Vector Map of the city of Bremen, Germany, in SVG format.
+Can be edited in the following programs: Adobe Illustrator, CorelDraw, InkScape
+
+Principal streets and roads, names places, residential streets and roads, road number labels, water objects, land use areas.
+Date	15 July 2024
+Source	[1]
+Author	
+Kirill Shrayber
+
+Previously published: https://vectormap.net/free_vector_maps_downloads/bremen-germany-vector-map-in-adobe-illustrator-pdf-and-svg-free/
+Other versions	[2]

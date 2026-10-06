@@ -38,6 +38,7 @@ import { useT } from "../../i18n/react.ts";
 import { Hint } from "../components/Hint.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
+import { ScoutMapJobsPanel } from "../components/ScoutMapJobsPanel.tsx";
 import { ScoutRegionMap } from "../components/ScoutRegionMap.tsx";
 import { ScoutRegionDetailScreen } from "../components/ScoutRegionDetailScreen.tsx";
 import { buildScoutDiscoveryMapModel } from "../../scouting/scout-region-map.ts";
@@ -100,7 +101,10 @@ export function ScoutingCenter({
   playerDivisionId,
   activeClubScout,
   activeRegionScout,
-  onScoutClub,
+  activeScoutTrip,
+  scoutTripQueue,
+  tripQueueLength,
+  onEnqueueScoutTrip,
   onScoutRegion,
   filters,
   onFiltersChange,
@@ -124,6 +128,7 @@ export function ScoutingCenter({
   onToggleShortlist,
   initialTab,
   onInitialTabApplied,
+  onScoutMapDetailChange,
 }: {
   targets: BoardTarget[];
   rivalPlayers: readonly Player[];
@@ -132,7 +137,13 @@ export function ScoutingCenter({
   playerDivisionId: WorldDivisionId;
   activeClubScout?: ActiveClubScout | null;
   activeRegionScout?: ActiveRegionScout | null;
-  onScoutClub: (careerClubId: string, route?: ScoutRouteScore) => void;
+  activeScoutTrip?: import("../../scouting/scout-trip.ts").ActiveScoutTrip | null;
+  scoutTripQueue?: readonly import("../../scouting/scout-trip.ts").ScoutTripPlan[];
+  tripQueueLength?: number;
+  onEnqueueScoutTrip: (
+    zoneId: string,
+    input: { pathNodeIds: string[]; targetClubId: string; score: ScoutRouteScore },
+  ) => void;
   onScoutRegion: (zoneId: string) => void;
   filters: MarketFilters;
   onFiltersChange: (filters: MarketFilters) => void;
@@ -156,10 +167,22 @@ export function ScoutingCenter({
   onToggleShortlist: (playerId: string) => void;
   initialTab?: ScoutingInitialTab | null;
   onInitialTabApplied?: () => void;
+  /** When region detail map is open, shell header shows back (replaces crest). */
+  onScoutMapDetailChange?: (open: boolean, onBack: () => void) => void;
 }) {
   const t = useT();
   const [tab, setTab] = useState<ScoutingTab>("hits");
   const [detailZoneId, setDetailZoneId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!onScoutMapDetailChange) return;
+    if (detailZoneId == null) {
+      onScoutMapDetailChange(false, () => {});
+      return;
+    }
+    onScoutMapDetailChange(true, () => setDetailZoneId(null));
+    return () => onScoutMapDetailChange(false, () => {});
+  }, [detailZoneId, onScoutMapDetailChange]);
   const mapModel = useMemo(
     () =>
       buildScoutDiscoveryMapModel({
@@ -295,10 +318,11 @@ export function ScoutingCenter({
               <ScoutRegionDetailScreen
                 zone={detailZone}
                 zoneLabel={detailZone.label}
-                activeClubScout={activeClubScout}
-                onBack={() => setDetailZoneId(null)}
-                onStartClubScout={(careerClubId, score) => {
-                  onScoutClub(careerClubId, score);
+                activeScoutTrip={activeScoutTrip}
+                tripQueueLength={tripQueueLength}
+                worldClubs={worldClubs}
+                onEnqueueTrip={(input) => {
+                  onEnqueueScoutTrip(detailZone.id, input);
                   setDetailZoneId(null);
                 }}
               />
@@ -330,6 +354,12 @@ export function ScoutingCenter({
 
       {tab === "hits" ? (
         <div className="fm-tab-panel">
+          <ScoutMapJobsPanel
+            activeTrip={activeScoutTrip}
+            tripQueue={scoutTripQueue}
+            scoutNetwork={scoutNetwork}
+            worldClubs={worldClubs}
+          />
           <section className="scouting-assignments game-panel scouting-section" aria-label={t("scouting.assignments.aria")}>
             <header className="scouting-assignments-head">
               <h2>{t("scouting.assignments.title")}</h2>

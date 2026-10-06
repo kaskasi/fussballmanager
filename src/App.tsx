@@ -28,12 +28,14 @@ import {
   toggleScoutAssignment,
 } from "./scouting/scout-board.ts";
 import {
-  canStartClubScout,
   canStartRegionScout,
   normalizeDiscovery,
-  startClubScoutJob,
   startRegionScoutJob,
 } from "./scouting/scout-discovery.ts";
+import { buildZoneMapNodes, layoutForZone } from "./scouting/scout-map-layout.ts";
+import { buildScoutDiscoveryMapModel } from "./scouting/scout-region-map.ts";
+import { canEnqueueScoutTrip, enqueueScoutTrip } from "./scouting/scout-trip-queue.ts";
+import type { ScoutRouteScore } from "./scouting/scout-route-puzzle.ts";
 import { worldCareerClubId, type WorldDivisionId } from "./world/world-generator.ts";
 import { ArrowLeft } from "lucide-react";
 import { ClubCrest } from "./ui/components/ClubCrest.tsx";
@@ -364,6 +366,7 @@ export default function App() {
   const [scoutingInitialTab, setScoutingInitialTab] = useState<"network" | "hits" | null>(
     null,
   );
+  const [scoutMapDetailBack, setScoutMapDetailBack] = useState<(() => void) | null>(null);
   const [pendingWatchedMatch, setPendingWatchedMatch] = useState<WatchedPlayerMatch | null>(null);
   const [pendingSpend, setPendingSpend] = useState<{
     title: string;
@@ -408,6 +411,10 @@ export default function App() {
     applyAccessibilityPreferences(accessibility);
     saveAccessibilityPreferences(accessibility);
   }, [accessibility]);
+
+  useEffect(() => {
+    if (screen !== "scouting") setScoutMapDetailBack(null);
+  }, [screen]);
 
   const session = sessionFromSave(save);
   const {
@@ -876,32 +883,51 @@ export default function App() {
     [patchSession],
   );
 
-  const handleScoutClub = useCallback(
-    (careerClubId: string, route?: import("./scouting/scout-route-puzzle.ts").ScoutRouteScore) => {
+  const handleEnqueueScoutTrip = useCallback(
+    (
+      zoneId: string,
+      input: {
+        pathNodeIds: string[];
+        targetClubId: string;
+        score: ScoutRouteScore;
+      },
+    ) => {
       patchSession((current) => {
         const club = current.world.clubs.find(
-          (entry) => worldCareerClubId(entry.id) === careerClubId,
+          (entry) => worldCareerClubId(entry.id) === input.targetClubId,
         );
         if (!club) return current;
         const division =
           current.world.clubs.find((entry) => worldCareerClubId(entry.id) === current.clubId)
             ?.division_id ?? "regionalliga-nord";
         const discovery = normalizeDiscovery(current.scoutBoard.discovery);
-        if (
-          !canStartClubScout(
-            club,
-            division,
-            discovery,
-            current.scoutBoard.active_club_scout,
-            current.world.clubs,
-          )
-        ) {
+        if (!canEnqueueScoutTrip(club, division, discovery, current.world.clubs)) {
           return current;
         }
+        const layout = layoutForZone(zoneId);
+        if (!layout) return current;
+        const zoneModel = buildScoutDiscoveryMapModel({
+          clubs: current.world.clubs,
+          targets: listBoardTargets(current.scoutBoard, current.rivalPlayers, current.world.clubs),
+          rivalPlayers: current.rivalPlayers,
+          discovery,
+          playerDivisionId: division,
+          activeClubScout: current.scoutBoard.active_scout_trip
+            ? { club_id: current.scoutBoard.active_scout_trip.target_club_id, progress: 0 }
+            : current.scoutBoard.active_club_scout,
+        }).zones.find((zone) => zone.id === zoneId);
+        if (!zoneModel) return current;
+        const mapNodes = buildZoneMapNodes(layout, zoneModel.clubs, input.targetClubId);
         return {
           ...current,
-          scoutBoard: startClubScoutJob(current.scoutBoard, careerClubId, {
-            progress_multiplier: route?.progressMultiplier,
+          scoutBoard: enqueueScoutTrip(current.scoutBoard, {
+            zoneId,
+            pathNodeIds: input.pathNodeIds,
+            mapNodes,
+            targetClubId: input.targetClubId,
+            routeScore: input.score,
+            week: current.week,
+            scouts: current.scoutNetwork,
           }),
         };
       });
@@ -1851,12 +1877,19 @@ export default function App() {
     setForeignPlayerId(null);
   }, []);
 
-  const shellHeaderBack = useMemo((): { title: string; onBack: () => void } | null => {
+  const shellHeaderBack = useMemo((): {
+    title: string;
+    onBack: () => void;
+    iconOnly?: boolean;
+  } | null => {
     if (profilePlayer) {
       return { title: formatPlayerName(profilePlayer), onBack: closePlayerProfile };
     }
     if (foreignProfileTarget) {
       return { title: formatPlayerName(foreignProfileTarget.player), onBack: closeForeignProfile };
+    }
+    if (screen === "scouting" && scoutMapDetailBack) {
+      return { title: "", onBack: scoutMapDetailBack, iconOnly: true };
     }
     const hubDrilldownTitle: Partial<Record<Screen, string>> = {
       postfach: t("shell.nav.postfach"),
@@ -1869,7 +1902,15 @@ export default function App() {
       return { title: drillTitle, onBack: () => setScreen("hub") };
     }
     return null;
-  }, [closeForeignProfile, closePlayerProfile, foreignProfileTarget, profilePlayer, screen, locale]);
+  }, [
+    closeForeignProfile,
+    closePlayerProfile,
+    foreignProfileTarget,
+    profilePlayer,
+    scoutMapDetailBack,
+    screen,
+    locale,
+  ]);
 
   careerMatchFlowRef.current = careerMatchSetup != null;
   matchNavActionRef.current = matchNavAction;
@@ -2331,7 +2372,10 @@ export default function App() {
           playerDivisionId={playerDivisionId}
           activeClubScout={scoutBoard.active_club_scout}
           activeRegionScout={scoutBoard.active_region_scout}
-          onScoutClub={handleScoutClub}
+          activeScoutTrip={scoutBoard.active_scout_trip}
+          scoutTripQueue={scoutBoard.scout_trip_queue}
+          tripQueueLength={scoutBoard.scout_trip_queue?.length ?? 0}
+          onEnqueueScoutTrip={handleEnqueueScoutTrip}
           onScoutRegion={handleScoutRegion}
           filters={marketFilters}
           onFiltersChange={setMarketFilters}
@@ -2355,6 +2399,9 @@ export default function App() {
           onToggleShortlist={handleToggleShortlist}
           initialTab={scoutingInitialTab}
           onInitialTabApplied={() => setScoutingInitialTab(null)}
+          onScoutMapDetailChange={(open, onBack) =>
+            setScoutMapDetailBack(open ? onBack : null)
+          }
         />
       ) : null}
       {screen === "transfers" ? (
@@ -2523,7 +2570,7 @@ function AppChrome({
   leaguePlace: number | null;
   screen: Screen;
   onNavigate: (screen: Screen) => void;
-  headerBack?: { title: string; onBack: () => void } | null;
+  headerBack?: { title: string; onBack: () => void; iconOnly?: boolean } | null;
   onCloseProfile?: () => void;
   onCampusNavigate?: () => void;
   hubActions: HubNavActions;
@@ -2579,7 +2626,7 @@ function AppNav({
   clubLogoSrc?: string;
   leaguePlace: number | null;
   onNavigate: (screen: Screen) => void;
-  headerBack?: { title: string; onBack: () => void } | null;
+  headerBack?: { title: string; onBack: () => void; iconOnly?: boolean } | null;
   onCloseProfile?: () => void;
   onCampusNavigate?: () => void;
   hubActions: HubNavActions;
@@ -2635,7 +2682,9 @@ function AppNav({
       className={`app-nav club-shell-header ${shellChrome === "card" ? "club-shell-card-head" : "club-shell-grid"}`}
       aria-label={tr("shell.nav.areas")}
     >
-      <div className={`club-shell-identity${headerBack ? " has-header-back" : ""}`}>
+      <div
+        className={`club-shell-identity${headerBack ? " has-header-back" : ""}${headerBack?.iconOnly ? " is-icon-only-back" : ""}`}
+      >
         {headerBack ? (
           <>
             <button
@@ -2646,9 +2695,11 @@ function AppNav({
             >
               <ArrowLeft size={22} strokeWidth={2.5} aria-hidden="true" />
             </button>
-            <div className="club-shell-identity-text">
-              <p className="club-shell-name club-shell-subscreen-title">{headerBack.title}</p>
-            </div>
+            {!headerBack.iconOnly ? (
+              <div className="club-shell-identity-text">
+                <p className="club-shell-name club-shell-subscreen-title">{headerBack.title}</p>
+              </div>
+            ) : null}
           </>
         ) : (
           <>

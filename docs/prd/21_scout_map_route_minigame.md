@@ -5,13 +5,13 @@
 ## Navigation
 
 - **2×2 grid (Screen 3a):** After `region_scout_tier >= 1`, zone tile shows **flavor photo** (`public/assets/scout-maps/flavor/{zoneId}.jpg`); click tile or „Region scouten“ → **Screen 3a-detail**.
-- **Detail:** Flavor background + SVG road graph; tap nodes to chain edges into a route.
+- **Detail:** Relief or city SVG only (no flavor JPEG); tap nodes to chain edges into a route.
 
 ## Route rules (Jan — option D)
 
 - **Club jobs only:** Minigame starts `active_club_scout` (not region). Region tier = passive button on grid card.
-- **Detail map:** Wikimedia relief clip (`scout-germany-relief.svg`) + **translucent flavor** overlay; club pins on relief coordinates.
-- **Grid card:** Flavor photo on front; click opens detail (“back”). No per-club list buttons on card.
+- **Detail map:** Wikimedia relief clip (`scout-germany-relief.svg`) or city SVG; club pins on GPS coordinates; crest pins after first visit (PRD 04.5 / map visit).
+- **Grid card:** Full-color flavor photo (bottom gradient + white type only); click opens detail. No per-club list buttons on card.
 - **No hard fail:** Duplicate roads allowed → lower `progress_multiplier` on **club** scout job.
 - **Autopilot** on detail screen.
 

@@ -76,6 +76,10 @@ main.pipeline.club-shell-card-body {
   min-height: 2.5rem;
 }
 
+.app-nav.club-shell-header .club-shell-identity.has-header-back.is-icon-only-back {
+  flex: 0 0 auto;
+}
+
 .app-nav.club-shell-header .club-shell-identity.has-header-back {
   gap: 0.5rem;
 }

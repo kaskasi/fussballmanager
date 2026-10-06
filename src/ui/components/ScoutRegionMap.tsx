@@ -5,6 +5,8 @@ import type { BoardTarget } from "../../scouting/scout-board.ts";
 import type { ScoutDiscoveryState } from "../../scouting/scout-discovery.ts";
 import { layoutForZone } from "../../scouting/scout-map-layout.ts";
 import { buildScoutDiscoveryMapModel } from "../../scouting/scout-region-map.ts";
+import { clubLogoUrlForId } from "../assets/club-logo.ts";
+import { ClubCrest } from "./ClubCrest.tsx";
 import type { Player } from "../../types/player.ts";
 import type { WorldClub, WorldDivisionId } from "../../world/world-generator.ts";
 import { useT } from "../../i18n/react.ts";
@@ -56,6 +58,7 @@ export function ScoutRegionMap({
           const canOpenDetail = Boolean(
             layoutForZone(zone.id) && onOpenRegionDetail && zone.regionDirectoryOpen,
           );
+          const discoveredClubs = zone.clubs.filter((club) => club.discovered);
           return (
             <article
               key={zone.id}
@@ -80,7 +83,7 @@ export function ScoutRegionMap({
                   aria-label={t("scouting.map.openRegionDetail", { label: zone.label })}
                 />
               ) : null}
-              <div className="scout-discovery-zone-card-shade" aria-hidden />
+              {flavor ? <div className="scout-discovery-zone-card-shade" aria-hidden /> : null}
               <header className="scout-discovery-zone-head">
                 <h3>{zone.label}</h3>
                 {zone.regionTier < zone.regionTierMax ? (
@@ -124,6 +127,20 @@ export function ScoutRegionMap({
                   </span>
                 ) : null}
               </header>
+              {discoveredClubs.length > 0 ? (
+                <ul className="scout-discovery-zone-crests" aria-label={t("scouting.map.discoveredClubsAria")}>
+                  {discoveredClubs.map((club) => (
+                    <li key={club.careerClubId}>
+                      <ClubCrest
+                        size={28}
+                        initials={club.shortName}
+                        logoSrc={clubLogoUrlForId(club.careerClubId)}
+                        alt={club.name}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </article>
           );
         })}

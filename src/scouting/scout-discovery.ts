@@ -7,6 +7,7 @@ import {
 import { SCOUT_MAP_ZONES, zoneIdForWorldRegion } from "./scout-region-map.ts";
 import type { ScoutKnowledgeTarget } from "./scout-board.ts";
 import { initialEstimateForPlayer } from "./market-list.ts";
+import { applyMapClubVisitToBoardTargets } from "./scout-map-visit.ts";
 
 export const CLUB_SCOUT_PROGRESS_PER_WEEK = 34;
 export const REGION_SCOUT_PROGRESS_PER_WEEK = 25;
@@ -15,7 +16,10 @@ export const REGION_SCOUT_TIER_MAX = 3;
 
 export interface ScoutDiscoveryState {
   discovered_region_ids: string[];
+  /** Legacy alias: at least one map/club scout visit (crest + pool identity). */
   discovered_club_ids: string[];
+  /** Clubs visited on the map at least once (same ids as discovered_club_ids when synced). */
+  visited_club_ids?: string[];
   scout_pool: string[];
   /** Per map zone: 0–3 completed region scout jobs (3 = full foreign directory). */
   region_scout_tier?: Record<string, number>;
@@ -72,9 +76,14 @@ export function normalizeDiscovery(state: ScoutDiscoveryState | undefined): Scou
         .map(([zoneId]) => zoneId),
     ]),
   ];
+  const discovered_club_ids = [
+    ...new Set([...(base.discovered_club_ids ?? []), ...(base.visited_club_ids ?? [])]),
+  ];
+  const visited_club_ids = [...new Set([...(base.visited_club_ids ?? []), ...discovered_club_ids])];
   return {
     discovered_region_ids,
-    discovered_club_ids: [...new Set(base.discovered_club_ids ?? [])],
+    discovered_club_ids,
+    visited_club_ids,
     scout_pool: [...new Set(base.scout_pool ?? [])],
     region_scout_tier,
   };
@@ -124,8 +133,14 @@ export function isInScoutPool(discovery: ScoutDiscoveryState, playerId: string):
   return discovery.scout_pool.includes(playerId);
 }
 
+export function isClubVisited(discovery: ScoutDiscoveryState, careerClubId: string): boolean {
+  const normalized = normalizeDiscovery(discovery);
+  return normalized.visited_club_ids?.includes(careerClubId) ?? false;
+}
+
+/** @deprecated Use isClubVisited — “discovered” means identity known, not fully scouted. */
 export function isClubFullyDiscovered(discovery: ScoutDiscoveryState, careerClubId: string): boolean {
-  return discovery.discovered_club_ids.includes(careerClubId);
+  return isClubVisited(discovery, careerClubId);
 }
 
 export function isRegionDiscovered(discovery: ScoutDiscoveryState, zoneId: string): boolean {
@@ -161,8 +176,6 @@ export function canStartClubScout(
   activeClubScout: ActiveClubScout | null | undefined,
   worldClubs: readonly WorldClub[] = [],
 ): boolean {
-  const careerId = worldCareerClubId(club.id);
-  if (isClubFullyDiscovered(discovery, careerId)) return false;
   if (!isClubDirectoryVisible(club, playerDivisionId, discovery, worldClubs)) return false;
   if (activeClubScout != null) return false;
   return true;
@@ -192,12 +205,27 @@ export function completeClubDiscovery(
   careerClubId: string,
   rivalPlayers: readonly Player[],
 ): ScoutDiscoveryState {
+  return recordMapClubVisit(discovery, careerClubId, rivalPlayers);
+}
+
+/** First visit adds pool + crest identity; safe to call on every trip stop. */
+export function recordMapClubVisit(
+  discovery: ScoutDiscoveryState,
+  careerClubId: string,
+  rivalPlayers: readonly Player[],
+): ScoutDiscoveryState {
+  const normalized = normalizeDiscovery(discovery);
   const playerIds = rivalPlayers
     .filter((player) => player.club_id === careerClubId && player.squad_status === "pro")
     .map((player) => player.id);
+  const withPool = addPlayersToPool(normalized, playerIds);
+  const visited = new Set(withPool.visited_club_ids ?? []);
+  visited.add(careerClubId);
+  const visited_club_ids = [...visited];
   return {
-    ...addPlayersToPool(discovery, playerIds),
-    discovered_club_ids: [...new Set([...discovery.discovered_club_ids, careerClubId])],
+    ...withPool,
+    visited_club_ids,
+    discovered_club_ids: visited_club_ids,
   };
 }
 
@@ -258,6 +286,7 @@ export function advanceDiscoveryWeek<T extends DiscoveryBoardSlice>(
   scoutSlotsActive: number,
 ): T {
   let discovery = normalizeDiscovery(board.discovery);
+  let targets = board.targets;
   let activeClub = board.active_club_scout ?? null;
   let activeRegion = board.active_region_scout ?? null;
   const boost = 1 + Math.min(2, Math.max(0, scoutSlotsActive - 1)) * 0.15;
@@ -267,7 +296,9 @@ export function advanceDiscoveryWeek<T extends DiscoveryBoardSlice>(
     const step = Math.round(CLUB_SCOUT_PROGRESS_PER_WEEK * boost * routeBoost);
     const progress = Math.min(DISCOVERY_COMPLETE, activeClub.progress + step);
     if (progress >= DISCOVERY_COMPLETE) {
-      discovery = completeClubDiscovery(discovery, activeClub.club_id, rivalPlayers);
+      discovery = recordMapClubVisit(discovery, activeClub.club_id, rivalPlayers);
+      targets = ensureTargetsForPool(targets, discovery, rivalPlayers);
+      targets = applyMapClubVisitToBoardTargets(targets, activeClub.club_id, rivalPlayers);
       activeClub = null;
     } else {
       activeClub = { ...activeClub, progress };
@@ -285,14 +316,14 @@ export function advanceDiscoveryWeek<T extends DiscoveryBoardSlice>(
     }
   }
 
-  const targets = ensureTargetsForPool(board.targets, discovery, rivalPlayers);
+  const mergedTargets = ensureTargetsForPool(targets, discovery, rivalPlayers);
 
   return {
     ...board,
     discovery,
     active_club_scout: activeClub,
     active_region_scout: activeRegion,
-    targets,
+    targets: mergedTargets,
   };
 }
 

@@ -1,25 +1,24 @@
+import { clubsInZone } from "./scout-discovery.ts";
 import { realCityByName } from "../world/real-cities.ts";
+import type { WorldClub } from "../world/world-generator.ts";
 
 export const SCOUT_RELIEF_WIDTH = 1073.381;
 export const SCOUT_RELIEF_HEIGHT = 1271.953;
 
+/** Wikimedia “Relief map of Germany” geographic bounds (plate carrée). */
+export const RELIEF_GEO_BOUNDS = {
+  west: 5.866_315_3,
+  east: 15.041_931_9,
+  south: 47.270_111_4,
+  north: 55.058_563_6,
+} as const;
+
 export interface ScoutMapGeoLayout {
   mapMode?: "relief" | "city";
   cityMapBounds?: GeoBounds;
+  /** When set, city pins use this SVG user box (not 0–100). */
+  citySvgViewBox?: string;
 }
-
-/** Affine WGS84 → `scout-germany-relief.svg` user space (calibrated to shipped asset). */
-const RELIEF_AFFINE_X = {
-  lon: 74.22872028865814,
-  lat: -51.854285594355744,
-  c: 2692.430011287098,
-} as const;
-
-const RELIEF_AFFINE_Y = {
-  lon: -1.1497609034208978,
-  lat: -226.50959516447904,
-  c: 12547.542995425112,
-} as const;
 
 export interface GeoBounds {
   west: number;
@@ -36,10 +35,21 @@ export const HANSE_CITY_MAP_BOUNDS: GeoBounds = {
   north: 53.72,
 };
 
+/** Bremen street-map SVG — local WGS84 clip (pins overlay). */
+export const BREMEN_CITY_GEO_BOUNDS: GeoBounds = {
+  west: 8.69,
+  east: 9.05,
+  south: 52.98,
+  north: 53.24,
+};
+
+export const BREMEN_CITY_SVG_VIEWBOX = "4904.5 3739.529 6560 5088";
+
 export function geoToReliefSvg(lat: number, lon: number): { x: number; y: number } {
+  const { west, east, south, north } = RELIEF_GEO_BOUNDS;
   return {
-    x: RELIEF_AFFINE_X.lon * lon + RELIEF_AFFINE_X.lat * lat + RELIEF_AFFINE_X.c,
-    y: RELIEF_AFFINE_Y.lon * lon + RELIEF_AFFINE_Y.lat * lat + RELIEF_AFFINE_Y.c,
+    x: ((lon - west) / (east - west)) * SCOUT_RELIEF_WIDTH,
+    y: ((north - lat) / (north - south)) * SCOUT_RELIEF_HEIGHT,
   };
 }
 
@@ -53,6 +63,25 @@ export function geoToLocalMap(
   const x = ((lon - bounds.west) / (bounds.east - bounds.west)) * size;
   const y = ((bounds.north - lat) / (bounds.north - bounds.south)) * size;
   return { x, y };
+}
+
+export function parseSvgViewBox(viewBox: string): { x: number; y: number; w: number; h: number } {
+  const [x, y, w, h] = viewBox.split(/\s+/).map(Number);
+  return { x: x ?? 0, y: y ?? 0, w: w ?? 100, h: h ?? 100 };
+}
+
+/** WGS84 point projected into an SVG viewBox that matches geographic bounds. */
+export function geoToBoundedSvg(
+  lat: number,
+  lon: number,
+  bounds: GeoBounds,
+  svgViewBox: string,
+): { x: number; y: number } {
+  const { x: vx, y: vy, w: vw, h: vh } = parseSvgViewBox(svgViewBox);
+  return {
+    x: vx + ((lon - bounds.west) / (bounds.east - bounds.west)) * vw,
+    y: vy + ((bounds.north - lat) / (bounds.north - bounds.south)) * vh,
+  };
 }
 
 export function reliefViewBoxAroundPoints(
@@ -79,6 +108,58 @@ export function reliefViewBoxAroundPoints(
   return `${x} ${y} ${w} ${h}`;
 }
 
+/** Fit relief clip to all club cities in a scout zone. */
+export function reliefViewBoxForZoneClubs(
+  zoneId: string,
+  worldClubs: readonly WorldClub[],
+  padding = 36,
+): string {
+  const clubs = clubsInZone(worldClubs, zoneId);
+  const points: { x: number; y: number }[] = [];
+  for (const club of clubs) {
+    if (!club.place) continue;
+    const city = realCityByName(club.place);
+    if (!city) continue;
+    points.push(geoToReliefSvg(city.lat, city.lon));
+  }
+  return reliefViewBoxAroundPoints(points, padding);
+}
+
+/** Fit city-map clip to club cities (Bremen SVG space or 0–100). */
+export function citySvgViewBoxForZoneClubs(
+  zoneId: string,
+  worldClubs: readonly WorldClub[],
+  layout: ScoutMapGeoLayout,
+  padding = 36,
+): string {
+  if (layout.mapMode !== "city" || !layout.cityMapBounds) {
+    return "0 0 100 100";
+  }
+  const fullBox = layout.citySvgViewBox ?? "0 0 100 100";
+  const clubs = clubsInZone(worldClubs, zoneId);
+  const points: { x: number; y: number }[] = [];
+  for (const club of clubs) {
+    if (!club.place) continue;
+    const city = realCityByName(club.place);
+    if (!city) continue;
+    points.push(
+      layout.citySvgViewBox
+        ? geoToBoundedSvg(city.lat, city.lon, layout.cityMapBounds, layout.citySvgViewBox)
+        : geoToLocalMap(city.lat, city.lon, layout.cityMapBounds),
+    );
+  }
+  if (points.length === 0) return fullBox;
+  const clip = reliefViewBoxAroundPoints(points, padding);
+  if (!layout.citySvgViewBox) return clip;
+  const { x: fx, y: fy, w: fw, h: fh } = parseSvgViewBox(fullBox);
+  const clipBox = parseSvgViewBox(clip);
+  const x = Math.max(fx, clipBox.x);
+  const y = Math.max(fy, clipBox.y);
+  const x2 = Math.min(fx + fw, clipBox.x + clipBox.w);
+  const y2 = Math.min(fy + fh, clipBox.y + clipBox.h);
+  return `${x} ${y} ${Math.max(1, x2 - x)} ${Math.max(1, y2 - y)}`;
+}
+
 export function mapCoordsForPlace(
   place: string,
   layout: ScoutMapGeoLayout,
@@ -86,6 +167,9 @@ export function mapCoordsForPlace(
   const city = realCityByName(place);
   if (!city) return null;
   if (layout.mapMode === "city" && layout.cityMapBounds) {
+    if (layout.citySvgViewBox) {
+      return geoToBoundedSvg(city.lat, city.lon, layout.cityMapBounds, layout.citySvgViewBox);
+    }
     return geoToLocalMap(city.lat, city.lon, layout.cityMapBounds);
   }
   return geoToReliefSvg(city.lat, city.lon);

@@ -34,6 +34,8 @@ import {
   noticesFromDiscoveryJobAdvance,
   type ScoutJobCompleteNotice,
 } from "./scout-job-postfach.ts";
+import { advanceScoutTripWeek } from "./scout-trip-queue.ts";
+import type { ActiveScoutTrip, ScoutTripPlan } from "./scout-trip.ts";
 import {
   applyObservationWithAccuracy,
   scoutNetworkAccuracyModifier,
@@ -71,6 +73,8 @@ export interface ScoutBoard {
   discovery?: ScoutDiscoveryState;
   active_club_scout?: ActiveClubScout | null;
   active_region_scout?: ActiveRegionScout | null;
+  scout_trip_queue?: ScoutTripPlan[];
+  active_scout_trip?: ActiveScoutTrip | null;
   discovery_postfach_queue?: ScoutJobCompleteNotice[];
 }
 
@@ -93,6 +97,8 @@ export function normalizeScoutBoard(board: ScoutBoard): ScoutBoard {
     discovery: normalizeDiscovery(board.discovery),
     active_club_scout: board.active_club_scout ?? null,
     active_region_scout: board.active_region_scout ?? null,
+    scout_trip_queue: board.scout_trip_queue ?? [],
+    active_scout_trip: board.active_scout_trip ?? null,
     discovery_postfach_queue: board.discovery_postfach_queue ?? [],
   };
 }
@@ -106,6 +112,8 @@ export function createScoutBoard(_players: readonly Player[] = []): ScoutBoard {
     discovery: emptyDiscovery(),
     active_club_scout: null,
     active_region_scout: null,
+    scout_trip_queue: [],
+    active_scout_trip: null,
     discovery_postfach_queue: [],
   };
 }
@@ -266,7 +274,10 @@ export function advanceScoutWeek(
     rivalPlayers,
     activeScoutCount(synced),
   );
-  const normalized = normalizeScoutBoard(withDiscovery);
+  const withTrips = network
+    ? advanceScoutTripWeek(withDiscovery, rivalPlayers, network)
+    : withDiscovery;
+  const normalized = normalizeScoutBoard(withTrips);
   const jobNotices = noticesFromDiscoveryJobAdvance({
     before: beforeAdvance,
     after: normalized,

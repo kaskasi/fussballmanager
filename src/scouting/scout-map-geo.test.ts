@@ -1,34 +1,40 @@
 import { describe, expect, it } from "vitest";
 import { buildZoneMapNodes, layoutForZone } from "./scout-map-layout.ts";
-import { geoToReliefSvg, mapCoordsForPlace } from "./scout-map-geo.ts";
+import {
+  geoToReliefSvg,
+  mapCoordsForPlace,
+  parseSvgViewBox,
+  reliefViewBoxForZoneClubs,
+} from "./scout-map-geo.ts";
 import type { ScoutMapClubPin } from "./scout-region-map.ts";
 import { generateWorld } from "../world/world-generator.ts";
 
 describe("scout-map-geo", () => {
-  it("projects SH cities into the SH relief clip", () => {
+  it("projects SH cities into the dynamic relief clip for zone clubs", () => {
+    const world = generateWorld(4242);
     const layout = layoutForZone("sh");
     expect(layout).toBeDefined();
+    const viewBox = reliefViewBoxForZoneClubs("sh", world.clubs);
+    const { x: vbX, y: vbY, w: vbW, h: vbH } = parseSvgViewBox(viewBox);
     for (const city of ["Elmshorn", "Glückstadt", "Kaltenkirchen", "Hasloh"]) {
       const coords = mapCoordsForPlace(city, layout!);
       expect(coords).not.toBeNull();
-      const [vbX = 0, vbY = 0, vbW = 100, vbH = 100] = layout!.reliefViewBox
-        .split(/\s+/)
-        .map(Number);
-      expect(coords!.x).toBeGreaterThanOrEqual(vbX - 20);
-      expect(coords!.x).toBeLessThanOrEqual(vbX + vbW + 20);
-      expect(coords!.y).toBeGreaterThanOrEqual(vbY - 20);
-      expect(coords!.y).toBeLessThanOrEqual(vbY + vbH + 20);
+      expect(coords!.x).toBeGreaterThanOrEqual(vbX - 24);
+      expect(coords!.x).toBeLessThanOrEqual(vbX + vbW + 24);
+      expect(coords!.y).toBeGreaterThanOrEqual(vbY - 24);
+      expect(coords!.y).toBeLessThanOrEqual(vbY + vbH + 24);
     }
   });
 
-  it("places Hanse clubs on the urban 0–100 canvas", () => {
+  it("places Bremen on the Bremen street-map canvas", () => {
     const layout = layoutForZone("hanse");
     expect(layout?.mapMode).toBe("city");
     const bremen = mapCoordsForPlace("Bremen", layout!);
-    const hamburg = mapCoordsForPlace("Hamburg", layout!);
-    expect(bremen!.x).toBeGreaterThan(0);
-    expect(bremen!.x).toBeLessThan(100);
-    expect(hamburg!.x).toBeGreaterThan(bremen!.x);
+    const { x: vx, y: vy, w: vw, h: vh } = parseSvgViewBox(layout!.citySvgViewBox!);
+    expect(bremen!.x).toBeGreaterThan(vx);
+    expect(bremen!.x).toBeLessThan(vx + vw);
+    expect(bremen!.y).toBeGreaterThan(vy);
+    expect(bremen!.y).toBeLessThan(vy + vh);
   });
 
   it("aligns club pins with GPS when place is set", () => {

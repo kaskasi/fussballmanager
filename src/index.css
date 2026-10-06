@@ -1657,11 +1657,17 @@ body {
 }
 
 .scout-discovery-zone.has-flavor {
-  min-height: 9rem;
+  min-height: 10rem;
+  border-color: rgb(255 255 255 / 25%);
+  background-color: var(--tinte, #3e3128);
 }
 
 .scout-discovery-zone-card {
   color: #0f172a;
+}
+
+.scout-discovery-zone-card.has-flavor {
+  color: #fff;
 }
 
 .scout-discovery-zone-card-shade {
@@ -1671,9 +1677,10 @@ body {
   border-radius: inherit;
   background: linear-gradient(
     180deg,
-    rgb(255 255 255 / 55%) 0%,
-    rgb(255 255 255 / 78%) 45%,
-    rgb(15 23 42 / 72%) 100%
+    transparent 0%,
+    transparent 55%,
+    rgb(15 23 42 / 45%) 78%,
+    rgb(15 23 42 / 82%) 100%
   );
   pointer-events: none;
 }
@@ -1684,6 +1691,30 @@ body {
   color: inherit;
 }
 
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-head h3,
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-meta {
+  color: #fff;
+  text-shadow: 0 1px 3px rgb(15 23 42 / 80%);
+}
+
+.scout-discovery-zone-card.has-flavor .scout-discovery-region-btn {
+  color: #fff;
+  text-shadow: 0 1px 2px rgb(15 23 42 / 70%);
+  border-color: rgb(255 255 255 / 45%);
+  background: rgb(15 23 42 / 35%);
+  backdrop-filter: blur(4px);
+}
+
+.scout-discovery-zone-card.has-flavor .scout-discovery-region-btn:hover:not(:disabled) {
+  background: rgb(15 23 42 / 52%);
+  border-color: rgb(255 255 255 / 65%);
+}
+
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-crests .club-crest,
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-crests .club-crest-img {
+  box-shadow: 0 1px 4px rgb(15 23 42 / 55%);
+}
+
 .scout-discovery-zone-pool {
   flex-basis: 100%;
   font-size: 0.7rem;
@@ -1691,6 +1722,10 @@ body {
 
 .scout-route-node.is-done {
   fill: #94a3b8;
+}
+
+.scout-route-club.is-visited image.scout-route-node {
+  filter: drop-shadow(0 1px 2px rgb(15 23 42 / 45%));
 }
 
 .scout-route-node.is-muted {
@@ -1719,6 +1754,7 @@ body {
 }
 
 .scout-discovery-zone.has-flavor .scout-discovery-zone-head,
+.scout-discovery-zone.has-flavor .scout-discovery-zone-crests,
 .scout-discovery-zone.has-flavor .scout-discovery-clubs,
 .scout-discovery-zone.has-flavor .scout-discovery-locked {
   position: relative;
@@ -1812,6 +1848,24 @@ body {
   fill: var(--sonnengelb, #facc15);
 }
 
+.scout-route-node.is-on-route {
+  fill: var(--sonnengelb, #facc15);
+  stroke: var(--tinte, #1e293b);
+  stroke-width: 2;
+}
+
+.scout-route-stop-num {
+  font-size: 6px;
+  font-weight: 800;
+  fill: var(--tinte, #1e293b);
+  pointer-events: none;
+  user-select: none;
+}
+
+.scout-route-mode-btn.is-active {
+  outline: 2px solid var(--sonnengelb, #facc15);
+}
+
 .scout-route-label {
   font-size: 3px;
   fill: #0f172a;
@@ -1869,6 +1923,23 @@ body {
 .scout-discovery-club-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.scout-discovery-zone-crests {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scout-discovery-zone-crests .club-crest,
+.scout-discovery-zone-crests .club-crest-img {
+  box-shadow: 0 1px 4px rgb(15 23 42 / 0.35);
+  border-radius: 4px;
 }
 
 .scout-discovery-clubs {
@@ -8939,6 +9010,64 @@ body {
 .scouting-assignment-label {
   flex: 1;
   font-size: 0.9rem;
+}
+
+.scouting-map-jobs-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.scouting-map-job-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.45rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.scouting-map-job-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.scouting-map-job-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.scouting-map-job-meta,
+.scouting-map-job-scout {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.scouting-map-job-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.35rem;
+  border-radius: 0.25rem;
+  background: var(--rasen, #16a34a);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.scouting-map-job-badge.is-queued {
+  background: #64748b;
+}
+
+.scouting-map-jobs-head-icon {
+  vertical-align: -0.2em;
+  margin-right: 0.25rem;
 }
 
 .negotiation-modal {

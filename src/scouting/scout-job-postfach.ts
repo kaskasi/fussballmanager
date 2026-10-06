@@ -104,11 +104,11 @@ function buildHighlights(
 export function noticesFromDiscoveryJobAdvance(input: {
   before: Pick<
     ScoutBoard,
-    "discovery" | "active_club_scout" | "active_region_scout" | "targets"
+    "discovery" | "active_club_scout" | "active_region_scout" | "active_scout_trip" | "targets"
   >;
   after: Pick<
     ScoutBoard,
-    "discovery" | "active_club_scout" | "active_region_scout" | "targets"
+    "discovery" | "active_club_scout" | "active_region_scout" | "active_scout_trip" | "targets"
   >;
   rivalPlayers: readonly Player[];
   worldClubs: readonly WorldClub[];
@@ -158,6 +158,33 @@ export function noticesFromDiscoveryJobAdvance(input: {
       playersAdded: newIds.length,
       highlights: buildHighlights(newIds, input.rivalPlayers, input.after.targets),
     });
+  }
+
+  if (input.before.active_scout_trip && !input.after.active_scout_trip) {
+    const trip = input.before.active_scout_trip;
+    const clubIds =
+      trip.career_club_ids_on_path.length > 0
+        ? trip.career_club_ids_on_path
+        : [trip.target_club_id];
+    for (const careerClubId of clubIds) {
+      if (beforeDiscovery.discovered_club_ids.includes(careerClubId)) continue;
+      if (!afterDiscovery.discovered_club_ids.includes(careerClubId)) continue;
+      const newIds = poolDelta(beforeDiscovery, afterDiscovery).filter((playerId) => {
+        const player = input.rivalPlayers.find((entry) => entry.id === playerId);
+        return player?.club_id === careerClubId;
+      });
+      notices.push({
+        id: scoutJobClubPostfachItemId(careerClubId, input.season, input.week),
+        kind: "club_complete",
+        season: input.season,
+        week: input.week,
+        consumed: false,
+        careerClubId,
+        clubName: clubDisplayName(careerClubId, input.worldClubs),
+        playersAdded: newIds.length,
+        highlights: buildHighlights(newIds, input.rivalPlayers, input.after.targets),
+      });
+    }
   }
 
   return notices;

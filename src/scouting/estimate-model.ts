@@ -16,7 +16,15 @@ export interface AbilityEstimate {
 
 export type PlayerKnowledge = { status: "owned" } | { status: "scouted"; estimate: AbilityEstimate };
 
-export type ObservationKind = "live_match_view" | "scout_visit_report" | "video_review" | "trial_period";
+export type ObservationKind =
+  | "live_match_view"
+  | "scout_visit_report"
+  | "video_review"
+  | "trial_period"
+  | "map_club_visit";
+
+/** Floor for foreign players after map revisits (PRD 04.5 map visit). */
+export const MAP_CLUB_VISIT_MIN_UNCERTAINTY = 5;
 
 export const UNKNOWN_PRIOR: AbilityEstimate = {
   estimatedAbilityMean: 65,
@@ -27,12 +35,28 @@ export const UNKNOWN_PRIOR: AbilityEstimate = {
 const UNCERTAINTY_CEILING = 40;
 const WEEKLY_DECAY = 0.25;
 
-const OBSERVATIONS: Record<ObservationKind, { reducesUncertaintyBy: number; samples: number }> = {
+const OBSERVATIONS: Record<
+  Exclude<ObservationKind, "map_club_visit">,
+  { reducesUncertaintyBy: number; samples: number }
+> = {
   live_match_view: { reducesUncertaintyBy: 15, samples: 1 },
   scout_visit_report: { reducesUncertaintyBy: 8, samples: 1 },
   video_review: { reducesUncertaintyBy: 5, samples: 1 },
   trial_period: { reducesUncertaintyBy: 25, samples: 3 },
 };
+
+/** Multiplicative −⅓ uncertainty per map club visit (plan: Rest × 2/3, min 5). */
+export function applyMapClubVisitToEstimate(estimate: AbilityEstimate): AbilityEstimate {
+  const uncertaintyRange = Math.max(
+    MAP_CLUB_VISIT_MIN_UNCERTAINTY,
+    Math.floor(estimate.uncertaintyRange * (2 / 3)),
+  );
+  return {
+    ...estimate,
+    uncertaintyRange,
+    sampleSize: estimate.sampleSize + 1,
+  };
+}
 
 export function unknownPlayer(): PlayerKnowledge {
   return { status: "scouted", estimate: { ...UNKNOWN_PRIOR } };
@@ -44,6 +68,12 @@ export function ownPlayer(): PlayerKnowledge {
 
 export function applyObservation(knowledge: PlayerKnowledge, kind: ObservationKind): PlayerKnowledge {
   if (knowledge.status === "owned") return knowledge;
+  if (kind === "map_club_visit") {
+    return {
+      status: "scouted",
+      estimate: applyMapClubVisitToEstimate(knowledge.estimate),
+    };
+  }
   const rule = OBSERVATIONS[kind];
   return {
     status: "scouted",

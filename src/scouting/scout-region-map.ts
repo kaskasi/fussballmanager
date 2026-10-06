@@ -4,7 +4,7 @@ import type { Player } from "../types/player.ts";
 import {
   REGION_SCOUT_TIER_MAX,
   isClubDirectoryVisible,
-  isClubFullyDiscovered,
+  isClubVisited,
   isInScoutPool,
   isRegionDiscovered,
   normalizeDiscovery,
@@ -194,7 +194,7 @@ export function buildScoutDiscoveryMapModel(input: {
         discovery,
         input.clubs,
       );
-      const discovered = isClubFullyDiscovered(discovery, careerClubId);
+      const discovered = isClubVisited(discovery, careerClubId);
       const scoutProgress =
         input.activeClubScout?.club_id === careerClubId ? input.activeClubScout.progress : null;
       const poolCount = poolByClub.get(careerClubId) ?? 0;

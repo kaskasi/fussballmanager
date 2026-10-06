@@ -171,6 +171,7 @@ import {
   cannotOpenPurchaseReason,
   cannotPayTransferFeeReason,
 } from "./transfers/purchase-block.ts";
+import { resolvePurchaseTarget } from "./transfers/resolve-purchase-target.ts";
 import { TransferWindowAmbience } from "./ui/components/TransferWindowAmbience.tsx";
 import { YouthCampus } from "./ui/screens/YouthCampus";
 import { CalendarScreen } from "./ui/screens/CalendarScreen.tsx";
@@ -1296,7 +1297,7 @@ export default function App() {
     (playerId: string, fee: number) => {
       let blocked: string | null = null;
       patchSession((current) => {
-        const target = getBoardTarget(current.scoutBoard, playerId, current.rivalPlayers);
+        const target = resolvePurchaseTarget(current.scoutBoard, playerId, current.rivalPlayers);
         const openReason = cannotOpenPurchaseReason(current.week, Boolean(target));
         if (openReason) {
           blocked = openReason;
@@ -1307,7 +1308,14 @@ export default function App() {
           blocked = payReason;
           return sessionWithEvent(current, "finance", payReason);
         }
-        if (!target) return current;
+        if (!target) {
+          blocked = t("transfer.purchase.targetUnavailable");
+          return sessionWithEvent(current, "transfer", blocked);
+        }
+        if (current.players.some((player) => player.id === playerId)) {
+          blocked = t("transfer.purchase.alreadySigned");
+          return sessionWithEvent(current, "transfer", blocked);
+        }
 
         const bought = completePurchase(target.player, current.clubId, current.season);
         const shifted = processTransferBreakout(bought, {
@@ -1361,13 +1369,16 @@ export default function App() {
       let started = false;
       let blocked: string | null = null;
       patchSession((current) => {
-        const target = getBoardTarget(current.scoutBoard, playerId, current.rivalPlayers);
+        const target = resolvePurchaseTarget(current.scoutBoard, playerId, current.rivalPlayers);
         const reason = cannotOpenPurchaseReason(current.week, Boolean(target));
         if (reason) {
           blocked = reason;
           return sessionWithEvent(current, "transfer", reason);
         }
-        if (!target) return current;
+        if (!target) {
+          blocked = t("transfer.purchase.targetUnavailable");
+          return sessionWithEvent(current, "transfer", blocked);
+        }
         const deal = startNegotiation(
           current.transferState,
           target.player,
@@ -1400,7 +1411,11 @@ export default function App() {
       let accepted = false;
       let missingTarget = false;
       patchSession((current) => {
-        const target = getBoardTarget(current.scoutBoard, negotiationPlayerId, current.rivalPlayers);
+        const target = resolvePurchaseTarget(
+          current.scoutBoard,
+          negotiationPlayerId,
+          current.rivalPlayers,
+        );
         if (!target) {
           missingTarget = true;
           return current;
@@ -1422,7 +1437,7 @@ export default function App() {
         return { ...current, transferState: round.state };
       });
       if (missingTarget) {
-        flashNotice(cannotOpenPurchaseReason(week, false) ?? t("transfer.purchase.generic"));
+        flashNotice(t("transfer.purchase.targetUnavailable"));
         return;
       }
       if (accepted) finalizePurchase(negotiationPlayerId, fee);
@@ -1683,7 +1698,7 @@ export default function App() {
   const jobOffers = listJobOffers(board.employer_club_id, season, league);
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
   const foreignTarget = foreignPlayerId
-    ? getBoardTarget(scoutBoard, foreignPlayerId, rivalPlayers)
+    ? resolvePurchaseTarget(scoutBoard, foreignPlayerId, rivalPlayers)
     : null;
 
   useEffect(() => {
@@ -2230,7 +2245,7 @@ export default function App() {
         />
       ) : null}
       {screen === "calendar" ? (
-        <CalendarScreen season={season} week={week} league={league} />
+        <CalendarScreen season={season} week={week} weekday={weekday} league={league} />
       ) : null}
       {clubProfileId && screen !== "leagues" ? (
         <ClubProfileModal

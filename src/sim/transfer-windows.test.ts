@@ -11,6 +11,9 @@ describe("transfer windows", () => {
     expect(transferWindowKind(1)).toBe("summer");
     expect(transferWindowLabel(1)).toBe("Sommerfenster");
 
+    expect(isTransferWindowOpen(2)).toBe(true);
+    expect(transferWindowKind(2)).toBe("summer");
+
     expect(isTransferWindowOpen(20)).toBe(true);
     expect(transferWindowKind(20)).toBe("winter");
     expect(transferWindowLabel(20)).toBe("Winterfenster");

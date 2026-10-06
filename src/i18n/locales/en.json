@@ -365,6 +365,8 @@
   "transfer.purchase.potSplit": "Cannot buy: transfer pot {pot}, offer {fee}. Cash {cash} is enough — the pot is not.",
   "transfer.purchase.profileUnavailable": "Profile unavailable: not a scout target or no longer on the market.",
   "transfer.purchase.windowClosed": "Cannot buy: transfer window closed. {hint}",
+  "transfer.purchase.targetUnavailable": "Cannot buy: player is no longer available (check market or scout target).",
+  "transfer.purchase.alreadySigned": "Cannot buy: player is already in your squad.",
   "transfer.window.closed": "Window closed",
   "transfer.window.summer": "Summer window",
   "transfer.window.winter": "Winter window",

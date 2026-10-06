@@ -365,6 +365,8 @@
   "transfer.purchase.potSplit": "Kauf nicht möglich: Transfer-Topf {pot}, Angebot {fee}. Kasse {cash} reicht — der Topf nicht.",
   "transfer.purchase.profileUnavailable": "Akte nicht verfügbar: Spieler ist kein Scout-Ziel oder nicht mehr auf dem Markt.",
   "transfer.purchase.windowClosed": "Kauf nicht möglich: Transferfenster zu. {hint}",
+  "transfer.purchase.targetUnavailable": "Kauf nicht möglich: Spieler ist nicht mehr verfügbar (Markt oder Scout-Ziel prüfen).",
+  "transfer.purchase.alreadySigned": "Kauf nicht möglich: Spieler ist bereits in deinem Kader.",
   "transfer.window.closed": "Fenster geschlossen",
   "transfer.window.summer": "Sommerfenster",
   "transfer.window.winter": "Winterfenster",

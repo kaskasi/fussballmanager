@@ -365,6 +365,8 @@
   "transfer.purchase.potSplit": "无法购买：转会池 {pot}，报价 {fee}。现金 {cash} 足够——转会池不够。",
   "transfer.purchase.profileUnavailable": "档案不可用：不是球探目标或已不在市场上。",
   "transfer.purchase.windowClosed": "无法购买：转会窗关闭。{hint}",
+  "transfer.purchase.targetUnavailable": "无法购买：球员已不在市场上（请检查球探目标）。",
+  "transfer.purchase.alreadySigned": "无法购买：球员已在你的阵容中。",
   "transfer.window.closed": "转会窗关闭",
   "transfer.window.summer": "夏季转会窗",
   "transfer.window.winter": "冬季转会窗",

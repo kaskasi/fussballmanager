@@ -64,6 +64,8 @@ export interface Player {
     last_match_goals?: number;
     /** F3.9 — HQ vs satellite camp id. Missing means HQ. */
     youth_site?: "hq" | string;
+    /** F2.3 — failed position-retrain completions per target (PRD 07.7). */
+    retrain_failures?: Partial<Record<PositionPrimary, number>>;
     modifiers: TemporaryModifier[];
   };
 

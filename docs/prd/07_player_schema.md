@@ -172,6 +172,22 @@ interface Injury {
 - **Reha-Tiefe:** F2.6 / F8.2 bleiben M2/M3 — v1 ohne Stufen-Sim.
 - **Engine:** Match-Engine unverändert; keine Sync-Pflicht zu Engine-`injury`-Events in v1.
 
+### 07.7 Positionsumschulung (F2.3 v1)
+
+- **Programm:** Individual-Training `position_retrain`, Dauer-Slider **4–12 Wochen** (`MIN_PROGRAM_WEEKS` / `MAX_PROGRAM_WEEKS`).
+- **Ablauf:** Wochen 1…N−1 binden den Slot ohne `flexibility`-Fortschritt. **Abschluss-Check in der letzten Programmwoche** (analog Stempel-Vergabe).
+- **Erfolgs-Chance** `p` (clamp 0,05–0,95):
+  - **Mental:** Mittelwert aus `composure`, `concentration`, `teamwork` ÷ (3 × 199).
+  - **Positions-Nähe:** Grobe Lane `TW | IV | MF | ST` (PRD 14.3); gleiche Lane = 1,0; benachbart = 0,75; überspringend = 0,5; TW↔Feld = 0,35.
+  - **Dauer:** Faktor `min(1, plannedWeeks / 8)` — ab **8 Wochen** keine höhere Chance (nur Opportunity Cost).
+  - **Bestehende Proficiency** des Ziels: leichter Bonus `(1 − proficiency × 0,25)` auf den Rohterm.
+  - Formel-Implementierung: `0,12 + 0,78 × duration × mental × lane × proficiencyEase`.
+- **RNG:** `hash(master_seed, player_id, target, season, startedWeek)` → Unit-Test `[0,1)`.
+- **Erfolg:** Slot `trained_as = target`, `proficiency = 1,0`, `weeks_trained += plannedWeeks`.
+- **Misserfolg:** Partieller Zuwachs `proficiency += plannedWeeks × 0,025 × mental` (cap &lt; 1); `state.retrain_failures[target] += 1`.
+- **Erschöpfung:** Bei **2** fehlgeschlagenen Abschlüssen für dieselbe Zielposition Option ausblenden; UI-Hinweis: „Das hatten wir doch schon versucht …“
+- **Save:** `player.state.retrain_failures?: Partial<Record<PositionPrimary, number>>` (0–2).
+
 interface GrowthSnapshot {
   season: number;
   age: number;

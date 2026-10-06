@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { MapPinOff } from "lucide-react";
 import {
   planToSessions,
   slotLabel,
@@ -24,6 +25,8 @@ import {
 } from "../../development/weekly-plan.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
+import { RetrainPreviewPanel } from "../components/RetrainPreviewPanel.tsx";
+import { ScreenEmptyState } from "../components/ScreenEmptyState.tsx";
 import {
   assignIndividualProgram,
   cancelIndividualProgram,
@@ -124,7 +127,6 @@ export function TrainingCenter({
   onAssignMentor: (menteeId: string, mentorId: string) => void;
   onClearMentor: (menteeId: string) => void;
   onSelectPlayer?: (playerId: string) => void;
-  onBack?: () => void;
   /** Öffnet Tab „Individuell“ und Programm-Modal für diesen Spieler (z. B. aus Spielerakte). */
   focusIndividualPlayerId?: string | null;
   onClearIndividualFocus?: () => void;
@@ -660,9 +662,15 @@ function IndividualProgramModal({
     active?.stampId ?? trainStamps[0]?.id ?? "",
   );
   const [weeks, setWeeks] = useState(active?.weeksRemaining ?? 8);
+  const retrainTargets = useMemo(() => eligibleRetrainPositions(player), [player]);
   const [targetPosition, setTargetPosition] = useState<PositionPrimary>(
-    active?.targetPosition ?? eligibleRetrainPositions(player)[0] ?? "AM",
+    active?.targetPosition ?? retrainTargets[0] ?? "AM",
   );
+  useEffect(() => {
+    if (retrainTargets.length > 0 && !retrainTargets.includes(targetPosition)) {
+      setTargetPosition(retrainTargets[0]!);
+    }
+  }, [retrainTargets, targetPosition]);
   const tired = playerFatigueWarning(player);
   const check = canAssignIndividualProgram(player, kind, programs, targetPosition, stampId);
   const stampWeeks = kind === "stamp" ? (stampDefinition(stampId)?.weeks ?? weeks) : weeks;
@@ -729,7 +737,7 @@ function IndividualProgramModal({
         <div className="training-individual-body">
           <p className="training-individual-stats">
             Schwaches Bein {Math.round(player.attributes.weak_foot)}/100
-            {player.flexibility.length > 0
+            {kind !== "position_retrain" && player.flexibility.length > 0
               ? ` · Flex ${player.flexibility.map((slot) => `${slot.trained_as} ${Math.round(slot.proficiency * 100)}%`).join(", ")}`
               : ""}
           </p>
@@ -761,18 +769,31 @@ function IndividualProgramModal({
             </select>
           </label>
 
-          {kind === "position_retrain" ? (
-            <label className="training-individual-field">
-              <span>Zielposition</span>
-              <select
-                value={targetPosition}
-                onChange={(event) => setTargetPosition(event.target.value as PositionPrimary)}
-              >
-                {eligibleRetrainPositions(player).map((position) => (
-                  <option key={position} value={position}>{position}</option>
-                ))}
-              </select>
-            </label>
+          {kind === "position_retrain" && retrainTargets.length === 0 ? (
+            <ScreenEmptyState
+              icon={MapPinOff}
+              title="Keine Umbau-Ziele mehr"
+              hint="Das hatten wir doch schon versucht — für manche Positionen passt es offenbar nicht."
+            />
+          ) : null}
+
+          {kind === "position_retrain" && retrainTargets.length > 0 ? (
+            <>
+              <label className="training-individual-field">
+                <span>Zielposition</span>
+                <select
+                  value={targetPosition}
+                  onChange={(event) => setTargetPosition(event.target.value as PositionPrimary)}
+                >
+                  {retrainTargets.map((position) => (
+                    <option key={position} value={position}>
+                      {position}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <RetrainPreviewPanel player={player} targetPosition={targetPosition} weeks={weeks} />
+            </>
           ) : null}
 
           {kind === "stamp" ? (

@@ -8,6 +8,11 @@ import {
   MAX_INDIVIDUAL_PROGRAMS,
   programForPlayer,
 } from "./individual-training.ts";
+import {
+  retrainDeterministicUnit,
+  retrainSuccessProbability,
+  rollRetrainSuccess,
+} from "./position-retrain-roll.ts";
 
 describe("individual training", () => {
   it("assigns a weak-foot program and grows weak_foot over a week", () => {
@@ -19,15 +24,37 @@ describe("individual training", () => {
     expect(programForPlayer(result.programs, player.id)?.weeksRemaining).toBe(5);
   });
 
-  it("advances position retrain proficiency on flexibility", () => {
+  it("resolves position retrain only on the final program week", () => {
     const player = clonePlayer();
     player.position = "CM";
     player.flexibility = [];
-    const programs = assignIndividualProgram([], player, "position_retrain", 8, 1, 8, "AM");
-    const result = advanceIndividualTrainingWeek([player], programs);
-    const slot = result.players[0]!.flexibility.find((entry) => entry.trained_as === "AM");
-    expect(slot?.proficiency).toBeGreaterThan(0);
-    expect(slot?.weeks_trained).toBe(1);
+    const masterSeed = 99;
+    const programs = assignIndividualProgram([], player, "position_retrain", 4, 1, 8, "AM");
+    let squad = [player];
+    let active = programs;
+    for (let week = 1; week <= 3; week++) {
+      const step = advanceIndividualTrainingWeek(squad, active, {
+        season: 1,
+        week,
+        masterSeed,
+      });
+      squad = step.players;
+      active = step.programs;
+      expect(squad[0]!.flexibility).toHaveLength(0);
+    }
+    const final = advanceIndividualTrainingWeek(squad, active, { season: 1, week: 4, masterSeed });
+    expect(final.retrainNotices).toHaveLength(1);
+    const slot = final.players[0]!.flexibility.find((entry) => entry.trained_as === "AM");
+    expect(slot).toBeDefined();
+    expect(slot!.proficiency).toBeGreaterThan(0);
+  });
+
+  it("blocks a target after two failed retrain completions", () => {
+    const player = clonePlayer();
+    player.position = "CM";
+    player.state.retrain_failures = { AM: 2 };
+    const blocked = canAssignIndividualProgram(player, "position_retrain", [], "AM");
+    expect(blocked.ok).toBe(false);
   });
 
   it("enforces the concurrent program cap", () => {
@@ -73,5 +100,51 @@ describe("individual training", () => {
     expect(hasStamp(squad[0]!, "kopfballungeheuer")).toBe(true);
     expect(active).toHaveLength(0);
     expect(squad[0]!.attributes.strength).toBe(113);
+  });
+
+  it("records a failure counter when the retrain roll misses", () => {
+    const player = clonePlayer();
+    player.position = "CM";
+    player.flexibility = [];
+    const startedWeek = 3;
+    let masterSeed = -1;
+    for (let seed = 0; seed < 500; seed += 1) {
+      const probability = retrainSuccessProbability({
+        plannedWeeks: 4,
+        from: player.position,
+        to: "RW",
+        attrs: player.attributes,
+        currentProficiency: 0,
+      });
+      const unit = retrainDeterministicUnit(seed, player.id, "RW", 1, startedWeek);
+      if (!rollRetrainSuccess(unit, probability)) {
+        masterSeed = seed;
+        break;
+      }
+    }
+    expect(masterSeed).toBeGreaterThanOrEqual(0);
+
+    const programs = assignIndividualProgram(
+      [],
+      player,
+      "position_retrain",
+      4,
+      1,
+      startedWeek,
+      "RW",
+    );
+    let squad = [player];
+    let active = programs;
+    for (let week = 1; week <= 4; week++) {
+      const step = advanceIndividualTrainingWeek(squad, active, {
+        season: 1,
+        week,
+        masterSeed,
+      });
+      squad = step.players;
+      active = step.programs;
+    }
+    expect(squad[0]!.state.retrain_failures?.RW).toBe(1);
+    expect(squad[0]!.flexibility[0]?.proficiency).toBeLessThan(1);
   });
 });

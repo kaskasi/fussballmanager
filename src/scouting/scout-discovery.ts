@@ -346,7 +346,7 @@ export function normalizeActiveRegionScout(
   }
   const legacyProgress = job.progress ?? 0;
   if (legacyProgress >= DISCOVERY_COMPLETE) {
-    return { zone_id: job.zone_id, working_days_left: 0, ...job };
+    return { ...job, working_days_left: 0 };
   }
   return {
     ...job,

@@ -1,3 +1,4 @@
+import { asTeamId, type TeamId } from "@fussballmanager/shared";
 import { applyVeteranBackstory, peakCaBaseAdjustment } from "../player/veteran-backstory.ts";
 import { seedPhaseStamps } from "../development/ability-stamps.ts";
 import { estimateCa, marketValue } from "../transfers/market-value.ts";
@@ -9,7 +10,7 @@ export const CLUBS_PER_DIVISION = 18;
 export const PLAYERS_PER_CLUB = 22;
 export const GENERATED_CLUB_COUNT = CLUBS_PER_DIVISION * 2;
 export const GENERATED_PLAYER_COUNT = GENERATED_CLUB_COUNT * PLAYERS_PER_CLUB;
-export const NORDSTERN_TEAM_ID = "fc-nordstern";
+export const NORDSTERN_TEAM_ID: TeamId = asTeamId("fc-nordstern");
 export const NORDSTERN_CLUB_ID = "cl_fc_nordstern";
 
 export type WorldDivisionId = "regionalliga-nord" | "oberliga-nord";

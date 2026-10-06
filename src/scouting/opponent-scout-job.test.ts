@@ -15,7 +15,12 @@ const setup: CareerMatchSetup = {
   seed: 99,
   matchday: 3,
   calendarWeek: 12,
-  fixture: { homeTeamId: asTeamId("a"), awayTeamId: asTeamId("b") },
+  fixture: {
+    id: "test-fixture",
+    matchday: 3,
+    homeTeamId: asTeamId("a"),
+    awayTeamId: asTeamId("b"),
+  },
   homeTeamId: asTeamId("a"),
   awayTeamId: asTeamId("b"),
   playerClubId: asTeamId("a"),
@@ -39,7 +44,7 @@ describe("opponent scout job (PRD 22)", () => {
       })),
       variantPlans: [],
     });
-    const network = defaultScoutNetwork();
+    const network = defaultScoutNetwork(1, 99);
     let board = createScoutBoard();
     const started = startOpponentScoutJob(board, network, setup, 1, 12);
     expect(started.reason).toBe("ok");

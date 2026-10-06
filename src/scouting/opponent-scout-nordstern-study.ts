@@ -149,6 +149,14 @@ function setupForStrengthBucket(
   const matchday = STUDY_SYNTHETIC_MATCHDAY_BASE + slotIndex;
   const week = matchday;
   const fixture: ScheduledFixture = {
+    id: opponentScoutMatchIdFromFixture(
+      session.season,
+      week,
+      matchday,
+      NORDSTERN_TEAM_ID,
+      picked.opponentId,
+    ),
+    matchday,
     homeTeamId: NORDSTERN_TEAM_ID,
     awayTeamId: picked.opponentId,
   };
@@ -182,6 +190,14 @@ function setupForOpponentId(
   const matchday = STUDY_SYNTHETIC_MATCHDAY_BASE + slotIndex;
   const week = matchday;
   const fixture: ScheduledFixture = {
+    id: opponentScoutMatchIdFromFixture(
+      session.season,
+      week,
+      matchday,
+      NORDSTERN_TEAM_ID,
+      opponentId,
+    ),
+    matchday,
     homeTeamId: NORDSTERN_TEAM_ID,
     awayTeamId: opponentId,
   };

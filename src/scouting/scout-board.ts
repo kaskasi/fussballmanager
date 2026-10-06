@@ -3,6 +3,7 @@ import { formatPlayerName } from "../types/player-display.ts";
 import {
   worldCareerClubId,
   type WorldClub,
+  type WorldDivisionId,
 } from "../world/world-generator.ts";
 import {
   applyQuietWeek,
@@ -10,11 +11,7 @@ import {
   type AbilityEstimate,
   type PlayerKnowledge,
 } from "./estimate-model.ts";
-import {
-  initialEstimateForPlayer,
-  loadMarketList,
-  type ScoutedTarget,
-} from "./market-list.ts";
+import { initialEstimateForPlayer, type ScoutedTarget } from "./market-list.ts";
 import {
   DEFAULT_SCOUT_CAPACITY,
   discoveryHeadline,
@@ -22,6 +19,21 @@ import {
   type ScoutAssignment,
   type ScoutDiscoveryAlert,
 } from "./scout-assignments.ts";
+import {
+  advanceDiscoveryWeek,
+  emptyDiscovery,
+  ensureTargetsForPool,
+  isInScoutPool,
+  normalizeDiscovery,
+  type ActiveClubScout,
+  type ActiveRegionScout,
+  type ScoutDiscoveryState,
+} from "./scout-discovery.ts";
+import {
+  appendScoutJobNotices,
+  noticesFromDiscoveryJobAdvance,
+  type ScoutJobCompleteNotice,
+} from "./scout-job-postfach.ts";
 import {
   applyObservationWithAccuracy,
   scoutNetworkAccuracyModifier,
@@ -56,6 +68,10 @@ export interface ScoutBoard {
   recentReports?: ScoutReport[];
   assignments?: ScoutAssignment[];
   discoveryAlerts?: ScoutDiscoveryAlert[];
+  discovery?: ScoutDiscoveryState;
+  active_club_scout?: ActiveClubScout | null;
+  active_region_scout?: ActiveRegionScout | null;
+  discovery_postfach_queue?: ScoutJobCompleteNotice[];
 }
 
 export function normalizeScoutBoard(board: ScoutBoard): ScoutBoard {
@@ -74,25 +90,23 @@ export function normalizeScoutBoard(board: ScoutBoard): ScoutBoard {
     recentReports: board.recentReports ?? [],
     assignments: board.assignments ?? [],
     discoveryAlerts: board.discoveryAlerts ?? [],
+    discovery: normalizeDiscovery(board.discovery),
+    active_club_scout: board.active_club_scout ?? null,
+    active_region_scout: board.active_region_scout ?? null,
+    discovery_postfach_queue: board.discovery_postfach_queue ?? [],
   };
 }
 
-export function createScoutBoard(players: readonly Player[] = []): ScoutBoard {
-  const market = loadMarketList(players);
+export function createScoutBoard(_players: readonly Player[] = []): ScoutBoard {
   return {
-    targets: Object.fromEntries(
-      market.map((target) => [
-        target.player.id,
-        {
-          playerId: target.player.id,
-          estimate: target.estimate,
-          assigned: false,
-        },
-      ]),
-    ),
+    targets: {},
     recentReports: [],
     assignments: [],
     discoveryAlerts: [],
+    discovery: emptyDiscovery(),
+    active_club_scout: null,
+    active_region_scout: null,
+    discovery_postfach_queue: [],
   };
 }
 
@@ -102,19 +116,9 @@ export function reconcileScoutBoard(
   rivalPlayers: readonly Player[],
 ): ScoutBoard {
   const normalized = normalizeScoutBoard(board);
-  const targets: Record<string, ScoutKnowledgeTarget> = {};
-  for (const [index, player] of rivalPlayers.entries()) {
-    if (player.squad_status !== "pro" || player.club_id === null) continue;
-    const existing = normalized.targets[player.id];
-    targets[player.id] = existing
-      ? { ...existing, playerId: player.id }
-      : {
-          playerId: player.id,
-          estimate: initialEstimateForPlayer(player, index),
-          assigned: false,
-        };
-  }
-  return { ...normalized, targets };
+  const discovery = normalizeDiscovery(normalized.discovery);
+  const targets = ensureTargetsForPool(normalized.targets, discovery, rivalPlayers);
+  return { ...normalized, discovery, targets };
 }
 
 export function scoutReportsForWeek(board: ScoutBoard, week: number): ScoutReport[] {
@@ -130,7 +134,9 @@ export function listBoardTargets(
   const clubNames = new Map(
     clubs.map((club) => [worldCareerClubId(club.id), club.name] as const),
   );
+  const discovery = normalizeDiscovery(board.discovery);
   return Object.values(board.targets).flatMap((target) => {
+    if (!isInScoutPool(discovery, target.playerId)) return [];
     const player = byId.get(target.playerId);
     return player
       ? [{
@@ -148,6 +154,8 @@ export function getBoardTarget(
   playerId: string,
   rivalPlayers: readonly Player[],
 ): BoardTarget | null {
+  const discovery = normalizeDiscovery(board.discovery);
+  if (!isInScoutPool(discovery, playerId)) return null;
   const target = board.targets[playerId];
   const player = rivalPlayers.find((entry) => entry.id === playerId);
   return target && player
@@ -246,27 +254,45 @@ export function advanceScoutWeek(
   rivalPlayers: readonly Player[] = [],
   clubs: readonly WorldClub[] = [],
   network?: ScoutNetworkState,
+  season = 1,
+  playerDivisionId?: WorldDivisionId,
 ): ScoutBoard {
   const capacity = network ? scoutNetworkCapacity(network) : DEFAULT_SCOUT_CAPACITY;
   const accuracy = network ? scoutNetworkAccuracyModifier(network) : 1;
   const synced = syncAssignmentTargets(board, rivalPlayers, clubs, capacity);
-  const normalized = normalizeScoutBoard(synced);
+  const beforeAdvance = normalizeScoutBoard(synced);
+  const withDiscovery = advanceDiscoveryWeek(
+    beforeAdvance,
+    rivalPlayers,
+    activeScoutCount(synced),
+  );
+  const normalized = normalizeScoutBoard(withDiscovery);
+  const jobNotices = noticesFromDiscoveryJobAdvance({
+    before: beforeAdvance,
+    after: normalized,
+    rivalPlayers,
+    worldClubs: clubs,
+    playerDivisionId,
+    season,
+    week,
+  });
+  const withNotices = appendScoutJobNotices(normalized, jobNotices);
   const targets: Record<string, ScoutKnowledgeTarget> = {};
   const reports: ScoutReport[] = [];
   const discoveries: ScoutDiscoveryAlert[] = [];
   const playersById = new Map(rivalPlayers.map((player) => [player.id, player] as const));
   const assignmentByPlayer = new Map<string, string>();
-  for (const assignment of normalized.assignments ?? []) {
+  for (const assignment of withNotices.assignments ?? []) {
     if (!assignment.active) continue;
     for (const target of targetsForAssignment(
       assignment,
-      listBoardTargets(normalized, rivalPlayers, clubs),
+      listBoardTargets(withNotices, rivalPlayers, clubs),
     )) {
       assignmentByPlayer.set(target.player.id, assignment.id);
     }
   }
 
-  for (const [playerId, target] of Object.entries(normalized.targets)) {
+  for (const [playerId, target] of Object.entries(withNotices.targets)) {
     const knowledge: PlayerKnowledge = { status: "scouted", estimate: target.estimate };
     const beforeRange = target.estimate.uncertaintyRange;
     const next = target.assigned
@@ -309,10 +335,11 @@ export function advanceScoutWeek(
   }
 
   return {
+    ...withNotices,
     targets,
-    recentReports: [...reports, ...(normalized.recentReports ?? [])].slice(0, 24),
-    assignments: normalized.assignments,
-    discoveryAlerts: [...discoveries, ...(normalized.discoveryAlerts ?? [])].slice(0, 16),
+    recentReports: [...reports, ...(withNotices.recentReports ?? [])].slice(0, 24),
+    assignments: withNotices.assignments,
+    discoveryAlerts: [...discoveries, ...(withNotices.discoveryAlerts ?? [])].slice(0, 16),
   };
 }
 

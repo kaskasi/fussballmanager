@@ -1,7 +1,7 @@
 # /docs/prd/04_scouting.md
 
-**Version:** 1.1
-**Last Updated:** 2026-09-22
+**Version:** 1.2
+**Last Updated:** 2026-10-06
 **Status:** Final
 
 ---
@@ -165,13 +165,40 @@ Vertrauen ist eine absolute Zahl 0–100, keine Sterne-Skala für Spielerqualit�
 }
 ```
 
-### 04.5 Shortlist & Watch-List
+### 04.5 Discovery (Region → Verein → Pool) — F4.4 v1
+
+Die Marktliste zeigt nur Spieler im **`scout_pool`** (append-only Player-IDs im Save).
+Neue Spiele starten mit leerem Pool; Käufe und Verhandlungen sind ohne Pool-Eintrag blockiert (PRD 05).
+
+| Schritt | Aktion | Ergebnis |
+|---|---|---|
+| Region | Bis zu **3** abgeschlossene **Regions-Scouts** pro Zone (Netzwerk-Tab / Karte) | `region_scout_tier` 1→3: Fremd-Verzeichnis wächst in Dritteln; Tier 3 = `discovered_region_ids` |
+| Verein | **Vereins-Scout** (nur sichtbare Clubs) | Profikader des Vereins → `scout_pool` + `discovered_club_ids` |
+| Beobachten | Scout-Zuweisung / Aufträge wie bisher | CI-Bänder enger (04.1), nur für Pool-Spieler |
+
+**Sichtbarkeit Vereinsverzeichnis (36-Clubs-Welt, v1):**
+
+- Alle Clubs der **eigenen Division** sind sofort im Verzeichnis (Name sichtbar).
+- Clubs anderer Divisionen erscheinen **stückweise** nach Regions-Scout (⅓ / ⅔ / alle bei Tier 1–3).
+- Unbekannte Regionen ohne Liga-Gegner: keine Club-Liste, nur „Region scouten (0/3)“.
+
+Persistenz (`scout_board.discovery`): `region_scout_tier`, `discovered_region_ids`, `discovered_club_ids`, `scout_pool`.
+Aktive Jobs: `active_region_scout`, `active_club_scout` (Fortschritt 0–100, Wochen-Ticks in `advanceScoutWeek`).
+Migration: bestehende `targets`-Keys werden in den Pool übernommen; alle Karten-Zonen gelten als entdeckt (Save ≥ 60). Legacy `discovered_region_ids` → Tier 3 pro Zone (Save ≥ 62).
+
+**Pool-Abdeckung (Karte):** Pro Zone/Club Anzeige `{im Pool} / ~{Profis}` nur für **sichtbare** Vereine; engeres Scout-Wissen bleibt Treffer/Assistent (nicht Karte).
+
+**Postfach (F4.4 v1):** Schließen sich Region- oder Vereins-Scout-Jobs ab, landet eine **informative Post-Karte** im Postfach (nicht blockierend für NEXT): Region = Stufe `{tier}/{max}` + sichtbare Vereine; Verein = Kader im Pool + optional 1–3 Namen. Verbrauch durch „Verstanden“; CTAs zu Scout-Netzwerk / Treffer. Queue: `scout_board.discovery_postfach_queue` (Save ≥ 61).
+
+**Ausbaustufe (PRD 21):** optionales Routen-Rätsel beim Regions-Job-Start — keine v1-Pflicht.
+
+### 04.6 Shortlist & Watch-List
 
 - Shortlist hält 20 Spieler.
 - Live-Tracking: Sparkline der beobachteten Entwicklung, wöchentlich.
 - Push-Alerts: „Großes Talent bei XY verfügbar“. Agenten-Push mit Zufallsfaktor.
 
-### 04.6 Invarianten
+### 04.7 Invarianten
 
 | Regel | Überprüfung |
 |---|---|

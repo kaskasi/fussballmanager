@@ -253,8 +253,10 @@ WorldState clubs
 
 Regeln:
 
-- Jeder fremde Profispieler ist grundsätzlich auffindbar, aber nicht
-  automatisch gut bekannt.
+- Fremde Profis existieren in der Welt, erscheinen in der Marktliste aber erst
+  nach Vereins-Scout (Pool, PRD 04.5). Division-Mitbewerber sind im
+  Vereinsverzeichnis sofort sichtbar; andere Clubs nach Regions-Scout.
+- Suche und Scout-Aufträge filtern nur den **Pool**, nicht die gesamte Welt.
 - Suche und Scout-Aufträge unterstützen mindestens Alter, Position, Region
   und Club.
 - Reports dürfen nur Wissen des Spielerclubs verwenden.

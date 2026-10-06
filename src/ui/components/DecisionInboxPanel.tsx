@@ -37,6 +37,14 @@ import {
   parseCampLeaderPostfachItemId,
 } from "../../inbox/postfach-camp-leader.ts";
 import { CampLeaderInboxCard } from "./CampLeaderInboxCard.tsx";
+import { ScoutJobInboxCard } from "./ScoutJobInboxCard.tsx";
+import type { ScoutBoard } from "../../scouting/scout-board.ts";
+import {
+  scoutJobNoticeById,
+  unconsumedScoutJobNotices,
+  type ScoutJobCompleteNotice,
+} from "../../scouting/scout-job-postfach.ts";
+import { isScoutJobPostfachItemId } from "../../inbox/postfach-scout-job.ts";
 
 /** WIREFRAME: docs/prd/design.md §9.4 — Postfach-Inhalt */
 export function DecisionInboxPanel({
@@ -53,6 +61,10 @@ export function DecisionInboxPanel({
   youthCamps,
   masterSeed,
   onHireCampLeader,
+  scoutBoard,
+  onDismissScoutJob,
+  onOpenScoutingNetwork,
+  onOpenScoutingHits,
 }: {
   inbox: YouthInboxState;
   players: Player[];
@@ -67,6 +79,10 @@ export function DecisionInboxPanel({
   youthCamps?: readonly YouthCamp[];
   masterSeed?: number;
   onHireCampLeader?: (campId: string, candidate: CampLeaderCandidate) => void;
+  scoutBoard?: ScoutBoard;
+  onDismissScoutJob?: (itemId: string) => void;
+  onOpenScoutingNetwork?: () => void;
+  onOpenScoutingHits?: () => void;
 }) {
   useT();
   const focus = useMemo(() => inboxWeekFocus(inbox, players), [inbox, players]);
@@ -75,9 +91,17 @@ export function DecisionInboxPanel({
     () => (youthCamps ? campsAwaitingLeaderChoice(youthCamps) : []),
     [youthCamps],
   );
+  const scoutJobNotices = useMemo(
+    () => (scoutBoard ? unconsumedScoutJobNotices(scoutBoard) : []),
+    [scoutBoard],
+  );
   const postfachQueueIds = useMemo(
-    () => [...pending.map((item) => item.id), ...campLeaderCamps.map((camp) => campLeaderPostfachItemId(camp.id))],
-    [campLeaderCamps, pending],
+    () => [
+      ...pending.map((item) => item.id),
+      ...campLeaderCamps.map((camp) => campLeaderPostfachItemId(camp.id)),
+      ...scoutJobNotices.map((notice) => notice.id),
+    ],
+    [campLeaderCamps, pending, scoutJobNotices],
   );
   const postfachOpenTotal = postfachQueueIds.length;
   const nextQueuedPlayer = focus.nextQueued
@@ -109,6 +133,8 @@ export function DecisionInboxPanel({
 
   const activeCampId = activeId ? parseCampLeaderPostfachItemId(activeId) : null;
   const activeCamp = activeCampId ? campLeaderCamps.find((camp) => camp.id === activeCampId) : undefined;
+  const activeScoutJob =
+    activeId && scoutBoard ? scoutJobNoticeById(scoutBoard, activeId) : undefined;
   const active = pending.find((item) => item.id === activeId) ?? null;
   const player = active ? players.find((entry) => entry.id === active.playerId) : null;
   const coachIcon = active ? inbox.coachIcons[active.playerId] : undefined;
@@ -131,7 +157,7 @@ export function DecisionInboxPanel({
       <header className="inbox-head">
         <div>
           <p className="eyebrow">
-            {campLeaderCamps.length > 0
+            {postfachOpenTotal > focus.openCount || campLeaderCamps.length > 0 || scoutJobNotices.length > 0
               ? t("hub.inbox.postfachQueue", { count: postfachOpenTotal })
               : t("hub.inbox.title", { current: focus.openCount, max: MAX_INBOX_ITEMS })}
             {" · "}
@@ -164,11 +190,15 @@ export function DecisionInboxPanel({
             {postfachQueueIds.map((queueId, index) => {
               const preview = isCampLeaderPostfachItemId(queueId)
                 ? campLeaderQueuePreview(parseCampLeaderPostfachItemId(queueId)!)
-                : inboxQueuePreview(
-                    pending.find((item) => item.id === queueId)!,
-                    players,
-                    storyCast,
-                  );
+                : isScoutJobPostfachItemId(queueId)
+                  ? scoutJobQueuePreview(
+                      scoutJobNotices.find((notice) => notice.id === queueId),
+                    )
+                  : inboxQueuePreview(
+                      pending.find((item) => item.id === queueId)!,
+                      players,
+                      storyCast,
+                    );
               return (
                 <button
                   key={queueId}
@@ -196,6 +226,15 @@ export function DecisionInboxPanel({
                 onHire={(candidate) => onHireCampLeader(activeCamp.id, candidate)}
               />
             </section>
+          ) : activeScoutJob && onDismissScoutJob ? (
+            <ScoutJobInboxCard
+              notice={activeScoutJob}
+              postIndex={postfachQueueIds.indexOf(activeId ?? "") + 1}
+              postTotal={postfachOpenTotal}
+              onDismiss={() => onDismissScoutJob(activeScoutJob.id)}
+              onOpenScoutingNetwork={onOpenScoutingNetwork}
+              onOpenScoutingHits={onOpenScoutingHits}
+            />
           ) : active && isStoryInboxItem(active) && active.narrative ? (
             <section className="inbox-card inbox-card-story">
               <div className="inbox-story">
@@ -274,6 +313,23 @@ export function DecisionInboxPanel({
       )}
     </>
   );
+}
+
+function scoutJobQueuePreview(notice: ScoutJobCompleteNotice | undefined): {
+  name: string;
+  topic: string;
+} {
+  if (!notice) return { name: "Scouting", topic: "" };
+  if (notice.kind === "region_complete") {
+    return {
+      name: notice.zoneLabel ?? notice.zoneId ?? "Region",
+      topic: t("postfach.scoutJob.queueTopicRegion"),
+    };
+  }
+  return {
+    name: notice.clubName ?? notice.careerClubId ?? "Verein",
+    topic: t("postfach.scoutJob.queueTopicClub"),
+  };
 }
 
 function campLeaderQueuePreview(campId: string): { name: string; topic: string } {

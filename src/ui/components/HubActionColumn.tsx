@@ -5,6 +5,7 @@ import { AlertTriangle, Mail } from "lucide-react";
 import type { ClubEvent } from "../../inbox/club-events.ts";
 import { clubEventIcon } from "../../inbox/club-events.ts";
 import { postfachOpenCount } from "../../inbox/postfach-open-count.ts";
+import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import {
@@ -38,10 +39,12 @@ export function HubActionColumn({
   onOpenPostfach,
   onStoryChoice,
   onViewAllEvents,
+  scoutBoard,
 }: {
   players: readonly Player[];
   youthInbox: YouthInboxState;
   youthCamps: readonly YouthCamp[];
+  scoutBoard?: ScoutBoard;
   clubEvents: readonly ClubEvent[];
   storyCast: StoryCast;
   onOpenPostfach: (itemId?: string) => void;
@@ -51,7 +54,7 @@ export function HubActionColumn({
   useT();
   const focus = inboxWeekFocus(youthInbox, players);
   const decisions = focus.open.slice(0, MAX_INBOX_ITEMS);
-  const postfachCount = postfachOpenCount(youthInbox, players, youthCamps);
+  const postfachCount = postfachOpenCount(youthInbox, players, youthCamps, scoutBoard);
   const nextQueuedPlayer = focus.nextQueued
     ? players.find((entry) => entry.id === focus.nextQueued?.playerId)
     : undefined;

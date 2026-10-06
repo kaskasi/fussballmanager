@@ -1643,6 +1643,118 @@ body {
   margin-top: 0.65rem;
 }
 
+.scout-discovery-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.scout-discovery-zone {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--panel-border, #e2e8f0);
+  background: rgb(255 255 255 / 72%);
+}
+
+.scout-discovery-zone.is-strong {
+  border-color: #6ee7b7;
+}
+
+.scout-discovery-zone.is-mixed {
+  border-color: #fcd34d;
+}
+
+.scout-discovery-zone.is-weak {
+  border-color: #cbd5e1;
+}
+
+.scout-discovery-zone-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.scout-discovery-zone-head h3 {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.scout-discovery-region-btn,
+.scout-discovery-club-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.35rem;
+  border: 1px solid #94a3b8;
+  background: #fff;
+  cursor: pointer;
+}
+
+.scout-discovery-region-btn:disabled,
+.scout-discovery-club-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.scout-discovery-clubs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.scout-discovery-club {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.scout-discovery-club.is-done {
+  opacity: 0.92;
+}
+
+.scout-discovery-club-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.scout-discovery-club-pool {
+  margin-left: 0.25rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.scout-discovery-locked {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.scout-discovery-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 0.4rem;
+  pointer-events: none;
+  background: conic-gradient(
+    var(--sonnengelb, #facc15) calc(var(--scout-progress, 0) * 1%),
+    transparent 0
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  padding: 2px;
+  opacity: 0.35;
+}
+
 .scout-region-map-svg {
   width: 100%;
   height: auto;

@@ -2,10 +2,14 @@ import { describe, expect, it } from "vitest";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { boardTargetFromPlayer } from "./scout-board.ts";
 import {
+  buildScoutDiscoveryMapModel,
   buildScoutRegionMapModel,
   SCOUT_MAP_ZONES,
   toneFromZoneStats,
 } from "./scout-region-map.ts";
+import { emptyDiscovery } from "./scout-discovery.ts";
+import type { WorldClub } from "../world/world-generator.ts";
+import type { Player } from "../types/player.ts";
 
 describe("buildScoutRegionMapModel", () => {
   it("returns four zones matching SCOUT_MAP_ZONES", () => {
@@ -40,6 +44,50 @@ describe("buildScoutRegionMapModel", () => {
       boardTargetFromPlayer(orphan, { uncertaintyRange: 10, sampleSize: 1, estimatedAbilityMean: 60 }),
     ]);
     expect(model.zones.every((z) => z.playerCount === 0)).toBe(true);
+  });
+});
+
+describe("buildScoutDiscoveryMapModel", () => {
+  it("counts pool expected only for directory-visible clubs", () => {
+    const clubs: WorldClub[] = [
+      {
+        id: "div",
+        name: "Div FC",
+        short_name: "DFC",
+        region: "Fördeküste",
+        division_id: "regionalliga-nord",
+        identity: "community",
+        reputation: 50,
+        rivalry_ids: [],
+      },
+      {
+        id: "foreign",
+        name: "Foreign FC",
+        short_name: "FFC",
+        region: "Fördeküste",
+        division_id: "oberliga-nord",
+        identity: "community",
+        reputation: 40,
+        rivalry_ids: [],
+      },
+    ];
+    const rivals = [
+      { id: "p1", club_id: "cl_div", squad_status: "pro" },
+      { id: "p2", club_id: "cl_div", squad_status: "pro" },
+    ] as unknown as readonly Player[];
+
+    const discovery = emptyDiscovery();
+    const model = buildScoutDiscoveryMapModel({
+      clubs,
+      targets: [],
+      rivalPlayers: rivals,
+      discovery,
+      playerDivisionId: "regionalliga-nord",
+    });
+    const foerde = model.zones.find((zone) => zone.id === "foerde");
+    expect(foerde?.poolExpected).toBe(2);
+    expect(foerde?.regionTier).toBe(0);
+    expect(foerde?.clubs.filter((club) => club.directoryVisible)).toHaveLength(1);
   });
 });
 

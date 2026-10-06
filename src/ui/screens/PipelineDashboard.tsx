@@ -175,6 +175,7 @@ export function PipelineDashboard({
             players={players}
             youthInbox={youthInbox}
             youthCamps={youthCamps}
+            scoutBoard={scoutBoard}
             clubEvents={clubEvents}
             storyCast={storyState.cast}
             onOpenPostfach={onOpenPostfach}

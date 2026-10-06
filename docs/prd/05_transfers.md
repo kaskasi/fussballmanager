@@ -33,6 +33,7 @@ Transfersystem, Vertragsverhandlungen und den KI-Transfermarkt spezifizieren. Ze
    Vertragsverhandlungen mit vereinslosen Spielern.
 4. **Verträge binden:** Gehalt, Bonus und Klauseln sind Wirtschaftsgrößen. Budget-Limits (Transfer-Topf, Gehalts-Cap) stehen in PRD 11.1; Ablösen und Gehälter buchen gegen `transfer_budget` bzw. `wage_budget_weekly`.
 5. **Verkauf ist erlaubt und normal:** Sell-On-Klauseln an Jugendspielern machen die Pipeline ökonomisch lohnend.
+6. **Kauf-Gate (Discovery):** Ablöse-Verhandlung und Kaufabschluss nur für Spieler in `scout_board.discovery.scout_pool` (PRD 04.5). Kein Fallback über die volle Rivalen-Liste.
 
 ---
 

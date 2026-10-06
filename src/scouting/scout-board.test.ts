@@ -12,13 +12,18 @@ import {
   reconcileScoutBoard,
   syncAssignmentTargets,
 } from "./scout-board.ts";
+import {
+  addPlayersToPool,
+  ensureTargetsForPool,
+  normalizeDiscovery,
+} from "./scout-discovery.ts";
 
 describe("scout board", () => {
   const rivals = initializeRivalPlayers(2026);
 
   it("loads market targets and can assign a scout", () => {
-    const board = createScoutBoard(rivals);
-    const first = listFirst(board);
+    const board = withPool(createScoutBoard(rivals), rivals);
+    const first = listBoardTargets(board, rivals)[0] ?? null;
     expect(first).not.toBeNull();
     const assigned = assignScout(board, first!.player.id);
     expect(getBoardTarget(assigned, first!.player.id, rivals)?.assigned).toBe(true);
@@ -26,8 +31,8 @@ describe("scout board", () => {
   });
 
   it("narrows assigned targets each simulated week", () => {
-    const board = createScoutBoard(rivals);
-    const first = listFirst(board)!;
+    const board = withPool(createScoutBoard(rivals), rivals);
+    const first = listBoardTargets(board, rivals)[0]!;
     const startRange = first.estimate.uncertaintyRange;
     let current = assignScout(board, first.player.id);
     current = advanceScoutWeek(current, 2, rivals);
@@ -37,8 +42,8 @@ describe("scout board", () => {
   });
 
   it("creates scout reports for assigned targets", () => {
-    const board = createScoutBoard(rivals);
-    const first = listFirst(board)!;
+    const board = withPool(createScoutBoard(rivals), rivals);
+    const first = listBoardTargets(board, rivals)[0]!;
     const assigned = assignScout(board, first.player.id);
     const next = advanceScoutWeek(assigned, 5, rivals);
     expect(next.recentReports?.length).toBe(1);
@@ -47,7 +52,7 @@ describe("scout board", () => {
   });
 
   it("decays unassigned targets on a quiet week", () => {
-    const board = createScoutBoard(rivals);
+    const board = withPool(createScoutBoard(rivals), rivals);
     const watched = Object.values(board.targets).find((target) => target.estimate.uncertaintyRange < 40)!;
     const startRange = watched.estimate.uncertaintyRange;
     const next = advanceScoutWeek(board, 2, rivals);
@@ -56,7 +61,7 @@ describe("scout board", () => {
   });
 
   it("auto-assigns targets from criteria-based scout assignments", () => {
-    const board = createScoutBoard(rivals);
+    const board = withPool(createScoutBoard(rivals), rivals);
     const young = rivals.find((player) => player.age <= 21);
     expect(young).toBeDefined();
     const withAssignment = addScoutAssignment(
@@ -68,8 +73,8 @@ describe("scout board", () => {
   });
 
   it("keeps knowledge while following authoritative roster changes", () => {
-    const board = createScoutBoard(rivals);
-    const first = listFirst(board)!;
+    const board = withPool(createScoutBoard(rivals), rivals);
+    const first = listBoardTargets(board, rivals)[0]!;
     const assigned = assignScout(board, first.player.id);
     const moved = rivals.map((player) =>
       player.id === first.player.id
@@ -89,6 +94,18 @@ describe("scout board", () => {
   });
 });
 
+function withPool(
+  board: ReturnType<typeof createScoutBoard>,
+  rivals: ReturnType<typeof initializeRivalPlayers>,
+  playerIds?: string[],
+) {
+  const ids = playerIds ?? rivals.map((player) => player.id);
+  const discovery = addPlayersToPool(normalizeDiscovery(board.discovery), ids);
+  const targets = ensureTargetsForPool(board.targets, discovery, rivals);
+  return { ...board, discovery, targets };
+}
+
 function listFirst(board: ReturnType<typeof createScoutBoard>) {
-  return listBoardTargets(board, initializeRivalPlayers(2026))[0] ?? null;
+  const rivals = initializeRivalPlayers(2026);
+  return listBoardTargets(withPool(board, rivals), rivals)[0] ?? null;
 }

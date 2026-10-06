@@ -1,6 +1,12 @@
-import { useMemo, useState, type ReactNode } from "react";
-import type { PositionPrimary } from "../../types/player.ts";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import type { Player, PositionPrimary } from "../../types/player.ts";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
+import type {
+  ActiveClubScout,
+  ActiveRegionScout,
+  ScoutDiscoveryState,
+} from "../../scouting/scout-discovery.ts";
+import type { WorldClub, WorldDivisionId } from "../../world/world-generator.ts";
 import {
   type ScoutAssignment,
 } from "../../scouting/scout-assignments.ts";
@@ -40,6 +46,7 @@ import { Circle, ClipboardList, Pause, Search, Star } from "lucide-react";
 import { ScreenEmptyState } from "../components/ScreenEmptyState.tsx";
 
 type ScoutingTab = "network" | "hits" | "watchlist";
+export type ScoutingInitialTab = "network" | "hits";
 
 const POSITIONS: PositionPrimary[] = [
   "GK",
@@ -84,6 +91,14 @@ const REGIONS = ["Schleswig-Holstein", "Fördeküste", "Hansestadt", "Nordfriesl
 /** WIREFRAME: docs/prd/design.md §9.13 — Scouting (list v1) */
 export function ScoutingCenter({
   targets,
+  rivalPlayers,
+  worldClubs,
+  discovery,
+  playerDivisionId,
+  activeClubScout,
+  activeRegionScout,
+  onScoutClub,
+  onScoutRegion,
   filters,
   onFiltersChange,
   sort,
@@ -104,8 +119,18 @@ export function ScoutingCenter({
   onFireScout,
   shortlistIds,
   onToggleShortlist,
+  initialTab,
+  onInitialTabApplied,
 }: {
   targets: BoardTarget[];
+  rivalPlayers: readonly Player[];
+  worldClubs: readonly WorldClub[];
+  discovery: ScoutDiscoveryState | undefined;
+  playerDivisionId: WorldDivisionId;
+  activeClubScout?: ActiveClubScout | null;
+  activeRegionScout?: ActiveRegionScout | null;
+  onScoutClub: (careerClubId: string) => void;
+  onScoutRegion: (zoneId: string) => void;
   filters: MarketFilters;
   onFiltersChange: (filters: MarketFilters) => void;
   sort: MarketSort;
@@ -126,9 +151,18 @@ export function ScoutingCenter({
   onFireScout: (scoutId: string) => void;
   shortlistIds: readonly string[];
   onToggleShortlist: (playerId: string) => void;
+  initialTab?: ScoutingInitialTab | null;
+  onInitialTabApplied?: () => void;
 }) {
   useT();
   const [tab, setTab] = useState<ScoutingTab>("hits");
+
+  useEffect(() => {
+    if (initialTab) {
+      setTab(initialTab);
+      onInitialTabApplied?.();
+    }
+  }, [initialTab, onInitialTabApplied]);
   const market = useMemo(
     () => targets.map((target) => ({ player: target.player, estimate: target.estimate })),
     [targets],
@@ -229,7 +263,17 @@ export function ScoutingCenter({
             {formatClubCash(scoutNetworkWeeklyWage(scoutNetwork))}/Woche
           </p>
           <section className="game-panel scouting-section" aria-label={t("scouting.network.aria")}>
-            <ScoutRegionMap targets={targets} />
+            <ScoutRegionMap
+              clubs={worldClubs}
+              targets={targets}
+              rivalPlayers={rivalPlayers}
+              discovery={discovery}
+              playerDivisionId={playerDivisionId}
+              activeClubScout={activeClubScout}
+              activeRegionScout={activeRegionScout}
+              onScoutClub={onScoutClub}
+              onScoutRegion={onScoutRegion}
+            />
           </section>
           <ScoutNetworkPanel
             network={scoutNetwork}
@@ -387,7 +431,7 @@ export function ScoutingCenter({
           <span className="squad-empty-icon" aria-hidden="true">
             <Search size={28} strokeWidth={2.5} />
           </span>
-          <p>{t("scouting.empty")}</p>
+          <p>{market.length === 0 ? t("scouting.pool.empty") : t("scouting.empty")}</p>
           {marketFiltersActive(filters) ? (
             <button
               type="button"

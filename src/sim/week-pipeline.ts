@@ -418,6 +418,8 @@ export async function simulateGameWeek(
       rivalPlayers,
       session.world.clubs,
       session.scoutNetwork,
+      session.season,
+      session.league.division_id,
     ),
     rivalPlayers,
   );

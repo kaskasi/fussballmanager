@@ -27,6 +27,14 @@ import {
   removeScoutAssignment,
   toggleScoutAssignment,
 } from "./scouting/scout-board.ts";
+import {
+  canStartClubScout,
+  canStartRegionScout,
+  normalizeDiscovery,
+  startClubScoutJob,
+  startRegionScoutJob,
+} from "./scouting/scout-discovery.ts";
+import { worldCareerClubId, type WorldDivisionId } from "./world/world-generator.ts";
 import { ArrowLeft } from "lucide-react";
 import { ClubCrest } from "./ui/components/ClubCrest.tsx";
 import { clubLogoUrlForPlayerClub } from "./ui/assets/club-logo.ts";
@@ -133,6 +141,7 @@ import {
   stadiumTotalCapacity,
 } from "./stadium/club-stadium.ts";
 import { clubDisplayName, clubShortLabel } from "./sim/league-divisions.ts";
+import { playerFixture } from "./sim/league-week.ts";
 import { fanbaseMood } from "./stadium/fanbase.ts";
 import { teamForm } from "./sim/league-form.ts";
 import { teamPoorRecentForm } from "./ui/assets/mood-photos.ts";
@@ -175,6 +184,11 @@ import {
 import { ScoutingCenter } from "./ui/screens/ScoutingCenter";
 import { CampLeaderDismissModal } from "./ui/components/CampLeaderDismissModal.tsx";
 import { postfachOpenCount } from "./inbox/postfach-open-count.ts";
+import { isScoutJobPostfachItemId } from "./inbox/postfach-scout-job.ts";
+import {
+  consumeScoutJobNotice,
+  unconsumedScoutJobNotices,
+} from "./scouting/scout-job-postfach.ts";
 import { PostfachScreen } from "./ui/screens/PostfachScreen.tsx";
 import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
 import { NoticeToast, SaveToast } from "./ui/components/SaveToast.tsx";
@@ -347,6 +361,9 @@ export default function App() {
   const [saveToastVisible, setSaveToastVisible] = useState(false);
   const [notice, setNotice] = useState<{ text: string; tone: "ok" | "warn" } | null>(null);
   const [campusInitialTab, setCampusInitialTab] = useState<"u17" | "u19" | "camps" | null>(null);
+  const [scoutingInitialTab, setScoutingInitialTab] = useState<"network" | "hits" | null>(
+    null,
+  );
   const [pendingWatchedMatch, setPendingWatchedMatch] = useState<WatchedPlayerMatch | null>(null);
   const [pendingSpend, setPendingSpend] = useState<{
     title: string;
@@ -422,6 +439,11 @@ export default function App() {
     academyFacility,
     youthCamps,
   } = session;
+  const playerDivisionId = useMemo((): WorldDivisionId => {
+    const club = world.clubs.find((entry) => worldCareerClubId(entry.id) === session.clubId);
+    return club?.division_id ?? "regionalliga-nord";
+  }, [session.clubId, world.clubs]);
+
   const shellClub = useMemo(() => {
     const teamId = league.player_club_id;
     const table = standings(league.club_ids, league.results);
@@ -630,23 +652,42 @@ export default function App() {
 
   const openPostfach = useCallback(
     (itemId?: string) => {
-      const count = postfachOpenCount(youthInbox, players, youthCamps);
+      const count = postfachOpenCount(youthInbox, players, youthCamps, scoutBoard);
       const pending = pendingInboxItems(youthInbox, players);
       const campItemIds = campsAwaitingLeaderChoice(youthCamps).map((camp) =>
         campLeaderPostfachItemId(camp.id),
       );
+      const scoutJobIds = unconsumedScoutJobNotices(scoutBoard).map((notice) => notice.id);
       if (count === 0) return;
-      if (itemId && !pending.some((item) => item.id === itemId) && !campItemIds.includes(itemId)) {
+      if (
+        itemId &&
+        !pending.some((item) => item.id === itemId) &&
+        !campItemIds.includes(itemId) &&
+        !scoutJobIds.includes(itemId) &&
+        !isScoutJobPostfachItemId(itemId)
+      ) {
         setPostfachItemId(null);
       } else {
-        setPostfachItemId(itemId ?? pending[0]?.id ?? campItemIds[0] ?? null);
+        setPostfachItemId(
+          itemId ?? pending[0]?.id ?? campItemIds[0] ?? scoutJobIds[0] ?? null,
+        );
       }
       setProfileId(null);
       setForeignPlayerId(null);
       setProfileFeedback(null);
       setScreen("postfach");
     },
-    [players, youthCamps, youthInbox],
+    [players, scoutBoard, youthCamps, youthInbox],
+  );
+
+  const handleDismissScoutJob = useCallback(
+    (itemId: string) => {
+      patchSession((current) => ({
+        ...current,
+        scoutBoard: consumeScoutJobNotice(current.scoutBoard, itemId),
+      }));
+    },
+    [patchSession],
   );
 
   const handleNext = useCallback(() => {
@@ -831,6 +872,53 @@ export default function App() {
           scoutNetworkCapacity(current.scoutNetwork),
         ),
       }));
+    },
+    [patchSession],
+  );
+
+  const handleScoutClub = useCallback(
+    (careerClubId: string) => {
+      patchSession((current) => {
+        const club = current.world.clubs.find(
+          (entry) => worldCareerClubId(entry.id) === careerClubId,
+        );
+        if (!club) return current;
+        const division =
+          current.world.clubs.find((entry) => worldCareerClubId(entry.id) === current.clubId)
+            ?.division_id ?? "regionalliga-nord";
+        const discovery = normalizeDiscovery(current.scoutBoard.discovery);
+        if (
+          !canStartClubScout(
+            club,
+            division,
+            discovery,
+            current.scoutBoard.active_club_scout,
+            current.world.clubs,
+          )
+        ) {
+          return current;
+        }
+        return {
+          ...current,
+          scoutBoard: startClubScoutJob(current.scoutBoard, careerClubId),
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handleScoutRegion = useCallback(
+    (zoneId: string) => {
+      patchSession((current) => {
+        const discovery = normalizeDiscovery(current.scoutBoard.discovery);
+        if (!canStartRegionScout(zoneId, discovery, current.scoutBoard.active_region_scout)) {
+          return current;
+        }
+        return {
+          ...current,
+          scoutBoard: startRegionScoutJob(current.scoutBoard, zoneId),
+        };
+      });
     },
     [patchSession],
   );
@@ -1750,7 +1838,7 @@ export default function App() {
 
   const jobOffers = listJobOffers(board.employer_club_id, season, league);
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
-  const openDecisionCount = postfachOpenCount(youthInbox, players, youthCamps);
+  const openDecisionCount = postfachOpenCount(youthInbox, players, youthCamps, scoutBoard);
 
   const closePlayerProfile = useCallback(() => {
     setProfileId(null);
@@ -2144,6 +2232,16 @@ export default function App() {
           onDecision={handleInboxDecision}
           onSelectPlayer={setProfileId}
           onHireCampLeader={handleHireCampLeader}
+          scoutBoard={scoutBoard}
+          onDismissScoutJob={handleDismissScoutJob}
+          onOpenScoutingNetwork={() => {
+            setScoutingInitialTab("network");
+            setScreen("scouting");
+          }}
+          onOpenScoutingHits={() => {
+            setScoutingInitialTab("hits");
+            setScreen("scouting");
+          }}
         />
       ) : null}
       {openingBlocked(session) ? (
@@ -2225,6 +2323,14 @@ export default function App() {
       {screen === "scouting" ? (
         <ScoutingCenter
           targets={listBoardTargets(scoutBoard, rivalPlayers, world.clubs)}
+          rivalPlayers={rivalPlayers}
+          worldClubs={world.clubs}
+          discovery={scoutBoard.discovery}
+          playerDivisionId={playerDivisionId}
+          activeClubScout={scoutBoard.active_club_scout}
+          activeRegionScout={scoutBoard.active_region_scout}
+          onScoutClub={handleScoutClub}
+          onScoutRegion={handleScoutRegion}
           filters={marketFilters}
           onFiltersChange={setMarketFilters}
           sort={marketSort}
@@ -2245,6 +2351,8 @@ export default function App() {
           onFireScout={handleFireScout}
           shortlistIds={transferState.shortlist}
           onToggleShortlist={handleToggleShortlist}
+          initialTab={scoutingInitialTab}
+          onInitialTabApplied={() => setScoutingInitialTab(null)}
         />
       ) : null}
       {screen === "transfers" ? (

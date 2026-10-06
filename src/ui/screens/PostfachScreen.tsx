@@ -4,6 +4,7 @@ import type { CampLeaderCandidate } from "../../youth/camp-leader-hire.ts";
 import type { YouthCamp } from "../../youth/satellite-camps.ts";
 import type { DecisionAction, YouthInboxState } from "../../youth/decision-inbox.ts";
 import type { StoryCast } from "../../narrative/story-state.ts";
+import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { DecisionInboxPanel } from "../components/DecisionInboxPanel.tsx";
@@ -21,6 +22,10 @@ export function PostfachScreen({
   onDecision,
   onSelectPlayer,
   onHireCampLeader,
+  scoutBoard,
+  onDismissScoutJob,
+  onOpenScoutingNetwork,
+  onOpenScoutingHits,
 }: {
   players: Player[];
   youthInbox: YouthInboxState;
@@ -34,6 +39,10 @@ export function PostfachScreen({
   onDecision: (itemId: string, action: DecisionAction) => void;
   onSelectPlayer: (playerId: string) => void;
   onHireCampLeader: (campId: string, candidate: CampLeaderCandidate) => void;
+  scoutBoard: ScoutBoard;
+  onDismissScoutJob: (itemId: string) => void;
+  onOpenScoutingNetwork: () => void;
+  onOpenScoutingHits: () => void;
 }) {
   useT();
 
@@ -53,6 +62,10 @@ export function PostfachScreen({
           youthCamps={youthCamps}
           masterSeed={masterSeed}
           onHireCampLeader={onHireCampLeader}
+          scoutBoard={scoutBoard}
+          onDismissScoutJob={onDismissScoutJob}
+          onOpenScoutingNetwork={onOpenScoutingNetwork}
+          onOpenScoutingHits={onOpenScoutingHits}
         />
       </section>
     </main>

@@ -144,9 +144,12 @@ Interaktion:
 
 **Screen 3a — Scout-Karte**
 
-- Regionen nach Wissensgrad eingefärbt.
-- Scouts als Pins. Klick ändert das Assignment.
-- Fortschritts-Ring um den Pin.
+- Vier Zonen (Filter-Labels aus Screen 3). Pro Zone: **bis zu 3×** „Region scouten ({tier}/{max})“ → Fremd-Verzeichnis wächst in Dritteln.
+- Eigene Division: Clubs sofort sichtbar; fremde Division stückweise nach Region-Tier.
+- Pool-Label: `{found} / ~{expected} ({pct}%)` nur für sichtbare Vereine; Hinweis Pool (Karte) vs. Wissen (Treffer/Assistent).
+- Aktionen: „Region scouten“ / „Verein scouten“ (je ein aktiver Job-Typ); Fortschritts-Ring während des Jobs.
+- Zone-Tönung nach Pool-Wissen (bekannt / unklar / blind), nicht nach Geburtsregion aller Rivalen.
+- Job abgeschlossen → Postfach-Karte (Region erkundet / Verein im Pool), Lucide, „Verstanden“ + Link Netzwerk/Treffer; zählt zur Post-Badge, blockiert NEXT nicht.
 
 **Screen 3b — Shortlist**
 

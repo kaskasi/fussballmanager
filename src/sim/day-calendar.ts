@@ -39,16 +39,14 @@ export function resolveSmartSkip(
     return { weekday: SUNDAY, action: "simulate_week", daysAdvanced: 0 };
   }
 
-  if (matchWeek && !matchPlayedThisWeek) {
-    if (weekday < SATURDAY) {
-      return { weekday: SATURDAY, action: "match", daysAdvanced: SATURDAY - weekday };
-    }
+  if (matchWeek && !matchPlayedThisWeek && weekday === SATURDAY) {
     return { weekday: SATURDAY, action: "match", daysAdvanced: 0 };
   }
 
-  if (weekday < SUNDAY) {
-    return { weekday: SUNDAY, action: "simulate_week", daysAdvanced: SUNDAY - weekday };
+  if (weekday < SATURDAY) {
+    return { weekday: weekday + 1, action: "advance", daysAdvanced: 1 };
   }
 
-  return { weekday: SUNDAY, action: "simulate_week", daysAdvanced: 0 };
+  // Saturday after match, or non-match Saturday → step to Sunday
+  return { weekday: SUNDAY, action: "advance", daysAdvanced: 1 };
 }

@@ -1,6 +1,6 @@
 # Credits & asset licenses (player-facing summary)
 
-Mood photos, textures, and avatars use **CC0 / open licenses** — no generative AI artwork in shipped visuals (see [docs/prd/01_vision.md](prd/01_vision.md)).
+We **prefer CC0 and open licenses wherever possible** (Open Peeps, Kenney, ambientCG, Commons with attribution). Where that is not enough for a credible, shippable game, we also use **other documented licenses** (Canva Content License, Magnific, etc.) — all listed below and in [assets/ATTRIBUTION.MD](../assets/ATTRIBUTION.MD). No generative AI artwork (see [docs/prd/01_vision.md](prd/01_vision.md)).
 
 | Kind | Credit |
 | --- | --- |
@@ -14,5 +14,6 @@ Mood photos, textures, and avatars use **CC0 / open licenses** — no generative
 | Kenney tiles / patterns / icons (when shipped) | [Kenney.nl](https://www.kenney.nl) (CC0) — remapped only; source zips in `assets/kenney.nl/` |
 | UI paper texture | [Paper003 from ambientCG.com](https://ambientcg.com/a/Paper003) (CC0) — `public/assets/textures/paper003-color.jpg` |
 | Browser favicon & PWA icons | Project-authored SVG/PNG (`public/favicon.svg`, `public/apple-touch-icon.png`) — Nordstern mark, design tokens §2 |
+| Fictional club crests (when shipped) | Designs exported from [Canva](https://www.canva.com/) (2026-10-06 batch), [Content License Agreement](https://www.canva.com/policies/content-license-agreement/) — fictional clubs only; sources in `assets/club_logos/` |
 
 Full maintainer inventory: [assets/ATTRIBUTION.MD](../assets/ATTRIBUTION.MD).

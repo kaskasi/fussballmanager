@@ -13,25 +13,43 @@ describe("day calendar smart skip", () => {
     });
   });
 
-  it("jumps to Saturday on a league match week", () => {
+  it("advances one weekday at a time on a league match week until Saturday", () => {
     const session = newGameSession();
     session.week = 3;
     session.weekday = MONDAY;
     expect(resolveSmartSkip(session, false)).toEqual({
+      weekday: 2,
+      action: "advance",
+      daysAdvanced: 1,
+    });
+    session.weekday = 5;
+    expect(resolveSmartSkip(session, false)).toEqual({
+      weekday: SATURDAY,
+      action: "advance",
+      daysAdvanced: 1,
+    });
+    session.weekday = SATURDAY;
+    expect(resolveSmartSkip(session, false)).toEqual({
       weekday: SATURDAY,
       action: "match",
-      daysAdvanced: 5,
+      daysAdvanced: 0,
     });
   });
 
-  it("jumps to Sunday on a non-match week", () => {
+  it("steps daily toward Sunday on a non-match week", () => {
     const session = newGameSession();
     session.week = 35;
     session.weekday = 2;
     expect(resolveSmartSkip(session, false)).toEqual({
+      weekday: 3,
+      action: "advance",
+      daysAdvanced: 1,
+    });
+    session.weekday = SATURDAY;
+    expect(resolveSmartSkip(session, false)).toEqual({
       weekday: SUNDAY,
-      action: "simulate_week",
-      daysAdvanced: 5,
+      action: "advance",
+      daysAdvanced: 1,
     });
   });
 

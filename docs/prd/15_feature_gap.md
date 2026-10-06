@@ -157,12 +157,12 @@ Priorität aus intensivem Playtest — **kein Ersatz** für nummerierte PRDs.
 | **P0** | Kalender: ein Ligaspiel-Chip pro Spieltag (Sa), nicht täglich | Done 2026-10-06 — `month-grid.ts`, `CalendarScreen` |
 | **P0** | Transfer Kauf Saisonwoche 2 (Sommerfenster) | Done 2026-10-06 — `resolve-purchase-target.ts`, `purchase-flow.test.ts` |
 | **P1** | Economy-Pacing (Infra/Stadion in ~5 Min voll) | Done 2026-10-06 — PRD 11.11, `early-pacing.ts`, Infra-Confirm |
-| **P1** | Umtrainieren als Slider + Roll (F2.3) | PRD-Schnipsel vor Mechanik; heute nur linear `position_retrain` |
-| **P1** | Portraits: `mens_squad` vs charge2; Match-UI `portrait_seed` | Charge2 erledigt; Match-Report-Portraits vereinheitlichen |
-| **P2** | Training-Camp 3×2-Grid (F3.9-Slice + Assets) | M2 |
-| **P2** | Echte Club-Logos | Research/Legal mit Jan |
-| **P2** | Kalender als Tages-Fortschritt (Mo→Sa→Spiel) | Smart-Skip existiert; Monatsgrid folgt |
-| **P2** | Mobile Layout | Screenshots in `playtest_ideas.md` ergänzen |
+| **P1** | Umtrainieren als Slider + Roll (F2.3) | Done 2026-10-06 — PRD 07.7, `position-retrain-roll.ts`, TrainingCenter preview |
+| **P1** | Portraits: `mens_squad` vs charge2; Match-UI `portrait_seed` | Done 2026-10-06 — `CareerMatch` seed map, `portrait-seed-fallback.ts` |
+| **P2** | Training-Camp 3×2-Grid (F3.9-Slice + Assets) | Done 2026-10-06 — PRD 03.6.1, `YouthCampCard`, `camp-photos.ts`, `bake:camp-photos` |
+| **P2** | Echte Club-Logos | Hooks done 2026-10-06 — `ClubCrest`, `club-logo.ts`, `bake:club-logos`; assets/legal `docs/design-refs/logos/` |
+| **P2** | Kalender als Tages-Fortschritt (Mo→Sa→Spiel) | Done 2026-10-06 — PRD 09.3, `day-calendar.ts`, `CalendarScreen` Training-Chip |
+| **P2** | Mobile Layout | Done 2026-10-06 — `screen-layout.css` @480px, `docs/design-refs/mobile-p2/AUDIT.md` |
 | **Later** | Regionale Ligen / Story-Events / Director+Kommentar | PRD 12/13/16 — Meta-Fokus Playtest |
 
 ### 15.6 Roadmap laut PRD 10 (unverändert außer F2.8-Zählung)

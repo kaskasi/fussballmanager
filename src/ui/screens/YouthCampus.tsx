@@ -9,7 +9,6 @@ import {
   Dumbbell,
   Flag,
   Frown,
-  Lock,
   PenLine,
   RefreshCw,
   Rocket,
@@ -37,15 +36,13 @@ import {
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
 import { hqIntakeCount } from "../../youth/intake-generator.ts";
 import {
-  campRoster,
-  canBuyYouthCamp,
-  campNationById,
+  CAMP_CARD_ROSTER_SLOTS,
+  CAMP_CARD_ROSTER_SLOTS_COMPACT,
   MAX_YOUTH_CAMPS,
   YOUTH_CAMP_NATIONS,
   type YouthCamp,
 } from "../../youth/satellite-camps.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
-import { formatClubCash } from "../../economy/club-finances.ts";
 import {
   actionIcon,
   actionLabel,
@@ -65,6 +62,7 @@ import {
 } from "../../youth/youth-report-view.ts";
 import { coachIconForPlayer, hasDepartureRisk } from "../components/DecisionInbox.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
+import { YouthCampCard } from "../components/YouthCampCard.tsx";
 
 const DRAG_PLAYER = "text/plain";
 type YouthTab = "u17" | "u19" | "camps";
@@ -99,6 +97,7 @@ export function YouthCampus({
   individualPrograms,
   academyFacility,
   youthCamps,
+  masterSeed,
   cash,
   onSelectPlayer,
   onOpenInbox,
@@ -117,6 +116,7 @@ export function YouthCampus({
   individualPrograms: readonly IndividualProgram[];
   academyFacility: AcademyFacility;
   youthCamps: readonly YouthCamp[];
+  masterSeed: number;
   cash: number;
   onSelectPlayer: (playerId: string) => void;
   onOpenInbox: (itemId?: string) => void;
@@ -192,6 +192,7 @@ export function YouthCampus({
           <YouthCampsPanel
             players={players}
             camps={youthCamps}
+            masterSeed={masterSeed}
             cash={cash}
             onBuy={onBuyCamp}
             onToggleStaff={onToggleCampStaff}
@@ -465,6 +466,7 @@ function YouthUnifiedRoster({
 function YouthCampsPanel({
   players,
   camps,
+  masterSeed,
   cash,
   onBuy,
   onToggleStaff,
@@ -472,90 +474,43 @@ function YouthCampsPanel({
 }: {
   players: readonly Player[];
   camps: readonly YouthCamp[];
+  masterSeed: number;
   cash: number;
   onBuy: (nationId: string) => void;
   onToggleStaff: (nationId: string, staffed: boolean) => void;
   onPull: (playerId: string) => void;
 }) {
-  const [activeCampId, setActiveCampId] = useState<string | null>(camps[0]?.id ?? null);
-  const activeOwned = activeCampId ? camps.find((camp) => camp.id === activeCampId) : undefined;
-  const roster = activeCampId && activeOwned ? campRoster(players, activeCampId) : [];
-  const nation = activeCampId ? campNationById(activeCampId) : undefined;
+  const atCampLimit = camps.length >= MAX_YOUTH_CAMPS;
+  const rosterSlots = atCampLimit ? CAMP_CARD_ROSTER_SLOTS : CAMP_CARD_ROSTER_SLOTS_COMPACT;
+  const nations = atCampLimit
+    ? YOUTH_CAMP_NATIONS.filter((entry) => camps.some((camp) => camp.id === entry.id))
+    : YOUTH_CAMP_NATIONS;
 
   return (
-    <section className="game-panel youth-camps-split" aria-label="Jugendcamps">
-      <aside className="youth-camps-list">
-        <p className="youth-camps-meta">
-          Max. {MAX_YOUTH_CAMPS} · Unterhalt gesamt siehe Finanzen
-        </p>
-        <ul>
-          {YOUTH_CAMP_NATIONS.map((entry) => {
-            const owned = camps.find((camp) => camp.id === entry.id);
-            const buy = canBuyYouthCamp(camps, entry.id, cash);
-            const active = activeCampId === entry.id;
-            return (
-              <li key={entry.id}>
-                <button
-                  type="button"
-                  className={active ? "youth-camp-pick is-active" : "youth-camp-pick"}
-                  disabled={!owned && !buy.ok}
-                  onClick={() => setActiveCampId(entry.id)}
-                >
-                  <span className="youth-camp-pick-label">
-                    {owned ? "●" : buy.ok ? "○" : ""} {entry.label} · {entry.region}
-                    {!owned && !buy.ok ? <Lock size={12} aria-hidden className="youth-camp-lock" /> : null}
-                  </span>
-                  {!owned ? (
-                    <span className="youth-camp-pick-price">{formatClubCash(entry.cost)}</span>
-                  ) : (
-                    <span className="youth-camp-pick-price">{formatClubCash(entry.upkeepWeekly)}/Wo</span>
-                  )}
-                </button>
-                {!owned && buy.ok ? (
-                  <button type="button" className="negotiation-btn negotiation-btn-primary youth-camp-buy" onClick={() => onBuy(entry.id)}>
-                    Kaufen
-                  </button>
-                ) : null}
-                {owned ? (
-                  <button
-                    type="button"
-                    className="negotiation-btn youth-camp-staff"
-                    onClick={() => onToggleStaff(entry.id, !owned.staffed)}
-                  >
-                    {owned.staffed ? "Betreuer abziehen" : "Betreuer einstellen"}
-                  </button>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      </aside>
-      <div className="youth-camps-players">
-        <h2>{nation ? `${nation.label} · ${nation.region}` : "Camp wählen"}</h2>
-        {!activeOwned ? (
-          <p className="youth-camps-empty">Camp kaufen oder links auswählen.</p>
-        ) : roster.length === 0 ? (
-          <p className="youth-camps-empty">Nächster Jahrgang: Saisonstart</p>
-        ) : (
-          <ul className="youth-camp-player-cards">
-            {roster.map((player) => (
-              <li key={player.id} className="youth-camp-player-card">
-                <PlayerPortrait seed={player.portrait_seed} size="md" />
-                <div>
-                  <strong>{formatPlayerName(player)}</strong>
-                  <p>
-                    {player.position} · {player.age} · CA{" "}
-                    {Math.round(estimateCa(player.attributes, player.position))} · Region {player.birth.region}
-                  </p>
-                  <button type="button" className="negotiation-btn negotiation-btn-primary" onClick={() => onPull(player.id)}>
-                    In Jugend überführen
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+    <section className="game-panel youth-camps-grid-wrap" aria-label="Jugendcamps">
+      <p className="youth-camps-meta">
+        {atCampLimit
+          ? `${camps.length} Camps aktiv · Unterhalt gesamt siehe Finanzen`
+          : `Max. ${MAX_YOUTH_CAMPS} · Unterhalt gesamt siehe Finanzen`}
+      </p>
+      <ul className={`youth-camps-grid${atCampLimit ? " is-camp-roster-full" : ""}`}>
+        {nations.map((entry) => (
+          <li key={entry.id}>
+            <YouthCampCard
+              nation={entry}
+              owned={camps.find((camp) => camp.id === entry.id)}
+              camps={camps}
+              cash={cash}
+              players={players}
+              masterSeed={masterSeed}
+              rosterSlots={rosterSlots}
+              onBuy={onBuy}
+              onToggleStaff={onToggleStaff}
+              onPull={onPull}
+            />
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

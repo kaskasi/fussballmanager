@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
+import { estimateCa } from "../transfers/market-value.ts";
+import { maxAnlageProfile } from "./intake-generator.ts";
 import {
   buyYouthCamp,
   campIntakeCount,
+  campLeaderName,
+  campNationById,
   canBuyYouthCamp,
+  generateCampOpeningProspects,
   MAX_YOUTH_CAMPS,
   pullCampPlayerToHq,
   weeklyCampUpkeep,
@@ -33,5 +38,38 @@ describe("satellite youth camps", () => {
     const player = clonePlayer();
     player.state.youth_site = "camp_br";
     expect(youthSite(pullCampPlayerToHq(player))).toBe("hq");
+  });
+
+  it("labels Croatia camp as Dubrovnik", () => {
+    expect(campNationById("camp_hr")?.region).toBe("Dubrovnik");
+  });
+
+  it("assigns a stable international camp leader name", () => {
+    const a = campLeaderName("camp_br", 42);
+    const b = campLeaderName("camp_br", 42);
+    const c = campLeaderName("camp_ng", 42);
+    expect(a).toBe(b);
+    expect(c).not.toBe(a);
+    expect(a.length).toBeGreaterThan(3);
+  });
+
+  it("seeds 1–2 weak youths with max development hidden stats on purchase", () => {
+    const opening = generateCampOpeningProspects({
+      campId: "camp_pl",
+      clubId: "cl_fc_nordstern",
+      season: 2,
+      week: 10,
+      masterSeed: 99,
+      players: [],
+    });
+    expect(opening.length).toBeGreaterThanOrEqual(1);
+    expect(opening.length).toBeLessThanOrEqual(2);
+    const maxAnlage = maxAnlageProfile();
+    for (const player of opening) {
+      expect(player.state.youth_site).toBe("camp_pl");
+      expect(player.hidden.drive).toBe(1.6);
+      expect(player.hidden.anlage).toEqual(maxAnlage);
+      expect(estimateCa(player.attributes, player.position)).toBeLessThan(75);
+    }
   });
 });

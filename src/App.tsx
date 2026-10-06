@@ -28,6 +28,7 @@ import {
   toggleScoutAssignment,
 } from "./scouting/scout-board.ts";
 import { ClubCrest } from "./ui/components/ClubCrest.tsx";
+import { clubLogoUrlForPlayerClub } from "./ui/assets/club-logo.ts";
 import { joinDocumentTitle, useDocumentTitle } from "./ui/document-title.ts";
 import { prepareCareerMatch, type CareerMatchSetup } from "./sim/career-match-setup.ts";
 import type { WatchedPlayerMatch } from "./sim/watched-player-match.ts";
@@ -185,9 +186,11 @@ import {
   buyYouthCamp,
   campNationById,
   canBuyYouthCamp,
+  generateCampOpeningProspects,
   pullCampPlayerToHq,
   setCampStaffed,
 } from "./youth/satellite-camps.ts";
+import { refreshAllMarketValues } from "./transfers/refresh-market-values.ts";
 import {
   applyProfileActionToSquad,
   type PlayerProfileAction,
@@ -413,6 +416,7 @@ export default function App() {
     return {
       name: clubDisplayName(teamId, world.clubs),
       initials: clubShortLabel(teamId, world.clubs),
+      logoSrc: clubLogoUrlForPlayerClub(teamId),
       leaguePlace: placeIndex >= 0 ? placeIndex + 1 : null,
     };
   }, [world.clubs, league.player_club_id, league.club_ids, league.results]);
@@ -639,6 +643,11 @@ export default function App() {
 
     if (skip.action === "simulate_week") {
       void simulateWeek();
+      return;
+    }
+
+    if (skip.action === "advance") {
+      return;
     }
   }, [
     careerMatchSetup,
@@ -1007,9 +1016,23 @@ export default function App() {
         (current) => {
           const next = canBuyYouthCamp(current.youthCamps, nationId, current.finances.cash);
           if (!next.ok) return current;
+          const youthCamps = buyYouthCamp(current.youthCamps, nationId, current.season);
+          const opening = generateCampOpeningProspects({
+            campId: nationId,
+            clubId: current.clubId,
+            season: current.season,
+            week: current.week,
+            masterSeed: current.masterSeed,
+            players: current.players,
+          });
+          const players =
+            opening.length > 0
+              ? refreshAllMarketValues([...current.players, ...opening], current.season)
+              : current.players;
           return {
             ...current,
-            youthCamps: buyYouthCamp(current.youthCamps, nationId, current.season),
+            youthCamps,
+            players,
             finances: spendClubCash(current.finances, next.cost, current.week),
           };
         },
@@ -1880,6 +1903,7 @@ export default function App() {
           cash={finances.cash}
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
+          clubLogoSrc={shellClub.logoSrc}
           leaguePlace={shellClub.leaguePlace}
           onNavigate={setScreen}
           onCampusNavigate={() => undefined}
@@ -1934,6 +1958,7 @@ export default function App() {
           cash={finances.cash}
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
+          clubLogoSrc={shellClub.logoSrc}
           leaguePlace={shellClub.leaguePlace}
           onNavigate={setScreen}
           onCloseProfile={() => setForeignPlayerId(null)}
@@ -2013,6 +2038,7 @@ export default function App() {
           cash={finances.cash}
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
+          clubLogoSrc={shellClub.logoSrc}
           leaguePlace={shellClub.leaguePlace}
           onNavigate={setScreen}
           onCloseProfile={() => setProfileId(null)}
@@ -2074,6 +2100,7 @@ export default function App() {
         cash={finances.cash}
         clubName={shellClub.name}
         clubInitials={shellClub.initials}
+        clubLogoSrc={shellClub.logoSrc}
         leaguePlace={shellClub.leaguePlace}
         onNavigate={setScreen}
         onCampusNavigate={() => undefined}
@@ -2186,6 +2213,7 @@ export default function App() {
           individualPrograms={individualPrograms}
           academyFacility={academyFacility}
           youthCamps={youthCamps}
+          masterSeed={session.masterSeed}
           cash={finances.cash}
           onSelectPlayer={setProfileId}
           onOpenInbox={openInbox}
@@ -2356,6 +2384,7 @@ function AppChrome({
   cash,
   clubName,
   clubInitials,
+  clubLogoSrc,
   leaguePlace,
   screen,
   onNavigate,
@@ -2370,6 +2399,7 @@ function AppChrome({
   cash: number;
   clubName: string;
   clubInitials: string;
+  clubLogoSrc?: string;
   leaguePlace: number | null;
   screen: Screen;
   onNavigate: (screen: Screen) => void;
@@ -2387,6 +2417,7 @@ function AppChrome({
         cash={cash}
         clubName={clubName}
         clubInitials={clubInitials}
+        clubLogoSrc={clubLogoSrc}
         leaguePlace={leaguePlace}
         onNavigate={onNavigate}
         onCloseProfile={onCloseProfile}
@@ -2407,6 +2438,7 @@ function AppNav({
   cash,
   clubName,
   clubInitials,
+  clubLogoSrc,
   leaguePlace,
   onNavigate,
   onCloseProfile,
@@ -2421,6 +2453,7 @@ function AppNav({
   cash: number;
   clubName: string;
   clubInitials: string;
+  clubLogoSrc?: string;
   leaguePlace: number | null;
   onNavigate: (screen: Screen) => void;
   onCloseProfile?: () => void;
@@ -2473,7 +2506,7 @@ function AppNav({
       aria-label={tr("shell.nav.areas")}
     >
       <div className="club-shell-identity">
-        <ClubCrest initials={clubInitials} />
+        <ClubCrest initials={clubInitials} logoSrc={clubLogoSrc} alt={clubName} />
         <div className="club-shell-identity-text">
           <p className="club-shell-name">{clubName}</p>
         </div>

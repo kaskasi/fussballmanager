@@ -16,42 +16,75 @@
 }
 
 /* — Shell header (design.md §6) — */
-.app-nav.club-shell-grid {
-  width: 100%;
-}
-
-.app-nav.club-shell-card-head,
-.app-nav.club-shell-grid {
+.app-nav.club-shell-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
   align-items: center;
   gap: 0.65rem;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  min-height: var(--club-header-height, 56px);
+  /* Same horizontal inset as .club-shell-card-body (index .app-nav padding used to zero out top/bottom). */
+  padding: 0.7rem var(--club-shell-inset);
 }
 
-.app-nav.club-shell-card-head {
-  max-width: 80rem;
-  margin-left: auto;
-  margin-right: auto;
+.app-nav.club-shell-header.club-shell-card-head {
   background: var(--panel) !important;
   border: var(--outline);
   border-bottom: none;
   border-radius: var(--radius) var(--radius) 0 0;
 }
 
-.app-nav .club-shell-identity {
+.app-nav.club-shell-header.club-shell-grid {
+  background: transparent !important;
+  border: 0;
+}
+
+.app-nav.club-shell-header .club-shell-identity {
   justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  min-height: 2.5rem;
+}
+
+.app-nav.club-shell-header .club-shell-identity-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   min-width: 0;
 }
 
-.app-nav .app-nav-center {
+.app-nav.club-shell-header .club-shell-name {
+  line-height: 1.2;
+}
+
+.app-nav.club-shell-header .club-crest,
+.app-nav.club-shell-header .club-crest-img {
+  display: block;
+  flex-shrink: 0;
+}
+
+.app-nav.club-shell-header .app-nav-center {
   justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
   max-width: 100%;
   text-align: center;
+  min-height: 2.5rem;
 }
 
-.app-nav .app-nav-actions {
+.app-nav.club-shell-header .app-nav-actions {
   justify-self: end;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 2.5rem;
 }
 
 .transfer-ambience-header {
@@ -178,6 +211,17 @@
 
   .app-nav-actions .app-nav-next-desktop {
     display: none;
+  }
+
+  /* Keep split-card header aligned with body; override legacy index mobile .app-nav chrome. */
+  .app-nav.club-shell-header {
+    padding: 0.6rem var(--club-shell-inset);
+  }
+
+  .app-nav.club-shell-header.club-shell-card-head {
+    background: var(--panel) !important;
+    box-shadow: none;
+    backdrop-filter: none;
   }
 }
 
@@ -1266,6 +1310,295 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   margin: 0;
   color: var(--tinte-weich);
   font-weight: 600;
+}
+
+.youth-camps-grid-wrap {
+  padding: 0.65rem;
+}
+
+.youth-camps-meta {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--tinte-weich);
+}
+
+.youth-camps-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+.youth-camps-grid > li {
+  display: flex;
+  min-height: 0;
+}
+
+/** Max camps owned — only three cards, one horizontal band. */
+.youth-camps-grid.is-camp-roster-full {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.youth-camp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  padding: 0.55rem;
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  background: var(--panel);
+  --youth-camp-roster-row-h: 2.35rem;
+  --youth-camp-roster-gap: 0.55rem;
+  --youth-camp-roster-slots: 5;
+}
+
+.youth-camp-card.is-compact-roster {
+  --youth-camp-roster-slots: 3;
+}
+
+.youth-camp-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.youth-camp-card-photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-klein);
+  background-size: cover;
+  background-position: center;
+}
+
+.youth-camp-card-head-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.youth-camp-card-head {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.youth-camp-card-head-side {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+}
+
+.youth-camp-card-head h3 {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.2;
+}
+
+.youth-camp-card-region {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--tinte-weich);
+}
+
+.youth-camp-card-meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.youth-camp-staff-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  min-height: 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.youth-camp-leader-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: right;
+  max-width: 5.5rem;
+}
+
+.youth-camp-leader-block:hover .youth-camp-leader-portrait {
+  outline: 2px solid var(--rasen-dunkel);
+  outline-offset: 1px;
+}
+
+.youth-camp-leader-name {
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--tinte);
+}
+
+.youth-camp-leader-role {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--tinte-weich);
+}
+
+.youth-camp-card-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 0.15rem;
+}
+
+.youth-camp-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: auto;
+}
+
+.youth-camp-card-actions .negotiation-btn {
+  min-height: 2.75rem;
+  flex: 1 1 auto;
+}
+
+.youth-camp-card-body.is-roster-empty {
+  position: relative;
+}
+
+.youth-camp-roster-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 0.35rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.youth-camp-roster-stack {
+  margin-top: auto;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.youth-camp-roster {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--youth-camp-roster-gap);
+  width: 100%;
+  overflow: hidden;
+  min-height: calc(
+    var(--youth-camp-roster-slots) * var(--youth-camp-roster-row-h) +
+      (var(--youth-camp-roster-slots) - 1) * var(--youth-camp-roster-gap)
+  );
+}
+
+.youth-camp-roster-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: var(--youth-camp-roster-row-h);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.youth-camp-roster-row.is-slot-placeholder {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.youth-camp-roster-more {
+  margin: 0.2rem 0 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--tinte-weich);
+  text-align: right;
+}
+
+.youth-camp-roster-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 800;
+}
+
+.youth-camp-roster-ca {
+  font-variant-numeric: tabular-nums;
+}
+
+.youth-camp-pull {
+  padding: 0.25rem 0.45rem;
+  min-height: 2.25rem;
+}
+
+.youth-camp-card-locked-copy {
+  font-size: 0.78rem;
+}
+
+.calendar-day-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.15rem 0 0;
+  padding: 0.15rem 0.35rem;
+  border-radius: var(--radius-klein);
+  background: rgba(62, 49, 40, 0.08);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.club-crest-img {
+  object-fit: contain;
+  border-radius: 50%;
+  border: 2px solid var(--tinte);
+  box-sizing: border-box;
+  background: var(--panel);
+}
+
+@media (max-width: 720px) {
+  .youth-camps-grid:not(.is-camp-roster-full) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .youth-camps-grid:not(.is-camp-roster-full) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .youth-camps-grid.is-camp-roster-full {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* §9.7 Tabellen */

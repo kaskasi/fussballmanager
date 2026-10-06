@@ -765,3 +765,170 @@ side-view-man-walking-rows.jpg
 - **License:** same as above.
 - **Ship attribution:** same as above (credits + next to use if visible in matchday mood).
 - **Suggested line:** `Photo from Magnific (https://www.magnific.com/)`
+
+
+
+
+
+
+
+-----
+
+TRAINING CAMP BRAZIL
+
+https://commons.wikimedia.org/wiki/File:Brazil_Bel%C3%A9m_Las_Docas_02.jpg
+
+This file is licensed under the Creative Commons Attribution-Share Alike 3.0 Unported license.
+
+Description	
+English: Las Docas in Belém, Brazil: restored ancient docks, presently with bars, restaurants and shops. Las Docas are located on the banks of the bay of the Guajará river.
+Español: Las Docas en Belém, Brasil: antiguos muelles restaurados, actualmente con bares, restaurantes y tiendas. Las Docas se encuentran a orillas de la bahía del Guajará.
+Українська: Лас-Докас у Белені, на березі затоки Гуажари: відреставровані стародавні доки, на яких зараз є бари, ресторани та магазини, Бразилія.
+Date	4 August 2009
+Source	Own work
+Author	Cayambe
+Camera location	1° 26′ 53.75″ S, 48° 30′ 00.41″ W  Heading=45° Kartographer map based on OpenStreetMap.	View this and other nearby images on: OpenStreetMap	info
+
+
+
+
+MAP BRAZIL
+
+https://commons.wikimedia.org/wiki/File:Brazil_topo.jpg
+
+
+w:en:Creative Commons
+attribution share alike	This file is licensed under the Creative Commons Attribution-Share Alike 3.0 Unported license.
+
+Description	
+Ελληνικά: Τοπογραφικός χάρτης της Βραζιλίας
+English: de:Bild:Brasilien_topo.jpg
+Date	4 July 2005 (original upload date)
+Source	Transferred from en.wikipedia to Commons.
+Author	The original uploader was Captain Blood at English Wikipedia.
+
+
+
+
+
+TRAINING_CAMP NIGERIA LANDSCAPE
+
+https://commons.wikimedia.org/wiki/File:Nigeria_Landscape_60.jpg
+
+This file is licensed under the Creative Commons Attribution-Share Alike 4.0 International license.
+
+Description	
+English: A drone view of Nigeria’s landscape reveals a stunning mix of lush forests, rolling hills, winding rivers, vast savannahs, and vibrant areas showcasing the country’s rich natural beauty and cultural diversity from above.
+Date	30 July 2025
+Source	Own work
+Author	MediaMOF
+
+
+
+TRAINING CAMP KRAKOW
+
+https://commons.wikimedia.org/wiki/File:Krakow_-_Kosciol_Mariacki.jpg
+
+This file is licensed under the Creative Commons Attribution-Share Alike 3.0 Poland license.
+
+
+Description	
+Polski: Kraków, kościół par. pw. Wniebowzięcia NMP (Mariacki), XIII/XIV, XIV, XIX, wraz ze sklepieniami pobliskich Sukiennic
+English: Saint Mary Basilica in Kraków, Poland
+Español: Basílica de Santa María vista desde la Lonja de los Paños en Cracovia, Polonia.
+Українська: Вид на базиліку Святої Марії з Суконних рядів у Кракові, Польща.
+Date	1 November 2013, 06:58:17
+Source	Own work
+Author	Jar.ciurus
+Camera location	50° 03′ 42″ N, 19° 56′ 21″ E Kartographer map based on OpenStreetMap.
+
+
+
+TRAINING CAMP KRAKOW
+https://commons.wikimedia.org/wiki/File:Barbakan_przed_wschodem_s%C5%82o%C5%84ca.jpg
+
+
+
+This file is licensed under the Creative Commons Attribution-Share Alike 4.0 International license.
+
+Description	
+Polski: PL-616491:Barbakan w Krakowie, historyczna brama prowadząca na Stare Miasto w Krakowie, w województwie małopolskim, zdjęcie zrobione tuż przed wschodem słońca. Barbakan, zbudowany około 1498 roku, jest jednym z niewielu zachowanych reliktów rozbudowanej sieci fortyfikacji i wałów obronnych, które niegdyś otaczały królewskie miasto Kraków.
+English: The Kraków Barbican, a historic gateway leading into the Old Town of Kraków, Lesser Poland Vovoideship, Poland, taken just before sunrise. The Barbican, built around 1498, is one of the few remaining relics of the complex network of fortifications and defensive barriers that once encircled the royal city of Kraków.
+Date	7 December 2020, 06:45:56
+Source	Own work
+Author	Gswito
+Other versions	
+Image extraction process	This image has an extracted file: Barbakan przed wschodem słońca (cropped).jpg.	
+lang=en
+Camera location	50° 03′ 56.88″ N, 19° 56′ 28.68″ E Kartographer map based on OpenStreetMap.	View this and other nearby images on: OpenStreetMap
+
+
+
+TRAINING_CAMP LYON FRANCE
+
+https://commons.wikimedia.org/wiki/File:Vue_du_Rh%C3%B4ne_depuis_le_Pont_Wilson_(Lyon),_mai_2019.jpg
+
+This file is made available under the Creative Commons CC0 1.0 Universal Public Domain Dedication.
+
+Description	
+Français : Vue du Rhône depuis le Pont Wilson (Lyon), mai 2019.
+Date	6 May 2019, 18:45:09
+Source	Own work
+Author	
+Benoît Prieur (1975–)  wikidata:Q42790984
+Camera location	45° 45′ 36.56″ N, 4° 50′ 25.37″ E  Heading=2.73977661133° Kartographer map based on OpenStreetMap.
+
+
+TRAINING_CAMP ISTANBUL
+
+https://commons.wikimedia.org/wiki/File:Istanbul_city_Photos-_Urban_01.jpg
+
+This file is licensed under the Creative Commons Attribution-Share Alike 4.0 International license.
+
+Description	
+فارسی: استانبول بزرگ‌ترین و پرجمعیت‌ترین شهر در کشور ترکیه و مرکز فرهنگی و اقتصادی آن کشور است. این شهر در کنار تنگه بسفر و دریای مرمره قرار دارد. تنگه بسفر دو قارهٔ آسیا و اروپا را از یکدیگر جدا می‌کند و استانبول تنها شهر بزرگ جهان است که در دو قارهٔ جهان گسترده شده‌است. بندر طبیعی شاخ طلایی یا خلیج در این شهر واقع است.
+English: Istanbul formerly known as Byzantium and Constantinople, is the most populous city in Turkey and the country's economic, cultural and historic center. Istanbul is a transcontinental city in Eurasia, straddling the Bosporus strait (which separates Europe and Asia) between the Sea of Marmara and the Black Sea. Its commercial and historical center lies on the European side and about a third of its population lives in suburbs on the Asian side of the Bosporus. With a total population of around 15 million residents in its metropolitan area, Istanbul is one of the world's most populous cities, ranking as the world's fourth largest city proper and the largest European city. The city is the administrative center of the Istanbul Metropolitan Municipality (coterminous with Istanbul Province). Istanbul is a bridge between the East and West.
+Deutsch: Istanbul (türkisch İstanbul, von griechisch εἰς τὴν πόλιν eis tḕn pólin, „in die Stadt“: siehe unten), früher Byzantion (Byzanz) und Konstantinopel, ist die bevölkerungsreichste Stadt der Türkei und deren Zentrum für Kultur, Handel, Finanzen und Medien. Mit rund 15,06 Millionen Einwohnern nahm die Metropolregion 2018 den 15. Platz unter den größten Metropolregionen der Welt ein. Mit jährlich knapp zwölf Millionen Touristen aus dem Ausland ist Istanbul überdies die Stadt mit der achtgrößten Besucherzahl der Welt.
+Español: Estambul conocida históricamente como Bizancio y, después, Constantinopla, es la ciudad más poblada de Turquía y el centro histórico, cultural y económico del país. Fue sucesivamente capital de Estados soberanos como el Imperio romano, el Imperio bizantino, el Imperio latino y el Imperio otomano hasta 1923 cuando se terminó en la Ocupación de Constantinopla.
+Português: Istambul a antiga Bizâncio e Constantinopla é a maior cidade da Turquia e a quarta maior do mundo, rivalizando com Londres como a mais populosa da Europa, com 15 029 231 habitantes na sua área metropolitana (2017). A grande maioria da população é muçulmana, mas também há um grande número de laicos e uma ínfima minoria de cristãos e judeus.
+Date	20 May 2018, 16:59:52
+Source	Own work
+Author	Mostafameraji
+Camera location	41° 01′ 55.49″ N, 28° 58′ 49.84″ E Kartographer map based on OpenStreetMap.
+
+
+TRAINING_CAMP SPLIT -> Dubrovnik CROATIA
+
+https://commons.wikimedia.org/wiki/File:Dubrovnik_as_seen_from_Sr%C4%91_-_September_2017.jpg
+
+This file is licensed under the Creative Commons Attribution-Share Alike 4.0 International license.
+
+
+Description	
+English: Dubrovnik, UNESCO World Heritage Site Ref. Number 95, as seen from Srđ.
+Polski: Widok z góry Srđ na stare miasto w Dubrowniku, w Chorwacji.
+Русский: Вид на Дубровник с горы Срдж.
+Čeština: Chorvatské město Dubrovník, původním jménem Ragusa na pobřeží Jaderského moře v regiónu Dalmácie. Jde o jednu z nejnavštěvovanějších turistických destinací v oblasti Středozemního moře s počtem obyvatel 42 615 (údaj z roku 2011), od roku 1979 součást Světové dědictví UNESCO.
+Español: Dubrovnik, anteriormente Ragusa, es una ciudad croata en el litoral del mar Adriático en la región de Dalmacia. Fue declarado Patrimonio de la Humanidad por la UNESCO en 1979, y se convirtió en uno de los destinos turísticos más importantes de Croacia.
+Magyar: Dubrovnik, régi magyar nevén Raguza látképe (Dalmácia, Horvátország)
+Italiano: Vista di Dubrovnik in Croazia.
+Македонски: Стариот дел на Дубровник во Далмација, Хрватска. Градот е прогласен за светско наследство на УНЕСКО.
+Эрзянь: Срдж пандонть лангсто ванмось Дубровникень Ташто ошонть лангс.
+Nederlands: Dubrovnik in de Kroatische regio Dalmatië
+Português: Dubrovnik, anteriormente Ragusa, uma cidade croata no litoral do mar Adriático, região da Dalmácia. Foi declarada Patrimônio da Humanidade pela UNESCO em 1979, e se tornou um dos destinos turísticos mais importantes da Croácia.
+Date	21 September 2017, 09:41:17
+Source	Own work
+Author	
+Martin Falbisoner (1978–)  wikidata:Q30147473
+Other versions	
+Image extraction process	This image has an extracted file: Dubrovnik as seen from Srđ - September 2017 (cropped).jpg.	
+lang=en
+Camera location	42° 38′ 54.43″ N, 18° 06′ 45.8″ E Kartographer map based on OpenStreetMap.
+
+
+TRAINING CAMP LAGOS< NIGERIA
+
+https://commons.wikimedia.org/wiki/File:Market_-_Ikija,_Lagos,_Nigeria.jpg
+
+I, the copyright holder of this work, release this work into the public domain. This applies worldwide.
+

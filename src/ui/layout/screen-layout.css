@@ -30,7 +30,7 @@
   width: 100%;
   max-width: 80rem;
   margin: 0 auto;
-  padding: var(--club-shell-inset);
+  /* Padding lives on .app-nav.club-shell-header (align with card body inset). */
   background: var(--panel);
   border: 2px solid var(--tinte);
   border-bottom: none;
@@ -272,5 +272,89 @@ main.scouting.club-shell-card-body .scouting-scouts {
   .finances-hero-grid {
     grid-template-columns: minmax(0, 1fr) min(320px, 32%);
     align-items: start;
+  }
+}
+
+/** P2 mobile pass (~390px): no page scroll, touch-friendly CTAs (playtest_ideas.md). */
+@media (max-width: 480px) {
+  #root {
+    padding: 0.35rem;
+  }
+
+  .screen-shell,
+  .club-shell-grid {
+    padding-inline: 0.65rem;
+  }
+
+  .club-shell-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 9rem;
+  }
+
+  .app-nav.club-shell-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "identity actions"
+      "center center";
+    gap: 0.35rem 0.5rem;
+    padding: 0.55rem max(0.65rem, env(safe-area-inset-right))
+      0.55rem max(0.65rem, env(safe-area-inset-left));
+  }
+
+  .app-nav .club-shell-identity {
+    grid-area: identity;
+  }
+
+  .app-nav .app-nav-center {
+    grid-area: center;
+    justify-self: stretch;
+  }
+
+  .app-nav .app-nav-actions {
+    grid-area: actions;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+  }
+
+  .app-nav-cash {
+    font-size: 0.82rem;
+  }
+
+  .app-nav-actions .app-nav-next,
+  .app-nav-menu .row-menu-trigger.app-nav-menu-trigger {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+
+  .calendar-grid-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .calendar-grid {
+    min-width: 18rem;
+  }
+
+  .squad-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  main.club-shell-card-body {
+    overflow-x: hidden;
+  }
+
+  .training-retrain-preview {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .training-retrain-chance-meter {
+    width: 100%;
+    max-width: 100%;
   }
 }

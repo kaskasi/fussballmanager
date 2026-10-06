@@ -181,7 +181,8 @@ sind SVG mit Text — kein generiertes Artwork.
 Stimmungs-Dekoration (Spieltag, Transferfenster) ist **optional** und darf durch
 reine Text/CSS-Ambience ersetzt werden; keine neuen generierten PNG-Streifen.
 
-Erlaubt: CC0-/Open-Source-Grafik und -SFX mit Quellenangabe im Repo.
+**Bevorzugt:** CC0-/Open-Source-Grafik und -SFX mit Quellenangabe im Repo.
+**Zusätzlich erlaubt:** andere dokumentierte Lizenzen (Creative Commons mit Attribution, Canva Content License, Magnific, …) — Inventur in `docs/ATTRIBUTION.md` / `assets/ATTRIBUTION.MD`; kein generatives Bild-KI.
 Erlaubt später: **modulare Sprachaufnahmen des Entwicklers** (kein TTS).
 Verboten ohne Produktentscheidung: Cloud-TTS, generative Musik, generative UI-Bilder.
 

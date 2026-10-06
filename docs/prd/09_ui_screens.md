@@ -101,7 +101,8 @@ Interaktion:
 - Klick auf ein Gebäude wechselt nach 2a oder kauft die nächste Stufe.
 - Spieler-Badges im Grid, sortiert nach Coach-Icon (🚀 / ➡️ / ⚠️ / 😞).
 - Abgangsrisiko: roter Rand, Klick öffnet die Decision Inbox.
-- Camps: Nationen-Liste, kaufen, Betreuer, Übernehmen in die Zentrale.
+- Camps (P2): **3×2** `YouthCampCard`-Raster — Foto, Kaufen/Betreuer, Roster pro Nation
+  (PRD 03.6.1). Split-Liste + Detailpanel entfällt.
 
 **Screen 2b — Decision Inbox Modal**
 
@@ -165,6 +166,21 @@ Interaktion:
 ```
 
 Der Wireframe-Kommentar steht in jeder neuen `.tsx`-Datei, bevor die Implementation beginnt.
+
+### 09.3 Kalender-Takt (P2)
+
+Header-**NEXT** schreitet die Session **tagweise** vor (`session.weekday`, Mo=1 … So=7).
+
+| Regel | Verhalten |
+|---|---|
+| Standard | **+1 Wochentag** innerhalb der laufenden Saisonwoche |
+| Spielwoche | Mo→…→Fr per NEXT; **Sa** löst `match` aus (kein Bulk-Sprung Mo→Sa) |
+| Nach Spiel / Freiwoche | Tagweise bis **So**, dann `simulate_week` |
+| Inbox | Montag + offene Jugend-Inbox → Inbox öffnen, **kein** Tag verbrauchen |
+| Jugend-Queue | `deliverInboxForDays(..., 1)` pro NEXT-Tag, nicht Multi-Day-Sprünge |
+
+Kalender-UI (`CalendarScreen`): Monatsfokus zur aktuellen Woche; `isToday` folgt
+`week` + `weekday`. Keine klickbaren Zellsprünge in P2.
 
 ## References
 

@@ -11,7 +11,7 @@ export interface CalendarMonthCell {
   key: string;
   day: number | null;
   isToday: boolean;
-  match?: { label: string; initials: string };
+  match?: { label: string; initials: string; clubId: string };
 }
 
 /** Map month grid day to season week (Spieltag); null if off-season in this month slice. */
@@ -67,6 +67,7 @@ export function buildMonthGrid(
         match = {
           label: home ? `Heim vs ${clubShortName(opponent)}` : `Ausw. @ ${clubShortName(opponent)}`,
           initials: clubShortName(opponent).slice(0, 2).toUpperCase(),
+          clubId: opponent,
         };
       }
     }

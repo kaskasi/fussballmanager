@@ -20,15 +20,20 @@ Ultimately, the options describe style features rather than a specific identity,
 - In diesem Zeitraum gibt es eine Chance das der Spieler die neue Rolle erlernt hat based on : Mentalen Attributen des SPielers, evtl gibt es bonus oder fähigkeiten (zb. anpassungsfähig, mit der man schneller lernt) + ob der Spieler vertraut ist mit der Position (Abw/MIT/ANG, ein CB wird schneller RB als RW) + eingestellte Dauer. 
 - Manche lernen schneller manche langsamer. Wenn ich eine zu kurze Zeit einstelle, schlägt mein roll fehl, wenn ich zu hoch einstelle habe ich trainingsressourcen verschwendet,
 - wenn ein Spieler eine Rolle beim zweiten mal nicht gelernt hat wird er es wohl nie lernen, option wird nicht mehr angezeigt, Kommentar, das hatten wir doch schon versucht...
+- **Stand 2026-10-06:** umgesetzt als PRD 07.7 (Abschluss-Roll, Slider-Vorschau im Training).
 
 
 ::: Trainig Camp Screen :::
 
 A 3 x 2 Grid of Camp Card, with small picture of the countryside(jan needs to go and get), name of coach, small cta to hire and fire, and list of players, their position and ca
 
+- **Stand 2026-10-06:** 3×2 `YouthCampCard` auf Jugend-Tab Camps; Fotos via `npm run bake:camp-photos` (pd_images → `public/assets/photos/camps/`).
+
 
 ::: Real Club logos :::
 - this would  would be help with immersion, Nordstern is not just a dot in green, no Nordstern ist  cool and sophisticated because it has a really cool logo, I can help do research ping me when help is needed
+
+- **Stand 2026-10-06:** Canva-SVG-Set + `ClubCrest`/`club-logo.ts`; Legal/Attribution in `docs/design-refs/logos/README.md`, `npm run bake:club-logos`.
 
 ::: calendar :::
 
@@ -39,6 +44,8 @@ A 3 x 2 Grid of Camp Card, with small picture of the countryside(jan needs to go
 - we would have to introduce time as a real concept
 - the calndar looks nice but entries are completely wrong. every day is filled with same oponent, for a week and then moves on to next opponent, expected, show only one entry
 
+- **Stand 2026-10-06:** NEXT = +1 Wochentag (PRD 09.3); Sa-Spielchip einmal pro Spieltag; „Training“-Chip am heutigen Nicht-Spieltag; Monatsfokus folgt `week`.
+
 ::: Transferphase :::
 
 Bugs beim Spieler kauf in woche 2 sommertransferfenster, 
@@ -48,6 +55,8 @@ Bugs beim Spieler kauf in woche 2 sommertransferfenster,
 ::: Mobile Issues :::
 
 Low priority but easily fixable
+
+- **Stand 2026-10-06:** CSS-Pass @480px (`screen-layout.css`); Audit `docs/design-refs/mobile-p2/AUDIT.md` — Screenshots optional nachreichen.
 
 
 

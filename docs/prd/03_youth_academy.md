@@ -219,6 +219,22 @@ bezahlter Satellit der Zentrale.
 - Camp-Kids stehen nicht in der HQ-Jahrgangstabelle, bis **Übernehmen in die
   Zentrale** (`youth_site = "hq"`). Keine Camp-XIs (Gesetz 6).
 
+#### 03.6.1 Camp screen layout (P2, F3.9 UI)
+
+Playtest-Slice: **6 Nationen** als **3×2-Kartenraster** (kein Split-Listen-Layout).
+
+| Element | Verhalten |
+|---|---|
+| Karte | Landschaftsfoto (CC0/Lizenziert, `campPhotoUrl(nationId)`), Nation + Region |
+| Status | Nicht gekauft (Preis + Kaufen) · gesperrt (Limit/Cash) · aktiv (Unterhalt/Wo) |
+| Betreuer | CTA „Betreuer vor Ort“ — bestehende `staffed`-Toggle, kein neues Sim |
+| Roster | Portrait, Name, Position, CA; **In Jugend überführen** auf owned Camps |
+| Camp-Leiter | Icon „Betreuer vor Ort“ unten rechts neben Meta; bei Toggle Portrait + Name + Rolle (Klick entfernt) |
+| Kauf | Sofort **1–2** schwache Talente (niedrige CA, **max** `anlage` + `drive`) im Camp |
+| Assets | Manifest `src/ui/assets/camp-photos.ts`; Bake `npm run bake:camp-photos` → `public/assets/photos/camps/` |
+
+Keine Camp-Aufstellungen, keine Scout-Karte — Gesetz 6 unverändert.
+
 ### 03.7 Invarianten
 
 | Regel | Überprüfung |

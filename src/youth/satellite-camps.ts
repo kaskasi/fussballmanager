@@ -1,5 +1,7 @@
 import type { Player, PlayerName } from "../types/player.ts";
-import { generatePlayerName } from "../types/player-display.ts";
+import { generatePlayerName, formatPlayerName } from "../types/player-display.ts";
+import { seasonCalendarYear } from "../sim/season-label.ts";
+import { buildAcademyCohort } from "./intake-generator.ts";
 import { isHqYouth, withYouthSite, YOUTH_SITE_HQ } from "./youth-site.ts";
 
 export interface YouthCampNation {
@@ -29,8 +31,47 @@ export const YOUTH_CAMP_NATIONS: readonly YouthCampNation[] = [
   { id: "camp_pl", code: "PL", flag: "🇵🇱", label: "Polen", region: "Krakau", cost: 750_000, upkeepWeekly: 5_500 },
   { id: "camp_fr", code: "FR", flag: "🇫🇷", label: "Frankreich", region: "Lyon", cost: 1_100_000, upkeepWeekly: 7_500 },
   { id: "camp_tr", code: "TR", flag: "🇹🇷", label: "Türkei", region: "Istanbul", cost: 850_000, upkeepWeekly: 6_000 },
-  { id: "camp_hr", code: "HR", flag: "🇭🇷", label: "Kroatien", region: "Split", cost: 800_000, upkeepWeekly: 5_800 },
+  { id: "camp_hr", code: "HR", flag: "🇭🇷", label: "Kroatien", region: "Dubrovnik", cost: 800_000, upkeepWeekly: 5_800 },
 ];
+
+/** Camp-Leiter: international pool, not tied to nation locale (PRD 03.6.1 UX). */
+const CAMP_LEADER_FIRST = [
+  "Marco",
+  "James",
+  "Carlos",
+  "André",
+  "David",
+  "Luca",
+  "Samir",
+  "Nikos",
+  "Oliver",
+  "Yusuf",
+  "Henrik",
+  "Mateo",
+] as const;
+
+const CAMP_LEADER_LAST = [
+  "Fischer",
+  "Bennett",
+  "Silva",
+  "Weber",
+  "Costa",
+  "Nguyen",
+  "Okonkwo",
+  "Petrov",
+  "Schmidt",
+  "Almeida",
+  "Kowalski",
+  "Rossi",
+] as const;
+
+export const CAMP_OPENING_MEAN_SHIFT = -38;
+export const CAMP_OPENING_PLAYER_MIN = 1;
+export const CAMP_OPENING_PLAYER_MAX = 2;
+/** Fixed roster rows when all camp slots are owned (wide row layout). */
+export const CAMP_CARD_ROSTER_SLOTS = 5;
+/** Smaller camp cards in 6-up shop grid — at least three talents visible. */
+export const CAMP_CARD_ROSTER_SLOTS_COMPACT = 3;
 
 const NAMES: Record<string, { first: readonly string[]; last: readonly string[] }> = {
   BR: {
@@ -61,6 +102,85 @@ const NAMES: Record<string, { first: readonly string[]; last: readonly string[] 
 
 export function campNationById(id: string): YouthCampNation | undefined {
   return YOUTH_CAMP_NATIONS.find((entry) => entry.id === id);
+}
+
+function hashCampKey(value: string): number {
+  let hash = 0;
+  for (let index = 0; index < value.length; index++) {
+    hash = Math.imul(hash ^ value.charCodeAt(index), 0x9e3779b1);
+  }
+  return hash >>> 0;
+}
+
+function mulberry32(seed: number): () => number {
+  let state = seed | 0;
+  return () => {
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function campLeaderPortraitSeed(campId: string, masterSeed: number): number {
+  return hashCampKey(`${masterSeed}:${campId}:leader`);
+}
+
+/** Stable Camp-Leiter name for a owned camp (no extra save field). */
+export function campLeaderName(campId: string, masterSeed: number): string {
+  const hash = campLeaderPortraitSeed(campId, masterSeed);
+  const first = CAMP_LEADER_FIRST[hash % CAMP_LEADER_FIRST.length] ?? CAMP_LEADER_FIRST[0]!;
+  const last =
+    CAMP_LEADER_LAST[Math.floor(hash / CAMP_LEADER_FIRST.length) % CAMP_LEADER_LAST.length] ??
+    CAMP_LEADER_LAST[0]!;
+  return formatPlayerName({ name: { first, last }, portrait_seed: hash });
+}
+
+export function campOpeningPlayerCount(campId: string, masterSeed: number, season: number): number {
+  const random = mulberry32(hashCampKey(`${masterSeed}:${campId}:${season}:opening`));
+  return random() < 0.45 ? CAMP_OPENING_PLAYER_MIN : CAMP_OPENING_PLAYER_MAX;
+}
+
+export function nextYouthPlayerIdStart(players: readonly Player[]): number {
+  let max = 0;
+  for (const player of players) {
+    const match = /^pl_(\d+)$/.exec(player.id);
+    if (!match) continue;
+    max = Math.max(max, Number.parseInt(match[1]!, 10));
+  }
+  return max + 1;
+}
+
+/** 1–2 weak-CA youths with max Anlage/Drive — immediate roster after camp purchase. */
+export function generateCampOpeningProspects(input: {
+  campId: string;
+  clubId: string;
+  season: number;
+  week: number;
+  masterSeed: number;
+  players: readonly Player[];
+}): Player[] {
+  const nation = campNationById(input.campId);
+  if (!nation) return [];
+  const count = campOpeningPlayerCount(input.campId, input.masterSeed, input.season);
+  const idStart = nextYouthPlayerIdStart(input.players);
+  const random = mulberry32(hashCampKey(`${input.masterSeed}:${input.campId}:prospects:${input.season}`));
+  return buildAcademyCohort({
+    season: input.season,
+    week: input.week,
+    seasonYear: seasonCalendarYear(input.season),
+    clubId: input.clubId,
+    nationality: nation.code,
+    region: nation.region,
+    facility: "academy_basic",
+    idStart,
+    random,
+    count,
+    youthSite: input.campId,
+    meanShift: CAMP_OPENING_MEAN_SHIFT,
+    hiddenProfile: "max_development",
+    nameFor: (seed) => generateCampPlayerName(nation.code, seed),
+  });
 }
 
 export function generateCampPlayerName(code: string, seed: number): PlayerName {

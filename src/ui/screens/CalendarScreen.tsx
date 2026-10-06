@@ -1,6 +1,8 @@
 /** WIREFRAME: docs/prd/design.md §9.5 — Kalender */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Dumbbell } from "lucide-react";
 import { ClubCrest } from "../components/ClubCrest.tsx";
+import { clubLogoUrlForId } from "../assets/club-logo.ts";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
 import { calendarWeek } from "../../sim/game-calendar.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
@@ -33,6 +35,9 @@ export function CalendarScreen({
   league: LeagueState;
 }) {
   const [monthIndex, setMonthIndex] = useState(() => monthIndexForSeasonWeek(week));
+  useEffect(() => {
+    setMonthIndex(monthIndexForSeasonWeek(week));
+  }, [week]);
   const cells = useMemo(
     () => buildMonthGrid(season, monthIndex, league, { week, weekday }),
     [season, monthIndex, league, week, weekday],
@@ -75,8 +80,17 @@ export function CalendarScreen({
               <span className="calendar-day">{cell.day}</span>
               {cell.match ? (
                 <p className="calendar-match-chip">
-                  <ClubCrest initials={cell.match.initials} />
+                  <ClubCrest
+                    initials={cell.match.initials}
+                    logoSrc={clubLogoUrlForId(cell.match.clubId)}
+                    size={28}
+                  />
                   {cell.match.label}
+                </p>
+              ) : cell.isToday ? (
+                <p className="calendar-day-chip" aria-label="Training">
+                  <Dumbbell size={14} strokeWidth={2.5} aria-hidden />
+                  Training
                 </p>
               ) : null}
             </div>

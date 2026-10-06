@@ -1,5 +1,7 @@
 # Asset attribution (shipped / source packs)
 
+**Principle:** Prefer **CC0 / open source** when choosing art (auditable, share-friendly). Use **documented commercial or Commons licenses** when they clearly improve the product — every file here has a source and license row. Goal: a game real people want to play, not license purity over polish.
+
 ## Kenney.nl
 
 - **License:** CC0 1.0 (Public Domain)
@@ -48,6 +50,19 @@ Optional credit: `Created using <name> from ambientCG.com, licensed under CC0 1.
 - **Example:** `Photo from Magnific (https://www.magnific.com/)`
 
 Full placement rules: Magnific license docs (website footer, app credits, etc.).
+
+## Canva — fictional club crests
+
+- **Policy:** [Canva Content License Agreement](https://www.canva.com/policies/content-license-agreement/) (and applicable Canva Terms of Use at time of export).
+- **Account:** Jan — Canva signup **2026-10-06**; logo designs **downloaded as PDF from Canva** after signup (same session / immediately after).
+- **Repo pipeline:** Canva PDF export → SVG via [PDF24](https://tools.pdf24.org/) (format conversion only; **no license** from PDF24) → `assets/club_logos/*.svg` (~90 files).
+- **Product use:** Crests for **fictional** generated-world clubs only (UI e.g. calendar, tables, `ClubCrest` when wired). **Not** real club trademarks; **not** registered as product or club trademarks.
+- **Allowed (typical Canva Content License):** Use in this **commercial game** end product; modify/recolor for in-game display.
+- **Not allowed (maintainer must respect):** Redistribute Canva designs as a **standalone template/logo pack** (including “free logo download” for third parties); sell or sublicense the **source** designs separately from the game; use in a way that implies Canva endorsement; trademark the exported artwork.
+- **Subscription:** Exports must comply with the Canva plan and element library **in effect when each design was downloaded** (Pro-only template elements require a Pro-eligible export at that time). Keep export date **2026-10-06** on record for this batch.
+- **Shipped in game:** Not yet — target baked slugs under `public/assets/club-logos/` + catalog (see P2 plan); until then sources stay in `assets/club_logos/`.
+- **Player-facing credit (when shipped):** Optional but recommended in Help/Credits, e.g. `Club crests: designs exported from Canva (canva.com), used under the Canva Content License.` — Canva does not require attribution for most Content uses; we list it for transparency alongside Commons/Magnific.
+- **Audit:** Replace or re-export any file that mixed **user uploads** into Canva without rights; prefer outlined SVG (no live Canva fonts) after PDF24 conversion.
 
 ## Photography (Wikimedia / other)
 

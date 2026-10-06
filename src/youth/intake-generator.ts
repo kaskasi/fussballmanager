@@ -145,6 +145,8 @@ export interface GenerateIntakeInput {
   youthSite?: string;
   meanShift?: number;
   nameFor?: (seed: number, index: number) => PlayerName;
+  /** Weak CA today, ceiling via growth — camp purchase “diamond in the rough”. */
+  hiddenProfile?: "max_development";
 }
 
 /**
@@ -245,15 +247,18 @@ function generateOne(
 ): Player {
   const component = mixture[pickIndex(mixture, input.random)] ?? mixture[0]!;
   const attributes = drawAttributes(component, position, input.random);
-  const anlage = drawAnlage(input.random);
+  const anlage = input.hiddenProfile === "max_development" ? maxAnlageProfile() : drawAnlage(input.random);
   const skillMean = average(SKILLS.map((key) => attributes[key]));
   const meanAnlage = average(Object.values(anlage));
-  const drive = adjustDrive(
-    sampleTriangular(0.6, 1, 1.5, input.random),
-    meanAnlage,
-    skillMean,
-    input.random(),
-  );
+  const drive =
+    input.hiddenProfile === "max_development"
+      ? 1.6
+      : adjustDrive(
+          sampleTriangular(0.6, 1, 1.5, input.random),
+          meanAnlage,
+          skillMean,
+          input.random(),
+        );
 
   const idNumber = input.idStart + index;
   const portraitSeed = Math.floor(input.random() * 1_000_000_000);
@@ -349,6 +354,26 @@ function drawAttributes(
     teamwork: skill("teamwork"),
     weak_foot: 20 + Math.floor(random() * 61),
     gk_handling: skill("gk_handling"),
+  };
+}
+
+export function maxAnlageProfile(): Player["hidden"]["anlage"] {
+  return {
+    shooting: ANLAGE_MAX,
+    passing: ANLAGE_MAX,
+    dribbling: ANLAGE_MAX,
+    technique: ANLAGE_MAX,
+    pace: ANLAGE_MAX,
+    strength: ANLAGE_MAX,
+    stamina: ANLAGE_MAX,
+    composure: ANLAGE_MAX,
+    leadership: ANLAGE_MAX,
+    positioning: ANLAGE_MAX,
+    vision: ANLAGE_MAX,
+    concentration: ANLAGE_MAX,
+    teamwork: ANLAGE_MAX,
+    weak_foot: ANLAGE_MAX,
+    gk_handling: ANLAGE_MAX,
   };
 }
 

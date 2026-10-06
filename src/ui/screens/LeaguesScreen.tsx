@@ -10,6 +10,7 @@ import { ClubProfileModal } from "../components/ClubProfileModal.tsx";
 import { LeagueLeaderLists } from "../components/LeagueLeaderLists.tsx";
 import { LeagueTable } from "../components/LeagueTable.tsx";
 import type { WorldClub } from "../../world/world-generator.ts";
+import { useT } from "../../i18n/react.ts";
 
 const DIVISIONS: DivisionEconomyId[] = [REGIONALLIGA_ID, OBERLIGA_ID];
 
@@ -35,6 +36,7 @@ export function LeaguesScreen({
   stadium: ClubStadium;
   onOpenStadium?: () => void;
 }) {
+  const t = useT();
   const [divisionId, setDivisionId] = useState<DivisionEconomyId>(league.division_id);
   const [viewTab, setViewTab] = useState<"table" | "scorers">("table");
   const [selectedClubId, setSelectedClubId] = useState<TeamId | null>(null);
@@ -57,7 +59,7 @@ export function LeaguesScreen({
     <main className="leagues-screen club-shell-card-body">
       <header className="leagues-screen-head">
         <div>
-          <p className="eyebrow">Wettbewerb</p>
+          <p className="eyebrow">{t("leagues.eyebrow")}</p>
           <h1>Ligen</h1>
           <p className="leagues-screen-sub">
             Klick auf einen Verein für Kurzprofil · {standings.simulated ? "Fremdliga simuliert" : "Deine Liga live"}
@@ -89,7 +91,7 @@ export function LeaguesScreen({
           className={viewTab === "table" ? "is-active" : undefined}
           onClick={() => setViewTab("table")}
         >
-          Tabelle
+          {t("leagues.tab.table")}
         </button>
         <button
           type="button"
@@ -98,7 +100,7 @@ export function LeaguesScreen({
           className={viewTab === "scorers" ? "is-active" : undefined}
           onClick={() => setViewTab("scorers")}
         >
-          Torschützen
+          {t("leagues.tab.scorers")}
         </button>
       </div>
 

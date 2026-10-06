@@ -179,7 +179,7 @@ export function useTransferNegotiation(args: {
           return sessionWithEvent(
             { ...current, transferState: round.state },
             "transfer",
-            `Verhandlung gescheitert — Spieler-Moral −${round.moralePenalty}.`,
+            t("clubEvent.negotiationMoralePenalty", { amount: round.moralePenalty }),
           );
         }
         return { ...current, transferState: round.state };

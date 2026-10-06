@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../../i18n/react.ts";
 import { Construction, Dumbbell, Home, Shirt, Star } from "lucide-react";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
 import {
@@ -106,6 +107,7 @@ export function StadiumScreen({
   onExpandPrecinct: (patchId: string, edge: PrecinctEdge, delta?: 1 | -1) => void;
   onShrinkPrecinctToMin: (patchId: string) => void;
 }) {
+  const t = useT();
   const [tab, setTab] = useState<StadiumTab>("plan");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openSlotId, setOpenSlotId] = useState<string | null>(null);
@@ -130,10 +132,10 @@ export function StadiumScreen({
     setOpenSlotId(null);
   }
 
-  const stadiumTabs: { id: StadiumTab; label: string }[] = [
-    { id: "plan", label: "Grundriss" },
-    { id: "precinct", label: "Gelände" },
-    { id: "upgrades", label: "Ausbau" },
+  const stadiumTabs: { id: StadiumTab; labelKey: string }[] = [
+    { id: "plan", labelKey: "stadium.tab.plan" },
+    { id: "precinct", labelKey: "stadium.tab.precinct" },
+    { id: "upgrades", labelKey: "stadium.tab.upgrades" },
   ];
 
   const stadiumContext = (
@@ -169,7 +171,7 @@ export function StadiumScreen({
   return (
     <main className="stadium club-shell-card-body">
       <div className="fm-tab-bar" role="tablist" aria-label="Stadionbereiche">
-        {stadiumTabs.map(({ id, label }) => (
+        {stadiumTabs.map(({ id, labelKey }) => (
           <button
             key={id}
             type="button"
@@ -178,7 +180,7 @@ export function StadiumScreen({
             className={tab === id ? "fm-tab is-active" : "fm-tab"}
             onClick={() => setTab(id)}
           >
-            {label}
+            {t(labelKey)}
           </button>
         ))}
       </div>

@@ -6,6 +6,7 @@ import { calendarPointFromIndex } from "../../sim/calendar-days.ts";
 import { civilDateFromSession, type CivilDate } from "../../sim/session-civil-date.ts";
 import { seasonCalendarYear } from "../../sim/season-label.ts";
 import { careerWeekIndex } from "../../stadium/hospitality.ts";
+import { t } from "../../i18n/index.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import {
@@ -98,21 +99,21 @@ function kindForProgram(program: IndividualProgram): CalendarMilestoneKind {
 function shortKindLabel(kind: CalendarMilestoneKind): string {
   switch (kind) {
     case "individual_retrain":
-      return "Umbau";
+      return t("calendar.milestone.retrain");
     case "individual_weak_foot":
-      return "Bein";
+      return t("calendar.milestone.weakFoot");
     case "individual_stamp":
-      return "Stempel";
+      return t("calendar.milestone.stamp");
     case "pro_trial":
-      return "Probe";
+      return t("calendar.milestone.probe");
     case "injury_return":
-      return "Fit";
+      return t("calendar.milestone.fit");
     case "camp_leader":
-      return "Camp";
+      return t("calendar.milestone.camp");
     case "contract_unlock":
-      return "Vertrag";
+      return t("calendar.milestone.contract");
     case "restaurant_viral":
-      return "Restaurant";
+      return t("calendar.milestone.restaurant");
   }
 }
 
@@ -157,7 +158,7 @@ export function collectCalendarMilestones(
         season: trial.season,
         week: trial.ends_week,
         weekday: SUNDAY,
-        label: `Profiprobenende · ${who}`,
+        label: t("calendar.milestone.proTrialEnd", { who }),
         shortLabel: who,
         playerId: player.id,
         priority: 2,
@@ -174,7 +175,7 @@ export function collectCalendarMilestones(
         season: nowSeason,
         week: returnWeek,
         weekday: SUNDAY,
-        label: `Fit-Rückkehr · ${who}`,
+        label: t("calendar.milestone.injuryReturn", { who }),
         shortLabel: who,
         playerId: player.id,
         priority: 3,
@@ -191,7 +192,7 @@ export function collectCalendarMilestones(
         season: unlock.season,
         week: unlock.week,
         weekday: unlock.weekday,
-        label: `Verhandlung möglich · ${who}`,
+        label: t("calendar.milestone.contractUnlock", { who }),
         shortLabel: who,
         playerId: player.id,
         priority: 4,
@@ -214,7 +215,7 @@ export function collectCalendarMilestones(
       season: ready.season,
       week: ready.week,
       weekday: ready.weekday,
-      label: "Camp-Leiter Kandidaten",
+      label: t("calendar.milestone.campLeader"),
       shortLabel: shortKindLabel("camp_leader"),
       priority: 2,
       isPast:
@@ -233,7 +234,7 @@ export function collectCalendarMilestones(
       season,
       week,
       weekday: SUNDAY,
-      label: "Restaurant-Hype endet",
+      label: t("calendar.milestone.restaurantViral"),
       shortLabel: shortKindLabel("restaurant_viral"),
       priority: 5,
       isPast: careerWeekIndex(season, week) < careerWeekIndex(nowSeason, nowWeek),

@@ -9,21 +9,22 @@ import { sessionMonthIndex } from "../../sim/session-civil-date.ts";
 import { buildMonthGrid } from "../calendar/month-grid.ts";
 import type { CalendarMilestone } from "../calendar/calendar-milestones.ts";
 import { formatCalendarWeekDisplay, weekdayShortDisplay } from "../../i18n/calendar-display.ts";
+import { useT } from "../../i18n/react.ts";
 import { MONDAY } from "../../sim/day-calendar.ts";
 
-const MONTHS = [
-  "Januar",
-  "Februar",
-  "März",
-  "April",
-  "Mai",
-  "Juni",
-  "Juli",
-  "August",
-  "September",
-  "Oktober",
-  "November",
-  "Dezember",
+const MONTH_KEYS = [
+  "calendar.month.january",
+  "calendar.month.february",
+  "calendar.month.march",
+  "calendar.month.april",
+  "calendar.month.may",
+  "calendar.month.june",
+  "calendar.month.july",
+  "calendar.month.august",
+  "calendar.month.september",
+  "calendar.month.october",
+  "calendar.month.november",
+  "calendar.month.december",
 ] as const;
 
 export function CalendarScreen({
@@ -39,6 +40,7 @@ export function CalendarScreen({
   league: LeagueState;
   milestones?: readonly CalendarMilestone[];
 }) {
+  const t = useT();
   const [monthIndex, setMonthIndex] = useState(() => sessionMonthIndex(season, week, weekday));
   const todayCellRef = useRef<HTMLDivElement | null>(null);
 
@@ -58,7 +60,7 @@ export function CalendarScreen({
   return (
     <main className="calendar club-shell-card-body">
       <div className="fm-tab-panel">
-        <nav className="calendar-month-nav" aria-label="Monat">
+        <nav className="calendar-month-nav" aria-label={t("calendar.nav.monthAria")}>
           <button
             type="button"
             disabled={monthIndex <= 0}
@@ -67,21 +69,22 @@ export function CalendarScreen({
             ◀
           </button>
           <span className="calendar-month-label">
-            {MONTHS[monthIndex]} · {formatSeasonLabel(season)} · {formatCalendarWeekDisplay(week)} ·{" "}
+            {t(MONTH_KEYS[monthIndex] ?? "calendar.month.january")} · {formatSeasonLabel(season)} ·{" "}
+            {formatCalendarWeekDisplay(week)} ·{" "}
             {weekdayShortDisplay(weekday)}
           </span>
           <button
             type="button"
-            disabled={monthIndex >= MONTHS.length - 1}
-            onClick={() => setMonthIndex((value) => Math.min(MONTHS.length - 1, value + 1))}
+            disabled={monthIndex >= MONTH_KEYS.length - 1}
+            onClick={() => setMonthIndex((value) => Math.min(MONTH_KEYS.length - 1, value + 1))}
           >
             ▶
           </button>
         </nav>
         {weekday === MONDAY ? (
-          <p className="calendar-context-kicker">Termine dieser Woche — weitere Wochen folgen mit dem Kalender.</p>
+          <p className="calendar-context-kicker">{t("calendar.mondayRevealKicker")}</p>
         ) : null}
-        <section className="game-panel calendar-grid-wrap" aria-label="Saisonkalender">
+        <section className="game-panel calendar-grid-wrap" aria-label={t("calendar.gridAria")}>
           <div className="calendar-weekdays">
             {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((label) => (
               <span key={label}>{label}</span>
@@ -105,7 +108,9 @@ export function CalendarScreen({
                     <span
                       className="calendar-transfer-earmark"
                       title={
-                        cell.transferWindow === "summer" ? "Sommerfenster" : "Winterfenster"
+                        cell.transferWindow === "summer"
+                          ? t("calendar.transferSummerTitle")
+                          : t("calendar.transferWinterTitle")
                       }
                       aria-hidden
                     />
@@ -114,11 +119,11 @@ export function CalendarScreen({
                   {cell.transferLastDay ? (
                     <p className="calendar-transfer-close">
                       <ArrowLeftRight size={12} strokeWidth={2.5} aria-hidden />
-                      Fenster schließt
+                      {t("calendar.transferClose")}
                     </p>
                   ) : null}
                   {cell.milestones?.length ? (
-                    <ul className="calendar-milestone-list" aria-label="Meilensteine">
+                    <ul className="calendar-milestone-list" aria-label={t("calendar.milestoneListAria")}>
                       {cell.milestones.map((entry) => (
                         <li
                           key={entry.id}
@@ -145,9 +150,9 @@ export function CalendarScreen({
                       {cell.match.label}
                     </p>
                   ) : cell.isToday ? (
-                    <p className="calendar-day-chip calendar-day-chip--today" aria-label="Heute">
+                    <p className="calendar-day-chip calendar-day-chip--today" aria-label={t("calendar.todayAria")}>
                       <Dumbbell size={14} strokeWidth={2.5} aria-hidden />
-                      Heute
+                      {t("calendar.todayAria")}
                     </p>
                   ) : null}
                 </div>

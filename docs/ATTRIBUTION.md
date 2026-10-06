@@ -1,5 +1,7 @@
 # Credits & asset licenses (player-facing summary)
 
+**In-game summary:** Help → **Credits** / **Danksagung** (Attribution tab). This file and [assets/ATTRIBUTION.MD](../assets/ATTRIBUTION.MD) remain the maintainer source of truth.
+
 We **prefer CC0 and open licenses wherever possible** (Open Peeps, Kenney, ambientCG, Commons with attribution). Where that is not enough for a credible, shippable game, we also use **other documented licenses** (Canva Content License, Magnific, etc.) — all listed below and in [assets/ATTRIBUTION.MD](../assets/ATTRIBUTION.MD). No generative AI artwork (see [docs/prd/01_vision.md](prd/01_vision.md)).
 
 | Kind | Credit |

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
+import de from "./locales/de.json" with { type: "json" };
+import en from "./locales/en.json" with { type: "json" };
+import zhHans from "./locales/zh-Hans.json" with { type: "json" };
 import { setLocale, t } from "./index.ts";
+
+function localeKeys(pack: Record<string, string>): string[] {
+  return Object.keys(pack).sort();
+}
 
 describe("i18n", () => {
   it("falls back to de for missing keys", () => {
@@ -16,5 +23,13 @@ describe("i18n", () => {
   it("serves zh-Hans strings", () => {
     setLocale("zh-Hans");
     expect(t("shell.nav.finances")).toBe("财务");
+  });
+
+  it("keeps de, en, and zh-Hans locale packs in parity", () => {
+    const kd = localeKeys(de as Record<string, string>);
+    const ke = localeKeys(en as Record<string, string>);
+    const kz = localeKeys(zhHans as Record<string, string>);
+    expect(ke).toEqual(kd);
+    expect(kz).toEqual(kd);
   });
 });

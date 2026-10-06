@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import type { Player } from "../types/player.ts";
 import type { TransferRecord } from "./transfer-history.ts";
 import { estimateCa, marketValue } from "./market-value.ts";
@@ -115,17 +116,19 @@ export function reactionMessage(
 ): string {
   if (reaction === "accept") {
     return ratio >= 1.1
-      ? "Der Verein nimmt das Angebot an."
-      : "Nach kurzem Zögern stimmt der Verein zu.";
+      ? t("transfer.negotiation.reaction.acceptHigh")
+      : t("transfer.negotiation.reaction.acceptMid");
   }
   if (reaction === "reject") {
     return ratio < 0.7
-      ? "Beleidigendes Angebot — Verhandlung beendet."
-      : "Angebot abgelehnt — Geduld sinkt.";
+      ? t("transfer.negotiation.reaction.rejectLow")
+      : t("transfer.negotiation.reaction.rejectMid");
   }
   return counter
-    ? `Gegenangebot: ${Math.round(counter).toLocaleString("de-DE")} €.`
-    : "Gegenangebot liegt auf dem Tisch.";
+    ? t("transfer.negotiation.reaction.counter", {
+        amount: `${Math.round(counter).toLocaleString("de-DE")} €`,
+      })
+    : t("transfer.negotiation.reaction.counterFallback");
 }
 
 export function startNegotiation(
@@ -295,7 +298,7 @@ export function submitNegotiationRound(
       state: { ...state, negotiations },
       negotiation: updated,
       accepted: false,
-      message: "Keine Einigung nach 4 Runden — Verhandlung beendet.",
+      message: t("transfer.negotiation.roundsExhausted"),
       moralePenalty: failedLowballs >= 3 ? 10 : undefined,
     };
   }

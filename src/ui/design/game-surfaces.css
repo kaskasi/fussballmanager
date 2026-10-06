@@ -2764,3 +2764,91 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   font-weight: 700;
   color: var(--text-muted);
 }
+
+.help-figure-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-4);
+}
+
+.help-figure {
+  margin: 0;
+  border: var(--outline);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.help-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+.help-figure figcaption {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  border-top: var(--outline);
+}
+
+.help-attribution-thanks .help-quote {
+  margin-bottom: 0;
+}
+
+.help-attribution-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.help-attribution-row {
+  padding: 0.65rem 0.75rem;
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  background: var(--bg-inactive);
+}
+
+.help-attribution-row.is-highlight {
+  background: var(--panel);
+  border-color: var(--accent-primary);
+}
+
+.help-attribution-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+}
+
+.help-attribution-row-head a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.help-attribution-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.4rem;
+  border-radius: var(--radius-klein);
+  border: var(--outline);
+  color: var(--text-secondary);
+}
+
+.help-attribution-role {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}

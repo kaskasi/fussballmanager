@@ -842,7 +842,7 @@ export default function App() {
           return sessionWithEvent(
             current,
             "finance",
-            `Zu wenig Cash für Scout ${scout.name}.`,
+            t("clubEvent.scoutHireInsufficientCash", { name: scout.name }),
           );
         }
         return sessionWithEvent(
@@ -851,7 +851,7 @@ export default function App() {
             scoutNetwork: hireScout(current.scoutNetwork, scout),
           },
           "info",
-          `Scout eingestellt: ${scout.name}.`,
+          t("clubEvent.scoutHired", { name: scout.name }),
         );
       });
     },
@@ -864,7 +864,7 @@ export default function App() {
         const scout = current.scoutNetwork.scouts.find((entry) => entry.id === scoutId);
         if (!scout) return current;
         if (current.scoutNetwork.scouts.length <= 1) {
-          return sessionWithEvent(current, "info", "Mindestens ein Scout muss im Netzwerk bleiben.");
+          return sessionWithEvent(current, "info", t("clubEvent.scoutNetworkMinimum"));
         }
         return sessionWithEvent(
           {
@@ -872,7 +872,7 @@ export default function App() {
             scoutNetwork: fireScout(current.scoutNetwork, scoutId),
           },
           "info",
-          `${scout.name} verlässt das Scout-Netzwerk.`,
+          t("clubEvent.scoutFired", { name: scout.name }),
         );
       });
     },
@@ -977,7 +977,7 @@ export default function App() {
         return sessionWithEvent(
           switched,
           "info",
-          `Neuer Job bei ${offer?.clubName ?? clubId} — Saisonziele gesetzt.`,
+          t("clubEvent.newJob", { club: offer?.clubName ?? clubId }),
         );
       });
     },
@@ -1369,7 +1369,7 @@ export default function App() {
           return sessionWithEvent(
             current,
             "transfer",
-            eligibility.reason ?? "Verkauf nicht möglich.",
+            eligibility.reason ?? t("clubEvent.sellNotAllowed"),
           );
         }
 
@@ -1390,7 +1390,7 @@ export default function App() {
           return sessionWithEvent(
             current,
             "transfer",
-            "Kein Liga-Verein zahlt den Wunschpreis — im nächsten Fenster erneut versuchen.",
+            t("clubEvent.sellNoBuyer"),
           );
         }
 
@@ -1424,10 +1424,18 @@ export default function App() {
             finances: applyPlayerSaleIncome(current.finances, deal.fee, current.week),
           },
           "transfer",
-          `Abgang ${formatPlayerName(player)} zu ${loanClubName(buyerClubId)} für ${formatClubCash(deal.fee)}.`,
+          t("clubEvent.sellComplete", {
+            player: formatPlayerName(player),
+            club: loanClubName(buyerClubId),
+            fee: formatClubCash(deal.fee),
+          }),
         );
         for (const narrative of shifted.narratives) {
-          next = sessionWithEvent(next, "profile", `💡 ${narrative.narrative}`);
+          next = sessionWithEvent(
+            next,
+            "profile",
+            t("clubEvent.profileInsight", { narrative: narrative.narrative }),
+          );
         }
         return next;
       });
@@ -1452,7 +1460,11 @@ export default function App() {
           pending,
         );
         if (!eligibility.allowed) {
-          return sessionWithEvent(current, "transfer", eligibility.reason ?? "Vorvertrag nicht möglich.");
+          return sessionWithEvent(
+            current,
+            "transfer",
+            eligibility.reason ?? t("clubEvent.preContractNotAllowed"),
+          );
         }
 
         const offer = preContractOffer(target.player, current.season, current.week);
@@ -1460,7 +1472,9 @@ export default function App() {
           return sessionWithEvent(
             current,
             "finance",
-            `Transfer-Budget zu niedrig (Signaturbonus ca. ${formatClubCash(offer?.signingBonus ?? 0)}).`,
+            t("clubEvent.preContractBudget", {
+              amount: formatClubCash(offer?.signingBonus ?? 0),
+            }),
           );
         }
 
@@ -1479,8 +1493,11 @@ export default function App() {
             { ...current, transferState: deal.state },
             "transfer",
             deal.winnerClubId
-              ? `${formatPlayerName(target.player)} wählt ${loanClubName(deal.winnerClubId)}.`
-              : "Vorvertrag fehlgeschlagen.",
+              ? t("clubEvent.preContractLost", {
+                  player: formatPlayerName(target.player),
+                  club: loanClubName(deal.winnerClubId),
+                })
+              : t("clubEvent.preContractFailed"),
           );
         }
 
@@ -1491,7 +1508,10 @@ export default function App() {
             finances: applyTransferFee(current.finances, deal.pending.signing_bonus, current.week),
           },
           "transfer",
-          `Vorvertrag mit ${formatPlayerName(target.player)} — wirksam ${formatSeasonLabel(deal.pending.effective_season)}.`,
+          t("clubEvent.preContractSigned", {
+            player: formatPlayerName(target.player),
+            season: formatSeasonLabel(deal.pending.effective_season),
+          }),
         );
       });
       setForeignPlayerId(null);
@@ -1588,12 +1608,15 @@ export default function App() {
           return sessionWithEvent(
             current,
             "finance",
-            `Zu wenig Cash für ${coach.name} (min. ${formatClubCash(coach.wage_weekly * 2)}).`,
+            t("clubEvent.coachInsufficientCash", {
+              name: coach.name,
+              amount: formatClubCash(coach.wage_weekly * 2),
+            }),
           );
         }
         const currentCoach = current.coachingStaff[coach.role];
         if (currentCoach && coach.quality <= currentCoach.quality) {
-          return sessionWithEvent(current, "info", "Der Kandidat ist nicht besser als der aktuelle Trainer.");
+          return sessionWithEvent(current, "info", t("clubEvent.coachNotBetter"));
         }
         return sessionWithEvent(
           {
@@ -1601,7 +1624,11 @@ export default function App() {
             coachingStaff: hireCoach(current.coachingStaff, coach),
           },
           "info",
-          `Neuer ${COACH_ROLE_LABELS[coach.role]}-Trainer: ${coach.name} (Q${coach.quality}).`,
+          t("clubEvent.coachHired", {
+            role: COACH_ROLE_LABELS[coach.role],
+            name: coach.name,
+            quality: coach.quality,
+          }),
         );
       });
     },

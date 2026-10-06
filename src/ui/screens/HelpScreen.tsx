@@ -8,9 +8,7 @@ import {
   BookOpen,
   Bot,
   Briefcase,
-  Building,
   Calendar,
-  Camera,
   ClipboardList,
   Construction,
   Diamond,
@@ -18,16 +16,15 @@ import {
   Dumbbell,
   Euro,
   Eye,
-  FileText,
   Flag,
   Flame,
   Gamepad2,
   Globe,
   Hourglass,
-  Image,
   Landmark,
   Link2,
   Play,
+  Heart,
   Repeat,
   Scale,
   School,
@@ -47,7 +44,10 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useT } from "../../i18n/react.ts";
+import { HelpAttributionPanel } from "../components/HelpAttributionPanel.tsx";
+import { HelpFigure } from "../components/HelpFigure.tsx";
 import { HelpInlineIcon } from "../components/HelpInlineIcon.tsx";
+import { HELP_PLAY_FIGURES } from "../help/help-play-figures.ts";
 import {
   formatStampEffects,
   formatStampGates,
@@ -60,24 +60,26 @@ import {
  *
  * ┌────────────────────────────────────────────────────────────┐
  * │ 📖 Hilfe                                                   │
- * │ [Welt & Story] [So funktioniert's] [Fähigkeiten]           │
+ * │ [Welt & Story] [So funktioniert's] [Fähigkeiten] [Danksagung] │
  * │                                                            │
  * │ Icon-first Abschnitte · Stempel-Katalog mit Gates/Effekten │
  * └────────────────────────────────────────────────────────────┘
  */
 
-type HelpTab = "story" | "play" | "stamps";
+type HelpTab = "story" | "play" | "stamps" | "attribution";
 
 const TAB_ICONS: Record<HelpTab, LucideIcon> = {
   story: Globe,
   play: Play,
   stamps: Sparkles,
+  attribution: Heart,
 };
 
 const TABS: { id: HelpTab; labelKey: string }[] = [
   { id: "story", labelKey: "help.tab.story" },
   { id: "play", labelKey: "help.tab.play" },
   { id: "stamps", labelKey: "help.tab.stamps" },
+  { id: "attribution", labelKey: "help.tab.attribution" },
 ];
 
 export function HelpScreen() {
@@ -114,6 +116,7 @@ export function HelpScreen() {
       {tab === "story" ? <StoryPanel /> : null}
       {tab === "play" ? <PlayPanel /> : null}
       {tab === "stamps" ? <StampsPanel /> : null}
+      {tab === "attribution" ? <HelpAttributionPanel /> : null}
     </main>
   );
 }
@@ -124,366 +127,272 @@ function StoryPanel() {
     <div className="help-panel">
       <section className="help-card" aria-labelledby="help-promise">
         <h2 id="help-promise">
-          <HelpInlineIcon icon={Landmark} /> Das Versprechen
+          <HelpInlineIcon icon={Landmark} /> {t("help.story.promise.title")}
         </h2>
-        <p className="help-quote">
-          Baue mit begrenzten Mitteln einen Underdog-Verein auf, ohne die Menschen zu verlieren, die ihn
-          tragen.
-        </p>
-        <p>
-          Du führst nicht nur einen Kader. Du verantwortest einen lokalen Club: Mitarbeiter, Nachwuchs,
-          Fans, Tradition und knappe Kasse. Erfolge fühlen sich verdient an, weil Abstieg, Fehlkäufe und
-          verlorene Talente echte Folgen haben.
-        </p>
+        <p className="help-quote">{t("help.story.promise.quote")}</p>
+        <p>{t("help.story.promise.body")}</p>
       </section>
 
       <section className="help-card" aria-labelledby="help-underdog">
         <h2 id="help-underdog">
-          <HelpInlineIcon icon={Dog} /> Dein Start: Underdog
+          <HelpInlineIcon icon={Dog} /> {t("help.story.underdog.title")}
         </h2>
-        <p>
-          Der Standardstart ist ein fiktionaler, lokal verwurzelter Verein — kein vorgefertigtes Imperium.
-          „Underdog“ ist der Startkonflikt, kein dauerhafter Statuseffekt: Aufstieg und Größe entstehen nur
-          aus dem, was du in der Simulation baust.
-        </p>
+        <p>{t("help.story.underdog.body")}</p>
         <ul className="help-icon-list">
           <li>
             <HelpInlineIcon icon={TrendingDown} />
-            <span>Sportlich unterlegener Profikader</span>
+            <span>{t("help.story.underdog.item1")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Euro} />
-            <span>Enge Transfer- und Gehaltsbudgets</span>
+            <span>{t("help.story.underdog.item2")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Construction} />
-            <span>Einfache, ausbaufähige Infrastruktur</span>
+            <span>{t("help.story.underdog.item3")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Ticket} />
-            <span>Kleine, loyale Fanbasis am Stadion und in der Stadt</span>
+            <span>{t("help.story.underdog.item4")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Sprout} />
-            <span>Starke Akademie-Hoffnung — Talente sind oft dein einziger Hebel</span>
+            <span>{t("help.story.underdog.item5")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={AlertTriangle} />
-            <span>Reales Abstiegs- und Jobrisiko vom ersten Tag an</span>
+            <span>{t("help.story.underdog.item6")}</span>
           </li>
         </ul>
       </section>
 
       <section className="help-card" aria-labelledby="help-origin">
         <h2 id="help-origin">
-          <HelpInlineIcon icon={ScrollText} /> Wie du hier landest
+          <HelpInlineIcon icon={ScrollText} /> {t("help.story.origin.title")}
         </h2>
-        <p>
-          Am Karrierebeginn wählst du deinen Weg zum Verein. Die Herkunft färbt Ton und Erwartungen — sie
-          überschreibt keine Spielergebnisse.
-        </p>
+        <p>{t("help.story.origin.body")}</p>
         <ul className="help-ensemble">
-          <li>
-            <strong>Losgewinn</strong> — Fanverein zog deinen Namen; skeptischer Vorstand
-          </li>
-          <li>
-            <strong>Der Brief</strong> — du hast geschrieben, was du fühlst
-          </li>
-          <li>
-            <strong>Gemeinschaft</strong> — niemand wollte den Job; der Verein gehört euch
-          </li>
+          <li>{t("help.story.origin.pathLottery")}</li>
+          <li>{t("help.story.origin.pathLetter")}</li>
+          <li>{t("help.story.origin.pathCommunity")}</li>
         </ul>
-        <p className="help-note">
-          Dazu wählst du den Kapitän (Führung zählt) und triffst die ersten Stimmen aus Kabine, Tribüne und
-          Presse.
-        </p>
+        <p className="help-note">{t("help.story.origin.note")}</p>
       </section>
 
       <section className="help-card" aria-labelledby="help-arc">
         <h2 id="help-arc">
-          <HelpInlineIcon icon={Flame} /> Erster Bogen: Gemeinsam gegen den Abstieg
+          <HelpInlineIcon icon={Flame} /> {t("help.story.arc.title")}
         </h2>
-        <p>
-          Die erste Saison-Geschichte ist kein festes Drehbuch. Sie erkennt echte Zustände — und erzählt
-          daraus einen Bogen um Klassenerhalt.
-        </p>
+        <p>{t("help.story.arc.body")}</p>
         <ol className="help-steps">
-          <li>Der Vorstand setzt das Klassenerhaltsziel — Verfehlen erhöht Jobdruck.</li>
-          <li>Assistent und Kapitän reagieren auf Form, Verletzungen und Spielzeit.</li>
-          <li>Fans antworten auf Ergebnisse, Ticketpreise und sichtbaren Einsatz.</li>
-          <li>Die Presse stellt kurze, icon-getriebene Fragen; Hype und Moral schwanken.</li>
-          <li>Am Saisonende erinnert die Chronik an konkrete Entscheidungen und Resultate.</li>
+          <li>{t("help.story.arc.step1")}</li>
+          <li>{t("help.story.arc.step2")}</li>
+          <li>{t("help.story.arc.step3")}</li>
+          <li>{t("help.story.arc.step4")}</li>
+          <li>{t("help.story.arc.step5")}</li>
         </ol>
-        <p className="help-note">
-          Zwei Saves mit anderem Saisonverlauf erzählen erkennbar andere Geschichten — ohne erfundene
-          Tore oder Transfers.
-        </p>
+        <p className="help-note">{t("help.story.arc.note")}</p>
       </section>
 
       <section className="help-card" aria-labelledby="help-tone">
         <h2 id="help-tone">
-          <HelpInlineIcon icon={Sun} /> Ton der Welt
+          <HelpInlineIcon icon={Sun} /> {t("help.story.tone.title")}
         </h2>
         <ul className="help-icon-list">
           <li>
             <HelpInlineIcon icon={Scale} />
-            <span>Nicht cozy: Fußball ist ungerecht und wirtschaftlich hart — aber hell und lokal warm.</span>
+            <span>{t("help.story.tone.item1")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={TrendingDown} />
-            <span>Abstieg, Entlassung, Verletzungen und Abgänge werden nicht abgefedert.</span>
+            <span>{t("help.story.tone.item2")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Smile} />
-            <span>Humor aus Figuren und Ritualen — nie aus Lächerlichmachung kleiner Vereine.</span>
+            <span>{t("help.story.tone.item3")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Sprout} />
-            <span>Hoffnung aus Entscheidungen und Beziehungen — kein garantiertes Happy End.</span>
+            <span>{t("help.story.tone.item4")}</span>
           </li>
         </ul>
       </section>
 
       <section className="help-card" aria-labelledby="help-ensemble">
         <h2 id="help-ensemble">
-          <HelpInlineIcon icon={Users} /> Das Ensemble
+          <HelpInlineIcon icon={Users} /> {t("help.story.ensemble.title")}
         </h2>
-        <p>
-          Die Story tragen stabile Rollen. Namen und Gesichter können pro Save variieren. Figuren dürfen
-          widersprechen — aber nie mehr wissen, als ihr System und ihre Fähigkeit hergeben.
-        </p>
+        <p>{t("help.story.ensemble.body")}</p>
         <ul className="help-ensemble">
-          <li>
-            <strong>Assistent</strong> — Taktik, Aufstellung, Risiko
-          </li>
-          <li>
-            <strong>Vorstand</strong> — Ziele, Finanzen, Jobdruck
-          </li>
-          <li>
-            <strong>Kapitän</strong> — Kabine, Moral, Spielzeit
-          </li>
-          <li>
-            <strong>Jugendtrainer</strong> — Talente, Geduld, Abgangsrisiko
-          </li>
-          <li>
-            <strong>Scout</strong> — Chancen mit Unsicherheitsband
-          </li>
-          <li>
-            <strong>Fanvertretung</strong> — Stimmung, Identität, Ticketpreise
-          </li>
-          <li>
-            <strong>Lokalpresse</strong> — Fragen, Hype, öffentliche Folgen
-          </li>
-          <li>
-            <strong>Rivalen</strong> — Derby, Neid, gemeinsame Historie
-          </li>
+          <li>{t("help.story.ensemble.assistant")}</li>
+          <li>{t("help.story.ensemble.board")}</li>
+          <li>{t("help.story.ensemble.captain")}</li>
+          <li>{t("help.story.ensemble.youthCoach")}</li>
+          <li>{t("help.story.ensemble.scout")}</li>
+          <li>{t("help.story.ensemble.fans")}</li>
+          <li>{t("help.story.ensemble.press")}</li>
+          <li>{t("help.story.ensemble.rivals")}</li>
         </ul>
       </section>
 
       <section className="help-card" aria-labelledby="help-horizons">
         <h2 id="help-horizons">
-          <HelpInlineIcon icon={Hourglass} /> Drei Zeithorizonte
+          <HelpInlineIcon icon={Hourglass} /> {t("help.story.horizons.title")}
         </h2>
         <ul className="help-icon-list">
           <li>
             <HelpInlineIcon icon={Calendar} />
-            <span>
-              <strong>Woche</strong> — kurze Reaktionen auf Spiel, Training, Transfer, Geld oder Jugend
-            </span>
+            <span>{t("help.story.horizons.week")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Flag} />
-            <span>
-              <strong>Saison</strong> — Bögen wie Klassenerhalt, Aufstieg, Derby-Revanche, Akademie-Durchbruch
-            </span>
+            <span>{t("help.story.horizons.season")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={BookOpen} />
-            <span>
-              <strong>Karriere</strong> — Chronik, wiederkehrende Rivalen, ehemalige Spieler, ausgebaute Orte
-            </span>
+            <span>{t("help.story.horizons.career")}</span>
           </li>
         </ul>
       </section>
 
       <section className="help-card" aria-labelledby="help-sim-story">
         <h2 id="help-sim-story">
-          <HelpInlineIcon icon={Link2} /> Story aus der Simulation
+          <HelpInlineIcon icon={Link2} /> {t("help.story.sim.title")}
         </h2>
         <ol className="help-steps">
-          <li>Die Simulation erzeugt Fakten (Spiel, Transfer, Geld, Jugend).</li>
-          <li>Figuren reagieren — kurz, icon-getrieben, mit Haltungsrichtung.</li>
-          <li>Du entscheidest nur, wenn es Konsequenzen hat (Post, max. wenige Items).</li>
-          <li>Spätere Meldungen erinnern sich an echte Savegame-Ereignisse.</li>
+          <li>{t("help.story.sim.step1")}</li>
+          <li>{t("help.story.sim.step2")}</li>
+          <li>{t("help.story.sim.step3")}</li>
+          <li>{t("help.story.sim.step4")}</li>
         </ol>
-        <p className="help-note">
-          Narrative erklärt und spitzt zu. Sie erfindet keine Tore, Transfers, Verletzungen oder
-          Potential-Zahlen — und verhindert keinen Abstieg.
-        </p>
+        <p className="help-note">{t("help.story.sim.note")}</p>
       </section>
 
-      <section className="help-card help-credits" aria-labelledby="help-credits">
-        <h2 id="help-credits">
-          <HelpInlineIcon icon={Image} /> {t("help.credits.title")}
-        </h2>
-        <p>{t("help.credits.lede")}</p>
-        <ul className="help-icon-list">
-          <li>
-            <HelpInlineIcon icon={Camera} />
-            <span>{t("help.credits.commons")}</span>
-          </li>
-          <li>
-            <HelpInlineIcon icon={Building} />
-            <span>{t("help.credits.hub")}</span>
-          </li>
-          <li>
-            <HelpInlineIcon icon={Sprout} />
-            <span>{t("help.credits.youth")}</span>
-          </li>
-          <li>
-            <HelpInlineIcon icon={Sparkles} />
-            <span>
-              {t("help.credits.magnific")}{" "}
-              <a href="https://www.magnific.com/" rel="noopener noreferrer">
-                magnific.com
-              </a>
-            </span>
-          </li>
-          <li>
-            <HelpInlineIcon icon={User} />
-            <span>
-              {t("help.credits.openPeeps")}{" "}
-              <a href="https://www.openpeeps.com/" rel="noopener noreferrer">
-                openpeeps.com
-              </a>
-            </span>
-          </li>
-          <li>
-            <HelpInlineIcon icon={FileText} />
-            <span>
-              {t("help.credits.ambientcg")}{" "}
-              <a href="https://ambientcg.com/" rel="noopener noreferrer">
-                ambientCG.com
-              </a>
-            </span>
-          </li>
-        </ul>
-      </section>
+      <p className="help-note">{t("help.story.attributionLink")}</p>
     </div>
   );
 }
 
 function PlayPanel() {
+  const t = useT();
   return (
     <div className="help-panel">
+      <section className="help-card help-figures" aria-label={t("help.tab.play")}>
+        <div className="help-figure-grid">
+          {HELP_PLAY_FIGURES.map((figure) => (
+            <HelpFigure
+              key={figure.src}
+              src={figure.src}
+              captionKey={figure.captionKey}
+              altKey={figure.altKey}
+            />
+          ))}
+        </div>
+      </section>
+
       <section className="help-card" aria-labelledby="help-loop">
         <h2 id="help-loop">
-          <HelpInlineIcon icon={Repeat} /> In einem Satz
+          <HelpInlineIcon icon={Repeat} /> {t("help.play.loop.title")}
         </h2>
-        <p className="help-quote">
-          Du planst die Woche, drückst ▶ Next, liest die Folgen — und greifst nur dort ein, wo es den
-          Verein wirklich bewegt.
-        </p>
+        <p className="help-quote">{t("help.play.loop.quote")}</p>
       </section>
 
       <section className="help-card" aria-labelledby="help-week">
         <h2 id="help-week">
-          <HelpInlineIcon icon={Calendar} /> Die Woche
+          <HelpInlineIcon icon={Calendar} /> {t("help.play.week.title")}
         </h2>
         <ol className="help-steps">
-          <li>
-            <strong>▶ Next</strong> simuliert bis zum nächsten Ereignis (Training, Spieltag, Post…).
-          </li>
-          <li>Im Hub: Ampeln, Post, Trainings-Heatmap und kurze Story-Stimmen.</li>
-          <li>Post-Entscheidungen: höchstens wenige offene Items — kein Mikromanagement.</li>
-          <li>Spieltage laufen als Text + 2D-Spielfeld aus demselben Event-Stream.</li>
+          <li>{t("help.play.week.step1")}</li>
+          <li>{t("help.play.week.step2")}</li>
+          <li>{t("help.play.week.step3")}</li>
+          <li>{t("help.play.week.step4")}</li>
         </ol>
       </section>
 
       <section className="help-card" aria-labelledby="help-grow">
         <h2 id="help-grow">
-          <HelpInlineIcon icon={TrendingUp} /> Entwicklung ohne Potential-Sterne
+          <HelpInlineIcon icon={TrendingUp} /> {t("help.play.grow.title")}
         </h2>
         <ul className="help-icon-list">
           <li>
             <HelpInlineIcon icon={Ban} />
-            <span>Keine feste Potential-Zahl. Spieler können überraschende Karrieren machen.</span>
+            <span>{t("help.play.grow.item1")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Target} />
-            <span>Team-Training: 5 Slots, bis zu 3 Fokus — Gruppen Technik / Athletik / Mental.</span>
+            <span>{t("help.play.grow.item2")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Thermometer} />
-            <span>Heatmap: jedes Quadrat = ein Spieler, Farbe = Zuwachs der letzten Woche.</span>
+            <span>{t("help.play.grow.item3")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={User} />
-            <span>Einzelprogramme: schwaches Bein, Umschulung — und Stempel-Ziele (Fähigkeiten).</span>
+            <span>{t("help.play.grow.item4")}</span>
           </li>
         </ul>
       </section>
 
       <section className="help-card" aria-labelledby="help-youth">
         <h2 id="help-youth">
-          <HelpInlineIcon icon={School} /> Jugend & Scouting
+          <HelpInlineIcon icon={School} /> {t("help.play.youth.title")}
         </h2>
         <ul className="help-icon-list">
           <li>
             <HelpInlineIcon icon={Bot} />
-            <span>U17/U19 laufen vollautomatisch. Du siehst Reports und triffst Inbox-Entscheidungen.</span>
+            <span>{t("help.play.youth.item1")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Eye} />
-            <span>Scouting schätzt mit Unsicherheitsband — keine exakten Fremd-Attribute ab Tag 1.</span>
+            <span>{t("help.play.youth.item2")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={ArrowUp} />
-            <span>Eigene Spieler kennst du sofort. Talente hochziehen, leihen oder halten bleibt deine Wahl.</span>
+            <span>{t("help.play.youth.item3")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={School} />
-            <span>Campus-Stufen: mehr Intake und bessere Qualität. Weltcamps liefern Nation-Jahrgänge in die Zentrale.</span>
+            <span>{t("help.play.youth.item4")}</span>
           </li>
         </ul>
       </section>
 
       <section className="help-card" aria-labelledby="help-club">
         <h2 id="help-club">
-          <HelpInlineIcon icon={Briefcase} /> Verein & Risiko
+          <HelpInlineIcon icon={Briefcase} /> {t("help.play.club.title")}
         </h2>
         <ul className="help-icon-list">
           <li>
             <HelpInlineIcon icon={Euro} />
-            <span>Finanzen und Stadion sind erste Klasse — Banden, Tribüne, Matchday. Hotel/Restaurant leben von Auslastung, nicht von Training.</span>
+            <span>{t("help.play.club.item1")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={ClipboardList} />
-            <span>Vorstand setzt Ziele. Verfehlungen erhöhen Jobdruck.</span>
+            <span>{t("help.play.club.item2")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={ArrowDown} />
-            <span>Abstieg ist real. Rivalen nutzen dieselbe Growth-Engine.</span>
+            <span>{t("help.play.club.item3")}</span>
           </li>
         </ul>
       </section>
 
       <section className="help-card" aria-labelledby="help-not">
         <h2 id="help-not">
-          <HelpInlineIcon icon={Ban} /> Was du nicht machst
+          <HelpInlineIcon icon={Ban} /> {t("help.play.not.title")}
         </h2>
         <ul className="help-icon-list">
           <li>
             <HelpInlineIcon icon={Gamepad2} />
-            <span>Keine Matches selbst spielen — du managst, die Engine simuliert.</span>
+            <span>{t("help.play.not.item1")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={ClipboardList} />
-            <span>Keine Jugend-Aufstellungen — U17/U19 bleiben vollautomatisch.</span>
+            <span>{t("help.play.not.item2")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Star} />
-            <span>Keine Sterne-Potentiale — Wachstum mit Varianz statt Decke.</span>
+            <span>{t("help.play.not.item3")}</span>
           </li>
         </ul>
       </section>
@@ -492,6 +401,7 @@ function PlayPanel() {
 }
 
 function StampsPanel() {
+  const t = useT();
   const stamps = stampCatalog();
   const trained = stamps.filter((entry) => entry.path === "train");
   const hybrid = stamps.filter((entry) => entry.path === "hybrid");
@@ -501,61 +411,49 @@ function StampsPanel() {
     <div className="help-panel">
       <section className="help-card" aria-labelledby="help-stamp-intro">
         <h2 id="help-stamp-intro">
-          <HelpInlineIcon icon={Diamond} /> Fähigkeiten / Bonus-Stempel
+          <HelpInlineIcon icon={Diamond} /> {t("help.stamps.intro.title")}
         </h2>
-        <p>
-          Stempel sind benannte Boni — und manchmal Makel — auf der Spielerakte. Beim Verdienen
-          ändern sich dauerhaft ein paar Attribute (+ oder −). Maximal drei Badges sind prominent
-          sichtbar. Start-Makel (Grünschnabel, Chancentod) fallen von allein, wenn der Meilenstein
-          kommt.
-        </p>
+        <p>{t("help.stamps.intro.body")}</p>
         <ul className="help-icon-list">
           <li>
             <HelpInlineIcon icon={Dumbbell} />
-            <span>
-              <strong>Training:</strong> Attribute-Gate erfüllen, dann Einzelprogramm starten.
-            </span>
+            <span>{t("help.stamps.intro.train")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Flag} />
-            <span>
-              <strong>Ereignis:</strong> Meilenstein in der Saison/Karriere — sofortiger Award.
-            </span>
+            <span>{t("help.stamps.intro.event")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Link2} />
-            <span>
-              <strong>Hybrid:</strong> Gate oder Karriere-Beweis schaltet frei, dann Einzelprogramm siegelt.
-            </span>
+            <span>{t("help.stamps.intro.hybrid")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={Sprout} />
-            <span>
-              <strong>Start-Makel:</strong> fast jeder Neue trägt Grünschnabel; Angreifer können Chancentod
-              mitbringen. Beides geht wieder weg.
-            </span>
+            <span>{t("help.stamps.intro.spawn")}</span>
           </li>
         </ul>
       </section>
 
-      <StampGroup title="Start-Makel" icon={Sprout} stamps={stamps.filter((entry) => entry.spawn)} />
-      <StampGroup title="Durch Training" icon={Dumbbell} stamps={trained} />
-      <StampGroup title="Hybrid · Unlock dann Siegel" icon={Link2} stamps={hybrid} />
-      <StampGroup title="Durch Ereignisse" icon={Flag} stamps={events} />
+      <StampGroup titleKey="help.stamps.group.spawn" icon={Sprout} stamps={stamps.filter((entry) => entry.spawn)} />
+      <StampGroup titleKey="help.stamps.group.train" icon={Dumbbell} stamps={trained} />
+      <StampGroup titleKey="help.stamps.group.hybrid" icon={Link2} stamps={hybrid} />
+      <StampGroup titleKey="help.stamps.group.event" icon={Flag} stamps={events} />
     </div>
   );
 }
 
 function StampGroup({
-  title,
+  titleKey,
   icon,
   stamps,
 }: {
-  title: string;
+  titleKey: string;
   icon: LucideIcon;
   stamps: ReturnType<typeof stampCatalog>;
 }) {
+  const t = useT();
   if (stamps.length === 0) return null;
+  const title = t(titleKey);
   return (
     <section className="help-card" aria-label={title}>
       <h2>
@@ -572,13 +470,13 @@ function StampGroup({
                 <strong>{stamp.label}</strong>
                 <p className="help-stamp-meta">
                   {stampPathLabel(stamp.path, stamp)}
-                  {stamp.weeks ? ` · ${stamp.weeks} Wochen` : ""}
+                  {stamp.weeks ? ` · ${t("help.stamps.weeks", { count: stamp.weeks })}` : ""}
                 </p>
               </div>
             </div>
             <div className="help-stamp-cols">
               <div>
-                <p className="help-stamp-label">Voraussetzung</p>
+                <p className="help-stamp-label">{t("help.stamps.prereq")}</p>
                 <ul>
                   {formatStampGates(stamp).map((line) => (
                     <li key={line}>{line}</li>
@@ -586,7 +484,7 @@ function StampGroup({
                 </ul>
               </div>
               <div>
-                <p className="help-stamp-label">Effekt</p>
+                <p className="help-stamp-label">{t("help.stamps.effect")}</p>
                 <ul>
                   {formatStampEffects(stamp).map((line) => (
                     <li key={line}>{line}</li>

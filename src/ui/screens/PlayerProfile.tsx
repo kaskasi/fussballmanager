@@ -111,12 +111,12 @@ import {
 import { formatGrowthDelta } from "../../player/growth-history.ts";
 type ProfileTab = "attributes" | "training" | "contract" | "development" | "stats";
 
-const PROFILE_TABS: { id: ProfileTab; label: string }[] = [
-  { id: "attributes", label: "Attribute" },
-  { id: "training", label: "Training" },
-  { id: "contract", label: "Vertrag" },
-  { id: "development", label: "Verlauf" },
-  { id: "stats", label: "Saisonwerte" },
+const PROFILE_TABS: { id: ProfileTab; labelKey: string }[] = [
+  { id: "attributes", labelKey: "profile.tab.attributes" },
+  { id: "training", labelKey: "profile.tab.training" },
+  { id: "contract", labelKey: "profile.tab.contract" },
+  { id: "development", labelKey: "profile.tab.development" },
+  { id: "stats", labelKey: "profile.tab.stats" },
 ];
 
 const CARD_ACTIONS: Partial<Record<PlayerProfileAction, { label: string; className: string }>> = {
@@ -318,7 +318,7 @@ export function PlayerProfile({
             className={tab === entry.id ? "fm-tab is-active" : "fm-tab"}
             onClick={() => setTab(entry.id)}
           >
-            {entry.label}
+            {t(entry.labelKey)}
           </button>
         ))}
       </div>

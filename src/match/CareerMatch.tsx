@@ -26,6 +26,8 @@ import { MatchdayPreviewPanel } from "./MatchdayPreviewPanel.tsx";
 import type { MatchdayCashBreakdown } from "../stadium/matchday-commerce.ts";
 import type { FanbaseMood } from "../stadium/fanbase.ts";
 import { matchAmbiencePhotoUrl } from "../ui/assets/mood-photos.ts";
+import { t } from "../i18n/index.ts";
+
 export function CareerMatch({
   setup,
   players,
@@ -216,7 +218,7 @@ function CareerMatchPlayback({
           setup.homeTeamId === setup.playerClubId ? setup.awayTeamId : setup.homeTeamId;
         const opponentSquad = squadForLeagueClub(opponentId, rivalPlayersRef.current);
         if (!opponentSquad) {
-          throw new Error("Gegnerkader konnte nicht geladen werden.");
+          throw new Error(t("match.career.loadRivalFailed"));
         }
         const homeSquad =
           setup.homeTeamId === setup.playerClubId ? squad : opponentSquad;
@@ -330,12 +332,12 @@ function CareerMatchPlayback({
     const navLabel = simulating
       ? "…"
       : reportOpen
-        ? "Spieltag abschließen"
+        ? t("match.career.nav.finishMatchday")
         : awaitingKickoff
-          ? "Spiel starten"
+          ? t("match.career.nav.start")
           : playback.playing
-            ? "Pause"
-            : "Fortsetzen";
+            ? t("match.career.nav.pause")
+            : t("match.career.nav.resume");
     onNavActionChange({
       label: navLabel,
       onClick: () => {
@@ -354,12 +356,12 @@ function CareerMatchPlayback({
       },
       disabled: simulating || loading || !outcome,
       title: reportOpen
-        ? "Ergebnis übernehmen und zum Sonntag"
+        ? t("match.career.nav.finishHint")
         : awaitingKickoff
-          ? "Live-Phase starten (Kommentar und Spielfeld)"
+          ? t("match.career.nav.startLive")
           : playback.playing
-            ? "Simulation pausieren"
-            : "Simulation fortsetzen",
+            ? t("match.career.nav.pauseSim")
+            : t("match.career.nav.resumeSim"),
     });
     return () => onNavActionChange(null);
   }, [
@@ -422,7 +424,8 @@ function CareerMatchPlayback({
               <header className="scoreboard scoreboard--compact matchday-preview-score">
                 <p className="eyebrow">Spieltag {setup.matchday}</p>
                 <h1 className="career-match-placeholder-title">
-                  {setup.isHome ? "Heim" : "Auswärts"} vs {setup.opponentShortName}
+                  {setup.isHome ? t("match.career.side.home") : t("match.career.side.away")} vs{" "}
+                  {setup.opponentShortName}
                 </h1>
               </header>
             )}

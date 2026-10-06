@@ -2,14 +2,9 @@
 import { useMemo, useState } from "react";
 import { ClubCrest } from "../components/ClubCrest.tsx";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
-import {
-  calendarWeek,
-  isLeagueMatchWeek,
-  LEAGUE_FIRST_WEEK,
-  LEAGUE_LAST_WEEK,
-} from "../../sim/game-calendar.ts";
+import { calendarWeek } from "../../sim/game-calendar.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
-import { clubShortName, playerFixture } from "../../sim/league-week.ts";
+import { buildMonthGrid } from "../calendar/month-grid.ts";
 
 const MONTHS = [
   "Januar",
@@ -29,14 +24,19 @@ const MONTHS = [
 export function CalendarScreen({
   season,
   week,
+  weekday,
   league,
 }: {
   season: number;
   week: number;
+  weekday: number;
   league: LeagueState;
 }) {
   const [monthIndex, setMonthIndex] = useState(() => monthIndexForSeasonWeek(week));
-  const cells = useMemo(() => buildMonthGrid(season, monthIndex, league), [season, monthIndex, league]);
+  const cells = useMemo(
+    () => buildMonthGrid(season, monthIndex, league, { week, weekday }),
+    [season, monthIndex, league, week, weekday],
+  );
 
   return (
     <main className="calendar club-shell-card-body">
@@ -98,49 +98,4 @@ function monthIndexForSeasonWeek(seasonWeek: number): number {
   if (kw >= 10) return 2;
   if (kw >= 6) return 1;
   return 0;
-}
-
-function buildMonthGrid(season: number, monthIndex: number, league: LeagueState) {
-  const year = season + 2025;
-  const first = new Date(year, monthIndex, 1);
-  const startPad = (first.getDay() + 6) % 7;
-  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-  const cells: Array<{
-    key: string;
-    day: number | null;
-    isToday: boolean;
-    match?: { label: string; initials: string };
-  }> = [];
-  for (let index = 0; index < startPad; index += 1) {
-    cells.push({ key: `pad-${index}`, day: null, isToday: false });
-  }
-  for (let day = 1; day <= daysInMonth; day += 1) {
-    const matchWeek = matchWeekForDay(monthIndex, day);
-    let match: { label: string; initials: string } | undefined;
-    if (matchWeek && isLeagueMatchWeek(matchWeek)) {
-      const fixture = playerFixture(league, matchWeek);
-      if (fixture) {
-        const home = fixture.homeTeamId === league.player_club_id;
-        const opponent = home ? fixture.awayTeamId : fixture.homeTeamId;
-        match = {
-          label: home ? `Heim vs ${clubShortName(opponent)}` : `Ausw. @ ${clubShortName(opponent)}`,
-          initials: clubShortName(opponent).slice(0, 2).toUpperCase(),
-        };
-      }
-    }
-    cells.push({
-      key: `d-${day}`,
-      day,
-      isToday: false,
-      match,
-    });
-  }
-  return cells;
-}
-
-function matchWeekForDay(monthIndex: number, day: number): number | null {
-  if (monthIndex === 7 && day >= 20) return LEAGUE_FIRST_WEEK;
-  if (monthIndex === 8) return Math.min(LEAGUE_LAST_WEEK, 2 + Math.floor(day / 7));
-  if (monthIndex >= 9) return Math.min(LEAGUE_LAST_WEEK, 6 + Math.floor((day + (monthIndex - 9) * 30) / 7));
-  return null;
 }

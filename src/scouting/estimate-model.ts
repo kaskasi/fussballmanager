@@ -71,9 +71,9 @@ export function applyQuietWeek(knowledge: PlayerKnowledge): PlayerKnowledge {
 export function confidenceLabel(knowledge: PlayerKnowledge): string | null {
   if (knowledge.status === "owned") return null;
   const range = knowledge.estimate.uncertaintyRange;
-  if (range >= 40) return "❓ Unbekannt";
-  if (range >= 20) return "🤷 Unklar";
-  if (range >= 10) return "👁️ Grobes Bild";
-  if (range >= 5) return "✅ Gut bekannt";
-  return "🎯 Präzise Einschätzung";
+  if (range >= 40) return "Unbekannt";
+  if (range >= 20) return "Unklar";
+  if (range >= 10) return "Grobes Bild";
+  if (range >= 5) return "Gut bekannt";
+  return "Präzise Einschätzung";
 }

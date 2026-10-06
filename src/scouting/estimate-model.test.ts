@@ -13,7 +13,7 @@ describe("scout knowledge", () => {
       status: "scouted",
       estimate: { estimatedAbilityMean: 65, uncertaintyRange: 40, sampleSize: 0 },
     });
-    expect(confidenceLabel(unknownPlayer())).toBe("❓ Unbekannt");
+    expect(confidenceLabel(unknownPlayer())).toBe("Unbekannt");
   });
 
   it("narrows the range by the published observation amounts and never below 0", () => {
@@ -53,12 +53,12 @@ describe("scout knowledge", () => {
   });
 
   it("labels the range bands, with under 5 more precise than under 10", () => {
-    expect(confidenceLabel(band(40))).toBe("❓ Unbekannt");
-    expect(confidenceLabel(band(20))).toBe("🤷 Unklar");
-    expect(confidenceLabel(band(10))).toBe("👁️ Grobes Bild");
-    expect(confidenceLabel(band(5))).toBe("✅ Gut bekannt");
-    expect(confidenceLabel(band(4.9))).toBe("🎯 Präzise Einschätzung");
-    expect(confidenceLabel(band(0))).toBe("🎯 Präzise Einschätzung");
+    expect(confidenceLabel(band(40))).toBe("Unbekannt");
+    expect(confidenceLabel(band(20))).toBe("Unklar");
+    expect(confidenceLabel(band(10))).toBe("Grobes Bild");
+    expect(confidenceLabel(band(5))).toBe("Gut bekannt");
+    expect(confidenceLabel(band(4.9))).toBe("Präzise Einschätzung");
+    expect(confidenceLabel(band(0))).toBe("Präzise Einschätzung");
   });
 });
 

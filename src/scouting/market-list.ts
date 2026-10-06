@@ -141,7 +141,7 @@ function hashPlayerId(playerId: string, index: number): number {
 }
 
 export function targetLabel(target: ScoutedTarget): string {
-  return confidenceLabel({ status: "scouted", estimate: target.estimate }) ?? "❓";
+  return confidenceLabel({ status: "scouted", estimate: target.estimate }) ?? "Unbekannt";
 }
 
 export function barBand(estimate: AbilityEstimate): { value: number; low: number; high: number } {

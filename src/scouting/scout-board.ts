@@ -287,7 +287,7 @@ export function advanceScoutWeek(
         estimatedCa,
         uncertaintyRange: estimate.uncertaintyRange,
         uncertaintyDelta: estimate.uncertaintyRange - beforeRange,
-        confidence: confidenceLabel(next) ?? "👁️ Bericht",
+        confidence: confidenceLabel(next) ?? "Bericht",
       });
       const improved =
         beforeRange - estimate.uncertaintyRange >= 6 &&

@@ -36,7 +36,8 @@ import { ScoutRegionMap } from "../components/ScoutRegionMap.tsx";
 import { ScoutNetworkPanel } from "../components/ScoutNetworkPanel.tsx";
 import { ScoutConfidenceIcon } from "../components/ScoutConfidenceIcon.tsx";
 import { formatClubCash } from "../../economy/club-finances.ts";
-import { Circle, Pause, Search, Star } from "lucide-react";
+import { Circle, ClipboardList, Pause, Search, Star } from "lucide-react";
+import { ScreenEmptyState } from "../components/ScreenEmptyState.tsx";
 
 type ScoutingTab = "network" | "hits" | "watchlist";
 
@@ -76,7 +77,7 @@ const REGIONS = ["Schleswig-Holstein", "Fördeküste", "Hansestadt", "Nordfriesl
 /**
  * WIREFRAME: PRD 14.9 / 09 Screen 3
  *
- * ✅ Gut bekannt · 🤷 Unklar · ❓ Unbekannt
+ * ScoutConfidenceIcon: known · unclear · unknown
  * [Portrait] Name            [CA ▓░CI░] [€ ▓░CI░]
  *            19 · CM · Club
  */
@@ -255,7 +256,11 @@ export function ScoutingCenter({
               </Hint>
             </header>
             {assignments.length === 0 ? (
-              <p className="scouting-assignments-empty">{t("scouting.assignments.empty")}</p>
+              <ScreenEmptyState
+                icon={ClipboardList}
+                title={t("scouting.assignments.empty")}
+                aria-label={t("scouting.assignments.aria")}
+              />
             ) : (
               <ul className="scouting-assignments-list">
                 {assignments.map((assignment) => (
@@ -436,12 +441,13 @@ export function ScoutingCenter({
             <p className="scouting-scouts">{t("scouting.watchlist.summary", { count: shortlistIds.length })}</p>
           </Hint>
           {watchlistVisible.length === 0 ? (
-            <section className="squad-empty scouting-empty" aria-label={t("scouting.watchlist.empty.aria")}>
-              <span className="squad-empty-icon" aria-hidden="true">
-                <Star size={28} strokeWidth={2.5} />
-              </span>
-              <p>{t("scouting.watchlist.empty")}</p>
-            </section>
+            <ScreenEmptyState
+              icon={Star}
+              title={t("scouting.watchlist.empty")}
+              hint={t("scouting.watchlist.hint")}
+              aria-label={t("scouting.watchlist.empty.aria")}
+              className="scouting-empty"
+            />
           ) : (
             <>
               <div className="scouting-sort" role="toolbar" aria-label={t("scouting.sort.aria")}>

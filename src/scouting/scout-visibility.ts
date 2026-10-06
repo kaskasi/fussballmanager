@@ -131,6 +131,16 @@ export function scoutMarketValueBounds(
   };
 }
 
+export function scoutIntelExactForTransfer(
+  player: Player,
+  estimate: AbilityEstimate | undefined,
+  season: number,
+): boolean {
+  if (!estimate) return false;
+  const bounds = scoutMarketValueBounds(player, estimate, season, false);
+  return Boolean(bounds?.exact);
+}
+
 export function formatScoutMarketValue(
   player: Player,
   estimate: AbilityEstimate,

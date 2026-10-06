@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
+import { ScoutConfidenceIcon } from "./ScoutConfidenceIcon.tsx";
 import {
   buildScoutRegionMapModel,
   type ScoutRegionTone,
@@ -33,9 +34,21 @@ export function ScoutRegionMap({ targets }: { targets: readonly BoardTarget[] })
               <span className="scout-region-map-legend-label">
                 <strong>{zone.label}</strong>
                 <span className="scout-region-map-legend-meta">
-                  {zone.playerCount === 0
-                    ? "—"
-                    : `✅ ${zone.known} · 🤷 ${zone.unclear} · ❓ ${zone.unknown}`}
+                  {zone.playerCount === 0 ? (
+                    "—"
+                  ) : (
+                    <span className="scout-region-map-confidence-counts">
+                      <span>
+                        <ScoutConfidenceIcon bucket="known" size={14} /> {zone.known}
+                      </span>
+                      <span>
+                        <ScoutConfidenceIcon bucket="unclear" size={14} /> {zone.unclear}
+                      </span>
+                      <span>
+                        <ScoutConfidenceIcon bucket="unknown" size={14} /> {zone.unknown}
+                      </span>
+                    </span>
+                  )}
                 </span>
               </span>
             </li>

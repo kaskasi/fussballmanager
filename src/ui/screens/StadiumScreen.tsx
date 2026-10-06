@@ -320,6 +320,7 @@ function StadiumPitchPlan({
   onSelect: (blockId: string) => void;
   onOpenSlot: (slotId: string) => void;
 }) {
+  const t = useT();
   const byId = Object.fromEntries(blocks.map((block) => [block.id, block]));
   const shirt = SPONSOR_SLOTS.find((slot) => slot.kind === "shirt");
   const shirtDeal = shirt ? dealForSlot(deals, shirt.id, season) : undefined;
@@ -384,11 +385,15 @@ function StadiumPitchPlan({
           <button
             type="button"
             className={shirtDeal ? "stadium-commerce-slot" : "stadium-commerce-slot is-empty"}
-            title={shirtDeal ? `${shirtDeal.brand} auf der Brust` : "Trikot ohne Brustlogo"}
+            title={
+              shirtDeal
+                ? t("stadium.sponsor.shirtTitleOccupied", { brand: shirtDeal.brand })
+                : t("stadium.sponsor.shirtTitleEmpty")
+            }
             onClick={() => onOpenSlot(shirt.id)}
           >
             <Shirt size={18} aria-hidden="true" strokeWidth={2.5} />
-            <span>{shirtDeal?.brand ?? "Shirt-Slot"}</span>
+            <span>{shirtDeal?.brand ?? t("stadium.sponsor.shirtEmpty")}</span>
           </button>
         </aside>
       ) : null}
@@ -409,6 +414,7 @@ function StandBoardSlots({
   upgradeLevels?: Record<string, number>;
   onOpenSlot: (slotId: string) => void;
 }) {
+  const t = useT();
   const slots = sponsorSlotsForStand(stand, upgradeLevels);
   if (slots.length === 0) return null;
   return (
@@ -420,10 +426,14 @@ function StandBoardSlots({
             key={slot.id}
             type="button"
             className={deal ? "stadium-card-board" : "stadium-card-board is-empty"}
-            aria-label={deal ? `${slot.label}, ${deal.brand}` : `${slot.label}, Bande frei`}
+            aria-label={
+              deal
+                ? `${slot.label}, ${deal.brand}`
+                : `${slot.label}, ${t("stadium.sponsor.boardEmpty")}`
+            }
             onClick={() => onOpenSlot(slot.id)}
           >
-            {deal ? deal.brand : "Bande frei"}
+            {deal ? deal.brand : t("stadium.sponsor.boardEmpty")}
           </button>
         );
       })}

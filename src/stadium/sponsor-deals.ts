@@ -1,3 +1,6 @@
+import { t } from "../i18n/index.ts";
+import { formatClubCash } from "../economy/club-finances.ts";
+
 export type SponsorStand = "north" | "west" | "east" | "south" | "pitch";
 export type SponsorSlotKind = "board" | "shirt";
 
@@ -266,37 +269,53 @@ export function evaluateSponsorOffer(
   offer: SponsorOffer,
 ): { accepted: boolean; reason: string } {
   const brand = sponsorBrandById(offer.brandId);
-  if (!brand) return { accepted: false, reason: "Keine Marke gewählt." };
+  if (!brand) return { accepted: false, reason: t("sponsor.verdict.noBrand") };
   if (Math.abs(offer.seasons - brand.preferSeasons) >= 2) {
     return {
       accepted: false,
-      reason: `${brand.name} will ${brand.preferSeasons} Saisons, nicht ${offer.seasons}.`,
+      reason: t("sponsor.verdict.wrongSeasons", {
+        brand: brand.name,
+        prefer: brand.preferSeasons,
+        offer: offer.seasons,
+      }),
     };
   }
   if (brand.bonusStance === "hate" && (offer.bonusTopScorer || offer.bonusLeagueTitle)) {
-    return { accepted: false, reason: `${brand.name} zahlt keine Erfolgsstaffel.` };
+    return {
+      accepted: false,
+      reason: t("sponsor.verdict.noBonus", { brand: brand.name }),
+    };
   }
   if (brand.bonusStance === "want" && !offer.bonusTopScorer && !offer.bonusLeagueTitle) {
-    return { accepted: false, reason: `${brand.name} will Torjäger oder Meister auf der Bande.` };
+    return {
+      accepted: false,
+      reason: t("sponsor.verdict.wantBonus", { brand: brand.name }),
+    };
   }
   const cap = sponsorWeeklyCap(slotId, offer);
   const floor = Math.max(1_000, Math.round(cap * 0.5));
   if (offer.weeklyAmount > cap) {
     return {
       accepted: false,
-      reason: `Zu teuer. ${brand.name} zahlt höchstens ${formatWeeklyAsk(cap)}.`,
+      reason: t("sponsor.verdict.tooExpensive", {
+        brand: brand.name,
+        cap: formatClubCash(cap),
+      }),
     };
   }
   if (offer.weeklyAmount < floor) {
-    return { accepted: false, reason: `Zu knausrig — ${brand.name} fühlt sich unter Wert.` };
+    return {
+      accepted: false,
+      reason: t("sponsor.verdict.tooCheap", { brand: brand.name }),
+    };
   }
   if (offer.weeklyAmount >= cap * 0.88) {
-    return { accepted: true, reason: "Letztes Wort. Handschlag." };
+    return { accepted: true, reason: t("sponsor.verdict.lastWord") };
   }
   if (offer.weeklyAmount <= cap * 0.58) {
-    return { accepted: true, reason: "Knausrig, aber okay." };
+    return { accepted: true, reason: t("sponsor.verdict.cheapOk") };
   }
-  return { accepted: true, reason: "Handschlag." };
+  return { accepted: true, reason: t("sponsor.verdict.ok") };
 }
 
 export function signSponsorDeal(
@@ -358,7 +377,3 @@ export function seasonSponsorBonusPayouts(
   return payouts;
 }
 
-function formatWeeklyAsk(amount: number): string {
-  if (amount >= 1_000) return `€ ${Math.round(amount / 1_000)}k`;
-  return `€ ${amount}`;
-}

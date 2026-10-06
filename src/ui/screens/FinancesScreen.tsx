@@ -189,7 +189,14 @@ export function FinancesScreen({
                       <span className="finances-bar-icon" aria-hidden="true">
                         <FinanceLineIcon kind={line.kind} />
                       </span>
-                      <span className="finances-bar-label">{financeLineLabel(line.kind)}</span>
+                      <span
+                        className="finances-bar-label"
+                        title={
+                          line.kind === "sponsorship" ? t("finances.sponsorshipInventoryHint") : undefined
+                        }
+                      >
+                        {financeLineLabel(line.kind)}
+                      </span>
                       <span className="finances-bar-track" aria-hidden="true">
                         <span className="finances-bar-fill" style={{ width: `${width}%` }} />
                       </span>

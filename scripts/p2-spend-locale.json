@@ -1,0 +1,26 @@
+{
+  "de": {
+    "spend.precinctExpansion": "Gelände-Erweiterung",
+    "spend.street": "Straße",
+    "spend.precinctGrow": "Gelände wachsen",
+    "clubEvent.assistantScoutsUpdated": "{name} hat die Scout-Aufträge aktualisiert.",
+    "clubEvent.assistantLineupSet": "{name} hat die Startelf für den Spieltag gewählt.",
+    "clubEvent.transferAi": "{message}"
+  },
+  "en": {
+    "spend.precinctExpansion": "Precinct expansion",
+    "spend.street": "Street",
+    "spend.precinctGrow": "Grow precinct",
+    "clubEvent.assistantScoutsUpdated": "{name} updated scout assignments.",
+    "clubEvent.assistantLineupSet": "{name} picked the matchday lineup.",
+    "clubEvent.transferAi": "{message}"
+  },
+  "zh-Hans": {
+    "spend.precinctExpansion": "园区扩建",
+    "spend.street": "道路",
+    "spend.precinctGrow": "扩大园区",
+    "clubEvent.assistantScoutsUpdated": "{name} 更新了球探任务。",
+    "clubEvent.assistantLineupSet": "{name} 已选定比赛日阵容。",
+    "clubEvent.transferAi": "{message}"
+  }
+}

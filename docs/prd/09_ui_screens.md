@@ -73,9 +73,9 @@ Pipeline Dashboard (Tab-Hub)
 ┌────────────────────────────────────────────────────────┐
 │ [Chart: Pipeline-Füllung nach Stufe]                  │
 │                                                        │
-│ 🏋️ Training: [Ampel Grün]  🎯 3 Fokus-Slots gesetzt   │
-│ 🏫 Jugend:   [⚠️ 2] Empfehlungen · [🚩 1] Abgangsrisiko│
-│ 👁️ Scouting: [🟢 3] Scouts aktiv · [❓ 7] offene Reports│
+│ [Training] Ampel Grün · [Focus] 3 Fokus-Slots gesetzt  │
+│ [Youth] 2 Empfehlungen · [Flag] 1 Abgangsrisiko      │
+│ [Scouting] 3 Scouts aktiv · 7 offene Reports           │
 │                                                        │
 │ [▶ Diese Woche simulieren]                            │
 └────────────────────────────────────────────────────────┘
@@ -90,7 +90,7 @@ Interaktion:
 **Screen 1a — Individual Plan Modal**
 
 - Links: Spielerkarte (Portrait, Position, 3 Kernattribute als Balken).
-- Rechts: Programm-Dropdown, Dauer-Slider, Fatigue-Warnung als Icon (⚡ rot).
+- Rechts: Programm-Dropdown, Dauer-Slider, Fatigue-Warnung als Icon (Zap, rot).
 - Dropdown-Arten: Schwaches Bein, Positionsumschulung (F2.3), und freigeschaltete
   Stamp-Ziele (F2.8, `kind: "stamp"`) wenn das Gate erfüllt ist.
 - Bestätigen wirkt ab der kommenden Woche.
@@ -99,7 +99,7 @@ Interaktion:
 
 - Gebäude nach Academy-Level visuell unterscheidbar (SVG-Glyphen, kein Iso-Stadtmodell).
 - Klick auf ein Gebäude wechselt nach 2a oder kauft die nächste Stufe.
-- Spieler-Badges im Grid, sortiert nach Coach-Icon (🚀 / ➡️ / ⚠️ / 😞).
+- Spieler-Badges im Grid, sortiert nach Coach-Icon (Rocket / Arrow / Alert / Frown — Lucide).
 - Abgangsrisiko: roter Rand, Klick öffnet die Decision Inbox.
 - Camps (P2): **3×2** `YouthCampCard`-Raster — Foto, Agentur-Brief, Roster pro Nation
   (PRD 03.6.1 / 03.6.2). Split-Liste + Detailpanel entfällt.
@@ -127,18 +127,18 @@ Interaktion:
 - Queue, höchstens 4 Items pro Woche (PRD 03.4), Abgangswarnung zählt mit.
 - Pro Item: Spielerkarte und Icon-Buttons.
 
-| Aktion | Icon |
+| Aktion | Icon (Lucide) |
 |---|---|
-| Leihen | 🔄 |
-| Hochziehen | ⬆️ |
-| Vertrag | ✍️ |
-| Trainingsfokus | 💪 |
+| Leihen | RefreshCw |
+| Hochziehen | ArrowUp |
+| Vertrag | PenLine |
+| Trainingsfokus | Dumbbell |
 
 - „Leihen“ öffnet ein Karten-Deck der Zielvereine mit Minuten-Garantie-Badge.
 
 **Screen 3 — Scouting Center**
 
-- Kopfzeile: „✅ Gut bekannt: 12 · 🤷 Unklar: 43 · ❓ Unbekannt: 290“.
+- Kopfzeile: „Gut bekannt: 12 · Unklar: 43 · Unbekannt: 290“ (Konfidenz-Chips, keine Emoji).
 - Suchleiste und Filter-Chips (Position, Alter, Konfidenz).
 - Zeile: Portrait, Name, Alter, Position, zwei Balken. Die CI-Breite ist eine Grauzone auf dem Balken.
 
@@ -157,7 +157,7 @@ Interaktion:
 
 - Attributverläufe als Liniendiagramm über Saisons (`history.growth`).
 - CI-Band nur bei fremden Spielern.
-- Breakout-Timeline unter dem Chart. 💡 = sichtbares Event (PRD 06.5). Versteckte Events haben kein Icon.
+- Breakout-Timeline unter dem Chart. Lightbulb-Icon = sichtbares Event (PRD 06.5). Versteckte Events haben kein Icon.
 
 ### 09.3 Interaktions-Richtlinien
 
@@ -175,9 +175,9 @@ Interaktion:
  *
  * ┌────────────────────────────────────────────────────────┐
  * │ [Chart: Pipeline-Füllung nach Stufe]                  │
- * │ 🏋️ Training: [Ampel Grün]  🎯 3 Fokus-Slots gesetzt   │
- * │ 🏫 Jugend:   [⚠️ 2] Empfehlungen · [🚩 1] Abgangsrisiko│
- * │ 👁️ Scouting: [🟢 3] Scouts aktiv · [❓ 7] offene Reports│
+ * │ [Training] Ampel Grün · [Focus] 3 Fokus-Slots          │
+ * │ [Youth] 2 Empfehlungen · [Flag] 1 Abgangsrisiko      │
+ * │ [Scouting] 3 Scouts aktiv · 7 offene Reports           │
  * │ [▶ Diese Woche simulieren]                            │
  * └────────────────────────────────────────────────────────┘
  */

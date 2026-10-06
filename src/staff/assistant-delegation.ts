@@ -24,6 +24,7 @@ import {
   type ScoutBoard,
 } from "../scouting/scout-board.ts";
 import { createScoutAssignment } from "../scouting/scout-assignments.ts";
+import { t } from "../i18n/index.ts";
 import type { CoachingStaff } from "./coaching-staff.ts";
 
 export type AssistantDelegationTask = "lineup" | "training" | "scouting";
@@ -43,19 +44,19 @@ export const ASSISTANT_DELEGATION_TASKS: readonly {
   {
     key: "lineup",
     label: "Aufstellung",
-    icon: "📋",
+    icon: "lineup",
     hint: "Vor dem Spieltag Startelf und Formation wählen",
   },
   {
     key: "training",
     label: "Wochenplan",
-    icon: "🏋️",
+    icon: "training",
     hint: "Erinnerung, bevor du den Wochenplan vergisst",
   },
   {
     key: "scouting",
     label: "Scouting",
-    icon: "🔭",
+    icon: "scouting",
     hint: "Aufträge pflegen und Ziele zuweisen",
   },
 ];
@@ -394,9 +395,7 @@ export function applyAssistantDelegationWeek(input: {
       input.week,
       input.masterSeed,
     );
-    messages.push(
-      `🧢 ${input.assistantName} hat die Scout-Aufträge aktualisiert.`,
-    );
+    messages.push(t("clubEvent.assistantScoutsUpdated", { name: input.assistantName }));
   }
 
   if (input.delegation.lineup && input.hasPlayerFixture) {
@@ -408,9 +407,7 @@ export function applyAssistantDelegationWeek(input: {
       input.quality,
       input.masterSeed,
     );
-    messages.push(
-      `🧢 ${input.assistantName} hat die Startelf für den Spieltag gewählt.`,
-    );
+    messages.push(t("clubEvent.assistantLineupSet", { name: input.assistantName }));
   }
 
   return { trainingPlan, scoutBoard, matchLineup, messages };

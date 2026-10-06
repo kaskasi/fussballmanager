@@ -64,6 +64,9 @@ Gedecktes Anime/Comic-Feeling eines sonnigen Nachmittags im Stadion. Warm, flach
 - Statusfarben: grün = positiv, terrakotta = negativ/hervorgehoben, staubblau = informativ/neutral. Nie rot-blau mischen.
 - Keine Verläufe auf Panels. Subtile Schatten nur als flacher 2px-Versatz (Comic-Stil).
 
+### Global shell override (`design-repair.css`)
+
+`src/ui/design/design-repair.css` is imported **after** `design-tokens.css` and `game-surfaces.css` in `main.tsx`. It is **not** a third design system: it applies legacy “repair P0” rules that still sit outside token-only screens (sand page background on non-shell routes, comic `--outline-tinte` on legacy `.panel` / `.card` selectors, circular nav tab pills). New UI must use **tokens + `game-surfaces.css`** only; extend repair only when unblocking a legacy route — prefer migrating rules into tokens/game-surfaces and deleting repair over time.
 
 ### Asset-Farbanpassung (Remapping)
 Kenney-Tiles und SVGs kommen in eigenen Farben. Bevor sie ins Projekt einfließen, müssen ihre Fill-Farben auf unsere Tokens gemapped werden.

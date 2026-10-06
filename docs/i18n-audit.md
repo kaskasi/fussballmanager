@@ -27,6 +27,7 @@ Last updated: 2026-10-06
 | YouthCampus | WIP | Body copy still DE — migrate when touching screen |
 | Domain negotiations messages | OK | `reactionMessage` uses i18n keys |
 | Emoji in locale JSON | OK | Scouting/training hints use text labels (design.md §4) |
+| Emoji in shipped UI strings (P2) | OK | Spend confirm + assistant events i18n; Lucide in delegation/club profile |
 
 ## Screens without `useT()` (grep inventory)
 

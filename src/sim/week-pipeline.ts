@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import {
   expireBreakoutModifiers,
   processWeeklyBreakoutChecks,
@@ -99,7 +100,7 @@ export function appendBreakoutNarrativesToEvents(
       season,
       week,
       "profile",
-      `💡 ${narrative.narrative}`,
+      t("clubEvent.profileInsight", { narrative: narrative.narrative }),
     );
   }
   return next;
@@ -400,7 +401,13 @@ export async function simulateGameWeek(
     rivalPlayers = aiTransfers.rivalPlayers;
     transferState = aiTransfers.transferState;
     for (const message of aiTransfers.messages) {
-      clubEvents = withClubEvent(clubEvents, session.season, nextWeek, "transfer", `💱 ${message}`);
+      clubEvents = withClubEvent(
+        clubEvents,
+        session.season,
+        nextWeek,
+        "transfer",
+        t("clubEvent.transferAi", { message }),
+      );
     }
   }
 

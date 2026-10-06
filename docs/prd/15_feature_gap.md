@@ -139,14 +139,21 @@ positioning/tackling/aerial. C2 bleibt blockiert.
 
 Ohne Meilensteine in PRD 10 zu verschieben:
 
-1. **F6.5** — gezogen: Modal am Slot, Laufzeit, Wochenbetrag, zwei Staffeln.
-   Klausel-Enzyklopädie bleibt raus.
-2. **F7.3-Slice** Hotel + Restaurant (Auslastung + Story) — gezogen, Museum raus.
+1. **F6.5** — **Done 2026-10-06:** Modal am Slot, Laufzeit, Wochenbetrag, zwei Staffeln
+   (`SponsorDealModal`, `sponsor-deals.ts`, PRD 11.10). Klausel-Enzyklopädie bleibt raus.
+2. **F7.3-Slice** Hotel + Restaurant (Auslastung + Story) — **nächster Katalog-Slice**, Museum raus.
 3. **F2.8** Phase-Makel + Spend-Bar + Hybrid + Archetypen — gebaut.
 4. **F3.9** Satelliten-Camps — gebaut.
 5. **C2** erst nach 07/10.
 
 Shirt-Verkauf (F6.7) bleibt M3 und folgt der Bude, nicht dem Brustlogo.
+
+#### 15.5.1 Active slice (2026-10-06)
+
+P2/P3 cleanup slate ist frei (Monday reveal + i18n/Help committed). **Als Nächstes bauen:
+F7.3** — Hotel/Restaurant-Auslastung und Story im Gelände-Tab vertiefen (Backend:
+`hospitality.ts`, `precinct.ts`; UI noch dünn). Danach **F4.4** Scout-Map-Tiefe oder
+**PRD 14.3** Spielerakte-Dichte — nicht blockiert durch App-Split oder Engine-Package.
 
 ### 15.7 Playtest-Backlog (Rohnotizen: `playtest_ideas.md`)
 
@@ -162,6 +169,7 @@ Priorität aus intensivem Playtest — **kein Ersatz** für nummerierte PRDs.
 | **P2** | Training-Camp 3×2-Grid (F3.9-Slice + Assets) | Done 2026-10-06 — PRD 03.6.1, `YouthCampCard`, `camp-photos.ts`, `bake:camp-photos` |
 | **P2** | Echte Club-Logos | Hooks done 2026-10-06 — `ClubCrest`, `club-logo.ts`, `bake:club-logos`; assets/legal `docs/design-refs/logos/` |
 | **P2** | Kalender als Tages-Fortschritt (Mo→Sa→Spiel) | Done 2026-10-06 — PRD 09.3, `day-calendar.ts`, `CalendarScreen` Training-Chip |
+| **P2** | Kalender: Meilenstein-Chips Montag-Reveal | Done 2026-10-06 — `filterCalendarMilestonesForReveal`, PRD 09.3 |
 | **P2** | Mobile Layout | Done 2026-10-06 — `screen-layout.css` @480px, `docs/design-refs/mobile-p2/AUDIT.md` |
 | **Later** | Regionale Ligen / Story-Events / Director+Kommentar | PRD 12/13/16 — Meta-Fokus Playtest |
 

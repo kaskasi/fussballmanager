@@ -1222,7 +1222,7 @@ export default function App() {
     const quoted = infrastructureCostForWeek(check.cost, week);
     requestClubSpend(
       quoted,
-      "🗺️ Gelände-Erweiterung",
+      t("spend.precinctExpansion"),
       (current) => {
         const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
         const nextCheck = canBuyPrecinctExpansion(currentPrecinct, current.finances.cash);
@@ -1249,7 +1249,7 @@ export default function App() {
       const quoted = infrastructureCostForWeek(preview.spent, week);
       requestClubSpend(
         quoted,
-        "🛣️ Straße",
+        t("spend.street"),
         (current) => {
           const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
           const result = placeStreetRun(currentPrecinct, cells, current.finances.cash);
@@ -1278,7 +1278,7 @@ export default function App() {
       const quoted = infrastructureCostForWeek(check.cost, week);
       requestClubSpend(
         quoted,
-        "🗺️ Gelände wachsen",
+        t("spend.precinctGrow"),
         (current) => {
           const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
           const nextCheck = canNudgePrecinctPatch(

@@ -42,17 +42,18 @@ export interface YouthCamp {
 }
 
 export const MAX_YOUTH_CAMPS = 3;
-export const CAMP_BETREUER_WAGE = 2_500;
+/** Camp-Leiter Gehalt (Material/Miete/Werbung/Essen läuft über `upkeepWeekly`). */
+export const CAMP_BETREUER_WAGE = 7_500;
 export const CAMP_INTAKE_STAFFED = 4;
 export const CAMP_INTAKE_UNSTAFFED = 2;
 
 export const YOUTH_CAMP_NATIONS: readonly YouthCampNation[] = [
-  { id: "camp_br", code: "BR", flag: "🇧🇷", label: "Brasilien", region: "São Paulo", cost: 1_200_000, upkeepWeekly: 8_000 },
-  { id: "camp_ng", code: "NG", flag: "🇳🇬", label: "Nigeria", region: "Lagos", cost: 900_000, upkeepWeekly: 6_500 },
-  { id: "camp_pl", code: "PL", flag: "🇵🇱", label: "Polen", region: "Krakau", cost: 750_000, upkeepWeekly: 5_500 },
-  { id: "camp_fr", code: "FR", flag: "🇫🇷", label: "Frankreich", region: "Lyon", cost: 1_100_000, upkeepWeekly: 7_500 },
-  { id: "camp_tr", code: "TR", flag: "🇹🇷", label: "Türkei", region: "Istanbul", cost: 850_000, upkeepWeekly: 6_000 },
-  { id: "camp_hr", code: "HR", flag: "🇭🇷", label: "Kroatien", region: "Dubrovnik", cost: 800_000, upkeepWeekly: 5_800 },
+  { id: "camp_br", code: "BR", flag: "🇧🇷", label: "Brasilien", region: "São Paulo", cost: 1_200_000, upkeepWeekly: 19_000 },
+  { id: "camp_ng", code: "NG", flag: "🇳🇬", label: "Nigeria", region: "Lagos", cost: 900_000, upkeepWeekly: 15_500 },
+  { id: "camp_pl", code: "PL", flag: "🇵🇱", label: "Polen", region: "Krakau", cost: 750_000, upkeepWeekly: 13_000 },
+  { id: "camp_fr", code: "FR", flag: "🇫🇷", label: "Frankreich", region: "Lyon", cost: 1_100_000, upkeepWeekly: 18_000 },
+  { id: "camp_tr", code: "TR", flag: "🇹🇷", label: "Türkei", region: "Istanbul", cost: 850_000, upkeepWeekly: 14_500 },
+  { id: "camp_hr", code: "HR", flag: "🇭🇷", label: "Kroatien", region: "Dubrovnik", cost: 800_000, upkeepWeekly: 13_500 },
 ];
 
 /** Camp-Leiter: international pool, not tied to nation locale (PRD 03.6.1 UX). */
@@ -216,12 +217,14 @@ export function ownedCamp(camps: readonly YouthCamp[], id: string): YouthCamp | 
   return camps.find((entry) => entry.id === id);
 }
 
+export function weeklyCampUpkeepForCamp(camp: YouthCamp): number {
+  const nation = campNationById(camp.id);
+  if (!nation) return 0;
+  return nation.upkeepWeekly + (isCampStaffed(camp) ? CAMP_BETREUER_WAGE : 0);
+}
+
 export function weeklyCampUpkeep(camps: readonly YouthCamp[]): number {
-  return camps.reduce((sum, camp) => {
-    const nation = campNationById(camp.id);
-    if (!nation) return sum;
-    return sum + nation.upkeepWeekly + (isCampStaffed(camp) ? CAMP_BETREUER_WAGE : 0);
-  }, 0);
+  return camps.reduce((sum, camp) => sum + weeklyCampUpkeepForCamp(camp), 0);
 }
 
 export function canBuyYouthCamp(

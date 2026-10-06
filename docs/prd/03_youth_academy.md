@@ -210,10 +210,12 @@ Die Minuten-Garantie erfüllt die automatische Jugend-Sim, nicht eine manuelle A
 Kein Scout-Karten-Ersatz (F4.4) und keine Blutlinie (C2). Jedes Camp ist ein
 bezahlter Satellit der Zentrale.
 
-- Katalog: sechs Nationen (nicht DE). Kaufpreis + wöchentlicher Unterhalt.
+- Katalog: sechs Nationen (nicht DE). Kaufpreis + wöchentlicher Unterhalt
+  (Betrieb: Miete, Material, Verpflegung, lokale Werbung; skaliert mit Markt).
   Höchstens **3** Camps gleichzeitig, eine Nation nur einmal.
 - **Camp-Leiter** wird über Agentur + Hub-Auswahl eingestellt (03.6.2), nicht per
-  Sofort-Toggle. Bezahlter Wochenlohn nur bei `leader_hire === hired`. Die drei
+  Sofort-Toggle. Zusätzlicher Wochenlohn (`CAMP_BETREUER_WAGE`) nur bei
+  `leader_hire === hired`, oben auf den Betriebs-Unterhalt. Die drei
   Profi-Gruppen-Trainer (F8.1) bleiben in der Zentrale.
 - Saisonende: unstaffed 2 Spieler / staffed 4, Nationalität des Camps, schwächere
   Mischung ohne Betreuer. `state.youth_site = campId`.

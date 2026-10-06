@@ -52,9 +52,21 @@ const CAMP_LEADER_FIRST = [
   "Yusuf",
   "Henrik",
   "Mateo",
-  "Priya",
   "Kwame",
+  "Anna",
+  "Sophie",
+  "Maria",
+  "Laura",
   "Elena",
+  "Priya",
+  "Fatima",
+  "Amira",
+  "Chiara",
+  "Svenja",
+  "Leila",
+  "Nadia",
+  "Emma",
+  "Zeynep",
 ] as const;
 
 const CAMP_LEADER_LAST = [

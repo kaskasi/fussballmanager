@@ -10,6 +10,7 @@ import {
 import {
   campRoster,
   canBuyYouthCamp,
+  weeklyCampUpkeepForCamp,
   type YouthCamp,
   type YouthCampNation,
 } from "../../youth/satellite-camps.ts";
@@ -75,7 +76,9 @@ export function YouthCampCard({
                 {buy.ok ? formatClubCash(nation.cost) : <Lock size={14} aria-hidden />}
               </p>
             ) : (
-              <p className="youth-camp-card-meta">{formatClubCash(nation.upkeepWeekly)}/Wo</p>
+              <p className="youth-camp-card-meta">
+                {formatClubCash(weeklyCampUpkeepForCamp(owned))}/Wo
+              </p>
             )}
           </div>
 
@@ -86,19 +89,20 @@ export function YouthCampCard({
                   type="button"
                   className="youth-camp-leader-block"
                   onClick={() => onRequestDismissLeader(nation.id)}
-                  aria-label={`Camp-Leiter ${leaderName} — Entlassung anfragen`}
+                  aria-label={`${leaderName} — Leitung entlassen`}
                 >
-                  <PlayerPortrait seed={leaderSeed} size="sm" className="youth-camp-leader-portrait" />
-                  <span className="youth-camp-leader-name">{leaderName}</span>
-                  <span className="youth-camp-leader-role">Camp-Leiter</span>
-                  <span className="youth-camp-leader-mods">
-                    <span className="camp-leader-mod-badge">
-                      {formatCampLeaderModLabel("training", leaderTrainingMod)}
-                    </span>
-                    <span className="camp-leader-mod-badge">
-                      {formatCampLeaderModLabel("mental", leaderMentalMod)}
+                  <span className="youth-camp-leader-copy">
+                    <span className="youth-camp-leader-name">{leaderName}</span>
+                    <span className="youth-camp-leader-mods">
+                      <span className="camp-leader-mod-badge">
+                        {formatCampLeaderModLabel("training", leaderTrainingMod)}
+                      </span>
+                      <span className="camp-leader-mod-badge">
+                        {formatCampLeaderModLabel("mental", leaderMentalMod)}
+                      </span>
                     </span>
                   </span>
+                  <PlayerPortrait seed={leaderSeed} size="sm" className="youth-camp-leader-portrait" />
                 </button>
               ) : hireState === "candidates_ready" ? (
                 <p className="youth-camp-agency-hint">Kandidaten im Postfach</p>

@@ -1,11 +1,14 @@
 import type { MatchStarPick } from "./match-three-stars.ts";
 import { PlayerPortrait } from "../ui/components/PlayerPortrait.tsx";
+import { resolvePortraitSeed } from "../ui/portraits/portrait-seed-fallback.ts";
 
 export function MatchThreeStars({
   stars,
+  portraitSeedForPlayerId,
   onSelectPlayer,
 }: {
   stars: readonly MatchStarPick[];
+  portraitSeedForPlayerId?: (id: string) => number | undefined;
   onSelectPlayer?: (playerId: string) => void;
 }) {
   if (stars.length === 0) {
@@ -24,7 +27,10 @@ export function MatchThreeStars({
               <span className="match-report-star-rank" aria-hidden="true">
                 {star.rank}
               </span>
-              <PlayerPortrait seed={portraitSeedFromId(star.playerId)} size="sm" />
+              <PlayerPortrait
+                seed={resolvePortraitSeed(star.playerId, portraitSeedForPlayerId)}
+                size="sm"
+              />
               <div className="match-report-star-body">
                 <strong className="match-report-star-name">{star.name}</strong>
                 <span className="match-report-star-meta">
@@ -60,10 +66,3 @@ export function MatchThreeStars({
   );
 }
 
-function portraitSeedFromId(id: string): number {
-  let hash = 0;
-  for (let i = 0; i < id.length; i += 1) {
-    hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  }
-  return (Math.abs(hash) % 9999) + 1;
-}

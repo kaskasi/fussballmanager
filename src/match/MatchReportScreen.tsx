@@ -13,6 +13,7 @@ import { pickMatchThreeStars } from "./match-three-stars.ts";
 import { normalizeMatchView } from "./normalize-match-view.ts";
 import { MatchGoalTimeline } from "./MatchGoalTimeline.tsx";
 import { PlayerPortrait } from "../ui/components/PlayerPortrait.tsx";
+import { resolvePortraitSeed } from "../ui/portraits/portrait-seed-fallback.ts";
 export function MatchReportScreen({
   view,
   setup,
@@ -20,6 +21,7 @@ export function MatchReportScreen({
   weekday,
   kasse,
   stadiumPhotoUrl,
+  portraitSeedForPlayerId,
   onSelectPlayer,
 }: {
   view: MatchView;
@@ -28,6 +30,7 @@ export function MatchReportScreen({
   weekday: number;
   kasse?: MatchdayCashBreakdown;
   stadiumPhotoUrl?: string;
+  portraitSeedForPlayerId?: (id: string) => number | undefined;
   onSelectPlayer?: (playerId: string) => void;
 }) {
   const normalized = normalizeMatchView(view);
@@ -77,7 +80,11 @@ export function MatchReportScreen({
             <MatchReportCardsColumn cards={report.cards} />
           </div>
 
-          <MatchThreeStars stars={threeStars} onSelectPlayer={onSelectPlayer} />
+          <MatchThreeStars
+            stars={threeStars}
+            portraitSeedForPlayerId={portraitSeedForPlayerId}
+            onSelectPlayer={onSelectPlayer}
+          />
 
           <details className="match-report-roster-details">
             <summary>Kader anzeigen</summary>
@@ -107,6 +114,7 @@ export function MatchReportScreen({
                 teamLabel={activeTeamLabel}
                 view={normalized}
                 playerStats={report.playerStats}
+                portraitSeedForPlayerId={portraitSeedForPlayerId}
                 onSelectPlayer={onSelectPlayer}
               />
             </div>
@@ -188,12 +196,14 @@ function MatchReportRosterTable({
   teamLabel,
   view,
   playerStats,
+  portraitSeedForPlayerId,
   onSelectPlayer,
 }: {
   teamId: TeamId;
   teamLabel: string;
   view: MatchView;
   playerStats: readonly PlayerSeasonStat[];
+  portraitSeedForPlayerId?: (id: string) => number | undefined;
   onSelectPlayer?: (playerId: string) => void;
 }) {
   const rows = view.roster
@@ -221,7 +231,10 @@ function MatchReportRosterTable({
               <td>
                 {onSelectPlayer ? (
                   <button type="button" className="match-roster-name-btn" onClick={() => onSelectPlayer(row.id)}>
-                    <PlayerPortrait seed={portraitSeedFromId(row.id)} size="sm" />
+                    <PlayerPortrait
+                      seed={resolvePortraitSeed(row.id, portraitSeedForPlayerId)}
+                      size="sm"
+                    />
                     {row.name}
                   </button>
                 ) : (
@@ -265,10 +278,3 @@ function MatchEventBadges({ stat }: { stat?: PlayerSeasonStat }) {
   );
 }
 
-function portraitSeedFromId(id: string): number {
-  let hash = 0;
-  for (let i = 0; i < id.length; i += 1) {
-    hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  }
-  return (Math.abs(hash) % 9999) + 1;
-}

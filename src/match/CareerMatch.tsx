@@ -116,6 +116,7 @@ export function CareerMatch({
   return (
     <CareerMatchPlayback
       setup={setup}
+      players={players}
       playerClubSquad={playerClubSquad}
       rivalPlayers={rivalPlayers}
       week={week}
@@ -135,6 +136,7 @@ export function CareerMatch({
 
 function CareerMatchPlayback({
   setup,
+  players,
   playerClubSquad,
   rivalPlayers,
   week,
@@ -150,6 +152,7 @@ function CareerMatchPlayback({
   backdropPhotoUrl,
 }: {
   setup: CareerMatchSetup;
+  players: readonly Player[];
   playerClubSquad: Squad;
   rivalPlayers: readonly Player[];
   week: number;
@@ -169,6 +172,17 @@ function CareerMatchPlayback({
   const [loading, setLoading] = useState(true);
   const [reportOpen, setReportOpen] = useState(false);
   const [fastSim, setFastSim] = useState(false);
+
+  const portraitSeedForPlayerId = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const player of players) {
+      map.set(player.id, player.portrait_seed);
+    }
+    for (const player of rivalPlayers) {
+      map.set(player.id, player.portrait_seed);
+    }
+    return (id: string) => map.get(id);
+  }, [players, rivalPlayers]);
   const playback = useMatchPlayback(view);
   /** Set only on explicit user transport (play / step / skip) — never from index side-effects. */
   const userStartedPlaybackRef = useRef(false);
@@ -296,7 +310,7 @@ function CareerMatchPlayback({
 
   useEffect(() => {
     if (!onRegisterSkipToReport) return;
-    if (reportOpen || !view || loading) {
+    if (reportOpen || !view || loading || !userStartedPlayback) {
       onRegisterSkipToReport(null);
       return;
     }
@@ -308,23 +322,20 @@ function CareerMatchPlayback({
       setReportOpen(true);
     });
     return () => onRegisterSkipToReport(null);
-  }, [loading, onRegisterSkipToReport, playback.goToEnd, reportOpen, view]);
+  }, [loading, onRegisterSkipToReport, playback.goToEnd, reportOpen, userStartedPlayback, view]);
 
   useLayoutEffect(() => {
     const outcome = view ? watchedMatchFromView(setup, view) : null;
     const awaitingKickoff = Boolean(view && !loading && !reportOpen && !userStartedPlayback);
-    const atKickoff = playback.index === 0 && !playback.playing;
     const navLabel = simulating
       ? "…"
       : reportOpen
         ? "Spieltag abschließen"
         : awaitingKickoff
-          ? "Spiel simulieren"
+          ? "Spiel starten"
           : playback.playing
             ? "Pause"
-            : atKickoff
-              ? "Spiel simulieren"
-              : "Fortsetzen";
+            : "Fortsetzen";
     onNavActionChange({
       label: navLabel,
       onClick: () => {
@@ -344,9 +355,11 @@ function CareerMatchPlayback({
       disabled: simulating || loading || !outcome,
       title: reportOpen
         ? "Ergebnis übernehmen und zum Sonntag"
-        : playback.playing
-          ? "Simulation pausieren"
-          : "Simulation starten oder fortsetzen",
+        : awaitingKickoff
+          ? "Live-Phase starten (Kommentar und Spielfeld)"
+          : playback.playing
+            ? "Simulation pausieren"
+            : "Simulation fortsetzen",
     });
     return () => onNavActionChange(null);
   }, [
@@ -388,6 +401,7 @@ function CareerMatchPlayback({
           weekday={weekday}
           kasse={kasse}
           stadiumPhotoUrl={backdropPhotoUrl}
+          portraitSeedForPlayerId={portraitSeedForPlayerId}
           onSelectPlayer={onSelectMatchPlayer}
         />
       ) : (

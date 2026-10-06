@@ -14,7 +14,7 @@ export function MatchdayPreviewPanel({ view }: { view: MatchView }) {
         <Lineup view={view} frame={kickoffFrame} />
       </div>
       <p className="matchday-preview-hint">
-        Header: <span className="matchday-preview-hint-em">Spiel simulieren</span> startet die Live-Phase.
+        Header: <span className="matchday-preview-hint-em">Spiel starten</span> startet die Live-Phase.
       </p>
     </aside>
   );

@@ -1937,10 +1937,12 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 
 .club-crest-img {
   object-fit: contain;
-  border-radius: 50%;
-  border: 2px solid var(--tinte);
-  box-sizing: border-box;
-  background: var(--panel);
+  display: block;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-sizing: content-box;
+  mix-blend-mode: multiply;
 }
 
 @media (max-width: 720px) {

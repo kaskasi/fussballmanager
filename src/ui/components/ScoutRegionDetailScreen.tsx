@@ -30,12 +30,85 @@ import { ScoutTripMapOverlay } from "./ScoutTripMapOverlay.tsx";
 import type { ScoutDiscoveryZoneModel } from "../../scouting/scout-region-map.ts";
 import { useT } from "../../i18n/react.ts";
 import { clubLogoUrlForId } from "../assets/club-logo.ts";
+import { pickClubLogoPinLayout } from "../../scouting/scout-map-pin-layout.ts";
+import type { ScoutMapEdge } from "../../scouting/scout-route-puzzle.ts";
+import type { ScoutMapNode } from "../../scouting/scout-map-layout.ts";
 
 function stopNumberOnPath(pathNodeIds: readonly string[], nodeId: string): number | null {
   for (let index = pathNodeIds.length - 1; index >= 0; index -= 1) {
     if (pathNodeIds[index] === nodeId) return index + 1;
   }
   return null;
+}
+
+function ScoutRouteClubMarker({
+  clubId,
+  node,
+  mapNodes,
+  edges,
+  size,
+  nodeClass,
+  stop,
+}: {
+  clubId: string;
+  node: ScoutMapNode;
+  mapNodes: readonly ScoutMapNode[];
+  edges: readonly ScoutMapEdge[];
+  size: number;
+  nodeClass: string;
+  stop: number | null;
+}) {
+  const [logoFailed, setLogoFailed] = useState(false);
+  const logoSrc = clubLogoUrlForId(clubId);
+  const showLogo = Boolean(logoSrc) && !logoFailed;
+  const placement = useMemo(
+    () => pickClubLogoPinLayout(node, mapNodes, edges, size),
+    [edges, mapNodes, node, size],
+  );
+  const logoClass = nodeClass.includes("is-on-route")
+    ? "scout-route-club-logo is-on-route"
+    : "scout-route-club-logo";
+
+  return (
+    <>
+      {showLogo ? (
+        <>
+          <circle cx={placement.pinX} cy={placement.pinY} r={2.75} className="scout-route-pin" />
+          <image
+            className={logoClass}
+            href={logoSrc}
+            x={placement.logoX}
+            y={placement.logoY}
+            width={size}
+            height={size}
+            preserveAspectRatio="xMidYMid meet"
+            onError={() => setLogoFailed(true)}
+          />
+        </>
+      ) : (
+        <circle cx={placement.pinX} cy={placement.pinY} r={size <= 20 ? 4.5 : 6} className={nodeClass} />
+      )}
+      {stop != null ? (
+        <g
+          className="scout-route-stop-badge"
+          transform={`translate(${placement.badgeX}, ${placement.badgeY})`}
+        >
+          <circle r={3.25} className="scout-route-stop-badge-bg" />
+          <text x={0} y={0.8} className="scout-route-stop-num" textAnchor="middle">
+            {stop}
+          </text>
+        </g>
+      ) : null}
+      <text
+        x={placement.labelX}
+        y={placement.labelY}
+        className="scout-route-label"
+        textAnchor={placement.labelX >= placement.pinX ? "start" : "end"}
+      >
+        {node.label}
+      </text>
+    </>
+  );
 }
 
 export function ScoutRegionDetailScreen({
@@ -256,7 +329,6 @@ export function ScoutRegionDetailScreen({
             const clickable = routeMode && !tripActiveHere;
             const visited = node.discovered && node.careerClubId;
             const crestSize = layout.mapMode === "city" ? 28 : 18;
-            const crestHalf = crestSize / 2;
             const nodeClass =
               stop != null
                 ? "scout-route-node is-on-route"
@@ -273,26 +345,28 @@ export function ScoutRegionDetailScreen({
                 style={{ cursor: clickable ? "pointer" : undefined }}
               >
                 {visited ? (
-                  <image
-                    className={nodeClass}
-                    href={clubLogoUrlForId(node.careerClubId!)}
-                    x={node.x - crestHalf}
-                    y={node.y - crestHalf}
-                    width={crestSize}
-                    height={crestSize}
-                    preserveAspectRatio="xMidYMid meet"
+                  <ScoutRouteClubMarker
+                    clubId={node.careerClubId!}
+                    node={node}
+                    mapNodes={mapNodes}
+                    edges={layout.edges}
+                    size={crestSize}
+                    nodeClass={nodeClass}
+                    stop={stop}
                   />
                 ) : (
-                  <circle cx={node.x} cy={node.y} r={4.5} className={nodeClass} />
+                  <>
+                    <circle cx={node.x} cy={node.y} r={4.5} className={nodeClass} />
+                    {stop != null ? (
+                      <text x={node.x} y={node.y + 1} className="scout-route-stop-num" textAnchor="middle">
+                        {stop}
+                      </text>
+                    ) : null}
+                    <text x={node.x + 6} y={node.y + 2} className="scout-route-label">
+                      {node.label}
+                    </text>
+                  </>
                 )}
-                {stop != null ? (
-                  <text x={node.x} y={node.y + 1} className="scout-route-stop-num" textAnchor="middle">
-                    {stop}
-                  </text>
-                ) : null}
-                <text x={node.x + 6} y={node.y + 2} className="scout-route-label">
-                  {node.label}
-                </text>
               </g>
             );
           })}

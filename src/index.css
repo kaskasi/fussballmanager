@@ -1830,7 +1830,7 @@ body {
 
 .scout-discovery-zone-card.has-flavor .scout-discovery-zone-crests .club-crest,
 .scout-discovery-zone-card.has-flavor .scout-discovery-zone-crests .club-crest-img {
-  box-shadow: 0 1px 4px rgb(15 23 42 / 55%);
+  filter: drop-shadow(0 1px 3px rgb(15 23 42 / 55%));
 }
 
 .scout-discovery-zone-pool {
@@ -1842,8 +1842,31 @@ body {
   fill: #94a3b8;
 }
 
-.scout-route-club.is-visited image.scout-route-node {
-  filter: drop-shadow(0 1px 2px rgb(15 23 42 / 45%));
+.scout-route-pin {
+  fill: #fff;
+  stroke: #0f172a;
+  stroke-width: 0.45;
+  pointer-events: none;
+}
+
+.scout-route-club-logo {
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 0.5px 1.5px rgb(15 23 42 / 35%));
+}
+
+.scout-route-club-logo.is-on-route {
+  filter: drop-shadow(0 0 2px rgb(250 204 21 / 85%))
+    drop-shadow(0 0.5px 1.5px rgb(15 23 42 / 45%));
+}
+
+.scout-route-stop-badge-bg {
+  fill: var(--sonnengelb, #facc15);
+  stroke: none;
+}
+
+.scout-route-stop-badge .scout-route-stop-num {
+  font-size: 5px;
 }
 
 .scout-route-node.is-muted {
@@ -2076,8 +2099,7 @@ body {
 
 .scout-discovery-zone-crests .club-crest,
 .scout-discovery-zone-crests .club-crest-img {
-  box-shadow: 0 1px 4px rgb(15 23 42 / 0.35);
-  border-radius: 4px;
+  filter: drop-shadow(0 1px 2px rgb(15 23 42 / 35%));
 }
 
 .scout-discovery-clubs {

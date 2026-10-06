@@ -7,11 +7,7 @@ import {
 import { applyMapClubVisitToBoardTargetsForClubs } from "./scout-map-visit.ts";
 import type { ScoutKnowledgeTarget } from "./scout-board.ts";
 import { careerClubsOnPath, type ScoutMapNode } from "./scout-map-layout.ts";
-import {
-  scoutTripDuration,
-  WORKING_DAYS_PER_GAME_WEEK,
-  type ScoutTripDurationBreakdown,
-} from "./scout-trip-duration.ts";
+import { scoutTripDuration, type ScoutTripDurationBreakdown } from "./scout-trip-duration.ts";
 import type { ScoutRouteScore } from "./scout-route-puzzle.ts";
 
 export interface ScoutTripPlan {
@@ -75,13 +71,13 @@ export function advanceActiveScoutTrip(
   discovery: ScoutDiscoveryState,
   rivalPlayers: readonly Player[],
   targets: Record<string, ScoutKnowledgeTarget> = {},
+  deltaWorkingDays = 1,
 ): {
   trip: ActiveScoutTrip | null;
   discovery: ScoutDiscoveryState;
   targets: Record<string, ScoutKnowledgeTarget>;
 } {
-  const step = WORKING_DAYS_PER_GAME_WEEK;
-  const working_days_done = trip.working_days_done + step;
+  const working_days_done = trip.working_days_done + Math.max(0, deltaWorkingDays);
   if (working_days_done < trip.duration.totalWorkingDays) {
     return {
       trip: { ...trip, working_days_done },

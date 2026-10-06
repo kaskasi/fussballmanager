@@ -34,7 +34,7 @@ describe("scout trip map visits", () => {
       },
       queued_at_week: 1,
       assigned_scout_id: "scout_1",
-      working_days_done: 1,
+      working_days_done: 5,
     } satisfies ActiveScoutTrip;
 
     const { trip: after, discovery, targets } = advanceActiveScoutTrip(

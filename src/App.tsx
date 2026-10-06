@@ -22,6 +22,7 @@ import {
   activeScoutCount,
   addScoutAssignment,
   assignScout,
+  advanceScoutWorkingDay,
   getBoardTarget,
   listBoardTargets,
   removeScoutAssignment,
@@ -728,11 +729,25 @@ export default function App() {
       if (skip.daysAdvanced > 0) {
         patchSession((current) => {
           const now = { season: current.season, week: current.week, weekday: skip.weekday };
+          const club = current.world.clubs.find(
+            (entry) => worldCareerClubId(entry.id) === current.clubId,
+          );
+          const division = club?.division_id ?? "regionalliga-nord";
           return {
             ...current,
             weekday: skip.weekday,
             youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced, current.players),
             youthCamps: tickCampLeaderHires(current.youthCamps, now),
+            scoutBoard: advanceScoutWorkingDay(
+              current.scoutBoard,
+              skip.weekday,
+              current.rivalPlayers,
+              current.scoutNetwork,
+              current.world.clubs,
+              current.season,
+              current.week,
+              division,
+            ),
           };
         });
       }
@@ -773,11 +788,25 @@ export default function App() {
     if (skip.action === "advance" && skip.daysAdvanced > 0) {
       patchSession((current) => {
         const now = { season: current.season, week: current.week, weekday: skip.weekday };
+        const club = current.world.clubs.find(
+          (entry) => worldCareerClubId(entry.id) === current.clubId,
+        );
+        const division = club?.division_id ?? "regionalliga-nord";
         return {
           ...current,
           weekday: skip.weekday,
           youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced, current.players),
           youthCamps: tickCampLeaderHires(current.youthCamps, now),
+          scoutBoard: advanceScoutWorkingDay(
+            current.scoutBoard,
+            skip.weekday,
+            current.rivalPlayers,
+            current.scoutNetwork,
+            current.world.clubs,
+            current.season,
+            current.week,
+            division,
+          ),
         };
       });
     }
@@ -2368,6 +2397,9 @@ export default function App() {
           targets={listBoardTargets(scoutBoard, rivalPlayers, world.clubs)}
           rivalPlayers={rivalPlayers}
           worldClubs={world.clubs}
+          playerClub={
+            world.clubs.find((entry) => worldCareerClubId(entry.id) === session.clubId) ?? null
+          }
           discovery={scoutBoard.discovery}
           playerDivisionId={playerDivisionId}
           activeClubScout={scoutBoard.active_club_scout}

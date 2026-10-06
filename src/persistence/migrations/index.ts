@@ -62,6 +62,7 @@ import { migration062RegionScoutTier } from "./migration_062_region_scout_tier.t
 import { migration063ClubPlaceGeo } from "./migration_063_club_place_geo.ts";
 import { migration064ScoutTrips } from "./migration_064_scout_trips.ts";
 import { migration065MapClubVisits } from "./migration_065_map_club_visits.ts";
+import { migration066HomeZoneScout } from "./migration_066_home_zone_scout.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -133,6 +134,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration063ClubPlaceGeo,
   migration064ScoutTrips,
   migration065MapClubVisits,
+  migration066HomeZoneScout,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

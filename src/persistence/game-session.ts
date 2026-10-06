@@ -4,6 +4,7 @@ import {
   reconcileScoutBoard,
   type ScoutBoard,
 } from "../scouting/scout-board.ts";
+import { worldCareerClubId } from "../world/world-generator.ts";
 import type { Player } from "../types/player.ts";
 import { loadDemoRoster } from "../ui/demo-roster.ts";
 import {
@@ -130,7 +131,11 @@ export function newGameSession(now = new Date()): GameSession {
   );
   if (save.state.pipeline) {
     save.state.pipeline.rival_players = rivalPlayers;
-    save.state.pipeline.scout_board = createScoutBoard(rivalPlayers);
+    const playerClub =
+      world.clubs.find((club) => worldCareerClubId(club.id) === NORDSTERN_CLUB_ID) ??
+      world.clubs.find((club) => club.id === NORDSTERN_CLUB_ID) ??
+      null;
+    save.state.pipeline.scout_board = createScoutBoard(rivalPlayers, playerClub);
     save.state.pipeline.story_state = initializeStoryForNewGame(
       DEFAULT_MASTER_SEED,
       DEFAULT_MANAGER,

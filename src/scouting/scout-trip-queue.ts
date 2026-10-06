@@ -99,7 +99,8 @@ export function canEnqueueScoutTrip(
   return true;
 }
 
-export function advanceScoutTripWeek<T extends ScoutTripBoardSlice>(
+/** Mo–Fr calendar tick: +1 working day on active trip, then dispatch queue if free. */
+export function advanceScoutTripsOnWorkingDay<T extends ScoutTripBoardSlice>(
   board: T,
   rivalPlayers: readonly Player[],
   network: ScoutNetworkState,
@@ -113,6 +114,7 @@ export function advanceScoutTripWeek<T extends ScoutTripBoardSlice>(
       discovery,
       rivalPlayers,
       board.targets,
+      1,
     );
     next = {
       ...next,
@@ -122,4 +124,13 @@ export function advanceScoutTripWeek<T extends ScoutTripBoardSlice>(
     };
   }
   return tryDispatchNextScoutTrip(next, network);
+}
+
+/** Week sim: dispatch queued trips only (progress is daily via advanceScoutTripsOnWorkingDay). */
+export function advanceScoutTripWeek<T extends ScoutTripBoardSlice>(
+  board: T,
+  _rivalPlayers: readonly Player[],
+  network: ScoutNetworkState,
+): T {
+  return tryDispatchNextScoutTrip(board, network);
 }

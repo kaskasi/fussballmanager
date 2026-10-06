@@ -29,6 +29,7 @@ Referenz-Implementierungen: PRD 03.6.2 (Camp-Leiter), Training-Reminder-Inbox, P
 - **Spieler** vergrößert den Pool (Karte, Jobs, später Batch-Klicks).
 - **Assistent** (F8.5) vertieft Wissen **nur** für Pool-Mitglieder — keine Geo-Automation.
 - **Postfach** schließt den Kreis, wenn ein Job fertig ist (sichtbare Auszahlung der Map-Investition).
+- **Kalender:** Mo–Fr **NEXT** verbraucht je einen **Arbeitstag** für aktive Regions-Erkundung und Karten-Reisen (PRD 04.5); Sonntags-Wochensim ersetzt das nicht.
 
 ---
 

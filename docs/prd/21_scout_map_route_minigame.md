@@ -4,7 +4,7 @@
 
 ## Navigation
 
-- **2×2 grid (Screen 3a):** After `region_scout_tier >= 1`, zone tile shows **flavor photo** (`public/assets/scout-maps/flavor/{zoneId}.jpg`); click tile or „Region scouten“ → **Screen 3a-detail**.
+- **2×2 grid (Screen 3a):** **Locked** foreign zones (tier &lt; 3): lore copy, no photo, no detail map. **Unlocked** (tier 3 or **home zone**): flavor photo (`public/assets/scout-maps/flavor/{zoneId}.jpg`); **„Karte öffnen“** → **Screen 3a-detail**.
 - **Detail:** Relief or city SVG only (no flavor JPEG); tap nodes to chain edges into a route.
 
 ## Route rules (Jan — option D)
@@ -22,8 +22,9 @@
 
 ## Sim
 
-- `startRegionScoutJob(board, zoneId, { progress_multiplier, no_duplicate_bonus })`
-- `advanceDiscoveryWeek` applies multiplier to region job weekly step.
+- `startRegionScoutJob(board, zoneId)` → `working_days_left` (default 1); tier +1 when job completes on a **Mo–Fr NEXT** tick (`advanceScoutWorkingDay`).
+- **Scout trips:** duration in working days; +1 per Mo–Fr NEXT while trip active; week sim dispatches queue only (no +5 lump).
+- Club route jobs: `startClubScoutJob` + weekly progress in `advanceDiscoveryWeek` (unchanged v1).
 
 ## Future
 

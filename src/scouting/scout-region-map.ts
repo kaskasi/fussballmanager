@@ -11,6 +11,7 @@ import {
   regionScoutTier,
   type ScoutDiscoveryState,
 } from "./scout-discovery.ts";
+import { homeZoneIdForClub, isRegionMapUnlocked } from "./scout-region-unlock.ts";
 import {
   worldCareerClubId,
   type WorldClub,
@@ -143,6 +144,8 @@ export interface ScoutMapClubPin {
   scoutProgress: number | null;
 }
 
+export type ScoutDiscoveryCardMode = "locked" | "unlocked";
+
 export interface ScoutDiscoveryZoneModel {
   id: string;
   label: string;
@@ -150,7 +153,10 @@ export interface ScoutDiscoveryZoneModel {
   regionTier: number;
   regionTierMax: number;
   regionDirectoryOpen: boolean;
+  mapUnlocked: boolean;
+  cardMode: ScoutDiscoveryCardMode;
   regionProgress: number | null;
+  regionWorkingDaysLeft: number | null;
   poolPlayers: number;
   poolExpected: number;
   poolCoveragePct: number;
@@ -167,10 +173,12 @@ export function buildScoutDiscoveryMapModel(input: {
   rivalPlayers: readonly Player[];
   discovery: ScoutDiscoveryState | undefined;
   playerDivisionId: WorldDivisionId;
+  playerClub?: WorldClub | null;
   activeClubScout?: { club_id: string; progress: number } | null;
-  activeRegionScout?: { zone_id: string; progress: number } | null;
+  activeRegionScout?: { zone_id: string; working_days_left?: number; progress?: number } | null;
 }): ScoutDiscoveryMapModel {
   const discovery = normalizeDiscovery(input.discovery);
+  const homeZoneId = homeZoneIdForClub(input.playerClub);
   const proCounts = proSquadCountsByCareerClubId(input.rivalPlayers);
   const poolByClub = new Map<string, number>();
   for (const target of input.targets) {
@@ -183,8 +191,14 @@ export function buildScoutDiscoveryMapModel(input: {
   const zones: ScoutDiscoveryZoneModel[] = SCOUT_MAP_ZONES.map((zone) => {
     const zoneClubs = input.clubs.filter((club) => zone.worldRegions.includes(club.region));
     const regionTier = regionScoutTier(discovery, zone.id);
+    const regionWorkingDaysLeft =
+      input.activeRegionScout?.zone_id === zone.id
+        ? (input.activeRegionScout.working_days_left ?? null)
+        : null;
     const regionProgress =
-      input.activeRegionScout?.zone_id === zone.id ? input.activeRegionScout.progress : null;
+      regionWorkingDaysLeft != null ? null : input.activeRegionScout?.progress ?? null;
+    const mapUnlocked = isRegionMapUnlocked(discovery, zone.id, homeZoneId);
+    const cardMode: ScoutDiscoveryCardMode = mapUnlocked ? "unlocked" : "locked";
 
     const pins: ScoutMapClubPin[] = zoneClubs.map((club) => {
       const careerClubId = worldCareerClubId(club.id);
@@ -258,7 +272,10 @@ export function buildScoutDiscoveryMapModel(input: {
       regionTier,
       regionTierMax: REGION_SCOUT_TIER_MAX,
       regionDirectoryOpen,
+      mapUnlocked,
+      cardMode,
       regionProgress,
+      regionWorkingDaysLeft,
       poolPlayers,
       poolExpected,
       poolCoveragePct,

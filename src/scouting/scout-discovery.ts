@@ -8,6 +8,7 @@ import { SCOUT_MAP_ZONES, zoneIdForWorldRegion } from "./scout-region-map.ts";
 import type { ScoutKnowledgeTarget } from "./scout-board.ts";
 import { initialEstimateForPlayer } from "./market-list.ts";
 import { applyMapClubVisitToBoardTargets } from "./scout-map-visit.ts";
+import { isScoutWorkingWeekday } from "./scout-trip-duration.ts";
 
 export const CLUB_SCOUT_PROGRESS_PER_WEEK = 34;
 export const REGION_SCOUT_PROGRESS_PER_WEEK = 25;
@@ -33,11 +34,16 @@ export interface ActiveClubScout {
 
 export interface ActiveRegionScout {
   zone_id: string;
-  progress: number;
+  /** Mo–Fr NEXT ticks until 0, then tier +1. */
+  working_days_left: number;
+  /** @deprecated Legacy week-sim progress 0–100. */
+  progress?: number;
   /** PRD 21: route efficiency (duplicate edges slow weekly progress). */
   progress_multiplier?: number;
   no_duplicate_bonus?: boolean;
 }
+
+export const REGION_SCOUT_WORKING_DAYS_PER_JOB = 1;
 
 export function emptyDiscovery(): ScoutDiscoveryState {
   return {
@@ -305,17 +311,6 @@ export function advanceDiscoveryWeek<T extends DiscoveryBoardSlice>(
     }
   }
 
-  if (activeRegion) {
-    const step = Math.round(REGION_SCOUT_PROGRESS_PER_WEEK * boost);
-    const progress = Math.min(DISCOVERY_COMPLETE, activeRegion.progress + step);
-    if (progress >= DISCOVERY_COMPLETE) {
-      discovery = completeRegionDiscovery(discovery, activeRegion.zone_id);
-      activeRegion = null;
-    } else {
-      activeRegion = { ...activeRegion, progress };
-    }
-  }
-
   const mergedTargets = ensureTargetsForPool(targets, discovery, rivalPlayers);
 
   return {
@@ -342,13 +337,64 @@ export function startClubScoutJob<T extends DiscoveryBoardSlice>(
   };
 }
 
+export function normalizeActiveRegionScout(
+  job: ActiveRegionScout | null | undefined,
+): ActiveRegionScout | null {
+  if (!job) return null;
+  if (typeof job.working_days_left === "number") {
+    return { ...job, working_days_left: Math.max(0, job.working_days_left) };
+  }
+  const legacyProgress = job.progress ?? 0;
+  if (legacyProgress >= DISCOVERY_COMPLETE) {
+    return { zone_id: job.zone_id, working_days_left: 0, ...job };
+  }
+  return {
+    ...job,
+    working_days_left: REGION_SCOUT_WORKING_DAYS_PER_JOB,
+    progress: legacyProgress,
+  };
+}
+
+/** One Mo–Fr NEXT while a region job is active. */
+export function advanceRegionScoutOnWorkingDay<T extends DiscoveryBoardSlice>(
+  board: T,
+  weekday: number,
+  rivalPlayers: readonly Player[],
+): T {
+  if (!isScoutWorkingWeekday(weekday)) return board;
+  let activeRegion = normalizeActiveRegionScout(board.active_region_scout ?? null);
+  if (!activeRegion || activeRegion.working_days_left <= 0) return board;
+
+  let discovery = normalizeDiscovery(board.discovery);
+  let targets = board.targets;
+  const left = activeRegion.working_days_left - 1;
+  if (left > 0) {
+    return {
+      ...board,
+      active_region_scout: { ...activeRegion, working_days_left: left },
+    };
+  }
+
+  discovery = completeRegionDiscovery(discovery, activeRegion.zone_id);
+  targets = ensureTargetsForPool(targets, discovery, rivalPlayers);
+  return {
+    ...board,
+    discovery,
+    targets,
+    active_region_scout: null,
+  };
+}
+
 export function startRegionScoutJob<T extends DiscoveryBoardSlice>(
   board: T,
   zoneId: string,
 ): T {
   return {
     ...board,
-    active_region_scout: { zone_id: zoneId, progress: 0 },
+    active_region_scout: {
+      zone_id: zoneId,
+      working_days_left: REGION_SCOUT_WORKING_DAYS_PER_JOB,
+    },
   };
 }
 

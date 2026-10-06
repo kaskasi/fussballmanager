@@ -97,6 +97,7 @@ export function ScoutingCenter({
   targets,
   rivalPlayers,
   worldClubs,
+  playerClub,
   discovery,
   playerDivisionId,
   activeClubScout,
@@ -133,6 +134,7 @@ export function ScoutingCenter({
   targets: BoardTarget[];
   rivalPlayers: readonly Player[];
   worldClubs: readonly WorldClub[];
+  playerClub?: WorldClub | null;
   discovery: ScoutDiscoveryState | undefined;
   playerDivisionId: WorldDivisionId;
   activeClubScout?: ActiveClubScout | null;
@@ -191,6 +193,7 @@ export function ScoutingCenter({
         rivalPlayers,
         discovery,
         playerDivisionId,
+        playerClub,
         activeClubScout,
         activeRegionScout,
       }),
@@ -198,6 +201,7 @@ export function ScoutingCenter({
       activeClubScout,
       activeRegionScout,
       discovery,
+      playerClub,
       playerDivisionId,
       rivalPlayers,
       targets,
@@ -333,6 +337,7 @@ export function ScoutingCenter({
                 rivalPlayers={rivalPlayers}
                 discovery={discovery}
                 playerDivisionId={playerDivisionId}
+                playerClub={playerClub}
                 activeRegionScout={activeRegionScout}
                 onScoutRegion={onScoutRegion}
                 onOpenRegionDetail={setDetailZoneId}

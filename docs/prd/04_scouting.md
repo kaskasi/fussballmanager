@@ -184,8 +184,16 @@ Neue Spiele starten mit leerem Pool; Käufe und Verhandlungen sind ohne Pool-Ein
 - Clubs anderer Divisionen erscheinen **stückweise** nach Regions-Scout (⅓ / ⅔ / alle bei Tier 1–3).
 - Unbekannte Regionen ohne Liga-Gegner: keine Club-Liste, nur „Region scouten (0/3)“.
 
+**Heimatzone & Karten-UX (Grid 2×2):**
+
+- **Heimatzone** = Map-Zone zur `world.region` des Manager-Vereins (`homeZoneIdForClub`). Neue Karrieren + Migration 066: `region_scout_tier[homeZoneId] = 3` — Flavor-Foto + Detailkarte ab Tag 1 (Fremd-Verzeichnis in der Zone wie Tier 3).
+- **Fremd-Zonen** vor Tier 3: **Locked card** — Lore-Text, kein Foto, keine Detailkarte; Aktion „Region scouten (n/3)“.
+- **Tier 3** (oder Heimatzone): **Unlocked card** — Flavor-JPEG, „Karte öffnen“ → Detail-Route (PRD 21).
+
+**Kalender (Mo–Fr):** Regions-Jobs und Karten-Reisen ticken mit **Header-NEXT** an **Arbeitstagen** (`working_days_left` / `working_days_done`), nicht als +5-Paket am Sonntags-Wochensim. Sa/So zählen nicht. Ein abgeschlossener Regions-Job = +1 Tier (1 Arbeitstag pro Job, v1).
+
 Persistenz (`scout_board.discovery`): `region_scout_tier`, `discovered_region_ids`, `visited_club_ids`, `discovered_club_ids` (Legacy-Alias), `scout_pool`.
-Aktive Jobs: `active_region_scout`, `active_club_scout` (Fortschritt 0–100, Wochen-Ticks in `advanceScoutWeek`).
+Aktive Jobs: `active_region_scout` (`working_days_left`), `active_club_scout` (Fortschritt 0–100, weiterhin Wochen-Ticks in `advanceScoutWeek` für Legacy-Vereinsjobs).
 Migration: bestehende `targets`-Keys werden in den Pool übernommen; alle Karten-Zonen gelten als entdeckt (Save ≥ 60). Legacy `discovered_region_ids` → Tier 3 pro Zone (Save ≥ 62).
 
 **Pool-Abdeckung (Karte):** Pro Zone/Club Anzeige `{im Pool} / ~{Profis}` nur für **sichtbare** Vereine; engeres Scout-Wissen bleibt Treffer/Assistent (nicht Karte).

@@ -21,6 +21,7 @@ import {
 } from "./scout-assignments.ts";
 import {
   advanceDiscoveryWeek,
+  advanceRegionScoutOnWorkingDay,
   emptyDiscovery,
   ensureTargetsForPool,
   isInScoutPool,
@@ -29,12 +30,14 @@ import {
   type ActiveRegionScout,
   type ScoutDiscoveryState,
 } from "./scout-discovery.ts";
+import { applyHomeZoneBootstrap } from "./scout-region-unlock.ts";
 import {
   appendScoutJobNotices,
   noticesFromDiscoveryJobAdvance,
   type ScoutJobCompleteNotice,
 } from "./scout-job-postfach.ts";
-import { advanceScoutTripWeek } from "./scout-trip-queue.ts";
+import { isScoutWorkingWeekday } from "./scout-trip-duration.ts";
+import { advanceScoutTripWeek, advanceScoutTripsOnWorkingDay } from "./scout-trip-queue.ts";
 import type { ActiveScoutTrip, ScoutTripPlan } from "./scout-trip.ts";
 import {
   applyObservationWithAccuracy,
@@ -103,13 +106,16 @@ export function normalizeScoutBoard(board: ScoutBoard): ScoutBoard {
   };
 }
 
-export function createScoutBoard(_players: readonly Player[] = []): ScoutBoard {
+export function createScoutBoard(
+  _players: readonly Player[] = [],
+  playerClub?: WorldClub | null,
+): ScoutBoard {
   return {
     targets: {},
     recentReports: [],
     assignments: [],
     discoveryAlerts: [],
-    discovery: emptyDiscovery(),
+    discovery: applyHomeZoneBootstrap(emptyDiscovery(), playerClub),
     active_club_scout: null,
     active_region_scout: null,
     scout_trip_queue: [],
@@ -253,6 +259,34 @@ export function syncAssignmentTargets(
 
 export function activeScoutCount(board: ScoutBoard): number {
   return Object.values(board.targets).filter((target) => target.assigned).length;
+}
+
+/** Mo–Fr NEXT: region jobs + map trips (working-day calendar). */
+export function advanceScoutWorkingDay(
+  board: ScoutBoard,
+  weekday: number,
+  rivalPlayers: readonly Player[],
+  network: ScoutNetworkState,
+  clubs: readonly WorldClub[] = [],
+  season = 1,
+  week = 1,
+  playerDivisionId?: WorldDivisionId,
+): ScoutBoard {
+  const before = normalizeScoutBoard(board);
+  if (!isScoutWorkingWeekday(weekday)) return before;
+  let next = advanceRegionScoutOnWorkingDay(before, weekday, rivalPlayers);
+  next = advanceScoutTripsOnWorkingDay(next, rivalPlayers, network);
+  const normalized = normalizeScoutBoard(next);
+  const jobNotices = noticesFromDiscoveryJobAdvance({
+    before,
+    after: normalized,
+    rivalPlayers,
+    worldClubs: clubs,
+    playerDivisionId,
+    season,
+    week,
+  });
+  return appendScoutJobNotices(normalized, jobNotices);
 }
 
 /** One hub week: assigned targets get a visit report; everyone else decays quietly. */

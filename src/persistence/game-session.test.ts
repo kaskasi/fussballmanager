@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createInitialTrainingPlan } from "../development/training-units.ts";
-import { assignScout, createScoutBoard } from "../scouting/scout-board.ts";
+import { assignScout, reconcileScoutBoard } from "../scouting/scout-board.ts";
+import { addPlayersToPool, ensureTargetsForPool, normalizeDiscovery } from "../scouting/scout-discovery.ts";
 import { loadDemoRoster } from "../ui/demo-roster.ts";
 import { newGameSession, saveFromSession, sessionFromSave } from "./game-session.ts";
 import { loadLocalSave, persistSession, removeLocalSave, writeLocalSave } from "./local-save.ts";
@@ -28,13 +29,19 @@ afterEach(() => {
 describe("game session", () => {
   it("round-trips hub state through a save", () => {
     const session = newGameSession(new Date("2026-09-22T14:00:00Z"));
-    expect(Object.keys(session.scoutBoard.targets)).toHaveLength(session.rivalPlayers.length);
-    expect(
-      Object.values(session.scoutBoard.targets).every((target) =>
-        session.rivalPlayers.some((player) => player.id === target.playerId),
-      ),
-    ).toBe(true);
-    const board = assignScout(session.scoutBoard, Object.keys(session.scoutBoard.targets)[0]!);
+    const firstRivalId = session.rivalPlayers[0]!.id;
+    const discovery = addPlayersToPool(normalizeDiscovery(session.scoutBoard.discovery), [
+      firstRivalId,
+    ]);
+    const scoutBase = reconcileScoutBoard(
+      {
+        ...session.scoutBoard,
+        discovery,
+        targets: ensureTargetsForPool(session.scoutBoard.targets, discovery, session.rivalPlayers),
+      },
+      session.rivalPlayers,
+    );
+    const board = assignScout(scoutBase, firstRivalId);
     const plan = createInitialTrainingPlan().map((slot, index) =>
       index === 0 ? { ...slot, focus: true } : slot,
     );
@@ -71,7 +78,7 @@ describe("game session", () => {
     const session = newGameSession();
     persistSession(session, 1);
     const loaded = loadLocalSave(1);
-    expect(loaded?.state.pipeline?.scout_board).toEqual(createScoutBoard(session.rivalPlayers));
+    expect(sessionFromSave(loaded!).scoutBoard).toEqual(session.scoutBoard);
     expect(loaded?.state.pipeline?.youth_inbox.queue.length).toBeGreaterThan(0);
     expect(loaded?.state.world?.generation_version).toBe(1);
     expect(sessionFromSave(loaded!)).toMatchObject({

@@ -89,7 +89,38 @@ describe("buildScoutDiscoveryMapModel", () => {
     const foerde = model.zones.find((zone) => zone.id === "foerde");
     expect(foerde?.poolExpected).toBe(2);
     expect(foerde?.regionTier).toBe(0);
+    expect(foerde?.cardMode).toBe("locked");
+    expect(foerde?.mapUnlocked).toBe(false);
     expect(foerde?.clubs.filter((club) => club.directoryVisible)).toHaveLength(1);
+  });
+
+  it("home zone is unlocked with flavor card mode when player club is in zone", () => {
+    const playerClub: WorldClub = {
+      id: "nord",
+      name: "Nordstern",
+      short_name: "NS",
+      place: "Kiel",
+      region: "Fördeküste",
+      division_id: "regionalliga-nord",
+      identity: "community",
+      reputation: 55,
+      rivalry_ids: [],
+    };
+    const discovery = emptyDiscovery();
+    const model = buildScoutDiscoveryMapModel({
+      clubs: [playerClub],
+      targets: [],
+      rivalPlayers: [],
+      discovery,
+      playerDivisionId: "regionalliga-nord",
+      playerClub,
+    });
+    const foerde = model.zones.find((zone) => zone.id === "foerde");
+    expect(foerde?.mapUnlocked).toBe(true);
+    expect(foerde?.cardMode).toBe("unlocked");
+    const hanse = model.zones.find((zone) => zone.id === "hanse");
+    expect(hanse?.mapUnlocked).toBe(false);
+    expect(hanse?.cardMode).toBe("locked");
   });
 });
 

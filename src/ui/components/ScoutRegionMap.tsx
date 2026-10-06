@@ -1,8 +1,8 @@
 /** WIREFRAME: PRD 09 Screen 3a — Scout-Karte (F4.4 discovery) */
 import { useMemo } from "react";
-import { Radar } from "lucide-react";
+import { MapPin, Radar } from "lucide-react";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
-import type { ScoutDiscoveryState } from "../../scouting/scout-discovery.ts";
+import type { ActiveRegionScout, ScoutDiscoveryState } from "../../scouting/scout-discovery.ts";
 import { layoutForZone } from "../../scouting/scout-map-layout.ts";
 import { buildScoutDiscoveryMapModel } from "../../scouting/scout-region-map.ts";
 import { clubLogoUrlForId } from "../assets/club-logo.ts";
@@ -17,6 +17,7 @@ export function ScoutRegionMap({
   rivalPlayers,
   discovery,
   playerDivisionId,
+  playerClub,
   activeRegionScout,
   onScoutRegion,
   onOpenRegionDetail,
@@ -26,8 +27,9 @@ export function ScoutRegionMap({
   rivalPlayers: readonly Player[];
   discovery: ScoutDiscoveryState | undefined;
   playerDivisionId: WorldDivisionId;
+  playerClub?: WorldClub | null;
   activeClubScout?: { club_id: string; progress: number } | null;
-  activeRegionScout?: { zone_id: string; progress: number } | null;
+  activeRegionScout?: ActiveRegionScout | null;
   onScoutRegion: (zoneId: string) => void;
   onOpenRegionDetail?: (zoneId: string) => void;
 }) {
@@ -40,10 +42,11 @@ export function ScoutRegionMap({
         rivalPlayers,
         discovery,
         playerDivisionId,
+        playerClub,
         activeClubScout: null,
         activeRegionScout,
       }),
-    [activeRegionScout, clubs, discovery, playerDivisionId, rivalPlayers, targets],
+    [activeRegionScout, clubs, discovery, playerClub, playerDivisionId, rivalPlayers, targets],
   );
 
   return (
@@ -54,15 +57,23 @@ export function ScoutRegionMap({
       </header>
       <div className="scout-region-map-body scout-discovery-grid">
         {model.zones.map((zone, index) => {
-          const flavor = zone.regionTier > 0 ? layoutForZone(zone.id)?.flavorAsset : undefined;
+          const unlocked = zone.cardMode === "unlocked";
+          const flavor = unlocked ? layoutForZone(zone.id)?.flavorAsset : undefined;
+          const hasLayout = Boolean(layoutForZone(zone.id));
           const canOpenDetail = Boolean(
-            layoutForZone(zone.id) && onOpenRegionDetail && zone.regionDirectoryOpen,
+            unlocked && hasLayout && onOpenRegionDetail && zone.mapUnlocked,
           );
           const discoveredClubs = zone.clubs.filter((club) => club.discovered);
+          const loreKey = `scouting.map.regionLore.${zone.id}` as const;
+          const regionJobActive = activeRegionScout?.zone_id === zone.id;
+          const workingDaysLeft = regionJobActive
+            ? (activeRegionScout?.working_days_left ?? zone.regionWorkingDaysLeft)
+            : null;
+
           return (
             <article
               key={zone.id}
-              className={`scout-discovery-zone scout-discovery-zone-card is-${zone.tone}${flavor ? " has-flavor" : ""}`}
+              className={`scout-discovery-zone scout-discovery-zone-card is-${zone.tone}${unlocked && flavor ? " has-flavor" : ""}${!unlocked ? " is-locked" : ""}`}
               style={{
                 gridColumn: (index % 2) + 1,
                 gridRow: Math.floor(index / 2) + 1,
@@ -75,72 +86,90 @@ export function ScoutRegionMap({
                   : {}),
               }}
             >
-              {canOpenDetail ? (
-                <button
-                  type="button"
-                  className="scout-discovery-zone-flavor-hit"
-                  onClick={() => onOpenRegionDetail!(zone.id)}
-                  aria-label={t("scouting.map.openRegionDetail", { label: zone.label })}
-                />
-              ) : null}
               {flavor ? <div className="scout-discovery-zone-card-shade" aria-hidden /> : null}
-              <header className="scout-discovery-zone-head">
-                <h3>{zone.label}</h3>
-                {zone.regionTier < zone.regionTierMax ? (
+              <div className="scout-discovery-zone-card-inner">
+                <header className="scout-discovery-zone-head">
+                  <h3>{zone.label}</h3>
+                  {zone.regionTier < zone.regionTierMax ? (
+                    <button
+                      type="button"
+                      className="scout-discovery-region-btn"
+                      onClick={() => onScoutRegion(zone.id)}
+                      disabled={activeRegionScout != null}
+                    >
+                      <Radar size={14} aria-hidden />
+                      {regionJobActive && workingDaysLeft != null
+                        ? t("scouting.map.regionWorkingDays", {
+                            tier: zone.regionTier,
+                            max: zone.regionTierMax,
+                            left: workingDaysLeft,
+                          })
+                        : t("scouting.map.scoutRegionTier", {
+                            tier: zone.regionTier,
+                            max: zone.regionTierMax,
+                          })}
+                    </button>
+                  ) : (
+                    <span className="scout-discovery-zone-meta">
+                      {zone.poolExpected > 0
+                        ? t("scouting.map.poolCoverage", {
+                            found: zone.poolPlayers,
+                            expected: zone.poolExpected,
+                            pct: zone.poolCoveragePct,
+                          })
+                        : t("scouting.map.regionComplete")}
+                    </span>
+                  )}
+                  {unlocked &&
+                  zone.regionDirectoryOpen &&
+                  zone.regionTier < zone.regionTierMax &&
+                  zone.poolExpected > 0 ? (
+                    <span className="scout-discovery-zone-meta scout-discovery-zone-pool">
+                      {t("scouting.map.poolCoverage", {
+                        found: zone.poolPlayers,
+                        expected: zone.poolExpected,
+                        pct: zone.poolCoveragePct,
+                      })}
+                    </span>
+                  ) : null}
+                </header>
+
+                {!unlocked ? (
+                  <div className="scout-discovery-zone-lore">
+                    <p>{t(loreKey)}</p>
+                    <p className="scout-discovery-zone-locked-hint">{t("scouting.map.regionLockedHint")}</p>
+                  </div>
+                ) : null}
+
+                {unlocked && discoveredClubs.length > 0 ? (
+                  <ul
+                    className="scout-discovery-zone-crests"
+                    aria-label={t("scouting.map.discoveredClubsAria")}
+                  >
+                    {discoveredClubs.map((club) => (
+                      <li key={club.careerClubId}>
+                        <ClubCrest
+                          size={28}
+                          initials={club.shortName}
+                          logoSrc={clubLogoUrlForId(club.careerClubId)}
+                          alt={club.name}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+
+                {canOpenDetail ? (
                   <button
                     type="button"
-                    className="scout-discovery-region-btn"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onScoutRegion(zone.id);
-                    }}
-                    disabled={activeRegionScout != null}
+                    className="scout-discovery-zone-open-map"
+                    onClick={() => onOpenRegionDetail!(zone.id)}
                   >
-                    <Radar size={14} aria-hidden />
-                    {activeRegionScout?.zone_id === zone.id
-                      ? t("scouting.map.regionProgress", {
-                          pct: activeRegionScout.progress,
-                        })
-                      : t("scouting.map.scoutRegionTier", {
-                          tier: zone.regionTier,
-                          max: zone.regionTierMax,
-                        })}
+                    <MapPin size={16} aria-hidden />
+                    {t("scouting.map.openMap")}
                   </button>
-                ) : (
-                  <span className="scout-discovery-zone-meta">
-                    {zone.poolExpected > 0
-                      ? t("scouting.map.poolCoverage", {
-                          found: zone.poolPlayers,
-                          expected: zone.poolExpected,
-                          pct: zone.poolCoveragePct,
-                        })
-                      : t("scouting.map.regionComplete")}
-                  </span>
-                )}
-                {zone.regionDirectoryOpen && zone.regionTier < zone.regionTierMax && zone.poolExpected > 0 ? (
-                  <span className="scout-discovery-zone-meta scout-discovery-zone-pool">
-                    {t("scouting.map.poolCoverage", {
-                      found: zone.poolPlayers,
-                      expected: zone.poolExpected,
-                      pct: zone.poolCoveragePct,
-                    })}
-                  </span>
                 ) : null}
-              </header>
-              {discoveredClubs.length > 0 ? (
-                <ul className="scout-discovery-zone-crests" aria-label={t("scouting.map.discoveredClubsAria")}>
-                  {discoveredClubs.map((club) => (
-                    <li key={club.careerClubId}>
-                      <ClubCrest
-                        size={28}
-                        initials={club.shortName}
-                        logoSrc={clubLogoUrlForId(club.careerClubId)}
-                        alt={club.name}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+              </div>
             </article>
           );
         })}

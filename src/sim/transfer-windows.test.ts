@@ -13,8 +13,10 @@ describe("transfer windows", () => {
 
     expect(isTransferWindowOpen(2)).toBe(true);
     expect(transferWindowKind(2)).toBe("summer");
+    expect(isTransferWindowOpen(4)).toBe(true);
 
     expect(isTransferWindowOpen(20)).toBe(true);
+    expect(isTransferWindowOpen(23)).toBe(true);
     expect(transferWindowKind(20)).toBe("winter");
     expect(transferWindowLabel(20)).toBe("Winterfenster");
   });
@@ -23,7 +25,8 @@ describe("transfer windows", () => {
     expect(isTransferWindowOpen(10)).toBe(false);
     expect(transferWindowKind(10)).toBeNull();
     expect(transferWindowLabel(10)).toBe("Fenster geschlossen");
-    expect(isTransferWindowOpen(3)).toBe(false);
+    expect(isTransferWindowOpen(5)).toBe(false);
+    expect(isTransferWindowOpen(24)).toBe(false);
     expect(isTransferWindowOpen(30)).toBe(false);
   });
 });

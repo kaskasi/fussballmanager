@@ -4,14 +4,31 @@ import {
   LEAGUE_LAST_WEEK,
 } from "../../sim/game-calendar.ts";
 import { SATURDAY } from "../../sim/day-calendar.ts";
+import { civilDateFromSession } from "../../sim/session-civil-date.ts";
+import { seasonCalendarYear } from "../../sim/season-label.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { clubShortName, playerFixture } from "../../sim/league-week.ts";
+import {
+  civilTransferWindow,
+  isCivilTransferWindowLastDay,
+  type CivilTransferWindow,
+} from "./transfer-window-dates.ts";
+import type { CalendarMilestone } from "./calendar-milestones.ts";
+import {
+  attachMilestonesToGrid,
+  milestoneOverflowCount,
+  type CalendarMilestoneView,
+} from "./calendar-milestones.ts";
 
 export interface CalendarMonthCell {
   key: string;
   day: number | null;
   isToday: boolean;
+  transferWindow?: CivilTransferWindow;
+  transferLastDay?: boolean;
   match?: { label: string; initials: string; clubId: string };
+  milestones?: CalendarMilestoneView[];
+  milestoneOverflow?: number;
 }
 
 /** Map month grid day to season week (Spieltag); null if off-season in this month slice. */
@@ -41,8 +58,9 @@ export function buildMonthGrid(
   monthIndex: number,
   league: LeagueState,
   today?: { week: number; weekday: number },
+  milestones: readonly CalendarMilestone[] = [],
 ): CalendarMonthCell[] {
-  const year = season + 2025;
+  const year = seasonCalendarYear(season);
   const first = new Date(year, monthIndex, 1);
   const startPad = (first.getDay() + 6) % 7;
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
@@ -74,16 +92,38 @@ export function buildMonthGrid(
 
     const isToday =
       today !== undefined &&
-      seasonWeek === today.week &&
-      isoWeekdayForDate(year, monthIndex, day) === today.weekday;
+      (() => {
+        const civil = civilDateFromSession(season, today.week, today.weekday);
+        return (
+          civil.monthIndex === monthIndex &&
+          civil.day === day &&
+          (civil.year === year || civil.year === year + 1 || civil.year === year - 1)
+        );
+      })();
+
+    const transferWindow = civilTransferWindow(monthIndex, day);
+    const transferLastDay = isCivilTransferWindowLastDay(monthIndex, day);
 
     cells.push({
       key: `d-${day}`,
       day,
       isToday,
+      transferWindow: transferWindow ?? undefined,
+      transferLastDay: transferLastDay || undefined,
       match,
     });
   }
 
-  return cells;
+  const milestoneMap = attachMilestonesToGrid(cells, season, monthIndex, milestones);
+  const overflowMap = milestoneOverflowCount(cells, season, monthIndex, milestones);
+
+  return cells.map((cell) => {
+    if (cell.day == null) return cell;
+    const key = cell.key;
+    return {
+      ...cell,
+      milestones: milestoneMap.get(key),
+      milestoneOverflow: overflowMap.get(key),
+    };
+  });
 }

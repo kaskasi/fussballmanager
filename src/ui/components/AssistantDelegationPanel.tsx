@@ -32,7 +32,7 @@ export function AssistantDelegationPanel({
           </p>
         </div>
         <Hint
-          text="Der Assistenztrainer übernimmt markierte Aufgaben automatisch. Schwächere Qualität = unschärfere Entscheidungen."
+          text="Aufstellung und Scouting kann er übernehmen. Wochenplan nur als Erinnerung — du setzt den Plan selbst."
           block
         >
           <span className="assistant-delegation-badge">F8.5</span>

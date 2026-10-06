@@ -1,12 +1,13 @@
 /** WIREFRAME: docs/prd/design.md §9.5 — Kalender */
-import { useEffect, useMemo, useState } from "react";
-import { Dumbbell } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeftRight, Dumbbell } from "lucide-react";
 import { ClubCrest } from "../components/ClubCrest.tsx";
 import { clubLogoUrlForId } from "../assets/club-logo.ts";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
-import { calendarWeek } from "../../sim/game-calendar.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
+import { sessionMonthIndex } from "../../sim/session-civil-date.ts";
 import { buildMonthGrid } from "../calendar/month-grid.ts";
+import { formatCalendarWeekDisplay, weekdayShortDisplay } from "../../i18n/calendar-display.ts";
 
 const MONTHS = [
   "Januar",
@@ -34,14 +35,21 @@ export function CalendarScreen({
   weekday: number;
   league: LeagueState;
 }) {
-  const [monthIndex, setMonthIndex] = useState(() => monthIndexForSeasonWeek(week));
+  const [monthIndex, setMonthIndex] = useState(() => sessionMonthIndex(season, week, weekday));
+  const todayCellRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
-    setMonthIndex(monthIndexForSeasonWeek(week));
-  }, [week]);
+    setMonthIndex(sessionMonthIndex(season, week, weekday));
+  }, [season, week, weekday]);
+
   const cells = useMemo(
     () => buildMonthGrid(season, monthIndex, league, { week, weekday }),
     [season, monthIndex, league, week, weekday],
   );
+
+  useEffect(() => {
+    todayCellRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [week, weekday, monthIndex]);
 
   return (
     <main className="calendar club-shell-card-body">
@@ -55,7 +63,8 @@ export function CalendarScreen({
             ◀
           </button>
           <span className="calendar-month-label">
-            {MONTHS[monthIndex]} · {formatSeasonLabel(season)}
+            {MONTHS[monthIndex]} · {formatSeasonLabel(season)} · {formatCalendarWeekDisplay(week)} ·{" "}
+            {weekdayShortDisplay(weekday)}
           </span>
           <button
             type="button"
@@ -66,50 +75,62 @@ export function CalendarScreen({
           </button>
         </nav>
         <section className="game-panel calendar-grid-wrap" aria-label="Saisonkalender">
-        <div className="calendar-weekdays">
-          {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((label) => (
-            <span key={label}>{label}</span>
-          ))}
-        </div>
-        <div className="calendar-grid">
-          {cells.map((cell) => (
-            <div
-              key={cell.key}
-              className={`calendar-cell${cell.isToday ? " is-today" : ""}${cell.match ? " has-match" : ""}`}
-            >
-              <span className="calendar-day">{cell.day}</span>
-              {cell.match ? (
-                <p className="calendar-match-chip">
-                  <ClubCrest
-                    initials={cell.match.initials}
-                    logoSrc={clubLogoUrlForId(cell.match.clubId)}
-                    size={28}
-                  />
-                  {cell.match.label}
-                </p>
-              ) : cell.isToday ? (
-                <p className="calendar-day-chip" aria-label="Training">
-                  <Dumbbell size={14} strokeWidth={2.5} aria-hidden />
-                  Training
-                </p>
-              ) : null}
-            </div>
-          ))}
-        </div>
+          <div className="calendar-weekdays">
+            {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((label) => (
+              <span key={label}>{label}</span>
+            ))}
+          </div>
+          <div className="calendar-grid">
+            {cells.map((cell) => {
+              const transferClass =
+                cell.transferWindow === "summer"
+                  ? " is-transfer-summer"
+                  : cell.transferWindow === "winter"
+                    ? " is-transfer-winter"
+                    : "";
+              return (
+                <div
+                  key={cell.key}
+                  ref={cell.isToday ? todayCellRef : undefined}
+                  className={`calendar-cell${cell.isToday ? " is-today" : ""}${cell.match ? " has-match" : ""}${transferClass}${cell.transferLastDay ? " is-transfer-last" : ""}`}
+                >
+                  {cell.transferWindow ? (
+                    <span
+                      className="calendar-transfer-earmark"
+                      title={
+                        cell.transferWindow === "summer" ? "Sommerfenster" : "Winterfenster"
+                      }
+                      aria-hidden
+                    />
+                  ) : null}
+                  <span className="calendar-day">{cell.day}</span>
+                  {cell.transferLastDay ? (
+                    <p className="calendar-transfer-close">
+                      <ArrowLeftRight size={12} strokeWidth={2.5} aria-hidden />
+                      Fenster schließt
+                    </p>
+                  ) : null}
+                  {cell.match ? (
+                    <p className="calendar-match-chip">
+                      <ClubCrest
+                        initials={cell.match.initials}
+                        logoSrc={clubLogoUrlForId(cell.match.clubId)}
+                        size={28}
+                      />
+                      {cell.match.label}
+                    </p>
+                  ) : cell.isToday ? (
+                    <p className="calendar-day-chip calendar-day-chip--today" aria-label="Heute">
+                      <Dumbbell size={14} strokeWidth={2.5} aria-hidden />
+                      Heute
+                    </p>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
         </section>
       </div>
     </main>
   );
-}
-
-function monthIndexForSeasonWeek(seasonWeek: number): number {
-  const kw = calendarWeek(seasonWeek);
-  if (kw >= 35) return 7;
-  if (kw >= 27) return 6;
-  if (kw >= 22) return 5;
-  if (kw >= 18) return 4;
-  if (kw >= 14) return 3;
-  if (kw >= 10) return 2;
-  if (kw >= 6) return 1;
-  return 0;
 }

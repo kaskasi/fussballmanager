@@ -34,6 +34,16 @@ import { joinDocumentTitle, useDocumentTitle } from "./ui/document-title.ts";
 import { prepareCareerMatch, type CareerMatchSetup } from "./sim/career-match-setup.ts";
 import type { WatchedPlayerMatch } from "./sim/watched-player-match.ts";
 import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
+import {
+  injectTrainingReminderInbox,
+  shouldInjectTrainingReminderBeforeAdvance,
+  trainingReminderItemId,
+} from "./inbox/training-reminder-inbox.ts";
+import {
+  hasInboxBlockerForNext,
+  shouldNavigateToCalendarBeforeTimeStep,
+  shouldOpenLineupFromCalendar,
+} from "./ui/nav-next-flow.ts";
 import { formatSeasonLabel } from "./sim/season-label.ts";
 import { simulateGameWeek } from "./sim/week-pipeline.ts";
 import { isTransferWindowOpen } from "./sim/transfer-windows.ts";
@@ -181,7 +191,6 @@ import {
   cannotPayTransferFeeReason,
 } from "./transfers/purchase-block.ts";
 import { resolvePurchaseTarget } from "./transfers/resolve-purchase-target.ts";
-import { TransferWindowAmbience } from "./ui/components/TransferWindowAmbience.tsx";
 import { YouthCampus } from "./ui/screens/YouthCampus";
 import { CalendarScreen } from "./ui/screens/CalendarScreen.tsx";
 import { canBuyAcademyUpgrade, ACADEMY_FACILITIES } from "./youth/academy.ts";
@@ -194,13 +203,14 @@ import {
 } from "./youth/satellite-camps.ts";
 import {
   CAMP_LEADER_AGENCY_NOTICE,
+  campsAwaitingLeaderChoice,
   commissionCampLeaderAgency,
   dismissCampLeader,
   hireCampLeader,
   tickCampLeaderHires,
   type CampLeaderCandidate,
 } from "./youth/camp-leader-hire.ts";
-import { CampLeaderHireModal } from "./ui/components/CampLeaderHireModal.tsx";
+import { campLeaderPostfachItemId } from "./inbox/postfach-camp-leader.ts";
 import { refreshAllMarketValues } from "./transfers/refresh-market-values.ts";
 import {
   applyProfileActionToSquad,
@@ -347,7 +357,6 @@ export default function App() {
   );
   const [saveToastVisible, setSaveToastVisible] = useState(false);
   const [notice, setNotice] = useState<{ text: string; tone: "ok" | "warn" } | null>(null);
-  const [campLeaderHireCampId, setCampLeaderHireCampId] = useState<string | null>(null);
   const [campusInitialTab, setCampusInitialTab] = useState<"u17" | "u19" | "camps" | null>(null);
   const [pendingWatchedMatch, setPendingWatchedMatch] = useState<WatchedPlayerMatch | null>(null);
   const [pendingSpend, setPendingSpend] = useState<{
@@ -598,11 +607,14 @@ export default function App() {
     (itemId?: string) => {
       const count = postfachOpenCount(youthInbox, players, youthCamps);
       const pending = pendingInboxItems(youthInbox, players);
+      const campItemIds = campsAwaitingLeaderChoice(youthCamps).map((camp) =>
+        campLeaderPostfachItemId(camp.id),
+      );
       if (count === 0) return;
-      if (itemId && !pending.some((item) => item.id === itemId)) {
+      if (itemId && !pending.some((item) => item.id === itemId) && !campItemIds.includes(itemId)) {
         setPostfachItemId(null);
       } else {
-        setPostfachItemId(itemId ?? pending[0]?.id ?? null);
+        setPostfachItemId(itemId ?? pending[0]?.id ?? campItemIds[0] ?? null);
       }
       setProfileId(null);
       setForeignPlayerId(null);
@@ -614,6 +626,17 @@ export default function App() {
 
   const handleNext = useCallback(() => {
     if (simulating) return;
+
+    if (hasInboxBlockerForNext(session, youthInbox, players)) {
+      openPostfach();
+      return;
+    }
+
+    if (screen !== "calendar") {
+      setScreen("calendar");
+      return;
+    }
+
     const hasInbox = pendingInboxItems(youthInbox, players).length > 0;
     const skip = resolveSmartSkip(session, hasInbox);
 
@@ -628,19 +651,18 @@ export default function App() {
         : session.youthInbox;
     const sessionAtTarget = { ...session, weekday: skip.weekday, youthInbox: inboxAfterDays };
 
-    if (skip.daysAdvanced > 0) {
-      patchSession((current) => {
-        const now = { season: current.season, week: current.week, weekday: skip.weekday };
-        return {
-          ...current,
-          weekday: skip.weekday,
-          youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced, current.players),
-          youthCamps: tickCampLeaderHires(current.youthCamps, now),
-        };
-      });
-    }
-
-    if (skip.action === "match") {
+    if (skip.action === "match" || shouldOpenLineupFromCalendar(skip, session)) {
+      if (skip.daysAdvanced > 0) {
+        patchSession((current) => {
+          const now = { season: current.season, week: current.week, weekday: skip.weekday };
+          return {
+            ...current,
+            weekday: skip.weekday,
+            youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced, current.players),
+            youthCamps: tickCampLeaderHires(current.youthCamps, now),
+          };
+        });
+      }
       const setup = prepareCareerMatch(sessionAtTarget);
       if (setup) {
         careerMatchFlowRef.current = true;
@@ -655,15 +677,40 @@ export default function App() {
       return;
     }
 
-    if (skip.action === "advance") {
+    if (
+      skip.action === "advance" &&
+      skip.daysAdvanced > 0 &&
+      shouldInjectTrainingReminderBeforeAdvance({
+        delegation: session.assistantDelegation,
+        trainingPlan: session.trainingPlan,
+        youthInbox: session.youthInbox,
+        session,
+      })
+    ) {
+      const itemId = trainingReminderItemId(session.season, session.week);
+      patchSession((current) => ({
+        ...current,
+        youthInbox: injectTrainingReminderInbox(current.youthInbox, current.season, current.week),
+        trainingReminderWeek: { season: current.season, week: current.week },
+      }));
+      openPostfach(itemId);
       return;
     }
+
+    if (skip.action === "advance" && skip.daysAdvanced > 0) {
+      patchSession((current) => {
+        const now = { season: current.season, week: current.week, weekday: skip.weekday };
+        return {
+          ...current,
+          weekday: skip.weekday,
+          youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced, current.players),
+          youthCamps: tickCampLeaderHires(current.youthCamps, now),
+        };
+      });
+    }
   }, [
-    careerMatchSetup,
-    foreignPlayerId,
     openPostfach,
     patchSession,
-    profileId,
     screen,
     session,
     simulating,
@@ -695,6 +742,12 @@ export default function App() {
           players: result.players,
           youthInbox: result.inbox,
         };
+        if (item?.kind === "assistant_training_reminder") {
+          next = {
+            ...next,
+            trainingReminderWeek: { season: current.season, week: current.week },
+          };
+        }
         if (item && isStoryInboxItem(item)) {
           const choiceId = storyChoiceId(action);
           if (choiceId) {
@@ -1086,17 +1139,13 @@ export default function App() {
   }, [campLeaderDismissCampId, patchSession]);
 
   const handleHireCampLeader = useCallback(
-    (candidate: CampLeaderCandidate) => {
-      if (!campLeaderHireCampId) return;
+    (campId: string, candidate: CampLeaderCandidate) => {
       patchSession((current) => ({
         ...current,
-        youthCamps: hireCampLeader(current.youthCamps, campLeaderHireCampId, candidate),
+        youthCamps: hireCampLeader(current.youthCamps, campId, candidate),
       }));
-      setCampLeaderHireCampId(null);
-      setCampusInitialTab("camps");
-      setScreen("campus");
     },
-    [campLeaderHireCampId, patchSession],
+    [patchSession],
   );
 
   const handlePullCampPlayer = useCallback(
@@ -1885,6 +1934,14 @@ export default function App() {
     handleNext();
   }, [handleNext]);
 
+  const nextHeaderTitle = careerMatchSetup
+    ? t("shell.next")
+    : hasInboxBlockerForNext(session, youthInbox, players)
+      ? t("shell.nextToPostfach")
+      : screen !== "calendar"
+        ? t("shell.nextViaCalendar")
+        : t("shell.smartSkip");
+
   const navActions: HubNavActions = {
     week,
     weekday,
@@ -1897,6 +1954,7 @@ export default function App() {
     matchFlowActive: careerMatchSetup != null,
     primaryAction: careerMatchSetup ? matchNavAction : null,
     matchSkipToReport: careerMatchSetup ? matchSkipToReport : null,
+    nextHeaderTitle,
   };
 
   const saveManagerOverlay = saveManagerOpen ? (
@@ -2230,18 +2288,11 @@ export default function App() {
           season={season}
           week={week}
           storyCast={session.storyState.cast}
+          masterSeed={session.masterSeed}
           initialItemId={postfachItemId}
           onDecision={handleInboxDecision}
           onSelectPlayer={setProfileId}
-          onOpenCampLeaderHire={(campId) => setCampLeaderHireCampId(campId)}
-        />
-      ) : null}
-      {campLeaderHireCampId && youthCamps.some((entry) => entry.id === campLeaderHireCampId) ? (
-        <CampLeaderHireModal
-          camp={youthCamps.find((entry) => entry.id === campLeaderHireCampId)!}
-          masterSeed={session.masterSeed}
-          onHire={handleHireCampLeader}
-          onClose={() => setCampLeaderHireCampId(null)}
+          onHireCampLeader={handleHireCampLeader}
         />
       ) : null}
       {openingBlocked(session) ? (
@@ -2476,6 +2527,7 @@ interface HubNavActions {
   matchFlowActive?: boolean;
   primaryAction?: NavPrimaryAction | null;
   matchSkipToReport?: (() => void) | null;
+  nextHeaderTitle?: string;
 }
 
 function AppChrome({
@@ -2639,13 +2691,21 @@ function AppNav({
           </>
         )}
       </div>
-      <div className="app-nav-center" aria-live="polite">
-        <TransferWindowAmbience week={week} placement="header" />
-      </div>
+      <div className="app-nav-center" aria-live="polite" />
       <div className="app-nav-actions">
         <span className="app-nav-cash" aria-label="Kasse">
           {formatClubCash(cash)}
         </span>
+        {hubActions.matchSkipToReport ? (
+          <button
+            type="button"
+            className="app-nav-match-simulate"
+            title={tr("shell.match.simulate")}
+            onClick={() => hubActions.matchSkipToReport?.()}
+          >
+            {tr("shell.match.simulate")}
+          </button>
+        ) : null}
         <div className="row-menu app-nav-menu" ref={menuRef}>
           <button
             type="button"
@@ -2758,19 +2818,6 @@ function AppNav({
                 </>
               ) : (
                 <>
-                  {hubActions.matchSkipToReport ? (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="row-menu-item"
-                      onClick={() => {
-                        hubActions.matchSkipToReport?.();
-                        setMenuOpen(false);
-                      }}
-                    >
-                      Direkt zur Zusammenfassung
-                    </button>
-                  ) : null}
                   <p className="pipeline-menu-section-title">TEAM</p>
                   {teamMenu.map((item) => (
                     <button
@@ -2855,9 +2902,7 @@ function AppNav({
             hubActions.primaryAction?.title ??
             (hubActions.primaryAction
               ? hubActions.primaryAction.label
-              : hubActions.matchFlowActive
-                ? tr("shell.next")
-                : tr("shell.smartSkip"))
+              : hubActions.nextHeaderTitle ?? tr("shell.smartSkip"))
           }
         >
           <span className="app-nav-next-mobile">{tr("shell.next")}</span>

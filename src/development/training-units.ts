@@ -1,5 +1,13 @@
 import type { Attributes } from "../types/player.ts";
+import { emptyWeeklyTrainingPlan, assertWeeklyPlanLength } from "./training-plan-state.ts";
 import { SLOT_COUNT, TRAINING_DAYS, UNITS_PER_DAY, type TrainingSession } from "./weekly-plan.ts";
+
+export {
+  emptyWeeklyTrainingPlan,
+  isTrainingSlotConfigured,
+  isTrainingWeekday,
+  weeklyFocusCount,
+} from "./training-plan-state.ts";
 
 /** Named units for the team timetable. Each maps to one PRD 02.4 group. */
 export interface TrainingUnit {
@@ -107,9 +115,7 @@ export function unitsForGroup(
 }
 
 export function createInitialTrainingPlan(): TrainingSlot[] {
-  const plan = defaultTrainingPlan();
-  if (plan.length !== SLOT_COUNT) {
-    throw new Error(`default training plan has ${plan.length} slots, expected ${SLOT_COUNT}`);
-  }
+  const plan = emptyWeeklyTrainingPlan();
+  assertWeeklyPlanLength(plan);
   return plan;
 }

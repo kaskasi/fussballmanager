@@ -56,6 +56,8 @@ export interface PipelineState {
   story_state?: StoryState;
   /** F8.5 — per-task assistant auto-delegation. */
   assistant_delegation?: AssistantDelegation;
+  /** Assistenten-Training-Erinnerung — höchstens ein Blocker pro Spielwoche. */
+  training_reminder_week?: { season: number; week: number };
   /** F4.3 — hired scout tiers and capacity. */
   scout_network?: ScoutNetworkState;
 }

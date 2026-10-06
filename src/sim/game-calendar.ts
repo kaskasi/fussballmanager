@@ -10,8 +10,9 @@ export const LEAGUE_FIRST_WEEK = 1;
 export const LEAGUE_LAST_WEEK = 34;
 /** ISO-style calendar week of Spieltag 1 (late August in Germany). */
 export const SEASON_START_CALENDAR_WEEK = 35;
-export const SUMMER_WINDOW_CALENDAR_WEEKS = [35, 36] as const;
-export const WINTER_WINDOW_CALENDAR_WEEKS = [2, 3, 4] as const;
+/** Four ISO weeks: late August (Sommer) and January (Winter). */
+export const SUMMER_WINDOW_CALENDAR_WEEKS = [35, 36, 37, 38] as const;
+export const WINTER_WINDOW_CALENDAR_WEEKS = [2, 3, 4, 5] as const;
 
 export function calendarWeek(seasonWeek: number): number {
   const week = Math.max(1, Math.round(seasonWeek));

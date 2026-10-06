@@ -4,7 +4,9 @@ import { defaultTacticsPresets } from "../match/tactics-presets.ts";
 import { createScoutBoard, activeScoutCount } from "../scouting/scout-board.ts";
 import { initializeRivalPlayers } from "../sim/rival-growth.ts";
 import { defaultCoachingStaff } from "./coaching-staff.ts";
+import { emptyWeeklyTrainingPlan } from "../development/training-plan-state.ts";
 import {
+  applyAssistantDelegationWeek,
   assistantLineupMode,
   assistantQuality,
   assistantScoutBoard,
@@ -12,7 +14,6 @@ import {
   buildAssistantMatchLineup,
   normalizeAssistantDelegation,
 } from "./assistant-delegation.ts";
-
 describe("assistant delegation", () => {
   const players = loadDemoRoster();
   const clubId = "cl_fc_nordstern";
@@ -60,5 +61,27 @@ describe("assistant delegation", () => {
       training: false,
       scouting: false,
     });
+  });
+
+  it("training delegation sends a reminder without changing the plan", () => {
+    const plan = emptyWeeklyTrainingPlan();
+    const result = applyAssistantDelegationWeek({
+      delegation: { lineup: false, training: true, scouting: false },
+      assistantName: "Alex",
+      quality: 60,
+      players,
+      clubId,
+      trainingPlan: plan,
+      scoutBoard: createScoutBoard(rivals),
+      rivalPlayers: rivals,
+      tacticsPresets: defaultTacticsPresets(),
+      matchLineup: undefined,
+      season: 1,
+      week: 2,
+      masterSeed: 2026,
+      hasPlayerFixture: false,
+    });
+    expect(result.trainingPlan).toEqual(plan);
+    expect(result.messages.some((line) => line.includes("Wochenplan"))).toBe(true);
   });
 });

@@ -187,18 +187,19 @@ Der Wireframe-Kommentar steht in jeder neuen `.tsx`-Datei, bevor die Implementat
 
 ### 09.3 Kalender-Takt (P2)
 
-Header-**NEXT** schreitet die Session **tagweise** vor (`session.weekday`, Mo=1 … So=7).
+Header-**NEXT** ist **kalendergebunden**: erst orientieren, dann Zeit/Spiel.
 
 | Regel | Verhalten |
 |---|---|
-| Standard | **+1 Wochentag** innerhalb der laufenden Saisonwoche |
-| Spielwoche | Mo→…→Fr per NEXT; **Sa** löst `match` aus (kein Bulk-Sprung Mo→Sa) |
-| Nach Spiel / Freiwoche | Tagweise bis **So**, dann `simulate_week` |
-| Inbox | Montag + offene Jugend-Inbox → Inbox öffnen, **kein** Tag verbrauchen |
-| Jugend-Queue | `deliverInboxForDays(..., 1)` pro NEXT-Tag, nicht Multi-Day-Sprünge |
+| **Global** | Montag + offene Jugend-Inbox → **Postfach**; sonst Navigation → **Kalender** (kein Tag verbraucht) |
+| **Nur auf Kalender** | **+1 Wochentag** (`session.weekday`, Mo=1 … So=7) |
+| Spielwoche | Auf dem Kalender: Fr→Sa oder Sa mit `match` → **Aufstellung** (`CareerLineupScreen`), nicht Live-Match vom Hub |
+| Nach Spiel / Freiwoche | Tagweise bis **So**, dann `simulate_week` (nur auf Kalender) |
+| Inbox | Montag + offene Jugend-Inbox → Postfach (global oder auf Kalender), **kein** Tag verbrauchen |
+| Jugend-Queue | `deliverInboxForDays(..., 1)` pro Kalender-NEXT-Tag, nicht Multi-Day-Sprünge |
+| Training-Erinnerung | Kalender + Assistenten-Toggle „Wochenplan“: fehlt Fokus am **aktuellen** Mo–Fr-Tag, **einmal pro Spielwoche** blockierendes Postfach vor Tag+1; danach normale NEXT-Kette |
 
-Kalender-UI (`CalendarScreen`): Monatsfokus zur aktuellen Woche; `isToday` folgt
-`week` + `weekday`. Keine klickbaren Zellsprünge in P2.
+Kalender-UI (`CalendarScreen`): Monatsfokus; **`isToday`** = Zivil-Datum aus `(season, week, weekday)`; Transferfenster nur im Raster (kein Shell-Header-Chrome); kein WeekdayStrip; kein klickbarer Zellsprung in P2.
 
 ## References
 

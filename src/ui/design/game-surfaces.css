@@ -15,8 +15,17 @@
   padding: 1rem 1.1rem 1.15rem;
 }
 
+/* Hub split-card: neutralize legacy index.css `.pipeline { max-width: 72rem }` on shell body */
+main.pipeline.club-shell-card-body {
+  max-width: 80rem;
+  width: 100%;
+  margin-inline: auto;
+  padding: var(--club-shell-inset);
+}
+
 /* — Shell header (design.md §6) — */
 .app-nav.club-shell-header {
+  position: sticky;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
   align-items: center;
@@ -26,6 +35,9 @@
   max-width: 80rem;
   margin-inline: auto;
   min-height: var(--club-header-height, 56px);
+  /* top: 0 — content must not scroll into the strip above a offset sticky header (tab bleed). */
+  top: 0;
+  z-index: 100;
   /* Same horizontal inset as .club-shell-card-body (index .app-nav padding used to zero out top/bottom). */
   padding: 0.7rem var(--club-shell-inset);
 }
@@ -35,6 +47,19 @@
   border: var(--outline);
   border-bottom: none;
   border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: 0 0 0 1px var(--panel);
+}
+
+.app-nav.club-shell-header.club-shell-card-head::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 3px;
+  background: var(--panel);
+  pointer-events: none;
 }
 
 .app-nav.club-shell-header.club-shell-grid {
@@ -210,6 +235,29 @@
   align-items: center;
   padding: 0;
   margin: 0;
+}
+
+.app-nav-match-simulate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  margin: 0;
+  padding: 0 0.85rem;
+  border: 1px solid var(--outline-weich, rgba(255, 255, 255, 0.2));
+  border-radius: var(--radius-md, 8px);
+  background: var(--panel-muted, rgba(255, 255, 255, 0.06));
+  color: var(--tinte, inherit);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.app-nav-match-simulate:hover {
+  background: var(--surface-elevated, rgba(255, 255, 255, 0.1));
 }
 
 .app-nav-actions .app-nav-next {
@@ -1274,8 +1322,10 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 }
 
 .calendar-cell {
+  position: relative;
   min-height: 4.5rem;
   padding: 0.35rem;
+  overflow: hidden;
   background: var(--panel-muted);
   border: 2px solid rgba(62, 49, 40, 0.12);
   border-radius: var(--radius-klein);
@@ -1283,8 +1333,85 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 }
 
 .calendar-cell.is-today {
-  border-color: var(--tinte);
-  box-shadow: 0 0 0 1px var(--tinte);
+  background: var(--rasen);
+  color: var(--panel);
+  border: 3px solid var(--tinte);
+  box-shadow: 0 2px 0 rgba(62, 49, 40, 0.25);
+  z-index: 1;
+}
+
+.calendar-cell.is-today .calendar-day {
+  font-weight: 900;
+}
+
+.calendar-cell.is-today .calendar-day-chip,
+.calendar-cell.is-today .calendar-match-chip,
+.calendar-cell.is-today .calendar-transfer-close {
+  color: var(--panel);
+}
+
+.calendar-cell.is-transfer-summer {
+  background: color-mix(in srgb, var(--staubblau) 38%, var(--panel-muted));
+  border-color: color-mix(in srgb, var(--staubblau) 55%, var(--tinte));
+}
+
+.calendar-cell.is-transfer-winter {
+  background: color-mix(in srgb, var(--staubblau) 28%, var(--panel));
+  border-color: color-mix(in srgb, var(--staubblau) 45%, var(--tinte-weich));
+}
+
+.calendar-cell.is-transfer-last {
+  outline: 2px dashed var(--terra);
+  outline-offset: -2px;
+}
+
+.calendar-transfer-earmark {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 1.35rem 1.35rem 0;
+  border-color: transparent var(--staubblau) transparent transparent;
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.calendar-cell.is-transfer-winter .calendar-transfer-earmark {
+  border-right-color: color-mix(in srgb, var(--staubblau) 70%, var(--tinte-weich));
+}
+
+.calendar-transfer-close {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0.2rem 0 0;
+  padding: 0.12rem 0.25rem;
+  border-radius: var(--radius-klein);
+  background: var(--terra);
+  color: var(--panel);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.calendar-cell.is-today.is-transfer-summer,
+.calendar-cell.is-today.is-transfer-winter {
+  background: var(--rasen);
+}
+
+.calendar-context-kicker {
+  margin: 0 0 0.5rem;
+  padding: 0 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--tinte-weich);
+  font-variant-numeric: tabular-nums;
+}
+
+.calendar .weekday-strip {
+  margin-bottom: 0.65rem;
 }
 
 .calendar-cell.has-match {
@@ -1426,9 +1553,15 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 }
 
 .youth-camp-card-head-side {
-  flex: 0 0 auto;
+  flex: 1 1 40%;
   display: flex;
   align-items: flex-start;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.youth-camp-card-head-side:has(.youth-camp-leader-block) {
+  flex: 1 1 55%;
 }
 
 .youth-camp-card-head h3 {
@@ -1533,10 +1666,11 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 }
 
 .youth-camp-leader-block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.1rem;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.35rem;
   margin: 0;
   padding: 0;
   border: 0;
@@ -1544,8 +1678,14 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   cursor: pointer;
   font: inherit;
   color: inherit;
-  text-align: right;
-  max-width: 5.5rem;
+  min-width: 0;
+  width: auto;
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+
+.youth-camp-leader-portrait {
+  flex-shrink: 0;
 }
 
 .youth-camp-leader-block:hover .youth-camp-leader-portrait {
@@ -1553,33 +1693,52 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   outline-offset: 1px;
 }
 
+.youth-camp-leader-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.08rem;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: calc(100% - 2rem - 0.35rem);
+  padding: 0;
+  margin: 0;
+  text-align: right;
+}
+
 .youth-camp-leader-name {
   font-size: 0.68rem;
   font-weight: 800;
   line-height: 1.15;
   color: var(--tinte);
-}
-
-.youth-camp-leader-role {
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--tinte-weich);
+  text-align: right;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .youth-camp-leader-mods {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.2rem;
-  margin-top: 0.15rem;
-  max-width: 7rem;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.12rem;
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .youth-camp-leader-mods .camp-leader-mod-badge {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  box-sizing: border-box;
   font-size: 0.58rem;
-  padding: 0.1rem 0.35rem;
+  padding: 0.1rem 0;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .camp-leader-candidate-lang {
@@ -1594,24 +1753,32 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   overflow: auto;
 }
 
-.postfach-screen .postfach-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
 .postfach-decisions .inbox-head h2 {
   font-size: 1.1rem;
 }
 
-.postfach-camp-staff {
-  padding: 0.75rem 1rem;
+.inbox-card-camp-leader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.postfach-camp-lead {
-  margin: 0 0 0.5rem;
-  font-size: 0.85rem;
-  color: var(--tinte-weich);
+.inbox-camp-leader-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.35rem 0 0;
+}
+
+.camp-leader-candidate-list--inbox {
+  margin: 0;
+  padding: 0;
+}
+
+.camp-leader-inbox-hire {
+  margin-top: 0.35rem;
+  width: 100%;
+  max-width: 16rem;
 }
 
 .youth-camp-card-body {

@@ -105,6 +105,8 @@ export interface GameSession {
   scoutNetwork: ScoutNetworkState;
   academyFacility: AcademyFacility;
   youthCamps: YouthCamp[];
+  /** Set when training reminder Postfach item was shown/dismissed this game week. */
+  trainingReminderWeek?: { season: number; week: number };
 }
 
 export function newGameSession(now = new Date()): GameSession {
@@ -221,6 +223,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     ),
     academyFacility: pipeline.academy_facility ?? "academy_basic",
     youthCamps: normalizeYouthCamps(pipeline.youth_camps),
+    trainingReminderWeek: pipeline.training_reminder_week,
   };
   return syncManagerClubWithBoard(session);
 }
@@ -247,6 +250,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     scout_network: session.scoutNetwork,
     academy_facility: session.academyFacility,
     youth_camps: session.youthCamps,
+    training_reminder_week: session.trainingReminderWeek,
   };
   const iso = now.toISOString();
 

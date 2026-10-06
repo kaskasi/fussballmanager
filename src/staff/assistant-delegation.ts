@@ -6,6 +6,7 @@
 import { getFormation, type FormationSlotId } from "@fussballmanager/shared";
 import type { TrainingSlot } from "../development/training-units.ts";
 import { TRAINING_UNITS, trainingUnit } from "../development/training-units.ts";
+import { weeklyFocusCount } from "../development/training-plan-state.ts";
 import { MAX_FOCUS_PER_GROUP, MAX_FOCUS_SLOTS } from "../development/weekly-plan.ts";
 import {
   autoLineupAssignments,
@@ -49,7 +50,7 @@ export const ASSISTANT_DELEGATION_TASKS: readonly {
     key: "training",
     label: "Wochenplan",
     icon: "🏋️",
-    hint: "Montags den Team-Stundenplan setzen",
+    hint: "Erinnerung, bevor du den Wochenplan vergisst",
   },
   {
     key: "scouting",
@@ -376,16 +377,11 @@ export function applyAssistantDelegationWeek(input: {
   let matchLineup = input.matchLineup;
 
   if (input.delegation.training) {
-    trainingPlan = assistantTrainingPlan(
-      input.players,
-      input.clubId,
-      input.quality,
-      input.season,
-      input.week,
-      input.masterSeed,
-    );
+    const emptyWeek = weeklyFocusCount(input.trainingPlan) === 0;
     messages.push(
-      `🧢 ${input.assistantName} hat den Wochenplan vorbereitet (${assistantQualityLabel(input.quality)}).`,
+      emptyWeek
+        ? `${input.assistantName}: Du hast noch keinen Wochenplan gesetzt — ohne Fokus gibt es kaum Entwicklung.`
+        : `${input.assistantName}: Denk an den Wochenplan — ich erinnere dich, ich setze nichts für dich.`,
     );
   }
 

@@ -29,6 +29,14 @@ import { useT } from "../../i18n/react.ts";
 import { localizeStoryInbox } from "../../i18n/story-display.ts";
 import type { StoryCast } from "../../narrative/story-state.ts";
 import { InboxStanceButtons } from "./InboxStanceButtons.tsx";
+import { campsAwaitingLeaderChoice, type CampLeaderCandidate } from "../../youth/camp-leader-hire.ts";
+import { campNationById, type YouthCamp } from "../../youth/satellite-camps.ts";
+import {
+  campLeaderPostfachItemId,
+  isCampLeaderPostfachItemId,
+  parseCampLeaderPostfachItemId,
+} from "../../inbox/postfach-camp-leader.ts";
+import { CampLeaderInboxCard } from "./CampLeaderInboxCard.tsx";
 
 /** WIREFRAME: docs/prd/design.md §9.4 — Postfach-Inhalt */
 export function DecisionInboxPanel({
@@ -42,6 +50,9 @@ export function DecisionInboxPanel({
   initialItemId = null,
   onClose,
   onSelectPlayer,
+  youthCamps,
+  masterSeed,
+  onHireCampLeader,
 }: {
   inbox: YouthInboxState;
   players: Player[];
@@ -53,10 +64,22 @@ export function DecisionInboxPanel({
   initialItemId?: string | null;
   onClose?: () => void;
   onSelectPlayer?: (playerId: string) => void;
+  youthCamps?: readonly YouthCamp[];
+  masterSeed?: number;
+  onHireCampLeader?: (campId: string, candidate: CampLeaderCandidate) => void;
 }) {
   useT();
   const focus = useMemo(() => inboxWeekFocus(inbox, players), [inbox, players]);
   const pending = focus.open;
+  const campLeaderCamps = useMemo(
+    () => (youthCamps ? campsAwaitingLeaderChoice(youthCamps) : []),
+    [youthCamps],
+  );
+  const postfachQueueIds = useMemo(
+    () => [...pending.map((item) => item.id), ...campLeaderCamps.map((camp) => campLeaderPostfachItemId(camp.id))],
+    [campLeaderCamps, pending],
+  );
+  const postfachOpenTotal = postfachQueueIds.length;
   const nextQueuedPlayer = focus.nextQueued
     ? players.find((entry) => entry.id === focus.nextQueued?.playerId)
     : undefined;
@@ -64,21 +87,29 @@ export function DecisionInboxPanel({
     focus,
     nextQueuedPlayer ? formatPlayerName(nextQueuedPlayer) : undefined,
   );
-  const [activeId, setActiveId] = useState<string | null>(initialItemId ?? pending[0]?.id ?? null);
+  const defaultQueueId =
+    initialItemId ??
+    pending[0]?.id ??
+    (campLeaderCamps[0] ? campLeaderPostfachItemId(campLeaderCamps[0].id) : null);
+  const [activeId, setActiveId] = useState<string | null>(defaultQueueId);
 
   useEffect(() => {
-    if (initialItemId && pending.some((item) => item.id === initialItemId)) {
+    if (initialItemId && postfachQueueIds.includes(initialItemId)) {
       setActiveId(initialItemId);
     }
-  }, [initialItemId, pending]);
+  }, [initialItemId, postfachQueueIds]);
 
   useEffect(() => {
-    if (!pending.some((item) => item.id === activeId)) {
-      setActiveId(pending[0]?.id ?? null);
+    if (activeId && !postfachQueueIds.includes(activeId)) {
+      setActiveId(
+        pending[0]?.id ?? (campLeaderCamps[0] ? campLeaderPostfachItemId(campLeaderCamps[0].id) : null),
+      );
     }
-  }, [pending, activeId]);
+  }, [activeId, campLeaderCamps, pending, postfachQueueIds]);
 
-  const active = pending.find((item) => item.id === activeId) ?? pending[0] ?? null;
+  const activeCampId = activeId ? parseCampLeaderPostfachItemId(activeId) : null;
+  const activeCamp = activeCampId ? campLeaderCamps.find((camp) => camp.id === activeCampId) : undefined;
+  const active = pending.find((item) => item.id === activeId) ?? null;
   const player = active ? players.find((entry) => entry.id === active.playerId) : null;
   const coachIcon = active ? inbox.coachIcons[active.playerId] : undefined;
   const actionContext = active
@@ -100,7 +131,9 @@ export function DecisionInboxPanel({
       <header className="inbox-head">
         <div>
           <p className="eyebrow">
-            {t("hub.inbox.title", { current: focus.openCount, max: MAX_INBOX_ITEMS })}
+            {campLeaderCamps.length > 0
+              ? t("hub.inbox.postfachQueue", { count: postfachOpenTotal })
+              : t("hub.inbox.title", { current: focus.openCount, max: MAX_INBOX_ITEMS })}
             {" · "}
             {formatCalendarWeekDisplay(inbox.week)}
           </p>
@@ -116,7 +149,7 @@ export function DecisionInboxPanel({
       <p className="inbox-focus-line">{inboxHeadline(focus)}</p>
       {pipelineHint ? <p className="inbox-queue-note">{pipelineHint}</p> : null}
 
-      {pending.length === 0 ? (
+      {postfachOpenTotal === 0 ? (
         <p className="inbox-empty">
           {focus.nextQueued && nextQueuedPlayer
             ? t("inbox.modal.nextQueued", {
@@ -128,14 +161,20 @@ export function DecisionInboxPanel({
       ) : (
         <>
           <nav className="inbox-queue" aria-label="Warteschlange">
-            {pending.map((item, index) => {
-              const preview = inboxQueuePreview(item, players, storyCast);
+            {postfachQueueIds.map((queueId, index) => {
+              const preview = isCampLeaderPostfachItemId(queueId)
+                ? campLeaderQueuePreview(parseCampLeaderPostfachItemId(queueId)!)
+                : inboxQueuePreview(
+                    pending.find((item) => item.id === queueId)!,
+                    players,
+                    storyCast,
+                  );
               return (
                 <button
-                  key={item.id}
+                  key={queueId}
                   type="button"
-                  className={item.id === active?.id ? "inbox-queue-item is-active" : "inbox-queue-item"}
-                  onClick={() => setActiveId(item.id)}
+                  className={queueId === activeId ? "inbox-queue-item is-active" : "inbox-queue-item"}
+                  onClick={() => setActiveId(queueId)}
                 >
                   <span className="inbox-queue-index">{index + 1}</span>
                   <span className="inbox-queue-label">
@@ -147,7 +186,17 @@ export function DecisionInboxPanel({
             })}
           </nav>
 
-          {active && isStoryInboxItem(active) && active.narrative ? (
+          {activeCamp && masterSeed != null && onHireCampLeader ? (
+            <section className="inbox-card inbox-card-camp-leader">
+              <CampLeaderInboxCard
+                camp={activeCamp}
+                masterSeed={masterSeed}
+                postIndex={postfachQueueIds.indexOf(activeId ?? "") + 1}
+                postTotal={postfachOpenTotal}
+                onHire={(candidate) => onHireCampLeader(activeCamp.id, candidate)}
+              />
+            </section>
+          ) : active && isStoryInboxItem(active) && active.narrative ? (
             <section className="inbox-card inbox-card-story">
               <div className="inbox-story">
                 <p className="inbox-post-count">
@@ -227,6 +276,14 @@ export function DecisionInboxPanel({
   );
 }
 
+function campLeaderQueuePreview(campId: string): { name: string; topic: string } {
+  const nation = campNationById(campId);
+  return {
+    name: nation?.label ?? campId,
+    topic: "Camp-Leiter · Kandidaten",
+  };
+}
+
 function inboxQueuePreview(
   item: DecisionInboxItem,
   players: readonly Player[],
@@ -237,6 +294,12 @@ function inboxQueuePreview(
     return {
       name: inboxItemLabel(item, cast),
       topic: body.length > 48 ? `${body.slice(0, 48)}…` : body,
+    };
+  }
+  if (item.kind === "assistant_training_reminder") {
+    return {
+      name: cast.assistant_name,
+      topic: inboxItemLabel(item, cast),
     };
   }
   const player = players.find((entry) => entry.id === item.playerId);
@@ -259,6 +322,8 @@ function primaryInboxAction(
           ? ["contract", "loan", "dismiss"]
           : item.kind === "training_focus"
             ? ["training_focus", "dismiss"]
-            : [];
+            : item.kind === "assistant_training_reminder"
+              ? ["dismiss"]
+              : [];
   return preferred.find((action) => actions.includes(action)) ?? actions[0] ?? null;
 }

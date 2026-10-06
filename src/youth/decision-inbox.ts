@@ -37,7 +37,8 @@ export type InboxItemKind =
   | "story_fan"
   | "story_captain"
   | "story_assistant"
-  | "story_board";
+  | "story_board"
+  | "assistant_training_reminder";
 
 export interface DecisionInboxItem {
   id: string;
@@ -101,6 +102,7 @@ const KIND_PRIORITY: Record<InboxItemKind, number> = {
   story_fan: 3,
   contract_offer: 3,
   training_focus: 4,
+  assistant_training_reminder: 0,
 };
 
 export function emptyInbox(week: number): YouthInboxState {
@@ -128,6 +130,7 @@ function youthPlayerIds(players: readonly Player[]): Set<string> {
 
 function keepInboxItem(item: DecisionInboxItem, validIds: Set<string>): boolean {
   if (isStoryInboxItem(item)) return true;
+  if (item.kind === "assistant_training_reminder") return true;
   return validIds.has(item.playerId);
 }
 
@@ -323,6 +326,8 @@ export function inboxItemLabel(item: DecisionInboxItem, cast?: StoryCast): strin
       return t("inbox.reason.contract_due");
     case "coach_focus":
       return t("inbox.reason.coach_focus");
+    case "training_plan_missing":
+      return t("inbox.reason.training_plan_missing");
     default:
       return item.reason;
   }
@@ -347,6 +352,8 @@ export function allowedActions(
         return ["contract", "dismiss"];
       case "training_focus":
         return ["training_focus", "dismiss"];
+      case "assistant_training_reminder":
+        return ["dismiss"];
       case "story_press":
       case "story_fan":
       case "story_captain":

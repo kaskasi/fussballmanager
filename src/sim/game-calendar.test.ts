@@ -26,12 +26,13 @@ describe("game calendar", () => {
     expect(calendarWeek(34)).toBe(16);
   });
 
-  it("opens the summer window at season start, winter in January", () => {
+  it("opens four calendar weeks at season start and four in January", () => {
     expect(isSummerTransferWindow(1)).toBe(true);
-    expect(isSummerTransferWindow(2)).toBe(true);
-    expect(isSummerTransferWindow(3)).toBe(false);
+    expect(isSummerTransferWindow(4)).toBe(true);
+    expect(isSummerTransferWindow(5)).toBe(false);
     expect(isWinterTransferWindow(20)).toBe(true);
-    expect(isWinterTransferWindow(22)).toBe(true);
+    expect(isWinterTransferWindow(23)).toBe(true);
+    expect(isWinterTransferWindow(24)).toBe(false);
     expect(isWinterTransferWindow(3)).toBe(false);
   });
 

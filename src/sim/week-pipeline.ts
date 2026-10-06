@@ -7,7 +7,16 @@ import { evaluateClearStamps, evaluateEventStamps } from "../development/ability
 import { advanceIndividualTrainingWeek } from "../development/individual-training.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { applyTrainingWeek } from "../development/pipeline-week.ts";
-import { planToSessions } from "../development/training-units.ts";
+import {
+  emptyWeeklyTrainingPlan,
+  planToSessions,
+} from "../development/training-units.ts";
+import {
+  applyTrainingNeglectMorale,
+  isTrainingPlanNeglected,
+  TRAINING_NEGLECT_BOARD_PRESSURE,
+  TRAINING_NEGLECT_FANBASE_PENALTY,
+} from "../development/training-neglect.ts";
 import { advanceWeeklyClubFinances } from "../economy/club-finances.ts";
 import type { FixtureResult } from "@fussballmanager/shared";
 import type { CareerLeagueStat } from "../persistence/league-state.ts";
@@ -141,6 +150,31 @@ export async function simulateGameWeek(
   };
 
   const playersAtWeekStart = session.players;
+  const trainingPlanNeglected = isTrainingPlanNeglected(session.trainingPlan);
+  let board = session.board;
+  if (trainingPlanNeglected) {
+    board = {
+      ...board,
+      pressure: Math.min(
+        100,
+        Math.max(0, board.pressure + TRAINING_NEGLECT_BOARD_PRESSURE),
+      ),
+    };
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "info",
+      "Vorstand: Kein strukturiertes Training — das akzeptieren wir nicht dauerhaft.",
+    );
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "info",
+      "Fans: Ohne Plan auf dem Platz wirkt der Verein planlos — Vertrauen leidet.",
+    );
+  }
   const sessions = planToSessions(session.trainingPlan);
   const trainingContext = {
     season: session.season,
@@ -170,6 +204,15 @@ export async function simulateGameWeek(
       nextWeek,
       "profile",
       `${award.icon} ${who} verdient ${award.label}`,
+    );
+  }
+  for (const notice of individualStep.retrainNotices) {
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "profile",
+      notice.label,
     );
   }
 
@@ -264,7 +307,10 @@ export async function simulateGameWeek(
     youth.report,
   );
   const trialStep = advanceProTrials(advanced.players, session.clubId, session.season, nextWeek);
-  const playersWithMorale = applyDepartureMoralePressure(trialStep.players, advanced.inbox);
+  let playersWithMorale = applyDepartureMoralePressure(trialStep.players, advanced.inbox);
+  if (trainingPlanNeglected) {
+    playersWithMorale = applyTrainingNeglectMorale(playersWithMorale, session.clubId);
+  }
   const isHomeMatchWeek =
     leagueStep.playerFixture?.homeTeamId === session.league.player_club_id;
   const occupancy = weekCommerceOccupancy(isHomeMatchWeek, session.stadium);
@@ -273,7 +319,9 @@ export async function simulateGameWeek(
       leagueWithCareerStats,
       session.clubId,
       leagueStep.playerFixture != null,
-    ) + precinctWeeklyFanbaseBonus(session.stadium.precinct, occupancy);
+    ) +
+    precinctWeeklyFanbaseBonus(session.stadium.precinct, occupancy) +
+    (trainingPlanNeglected ? TRAINING_NEGLECT_FANBASE_PENALTY : 0);
   const stadium = advanceClubFanbase(session.stadium, fanbaseDelta);
   const opponentId =
     isHomeMatchWeek && leagueStep.playerFixture
@@ -378,6 +426,7 @@ export async function simulateGameWeek(
   const narrativeStep = advanceNarrativeWeek(
     {
       ...session,
+      board,
       season: seasonEnded ? session.season + 1 : session.season,
       week: nextWeek,
       players: playersWithCaStamp,
@@ -406,6 +455,8 @@ export async function simulateGameWeek(
     finances,
     stadium: narrativeStep.stadium,
     board: narrativeStep.board,
+    trainingPlan: emptyWeeklyTrainingPlan(),
+    trainingReminderWeek: undefined,
     rivalPlayers,
     transferState,
     clubEvents,

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Player, PositionPrimary } from "../../types/player.ts";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
 import type {
@@ -176,15 +176,36 @@ export function ScoutingCenter({
   const [tab, setTab] = useState<ScoutingTab>("hits");
   const [detailZoneId, setDetailZoneId] = useState<string | null>(null);
 
+  const notifyScoutMapDetailRef = useRef(onScoutMapDetailChange);
+  notifyScoutMapDetailRef.current = onScoutMapDetailChange;
+  const detailOpenedAtRef = useRef(0);
+
   useEffect(() => {
-    if (!onScoutMapDetailChange) return;
+    const notify = notifyScoutMapDetailRef.current;
+    if (!notify) return;
     if (detailZoneId == null) {
-      onScoutMapDetailChange(false, () => {});
-      return;
+      notify(false, () => {});
+      return undefined;
     }
-    onScoutMapDetailChange(true, () => setDetailZoneId(null));
-    return () => onScoutMapDetailChange(false, () => {});
-  }, [detailZoneId, onScoutMapDetailChange]);
+    detailOpenedAtRef.current = Date.now();
+    const closeDetail = () => {
+      if (Date.now() - detailOpenedAtRef.current < 200) return;
+      setDetailZoneId(null);
+    };
+    let cancelled = false;
+    const frame = requestAnimationFrame(() => {
+      if (!cancelled) notify(true, closeDetail);
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [detailZoneId]);
+
+  useEffect(() => {
+    return () => notifyScoutMapDetailRef.current?.(false, () => {});
+  }, []);
+
   const mapModel = useMemo(
     () =>
       buildScoutDiscoveryMapModel({

@@ -964,6 +964,10 @@ export default function App() {
     [patchSession],
   );
 
+  const handleScoutMapDetailChange = useCallback((open: boolean, onBack: () => void) => {
+    setScoutMapDetailBack(open ? onBack : null);
+  }, []);
+
   const handleScoutRegion = useCallback(
     (zoneId: string) => {
       patchSession((current) => {
@@ -2431,9 +2435,7 @@ export default function App() {
           onToggleShortlist={handleToggleShortlist}
           initialTab={scoutingInitialTab}
           onInitialTabApplied={() => setScoutingInitialTab(null)}
-          onScoutMapDetailChange={(open, onBack) =>
-            setScoutMapDetailBack(open ? onBack : null)
-          }
+          onScoutMapDetailChange={handleScoutMapDetailChange}
         />
       ) : null}
       {screen === "transfers" ? (

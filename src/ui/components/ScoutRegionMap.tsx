@@ -163,7 +163,10 @@ export function ScoutRegionMap({
                   <button
                     type="button"
                     className="scout-discovery-zone-open-map"
-                    onClick={() => onOpenRegionDetail!(zone.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onOpenRegionDetail!(zone.id);
+                    }}
                   >
                     <MapPin size={16} aria-hidden />
                     {t("scouting.map.openMap")}

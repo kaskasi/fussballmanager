@@ -1,5 +1,5 @@
-/** WIREFRAME: PRD 22 + design.md §9.5 / §9.1 — Gegner scouten CTA */
-import { Radar } from "lucide-react";
+/** WIREFRAME: PRD 22 + design.md §9.5 (start) / §9.1 (report link only) */
+import { FileBarChart, Radar } from "lucide-react";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import type { ScoutNetworkState } from "../../scouting/scout-network.ts";
 import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
@@ -8,27 +8,50 @@ import {
   opponentScoutJobProgress,
 } from "../../scouting/opponent-scout-job.ts";
 import { opponentScoutMatchIdFromSetup } from "../../scouting/opponent-scout-match-id.ts";
+import { opponentScoutNoticeForMatch } from "../../scouting/scout-job-postfach.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 
 export function OpponentScoutMatchAction({
+  mode = "calendar",
   setup,
   season,
   scoutBoard,
   scoutNetwork,
   onStart,
+  onViewReport,
 }: {
+  mode?: "calendar" | "lineup";
   setup: CareerMatchSetup | null;
   season: number;
   scoutBoard: ScoutBoard;
-  scoutNetwork: ScoutNetworkState;
-  onStart: () => void;
+  scoutNetwork?: ScoutNetworkState;
+  onStart?: () => void;
+  onViewReport?: (postfachItemId: string) => void;
 }) {
   useT();
   if (!setup) return null;
 
-  const job = scoutBoard.active_opponent_scout;
   const matchId = opponentScoutMatchIdFromSetup(season, setup);
+
+  if (mode === "lineup") {
+    const notice = opponentScoutNoticeForMatch(scoutBoard, matchId);
+    if (!notice || !onViewReport) return null;
+    return (
+      <div className="opponent-scout-action">
+        <button
+          type="button"
+          className="inbox-action"
+          onClick={() => onViewReport(notice.id)}
+        >
+          <FileBarChart size={16} aria-hidden />
+          {t("scouting.opponent.viewReport")}
+        </button>
+      </div>
+    );
+  }
+
+  const job = scoutBoard.active_opponent_scout;
   const activeForFixture = job?.match_id === matchId ? job : null;
   const progressForFixture = opponentScoutJobProgress(activeForFixture);
 
@@ -45,6 +68,8 @@ export function OpponentScoutMatchAction({
       </div>
     );
   }
+
+  if (!scoutNetwork || !onStart) return null;
 
   const gate = canStartOpponentScout(scoutBoard, scoutNetwork, setup, season);
   const disabled = !gate.ok;

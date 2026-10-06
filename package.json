@@ -23,7 +23,10 @@
     "bake:portraits:full": "node scripts/bake-open-peeps-busts.mjs && node scripts/generate-portrait-catalog.mjs",
     "bake:hub-photos": "node scripts/bake-hub-photos.mjs",
     "bake:camp-photos": "node scripts/bake-camp-photos.mjs",
-    "bake:club-logos": "node scripts/bake-club-logos.mjs"
+    "bake:club-logos": "node scripts/bake-club-logos.mjs",
+    "study:opponent-scout": "npx vite-node scripts/run-opponent-scout-nordstern-study.ts",
+    "study:opponent-scout:quick": "STUDY_QUICK=1 npx vite-node scripts/run-opponent-scout-nordstern-study.ts",
+    "study:opponent-scout:quick-10": "STUDY_QUICK=1 STUDY_QUICK_TEAMS=10 npx vite-node scripts/run-opponent-scout-nordstern-study.ts"
   },
   "dependencies": {
     "@fussballmanager/shared": "*",

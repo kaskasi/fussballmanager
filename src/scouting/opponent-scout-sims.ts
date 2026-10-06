@@ -20,6 +20,9 @@ export interface OpponentScoutSimVariant {
   shotsOnTargetFor?: number;
   shotsAgainst?: number;
   shotsOnTargetAgainst?: number;
+  cornersFor?: number;
+  cornersAgainst?: number;
+  passCompletionPctFor?: number | null;
 }
 
 export interface OpponentScoutBundleResult {

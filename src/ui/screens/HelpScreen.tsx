@@ -48,6 +48,7 @@ import { HelpAttributionPanel } from "../components/HelpAttributionPanel.tsx";
 import { HelpFigure } from "../components/HelpFigure.tsx";
 import { HelpInlineIcon } from "../components/HelpInlineIcon.tsx";
 import { HELP_PLAY_FIGURES } from "../help/help-play-figures.ts";
+import { TacticsHelpPanel } from "../help/TacticsHelpPanel.tsx";
 import {
   formatStampEffects,
   formatStampGates,
@@ -60,17 +61,18 @@ import {
  *
  * ┌────────────────────────────────────────────────────────────┐
  * │ 📖 Hilfe                                                   │
- * │ [Welt & Story] [So funktioniert's] [Fähigkeiten] [Danksagung] │
+ * │ [Welt & Story] [So funktioniert's] [Taktik] [Fähigkeiten] [Danksagung] │
  * │                                                            │
  * │ Icon-first Abschnitte · Stempel-Katalog mit Gates/Effekten │
  * └────────────────────────────────────────────────────────────┘
  */
 
-type HelpTab = "story" | "play" | "stamps" | "attribution";
+type HelpTab = "story" | "play" | "tactics" | "stamps" | "attribution";
 
 const TAB_ICONS: Record<HelpTab, LucideIcon> = {
   story: Globe,
   play: Play,
+  tactics: Target,
   stamps: Sparkles,
   attribution: Heart,
 };
@@ -78,6 +80,7 @@ const TAB_ICONS: Record<HelpTab, LucideIcon> = {
 const TABS: { id: HelpTab; labelKey: string }[] = [
   { id: "story", labelKey: "help.tab.story" },
   { id: "play", labelKey: "help.tab.play" },
+  { id: "tactics", labelKey: "help.tab.tactics" },
   { id: "stamps", labelKey: "help.tab.stamps" },
   { id: "attribution", labelKey: "help.tab.attribution" },
 ];
@@ -115,6 +118,7 @@ export function HelpScreen() {
 
       {tab === "story" ? <StoryPanel /> : null}
       {tab === "play" ? <PlayPanel /> : null}
+      {tab === "tactics" ? <TacticsHelpPanel /> : null}
       {tab === "stamps" ? <StampsPanel /> : null}
       {tab === "attribution" ? <HelpAttributionPanel /> : null}
     </main>

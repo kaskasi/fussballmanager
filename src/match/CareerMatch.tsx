@@ -28,7 +28,6 @@ import type { FanbaseMood } from "../stadium/fanbase.ts";
 import { matchAmbiencePhotoUrl } from "../ui/assets/mood-photos.ts";
 import { t } from "../i18n/index.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
-import type { ScoutNetworkState } from "../scouting/scout-network.ts";
 
 export function CareerMatch({
   setup,
@@ -53,8 +52,7 @@ export function CareerMatch({
   poorForm,
   season = 1,
   scoutBoard,
-  scoutNetwork,
-  onStartOpponentScout,
+  onOpenOpponentScoutReport,
   onLineupPhaseChange,
 }: {
   setup: CareerMatchSetup;
@@ -79,8 +77,7 @@ export function CareerMatch({
   poorForm?: boolean;
   season?: number;
   scoutBoard?: ScoutBoard;
-  scoutNetwork?: ScoutNetworkState;
-  onStartOpponentScout?: () => void;
+  onOpenOpponentScoutReport?: (postfachItemId: string) => void;
   onLineupPhaseChange?: (inLineup: boolean) => void;
 }) {
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
@@ -129,8 +126,7 @@ export function CareerMatch({
         poorForm={poorForm}
         season={season}
         scoutBoard={scoutBoard}
-        scoutNetwork={scoutNetwork}
-        onStartOpponentScout={onStartOpponentScout}
+        onOpenOpponentScoutReport={onOpenOpponentScoutReport}
       />
     );
   }

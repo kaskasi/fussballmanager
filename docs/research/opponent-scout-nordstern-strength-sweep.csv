@@ -1,0 +1,4 @@
+strength_bucket,nordstern_ca,opponent_ca,ca_delta,matchday,match_id,plan_id,label,formation,runs,win_pct,draw_pct,avg_goal_diff,avg_goals_for,avg_goals_against,clean_sheet_pct
+similar,84,87,3,90,s1_w90_md90_fc-nordstern_world-0a8746de-3,4-3-3_m46_p64_l48,"4-3-3 · M46 P64 L48",4-3-3,2,50,0,0.50,1.00,0.50,50
+similar,84,87,3,90,s1_w90_md90_fc-nordstern_world-0a8746de-3,4-3-3_m46_p64_l64,"4-3-3 · M46 P64 L64",4-3-3,2,50,50,0.50,1.00,0.50,50
+similar,84,87,3,90,s1_w90_md90_fc-nordstern_world-0a8746de-3,4-3-3_m58_p64_l64,"4-3-3 · M58 P64 L64",4-3-3,2,50,50,0.50,0.50,0.00,100

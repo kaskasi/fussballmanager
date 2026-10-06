@@ -17,7 +17,11 @@ import {
   type OpponentScoutSimVariant,
 } from "./opponent-scout-sims.ts";
 import { buildMatchView } from "../../server/src/api/match-view.ts";
-
+import {
+  buildOpponentScoutBundleSummary,
+  playerMatchStatsFromPairStats,
+  type OpponentScoutBundleSummary,
+} from "./opponent-scout-bundle-summary.ts";
 import type { OpponentScoutRiskTag } from "./opponent-scout-sims.ts";
 
 export interface OpponentScoutVariantPlan {
@@ -40,6 +44,7 @@ export interface OpponentScoutRecommendation {
 export interface OpponentScoutReport extends OpponentScoutBundleResult {
   recommendations: OpponentScoutRecommendation[];
   assignedScoutTrust: number;
+  bundleSummary: OpponentScoutBundleSummary;
 }
 
 export function tacticHashFromPlan(plan: SandboxPlan): number {
@@ -85,20 +90,13 @@ export function opponentScoutVariantPlans(
   return plans;
 }
 
-function statsFromView(view: MatchView, playerClubId: string, setup: CareerMatchSetup) {
+export function statsFromView(view: MatchView, setup: CareerMatchSetup) {
   const last = view.frames[view.frames.length - 1];
   const stats = last?.stats ?? view.kickoff.stats;
   const isHome = setup.playerClubId === setup.homeTeamId;
-  const forSide = isHome ? stats.home : stats.away;
-  const againstSide = isHome ? stats.away : stats.home;
-  return {
-    goalsFor: isHome ? view.finalScore.home : view.finalScore.away,
-    goalsAgainst: isHome ? view.finalScore.away : view.finalScore.home,
-    shotsFor: forSide.shots,
-    shotsOnTargetFor: forSide.shotsOnTarget,
-    shotsAgainst: againstSide.shots,
-    shotsOnTargetAgainst: againstSide.shotsOnTarget,
-  };
+  const goalsFor = isHome ? view.finalScore.home : view.finalScore.away;
+  const goalsAgainst = isHome ? view.finalScore.away : view.finalScore.home;
+  return playerMatchStatsFromPairStats(stats, isHome, goalsFor, goalsAgainst);
 }
 
 export function buildOpponentScoutVariants(input: {
@@ -145,7 +143,7 @@ export function buildOpponentScoutVariants(input: {
       homePlan: isPlayerHome ? entry.plan : undefined,
       awayPlan: isPlayerHome ? undefined : entry.plan,
     });
-    const snap = statsFromView(view, input.setup.playerClubId, input.setup);
+    const snap = statsFromView(view, input.setup);
     variants.push({
       variantIndex: entry.variantIndex,
       seed,
@@ -160,6 +158,9 @@ export function buildOpponentScoutVariants(input: {
       shotsOnTargetFor: snap.shotsOnTargetFor,
       shotsAgainst: snap.shotsAgainst,
       shotsOnTargetAgainst: snap.shotsOnTargetAgainst,
+      cornersFor: snap.cornersFor,
+      cornersAgainst: snap.cornersAgainst,
+      passCompletionPctFor: snap.passCompletionPctFor,
     });
   }
   return { variants, variantPlans };
@@ -222,5 +223,6 @@ export function buildOpponentScoutReport(
     ...summary,
     recommendations: recommendations.slice(0, maxRows),
     assignedScoutTrust: scoutTrust,
+    bundleSummary: buildOpponentScoutBundleSummary(variants, summary.modeScoreline),
   };
 }

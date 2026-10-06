@@ -13,7 +13,7 @@ Special scout assignment **scout next opponent**: run multiple **deterministic**
 | Postfach card after job completes | 10× live commentary UI |
 | Aggregate: result spread, shots-on-target proxy, tactic rows | Cloud LLM narrative |
 | Scout trust → band width / row count | Assistant auto-starts (PRD 19) |
-| Start: Kalender (Spielwoche) + Pre-Match Aufstellung | Scouting-Treffer tab entry |
+| Start: Kalender (Spielwoche); Aufstellung nur Link zum Postfach-Report wenn vorhanden | Scouting-Treffer tab entry |
 
 ## Job rules
 
@@ -31,15 +31,26 @@ Special scout assignment **scout next opponent**: run multiple **deterministic**
 
 ## Aggregates & report
 
-Per variant: final score, shots, shots on target (xG proxy), formation label, risk tag (`balanced` | `high_line` | `low_block`).
+Per variant: final score, shots, shots on target (xG proxy), corners, pass completion %, formation label, risk tag (`balanced` | `high_line` | `low_block`).
 
-Bundle: score histogram, mode scoreline, goal bands.
+**Mode scoreline (`modeScoreline`):** the **most frequent** `home:away` score among scout sims (histogram mode). It is **not** a match prediction—label in UI as “Häufigstes Sim-Ergebnis (N Läufe)”.
+
+**Bundle summary (4×3 grid, v2):** twelve aggregates across all sims in the job—mode scoreline, win/draw/loss %, avg goal diff, goals/shots/SoT for & against, pass %, corners. Stored on `OpponentScoutReport.bundleSummary` (no save_version bump).
 
 **Recommendations (2–3 rows):** cluster by formation; each row = formation label, predicted score band (trust widens/narrows), risk icon. Trust &lt; 55: max 2 rows; trust ≥ 55: up to 3.
+
+## Tactic lattice & Monte Carlo (offline / future in-game)
+
+Continuous `SandboxPlan` has infinite permutations. Research uses a **finite lattice**: 3 formations × quantized mentality / pressing / lineHeight steps; duties from formation defaults.
+
+- **Offline study:** `npm run study:opponent-scout` (`vite-node scripts/run-opponent-scout-nordstern-study.ts`) — FC Nordstern vs **weaker / similar / stronger** league opponents (starter Ø CA), 375 lattice plans × 20 seeds; quick: `npm run study:opponent-scout:quick`. Artifacts: `docs/research/opponent-scout-nordstern-strength-sweep.{md,json,csv}`. CI: quick probe in `opponent-scout-lattice.study.test.ts` only.
+- **Method:** deterministic `buildMatchView` only (Gesetz 4)—empirical win rates and goal means, not neural nets or cloud LLM.
+- **Cards:** not in `MatchSideStats` v1; deferred unless event fold added in wrapper.
 
 ## Output (Postfach)
 
 - Title: fixture + opponent name + crest
+- **4×3 analytics grid** (icon-first mini statlines)
 - 2–3 tactic rows (icon-first)
 - CTA: **Taktik** (lineup flow), **Kalender** — no yellow NEXT in card body (design.md §10)
 

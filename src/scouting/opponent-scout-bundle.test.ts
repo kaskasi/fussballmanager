@@ -22,6 +22,7 @@ describe("opponent scout report", () => {
     }));
     const low = buildOpponentScoutReport("m1", variants, 40);
     const high = buildOpponentScoutReport("m1", variants, 80);
+    expect(low.bundleSummary.simCount).toBe(10);
     expect(low.recommendations.length).toBeLessThanOrEqual(2);
     expect(high.recommendations.length).toBeLessThanOrEqual(3);
     const lowWidth = low.recommendations[0]!.goalsForBand[1] - low.recommendations[0]!.goalsForBand[0];

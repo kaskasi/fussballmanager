@@ -155,6 +155,14 @@ function careerCaForStarter(
   return Math.round(estimateCa(career.attributes, career.position));
 }
 
+/** Mean CA of current starters (engine squad), for study / profile comparisons. */
+export function clubStarterCaAverage(
+  squad: Squad,
+  careerRoster: readonly Player[],
+): number | null {
+  return squadCaAverage(squad, careerRoster);
+}
+
 function squadCaAverage(squad: Squad, careerRoster: readonly Player[]): number | null {
   const rosterIndex = indexRivalRoster(careerRoster);
   const values = squad.starters

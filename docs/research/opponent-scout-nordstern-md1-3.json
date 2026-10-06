@@ -1,0 +1,435 @@
+{
+  "config": {
+    "masterSeed": 2026,
+    "matchdays": [
+      1,
+      2,
+      3
+    ],
+    "lattice": {
+      "mentalitySteps": [
+        40,
+        46,
+        52,
+        58,
+        64
+      ],
+      "pressingSteps": [
+        40,
+        48,
+        56,
+        64,
+        72
+      ],
+      "lineHeightSteps": [
+        40,
+        48,
+        56,
+        64,
+        72
+      ]
+    },
+    "seedRepeats": 20,
+    "topK": 10
+  },
+  "latticePlanCount": 375,
+  "matchdays": [
+    {
+      "matchday": 1,
+      "week": 1,
+      "matchId": "s1_w1_md1_fc-nordstern_world-2736a7c4-17",
+      "opponentShortName": "TÖN",
+      "planCount": 375,
+      "seedRepeats": 20,
+      "totalSims": 7500,
+      "elapsedMs": 634264.994291,
+      "topPlans": [
+        {
+          "planId": "4-3-3_m58_p56_l72",
+          "label": "4-3-3 · M58 P56 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 35,
+          "drawPct": 40,
+          "avgGoalDiff": 0.4,
+          "avgGoalsFor": 0.9,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 55
+        },
+        {
+          "planId": "4-3-3_m46_p64_l72",
+          "label": "4-3-3 · M46 P64 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 45,
+          "drawPct": 40,
+          "avgGoalDiff": 0.35,
+          "avgGoalsFor": 0.95,
+          "avgGoalsAgainst": 0.6,
+          "cleanSheetPct": 70
+        },
+        {
+          "planId": "4-3-3_m52_p72_l72",
+          "label": "4-3-3 · M52 P72 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 40,
+          "drawPct": 45,
+          "avgGoalDiff": 0.3,
+          "avgGoalsFor": 0.8,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 65
+        },
+        {
+          "planId": "2-3-5_m58_p56_l72",
+          "label": "2-3-5 · M58 P56 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 40,
+          "drawPct": 40,
+          "avgGoalDiff": 0.3,
+          "avgGoalsFor": 0.9,
+          "avgGoalsAgainst": 0.6,
+          "cleanSheetPct": 60
+        },
+        {
+          "planId": "2-3-5_m58_p72_l72",
+          "label": "2-3-5 · M58 P72 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 25,
+          "drawPct": 60,
+          "avgGoalDiff": 0.25,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 0.25,
+          "cleanSheetPct": 80
+        },
+        {
+          "planId": "2-3-5_m40_p72_l64",
+          "label": "2-3-5 · M40 P72 L64",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 35,
+          "drawPct": 45,
+          "avgGoalDiff": 0.2,
+          "avgGoalsFor": 0.45,
+          "avgGoalsAgainst": 0.25,
+          "cleanSheetPct": 80
+        },
+        {
+          "planId": "2-3-5_m52_p72_l72",
+          "label": "2-3-5 · M52 P72 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 35,
+          "drawPct": 45,
+          "avgGoalDiff": 0.2,
+          "avgGoalsFor": 0.7,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 55
+        },
+        {
+          "planId": "2-3-5_m64_p64_l64",
+          "label": "2-3-5 · M64 P64 L64",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 25,
+          "drawPct": 55,
+          "avgGoalDiff": 0.2,
+          "avgGoalsFor": 0.65,
+          "avgGoalsAgainst": 0.45,
+          "cleanSheetPct": 60
+        },
+        {
+          "planId": "4-3-3_m40_p48_l72",
+          "label": "4-3-3 · M40 P48 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 30,
+          "drawPct": 40,
+          "avgGoalDiff": 0.15,
+          "avgGoalsFor": 1.05,
+          "avgGoalsAgainst": 0.9,
+          "cleanSheetPct": 40
+        },
+        {
+          "planId": "4-3-3_m40_p64_l72",
+          "label": "4-3-3 · M40 P64 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 40,
+          "drawPct": 30,
+          "avgGoalDiff": 0.1,
+          "avgGoalsFor": 0.7,
+          "avgGoalsAgainst": 0.6,
+          "cleanSheetPct": 60
+        }
+      ]
+    },
+    {
+      "matchday": 2,
+      "week": 2,
+      "matchId": "s1_w2_md2_world-94c4d158-16_fc-nordstern",
+      "opponentShortName": "ITZ",
+      "planCount": 375,
+      "seedRepeats": 20,
+      "totalSims": 7500,
+      "elapsedMs": 633334.6036249999,
+      "topPlans": [
+        {
+          "planId": "2-3-5_m64_p64_l72",
+          "label": "2-3-5 · M64 P64 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 40,
+          "drawPct": 40,
+          "avgGoalDiff": 0.2,
+          "avgGoalsFor": 0.45,
+          "avgGoalsAgainst": 0.25,
+          "cleanSheetPct": 80
+        },
+        {
+          "planId": "2-3-5_m58_p56_l72",
+          "label": "2-3-5 · M58 P56 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 25,
+          "drawPct": 55,
+          "avgGoalDiff": 0.2,
+          "avgGoalsFor": 0.55,
+          "avgGoalsAgainst": 0.35,
+          "cleanSheetPct": 65
+        },
+        {
+          "planId": "2-3-5_m64_p56_l72",
+          "label": "2-3-5 · M64 P56 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 20,
+          "drawPct": 70,
+          "avgGoalDiff": 0.15,
+          "avgGoalsFor": 0.4,
+          "avgGoalsAgainst": 0.25,
+          "cleanSheetPct": 75
+        },
+        {
+          "planId": "4-3-3_m46_p72_l72",
+          "label": "4-3-3 · M46 P72 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 40,
+          "drawPct": 35,
+          "avgGoalDiff": 0.1,
+          "avgGoalsFor": 0.65,
+          "avgGoalsAgainst": 0.55,
+          "cleanSheetPct": 55
+        },
+        {
+          "planId": "4-3-3_m64_p56_l72",
+          "label": "4-3-3 · M64 P56 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 30,
+          "drawPct": 30,
+          "avgGoalDiff": 0.05,
+          "avgGoalsFor": 0.55,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 55
+        },
+        {
+          "planId": "2-3-5_m52_p48_l72",
+          "label": "2-3-5 · M52 P48 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 25,
+          "drawPct": 55,
+          "avgGoalDiff": 0.05,
+          "avgGoalsFor": 0.7,
+          "avgGoalsAgainst": 0.65,
+          "cleanSheetPct": 55
+        },
+        {
+          "planId": "4-3-3_m40_p64_l72",
+          "label": "4-3-3 · M40 P64 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 30,
+          "drawPct": 40,
+          "avgGoalDiff": 0,
+          "avgGoalsFor": 0.55,
+          "avgGoalsAgainst": 0.55,
+          "cleanSheetPct": 55
+        },
+        {
+          "planId": "2-3-5_m40_p48_l72",
+          "label": "2-3-5 · M40 P48 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 10,
+          "drawPct": 75,
+          "avgGoalDiff": 0,
+          "avgGoalsFor": 0.15,
+          "avgGoalsAgainst": 0.15,
+          "cleanSheetPct": 85
+        },
+        {
+          "planId": "4-3-3_m52_p56_l72",
+          "label": "4-3-3 · M52 P56 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 25,
+          "drawPct": 45,
+          "avgGoalDiff": -0.05,
+          "avgGoalsFor": 0.45,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "4-3-3_m46_p56_l72",
+          "label": "4-3-3 · M46 P56 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 5,
+          "drawPct": 80,
+          "avgGoalDiff": -0.05,
+          "avgGoalsFor": 0.35,
+          "avgGoalsAgainst": 0.4,
+          "cleanSheetPct": 60
+        }
+      ]
+    },
+    {
+      "matchday": 3,
+      "week": 3,
+      "matchId": "s1_w3_md3_fc-nordstern_world-65542af6-15",
+      "opponentShortName": "PIN",
+      "planCount": 375,
+      "seedRepeats": 20,
+      "totalSims": 7500,
+      "elapsedMs": 634010.71875,
+      "topPlans": [
+        {
+          "planId": "2-3-5_m64_p72_l72",
+          "label": "2-3-5 · M64 P72 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 35,
+          "drawPct": 45,
+          "avgGoalDiff": 0.15,
+          "avgGoalsFor": 0.55,
+          "avgGoalsAgainst": 0.4,
+          "cleanSheetPct": 60
+        },
+        {
+          "planId": "4-3-3_m58_p72_l72",
+          "label": "4-3-3 · M58 P72 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 40,
+          "drawPct": 25,
+          "avgGoalDiff": 0.1,
+          "avgGoalsFor": 0.8,
+          "avgGoalsAgainst": 0.7,
+          "cleanSheetPct": 40
+        },
+        {
+          "planId": "4-3-3_m40_p64_l72",
+          "label": "4-3-3 · M40 P64 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 30,
+          "drawPct": 50,
+          "avgGoalDiff": 0.05,
+          "avgGoalsFor": 0.85,
+          "avgGoalsAgainst": 0.8,
+          "cleanSheetPct": 45
+        },
+        {
+          "planId": "2-3-5_m58_p72_l72",
+          "label": "2-3-5 · M58 P72 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 35,
+          "drawPct": 30,
+          "avgGoalDiff": -0.2,
+          "avgGoalsFor": 0.55,
+          "avgGoalsAgainst": 0.75,
+          "cleanSheetPct": 55
+        },
+        {
+          "planId": "4-3-3_m52_p72_l72",
+          "label": "4-3-3 · M52 P72 L72",
+          "formation": "4-3-3",
+          "runs": 20,
+          "winPct": 20,
+          "drawPct": 40,
+          "avgGoalDiff": -0.2,
+          "avgGoalsFor": 0.75,
+          "avgGoalsAgainst": 0.95,
+          "cleanSheetPct": 45
+        },
+        {
+          "planId": "2-3-5_m40_p56_l72",
+          "label": "2-3-5 · M40 P56 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 25,
+          "drawPct": 40,
+          "avgGoalDiff": -0.25,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 0.75,
+          "cleanSheetPct": 60
+        },
+        {
+          "planId": "2-3-5_m46_p64_l72",
+          "label": "2-3-5 · M46 P64 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 25,
+          "drawPct": 40,
+          "avgGoalDiff": -0.25,
+          "avgGoalsFor": 0.3,
+          "avgGoalsAgainst": 0.55,
+          "cleanSheetPct": 60
+        },
+        {
+          "planId": "2-3-5_m52_p72_l72",
+          "label": "2-3-5 · M52 P72 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 25,
+          "drawPct": 25,
+          "avgGoalDiff": -0.3,
+          "avgGoalsFor": 0.55,
+          "avgGoalsAgainst": 0.85,
+          "cleanSheetPct": 35
+        },
+        {
+          "planId": "2-3-5_m58_p64_l72",
+          "label": "2-3-5 · M58 P64 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 25,
+          "drawPct": 35,
+          "avgGoalDiff": -0.3,
+          "avgGoalsFor": 0.55,
+          "avgGoalsAgainst": 0.85,
+          "cleanSheetPct": 45
+        },
+        {
+          "planId": "2-3-5_m58_p56_l72",
+          "label": "2-3-5 · M58 P56 L72",
+          "formation": "2-3-5",
+          "runs": 20,
+          "winPct": 20,
+          "drawPct": 45,
+          "avgGoalDiff": -0.3,
+          "avgGoalsFor": 0.35,
+          "avgGoalsAgainst": 0.65,
+          "cleanSheetPct": 55
+        }
+      ]
+    }
+  ],
+  "totalElapsedMs": 1901611.901959
+}

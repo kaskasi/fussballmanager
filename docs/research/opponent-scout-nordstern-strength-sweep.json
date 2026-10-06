@@ -1,0 +1,84 @@
+{
+  "config": {
+    "masterSeed": 2026,
+    "fixtures": [
+      {
+        "type": "strength",
+        "bucket": "similar"
+      }
+    ],
+    "lattice": {
+      "mentalitySteps": [
+        46,
+        58
+      ],
+      "pressingSteps": [
+        48,
+        64
+      ],
+      "lineHeightSteps": [
+        48,
+        64
+      ]
+    },
+    "seedRepeats": 2,
+    "topK": 3
+  },
+  "latticePlanCount": 24,
+  "matchdays": [
+    {
+      "matchday": 90,
+      "week": 90,
+      "matchId": "s1_w90_md90_fc-nordstern_world-0a8746de-3",
+      "opponentShortName": "ELM",
+      "opponentTeamId": "world-0a8746de-3",
+      "strengthBucket": "similar",
+      "nordsternStarterCa": 84,
+      "opponentStarterCa": 87,
+      "caDelta": 3,
+      "planCount": 24,
+      "seedRepeats": 2,
+      "totalSims": 48,
+      "elapsedMs": 4388.4517080000005,
+      "topPlans": [
+        {
+          "planId": "4-3-3_m46_p64_l48",
+          "label": "4-3-3 · M46 P64 L48",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 0,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 1,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "4-3-3_m46_p64_l64",
+          "label": "4-3-3 · M46 P64 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 50,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 1,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "4-3-3_m58_p64_l64",
+          "label": "4-3-3 · M58 P64 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 50,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 0,
+          "cleanSheetPct": 100
+        }
+      ]
+    }
+  ],
+  "totalElapsedMs": 4388.772083000001
+}

@@ -1,0 +1,657 @@
+{
+  "config": {
+    "masterSeed": 2026,
+    "fixtures": [
+      {
+        "type": "opponent",
+        "opponentId": "world-0a8746de-3"
+      },
+      {
+        "type": "opponent",
+        "opponentId": "world-df198a05-1"
+      },
+      {
+        "type": "opponent",
+        "opponentId": "world-6bbff0e5-7"
+      },
+      {
+        "type": "opponent",
+        "opponentId": "world-d9b26db0-10"
+      },
+      {
+        "type": "opponent",
+        "opponentId": "world-6d338fc1-6"
+      },
+      {
+        "type": "opponent",
+        "opponentId": "world-aa9ea14a-13"
+      },
+      {
+        "type": "opponent",
+        "opponentId": "world-2736a7c4-17"
+      },
+      {
+        "type": "opponent",
+        "opponentId": "world-437bd972-14"
+      },
+      {
+        "type": "opponent",
+        "opponentId": "world-94c4d158-16"
+      },
+      {
+        "type": "opponent",
+        "opponentId": "world-65542af6-15"
+      }
+    ],
+    "lattice": {
+      "mentalitySteps": [
+        46,
+        58
+      ],
+      "pressingSteps": [
+        48,
+        64
+      ],
+      "lineHeightSteps": [
+        48,
+        64
+      ]
+    },
+    "seedRepeats": 2,
+    "topK": 3
+  },
+  "latticePlanCount": 24,
+  "matchdays": [
+    {
+      "matchday": 90,
+      "week": 90,
+      "matchId": "s1_w90_md90_fc-nordstern_world-0a8746de-3",
+      "opponentShortName": "ELM",
+      "opponentTeamId": "world-0a8746de-3",
+      "strengthBucket": "stronger",
+      "nordsternStarterCa": 84,
+      "opponentStarterCa": 87,
+      "caDelta": 3,
+      "opponentTactics": {
+        "formation": "4-3-3",
+        "mentality": 62,
+        "pressing": 64,
+        "lineHeight": 56
+      },
+      "planCount": 24,
+      "seedRepeats": 2,
+      "totalSims": 48,
+      "elapsedMs": 4566.234082999999,
+      "topPlans": [
+        {
+          "planId": "4-3-3_m46_p64_l48",
+          "label": "4-3-3 · M46 P64 L48",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 0,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 1,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "4-3-3_m46_p64_l64",
+          "label": "4-3-3 · M46 P64 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 50,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 1,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "4-3-3_m58_p64_l64",
+          "label": "4-3-3 · M58 P64 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 50,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 0,
+          "cleanSheetPct": 100
+        }
+      ]
+    },
+    {
+      "matchday": 91,
+      "week": 91,
+      "matchId": "s1_w91_md91_fc-nordstern_world-df198a05-1",
+      "opponentShortName": "KIE",
+      "opponentTeamId": "world-df198a05-1",
+      "strengthBucket": "stronger",
+      "nordsternStarterCa": 84,
+      "opponentStarterCa": 89,
+      "caDelta": 5,
+      "opponentTactics": {
+        "formation": "4-3-3",
+        "mentality": 52,
+        "pressing": 64,
+        "lineHeight": 56
+      },
+      "planCount": 24,
+      "seedRepeats": 2,
+      "totalSims": 48,
+      "elapsedMs": 4239.456209,
+      "topPlans": [
+        {
+          "planId": "4-3-3_m46_p64_l64",
+          "label": "4-3-3 · M46 P64 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 100,
+          "drawPct": 0,
+          "avgGoalDiff": 2.5,
+          "avgGoalsFor": 2.5,
+          "avgGoalsAgainst": 0,
+          "cleanSheetPct": 100
+        },
+        {
+          "planId": "2-3-5_m58_p64_l64",
+          "label": "2-3-5 · M58 P64 L64",
+          "formation": "2-3-5",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 50,
+          "avgGoalDiff": 1,
+          "avgGoalsFor": 1.5,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "4-3-3_m46_p48_l64",
+          "label": "4-3-3 · M46 P48 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 50,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 0,
+          "cleanSheetPct": 100
+        }
+      ]
+    },
+    {
+      "matchday": 92,
+      "week": 92,
+      "matchId": "s1_w92_md92_fc-nordstern_world-6bbff0e5-7",
+      "opponentShortName": "FLE",
+      "opponentTeamId": "world-6bbff0e5-7",
+      "strengthBucket": "stronger",
+      "nordsternStarterCa": 84,
+      "opponentStarterCa": 92,
+      "caDelta": 8,
+      "opponentTactics": {
+        "formation": "4-4-2",
+        "mentality": 44,
+        "pressing": 44,
+        "lineHeight": 48
+      },
+      "planCount": 24,
+      "seedRepeats": 2,
+      "totalSims": 48,
+      "elapsedMs": 4341.691375,
+      "topPlans": [
+        {
+          "planId": "4-3-3_m58_p48_l64",
+          "label": "4-3-3 · M58 P48 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 100,
+          "drawPct": 0,
+          "avgGoalDiff": 4,
+          "avgGoalsFor": 6,
+          "avgGoalsAgainst": 2,
+          "cleanSheetPct": 0
+        },
+        {
+          "planId": "2-3-5_m58_p64_l64",
+          "label": "2-3-5 · M58 P64 L64",
+          "formation": "2-3-5",
+          "runs": 2,
+          "winPct": 100,
+          "drawPct": 0,
+          "avgGoalDiff": 3.5,
+          "avgGoalsFor": 3.5,
+          "avgGoalsAgainst": 0,
+          "cleanSheetPct": 100
+        },
+        {
+          "planId": "4-3-3_m46_p64_l64",
+          "label": "4-3-3 · M46 P64 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 100,
+          "drawPct": 0,
+          "avgGoalDiff": 3,
+          "avgGoalsFor": 3.5,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        }
+      ]
+    },
+    {
+      "matchday": 93,
+      "week": 93,
+      "matchId": "s1_w93_md93_fc-nordstern_world-d9b26db0-10",
+      "opponentShortName": "HAS",
+      "opponentTeamId": "world-d9b26db0-10",
+      "strengthBucket": "stronger",
+      "nordsternStarterCa": 84,
+      "opponentStarterCa": 92,
+      "caDelta": 8,
+      "opponentTactics": {
+        "formation": "4-3-3",
+        "mentality": 52,
+        "pressing": 64,
+        "lineHeight": 56
+      },
+      "planCount": 24,
+      "seedRepeats": 2,
+      "totalSims": 48,
+      "elapsedMs": 4141.1202079999985,
+      "topPlans": [
+        {
+          "planId": "4-3-3_m46_p64_l64",
+          "label": "4-3-3 · M46 P64 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 100,
+          "drawPct": 0,
+          "avgGoalDiff": 1,
+          "avgGoalsFor": 1,
+          "avgGoalsAgainst": 0,
+          "cleanSheetPct": 100
+        },
+        {
+          "planId": "4-3-3_m58_p48_l64",
+          "label": "4-3-3 · M58 P48 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 50,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 1,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "2-3-5_m46_p64_l64",
+          "label": "2-3-5 · M46 P64 L64",
+          "formation": "2-3-5",
+          "runs": 2,
+          "winPct": 0,
+          "drawPct": 100,
+          "avgGoalDiff": 0,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        }
+      ]
+    },
+    {
+      "matchday": 94,
+      "week": 94,
+      "matchId": "s1_w94_md94_fc-nordstern_world-6d338fc1-6",
+      "opponentShortName": "LIS",
+      "opponentTeamId": "world-6d338fc1-6",
+      "strengthBucket": "stronger",
+      "nordsternStarterCa": 84,
+      "opponentStarterCa": 94,
+      "caDelta": 10,
+      "opponentTactics": {
+        "formation": "4-4-2",
+        "mentality": 52,
+        "pressing": 44,
+        "lineHeight": 48
+      },
+      "planCount": 24,
+      "seedRepeats": 2,
+      "totalSims": 48,
+      "elapsedMs": 4391.862332999997,
+      "topPlans": [
+        {
+          "planId": "2-3-5_m46_p64_l64",
+          "label": "2-3-5 · M46 P64 L64",
+          "formation": "2-3-5",
+          "runs": 2,
+          "winPct": 100,
+          "drawPct": 0,
+          "avgGoalDiff": 4,
+          "avgGoalsFor": 4,
+          "avgGoalsAgainst": 0,
+          "cleanSheetPct": 100
+        },
+        {
+          "planId": "4-3-3_m46_p64_l64",
+          "label": "4-3-3 · M46 P64 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 100,
+          "drawPct": 0,
+          "avgGoalDiff": 3.5,
+          "avgGoalsFor": 4,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "4-3-3_m58_p64_l64",
+          "label": "4-3-3 · M58 P64 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 100,
+          "drawPct": 0,
+          "avgGoalDiff": 3,
+          "avgGoalsFor": 3,
+          "avgGoalsAgainst": 0,
+          "cleanSheetPct": 100
+        }
+      ]
+    },
+    {
+      "matchday": 95,
+      "week": 95,
+      "matchId": "s1_w95_md95_fc-nordstern_world-aa9ea14a-13",
+      "opponentShortName": "ECK",
+      "opponentTeamId": "world-aa9ea14a-13",
+      "strengthBucket": "stronger",
+      "nordsternStarterCa": 84,
+      "opponentStarterCa": 95,
+      "caDelta": 11,
+      "opponentTactics": {
+        "formation": "4-4-2",
+        "mentality": 44,
+        "pressing": 44,
+        "lineHeight": 48
+      },
+      "planCount": 24,
+      "seedRepeats": 2,
+      "totalSims": 48,
+      "elapsedMs": 4265.595000000001,
+      "topPlans": [
+        {
+          "planId": "2-3-5_m58_p64_l64",
+          "label": "2-3-5 · M58 P64 L64",
+          "formation": "2-3-5",
+          "runs": 2,
+          "winPct": 100,
+          "drawPct": 0,
+          "avgGoalDiff": 4.5,
+          "avgGoalsFor": 5,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "2-3-5_m58_p48_l48",
+          "label": "2-3-5 · M58 P48 L48",
+          "formation": "2-3-5",
+          "runs": 2,
+          "winPct": 100,
+          "drawPct": 0,
+          "avgGoalDiff": 3,
+          "avgGoalsFor": 4,
+          "avgGoalsAgainst": 1,
+          "cleanSheetPct": 0
+        },
+        {
+          "planId": "4-3-3_m58_p48_l64",
+          "label": "4-3-3 · M58 P48 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 100,
+          "drawPct": 0,
+          "avgGoalDiff": 2,
+          "avgGoalsFor": 4,
+          "avgGoalsAgainst": 2,
+          "cleanSheetPct": 0
+        }
+      ]
+    },
+    {
+      "matchday": 96,
+      "week": 96,
+      "matchId": "s1_w96_md96_fc-nordstern_world-2736a7c4-17",
+      "opponentShortName": "TÖN",
+      "opponentTeamId": "world-2736a7c4-17",
+      "strengthBucket": "stronger",
+      "nordsternStarterCa": 84,
+      "opponentStarterCa": 96,
+      "caDelta": 12,
+      "opponentTactics": {
+        "formation": "4-3-3",
+        "mentality": 52,
+        "pressing": 64,
+        "lineHeight": 56
+      },
+      "planCount": 24,
+      "seedRepeats": 2,
+      "totalSims": 48,
+      "elapsedMs": 4085.787083000003,
+      "topPlans": [
+        {
+          "planId": "2-3-5_m46_p64_l64",
+          "label": "2-3-5 · M46 P64 L64",
+          "formation": "2-3-5",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 50,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 1,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "4-3-3_m46_p48_l48",
+          "label": "4-3-3 · M46 P48 L48",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 0,
+          "avgGoalDiff": 0,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "4-3-3_m46_p64_l48",
+          "label": "4-3-3 · M46 P64 L48",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 0,
+          "avgGoalDiff": 0,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        }
+      ]
+    },
+    {
+      "matchday": 97,
+      "week": 97,
+      "matchId": "s1_w97_md97_fc-nordstern_world-437bd972-14",
+      "opponentShortName": "LÜB",
+      "opponentTeamId": "world-437bd972-14",
+      "strengthBucket": "stronger",
+      "nordsternStarterCa": 84,
+      "opponentStarterCa": 97,
+      "caDelta": 13,
+      "opponentTactics": {
+        "formation": "4-3-3",
+        "mentality": 52,
+        "pressing": 64,
+        "lineHeight": 56
+      },
+      "planCount": 24,
+      "seedRepeats": 2,
+      "totalSims": 48,
+      "elapsedMs": 4109.166917000002,
+      "topPlans": [
+        {
+          "planId": "2-3-5_m58_p48_l64",
+          "label": "2-3-5 · M58 P48 L64",
+          "formation": "2-3-5",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 50,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 1,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "2-3-5_m58_p64_l64",
+          "label": "2-3-5 · M58 P64 L64",
+          "formation": "2-3-5",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 0,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 1.5,
+          "avgGoalsAgainst": 1,
+          "cleanSheetPct": 0
+        },
+        {
+          "planId": "4-3-3_m46_p64_l64",
+          "label": "4-3-3 · M46 P64 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 0,
+          "drawPct": 100,
+          "avgGoalDiff": 0,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        }
+      ]
+    },
+    {
+      "matchday": 98,
+      "week": 98,
+      "matchId": "s1_w98_md98_fc-nordstern_world-94c4d158-16",
+      "opponentShortName": "ITZ",
+      "opponentTeamId": "world-94c4d158-16",
+      "strengthBucket": "stronger",
+      "nordsternStarterCa": 84,
+      "opponentStarterCa": 98,
+      "caDelta": 14,
+      "opponentTactics": {
+        "formation": "4-3-3",
+        "mentality": 52,
+        "pressing": 64,
+        "lineHeight": 56
+      },
+      "planCount": 24,
+      "seedRepeats": 2,
+      "totalSims": 48,
+      "elapsedMs": 4251.344665999997,
+      "topPlans": [
+        {
+          "planId": "4-3-3_m58_p48_l64",
+          "label": "4-3-3 · M58 P48 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 100,
+          "drawPct": 0,
+          "avgGoalDiff": 2.5,
+          "avgGoalsFor": 3,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "4-3-3_m58_p64_l64",
+          "label": "4-3-3 · M58 P64 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 50,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 1,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "2-3-5_m58_p48_l64",
+          "label": "2-3-5 · M58 P48 L64",
+          "formation": "2-3-5",
+          "runs": 2,
+          "winPct": 50,
+          "drawPct": 50,
+          "avgGoalDiff": 0.5,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 0,
+          "cleanSheetPct": 100
+        }
+      ]
+    },
+    {
+      "matchday": 99,
+      "week": 99,
+      "matchId": "s1_w99_md99_fc-nordstern_world-65542af6-15",
+      "opponentShortName": "PIN",
+      "opponentTeamId": "world-65542af6-15",
+      "strengthBucket": "stronger",
+      "nordsternStarterCa": 84,
+      "opponentStarterCa": 99,
+      "caDelta": 15,
+      "opponentTactics": {
+        "formation": "4-3-3",
+        "mentality": 52,
+        "pressing": 64,
+        "lineHeight": 56
+      },
+      "planCount": 24,
+      "seedRepeats": 2,
+      "totalSims": 48,
+      "elapsedMs": 4110.150416000004,
+      "topPlans": [
+        {
+          "planId": "2-3-5_m58_p48_l64",
+          "label": "2-3-5 · M58 P48 L64",
+          "formation": "2-3-5",
+          "runs": 2,
+          "winPct": 0,
+          "drawPct": 100,
+          "avgGoalDiff": 0,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 0.5,
+          "cleanSheetPct": 50
+        },
+        {
+          "planId": "4-3-3_m46_p64_l64",
+          "label": "4-3-3 · M46 P64 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 0,
+          "drawPct": 50,
+          "avgGoalDiff": -0.5,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 1,
+          "cleanSheetPct": 0
+        },
+        {
+          "planId": "4-3-3_m58_p48_l64",
+          "label": "4-3-3 · M58 P48 L64",
+          "formation": "4-3-3",
+          "runs": 2,
+          "winPct": 0,
+          "drawPct": 0,
+          "avgGoalDiff": -1,
+          "avgGoalsFor": 0.5,
+          "avgGoalsAgainst": 1.5,
+          "cleanSheetPct": 0
+        }
+      ]
+    }
+  ],
+  "totalElapsedMs": 42503.051709
+}

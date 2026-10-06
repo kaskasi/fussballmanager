@@ -4,6 +4,7 @@ import type { ScoutJobCompleteNotice } from "../../scouting/scout-job-postfach.t
 import type { OpponentScoutRiskTag } from "../../scouting/opponent-scout-sims.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
+import { OpponentScoutSummaryGrid } from "./OpponentScoutSummaryGrid.tsx";
 
 function RiskIcon({ risk }: { risk: OpponentScoutRiskTag }) {
   if (risk === "high_line") return <Swords size={14} aria-hidden />;
@@ -44,12 +45,19 @@ export function OpponentScoutInboxCard({
             })}
           </strong>
         </p>
-        {report?.modeScoreline ? (
+        {report?.bundleSummary ? (
+          <>
+            <p className="inbox-scout-job-lead">
+              {t("postfach.opponentScout.simRuns", { count: report.bundleSummary.simCount })}
+              {notice.assignedScoutName
+                ? ` · ${t("postfach.opponentScout.scout", { name: notice.assignedScoutName })}`
+                : null}
+            </p>
+            <OpponentScoutSummaryGrid summary={report.bundleSummary} />
+          </>
+        ) : report?.modeScoreline ? (
           <p className="inbox-scout-job-lead">
             {t("postfach.opponentScout.modeScore", { score: report.modeScoreline })}
-            {notice.assignedScoutName
-              ? ` · ${t("postfach.opponentScout.scout", { name: notice.assignedScoutName })}`
-              : null}
           </p>
         ) : null}
         {rows.length > 0 ? (

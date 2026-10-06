@@ -777,6 +777,16 @@ export default function App() {
     setScreen("hub");
   }, [session]);
 
+  const handleOpenOpponentScoutReport = useCallback(
+    (itemId: string) => {
+      if (careerMatchSetup && careerMatchUiVisible) {
+        setCareerMatchUiVisible(false);
+      }
+      openPostfach(itemId);
+    },
+    [careerMatchSetup, careerMatchUiVisible, openPostfach],
+  );
+
   const handleNext = useCallback(() => {
     if (simulating) return;
 
@@ -2217,8 +2227,7 @@ export default function App() {
           poorForm={matchPoorForm}
           season={season}
           scoutBoard={scoutBoard}
-          scoutNetwork={scoutNetwork}
-          onStartOpponentScout={handleStartOpponentScout}
+          onOpenOpponentScoutReport={handleOpenOpponentScoutReport}
           onLineupPhaseChange={(inLineup) => {
             careerMatchInLineupRef.current = inLineup;
           }}

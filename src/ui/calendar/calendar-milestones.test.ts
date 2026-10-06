@@ -3,6 +3,7 @@ import { assignIndividualProgram } from "../../development/individual-training.t
 import { loadDemoRoster } from "../../ui/demo-roster.ts";
 import {
   collectCalendarMilestones,
+  filterCalendarMilestonesForReveal,
   individualProgramEndWeek,
   milestoneCivilDate,
 } from "./calendar-milestones.ts";
@@ -34,5 +35,34 @@ describe("calendar milestones", () => {
     expect(retrain?.week).toBe(11);
     expect(retrain?.weekday).toBe(7);
     expect(milestoneCivilDate(retrain!).day).toBeGreaterThan(0);
+  });
+
+  it("hides milestones in future Spielwochen until session week catches up", () => {
+    const session = newGameSession();
+    const player = session.players.find((entry) => entry.squad_status === "pro")!;
+    session.individualPrograms = assignIndividualProgram(
+      [],
+      player,
+      "position_retrain",
+      4,
+      session.season,
+      8,
+      "AM",
+    );
+    const collected = collectCalendarMilestones(session);
+    const endWeek = individualProgramEndWeek(session.individualPrograms[0]!);
+    expect(endWeek).toBe(11);
+
+    const early = filterCalendarMilestonesForReveal(collected, session.season, 8);
+    expect(early.some((entry) => entry.kind === "individual_retrain")).toBe(false);
+
+    const atEnd = filterCalendarMilestonesForReveal(collected, session.season, endWeek);
+    expect(atEnd.some((entry) => entry.kind === "individual_retrain")).toBe(true);
+
+    session.week = endWeek + 2;
+    const collectedPast = collectCalendarMilestones(session);
+    const afterEnd = filterCalendarMilestonesForReveal(collectedPast, session.season, session.week);
+    const retrain = afterEnd.find((entry) => entry.kind === "individual_retrain");
+    expect(retrain?.isPast).toBe(true);
   });
 });

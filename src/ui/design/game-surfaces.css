@@ -2749,6 +2749,15 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   opacity: 0.55;
 }
 
+.calendar-milestone-chip.is-current-week {
+  background: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.calendar-cell.has-match .calendar-milestone-list {
+  display: none;
+}
+
 .calendar-milestone-overflow {
   margin: 0;
   font-size: 0.6rem;

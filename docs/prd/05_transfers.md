@@ -173,6 +173,8 @@ Runden-Modell:
 }
 ```
 
+**UI Kauf (Fremdakte / Scouting):** **Kaufen** öffnet immer das Transfer-Verhandlungsmodal; Fenster-, Scout-Genauigkeit- und Budget-Gates sitzen **im Modal** (Checkliste / deaktiviertes Angebot senden), nicht als blockierender Toast davor. Kein separater Blind-Buy-Bestätigungsdialog in v1.
+
 ### 05.4 Vertragsverhandlungen (Spieler und eigener Club)
 
 ```json

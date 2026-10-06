@@ -45,6 +45,18 @@ export interface CalendarMilestoneView {
   shortLabel: string;
   title: string;
   isPast: boolean;
+  /** Spielwoche matches session — used for Monday-week emphasis on chips. */
+  isCurrentWeek?: boolean;
+}
+
+/** Hide milestone chips for Spielwochen after the current session week (Monday reveal). */
+export function filterCalendarMilestonesForReveal(
+  milestones: readonly CalendarMilestone[],
+  season: number,
+  week: number,
+): CalendarMilestone[] {
+  const cutoff = careerWeekIndex(season, week);
+  return milestones.filter((entry) => careerWeekIndex(entry.season, entry.week) <= cutoff);
 }
 
 export function individualProgramEndWeek(program: IndividualProgram): number {
@@ -246,6 +258,7 @@ export function attachMilestonesToGrid(
   monthIndex: number,
   milestones: readonly CalendarMilestone[],
   maxPerCell = 2,
+  sessionWeek?: { season: number; week: number },
 ): Map<string, CalendarMilestoneView[]> {
   const year = seasonCalendarYear(season);
   const bucket = new Map<string, CalendarMilestoneView[]>();
@@ -261,6 +274,10 @@ export function attachMilestonesToGrid(
       shortLabel: milestone.shortLabel,
       title: milestone.label,
       isPast: milestone.isPast,
+      isCurrentWeek:
+        sessionWeek !== undefined &&
+        milestone.season === sessionWeek.season &&
+        milestone.week === sessionWeek.week,
     };
     const list = bucket.get(key) ?? [];
     list.push(view);

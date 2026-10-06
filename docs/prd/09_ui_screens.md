@@ -201,7 +201,7 @@ Header-**NEXT** ist **kalendergebunden**: erst orientieren, dann Zeit/Spiel.
 
 Kalender-UI (`CalendarScreen`): Monatsfokus; **`isToday`** = Zivil-Datum aus `(season, week, weekday)`; Transferfenster nur im Raster (kein Shell-Header-Chrome); kein WeekdayStrip; kein klickbarer Zellsprung in P2.
 
-**Meilenstein-Chips (P2):** `collectCalendarMilestones(session)` liefert ETAs (Individualtraining-Ende, Verletzungsende, Camp-Leiter, Vertrags-Unlock, …). Pro Zelltag max. zwei Chips + Overflow-Zähler; Vergangenheit als `is-past`. Kein Montag-Reveal-Gate in v1 — Chips sind ab Wochenstart sichtbar.
+**Meilenstein-Chips (P2):** `collectCalendarMilestones(session)` liefert ETAs (Individualtraining-Ende, Verletzungsende, Camp-Leiter, Vertrags-Unlock, …). Anzeige über `filterCalendarMilestonesForReveal` — nur Meilensteine in der **aktuellen Spielwoche und früher**; spätere Wochen bleiben leer, bis `session.week` nachrückt (Montag-Reveal implizit beim Wochenwechsel, kein Postfach-Schritt, kein Save-Flag). Pro Zelltag max. zwei Chips + Overflow-Zähler; Vergangenheit als `is-past`. Montag: Kicker „Termine dieser Woche“; Chips der laufenden Woche optional `is-current-week`.
 
 ## References
 

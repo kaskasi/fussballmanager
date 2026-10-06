@@ -180,7 +180,10 @@ import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
 import { NoticeToast, SaveToast } from "./ui/components/SaveToast.tsx";
 import { YouthCampus } from "./ui/screens/YouthCampus";
 import { CalendarScreen } from "./ui/screens/CalendarScreen.tsx";
-import { collectCalendarMilestones } from "./ui/calendar/calendar-milestones.ts";
+import {
+  collectCalendarMilestones,
+  filterCalendarMilestonesForReveal,
+} from "./ui/calendar/calendar-milestones.ts";
 import { canBuyAcademyUpgrade, ACADEMY_FACILITIES } from "./youth/academy.ts";
 import {
   buyYouthCamp,
@@ -432,20 +435,19 @@ export default function App() {
   }, [world.clubs, league.player_club_id, league.club_ids, league.results]);
 
   const scoutCapacity = scoutNetworkCapacity(scoutNetwork);
-  const calendarMilestones = useMemo(
-    () =>
-      collectCalendarMilestones({
-        season,
-        week,
-        weekday,
-        clubId: session.clubId,
-        players,
-        individualPrograms,
-        youthCamps,
-        stadium,
-      }),
-    [season, week, weekday, session.clubId, players, individualPrograms, youthCamps, stadium],
-  );
+  const calendarMilestones = useMemo(() => {
+    const collected = collectCalendarMilestones({
+      season,
+      week,
+      weekday,
+      clubId: session.clubId,
+      players,
+      individualPrograms,
+      youthCamps,
+      stadium,
+    });
+    return filterCalendarMilestonesForReveal(collected, season, week);
+  }, [season, week, weekday, session.clubId, players, individualPrograms, youthCamps, stadium]);
 
   function sessionWithEvent(
     current: ReturnType<typeof sessionFromSave>,

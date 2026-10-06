@@ -9,6 +9,7 @@ import { sessionMonthIndex } from "../../sim/session-civil-date.ts";
 import { buildMonthGrid } from "../calendar/month-grid.ts";
 import type { CalendarMilestone } from "../calendar/calendar-milestones.ts";
 import { formatCalendarWeekDisplay, weekdayShortDisplay } from "../../i18n/calendar-display.ts";
+import { MONDAY } from "../../sim/day-calendar.ts";
 
 const MONTHS = [
   "Januar",
@@ -77,6 +78,9 @@ export function CalendarScreen({
             ▶
           </button>
         </nav>
+        {weekday === MONDAY ? (
+          <p className="calendar-context-kicker">Termine dieser Woche — weitere Wochen folgen mit dem Kalender.</p>
+        ) : null}
         <section className="game-panel calendar-grid-wrap" aria-label="Saisonkalender">
           <div className="calendar-weekdays">
             {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((label) => (
@@ -118,7 +122,7 @@ export function CalendarScreen({
                       {cell.milestones.map((entry) => (
                         <li
                           key={entry.id}
-                          className={`calendar-milestone-chip is-${entry.kind}${entry.isPast ? " is-past" : ""}`}
+                          className={`calendar-milestone-chip is-${entry.kind}${entry.isPast ? " is-past" : ""}${entry.isCurrentWeek ? " is-current-week" : ""}`}
                           title={entry.title}
                         >
                           {entry.shortLabel}

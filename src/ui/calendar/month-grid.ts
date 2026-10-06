@@ -114,7 +114,14 @@ export function buildMonthGrid(
     });
   }
 
-  const milestoneMap = attachMilestonesToGrid(cells, season, monthIndex, milestones);
+  const milestoneMap = attachMilestonesToGrid(
+    cells,
+    season,
+    monthIndex,
+    milestones,
+    2,
+    today ? { season, week: today.week } : undefined,
+  );
   const overflowMap = milestoneOverflowCount(cells, season, monthIndex, milestones);
 
   return cells.map((cell) => {

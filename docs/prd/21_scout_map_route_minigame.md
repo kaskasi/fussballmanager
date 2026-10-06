@@ -9,10 +9,11 @@
 
 ## Route rules (Jan — option D)
 
-- **No hard fail:** Any route is valid; repeating the same road is allowed.
-- **Duplicate edges** → lower `progress_multiplier` on `active_region_scout` (slower weekly job bar).
-- **All edges unique** (≥2 steps) → `no_duplicate_bonus` flag (future: extra directory outcome; M1: faster progress only).
-- **Autopilot** on detail screen; skip does not block NEXT.
+- **Club jobs only:** Minigame starts `active_club_scout` (not region). Region tier = passive button on grid card.
+- **Detail map:** Wikimedia relief clip (`scout-germany-relief.svg`) + **translucent flavor** overlay; club pins on relief coordinates.
+- **Grid card:** Flavor photo on front; click opens detail (“back”). No per-club list buttons on card.
+- **No hard fail:** Duplicate roads allowed → lower `progress_multiplier` on **club** scout job.
+- **Autopilot** on detail screen.
 
 ## Assets
 

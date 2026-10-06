@@ -1,9 +1,14 @@
-/** WIREFRAME: PRD 09 Screen 3a-detail — region map + route (PRD 21) */
-import { useMemo, useState } from "react";
-import { ArrowLeft, Radar } from "lucide-react";
+/** WIREFRAME: PRD 09 Screen 3a-detail — relief map + club route (PRD 21) */
+import { useMemo, useState, type CSSProperties } from "react";
+import { ArrowLeft, MapPin } from "lucide-react";
 import {
+  buildZoneMapNodes,
   edgeBetween,
+  lastScoutableClubOnPath,
   layoutForZone,
+  SCOUT_RELIEF_HEIGHT,
+  SCOUT_RELIEF_MAP_ASSET,
+  SCOUT_RELIEF_WIDTH,
 } from "../../scouting/scout-map-layout.ts";
 import {
   defaultAutopilotRoute,
@@ -11,31 +16,41 @@ import {
   type ScoutRouteScore,
 } from "../../scouting/scout-route-puzzle.ts";
 import type { ScoutDiscoveryZoneModel } from "../../scouting/scout-region-map.ts";
+import { DISCOVERY_COMPLETE } from "../../scouting/scout-discovery.ts";
 import { useT } from "../../i18n/react.ts";
 
 export function ScoutRegionDetailScreen({
   zone,
   zoneLabel,
-  canStartRegionJob,
-  activeRegionScout,
+  activeClubScout,
   onBack,
-  onStartRegionJob,
+  onStartClubScout,
 }: {
   zone: ScoutDiscoveryZoneModel;
   zoneLabel: string;
-  canStartRegionJob: boolean;
-  activeRegionScout?: { zone_id: string; progress: number } | null;
+  activeClubScout?: { club_id: string; progress: number } | null;
   onBack: () => void;
-  onStartRegionJob: (score: ScoutRouteScore, pathEdgeIds: readonly string[]) => void;
+  onStartClubScout: (careerClubId: string, score: ScoutRouteScore) => void;
 }) {
   const t = useT();
   const layout = layoutForZone(zone.id);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [pathEdgeIds, setPathEdgeIds] = useState<string[]>([]);
+  const [pathNodeIds, setPathNodeIds] = useState<string[]>([]);
+
+  const mapNodes = useMemo(
+    () => (layout ? buildZoneMapNodes(layout, zone.clubs, activeClubScout?.club_id) : []),
+    [activeClubScout?.club_id, layout, zone.clubs],
+  );
 
   const score = useMemo(
     () => (layout ? scoreScoutRoute(pathEdgeIds, layout.edges) : null),
     [layout, pathEdgeIds],
+  );
+
+  const targetClubId = useMemo(
+    () => lastScoutableClubOnPath(pathNodeIds, mapNodes),
+    [mapNodes, pathNodeIds],
   );
 
   if (!layout) {
@@ -51,6 +66,7 @@ export function ScoutRegionDetailScreen({
   }
 
   const handleNodeClick = (nodeId: string) => {
+    setPathNodeIds((prev) => [...prev, nodeId]);
     if (!selectedNode) {
       setSelectedNode(nodeId);
       return;
@@ -70,15 +86,21 @@ export function ScoutRegionDetailScreen({
     const path = defaultAutopilotRoute(layout.edges);
     setPathEdgeIds(path);
     const autopilotScore = scoreScoutRoute(path, layout.edges);
-    onStartRegionJob(autopilotScore, path);
+    const clubId =
+      mapNodes.find((node) => node.scoutable)?.careerClubId ?? targetClubId;
+    if (clubId) onStartClubScout(clubId, autopilotScore);
   };
 
   const handleStart = () => {
-    if (!score) return;
-    onStartRegionJob(score, pathEdgeIds);
+    if (!score || !targetClubId) return;
+    onStartClubScout(targetClubId, score);
   };
 
-  const jobActiveHere = activeRegionScout?.zone_id === zone.id;
+  const jobActiveHere =
+    activeClubScout != null &&
+    mapNodes.some((node) => node.careerClubId === activeClubScout.club_id);
+
+  const [vbX, vbY, vbW, vbH] = layout.reliefViewBox.split(/\s+/).map(Number);
 
   return (
     <section className="scout-region-detail" aria-label={zoneLabel}>
@@ -102,22 +124,33 @@ export function ScoutRegionDetailScreen({
         ) : null}
       </header>
       <div className="scout-region-detail-map-wrap">
-        <img
-          className="scout-region-detail-flavor"
-          src={layout.flavorAsset}
-          alt=""
-          decoding="async"
-        />
         <svg
           className="scout-region-detail-graph"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="xMidYMid slice"
+          viewBox={layout.reliefViewBox}
+          preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-label={t("scouting.map.routeGraphAria")}
         >
+          <image
+            href={SCOUT_RELIEF_MAP_ASSET}
+            x={0}
+            y={0}
+            width={SCOUT_RELIEF_WIDTH}
+            height={SCOUT_RELIEF_HEIGHT}
+            preserveAspectRatio="xMidYMid meet"
+          />
+          <image
+            href={layout.flavorAsset}
+            x={vbX}
+            y={vbY}
+            width={vbW}
+            height={vbH}
+            preserveAspectRatio="xMidYMid slice"
+            opacity={0.32}
+          />
           {layout.edges.map((edge) => {
-            const a = layout.nodes.find((n) => n.id === edge.a);
-            const b = layout.nodes.find((n) => n.id === edge.b);
+            const a = layout.anchorNodes.find((n) => n.id === edge.a);
+            const b = layout.anchorNodes.find((n) => n.id === edge.b);
             if (!a || !b) return null;
             const used = pathEdgeIds.filter((id) => id === edge.id).length;
             return (
@@ -137,18 +170,24 @@ export function ScoutRegionDetailScreen({
               />
             );
           })}
-          {layout.nodes.map((node) => (
-            <g key={node.id}>
+          {mapNodes.map((node) => (
+            <g key={node.id} className={node.discovered ? "scout-route-club is-done" : undefined}>
               <circle
                 cx={node.x}
                 cy={node.y}
-                r={4.2}
+                r={node.discovered ? 3.2 : 4.5}
                 className={
-                  selectedNode === node.id ? "scout-route-node is-selected" : "scout-route-node"
+                  selectedNode === node.id
+                    ? "scout-route-node is-selected"
+                    : node.discovered
+                      ? "scout-route-node is-done"
+                      : node.scoutable
+                        ? "scout-route-node"
+                        : "scout-route-node is-muted"
                 }
-                onClick={() => handleNodeClick(node.id)}
+                onClick={() => node.scoutable && handleNodeClick(node.id)}
               />
-              <text x={node.x + 5} y={node.y + 1} className="scout-route-label">
+              <text x={node.x + 6} y={node.y + 2} className="scout-route-label">
                 {node.label}
               </text>
             </g>
@@ -156,24 +195,40 @@ export function ScoutRegionDetailScreen({
         </svg>
       </div>
       <footer className="scout-region-detail-actions">
-        <button type="button" onClick={() => setPathEdgeIds([])}>
+        <button type="button" onClick={() => { setPathEdgeIds([]); setPathNodeIds([]); setSelectedNode(null); }}>
           {t("scouting.map.routeClear")}
         </button>
-        {canStartRegionJob && !jobActiveHere ? (
+        {!jobActiveHere ? (
           <>
-            <button type="button" onClick={handleAutopilot}>
+            <button type="button" onClick={handleAutopilot} disabled={mapNodes.every((n) => !n.scoutable)}>
               {t("scouting.map.routeAutopilot")}
             </button>
-            <button type="button" className="scout-discovery-region-btn" onClick={handleStart}>
-              <Radar size={14} aria-hidden />
-              {t("scouting.map.routeStartJob")}
+            <button
+              type="button"
+              className="scout-discovery-region-btn"
+              onClick={handleStart}
+              disabled={!targetClubId || !score}
+            >
+              <MapPin size={14} aria-hidden />
+              {targetClubId
+                ? t("scouting.map.routeStartClubJob")
+                : t("scouting.map.routePickClub")}
             </button>
           </>
-        ) : jobActiveHere ? (
+        ) : (
           <span>
-            {t("scouting.map.regionProgress", { pct: activeRegionScout?.progress ?? 0 })}
+            {t("scouting.map.clubProgress", { pct: activeClubScout?.progress ?? 0 })}
+            <span
+              className="scout-discovery-ring scout-discovery-ring-inline"
+              style={
+                {
+                  "--scout-progress": `${((activeClubScout?.progress ?? 0) / DISCOVERY_COMPLETE) * 100}%`,
+                } as CSSProperties
+              }
+              aria-hidden
+            />
           </span>
-        ) : null}
+        )}
       </footer>
     </section>
   );

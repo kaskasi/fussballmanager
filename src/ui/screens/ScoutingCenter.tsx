@@ -41,7 +41,6 @@ import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { ScoutRegionMap } from "../components/ScoutRegionMap.tsx";
 import { ScoutRegionDetailScreen } from "../components/ScoutRegionDetailScreen.tsx";
 import { buildScoutDiscoveryMapModel } from "../../scouting/scout-region-map.ts";
-import { canStartRegionScout, normalizeDiscovery } from "../../scouting/scout-discovery.ts";
 import type { ScoutRouteScore } from "../../scouting/scout-route-puzzle.ts";
 import { ScoutNetworkPanel } from "../components/ScoutNetworkPanel.tsx";
 import { ScoutConfidenceIcon } from "../components/ScoutConfidenceIcon.tsx";
@@ -133,8 +132,8 @@ export function ScoutingCenter({
   playerDivisionId: WorldDivisionId;
   activeClubScout?: ActiveClubScout | null;
   activeRegionScout?: ActiveRegionScout | null;
-  onScoutClub: (careerClubId: string) => void;
-  onScoutRegion: (zoneId: string, route?: ScoutRouteScore) => void;
+  onScoutClub: (careerClubId: string, route?: ScoutRouteScore) => void;
+  onScoutRegion: (zoneId: string) => void;
   filters: MarketFilters;
   onFiltersChange: (filters: MarketFilters) => void;
   sort: MarketSort;
@@ -296,15 +295,10 @@ export function ScoutingCenter({
               <ScoutRegionDetailScreen
                 zone={detailZone}
                 zoneLabel={detailZone.label}
-                canStartRegionJob={canStartRegionScout(
-                  detailZone.id,
-                  normalizeDiscovery(discovery),
-                  activeRegionScout,
-                )}
-                activeRegionScout={activeRegionScout}
+                activeClubScout={activeClubScout}
                 onBack={() => setDetailZoneId(null)}
-                onStartRegionJob={(score) => {
-                  onScoutRegion(detailZone.id, score);
+                onStartClubScout={(careerClubId, score) => {
+                  onScoutClub(careerClubId, score);
                   setDetailZoneId(null);
                 }}
               />
@@ -315,10 +309,8 @@ export function ScoutingCenter({
                 rivalPlayers={rivalPlayers}
                 discovery={discovery}
                 playerDivisionId={playerDivisionId}
-                activeClubScout={activeClubScout}
                 activeRegionScout={activeRegionScout}
-                onScoutClub={onScoutClub}
-                onScoutRegion={(zoneId) => onScoutRegion(zoneId)}
+                onScoutRegion={onScoutRegion}
                 onOpenRegionDetail={setDetailZoneId}
               />
             )}

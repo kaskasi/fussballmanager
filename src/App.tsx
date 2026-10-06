@@ -877,7 +877,7 @@ export default function App() {
   );
 
   const handleScoutClub = useCallback(
-    (careerClubId: string) => {
+    (careerClubId: string, route?: import("./scouting/scout-route-puzzle.ts").ScoutRouteScore) => {
       patchSession((current) => {
         const club = current.world.clubs.find(
           (entry) => worldCareerClubId(entry.id) === careerClubId,
@@ -900,7 +900,9 @@ export default function App() {
         }
         return {
           ...current,
-          scoutBoard: startClubScoutJob(current.scoutBoard, careerClubId),
+          scoutBoard: startClubScoutJob(current.scoutBoard, careerClubId, {
+            progress_multiplier: route?.progressMultiplier,
+          }),
         };
       });
     },
@@ -908,7 +910,7 @@ export default function App() {
   );
 
   const handleScoutRegion = useCallback(
-    (zoneId: string, route?: import("./scouting/scout-route-puzzle.ts").ScoutRouteScore) => {
+    (zoneId: string) => {
       patchSession((current) => {
         const discovery = normalizeDiscovery(current.scoutBoard.discovery);
         if (!canStartRegionScout(zoneId, discovery, current.scoutBoard.active_region_scout)) {
@@ -916,10 +918,7 @@ export default function App() {
         }
         return {
           ...current,
-          scoutBoard: startRegionScoutJob(current.scoutBoard, zoneId, {
-            progress_multiplier: route?.progressMultiplier,
-            no_duplicate_bonus: route?.noDuplicateBonus,
-          }),
+          scoutBoard: startRegionScoutJob(current.scoutBoard, zoneId),
         };
       });
     },

@@ -24,6 +24,7 @@ export interface ScoutDiscoveryState {
 export interface ActiveClubScout {
   club_id: string;
   progress: number;
+  progress_multiplier?: number;
 }
 
 export interface ActiveRegionScout {
@@ -262,7 +263,8 @@ export function advanceDiscoveryWeek<T extends DiscoveryBoardSlice>(
   const boost = 1 + Math.min(2, Math.max(0, scoutSlotsActive - 1)) * 0.15;
 
   if (activeClub) {
-    const step = Math.round(CLUB_SCOUT_PROGRESS_PER_WEEK * boost);
+    const routeBoost = activeClub.progress_multiplier ?? 1;
+    const step = Math.round(CLUB_SCOUT_PROGRESS_PER_WEEK * boost * routeBoost);
     const progress = Math.min(DISCOVERY_COMPLETE, activeClub.progress + step);
     if (progress >= DISCOVERY_COMPLETE) {
       discovery = completeClubDiscovery(discovery, activeClub.club_id, rivalPlayers);
@@ -273,8 +275,7 @@ export function advanceDiscoveryWeek<T extends DiscoveryBoardSlice>(
   }
 
   if (activeRegion) {
-    const routeBoost = activeRegion.progress_multiplier ?? 1;
-    const step = Math.round(REGION_SCOUT_PROGRESS_PER_WEEK * boost * routeBoost);
+    const step = Math.round(REGION_SCOUT_PROGRESS_PER_WEEK * boost);
     const progress = Math.min(DISCOVERY_COMPLETE, activeRegion.progress + step);
     if (progress >= DISCOVERY_COMPLETE) {
       discovery = completeRegionDiscovery(discovery, activeRegion.zone_id);
@@ -298,26 +299,25 @@ export function advanceDiscoveryWeek<T extends DiscoveryBoardSlice>(
 export function startClubScoutJob<T extends DiscoveryBoardSlice>(
   board: T,
   careerClubId: string,
+  route?: Pick<ActiveClubScout, "progress_multiplier">,
 ): T {
   return {
     ...board,
-    active_club_scout: { club_id: careerClubId, progress: 0 },
+    active_club_scout: {
+      club_id: careerClubId,
+      progress: 0,
+      progress_multiplier: route?.progress_multiplier ?? 1,
+    },
   };
 }
 
 export function startRegionScoutJob<T extends DiscoveryBoardSlice>(
   board: T,
   zoneId: string,
-  route?: Pick<ActiveRegionScout, "progress_multiplier" | "no_duplicate_bonus">,
 ): T {
   return {
     ...board,
-    active_region_scout: {
-      zone_id: zoneId,
-      progress: 0,
-      progress_multiplier: route?.progress_multiplier ?? 1,
-      no_duplicate_bonus: route?.no_duplicate_bonus ?? false,
-    },
+    active_region_scout: { zone_id: zoneId, progress: 0 },
   };
 }
 

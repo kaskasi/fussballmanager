@@ -1660,6 +1660,54 @@ body {
   min-height: 9rem;
 }
 
+.scout-discovery-zone-card {
+  color: #0f172a;
+}
+
+.scout-discovery-zone-card-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 55%) 0%,
+    rgb(255 255 255 / 78%) 45%,
+    rgb(15 23 42 / 72%) 100%
+  );
+  pointer-events: none;
+}
+
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-head,
+.scout-discovery-zone-card .scout-discovery-zone-card-lead {
+  position: relative;
+  z-index: 1;
+  color: inherit;
+}
+
+.scout-discovery-zone-card-lead {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.scout-route-node.is-done {
+  fill: #94a3b8;
+}
+
+.scout-route-node.is-muted {
+  fill: #e2e8f0;
+  cursor: not-allowed;
+}
+
+.scout-discovery-ring-inline {
+  display: inline-block;
+  width: 2.5rem;
+  height: 0.35rem;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
 .scout-discovery-zone-flavor-hit {
   position: absolute;
   inset: 0;

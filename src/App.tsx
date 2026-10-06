@@ -35,7 +35,11 @@ import {
 } from "./scouting/scout-discovery.ts";
 import { buildZoneMapNodes, layoutForZone } from "./scouting/scout-map-layout.ts";
 import { buildScoutDiscoveryMapModel } from "./scouting/scout-region-map.ts";
-import { canEnqueueScoutTrip, enqueueScoutTrip } from "./scouting/scout-trip-queue.ts";
+import {
+  canEnqueueScoutTrip,
+  dispatchQueuedScoutTrips,
+  enqueueScoutTrip,
+} from "./scouting/scout-trip-queue.ts";
 import type { ScoutRouteScore } from "./scouting/scout-route-puzzle.ts";
 import { worldCareerClubId, type WorldDivisionId } from "./world/world-generator.ts";
 import { ArrowLeft } from "lucide-react";
@@ -367,7 +371,11 @@ export default function App() {
   const [scoutingInitialTab, setScoutingInitialTab] = useState<"network" | "hits" | null>(
     null,
   );
-  const [scoutMapDetailBack, setScoutMapDetailBack] = useState<(() => void) | null>(null);
+  const scoutMapDetailBackRef = useRef<(() => void) | null>(null);
+  const [scoutMapDetailNav, setScoutMapDetailNav] = useState<{
+    onBack: () => void;
+    title: string;
+  } | null>(null);
   const [pendingWatchedMatch, setPendingWatchedMatch] = useState<WatchedPlayerMatch | null>(null);
   const [pendingSpend, setPendingSpend] = useState<{
     title: string;
@@ -414,7 +422,10 @@ export default function App() {
   }, [accessibility]);
 
   useEffect(() => {
-    if (screen !== "scouting") setScoutMapDetailBack(null);
+    if (screen !== "scouting") {
+      scoutMapDetailBackRef.current = null;
+      setScoutMapDetailNav(null);
+    }
   }, [screen]);
 
   const session = sessionFromSave(save);
@@ -964,9 +975,20 @@ export default function App() {
     [patchSession],
   );
 
-  const handleScoutMapDetailChange = useCallback((open: boolean, onBack: () => void) => {
-    setScoutMapDetailBack(open ? onBack : null);
-  }, []);
+  const handleScoutMapDetailChange = useCallback(
+    (open: boolean, onBack: () => void, title?: string) => {
+      scoutMapDetailBackRef.current = open ? onBack : null;
+      setScoutMapDetailNav(
+        open
+          ? {
+              onBack: () => scoutMapDetailBackRef.current?.(),
+              title: title ?? "",
+            }
+          : null,
+      );
+    },
+    [],
+  );
 
   const handleScoutRegion = useCallback(
     (zoneId: string) => {
@@ -994,10 +1016,12 @@ export default function App() {
             t("clubEvent.scoutHireInsufficientCash", { name: scout.name }),
           );
         }
+        const scoutNetwork = hireScout(current.scoutNetwork, scout);
         return sessionWithEvent(
           {
             ...current,
-            scoutNetwork: hireScout(current.scoutNetwork, scout),
+            scoutNetwork,
+            scoutBoard: dispatchQueuedScoutTrips(current.scoutBoard, scoutNetwork),
           },
           "info",
           t("clubEvent.scoutHired", { name: scout.name }),
@@ -1921,8 +1945,8 @@ export default function App() {
     if (foreignProfileTarget) {
       return { title: formatPlayerName(foreignProfileTarget.player), onBack: closeForeignProfile };
     }
-    if (screen === "scouting" && scoutMapDetailBack) {
-      return { title: "", onBack: scoutMapDetailBack, iconOnly: true };
+    if (screen === "scouting" && scoutMapDetailNav) {
+      return { title: scoutMapDetailNav.title, onBack: scoutMapDetailNav.onBack };
     }
     const hubDrilldownTitle: Partial<Record<Screen, string>> = {
       postfach: t("shell.nav.postfach"),
@@ -1940,7 +1964,7 @@ export default function App() {
     closePlayerProfile,
     foreignProfileTarget,
     profilePlayer,
-    scoutMapDetailBack,
+    scoutMapDetailNav,
     screen,
     locale,
   ]);
@@ -2408,7 +2432,7 @@ export default function App() {
           playerDivisionId={playerDivisionId}
           activeClubScout={scoutBoard.active_club_scout}
           activeRegionScout={scoutBoard.active_region_scout}
-          activeScoutTrip={scoutBoard.active_scout_trip}
+          activeScoutTrips={scoutBoard.active_scout_trips ?? []}
           scoutTripQueue={scoutBoard.scout_trip_queue}
           tripQueueLength={scoutBoard.scout_trip_queue?.length ?? 0}
           onEnqueueScoutTrip={handleEnqueueScoutTrip}

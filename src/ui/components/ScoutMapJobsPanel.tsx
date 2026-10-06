@@ -42,19 +42,19 @@ function MapScoutJobItem({ row }: { row: MapScoutJobRow }) {
 
 /** WIREFRAME: PRD 09 — Treffer tab map scout job queue */
 export function ScoutMapJobsPanel({
-  activeTrip,
+  activeTrips,
   tripQueue,
   scoutNetwork,
   worldClubs,
 }: {
-  activeTrip: ActiveScoutTrip | null | undefined;
+  activeTrips: readonly ActiveScoutTrip[];
   tripQueue: readonly ScoutTripPlan[] | undefined;
   scoutNetwork: ScoutNetworkState;
   worldClubs: readonly WorldClub[];
 }) {
   const t = useT();
   const jobs = listMapScoutJobs({
-    activeTrip,
+    activeTrips,
     queue: tripQueue,
     network: scoutNetwork,
     worldClubs,

@@ -17,23 +17,75 @@ import type { Player } from "../types/player.ts";
 import type { ScoutKnowledgeTarget } from "./scout-board.ts";
 import { isClubDirectoryVisible } from "./scout-discovery.ts";
 import type { WorldClub, WorldDivisionId } from "../world/world-generator.ts";
-import { worldCareerClubId } from "../world/world-generator.ts";
 
 export interface ScoutTripBoardSlice {
   discovery?: ScoutDiscoveryState;
   scout_trip_queue?: ScoutTripPlan[];
   active_scout_trip?: ActiveScoutTrip | null;
+  active_scout_trips?: ActiveScoutTrip[];
   targets: Record<string, ScoutKnowledgeTarget>;
+}
+
+export function listActiveScoutTrips(board: ScoutTripBoardSlice): ActiveScoutTrip[] {
+  if (board.active_scout_trips && board.active_scout_trips.length > 0) {
+    return [...board.active_scout_trips];
+  }
+  if (board.active_scout_trip) return [board.active_scout_trip];
+  return [];
 }
 
 export function normalizeScoutTrips(board: ScoutTripBoardSlice): {
   scout_trip_queue: ScoutTripPlan[];
-  active_scout_trip: ActiveScoutTrip | null;
+  active_scout_trips: ActiveScoutTrip[];
 } {
   return {
     scout_trip_queue: [...(board.scout_trip_queue ?? [])],
-    active_scout_trip: board.active_scout_trip ?? null,
+    active_scout_trips: listActiveScoutTrips(board),
   };
+}
+
+function withTripState<T extends ScoutTripBoardSlice>(
+  board: T,
+  scout_trip_queue: ScoutTripPlan[],
+  active_scout_trips: ActiveScoutTrip[],
+): T {
+  return {
+    ...board,
+    scout_trip_queue,
+    active_scout_trips,
+    active_scout_trip: active_scout_trips[0] ?? null,
+  };
+}
+
+/** Assign queued trips to any scout not already on an active map trip. */
+export function dispatchQueuedScoutTrips<T extends ScoutTripBoardSlice>(
+  board: T,
+  network: ScoutNetworkState,
+): T {
+  const { scout_trip_queue } = normalizeScoutTrips(board);
+  let queue = scout_trip_queue;
+  let active = listActiveScoutTrips(board);
+
+  while (queue.length > 0) {
+    const busyIds = active.map((trip) => trip.assigned_scout_id);
+    const scoutId = pickAvailableScoutId(network.scouts, busyIds);
+    if (!scoutId) break;
+
+    const [next, ...rest] = queue;
+    if (!next) break;
+
+    queue = rest;
+    active = [
+      ...active,
+      {
+        ...next,
+        assigned_scout_id: scoutId,
+        working_days_done: 0,
+      },
+    ];
+  }
+
+  return withTripState(board, queue, active);
 }
 
 export function enqueueScoutTrip<T extends ScoutTripBoardSlice>(
@@ -58,35 +110,18 @@ export function enqueueScoutTrip<T extends ScoutTripBoardSlice>(
   });
   if (!plan) return board;
 
-  const { scout_trip_queue, active_scout_trip } = normalizeScoutTrips(board);
+  const { scout_trip_queue, active_scout_trips } = normalizeScoutTrips(board);
   scout_trip_queue.push(plan);
-  const withQueue = { ...board, scout_trip_queue, active_scout_trip };
-  return tryDispatchNextScoutTrip(withQueue, input.scouts);
+  const withQueue = withTripState(board, scout_trip_queue, active_scout_trips);
+  return dispatchQueuedScoutTrips(withQueue, input.scouts);
 }
 
+/** @deprecated Use dispatchQueuedScoutTrips */
 export function tryDispatchNextScoutTrip<T extends ScoutTripBoardSlice>(
   board: T,
   network: ScoutNetworkState,
 ): T {
-  const { scout_trip_queue, active_scout_trip } = normalizeScoutTrips(board);
-  if (active_scout_trip || scout_trip_queue.length === 0) return board;
-
-  const scoutId = pickAvailableScoutId(network.scouts, []);
-  if (!scoutId) return board;
-
-  const [next, ...rest] = scout_trip_queue;
-  if (!next) return board;
-
-  const active: ActiveScoutTrip = {
-    ...next,
-    assigned_scout_id: scoutId,
-    working_days_done: 0,
-  };
-  return {
-    ...board,
-    scout_trip_queue: rest,
-    active_scout_trip: active,
-  };
+  return dispatchQueuedScoutTrips(board, network);
 }
 
 export function canEnqueueScoutTrip(
@@ -99,31 +134,31 @@ export function canEnqueueScoutTrip(
   return true;
 }
 
-/** Mo–Fr calendar tick: +1 working day on active trip, then dispatch queue if free. */
+/** Mo–Fr calendar tick: +1 working day on each active trip, then dispatch queue if scouts free. */
 export function advanceScoutTripsOnWorkingDay<T extends ScoutTripBoardSlice>(
   board: T,
   rivalPlayers: readonly Player[],
   network: ScoutNetworkState,
 ): T {
   let next = board;
-  const { active_scout_trip } = normalizeScoutTrips(board);
-  if (active_scout_trip) {
-    const discovery = normalizeDiscovery(board.discovery);
-    const { trip, discovery: updatedDiscovery, targets: visitedTargets } = advanceActiveScoutTrip(
-      active_scout_trip,
-      discovery,
-      rivalPlayers,
-      board.targets,
-      1,
-    );
-    next = {
-      ...next,
-      discovery: updatedDiscovery,
-      active_scout_trip: trip,
-      targets: ensureTargetsForPool(visitedTargets, updatedDiscovery, rivalPlayers),
-    };
+  let discovery = normalizeDiscovery(board.discovery);
+  let targets = board.targets;
+  const stillActive: ActiveScoutTrip[] = [];
+
+  for (const trip of listActiveScoutTrips(board)) {
+    const advanced = advanceActiveScoutTrip(trip, discovery, rivalPlayers, targets, 1);
+    discovery = advanced.discovery;
+    targets = ensureTargetsForPool(advanced.targets, discovery, rivalPlayers);
+    if (advanced.trip) stillActive.push(advanced.trip);
   }
-  return tryDispatchNextScoutTrip(next, network);
+
+  next = {
+    ...next,
+    discovery,
+    targets,
+  };
+  next = withTripState(next, normalizeScoutTrips(board).scout_trip_queue, stillActive);
+  return dispatchQueuedScoutTrips(next, network);
 }
 
 /** Week sim: dispatch queued trips only (progress is daily via advanceScoutTripsOnWorkingDay). */
@@ -132,5 +167,5 @@ export function advanceScoutTripWeek<T extends ScoutTripBoardSlice>(
   _rivalPlayers: readonly Player[],
   network: ScoutNetworkState,
 ): T {
-  return tryDispatchNextScoutTrip(board, network);
+  return dispatchQueuedScoutTrips(board, network);
 }

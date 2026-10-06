@@ -63,6 +63,8 @@ import { migration063ClubPlaceGeo } from "./migration_063_club_place_geo.ts";
 import { migration064ScoutTrips } from "./migration_064_scout_trips.ts";
 import { migration065MapClubVisits } from "./migration_065_map_club_visits.ts";
 import { migration066HomeZoneScout } from "./migration_066_home_zone_scout.ts";
+import { migration067ScoutTripClubDays } from "./migration_067_scout_trip_club_days.ts";
+import { migration068ActiveScoutTrips } from "./migration_068_active_scout_trips.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -135,6 +137,8 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration064ScoutTrips,
   migration065MapClubVisits,
   migration066HomeZoneScout,
+  migration067ScoutTripClubDays,
+  migration068ActiveScoutTrips,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

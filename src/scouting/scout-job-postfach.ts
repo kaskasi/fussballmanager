@@ -3,6 +3,8 @@ import { formatPlayerName } from "../types/player-display.ts";
 import type { WorldClub } from "../world/world-generator.ts";
 import { worldCareerClubId } from "../world/world-generator.ts";
 import type { ScoutBoard, ScoutKnowledgeTarget } from "./scout-board.ts";
+import { listActiveScoutTrips } from "./scout-trip-queue.ts";
+import type { ActiveScoutTrip } from "./scout-trip.ts";
 import {
   clubsInZone,
   isClubDirectoryVisible,
@@ -100,6 +102,44 @@ function buildHighlights(
   return ranked;
 }
 
+function pushTripCompleteNotices(
+  trip: ActiveScoutTrip,
+  input: {
+    rivalPlayers: readonly Player[];
+    worldClubs: readonly WorldClub[];
+    season: number;
+    week: number;
+    after: Pick<ScoutBoard, "targets">;
+  },
+  beforeDiscovery: ScoutDiscoveryState,
+  afterDiscovery: ScoutDiscoveryState,
+  notices: ScoutJobCompleteNotice[],
+): void {
+  const clubIds =
+    trip.career_club_ids_on_path.length > 0
+      ? trip.career_club_ids_on_path
+      : [trip.target_club_id];
+  for (const careerClubId of clubIds) {
+    if (beforeDiscovery.discovered_club_ids.includes(careerClubId)) continue;
+    if (!afterDiscovery.discovered_club_ids.includes(careerClubId)) continue;
+    const newIds = poolDelta(beforeDiscovery, afterDiscovery).filter((playerId) => {
+      const player = input.rivalPlayers.find((entry) => entry.id === playerId);
+      return player?.club_id === careerClubId;
+    });
+    notices.push({
+      id: scoutJobClubPostfachItemId(careerClubId, input.season, input.week),
+      kind: "club_complete",
+      season: input.season,
+      week: input.week,
+      consumed: false,
+      careerClubId,
+      clubName: clubDisplayName(careerClubId, input.worldClubs),
+      playersAdded: newIds.length,
+      highlights: buildHighlights(newIds, input.rivalPlayers, input.after.targets),
+    });
+  }
+}
+
 /** Detect jobs that finished during advanceDiscoveryWeek and build Postfach notices. */
 export function noticesFromDiscoveryJobAdvance(input: {
   before: Pick<
@@ -160,31 +200,10 @@ export function noticesFromDiscoveryJobAdvance(input: {
     });
   }
 
-  if (input.before.active_scout_trip && !input.after.active_scout_trip) {
-    const trip = input.before.active_scout_trip;
-    const clubIds =
-      trip.career_club_ids_on_path.length > 0
-        ? trip.career_club_ids_on_path
-        : [trip.target_club_id];
-    for (const careerClubId of clubIds) {
-      if (beforeDiscovery.discovered_club_ids.includes(careerClubId)) continue;
-      if (!afterDiscovery.discovered_club_ids.includes(careerClubId)) continue;
-      const newIds = poolDelta(beforeDiscovery, afterDiscovery).filter((playerId) => {
-        const player = input.rivalPlayers.find((entry) => entry.id === playerId);
-        return player?.club_id === careerClubId;
-      });
-      notices.push({
-        id: scoutJobClubPostfachItemId(careerClubId, input.season, input.week),
-        kind: "club_complete",
-        season: input.season,
-        week: input.week,
-        consumed: false,
-        careerClubId,
-        clubName: clubDisplayName(careerClubId, input.worldClubs),
-        playersAdded: newIds.length,
-        highlights: buildHighlights(newIds, input.rivalPlayers, input.after.targets),
-      });
-    }
+  const afterTripIds = new Set(listActiveScoutTrips(input.after).map((trip) => trip.id));
+  const completedTrips = listActiveScoutTrips(input.before).filter((trip) => !afterTripIds.has(trip.id));
+  for (const trip of completedTrips) {
+    pushTripCompleteNotices(trip, input, beforeDiscovery, afterDiscovery, notices);
   }
 
   return notices;

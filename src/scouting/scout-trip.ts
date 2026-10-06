@@ -7,7 +7,10 @@ import {
 import { applyMapClubVisitToBoardTargetsForClubs } from "./scout-map-visit.ts";
 import type { ScoutKnowledgeTarget } from "./scout-board.ts";
 import { careerClubsOnPath, type ScoutMapNode } from "./scout-map-layout.ts";
-import { scoutTripDuration, type ScoutTripDurationBreakdown } from "./scout-trip-duration.ts";
+import {
+  scoutTripDurationFromClubStops,
+  type ScoutTripDurationBreakdown,
+} from "./scout-trip-duration.ts";
 import type { ScoutRouteScore } from "./scout-route-puzzle.ts";
 
 export interface ScoutTripPlan {
@@ -33,6 +36,13 @@ function tripId(zoneId: string, week: number): string {
   return `trip_${zoneId}_w${week}_${tripCounter}`;
 }
 
+export function clubStopsForTrip(
+  trip: Pick<ScoutTripPlan, "career_club_ids_on_path" | "target_club_id">,
+): string[] {
+  if (trip.career_club_ids_on_path.length > 0) return [...trip.career_club_ids_on_path];
+  return trip.target_club_id ? [trip.target_club_id] : [];
+}
+
 export function buildScoutTripPlan(input: {
   zoneId: string;
   pathNodeIds: readonly string[];
@@ -42,9 +52,10 @@ export function buildScoutTripPlan(input: {
   week: number;
 }): ScoutTripPlan | null {
   if (input.pathNodeIds.length === 0 || !input.targetClubId) return null;
-  const duration = scoutTripDuration(input.zoneId, input.pathNodeIds.length);
-  if (duration.totalWorkingDays <= 0) return null;
   const career_club_ids_on_path = careerClubsOnPath(input.pathNodeIds, input.mapNodes);
+  const clubCount = Math.max(1, career_club_ids_on_path.length);
+  const duration = scoutTripDurationFromClubStops(clubCount, input.zoneId);
+  if (duration.totalWorkingDays <= 0) return null;
   return {
     id: tripId(input.zoneId, input.week),
     zone_id: input.zoneId,
@@ -63,7 +74,7 @@ export function pickAvailableScoutId(
 ): string | null {
   const busy = new Set(activeTripScoutIds);
   const free = scouts.find((scout) => !busy.has(scout.id));
-  return free?.id ?? scouts[0]?.id ?? null;
+  return free?.id ?? null;
 }
 
 export function advanceActiveScoutTrip(
@@ -77,34 +88,43 @@ export function advanceActiveScoutTrip(
   discovery: ScoutDiscoveryState;
   targets: Record<string, ScoutKnowledgeTarget>;
 } {
-  const working_days_done = trip.working_days_done + Math.max(0, deltaWorkingDays);
-  if (working_days_done < trip.duration.totalWorkingDays) {
-    return {
-      trip: { ...trip, working_days_done },
-      discovery,
-      targets,
-    };
+  const clubs = clubStopsForTrip(trip);
+  const total = trip.duration.totalWorkingDays;
+  if (total <= 0 || clubs.length === 0) {
+    return { trip: null, discovery, targets };
   }
 
   let nextDiscovery = discovery;
-  const careerIds =
-    trip.career_club_ids_on_path.length > 0
-      ? trip.career_club_ids_on_path
-      : [trip.target_club_id];
-  for (const careerClubId of careerIds) {
+  let nextTargets = targets;
+  const delta = Math.max(0, deltaWorkingDays);
+  const startDay = trip.working_days_done;
+  const endDay = Math.min(total, startDay + delta);
+
+  for (let day = startDay; day < endDay; day += 1) {
+    const careerClubId = clubs[day];
+    if (!careerClubId) continue;
     nextDiscovery = recordMapClubVisit(nextDiscovery, careerClubId, rivalPlayers);
+    nextTargets = ensureTargetsForPool(nextTargets, nextDiscovery, rivalPlayers);
+    nextTargets = applyMapClubVisitToBoardTargetsForClubs(
+      nextTargets,
+      [careerClubId],
+      rivalPlayers,
+    );
   }
-  const pooledTargets = ensureTargetsForPool(targets, nextDiscovery, rivalPlayers);
-  const nextTargets = applyMapClubVisitToBoardTargetsForClubs(
-    pooledTargets,
-    careerIds,
-    rivalPlayers,
-  );
-  return { trip: null, discovery: nextDiscovery, targets: nextTargets };
+
+  if (endDay >= total) {
+    return { trip: null, discovery: nextDiscovery, targets: nextTargets };
+  }
+
+  return {
+    trip: { ...trip, working_days_done: endDay },
+    discovery: nextDiscovery,
+    targets: nextTargets,
+  };
 }
 
 export function formatTripDurationDe(duration: ScoutTripDurationBreakdown): string {
   if (duration.totalWorkingDays <= 0) return "";
-  const speed = Math.round(duration.speedPct * 100);
-  return `${duration.totalWorkingDays} Arbeitstage (Mo–Fr, ${speed}% Tempo) · ${duration.setupWorkingDays} Vorbereitung · ${duration.scoutingWorkingDays} unterwegs · ${duration.teardownWorkingDays} Abschluss`;
+  const clubs = duration.clubStops || duration.cityStops;
+  return `${duration.totalWorkingDays} Arbeitstage (1 Tag pro Verein, ${clubs} Stopps)`;
 }

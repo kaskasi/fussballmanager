@@ -37,7 +37,11 @@ import {
   type ScoutJobCompleteNotice,
 } from "./scout-job-postfach.ts";
 import { isScoutWorkingWeekday } from "./scout-trip-duration.ts";
-import { advanceScoutTripWeek, advanceScoutTripsOnWorkingDay } from "./scout-trip-queue.ts";
+import {
+  advanceScoutTripWeek,
+  advanceScoutTripsOnWorkingDay,
+  listActiveScoutTrips,
+} from "./scout-trip-queue.ts";
 import type { ActiveScoutTrip, ScoutTripPlan } from "./scout-trip.ts";
 import {
   applyObservationWithAccuracy,
@@ -78,6 +82,7 @@ export interface ScoutBoard {
   active_region_scout?: ActiveRegionScout | null;
   scout_trip_queue?: ScoutTripPlan[];
   active_scout_trip?: ActiveScoutTrip | null;
+  active_scout_trips?: ActiveScoutTrip[];
   discovery_postfach_queue?: ScoutJobCompleteNotice[];
 }
 
@@ -101,7 +106,8 @@ export function normalizeScoutBoard(board: ScoutBoard): ScoutBoard {
     active_club_scout: board.active_club_scout ?? null,
     active_region_scout: board.active_region_scout ?? null,
     scout_trip_queue: board.scout_trip_queue ?? [],
-    active_scout_trip: board.active_scout_trip ?? null,
+    active_scout_trips: listActiveScoutTrips(board),
+    active_scout_trip: listActiveScoutTrips(board)[0] ?? null,
     discovery_postfach_queue: board.discovery_postfach_queue ?? [],
   };
 }
@@ -119,6 +125,7 @@ export function createScoutBoard(
     active_club_scout: null,
     active_region_scout: null,
     scout_trip_queue: [],
+    active_scout_trips: [],
     active_scout_trip: null,
     discovery_postfach_queue: [],
   };

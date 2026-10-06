@@ -13,6 +13,7 @@ import { defaultScoutNetwork } from "./scout-network.ts";
 import { advanceActiveScoutTrip } from "./scout-trip.ts";
 import { emptyDiscovery } from "./scout-discovery.ts";
 import type { ActiveScoutTrip } from "./scout-trip.ts";
+import { scoutTripDurationFromClubStops } from "./scout-trip-duration.ts";
 
 describe("scout working-day calendar", () => {
   it("completes region job after one Mo–Fr tick", () => {
@@ -34,16 +35,11 @@ describe("scout working-day calendar", () => {
     const trip: ActiveScoutTrip = {
       id: "t1",
       zone_id: "sh",
-      path_node_ids: ["a", "b"],
-      career_club_ids_on_path: [],
-      target_club_id: "cl_x",
+      path_node_ids: ["cl_a", "cl_b", "cl_c"],
+      career_club_ids_on_path: ["cl_a", "cl_b", "cl_c"],
+      target_club_id: "cl_c",
       progress_multiplier: 1,
-      duration: {
-        setupWorkingDays: 1,
-        scoutingWorkingDays: 1,
-        teardownWorkingDays: 1,
-        totalWorkingDays: 3,
-      },
+      duration: scoutTripDurationFromClubStops(3),
       queued_at_week: 1,
       assigned_scout_id: "scout_1",
       working_days_done: 0,
@@ -64,15 +60,10 @@ describe("scout working-day calendar", () => {
       id: "t2",
       zone_id: "sh",
       path_node_ids: ["a"],
-      career_club_ids_on_path: [],
+      career_club_ids_on_path: ["cl_x"],
       target_club_id: "cl_x",
       progress_multiplier: 1,
-      duration: {
-        setupWorkingDays: 1,
-        scoutingWorkingDays: 0,
-        teardownWorkingDays: 0,
-        totalWorkingDays: 1,
-      },
+      duration: scoutTripDurationFromClubStops(1),
       queued_at_week: 1,
       assigned_scout_id: "scout_1",
       working_days_done: 0,

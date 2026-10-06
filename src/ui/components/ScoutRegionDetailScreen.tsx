@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { MapPin, Route } from "lucide-react";
 import {
   buildZoneMapNodes,
+  clubsOnPath,
   lastScoutableClubOnPath,
   layoutForZone,
   SCOUT_RELIEF_HEIGHT,
@@ -22,9 +23,10 @@ import {
   scoreScoutRouteFromPath,
   type ScoutRouteScore,
 } from "../../scouting/scout-route-puzzle.ts";
-import { scoutTripDuration } from "../../scouting/scout-trip-duration.ts";
-import { formatTripDurationDe } from "../../scouting/scout-trip.ts";
-import type { ActiveScoutTrip } from "../../scouting/scout-trip.ts";
+import { scoutTripDurationFromClubStops } from "../../scouting/scout-trip-duration.ts";
+import type { ActiveScoutTrip, ScoutTripPlan } from "../../scouting/scout-trip.ts";
+import { tripsForZone } from "../../scouting/scout-trip-map-viz.ts";
+import { ScoutTripMapOverlay } from "./ScoutTripMapOverlay.tsx";
 import type { ScoutDiscoveryZoneModel } from "../../scouting/scout-region-map.ts";
 import { useT } from "../../i18n/react.ts";
 import { clubLogoUrlForId } from "../assets/club-logo.ts";
@@ -39,14 +41,16 @@ function stopNumberOnPath(pathNodeIds: readonly string[], nodeId: string): numbe
 export function ScoutRegionDetailScreen({
   zone,
   zoneLabel,
-  activeScoutTrip,
+  activeScoutTrips,
+  scoutTripQueue,
   tripQueueLength,
   worldClubs,
   onEnqueueTrip,
 }: {
   zone: ScoutDiscoveryZoneModel;
   zoneLabel: string;
-  activeScoutTrip?: ActiveScoutTrip | null;
+  activeScoutTrips?: readonly ActiveScoutTrip[];
+  scoutTripQueue?: readonly ScoutTripPlan[];
   tripQueueLength?: number;
   worldClubs: readonly WorldClub[];
   onEnqueueTrip: (input: {
@@ -60,7 +64,12 @@ export function ScoutRegionDetailScreen({
   const [routeMode, setRouteMode] = useState(false);
   const [pathNodeIds, setPathNodeIds] = useState<string[]>([]);
 
-  const tripActiveHere = activeScoutTrip?.zone_id === zone.id;
+  const zoneActiveTrips = useMemo(
+    () => (activeScoutTrips ?? []).filter((trip) => trip.zone_id === zone.id),
+    [activeScoutTrips, zone.id],
+  );
+  const tripActiveHere = zoneActiveTrips.length > 0;
+  const primaryActiveTrip = zoneActiveTrips[0];
 
   const mapViewBox = useMemo(() => {
     if (!layout) return "0 0 100 100";
@@ -81,11 +90,11 @@ export function ScoutRegionDetailScreen({
         ? buildZoneMapNodes(
             layout,
             zone.clubs,
-            tripActiveHere ? activeScoutTrip?.target_club_id : null,
+            tripActiveHere ? primaryActiveTrip?.target_club_id : null,
             mapViewBox,
           )
         : [],
-    [activeScoutTrip?.target_club_id, layout, mapViewBox, tripActiveHere, zone.clubs],
+    [layout, mapViewBox, primaryActiveTrip?.target_club_id, tripActiveHere, zone.clubs],
   );
 
   const pathEdgeIds = useMemo(() => pathEdgeIdsFromNodePath(pathNodeIds), [pathNodeIds]);
@@ -105,10 +114,15 @@ export function ScoutRegionDetailScreen({
     [mapNodes, pathNodeIds],
   );
 
-  const tripDuration = useMemo(
-    () => scoutTripDuration(zone.id, pathNodeIds.length),
-    [pathNodeIds.length, zone.id],
+  const tripLayers = useMemo(
+    () => tripsForZone(zone.id, activeScoutTrips ?? [], scoutTripQueue),
+    [activeScoutTrips, scoutTripQueue, zone.id],
   );
+
+  const tripDuration = useMemo(() => {
+    const clubCount = Math.max(1, clubsOnPath(pathNodeIds, mapNodes).length);
+    return scoutTripDurationFromClubStops(clubCount, zone.id);
+  }, [mapNodes, pathNodeIds, zone.id]);
 
   if (!layout) {
     return (
@@ -151,17 +165,21 @@ export function ScoutRegionDetailScreen({
   const isCityMap = layout.mapMode === "city";
 
   const durationLabel =
-    pathNodeIds.length > 0 ? formatTripDurationDe(tripDuration) : null;
+    pathNodeIds.length > 0
+      ? t("scouting.map.tripDuration", {
+          days: tripDuration.totalWorkingDays,
+          stops: tripDuration.clubStops ?? Math.max(1, clubsOnPath(pathNodeIds, mapNodes).length),
+        })
+      : null;
 
   return (
     <section className="scout-region-detail" aria-label={zoneLabel}>
       <header className="scout-region-detail-head">
-        <h2>{zoneLabel}</h2>
-        {tripActiveHere && activeScoutTrip ? (
+        {tripActiveHere && primaryActiveTrip ? (
           <p className="scout-region-detail-speed">
             {t("scouting.map.tripInProgress", {
-              done: activeScoutTrip.working_days_done,
-              total: activeScoutTrip.duration.totalWorkingDays,
+              done: primaryActiveTrip.working_days_done,
+              total: primaryActiveTrip.duration.totalWorkingDays,
             })}
           </p>
         ) : routeMode ? (
@@ -212,6 +230,7 @@ export function ScoutRegionDetailScreen({
               preserveAspectRatio="xMidYMid meet"
             />
           )}
+          <ScoutTripMapOverlay layers={tripLayers} mapNodes={mapNodes} variant="detail" />
           {pathNodeIds.length > 1
             ? routeSegments.map((edge, index) => {
                 const a = mapNodes.find((node) => node.id === edge.a);
@@ -220,7 +239,7 @@ export function ScoutRegionDetailScreen({
                 const used = pathEdgeIds.filter((id) => id === edge.id).length;
                 return (
                   <line
-                    key={`${edge.a}-${edge.b}-${index}`}
+                    key={`draft-${edge.a}-${edge.b}-${index}`}
                     x1={a.x}
                     y1={a.y}
                     x2={b.x}

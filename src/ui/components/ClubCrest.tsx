@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 /**
  * WIREFRAME: docs/prd/design.md §5 — parametric crest + optional baked logo
  */
@@ -14,7 +16,9 @@ export function ClubCrest({
   size?: number;
   alt?: string;
 }) {
-  if (logoSrc) {
+  const [logoFailed, setLogoFailed] = useState(false);
+
+  if (logoSrc && !logoFailed) {
     return (
       <img
         className="club-crest club-crest-img"
@@ -24,6 +28,7 @@ export function ClubCrest({
         alt={alt ?? initials}
         loading="lazy"
         decoding="async"
+        onError={() => setLogoFailed(true)}
       />
     );
   }

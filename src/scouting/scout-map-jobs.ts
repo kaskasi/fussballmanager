@@ -60,23 +60,23 @@ function planToRow(
   };
 }
 
-/** Treffer tab: active map trip + queued scout jobs (internal job queue). */
+/** Treffer tab: active map trips + queued scout jobs (internal job queue). */
 export function listMapScoutJobs(input: {
-  activeTrip: ActiveScoutTrip | null | undefined;
+  activeTrips: readonly ActiveScoutTrip[];
   queue: readonly ScoutTripPlan[] | undefined;
   network: ScoutNetworkState;
   worldClubs: readonly WorldClub[];
 }): MapScoutJobRow[] {
   const rows: MapScoutJobRow[] = [];
-  if (input.activeTrip) {
+  for (const activeTrip of input.activeTrips) {
     rows.push(
       planToRow(
-        input.activeTrip,
+        activeTrip,
         "active",
         input.network,
         input.worldClubs,
-        input.activeTrip.working_days_done,
-        input.activeTrip.assigned_scout_id,
+        activeTrip.working_days_done,
+        activeTrip.assigned_scout_id,
       ),
     );
   }

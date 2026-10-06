@@ -23,7 +23,8 @@
 ## Sim
 
 - `startRegionScoutJob(board, zoneId)` → `working_days_left` (default 1); tier +1 when job completes on a **Mo–Fr NEXT** tick (`advanceScoutWorkingDay`).
-- **Scout trips:** duration in working days; +1 per Mo–Fr NEXT while trip active; week sim dispatches queue only (no +5 lump).
+- **Scout trips:** `totalWorkingDays = club stops on path` (one working day per club visited). Each Mo–Fr NEXT while active: advance progress, `recordMapClubVisit` for that day’s club, then complete when done. Queue dispatches to any scout not already on a map trip (including right after hiring).
+- **Map viz:** Detail relief SVG only — active route (solid) + queued routes (dashed, distinct colors) and scout marker on the active path. Grid flavor cards stay photo-only; optional text status when a trip is active/queued in that zone.
 - Club route jobs: `startClubScoutJob` + weekly progress in `advanceDiscoveryWeek` (unchanged v1).
 
 ## Future

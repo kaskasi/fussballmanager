@@ -16,7 +16,7 @@ describe("listMapScoutJobs", () => {
       queued_at_week: 3,
     };
     const rows = listMapScoutJobs({
-      activeTrip: { ...plan, assigned_scout_id: "scout_1", working_days_done: 1 },
+      activeTrips: [{ ...plan, assigned_scout_id: "scout_1", working_days_done: 1 }],
       queue: [
         {
           ...plan,

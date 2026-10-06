@@ -5,6 +5,7 @@ import type { BoardTarget } from "../../scouting/scout-board.ts";
 import type { ActiveRegionScout, ScoutDiscoveryState } from "../../scouting/scout-discovery.ts";
 import { layoutForZone } from "../../scouting/scout-map-layout.ts";
 import { buildScoutDiscoveryMapModel } from "../../scouting/scout-region-map.ts";
+import type { ActiveScoutTrip, ScoutTripPlan } from "../../scouting/scout-trip.ts";
 import { clubLogoUrlForId } from "../assets/club-logo.ts";
 import { ClubCrest } from "./ClubCrest.tsx";
 import type { Player } from "../../types/player.ts";
@@ -19,6 +20,8 @@ export function ScoutRegionMap({
   playerDivisionId,
   playerClub,
   activeRegionScout,
+  activeScoutTrips,
+  scoutTripQueue,
   onScoutRegion,
   onOpenRegionDetail,
 }: {
@@ -30,6 +33,8 @@ export function ScoutRegionMap({
   playerClub?: WorldClub | null;
   activeClubScout?: { club_id: string; progress: number } | null;
   activeRegionScout?: ActiveRegionScout | null;
+  activeScoutTrips?: readonly ActiveScoutTrip[];
+  scoutTripQueue?: readonly ScoutTripPlan[];
   onScoutRegion: (zoneId: string) => void;
   onOpenRegionDetail?: (zoneId: string) => void;
 }) {
@@ -69,6 +74,11 @@ export function ScoutRegionMap({
           const workingDaysLeft = regionJobActive
             ? (activeRegionScout?.working_days_left ?? zone.regionWorkingDaysLeft)
             : null;
+          const zoneActiveTrip = (activeScoutTrips ?? []).find((trip) => trip.zone_id === zone.id);
+          const tripActiveHere = zoneActiveTrip != null;
+          const tripQueuedHere =
+            !tripActiveHere &&
+            (scoutTripQueue?.some((plan) => plan.zone_id === zone.id) ?? false);
 
           return (
             <article
@@ -132,6 +142,19 @@ export function ScoutRegionMap({
                       })}
                     </span>
                   ) : null}
+                  {unlocked && tripActiveHere && zoneActiveTrip ? (
+                    <span className="scout-discovery-zone-meta scout-discovery-zone-trip-status">
+                      {t("scouting.map.tripInProgress", {
+                        done: zoneActiveTrip.working_days_done,
+                        total: zoneActiveTrip.duration.totalWorkingDays,
+                      })}
+                    </span>
+                  ) : null}
+                  {unlocked && tripQueuedHere ? (
+                    <span className="scout-discovery-zone-meta scout-discovery-zone-trip-status">
+                      {t("scouting.map.tripQueuedOnCard")}
+                    </span>
+                  ) : null}
                 </header>
 
                 {!unlocked ? (
@@ -141,7 +164,7 @@ export function ScoutRegionMap({
                   </div>
                 ) : null}
 
-                {unlocked && discoveredClubs.length > 0 ? (
+                {unlocked && !flavor && discoveredClubs.length > 0 ? (
                   <ul
                     className="scout-discovery-zone-crests"
                     aria-label={t("scouting.map.discoveredClubsAria")}

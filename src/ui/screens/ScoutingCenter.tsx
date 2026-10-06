@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Player, PositionPrimary } from "../../types/player.ts";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
 import type {
@@ -102,7 +102,7 @@ export function ScoutingCenter({
   playerDivisionId,
   activeClubScout,
   activeRegionScout,
-  activeScoutTrip,
+  activeScoutTrips,
   scoutTripQueue,
   tripQueueLength,
   onEnqueueScoutTrip,
@@ -139,7 +139,7 @@ export function ScoutingCenter({
   playerDivisionId: WorldDivisionId;
   activeClubScout?: ActiveClubScout | null;
   activeRegionScout?: ActiveRegionScout | null;
-  activeScoutTrip?: import("../../scouting/scout-trip.ts").ActiveScoutTrip | null;
+  activeScoutTrips?: readonly import("../../scouting/scout-trip.ts").ActiveScoutTrip[];
   scoutTripQueue?: readonly import("../../scouting/scout-trip.ts").ScoutTripPlan[];
   tripQueueLength?: number;
   onEnqueueScoutTrip: (
@@ -169,8 +169,8 @@ export function ScoutingCenter({
   onToggleShortlist: (playerId: string) => void;
   initialTab?: ScoutingInitialTab | null;
   onInitialTabApplied?: () => void;
-  /** When region detail map is open, shell header shows back (replaces crest). */
-  onScoutMapDetailChange?: (open: boolean, onBack: () => void) => void;
+  /** When region detail map is open, shell header shows back + zone title (replaces crest). */
+  onScoutMapDetailChange?: (open: boolean, onBack: () => void, title?: string) => void;
 }) {
   const t = useT();
   const [tab, setTab] = useState<ScoutingTab>("hits");
@@ -178,32 +178,9 @@ export function ScoutingCenter({
 
   const notifyScoutMapDetailRef = useRef(onScoutMapDetailChange);
   notifyScoutMapDetailRef.current = onScoutMapDetailChange;
-  const detailOpenedAtRef = useRef(0);
 
-  useEffect(() => {
-    const notify = notifyScoutMapDetailRef.current;
-    if (!notify) return;
-    if (detailZoneId == null) {
-      notify(false, () => {});
-      return undefined;
-    }
-    detailOpenedAtRef.current = Date.now();
-    const closeDetail = () => {
-      if (Date.now() - detailOpenedAtRef.current < 200) return;
-      setDetailZoneId(null);
-    };
-    let cancelled = false;
-    const frame = requestAnimationFrame(() => {
-      if (!cancelled) notify(true, closeDetail);
-    });
-    return () => {
-      cancelled = true;
-      cancelAnimationFrame(frame);
-    };
-  }, [detailZoneId]);
-
-  useEffect(() => {
-    return () => notifyScoutMapDetailRef.current?.(false, () => {});
+  const closeRegionDetail = useCallback(() => {
+    setDetailZoneId(null);
   }, []);
 
   const mapModel = useMemo(
@@ -232,6 +209,25 @@ export function ScoutingCenter({
   const detailZone = detailZoneId
     ? mapModel.zones.find((zone) => zone.id === detailZoneId)
     : undefined;
+
+  const detailZoneLabel = detailZone?.label;
+
+  useEffect(() => {
+    const notify = notifyScoutMapDetailRef.current;
+    if (!notify) return;
+    if (detailZoneId == null || detailZoneLabel == null) {
+      notify(false, () => {});
+      return undefined;
+    }
+    notify(true, closeRegionDetail, detailZoneLabel);
+    return () => {
+      notify(false, () => {});
+    };
+  }, [closeRegionDetail, detailZoneId, detailZoneLabel]);
+
+  useEffect(() => {
+    if (detailZoneId != null && !detailZone) setDetailZoneId(null);
+  }, [detailZoneId, detailZone]);
 
   useEffect(() => {
     if (initialTab) {
@@ -299,6 +295,8 @@ export function ScoutingCenter({
     onSortChange({ key, direction: key === "name" || key === "position" ? "asc" : "desc" });
   };
 
+  const inRegionDetail = tab === "network" && detailZone != null;
+
   const scoutingTabs: { id: ScoutingTab; labelKey: string; suffix?: string }[] = [
     { id: "network", labelKey: "scouting.tab.network" },
     { id: "hits", labelKey: "scouting.tab.hits" },
@@ -310,48 +308,56 @@ export function ScoutingCenter({
   ];
 
   return (
-    <main className="scouting club-shell-card-body">
-      <div className="fm-tab-bar" role="tablist" aria-label={t("scouting.tabs.aria")}>
-        {scoutingTabs.map(({ id, labelKey, suffix }) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            className={tab === id ? "fm-tab is-active" : "fm-tab"}
-            onClick={() => setTab(id)}
-          >
-            {t(labelKey)}
-            {suffix ?? ""}
-          </button>
-        ))}
-      </div>
+    <main
+      className={
+        inRegionDetail
+          ? "scouting club-shell-card-body scouting-region-detail-screen"
+          : "scouting club-shell-card-body"
+      }
+    >
+      {inRegionDetail ? null : (
+        <div className="fm-tab-bar" role="tablist" aria-label={t("scouting.tabs.aria")}>
+          {scoutingTabs.map(({ id, labelKey, suffix }) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={tab === id}
+              className={tab === id ? "fm-tab is-active" : "fm-tab"}
+              onClick={() => setTab(id)}
+            >
+              {t(labelKey)}
+              {suffix ?? ""}
+            </button>
+          ))}
+        </div>
+      )}
 
       {tab === "network" ? (
-        <div className="fm-tab-panel">
-          <p className="scouting-scouts">
-            {t("scouting.network.meta", {
-              scouts: scoutNetwork.scouts.length,
-              capacity: networkCapacity,
-              accuracy: networkAccuracy.toFixed(2),
-            })}
-            {" · "}
-            {formatClubCash(scoutNetworkWeeklyWage(scoutNetwork))}/Woche
-          </p>
-          <section className="game-panel scouting-section" aria-label={t("scouting.network.aria")}>
-            {detailZone ? (
-              <ScoutRegionDetailScreen
-                zone={detailZone}
-                zoneLabel={detailZone.label}
-                activeScoutTrip={activeScoutTrip}
-                tripQueueLength={tripQueueLength}
-                worldClubs={worldClubs}
-                onEnqueueTrip={(input) => {
-                  onEnqueueScoutTrip(detailZone.id, input);
-                  setDetailZoneId(null);
-                }}
-              />
-            ) : (
+        inRegionDetail && detailZone ? (
+          <ScoutRegionDetailScreen
+            zone={detailZone}
+            zoneLabel={detailZone.label}
+            activeScoutTrips={activeScoutTrips}
+            scoutTripQueue={scoutTripQueue}
+            tripQueueLength={tripQueueLength}
+            worldClubs={worldClubs}
+            onEnqueueTrip={(input) => {
+              onEnqueueScoutTrip(detailZone.id, input);
+            }}
+          />
+        ) : (
+          <div className="fm-tab-panel">
+            <p className="scouting-scouts">
+              {t("scouting.network.meta", {
+                scouts: scoutNetwork.scouts.length,
+                capacity: networkCapacity,
+                accuracy: networkAccuracy.toFixed(2),
+              })}
+              {" · "}
+              {formatClubCash(scoutNetworkWeeklyWage(scoutNetwork))}/Woche
+            </p>
+            <section className="game-panel scouting-section" aria-label={t("scouting.network.aria")}>
               <ScoutRegionMap
                 clubs={worldClubs}
                 targets={targets}
@@ -360,28 +366,30 @@ export function ScoutingCenter({
                 playerDivisionId={playerDivisionId}
                 playerClub={playerClub}
                 activeRegionScout={activeRegionScout}
+                activeScoutTrips={activeScoutTrips}
+                scoutTripQueue={scoutTripQueue}
                 onScoutRegion={onScoutRegion}
                 onOpenRegionDetail={setDetailZoneId}
               />
-            )}
-          </section>
-          <ScoutNetworkPanel
-            network={scoutNetwork}
-            season={season}
-            week={week}
-            masterSeed={masterSeed}
-            cash={cash}
-            onHire={onHireScout}
-            onFire={onFireScout}
-            showHead={false}
-          />
-        </div>
+            </section>
+            <ScoutNetworkPanel
+              network={scoutNetwork}
+              season={season}
+              week={week}
+              masterSeed={masterSeed}
+              cash={cash}
+              onHire={onHireScout}
+              onFire={onFireScout}
+              showHead={false}
+            />
+          </div>
+        )
       ) : null}
 
       {tab === "hits" ? (
         <div className="fm-tab-panel">
           <ScoutMapJobsPanel
-            activeTrip={activeScoutTrip}
+            activeTrips={activeScoutTrips ?? []}
             tripQueue={scoutTripQueue}
             scoutNetwork={scoutNetwork}
             worldClubs={worldClubs}

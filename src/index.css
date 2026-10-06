@@ -1726,6 +1726,64 @@ body {
   background: rgb(15 23 42 / 58%);
 }
 
+.scout-discovery-zone-trip-status {
+  display: block;
+  width: 100%;
+  font-size: 0.72rem;
+}
+
+.scout-trip-route {
+  fill: none;
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.scout-trip-route.is-mini {
+  stroke-width: 0.85;
+}
+
+.scout-trip-route.is-queued {
+  stroke-dasharray: 3 2;
+  opacity: 0.75;
+}
+
+.scout-trip-route.is-color-0 {
+  stroke: var(--tinte-blau, #1d4ed8);
+}
+
+.scout-trip-route.is-color-1 {
+  stroke: var(--warn-tinte, #ca8a04);
+}
+
+.scout-trip-route.is-color-2 {
+  stroke: #0d9488;
+}
+
+.scout-trip-route.is-color-3 {
+  stroke: #7c3aed;
+}
+
+.scout-trip-route.is-color-4 {
+  stroke: #c2410c;
+}
+
+.scout-trip-marker-halo {
+  fill: rgb(255 255 255 / 55%);
+  stroke: var(--tinte, #1e293b);
+  stroke-width: 0.35;
+}
+
+.scout-trip-marker-dot {
+  fill: var(--sonnengelb, #facc15);
+  stroke: var(--tinte, #1e293b);
+  stroke-width: 0.4;
+}
+
+.scout-trip-map-overlay.is-mini .scout-trip-marker-halo {
+  stroke-width: 0.25;
+}
+
 .scout-discovery-zone-card.has-flavor {
   color: #fff;
 }
@@ -1858,6 +1916,26 @@ body {
   border: 1px solid var(--panel-border, #e2e8f0);
   aspect-ratio: 4 / 3;
   max-height: 22rem;
+}
+
+.scouting-region-detail-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.scouting-region-detail-screen .scout-region-detail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.scouting-region-detail-screen .scout-region-detail-map-wrap {
+  flex: 1;
+  max-height: min(58vh, 32rem);
+  min-height: 14rem;
 }
 
 .scout-region-detail-flavor {

@@ -254,16 +254,16 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
 
   Grundriss: Banden sitzen auf den *Tribünen-Karten* um den Plan,
   nicht auf dem Rasen. Klick ▭ = Sponsor-Modal (F6.5).
-  👕 Shirt-Slot bleibt am Platz.
+  Lucide Shirt — Brustlogo-Slot neben dem Plan.
 
-  Gelände: 14×10. 🏟️ Stadion fest (4×2, Mitte). Start: 10×10 owned,
+  Gelände: 14×10. Stadion fest (4×2, Mitte). Start: 10×10 owned,
   Straße von der Stadt zur Arena. 2×5-Plättchen links/rechts (abwechselnd).
   Gebäude = Rechteck (Mindestgröße), Kante wachsen/schrumpfen, zurück auf min.
-  🛣️ Stadtanschluss außerhalb oben. Straße ziehen (Sim City): verbindet sich
-  automatisch. Gebäude ohne Netz (inkl. Arena) tragen ⚠️ wie die Bushaltestelle;
-  Klick mit 🛣️ legt den Weg zur Autobahn.
-  🌭 Bude (n)  🅿️ Park (n)  · Rest einmal, aber skalierbar.
-  Rechts: Effekt-Buffs (Zuschauer/Stadt/Training/Kasse), Hunger = leer, ⚠️ = undocked.
+  Stadtanschluss außerhalb oben. Straße ziehen (Sim City): verbindet sich
+  automatisch. Gebäude ohne Netz (inkl. Arena) tragen Warn-Icon wie die Bushaltestelle;
+  Klick legt den Weg zur Autobahn.
+  Bude (n) · Park (n) · Rest einmal, aber skalierbar.
+  Rechts: Effekt-Buffs (Zuschauer/Stadt/Training/Kasse), Hunger = leer, undocked = Warnung.
 ```
 
 - Pro Stand sichtbare Werbe-Slots **auf den Karten** um den Grundriss

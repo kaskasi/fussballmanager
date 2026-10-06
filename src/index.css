@@ -4572,6 +4572,31 @@ body {
   cursor: pointer;
 }
 
+.sponsor-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: var(--radius-klein, 8px);
+  border: 2px solid var(--tinte, #3e3128);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sponsor-deal-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.sponsor-deal-fact-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .sponsor-brand span {
   font-size: 1.15rem;
 }

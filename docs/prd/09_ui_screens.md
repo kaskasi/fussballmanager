@@ -101,8 +101,26 @@ Interaktion:
 - Klick auf ein Gebäude wechselt nach 2a oder kauft die nächste Stufe.
 - Spieler-Badges im Grid, sortiert nach Coach-Icon (🚀 / ➡️ / ⚠️ / 😞).
 - Abgangsrisiko: roter Rand, Klick öffnet die Decision Inbox.
-- Camps (P2): **3×2** `YouthCampCard`-Raster — Foto, Kaufen/Betreuer, Roster pro Nation
-  (PRD 03.6.1). Split-Liste + Detailpanel entfällt.
+- Camps (P2): **3×2** `YouthCampCard`-Raster — Foto, Agentur-Brief, Roster pro Nation
+  (PRD 03.6.1 / 03.6.2). Split-Liste + Detailpanel entfällt.
+
+**Hub — Camp-Personal (PRD 03.6.2)**
+
+- Unter der Jugend-Entscheidungs-Sektion: Panel **Camp-Personal** (zählt nicht gegen MAX 4).
+- Zeile pro Camp mit `candidates_ready`: „Leiter wählen · {Nation}“ → Modal.
+
+**Camp-Leiter Modal (2c)**
+
+```text
+┌──────────────────────────────────────────────┐
+│ Camp-Leiter · Brasilien                      │
+│ [Portrait] Name · Badges (+Training / Mental)│
+│ 5 Absätze Intro (einer disqualifiziert sich) │
+│ [Leiter einstellen]  ·  [Später]             │
+└──────────────────────────────────────────────┘
+```
+
+- Nach Hire: Navigation **Youth Campus → Tab Camps** mit Leader-Block wie 03.6.1.
 
 **Screen 2b — Decision Inbox Modal**
 

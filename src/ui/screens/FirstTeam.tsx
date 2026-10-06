@@ -61,7 +61,6 @@ export function FirstTeam({
   clubId: string;
   season: number;
   trainingIntensity?: number;
-  onBack?: () => void;
   onSelectPlayer: (playerId: string) => void;
   week?: number;
   coachingStaff?: CoachingStaff;

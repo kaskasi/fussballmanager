@@ -27,6 +27,7 @@ import {
   removeScoutAssignment,
   toggleScoutAssignment,
 } from "./scouting/scout-board.ts";
+import { ArrowLeft } from "lucide-react";
 import { ClubCrest } from "./ui/components/ClubCrest.tsx";
 import { clubLogoUrlForPlayerClub } from "./ui/assets/club-logo.ts";
 import { joinDocumentTitle, useDocumentTitle } from "./ui/document-title.ts";
@@ -170,7 +171,9 @@ import {
   type MarketSort,
 } from "./scouting/market-list.ts";
 import { ScoutingCenter } from "./ui/screens/ScoutingCenter";
-import { DecisionInboxModal } from "./ui/components/DecisionInbox.tsx";
+import { CampLeaderDismissModal } from "./ui/components/CampLeaderDismissModal.tsx";
+import { postfachOpenCount } from "./inbox/postfach-open-count.ts";
+import { PostfachScreen } from "./ui/screens/PostfachScreen.tsx";
 import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
 import { NoticeToast, SaveToast } from "./ui/components/SaveToast.tsx";
 import {
@@ -188,8 +191,16 @@ import {
   canBuyYouthCamp,
   generateCampOpeningProspects,
   pullCampPlayerToHq,
-  setCampStaffed,
 } from "./youth/satellite-camps.ts";
+import {
+  CAMP_LEADER_AGENCY_NOTICE,
+  commissionCampLeaderAgency,
+  dismissCampLeader,
+  hireCampLeader,
+  tickCampLeaderHires,
+  type CampLeaderCandidate,
+} from "./youth/camp-leader-hire.ts";
+import { CampLeaderHireModal } from "./ui/components/CampLeaderHireModal.tsx";
 import { refreshAllMarketValues } from "./transfers/refresh-market-values.ts";
 import {
   applyProfileActionToSquad,
@@ -240,7 +251,8 @@ type Screen =
   | "leagues"
   | "help"
   | "club-events"
-  | "calendar";
+  | "calendar"
+  | "postfach";
 
 const SCREEN_DOCUMENT_TITLE_KEYS: Record<Screen, string> = {
   hub: "shell.nav.pipeline",
@@ -256,6 +268,7 @@ const SCREEN_DOCUMENT_TITLE_KEYS: Record<Screen, string> = {
   help: "shell.nav.help",
   "club-events": "shell.nav.clubEvents",
   calendar: "shell.nav.calendar",
+  postfach: "shell.nav.postfach",
 };
 
 function bootstrapSave(slot: number): SaveGame {
@@ -274,7 +287,7 @@ function clearTransientUi(
   setters: {
     setProfileId: (value: string | null) => void;
     setForeignPlayerId: (value: string | null) => void;
-    setInboxOpen: (value: boolean) => void;
+    setPostfachItemId: (value: string | null) => void;
     setProfileFeedback: (value: string | null) => void;
     setCareerMatchSetup: (value: CareerMatchSetup | null) => void;
     setMatchNavAction: (value: NavPrimaryAction | null) => void;
@@ -285,7 +298,7 @@ function clearTransientUi(
 ) {
   setters.setProfileId(null);
   setters.setForeignPlayerId(null);
-  setters.setInboxOpen(false);
+  setters.setPostfachItemId(null);
   setters.setProfileFeedback(null);
   setters.setCareerMatchSetup(null);
   setters.setMatchNavAction(null);
@@ -304,8 +317,8 @@ export default function App() {
   const [foreignPlayerId, setForeignPlayerId] = useState<string | null>(null);
   const [negotiationPlayerId, setNegotiationPlayerId] = useState<string | null>(null);
   const [negotiationMessage, setNegotiationMessage] = useState<string | null>(null);
-  const [inboxOpen, setInboxOpen] = useState(false);
-  const [inboxItemId, setInboxItemId] = useState<string | null>(null);
+  const [postfachItemId, setPostfachItemId] = useState<string | null>(null);
+  const [campLeaderDismissCampId, setCampLeaderDismissCampId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState<string | null>(null);
   const [careerMatchSetup, setCareerMatchSetup] = useState<CareerMatchSetup | null>(null);
@@ -334,6 +347,8 @@ export default function App() {
   );
   const [saveToastVisible, setSaveToastVisible] = useState(false);
   const [notice, setNotice] = useState<{ text: string; tone: "ok" | "warn" } | null>(null);
+  const [campLeaderHireCampId, setCampLeaderHireCampId] = useState<string | null>(null);
+  const [campusInitialTab, setCampusInitialTab] = useState<"u17" | "u19" | "camps" | null>(null);
   const [pendingWatchedMatch, setPendingWatchedMatch] = useState<WatchedPlayerMatch | null>(null);
   const [pendingSpend, setPendingSpend] = useState<{
     title: string;
@@ -498,11 +513,17 @@ export default function App() {
     const result = await simulateGameWeek(snapshot, override);
     setPendingWatchedMatch(null);
     setSave((current) => {
+      const weekStamp = {
+        season: result.session.season,
+        week: result.session.week,
+        weekday: MONDAY,
+      };
       let nextSession = {
         ...result.session,
         weekday: MONDAY,
         matchPlayedThisWeek: false,
         youthInbox: deliverDailyInbox(result.session.youthInbox, result.session.players),
+        youthCamps: tickCampLeaderHires(result.session.youthCamps, weekStamp),
       };
       if (result.playerFixture) {
         nextSession = {
@@ -573,32 +594,22 @@ export default function App() {
     [completeCareerMatch],
   );
 
-  const openInbox = useCallback(
+  const openPostfach = useCallback(
     (itemId?: string) => {
+      const count = postfachOpenCount(youthInbox, players, youthCamps);
       const pending = pendingInboxItems(youthInbox, players);
-      if (!itemId && pending.length === 0) return;
-      if (itemId && !pending.some((item) => item.id === itemId)) return;
-      setInboxItemId(itemId ?? null);
-      setInboxOpen(true);
-    },
-    [youthInbox, players],
-  );
-
-  /** Post-Inbox lives on the Hub — leave overlays/other screens so the modal can mount. */
-  const openHubInbox = useCallback(
-    (itemId?: string) => {
-      const pending = pendingInboxItems(youthInbox, players);
-      const targetId = itemId ?? pending[0]?.id ?? null;
-      if (!targetId && pending.length === 0) return;
-      if (targetId && !pending.some((item) => item.id === targetId)) return;
+      if (count === 0) return;
+      if (itemId && !pending.some((item) => item.id === itemId)) {
+        setPostfachItemId(null);
+      } else {
+        setPostfachItemId(itemId ?? pending[0]?.id ?? null);
+      }
       setProfileId(null);
       setForeignPlayerId(null);
       setProfileFeedback(null);
-      setScreen("hub");
-      setInboxItemId(targetId);
-      setInboxOpen(true);
+      setScreen("postfach");
     },
-    [youthInbox, players],
+    [players, youthCamps, youthInbox],
   );
 
   const handleNext = useCallback(() => {
@@ -607,13 +618,7 @@ export default function App() {
     const skip = resolveSmartSkip(session, hasInbox);
 
     if (skip.action === "inbox") {
-      const inboxVisibleHere =
-        (screen === "hub" || screen === "squad") && !profileId && !foreignPlayerId;
-      if (inboxVisibleHere) {
-        openInbox();
-      } else {
-        openHubInbox();
-      }
+      openPostfach();
       return;
     }
 
@@ -624,11 +629,15 @@ export default function App() {
     const sessionAtTarget = { ...session, weekday: skip.weekday, youthInbox: inboxAfterDays };
 
     if (skip.daysAdvanced > 0) {
-      patchSession((current) => ({
-        ...current,
-        weekday: skip.weekday,
-        youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced, current.players),
-      }));
+      patchSession((current) => {
+        const now = { season: current.season, week: current.week, weekday: skip.weekday };
+        return {
+          ...current,
+          weekday: skip.weekday,
+          youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced, current.players),
+          youthCamps: tickCampLeaderHires(current.youthCamps, now),
+        };
+      });
     }
 
     if (skip.action === "match") {
@@ -652,8 +661,7 @@ export default function App() {
   }, [
     careerMatchSetup,
     foreignPlayerId,
-    openHubInbox,
-    openInbox,
+    openPostfach,
     patchSession,
     profileId,
     screen,
@@ -680,8 +688,7 @@ export default function App() {
           current.week,
         );
         if (pendingInboxItems(result.inbox, result.players).length === 0) {
-          setInboxOpen(false);
-          setInboxItemId(null);
+          setPostfachItemId(null);
         }
         let next = {
           ...current,
@@ -1041,14 +1048,55 @@ export default function App() {
     [finances.cash, requestClubSpend, youthCamps],
   );
 
-  const handleToggleCampStaff = useCallback(
-    (nationId: string, staffed: boolean) => {
+  const handleCommissionCampLeader = useCallback(
+    (nationId: string) => {
+      const owned = youthCamps.find((camp) => camp.id === nationId);
+      if (!owned || owned.leader_hire === "hired" || owned.leader_hire === "candidates_ready") {
+        return;
+      }
+      if (owned.leader_hire === "agency_pending") {
+        flashNotice(CAMP_LEADER_AGENCY_NOTICE, "ok");
+        return;
+      }
       patchSession((current) => ({
         ...current,
-        youthCamps: setCampStaffed(current.youthCamps, nationId, staffed),
+        youthCamps: commissionCampLeaderAgency(current.youthCamps, nationId, {
+          season: current.season,
+          week: current.week,
+          weekday: current.weekday,
+        }),
       }));
+      flashNotice(CAMP_LEADER_AGENCY_NOTICE, "ok");
     },
-    [patchSession],
+    [flashNotice, patchSession, youthCamps],
+  );
+
+  const handleRequestDismissCampLeader = useCallback((nationId: string) => {
+    setCampLeaderDismissCampId(nationId);
+  }, []);
+
+  const handleConfirmDismissCampLeader = useCallback(() => {
+    if (!campLeaderDismissCampId) return;
+    const nationId = campLeaderDismissCampId;
+    setCampLeaderDismissCampId(null);
+    patchSession((current) => ({
+      ...current,
+      youthCamps: dismissCampLeader(current.youthCamps, nationId),
+    }));
+  }, [campLeaderDismissCampId, patchSession]);
+
+  const handleHireCampLeader = useCallback(
+    (candidate: CampLeaderCandidate) => {
+      if (!campLeaderHireCampId) return;
+      patchSession((current) => ({
+        ...current,
+        youthCamps: hireCampLeader(current.youthCamps, campLeaderHireCampId, candidate),
+      }));
+      setCampLeaderHireCampId(null);
+      setCampusInitialTab("camps");
+      setScreen("campus");
+    },
+    [campLeaderHireCampId, patchSession],
   );
 
   const handlePullCampPlayer = useCallback(
@@ -1715,7 +1763,7 @@ export default function App() {
     clearTransientUi({
       setProfileId,
       setForeignPlayerId,
-      setInboxOpen,
+      setPostfachItemId,
       setProfileFeedback,
       setCareerMatchSetup,
       setMatchNavAction,
@@ -1747,7 +1795,7 @@ export default function App() {
       clearTransientUi({
         setProfileId,
         setForeignPlayerId,
-        setInboxOpen,
+        setPostfachItemId,
         setProfileFeedback,
         setCareerMatchSetup,
         setMatchNavAction,
@@ -1769,7 +1817,7 @@ export default function App() {
     clearTransientUi({
       setProfileId,
       setForeignPlayerId,
-      setInboxOpen,
+      setPostfachItemId,
       setProfileFeedback,
       setCareerMatchSetup,
       setMatchNavAction,
@@ -1790,7 +1838,36 @@ export default function App() {
     flashNotice(t("transfer.purchase.profileUnavailable"));
     setForeignPlayerId(null);
   }, [flashNotice, foreignPlayerId, foreignTarget]);
-  const openDecisionCount = pendingInboxItems(youthInbox, players).length;
+  const openDecisionCount = postfachOpenCount(youthInbox, players, youthCamps);
+
+  const closePlayerProfile = useCallback(() => {
+    setProfileId(null);
+    setProfileFeedback(null);
+  }, []);
+
+  const closeForeignProfile = useCallback(() => {
+    setForeignPlayerId(null);
+  }, []);
+
+  const shellHeaderBack = useMemo((): { title: string; onBack: () => void } | null => {
+    if (profilePlayer) {
+      return { title: formatPlayerName(profilePlayer), onBack: closePlayerProfile };
+    }
+    if (foreignTarget) {
+      return { title: formatPlayerName(foreignTarget.player), onBack: closeForeignProfile };
+    }
+    const hubDrilldownTitle: Partial<Record<Screen, string>> = {
+      postfach: t("shell.nav.postfach"),
+      "club-events": t("hub.events.screenTitle"),
+      training: t("shell.nav.training"),
+      squad: t("shell.nav.squad"),
+    };
+    const drillTitle = hubDrilldownTitle[screen];
+    if (drillTitle) {
+      return { title: drillTitle, onBack: () => setScreen("hub") };
+    }
+    return null;
+  }, [closeForeignProfile, closePlayerProfile, foreignTarget, profilePlayer, screen, locale]);
 
   careerMatchFlowRef.current = careerMatchSetup != null;
   matchNavActionRef.current = matchNavAction;
@@ -1961,6 +2038,7 @@ export default function App() {
           clubLogoSrc={shellClub.logoSrc}
           leaguePlace={shellClub.leaguePlace}
           onNavigate={setScreen}
+          headerBack={shellHeaderBack}
           onCloseProfile={() => setForeignPlayerId(null)}
           onCampusNavigate={() => undefined}
           hubActions={navActions}
@@ -2041,6 +2119,7 @@ export default function App() {
           clubLogoSrc={shellClub.logoSrc}
           leaguePlace={shellClub.leaguePlace}
           onNavigate={setScreen}
+          headerBack={shellHeaderBack}
           onCloseProfile={() => setProfileId(null)}
           onCampusNavigate={() => undefined}
           hubActions={navActions}
@@ -2103,6 +2182,7 @@ export default function App() {
         clubLogoSrc={shellClub.logoSrc}
         leaguePlace={shellClub.leaguePlace}
         onNavigate={setScreen}
+        headerBack={shellHeaderBack}
         onCampusNavigate={() => undefined}
         hubActions={navActions}
         accessibility={accessibility}
@@ -2127,7 +2207,7 @@ export default function App() {
           onSelectPlayer={setProfileId}
           onOpenScouting={() => setScreen("scouting")}
           onOpenTransfers={() => setScreen("transfers")}
-          onOpenInbox={openInbox}
+          onOpenPostfach={openPostfach}
           onStoryChoice={handleInboxDecision}
           onOpenJugend={() => setScreen("campus")}
           onSelectScoutTarget={(playerId) => setForeignPlayerId(playerId)}
@@ -2138,6 +2218,30 @@ export default function App() {
           onViewAllEvents={() => setScreen("club-events")}
           lastSeasonAwards={lastSeasonAwards}
           storyState={storyState}
+          youthCamps={youthCamps}
+        />
+      ) : null}
+      {screen === "postfach" ? (
+        <PostfachScreen
+          players={players}
+          youthInbox={youthInbox}
+          youthCamps={youthCamps}
+          clubId={session.clubId}
+          season={season}
+          week={week}
+          storyCast={session.storyState.cast}
+          initialItemId={postfachItemId}
+          onDecision={handleInboxDecision}
+          onSelectPlayer={setProfileId}
+          onOpenCampLeaderHire={(campId) => setCampLeaderHireCampId(campId)}
+        />
+      ) : null}
+      {campLeaderHireCampId && youthCamps.some((entry) => entry.id === campLeaderHireCampId) ? (
+        <CampLeaderHireModal
+          camp={youthCamps.find((entry) => entry.id === campLeaderHireCampId)!}
+          masterSeed={session.masterSeed}
+          onHire={handleHireCampLeader}
+          onClose={() => setCampLeaderHireCampId(null)}
         />
       ) : null}
       {openingBlocked(session) ? (
@@ -2178,27 +2282,17 @@ export default function App() {
           onAssignMentor={handleAssignMentor}
           onClearMentor={handleClearMentor}
           onSelectPlayer={setProfileId}
-          onBack={() => setScreen("hub")}
           focusIndividualPlayerId={trainingFocusPlayerId}
           onClearIndividualFocus={() => setTrainingFocusPlayerId(null)}
           hasTrainingHall={precinctHasTrainingHall(stadium.precinct)}
           injuryRiskFactor={precinctInjuryRiskFactor(stadium.precinct)}
         />
       ) : null}
-      {inboxOpen && pendingInboxItems(youthInbox, players).length > 0 ? (
-        <DecisionInboxModal
-          inbox={youthInbox}
-          players={players}
-          clubId={session.clubId}
-          season={season}
-          week={week}
-          storyCast={session.storyState.cast}
-          initialItemId={inboxItemId}
-          onDecision={handleInboxDecision}
-          onClose={() => {
-            setInboxOpen(false);
-            setInboxItemId(null);
-          }}
+      {campLeaderDismissCampId && youthCamps.some((entry) => entry.id === campLeaderDismissCampId) ? (
+        <CampLeaderDismissModal
+          camp={youthCamps.find((entry) => entry.id === campLeaderDismissCampId)!}
+          onConfirm={handleConfirmDismissCampLeader}
+          onCancel={() => setCampLeaderDismissCampId(null)}
         />
       ) : null}
       {screen === "campus" ? (
@@ -2216,11 +2310,14 @@ export default function App() {
           masterSeed={session.masterSeed}
           cash={finances.cash}
           onSelectPlayer={setProfileId}
-          onOpenInbox={openInbox}
+          onOpenInbox={openPostfach}
           onInboxDecision={handleInboxDecision}
           onBuyCamp={handleBuyYouthCamp}
-          onToggleCampStaff={handleToggleCampStaff}
+          onCommissionCampLeader={handleCommissionCampLeader}
+          onRequestDismissCampLeader={handleRequestDismissCampLeader}
           onPullCampPlayer={handlePullCampPlayer}
+          initialTab={campusInitialTab}
+          onInitialTabApplied={() => setCampusInitialTab(null)}
         />
       ) : null}
       {screen === "scouting" ? (
@@ -2281,9 +2378,11 @@ export default function App() {
           onAssignMentor={handleAssignMentor}
           onClearMentor={handleClearMentor}
           injuryRiskFactor={precinctInjuryRiskFactor(stadium.precinct)}
-          onBack={() => setScreen("hub")}
           onSelectPlayer={setProfileId}
         />
+      ) : null}
+      {screen === "club-events" ? (
+        <ClubEventsScreen events={clubEvents} />
       ) : null}
       {screen === "finances" ? (
         <FinancesScreen
@@ -2388,6 +2487,7 @@ function AppChrome({
   leaguePlace,
   screen,
   onNavigate,
+  headerBack,
   onCloseProfile,
   onCampusNavigate,
   hubActions,
@@ -2403,6 +2503,7 @@ function AppChrome({
   leaguePlace: number | null;
   screen: Screen;
   onNavigate: (screen: Screen) => void;
+  headerBack?: { title: string; onBack: () => void } | null;
   onCloseProfile?: () => void;
   onCampusNavigate?: () => void;
   hubActions: HubNavActions;
@@ -2420,6 +2521,7 @@ function AppChrome({
         clubLogoSrc={clubLogoSrc}
         leaguePlace={leaguePlace}
         onNavigate={onNavigate}
+        headerBack={headerBack}
         onCloseProfile={onCloseProfile}
         onCampusNavigate={onCampusNavigate}
         hubActions={hubActions}
@@ -2441,6 +2543,7 @@ function AppNav({
   clubLogoSrc,
   leaguePlace,
   onNavigate,
+  headerBack,
   onCloseProfile,
   onCampusNavigate,
   hubActions,
@@ -2456,6 +2559,7 @@ function AppNav({
   clubLogoSrc?: string;
   leaguePlace: number | null;
   onNavigate: (screen: Screen) => void;
+  headerBack?: { title: string; onBack: () => void } | null;
   onCloseProfile?: () => void;
   onCampusNavigate?: () => void;
   hubActions: HubNavActions;
@@ -2488,6 +2592,12 @@ function AppNav({
     onClick?: () => void;
   }[] = [
     { screen: "hub", labelKey: "shell.nav.pipeline" },
+    {
+      screen: "postfach",
+      labelKey: "shell.nav.postfach",
+      labelSuffix:
+        hubActions.openDecisionCount > 0 ? ` (${hubActions.openDecisionCount})` : undefined,
+    },
     { screen: "squad", labelKey: "shell.nav.squad" },
     { screen: "training", labelKey: "shell.nav.training" },
     { screen: "campus", labelKey: "shell.nav.campus" },
@@ -2505,11 +2615,29 @@ function AppNav({
       className={`app-nav club-shell-header ${shellChrome === "card" ? "club-shell-card-head" : "club-shell-grid"}`}
       aria-label={tr("shell.nav.areas")}
     >
-      <div className="club-shell-identity">
-        <ClubCrest initials={clubInitials} logoSrc={clubLogoSrc} alt={clubName} />
-        <div className="club-shell-identity-text">
-          <p className="club-shell-name">{clubName}</p>
-        </div>
+      <div className={`club-shell-identity${headerBack ? " has-header-back" : ""}`}>
+        {headerBack ? (
+          <>
+            <button
+              type="button"
+              className="club-shell-header-back"
+              onClick={headerBack.onBack}
+              aria-label={tr("shell.menu.back")}
+            >
+              <ArrowLeft size={22} strokeWidth={2.5} aria-hidden="true" />
+            </button>
+            <div className="club-shell-identity-text">
+              <p className="club-shell-name club-shell-subscreen-title">{headerBack.title}</p>
+            </div>
+          </>
+        ) : (
+          <>
+            <ClubCrest initials={clubInitials} logoSrc={clubLogoSrc} alt={clubName} />
+            <div className="club-shell-identity-text">
+              <p className="club-shell-name">{clubName}</p>
+            </div>
+          </>
+        )}
       </div>
       <div className="app-nav-center" aria-live="polite">
         <TransferWindowAmbience week={week} placement="header" />

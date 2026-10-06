@@ -1,7 +1,7 @@
 # /docs/prd/03_youth_academy.md
 
 **Version:** 1.3
-**Last Updated:** 2026-10-04
+**Last Updated:** 2026-10-06
 **Status:** Final
 
 ---
@@ -212,7 +212,8 @@ bezahlter Satellit der Zentrale.
 
 - Katalog: sechs Nationen (nicht DE). Kaufpreis + wöchentlicher Unterhalt.
   Höchstens **3** Camps gleichzeitig, eine Nation nur einmal.
-- **Betreuer vor Ort** ist eine bezahlte Toggle-Stelle (Wochenlohn). Die drei
+- **Camp-Leiter** wird über Agentur + Hub-Auswahl eingestellt (03.6.2), nicht per
+  Sofort-Toggle. Bezahlter Wochenlohn nur bei `leader_hire === hired`. Die drei
   Profi-Gruppen-Trainer (F8.1) bleiben in der Zentrale.
 - Saisonende: unstaffed 2 Spieler / staffed 4, Nationalität des Camps, schwächere
   Mischung ohne Betreuer. `state.youth_site = campId`.
@@ -227,13 +228,28 @@ Playtest-Slice: **6 Nationen** als **3×2-Kartenraster** (kein Split-Listen-Layo
 |---|---|
 | Karte | Landschaftsfoto (CC0/Lizenziert, `campPhotoUrl(nationId)`), Nation + Region |
 | Status | Nicht gekauft (Preis + Kaufen) · gesperrt (Limit/Cash) · aktiv (Unterhalt/Wo) |
-| Betreuer | CTA „Betreuer vor Ort“ — bestehende `staffed`-Toggle, kein neues Sim |
+| Agentur | Brief-Icon (Lucide `Mail`) — beauftragt Kandidatensuche; erneuter Klick = gleicher Hinweis (NoticeToast) |
 | Roster | Portrait, Name, Position, CA; **In Jugend überführen** auf owned Camps |
-| Camp-Leiter | Icon „Betreuer vor Ort“ unten rechts neben Meta; bei Toggle Portrait + Name + Rolle (Klick entfernt) |
+| Camp-Leiter | Nach Hub-Auswahl: Portrait + Name + Rolle (Klick entlässt); während Suche Brief-Icon; bei Kandidaten „Kandidaten im Hub“ |
 | Kauf | Sofort **1–2** schwache Talente (niedrige CA, **max** `anlage` + `drive`) im Camp |
 | Assets | Manifest `src/ui/assets/camp-photos.ts`; Bake `npm run bake:camp-photos` → `public/assets/photos/camps/` |
 
 Keine Camp-Aufstellungen, keine Scout-Karte — Gesetz 6 unverändert.
+
+#### 03.6.2 Camp-Leiter Einstellung
+
+1. **Agentur:** Klick auf Brief-Icon setzt `leader_hire = agency_pending` und
+   `agency_commissioned_at` (Saison/Woche/Wochentag). `staffed` bleibt `false`.
+   UI-Hinweis: *„Eine Agentur wurde beauftragt, geeignete Kandidaten für die Camp-Leitung zu finden.“*
+2. **Wartezeit:** **5 Werktage** (Mo–Fr; Sa/So zählen nicht) entlang des Tageskalenders.
+   Danach `leader_hire = candidates_ready` + `candidate_set_id` (deterministische Dreierliste).
+3. **Hub:** Sektion **Camp-Personal** (parallel zur Jugend-Inbox, **nicht** gegen MAX 4).
+   Modal: 3 Kandidaten, Portrait, ~5 Sätze Intro; einige disqualifizieren sich im Text;
+   Badges für `training_mod` / `mental_mod`. v1: `training_mod` skaliert Camp-Intake-`meanShift`;
+   `mental_mod` gespeichert + Badge (Sim-Follow-up).
+4. **Abschluss:** Auswahl → `leader_hire = hired`, `staffed = true`, Navigation Campus Tab Camps.
+5. **Save:** Felder auf `YouthCamp` in Pipeline; Migration backfillt altes `staffed: true`.
+6. **Out of scope v1:** Presse/Interview, Agenturkosten, zweiter Fortschritts-CTA.
 
 ### 03.7 Invarianten
 

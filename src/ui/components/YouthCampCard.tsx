@@ -1,11 +1,13 @@
-/** WIREFRAME: design.md §9.12 + PRD 03.6.1 / 09.2 — Satelliten-Camp-Karte */
-import { Lock, UserCheck } from "lucide-react";
+/** WIREFRAME: design.md §9.12 + PRD 03.6.1 / 03.6.2 — Satelliten-Camp-Karte */
+import { Lock, Mail, UserCheck } from "lucide-react";
 import type { Player } from "../../types/player.ts";
 import { estimateCa } from "../../transfers/market-value.ts";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import {
-  campLeaderName,
-  campLeaderPortraitSeed,
+  campLeaderDisplayName,
+  formatCampLeaderModLabel,
+} from "../../youth/camp-leader-hire.ts";
+import {
   campRoster,
   canBuyYouthCamp,
   type YouthCamp,
@@ -21,9 +23,9 @@ export function YouthCampCard({
   camps,
   cash,
   players,
-  masterSeed,
   onBuy,
-  onToggleStaff,
+  onCommissionAgency,
+  onRequestDismissLeader,
   onPull,
   rosterSlots,
 }: {
@@ -32,19 +34,22 @@ export function YouthCampCard({
   camps: readonly YouthCamp[];
   cash: number;
   players: readonly Player[];
-  masterSeed: number;
   rosterSlots: number;
   onBuy: (nationId: string) => void;
-  onToggleStaff: (nationId: string, staffed: boolean) => void;
+  onCommissionAgency: (nationId: string) => void;
+  onRequestDismissLeader: (nationId: string) => void;
   onPull: (playerId: string) => void;
 }) {
   const buy = canBuyYouthCamp(camps, nation.id, cash);
   const roster = owned ? campRoster(players, nation.id) : [];
   const photo = campPhotoUrl(nation.id);
-  const leaderName = owned ? campLeaderName(nation.id, masterSeed) : null;
-  const leaderSeed = owned ? campLeaderPortraitSeed(nation.id, masterSeed) : 0;
+  const hireState = owned?.leader_hire ?? "none";
+  const leaderName = owned ? campLeaderDisplayName(owned) : null;
+  const leaderSeed = owned?.leader?.portrait_seed ?? 0;
   const rosterOverflow = Math.max(0, roster.length - rosterSlots);
   const emptyOwned = owned && roster.length === 0;
+  const leaderTrainingMod = owned?.leader?.training_mod ?? 0;
+  const leaderMentalMod = owned?.leader?.mental_mod ?? 0;
 
   return (
     <article
@@ -76,25 +81,43 @@ export function YouthCampCard({
 
           {owned ? (
             <div className="youth-camp-card-head-side">
-              {owned.staffed && leaderName ? (
+              {hireState === "hired" && leaderName ? (
                 <button
                   type="button"
                   className="youth-camp-leader-block"
-                  onClick={() => onToggleStaff(nation.id, false)}
-                  aria-label={`Betreuer ${leaderName} abziehen`}
+                  onClick={() => onRequestDismissLeader(nation.id)}
+                  aria-label={`Camp-Leiter ${leaderName} — Entlassung anfragen`}
                 >
                   <PlayerPortrait seed={leaderSeed} size="sm" className="youth-camp-leader-portrait" />
                   <span className="youth-camp-leader-name">{leaderName}</span>
                   <span className="youth-camp-leader-role">Camp-Leiter</span>
+                  <span className="youth-camp-leader-mods">
+                    <span className="camp-leader-mod-badge">
+                      {formatCampLeaderModLabel("training", leaderTrainingMod)}
+                    </span>
+                    <span className="camp-leader-mod-badge">
+                      {formatCampLeaderModLabel("mental", leaderMentalMod)}
+                    </span>
+                  </span>
                 </button>
+              ) : hireState === "candidates_ready" ? (
+                <p className="youth-camp-agency-hint">Kandidaten im Postfach</p>
               ) : (
                 <button
                   type="button"
                   className="negotiation-btn youth-camp-staff-icon-btn"
-                  onClick={() => onToggleStaff(nation.id, true)}
-                  aria-label="Betreuer vor Ort einstellen"
+                  onClick={() => onCommissionAgency(nation.id)}
+                  aria-label={
+                    hireState === "agency_pending"
+                      ? "Agentur-Suche läuft — Status anzeigen"
+                      : "Camp-Leiter suchen"
+                  }
                 >
-                  <UserCheck size={18} strokeWidth={2.5} aria-hidden />
+                  {hireState === "agency_pending" ? (
+                    <Mail size={18} strokeWidth={2.5} aria-hidden />
+                  ) : (
+                    <UserCheck size={18} strokeWidth={2.5} aria-hidden />
+                  )}
                 </button>
               )}
             </div>

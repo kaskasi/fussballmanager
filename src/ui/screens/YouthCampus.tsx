@@ -1,5 +1,5 @@
 /** WIREFRAME: docs/prd/design.md §9.12 — Jugend (eine Tabelle, U17/U19/Camps) */
-import { Fragment, useMemo, useState, type DragEvent } from "react";
+import { Fragment, useEffect, useMemo, useState, type DragEvent } from "react";
 import {
   AlertTriangle,
   ArrowUp,
@@ -103,8 +103,11 @@ export function YouthCampus({
   onOpenInbox,
   onInboxDecision,
   onBuyCamp,
-  onToggleCampStaff,
+  onCommissionCampLeader,
+  onRequestDismissCampLeader,
   onPullCampPlayer,
+  initialTab,
+  onInitialTabApplied,
 }: {
   players: Player[];
   youthInbox: YouthInboxState;
@@ -122,10 +125,19 @@ export function YouthCampus({
   onOpenInbox: (itemId?: string) => void;
   onInboxDecision: (itemId: string, action: DecisionAction) => void;
   onBuyCamp: (nationId: string) => void;
-  onToggleCampStaff: (nationId: string, staffed: boolean) => void;
+  onCommissionCampLeader: (nationId: string) => void;
+  onRequestDismissCampLeader: (nationId: string) => void;
   onPullCampPlayer: (playerId: string) => void;
+  initialTab?: "u17" | "u19" | "camps" | null;
+  onInitialTabApplied?: () => void;
 }) {
   const [tab, setTab] = useState<YouthTab>("u17");
+
+  useEffect(() => {
+    if (!initialTab) return;
+    setTab(initialTab);
+    onInitialTabApplied?.();
+  }, [initialTab, onInitialTabApplied]);
   const report = youthInbox.lastReport;
   const u17Count = useMemo(
     () => players.filter((player) => player.squad_status === "u17").length,
@@ -192,10 +204,10 @@ export function YouthCampus({
           <YouthCampsPanel
             players={players}
             camps={youthCamps}
-            masterSeed={masterSeed}
             cash={cash}
             onBuy={onBuyCamp}
-            onToggleStaff={onToggleCampStaff}
+            onCommissionAgency={onCommissionCampLeader}
+            onRequestDismissLeader={onRequestDismissCampLeader}
             onPull={onPullCampPlayer}
           />
         </div>
@@ -466,18 +478,18 @@ function YouthUnifiedRoster({
 function YouthCampsPanel({
   players,
   camps,
-  masterSeed,
   cash,
   onBuy,
-  onToggleStaff,
+  onCommissionAgency,
+  onRequestDismissLeader,
   onPull,
 }: {
   players: readonly Player[];
   camps: readonly YouthCamp[];
-  masterSeed: number;
   cash: number;
   onBuy: (nationId: string) => void;
-  onToggleStaff: (nationId: string, staffed: boolean) => void;
+  onCommissionAgency: (nationId: string) => void;
+  onRequestDismissLeader: (nationId: string) => void;
   onPull: (playerId: string) => void;
 }) {
   const atCampLimit = camps.length >= MAX_YOUTH_CAMPS;
@@ -502,10 +514,10 @@ function YouthCampsPanel({
               camps={camps}
               cash={cash}
               players={players}
-              masterSeed={masterSeed}
               rosterSlots={rosterSlots}
               onBuy={onBuy}
-              onToggleStaff={onToggleStaff}
+              onCommissionAgency={onCommissionAgency}
+              onRequestDismissLeader={onRequestDismissLeader}
               onPull={onPull}
             />
           </li>

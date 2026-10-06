@@ -1,5 +1,5 @@
 /**
- * WIREFRAME: docs/prd/design.md §9.9 — full club events list (Alle)
+ * WIREFRAME: docs/prd/design.md §9.9 — full club events list (Alle; Zurück im Shell-Header)
  */
 import type { ClubEvent } from "../../inbox/club-events.ts";
 import { clubEventIcon } from "../../inbox/club-events.ts";
@@ -7,24 +7,10 @@ import { formatCalendarWeekDisplay } from "../../i18n/calendar-display.ts";
 import { useT } from "../../i18n/react.ts";
 import { t } from "../../i18n/index.ts";
 
-export function ClubEventsScreen({
-  events,
-  onBack,
-}: {
-  events: readonly ClubEvent[];
-  onBack: () => void;
-}) {
+export function ClubEventsScreen({ events }: { events: readonly ClubEvent[] }) {
   useT();
   return (
-    <main className="club-shell-card-body">
-      <header className="screen-title-row">
-        <div>
-          <button type="button" className="screen-back-link" onClick={onBack}>
-            {t("shell.menu.back")}
-          </button>
-          <h1>{t("hub.events.screenTitle")}</h1>
-        </div>
-      </header>
+    <main className="club-shell-card-body club-events-screen">
       {events.length === 0 ? (
         <p className="hub-inbox-empty">{t("hub.inbox.eventsEmpty")}</p>
       ) : (

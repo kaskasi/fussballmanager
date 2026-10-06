@@ -28,6 +28,7 @@ Ultimately, the options describe style features rather than a specific identity,
 A 3 x 2 Grid of Camp Card, with small picture of the countryside(jan needs to go and get), name of coach, small cta to hire and fire, and list of players, their position and ca
 
 - **Stand 2026-10-06:** 3×2 `YouthCampCard` auf Jugend-Tab Camps; Fotos via `npm run bake:camp-photos` (pd_images → `public/assets/photos/camps/`).
+- **Camp-Leiter:** Brief-Icon → Agentur-Toast → 5 Werktage NEXT → Hub **Camp-Personal** → 3 Kandidaten-Modal → Campus/Camps.
 
 
 ::: Real Club logos :::

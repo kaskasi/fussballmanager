@@ -4,6 +4,7 @@
 import { AlertTriangle, Mail } from "lucide-react";
 import type { ClubEvent } from "../../inbox/club-events.ts";
 import { clubEventIcon } from "../../inbox/club-events.ts";
+import { postfachOpenCount } from "../../inbox/postfach-open-count.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import {
@@ -16,6 +17,7 @@ import {
   type DecisionAction,
   type YouthInboxState,
 } from "../../youth/decision-inbox.ts";
+import type { YouthCamp } from "../../youth/satellite-camps.ts";
 import { formatCalendarWeekDisplay } from "../../i18n/calendar-display.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
@@ -28,23 +30,26 @@ const HUB_EVENTS_PREVIEW = 4;
 export function HubActionColumn({
   players,
   youthInbox,
+  youthCamps,
   clubEvents,
   storyCast,
-  onOpenDecision,
+  onOpenPostfach,
   onStoryChoice,
   onViewAllEvents,
 }: {
   players: readonly Player[];
   youthInbox: YouthInboxState;
+  youthCamps: readonly YouthCamp[];
   clubEvents: readonly ClubEvent[];
   storyCast: StoryCast;
-  onOpenDecision: (itemId?: string) => void;
+  onOpenPostfach: (itemId?: string) => void;
   onStoryChoice: (itemId: string, action: DecisionAction) => void;
   onViewAllEvents: () => void;
 }) {
   useT();
   const focus = inboxWeekFocus(youthInbox, players);
   const decisions = focus.open.slice(0, MAX_INBOX_ITEMS);
+  const postfachCount = postfachOpenCount(youthInbox, players, youthCamps);
   const nextQueuedPlayer = focus.nextQueued
     ? players.find((entry) => entry.id === focus.nextQueued?.playerId)
     : undefined;
@@ -64,7 +69,7 @@ export function HubActionColumn({
           <strong>{inboxHeadline(focus)}</strong>
         </header>
         {pipelineHint ? <p className="hub-inbox-queue-note">{pipelineHint}</p> : null}
-        {decisions.length === 0 ? (
+        {decisions.length === 0 && postfachCount === 0 ? (
           <p className="hub-inbox-empty">
             {focus.nextQueued && nextQueuedPlayer
               ? t("hub.inbox.decisionsNext", {
@@ -102,7 +107,7 @@ export function HubActionColumn({
                   <button
                     type="button"
                     className="hub-inbox-row"
-                    onClick={() => onOpenDecision(item.id)}
+                    onClick={() => onOpenPostfach(item.id)}
                   >
                     <span className="hub-inbox-row-text">
                       <strong>{formatPlayerName(player)}</strong>
@@ -119,9 +124,17 @@ export function HubActionColumn({
         )}
       </section>
 
-      <button type="button" className="design-panel hub-post-summary" onClick={() => onOpenDecision()}>
+      <button
+        type="button"
+        className="design-panel hub-post-summary"
+        onClick={() => onOpenPostfach()}
+        disabled={postfachCount === 0}
+      >
         <Mail size={18} aria-hidden="true" />
-        <span>{t("hub.inbox.title", { current: decisions.length, max: MAX_INBOX_ITEMS })}</span>
+        <span>
+          {t("shell.nav.postfach")}
+          {postfachCount > 0 ? ` · ${postfachCount}` : ""}
+        </span>
       </button>
 
       <section className="design-panel hub-events-preview" aria-label={t("hub.inbox.events")}>

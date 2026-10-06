@@ -51,6 +51,39 @@
   min-height: 2.5rem;
 }
 
+.app-nav.club-shell-header .club-shell-identity.has-header-back {
+  gap: 0.5rem;
+}
+
+.club-shell-header-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md, 8px);
+  background: var(--surface-elevated, rgba(255, 255, 255, 0.06));
+  color: var(--tinte, inherit);
+  cursor: pointer;
+}
+
+.club-shell-header-back:hover {
+  background: var(--panel-muted, rgba(255, 255, 255, 0.1));
+}
+
+.club-shell-subscreen-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(14rem, 42vw);
+}
+
 .app-nav.club-shell-header .club-shell-identity-text {
   display: flex;
   flex-direction: column;
@@ -1418,6 +1451,76 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   font-variant-numeric: tabular-nums;
 }
 
+.youth-camp-agency-hint {
+  margin: 0;
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--text-muted, #8a8f98);
+  text-align: right;
+  max-width: 6.5rem;
+  line-height: 1.25;
+}
+
+.camp-leader-hire-modal .negotiation-modal-inner {
+  max-width: 52rem;
+}
+
+.camp-leader-hire-lead {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted, #8a8f98);
+}
+
+.camp-leader-candidate-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.camp-leader-candidate {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 8px);
+}
+
+.camp-leader-candidate.is-disqualified {
+  opacity: 0.72;
+}
+
+.camp-leader-candidate-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.camp-leader-mod-badge {
+  font-size: var(--text-xs, 0.75rem);
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--surface-elevated, rgba(255, 255, 255, 0.06));
+}
+
+.camp-leader-candidate-intro p {
+  margin: 0 0 0.35rem;
+  font-size: var(--text-sm, 0.875rem);
+  line-height: 1.35;
+}
+
+.camp-leader-candidate-blocked {
+  margin: 0.5rem 0 0;
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--warn, #e8a317);
+}
+
+.hub-camp-staff-panel {
+  margin-top: 0.75rem;
+}
+
 .youth-camp-staff-icon-btn {
   display: inline-flex;
   align-items: center;
@@ -1462,6 +1565,52 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+  color: var(--tinte-weich);
+}
+
+.youth-camp-leader-mods {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.2rem;
+  margin-top: 0.15rem;
+  max-width: 7rem;
+}
+
+.youth-camp-leader-mods .camp-leader-mod-badge {
+  font-size: 0.58rem;
+  padding: 0.1rem 0.35rem;
+}
+
+.camp-leader-candidate-lang {
+  margin: 0.15rem 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--tinte-weich);
+}
+
+.camp-leader-hire-modal {
+  max-height: min(90vh, 52rem);
+  overflow: auto;
+}
+
+.postfach-screen .postfach-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.postfach-decisions .inbox-head h2 {
+  font-size: 1.1rem;
+}
+
+.postfach-camp-staff {
+  padding: 0.75rem 1rem;
+}
+
+.postfach-camp-lead {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
   color: var(--tinte-weich);
 }
 

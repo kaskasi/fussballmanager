@@ -24,7 +24,7 @@ import {
   type AcademyFacility,
 } from "../youth/intake-generator.ts";
 import {
-  campIntakeCount,
+  campIntakeCountForCamp,
   campMixtureShift,
   campNationById,
   generateCampPlayerName,
@@ -210,9 +210,9 @@ function generateCampIntakes(
       facility: "academy_basic",
       idStart: cursor,
       random: mulberry32(masterSeed ^ endingSeason ^ cursor),
-      count: campIntakeCount(camp.staffed),
+      count: campIntakeCountForCamp(camp),
       youthSite: camp.id,
-      meanShift: campMixtureShift(camp.staffed),
+      meanShift: campMixtureShift(camp),
       nameFor: (seed) => generateCampPlayerName(nation.code, seed),
     });
     cursor += batch.length;

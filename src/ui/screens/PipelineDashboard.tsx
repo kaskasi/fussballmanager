@@ -42,6 +42,7 @@ import type { SeasonAwardsSnapshot } from "../../sim/season-awards.ts";
 import { showSummerChecklist } from "../../sim/summer-checklist.ts";
 import { ChroniclePanel } from "../components/ChroniclePanel.tsx";
 import type { StoryState } from "../../narrative/story-state.ts";
+import type { YouthCamp } from "../../youth/satellite-camps.ts";
 
 /**
  * WIREFRAME: docs/prd/design.md §9.9 — Hub cockpit
@@ -64,7 +65,7 @@ export function PipelineDashboard({
   onSelectPlayer,
   onOpenScouting,
   onOpenTransfers,
-  onOpenInbox,
+  onOpenPostfach,
   onStoryChoice,
   onOpenJugend,
   onSelectScoutTarget,
@@ -80,6 +81,7 @@ export function PipelineDashboard({
   lastSeasonAwards,
   activeScouts,
   storyState,
+  youthCamps,
 }: {
   players: Player[];
   season: number;
@@ -92,7 +94,7 @@ export function PipelineDashboard({
   onSelectPlayer: (playerId: string) => void;
   onOpenScouting: () => void;
   onOpenTransfers: () => void;
-  onOpenInbox: (itemId?: string) => void;
+  onOpenPostfach: (itemId?: string) => void;
   onStoryChoice: (itemId: string, action: DecisionAction) => void;
   onOpenJugend: () => void;
   onSelectScoutTarget: (playerId: string) => void;
@@ -107,6 +109,7 @@ export function PipelineDashboard({
   onViewAllEvents: () => void;
   lastSeasonAwards?: SeasonAwardsSnapshot;
   storyState: StoryState;
+  youthCamps: readonly YouthCamp[];
 }) {
   useT();
   const sessions = useMemo(() => planToSessions(trainingPlan), [trainingPlan]);
@@ -171,9 +174,10 @@ export function PipelineDashboard({
           <HubActionColumn
             players={players}
             youthInbox={youthInbox}
+            youthCamps={youthCamps}
             clubEvents={clubEvents}
             storyCast={storyState.cast}
-            onOpenDecision={(itemId) => onOpenInbox(itemId)}
+            onOpenPostfach={onOpenPostfach}
             onStoryChoice={onStoryChoice}
             onViewAllEvents={onViewAllEvents}
           />

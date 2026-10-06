@@ -14,10 +14,31 @@ export interface YouthCampNation {
   upkeepWeekly: number;
 }
 
+export type CampLeaderHireState = "none" | "agency_pending" | "candidates_ready" | "hired";
+
+export interface CampDayStamp {
+  season: number;
+  week: number;
+  weekday: number;
+}
+
+export interface CampLeaderRecord {
+  first: string;
+  last: string;
+  portrait_seed: number;
+  training_mod: number;
+  mental_mod: number;
+  tagline?: string;
+}
+
 export interface YouthCamp {
   id: string;
   staffed: boolean;
   purchased_season: number;
+  leader_hire?: CampLeaderHireState;
+  agency_commissioned_at?: CampDayStamp;
+  leader?: CampLeaderRecord;
+  candidate_set_id?: string;
 }
 
 export const MAX_YOUTH_CAMPS = 3;
@@ -199,7 +220,7 @@ export function weeklyCampUpkeep(camps: readonly YouthCamp[]): number {
   return camps.reduce((sum, camp) => {
     const nation = campNationById(camp.id);
     if (!nation) return sum;
-    return sum + nation.upkeepWeekly + (camp.staffed ? CAMP_BETREUER_WAGE : 0);
+    return sum + nation.upkeepWeekly + (isCampStaffed(camp) ? CAMP_BETREUER_WAGE : 0);
   }, 0);
 }
 
@@ -218,11 +239,14 @@ export function canBuyYouthCamp(
 
 export function buyYouthCamp(camps: readonly YouthCamp[], nationId: string, season: number): YouthCamp[] {
   if (ownedCamp(camps, nationId)) return [...camps];
-  return [...camps, { id: nationId, staffed: false, purchased_season: season }];
+  return [
+    ...camps,
+    { id: nationId, staffed: false, purchased_season: season, leader_hire: "none" as const },
+  ];
 }
 
-export function setCampStaffed(camps: readonly YouthCamp[], nationId: string, staffed: boolean): YouthCamp[] {
-  return camps.map((camp) => (camp.id === nationId ? { ...camp, staffed } : camp));
+export function isCampStaffed(camp: YouthCamp): boolean {
+  return camp.leader_hire === "hired" && camp.staffed;
 }
 
 export function pullCampPlayerToHq(player: Player): Player {
@@ -248,8 +272,15 @@ export function campIntakeCount(staffed: boolean): number {
   return staffed ? CAMP_INTAKE_STAFFED : CAMP_INTAKE_UNSTAFFED;
 }
 
-export function campMixtureShift(staffed: boolean): number {
-  return staffed ? 0 : -8;
+export function campIntakeCountForCamp(camp: YouthCamp): number {
+  return campIntakeCount(isCampStaffed(camp));
+}
+
+/** Mean shift for season-end camp intake; leader `training_mod` adds points when staffed. */
+export function campMixtureShift(camp: YouthCamp): number {
+  if (!isCampStaffed(camp)) return -8;
+  const mod = camp.leader?.training_mod ?? 0;
+  return Math.round(mod * 100);
 }
 
 export function normalizeYouthCamps(camps: readonly YouthCamp[] | undefined): YouthCamp[] {
@@ -259,7 +290,17 @@ export function normalizeYouthCamps(camps: readonly YouthCamp[] | undefined): Yo
   for (const camp of camps) {
     if (!campNationById(camp.id) || seen.has(camp.id)) continue;
     seen.add(camp.id);
-    next.push({ id: camp.id, staffed: Boolean(camp.staffed), purchased_season: camp.purchased_season ?? 1 });
+    const leader_hire = camp.leader_hire ?? (camp.staffed ? "hired" : "none");
+    const staffed = leader_hire === "hired";
+    next.push({
+      id: camp.id,
+      staffed,
+      purchased_season: camp.purchased_season ?? 1,
+      leader_hire,
+      agency_commissioned_at: camp.agency_commissioned_at,
+      leader: camp.leader,
+      candidate_set_id: camp.candidate_set_id,
+    });
     if (next.length >= MAX_YOUTH_CAMPS) break;
   }
   return next;

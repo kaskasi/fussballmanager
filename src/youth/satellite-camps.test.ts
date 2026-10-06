@@ -5,6 +5,7 @@ import { maxAnlageProfile } from "./intake-generator.ts";
 import {
   buyYouthCamp,
   campIntakeCount,
+  campMixtureShift,
   campLeaderName,
   campNationById,
   canBuyYouthCamp,
@@ -26,12 +27,33 @@ describe("satellite youth camps", () => {
   });
 
   it("charges upkeep and extra Betreuer wage", () => {
-    const camps = [{ id: "camp_br", staffed: true, purchased_season: 1 }];
-    expect(weeklyCampUpkeep(camps)).toBeGreaterThan(weeklyCampUpkeep([{ ...camps[0]!, staffed: false }]));
+    const staffed = {
+      id: "camp_br",
+      staffed: true,
+      purchased_season: 1,
+      leader_hire: "hired" as const,
+      leader: { first: "Marco", last: "Fischer", portrait_seed: 1, training_mod: 0, mental_mod: 0 },
+    };
+    const camps = [staffed];
+    expect(weeklyCampUpkeep(camps)).toBeGreaterThan(
+      weeklyCampUpkeep([{ ...staffed, staffed: false, leader_hire: "none", leader: undefined }]),
+    );
   });
 
   it("staffed camps take more intake", () => {
     expect(campIntakeCount(true)).toBeGreaterThan(campIntakeCount(false));
+  });
+
+  it("applies leader training_mod to camp mixture shift", () => {
+    const camp = {
+      id: "camp_br",
+      staffed: true,
+      purchased_season: 1,
+      leader_hire: "hired" as const,
+      leader: { first: "A", last: "B", portrait_seed: 1, training_mod: 0.1, mental_mod: 0 },
+    };
+    expect(campMixtureShift(camp)).toBe(10);
+    expect(campMixtureShift({ ...camp, leader_hire: "none", staffed: false })).toBe(-8);
   });
 
   it("pulls a camp player into HQ", () => {

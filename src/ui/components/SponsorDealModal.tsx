@@ -12,6 +12,7 @@
  * └─────────────────────────────────────┘
  */
 import { useState } from "react";
+import { Angry, Handshake, Trophy } from "lucide-react";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import {
   dealSeasonsLeft,
@@ -195,13 +196,17 @@ export function SponsorDealModal({
                 className={offer.bonusLeagueTitle ? "sponsor-bonus is-on" : "sponsor-bonus"}
                 onClick={() => patch({ bonusLeagueTitle: !offer.bonusLeagueTitle })}
               >
-                <span aria-hidden="true">🏆</span>
+                <Trophy size={16} aria-hidden="true" strokeWidth={2.5} />
                 Meister
                 <strong>+{formatClubCash(SPONSOR_BONUS_PAYOUT)}</strong>
               </button>
             </div>
             <p className={verdict.accepted ? "sponsor-deal-verdict is-ok" : "sponsor-deal-verdict is-no"}>
-              {verdict.accepted ? "🤝 " : "😤 "}
+              {verdict.accepted ? (
+                <Handshake size={16} aria-hidden="true" strokeWidth={2.5} className="negotiation-verdict-icon" />
+              ) : (
+                <Angry size={16} aria-hidden="true" strokeWidth={2.5} className="negotiation-verdict-icon" />
+              )}{" "}
               {verdict.reason}
             </p>
             <footer className="negotiation-actions">

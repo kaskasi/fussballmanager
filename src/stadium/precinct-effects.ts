@@ -9,6 +9,7 @@ import {
   type PrecinctBuilding,
   type PrecinctState,
 } from "./precinct.ts";
+import { formatClubCash } from "../economy/club-finances.ts";
 
 function fillParts(state: PrecinctState) {
   const parking = dockedOccupiedCells(state, "parking");
@@ -117,11 +118,6 @@ const VISIT_FILL_MAX = 0.12;
 function clampOccupancy(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.min(1, Math.max(0, value));
-}
-
-function formatCash(amount: number): string {
-  if (amount >= 1000) return `€ ${Math.round(amount / 1000)}k`;
-  return `€ ${amount}`;
 }
 
 function scaleByOccupancy(full: number, occupancy = 1): number {
@@ -297,13 +293,13 @@ export function listPrecinctStatusEffects(state: PrecinctState | undefined): Pre
       }
     }
     if (placed && def.id === "kiosk" && kioskCash > 0) {
-      bits.push(`Kasse ${formatCash(kioskCash)} bei voller Auslastung`);
+      bits.push(`Kasse ${formatClubCash(kioskCash)} bei voller Auslastung`);
     }
     if (placed && def.id === "beer_tent" && beerCash > 0) {
-      bits.push(`Kasse ${formatCash(beerCash)} bei voller Auslastung`);
+      bits.push(`Kasse ${formatClubCash(beerCash)} bei voller Auslastung`);
     }
     if (placed && def.id === "fanshop" && merch > 0) {
-      bits.push(`Merch ${formatCash(merch)} bei voller Auslastung`);
+      bits.push(`Merch ${formatClubCash(merch)} bei voller Auslastung`);
     }
     if (placed && (def.id === "hotel" || def.id === "restaurant")) {
       bits.push("Auslastung");
@@ -347,8 +343,8 @@ function compactMagnitude(
 ): string | null {
   if (!fill || !fans || !training) return null;
   if (id === "parking") return fill.parking > 0 ? formatPct(fill.parking) : null;
-  if (id === "kiosk") return kioskCash > 0 ? formatCash(kioskCash) : fill.kiosk > 0 ? formatPct(fill.kiosk) : null;
-  if (id === "beer_tent") return beerCash > 0 ? formatCash(beerCash) : fill.beer > 0 ? formatPct(fill.beer) : null;
+  if (id === "kiosk") return kioskCash > 0 ? formatClubCash(kioskCash) : fill.kiosk > 0 ? formatPct(fill.kiosk) : null;
+  if (id === "beer_tent") return beerCash > 0 ? formatClubCash(beerCash) : fill.beer > 0 ? formatPct(fill.beer) : null;
   if (id === "fan_services") {
     if (fans.services > 0) return formatFans(fans.services);
     return fill.services > 0 ? formatPct(fill.services) : null;
@@ -358,7 +354,7 @@ function compactMagnitude(
     return fill.clubhouse > 0 ? formatPct(fill.clubhouse) : null;
   }
   if (id === "fanshop") {
-    if (merch > 0) return formatCash(merch);
+    if (merch > 0) return formatClubCash(merch);
     return fill.fanshop > 0 ? formatPct(fill.fanshop) : null;
   }
   if (id === "bus") return fill.bus > 0 ? formatPct(fill.bus) : null;

@@ -2579,3 +2579,179 @@ main.stadium.club-shell-card-body .stadium-fanbase {
     max-height: none;
   }
 }
+
+/* Style consolidation — tokens only (formerly design-consolidation.css) */
+
+.leagues-screen-tabs,
+.leagues-screen-view-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  margin: var(--space-4) 0 var(--space-3);
+  padding: 0;
+  background: var(--bg-inactive);
+  border-bottom: var(--outline);
+}
+
+.leagues-screen-tabs button,
+.leagues-screen-view-tabs button {
+  flex: 0 1 auto;
+  margin: 0;
+  padding: 0.5rem 1.15rem;
+  border: 0;
+  border-right: var(--outline);
+  border-radius: 0;
+  background: var(--bg-inactive);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.leagues-screen-tabs button:last-child,
+.leagues-screen-view-tabs button:last-child {
+  border-right: none;
+}
+
+.leagues-screen-tabs button.is-active,
+.leagues-screen-view-tabs button.is-active {
+  background: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.leagues-screen-tabs button:not(.is-active):hover,
+.leagues-screen-view-tabs button:not(.is-active):hover {
+  background: var(--bg-card);
+}
+
+.leagues-screen-sub,
+.leagues-screen-own,
+.leagues-screen-meta {
+  color: var(--text-secondary);
+}
+
+.scouting-chip {
+  border: var(--outline);
+  border-radius: var(--radius-chip);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.scouting-chip.is-active {
+  background: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.screen-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.screen-empty-state-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.screen-empty-state-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.screen-empty-state-hint {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.help-inline-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  vertical-align: -0.15em;
+}
+
+.help-card h2 .help-inline-icon {
+  margin-right: 0.35rem;
+}
+
+.scout-region-map-confidence-counts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+}
+
+.scout-region-map-confidence-counts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.negotiation-verdict-icon {
+  display: inline-block;
+  vertical-align: -0.2em;
+  margin-right: 0.15rem;
+}
+
+.scout-confidence-icon.is-known {
+  color: var(--accent-positive);
+}
+
+.scout-confidence-icon.is-unclear {
+  color: var(--accent-warning);
+}
+
+.scout-confidence-icon.is-unknown {
+  color: var(--text-muted);
+}
+
+.calendar-milestone-list {
+  list-style: none;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.calendar-milestone-chip {
+  margin: 0;
+  padding: 0.12rem 0.3rem;
+  border-radius: var(--radius-klein);
+  background: var(--bg-inactive);
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-milestone-chip.is-past {
+  opacity: 0.55;
+}
+
+.calendar-milestone-overflow {
+  margin: 0;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}

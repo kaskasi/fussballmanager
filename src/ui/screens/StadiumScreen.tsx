@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Construction, Dumbbell, Home, Star } from "lucide-react";
+import { Construction, Dumbbell, Home, Shirt, Star } from "lucide-react";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
 import {
   ACADEMY_FACILITIES,
@@ -385,7 +385,7 @@ function StadiumPitchPlan({
             title={shirtDeal ? `${shirtDeal.brand} auf der Brust` : "Trikot ohne Brustlogo"}
             onClick={() => onOpenSlot(shirt.id)}
           >
-            <span aria-hidden="true">👕</span>
+            <Shirt size={18} aria-hidden="true" strokeWidth={2.5} />
             <span>{shirtDeal?.brand ?? "Shirt-Slot"}</span>
           </button>
         </aside>

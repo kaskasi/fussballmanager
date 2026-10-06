@@ -239,28 +239,20 @@ export function growthPolyline(points: GrowthPoint[], width = 240, height = 72):
     .join(" ");
 }
 
-export type StaerkeLane = "TW" | "IV" | "MF" | "ST";
+export type { StaerkeLane } from "../development/position-lanes.ts";
+export {
+  positionLane,
+  STAERKE_LANE_LABELS as STAERKE_LABELS,
+} from "../development/position-lanes.ts";
+
+import type { StaerkeLane } from "../development/position-lanes.ts";
+import { positionLane, STAERKE_LANE_LABELS } from "../development/position-lanes.ts";
 
 export interface StaerkeAlsBar {
   lane: StaerkeLane;
   label: string;
   /** 0–1, primary position is 1. Flexibility fills other lanes. */
   value: number;
-}
-
-const STAERKE_LABELS: Record<StaerkeLane, string> = {
-  TW: "Torhüter",
-  IV: "Verteidiger",
-  MF: "Mittelfeld",
-  ST: "Stürmer",
-};
-
-/** PRD 14.3 — four coarse lanes, not a second attribute encyclopedia. */
-export function positionLane(position: PositionPrimary): StaerkeLane {
-  if (position === "GK") return "TW";
-  if (position === "CB" || position === "LB" || position === "RB") return "IV";
-  if (position === "LW" || position === "RW" || position === "CF") return "ST";
-  return "MF";
 }
 
 export function staerkeAlsLanes(player: Player): StaerkeAlsBar[] {
@@ -272,7 +264,7 @@ export function staerkeAlsLanes(player: Player): StaerkeAlsBar[] {
   }
   return (["TW", "IV", "MF", "ST"] as const).map((lane) => ({
     lane,
-    label: STAERKE_LABELS[lane],
+    label: STAERKE_LANE_LABELS[lane],
     value: Math.min(1, Math.max(0, scores[lane])),
   }));
 }

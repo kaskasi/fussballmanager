@@ -201,6 +201,8 @@ Header-**NEXT** ist **kalendergebunden**: erst orientieren, dann Zeit/Spiel.
 
 Kalender-UI (`CalendarScreen`): Monatsfokus; **`isToday`** = Zivil-Datum aus `(season, week, weekday)`; Transferfenster nur im Raster (kein Shell-Header-Chrome); kein WeekdayStrip; kein klickbarer Zellsprung in P2.
 
+**Meilenstein-Chips (P2):** `collectCalendarMilestones(session)` liefert ETAs (Individualtraining-Ende, Verletzungsende, Camp-Leiter, Vertrags-Unlock, …). Pro Zelltag max. zwei Chips + Overflow-Zähler; Vergangenheit als `is-past`. Kein Montag-Reveal-Gate in v1 — Chips sind ab Wochenstart sichtbar.
+
 ## References
 
 - Growth Engine: PRD 02.1 und PRD 02.4

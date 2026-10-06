@@ -7,6 +7,7 @@ import { formatSeasonLabel } from "../../sim/season-label.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { sessionMonthIndex } from "../../sim/session-civil-date.ts";
 import { buildMonthGrid } from "../calendar/month-grid.ts";
+import type { CalendarMilestone } from "../calendar/calendar-milestones.ts";
 import { formatCalendarWeekDisplay, weekdayShortDisplay } from "../../i18n/calendar-display.ts";
 
 const MONTHS = [
@@ -29,11 +30,13 @@ export function CalendarScreen({
   week,
   weekday,
   league,
+  milestones = [],
 }: {
   season: number;
   week: number;
   weekday: number;
   league: LeagueState;
+  milestones?: readonly CalendarMilestone[];
 }) {
   const [monthIndex, setMonthIndex] = useState(() => sessionMonthIndex(season, week, weekday));
   const todayCellRef = useRef<HTMLDivElement | null>(null);
@@ -43,8 +46,8 @@ export function CalendarScreen({
   }, [season, week, weekday]);
 
   const cells = useMemo(
-    () => buildMonthGrid(season, monthIndex, league, { week, weekday }),
-    [season, monthIndex, league, week, weekday],
+    () => buildMonthGrid(season, monthIndex, league, { week, weekday }, milestones),
+    [season, monthIndex, league, week, weekday, milestones],
   );
 
   useEffect(() => {
@@ -109,6 +112,24 @@ export function CalendarScreen({
                       <ArrowLeftRight size={12} strokeWidth={2.5} aria-hidden />
                       Fenster schließt
                     </p>
+                  ) : null}
+                  {cell.milestones?.length ? (
+                    <ul className="calendar-milestone-list" aria-label="Meilensteine">
+                      {cell.milestones.map((entry) => (
+                        <li
+                          key={entry.id}
+                          className={`calendar-milestone-chip is-${entry.kind}${entry.isPast ? " is-past" : ""}`}
+                          title={entry.title}
+                        >
+                          {entry.shortLabel}
+                        </li>
+                      ))}
+                      {cell.milestoneOverflow ? (
+                        <li className="calendar-milestone-overflow">
+                          +{cell.milestoneOverflow}
+                        </li>
+                      ) : null}
+                    </ul>
                   ) : null}
                   {cell.match ? (
                     <p className="calendar-match-chip">

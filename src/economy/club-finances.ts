@@ -316,6 +316,11 @@ export function formatClubCash(amount: number): string {
   return `€ ${amount}`;
 }
 
+/** Weekly wage / upkeep — same magnitude rules as formatClubCash. */
+export function formatClubCashWeekly(amount: number): string {
+  return `${formatClubCash(amount)}/Wo`;
+}
+
 export function formatSignedCash(amount: number): string {
   const sign = amount < 0 ? "−" : "";
   const value = Math.abs(amount);

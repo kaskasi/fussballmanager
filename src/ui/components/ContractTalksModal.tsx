@@ -11,6 +11,7 @@
  * │ [Anbieten] [Abbrechen]              │
  * └─────────────────────────────────────┘
  */
+import { Angry, Handshake } from "lucide-react";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import {
   contractTalkBounds,
@@ -159,7 +160,11 @@ export function ContractTalksModal({
 
         {revealed ? (
           <p className={verdict.accepted ? "sponsor-deal-verdict is-ok" : "sponsor-deal-verdict is-no"}>
-            {verdict.accepted ? "🤝 " : "😤 "}
+            {verdict.accepted ? (
+              <Handshake size={16} aria-hidden="true" strokeWidth={2.5} className="negotiation-verdict-icon" />
+            ) : (
+              <Angry size={16} aria-hidden="true" strokeWidth={2.5} className="negotiation-verdict-icon" />
+            )}{" "}
             {verdict.reason}
           </p>
         ) : null}

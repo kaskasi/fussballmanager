@@ -59,8 +59,7 @@ body,
   box-shadow: none !important;
 }
 
-.app-nav,
-.club-shell-header {
+.app-nav.club-shell-header.club-shell-grid {
   background: transparent !important;
 }
 

@@ -11,6 +11,16 @@ import {
   type PrecinctStatusEffect,
 } from "../../stadium/precinct-effects.ts";
 import type { PrecinctBuilding, PrecinctState } from "../../stadium/precinct.ts";
+import {
+  PrecinctBuildingIcon,
+  PrecinctCashIcon,
+  PrecinctFansIcon,
+  PrecinctFillIcon,
+  PrecinctGroupIcon,
+  PrecinctSparkleIcon,
+  PrecinctTrainingIcon,
+  PrecinctWarnIcon,
+} from "../icons/precinct-status-icons.tsx";
 
 function formatPct(rate: number): string {
   const pct = rate * 100;
@@ -39,13 +49,23 @@ export function PrecinctStatus({
   return (
     <aside className="stadium-precinct-status" aria-label="Gelände-Effekte">
       <p className="stadium-precinct-status-kicker">
-        <span aria-hidden="true">✨</span> Effekte · {active}/{effects.length}
+        <PrecinctSparkleIcon size={16} aria-hidden="true" strokeWidth={2.5} /> Effekte · {active}/
+        {effects.length}
       </p>
       <div className="stadium-precinct-status-sheet" aria-label="Summe">
-        <span title="Zuschauer-Füllung">👁 {formatPct(totals.fill)}</span>
-        <span title="Fanbase pro Woche">📣 {formatFans(totals.fans)}</span>
-        <span title="Training">🏃 ×{totals.training.toFixed(2).replace(".", ",")}</span>
-        <span title="Imbiss und Merch pro Woche">💰 {formatMerch(totals.merch)}</span>
+        <span title="Zuschauer-Füllung">
+          <PrecinctFillIcon size={14} aria-hidden="true" strokeWidth={2.5} /> {formatPct(totals.fill)}
+        </span>
+        <span title="Fanbase pro Woche">
+          <PrecinctFansIcon size={14} aria-hidden="true" strokeWidth={2.5} /> {formatFans(totals.fans)}
+        </span>
+        <span title="Training">
+          <PrecinctTrainingIcon size={14} aria-hidden="true" strokeWidth={2.5} /> ×
+          {totals.training.toFixed(2).replace(".", ",")}
+        </span>
+        <span title="Imbiss und Merch pro Woche">
+          <PrecinctCashIcon size={14} aria-hidden="true" strokeWidth={2.5} /> {formatMerch(totals.merch)}
+        </span>
       </div>
       {PRECINCT_STATUS_GROUPS.map((group) => {
         const slots = effects.filter((entry) => entry.group === group.id);
@@ -53,7 +73,7 @@ export function PrecinctStatus({
         return (
           <section key={group.id} className="stadium-precinct-status-group" aria-label={group.label}>
             <h3>
-              <span aria-hidden="true">{group.icon}</span>
+              <PrecinctGroupIcon group={group.id} size={16} />
               {group.label}
             </h3>
             <ul>
@@ -105,9 +125,11 @@ function StatusChip({
         onFocus(effect.id);
       }}
     >
-      <span aria-hidden="true">{effect.icon}</span>
+      <PrecinctBuildingIcon building={effect.id} size={16} />
       {effect.tone === "warn" ? (
-        <strong>⚠️</strong>
+        <strong>
+          <PrecinctWarnIcon size={12} aria-hidden="true" strokeWidth={2.5} />
+        </strong>
       ) : effect.magnitude ? (
         <strong>{effect.magnitude}</strong>
       ) : (

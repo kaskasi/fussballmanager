@@ -17,7 +17,9 @@ import {
   type DecisionAction,
   type YouthInboxState,
 } from "../../youth/decision-inbox.ts";
-import type { YouthCamp } from "../../youth/satellite-camps.ts";
+import { campNationById, type YouthCamp } from "../../youth/satellite-camps.ts";
+import { campsAwaitingLeaderChoice } from "../../youth/camp-leader-hire.ts";
+import { campLeaderPostfachItemId } from "../../inbox/postfach-camp-leader.ts";
 import { formatCalendarWeekDisplay } from "../../i18n/calendar-display.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
@@ -58,6 +60,7 @@ export function HubActionColumn({
     nextQueuedPlayer ? formatPlayerName(nextQueuedPlayer) : undefined,
   );
   const previewEvents = clubEvents.slice(0, HUB_EVENTS_PREVIEW);
+  const campLeaderMail = campsAwaitingLeaderChoice(youthCamps);
 
   return (
     <div className="hub-action-column">
@@ -112,6 +115,27 @@ export function HubActionColumn({
                     <span className="hub-inbox-row-text">
                       <strong>{formatPlayerName(player)}</strong>
                       <span className="hub-inbox-row-detail">{inboxItemLabel(item, storyCast)}</span>
+                    </span>
+                    <span className="hub-inbox-row-cta" aria-hidden="true">
+                      →
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+            {campLeaderMail.map((camp) => {
+              const nation = campNationById(camp.id);
+              const itemId = campLeaderPostfachItemId(camp.id);
+              return (
+                <li key={itemId}>
+                  <button
+                    type="button"
+                    className="hub-inbox-row"
+                    onClick={() => onOpenPostfach(itemId)}
+                  >
+                    <span className="hub-inbox-row-text">
+                      <strong>{nation?.label ?? camp.id}</strong>
+                      <span className="hub-inbox-row-detail">Camp-Leiter · Kandidaten</span>
                     </span>
                     <span className="hub-inbox-row-cta" aria-hidden="true">
                       →

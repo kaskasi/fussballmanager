@@ -18,3 +18,7 @@ assets/textures/ambientcg/.DS_Store
 # FM2001 PNG captures (README committed)
 fmscreens/**/*.png
 !fmscreens/**/README.md
+
+# WIP club logos / precinct refs — bake via docs/design-refs/logos before commit (PRD 15.7)
+assets/club_logos/
+pd_images/

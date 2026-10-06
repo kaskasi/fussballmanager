@@ -42,6 +42,11 @@ import {
   advanceScoutTripsOnWorkingDay,
   listActiveScoutTrips,
 } from "./scout-trip-queue.ts";
+import {
+  advanceOpponentScoutOnWorkingDay,
+  type ActiveOpponentScout,
+  type OpponentScoutWorkingDayContext,
+} from "./opponent-scout-job.ts";
 import type { ActiveScoutTrip, ScoutTripPlan } from "./scout-trip.ts";
 import {
   applyObservationWithAccuracy,
@@ -84,6 +89,7 @@ export interface ScoutBoard {
   active_scout_trip?: ActiveScoutTrip | null;
   active_scout_trips?: ActiveScoutTrip[];
   discovery_postfach_queue?: ScoutJobCompleteNotice[];
+  active_opponent_scout?: ActiveOpponentScout | null;
 }
 
 export function normalizeScoutBoard(board: ScoutBoard): ScoutBoard {
@@ -109,6 +115,7 @@ export function normalizeScoutBoard(board: ScoutBoard): ScoutBoard {
     active_scout_trips: listActiveScoutTrips(board),
     active_scout_trip: listActiveScoutTrips(board)[0] ?? null,
     discovery_postfach_queue: board.discovery_postfach_queue ?? [],
+    active_opponent_scout: board.active_opponent_scout ?? null,
   };
 }
 
@@ -128,6 +135,7 @@ export function createScoutBoard(
     active_scout_trips: [],
     active_scout_trip: null,
     discovery_postfach_queue: [],
+    active_opponent_scout: null,
   };
 }
 
@@ -278,11 +286,13 @@ export function advanceScoutWorkingDay(
   season = 1,
   week = 1,
   playerDivisionId?: WorldDivisionId,
+  opponentScoutContext?: OpponentScoutWorkingDayContext | null,
 ): ScoutBoard {
   const before = normalizeScoutBoard(board);
   if (!isScoutWorkingWeekday(weekday)) return before;
   let next = advanceRegionScoutOnWorkingDay(before, weekday, rivalPlayers);
   next = advanceScoutTripsOnWorkingDay(next, rivalPlayers, network);
+  next = advanceOpponentScoutOnWorkingDay(next, network, opponentScoutContext);
   const normalized = normalizeScoutBoard(next);
   const jobNotices = noticesFromDiscoveryJobAdvance({
     before,

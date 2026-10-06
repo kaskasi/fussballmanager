@@ -21,7 +21,9 @@ import {
 import { SCOUT_MAP_ZONES } from "./scout-region-map.ts";
 import { initialEstimateForPlayer } from "./market-list.ts";
 
-export type ScoutJobCompleteKind = "region_complete" | "club_complete";
+import type { OpponentScoutReport } from "./opponent-scout-bundle.ts";
+
+export type ScoutJobCompleteKind = "region_complete" | "club_complete" | "opponent_scout_complete";
 
 export interface ScoutJobHighlight {
   playerId: string;
@@ -45,6 +47,11 @@ export interface ScoutJobCompleteNotice {
   clubName?: string;
   playersAdded?: number;
   highlights?: ScoutJobHighlight[];
+  matchId?: string;
+  opponentShortName?: string;
+  opponentCrestId?: string;
+  assignedScoutName?: string;
+  report?: OpponentScoutReport;
 }
 
 const MAX_QUEUE = 24;

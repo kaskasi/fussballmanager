@@ -42,6 +42,9 @@ import { careerTeamId } from "../sim/rival-growth.ts";
 import { formatCalendarWeek } from "../sim/game-calendar.ts";
 import { listProSquad, sortProSquadRows } from "../squad/pro-roster.ts";
 import { formMark } from "../ui/player-profile.ts";
+import type { ScoutBoard } from "../scouting/scout-board.ts";
+import type { ScoutNetworkState } from "../scouting/scout-network.ts";
+import { OpponentScoutMatchAction } from "../ui/components/OpponentScoutMatchAction.tsx";
 
 type CareerLineupScreenProps = {
   setup: CareerMatchSetup;
@@ -58,6 +61,10 @@ type CareerLineupScreenProps = {
   homeStadiumCapacity?: number;
   fanbaseMood?: FanbaseMood;
   poorForm?: boolean;
+  season?: number;
+  scoutBoard?: ScoutBoard;
+  scoutNetwork?: ScoutNetworkState;
+  onStartOpponentScout?: () => void;
 };
 
 const TACTICS_STYLE_IDS: TacticsPresetId[] = [1, 2, 3];
@@ -77,6 +84,10 @@ export function CareerLineupScreen({
   homeStadiumCapacity,
   fanbaseMood,
   poorForm,
+  season = 1,
+  scoutBoard,
+  scoutNetwork,
+  onStartOpponentScout,
 }: CareerLineupScreenProps) {
   const managerClubId = careerTeamId(setup.playerClubId);
   const fallbackPlan = useMemo(() => loadTacticsPreset(tacticsPresets, 1), [tacticsPresets]);
@@ -223,6 +234,15 @@ export function CareerLineupScreen({
             <p className="career-lineup-sub">
               {filledCount}/11 · {formatCalendarWeek(week)} {weekdayLabel(weekday)}
             </p>
+            {scoutBoard && scoutNetwork && onStartOpponentScout ? (
+              <OpponentScoutMatchAction
+                setup={setup}
+                season={season}
+                scoutBoard={scoutBoard}
+                scoutNetwork={scoutNetwork}
+                onStart={onStartOpponentScout}
+              />
+            ) : null}
           </div>
           <label className="career-lineup-formation career-lineup-formation--inline">
             Formation

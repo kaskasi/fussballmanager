@@ -11,3 +11,11 @@ Run on a fresh or migrated save after buy-fix and scout Postfach ship.
 7. **Intake week:** Note whether intake remains the emotional peak.
 
 Log the week you stop adding clubs — input for batch-scout UX (PRD 20).
+
+## PRD 22 — Gegner-Scouting (save ≥ 69)
+
+1. **Spielwoche:** Kalender zeigt Gegner-Panel; **Gegner scouten** startet nur mit freiem Scout.
+2. **Fortschritt:** NEXT (Mo–Fr) ×4 — Fortschritt 1/4 … 4/4; Scout blockiert für Karten-Reise (vor Spieltag).
+3. **Postfach:** Karte mit 2–3 Taktik-Zeilen, Modus-Ergebnis; **Taktik** → Aufstellung, **Kalender** → Kalender.
+4. **Pre-Match:** Gleicher CTA auf Aufstellungs-Screen.
+5. **Trust:** Niedriger Trust → max. 2 Zeilen / breitere Bandbreiten (sichtbar in Zahlen).

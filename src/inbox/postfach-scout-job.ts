@@ -16,6 +16,14 @@ export function scoutJobClubPostfachItemId(
   return `${PREFIX}club:${careerClubId}:${season}:${week}`;
 }
 
+export function scoutJobOpponentPostfachItemId(
+  matchId: string,
+  season: number,
+  week: number,
+): string {
+  return `${PREFIX}opponent:${matchId}:${season}:${week}`;
+}
+
 export function isScoutJobPostfachItemId(itemId: string): boolean {
   return itemId.startsWith(PREFIX);
 }

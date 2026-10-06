@@ -47,6 +47,10 @@ import { ClubCrest } from "./ui/components/ClubCrest.tsx";
 import { clubLogoUrlForPlayerClub } from "./ui/assets/club-logo.ts";
 import { joinDocumentTitle, useDocumentTitle } from "./ui/document-title.ts";
 import { prepareCareerMatch, type CareerMatchSetup } from "./sim/career-match-setup.ts";
+import {
+  buildOpponentScoutWorkingDayContext,
+  startOpponentScoutJob,
+} from "./scouting/opponent-scout-job.ts";
 import type { WatchedPlayerMatch } from "./sim/watched-player-match.ts";
 import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
 import {
@@ -312,6 +316,7 @@ function clearTransientUi(
     setPostfachItemId: (value: string | null) => void;
     setProfileFeedback: (value: string | null) => void;
     setCareerMatchSetup: (value: CareerMatchSetup | null) => void;
+    setCareerMatchUiVisible: (value: boolean) => void;
     setMatchNavAction: (value: NavPrimaryAction | null) => void;
     setMarketFilters: (value: MarketFilters) => void;
     setMarketSort: (value: MarketSort) => void;
@@ -323,6 +328,7 @@ function clearTransientUi(
   setters.setPostfachItemId(null);
   setters.setProfileFeedback(null);
   setters.setCareerMatchSetup(null);
+  setters.setCareerMatchUiVisible(true);
   setters.setMatchNavAction(null);
   setters.setMarketFilters(DEFAULT_MARKET_FILTERS);
   setters.setMarketSort(DEFAULT_MARKET_SORT);
@@ -342,6 +348,8 @@ export default function App() {
   const [simulating, setSimulating] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState<string | null>(null);
   const [careerMatchSetup, setCareerMatchSetup] = useState<CareerMatchSetup | null>(null);
+  const [careerMatchUiVisible, setCareerMatchUiVisible] = useState(true);
+  const careerMatchInLineupRef = useRef(true);
   const [matchNavAction, setMatchNavActionState] = useState<NavPrimaryAction | null>(null);
   const matchNavActionRef = useRef<NavPrimaryAction | null>(null);
   const careerMatchFlowRef = useRef(false);
@@ -644,6 +652,7 @@ export default function App() {
           }));
           careerMatchFlowRef.current = false;
           setCareerMatchSetup(null);
+          setCareerMatchUiVisible(true);
           await finishWeekSimulation(outcome);
         } finally {
           setSimulating(false);
@@ -657,6 +666,7 @@ export default function App() {
       }));
       careerMatchFlowRef.current = false;
       setCareerMatchSetup(null);
+      setCareerMatchUiVisible(true);
     },
     [finishWeekSimulation, patchSession, simulating],
   );
@@ -709,6 +719,64 @@ export default function App() {
     [patchSession],
   );
 
+  const advanceScoutBoardForSession = useCallback(
+    (current: typeof session, weekday: number) => {
+      const club = current.world.clubs.find(
+        (entry) => worldCareerClubId(entry.id) === current.clubId,
+      );
+      const division = club?.division_id ?? "regionalliga-nord";
+      const opponentCtx = buildOpponentScoutWorkingDayContext(current);
+      return advanceScoutWorkingDay(
+        current.scoutBoard,
+        weekday,
+        current.rivalPlayers,
+        current.scoutNetwork,
+        current.world.clubs,
+        current.season,
+        current.week,
+        division,
+        opponentCtx,
+      );
+    },
+    [],
+  );
+
+  const handleStartOpponentScout = useCallback(() => {
+    const setup = prepareCareerMatch(session);
+    if (!setup) {
+      flashNotice(t("scouting.opponent.notMatchWeek"));
+      return;
+    }
+    const { board, reason } = startOpponentScoutJob(
+      session.scoutBoard,
+      session.scoutNetwork,
+      setup,
+      session.season,
+      session.week,
+    );
+    if (reason !== "ok") {
+      const message =
+        reason === "no_scout"
+          ? t("scouting.opponent.noScout")
+          : reason === "job_active"
+            ? t("scouting.opponent.jobElsewhere")
+            : t("scouting.opponent.notMatchWeek");
+      flashNotice(message);
+      return;
+    }
+    patchSession((current) => ({ ...current, scoutBoard: board }));
+    flashNotice(t("scouting.opponent.started"), "ok");
+  }, [flashNotice, patchSession, session]);
+
+  const handleOpenOpponentScoutLineup = useCallback(() => {
+    const setup = prepareCareerMatch(session);
+    if (!setup) return;
+    careerMatchFlowRef.current = true;
+    setCareerMatchUiVisible(true);
+    setCareerMatchSetup(setup);
+    setScreen("hub");
+  }, [session]);
+
   const handleNext = useCallback(() => {
     if (simulating) return;
 
@@ -740,31 +808,19 @@ export default function App() {
       if (skip.daysAdvanced > 0) {
         patchSession((current) => {
           const now = { season: current.season, week: current.week, weekday: skip.weekday };
-          const club = current.world.clubs.find(
-            (entry) => worldCareerClubId(entry.id) === current.clubId,
-          );
-          const division = club?.division_id ?? "regionalliga-nord";
           return {
             ...current,
             weekday: skip.weekday,
             youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced, current.players),
             youthCamps: tickCampLeaderHires(current.youthCamps, now),
-            scoutBoard: advanceScoutWorkingDay(
-              current.scoutBoard,
-              skip.weekday,
-              current.rivalPlayers,
-              current.scoutNetwork,
-              current.world.clubs,
-              current.season,
-              current.week,
-              division,
-            ),
+            scoutBoard: advanceScoutBoardForSession(current, skip.weekday),
           };
         });
       }
       const setup = prepareCareerMatch(sessionAtTarget);
       if (setup) {
         careerMatchFlowRef.current = true;
+        setCareerMatchUiVisible(true);
         setCareerMatchSetup(setup);
         setScreen("hub");
       }
@@ -799,29 +855,17 @@ export default function App() {
     if (skip.action === "advance" && skip.daysAdvanced > 0) {
       patchSession((current) => {
         const now = { season: current.season, week: current.week, weekday: skip.weekday };
-        const club = current.world.clubs.find(
-          (entry) => worldCareerClubId(entry.id) === current.clubId,
-        );
-        const division = club?.division_id ?? "regionalliga-nord";
         return {
           ...current,
           weekday: skip.weekday,
           youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced, current.players),
           youthCamps: tickCampLeaderHires(current.youthCamps, now),
-          scoutBoard: advanceScoutWorkingDay(
-            current.scoutBoard,
-            skip.weekday,
-            current.rivalPlayers,
-            current.scoutNetwork,
-            current.world.clubs,
-            current.season,
-            current.week,
-            division,
-          ),
+          scoutBoard: advanceScoutBoardForSession(current, skip.weekday),
         };
       });
     }
   }, [
+    advanceScoutBoardForSession,
     openPostfach,
     patchSession,
     screen,
@@ -1860,6 +1904,7 @@ export default function App() {
       setPostfachItemId,
       setProfileFeedback,
       setCareerMatchSetup,
+      setCareerMatchUiVisible,
       setMatchNavAction,
       setMarketFilters,
       setMarketSort,
@@ -1892,6 +1937,7 @@ export default function App() {
         setPostfachItemId,
         setProfileFeedback,
         setCareerMatchSetup,
+        setCareerMatchUiVisible,
         setMatchNavAction,
         setMarketFilters,
         setMarketSort,
@@ -1914,6 +1960,7 @@ export default function App() {
       setPostfachItemId,
       setProfileFeedback,
       setCareerMatchSetup,
+      setCareerMatchUiVisible,
       setMatchNavAction,
       setMarketFilters,
       setMarketSort,
@@ -1972,9 +2019,35 @@ export default function App() {
   careerMatchFlowRef.current = careerMatchSetup != null;
   matchNavActionRef.current = matchNavAction;
 
+  const matchFlowBrowsing = Boolean(careerMatchSetup && !careerMatchUiVisible);
+
+  const returnToCareerLineup = useCallback(() => {
+    setCareerMatchUiVisible(true);
+    setScreen("hub");
+  }, []);
+
+  const handleAppNavigate = useCallback(
+    (next: Screen) => {
+      if (
+        careerMatchSetup &&
+        careerMatchUiVisible &&
+        next !== "hub" &&
+        careerMatchInLineupRef.current
+      ) {
+        setCareerMatchUiVisible(false);
+      }
+      setScreen(next);
+    },
+    [careerMatchSetup, careerMatchUiVisible],
+  );
+
   const handleHeaderPrimaryClick = useCallback(() => {
+    if (matchFlowBrowsing) {
+      returnToCareerLineup();
+      return;
+    }
     const action = matchNavActionRef.current;
-    const inMatchFlow = careerMatchFlowRef.current;
+    const inMatchFlow = careerMatchFlowRef.current && careerMatchUiVisible;
     if (action?.onClick && !action.disabled) {
       action.onClick();
       return;
@@ -1983,9 +2056,20 @@ export default function App() {
       return;
     }
     handleNext();
-  }, [handleNext]);
+  }, [careerMatchUiVisible, handleNext, matchFlowBrowsing, returnToCareerLineup]);
 
-  const nextHeaderTitle = careerMatchSetup
+  const backToLineupAction = useMemo<NavPrimaryAction>(
+    () => ({
+      label: t("match.lineup.backToSelection"),
+      onClick: returnToCareerLineup,
+      title: t("match.lineup.backToSelectionTitle"),
+    }),
+    [returnToCareerLineup, locale],
+  );
+
+  const nextHeaderTitle = matchFlowBrowsing
+    ? t("match.lineup.backToSelection")
+    : careerMatchSetup
     ? t("shell.next")
     : hasInboxBlockerForNext(session, youthInbox, players)
       ? t("shell.nextToPostfach")
@@ -2002,8 +2086,12 @@ export default function App() {
     onHeaderPrimaryClick: handleHeaderPrimaryClick,
     onNewGame: resetGame,
     onOpenSaves: () => setSaveManagerOpen(true),
-    matchFlowActive: careerMatchSetup != null,
-    primaryAction: careerMatchSetup ? matchNavAction : null,
+    matchFlowActive: Boolean(careerMatchSetup && careerMatchUiVisible),
+    primaryAction: matchFlowBrowsing
+      ? backToLineupAction
+      : careerMatchSetup && careerMatchUiVisible
+        ? matchNavAction
+        : null,
     matchSkipToReport: careerMatchSetup ? matchSkipToReport : null,
     nextHeaderTitle,
   };
@@ -2080,7 +2168,7 @@ export default function App() {
 
   useDocumentTitle(browserDocumentTitle);
 
-  if (careerMatchSetup) {
+  if (careerMatchSetup && careerMatchUiVisible) {
     return (
       <>
         <AppChrome
@@ -2091,7 +2179,7 @@ export default function App() {
           clubInitials={shellClub.initials}
           clubLogoSrc={shellClub.logoSrc}
           leaguePlace={shellClub.leaguePlace}
-          onNavigate={setScreen}
+          onNavigate={handleAppNavigate}
           onCampusNavigate={() => undefined}
           hubActions={navActions}
           accessibility={accessibility}
@@ -2127,6 +2215,13 @@ export default function App() {
           homeStadiumCapacity={stadiumTotalCapacity(stadium)}
           fanbaseMood={matchFanbaseMood}
           poorForm={matchPoorForm}
+          season={season}
+          scoutBoard={scoutBoard}
+          scoutNetwork={scoutNetwork}
+          onStartOpponentScout={handleStartOpponentScout}
+          onLineupPhaseChange={(inLineup) => {
+            careerMatchInLineupRef.current = inLineup;
+          }}
         />
         {saveManagerOverlay}
         {spendConfirmOverlay}
@@ -2148,7 +2243,7 @@ export default function App() {
           clubInitials={shellClub.initials}
           clubLogoSrc={shellClub.logoSrc}
           leaguePlace={shellClub.leaguePlace}
-          onNavigate={setScreen}
+          onNavigate={handleAppNavigate}
           headerBack={shellHeaderBack}
           onCloseProfile={() => setForeignPlayerId(null)}
           onCampusNavigate={() => undefined}
@@ -2214,7 +2309,7 @@ export default function App() {
           clubInitials={shellClub.initials}
           clubLogoSrc={shellClub.logoSrc}
           leaguePlace={shellClub.leaguePlace}
-          onNavigate={setScreen}
+          onNavigate={handleAppNavigate}
           headerBack={shellHeaderBack}
           onCloseProfile={() => setProfileId(null)}
           onCampusNavigate={() => undefined}
@@ -2278,7 +2373,7 @@ export default function App() {
         clubInitials={shellClub.initials}
         clubLogoSrc={shellClub.logoSrc}
         leaguePlace={shellClub.leaguePlace}
-        onNavigate={setScreen}
+        onNavigate={handleAppNavigate}
         headerBack={shellHeaderBack}
         onCampusNavigate={() => undefined}
         hubActions={navActions}
@@ -2342,6 +2437,8 @@ export default function App() {
             setScoutingInitialTab("hits");
             setScreen("scouting");
           }}
+          onOpenOpponentScoutTactics={handleOpenOpponentScoutLineup}
+          onOpenCalendarFromPostfach={() => setScreen("calendar")}
         />
       ) : null}
       {openingBlocked(session) ? (
@@ -2557,6 +2654,10 @@ export default function App() {
           weekday={weekday}
           league={league}
           milestones={calendarMilestones}
+          matchSetup={prepareCareerMatch(session)}
+          scoutBoard={scoutBoard}
+          scoutNetwork={scoutNetwork}
+          onStartOpponentScout={handleStartOpponentScout}
         />
       ) : null}
       {clubProfileId && screen !== "leagues" ? (

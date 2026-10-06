@@ -14,7 +14,8 @@ import {
   type ScoutDiscoveryState,
 } from "./scout-discovery.ts";
 import type { Player } from "../types/player.ts";
-import type { ScoutKnowledgeTarget } from "./scout-board.ts";
+import type { ScoutBoard, ScoutKnowledgeTarget } from "./scout-board.ts";
+import { busyScoutIds } from "./scout-busy.ts";
 import { isClubDirectoryVisible } from "./scout-discovery.ts";
 import type { WorldClub, WorldDivisionId } from "../world/world-generator.ts";
 
@@ -67,7 +68,7 @@ export function dispatchQueuedScoutTrips<T extends ScoutTripBoardSlice>(
   let active = listActiveScoutTrips(board);
 
   while (queue.length > 0) {
-    const busyIds = active.map((trip) => trip.assigned_scout_id);
+    const busyIds = busyScoutIds(board as ScoutBoard);
     const scoutId = pickAvailableScoutId(network.scouts, busyIds);
     if (!scoutId) break;
 

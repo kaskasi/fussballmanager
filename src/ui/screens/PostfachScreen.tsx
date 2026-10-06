@@ -26,6 +26,8 @@ export function PostfachScreen({
   onDismissScoutJob,
   onOpenScoutingNetwork,
   onOpenScoutingHits,
+  onOpenOpponentScoutTactics,
+  onOpenCalendarFromPostfach,
 }: {
   players: Player[];
   youthInbox: YouthInboxState;
@@ -43,6 +45,8 @@ export function PostfachScreen({
   onDismissScoutJob: (itemId: string) => void;
   onOpenScoutingNetwork: () => void;
   onOpenScoutingHits: () => void;
+  onOpenOpponentScoutTactics?: () => void;
+  onOpenCalendarFromPostfach?: () => void;
 }) {
   useT();
 
@@ -66,6 +70,8 @@ export function PostfachScreen({
           onDismissScoutJob={onDismissScoutJob}
           onOpenScoutingNetwork={onOpenScoutingNetwork}
           onOpenScoutingHits={onOpenScoutingHits}
+          onOpenOpponentScoutTactics={onOpenOpponentScoutTactics}
+          onOpenCalendarFromPostfach={onOpenCalendarFromPostfach}
         />
       </section>
     </main>

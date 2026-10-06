@@ -192,6 +192,8 @@ Neue Spiele starten mit leerem Pool; Käufe und Verhandlungen sind ohne Pool-Ein
 
 **Kalender (Mo–Fr):** Regions-Jobs und Karten-Reisen ticken mit **Header-NEXT** an **Arbeitstagen** (`working_days_left` / `working_days_done`), nicht als +5-Paket am Sonntags-Wochensim. Sa/So zählen nicht. Ein abgeschlossener Regions-Job = +1 Tier (1 Arbeitstag pro Job, v1).
 
+**Gegner-Scout (PRD 22):** In **Spielwochen** vom Kalender / Pre-Match — ein Scout, **5 Arbeitstage**, danach 10× Headless-Sims → Postfach mit 2–3 Taktik-Empfehlungen (`active_opponent_scout`, Save ≥ 69). Blockiert denselben Scout wie Karten-Reisen.
+
 **Karten-Reisen (PRD 21):** Geplante Route → `scout_trip_queue`; bis zu **eine aktive Reise pro eingestelltem Scout** (`active_scout_trips`). Freie Scouts übernehmen Warteschlange sofort (auch direkt nach Einstellung). **Dauer = Anzahl Vereins-Stopps** auf der Route (1 Arbeitstag pro Club; pro Tag `recordMapClubVisit`). UI: Route + Marker nur auf der Detailkarte; Grid-Karten nur Flavor-Foto (+ optional Kurzstatus „Scout unterwegs“).
 
 Persistenz (`scout_board.discovery`): `region_scout_tier`, `discovered_region_ids`, `visited_club_ids`, `discovered_club_ids` (Legacy-Alias), `scout_pool`.

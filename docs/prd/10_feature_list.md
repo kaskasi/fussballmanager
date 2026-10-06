@@ -89,6 +89,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F4.7 | Shortlist-Sparklines | M2 | Beobachtete Entwicklung als Verlauf (PRD 04.5) |
 | F4.8 | False Positives | M2 | Prodigy-Trap, Hype-Blasen (PRD 04.4) |
 | F4.9 | Spielerakte | M3 | Vita, Geburtsort, Vereinshistorie |
+| F4.10 | Gegner-Scout (Sim-Bündel) | M2 | 10× Headless-Sims, 5 Arbeitstage, Postfach-Analytics (PRD 22) |
 
 ### Modul 5 · Transfers & Verträge *(PRD 05)*
 

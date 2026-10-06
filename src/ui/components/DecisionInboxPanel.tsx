@@ -38,6 +38,7 @@ import {
 } from "../../inbox/postfach-camp-leader.ts";
 import { CampLeaderInboxCard } from "./CampLeaderInboxCard.tsx";
 import { ScoutJobInboxCard } from "./ScoutJobInboxCard.tsx";
+import { OpponentScoutInboxCard } from "./OpponentScoutInboxCard.tsx";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import {
   scoutJobNoticeById,
@@ -65,6 +66,8 @@ export function DecisionInboxPanel({
   onDismissScoutJob,
   onOpenScoutingNetwork,
   onOpenScoutingHits,
+  onOpenOpponentScoutTactics,
+  onOpenCalendarFromPostfach,
 }: {
   inbox: YouthInboxState;
   players: Player[];
@@ -83,6 +86,8 @@ export function DecisionInboxPanel({
   onDismissScoutJob?: (itemId: string) => void;
   onOpenScoutingNetwork?: () => void;
   onOpenScoutingHits?: () => void;
+  onOpenOpponentScoutTactics?: () => void;
+  onOpenCalendarFromPostfach?: () => void;
 }) {
   useT();
   const focus = useMemo(() => inboxWeekFocus(inbox, players), [inbox, players]);
@@ -226,6 +231,15 @@ export function DecisionInboxPanel({
                 onHire={(candidate) => onHireCampLeader(activeCamp.id, candidate)}
               />
             </section>
+          ) : activeScoutJob?.kind === "opponent_scout_complete" && onDismissScoutJob ? (
+            <OpponentScoutInboxCard
+              notice={activeScoutJob}
+              postIndex={postfachQueueIds.indexOf(activeId ?? "") + 1}
+              postTotal={postfachOpenTotal}
+              onDismiss={() => onDismissScoutJob(activeScoutJob.id)}
+              onOpenTactics={onOpenOpponentScoutTactics}
+              onOpenCalendar={onOpenCalendarFromPostfach}
+            />
           ) : activeScoutJob && onDismissScoutJob ? (
             <ScoutJobInboxCard
               notice={activeScoutJob}
@@ -324,6 +338,12 @@ function scoutJobQueuePreview(notice: ScoutJobCompleteNotice | undefined): {
     return {
       name: notice.zoneLabel ?? notice.zoneId ?? "Region",
       topic: t("postfach.scoutJob.queueTopicRegion"),
+    };
+  }
+  if (notice.kind === "opponent_scout_complete") {
+    return {
+      name: notice.opponentShortName ?? t("postfach.opponentScout.queueName"),
+      topic: t("postfach.opponentScout.queueTopic"),
     };
   }
   return {

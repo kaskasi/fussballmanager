@@ -27,6 +27,8 @@ import type { MatchdayCashBreakdown } from "../stadium/matchday-commerce.ts";
 import type { FanbaseMood } from "../stadium/fanbase.ts";
 import { matchAmbiencePhotoUrl } from "../ui/assets/mood-photos.ts";
 import { t } from "../i18n/index.ts";
+import type { ScoutBoard } from "../scouting/scout-board.ts";
+import type { ScoutNetworkState } from "../scouting/scout-network.ts";
 
 export function CareerMatch({
   setup,
@@ -49,6 +51,11 @@ export function CareerMatch({
   homeStadiumCapacity,
   fanbaseMood,
   poorForm,
+  season = 1,
+  scoutBoard,
+  scoutNetwork,
+  onStartOpponentScout,
+  onLineupPhaseChange,
 }: {
   setup: CareerMatchSetup;
   players: readonly Player[];
@@ -70,6 +77,11 @@ export function CareerMatch({
   homeStadiumCapacity?: number;
   fanbaseMood?: FanbaseMood;
   poorForm?: boolean;
+  season?: number;
+  scoutBoard?: ScoutBoard;
+  scoutNetwork?: ScoutNetworkState;
+  onStartOpponentScout?: () => void;
+  onLineupPhaseChange?: (inLineup: boolean) => void;
 }) {
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
   const capacity = homeStadiumCapacity ?? 8_000;
@@ -84,6 +96,10 @@ export function CareerMatch({
   useEffect(() => {
     setPlayerClubSquad(null);
   }, [setup.playerClubId, setup.homeTeamId, setup.awayTeamId]);
+
+  useEffect(() => {
+    onLineupPhaseChange?.(playerClubSquad == null);
+  }, [playerClubSquad, onLineupPhaseChange]);
 
   const handleLineupConfirm = useCallback((squad: Squad) => {
     setPlayerClubSquad(squad);
@@ -111,6 +127,10 @@ export function CareerMatch({
         homeStadiumCapacity={capacity}
         fanbaseMood={mood}
         poorForm={poorForm}
+        season={season}
+        scoutBoard={scoutBoard}
+        scoutNetwork={scoutNetwork}
+        onStartOpponentScout={onStartOpponentScout}
       />
     );
   }

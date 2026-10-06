@@ -1,7 +1,9 @@
 /** PRD 22 — headless opponent prep sims (engine wrapper only). */
 
 export const OPPONENT_SCOUT_SIM_COUNT = 10;
-export const OPPONENT_SCOUT_WORKING_DAYS = 5;
+export const OPPONENT_SCOUT_WORKING_DAYS = 4;
+
+export type OpponentScoutRiskTag = "balanced" | "high_line" | "low_block";
 
 export interface OpponentScoutSimVariant {
   variantIndex: number;
@@ -9,6 +11,15 @@ export interface OpponentScoutSimVariant {
   homeScore: number;
   awayScore: number;
   eventCount: number;
+  formationLabel?: string;
+  formation?: string;
+  risk?: OpponentScoutRiskTag;
+  goalsFor?: number;
+  goalsAgainst?: number;
+  shotsFor?: number;
+  shotsOnTargetFor?: number;
+  shotsAgainst?: number;
+  shotsOnTargetAgainst?: number;
 }
 
 export interface OpponentScoutBundleResult {

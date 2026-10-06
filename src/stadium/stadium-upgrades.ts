@@ -153,10 +153,15 @@ export function purchaseStadiumUpgrade(
   upgradeId: string,
   baseBlocks: StadiumBlock[],
   week = 1,
+  chargedCost?: number,
 ): { stadium: ClubStadium; finances: ClubFinances; ok: boolean; reason?: string } {
   const check = canPurchaseStadiumUpgrade(stadium, finances, upgradeId);
   if (!check.allowed || check.cost === undefined) {
     return { stadium, finances, ok: false, reason: check.reason };
+  }
+  const fee = chargedCost ?? check.cost;
+  if (finances.cash < fee) {
+    return { stadium, finances, ok: false, reason: "Nicht genug Cash." };
   }
   const nextLevels = {
     ...(stadium.upgrade_levels ?? {}),
@@ -168,7 +173,7 @@ export function purchaseStadiumUpgrade(
   );
   return {
     stadium: upgraded,
-    finances: spendClubCash(finances, check.cost, week),
+    finances: spendClubCash(finances, fee, week),
     ok: true,
   };
 }

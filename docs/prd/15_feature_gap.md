@@ -156,7 +156,7 @@ Priorität aus intensivem Playtest — **kein Ersatz** für nummerierte PRDs.
 |---|---|---|
 | **P0** | Kalender: ein Ligaspiel-Chip pro Spieltag (Sa), nicht täglich | Done 2026-10-06 — `month-grid.ts`, `CalendarScreen` |
 | **P0** | Transfer Kauf Saisonwoche 2 (Sommerfenster) | Done 2026-10-06 — `resolve-purchase-target.ts`, `purchase-flow.test.ts` |
-| **P1** | Economy-Pacing (Infra/Stadion in ~5 Min voll) | Balancing `club-finances` / Precinct — eigene Session |
+| **P1** | Economy-Pacing (Infra/Stadion in ~5 Min voll) | Done 2026-10-06 — PRD 11.11, `early-pacing.ts`, Infra-Confirm |
 | **P1** | Umtrainieren als Slider + Roll (F2.3) | PRD-Schnipsel vor Mechanik; heute nur linear `position_retrain` |
 | **P1** | Portraits: `mens_squad` vs charge2; Match-UI `portrait_seed` | Charge2 erledigt; Match-Report-Portraits vereinheitlichen |
 | **P2** | Training-Camp 3×2-Grid (F3.9-Slice + Assets) | M2 |

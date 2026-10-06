@@ -361,6 +361,14 @@ pipeline.club_finances = {
 - Belegte Banden addieren auf die F6.2-Sponsoring-Zeile.
 - Saisonende: Torschützenkönig-/Meister-Staffel je +€ 1 Mio. als `other`.
 
+### 11.11 Early capital pacing (playtest)
+
+**Ziel:** In den ersten Spielwochen kein „Precinct + Tribüne in Minuten leerkaufen“ — Underdog-Tempo.
+
+- **Wochen 1–6:** Precinct- und Stadion-Käufe nutzen `infrastructureCostForWeek(base, week)` — bis **+20 %** Aufschlag in Woche 1, linear abnehmend bis Woche 7 = Basispreis (`src/economy/early-pacing.ts`).
+- **Confirm:** Gelände- und Tribünen-Ausgaben ≥ 25 000 € oder in Wochen 1–6 **immer** über Spend-Runway-Sheet (PRD 11.5), auch wenn der Betrag unter der normalen 100 k-Schwelle liegt.
+- **Kein** Kreditprodukt (F6.6 bleibt out). Kein hartes Wochenlimit an Käufen in v1 — nur Preis + Reibung.
+
 ### 11.10 Sponsor-Inventar (F6.5)
 
 Slots am Stadion (PRD 14.7): Banden auf den Tribünen-Karten + ein Shirt-Slot.

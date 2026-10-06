@@ -59,6 +59,11 @@ import {
 import { TransferNegotiationModal } from "./ui/components/TransferNegotiationModal.tsx";
 import { SpendConfirmSheet } from "./ui/components/SpendConfirmSheet.tsx";
 import {
+  infrastructureCostForWeek,
+  isEarlyCapitalSeason,
+  needsInfrastructureSpendConfirm,
+} from "./economy/early-pacing.ts";
+import {
   boardCashFloor,
   needsSpendConfirm,
   spendRunway,
@@ -330,6 +335,7 @@ export default function App() {
   const [pendingSpend, setPendingSpend] = useState<{
     title: string;
     cost: number;
+    earlySeasonHint: boolean;
     apply: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>;
   } | null>(null);
   const saveToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -438,15 +444,24 @@ export default function App() {
       cost: number,
       title: string,
       apply: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>,
+      options?: { infrastructure?: boolean },
     ) => {
       const wageBill = weeklyWageBill(players, session.clubId);
-      if (needsSpendConfirm(cost, wageBill)) {
-        setPendingSpend({ title, cost, apply });
+      const needsConfirm = options?.infrastructure
+        ? needsInfrastructureSpendConfirm(cost, session.week, wageBill)
+        : needsSpendConfirm(cost, wageBill);
+      if (needsConfirm) {
+        setPendingSpend({
+          title,
+          cost,
+          earlySeasonHint: Boolean(options?.infrastructure && isEarlyCapitalSeason(session.week)),
+          apply,
+        });
         return;
       }
       patchSession(apply);
     },
-    [patchSession, players, session.clubId],
+    [patchSession, players, session.clubId, session.week],
   );
 
   useEffect(() => {
@@ -897,48 +912,65 @@ export default function App() {
       const check = canPurchaseStadiumUpgrade(stadium, finances, upgradeId);
       if (!check.allowed || check.cost === undefined) return;
       const def = stadiumUpgradeCatalog().find((entry) => entry.id === upgradeId);
-      requestClubSpend(check.cost, def ? `${def.icon} ${def.name}` : "Tribünen-Ausbau", (current) => {
-        const result = purchaseStadiumUpgrade(
-          current.stadium,
-          current.finances,
-          upgradeId,
-          STADIUM_BASE_BLOCKS,
-          current.week,
-        );
-        if (!result.ok) return current;
-        return {
-          ...current,
-          stadium: normalizeClubStadium(result.stadium),
-          finances: result.finances,
-        };
-      });
+      const quoted = infrastructureCostForWeek(check.cost, week);
+      requestClubSpend(
+        quoted,
+        def ? `${def.icon} ${def.name}` : "Tribünen-Ausbau",
+        (current) => {
+          const recheck = canPurchaseStadiumUpgrade(current.stadium, current.finances, upgradeId);
+          if (!recheck.allowed || recheck.cost === undefined) return current;
+          const fee = infrastructureCostForWeek(recheck.cost, current.week);
+          const result = purchaseStadiumUpgrade(
+            current.stadium,
+            current.finances,
+            upgradeId,
+            STADIUM_BASE_BLOCKS,
+            current.week,
+            fee,
+          );
+          if (!result.ok) return current;
+          return {
+            ...current,
+            stadium: normalizeClubStadium(result.stadium),
+            finances: result.finances,
+          };
+        },
+        { infrastructure: true },
+      );
     },
-    [finances, requestClubSpend, stadium],
+    [finances, requestClubSpend, stadium, week],
   );
 
   const handlePlacePrecinct = useCallback(
     (building: PrecinctBuilding, x: number, y: number, from?: { x: number; y: number }) => {
       const precinct = stadium.precinct ?? emptyPrecinct();
-      const cost = precinctPlacementCost(precinct, building, from);
+      const baseCost = precinctPlacementCost(precinct, building, from);
+      const cost = infrastructureCostForWeek(baseCost, week);
       if (cost > finances.cash) return;
       const def = PRECINCT_BUILDINGS.find((entry) => entry.id === building);
-      requestClubSpend(cost, def ? `${def.icon} ${def.label}` : "Gelände", (current) => {
-        const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
-        const actualCost = precinctPlacementCost(currentPrecinct, building, from);
-        if (actualCost > current.finances.cash) return current;
-        const nextPrecinct = placePrecinctBuilding(currentPrecinct, x, y, building, from);
-        if (nextPrecinct === currentPrecinct) return current;
-        return {
-          ...current,
-          stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
-          finances:
-            actualCost === 0
-              ? current.finances
-              : spendClubCash(current.finances, actualCost, current.week),
-        };
-      });
+      requestClubSpend(
+        cost,
+        def ? `${def.icon} ${def.label}` : "Gelände",
+        (current) => {
+          const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
+          const actualBase = precinctPlacementCost(currentPrecinct, building, from);
+          const actualCost = infrastructureCostForWeek(actualBase, current.week);
+          if (actualCost > current.finances.cash) return current;
+          const nextPrecinct = placePrecinctBuilding(currentPrecinct, x, y, building, from);
+          if (nextPrecinct === currentPrecinct) return current;
+          return {
+            ...current,
+            stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
+            finances:
+              actualCost === 0
+                ? current.finances
+                : spendClubCash(current.finances, actualCost, current.week),
+          };
+        },
+        { infrastructure: true },
+      );
     },
-    [finances.cash, requestClubSpend, stadium.precinct],
+    [finances.cash, requestClubSpend, stadium.precinct, week],
   );
 
   const handleUpgradeAcademy = useCallback(() => {
@@ -1014,59 +1046,83 @@ export default function App() {
       const check = canUpgradePrecinctBuilding(precinct, building, finances.cash);
       if (!check.allowed) return;
       const def = PRECINCT_BUILDINGS.find((entry) => entry.id === building);
-      requestClubSpend(check.cost, def ? `${def.icon} ${def.label} Ausbau` : "Gelände-Ausbau", (current) => {
-        const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
-        const nextCheck = canUpgradePrecinctBuilding(currentPrecinct, building, current.finances.cash);
-        if (!nextCheck.allowed) return current;
-        return {
-          ...current,
-          stadium: normalizeClubStadium({
-            ...current.stadium,
-            precinct: upgradePrecinctBuilding(currentPrecinct, building),
-          }),
-          finances: spendClubCash(current.finances, nextCheck.cost, current.week),
-        };
-      });
+      const quoted = infrastructureCostForWeek(check.cost, week);
+      requestClubSpend(
+        quoted,
+        def ? `${def.icon} ${def.label} Ausbau` : "Gelände-Ausbau",
+        (current) => {
+          const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
+          const nextCheck = canUpgradePrecinctBuilding(currentPrecinct, building, current.finances.cash);
+          if (!nextCheck.allowed) return current;
+          const fee = infrastructureCostForWeek(nextCheck.cost, current.week);
+          return {
+            ...current,
+            stadium: normalizeClubStadium({
+              ...current.stadium,
+              precinct: upgradePrecinctBuilding(currentPrecinct, building),
+            }),
+            finances: spendClubCash(current.finances, fee, current.week),
+          };
+        },
+        { infrastructure: true },
+      );
     },
-    [finances.cash, requestClubSpend, stadium.precinct],
+    [finances.cash, requestClubSpend, stadium.precinct, week],
   );
 
   const handleBuyParcel = useCallback(() => {
     const precinct = stadium.precinct ?? emptyPrecinct();
     const check = canBuyPrecinctExpansion(precinct, finances.cash);
     if (!check.allowed) return;
-    requestClubSpend(check.cost, "🗺️ Gelände-Erweiterung", (current) => {
-      const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
-      const nextCheck = canBuyPrecinctExpansion(currentPrecinct, current.finances.cash);
-      if (!nextCheck.allowed) return current;
-      return {
-        ...current,
-        stadium: normalizeClubStadium({
-          ...current.stadium,
-          precinct: buyPrecinctExpansion(currentPrecinct),
-        }),
-        finances: spendClubCash(current.finances, nextCheck.cost, current.week),
-      };
-    });
-  }, [finances.cash, requestClubSpend, stadium.precinct]);
-
-  const handlePlaceStreet = useCallback(
-    (cells: Array<{ x: number; y: number }>) => {
-      patchSession((current) => {
-        const precinct = current.stadium.precinct ?? emptyPrecinct();
-        const result = placeStreetRun(precinct, cells, current.finances.cash);
-        if (result.spent <= 0) return current;
+    const quoted = infrastructureCostForWeek(check.cost, week);
+    requestClubSpend(
+      quoted,
+      "🗺️ Gelände-Erweiterung",
+      (current) => {
+        const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
+        const nextCheck = canBuyPrecinctExpansion(currentPrecinct, current.finances.cash);
+        if (!nextCheck.allowed) return current;
+        const fee = infrastructureCostForWeek(nextCheck.cost, current.week);
         return {
           ...current,
           stadium: normalizeClubStadium({
             ...current.stadium,
-            precinct: result.state,
+            precinct: buyPrecinctExpansion(currentPrecinct),
           }),
-          finances: spendClubCash(current.finances, result.spent, current.week),
+          finances: spendClubCash(current.finances, fee, current.week),
         };
-      });
+      },
+      { infrastructure: true },
+    );
+  }, [finances.cash, requestClubSpend, stadium.precinct, week]);
+
+  const handlePlaceStreet = useCallback(
+    (cells: Array<{ x: number; y: number }>) => {
+      const precinct = stadium.precinct ?? emptyPrecinct();
+      const preview = placeStreetRun(precinct, cells, finances.cash);
+      if (preview.spent <= 0) return;
+      const quoted = infrastructureCostForWeek(preview.spent, week);
+      requestClubSpend(
+        quoted,
+        "🛣️ Straße",
+        (current) => {
+          const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
+          const result = placeStreetRun(currentPrecinct, cells, current.finances.cash);
+          if (result.spent <= 0) return current;
+          const fee = infrastructureCostForWeek(result.spent, current.week);
+          return {
+            ...current,
+            stadium: normalizeClubStadium({
+              ...current.stadium,
+              precinct: result.state,
+            }),
+            finances: spendClubCash(current.finances, fee, current.week),
+          };
+        },
+        { infrastructure: true },
+      );
     },
-    [patchSession],
+    [finances.cash, requestClubSpend, stadium.precinct, week],
   );
 
   const handleExpandPrecinct = useCallback(
@@ -1074,29 +1130,34 @@ export default function App() {
       const precinct = stadium.precinct ?? emptyPrecinct();
       const check = canNudgePrecinctPatch(precinct, patchId, edge, finances.cash, delta);
       if (!check.allowed) return;
-      requestClubSpend(check.cost, "🗺️ Gelände wachsen", (current) => {
-        const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
-        const nextCheck = canNudgePrecinctPatch(
-          currentPrecinct,
-          patchId,
-          edge,
-          current.finances.cash,
-          delta,
-        );
-        if (!nextCheck.allowed) return current;
-        const nextPrecinct = nudgePrecinctPatch(currentPrecinct, patchId, edge, delta);
-        if (nextPrecinct === currentPrecinct) return current;
-        return {
-          ...current,
-          stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
-          finances:
-            nextCheck.cost === 0
-              ? current.finances
-              : spendClubCash(current.finances, nextCheck.cost, current.week),
-        };
-      });
+      const quoted = infrastructureCostForWeek(check.cost, week);
+      requestClubSpend(
+        quoted,
+        "🗺️ Gelände wachsen",
+        (current) => {
+          const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
+          const nextCheck = canNudgePrecinctPatch(
+            currentPrecinct,
+            patchId,
+            edge,
+            current.finances.cash,
+            delta,
+          );
+          if (!nextCheck.allowed) return current;
+          const nextPrecinct = nudgePrecinctPatch(currentPrecinct, patchId, edge, delta);
+          if (nextPrecinct === currentPrecinct) return current;
+          const fee = infrastructureCostForWeek(nextCheck.cost, current.week);
+          return {
+            ...current,
+            stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
+            finances:
+              fee === 0 ? current.finances : spendClubCash(current.finances, fee, current.week),
+          };
+        },
+        { infrastructure: true },
+      );
     },
-    [finances.cash, requestClubSpend, stadium.precinct],
+    [finances.cash, requestClubSpend, stadium.precinct, week],
   );
 
   const handleShrinkPrecinctToMin = useCallback(
@@ -1751,6 +1812,7 @@ export default function App() {
   const spendConfirmOverlay = pendingSpend ? (
     <SpendConfirmSheet
       title={pendingSpend.title}
+      earlySeasonHint={pendingSpend.earlySeasonHint}
       runway={spendRunway(
         finances,
         weeklyWageBill(players, session.clubId),

@@ -4,11 +4,13 @@ import { spendRunwayLines, type SpendRunway } from "../../economy/spend-runway.t
 export function SpendConfirmSheet({
   title,
   runway,
+  earlySeasonHint = false,
   onConfirm,
   onCancel,
 }: {
   title: string;
   runway: SpendRunway;
+  earlySeasonHint?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -25,6 +27,11 @@ export function SpendConfirmSheet({
             </li>
           ))}
         </ul>
+        {earlySeasonHint ? (
+          <p className="spend-confirm-note" role="status">
+            Frühe Saison — Bauprojekte binden Liquidität und kosten derzeit etwas mehr.
+          </p>
+        ) : null}
         {runway.belowFloor ? (
           <p className="spend-confirm-warn" role="status">
             Vorstand-Kasse verfehlt, wenn die Saison heute endet. Kauf trotzdem möglich.

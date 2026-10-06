@@ -1,34 +1,31 @@
-# PRD 21 — Scout-Karte: Routen-Minigame (Brainstorm)
+# PRD 21 — Scout-Karte: Routen-Minigame
 
-**Status:** Ausbaustufe — **nicht** F4.4 v1. Near-term v1 bleibt Tier-Fortschritt + Pool-% (Save ≥ 62, PRD 04.5).
+**Status:** M1 shipped on branch — flavor tiles, detail map, soft route speed (option D).
 
-## Vision
+## Navigation
 
-Statt nur passivem Regions-Job-Fortschritt optional ein **Routen-Rätsel** auf einer **echten Karte** (Geo/SVG-Städte), nicht das 2×2-Zonen-Grid. Spieler plant eine Route für den Scout durch Städte/Clubs (Kanten zeichnen; Euler-/Hamilton-Varianten mit klaren Regeln). Jedes Mal ein neues Rätsel (procedural aus Zonen-Graph + Wochen-Seed).
+- **2×2 grid (Screen 3a):** After `region_scout_tier >= 1`, zone tile shows **flavor photo** (`public/assets/scout-maps/flavor/{zoneId}.jpg`); click tile or „Region scouten“ → **Screen 3a-detail**.
+- **Detail:** Flavor background + SVG road graph; tap nodes to chain edges into a route.
 
-**Nicht:** 18 Clubs mit einem Klick; Minigame **ersetzt nicht** die 3×-Region-Pflicht, es **verziert** oder beschleunigt sie.
+## Route rules (Jan — option D)
 
-## Trigger (offen)
+- **No hard fail:** Any route is valid; repeating the same road is allowed.
+- **Duplicate edges** → lower `progress_multiplier` on `active_region_scout` (slower weekly job bar).
+- **All edges unique** (≥2 steps) → `no_duplicate_bonus` flag (future: extra directory outcome; M1: faster progress only).
+- **Autopilot** on detail screen; skip does not block NEXT.
 
-- Nur beim **Start** eines Regions-Jobs (Tier 0→1, 1→2, 2→3), **oder**
-- Optionaler Bonus (schnellerer Job / +1 Highlight im Postfach), **Skip** mit Autopilot-Fallback (Default-Next-Spieler).
+## Assets
 
-## Produktfragen
+- Flavor + attribution: `pd_images/image_refs.md` → shipped JPEGs under `public/assets/scout-maps/flavor/`.
+- **One master relief SVG** (Germany) planned; M1 uses flavor + abstract graph (`src/scouting/scout-map-layout.ts`). Relief clip `reliefViewBox` per zone reserved.
 
-| Frage | Optionen |
-|---|---|
-| Skip vs. Pflicht pro Tier? | Skip + Default-Route vs. einmal pro Save-Tutorial Pflicht |
-| Graph pro Zone oder überregional? | Eine Zone pro Rätsel vs. verknüpfte Nachbarzonen |
-| Mobile / Steam Deck | Touch-Ziehen vs. Tap-Reihenfolge |
-| Belohnung | Nur Flavor vs. −1 Woche Job vs. extra Postfach-Highlight |
+## Sim
 
-## Technik (Richtung)
+- `startRegionScoutJob(board, zoneId, { progress_multiplier, no_duplicate_bonus })`
+- `advanceDiscoveryWeek` applies multiplier to region job weekly step.
 
-- Client-only; deterministischer Seed: `hash(master_seed, season, week, zone_id, tier)`.
-- Keine Engine-Änderung; Hook in `startRegionScoutJob` / UI-Modal vor Job-Start.
-- SVG-First (design.md); keine 3D.
+## Future
 
-## Abgrenzung
-
-- v1: `region_scout_tier`, sichtbare Clubs, Pool-Coverage — siehe PRD 04.5 / 09 Screen 3a.
-- PRD 21: Nachfolger-UX für F4.4, wenn Karten-Geo und Graph-Content existieren.
+- Club crest pins on graph nodes tied to `directoryVisible` clubs
+- Ship optimized `scout-germany-relief.svg` clip per zone
+- Postfach route summary line

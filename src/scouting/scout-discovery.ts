@@ -29,6 +29,9 @@ export interface ActiveClubScout {
 export interface ActiveRegionScout {
   zone_id: string;
   progress: number;
+  /** PRD 21: route efficiency (duplicate edges slow weekly progress). */
+  progress_multiplier?: number;
+  no_duplicate_bonus?: boolean;
 }
 
 export function emptyDiscovery(): ScoutDiscoveryState {
@@ -270,7 +273,8 @@ export function advanceDiscoveryWeek<T extends DiscoveryBoardSlice>(
   }
 
   if (activeRegion) {
-    const step = Math.round(REGION_SCOUT_PROGRESS_PER_WEEK * boost);
+    const routeBoost = activeRegion.progress_multiplier ?? 1;
+    const step = Math.round(REGION_SCOUT_PROGRESS_PER_WEEK * boost * routeBoost);
     const progress = Math.min(DISCOVERY_COMPLETE, activeRegion.progress + step);
     if (progress >= DISCOVERY_COMPLETE) {
       discovery = completeRegionDiscovery(discovery, activeRegion.zone_id);
@@ -304,10 +308,16 @@ export function startClubScoutJob<T extends DiscoveryBoardSlice>(
 export function startRegionScoutJob<T extends DiscoveryBoardSlice>(
   board: T,
   zoneId: string,
+  route?: Pick<ActiveRegionScout, "progress_multiplier" | "no_duplicate_bonus">,
 ): T {
   return {
     ...board,
-    active_region_scout: { zone_id: zoneId, progress: 0 },
+    active_region_scout: {
+      zone_id: zoneId,
+      progress: 0,
+      progress_multiplier: route?.progress_multiplier ?? 1,
+      no_duplicate_bonus: route?.no_duplicate_bonus ?? false,
+    },
   };
 }
 

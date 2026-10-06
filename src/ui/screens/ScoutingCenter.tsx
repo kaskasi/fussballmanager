@@ -39,6 +39,10 @@ import { Hint } from "../components/Hint.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { ScoutRegionMap } from "../components/ScoutRegionMap.tsx";
+import { ScoutRegionDetailScreen } from "../components/ScoutRegionDetailScreen.tsx";
+import { buildScoutDiscoveryMapModel } from "../../scouting/scout-region-map.ts";
+import { canStartRegionScout, normalizeDiscovery } from "../../scouting/scout-discovery.ts";
+import type { ScoutRouteScore } from "../../scouting/scout-route-puzzle.ts";
 import { ScoutNetworkPanel } from "../components/ScoutNetworkPanel.tsx";
 import { ScoutConfidenceIcon } from "../components/ScoutConfidenceIcon.tsx";
 import { formatClubCash } from "../../economy/club-finances.ts";
@@ -130,7 +134,7 @@ export function ScoutingCenter({
   activeClubScout?: ActiveClubScout | null;
   activeRegionScout?: ActiveRegionScout | null;
   onScoutClub: (careerClubId: string) => void;
-  onScoutRegion: (zoneId: string) => void;
+  onScoutRegion: (zoneId: string, route?: ScoutRouteScore) => void;
   filters: MarketFilters;
   onFiltersChange: (filters: MarketFilters) => void;
   sort: MarketSort;
@@ -154,8 +158,33 @@ export function ScoutingCenter({
   initialTab?: ScoutingInitialTab | null;
   onInitialTabApplied?: () => void;
 }) {
-  useT();
+  const t = useT();
   const [tab, setTab] = useState<ScoutingTab>("hits");
+  const [detailZoneId, setDetailZoneId] = useState<string | null>(null);
+  const mapModel = useMemo(
+    () =>
+      buildScoutDiscoveryMapModel({
+        clubs: worldClubs,
+        targets,
+        rivalPlayers,
+        discovery,
+        playerDivisionId,
+        activeClubScout,
+        activeRegionScout,
+      }),
+    [
+      activeClubScout,
+      activeRegionScout,
+      discovery,
+      playerDivisionId,
+      rivalPlayers,
+      targets,
+      worldClubs,
+    ],
+  );
+  const detailZone = detailZoneId
+    ? mapModel.zones.find((zone) => zone.id === detailZoneId)
+    : undefined;
 
   useEffect(() => {
     if (initialTab) {
@@ -263,17 +292,36 @@ export function ScoutingCenter({
             {formatClubCash(scoutNetworkWeeklyWage(scoutNetwork))}/Woche
           </p>
           <section className="game-panel scouting-section" aria-label={t("scouting.network.aria")}>
-            <ScoutRegionMap
-              clubs={worldClubs}
-              targets={targets}
-              rivalPlayers={rivalPlayers}
-              discovery={discovery}
-              playerDivisionId={playerDivisionId}
-              activeClubScout={activeClubScout}
-              activeRegionScout={activeRegionScout}
-              onScoutClub={onScoutClub}
-              onScoutRegion={onScoutRegion}
-            />
+            {detailZone ? (
+              <ScoutRegionDetailScreen
+                zone={detailZone}
+                zoneLabel={detailZone.label}
+                canStartRegionJob={canStartRegionScout(
+                  detailZone.id,
+                  normalizeDiscovery(discovery),
+                  activeRegionScout,
+                )}
+                activeRegionScout={activeRegionScout}
+                onBack={() => setDetailZoneId(null)}
+                onStartRegionJob={(score) => {
+                  onScoutRegion(detailZone.id, score);
+                  setDetailZoneId(null);
+                }}
+              />
+            ) : (
+              <ScoutRegionMap
+                clubs={worldClubs}
+                targets={targets}
+                rivalPlayers={rivalPlayers}
+                discovery={discovery}
+                playerDivisionId={playerDivisionId}
+                activeClubScout={activeClubScout}
+                activeRegionScout={activeRegionScout}
+                onScoutClub={onScoutClub}
+                onScoutRegion={(zoneId) => onScoutRegion(zoneId)}
+                onOpenRegionDetail={setDetailZoneId}
+              />
+            )}
           </section>
           <ScoutNetworkPanel
             network={scoutNetwork}

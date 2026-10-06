@@ -4,6 +4,7 @@ import { MapPin, Radar } from "lucide-react";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
 import type { ScoutDiscoveryState } from "../../scouting/scout-discovery.ts";
 import { DISCOVERY_COMPLETE } from "../../scouting/scout-discovery.ts";
+import { layoutForZone } from "../../scouting/scout-map-layout.ts";
 import {
   buildScoutDiscoveryMapModel,
   type ScoutMapClubPin,
@@ -23,6 +24,7 @@ export function ScoutRegionMap({
   activeRegionScout,
   onScoutClub,
   onScoutRegion,
+  onOpenRegionDetail,
 }: {
   clubs: readonly WorldClub[];
   targets: readonly BoardTarget[];
@@ -33,6 +35,7 @@ export function ScoutRegionMap({
   activeRegionScout?: { zone_id: string; progress: number } | null;
   onScoutClub: (careerClubId: string) => void;
   onScoutRegion: (zoneId: string) => void;
+  onOpenRegionDetail?: (zoneId: string) => void;
 }) {
   const t = useT();
   const model = useMemo(
@@ -56,19 +59,46 @@ export function ScoutRegionMap({
         <p className="scout-region-map-hint">{t("scouting.map.poolVsKnowledge")}</p>
       </header>
       <div className="scout-region-map-body scout-discovery-grid">
-        {model.zones.map((zone, index) => (
+        {model.zones.map((zone, index) => {
+          const flavor = zone.regionTier > 0 ? layoutForZone(zone.id)?.flavorAsset : undefined;
+          const openDetail = () => {
+            if (layoutForZone(zone.id) && onOpenRegionDetail) {
+              onOpenRegionDetail(zone.id);
+            } else {
+              onScoutRegion(zone.id);
+            }
+          };
+          return (
           <article
             key={zone.id}
-            className={`scout-discovery-zone is-${zone.tone}`}
-            style={{ gridColumn: (index % 2) + 1, gridRow: Math.floor(index / 2) + 1 }}
+            className={`scout-discovery-zone is-${zone.tone}${flavor ? " has-flavor" : ""}`}
+            style={{
+              gridColumn: (index % 2) + 1,
+              gridRow: Math.floor(index / 2) + 1,
+              ...(flavor
+                ? {
+                    backgroundImage: `linear-gradient(rgb(255 255 255 / 82%), rgb(255 255 255 / 88%)), url(${flavor})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }
+                : {}),
+            }}
           >
+            {flavor && onOpenRegionDetail ? (
+              <button
+                type="button"
+                className="scout-discovery-zone-flavor-hit"
+                onClick={() => onOpenRegionDetail(zone.id)}
+                aria-label={t("scouting.map.openRegionDetail", { label: zone.label })}
+              />
+            ) : null}
             <header className="scout-discovery-zone-head">
               <h3>{zone.label}</h3>
               {zone.regionTier < zone.regionTierMax ? (
                 <button
                   type="button"
                   className="scout-discovery-region-btn"
-                  onClick={() => onScoutRegion(zone.id)}
+                  onClick={openDetail}
                   disabled={activeRegionScout != null}
                 >
                   <Radar size={14} aria-hidden />
@@ -112,7 +142,8 @@ export function ScoutRegionMap({
               <p className="scout-discovery-locked">{t("scouting.map.regionLocked")}</p>
             )}
           </article>
-        ))}
+        );
+        })}
       </div>
     </section>
   );

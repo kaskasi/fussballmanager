@@ -908,7 +908,7 @@ export default function App() {
   );
 
   const handleScoutRegion = useCallback(
-    (zoneId: string) => {
+    (zoneId: string, route?: import("./scouting/scout-route-puzzle.ts").ScoutRouteScore) => {
       patchSession((current) => {
         const discovery = normalizeDiscovery(current.scoutBoard.discovery);
         if (!canStartRegionScout(zoneId, discovery, current.scoutBoard.active_region_scout)) {
@@ -916,7 +916,10 @@ export default function App() {
         }
         return {
           ...current,
-          scoutBoard: startRegionScoutJob(current.scoutBoard, zoneId),
+          scoutBoard: startRegionScoutJob(current.scoutBoard, zoneId, {
+            progress_multiplier: route?.progressMultiplier,
+            no_duplicate_bonus: route?.noDuplicateBonus,
+          }),
         };
       });
     },

@@ -1649,10 +1649,129 @@ body {
 }
 
 .scout-discovery-zone {
+  position: relative;
   padding: 0.65rem 0.75rem;
   border-radius: 0.65rem;
   border: 1px solid var(--panel-border, #e2e8f0);
   background: rgb(255 255 255 / 72%);
+}
+
+.scout-discovery-zone.has-flavor {
+  min-height: 9rem;
+}
+
+.scout-discovery-zone-flavor-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background: transparent;
+  border-radius: inherit;
+}
+
+.scout-discovery-zone.has-flavor .scout-discovery-zone-head,
+.scout-discovery-zone.has-flavor .scout-discovery-clubs,
+.scout-discovery-zone.has-flavor .scout-discovery-locked {
+  position: relative;
+  z-index: 1;
+}
+
+.scout-region-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.scout-region-detail-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.scout-region-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary, #334155);
+}
+
+.scout-region-detail-speed {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+}
+
+.scout-region-detail-map-wrap {
+  position: relative;
+  border-radius: 0.65rem;
+  overflow: hidden;
+  border: 1px solid var(--panel-border, #e2e8f0);
+  aspect-ratio: 4 / 3;
+  max-height: 22rem;
+}
+
+.scout-region-detail-flavor {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scout-region-detail-graph {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
+
+.scout-route-edge {
+  stroke: rgb(15 23 42 / 35%);
+  stroke-width: 0.65;
+}
+
+.scout-route-edge.is-active {
+  stroke: var(--tinte-blau, #1d4ed8);
+  stroke-width: 1.1;
+}
+
+.scout-route-edge.is-dup {
+  stroke: var(--warn-tinte, #ca8a04);
+  stroke-width: 1.2;
+  stroke-dasharray: 2 1.5;
+}
+
+.scout-route-node {
+  fill: #fff;
+  stroke: #0f172a;
+  stroke-width: 0.5;
+  cursor: pointer;
+}
+
+.scout-route-node.is-selected {
+  fill: var(--sonnengelb, #facc15);
+}
+
+.scout-route-label {
+  font-size: 3px;
+  fill: #0f172a;
+  pointer-events: none;
+}
+
+.scout-region-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+  align-items: center;
 }
 
 .scout-discovery-zone.is-strong {

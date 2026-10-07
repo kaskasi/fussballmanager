@@ -219,9 +219,44 @@ export function buildClubRoutingEdges(nodes: readonly ScoutMapNode[]): ScoutMapE
   return edges;
 }
 
-function placeForClubPin(club: ScoutMapClubPin): string | null {
+export function placeForClubPin(club: ScoutMapClubPin): string | null {
   if (club.place) return club.place;
   return extractPlaceFromClubName(club.name);
+}
+
+export interface ScoutCityPlaceGroup {
+  place: string;
+  x: number;
+  y: number;
+  clubs: readonly ScoutMapClubPin[];
+}
+
+/** Group directory-visible clubs by `place` for city hover cards on the detail map. */
+export function cityPlaceGroupsOnMap(
+  layout: Pick<ScoutZoneMapLayout, "mapMode" | "cityMapBounds" | "citySvgViewBox">,
+  clubs: readonly ScoutMapClubPin[],
+): ScoutCityPlaceGroup[] {
+  const byPlace = new Map<string, ScoutMapClubPin[]>();
+  for (const club of clubs) {
+    if (!club.directoryVisible) continue;
+    const place = placeForClubPin(club);
+    if (!place) continue;
+    const list = byPlace.get(place) ?? [];
+    list.push(club);
+    byPlace.set(place, list);
+  }
+  const groups: ScoutCityPlaceGroup[] = [];
+  for (const [place, clubList] of byPlace) {
+    const coords = mapCoordsForPlace(place, layout);
+    if (!coords) continue;
+    groups.push({
+      place,
+      x: coords.x,
+      y: coords.y,
+      clubs: [...clubList].sort((a, b) => a.shortName.localeCompare(b.shortName)),
+    });
+  }
+  return groups.sort((a, b) => a.place.localeCompare(b.place));
 }
 
 /** Visible clubs on map; GPS-backed when `place` matches catalog, else hashed fallback. */

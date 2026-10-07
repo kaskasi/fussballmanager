@@ -1,8 +1,9 @@
 /** WIREFRAME: PRD 09 Screen 3a-detail — relief map + club route (PRD 21) */
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { MapPin, Route } from "lucide-react";
 import {
   buildZoneMapNodes,
+  cityPlaceGroupsOnMap,
   clubsOnPath,
   lastScoutableClubOnPath,
   layoutForZone,
@@ -32,7 +33,8 @@ import { useT } from "../../i18n/react.ts";
 import { clubLogoUrlForId } from "../assets/club-logo.ts";
 import { pickClubLogoPinLayout } from "../../scouting/scout-map-pin-layout.ts";
 import type { ScoutMapEdge } from "../../scouting/scout-route-puzzle.ts";
-import type { ScoutMapNode } from "../../scouting/scout-map-layout.ts";
+import type { ScoutCityPlaceGroup, ScoutMapNode } from "../../scouting/scout-map-layout.ts";
+import { ScoutCityPlacePopover } from "./ScoutCityPlacePopover.tsx";
 
 function stopNumberOnPath(pathNodeIds: readonly string[], nodeId: string): number | null {
   for (let index = pathNodeIds.length - 1; index >= 0; index -= 1) {
@@ -136,6 +138,12 @@ export function ScoutRegionDetailScreen({
   const layout = layoutForZone(zone.id);
   const [routeMode, setRouteMode] = useState(false);
   const [pathNodeIds, setPathNodeIds] = useState<string[]>([]);
+  const mapWrapRef = useRef<HTMLDivElement | null>(null);
+  const [cityPopover, setCityPopover] = useState<{
+    group: ScoutCityPlaceGroup;
+    left: number;
+    top: number;
+  } | null>(null);
 
   const zoneActiveTrips = useMemo(
     () => (activeScoutTrips ?? []).filter((trip) => trip.zone_id === zone.id),
@@ -169,6 +177,26 @@ export function ScoutRegionDetailScreen({
         : [],
     [layout, mapViewBox, primaryActiveTrip?.target_club_id, tripActiveHere, zone.clubs],
   );
+
+  const cityPlaceGroups = useMemo(
+    () => (layout ? cityPlaceGroupsOnMap(layout, zone.clubs) : []),
+    [layout, zone.clubs],
+  );
+
+  const showCityPlaceHover = !routeMode && !tripActiveHere;
+
+  const openCityPopover = (group: ScoutCityPlaceGroup, clientX: number, clientY: number) => {
+    const wrap = mapWrapRef.current;
+    if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    setCityPopover({
+      group,
+      left: clientX - rect.left + 8,
+      top: clientY - rect.top + 8,
+    });
+  };
+
+  const closeCityPopover = () => setCityPopover(null);
 
   const pathEdgeIds = useMemo(() => pathEdgeIdsFromNodePath(pathNodeIds), [pathNodeIds]);
 
@@ -232,7 +260,10 @@ export function ScoutRegionDetailScreen({
   };
 
   const toggleRouteMode = () => {
-    setRouteMode((active) => !active);
+    setRouteMode((active) => {
+      if (!active) closeCityPopover();
+      return !active;
+    });
   };
 
   const isCityMap = layout.mapMode === "city";
@@ -276,7 +307,14 @@ export function ScoutRegionDetailScreen({
           </p>
         ) : null}
       </header>
-      <div className="scout-region-detail-map-wrap">
+      <div
+        className="scout-region-detail-map-wrap"
+        ref={mapWrapRef}
+        onMouseLeave={showCityPlaceHover ? closeCityPopover : undefined}
+      >
+        {showCityPlaceHover && cityPopover ? (
+          <ScoutCityPlacePopover group={cityPopover.group} style={cityPopover} />
+        ) : null}
         <svg
           className="scout-region-detail-graph"
           viewBox={mapViewBox}
@@ -337,11 +375,26 @@ export function ScoutRegionDetailScreen({
                   : routeMode && node.scoutable
                     ? "scout-route-node"
                     : "scout-route-node is-muted";
+            const placeGroup = showCityPlaceHover
+              ? cityPlaceGroups.find((group) =>
+                  group.clubs.some((club) => club.careerClubId === node.careerClubId),
+                )
+              : undefined;
             return (
               <g
                 key={node.id}
                 className={node.discovered ? "scout-route-club is-visited" : undefined}
                 onClick={() => clickable && handleNodeClick(node.id)}
+                onMouseEnter={
+                  showCityPlaceHover && placeGroup
+                    ? (event) => openCityPopover(placeGroup, event.clientX, event.clientY)
+                    : undefined
+                }
+                onMouseMove={
+                  showCityPlaceHover && placeGroup
+                    ? (event) => openCityPopover(placeGroup, event.clientX, event.clientY)
+                    : undefined
+                }
                 style={{ cursor: clickable ? "pointer" : undefined }}
               >
                 {visited ? (
@@ -370,6 +423,26 @@ export function ScoutRegionDetailScreen({
               </g>
             );
           })}
+          {showCityPlaceHover
+            ? cityPlaceGroups.map((group) => (
+                <g
+                  key={`city-hit-${group.place}`}
+                  className="scout-city-place-hit"
+                  onMouseEnter={(event) => openCityPopover(group, event.clientX, event.clientY)}
+                  onMouseMove={(event) => openCityPopover(group, event.clientX, event.clientY)}
+                  onFocus={(event) => {
+                    const rect = event.currentTarget.getBoundingClientRect();
+                    openCityPopover(group, rect.left + rect.width / 2, rect.top + rect.height / 2);
+                  }}
+                  onBlur={closeCityPopover}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={t("scouting.map.cityPopover.aria", { place: group.place })}
+                >
+                  <circle cx={group.x} cy={group.y} r={layout.mapMode === "city" ? 14 : 10} />
+                </g>
+              ))
+            : null}
         </svg>
       </div>
       <footer className="scout-region-detail-actions">

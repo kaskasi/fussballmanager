@@ -1072,6 +1072,9 @@ export default function App() {
   const handleHireScout = useCallback(
     (scout: HiredScout) => {
       patchSession((current) => {
+        if (current.scoutNetwork.scouts.some((existing) => existing.id === scout.id)) {
+          return current;
+        }
         if (current.finances.cash < scout.wage_weekly * 4) {
           return sessionWithEvent(
             current,

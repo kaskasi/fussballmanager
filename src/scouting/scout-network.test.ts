@@ -3,6 +3,7 @@ import { unknownPlayer } from "./estimate-model.ts";
 import {
   applyObservationWithAccuracy,
   defaultScoutNetwork,
+  availableScoutCandidates,
   hireScout,
   scoutCandidates,
   scoutNetworkAccuracyModifier,
@@ -24,6 +25,17 @@ describe("scout network", () => {
     expect(scoutNetworkAccuracyModifier(expanded)).toBeGreaterThan(
       scoutNetworkAccuracyModifier(base),
     );
+  });
+
+  it("drops hired candidates from the market list and blocks duplicate hires", () => {
+    const base = defaultScoutNetwork(1, 2026);
+    const local = scoutCandidates("local", 1, 4, 2026)[1]!;
+    const once = hireScout(base, local);
+    expect(once.scouts.some((scout) => scout.id === local.id)).toBe(true);
+    const twice = hireScout(once, local);
+    expect(twice.scouts).toHaveLength(once.scouts.length);
+    const market = availableScoutCandidates("local", 1, 4, 2026, once);
+    expect(market.some((candidate) => candidate.id === local.id)).toBe(false);
   });
 
   it("applies tier accuracy to observations", () => {

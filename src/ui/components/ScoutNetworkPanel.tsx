@@ -3,7 +3,7 @@ import { formatClubCash } from "../../economy/club-finances.ts";
 import {
   formatTrust,
   SCOUT_TIERS,
-  scoutCandidates,
+  availableScoutCandidates,
   scoutNetworkAccuracyModifier,
   scoutNetworkCapacity,
   scoutNetworkWeeklyWage,
@@ -81,7 +81,7 @@ export function ScoutNetworkPanel({
       <div className="scout-network-market">
         {TIER_ORDER.map((tierId) => {
           const tier = SCOUT_TIERS[tierId];
-          const candidates = scoutCandidates(tierId, season, week, masterSeed);
+          const candidates = availableScoutCandidates(tierId, season, week, masterSeed, network);
           return (
             <article key={tierId} className="scout-network-tier">
               <h3>{tier.icon} {tier.label}</h3>

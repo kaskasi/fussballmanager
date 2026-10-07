@@ -152,7 +152,22 @@ export function scoutCandidates(
   });
 }
 
+/** Weekly market minus scouts already on the payroll (same candidate id). */
+export function availableScoutCandidates(
+  tier: ScoutTierId,
+  season: number,
+  week: number,
+  masterSeed: number,
+  network: ScoutNetworkState,
+): HiredScout[] {
+  const hiredIds = new Set(network.scouts.map((scout) => scout.id));
+  return scoutCandidates(tier, season, week, masterSeed).filter((candidate) => !hiredIds.has(candidate.id));
+}
+
 export function hireScout(network: ScoutNetworkState, scout: HiredScout): ScoutNetworkState {
+  if (network.scouts.some((existing) => existing.id === scout.id)) {
+    return network;
+  }
   return { scouts: [...network.scouts, scout] };
 }
 

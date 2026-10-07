@@ -1350,8 +1350,47 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 
 .calendar-cell.is-today .calendar-day-chip,
 .calendar-cell.is-today .calendar-match-chip,
+.calendar-cell.is-today .calendar-scout-chip,
 .calendar-cell.is-today .calendar-transfer-close {
   color: var(--panel);
+}
+
+.calendar-scout-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0.15rem 0 0;
+  padding: 0.1rem 0.25rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rasen) 18%, var(--panel));
+  color: var(--rasen-dunkel, var(--tinte));
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.calendar-cell.is-today .calendar-scout-chip {
+  background: color-mix(in srgb, var(--panel) 25%, transparent);
+}
+
+.hub-postfach-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--rasen);
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.hub-postfach-link:hover {
+  color: var(--tinte);
 }
 
 .calendar-cell.is-transfer-summer {

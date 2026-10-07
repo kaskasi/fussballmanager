@@ -75,6 +75,16 @@ export function HubActionColumn({
           <strong>{inboxHeadline(focus)}</strong>
         </header>
         {pipelineHint ? <p className="hub-inbox-queue-note">{pipelineHint}</p> : null}
+        {postfachCount > 0 ? (
+          <button
+            type="button"
+            className="hub-postfach-link"
+            onClick={() => onOpenPostfach(decisions[0]?.id)}
+          >
+            <Mail size={14} strokeWidth={2.25} aria-hidden />
+            {t("hub.postfach.openQueue", { count: postfachCount })}
+          </button>
+        ) : null}
         {decisions.length === 0 && postfachCount === 0 ? (
           <p className="hub-inbox-empty">
             {focus.nextQueued && nextQueuedPlayer

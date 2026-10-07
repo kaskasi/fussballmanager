@@ -142,11 +142,10 @@ Implementation: `N(1.0, σ)` multiplikativ auf den Wachstumsteil vor dem Decay, 
 
 ### 02.4 Training-Fokus-Bonus
 
-Die Woche hat **5 Trainingsslots**. Davon dürfen **bis zu 3 Fokus-Slots** sein (F2.1).
+Die Woche hat **15 Trainingsslots** (3 Einheiten pro Werktag, Mo–Fr). Davon dürfen **bis zu 2 Fokus-Slots** sein (F2.1).
 
 - Pro Attributgruppe höchstens 2 Fokus-Slots.
-- Ein Fokus-Slot auf der Gruppe: `training_focus(attr) = 1.25` für jedes Attribut der Gruppe.
-- Zwei Fokus-Slots auf derselben Gruppe: zusätzlich ×1.2, also 1.25 × 1.2 = 1.5.
+- Pro Fokus-Slot auf der Gruppe: `training_focus(attr) = 1 + 0.33` (ein Fokus) bzw. `1 + 0.66` (zwei Fokus auf derselben Gruppe) für jedes Attribut der Gruppe.
 - Kein Fokus auf der Gruppe: 1.0.
 - Session-Typen treffen Gruppen: technical → shooting, passing, dribbling, technique, weak_foot.
 

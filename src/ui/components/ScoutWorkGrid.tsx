@@ -1,5 +1,5 @@
 /** WIREFRAME: design.md §9 — Scout-Aufträge als Kachel-Grid */
-import { ClipboardList, MapPin, Radar, User } from "lucide-react";
+import { ClipboardList, MapPin, Radar, User, X } from "lucide-react";
 import { buildScoutWorkTiles, type ScoutWorkTile } from "../../scouting/scout-work-overview.ts";
 import type { ScoutWorkCancelTarget } from "../../scouting/scout-work-cancel.ts";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
@@ -110,7 +110,7 @@ function ScoutWorkTileCard({
             onCancelScoutWork(tile.cancelTarget);
           }}
         >
-          ×
+          <X size={12} strokeWidth={2.75} aria-hidden />
         </button>
       ) : null}
       <div className="scout-work-tile-visual">

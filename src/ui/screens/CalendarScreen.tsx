@@ -1,6 +1,6 @@
 /** WIREFRAME: docs/prd/design.md §9.5 — Kalender */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftRight, Dumbbell } from "lucide-react";
+import { ArrowLeftRight, Dumbbell, Radar } from "lucide-react";
 import { ClubCrest } from "../components/ClubCrest.tsx";
 import { clubLogoUrlForId } from "../assets/club-logo.ts";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
@@ -17,6 +17,12 @@ import type { ScoutNetworkState } from "../../scouting/scout-network.ts";
 import { clubShortName } from "../../sim/league-week.ts";
 import { OpponentScoutMatchAction } from "../components/OpponentScoutMatchAction.tsx";
 import { t } from "../../i18n/index.ts";
+import {
+  activeTripCivilDayKeys,
+  civilDateKey,
+  countActiveScoutTrips,
+} from "../../scouting/scout-calendar-day.ts";
+import { calendarGridYear } from "../../sim/session-civil-date.ts";
 
 const MONTH_KEYS = [
   "calendar.month.january",
@@ -68,6 +74,14 @@ export function CalendarScreen({
     () => buildMonthGrid(season, monthIndex, league, { week, weekday }, milestones),
     [season, monthIndex, league, week, weekday, milestones],
   );
+
+  const activeTrips = scoutBoard?.active_scout_trips ?? [];
+  const scoutTripCount = countActiveScoutTrips(activeTrips);
+  const scoutBusyDayKeys = useMemo(
+    () => activeTripCivilDayKeys(season, week, activeTrips),
+    [activeTrips, season, week],
+  );
+  const gridYear = calendarGridYear(season, monthIndex);
 
   useEffect(() => {
     todayCellRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
@@ -138,6 +152,10 @@ export function CalendarScreen({
           </div>
           <div className="calendar-grid">
             {cells.map((cell) => {
+              const scoutBusy =
+                cell.day != null &&
+                scoutTripCount > 0 &&
+                scoutBusyDayKeys.has(civilDateKey({ year: gridYear, monthIndex, day: cell.day }));
               const transferClass =
                 cell.transferWindow === "summer"
                   ? " is-transfer-summer"
@@ -148,7 +166,7 @@ export function CalendarScreen({
                 <div
                   key={cell.key}
                   ref={cell.isToday ? todayCellRef : undefined}
-                  className={`calendar-cell${cell.isToday ? " is-today" : ""}${cell.match ? " has-match" : ""}${transferClass}${cell.transferLastDay ? " is-transfer-last" : ""}`}
+                  className={`calendar-cell${cell.isToday ? " is-today" : ""}${cell.match ? " has-match" : ""}${scoutBusy ? " has-scout-trip" : ""}${transferClass}${cell.transferLastDay ? " is-transfer-last" : ""}`}
                 >
                   {cell.transferWindow ? (
                     <span
@@ -185,6 +203,15 @@ export function CalendarScreen({
                         </li>
                       ) : null}
                     </ul>
+                  ) : null}
+                  {scoutBusy && !cell.match ? (
+                    <p
+                      className="calendar-scout-chip"
+                      title={t("calendar.scoutTrips", { count: scoutTripCount })}
+                    >
+                      <Radar size={12} strokeWidth={2.5} aria-hidden />
+                      <span className="calendar-scout-chip-label">{scoutTripCount}</span>
+                    </p>
                   ) : null}
                   {cell.match ? (
                     <p className="calendar-match-chip">

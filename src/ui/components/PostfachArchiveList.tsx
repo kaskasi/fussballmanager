@@ -39,7 +39,7 @@ export function PostfachArchiveList({
   }
 
   return (
-    <section className="postfach-archive" aria-label={t("postfach.archive.aria")}>
+    <section className="postfach-archive game-panel" aria-label={t("postfach.archive.aria")}>
       <h3 className="postfach-archive-title">{t("postfach.archive.title")}</h3>
       <ul
         key={`archive-page-${page}`}

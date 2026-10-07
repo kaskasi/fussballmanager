@@ -8,6 +8,7 @@ import {
   applyInboxDecision,
   deliverDailyInbox,
   deliverInboxForDays,
+  inboxReleaseWeekday,
   emptyInbox,
   enqueueStoryInboxItem,
   generateWeeklyInbox,
@@ -50,18 +51,48 @@ describe("decision inbox", () => {
       coachIcons: {},
       lastReport: null,
     } as unknown as YouthInboxState;
-    expect(() => deliverDailyInbox(legacy)).not.toThrow();
+    expect(() =>
+      deliverDailyInbox(legacy, { season: 1, week: 3, weekday: 1, masterSeed: 1 }),
+    ).not.toThrow();
     expect(normalizeYouthInbox(legacy).queue).toEqual([]);
   });
 
-  it("delivers one queued item per in-game day up to the open cap", () => {
+  it("delivers at most one queued item per calendar week on the release weekday", () => {
     const players = Array.from({ length: 24 }, (_, index) => youthPlayer(`pl_${index}`, 15 + (index % 3)));
     const inbox = generateWeeklyInbox(players, 34, 2026);
-    const afterThreeDays = deliverInboxForDays(inbox, 3);
-    expect(pendingInboxItems(afterThreeDays)).toHaveLength(3);
-    expect(afterThreeDays.queue.length).toBe(inbox.queue.length - 3);
-    const capped = deliverInboxForDays(inbox, 10);
-    expect(pendingInboxItems(capped)).toHaveLength(MAX_INBOX_ITEMS);
+    const season = 1;
+    const week = 34;
+    const masterSeed = 2026;
+    const releaseDay = inboxReleaseWeekday(masterSeed, season, week);
+    const afterWeek = deliverInboxForDays(
+      inbox,
+      { season, week, weekday: 1, masterSeed },
+      7,
+      players,
+    );
+    expect(pendingInboxItems(afterWeek)).toHaveLength(1);
+    expect(afterWeek.queue.length).toBe(inbox.queue.length - 1);
+    const afterSecondWeek = deliverInboxForDays(
+      afterWeek,
+      { season, week, weekday: 7, masterSeed },
+      7,
+      players,
+    );
+    expect(pendingInboxItems(afterSecondWeek)).toHaveLength(2);
+    const capped = deliverInboxForDays(
+      inbox,
+      { season, week, weekday: 1, masterSeed },
+      7 * 12,
+      players,
+    );
+    expect(pendingInboxItems(capped).length).toBeLessThanOrEqual(MAX_INBOX_ITEMS);
+  });
+
+  it("inboxReleaseWeekday is deterministic Mo–Fr", () => {
+    const day = inboxReleaseWeekday(99, 2, 40);
+    expect(day).toBeGreaterThanOrEqual(1);
+    expect(day).toBeLessThanOrEqual(5);
+    expect(inboxReleaseWeekday(99, 2, 40)).toBe(day);
   });
 
   it("prioritises departure risks in the queue", () => {
@@ -320,7 +351,7 @@ describe("decision inbox", () => {
     expect(focus.openCount).toBe(1);
     expect(focus.nextQueued?.playerId).toBe("p2");
     expect(inboxHeadline(focus)).toBe("1 Entscheidung offen.");
-    expect(inboxPipelineHint(focus, "Next Kid")).toBe("Danach: Next Kid");
+    expect(inboxPipelineHint(focus)).toBeNull();
     expect(inboxSummary(inbox).queued).toBe(47);
   });
 
@@ -356,7 +387,9 @@ describe("decision inbox", () => {
       departureRisks: 1,
       queued: 1,
     });
-    expect(deliverDailyInbox(inbox).items).toHaveLength(3);
+    const releaseDay = inboxReleaseWeekday(1, 1, 34);
+    const delivered = deliverDailyInbox(inbox, { season: 1, week: 34, weekday: releaseDay, masterSeed: 1 });
+    expect(delivered.items).toHaveLength(3);
   });
 });
 

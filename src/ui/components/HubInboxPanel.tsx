@@ -62,13 +62,7 @@ export function HubInboxPanel({
   useT();
   const focus = inboxWeekFocus(youthInbox, players);
   const decisions = focus.open;
-  const nextQueuedPlayer = focus.nextQueued
-    ? players.find((entry) => entry.id === focus.nextQueued?.playerId)
-    : undefined;
-  const pipelineHint = inboxPipelineHint(
-    focus,
-    nextQueuedPlayer ? formatPlayerName(nextQueuedPlayer) : undefined,
-  );
+  const pipelineHint = inboxPipelineHint(focus);
   const reports = scoutReportsForWeek(scoutBoard, week);
   const discoveries = discoveryAlertsForWeek(scoutBoard, week);
   const scoutRows = [
@@ -113,14 +107,7 @@ export function HubInboxPanel({
           <p className="hub-inbox-focus-line">{inboxHeadline(focus)}</p>
           {pipelineHint ? <p className="hub-inbox-queue-note">{pipelineHint}</p> : null}
           {decisions.length === 0 ? (
-            <p className="hub-inbox-empty">
-              {focus.nextQueued && nextQueuedPlayer
-                ? t("hub.inbox.decisionsNext", {
-                    name: formatPlayerName(nextQueuedPlayer),
-                    label: inboxItemLabel(focus.nextQueued, storyCast),
-                  })
-                : t("hub.inbox.decisionsEmpty")}
-            </p>
+            <p className="hub-inbox-empty">{t("hub.inbox.decisionsEmpty")}</p>
           ) : (
             <ul className="hub-inbox-list">
               {decisions.map((item, index) => {

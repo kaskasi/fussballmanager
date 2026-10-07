@@ -21,6 +21,10 @@ import {
 import { campNationById, type YouthCamp } from "../../youth/satellite-camps.ts";
 import { campsAwaitingLeaderChoice } from "../../youth/camp-leader-hire.ts";
 import { campLeaderPostfachItemId } from "../../inbox/postfach-camp-leader.ts";
+import { buildPostfachQueueIds, firstPostfachQueueId } from "../../inbox/postfach-queue.ts";
+import { campLeaderQueuePreview, scoutJobQueuePreview } from "../../inbox/postfach-queue-preview.ts";
+import type { PostfachArchiveEntry } from "../../inbox/postfach-archive.ts";
+import { unconsumedScoutJobNotices } from "../../scouting/scout-job-postfach.ts";
 import { formatCalendarWeekDisplay } from "../../i18n/calendar-display.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
@@ -40,6 +44,7 @@ export function HubActionColumn({
   onStoryChoice,
   onViewAllEvents,
   scoutBoard,
+  archivePreview = [],
 }: {
   players: readonly Player[];
   youthInbox: YouthInboxState;
@@ -50,20 +55,20 @@ export function HubActionColumn({
   onOpenPostfach: (itemId?: string) => void;
   onStoryChoice: (itemId: string, action: DecisionAction) => void;
   onViewAllEvents: () => void;
+  archivePreview?: readonly PostfachArchiveEntry[];
 }) {
   useT();
   const focus = inboxWeekFocus(youthInbox, players);
   const decisions = focus.open.slice(0, MAX_INBOX_ITEMS);
   const postfachCount = postfachOpenCount(youthInbox, players, youthCamps, scoutBoard);
-  const nextQueuedPlayer = focus.nextQueued
-    ? players.find((entry) => entry.id === focus.nextQueued?.playerId)
-    : undefined;
-  const pipelineHint = inboxPipelineHint(
-    focus,
-    nextQueuedPlayer ? formatPlayerName(nextQueuedPlayer) : undefined,
-  );
+  const pipelineHint = inboxPipelineHint(focus);
   const previewEvents = clubEvents.slice(0, HUB_EVENTS_PREVIEW);
   const campLeaderMail = campsAwaitingLeaderChoice(youthCamps);
+  const scoutJobNotices = scoutBoard ? unconsumedScoutJobNotices(scoutBoard) : [];
+  const postfachQueueIds = buildPostfachQueueIds(focus.open, campLeaderMail, scoutJobNotices);
+  const firstQueueId = firstPostfachQueueId(postfachQueueIds);
+  const showDecisionList =
+    decisions.length > 0 || campLeaderMail.length > 0 || scoutJobNotices.length > 0;
 
   return (
     <div className="hub-action-column">
@@ -79,28 +84,24 @@ export function HubActionColumn({
           <button
             type="button"
             className="hub-postfach-link"
-            onClick={() => onOpenPostfach(decisions[0]?.id)}
+            onClick={() => onOpenPostfach(firstQueueId)}
           >
             <Mail size={14} strokeWidth={2.25} aria-hidden />
             {t("hub.postfach.openQueue", { count: postfachCount })}
           </button>
         ) : null}
-        {decisions.length === 0 && postfachCount === 0 ? (
-          <p className="hub-inbox-empty">
-            {focus.nextQueued && nextQueuedPlayer
-              ? t("hub.inbox.decisionsNext", {
-                  name: formatPlayerName(nextQueuedPlayer),
-                  label: inboxItemLabel(focus.nextQueued, storyCast),
-                })
-              : t("hub.inbox.decisionsEmpty")}
-          </p>
+        {!showDecisionList && postfachCount === 0 ? (
+          <p className="hub-inbox-empty">{t("hub.inbox.decisionsEmpty")}</p>
         ) : (
           <ul className="hub-inbox-list">
             {decisions.map((item) => {
               if (isStoryInboxItem(item)) {
                 return (
                   <li key={item.id}>
-                    <article className="hub-post" aria-label={item.narrative?.title ?? "Post"}>
+                    <article
+                      className="hub-post"
+                      aria-label={item.narrative?.title ?? t("hub.storyPost.aria")}
+                    >
                       <p className="hub-post-title">{inboxItemLabel(item, storyCast)}</p>
                       {item.narrative ? (
                         <p className="hub-post-body">
@@ -148,7 +149,29 @@ export function HubActionColumn({
                   >
                     <span className="hub-inbox-row-text">
                       <strong>{nation?.label ?? camp.id}</strong>
-                      <span className="hub-inbox-row-detail">Camp-Leiter · Kandidaten</span>
+                      <span className="hub-inbox-row-detail">
+                        {campLeaderQueuePreview(camp.id).topic}
+                      </span>
+                    </span>
+                    <span className="hub-inbox-row-cta" aria-hidden="true">
+                      →
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+            {scoutJobNotices.map((notice) => {
+              const preview = scoutJobQueuePreview(notice);
+              return (
+                <li key={notice.id}>
+                  <button
+                    type="button"
+                    className="hub-inbox-row"
+                    onClick={() => onOpenPostfach(notice.id)}
+                  >
+                    <span className="hub-inbox-row-text">
+                      <strong>{preview.name}</strong>
+                      <span className="hub-inbox-row-detail">{preview.topic}</span>
                     </span>
                     <span className="hub-inbox-row-cta" aria-hidden="true">
                       →
@@ -161,11 +184,32 @@ export function HubActionColumn({
         )}
       </section>
 
+      {archivePreview.length > 0 ? (
+        <section className="design-panel hub-archive-preview" aria-label={t("hub.archive.previewTitle")}>
+          <header className="hub-events-preview-head">
+            <strong>{t("hub.archive.previewTitle")}</strong>
+            <button type="button" className="hub-events-all-link" onClick={() => onOpenPostfach()}>
+              {t("hub.postfach.openArchive")}
+            </button>
+          </header>
+          <ul className="hub-inbox-list hub-inbox-list-events">
+            {archivePreview.map((entry) => (
+              <li key={entry.id}>
+                <div className="hub-inbox-event hub-inbox-event-archive">
+                  <span className="hub-inbox-event-message">{entry.title}</span>
+                  <span className="hub-inbox-event-meta">{formatCalendarWeekDisplay(entry.week)}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <button
         type="button"
         className="design-panel hub-post-summary"
-        onClick={() => onOpenPostfach()}
-        disabled={postfachCount === 0}
+        onClick={() => onOpenPostfach(firstQueueId)}
+        disabled={postfachCount === 0 && archivePreview.length === 0}
       >
         <Mail size={18} aria-hidden="true" />
         <span>
@@ -177,11 +221,18 @@ export function HubActionColumn({
       <section className="design-panel hub-events-preview" aria-label={t("hub.inbox.events")}>
         <header className="hub-events-preview-head">
           <strong>{t("hub.inbox.events")}</strong>
-          {clubEvents.length > HUB_EVENTS_PREVIEW ? (
-            <button type="button" className="hub-events-all-link" onClick={onViewAllEvents}>
-              {t("hub.events.all", { count: clubEvents.length })}
-            </button>
-          ) : null}
+          <span className="hub-events-preview-actions">
+            {clubEvents.length > 0 ? (
+              <button type="button" className="hub-events-all-link" onClick={() => onOpenPostfach()}>
+                {t("hub.postfach.openArchive")}
+              </button>
+            ) : null}
+            {clubEvents.length > HUB_EVENTS_PREVIEW ? (
+              <button type="button" className="hub-events-all-link" onClick={onViewAllEvents}>
+                {t("hub.events.all", { count: clubEvents.length })}
+              </button>
+            ) : null}
+          </span>
         </header>
         {clubEvents.length === 0 ? (
           <p className="hub-inbox-empty">{t("hub.inbox.eventsEmpty")}</p>

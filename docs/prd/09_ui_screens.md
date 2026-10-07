@@ -122,10 +122,11 @@ Interaktion:
 
 - Nach Hire: Navigation **Youth Campus → Tab Camps** mit Leader-Block wie 03.6.1.
 
-**Screen 2b — Decision Inbox Modal**
+**Screen 2b — Decision Inbox Modal** (Alias: **Postfach**-Screen, design.md §9.4)
 
-- Queue, höchstens 4 Items pro Woche (PRD 03.4), Abgangswarnung zählt mit.
-- Pro Item: Spielerkarte und Icon-Buttons.
+- Queue, höchstens 4 offen (PRD 03.4); Zustellung aus der Queue **max. 1 Jugend-Post pro Kalenderwoche** (Mo–Fr-Slot).
+- Jugend-Callbacks: Kachel mit Portrait + Token (Position, Alter, CA); Aktionen inline (Lucide), **kein** zweites Spieler-Hero-Panel.
+- Schwere Post (Gegner-Analyse, Camp-Leiter): **Modal**; Scout-Job (Region/Verein): kompakte Inline-Zeile.
 
 | Aktion | Icon (Lucide) |
 |---|---|
@@ -199,7 +200,7 @@ Header-**NEXT** ist **kalendergebunden**: erst orientieren, dann Zeit/Spiel.
 | Spielwoche | Auf dem Kalender: Fr→Sa oder Sa mit `match` → **Aufstellung** (`CareerLineupScreen`), nicht Live-Match vom Hub |
 | Nach Spiel / Freiwoche | Tagweise bis **So**, dann `simulate_week` (nur auf Kalender) |
 | Inbox | Montag + offene Jugend-Inbox → Postfach (global oder auf Kalender), **kein** Tag verbrauchen |
-| Jugend-Queue | `deliverInboxForDays(..., 1)` pro Kalender-NEXT-Tag, nicht Multi-Day-Sprünge |
+| Jugend-Queue | `deliverInboxForDays` pro NEXT-Tag; **max. 1** Queue→offen pro Kalenderwoche am Release-Wochentag (Mo–Fr) |
 | Training-Erinnerung | Kalender + Assistenten-Toggle „Wochenplan“: fehlt Fokus am **aktuellen** Mo–Fr-Tag, **einmal pro Spielwoche** blockierendes Postfach vor Tag+1; danach normale NEXT-Kette |
 
 Kalender-UI (`CalendarScreen`): Monatsfokus; **`isToday`** = Zivil-Datum aus `(season, week, weekday)`; Transferfenster nur im Raster (kein Shell-Header-Chrome); kein WeekdayStrip; kein klickbarer Zellsprung in P2.

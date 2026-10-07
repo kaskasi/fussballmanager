@@ -14,6 +14,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Player } from "../../types/player.ts";
+import { roundStat } from "../../types/player-display.ts";
+import { estimateCa } from "../../transfers/market-value.ts";
+import { t } from "../../i18n/index.ts";
 import type { DecisionInboxItem } from "../../youth/decision-inbox.ts";
 import { isStoryInboxItem } from "../../youth/decision-inbox.ts";
 import type { StoryCast } from "../../narrative/story-state.ts";
@@ -120,7 +123,12 @@ function DecisionTileVisual({
   }
   const player = players.find((entry) => entry.id === item.playerId);
   if (player) {
-    return <PlayerPortrait seed={player.portrait_seed} size="sm" variant="known" />;
+    return (
+      <>
+        <PlayerPortrait seed={player.portrait_seed} size="sm" variant="known" />
+        <PlayerTileTokens player={player} />
+      </>
+    );
   }
   const Icon = playerIcon(item.kind);
   return (
@@ -128,6 +136,27 @@ function DecisionTileVisual({
       <Icon size={22} strokeWidth={2.25} />
     </span>
   );
+}
+
+function PlayerTileTokens({ player }: { player: Player }) {
+  const ca = roundStat(estimateCa(player.attributes, player.position));
+  return (
+    <div className="postfach-decision-tile-tokens" aria-hidden>
+      <span className="postfach-tile-token">{player.position}</span>
+      <span className="postfach-tile-token">{player.age}</span>
+      <span className="postfach-tile-token">CA {ca}</span>
+    </div>
+  );
+}
+
+function tileExpandHint(
+  queueId: string,
+  scoutJobNotices: readonly ScoutJobCompleteNotice[],
+): string | null {
+  if (isCampLeaderPostfachItemId(queueId)) return t("postfach.tile.openCandidates");
+  const notice = scoutJobNotices.find((entry) => entry.id === queueId);
+  if (notice?.kind === "opponent_scout_complete") return t("postfach.tile.openReport");
+  return null;
 }
 
 export function PostfachDecisionGrid({
@@ -160,6 +189,7 @@ export function PostfachDecisionGrid({
                 storyCast,
               );
         const isActive = queueId === activeId;
+        const expandHint = tileExpandHint(queueId, scoutJobNotices);
         return (
           <li key={queueId}>
             <button
@@ -179,7 +209,9 @@ export function PostfachDecisionGrid({
               </div>
               <div className="postfach-decision-tile-copy">
                 <span className="postfach-decision-tile-title">{preview.name}</span>
-                <span className="postfach-decision-tile-sub">{preview.topic}</span>
+                <span className="postfach-decision-tile-sub">
+                  {expandHint ?? preview.topic}
+                </span>
               </div>
             </button>
           </li>

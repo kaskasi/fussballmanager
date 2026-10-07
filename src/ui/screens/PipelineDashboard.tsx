@@ -23,6 +23,7 @@ import {
 } from "../../sim/league-week.ts";
 import type { ClubFinances } from "../../economy/club-finances.ts";
 import type { ClubEvent } from "../../inbox/club-events.ts";
+import { buildPostfachArchive } from "../../inbox/postfach-archive.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import { inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
 import type { DecisionAction } from "../../youth/decision-inbox.ts";
@@ -145,6 +146,18 @@ export function PipelineDashboard({
         total: seasonMatchdays,
       });
   const showObjectives = board.objectives.length > 0 && board.job_status !== "dismissed";
+  const hubArchivePreview = useMemo(
+    () =>
+      buildPostfachArchive({
+        scoutBoard,
+        clubEvents,
+        youthInbox,
+        players,
+        season,
+        storyCast: storyState.cast,
+      }).slice(0, 2),
+    [clubEvents, players, scoutBoard, season, storyState.cast, youthInbox],
+  );
 
   const tablePlace = leagueTablePlace(league);
   const matchdayStrip = [
@@ -181,6 +194,7 @@ export function PipelineDashboard({
             onOpenPostfach={onOpenPostfach}
             onStoryChoice={onStoryChoice}
             onViewAllEvents={onViewAllEvents}
+            archivePreview={hubArchivePreview}
           />
         </div>
 

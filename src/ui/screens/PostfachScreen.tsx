@@ -1,4 +1,4 @@
-/** WIREFRAME: docs/prd/design.md §9.4 — Postfach (voller Screen; Zurück im Shell-Header) */
+/** WIREFRAME: design.md §9.4 — Postfach: Kachel-Queue, Jugend inline, Camp/Gegner-Report Modal, Archiv unten */
 import type { SandboxPlan } from "@fussballmanager/shared";
 import type { Player } from "../../types/player.ts";
 import type { CampLeaderCandidate } from "../../youth/camp-leader-hire.ts";
@@ -54,7 +54,10 @@ export function PostfachScreen({
 
   return (
     <main className="club-shell-card-body postfach-screen">
-      <section className="postfach-decisions" aria-label={t("hub.inbox.decisions")}>
+      <section
+        className="game-panel postfach-decisions"
+        aria-label={t("postfach.open.panelAria")}
+      >
         <DecisionInboxPanel
           inbox={youthInbox}
           players={players}

@@ -15,7 +15,7 @@ export function scoutJobQueuePreview(notice: ScoutJobCompleteNotice | undefined)
   name: string;
   topic: string;
 } {
-  if (!notice) return { name: "Scouting", topic: "" };
+  if (!notice) return { name: t("shell.nav.scouting"), topic: "" };
   if (notice.kind === "region_complete") {
     return {
       name: notice.zoneLabel ?? notice.zoneId ?? "Region",
@@ -29,7 +29,7 @@ export function scoutJobQueuePreview(notice: ScoutJobCompleteNotice | undefined)
     };
   }
   return {
-    name: notice.clubName ?? notice.careerClubId ?? "Verein",
+    name: notice.clubName ?? notice.careerClubId ?? t("postfach.archive.fallbackClub"),
     topic: t("postfach.scoutJob.queueTopicClub"),
   };
 }
@@ -38,7 +38,7 @@ export function campLeaderQueuePreview(campId: string): { name: string; topic: s
   const nation = campNationById(campId);
   return {
     name: nation?.label ?? campId,
-    topic: "Camp-Leiter · Kandidaten",
+    topic: t("postfach.campLeader.queueTopic"),
   };
 }
 

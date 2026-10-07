@@ -84,19 +84,27 @@ export function OpponentScoutInboxCard({
   postTotal,
   onDismiss,
   onApplyPlan,
+  embedded = false,
 }: {
   notice: ScoutJobCompleteNotice;
   postIndex: number;
   postTotal: number;
   onDismiss: () => void;
   onApplyPlan?: (plan: SandboxPlan) => void;
+  embedded?: boolean;
 }) {
   useT();
   const report = notice.report;
   const rows = report?.recommendations ?? [];
 
   return (
-    <section className="inbox-card inbox-card-scout-job inbox-card-opponent-scout">
+    <section
+      className={
+        embedded
+          ? "inbox-card-opponent-scout is-embedded"
+          : "inbox-card inbox-card-scout-job inbox-card-opponent-scout"
+      }
+    >
       <div className="inbox-story">
         <p className="inbox-post-count">
           {t("postfach.scoutJob.postCount", { index: postIndex, total: postTotal })}

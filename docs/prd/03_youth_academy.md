@@ -152,7 +152,7 @@ interface YouthReport {
 
 ### 03.4 Manager-Entscheidungen (Decision Inbox)
 
-Max **4 offene** Items gleichzeitig. Ein Abgangsrisiko (03.5) zählt wie jedes andere Item. Alle weiteren Kandidaten der Woche landen in einer **priorisierten Queue** und werden mit **1 Item pro Spieltag** in die Inbox übernommen — **kein Drop**, kein Overflow-Warning.
+Max **4 offene** Items gleichzeitig. Ein Abgangsrisiko (03.5) zählt wie jedes andere Item. Alle weiteren Kandidaten der Woche landen in einer **priorisierten Queue** und werden mit **höchstens 1 Item pro Kalenderwoche** in die Inbox übernommen — an einem **deterministischen Zufallstag Mo–Fr** (Seed + Saison + Woche). **Kein Drop**, kein Overflow-Warning.
 
 ```typescript
 interface YouthInboxState {

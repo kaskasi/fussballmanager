@@ -13,6 +13,7 @@ export function ScoutJobInboxCard({
   onDismiss,
   onOpenScoutingNetwork,
   onOpenScoutingHits,
+  compact = false,
 }: {
   notice: ScoutJobCompleteNotice;
   postIndex: number;
@@ -20,16 +21,19 @@ export function ScoutJobInboxCard({
   onDismiss: () => void;
   onOpenScoutingNetwork?: () => void;
   onOpenScoutingHits?: () => void;
+  compact?: boolean;
 }) {
   useT();
   const isRegion = notice.kind === "region_complete";
 
   return (
-    <section className="inbox-card inbox-card-scout-job">
+    <section className={compact ? "inbox-detail inbox-scout-job-inline" : "inbox-card inbox-card-scout-job"}>
       <div className="inbox-story">
-        <p className="inbox-post-count">
-          {t("postfach.scoutJob.postCount", { index: postIndex, total: postTotal })}
-        </p>
+        {!compact ? (
+          <p className="inbox-post-count">
+            {t("postfach.scoutJob.postCount", { index: postIndex, total: postTotal })}
+          </p>
+        ) : null}
         <p className="inbox-scout-job-head">
           {isRegion ? (
             <Radar size={18} aria-hidden />
@@ -53,7 +57,7 @@ export function ScoutJobInboxCard({
                 count: notice.playersAdded ?? 0,
               })}
         </p>
-        {!isRegion && notice.highlights && notice.highlights.length > 0 ? (
+        {!compact && !isRegion && notice.highlights && notice.highlights.length > 0 ? (
           <ul className="inbox-scout-job-highlights">
             {notice.highlights.map((row) => (
               <li key={row.playerId}>

@@ -11501,7 +11501,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .postfach-archive-page.is-active {
-  background: var(--sonnengelb);
+  background: color-mix(in srgb, var(--rasen) 18%, var(--panel-muted));
   color: var(--tinte);
 }
 

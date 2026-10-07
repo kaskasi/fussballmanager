@@ -82,14 +82,28 @@ function storyKindForSource(source: StoryInboxPayload["source"]): InboxItemKind 
   }
 }
 
+export interface YouthInboxDeliveryStamp {
+  season: number;
+  week: number;
+}
+
 export interface YouthInboxState {
   week: number;
   items: DecisionInboxItem[];
-  /** Priority-sorted backlog; one item moves to `items` per in-game day. */
+  /** Priority-sorted backlog; at most one item moves to `items` per calendar week. */
   queue: DecisionInboxItem[];
   resolvedIds: string[];
   coachIcons: Record<string, CoachIcon>;
   lastReport: YouthReport | null;
+  /** Last week a queued youth item was promoted to open (PRD 03.4 weekly slot). */
+  lastYouthDelivery?: YouthInboxDeliveryStamp;
+}
+
+export interface InboxDeliveryContext {
+  season: number;
+  week: number;
+  weekday: number;
+  masterSeed: number;
 }
 
 const KIND_PRIORITY: Record<InboxItemKind, number> = {
@@ -196,19 +210,9 @@ export function inboxHeadline(focus: InboxWeekFocus): string {
   return t("inbox.headline.many", { count: focus.openCount, max: MAX_INBOX_ITEMS });
 }
 
-export function inboxPipelineHint(
-  focus: InboxWeekFocus,
-  nextPlayerName?: string,
-): string | null {
+export function inboxPipelineHint(focus: InboxWeekFocus): string | null {
   if (focus.openCount >= MAX_INBOX_ITEMS) {
     return t("inbox.hint.resolveFirst");
-  }
-  if (focus.nextQueued && nextPlayerName) {
-    if (focus.openCount > 0) return t("inbox.hint.thenPlayer", { name: nextPlayerName });
-    return t("inbox.hint.nextPlayer", { name: nextPlayerName });
-  }
-  if (focus.openCount === 0 && focus.nextQueued) {
-    return t("inbox.hint.nextOnMatchday");
   }
   return null;
 }
@@ -228,8 +232,31 @@ export function inboxSummary(inbox: YouthInboxState): {
   };
 }
 
+/** Deterministic Mo–Fr release day for the weekly youth mail slot. */
+export function inboxReleaseWeekday(masterSeed: number, season: number, week: number): number {
+  let hash = masterSeed ^ season ^ week;
+  hash = Math.imul(hash ^ 0x5f3759df, 0x9e3779b1);
+  return 1 + ((hash >>> 0) % 5);
+}
+
+export function advanceInboxDeliveryDay(ctx: InboxDeliveryContext): InboxDeliveryContext {
+  if (ctx.weekday < 7) {
+    return { ...ctx, weekday: ctx.weekday + 1 };
+  }
+  return { season: ctx.season, week: ctx.week + 1, weekday: 1, masterSeed: ctx.masterSeed };
+}
+
+function youthDeliveredThisWeek(
+  inbox: YouthInboxState,
+  season: number,
+  week: number,
+): boolean {
+  return inbox.lastYouthDelivery?.season === season && inbox.lastYouthDelivery?.week === week;
+}
+
 export function deliverDailyInbox(
   inbox: YouthInboxState,
+  ctx: InboxDeliveryContext,
   players?: readonly Player[],
 ): YouthInboxState {
   let normalized = normalizeYouthInbox(inbox);
@@ -238,23 +265,33 @@ export function deliverDailyInbox(
   if (pending.length >= MAX_INBOX_ITEMS || normalized.queue.length === 0) {
     return normalized;
   }
+  if (youthDeliveredThisWeek(normalized, ctx.season, ctx.week)) {
+    return normalized;
+  }
+  if (ctx.weekday !== inboxReleaseWeekday(ctx.masterSeed, ctx.season, ctx.week)) {
+    return normalized;
+  }
   const [next, ...rest] = normalized.queue;
   if (!next) return normalized;
   return {
     ...normalized,
     items: [...normalized.items, next],
     queue: rest,
+    lastYouthDelivery: { season: ctx.season, week: ctx.week },
   };
 }
 
 export function deliverInboxForDays(
   inbox: YouthInboxState,
+  startCtx: InboxDeliveryContext,
   days: number,
   players?: readonly Player[],
 ): YouthInboxState {
   let current = inbox;
+  let ctx = startCtx;
   for (let index = 0; index < days; index += 1) {
-    current = deliverDailyInbox(current, players);
+    ctx = advanceInboxDeliveryDay(ctx);
+    current = deliverDailyInbox(current, ctx, players);
   }
   return current;
 }

@@ -611,7 +611,12 @@ export default function App() {
         ...result.session,
         weekday: MONDAY,
         matchPlayedThisWeek: false,
-        youthInbox: deliverDailyInbox(result.session.youthInbox, result.session.players),
+        youthInbox: deliverDailyInbox(result.session.youthInbox, {
+          season: result.session.season,
+          week: result.session.week,
+          weekday: MONDAY,
+          masterSeed: result.session.masterSeed,
+        }, result.session.players),
         youthCamps: tickCampLeaderHires(result.session.youthCamps, weekStamp),
       };
       if (result.playerFixture) {
@@ -832,7 +837,17 @@ export default function App() {
 
     const inboxAfterDays =
       skip.daysAdvanced > 0
-        ? deliverInboxForDays(session.youthInbox, skip.daysAdvanced, session.players)
+        ? deliverInboxForDays(
+            session.youthInbox,
+            {
+              season: session.season,
+              week: session.week,
+              weekday: session.weekday,
+              masterSeed: session.masterSeed,
+            },
+            skip.daysAdvanced,
+            session.players,
+          )
         : session.youthInbox;
     const sessionAtTarget = { ...session, weekday: skip.weekday, youthInbox: inboxAfterDays };
 
@@ -843,7 +858,17 @@ export default function App() {
           return {
             ...current,
             weekday: skip.weekday,
-            youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced, current.players),
+            youthInbox: deliverInboxForDays(
+              current.youthInbox,
+              {
+                season: current.season,
+                week: current.week,
+                weekday: current.weekday,
+                masterSeed: current.masterSeed,
+              },
+              skip.daysAdvanced,
+              current.players,
+            ),
             youthCamps: tickCampLeaderHires(current.youthCamps, now),
             scoutBoard: advanceScoutBoardForSession(current, skip.weekday),
           };
@@ -890,7 +915,17 @@ export default function App() {
         return {
           ...current,
           weekday: skip.weekday,
-          youthInbox: deliverInboxForDays(current.youthInbox, skip.daysAdvanced, current.players),
+          youthInbox: deliverInboxForDays(
+            current.youthInbox,
+            {
+              season: current.season,
+              week: current.week,
+              weekday: current.weekday,
+              masterSeed: current.masterSeed,
+            },
+            skip.daysAdvanced,
+            current.players,
+          ),
           youthCamps: tickCampLeaderHires(current.youthCamps, now),
           scoutBoard: advanceScoutBoardForSession(current, skip.weekday),
         };

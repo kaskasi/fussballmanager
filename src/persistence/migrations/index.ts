@@ -67,6 +67,7 @@ import { migration067ScoutTripClubDays } from "./migration_067_scout_trip_club_d
 import { migration068ActiveScoutTrips } from "./migration_068_active_scout_trips.ts";
 import { migration069OpponentScout } from "./migration_069_opponent_scout.ts";
 import { migration070TrainingFifteenSlots } from "./migration_070_training_fifteen_slots.ts";
+import { migration071YouthInboxWeeklyDelivery } from "./migration_071_youth_inbox_weekly_delivery.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -143,6 +144,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration068ActiveScoutTrips,
   migration069OpponentScout,
   migration070TrainingFifteenSlots,
+  migration071YouthInboxWeeklyDelivery,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

@@ -2,12 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import type { SandboxPlan } from "@fussballmanager/shared";
 import { X } from "lucide-react";
 import type { Player } from "../../types/player.ts";
-import { formatPlayerName, roundStat } from "../../types/player-display.ts";
+import { formatPlayerName } from "../../types/player-display.ts";
 import { defaultYouthContract } from "../../player/youth-contract.ts";
-import { estimateCa } from "../../transfers/market-value.ts";
 import { coachIconLabel } from "../../youth/academy.ts";
 import {
-  actionIcon,
   actionLabel,
   allowedActions,
   loanBlockReason,
@@ -24,19 +22,16 @@ import {
 import { canPromotePlayer, promotionGateLabel } from "../../youth/promotion-gate.ts";
 import { proTrialLabel } from "../../youth/pro-trial.ts";
 import { formatCalendarWeekDisplay } from "../../i18n/calendar-display.ts";
-import { PlayerPortrait } from "./PlayerPortrait.tsx";
 import { t } from "../../i18n/index.ts";
+import { postfachPresentation, postfachUsesExpandModal } from "../../inbox/postfach-presentation.ts";
+import { campNationById } from "../../youth/satellite-camps.ts";
 import { useT } from "../../i18n/react.ts";
 import { localizeStoryInbox } from "../../i18n/story-display.ts";
 import type { StoryCast } from "../../narrative/story-state.ts";
 import { InboxStanceButtons } from "./InboxStanceButtons.tsx";
 import { campsAwaitingLeaderChoice, type CampLeaderCandidate } from "../../youth/camp-leader-hire.ts";
 import type { YouthCamp } from "../../youth/satellite-camps.ts";
-import {
-  campLeaderPostfachItemId,
-  isCampLeaderPostfachItemId,
-  parseCampLeaderPostfachItemId,
-} from "../../inbox/postfach-camp-leader.ts";
+import { parseCampLeaderPostfachItemId } from "../../inbox/postfach-camp-leader.ts";
 import { CampLeaderInboxCard } from "./CampLeaderInboxCard.tsx";
 import { ScoutJobInboxCard } from "./ScoutJobInboxCard.tsx";
 import { OpponentScoutInboxCard } from "./OpponentScoutInboxCard.tsx";
@@ -45,11 +40,13 @@ import {
   scoutJobNoticeById,
   unconsumedScoutJobNotices,
 } from "../../scouting/scout-job-postfach.ts";
-import { isScoutJobPostfachItemId } from "../../inbox/postfach-scout-job.ts";
 import { buildPostfachArchive } from "../../inbox/postfach-archive.ts";
+import { buildPostfachQueueIds } from "../../inbox/postfach-queue.ts";
 import type { ClubEvent } from "../../inbox/club-events.ts";
 import { PostfachDecisionGrid } from "./PostfachDecisionGrid.tsx";
 import { PostfachArchiveList } from "./PostfachArchiveList.tsx";
+import { PostfachExpandModal } from "./PostfachExpandModal.tsx";
+import { InboxActionButton } from "./InboxActionButton.tsx";
 
 /** WIREFRAME: docs/prd/design.md §9.4 — Postfach-Inhalt */
 export function DecisionInboxPanel({
@@ -117,26 +114,18 @@ export function DecisionInboxPanel({
     [clubEvents, inbox, players, scoutBoard, season, storyCast],
   );
   const postfachQueueIds = useMemo(
-    () => [
-      ...pending.map((item) => item.id),
-      ...campLeaderCamps.map((camp) => campLeaderPostfachItemId(camp.id)),
-      ...scoutJobNotices.map((notice) => notice.id),
-    ],
+    () => buildPostfachQueueIds(pending, campLeaderCamps, scoutJobNotices),
     [campLeaderCamps, pending, scoutJobNotices],
   );
   const postfachOpenTotal = postfachQueueIds.length;
-  const nextQueuedPlayer = focus.nextQueued
-    ? players.find((entry) => entry.id === focus.nextQueued?.playerId)
-    : undefined;
-  const pipelineHint = inboxPipelineHint(
-    focus,
-    nextQueuedPlayer ? formatPlayerName(nextQueuedPlayer) : undefined,
-  );
+  const pipelineHint = inboxPipelineHint(focus);
   const defaultQueueId =
-    initialItemId ??
-    pending[0]?.id ??
-    (campLeaderCamps[0] ? campLeaderPostfachItemId(campLeaderCamps[0].id) : null);
+    initialItemId && postfachQueueIds.includes(initialItemId)
+      ? initialItemId
+      : (postfachQueueIds[0] ?? null);
   const [activeId, setActiveId] = useState<string | null>(defaultQueueId);
+  const [expandModalOpen, setExpandModalOpen] = useState(false);
+  const presentation = postfachPresentation(activeId, scoutBoard);
 
   useEffect(() => {
     if (initialItemId && postfachQueueIds.includes(initialItemId)) {
@@ -145,12 +134,18 @@ export function DecisionInboxPanel({
   }, [initialItemId, postfachQueueIds]);
 
   useEffect(() => {
-    if (activeId && !postfachQueueIds.includes(activeId)) {
-      setActiveId(
-        pending[0]?.id ?? (campLeaderCamps[0] ? campLeaderPostfachItemId(campLeaderCamps[0].id) : null),
-      );
+    if (postfachUsesExpandModal(presentation)) {
+      setExpandModalOpen(true);
+    } else {
+      setExpandModalOpen(false);
     }
-  }, [activeId, campLeaderCamps, pending, postfachQueueIds]);
+  }, [activeId, presentation]);
+
+  useEffect(() => {
+    if (activeId && !postfachQueueIds.includes(activeId)) {
+      setActiveId(postfachQueueIds[0] ?? null);
+    }
+  }, [activeId, postfachQueueIds]);
 
   const activeCampId = activeId ? parseCampLeaderPostfachItemId(activeId) : null;
   const activeCamp = activeCampId ? campLeaderCamps.find((camp) => camp.id === activeCampId) : undefined;
@@ -197,14 +192,7 @@ export function DecisionInboxPanel({
       {pipelineHint ? <p className="inbox-queue-note">{pipelineHint}</p> : null}
 
       {postfachOpenTotal === 0 ? (
-        <p className="inbox-empty">
-          {focus.nextQueued && nextQueuedPlayer
-            ? t("inbox.modal.nextQueued", {
-                name: formatPlayerName(nextQueuedPlayer),
-                label: inboxItemLabel(focus.nextQueued, storyCast),
-              })
-            : t("inbox.modal.empty")}
-        </p>
+        <p className="inbox-empty">{t("inbox.modal.empty")}</p>
       ) : (
         <>
           <PostfachDecisionGrid
@@ -217,25 +205,70 @@ export function DecisionInboxPanel({
             onSelect={setActiveId}
           />
 
-          {activeCamp && masterSeed != null && onHireCampLeader ? (
-            <section className="inbox-card inbox-card-camp-leader">
-              <CampLeaderInboxCard
-                camp={activeCamp}
-                masterSeed={masterSeed}
+          {presentation === "modal-camp" && activeCamp && expandModalOpen ? (
+            <PostfachExpandModal
+              title={t("postfach.campLeader.modalTitle", {
+                nation: campNationById(activeCamp.id)?.label ?? activeCamp.id,
+              })}
+              onClose={() => setExpandModalOpen(false)}
+            >
+              {masterSeed != null && onHireCampLeader ? (
+                <CampLeaderInboxCard
+                  camp={activeCamp}
+                  masterSeed={masterSeed}
+                  postIndex={postfachQueueIds.indexOf(activeId ?? "") + 1}
+                  postTotal={postfachOpenTotal}
+                  embedded
+                  onHire={(candidate) => {
+                    onHireCampLeader(activeCamp.id, candidate);
+                    setExpandModalOpen(false);
+                  }}
+                />
+              ) : null}
+            </PostfachExpandModal>
+          ) : null}
+
+          {presentation === "modal-opponent-scout" &&
+          activeScoutJob?.kind === "opponent_scout_complete" &&
+          expandModalOpen &&
+          onDismissScoutJob ? (
+            <PostfachExpandModal
+              title={t("postfach.opponentScout.title", {
+                opponent: activeScoutJob.opponentShortName ?? "",
+              })}
+              onClose={() => setExpandModalOpen(false)}
+            >
+              <OpponentScoutInboxCard
+                notice={activeScoutJob}
                 postIndex={postfachQueueIds.indexOf(activeId ?? "") + 1}
                 postTotal={postfachOpenTotal}
-                onHire={(candidate) => onHireCampLeader(activeCamp.id, candidate)}
+                onDismiss={() => {
+                  onDismissScoutJob(activeScoutJob.id);
+                  setExpandModalOpen(false);
+                }}
+                onApplyPlan={onApplyOpponentScoutPlan}
+                embedded
               />
-            </section>
-          ) : activeScoutJob?.kind === "opponent_scout_complete" && onDismissScoutJob ? (
-            <OpponentScoutInboxCard
-              notice={activeScoutJob}
-              postIndex={postfachQueueIds.indexOf(activeId ?? "") + 1}
-              postTotal={postfachOpenTotal}
-              onDismiss={() => onDismissScoutJob(activeScoutJob.id)}
-              onApplyPlan={onApplyOpponentScoutPlan}
-            />
-          ) : activeScoutJob && onDismissScoutJob ? (
+            </PostfachExpandModal>
+          ) : null}
+
+          {presentation === "modal-camp" && !expandModalOpen ? (
+            <p className="inbox-inline-hint">
+              <button type="button" className="hub-events-all-link" onClick={() => setExpandModalOpen(true)}>
+                {t("postfach.tile.openCandidates")}
+              </button>
+            </p>
+          ) : null}
+
+          {presentation === "modal-opponent-scout" && !expandModalOpen ? (
+            <p className="inbox-inline-hint">
+              <button type="button" className="hub-events-all-link" onClick={() => setExpandModalOpen(true)}>
+                {t("postfach.tile.openReport")}
+              </button>
+            </p>
+          ) : null}
+
+          {activeScoutJob && presentation === "inline-scout-job" && onDismissScoutJob ? (
             <ScoutJobInboxCard
               notice={activeScoutJob}
               postIndex={postfachQueueIds.indexOf(activeId ?? "") + 1}
@@ -243,12 +276,16 @@ export function DecisionInboxPanel({
               onDismiss={() => onDismissScoutJob(activeScoutJob.id)}
               onOpenScoutingNetwork={onOpenScoutingNetwork}
               onOpenScoutingHits={onOpenScoutingHits}
+              compact
             />
           ) : active && isStoryInboxItem(active) && active.narrative ? (
-            <section className="inbox-card inbox-card-story">
+            <section className="inbox-detail inbox-card-story">
               <div className="inbox-story">
                 <p className="inbox-post-count">
-                  Post · {(pending.findIndex((item) => item.id === active.id) ?? 0) + 1}/{pending.length}
+                  {t("postfach.scoutJob.postCount", {
+                    index: postfachQueueIds.indexOf(active.id) + 1,
+                    total: postfachOpenTotal,
+                  })}
                 </p>
                 <strong>{localizeStoryInbox(active.narrative, storyCast).title}</strong>
                 <p>{localizeStoryInbox(active.narrative, storyCast).body}</p>
@@ -260,60 +297,49 @@ export function DecisionInboxPanel({
               />
             </section>
           ) : active && !player ? (
-            <section className="inbox-card inbox-card-orphan">
+            <section className="inbox-detail inbox-card-orphan">
               <p>{t("inbox.modal.orphan")}</p>
               <button type="button" className="inbox-action" onClick={() => onDecision(active.id, "dismiss")}>
                 {t("inbox.modal.remove")}
               </button>
             </section>
           ) : active && player ? (
-            <section className="inbox-card inbox-card-open">
-              <div className="inbox-player">
-                <PlayerPortrait seed={player.portrait_seed} size="md" className="inbox-portrait" />
-                <div className="inbox-player-body">
-                  <p className="inbox-decision-headline">
-                    <strong>{formatPlayerName(player)}</strong>
-                    <span className="inbox-decision-sep" aria-hidden="true">
-                      —
-                    </span>
-                    <span>{inboxItemLabel(active, storyCast)}</span>
-                  </p>
-                  <p className="inbox-player-meta">
-                    {player.position} · {player.age} J. · CA{" "}
-                    {roundStat(estimateCa(player.attributes, player.position))}
-                  </p>
-                  {coachIcon ? (
-                    <p className="inbox-coach-line" title={coachIconLabel(coachIcon)}>
-                      Coach: {coachIconLabel(coachIcon)}
-                    </p>
-                  ) : null}
-                  {onSelectPlayer ? (
-                    <button type="button" className="negotiation-btn" onClick={() => onSelectPlayer(player.id)}>
-                      Profil
-                    </button>
-                  ) : null}
-                </div>
-              </div>
+            <section className="inbox-detail inbox-card-youth">
+              <p className="inbox-youth-context">
+                <span>{inboxItemLabel(active, storyCast)}</span>
+                {coachIcon ? (
+                  <span className="inbox-coach-line" title={coachIconLabel(coachIcon)}>
+                    {coachIconLabel(coachIcon)}
+                  </span>
+                ) : null}
+                {onSelectPlayer ? (
+                  <button type="button" className="hub-events-all-link" onClick={() => onSelectPlayer(player.id)}>
+                    {t("inbox.modal.profile")}
+                  </button>
+                ) : null}
+              </p>
 
               {promotionBlock ? <p className="inbox-promotion-block">{promotionBlock}</p> : null}
               {trialHint ? <p className="inbox-trial-hint">{trialHint}</p> : null}
 
-              <div className="inbox-actions" aria-label="Aktionen">
+              <div className="inbox-actions" aria-label={t("inbox.modal.actionsAria")}>
                 {activeActions.map((action) => (
-                  <button
+                  <InboxActionButton
                     key={action}
-                    type="button"
-                    className={action === primaryAction ? "inbox-action is-primary" : "inbox-action"}
+                    action={action}
+                    primary={action === primaryAction}
+                    label={actionLabel(action, actionContext)}
                     onClick={() => onDecision(active.id, action)}
-                  >
-                    <span aria-hidden="true">{actionIcon(action, actionContext)}</span>
-                    <span>{actionLabel(action, actionContext)}</span>
-                  </button>
+                  />
                 ))}
                 {showBlockedLoanAction ? (
-                  <button type="button" className="inbox-action is-disabled" disabled title={loanBlock ?? undefined}>
-                    <span>{t("inbox.action.loan")}</span>
-                  </button>
+                  <InboxActionButton
+                    action="loan"
+                    disabled
+                    title={loanBlock ?? undefined}
+                    label={t("inbox.action.loan")}
+                    onClick={() => undefined}
+                  />
                 ) : null}
               </div>
             </section>

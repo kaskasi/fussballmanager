@@ -8,6 +8,8 @@ import {
 import { campNationById, type YouthCamp } from "../../youth/satellite-camps.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import { PlayerPortrait } from "./PlayerPortrait.tsx";
+import { t } from "../../i18n/index.ts";
+import { useT } from "../../i18n/react.ts";
 
 export function CampLeaderInboxCard({
   camp,
@@ -15,13 +17,16 @@ export function CampLeaderInboxCard({
   postIndex,
   postTotal,
   onHire,
+  embedded = false,
 }: {
   camp: YouthCamp;
   masterSeed: number;
   postIndex: number;
   postTotal: number;
   onHire: (candidate: CampLeaderCandidate) => void;
+  embedded?: boolean;
 }) {
+  useT();
   const nation = campNationById(camp.id);
   const setId = camp.candidate_set_id;
   const candidates =
@@ -34,21 +39,25 @@ export function CampLeaderInboxCard({
       : [];
 
   return (
-    <>
-      <div className="inbox-story">
-        <p className="inbox-post-count">
-          Post · {postIndex}/{postTotal}
+    <div className={embedded ? "camp-leader-inbox-embedded" : undefined}>
+      {embedded ? (
+        <p className="camp-leader-hire-lead camp-leader-hire-lead--compact">
+          {t("postfach.scoutJob.postCount", { index: postIndex, total: postTotal })}
+          {" · "}
+          {t("postfach.campLeader.lead")}
         </p>
-        <p className="inbox-camp-leader-head">
-          <UserRound size={18} aria-hidden="true" />
-          <strong>
-            Camp-Leiter · {nation?.label ?? camp.id}
-          </strong>
-        </p>
-        <p className="camp-leader-hire-lead">
-          Drei Vorstellungen der Agentur — Stärken siehst du nach der Einstellung auf der Camp-Karte.
-        </p>
-      </div>
+      ) : (
+        <div className="inbox-story">
+          <p className="inbox-post-count">
+            {t("postfach.scoutJob.postCount", { index: postIndex, total: postTotal })}
+          </p>
+          <p className="inbox-camp-leader-head">
+            <UserRound size={18} aria-hidden="true" />
+            <strong>{t("postfach.campLeader.cardTitle", { nation: nation?.label ?? camp.id })}</strong>
+          </p>
+          <p className="camp-leader-hire-lead">{t("postfach.campLeader.lead")}</p>
+        </div>
+      )}
       <ul className="camp-leader-candidate-list camp-leader-candidate-list--inbox">
         {candidates.map((candidate) => {
           const name = formatPlayerName({
@@ -62,7 +71,7 @@ export function CampLeaderInboxCard({
               >
                 <PlayerPortrait
                   seed={candidate.portrait_seed}
-                  size="md"
+                  size={embedded ? "sm" : "md"}
                   className="camp-leader-candidate-portrait"
                 />
                 <div className="camp-leader-candidate-body">
@@ -81,7 +90,7 @@ export function CampLeaderInboxCard({
                       className="inbox-action is-primary camp-leader-inbox-hire"
                       onClick={() => onHire(candidate)}
                     >
-                      Leiter einstellen
+                      {t("postfach.campLeader.hire")}
                     </button>
                   )}
                 </div>
@@ -90,6 +99,6 @@ export function CampLeaderInboxCard({
           );
         })}
       </ul>
-    </>
+    </div>
   );
 }

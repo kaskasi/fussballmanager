@@ -247,6 +247,19 @@ main.scouting.club-shell-card-body .scouting-scouts {
   gap: 0.5rem;
   margin-bottom: 0.35rem;
 }
+.hub-events-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem 0.65rem;
+}
+.hub-archive-preview {
+  margin-top: 0.5rem;
+}
+.hub-inbox-event-archive .hub-inbox-event-message {
+  font-weight: 600;
+}
 .hub-events-all-link {
   border: 0;
   background: transparent;

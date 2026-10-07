@@ -1,7 +1,7 @@
 import type { IndividualProgram } from "../development/individual-training.ts";
 import { programKindLabel } from "../development/individual-training.ts";
 import type { TrainingSlot } from "../development/training-units.ts";
-import { trainingUnit } from "../development/training-units.ts";
+import { isTrainingSlotEmpty, trainingUnit } from "../development/training-units.ts";
 import { needsYouthContract } from "../player/youth-contract.ts";
 import { formatSeasonLabel } from "../sim/season-label.ts";
 import { generatePlayerName } from "../types/player-display.ts";
@@ -121,11 +121,13 @@ export function youthReportTarget(
       progress: Math.min(1, elapsed / total),
     };
   }
-  const focus = plan.find((slot) => slot.focus) ?? plan[0];
-  if (!focus) {
+  const focused = plan.find((slot) => slot.focus && !isTrainingSlotEmpty(slot));
+  const firstConfigured = plan.find((slot) => !isTrainingSlotEmpty(slot));
+  const slot = focused ?? firstConfigured;
+  if (!slot || isTrainingSlotEmpty(slot)) {
     return { icon: "🏋️", title: "Kein Plan", progress: null };
   }
-  const group = GROUP_TARGET[trainingUnit(focus.unitId).group];
+  const group = GROUP_TARGET[trainingUnit(slot.unitId).group];
   return { icon: group.icon, title: group.title, progress: null };
 }
 

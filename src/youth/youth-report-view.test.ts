@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultTrainingPlan } from "../development/training-units.ts";
+import { defaultTrainingPlan, emptyWeeklyTrainingPlan } from "../development/training-units.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { emptyInbox } from "./decision-inbox.ts";
 import {
@@ -44,6 +44,12 @@ describe("youth report view (PRD 14.4)", () => {
     const player = clonePlayer();
     const target = youthReportTarget(player, [], defaultTrainingPlan(), 1);
     expect(target).toEqual({ icon: "🎯", title: "Technik", progress: null });
+  });
+
+  it("does not throw when the weekly plan is empty (F2.1 after week sim)", () => {
+    const player = clonePlayer();
+    const target = youthReportTarget(player, [], emptyWeeklyTrainingPlan(), 1);
+    expect(target.title).toBe("Kein Plan");
   });
 
   it("drops a badge onto a matching inbox action", () => {

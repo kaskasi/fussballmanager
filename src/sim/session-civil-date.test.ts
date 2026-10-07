@@ -19,4 +19,14 @@ describe("session civil date", () => {
     const civil = civilDateFromSession(1, 2, 3);
     expect(civil.monthIndex).toBe(8);
   });
+
+  it("places Rückrunde in the calendar year after the season label", () => {
+    const autumn = civilDateFromSession(2, 6, 1);
+    const spring = civilDateFromSession(2, 24, 1);
+    expect(autumn.year).toBe(2027);
+    expect(spring.year).toBe(2028);
+    const autumnTime = new Date(autumn.year, autumn.monthIndex, autumn.day).getTime();
+    const springTime = new Date(spring.year, spring.monthIndex, spring.day).getTime();
+    expect(springTime).toBeGreaterThan(autumnTime);
+  });
 });

@@ -4,8 +4,10 @@ import {
   LEAGUE_LAST_WEEK,
 } from "../../sim/game-calendar.ts";
 import { SATURDAY } from "../../sim/day-calendar.ts";
-import { civilDateFromSession } from "../../sim/session-civil-date.ts";
-import { seasonCalendarYear } from "../../sim/season-label.ts";
+import {
+  calendarGridYear,
+  civilDateFromSession,
+} from "../../sim/session-civil-date.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { clubShortName, playerFixture } from "../../sim/league-week.ts";
 import {
@@ -31,26 +33,18 @@ export interface CalendarMonthCell {
   milestoneOverflow?: number;
 }
 
-/** Map month grid day to season week (Spieltag); null if off-season in this month slice. */
-export function seasonWeekForMonthDay(monthIndex: number, day: number): number | null {
-  if (monthIndex === 7 && day >= 20) return LEAGUE_FIRST_WEEK;
-  if (monthIndex === 8) return Math.min(LEAGUE_LAST_WEEK, 2 + Math.floor(day / 7));
-  if (monthIndex >= 9) {
-    return Math.min(LEAGUE_LAST_WEEK, 6 + Math.floor((day + (monthIndex - 9) * 30) / 7));
+function civilDateKey(year: number, monthIndex: number, day: number): string {
+  return `${year}-${monthIndex}-${day}`;
+}
+
+function leagueMatchSaturdayWeeks(season: number): Map<string, number> {
+  const map = new Map<string, number>();
+  for (let week = LEAGUE_FIRST_WEEK; week <= LEAGUE_LAST_WEEK; week += 1) {
+    if (!isLeagueMatchWeek(week)) continue;
+    const sat = civilDateFromSession(season, week, SATURDAY);
+    map.set(civilDateKey(sat.year, sat.monthIndex, sat.day), week);
   }
-  return null;
-}
-
-/** ISO weekday Mon=1 … Sun=7 for a civil date. */
-export function isoWeekdayForDate(year: number, monthIndex: number, day: number): number {
-  const js = new Date(year, monthIndex, day).getDay();
-  return js === 0 ? 7 : js;
-}
-
-export function isLeagueMatchDay(year: number, monthIndex: number, day: number): boolean {
-  if (isoWeekdayForDate(year, monthIndex, day) !== SATURDAY) return false;
-  const seasonWeek = seasonWeekForMonthDay(monthIndex, day);
-  return seasonWeek !== null && isLeagueMatchWeek(seasonWeek);
+  return map;
 }
 
 export function buildMonthGrid(
@@ -60,7 +54,8 @@ export function buildMonthGrid(
   today?: { week: number; weekday: number },
   milestones: readonly CalendarMilestone[] = [],
 ): CalendarMonthCell[] {
-  const year = seasonCalendarYear(season);
+  const year = calendarGridYear(season, monthIndex);
+  const matchSaturdays = leagueMatchSaturdayWeeks(season);
   const first = new Date(year, monthIndex, 1);
   const startPad = (first.getDay() + 6) % 7;
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
@@ -71,13 +66,9 @@ export function buildMonthGrid(
   }
 
   for (let day = 1; day <= daysInMonth; day += 1) {
-    const seasonWeek = seasonWeekForMonthDay(monthIndex, day);
+    const seasonWeek = matchSaturdays.get(civilDateKey(year, monthIndex, day));
     let match: CalendarMonthCell["match"];
-    if (
-      seasonWeek &&
-      isLeagueMatchWeek(seasonWeek) &&
-      isLeagueMatchDay(year, monthIndex, day)
-    ) {
+    if (seasonWeek && isLeagueMatchWeek(seasonWeek)) {
       const fixture = playerFixture(league, seasonWeek);
       if (fixture) {
         const home = fixture.homeTeamId === league.player_club_id;
@@ -94,11 +85,7 @@ export function buildMonthGrid(
       today !== undefined &&
       (() => {
         const civil = civilDateFromSession(season, today.week, today.weekday);
-        return (
-          civil.monthIndex === monthIndex &&
-          civil.day === day &&
-          (civil.year === year || civil.year === year + 1 || civil.year === year - 1)
-        );
+        return civil.monthIndex === monthIndex && civil.day === day && civil.year === year;
       })();
 
     const transferWindow = civilTransferWindow(monthIndex, day);

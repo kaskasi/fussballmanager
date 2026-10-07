@@ -4,7 +4,7 @@ import type { GameSession } from "../../persistence/game-session.ts";
 import { SUNDAY } from "../../sim/day-calendar.ts";
 import { calendarPointFromIndex } from "../../sim/calendar-days.ts";
 import { civilDateFromSession, type CivilDate } from "../../sim/session-civil-date.ts";
-import { seasonCalendarYear } from "../../sim/season-label.ts";
+import { calendarGridYear } from "../../sim/session-civil-date.ts";
 import { careerWeekIndex } from "../../stadium/hospitality.ts";
 import { t } from "../../i18n/index.ts";
 import type { Player } from "../../types/player.ts";
@@ -261,7 +261,7 @@ export function attachMilestonesToGrid(
   maxPerCell = 2,
   sessionWeek?: { season: number; week: number },
 ): Map<string, CalendarMilestoneView[]> {
-  const year = seasonCalendarYear(season);
+  const year = calendarGridYear(season, monthIndex);
   const bucket = new Map<string, CalendarMilestoneView[]>();
 
   for (const milestone of milestones) {
@@ -304,7 +304,7 @@ export function milestoneOverflowCount(
   milestones: readonly CalendarMilestone[],
   maxPerCell = 2,
 ): Map<string, number> {
-  const year = seasonCalendarYear(season);
+  const year = calendarGridYear(season, monthIndex);
   const counts = new Map<string, number>();
   for (const milestone of milestones) {
     const civil = milestoneCivilDate(milestone);

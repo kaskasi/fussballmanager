@@ -69,11 +69,14 @@ export function attributeSigma(attribute: keyof Attributes): number {
   return 0.1;
 }
 
-/** Injured weeks zero the training term. Healthy weeks: 1 / 1.25 / 1.5. */
+/** +33% training growth per focus session on that attribute group (max 2/week). */
+export const TRAINING_FOCUS_BONUS_PER_SLOT = 0.33;
+
+/** Injured weeks zero the training term. Healthy: 1.0 / 1.33 / 1.66. */
 export function trainingFocus(slots: FocusSlots, injured: boolean): number {
   if (injured) return 0;
-  if (slots === 2) return 1.5;
-  if (slots === 1) return 1.25;
+  if (slots === 2) return 1 + TRAINING_FOCUS_BONUS_PER_SLOT * 2;
+  if (slots === 1) return 1 + TRAINING_FOCUS_BONUS_PER_SLOT;
   return 1;
 }
 

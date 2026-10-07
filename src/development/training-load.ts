@@ -7,6 +7,31 @@ export const TRAINING_INTENSITY_MIN = 80;
 export const TRAINING_INTENSITY_MAX = 130;
 export const DEFAULT_TRAINING_INTENSITY = 100;
 
+export interface TrainingIntensityPreset {
+  value: number;
+  labelKey: "training.intensity.light" | "training.intensity.normal" | "training.intensity.hard";
+}
+
+export const TRAINING_INTENSITY_PRESETS: readonly TrainingIntensityPreset[] = [
+  { value: 85, labelKey: "training.intensity.light" },
+  { value: 100, labelKey: "training.intensity.normal" },
+  { value: 115, labelKey: "training.intensity.hard" },
+];
+
+export function snapTrainingIntensityToPreset(value: number): number {
+  const normalized = normalizeTrainingIntensity(value);
+  let best = TRAINING_INTENSITY_PRESETS[1]!.value;
+  let bestDist = Math.abs(normalized - best);
+  for (const preset of TRAINING_INTENSITY_PRESETS) {
+    const dist = Math.abs(normalized - preset.value);
+    if (dist < bestDist) {
+      best = preset.value;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
+
 export type FatigueAmpel = "good" | "watch" | "risk";
 
 export interface TrainingLoadSummary {

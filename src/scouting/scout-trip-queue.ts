@@ -147,6 +147,7 @@ export function advanceScoutTripsOnWorkingDay<T extends ScoutTripBoardSlice>(
   const stillActive: ActiveScoutTrip[] = [];
 
   for (const trip of listActiveScoutTrips(board)) {
+    if (trip.cancelling_since) continue;
     const advanced = advanceActiveScoutTrip(trip, discovery, rivalPlayers, targets, 1);
     discovery = advanced.discovery;
     targets = ensureTargetsForPool(advanced.targets, discovery, rivalPlayers);

@@ -7,10 +7,11 @@ import { DEFAULT_SCOUT_CAPACITY } from "./scout-assignments.ts";
 
 export type ScoutTierId = "local" | "international" | "elite";
 
+export const MAX_HIRED_SCOUTS = 6;
+
 export interface ScoutTierDef {
   id: ScoutTierId;
   label: string;
-  icon: string;
   capacity: number;
   accuracy_modifier: number;
   wage_weekly: number;
@@ -33,7 +34,6 @@ export const SCOUT_TIERS: Record<ScoutTierId, ScoutTierDef> = {
   local: {
     id: "local",
     label: "Lokal",
-    icon: "🏘️",
     capacity: 3,
     accuracy_modifier: 0.8,
     wage_weekly: 700,
@@ -42,19 +42,17 @@ export const SCOUT_TIERS: Record<ScoutTierId, ScoutTierDef> = {
   international: {
     id: "international",
     label: "International",
-    icon: "🌍",
     capacity: 6,
     accuracy_modifier: 1.1,
-    wage_weekly: 2_000,
+    wage_weekly: 4_000,
     regions: "Europa, Südamerika",
   },
   elite: {
     id: "elite",
     label: "Elite",
-    icon: "🎯",
     capacity: 4,
     accuracy_modifier: 1.3,
-    wage_weekly: 3_500,
+    wage_weekly: 10_500,
     regions: "Global · Drive & Breakouts",
   },
 };
@@ -164,7 +162,12 @@ export function availableScoutCandidates(
   return scoutCandidates(tier, season, week, masterSeed).filter((candidate) => !hiredIds.has(candidate.id));
 }
 
+export function canHireScout(network: ScoutNetworkState): boolean {
+  return network.scouts.length < MAX_HIRED_SCOUTS;
+}
+
 export function hireScout(network: ScoutNetworkState, scout: HiredScout): ScoutNetworkState {
+  if (!canHireScout(network)) return network;
   if (network.scouts.some((existing) => existing.id === scout.id)) {
     return network;
   }

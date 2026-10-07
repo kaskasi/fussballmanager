@@ -54,15 +54,26 @@ import {
   scoutNetworkCapacity,
   type ScoutNetworkState,
 } from "./scout-network.ts";
+import { pickScoutForPlayerAssignment } from "./scout-player-assignment.ts";
+import {
+  applyFilterSweepToEstimate,
+  filterSweepReductionPerPlayer,
+} from "./scout-filter-sweep.ts";
+import type { ScoutCalendarDay } from "./scout-calendar-day.ts";
+import { finalizeScoutWorkCancellations } from "./scout-work-cancel.ts";
 
 export interface BoardTarget extends ScoutedTarget {
   assigned: boolean;
+  assigned_scout_id?: string | null;
+  assigned_cancelling_since?: ScoutCalendarDay;
 }
 
 export interface ScoutKnowledgeTarget {
   playerId: string;
   estimate: AbilityEstimate;
   assigned: boolean;
+  assigned_scout_id?: string | null;
+  assigned_cancelling_since?: ScoutCalendarDay;
 }
 
 export interface ScoutReport {
@@ -100,6 +111,8 @@ export function normalizeScoutBoard(board: ScoutBoard): ScoutBoard {
         playerId,
         estimate: target.estimate,
         assigned: target.assigned ?? false,
+        assigned_scout_id: target.assigned_scout_id ?? null,
+        assigned_cancelling_since: target.assigned_cancelling_since,
       },
     ]),
   );
@@ -171,8 +184,10 @@ export function listBoardTargets(
       ? [{
           player,
           estimate: target.estimate,
-          assigned: target.assigned,
-          clubName: player.club_id ? clubNames.get(player.club_id) : undefined,
+        assigned: target.assigned,
+        assigned_scout_id: target.assigned_scout_id ?? null,
+        assigned_cancelling_since: target.assigned_cancelling_since,
+        clubName: player.club_id ? clubNames.get(player.club_id) : undefined,
         }]
       : [];
   });
@@ -188,24 +203,31 @@ export function getBoardTarget(
   const target = board.targets[playerId];
   const player = rivalPlayers.find((entry) => entry.id === playerId);
   return target && player
-    ? { player, estimate: target.estimate, assigned: target.assigned }
+    ? {
+        player,
+        estimate: target.estimate,
+        assigned: target.assigned,
+        assigned_scout_id: target.assigned_scout_id ?? null,
+      }
     : null;
 }
 
 export function assignScout(
   board: ScoutBoard,
   playerId: string,
-  capacity = DEFAULT_SCOUT_CAPACITY,
+  network: ScoutNetworkState,
+  capacity = scoutNetworkCapacity(network),
 ): ScoutBoard {
   const normalized = normalizeScoutBoard(board);
   const target = normalized.targets[playerId];
   if (!target || target.assigned) return normalized;
   if (activeScoutCount(normalized) >= capacity) return normalized;
+  const assigned_scout_id = pickScoutForPlayerAssignment(normalized, network);
   return {
     ...normalized,
     targets: {
       ...normalized.targets,
-      [playerId]: { ...target, assigned: true },
+      [playerId]: { ...target, assigned: true, assigned_scout_id },
     },
   };
 }
@@ -248,11 +270,14 @@ export function syncAssignmentTargets(
   board: ScoutBoard,
   rivalPlayers: readonly Player[],
   clubs: readonly WorldClub[] = [],
-  capacity = DEFAULT_SCOUT_CAPACITY,
+  network?: ScoutNetworkState,
+  capacity = network ? scoutNetworkCapacity(network) : DEFAULT_SCOUT_CAPACITY,
 ): ScoutBoard {
   const normalized = normalizeScoutBoard(board);
   const targets = listBoardTargets(normalized, rivalPlayers, clubs);
-  const assignments = (normalized.assignments ?? []).filter((entry) => entry.active);
+  const assignments = (normalized.assignments ?? []).filter(
+    (entry) => entry.active && (entry.kind ?? "roster") !== "filter_sweep",
+  );
   if (assignments.length === 0) return normalized;
 
   let nextTargets = { ...normalized.targets };
@@ -265,7 +290,10 @@ export function syncAssignmentTargets(
       if (slots <= 0) break;
       const entry = nextTargets[target.player.id];
       if (!entry) continue;
-      nextTargets[target.player.id] = { ...entry, assigned: true };
+      const scoutId = network
+        ? pickScoutForPlayerAssignment({ ...normalized, targets: nextTargets }, network)
+        : null;
+      nextTargets[target.player.id] = { ...entry, assigned: true, assigned_scout_id: scoutId };
       slots -= 1;
     }
   }
@@ -290,7 +318,9 @@ export function advanceScoutWorkingDay(
 ): ScoutBoard {
   const before = normalizeScoutBoard(board);
   if (!isScoutWorkingWeekday(weekday)) return before;
-  let next = advanceRegionScoutOnWorkingDay(before, weekday, rivalPlayers);
+  const now = { season, week, weekday };
+  let next = finalizeScoutWorkCancellations(before, now, network);
+  next = advanceRegionScoutOnWorkingDay(next, weekday, rivalPlayers);
   next = advanceScoutTripsOnWorkingDay(next, rivalPlayers, network);
   next = advanceOpponentScoutOnWorkingDay(next, network, opponentScoutContext);
   const normalized = normalizeScoutBoard(next);
@@ -318,7 +348,7 @@ export function advanceScoutWeek(
 ): ScoutBoard {
   const capacity = network ? scoutNetworkCapacity(network) : DEFAULT_SCOUT_CAPACITY;
   const accuracy = network ? scoutNetworkAccuracyModifier(network) : 1;
-  const synced = syncAssignmentTargets(board, rivalPlayers, clubs, capacity);
+  const synced = syncAssignmentTargets(board, rivalPlayers, clubs, network, capacity);
   const beforeAdvance = normalizeScoutBoard(synced);
   const withDiscovery = advanceDiscoveryWeek(
     beforeAdvance,
@@ -343,23 +373,42 @@ export function advanceScoutWeek(
   const reports: ScoutReport[] = [];
   const discoveries: ScoutDiscoveryAlert[] = [];
   const playersById = new Map(rivalPlayers.map((player) => [player.id, player] as const));
+  const boardTargets = listBoardTargets(withNotices, rivalPlayers, clubs);
   const assignmentByPlayer = new Map<string, string>();
+  const sweepReductionByPlayer = new Map<string, number>();
   for (const assignment of withNotices.assignments ?? []) {
     if (!assignment.active) continue;
-    for (const target of targetsForAssignment(
-      assignment,
-      listBoardTargets(withNotices, rivalPlayers, clubs),
-    )) {
+    const matches = targetsForAssignment(assignment, boardTargets);
+    for (const target of matches) {
       assignmentByPlayer.set(target.player.id, assignment.id);
+    }
+    if ((assignment.kind ?? "roster") !== "filter_sweep") continue;
+    if ((assignment.weeksRemaining ?? 0) <= 0) continue;
+    const perPlayer = filterSweepReductionPerPlayer(matches.length, capacity, accuracy);
+    for (const target of matches) {
+      const playerId = target.player.id;
+      sweepReductionByPlayer.set(
+        playerId,
+        (sweepReductionByPlayer.get(playerId) ?? 0) + perPlayer,
+      );
     }
   }
 
   for (const [playerId, target] of Object.entries(withNotices.targets)) {
     const knowledge: PlayerKnowledge = { status: "scouted", estimate: target.estimate };
     const beforeRange = target.estimate.uncertaintyRange;
-    const next = target.assigned
-      ? applyObservationWithAccuracy(knowledge, "scout_visit_report", accuracy)
-      : applyQuietWeek(knowledge);
+    const sweepReduction = sweepReductionByPlayer.get(playerId) ?? 0;
+    let next: PlayerKnowledge;
+    if (target.assigned) {
+      next = applyObservationWithAccuracy(knowledge, "scout_visit_report", accuracy);
+    } else if (sweepReduction > 0) {
+      next = {
+        status: "scouted",
+        estimate: applyFilterSweepToEstimate(knowledge.estimate, sweepReduction),
+      };
+    } else {
+      next = applyQuietWeek(knowledge);
+    }
     const estimate = next.status === "scouted" ? next.estimate : target.estimate;
     targets[playerId] = { ...target, playerId, estimate };
 
@@ -396,11 +445,22 @@ export function advanceScoutWeek(
     }
   }
 
+  const assignmentsAfterWeek = (withNotices.assignments ?? []).map((assignment) => {
+    if ((assignment.kind ?? "roster") !== "filter_sweep" || !assignment.active) {
+      return assignment;
+    }
+    const remaining = (assignment.weeksRemaining ?? 1) - 1;
+    if (remaining <= 0) {
+      return { ...assignment, weeksRemaining: 0, active: false };
+    }
+    return { ...assignment, weeksRemaining: remaining };
+  });
+
   return {
     ...withNotices,
     targets,
     recentReports: [...reports, ...(withNotices.recentReports ?? [])].slice(0, 24),
-    assignments: withNotices.assignments,
+    assignments: assignmentsAfterWeek,
     discoveryAlerts: [...discoveries, ...(withNotices.discoveryAlerts ?? [])].slice(0, 16),
   };
 }

@@ -16,6 +16,7 @@ import type { ScoutNetworkState } from "./scout-network.ts";
 import { scoutJobOpponentPostfachItemId } from "../inbox/postfach-scout-job.ts";
 import { prepareCareerMatch } from "../sim/career-match-setup.ts";
 import type { GameSession } from "../persistence/game-session.ts";
+import type { ScoutCalendarDay } from "./scout-calendar-day.ts";
 
 export interface ActiveOpponentScout {
   match_id: string;
@@ -24,6 +25,7 @@ export interface ActiveOpponentScout {
   working_days_total: number;
   season: number;
   week: number;
+  cancelling_since?: ScoutCalendarDay;
 }
 
 export type OpponentScoutStartReason =
@@ -111,6 +113,7 @@ export function advanceOpponentScoutOnWorkingDay(
 ): ScoutBoard {
   const job = board.active_opponent_scout;
   if (!job) return board;
+  if (job.cancelling_since) return board;
 
   const nextDone = job.working_days_done + 1;
   if (nextDone < job.working_days_total) {

@@ -17,15 +17,17 @@ import {
   ensureTargetsForPool,
   normalizeDiscovery,
 } from "./scout-discovery.ts";
+import { defaultScoutNetwork } from "./scout-network.ts";
 
 describe("scout board", () => {
   const rivals = initializeRivalPlayers(2026);
+  const network = defaultScoutNetwork(1, 2026);
 
   it("loads market targets and can assign a scout", () => {
     const board = withPool(createScoutBoard(rivals), rivals);
     const first = listBoardTargets(board, rivals)[0] ?? null;
     expect(first).not.toBeNull();
-    const assigned = assignScout(board, first!.player.id);
+    const assigned = assignScout(board, first!.player.id, network);
     expect(getBoardTarget(assigned, first!.player.id, rivals)?.assigned).toBe(true);
     expect(activeScoutCount(assigned)).toBe(1);
   });
@@ -34,7 +36,7 @@ describe("scout board", () => {
     const board = withPool(createScoutBoard(rivals), rivals);
     const first = listBoardTargets(board, rivals)[0]!;
     const startRange = first.estimate.uncertaintyRange;
-    let current = assignScout(board, first.player.id);
+    let current = assignScout(board, first.player.id, network);
     current = advanceScoutWeek(current, 2, rivals);
     const after = getBoardTarget(current, first.player.id, rivals)!;
     expect(after.estimate.uncertaintyRange).toBeLessThan(startRange);
@@ -44,7 +46,7 @@ describe("scout board", () => {
   it("creates scout reports for assigned targets", () => {
     const board = withPool(createScoutBoard(rivals), rivals);
     const first = listBoardTargets(board, rivals)[0]!;
-    const assigned = assignScout(board, first.player.id);
+    const assigned = assignScout(board, first.player.id, network);
     const next = advanceScoutWeek(assigned, 5, rivals);
     expect(next.recentReports?.length).toBe(1);
     expect(next.recentReports?.[0]?.week).toBe(5);
@@ -68,14 +70,40 @@ describe("scout board", () => {
       board,
       createScoutAssignment("assign_u21", { age: "u21" }),
     );
-    const synced = syncAssignmentTargets(withAssignment, rivals);
+    const synced = syncAssignmentTargets(withAssignment, rivals, [], network);
     expect(activeScoutCount(synced)).toBeGreaterThan(0);
+  });
+
+  it("applies filter-sweep knowledge across all matching pool players for one week", () => {
+    const board = withPool(createScoutBoard(rivals), rivals);
+    const targets = listBoardTargets(board, rivals);
+    const u21 = targets.filter((target) => target.player.age <= 21);
+    expect(u21.length).toBeGreaterThan(3);
+    const startAvg =
+      u21.reduce((sum, target) => sum + target.estimate.uncertaintyRange, 0) / u21.length;
+
+    const withSweep = addScoutAssignment(
+      board,
+      createScoutAssignment("assign_sweep", { age: "u21" }, undefined, {
+        kind: "filter_sweep",
+        weeksRemaining: 1,
+      }),
+    );
+    const synced = syncAssignmentTargets(withSweep, rivals, [], network);
+    expect(activeScoutCount(synced)).toBe(0);
+
+    const after = advanceScoutWeek(synced, 3, rivals, [], network);
+    const afterU21 = listBoardTargets(after, rivals).filter((target) => target.player.age <= 21);
+    const endAvg =
+      afterU21.reduce((sum, target) => sum + target.estimate.uncertaintyRange, 0) / afterU21.length;
+    expect(endAvg).toBeLessThan(startAvg);
+    expect(after.assignments?.[0]?.active).toBe(false);
   });
 
   it("keeps knowledge while following authoritative roster changes", () => {
     const board = withPool(createScoutBoard(rivals), rivals);
     const first = listBoardTargets(board, rivals)[0]!;
-    const assigned = assignScout(board, first.player.id);
+    const assigned = assignScout(board, first.player.id, network);
     const moved = rivals.map((player) =>
       player.id === first.player.id
         ? { ...player, club_id: "cl_world_new_club" }

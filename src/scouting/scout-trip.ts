@@ -12,6 +12,7 @@ import {
   type ScoutTripDurationBreakdown,
 } from "./scout-trip-duration.ts";
 import type { ScoutRouteScore } from "./scout-route-puzzle.ts";
+import type { ScoutCalendarDay } from "./scout-calendar-day.ts";
 
 export interface ScoutTripPlan {
   id: string;
@@ -22,6 +23,7 @@ export interface ScoutTripPlan {
   progress_multiplier: number;
   duration: ScoutTripDurationBreakdown;
   queued_at_week: number;
+  cancelling_since?: ScoutCalendarDay;
 }
 
 export interface ActiveScoutTrip extends ScoutTripPlan {

@@ -45,8 +45,8 @@ describe("assistant delegation", () => {
 
   it("creates a valid five-slot training plan with at most three focus slots", () => {
     const plan = assistantTrainingPlan(players, clubId, 75, 1, 3, 2026);
-    expect(plan).toHaveLength(5);
-    expect(plan.filter((slot) => slot.focus).length).toBeLessThanOrEqual(3);
+    expect(plan).toHaveLength(15);
+    expect(plan.filter((slot) => slot.focus).length).toBeLessThanOrEqual(2);
   });
 
   it("seeds scout assignments when board is empty", () => {

@@ -6,6 +6,7 @@ import type { YouthCamp } from "../../youth/satellite-camps.ts";
 import type { DecisionAction, YouthInboxState } from "../../youth/decision-inbox.ts";
 import type { StoryCast } from "../../narrative/story-state.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
+import type { ClubEvent } from "../../inbox/club-events.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { DecisionInboxPanel } from "../components/DecisionInboxPanel.tsx";
@@ -28,6 +29,7 @@ export function PostfachScreen({
   onOpenScoutingNetwork,
   onOpenScoutingHits,
   onApplyOpponentScoutPlan,
+  clubEvents,
 }: {
   players: Player[];
   youthInbox: YouthInboxState;
@@ -46,6 +48,7 @@ export function PostfachScreen({
   onOpenScoutingNetwork: () => void;
   onOpenScoutingHits: () => void;
   onApplyOpponentScoutPlan?: (plan: SandboxPlan) => void;
+  clubEvents: readonly ClubEvent[];
 }) {
   useT();
 
@@ -70,6 +73,7 @@ export function PostfachScreen({
           onOpenScoutingNetwork={onOpenScoutingNetwork}
           onOpenScoutingHits={onOpenScoutingHits}
           onApplyOpponentScoutPlan={onApplyOpponentScoutPlan}
+          clubEvents={clubEvents}
         />
       </section>
     </main>

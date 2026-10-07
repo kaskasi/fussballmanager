@@ -9,6 +9,7 @@ import type { ScoutKnowledgeTarget } from "./scout-board.ts";
 import { initialEstimateForPlayer } from "./market-list.ts";
 import { applyMapClubVisitToBoardTargets } from "./scout-map-visit.ts";
 import { isScoutWorkingWeekday } from "./scout-trip-duration.ts";
+import type { ScoutCalendarDay } from "./scout-calendar-day.ts";
 
 export const CLUB_SCOUT_PROGRESS_PER_WEEK = 34;
 export const REGION_SCOUT_PROGRESS_PER_WEEK = 25;
@@ -30,6 +31,7 @@ export interface ActiveClubScout {
   club_id: string;
   progress: number;
   progress_multiplier?: number;
+  cancelling_since?: ScoutCalendarDay;
 }
 
 export interface ActiveRegionScout {
@@ -41,6 +43,7 @@ export interface ActiveRegionScout {
   /** PRD 21: route efficiency (duplicate edges slow weekly progress). */
   progress_multiplier?: number;
   no_duplicate_bonus?: boolean;
+  cancelling_since?: ScoutCalendarDay;
 }
 
 export const REGION_SCOUT_WORKING_DAYS_PER_JOB = 1;
@@ -297,7 +300,7 @@ export function advanceDiscoveryWeek<T extends DiscoveryBoardSlice>(
   let activeRegion = board.active_region_scout ?? null;
   const boost = 1 + Math.min(2, Math.max(0, scoutSlotsActive - 1)) * 0.15;
 
-  if (activeClub) {
+  if (activeClub && !activeClub.cancelling_since) {
     const routeBoost = activeClub.progress_multiplier ?? 1;
     const step = Math.round(CLUB_SCOUT_PROGRESS_PER_WEEK * boost * routeBoost);
     const progress = Math.min(DISCOVERY_COMPLETE, activeClub.progress + step);
@@ -364,6 +367,7 @@ export function advanceRegionScoutOnWorkingDay<T extends DiscoveryBoardSlice>(
   if (!isScoutWorkingWeekday(weekday)) return board;
   let activeRegion = normalizeActiveRegionScout(board.active_region_scout ?? null);
   if (!activeRegion || activeRegion.working_days_left <= 0) return board;
+  if (activeRegion.cancelling_since) return board;
 
   let discovery = normalizeDiscovery(board.discovery);
   let targets = board.targets;

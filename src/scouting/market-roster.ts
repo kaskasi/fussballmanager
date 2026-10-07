@@ -13,15 +13,16 @@ export interface MarketRow extends ProSquadRow {
   player: Player;
   estimate: AbilityEstimate;
   assigned: boolean;
+  assignedScoutId?: string | null;
   clubName?: string;
 }
 
 export function listMarketRows(
-  targets: readonly ScoutedTarget[],
+  targets: readonly (ScoutedTarget & { assigned?: boolean; assigned_scout_id?: string | null })[],
   assignedIds: ReadonlySet<string>,
   season: number,
 ): MarketRow[] {
-  return targets.map(({ player, estimate, clubName }) => ({
+  return targets.map(({ player, estimate, clubName, assigned, assigned_scout_id }) => ({
     playerId: player.id,
     displayName: formatPlayerName(player),
     position: player.position,
@@ -43,7 +44,8 @@ export function listMarketRows(
     avgRating: seasonMatchRating(player),
     player,
     estimate,
-    assigned: assignedIds.has(player.id),
+    assigned: assigned ?? assignedIds.has(player.id),
+    assignedScoutId: assigned_scout_id ?? null,
     clubName,
   }));
 }

@@ -63,6 +63,30 @@ describe("market list", () => {
     expect(track.ciWidth).toBeGreaterThan(track.fill * 0.1);
   });
 
+  it("maps scout map zone labels to world birth regions", () => {
+    const shExpected = market.filter((target) =>
+      ["Nordküste", "Elbmarsch"].includes(target.player.birth.region),
+    );
+    const shFiltered = filterMarket(market, {
+      query: "Schleswig-Holstein",
+      position: "all",
+      confidence: "all",
+      age: "all",
+    });
+    expect(shFiltered.length).toBe(shExpected.length);
+    expect(shFiltered.length).toBeGreaterThan(0);
+
+    const hanseExpected = market.filter((target) => target.player.birth.region === "Hansebogen");
+    const hanseFiltered = filterMarket(market, {
+      query: "Hansestadt",
+      position: "all",
+      confidence: "all",
+      age: "all",
+    });
+    expect(hanseFiltered.length).toBe(hanseExpected.length);
+    expect(hanseFiltered.length).toBeGreaterThan(0);
+  });
+
   it("flags any non-default market filter as active", () => {
     expect(marketFiltersActive(DEFAULT_MARKET_FILTERS)).toBe(false);
     expect(marketFiltersActive({ ...DEFAULT_MARKET_FILTERS, confidence: "unknown" })).toBe(true);

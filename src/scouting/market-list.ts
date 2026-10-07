@@ -5,6 +5,7 @@ import {
   type WorldClub,
 } from "../world/world-generator.ts";
 import { confidenceLabel, type AbilityEstimate } from "./estimate-model.ts";
+import { SCOUT_MAP_ZONES } from "./scout-region-map.ts";
 
 /**
  * Market targets for Screen 3 (PRD 09.2, F4.1).
@@ -83,8 +84,19 @@ export function headlineCounts(targets: readonly ScoutedTarget[]): {
   return { known, unclear, unknown };
 }
 
+function worldRegionsForMapZoneQuery(query: string): readonly string[] | null {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return null;
+  const zone = SCOUT_MAP_ZONES.find(
+    (entry) =>
+      entry.label.toLowerCase() === normalized || entry.id.toLowerCase() === normalized,
+  );
+  return zone ? zone.worldRegions : null;
+}
+
 export function filterMarket(targets: readonly ScoutedTarget[], filters: MarketFilters): ScoutedTarget[] {
   const query = filters.query.trim().toLowerCase();
+  const mapZoneRegions = worldRegionsForMapZoneQuery(filters.query);
   return targets.filter((target) => {
     if (filters.position !== "all" && target.player.position !== filters.position) return false;
     if (filters.age === "u21" && target.player.age > 21) return false;
@@ -95,6 +107,9 @@ export function filterMarket(targets: readonly ScoutedTarget[], filters: MarketF
       confidenceBucket(target.estimate.uncertaintyRange) !== filters.confidence
     ) {
       return false;
+    }
+    if (mapZoneRegions) {
+      return mapZoneRegions.includes(target.player.birth.region);
     }
     if (!query) return true;
     return (

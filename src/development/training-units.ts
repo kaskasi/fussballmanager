@@ -1,10 +1,18 @@
 import type { Attributes } from "../types/player.ts";
-import { emptyWeeklyTrainingPlan, assertWeeklyPlanLength } from "./training-plan-state.ts";
+import {
+  emptyTrainingSlot,
+  emptyWeeklyTrainingPlan,
+  assertWeeklyPlanLength,
+  isTrainingSlotEmpty,
+} from "./training-plan-state.ts";
 import { SLOT_COUNT, TRAINING_DAYS, UNITS_PER_DAY, type TrainingSession } from "./weekly-plan.ts";
 
 export {
+  EMPTY_TRAINING_UNIT_ID,
+  emptyTrainingSlot,
   emptyWeeklyTrainingPlan,
   isTrainingSlotConfigured,
+  isTrainingSlotEmpty,
   isTrainingWeekday,
   weeklyFocusCount,
 } from "./training-plan-state.ts";
@@ -37,9 +45,12 @@ export function slotPeriodIndex(slotIndex: number): number {
 
 export function slotLabel(slotIndex: number): string {
   const day = TRAINING_DAYS[slotDayIndex(slotIndex)] ?? "?";
-  if (UNITS_PER_DAY === 1) return day;
   const period = slotPeriodIndex(slotIndex) + 1;
   return `${day} · Einheit ${period}`;
+}
+
+export function slotPeriodLabel(slotIndex: number): string {
+  return `E${slotPeriodIndex(slotIndex) + 1}`;
 }
 
 export const TRAINING_UNITS: readonly TrainingUnit[] = [
@@ -70,31 +81,57 @@ export function trainingUnit(id: string): TrainingUnit {
 }
 
 export function defaultTrainingPlan(): TrainingSlot[] {
-  return [
-    { unitId: "tech_pass", focus: true },
-    { unitId: "phys_speed", focus: false },
-    { unitId: "ment_tactical", focus: false },
-    { unitId: "tech_ball", focus: true },
-    { unitId: "phys_power", focus: true },
-  ];
+  const plan = emptyWeeklyTrainingPlan();
+  plan[0] = { unitId: "tech_pass", focus: true };
+  plan[3] = { unitId: "phys_speed", focus: false };
+  plan[6] = { unitId: "ment_tactical", focus: false };
+  plan[9] = { unitId: "tech_ball", focus: true };
+  plan[12] = { unitId: "phys_power", focus: false };
+  return plan;
 }
 
-const LEGACY_SLOTS_PER_WEEK = 15;
+const LEGACY_FIVE_SLOTS_PER_WEEK = 5;
 
-/** Converts a pre-025 fifteen-slot week (Mo–Fr × 3) to five weekday slots. */
+/** Expands one slot per weekday (migration 025) to three per day. */
+export function expandFiveDayTrainingPlan(plan: readonly TrainingSlot[]): TrainingSlot[] {
+  const out: TrainingSlot[] = [];
+  for (let day = 0; day < TRAINING_DAYS.length; day++) {
+    const daySlot = plan[day] ?? emptyTrainingSlot();
+    out.push(daySlot);
+    out.push(emptyTrainingSlot(), emptyTrainingSlot());
+  }
+  return out;
+}
+
 export function migrateLegacyTrainingPlan(plan: readonly TrainingSlot[]): TrainingSlot[] {
-  if (plan.length === SLOT_COUNT) return [...plan];
-  if (plan.length === LEGACY_SLOTS_PER_WEEK) {
-    return [0, 3, 6, 9, 12].map((index) => plan[index]!).filter(Boolean);
+  if (plan.length === SLOT_COUNT) return normalizePlaceholderTrainingPlan([...plan]);
+  if (plan.length === LEGACY_FIVE_SLOTS_PER_WEEK) {
+    return normalizePlaceholderTrainingPlan(expandFiveDayTrainingPlan(plan));
   }
   return createInitialTrainingPlan();
 }
 
+/** Old empty weeks used Passspiel on every slot with no focus — show as unset. */
+export function normalizePlaceholderTrainingPlan(plan: readonly TrainingSlot[]): TrainingSlot[] {
+  if (plan.length !== SLOT_COUNT) return [...plan];
+  const legacyPlaceholder = plan.every((slot) => slot.unitId === "tech_pass" && !slot.focus);
+  if (legacyPlaceholder) return emptyWeeklyTrainingPlan();
+  return [...plan];
+}
+
+/** Padding for empty cells — no focus, does not stack growth (weekly-plan tests). */
+const EMPTY_SLOT_SESSION: TrainingSession = { group: "mental", focus: false };
+
 export function planToSessions(plan: readonly TrainingSlot[]): TrainingSession[] {
-  return plan.map((slot) => ({
-    group: trainingUnit(slot.unitId).group,
-    focus: slot.focus,
-  }));
+  return plan.map((slot) => {
+    if (isTrainingSlotEmpty(slot)) {
+      return { ...EMPTY_SLOT_SESSION, focus: false };
+    }
+    return {
+      group: trainingUnit(slot.unitId).group,
+      focus: slot.focus,
+    };
+  });
 }
 
 export function trainingUnitUnlocked(

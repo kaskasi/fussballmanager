@@ -41,7 +41,7 @@ describe("game session", () => {
       },
       session.rivalPlayers,
     );
-    const board = assignScout(scoutBase, firstRivalId);
+    const board = assignScout(scoutBase, firstRivalId, session.scoutNetwork);
     const plan = createInitialTrainingPlan().map((slot, index) =>
       index === 0 ? { ...slot, focus: true } : slot,
     );
@@ -106,7 +106,7 @@ describe("game session", () => {
     writeLocalSave(1, legacy);
     const loaded = loadLocalSave(1);
     expect(loaded?.manifest.save_version).toBe(SAVE_VERSION);
-    expect(loaded?.state.pipeline?.training_plan).toHaveLength(5);
+    expect(loaded?.state.pipeline?.training_plan).toHaveLength(15);
     expect(loaded?.state.pipeline?.youth_inbox.queue.length).toBeGreaterThan(0);
     expect(loaded?.state.world).toMatchObject({
       generation_version: 1,

@@ -25,9 +25,12 @@ import {
   advanceScoutWorkingDay,
   getBoardTarget,
   listBoardTargets,
-  removeScoutAssignment,
   toggleScoutAssignment,
 } from "./scouting/scout-board.ts";
+import {
+  requestScoutWorkCancel,
+  type ScoutWorkCancelTarget,
+} from "./scouting/scout-work-cancel.ts";
 import {
   canStartRegionScout,
   normalizeDiscovery,
@@ -130,6 +133,7 @@ import {
 import { assignMentor, clearMentor } from "./development/mentoring.ts";
 import {
   fireScout,
+  canHireScout,
   hireScout,
   scoutNetworkCapacity,
   type HiredScout,
@@ -198,8 +202,10 @@ import { postfachOpenCount } from "./inbox/postfach-open-count.ts";
 import { isScoutJobPostfachItemId } from "./inbox/postfach-scout-job.ts";
 import {
   consumeScoutJobNotice,
+  scoutJobNoticeById,
   unconsumedScoutJobNotices,
 } from "./scouting/scout-job-postfach.ts";
+import { scoutJobDismissOneLiner } from "./inbox/postfach-archive.ts";
 import { PostfachScreen } from "./ui/screens/PostfachScreen.tsx";
 import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
 import { NoticeToast, SaveToast } from "./ui/components/SaveToast.tsx";
@@ -711,10 +717,17 @@ export default function App() {
 
   const handleDismissScoutJob = useCallback(
     (itemId: string) => {
-      patchSession((current) => ({
-        ...current,
-        scoutBoard: consumeScoutJobNotice(current.scoutBoard, itemId),
-      }));
+      patchSession((current) => {
+        const notice = scoutJobNoticeById(current.scoutBoard, itemId);
+        const next = {
+          ...current,
+          scoutBoard: consumeScoutJobNotice(current.scoutBoard, itemId),
+        };
+        const message = notice
+          ? scoutJobDismissOneLiner(notice)
+          : "Scout-Bericht geschlossen";
+        return sessionWithEvent(next, "info", message);
+      });
     },
     [patchSession],
   );
@@ -976,11 +989,7 @@ export default function App() {
     (playerId: string) => {
       patchSession((current) => ({
         ...current,
-        scoutBoard: assignScout(
-          current.scoutBoard,
-          playerId,
-          scoutNetworkCapacity(current.scoutNetwork),
-        ),
+        scoutBoard: assignScout(current.scoutBoard, playerId, current.scoutNetwork),
       }));
     },
     [patchSession],
@@ -1075,6 +1084,9 @@ export default function App() {
         if (current.scoutNetwork.scouts.some((existing) => existing.id === scout.id)) {
           return current;
         }
+        if (!canHireScout(current.scoutNetwork)) {
+          return sessionWithEvent(current, "info", t("scouting.network.rosterFull"));
+        }
         if (current.finances.cash < scout.wage_weekly * 4) {
           return sessionWithEvent(
             current,
@@ -1162,9 +1174,11 @@ export default function App() {
         {
           position: marketFilters.position,
           age: marketFilters.age,
-          region: marketFilters.query,
           query: marketFilters.query,
+          confidence: marketFilters.confidence,
         },
+        undefined,
+        { kind: "filter_sweep", weeksRemaining: 1 },
       );
       return {
         ...current,
@@ -1173,11 +1187,15 @@ export default function App() {
     });
   }, [marketFilters, patchSession]);
 
-  const handleRemoveScoutAssignment = useCallback(
-    (assignmentId: string) => {
+  const handleCancelScoutWork = useCallback(
+    (target: ScoutWorkCancelTarget) => {
       patchSession((current) => ({
         ...current,
-        scoutBoard: removeScoutAssignment(current.scoutBoard, assignmentId),
+        scoutBoard: requestScoutWorkCancel(current.scoutBoard, target, {
+          season: current.season,
+          week: current.week,
+          weekday: current.weekday,
+        }),
       }));
     },
     [patchSession],
@@ -2459,6 +2477,7 @@ export default function App() {
             setScreen("scouting");
           }}
           onApplyOpponentScoutPlan={handleApplyOpponentScoutPlan}
+          clubEvents={clubEvents}
         />
       ) : null}
       {openingBlocked(session) ? (
@@ -2549,6 +2568,7 @@ export default function App() {
           playerDivisionId={playerDivisionId}
           activeClubScout={scoutBoard.active_club_scout}
           activeRegionScout={scoutBoard.active_region_scout}
+          activeOpponentScout={scoutBoard.active_opponent_scout}
           activeScoutTrips={scoutBoard.active_scout_trips ?? []}
           scoutTripQueue={scoutBoard.scout_trip_queue}
           tripQueueLength={scoutBoard.scout_trip_queue?.length ?? 0}
@@ -2560,7 +2580,7 @@ export default function App() {
           onSortChange={setMarketSort}
           assignments={scoutBoard.assignments ?? []}
           onAddAssignment={handleAddScoutAssignment}
-          onRemoveAssignment={handleRemoveScoutAssignment}
+          onCancelScoutWork={handleCancelScoutWork}
           onToggleAssignment={handleToggleScoutAssignment}
           onSelectTarget={(playerId) => setForeignPlayerId(playerId)}
           onAssignScout={handleAssignScout}
@@ -2577,6 +2597,8 @@ export default function App() {
           initialTab={scoutingInitialTab}
           onInitialTabApplied={() => setScoutingInitialTab(null)}
           onScoutMapDetailChange={handleScoutMapDetailChange}
+          opponentLabel={prepareCareerMatch(session)?.opponentShortName}
+          matchSetup={prepareCareerMatch(session)}
         />
       ) : null}
       {screen === "transfers" ? (

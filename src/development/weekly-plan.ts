@@ -4,7 +4,7 @@ import { calculateWeeklyGrowth, trainingFocus, type FocusSlots } from "./growth-
 /**
  * Club weekly training plan (F2.1, PRD 02.4).
  *
- * Five sessions (Mo–Fr, one slot per day), at most three marked focus,
+ * Fifteen sessions (Mo–Fr, three per day), at most three marked focus,
  * at most two focus sessions on one group. A focus session raises
  * `trainingFocus` for every attribute in that group. A normal session does not.
  *
@@ -14,9 +14,9 @@ import { calculateWeeklyGrowth, trainingFocus, type FocusSlots } from "./growth-
  */
 
 export const TRAINING_DAYS = ["Mo", "Di", "Mi", "Do", "Fr"] as const;
-export const UNITS_PER_DAY = 1;
-export const SLOT_COUNT = TRAINING_DAYS.length;
-export const MAX_FOCUS_SLOTS = 3;
+export const UNITS_PER_DAY = 3;
+export const SLOT_COUNT = TRAINING_DAYS.length * UNITS_PER_DAY;
+export const MAX_FOCUS_SLOTS = 2;
 export const MAX_FOCUS_PER_GROUP = 2;
 
 export type SessionGroup = "technical" | "physical" | "mental";

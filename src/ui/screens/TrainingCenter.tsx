@@ -3,8 +3,11 @@ import { MapPinOff } from "lucide-react";
 import {
   planToSessions,
   slotLabel,
+  slotPeriodLabel,
   TRAINING_DAYS,
   TRAINING_UNITS,
+  UNITS_PER_DAY,
+  isTrainingSlotEmpty,
   trainingUnit,
   trainingUnitUnlocked,
   type TrainingSlot,
@@ -17,7 +20,6 @@ import {
   seasonCaDelta,
 } from "../../player/ca-tracking.ts";
 import {
-  MAX_FOCUS_PER_GROUP,
   MAX_FOCUS_SLOTS,
   SLOT_COUNT,
   validateWeeklyPlan,
@@ -45,11 +47,11 @@ import {
 } from "../../development/individual-training.ts";
 import { stampDefinition } from "../../development/ability-stamps.ts";
 import {
-  clampTrainingIntensity,
   fatigueAmpelClassName,
   squadTrainingLoad,
-  TRAINING_INTENSITY_MAX,
-  TRAINING_INTENSITY_MIN,
+  snapTrainingIntensityToPreset,
+  TRAINING_INTENSITY_PRESETS,
+  type TrainingLoadSummary,
 } from "../../development/training-load.ts";
 import type { PositionPrimary } from "../../types/player.ts";
 import { Hint } from "../components/Hint.tsx";
@@ -65,7 +67,7 @@ import { Target } from "lucide-react";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 
-type TrainingTab = "status" | "team" | "individual";
+type TrainingTab = "team" | "individual";
 
 const GROUP_LABELS: Record<SessionGroup, string> = {
   technical: "Technik",
@@ -76,8 +78,7 @@ const GROUP_LABELS: Record<SessionGroup, string> = {
 /**
  * WIREFRAME: docs/prd/design.md §9.10 — Training
  *
- * Übersicht: Ampel · 🎯 Fokus · Heatmap Wochenzuwachs (02.1)
- * Team: Stundenplan (Mo–Fr, 5 Slots). Fokus-Modus per Checkbox.
+ * Stundenplan: Mo–Fr × 3, Intensität, Heatmap-Band, Fokus-Icons.
  * Individuell: Extra-Programme pro Spieler (F2.3).
  */
 
@@ -134,7 +135,7 @@ export function TrainingCenter({
   injuryRiskFactor?: number;
 }) {
   useT();
-  const [tab, setTab] = useState<TrainingTab>("status");
+  const [tab, setTab] = useState<TrainingTab>("team");
   const [pickSlot, setPickSlot] = useState<number | null>(null);
   const check = useMemo(() => validateWeeklyPlan(planToSessions(plan)), [plan]);
   const focusCount = plan.filter((slot) => slot.focus).length;
@@ -150,7 +151,6 @@ export function TrainingCenter({
   }, [focusIndividualPlayerId]);
 
   const trainingTabs: { id: TrainingTab; labelKey: string }[] = [
-    { id: "status", labelKey: "training.tab.overview" },
     { id: "team", labelKey: "training.tab.team" },
     { id: "individual", labelKey: "training.tab.individual" },
   ];
@@ -172,18 +172,6 @@ export function TrainingCenter({
         ))}
       </div>
 
-      {tab === "status" ? (
-        <div className="fm-tab-panel">
-          <TrainingOverview
-            focusCount={focusCount}
-            load={load}
-            players={players}
-            clubId={clubId}
-            onOpenPlan={() => setTab("team")}
-            onSelectPlayer={onSelectPlayer}
-          />
-        </div>
-      ) : null}
       {tab === "team" ? (
         <div className="fm-tab-panel">
           <TeamPlan
@@ -194,9 +182,12 @@ export function TrainingCenter({
             intensity={intensity}
             load={load}
             hasTrainingHall={hasTrainingHall}
+            players={players}
+            clubId={clubId}
             onPickSlot={setPickSlot}
             onPlanChange={onPlanChange}
             onIntensityChange={onIntensityChange}
+            onSelectPlayer={onSelectPlayer}
           />
         </div>
       ) : null}
@@ -217,52 +208,46 @@ export function TrainingCenter({
   );
 }
 
-function TrainingOverview({
-  focusCount,
+function TrainingIntensityStatus({
+  intensity,
   load,
-  players,
-  clubId,
-  onOpenPlan,
-  onSelectPlayer,
+  onIntensityChange,
 }: {
-  focusCount: number;
-  load: ReturnType<typeof squadTrainingLoad>;
-  players: Player[];
-  clubId: string;
-  onOpenPlan: () => void;
-  onSelectPlayer?: (playerId: string) => void;
+  intensity: number;
+  load: TrainingLoadSummary;
+  onIntensityChange: (value: number) => void;
 }) {
-  useT();
-  const heatCells = useMemo(() => squadGrowthHeatmap(players, clubId), [players, clubId]);
-  const focusOpen = focusCount < MAX_FOCUS_SLOTS;
-
+  const activeValue = snapTrainingIntensityToPreset(intensity);
   return (
-    <section className="training-overview">
-      <div className="training-overview-strip">
-        <p
-          className={`training-fatigue is-${load.ampel}`}
-          title={load.label}
-          aria-label={t("training.overview.fatigueAria", { label: load.label })}
-        >
-          <span className={`pipeline-light ${fatigueAmpelClassName(load.ampel)}`} aria-hidden="true">
-            {load.icon}
-          </span>
-          <span>{load.label}</span>
-        </p>
-        <p className="training-overview-focus">
-          {t("training.overview.focus", { count: focusCount, max: MAX_FOCUS_SLOTS })}
-        </p>
-        <button type="button" className="training-overview-go" onClick={onOpenPlan}>
-          {focusOpen
-            ? t("training.overview.setFocus", { count: focusCount, max: MAX_FOCUS_SLOTS })
-            : t("training.overview.openPlan")}
-        </button>
+    <div className="training-status-row">
+      <div className="training-intensity-presets" role="group" aria-label={t("training.intensity.aria")}>
+        {TRAINING_INTENSITY_PRESETS.map((preset) => (
+          <button
+            key={preset.value}
+            type="button"
+            className={
+              activeValue === preset.value
+                ? "training-intensity-preset is-active"
+                : "training-intensity-preset"
+            }
+            aria-pressed={activeValue === preset.value}
+            onClick={() => onIntensityChange(preset.value)}
+          >
+            {t(preset.labelKey)}
+          </button>
+        ))}
       </div>
-      <GrowthHeatmap
-        cells={heatCells}
-        onSelectPlayer={(playerId) => onSelectPlayer?.(playerId)}
-      />
-    </section>
+      <p
+        className={`training-status-load is-${load.ampel}`}
+        title={load.label}
+        aria-label={t("training.overview.fatigueAria", { label: load.label })}
+      >
+        <span className={`pipeline-light ${fatigueAmpelClassName(load.ampel)}`} aria-hidden="true">
+          {load.icon}
+        </span>
+        <span>{load.label}</span>
+      </p>
+    </div>
   );
 }
 
@@ -274,9 +259,12 @@ function TeamPlan({
   intensity,
   load,
   hasTrainingHall,
+  players,
+  clubId,
   onPickSlot,
   onPlanChange,
   onIntensityChange,
+  onSelectPlayer,
 }: {
   plan: TrainingSlot[];
   pickSlot: number | null;
@@ -285,87 +273,68 @@ function TeamPlan({
   intensity: number;
   load: ReturnType<typeof squadTrainingLoad>;
   hasTrainingHall: boolean;
+  players: Player[];
+  clubId: string;
   onPickSlot: (slot: number | null) => void;
   onPlanChange: (plan: TrainingSlot[]) => void;
   onIntensityChange: (intensity: number) => void;
+  onSelectPlayer?: (playerId: string) => void;
 }) {
-  const [focusMode, setFocusMode] = useState(false);
-
-  function handleSlotClick(index: number) {
-    if (focusMode) {
-      onPlanChange(toggleFocus(plan, index));
-      return;
-    }
-    onPickSlot(index);
-  }
+  const heatCells = useMemo(() => squadGrowthHeatmap(players, clubId), [players, clubId]);
 
   return (
     <section className="training-team">
       <Hint
-        text="Klick auf eine Einheit öffnet den Katalog. Fokus-Modus aktivieren, dann Einheiten anklicken — max. 3 Fokus/Woche (PRD 02.4)."
+        text="Karte anklicken = Einheit wählen. Fokus-Icon = +33 % Wachstum in der Gruppe (max. 2 Fokus/Woche)."
         block
       >
         <p className="training-rules">
-          {SLOT_COUNT} Trainingsslots (Mo–Fr) · {focusCount}/{MAX_FOCUS_SLOTS} Fokus · max. {MAX_FOCUS_PER_GROUP} Fokus pro Bereich
+          {TRAINING_DAYS.length}×{UNITS_PER_DAY} Trainingsslots (Mo–Fr) · {focusCount}/{MAX_FOCUS_SLOTS} Fokus (+33 %)
           {!check.valid ? <span className="training-warn"> · Plan ungültig</span> : null}
         </p>
       </Hint>
 
-      <div className="training-controls">
-        <label className="training-intensity">
-          <span>Intensität {intensity}</span>
-          <input
-            type="range"
-            min={TRAINING_INTENSITY_MIN}
-            max={TRAINING_INTENSITY_MAX}
-            step={5}
-            value={intensity}
-            onChange={(event) => onIntensityChange(clampTrainingIntensity(Number(event.target.value)))}
-          />
-        </label>
-        <p
-          className={`training-fatigue is-${load.ampel}`}
-          title={load.label}
-          aria-label={`Fatigue-Ampel: ${load.label}`}
-        >
-          <span className={`pipeline-light ${fatigueAmpelClassName(load.ampel)}`} aria-hidden="true">
-            {load.icon}
-          </span>
-          <span>{load.label}</span>
-        </p>
-      </div>
+      <TrainingIntensityStatus
+        intensity={intensity}
+        load={load}
+        onIntensityChange={onIntensityChange}
+      />
 
-      <label className="training-focus-mode">
-        <input
-          type="checkbox"
-          checked={focusMode}
-          onChange={(event) => {
-            const next = event.target.checked;
-            setFocusMode(next);
-            if (next) onPickSlot(null);
-          }}
-        />
-        <span>Fokus setzen</span>
-      </label>
-      {focusMode ? <p className="training-focus-hint">Einheit anklicken, um Fokus zu setzen oder zu entfernen.</p> : null}
-
-      <div
-        className={focusMode ? "training-week is-focus-mode" : "training-week"}
-        aria-label="Wochenplan"
-      >
-        {plan.map((slot, index) => (
-          <SlotCard
-            key={index}
-            period={TRAINING_DAYS[index] ?? slotLabel(index)}
-            slot={slot}
-            focusMode={focusMode}
-            active={!focusMode && pickSlot === index}
-            onSelect={() => handleSlotClick(index)}
-          />
+      <div className="training-timetable" aria-label="Wochenplan">
+        {TRAINING_DAYS.map((day, dayIndex) => (
+          <div key={day} className="training-day-column">
+            <p className="training-day-header">{day}</p>
+            {Array.from({ length: UNITS_PER_DAY }, (_, period) => {
+              const index = dayIndex * UNITS_PER_DAY + period;
+              const slot = plan[index]!;
+              return (
+                <SlotCard
+                  key={index}
+                  periodLabel={slotPeriodLabel(index)}
+                  slot={slot}
+                  active={pickSlot === index}
+                  onOpenPicker={() => onPickSlot(index)}
+                  onToggleFocus={() => onPlanChange(toggleFocus(plan, index))}
+                  focusToggleDisabled={
+                    isTrainingSlotEmpty(slot) ||
+                    (!slot.focus && !canSetFocus(plan, index))
+                  }
+                />
+              );
+            })}
+          </div>
         ))}
       </div>
 
-      {pickSlot !== null && !focusMode ? (
+      <div className="training-schedule-heatmap">
+        <GrowthHeatmap
+          cells={heatCells}
+          compact
+          onSelectPlayer={(playerId) => onSelectPlayer?.(playerId)}
+        />
+      </div>
+
+      {pickSlot !== null ? (
         <UnitPickerModal
           day={slotLabel(pickSlot)}
           hasTrainingHall={hasTrainingHall}
@@ -392,7 +361,8 @@ function TeamPlan({
 
 function canSetFocus(plan: TrainingSlot[], index: number): boolean {
   const slot = plan[index];
-  if (!slot || slot.focus) return true;
+  if (!slot || isTrainingSlotEmpty(slot)) return false;
+  if (slot.focus) return true;
   const trial = plan.map((entry, entryIndex) =>
     entryIndex === index ? { ...entry, focus: true } : entry,
   );
@@ -401,7 +371,7 @@ function canSetFocus(plan: TrainingSlot[], index: number): boolean {
 
 function toggleFocus(plan: TrainingSlot[], index: number): TrainingSlot[] {
   const slot = plan[index];
-  if (!slot) return plan;
+  if (!slot || isTrainingSlotEmpty(slot)) return plan;
   if (slot.focus) {
     const next = [...plan];
     next[index] = { ...slot, focus: false };
@@ -414,24 +384,27 @@ function toggleFocus(plan: TrainingSlot[], index: number): TrainingSlot[] {
 }
 
 function SlotCard({
-  period,
+  periodLabel,
   slot,
-  focusMode,
   active,
-  onSelect,
+  onOpenPicker,
+  onToggleFocus,
+  focusToggleDisabled,
 }: {
-  period: string;
+  periodLabel: string;
   slot: TrainingSlot;
-  focusMode: boolean;
   active: boolean;
-  onSelect: () => void;
+  onOpenPicker: () => void;
+  onToggleFocus: () => void;
+  focusToggleDisabled: boolean;
 }) {
-  const unit = trainingUnit(slot.unitId);
+  const empty = isTrainingSlotEmpty(slot);
+  const unit = empty ? null : trainingUnit(slot.unitId);
   const className = [
     "training-slot",
+    empty ? "is-empty" : "",
     slot.focus ? "is-focus" : "",
     active ? "is-active" : "",
-    focusMode ? "is-focus-mode" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -440,21 +413,35 @@ function SlotCard({
     <article className={className}>
       <button
         type="button"
-        className="training-slot-main"
-        onClick={onSelect}
-        aria-pressed={focusMode ? slot.focus : undefined}
+        className={
+          slot.focus ? "training-slot-focus-toggle is-on" : "training-slot-focus-toggle"
+        }
+        disabled={focusToggleDisabled}
+        aria-label={t("training.slot.toggleFocus")}
+        aria-pressed={slot.focus}
+        onClick={(event) => {
+          event.stopPropagation();
+          if (!focusToggleDisabled) onToggleFocus();
+        }}
       >
-        {slot.focus ? (
-          <span className="training-focus-badge" aria-hidden="true">
-            <Target size={14} strokeWidth={2.5} />
-          </span>
-        ) : null}
-        <span className="training-day">{period}</span>
-        <strong className="training-unit-name">{unit.label}</strong>
-        <span className="training-group">{GROUP_LABELS[unit.group]}</span>
-        <span className="training-skills">
-          {unit.skills.map((skill) => attributeLabel(skill)).join(" · ")}
-        </span>
+        <Target size={13} strokeWidth={2.5} aria-hidden="true" />
+      </button>
+      <button type="button" className="training-slot-main" onClick={onOpenPicker}>
+        <span className="training-period">{periodLabel}</span>
+        {empty ? (
+          <>
+            <strong className="training-unit-name training-unit-name--empty">{t("training.slot.empty")}</strong>
+            <span className="training-group training-group--muted">{t("training.slot.emptyHint")}</span>
+          </>
+        ) : (
+          <>
+            <strong className="training-unit-name">{unit!.label}</strong>
+            <span className="training-group">{GROUP_LABELS[unit!.group]}</span>
+            <span className="training-skills">
+              {unit!.skills.map((skill) => attributeLabel(skill)).join(" · ")}
+            </span>
+          </>
+        )}
       </button>
     </article>
   );

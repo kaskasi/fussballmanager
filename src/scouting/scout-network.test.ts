@@ -5,6 +5,7 @@ import {
   defaultScoutNetwork,
   availableScoutCandidates,
   hireScout,
+  MAX_HIRED_SCOUTS,
   scoutCandidates,
   scoutNetworkAccuracyModifier,
   scoutNetworkCapacity,
@@ -25,6 +26,22 @@ describe("scout network", () => {
     expect(scoutNetworkAccuracyModifier(expanded)).toBeGreaterThan(
       scoutNetworkAccuracyModifier(base),
     );
+  });
+
+  it("blocks hires beyond MAX_HIRED_SCOUTS", () => {
+    let network = defaultScoutNetwork(1, 2026);
+    const tiers = ["local", "international", "elite"] as const;
+    let week = 1;
+    while (network.scouts.length < MAX_HIRED_SCOUTS) {
+      const tier = tiers[network.scouts.length % tiers.length]!;
+      const candidate = scoutCandidates(tier, 1, week, 2026)[0]!;
+      network = hireScout(network, { ...candidate, id: `${candidate.id}_fill_${network.scouts.length}` });
+      week += 1;
+    }
+    expect(network.scouts).toHaveLength(MAX_HIRED_SCOUTS);
+    const extra = scoutCandidates("elite", 1, 99, 2026)[0]!;
+    const blocked = hireScout(network, extra);
+    expect(blocked.scouts).toHaveLength(MAX_HIRED_SCOUTS);
   });
 
   it("drops hired candidates from the market list and blocks duplicate hires", () => {

@@ -31,7 +31,7 @@ import { localizeStoryInbox } from "../../i18n/story-display.ts";
 import type { StoryCast } from "../../narrative/story-state.ts";
 import { InboxStanceButtons } from "./InboxStanceButtons.tsx";
 import { campsAwaitingLeaderChoice, type CampLeaderCandidate } from "../../youth/camp-leader-hire.ts";
-import { campNationById, type YouthCamp } from "../../youth/satellite-camps.ts";
+import type { YouthCamp } from "../../youth/satellite-camps.ts";
 import {
   campLeaderPostfachItemId,
   isCampLeaderPostfachItemId,
@@ -44,9 +44,12 @@ import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import {
   scoutJobNoticeById,
   unconsumedScoutJobNotices,
-  type ScoutJobCompleteNotice,
 } from "../../scouting/scout-job-postfach.ts";
 import { isScoutJobPostfachItemId } from "../../inbox/postfach-scout-job.ts";
+import { buildPostfachArchive } from "../../inbox/postfach-archive.ts";
+import type { ClubEvent } from "../../inbox/club-events.ts";
+import { PostfachDecisionGrid } from "./PostfachDecisionGrid.tsx";
+import { PostfachArchiveList } from "./PostfachArchiveList.tsx";
 
 /** WIREFRAME: docs/prd/design.md §9.4 — Postfach-Inhalt */
 export function DecisionInboxPanel({
@@ -68,6 +71,7 @@ export function DecisionInboxPanel({
   onOpenScoutingNetwork,
   onOpenScoutingHits,
   onApplyOpponentScoutPlan,
+  clubEvents = [],
 }: {
   inbox: YouthInboxState;
   players: Player[];
@@ -87,6 +91,7 @@ export function DecisionInboxPanel({
   onOpenScoutingNetwork?: () => void;
   onOpenScoutingHits?: () => void;
   onApplyOpponentScoutPlan?: (plan: SandboxPlan) => void;
+  clubEvents?: readonly ClubEvent[];
 }) {
   useT();
   const focus = useMemo(() => inboxWeekFocus(inbox, players), [inbox, players]);
@@ -98,6 +103,18 @@ export function DecisionInboxPanel({
   const scoutJobNotices = useMemo(
     () => (scoutBoard ? unconsumedScoutJobNotices(scoutBoard) : []),
     [scoutBoard],
+  );
+  const archiveEntries = useMemo(
+    () =>
+      buildPostfachArchive({
+        scoutBoard: scoutBoard ?? { targets: {} },
+        clubEvents,
+        youthInbox: inbox,
+        players,
+        season,
+        storyCast,
+      }),
+    [clubEvents, inbox, players, scoutBoard, season, storyCast],
   );
   const postfachQueueIds = useMemo(
     () => [
@@ -190,35 +207,15 @@ export function DecisionInboxPanel({
         </p>
       ) : (
         <>
-          <nav className="inbox-queue" aria-label="Warteschlange">
-            {postfachQueueIds.map((queueId, index) => {
-              const preview = isCampLeaderPostfachItemId(queueId)
-                ? campLeaderQueuePreview(parseCampLeaderPostfachItemId(queueId)!)
-                : isScoutJobPostfachItemId(queueId)
-                  ? scoutJobQueuePreview(
-                      scoutJobNotices.find((notice) => notice.id === queueId),
-                    )
-                  : inboxQueuePreview(
-                      pending.find((item) => item.id === queueId)!,
-                      players,
-                      storyCast,
-                    );
-              return (
-                <button
-                  key={queueId}
-                  type="button"
-                  className={queueId === activeId ? "inbox-queue-item is-active" : "inbox-queue-item"}
-                  onClick={() => setActiveId(queueId)}
-                >
-                  <span className="inbox-queue-index">{index + 1}</span>
-                  <span className="inbox-queue-label">
-                    <span className="inbox-queue-name">{preview.name}</span>
-                    <span className="inbox-queue-topic">{preview.topic}</span>
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
+          <PostfachDecisionGrid
+            queueIds={postfachQueueIds}
+            activeId={activeId}
+            pending={pending}
+            players={players}
+            storyCast={storyCast}
+            scoutJobNotices={scoutJobNotices}
+            onSelect={setActiveId}
+          />
 
           {activeCamp && masterSeed != null && onHireCampLeader ? (
             <section className="inbox-card inbox-card-camp-leader">
@@ -323,64 +320,10 @@ export function DecisionInboxPanel({
           ) : null}
         </>
       )}
+
+      <PostfachArchiveList entries={archiveEntries} />
     </>
   );
-}
-
-function scoutJobQueuePreview(notice: ScoutJobCompleteNotice | undefined): {
-  name: string;
-  topic: string;
-} {
-  if (!notice) return { name: "Scouting", topic: "" };
-  if (notice.kind === "region_complete") {
-    return {
-      name: notice.zoneLabel ?? notice.zoneId ?? "Region",
-      topic: t("postfach.scoutJob.queueTopicRegion"),
-    };
-  }
-  if (notice.kind === "opponent_scout_complete") {
-    return {
-      name: notice.opponentShortName ?? t("postfach.opponentScout.queueName"),
-      topic: t("postfach.opponentScout.queueTopic"),
-    };
-  }
-  return {
-    name: notice.clubName ?? notice.careerClubId ?? "Verein",
-    topic: t("postfach.scoutJob.queueTopicClub"),
-  };
-}
-
-function campLeaderQueuePreview(campId: string): { name: string; topic: string } {
-  const nation = campNationById(campId);
-  return {
-    name: nation?.label ?? campId,
-    topic: "Camp-Leiter · Kandidaten",
-  };
-}
-
-function inboxQueuePreview(
-  item: DecisionInboxItem,
-  players: readonly Player[],
-  cast: StoryCast,
-): { name: string; topic: string } {
-  if (isStoryInboxItem(item) && item.narrative) {
-    const body = localizeStoryInbox(item.narrative, cast).body;
-    return {
-      name: inboxItemLabel(item, cast),
-      topic: body.length > 48 ? `${body.slice(0, 48)}…` : body,
-    };
-  }
-  if (item.kind === "assistant_training_reminder") {
-    return {
-      name: cast.assistant_name,
-      topic: inboxItemLabel(item, cast),
-    };
-  }
-  const player = players.find((entry) => entry.id === item.playerId);
-  return {
-    name: player ? formatPlayerName(player) : t("inbox.modal.playerFallback"),
-    topic: inboxItemLabel(item, cast),
-  };
 }
 
 function primaryInboxAction(

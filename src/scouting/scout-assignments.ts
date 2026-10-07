@@ -1,16 +1,32 @@
 import type { PositionPrimary } from "../types/player.ts";
 import type { MarketFilters } from "./market-list.ts";
+import type { ScoutCalendarDay } from "./scout-calendar-day.ts";
 import { filterMarket } from "./market-list.ts";
 import type { BoardTarget } from "./scout-board.ts";
 
 /** PRD 04.2 — default local scout network capacity. */
 export const DEFAULT_SCOUT_CAPACITY = 3;
 
+export type ScoutAssignmentKind = "roster" | "filter_sweep";
+
 export interface ScoutAssignmentCriteria {
   position: PositionPrimary | "all";
   age: MarketFilters["age"];
   region: string;
   query: string;
+  confidence: MarketFilters["confidence"];
+}
+
+export function assignmentCriteriaToMarketFilters(
+  criteria: ScoutAssignmentCriteria,
+): MarketFilters {
+  const query = criteria.query.trim() || criteria.region.trim();
+  return {
+    query,
+    position: criteria.position,
+    age: criteria.age,
+    confidence: criteria.confidence ?? "all",
+  };
 }
 
 export interface ScoutAssignment {
@@ -18,6 +34,10 @@ export interface ScoutAssignment {
   label: string;
   criteria: ScoutAssignmentCriteria;
   active: boolean;
+  /** `filter_sweep`: anteilige Pool-Woche; `roster`: Kapazitäts-Ziele (Legacy/Assistent). */
+  kind?: ScoutAssignmentKind;
+  weeksRemaining?: number;
+  cancelling_since?: ScoutCalendarDay;
 }
 
 export const DEFAULT_ASSIGNMENT_CRITERIA: ScoutAssignmentCriteria = {
@@ -25,22 +45,28 @@ export const DEFAULT_ASSIGNMENT_CRITERIA: ScoutAssignmentCriteria = {
   age: "all",
   region: "",
   query: "",
+  confidence: "all",
 };
 
 export function createScoutAssignment(
   id: string,
   criteria: Partial<ScoutAssignmentCriteria> = {},
   label?: string,
+  options?: { kind?: ScoutAssignmentKind; weeksRemaining?: number },
 ): ScoutAssignment {
   const merged: ScoutAssignmentCriteria = {
     ...DEFAULT_ASSIGNMENT_CRITERIA,
     ...criteria,
   };
+  const kind = options?.kind ?? "roster";
   return {
     id,
     label: label ?? assignmentLabel(merged),
     criteria: merged,
     active: true,
+    kind,
+    weeksRemaining:
+      options?.weeksRemaining ?? (kind === "filter_sweep" ? 1 : undefined),
   };
 }
 
@@ -60,17 +86,14 @@ export function assignmentMatchesTarget(
   target: BoardTarget,
 ): boolean {
   if (!assignment.active) return false;
-  const filters: MarketFilters = {
-    query: assignment.criteria.query,
-    position: assignment.criteria.position,
-    age: assignment.criteria.age,
-    confidence: "all",
-  };
-  const region = assignment.criteria.region.trim().toLowerCase();
-  if (region && !target.player.birth.region.toLowerCase().includes(region)) {
+  if ((assignment.kind ?? "roster") === "filter_sweep" && (assignment.weeksRemaining ?? 0) <= 0) {
     return false;
   }
-  return filterMarket([{ player: target.player, estimate: target.estimate }], filters).length > 0;
+  const filters = assignmentCriteriaToMarketFilters(assignment.criteria);
+  return filterMarket(
+    [{ player: target.player, estimate: target.estimate, clubName: target.clubName }],
+    filters,
+  ).length > 0;
 }
 
 export function targetsForAssignment(

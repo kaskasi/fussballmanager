@@ -7,7 +7,7 @@ import { getFormation, type FormationSlotId } from "@fussballmanager/shared";
 import type { TrainingSlot } from "../development/training-units.ts";
 import { TRAINING_UNITS, trainingUnit } from "../development/training-units.ts";
 import { weeklyFocusCount } from "../development/training-plan-state.ts";
-import { MAX_FOCUS_PER_GROUP, MAX_FOCUS_SLOTS } from "../development/weekly-plan.ts";
+import { MAX_FOCUS_PER_GROUP, MAX_FOCUS_SLOTS, TRAINING_DAYS } from "../development/weekly-plan.ts";
 import {
   autoLineupAssignments,
   type AutoLineupMode,
@@ -250,7 +250,10 @@ export function assistantTrainingPlan(
         ? [weakest, second, ranked[2]![0]]
         : [ranked[Math.floor(rng() * 3)]![0], ranked[Math.floor(rng() * 3)]![0], weakest];
 
-  const groups: SessionGroup[] = ["technical", "physical", "mental", "technical", "mental"];
+  const groups: SessionGroup[] = [];
+  for (let day = 0; day < TRAINING_DAYS.length; day++) {
+    groups.push("technical", "physical", "mental");
+  }
   const plan: TrainingSlot[] = groups.map((group, index) => ({
     unitId: pickUnit(group, index),
     focus: false,

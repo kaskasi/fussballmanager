@@ -191,7 +191,7 @@ export function CalendarScreen({
                       <ClubCrest
                         initials={cell.match.initials}
                         logoSrc={clubLogoUrlForId(cell.match.clubId)}
-                        size={28}
+                        size={44}
                       />
                       {cell.match.label}
                     </p>

@@ -8,9 +8,12 @@ import type {
 } from "../../scouting/scout-discovery.ts";
 import type { WorldClub, WorldDivisionId } from "../../world/world-generator.ts";
 import {
+  assignmentLabel,
+  DEFAULT_ASSIGNMENT_CRITERIA,
   type ScoutAssignment,
 } from "../../scouting/scout-assignments.ts";
 import {
+  MAX_HIRED_SCOUTS,
   scoutNetworkAccuracyModifier,
   scoutNetworkCapacity,
   scoutNetworkWeeklyWage,
@@ -18,6 +21,7 @@ import {
   type ScoutNetworkState,
 } from "../../scouting/scout-network.ts";
 import {
+  confidenceBucket,
   filterMarket,
   headlineCounts,
   targetLabel,
@@ -38,7 +42,9 @@ import { useT } from "../../i18n/react.ts";
 import { Hint } from "../components/Hint.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
-import { ScoutMapJobsPanel } from "../components/ScoutMapJobsPanel.tsx";
+import { ScoutWorkGrid } from "../components/ScoutWorkGrid.tsx";
+import { ScoutHitGridCard } from "../components/ScoutHitGridCard.tsx";
+import { ScoutHitFilterAssignmentCard } from "../components/ScoutHitFilterAssignmentCard.tsx";
 import { ScoutRegionMap } from "../components/ScoutRegionMap.tsx";
 import { ScoutRegionDetailScreen } from "../components/ScoutRegionDetailScreen.tsx";
 import { buildScoutDiscoveryMapModel } from "../../scouting/scout-region-map.ts";
@@ -49,8 +55,21 @@ import { formatClubCash } from "../../economy/club-finances.ts";
 import { Circle, ClipboardList, Pause, Search, Star } from "lucide-react";
 import { ScreenEmptyState } from "../components/ScreenEmptyState.tsx";
 
-type ScoutingTab = "network" | "hits" | "watchlist";
-export type ScoutingInitialTab = "network" | "hits";
+type ScoutingTab = "map" | "staff" | "orders" | "pool" | "watchlist";
+export type ScoutingInitialTab =
+  | "network"
+  | "hits"
+  | "map"
+  | "staff"
+  | "orders"
+  | "pool"
+  | "watchlist";
+
+function resolveInitialScoutingTab(initial: ScoutingInitialTab): ScoutingTab {
+  if (initial === "network") return "map";
+  if (initial === "hits") return "pool";
+  return initial;
+}
 
 const POSITIONS: PositionPrimary[] = [
   "GK",
@@ -85,6 +104,9 @@ const AGE_FILTERS: Array<{ value: MarketFilters["age"]; label: string }> = [
 
 const REGIONS = ["Schleswig-Holstein", "Fördeküste", "Hansestadt", "Nordfriesland"];
 
+const HITS_GRID_COLUMNS = 5;
+const HITS_GRID_CAPACITY = HITS_GRID_COLUMNS * 2;
+
 /**
  * WIREFRAME: PRD 14.9 / 09 Screen 3
  *
@@ -102,6 +124,7 @@ export function ScoutingCenter({
   playerDivisionId,
   activeClubScout,
   activeRegionScout,
+  activeOpponentScout,
   activeScoutTrips,
   scoutTripQueue,
   tripQueueLength,
@@ -113,7 +136,7 @@ export function ScoutingCenter({
   onSortChange,
   assignments,
   onAddAssignment,
-  onRemoveAssignment,
+  onCancelScoutWork,
   onToggleAssignment,
   onSelectTarget,
   onAssignScout,
@@ -130,6 +153,8 @@ export function ScoutingCenter({
   initialTab,
   onInitialTabApplied,
   onScoutMapDetailChange,
+  opponentLabel,
+  matchSetup,
 }: {
   targets: BoardTarget[];
   rivalPlayers: readonly Player[];
@@ -139,6 +164,7 @@ export function ScoutingCenter({
   playerDivisionId: WorldDivisionId;
   activeClubScout?: ActiveClubScout | null;
   activeRegionScout?: ActiveRegionScout | null;
+  activeOpponentScout?: import("../../scouting/opponent-scout-job.ts").ActiveOpponentScout | null;
   activeScoutTrips?: readonly import("../../scouting/scout-trip.ts").ActiveScoutTrip[];
   scoutTripQueue?: readonly import("../../scouting/scout-trip.ts").ScoutTripPlan[];
   tripQueueLength?: number;
@@ -153,7 +179,7 @@ export function ScoutingCenter({
   onSortChange: (sort: MarketSort) => void;
   assignments: ScoutAssignment[];
   onAddAssignment: () => void;
-  onRemoveAssignment: (assignmentId: string) => void;
+  onCancelScoutWork: (target: import("../../scouting/scout-work-cancel.ts").ScoutWorkCancelTarget) => void;
   onToggleAssignment: (assignmentId: string) => void;
   onSelectTarget: (playerId: string) => void;
   onAssignScout: (playerId: string) => void;
@@ -171,9 +197,11 @@ export function ScoutingCenter({
   onInitialTabApplied?: () => void;
   /** When region detail map is open, shell header shows back + zone title (replaces crest). */
   onScoutMapDetailChange?: (open: boolean, onBack: () => void, title?: string) => void;
+  opponentLabel?: string;
+  matchSetup?: import("../../sim/career-match-setup.ts").CareerMatchSetup | null;
 }) {
   const t = useT();
-  const [tab, setTab] = useState<ScoutingTab>("hits");
+  const [tab, setTab] = useState<ScoutingTab>("pool");
   const [detailZoneId, setDetailZoneId] = useState<string | null>(null);
 
   const notifyScoutMapDetailRef = useRef(onScoutMapDetailChange);
@@ -231,12 +259,19 @@ export function ScoutingCenter({
 
   useEffect(() => {
     if (initialTab) {
-      setTab(initialTab);
+      setTab(resolveInitialScoutingTab(initialTab));
       onInitialTabApplied?.();
     }
   }, [initialTab, onInitialTabApplied]);
   const market = useMemo(
-    () => targets.map((target) => ({ player: target.player, estimate: target.estimate })),
+    () =>
+      targets.map((target) => ({
+        player: target.player,
+        estimate: target.estimate,
+        assigned: target.assigned,
+        assigned_scout_id: target.assigned_scout_id,
+        clubName: target.clubName,
+      })),
     [targets],
   );
   const assignedIds = useMemo(
@@ -250,7 +285,21 @@ export function ScoutingCenter({
     const rows = listMarketRows(filtered, assignedIds, season);
     return sortMarketRows(rows, sort.key, sort.direction);
   }, [market, filters, assignedIds, sort, season]);
-  const topHits = useMemo(() => visible.slice(0, 5), [visible]);
+  const gridHits = useMemo(
+    () => visible.slice(0, HITS_GRID_CAPACITY - 1),
+    [visible],
+  );
+  const filterOrderSummary = useMemo(
+    () =>
+      assignmentLabel({
+        ...DEFAULT_ASSIGNMENT_CRITERIA,
+        position: filters.position,
+        age: filters.age,
+        query: filters.query,
+        confidence: filters.confidence,
+      }),
+    [filters],
+  );
   const allMarketRows = useMemo(
     () => listMarketRows(market, assignedIds, season),
     [market, assignedIds, season],
@@ -274,18 +323,8 @@ export function ScoutingCenter({
     }
     return max;
   }, [watchlistVisible, season]);
-  const assigned = assignedIds.size;
   const networkCapacity = scoutNetworkCapacity(scoutNetwork);
   const networkAccuracy = scoutNetworkAccuracyModifier(scoutNetwork);
-
-  const valueScale = useMemo(() => {
-    let max = 1;
-    for (const row of visible) {
-      const bounds = scoutMarketValueBounds(row.player, row.estimate, season, false);
-      if (bounds) max = Math.max(max, bounds.high);
-    }
-    return max;
-  }, [visible, season]);
 
   const toggleSort = (key: MarketSortKey) => {
     if (sort.key === key) {
@@ -295,16 +334,14 @@ export function ScoutingCenter({
     onSortChange({ key, direction: key === "name" || key === "position" ? "asc" : "desc" });
   };
 
-  const inRegionDetail = tab === "network" && detailZone != null;
+  const inRegionDetail = tab === "map" && detailZone != null;
 
   const scoutingTabs: { id: ScoutingTab; labelKey: string; suffix?: string }[] = [
-    { id: "network", labelKey: "scouting.tab.network" },
-    { id: "hits", labelKey: "scouting.tab.hits" },
-    {
-      id: "watchlist",
-      labelKey: "scouting.tab.watchlist",
-      suffix: shortlistIds.length > 0 ? ` · ${shortlistIds.length}` : undefined,
-    },
+    { id: "map", labelKey: "scouting.subtab.networkMap" },
+    { id: "staff", labelKey: "scouting.subtab.networkStaff" },
+    { id: "orders", labelKey: "scouting.subtab.hitsOrders" },
+    { id: "pool", labelKey: "scouting.subtab.hitsPool" },
+    { id: "watchlist", labelKey: "scouting.tab.watchlist" },
   ];
 
   return (
@@ -312,12 +349,16 @@ export function ScoutingCenter({
       className={
         inRegionDetail
           ? "scouting club-shell-card-body scouting-region-detail-screen"
-          : "scouting club-shell-card-body"
+          : "scouting club-shell-card-body scouting-has-primary-tabs"
       }
     >
       {inRegionDetail ? null : (
-        <div className="fm-tab-bar" role="tablist" aria-label={t("scouting.tabs.aria")}>
-          {scoutingTabs.map(({ id, labelKey, suffix }) => (
+        <div
+          className="fm-tab-bar scouting-primary-tab-bar"
+          role="tablist"
+          aria-label={t("scouting.tabs.aria")}
+        >
+          {scoutingTabs.map(({ id, labelKey }) => (
             <button
               key={id}
               type="button"
@@ -327,13 +368,15 @@ export function ScoutingCenter({
               onClick={() => setTab(id)}
             >
               {t(labelKey)}
-              {suffix ?? ""}
+              {id === "watchlist" && shortlistIds.length > 0 ? (
+                <span className="fm-tab-count"> · {shortlistIds.length}</span>
+              ) : null}
             </button>
           ))}
         </div>
       )}
 
-      {tab === "network" ? (
+      {tab === "map" ? (
         inRegionDetail && detailZone ? (
           <ScoutRegionDetailScreen
             zone={detailZone}
@@ -351,6 +394,7 @@ export function ScoutingCenter({
             <p className="scouting-scouts">
               {t("scouting.network.meta", {
                 scouts: scoutNetwork.scouts.length,
+                max: MAX_HIRED_SCOUTS,
                 capacity: networkCapacity,
                 accuracy: networkAccuracy.toFixed(2),
               })}
@@ -372,6 +416,13 @@ export function ScoutingCenter({
                 onOpenRegionDetail={setDetailZoneId}
               />
             </section>
+          </div>
+        )
+      ) : null}
+
+      {tab === "staff" ? (
+        <div className="fm-tab-panel scouting-network-screen">
+          <section className="game-panel scouting-section" aria-label={t("scouting.network.aria")}>
             <ScoutNetworkPanel
               network={scoutNetwork}
               season={season}
@@ -380,66 +431,35 @@ export function ScoutingCenter({
               cash={cash}
               onHire={onHireScout}
               onFire={onFireScout}
-              showHead={false}
+              showHead
             />
-          </div>
-        )
+          </section>
+        </div>
       ) : null}
 
-      {tab === "hits" ? (
+      {tab === "orders" ? (
         <div className="fm-tab-panel">
-          <ScoutMapJobsPanel
+          <ScoutWorkGrid
+            targets={targets}
+            assignments={assignments}
             activeTrips={activeScoutTrips ?? []}
             tripQueue={scoutTripQueue}
+            activeClubScout={activeClubScout}
+            activeRegionScout={activeRegionScout}
+            activeOpponentScout={activeOpponentScout}
+            opponentLabel={opponentLabel}
+            season={season}
+            matchSetup={matchSetup}
             scoutNetwork={scoutNetwork}
             worldClubs={worldClubs}
+            onToggleAssignment={onToggleAssignment}
+            onCancelScoutWork={onCancelScoutWork}
           />
-          <section className="scouting-assignments game-panel scouting-section" aria-label={t("scouting.assignments.aria")}>
-            <header className="scouting-assignments-head">
-              <h2>{t("scouting.assignments.title")}</h2>
-              <Hint text={t("scouting.assignments.hint")} block>
-                <button type="button" className="scouting-chip" onClick={onAddAssignment}>
-                  {t("scouting.assignments.add")}
-                </button>
-              </Hint>
-            </header>
-            {assignments.length === 0 ? (
-              <ScreenEmptyState
-                icon={ClipboardList}
-                title={t("scouting.assignments.empty")}
-                aria-label={t("scouting.assignments.aria")}
-              />
-            ) : (
-              <ul className="scouting-assignments-list">
-                {assignments.map((assignment) => (
-                  <li key={assignment.id} className="scouting-assignment-row">
-                    <button
-                      type="button"
-                      className={assignment.active ? "scouting-assignment-toggle is-on" : "scouting-assignment-toggle"}
-                      onClick={() => onToggleAssignment(assignment.id)}
-                      aria-pressed={assignment.active}
-                    >
-                      {assignment.active ? (
-                        <Circle size={14} fill="var(--rasen)" strokeWidth={2.5} />
-                      ) : (
-                        <Pause size={14} strokeWidth={2.5} />
-                      )}
-                    </button>
-                    <span className="scouting-assignment-label">{assignment.label}</span>
-                    <button
-                      type="button"
-                      className="scouting-assignment-remove"
-                      aria-label={t("scouting.assignments.remove")}
-                      onClick={() => onRemoveAssignment(assignment.id)}
-                    >
-                      ×
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+        </div>
+      ) : null}
 
+      {tab === "pool" ? (
+        <div className="fm-tab-panel">
           <Hint text={t("scouting.hint")} block>
             <p className="scouting-summary">
               <span>{t("scouting.summary.known", { count: counts.known })}</span>
@@ -447,26 +467,8 @@ export function ScoutingCenter({
               <span>{t("scouting.summary.unknown", { count: counts.unknown })}</span>
             </p>
           </Hint>
-          <p className="scouting-scouts">
-            {t("scouting.headline", {
-              assigned,
-              capacity: scoutCapacity,
-              orders: assignments.filter((entry) => entry.active).length,
-              hits: visible.length,
-            })}
-          </p>
 
-      <Hint text={t("scouting.search.hint")} block>
-        <label className="scouting-search">
-          <span className="sr-only">{t("scouting.search.placeholder")}</span>
-          <input
-            type="search"
-            value={filters.query}
-            placeholder={t("scouting.search.placeholder")}
-            onChange={(event) => onFiltersChange({ ...filters, query: event.target.value })}
-          />
-        </label>
-
+      <div className="scouting-filter-toolbar">
         <div className="scouting-chips" role="toolbar" aria-label={t("scouting.filter.aria")}>
           <Chip active={filters.position === "all"} onClick={() => onFiltersChange({ ...filters, position: "all" })}>{t("scouting.filter.all")}</Chip>
           {POSITIONS.map((slot) => (
@@ -528,7 +530,26 @@ export function ScoutingCenter({
             </Chip>
           ))}
         </div>
-      </Hint>
+        <div className="scouting-sort" role="toolbar" aria-label={t("scouting.sort.aria")}>
+          {(["name", "ca", "marketValue"] as const).map((key) => {
+            const label =
+              key === "name" ? t("squad.col.name") : key === "ca" ? "CA" : t("squad.col.value");
+            const active = sort.key === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                className={active ? "scouting-chip is-active" : "scouting-chip"}
+                aria-pressed={active}
+                onClick={() => toggleSort(key)}
+              >
+                {label}
+                {active ? (sort.direction === "asc" ? " ▲" : " ▼") : ""}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {visible.length === 0 ? (
         <section className="squad-empty scouting-empty" aria-label={t("scouting.empty.aria")}>
@@ -547,47 +568,25 @@ export function ScoutingCenter({
           ) : null}
         </section>
       ) : (
-        <>
-          <div className="scouting-sort" role="toolbar" aria-label={t("scouting.sort.aria")}>
-            {(["name", "ca", "marketValue"] as const).map((key) => {
-              const label =
-                key === "name" ? t("squad.col.name") : key === "ca" ? "CA" : t("squad.col.value");
-              const active = sort.key === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  className={active ? "scouting-chip is-active" : "scouting-chip"}
-                  aria-pressed={active}
-                  onClick={() => toggleSort(key)}
-                >
-                  {label}
-                  {active ? (sort.direction === "asc" ? " ▲" : " ▼") : ""}
-                </button>
-              );
-            })}
-          </div>
-          <ScoutingPlayerList
-            rows={topHits}
-            season={season}
-            valueScale={valueScale}
-            sectionTitle={t("scouting.hits.sectionTitle")}
-            listAriaLabel={t("scouting.title")}
-            openMenuId={openMenuId}
-            setOpenMenuId={setOpenMenuId}
-            onSelectTarget={onSelectTarget}
-            onAssignScout={onAssignScout}
-          />
-        </>
+        <ScoutingHitsGrid
+          rows={gridHits}
+          season={season}
+          scoutNetwork={scoutNetwork}
+          shortlistIds={shortlistIds}
+          hitCount={visible.length}
+          filterSummary={filterOrderSummary}
+          filterMatchCount={visible.length}
+          onAddAssignment={onAddAssignment}
+          onSelectTarget={onSelectTarget}
+          onAssignScout={onAssignScout}
+          onToggleShortlist={onToggleShortlist}
+        />
       )}
         </div>
       ) : null}
 
       {tab === "watchlist" ? (
-        <div className="fm-tab-panel">
-          <Hint text={t("scouting.watchlist.hint")} block>
-            <p className="scouting-scouts">{t("scouting.watchlist.summary", { count: shortlistIds.length })}</p>
-          </Hint>
+        <div className="fm-tab-panel scouting-watchlist-only">
           {watchlistVisible.length === 0 ? (
             <ScreenEmptyState
               icon={Star}
@@ -621,7 +620,7 @@ export function ScoutingCenter({
                 rows={watchlistVisible}
                 season={season}
                 valueScale={watchlistValueScale}
-                sectionTitle={t("scouting.watchlist.sectionTitle")}
+                sectionTitle=""
                 listAriaLabel={t("scouting.watchlist.aria")}
                 openMenuId={openMenuId}
                 setOpenMenuId={setOpenMenuId}
@@ -635,6 +634,67 @@ export function ScoutingCenter({
         </div>
       ) : null}
     </main>
+  );
+}
+
+function ScoutingHitsGrid({
+  rows,
+  season,
+  scoutNetwork,
+  shortlistIds,
+  hitCount,
+  filterSummary,
+  filterMatchCount,
+  onAddAssignment,
+  onSelectTarget,
+  onAssignScout,
+  onToggleShortlist,
+}: {
+  rows: readonly MarketRow[];
+  season: number;
+  scoutNetwork: ScoutNetworkState;
+  shortlistIds: readonly string[];
+  hitCount: number;
+  filterSummary: string;
+  filterMatchCount: number;
+  onAddAssignment: () => void;
+  onSelectTarget: (playerId: string) => void;
+  onAssignScout: (playerId: string) => void;
+  onToggleShortlist: (playerId: string) => void;
+}) {
+  const t = useT();
+  const shortlisted = useMemo(() => new Set(shortlistIds), [shortlistIds]);
+  return (
+    <section className="scouting-hits-grid-wrap" aria-label={t("scouting.hits.gridAria")}>
+      <h2 className="scouting-section-title">
+        {t("scouting.hits.header", { count: hitCount })}
+      </h2>
+      <ul
+        className="scouting-hits-grid"
+        style={{ gridTemplateColumns: `repeat(${HITS_GRID_COLUMNS}, minmax(0, 1fr))` }}
+      >
+        <li className="scouting-hits-grid-cell">
+          <ScoutHitFilterAssignmentCard
+            filterSummary={filterSummary}
+            matchCount={filterMatchCount}
+            onAddAssignment={onAddAssignment}
+          />
+        </li>
+        {rows.map((row) => (
+          <li key={row.playerId} className="scouting-hits-grid-cell">
+            <ScoutHitGridCard
+              row={row}
+              season={season}
+              scoutNetwork={scoutNetwork}
+              shortlisted={shortlisted.has(row.playerId)}
+              onOpenProfile={() => onSelectTarget(row.playerId)}
+              onAssignScout={() => onAssignScout(row.playerId)}
+              onToggleShortlist={() => onToggleShortlist(row.playerId)}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -665,7 +725,7 @@ function ScoutingPlayerList({
 }) {
   return (
     <>
-      <h2 className="scouting-section-title">{sectionTitle}</h2>
+      {sectionTitle ? <h2 className="scouting-section-title">{sectionTitle}</h2> : null}
       <ul className="scouting-list" aria-label={listAriaLabel}>
         {rows.map((row) => {
           const band = barBand(row.estimate);

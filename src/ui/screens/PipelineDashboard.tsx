@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { planToSessions } from "../../development/training-units.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
 import type { Player } from "../../types/player.ts";
-import { validateWeeklyPlan } from "../../development/weekly-plan.ts";
+import { MAX_FOCUS_SLOTS, validateWeeklyPlan } from "../../development/weekly-plan.ts";
 import { totalSeasonMatchdays, type LeagueState } from "../../persistence/league-state.ts";
 import {
   calendarPhaseDisplay,
@@ -207,7 +207,7 @@ export function PipelineDashboard({
                 {trainingLoad.icon}
               </span>
               <span>
-                {t("hub.training.tile", { focus: focusCount })}
+                {t("hub.training.tile", { focus: focusCount, max: MAX_FOCUS_SLOTS })}
                 {!planOk ? t("hub.training.planCheck") : ""}
               </span>
             </button>

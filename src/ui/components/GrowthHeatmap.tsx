@@ -9,9 +9,12 @@ import {
   heatIntensity,
   PIPELINE_STAGES,
   type GrowthHeatCell,
+  type HeatTone,
   type PipelineStageFill,
   type WeeklyTrainingExtremes,
 } from "../../player/growth-heatmap.ts";
+
+const HEATMAP_LEGEND_TONES: readonly HeatTone[] = ["up", "down", "flat", "pending"];
 
 /**
  * WIREFRAME: PRD 09.2 / F2.7 — Team-Heatmap (1 Pixel = 1 Spieler)
@@ -176,19 +179,34 @@ export function GrowthHeatmap({
         <button
           type="button"
           className="pipeline-legend-toggle"
-          aria-label="Bedeutungen"
+          aria-label={t("hub.heat.legend.toggle")}
           aria-pressed={legendOpen}
-          title="Bedeutungen"
+          title={t("hub.heat.legend.toggle")}
           onClick={() => setLegendOpen((open) => !open)}
         >
           ?
         </button>
       </div>
       {legendOpen ? (
-        <p className="pipeline-heat-legend" role="note">
-          Jedes Quadrat = ein Spieler · ● Wachstum · ● gleich · ■ Rückgang · grau = noch keine Woche
-          · Desktop: Hover zeigt Namen
-        </p>
+        <div className="pipeline-heat-legend pipeline-heat-legend-swatches" role="note">
+          <p className="pipeline-heat-legend-lead">{t("hub.heat.legend.onePerPlayer")}</p>
+          <ul className="pipeline-heat-legend-list">
+            {HEATMAP_LEGEND_TONES.map((tone) => (
+              <li key={tone}>
+                {tone === "up" ? (
+                  <span className="heat-legend-swatch-pair" aria-hidden="true">
+                    <span className="heat-legend-swatch heat-pixel is-up is-legend-weak" />
+                    <span className="heat-legend-swatch heat-pixel is-up is-legend-strong" />
+                  </span>
+                ) : (
+                  <span className={`heat-legend-swatch heat-pixel is-${tone}`} aria-hidden="true" />
+                )}
+                <span>{t(`hub.heat.legend.${tone}`)}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="pipeline-heat-legend-hint">{t("hub.heat.legend.hover")}</p>
+        </div>
       ) : null}
 
       <div className="training-pixel-bar" role="list" aria-label="Spieler nach Trainingsleistung">

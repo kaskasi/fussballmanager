@@ -6646,6 +6646,27 @@ body {
   color: var(--text-muted, #64748b);
 }
 
+.training-day-column.is-past .training-day-header {
+  opacity: 0.65;
+}
+
+.training-slot.is-past {
+  opacity: 0.52;
+  filter: grayscale(0.45);
+  box-shadow: none;
+  border-color: color-mix(in srgb, var(--tinte, #3e3128) 12%, transparent);
+  background: color-mix(in srgb, var(--panel-muted, #efebe0) 55%, var(--panel, #fff));
+}
+
+.training-slot.is-past.is-focus {
+  border-color: color-mix(in srgb, var(--rasen, #047857) 35%, transparent);
+  box-shadow: none;
+}
+
+.training-slot.is-past .training-slot-main:disabled {
+  cursor: default;
+}
+
 .training-day-block {
   display: grid;
   gap: 0.45rem;

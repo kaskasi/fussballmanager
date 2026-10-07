@@ -7,7 +7,9 @@ import {
   TRAINING_DAYS,
   TRAINING_UNITS,
   UNITS_PER_DAY,
+  isTrainingDayPast,
   isTrainingSlotEmpty,
+  isTrainingSlotPast,
   trainingUnit,
   trainingUnitUnlocked,
   type TrainingSlot,
@@ -84,6 +86,7 @@ const GROUP_LABELS: Record<SessionGroup, string> = {
 
 export function TrainingCenter({
   week,
+  weekday,
   season,
   plan,
   intensity,
@@ -109,6 +112,7 @@ export function TrainingCenter({
   injuryRiskFactor = 1,
 }: {
   week: number;
+  weekday: number;
   season: number;
   plan: TrainingSlot[];
   intensity: number;
@@ -176,6 +180,7 @@ export function TrainingCenter({
         <div className="fm-tab-panel">
           <TeamPlan
             plan={plan}
+            weekday={weekday}
             pickSlot={pickSlot}
             focusCount={focusCount}
             check={check}
@@ -253,6 +258,7 @@ function TrainingIntensityStatus({
 
 function TeamPlan({
   plan,
+  weekday,
   pickSlot,
   focusCount,
   check,
@@ -267,6 +273,7 @@ function TeamPlan({
   onSelectPlayer,
 }: {
   plan: TrainingSlot[];
+  weekday: number;
   pickSlot: number | null;
   focusCount: number;
   check: ReturnType<typeof validateWeeklyPlan>;
@@ -303,21 +310,28 @@ function TeamPlan({
       />
 
       <div className="training-timetable" aria-label="Wochenplan">
-        {TRAINING_DAYS.map((day, dayIndex) => (
-          <div key={day} className="training-day-column">
+        {TRAINING_DAYS.map((day, dayIndex) => {
+          const dayPast = isTrainingDayPast(dayIndex, weekday);
+          return (
+          <div key={day} className={dayPast ? "training-day-column is-past" : "training-day-column"}>
             <p className="training-day-header">{day}</p>
             {Array.from({ length: UNITS_PER_DAY }, (_, period) => {
               const index = dayIndex * UNITS_PER_DAY + period;
               const slot = plan[index]!;
+              const slotPast = isTrainingSlotPast(index, weekday);
               return (
                 <SlotCard
                   key={index}
                   periodLabel={slotPeriodLabel(index)}
                   slot={slot}
+                  past={slotPast}
                   active={pickSlot === index}
-                  onOpenPicker={() => onPickSlot(index)}
+                  onOpenPicker={() => {
+                    if (!slotPast) onPickSlot(index);
+                  }}
                   onToggleFocus={() => onPlanChange(toggleFocus(plan, index))}
                   focusToggleDisabled={
+                    slotPast ||
                     isTrainingSlotEmpty(slot) ||
                     (!slot.focus && !canSetFocus(plan, index))
                   }
@@ -325,7 +339,8 @@ function TeamPlan({
               );
             })}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="training-schedule-heatmap">
@@ -388,6 +403,7 @@ function toggleFocus(plan: TrainingSlot[], index: number): TrainingSlot[] {
 function SlotCard({
   periodLabel,
   slot,
+  past,
   active,
   onOpenPicker,
   onToggleFocus,
@@ -395,6 +411,7 @@ function SlotCard({
 }: {
   periodLabel: string;
   slot: TrainingSlot;
+  past: boolean;
   active: boolean;
   onOpenPicker: () => void;
   onToggleFocus: () => void;
@@ -407,12 +424,13 @@ function SlotCard({
     empty ? "is-empty" : "",
     slot.focus ? "is-focus" : "",
     active ? "is-active" : "",
+    past ? "is-past" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <article className={className}>
+    <article className={className} aria-disabled={past || undefined}>
       <button
         type="button"
         className={
@@ -428,7 +446,7 @@ function SlotCard({
       >
         <Target size={13} strokeWidth={2.5} aria-hidden="true" />
       </button>
-      <button type="button" className="training-slot-main" onClick={onOpenPicker}>
+      <button type="button" className="training-slot-main" disabled={past} onClick={onOpenPicker}>
         <span className="training-period">{periodLabel}</span>
         {empty ? (
           <>

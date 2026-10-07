@@ -2499,6 +2499,7 @@ export default function App() {
       {screen === "training" ? (
         <TrainingCenter
           week={week}
+          weekday={weekday}
           season={season}
           plan={trainingPlan}
           intensity={trainingIntensity}

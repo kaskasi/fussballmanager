@@ -5,6 +5,7 @@ import {
   assertWeeklyPlanLength,
   isTrainingSlotEmpty,
 } from "./training-plan-state.ts";
+import { MONDAY, SATURDAY } from "../sim/day-calendar.ts";
 import { SLOT_COUNT, TRAINING_DAYS, UNITS_PER_DAY, type TrainingSession } from "./weekly-plan.ts";
 
 export {
@@ -41,6 +42,22 @@ export function slotDayIndex(slotIndex: number): number {
 
 export function slotPeriodIndex(slotIndex: number): number {
   return slotIndex % UNITS_PER_DAY;
+}
+
+/** Mo=1 … Fr=5 — matches session `weekday` (PRD day calendar). */
+export function trainingSlotWeekday(slotIndex: number): number {
+  return slotDayIndex(slotIndex) + MONDAY;
+}
+
+/** Past sessions within the current game week (before today; weekend grays Mo–Fr). */
+export function isTrainingSlotPast(slotIndex: number, sessionWeekday: number): boolean {
+  const slotDay = trainingSlotWeekday(slotIndex);
+  if (sessionWeekday >= SATURDAY) return slotDay <= TRAINING_DAYS.length;
+  return slotDay < sessionWeekday;
+}
+
+export function isTrainingDayPast(dayIndex: number, sessionWeekday: number): boolean {
+  return isTrainingSlotPast(dayIndex * UNITS_PER_DAY, sessionWeekday);
 }
 
 export function slotLabel(slotIndex: number): string {

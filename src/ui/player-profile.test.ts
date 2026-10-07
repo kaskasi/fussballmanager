@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { emptyWeeklyTrainingPlan } from "../development/training-units.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { UNKNOWN_PRIOR } from "../scouting/estimate-model.ts";
 import {
@@ -105,6 +106,13 @@ describe("player profile helpers", () => {
     const defender = staerkeAlsLanes(asWing);
     expect(defender.find((lane) => lane.lane === "IV")?.value).toBe(1);
     expect(defender.find((lane) => lane.lane === "MF")?.value).toBe(0.4);
+  });
+
+  it("returns empty dossier target when the weekly plan has no configured units", () => {
+    const player = clonePlayer();
+    const target = dossierTrainingTarget(player, [], emptyWeeklyTrainingPlan(), 1);
+    expect(target.accent).toBe("empty");
+    expect(target.title).toBe("Kein Plan");
   });
 
   it("prefers an individual program over team focus for the dossier target", () => {

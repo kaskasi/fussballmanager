@@ -9,7 +9,7 @@ import {
   programLabel,
   type IndividualProgram,
 } from "../development/individual-training.ts";
-import { trainingUnit, type TrainingSlot } from "../development/training-units.ts";
+import { isTrainingSlotEmpty, trainingUnit, type TrainingSlot } from "../development/training-units.ts";
 import type { Attributes, GrowthSnapshot, Player, PositionPrimary } from "../types/player.ts";
 import { roundStat } from "../types/player-display.ts";
 import { caGroup, estimateCa } from "../transfers/market-value.ts";
@@ -302,9 +302,10 @@ export function dossierTrainingTarget(
       progress: Math.min(1, elapsed / total),
     };
   }
-  const focusSlots = plan.filter((slot) => slot.focus);
-  const first = focusSlots[0] ?? plan[0];
-  if (!first) {
+  const focusSlots = plan.filter((slot) => slot.focus && !isTrainingSlotEmpty(slot));
+  const firstConfigured = plan.find((slot) => !isTrainingSlotEmpty(slot));
+  const slot = focusSlots[0] ?? firstConfigured;
+  if (!slot || isTrainingSlotEmpty(slot)) {
     return {
       accent: "empty",
       title: "Kein Plan",
@@ -312,7 +313,7 @@ export function dossierTrainingTarget(
       progress: null,
     };
   }
-  const unit = trainingUnit(first.unitId);
+  const unit = trainingUnit(slot.unitId);
   const extra = focusSlots.length > 1 ? ` · ${focusSlots.length} Fokus-Slots` : "";
   return {
     accent: "team",

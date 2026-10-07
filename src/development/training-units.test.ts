@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   defaultTrainingPlan,
+  isTrainingDayPast,
+  isTrainingSlotPast,
   migrateLegacyTrainingPlan,
   planToSessions,
   trainingUnit,
@@ -24,6 +26,16 @@ describe("training units", () => {
     expect(migrated[0]?.unitId).toBe("tech_pass");
     expect(migrated[1]?.unitId).toBe("");
     expect(migrated[9]?.unitId).toBe("tech_ball");
+  });
+
+  it("marks training days before the session weekday as past", () => {
+    expect(isTrainingSlotPast(0, 3)).toBe(true);
+    expect(isTrainingSlotPast(2, 3)).toBe(true);
+    expect(isTrainingSlotPast(3, 3)).toBe(true);
+    expect(isTrainingSlotPast(6, 3)).toBe(false);
+    expect(isTrainingDayPast(0, 3)).toBe(true);
+    expect(isTrainingDayPast(2, 3)).toBe(false);
+    expect(isTrainingSlotPast(0, 6)).toBe(true);
   });
 
   it("maps a named plan to PRD session groups", () => {

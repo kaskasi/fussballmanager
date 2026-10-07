@@ -27,24 +27,6 @@ export interface GeoBounds {
   north: number;
 }
 
-/** Urban minigame canvas for Hansestadt (Bremen–Hamburg corridor). */
-export const HANSE_CITY_MAP_BOUNDS: GeoBounds = {
-  west: 8.45,
-  east: 10.25,
-  south: 53.02,
-  north: 53.72,
-};
-
-/** Bremen street-map SVG — local WGS84 clip (pins overlay). */
-export const BREMEN_CITY_GEO_BOUNDS: GeoBounds = {
-  west: 8.69,
-  east: 9.05,
-  south: 52.98,
-  north: 53.24,
-};
-
-export const BREMEN_CITY_SVG_VIEWBOX = "4904.5 3739.529 6560 5088";
-
 export function geoToReliefSvg(lat: number, lon: number): { x: number; y: number } {
   const { west, east, south, north } = RELIEF_GEO_BOUNDS;
   return {

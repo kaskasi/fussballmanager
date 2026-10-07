@@ -1033,3 +1033,46 @@ Kirill Shrayber
 
 Previously published: https://vectormap.net/free_vector_maps_downloads/bremen-germany-vector-map-in-adobe-illustrator-pdf-and-svg-free/
 Other versions	[2]
+
+
+MAP REGION HANSESTADT BREMEN
+
+https://commons.wikimedia.org/wiki/Category:SVG_maps_of_Bremen#/media/File:Bremen_location_map_simplified.svg
+
+This file is made available under the Creative Commons CC0 1.0 Universal Public Domain Dedication.
+
+Description	
+Deutsch: Vereinfachte Karte der Bezirke in Bremen und der Stadt Bremerhaven.
+English: Simplified map of the districts of Bremen and of the city of Bremerhaven.
+Date	4 June 2011, 15:47 (UTC)
+Source	
+Bremen_53_Blumenthal.svg
+Author	
+Bremen_53_Blumenthal.svg: TUBS Gallery
+derivative work: MichaelBueker (talk)
+
+
+MAP REGION HANSESTADT
+
+https://commons.wikimedia.org/wiki/File:Bremen_Subdivisions.svg
+
+This file is licensed under the Creative Commons Attribution 3.0 Unported, 2.5 Generic, 2.0 Generic and 1.0 Generic license.
+Attribution: TUBS Gallery
+
+Description	
+Deutsch: Gliederung von Bremen in Stadtbezirke, Stadtteile und Ortsteile.
+Date	24 May 2010
+Source	Own work This W3C-unspecifiedvector image was created with Adobe Illustrator. This SVG file was uploaded with Commonist.
+Based on File:Bremen (city) location map.svg and File:Bremen location map.svg by TUBS Gallery
+Author	TUBS Gallery
+
+---
+
+## Research backlog — Bremer Fußballverband (not shipped assets)
+
+**File:** `pd_images/spielklassenreform_herren_2026.pdf` (added 2026-10-07, ~658 KB)
+
+**Purpose (analysis later):** BFV Herren Spielklassenreform 2026 — optional input for realistic Hanse/Nord club density, league tiers, or `real-cities` pool expansion. No product implementation until reviewed.
+
+**Status:** vorgemerkt, nicht ausgewertet.
+

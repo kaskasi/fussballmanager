@@ -1,7 +1,5 @@
 import { realCityByName } from "../world/real-cities.ts";
 import {
-  BREMEN_CITY_GEO_BOUNDS,
-  BREMEN_CITY_SVG_VIEWBOX,
   extractPlaceFromClubName,
   geoToLocalMap,
   geoToReliefSvg,
@@ -25,8 +23,6 @@ export interface ScoutMapNode {
 }
 
 export type ScoutZoneMapMode = "relief" | "city";
-
-export const SCOUT_BREMEN_CITY_MAP_ASSET = "/assets/scout-maps/bremen-city.svg";
 
 export interface ScoutZoneMapLayout {
   zoneId: string;
@@ -135,12 +131,10 @@ const SH_LAYOUT: Omit<ScoutZoneMapLayout, "anchorNodes"> = {
 
 const HANSE_LAYOUT: Omit<ScoutZoneMapLayout, "anchorNodes"> = {
   zoneId: "hanse",
-  mapMode: "city",
+  mapMode: "relief",
   flavorAsset: "/assets/scout-maps/flavor/hanse.jpg",
-  cityMapAsset: SCOUT_BREMEN_CITY_MAP_ASSET,
-  reliefViewBox: BREMEN_CITY_SVG_VIEWBOX,
-  cityMapBounds: BREMEN_CITY_GEO_BOUNDS,
-  citySvgViewBox: BREMEN_CITY_SVG_VIEWBOX,
+  /** Fallback clip; detail screen uses reliefViewBoxForZoneClubs(worldClubs). */
+  reliefViewBox: "470 300 200 140",
   edges: [
     { id: "h1", a: "bremen", b: "bremerhaven", length: 22 },
     { id: "h2", a: "bremen", b: "hamburg", length: 26 },

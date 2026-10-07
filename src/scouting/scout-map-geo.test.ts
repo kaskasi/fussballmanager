@@ -26,15 +26,20 @@ describe("scout-map-geo", () => {
     }
   });
 
-  it("places Bremen on the Bremen street-map canvas", () => {
+  it("projects Hanse corridor cities into the dynamic relief clip for zone clubs", () => {
+    const world = generateWorld(4242);
     const layout = layoutForZone("hanse");
-    expect(layout?.mapMode).toBe("city");
-    const bremen = mapCoordsForPlace("Bremen", layout!);
-    const { x: vx, y: vy, w: vw, h: vh } = parseSvgViewBox(layout!.citySvgViewBox!);
-    expect(bremen!.x).toBeGreaterThan(vx);
-    expect(bremen!.x).toBeLessThan(vx + vw);
-    expect(bremen!.y).toBeGreaterThan(vy);
-    expect(bremen!.y).toBeLessThan(vy + vh);
+    expect(layout?.mapMode).toBe("relief");
+    const viewBox = reliefViewBoxForZoneClubs("hanse", world.clubs);
+    const { x: vbX, y: vbY, w: vbW, h: vbH } = parseSvgViewBox(viewBox);
+    for (const city of ["Bremen", "Hamburg", "Bremerhaven", "Stade", "Lübeck", "Cuxhaven"]) {
+      const coords = mapCoordsForPlace(city, layout!);
+      expect(coords).not.toBeNull();
+      expect(coords!.x).toBeGreaterThanOrEqual(vbX - 24);
+      expect(coords!.x).toBeLessThanOrEqual(vbX + vbW + 24);
+      expect(coords!.y).toBeGreaterThanOrEqual(vbY - 24);
+      expect(coords!.y).toBeLessThanOrEqual(vbY + vbH + 24);
+    }
   });
 
   it("aligns club pins with GPS when place is set", () => {

@@ -284,13 +284,15 @@ function TeamPlan({
 
   return (
     <section className="training-team">
-      <Hint
-        text="Karte anklicken = Einheit wählen. Fokus-Icon = +33 % Wachstum in der Gruppe (max. 2 Fokus/Woche)."
-        block
-      >
+      <Hint text={t("training.schedule.hint")} block>
         <p className="training-rules">
-          {TRAINING_DAYS.length}×{UNITS_PER_DAY} Trainingsslots (Mo–Fr) · {focusCount}/{MAX_FOCUS_SLOTS} Fokus (+33 %)
-          {!check.valid ? <span className="training-warn"> · Plan ungültig</span> : null}
+          {t("training.schedule.meta", {
+            days: TRAINING_DAYS.length,
+            unitsPerDay: UNITS_PER_DAY,
+            focus: focusCount,
+            maxFocus: MAX_FOCUS_SLOTS,
+          })}
+          {!check.valid ? <span className="training-warn">{t("training.schedule.invalidPlan")}</span> : null}
         </p>
       </Hint>
 

@@ -610,55 +610,26 @@ Was verschwindet: Die Icon-Leiste im oberen Header (die gehört ins Menü), die 
 
 ### 9.10 Training
 
-- **Kein Overview-Tab.** Beim Betreten ist automatisch der **Default-View** sichtbar (Status-Zeile + Heatmap + Warnbanner + Intensitäts-Slider) — das ist kein Tab, sondern der Ruhezustand des Screens.
-- **Tabs (nur zwei):** `[Wochenplan]` und `[Individuell]`. Kein dritter Tab; der Nutzer sieht sofort den Status, wechselt optional in Planung oder Fein-Tuning.
-- **Default-View (beim Öffnen):**
-  - Status-Zeile (Gesamtfitness, Müdigkeit, aktuelle Intensität).
-  - Heatmap der wöchentlichen Belastung nach Altersgruppe (U17/U19/PRO).
-  - Warnbanner, wenn >8 Spieler müde oder Intensität zu hoch (Lucide + `--terra`, kein Emoji).
-  - Intensitäts-Slider (global für die Woche).
-- **Tab Wochenplan:**
-  - 5 Trainingsslots (Mo–Fr) als Karten-Grid; Fokus per Klick (grüner Rahmen); max. 2 Fokus pro Bereich (Technik/Athletik/Mental).
-- **Tab Individuell:**
-  - Spielerliste; Modal zum Erstellen/Bearbeiten individueller Programme (Modal hier erlaubt).
-- **Ausgelagert:** Mentoring → Kader §9.11; Coaches/Staff → Kader §9.11 Tab Staff.
+- **Tabs (zwei):** `[Team · Stundenplan]` (Default) und `[Individuell · Extra]`. Kein separater „Übersicht/Heatmap“-Tab — Heatmap sitzt als schmales Band unter dem Stundenplan.
+- **Tab Stundenplan:**
+  - **15 Trainingsslots** (Mo–Fr × 3 Einheiten/Tag), Spalten = Wochentage, Slots vertikal; leere Slots „Leer / Einheit wählen“ (kein Auto-Passspiel).
+  - **Fokus:** Icon auf der Karte (nicht globaler „Fokus setzen“-CTA); max. **2** Fokus/Woche, **+33 %** Wachstum pro Fokus auf Attributgruppe (PRD 02.4); max. 2 Fokus pro Gruppe (Technik/Athletik/Mental).
+  - **Intensität:** drei Presets (Leicht / Normal / Hart), kein Slider im Content.
+  - Kompakte Belastungszeile (Fitness/Müdigkeit); kein zweiter Fortschritts-CTA (nur Header-NEXT).
+  - **Growth-Heatmap** (F2.7): kompaktes Band unter dem Grid (Farbfelder + Legende mit Swatches).
+- **Tab Individuell:** Spielerliste; Modal für Programme (F2.3 / Stamps).
+- **Ausgelagert:** Mentoring → Kader; Coaches → Staff.
 
 ┌─[Header]──────────────────────────────────────────────────┐
-│ H1 "Training"              [Wochenplan][Individuell]      │
+│ H1 "Training"         [Team·Stundenplan][Individuell]     │
 ├───────────────────────────────────────────────────────────┤
-│ STATUS-ZEILE (Default-View, kein Tab):                    │
-│ 19 Profis · Ø Fitness 68 · 11 müde · Intensität 85        │
-├───────────────────────────────────────────┬───────────────┤
-│ DEFAULT-VIEW (beim Öffnen)                │ HEATMAP       │
-│ ┌───────────────────────────────────────┐ │               │
-│ │ WÖCHENTLICHE BELASTUNG (Heatmap)      │ │ (Farb-Grid)   │
-│ │ U17 · 1 [■]                           │ │ U17/U19/PRO   │
-│ │ U19 · 7 [■■■■■■■]                     │ │               │
-│ │ PRO · 19 [■■■■■■■■■■■■■■■■]           │ │               │
-│ └───────────────────────────────────────┘ │               │
-│                                           │               │
-│ WARNUNGEN (--terra, wenn >8 müde):        │               │
-│ 11 Spieler müde · Int. 100 (High Load)    │               │
-│                                           │               │
-│ [Intensität Slider 100]                   │               │
-│ [Fokus setzen] Checkbox                   │               │
-└───────────────────────────────────────────┴───────────────┘
-
-(Wenn "Wochenplan" aktiv:)
-┌─[Header]──────────────────────────────────────────────────┐
-│ H1 "Training · Wochenplan"                                │
+│ INFO: 5×3 Slots · 1/2 Fokus (+33 %) · Int. Normal         │
+│ Belastung: Ø Fitness … · N müde                           │
 ├───────────────────────────────────────────────────────────┤
-│ INFO: 5 Slots (Mo–Fr) · 3/3 Fokus · max. 2 pro Bereich    │
-├───────────────────────────────────────────────────────────┤
-│ INTENSITÄT SLIDER (100)                                   │
-│ [WARNUNG: High Load · 11 müde]                            │
+│  MO      DI      MI      DO      FR                        │
+│ [E1][E2][E3]  …  (3 Karten/Spalte, gleiche Höhe)          │
 │                                                           │
-│ ┌MO─-┐ ┌DI─-┐ ┌MI─-┐ ┌DO─-┐ ┌FR─-┐ ┌SA─-┐ ┌SO─-┐          │
-│ │Pass│ │Schn│ │Tak │ │Ball│ │Kraf│ │Matc│ │REST│          │
-│ │Tech│ │Ath │ │Men │ │Tech│ │Ath │ │day │ │    │          │
-│ └───-┘ └──-─┘ └───-┘ └─-──┘ └───-┘ └───-┘ └───-┘          │
-│                                                           │
-│ [Fokus setzen] → Klick auf Karte setzt/entfernt Fokus     │
+│ [Heatmap-Band: Spieler-Wochenzuwachs]                     │
 └───────────────────────────────────────────────────────────┘
 
 ### 9.11 Kader (Squad)

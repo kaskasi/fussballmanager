@@ -73,7 +73,7 @@ Pipeline Dashboard (Tab-Hub)
 ┌────────────────────────────────────────────────────────┐
 │ [Chart: Pipeline-Füllung nach Stufe]                  │
 │                                                        │
-│ [Training] Ampel Grün · [Focus] 3 Fokus-Slots gesetzt  │
+│ [Training] Ampel Grün · [Focus] 2/2 Fokus (+33 %)      │
 │ [Youth] 2 Empfehlungen · [Flag] 1 Abgangsrisiko      │
 │ [Scouting] 3 Scouts aktiv · 7 offene Reports           │
 │                                                        │
@@ -84,7 +84,7 @@ Pipeline Dashboard (Tab-Hub)
 Interaktion:
 
 - Klick auf eine Status-Kachel springt in den Sub-Screen.
-- Team-Heatmap (F2.7): **ein Quadrat = ein Spieler**, Farbe = Wochenzuwachs aus PRD 02.1. Desktop legt die Quadrate als ~3×8-Raster pro Stufe (Zelle ~8×8px, Hover zeigt Namen); Mobile nutzt größere Touch-Zellen ohne Zwischenschritt. Dieselbe Strip sitzt im Hub und in der Training-Übersicht. Die Fokus-Slots selbst stehen in PRD 02.4 (bis zu 3 von 5 Trainingsslots).
+- Team-Heatmap (F2.7): **ein Quadrat = ein Spieler**, Farbe = Wochenzuwachs aus PRD 02.1. Desktop legt die Quadrate als ~3×8-Raster pro Stufe (Zelle ~8×8px, Hover zeigt Namen); Mobile nutzt größere Touch-Zellen ohne Zwischenschritt. Dieselbe Strip sitzt im Hub und unter dem Stundenplan (Training). Fokus-Slots: PRD 02.4 (bis zu **2** von **15** Trainingsslots, +33 % pro Fokus auf Attributgruppe).
 - Keine Kachel hat mehr als einen Satz Fließtext.
 
 **Screen 1a — Individual Plan Modal**
@@ -178,7 +178,7 @@ Interaktion:
  *
  * ┌────────────────────────────────────────────────────────┐
  * │ [Chart: Pipeline-Füllung nach Stufe]                  │
- * │ [Training] Ampel Grün · [Focus] 3 Fokus-Slots          │
+ * │ [Training] Ampel Grün · [Focus] 2/2 Fokus              │
  * │ [Youth] 2 Empfehlungen · [Flag] 1 Abgangsrisiko      │
  * │ [Scouting] 3 Scouts aktiv · 7 offene Reports           │
  * │ [▶ Diese Woche simulieren]                            │

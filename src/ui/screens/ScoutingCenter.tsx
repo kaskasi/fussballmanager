@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FilterChip, FilterToolbar } from "../components/primitives/index.ts";
 import type { Player, PositionPrimary } from "../../types/player.ts";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
 import type {
@@ -469,10 +470,10 @@ export function ScoutingCenter({
           </Hint>
 
       <div className="scouting-filter-toolbar">
-        <div className="scouting-chips" role="toolbar" aria-label={t("scouting.filter.aria")}>
-          <Chip active={filters.position === "all"} onClick={() => onFiltersChange({ ...filters, position: "all" })}>{t("scouting.filter.all")}</Chip>
+        <FilterToolbar ariaLabel={t("scouting.filter.aria")} className="scouting-chips">
+          <FilterChip active={filters.position === "all"} onClick={() => onFiltersChange({ ...filters, position: "all" })}>{t("scouting.filter.all")}</FilterChip>
           {POSITIONS.map((slot) => (
-            <Chip
+            <FilterChip
               key={slot}
               active={filters.position === slot}
               onClick={() =>
@@ -483,10 +484,10 @@ export function ScoutingCenter({
               }
             >
               {slot}
-            </Chip>
+            </FilterChip>
           ))}
           {AGE_FILTERS.map((filter) => (
-            <Chip
+            <FilterChip
               key={filter.value}
               active={filters.age === filter.value}
               onClick={() =>
@@ -497,10 +498,10 @@ export function ScoutingCenter({
               }
             >
               {filter.label}
-            </Chip>
+            </FilterChip>
           ))}
           {CONFIDENCE_FILTERS.map((filter) => (
-            <Chip
+            <FilterChip
               key={filter.bucket}
               active={filters.confidence === filter.bucket}
               title={t(filter.titleKey)}
@@ -513,10 +514,10 @@ export function ScoutingCenter({
               }
             >
               <ScoutConfidenceIcon bucket={filter.bucket} size={16} />
-            </Chip>
+            </FilterChip>
           ))}
           {REGIONS.map((region) => (
-            <Chip
+            <FilterChip
               key={region}
               active={filters.query.toLowerCase() === region.toLowerCase()}
               onClick={() =>
@@ -527,28 +528,22 @@ export function ScoutingCenter({
               }
             >
               {region}
-            </Chip>
+            </FilterChip>
           ))}
-        </div>
-        <div className="scouting-sort" role="toolbar" aria-label={t("scouting.sort.aria")}>
+        </FilterToolbar>
+        <FilterToolbar ariaLabel={t("scouting.sort.aria")} className="scouting-sort">
           {(["name", "ca", "marketValue"] as const).map((key) => {
             const label =
               key === "name" ? t("squad.col.name") : key === "ca" ? "CA" : t("squad.col.value");
             const active = sort.key === key;
             return (
-              <button
-                key={key}
-                type="button"
-                className={active ? "scouting-chip is-active" : "scouting-chip"}
-                aria-pressed={active}
-                onClick={() => toggleSort(key)}
-              >
+              <FilterChip key={key} active={active} onClick={() => toggleSort(key)}>
                 {label}
                 {active ? (sort.direction === "asc" ? " ▲" : " ▼") : ""}
-              </button>
+              </FilterChip>
             );
           })}
-        </div>
+        </FilterToolbar>
       </div>
 
       {visible.length === 0 ? (
@@ -558,13 +553,9 @@ export function ScoutingCenter({
           </span>
           <p>{market.length === 0 ? t("scouting.pool.empty") : t("scouting.empty")}</p>
           {marketFiltersActive(filters) ? (
-            <button
-              type="button"
-              className="scouting-chip"
-              onClick={() => onFiltersChange(DEFAULT_MARKET_FILTERS)}
-            >
+            <FilterChip active={false} onClick={() => onFiltersChange(DEFAULT_MARKET_FILTERS)}>
               {t("scouting.empty.reset")}
-            </button>
+            </FilterChip>
           ) : null}
         </section>
       ) : (
@@ -597,25 +588,19 @@ export function ScoutingCenter({
             />
           ) : (
             <>
-              <div className="scouting-sort" role="toolbar" aria-label={t("scouting.sort.aria")}>
+              <FilterToolbar ariaLabel={t("scouting.sort.aria")} className="scouting-sort">
                 {(["name", "ca", "marketValue"] as const).map((key) => {
                   const label =
                     key === "name" ? t("squad.col.name") : key === "ca" ? "CA" : t("squad.col.value");
                   const active = sort.key === key;
                   return (
-                    <button
-                      key={key}
-                      type="button"
-                      className={active ? "scouting-chip is-active" : "scouting-chip"}
-                      aria-pressed={active}
-                      onClick={() => toggleSort(key)}
-                    >
+                    <FilterChip key={key} active={active} onClick={() => toggleSort(key)}>
                       {label}
                       {active ? (sort.direction === "asc" ? " ▲" : " ▼") : ""}
-                    </button>
+                    </FilterChip>
                   );
                 })}
-              </div>
+              </FilterToolbar>
               <ScoutingPlayerList
                 rows={watchlistVisible}
                 season={season}
@@ -781,7 +766,7 @@ function ScoutingPlayerList({
                   </div>
                   <div className="scouting-bar">
                     <small>€</small>
-                    <div className="scouting-bar-track" aria-label="Marktwert-Schätzung">
+                    <div className="scouting-bar-track" aria-label={t("scouting.estimateBar.aria")}>
                       {valueTrack ? (
                         <>
                           <span
@@ -821,32 +806,5 @@ function ScoutingPlayerList({
       </ul>
     </>
   );
-}
-
-function Chip({
-  active,
-  onClick,
-  title,
-  hint,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  title?: string;
-  hint?: string;
-  children: ReactNode;
-}) {
-  const chip = (
-    <button
-      type="button"
-      className={active ? "scouting-chip is-active" : "scouting-chip"}
-      title={title}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-  if (!hint) return chip;
-  return <Hint text={hint}>{chip}</Hint>;
 }
 

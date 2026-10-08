@@ -203,6 +203,34 @@ main.pipeline.club-shell-card-body {
   background: transparent;
 }
 
+.app-nav-cash-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.app-nav-training-warn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem;
+  border: 0;
+  background: transparent;
+  color: var(--warn, #c2410c);
+  cursor: pointer;
+  border-radius: var(--radius-klein, 0.55rem);
+}
+
+.app-nav-training-warn:hover {
+  color: color-mix(in srgb, var(--warn, #c2410c) 85%, var(--tinte));
+  background: color-mix(in srgb, var(--warn, #c2410c) 12%, transparent);
+}
+
+.app-nav-training-warn:focus-visible {
+  outline: 2px solid var(--tinte);
+  outline-offset: 2px;
+}
+
 .app-nav-cash {
   font-family: var(--font-display);
   font-weight: 800;
@@ -1219,26 +1247,69 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   white-space: nowrap;
 }
 
-.squad-list-toolbar {
+.squad-list-toolbar,
+.filter-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-bottom: 0.65rem;
 }
 
-.squad-sort-chip {
+.filter-chip,
+.squad-sort-chip,
+.scouting-chip {
   border: var(--outline);
-  border-radius: var(--radius-klein);
-  padding: 0.35rem 0.55rem;
-  background: #fff;
+  border-radius: var(--radius-chip);
+  padding: var(--space-2) var(--space-3);
+  background: var(--panel);
   font-weight: 700;
   font-size: 0.78rem;
   cursor: pointer;
   color: var(--tinte);
+  font-family: var(--font-body);
 }
 
-.squad-sort-chip.is-active {
+.filter-chip--dense {
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--radius-klein);
+}
+
+.filter-chip.is-active,
+.squad-sort-chip.is-active,
+.scouting-chip.is-active {
   background: var(--rasen);
+  color: var(--tinte);
+}
+
+.modal-shell-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: var(--outline-weich);
+}
+
+.modal-shell-title-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-shell-close {
+  flex-shrink: 0;
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  background: var(--panel-muted);
+  padding: 0.35rem;
+  cursor: pointer;
+  color: var(--tinte);
+  line-height: 0;
+}
+
+.modal-shell-body {
+  padding-top: var(--space-3);
+  max-height: min(70vh, 640px);
+  overflow: auto;
 }
 
 .squad-player-cards {
@@ -1990,7 +2061,35 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 
 .inbox-card-opponent-scout.is-embedded {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.5rem;
+}
+
+.inbox-scout-job-lead--compact {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+}
+
+.postfach-expand-modal .opponent-scout-tactic-table-title {
+  font-size: 0.72rem;
+  margin-top: 0.15rem;
+}
+
+.postfach-expand-modal .opponent-scout-tactic-table {
+  font-size: 0.78rem;
+}
+
+.postfach-expand-modal .opponent-scout-apply-btn {
+  padding: 0.35rem 0.45rem;
+  font-size: 0.72rem;
+}
+
+.postfach-expand-modal .inbox-scout-job-actions {
+  margin-top: 0.35rem;
+}
+
+.postfach-expand-modal .inbox-scout-job-actions .inbox-action {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.82rem;
 }
 
 .postfach-screen .inbox-card,
@@ -2922,18 +3021,7 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   color: var(--text-secondary);
 }
 
-.scouting-chip {
-  border: var(--outline);
-  border-radius: var(--radius-chip);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font-weight: 700;
-}
-
-.scouting-chip.is-active {
-  background: var(--accent-primary);
-  color: var(--text-primary);
-}
+/* scouting-chip: see .filter-chip block above (PRD 20) */
 
 .screen-empty-state {
   display: flex;
@@ -3139,5 +3227,145 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   margin: 0.35rem 0 0;
   font-size: 0.82rem;
   line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+/* Storyboard opening POC (?storyboard=poc) */
+.storyboard-poc {
+  min-height: 100dvh;
+  padding: var(--space-4);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.storyboard-poc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.storyboard-poc-head h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+}
+
+.storyboard-poc-close {
+  border: var(--outline);
+  background: var(--panel);
+  border-radius: var(--radius-klein);
+  padding: var(--space-2);
+  cursor: pointer;
+}
+
+.storyboard-poc-seq {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.storyboard-poc-seq-btn {
+  border: var(--outline-weich);
+  background: var(--panel);
+  border-radius: var(--radius-chip);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.storyboard-poc-seq-btn.is-active {
+  background: var(--rasen);
+  color: var(--panel);
+  border-color: var(--rasen-dunkel);
+}
+
+.storyboard-poc-panel {
+  margin: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.storyboard-poc-art {
+  width: 100%;
+  border: var(--outline);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.storyboard-poc-caption {
+  margin: 0;
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.storyboard-poc-progress {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.storyboard-poc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.storyboard-poc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: var(--outline);
+  background: var(--panel);
+  border-radius: var(--radius-klein);
+  padding: 0.5rem 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.storyboard-poc-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.storyboard-poc-btn-primary {
+  background: var(--rasen);
+  color: var(--panel);
+  border-color: var(--rasen-dunkel);
+}
+
+.storyboard-poc-skip {
+  margin-left: auto;
+  font-size: 0.85rem;
+}
+
+.storyboard-poc-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.storyboard-poc-grid img {
+  width: 100%;
+  border: var(--outline);
+  border-radius: var(--radius);
+}
+
+.storyboard-poc-note,
+.storyboard-poc-contact {
+  font-size: 0.85rem;
   color: var(--text-secondary);
 }

@@ -228,7 +228,7 @@ Playtest-Slice: **6 Nationen** als **3×2-Kartenraster** (kein Split-Listen-Layo
 
 | Element | Verhalten |
 |---|---|
-| Karte | Landschaftsfoto (CC0/Lizenziert, `campPhotoUrl(nationId)`), Nation + Region |
+| Karte | Hero-Oberfläche: CSS-Gradient (`campPhotoGradient`) oder illustriertes Asset (PRD 20); optional CC0-Illustration/SVG — keine Pflicht-JPG-Stockfotos im Default-Build |
 | Status | Nicht gekauft (Preis + Kaufen) · gesperrt (Limit/Cash) · aktiv (Unterhalt/Wo) |
 | Agentur | Brief-Icon (Lucide `Mail`) — beauftragt Kandidatensuche; erneuter Klick = gleicher Hinweis (NoticeToast) |
 | Roster | Portrait, Name, Position, CA; **In Jugend überführen** auf owned Camps |

@@ -1,0 +1,19 @@
+# PRD 20 backlog — path:relativeLine (remove entries as screens are fixed)
+src/ui/components/ClubProfileModal.tsx:42
+src/ui/components/PrecinctGrid.tsx:88
+src/ui/components/PrecinctGrid.tsx:120
+src/ui/components/PrecinctGrid.tsx:145
+src/ui/components/PrecinctGrid.tsx:178
+src/ui/components/PrecinctGrid.tsx:211
+src/ui/components/PrecinctGrid.tsx:244
+src/ui/components/PrecinctStatus.tsx:31
+src/ui/components/SaveManagerModal.tsx:118
+src/ui/screens/FinancesScreen.tsx:412
+src/ui/screens/FinancesScreen.tsx:521
+src/ui/screens/PlayerProfile.tsx:892
+src/ui/screens/PlayerProfile.tsx:1024
+src/ui/screens/PlayerProfile.tsx:1055
+src/ui/screens/PlayerProfile.tsx:1088
+src/ui/screens/StadiumScreen.tsx:289
+src/ui/screens/TransfersScreen.tsx:318
+src/ui/screens/TransfersScreen.tsx:402

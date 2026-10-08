@@ -27,6 +27,8 @@ import {
 import { caDeltaClassName, caDeltaMark, formatCaDelta } from "../../player/ca-tracking.ts";
 import { estimateCa } from "../../transfers/market-value.ts";
 import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
+import { FilterChip, FilterToolbar } from "../components/primitives/index.ts";
+import { useT } from "../../i18n/react.ts";
 import {
   academyStage,
   coachIconLabel,
@@ -131,6 +133,7 @@ export function YouthCampus({
   initialTab?: "u17" | "u19" | "camps" | null;
   onInitialTabApplied?: () => void;
 }) {
+  const tr = useT();
   const [tab, setTab] = useState<YouthTab>("u17");
 
   useEffect(() => {
@@ -160,7 +163,7 @@ export function YouthCampus({
 
   return (
     <main className="campus club-shell-card-body">
-      <div className="fm-tab-bar" role="tablist" aria-label="Jugend-Bereich">
+      <div className="fm-tab-bar" role="tablist" aria-label={tr("youth.tab.aria")}>
         {youthTabs.map(({ id, label }) => (
           <button
             key={id}
@@ -247,6 +250,7 @@ function YouthUnifiedRoster({
   onOpenInbox: (itemId?: string) => void;
   onInboxDecision: (itemId: string, action: DecisionAction) => void;
 }) {
+  const tr = useT();
   const [position, setPosition] = useState<PositionPrimary | "all">("all");
   const [sortKey, setSortKey] = useState<ProSquadSortKey>(DEFAULT_YOUTH_SORT.key);
   const [sortDirection, setSortDirection] = useState<ProSquadSortDirection>(DEFAULT_YOUTH_SORT.direction);
@@ -297,43 +301,35 @@ function YouthUnifiedRoster({
   };
 
   return (
-    <section className="game-panel youth-roster-panel" aria-label={`${team.toUpperCase()} Kader`}>
-      <div className="squad-list-toolbar" role="toolbar" aria-label="Position filtern">
-        <button
-          type="button"
-          className={position === "all" ? "squad-sort-chip is-active" : "squad-sort-chip"}
-          aria-pressed={position === "all"}
-          onClick={() => setPosition("all")}
-        >
-          Alle
-        </button>
+    <section
+      className="game-panel youth-roster-panel"
+      aria-label={tr("youth.roster.panelAria", { team: team.toUpperCase() })}
+    >
+      <FilterToolbar ariaLabel={tr("youth.filter.aria")} className="squad-list-toolbar">
+        <FilterChip active={position === "all"} onClick={() => setPosition("all")}>
+          {tr("scouting.filter.all")}
+        </FilterChip>
         {positions.map((slot) => {
           const active = position === slot;
           return (
-            <button
-              key={slot}
-              type="button"
-              className={active ? "squad-sort-chip is-active" : "squad-sort-chip"}
-              aria-pressed={active}
-              onClick={() => setPosition(active ? "all" : slot)}
-            >
+            <FilterChip key={slot} active={active} onClick={() => setPosition(active ? "all" : slot)}>
               {slot}
-            </button>
+            </FilterChip>
           );
         })}
-      </div>
+      </FilterToolbar>
 
       <div className="squad-table-wrap">
         <table className="squad-table youth-roster-table">
           <thead>
             <tr>
-              <th scope="col" aria-label="Details" />
-              <SquadSortHeader label="Name" sortKey="name" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} align="left" />
-              <SquadSortHeader label="Pos" sortKey="position" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-              <SquadSortHeader label="Alt" sortKey="age" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+              <th scope="col" aria-label={tr("youth.roster.detailsCol")} />
+              <SquadSortHeader label={tr("squad.col.name")} sortKey="name" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} align="left" />
+              <SquadSortHeader label={tr("squad.col.pos")} sortKey="position" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+              <SquadSortHeader label={tr("squad.col.age")} sortKey="age" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
               <SquadSortHeader label="CA" sortKey="ca" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
               <SquadSortHeader label="Δ" sortKey="caDelta" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-              <SquadSortHeader label="Wert" sortKey="marketValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
+              <SquadSortHeader label={tr("squad.col.value")} sortKey="marketValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
               <SquadSortHeader label="Min" sortKey="seasonMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
               <SquadSortHeader label="T" sortKey="goals" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
               <SquadSortHeader label="A" sortKey="assists" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
@@ -350,7 +346,7 @@ function YouthUnifiedRoster({
             {visible.length === 0 ? (
               <tr>
                 <td colSpan={17} className="youth-report-empty">
-                  Keine Spieler in {team === "u17" ? "der U17" : "der U19"}.
+                  {tr("youth.roster.empty", { team: team.toUpperCase() })}
                 </td>
               </tr>
             ) : (
@@ -446,7 +442,7 @@ function YouthUnifiedRoster({
         </table>
       </div>
 
-      <footer className="youth-report-actions" aria-label="Entscheidungen">
+      <footer className="youth-report-actions" aria-label={tr("youth.roster.decisionsAria")}>
         {YOUTH_REPORT_ACTIONS.map((action) => (
           <button
             key={action}
@@ -492,6 +488,7 @@ function YouthCampsPanel({
   onRequestDismissLeader: (nationId: string) => void;
   onPull: (playerId: string) => void;
 }) {
+  const tr = useT();
   const atCampLimit = camps.length >= MAX_YOUTH_CAMPS;
   const rosterSlots = atCampLimit ? CAMP_CARD_ROSTER_SLOTS : CAMP_CARD_ROSTER_SLOTS_COMPACT;
   const nations = atCampLimit
@@ -499,7 +496,7 @@ function YouthCampsPanel({
     : YOUTH_CAMP_NATIONS;
 
   return (
-    <section className="game-panel youth-camps-grid-wrap" aria-label="Jugendcamps">
+    <section className="game-panel youth-camps-grid-wrap" aria-label={tr("youth.camps.panelAria")}>
       <p className="youth-camps-meta">
         {atCampLimit
           ? `${camps.length} Camps aktiv · Unterhalt gesamt siehe Finanzen`
@@ -563,9 +560,10 @@ function YouthTargetLabel({ title }: { title: string }) {
 }
 
 function ProgressPips({ value }: { value: number }) {
+  const tr = useT();
   const filled = Math.round(Math.min(1, Math.max(0, value)) * 4);
   return (
-    <span className="youth-progress" aria-label={`${Math.round(value * 100)} Prozent`}>
+    <span className="youth-progress" aria-label={tr("youth.progress.aria", { pct: Math.round(value * 100) })}>
       {Array.from({ length: 4 }, (_, index) => (
         <i key={index} className={index < filled ? "is-on" : undefined} />
       ))}

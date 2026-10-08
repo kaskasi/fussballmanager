@@ -2,7 +2,7 @@
 
 **Projekt:** The Club (Fußball-Manager)
 **Datei:** `docs/prd/design.md`
-**Version:** 0.3 · Status: verbindliche Design-Referenz
+**Version:** 0.4 · Status: verbindliche Design-Referenz
 **Referenzbilder:** `docs/design-refs/design.png`, `docs/design-refs/lumo/` (Layout only, not shipped)
 **Ziel:** Dieses Dokument ist die alleinige Design-Wahrheit. Cursor baut jeden Screen ausschließlich aus den hier definierten Tokens, Komponenten und Wireframes. Bei Konflikten gilt: dieses Dokument > bestehender Code > improvisierte Lösungen.
 
@@ -64,6 +64,12 @@ Gedecktes Anime/Comic-Feeling eines sonnigen Nachmittags im Stadion. Warm, flach
 - Statusfarben: grün = positiv, terrakotta = negativ/hervorgehoben, staubblau = informativ/neutral. Nie rot-blau mischen.
 - Keine Verläufe auf Panels. Subtile Schatten nur als flacher 2px-Versatz (Comic-Stil).
 
+### 2.1 Implementation (PRD 20)
+
+Komponenten-Verträge, CSS-Kaskade, Migrations-Phasen und Screen-Audits leben in
+**[20_design_language.md](./20_design_language.md)**. Neue UI nutzt Primitives unter
+`src/ui/components/primitives/` — keine dritte Chip-/Modal-Variante pro Screen.
+
 ### Global shell override (`design-repair.css`)
 
 `src/ui/design/design-repair.css` is imported **after** `design-tokens.css` and `game-surfaces.css` in `main.tsx`. It is **not** a third design system: it applies legacy “repair P0” rules that still sit outside token-only screens (sand page background on non-shell routes, comic `--outline-tinte` on legacy `.panel` / `.card` selectors, circular nav tab pills). New UI must use **tokens + `game-surfaces.css`** only; extend repair only when unblocking a legacy route — prefer migrating rules into tokens/game-surfaces and deleting repair over time.
@@ -104,6 +110,14 @@ Kenney-Tiles und SVGs kommen in eigenen Farben. Bevor sie ins Projekt einfließe
 - **Größen:** 16px (inline), 20px (Buttons/Tabs), 24px (Nav), 32px (Feature).
 - **Absolute Verbotsliste:** Emojis als Icons. Jedes Emoji im Code ist ein Bug. Ersatz-Mapping beim Migrieren: 🌭→utensils, 🍺→beer, 👕→shirt, 🅿️→circle-parking, 🚌→bus, 🚃→train-front, 💰→wallet, 🎫→ticket, 🤝→handshake, 📺→tv, 🏗️→construction, 👷→hard-hat.
 - Icons erben die Textfarbe; nie eigenständige Icon-Farben einführen.
+
+### 4.1 Filter-Chips (Pills)
+
+Position-, Sortier- und Scout-Filter sind **ein** Baustein (`FilterChip`):
+
+- Inaktiv: `--panel` Füllung, `--outline`, `--radius-chip`
+- Aktiv: `--rasen` Füllung, Text `--tinte`
+- **Niemals** `--sonnengelb` / `--accent-primary` für aktive Filter (nur Header-NEXT)
 
 ---
 
@@ -1049,7 +1063,11 @@ Nutzung im Prompt: *"Implementiere den Screen 'Kalender' gemäß `docs/prd/desig
 
 **Cursor-Regel:** siehe `.cursor/rules/main.mdc` → Design-System.
 
-## 12. CC0-Asset-Quellen & Lizenzierung
+## 12. Komponenten-Imports & CC0-Assets
+
+**UI-Primitives:** `FilterChip`, `ModalShell`, … aus `src/ui/components/primitives/` importieren (Barrel `index.ts`). Details: PRD 20.
+
+### 12.0 CC0-Asset-Quellen & Lizenzierung
 
 Alle visuellen Assets stammen aus CC0/Public-Domain-Quellen. Keine KI-Generierung. Keine Attribution erforderlich, aber empfohlen als Dank.
 
@@ -1090,4 +1108,6 @@ Player-facing: [docs/ATTRIBUTION.md](../ATTRIBUTION.md). Maintainer inventory: [
 
 ---
 
-**Nächste Migrations-Tasks (Code):** CSS-Tokens aus §2, Emoji-Purge, shared Header/Menu — siehe Phase B in Projektplanung.
+**Nächste Migrations-Tasks (Code):** PRD [20_design_language.md](./20_design_language.md) (FilterChip, ModalShell, index.css-Abbau).
+
+**Referenz:** PRD 20 Design language & UI system.

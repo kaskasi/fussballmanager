@@ -57,6 +57,11 @@ import {
   persistedWorldState,
   type WorldState,
 } from "../world/world-generator.ts";
+import {
+  act1AssistantTrainingPlan,
+  resolveFeatureCurtain,
+} from "../narrative/career-presentation.ts";
+import { isTrainingPlanNeglected } from "../development/training-neglect.ts";
 import { normalizeStoryState, type StoryState } from "../narrative/story-state.ts";
 import { boardWithSurvivalArc, initializeStoryForNewGame } from "../narrative/opening.ts";
 import {
@@ -190,7 +195,17 @@ export function sessionFromSave(save: SaveGame): GameSession {
     weekday: save.state.weekday ?? MONDAY,
     matchPlayedThisWeek: save.state.match_played_this_week ?? false,
     players: save.players,
-    trainingPlan: migrateLegacyTrainingPlan(pipeline.training_plan),
+    trainingPlan: (() => {
+      const storyState = normalizeStoryState(pipeline.story_state, save.state.week);
+      const plan = migrateLegacyTrainingPlan(pipeline.training_plan);
+      if (
+        resolveFeatureCurtain(storyState).auto_training &&
+        isTrainingPlanNeglected(plan)
+      ) {
+        return act1AssistantTrainingPlan();
+      }
+      return plan;
+    })(),
     trainingIntensity: normalizeTrainingIntensity(pipeline.training_intensity),
     individualPrograms: pipeline.individual_programs ?? [],
     scoutBoard: reconcileScoutBoard(pipeline.scout_board, rivalPlayers),

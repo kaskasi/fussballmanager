@@ -1,7 +1,7 @@
 # /docs/prd/01_vision.md
 
-**Version:** 1.1
-**Last Updated:** 2026-09-29
+**Version:** 1.3
+**Last Updated:** 2026-10-08
 **Status:** Final
 
 ---
@@ -111,6 +111,28 @@ Narrative darf Ergebnisse erklären, zuspitzen und erinnern. Sie darf keine
 Tore, Transfers, Verletzungen, Beziehungen oder Zahlen erfinden, die nicht im
 Savegame existieren.
 
+### Story–Sim Input Boundary
+
+Die Match-Engine unter `server/src/engine/` bleibt unangetastet (Gesetz 4).
+**Quelle der Wahrheit** sind der Savegame-Zustand und die **Eingaben** an den
+Engine-Wrapper (Aufstellung, Taktik-Mapping, Attribute, Verfügbarkeit) — nicht
+nachträglich erfundene Ergebnisse.
+
+| Erlaubt | Verboten |
+|---------|----------|
+| Spieler-**Zustände** und Nichtverfügbarkeit (`injured`, `banned`, `awol`, `holiday`, Länderspiel/turnierbedingt) vor dem Match | Feste Toranzahl oder „dieses Spiel verlieren“ an die Engine |
+| Story setzt Moral, Vorstandsdruck, `media_hype`, Fanbase (PRD 13 Allow-List) | Erfundene Transfers oder Verträge |
+| Scouting-Unsicherheit (PRD 04) — was der Manager **glaubt** | Ergebnis nachträglich im Save überschreiben |
+| Karriere-Akte strukturiert Start (schwacher Kader, Budget, PRD 12) — Abstieg aus **gespielten** Partien | Script, das die Tabelle ohne Simulation verschiebt |
+
+Beispiel: Persönliche Krise → Spieler `awol` für N Wochen → Inbox-Flavor bei
+Rückkehr; die Partien in der Abwesenheit laufen mit der **tatsächlich**
+aufstellbaren Elf.
+
+**Act 4 Elite World (PRD 21):** Nach internationalem Pokalsieg optional **neue
+Karriere** mit anderem `world_profile` — **kein** Roguelike-Meta-Währung zwischen
+Runs; Unlock im Client-Profil, nicht Power-Ups.
+
 ### Drei Zeithorizonte
 
 1. **Woche:** Kurze Reaktionen auf Spiel, Training, Transfer, Geld oder Jugend.
@@ -206,7 +228,11 @@ Kommentare im Code (z. B. `img2img`) prüfen.
 - Keine Adaption oder Kopie eines realen Clubs, einer TV-Serie oder ihrer
   Figuren.
 - Kein vorgegebenes Drehbuch, das Spielergebnisse überschreibt.
-- Kein Roguelike- oder Meta-Progressionssystem.
+- Kein **Roguelike-Run-Loop** (Permadeath, prozedurale Runs, Meta-Währung
+  zwischen Runs). **Erlaubt:** Karriere-Akte (PRD 19), verzögerte
+  Story-Konsequenzen und Phasenwechsel **innerhalb eines Saves**; **Act 4**
+  Elite-World-Neustart nach abgeschlossener Underdog-Karriere (PRD 21) ohne
+  stat-Boni; optionales Cross-Save-Meta nur nach geschriebenem `13_meta.md`.
 - Kein spielbares Match, keine 3D-Sequenzen und keine **generative**
   Sprachsynthese (TTS).
 - Kein Multiplayer.

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 840 520">
+  <rect width="100%" height="100%" fill="#f5efe0"/>
+  <text x="20" y="14" font-size="11" font-weight="800" fill="#3e3128">Storyboard opening POC — contact sheet</text>
+  <rect x="20" y="20" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="28" y="38" font-size="9" font-weight="700" fill="#3e3128">co-01-empty-office</text>
+    <image href="panels/co-01-empty-office.svg" x="24" y="42" width="184" height="90"/><rect x="220" y="20" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="228" y="38" font-size="9" font-weight="700" fill="#3e3128">co-02-empty-bench</text>
+    <image href="panels/co-02-empty-bench.svg" x="224" y="42" width="184" height="90"/><rect x="420" y="20" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="428" y="38" font-size="9" font-weight="700" fill="#3e3128">co-03-fans-waiting</text>
+    <image href="panels/co-03-fans-waiting.svg" x="424" y="42" width="184" height="90"/><rect x="620" y="20" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="628" y="38" font-size="9" font-weight="700" fill="#3e3128">co-04-board-table</text>
+    <image href="panels/co-04-board-table.svg" x="624" y="42" width="184" height="90"/><rect x="20" y="140" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="28" y="158" font-size="9" font-weight="700" fill="#3e3128">co-05-hook</text>
+    <image href="panels/co-05-hook.svg" x="24" y="162" width="184" height="90"/><rect x="220" y="140" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="228" y="158" font-size="9" font-weight="700" fill="#3e3128">pl-01-writing</text>
+    <image href="panels/pl-01-writing.svg" x="224" y="162" width="184" height="90"/><rect x="420" y="140" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="428" y="158" font-size="9" font-weight="700" fill="#3e3128">pl-02-envelope</text>
+    <image href="panels/pl-02-envelope.svg" x="424" y="162" width="184" height="90"/><rect x="620" y="140" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="628" y="158" font-size="9" font-weight="700" fill="#3e3128">pl-03-board-reads</text>
+    <image href="panels/pl-03-board-reads.svg" x="624" y="162" width="184" height="90"/><rect x="20" y="260" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="28" y="278" font-size="9" font-weight="700" fill="#3e3128">pl-04-hired</text>
+    <image href="panels/pl-04-hired.svg" x="24" y="282" width="184" height="90"/><rect x="220" y="260" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="228" y="278" font-size="9" font-weight="700" fill="#3e3128">pl-05-sideline</text>
+    <image href="panels/pl-05-sideline.svg" x="224" y="282" width="184" height="90"/><rect x="420" y="260" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="428" y="278" font-size="9" font-weight="700" fill="#3e3128">pl-06-start</text>
+    <image href="panels/pl-06-start.svg" x="424" y="282" width="184" height="90"/><rect x="620" y="260" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="628" y="278" font-size="9" font-weight="700" fill="#3e3128">rf-01-draw</text>
+    <image href="panels/rf-01-draw.svg" x="624" y="282" width="184" height="90"/><rect x="20" y="380" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="28" y="398" font-size="9" font-weight="700" fill="#3e3128">rf-02-surprise</text>
+    <image href="panels/rf-02-surprise.svg" x="24" y="402" width="184" height="90"/><rect x="220" y="380" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="228" y="398" font-size="9" font-weight="700" fill="#3e3128">cm-01-crowd</text>
+    <image href="panels/cm-01-crowd.svg" x="224" y="402" width="184" height="90"/><rect x="420" y="380" width="192" height="112" rx="6" fill="#fdfbf4" stroke="#3e3128" stroke-width="1"/>
+    <text x="428" y="398" font-size="9" font-weight="700" fill="#3e3128">cm-02-phone</text>
+    <image href="panels/cm-02-phone.svg" x="424" y="402" width="184" height="90"/>
+</svg>

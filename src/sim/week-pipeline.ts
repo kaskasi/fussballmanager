@@ -12,6 +12,7 @@ import {
   emptyWeeklyTrainingPlan,
   planToSessions,
 } from "../development/training-units.ts";
+import { resolveTrainingPlanAfterWeek } from "../narrative/career-presentation.ts";
 import {
   applyTrainingNeglectMorale,
   isTrainingPlanNeglected,
@@ -464,7 +465,7 @@ export async function simulateGameWeek(
     finances,
     stadium: narrativeStep.stadium,
     board: narrativeStep.board,
-    trainingPlan: emptyWeeklyTrainingPlan(),
+    trainingPlan: resolveTrainingPlanAfterWeek(narrativeStep.storyState),
     trainingReminderWeek: undefined,
     rivalPlayers,
     transferState,

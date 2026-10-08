@@ -1,7 +1,7 @@
 # /docs/prd/14_ui_cockpit.md
 
-**Version:** 1.16
-**Last Updated:** 2026-10-04
+**Version:** 1.17
+**Last Updated:** 2026-10-07
 **Status:** Final (Darstellung — kein Code in diesem Dokument)
 
 ---
@@ -367,6 +367,44 @@ Ein Raum pro Task, Pipeline-Features nicht nebenbei umbauen.
 Politur (Abstände, Mint, neue Tokens) ist nachrangig, solange ein Raum noch
 Admin-Shell ist.
 
+### 14.13 Career curtain (PRD 19)
+
+Cockpit-Dichte gilt **pro Phase**. Act 1 ist bewusst leerer — nicht weniger
+„Spiel“, sondern weniger Navigationslast.
+
+```text
+/** WIREFRAME: PRD 14.13 — ⋮ TEAM menu by phase */
+
+act1_nordstern:
+  Pipeline · Postfach · Kader · Training* · Jugend · Kalender · Ligen · Hilfe
+  *Training screen: assistant banner, slots filled, no neglect block from empty plan
+
+act2_regional (incremental):
+  + Stadion (beat) · Scouting (beat) · Finanzen (beat) · Transfers (beat)
+
+full / act3_empire:
+  Full TEAM list per design.md §6
+```
+
+Hub **STATUS**-Kacheln: in Act 1 nur Training (auto label), Youth, Scouting chip
+hidden or „—“; Loans/Transfers chips suppressed. Chronicle and Board stay —
+story spine visible.
+
+Icon-first onboarding panel (post-opening): one card, Lucide `Play` or calendar
+glyph, copy „Woche mit NEXT voranbringen“ — kein zweiter gelber CTA im Content.
+
+### 14.14 Act 4 endgame shell (PRD 21)
+
+**VictoryEndScreen:** Outside club shell (no header-NEXT). Dark or sand full bleed;
+trophy icon; one chronicle headline; primary CTA unlocks Elite World path.
+
+**TitleCareerSelect:** First **title hub** most players see only after completing
+Act 3. Two large cards (icon-first): underdog vs elite. Elite card uses denser
+typography (`manager_desk`). Saves slot list secondary.
+
+**EliteWorldSetup:** Wizard inside normal shell once elite career starts — table-
+heavy club/league picker; no Nordstern cast in fan feed.
+
 ---
 
 ## Invarianten
@@ -393,4 +431,5 @@ Admin-Shell ist.
 - Finanz-Wireframe: PRD 11.5
 - Story-Surfaces: PRD 13
 - Keep/Refuse und Feature-Lücken: PRD 15
+- Career acts: PRD 19
 - Match-Präsentation vs Engine: `docs/match-presentation-blockers.md`

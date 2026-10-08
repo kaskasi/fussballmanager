@@ -15,7 +15,7 @@ import {
   type YouthCampNation,
 } from "../../youth/satellite-camps.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
-import { campPhotoGradient, campPhotoUrl } from "../assets/camp-photos.ts";
+import { campPhotoGradient } from "../assets/camp-photos.ts";
 import { PlayerPortrait } from "./PlayerPortrait.tsx";
 
 export function YouthCampCard({
@@ -43,7 +43,6 @@ export function YouthCampCard({
 }) {
   const buy = canBuyYouthCamp(camps, nation.id, cash);
   const roster = owned ? campRoster(players, nation.id) : [];
-  const photo = campPhotoUrl(nation.id);
   const hireState = owned?.leader_hire ?? "none";
   const leaderName = owned ? campLeaderDisplayName(owned) : null;
   const leaderSeed = owned?.leader?.portrait_seed ?? 0;
@@ -62,7 +61,7 @@ export function YouthCampCard({
         <div
           className="youth-camp-card-photo"
           style={{
-            backgroundImage: photo ? `url(${photo})` : campPhotoGradient(nation.id),
+            backgroundImage: campPhotoGradient(nation.id),
           }}
         />
         <div className="youth-camp-card-head-row">

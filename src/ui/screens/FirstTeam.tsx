@@ -22,6 +22,7 @@ import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { formMark, stateMark } from "../player-profile.ts";
 import { useT } from "../../i18n/react.ts";
 import { t } from "../../i18n/index.ts";
+import { FilterChip, FilterToolbar } from "../components/primitives/index.ts";
 
 /**
  * WIREFRAME: docs/prd/design.md §9.11 — Kader
@@ -105,7 +106,7 @@ export function FirstTeam({
 
   return (
     <main className="squad club-shell-card-body">
-      <div className="fm-tab-bar" role="tablist" aria-label="Kader-Bereiche">
+      <div className="fm-tab-bar" role="tablist" aria-label={t("squad.tab.aria")}>
         {squadTabs.map(({ id, label }) => (
           <button
             key={id}
@@ -133,7 +134,7 @@ export function FirstTeam({
           ) : (
             <>
               <div className="squad-list-head">
-                <div className="squad-list-toolbar" role="toolbar" aria-label={t("squad.sort.aria", { defaultValue: "Sortieren" })}>
+                <FilterToolbar ariaLabel={t("squad.sort.aria")} className="squad-list-toolbar">
                   {(
                     [
                       ["name", t("squad.col.name")],
@@ -145,19 +146,13 @@ export function FirstTeam({
                   ).map(([key, label]) => {
                     const active = sortKey === key;
                     return (
-                      <button
-                        key={key}
-                        type="button"
-                        className={active ? "squad-sort-chip is-active" : "squad-sort-chip"}
-                        aria-pressed={active}
-                        onClick={() => toggleSort(key)}
-                      >
+                      <FilterChip key={key} active={active} onClick={() => toggleSort(key)}>
                         {label}
                         {active ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}
-                      </button>
+                      </FilterChip>
                     );
                   })}
-                </div>
+                </FilterToolbar>
                 <Hint text={t("squad.hint")}>
                   <p className="squad-summary squad-summary--head">
                     {t("squad.summaryHead", {

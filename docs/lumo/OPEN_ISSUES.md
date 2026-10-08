@@ -71,7 +71,27 @@ From PRD 15.2 / PRD 10 non-features:
 
 PRD 15.7: P0/P1/P2 items from `playtest_ideas.md` are largely **Done (2026-10-06)** (calendar chips, transfer week 2, economy pacing, retrain roll, portraits, camps grid, mobile layout, etc.).
 
+**Priority (2026-10-08):** **[playtest_protocol.md](../prd/playtest_protocol.md)** — 4×30 min live observed sessions **before** major PRD 19 B–E / PRD 21 UI. Loop feel > more story scope.
+
 **Later bucket:** regional leagues, story events, director + commentary depth → PRD 12/13/16.
+
+---
+
+## Visual cohesion & design system (PRD 20)
+
+Lumo: SaaS/spreadsheet feel, inconsistent filter pills, modal chrome, background tokens, stock camp photos vs cartoon UI. Tracked in **[docs/prd/20_design_language.md](../prd/20_design_language.md)** — primitives (`FilterChip`, `ModalShell`), single CSS plane, gradient camp heroes, i18n layout pass. **Gates PRD 19** career UI slices B–E.
+
+---
+
+## Career acts & onboarding (PRD 19)
+
+Product direction for tutorial season, three-act arc, and progressive UI curtain:
+[docs/prd/19_career_acts.md](../prd/19_career_acts.md) and choice backlog
+[19_story_choice_seeds.md](../prd/19_story_choice_seeds.md). Addresses Lumo
+complexity via Act 1 auto-systems and hidden nav; implementation slice A in code
+(`career_phase`, menu filter, auto training).
+
+**Act 4 / Elite World NG+:** [21_career_act4_elite_world.md](../prd/21_career_act4_elite_world.md) — cup win, victory screen, elite `world_profile`. UI density tension (comic vs spreadsheet) → PRD 20 presentation modes.
 
 ---
 

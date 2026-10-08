@@ -11,6 +11,7 @@ import type { Player } from "../../types/player.ts";
 import { LOCALE_OPTIONS } from "../accessibility.ts";
 import { detectBrowserLocale, type LocaleId } from "../../i18n/locale-id.ts";
 import { useT } from "../../i18n/react.ts";
+import { ModalShell } from "./primitives/ModalShell.tsx";
 
 const ORIGIN_IDS: CareerOrigin[] = ["raffle", "passionate_letter", "community_takeover"];
 
@@ -86,13 +87,13 @@ export function OpeningStoryModal({
         : t("opening.step.story");
 
   return (
-    <div className="inbox-backdrop" role="presentation">
-      <div
-        className="inbox-modal opening-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("opening.dialogLabel")}
-      >
+    <ModalShell
+      ariaLabel={t("opening.dialogLabel")}
+      closeOnBackdrop={false}
+      showCloseButton={false}
+      panelClassName="opening-modal inbox-modal"
+      bodyClassName=""
+    >
         <header className="inbox-head">
           <div>
             <p className="eyebrow">
@@ -244,7 +245,6 @@ export function OpeningStoryModal({
             </footer>
           </>
         ) : null}
-      </div>
-    </div>
+    </ModalShell>
   );
 }

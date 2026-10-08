@@ -1,7 +1,7 @@
 # /docs/prd/12_league_world.md
 
-**Version:** 1.1
-**Last Updated:** 2026-10-03
+**Version:** 1.2
+**Last Updated:** 2026-10-08
 **Status:** Final (M1: zwei Spielklassen und prozedurale Welt)
 
 ---
@@ -61,6 +61,28 @@ PRD 11
    Bausteinen erzeugt und innerhalb eines Saves eindeutig.
 7. **Underdog, nicht Opfer:** Der Startclub liegt sportlich im unteren Bereich,
    kann aber mit guten Entscheidungen die Klasse halten.
+
+---
+
+## 12.0 Welt-Profile (`world_profile`)
+
+Karrieren wählen bei der Erzeugung ein **Profil** (persistiert im Save-Manifest).
+M1 Standard ist `fictional_regional` (zwei Klassen, PRD 12 Scope). Act 4 Elite
+World nutzt `elite_fantasy` — Spezifikation in
+[21_career_act4_elite_world.md](./21_career_act4_elite_world.md); Generator-Version
+und Ligenumfang hängen an **F10.8** (M4).
+
+```typescript
+type WorldProfile = "fictional_regional" | "elite_fantasy";
+```
+
+| Profil | Default career | Naming | Milestone |
+|--------|----------------|--------|-----------|
+| `fictional_regional` | Underdog saga (PRD 19 Acts 1–3), `full` saves | Regionale Bausteine, fiktionale Clubs | M1 |
+| `elite_fantasy` | Elite World NG+ (PRD 21) | Städte real, Clubs/Spieler procedural fiction | Post F10.8 subset |
+
+**Out of M1:** `elite_fantasy` erzeugt keine reale Bundesliga/Premier-League-
+Lizenzdaten; siehe PRD 21 Legal-Matrix.
 
 ---
 

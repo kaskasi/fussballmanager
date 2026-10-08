@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 220" role="img">
+  <rect width="390" height="220" fill="#f5efe0"/>
+  <rect x="8" y="8" width="374" height="204" rx="10" fill="#fdfbf4" stroke="#3e3128" stroke-width="2"/>
+  <text x="24" y="32" fill="#3e3128" font-family="Nunito, system-ui, sans-serif" font-size="13" font-weight="700">Losgewinn — Der Fanverein zieht.</text>
+      <circle cx="195" cy="125" r="50" fill="#9dbfd0" stroke="#3e3128" stroke-width="2"/>
+      <text x="195" y="132" text-anchor="middle" font-size="14" font-weight="800">?</text>
+</svg>

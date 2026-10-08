@@ -15,6 +15,7 @@ import { useState } from "react";
 import { Angry, Goal, Handshake, Megaphone, Shirt, Trophy } from "lucide-react";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import { useT } from "../../i18n/react.ts";
+import { ModalShell } from "./primitives/ModalShell.tsx";
 import {
   dealSeasonsLeft,
   defaultSponsorOffer,
@@ -86,18 +87,18 @@ export function SponsorDealModal({
     });
   }
 
+  const panelClass = occupied
+    ? "negotiation-modal sponsor-deal-modal"
+    : "negotiation-modal sponsor-deal-modal sponsor-deal-modal--hunger";
+
   return (
-    <div className="modal-backdrop" role="presentation" onClick={onClose}>
-      <dialog
-        className={
-          occupied
-            ? "negotiation-modal sponsor-deal-modal"
-            : "negotiation-modal sponsor-deal-modal sponsor-deal-modal--hunger"
-        }
-        open
-        aria-labelledby="sponsor-deal-title"
-        onClick={(event) => event.stopPropagation()}
-      >
+    <ModalShell
+      ariaLabel={slot.label}
+      onClose={onClose}
+      showCloseButton={false}
+      panelClassName={panelClass}
+      bodyClassName=""
+    >
         <header className="negotiation-head">
           <p className="eyebrow">
             {occupied ? t("sponsor.modal.eyebrowActive") : t("sponsor.modal.eyebrowEmpty")}
@@ -251,7 +252,6 @@ export function SponsorDealModal({
             </footer>
           </>
         )}
-      </dialog>
-    </div>
+    </ModalShell>
   );
 }

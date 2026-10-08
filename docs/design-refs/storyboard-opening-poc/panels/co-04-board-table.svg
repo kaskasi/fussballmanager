@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 220" role="img">
+  <rect width="390" height="220" fill="#f5efe0"/>
+  <rect x="8" y="8" width="374" height="204" rx="10" fill="#fdfbf4" stroke="#3e3128" stroke-width="2"/>
+  <text x="24" y="32" fill="#3e3128" font-family="Nunito, system-ui, sans-serif" font-size="13" font-weight="700">Der Vorstand sitzt zu.</text>
+      <ellipse cx="195" cy="130" rx="120" ry="40" fill="#efebe0" stroke="#3e3128" stroke-width="2"/>
+      <g transform="translate(100,88)">
+    <ellipse cx="28" cy="22" rx="22" ry="24" fill="#9dbfd0" stroke="#3e3128" stroke-width="2"/>
+    <path d="M8 78c6-28 20-40 28-44 8 4 22 16 28 44H8z" fill="#6b5d4f" stroke="#3e3128" stroke-width="2"/>
+  </g>
+      <g transform="translate(160,88)">
+    <ellipse cx="28" cy="22" rx="22" ry="24" fill="#9dbfd0" stroke="#3e3128" stroke-width="2"/>
+    <path d="M8 78c6-28 20-40 28-44 8 4 22 16 28 44H8z" fill="#6b5d4f" stroke="#3e3128" stroke-width="2"/>
+  </g>
+      <g transform="translate(220,88)">
+    <ellipse cx="28" cy="22" rx="22" ry="24" fill="#9dbfd0" stroke="#3e3128" stroke-width="2"/>
+    <path d="M8 78c6-28 20-40 28-44 8 4 22 16 28 44H8z" fill="#6b5d4f" stroke="#3e3128" stroke-width="2"/>
+  </g>
+      <text x="195" y="175" text-anchor="middle" fill="#e07a3f" font-size="12" font-weight="800">Wer führt die Mannschaft?</text>
+</svg>

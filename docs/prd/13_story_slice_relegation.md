@@ -57,3 +57,4 @@ Migration **039** when schema changes.
 - PRD 03.4 inbox cap
 - PRD 08 savegame
 - PRD 09 icon-first UI
+- PRD 19 career acts (tutorial curtain, delayed choices — extends this slice)

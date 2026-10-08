@@ -39,6 +39,26 @@ export function isTrainingSlotConfigured(plan: readonly TrainingSlot[], weekday:
   return plan.slice(start, end).some((slot) => slot?.focus === true);
 }
 
+function slotsForWeekday(plan: readonly TrainingSlot[], weekday: number): TrainingSlot[] {
+  const dayIndex = weekday - MONDAY;
+  if (dayIndex < 0 || dayIndex >= TRAINING_DAYS.length) return [];
+  const start = dayIndex * UNITS_PER_DAY;
+  return plan.slice(start, start + UNITS_PER_DAY);
+}
+
+/** All E1–E3 cells for this weekday have a training unit chosen. */
+export function isTrainingDayUnitsComplete(plan: readonly TrainingSlot[], weekday: number): boolean {
+  if (!isTrainingWeekday(weekday)) return true;
+  const daySlots = slotsForWeekday(plan, weekday);
+  if (daySlots.length < UNITS_PER_DAY) return false;
+  return daySlots.every((slot) => !isTrainingSlotEmpty(slot));
+}
+
+/** Mo–Fr: header warn when any of today's three timetable slots is still empty. */
+export function needsTrainingPlanForToday(plan: readonly TrainingSlot[], weekday: number): boolean {
+  return isTrainingWeekday(weekday) && !isTrainingDayUnitsComplete(plan, weekday);
+}
+
 export function assertWeeklyPlanLength(plan: readonly TrainingSlot[]): void {
   if (plan.length !== SLOT_COUNT) {
     throw new Error(`training plan has ${plan.length} slots, expected ${SLOT_COUNT}`);

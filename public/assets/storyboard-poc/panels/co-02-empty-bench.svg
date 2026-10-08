@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 220" role="img">
+  <rect width="390" height="220" fill="#f5efe0"/>
+  <rect x="8" y="8" width="374" height="204" rx="10" fill="#fdfbf4" stroke="#3e3128" stroke-width="2"/>
+  <text x="24" y="32" fill="#3e3128" font-family="Nunito, system-ui, sans-serif" font-size="13" font-weight="700">Die Ersatzbank ist leer.</text>
+      <rect x="24" y="100" width="342" height="72" rx="6" fill="#2e9e46" stroke="#3e3128" stroke-width="2"/>
+    <line x1="195" y1="100" x2="195" y2="172" stroke="#bfdec2" stroke-width="2"/>
+    <circle cx="195" cy="136" r="18" fill="none" stroke="#bfdec2" stroke-width="2"/>
+      <rect x="40" y="148" width="90" height="28" rx="4" fill="#efebe0" stroke="#3e3128" stroke-width="2"/>
+      <text x="145" y="168" fill="#3e3128" font-size="12" font-weight="700">Wo ist der Coach?</text>
+</svg>

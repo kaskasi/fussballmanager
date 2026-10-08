@@ -12929,78 +12929,105 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .opponent-scout-overview {
-  margin: 0.65rem 0 0.75rem;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
-  border-radius: 6px;
-  background: var(--surface-muted, rgba(0, 0, 0, 0.03));
+  margin: 0.45rem 0 0.55rem;
+  padding: 0;
 }
 
-.opponent-scout-outcomes {
+.opponent-scout-wdl-bar {
+  display: flex;
+  height: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 2px solid var(--tinte, #3e3128);
+  background: var(--panel-muted, #f1f5f9);
+}
+
+.opponent-scout-wdl-seg {
+  flex-shrink: 0;
+  min-width: 2px;
+}
+
+.opponent-scout-wdl-seg.is-win {
+  background: var(--rasen, #047857);
+}
+
+.opponent-scout-wdl-seg.is-draw {
+  background: color-mix(in srgb, var(--tinte-weich) 55%, var(--panel));
+}
+
+.opponent-scout-wdl-seg.is-loss {
+  background: color-mix(in srgb, var(--warn, #c2410c) 75%, var(--tinte));
+}
+
+.opponent-scout-wdl-nums {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
-  margin-bottom: 0.65rem;
-}
-
-.opponent-scout-outcome-pill {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-  padding: 0.35rem 0.25rem;
-  border-radius: 6px;
-  background: var(--surface-card, rgba(255, 255, 255, 0.5));
-}
-
-.opponent-scout-outcome-label {
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--text-muted, #64748b);
-}
-
-.opponent-scout-outcome-value {
-  font-size: 1.05rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
-.opponent-scout-overview-facts {
-  margin: 0;
+  gap: 0.25rem;
+  margin: 0.3rem 0 0;
   padding: 0;
   list-style: none;
+}
+
+.opponent-scout-wdl-nums li {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-}
-
-.opponent-scout-overview-facts li {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 0.4rem 0.5rem;
-  font-size: 0.85rem;
+  gap: 0.05rem;
 }
 
-.opponent-scout-overview-facts svg {
-  color: var(--text-muted, #64748b);
+.opponent-scout-wdl-key {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--tinte-weich);
 }
 
-.opponent-scout-overview-fact-label {
-  color: var(--text-muted, #64748b);
-}
-
-.opponent-scout-overview-fact-value {
-  font-weight: 700;
+.opponent-scout-wdl-val {
+  font-size: 0.82rem;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  color: var(--tinte);
+}
+
+.opponent-scout-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0.45rem 0 0;
+}
+
+.opponent-scout-stat-token {
+  border: 2px solid color-mix(in srgb, var(--tinte) 22%, transparent);
+  border-radius: var(--radius-klein, 0.55rem);
+  padding: 0.3rem 0.35rem;
+  text-align: center;
+  min-width: 0;
+}
+
+.opponent-scout-stat-token dt {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--tinte-weich);
+  line-height: 1.25;
+}
+
+.opponent-scout-stat-token dd {
+  margin: 0.12rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinte);
+  line-height: 1.2;
 }
 
 .opponent-scout-overview-note {
-  margin: 0.5rem 0 0;
-  font-size: 0.72rem;
-  color: var(--text-muted, #64748b);
+  margin: 0.35rem 0 0;
+  font-size: 0.68rem;
+  color: var(--tinte-weich);
   line-height: 1.35;
 }
 

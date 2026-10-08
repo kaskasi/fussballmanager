@@ -68,4 +68,5 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_069_opponent_scout",
   "migration_070_training_fifteen_slots",
   "migration_071_youth_inbox_weekly_delivery",
+  "migration_072_career_acts",
 ] as const;

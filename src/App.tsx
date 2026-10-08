@@ -2,6 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { IndividualProgram } from "./development/individual-training.ts";
 import { assignIndividualProgram } from "./development/individual-training.ts";
 import { processTransferBreakout } from "./development/breakouts.ts";
+import { needsTrainingPlanForToday } from "./development/training-plan-state.ts";
+import {
+  filterTeamNavScreens,
+  isNavScreenVisible,
+  suppressTrainingPlanWarning,
+  type CurtainNavScreen,
+} from "./narrative/career-presentation.ts";
+import type { StoryState } from "./narrative/story-state.ts";
 import type { TrainingSlot } from "./development/training-units.ts";
 import { CareerMatch } from "./match/CareerMatch";
 import { buildBroadcastStoryContext } from "./match/broadcast-story-context.ts";
@@ -45,7 +53,7 @@ import {
 } from "./scouting/scout-trip-queue.ts";
 import type { ScoutRouteScore } from "./scouting/scout-route-puzzle.ts";
 import { worldCareerClubId, type WorldDivisionId } from "./world/world-generator.ts";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, TriangleAlert } from "lucide-react";
 import { ClubCrest } from "./ui/components/ClubCrest.tsx";
 import { clubLogoUrlForPlayerClub } from "./ui/assets/club-logo.ts";
 import { joinDocumentTitle, useDocumentTitle } from "./ui/document-title.ts";
@@ -2111,10 +2119,21 @@ export default function App() {
       ) {
         setCareerMatchUiVisible(false);
       }
+      const navTarget = next as CurtainNavScreen;
+      if (!isNavScreenVisible(navTarget, storyState)) {
+        setScreen("hub");
+        return;
+      }
       setScreen(next);
     },
-    [careerMatchSetup, careerMatchUiVisible],
+    [careerMatchSetup, careerMatchUiVisible, storyState],
   );
+
+  useEffect(() => {
+    if (!isNavScreenVisible(screen as CurtainNavScreen, storyState)) {
+      setScreen("hub");
+    }
+  }, [screen, storyState]);
 
   const handleHeaderPrimaryClick = useCallback(() => {
     if (matchFlowBrowsing) {
@@ -2249,6 +2268,9 @@ export default function App() {
         <AppChrome
           screen="hub"
           week={week}
+          weekday={weekday}
+          trainingPlan={trainingPlan}
+          storyState={storyState}
           cash={finances.cash}
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
@@ -2312,6 +2334,9 @@ export default function App() {
         <AppChrome
           screen={screen}
           week={week}
+          weekday={weekday}
+          trainingPlan={trainingPlan}
+          storyState={storyState}
           cash={finances.cash}
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
@@ -2378,6 +2403,9 @@ export default function App() {
         <AppChrome
           screen={screen}
           week={week}
+          weekday={weekday}
+          trainingPlan={trainingPlan}
+          storyState={storyState}
           cash={finances.cash}
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
@@ -2442,6 +2470,9 @@ export default function App() {
       <AppChrome
         screen={screen}
         week={week}
+        weekday={weekday}
+        trainingPlan={trainingPlan}
+        storyState={storyState}
         cash={finances.cash}
         clubName={shellClub.name}
         clubInitials={shellClub.initials}
@@ -2785,6 +2816,9 @@ interface HubNavActions {
 
 function AppChrome({
   week,
+  weekday,
+  trainingPlan,
+  storyState,
   cash,
   clubName,
   clubInitials,
@@ -2801,6 +2835,9 @@ function AppChrome({
   shellChrome = "card",
 }: {
   week: number;
+  weekday: number;
+  trainingPlan: TrainingSlot[];
+  storyState: StoryState;
   cash: number;
   clubName: string;
   clubInitials: string;
@@ -2821,6 +2858,9 @@ function AppChrome({
       <AppNav
         screen={screen}
         cash={cash}
+        weekday={weekday}
+        trainingPlan={trainingPlan}
+        storyState={storyState}
         clubName={clubName}
         clubInitials={clubInitials}
         clubLogoSrc={clubLogoSrc}
@@ -2842,6 +2882,9 @@ function AppChrome({
 function AppNav({
   screen,
   week,
+  weekday,
+  trainingPlan,
+  storyState,
   cash,
   clubName,
   clubInitials,
@@ -2858,6 +2901,9 @@ function AppNav({
 }: {
   screen: Screen;
   week: number;
+  weekday: number;
+  trainingPlan: TrainingSlot[];
+  storyState: StoryState;
   cash: number;
   clubName: string;
   clubInitials: string;
@@ -2877,6 +2923,9 @@ function AppNav({
   const [a11yOpen, setA11yOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const tr = useT();
+  const showTrainingPlanWarn =
+    !suppressTrainingPlanWarning(storyState) &&
+    needsTrainingPlanForToday(trainingPlan, weekday);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -2890,30 +2939,28 @@ function AppNav({
     return () => document.removeEventListener("mousedown", handlePointer);
   }, [menuOpen]);
 
-  const teamMenu: {
-    screen: Screen;
-    labelKey: string;
-    labelSuffix?: string;
-    onClick?: () => void;
-  }[] = [
-    { screen: "hub", labelKey: "shell.nav.pipeline" },
-    {
-      screen: "postfach",
-      labelKey: "shell.nav.postfach",
-      labelSuffix:
-        hubActions.openDecisionCount > 0 ? ` (${hubActions.openDecisionCount})` : undefined,
-    },
-    { screen: "squad", labelKey: "shell.nav.squad" },
-    { screen: "training", labelKey: "shell.nav.training" },
-    { screen: "campus", labelKey: "shell.nav.campus" },
-    { screen: "scouting", labelKey: "shell.nav.scouting" },
-    { screen: "transfers", labelKey: "shell.nav.transfers" },
-    { screen: "calendar", labelKey: "shell.nav.calendar" },
-    { screen: "leagues", labelKey: "shell.nav.leagues" },
-    { screen: "finances", labelKey: "shell.nav.finances" },
-    { screen: "stadium", labelKey: "shell.nav.stadium" },
-    { screen: "help", labelKey: "shell.nav.help" },
-  ];
+  const teamMenu = filterTeamNavScreens(
+    [
+      { screen: "hub" as const, labelKey: "shell.nav.pipeline" },
+      {
+        screen: "postfach" as const,
+        labelKey: "shell.nav.postfach",
+        labelSuffix:
+          hubActions.openDecisionCount > 0 ? ` (${hubActions.openDecisionCount})` : undefined,
+      },
+      { screen: "squad" as const, labelKey: "shell.nav.squad" },
+      { screen: "training" as const, labelKey: "shell.nav.training" },
+      { screen: "campus" as const, labelKey: "shell.nav.campus" },
+      { screen: "scouting" as const, labelKey: "shell.nav.scouting" },
+      { screen: "transfers" as const, labelKey: "shell.nav.transfers" },
+      { screen: "calendar" as const, labelKey: "shell.nav.calendar" },
+      { screen: "leagues" as const, labelKey: "shell.nav.leagues" },
+      { screen: "finances" as const, labelKey: "shell.nav.finances" },
+      { screen: "stadium" as const, labelKey: "shell.nav.stadium" },
+      { screen: "help" as const, labelKey: "shell.nav.help" },
+    ],
+    storyState,
+  );
 
   return (
     <nav
@@ -2950,9 +2997,22 @@ function AppNav({
       </div>
       <div className="app-nav-center" aria-live="polite" />
       <div className="app-nav-actions">
-        <span className="app-nav-cash" aria-label="Kasse">
-          {formatClubCash(cash)}
-        </span>
+        <div className="app-nav-cash-wrap">
+          {showTrainingPlanWarn ? (
+            <button
+              type="button"
+              className="app-nav-training-warn"
+              onClick={() => onNavigate("training")}
+              aria-label={tr("shell.training.todayMissing")}
+              title={tr("shell.training.todayMissing")}
+            >
+              <TriangleAlert size={18} strokeWidth={2.35} aria-hidden />
+            </button>
+          ) : null}
+          <span className="app-nav-cash" aria-label={tr("shell.cash")}>
+            {formatClubCash(cash)}
+          </span>
+        </div>
         {hubActions.matchSkipToReport ? (
           <button
             type="button"

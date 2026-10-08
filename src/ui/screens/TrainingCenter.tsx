@@ -309,7 +309,7 @@ function TeamPlan({
         onIntensityChange={onIntensityChange}
       />
 
-      <div className="training-timetable" aria-label="Wochenplan">
+      <div className="training-timetable" aria-label={t("training.timetable.aria")}>
         {TRAINING_DAYS.map((day, dayIndex) => {
           const dayPast = isTrainingDayPast(dayIndex, weekday);
           return (
@@ -494,7 +494,7 @@ function UnitPickerModal({
         className="training-modal"
         role="dialog"
         aria-modal="true"
-        aria-label={`Trainingseinheit für ${day}`}
+        aria-label={t("training.slot.dialogAria", { day })}
         onClick={(event) => event.stopPropagation()}
       >
         <header className="training-modal-head">
@@ -502,7 +502,7 @@ function UnitPickerModal({
             <p className="eyebrow">{day}</p>
             <h2>Trainingseinheit wählen</h2>
           </div>
-          <button type="button" className="training-modal-close" onClick={onClose} aria-label="Schließen">
+          <button type="button" className="training-modal-close" onClick={onClose} aria-label={t("shell.modal.close")}>
             ✕
           </button>
         </header>
@@ -721,7 +721,7 @@ function IndividualProgramModal({
         className="training-modal training-modal-individual"
         role="dialog"
         aria-modal="true"
-        aria-label={`Individuelles Training für ${formatPlayerName(player)}`}
+        aria-label={t("training.individual.dialogAria", { name: formatPlayerName(player) })}
         onClick={(event) => event.stopPropagation()}
       >
         <header className="training-modal-head">
@@ -736,7 +736,7 @@ function IndividualProgramModal({
               <h2>{formatPlayerName(player)}</h2>
             </div>
           </div>
-          <button type="button" className="training-modal-close" onClick={onClose} aria-label="Schließen">
+          <button type="button" className="training-modal-close" onClick={onClose} aria-label={t("shell.modal.close")}>
             ✕
           </button>
         </header>

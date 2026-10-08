@@ -191,6 +191,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F12.6 | Mod-Support | M4 | JSON-Austausch |
 | F12.7 | Hilfe & Doku | M1 | Eigener Screen: Welt/Story, Spielablauf, **Taktik-Guide**, Stempel-Katalog (F2.8); Kanon `docs/help/tactics-player-guide.*.md` |
 | F12.8 | Anzeigesprache | M1 | DE / EN / 简体 JSON-Packs; Sprache in Opening Schritt 1 + ⋮ Anzeige (PRD 18) |
+| F12.9 | Karriere-Unlock-Profil | M4 | Client-Prefs: Elite World freigeschaltet nach PRD 21 — kein Meta-Währung; Spez in PRD 21 |
 
 ---
 
@@ -202,7 +203,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | M2 | 28 | USP-Ausbau: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps, Camps |
 | M3 | 24 | Imperium, Events, Staff, Storylines |
 | M4 | 6 | Legacy & Meta |
-| **Total** | **95** | |
+| **Total** | **96** | (+F12.9 career unlock profile, PRD 21) |
 
 **M1-Definition of Done:** Ein Spieler kann einen Verein führen, eine Saison simulieren (mit Auto-Matches), Jugendspieler hochziehen, Talente entwickeln und Transfers tätigen — gespeichert in versioniertem Savegame. Vorstand/Entlassung aktiv.
 
@@ -238,3 +239,6 @@ M2 list for F2.8: implement after F2.3 slot machinery exists. Schema fields in P
 - PRD 01 (Vision), 02 (Growth), 03 (Jugend), 04 (Scouting), 05 (Transfers), 06 (Breakouts), 07 (Player-Schema), 08 (Savegame), 09 (Pipeline-UI), 11 (Finanzen), 12 (Liga/Welt)
 - PRD 13 (Story-Slice Abstieg), 14 (Club-Cockpit-UI), 15 (Feature-Lücken / Referenz-DNA)
 - Offene PRD: `13_meta.md` — vor Redaktion von Meta-Features (M4) erforderlich. Nicht mit PRD 13 verwechseln.
+- PRD 19 (Career acts, tutorial curtain, story choices) — Narrative/Onboarding; kein neues F-ID ohne Katalog-Eintrag.
+- PRD 20 (Design language, UI primitives, CSS/i18n migration) — kein F-ID; harte Voraussetzung für PRD-19-UI ab Slice B.
+- PRD 21 (Act 4 / Elite World NG+) — F10.6 + F12.9; Implementierung gated durch [playtest_protocol.md](./playtest_protocol.md).

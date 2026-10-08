@@ -42,6 +42,7 @@ import { SummerChecklistPanel } from "../components/SummerChecklistPanel.tsx";
 import type { SeasonAwardsSnapshot } from "../../sim/season-awards.ts";
 import { showSummerChecklist } from "../../sim/summer-checklist.ts";
 import { ChroniclePanel } from "../components/ChroniclePanel.tsx";
+import { resolveFeatureCurtain } from "../../narrative/career-presentation.ts";
 import type { StoryState } from "../../narrative/story-state.ts";
 import type { YouthCamp } from "../../youth/satellite-camps.ts";
 
@@ -113,6 +114,7 @@ export function PipelineDashboard({
   youthCamps: readonly YouthCamp[];
 }) {
   useT();
+  const curtain = resolveFeatureCurtain(storyState);
   const sessions = useMemo(() => planToSessions(trainingPlan), [trainingPlan]);
   const planOk = validateWeeklyPlan(sessions).valid;
   const focusCount = trainingPlan.filter((slot) => slot.focus).length;
@@ -221,8 +223,9 @@ export function PipelineDashboard({
                 {trainingLoad.icon}
               </span>
               <span>
-                {t("hub.training.tile", { focus: focusCount, max: MAX_FOCUS_SLOTS })}
-                {!planOk ? t("hub.training.planCheck") : ""}
+                {curtain.auto_training
+                  ? t("career.act1.trainingAuto")
+                  : `${t("hub.training.tile", { focus: focusCount, max: MAX_FOCUS_SLOTS })}${!planOk ? t("hub.training.planCheck") : ""}`}
               </span>
             </button>
             <button type="button" className="pipeline-tile" onClick={onOpenJugend}>
@@ -231,14 +234,20 @@ export function PipelineDashboard({
               </span>
               <span>{youthTileLabel(youthInbox)}</span>
             </button>
-            <button type="button" className="pipeline-tile" onClick={onOpenScouting}>
-              <Eye size={18} aria-hidden="true" />
-              <span>{t("hub.scouting.active", { count: activeScouts })}</span>
-            </button>
-            <button type="button" className="pipeline-tile" onClick={onOpenTransfers}>
-              <ArrowLeftRight size={18} aria-hidden="true" />
-              <span>{loanCount > 0 ? t("hub.loans.out", { count: loanCount }) : t("hub.loans")}</span>
-            </button>
+            {curtain.scouting_nav ? (
+              <button type="button" className="pipeline-tile" onClick={onOpenScouting}>
+                <Eye size={18} aria-hidden="true" />
+                <span>{t("hub.scouting.active", { count: activeScouts })}</span>
+              </button>
+            ) : null}
+            {curtain.transfers_nav ? (
+              <button type="button" className="pipeline-tile" onClick={onOpenTransfers}>
+                <ArrowLeftRight size={18} aria-hidden="true" />
+                <span>
+                  {loanCount > 0 ? t("hub.loans.out", { count: loanCount }) : t("hub.loans")}
+                </span>
+              </button>
+            ) : null}
           </div>
 
           <PipelineFillCard fill={stageFill} onOpenJugend={onOpenJugend} />

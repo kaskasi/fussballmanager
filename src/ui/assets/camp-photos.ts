@@ -1,4 +1,8 @@
-/** Camp nation hero photos — baked to public/assets/photos/camps/ (see npm run bake:camp-photos). */
+/**
+ * Camp nation hero surfaces (PRD 20).
+ * Default build: CSS gradients only — JPG bake optional for illustrated upgrades.
+ * See npm run bake:camp-photos and docs/prd/20_design_language.md.
+ */
 
 const CAMP_PHOTO_BY_NATION: Record<string, string> = {
   camp_br: "/assets/photos/camps/camp-br.jpg",
@@ -9,7 +13,11 @@ const CAMP_PHOTO_BY_NATION: Record<string, string> = {
   camp_hr: "/assets/photos/camps/camp-hr.jpg",
 };
 
+/** Optional illustrated/CC0 hero — off in default build for visual coherence. */
+export const CAMP_PHOTO_JPG_ENABLED = false;
+
 export function campPhotoUrl(nationId: string): string | undefined {
+  if (!CAMP_PHOTO_JPG_ENABLED) return undefined;
   return CAMP_PHOTO_BY_NATION[nationId];
 }
 

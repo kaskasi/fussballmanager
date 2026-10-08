@@ -1,8 +1,31 @@
-/** Persisted narrative state (PRD 13) — lives in `pipeline.story_state`. */
+/** Persisted narrative state (PRD 13, PRD 19) — lives in `pipeline.story_state`. */
+
+import {
+  featureCurtainForPhase,
+  fullFeatureCurtain,
+  type CareerPhase,
+  type FeatureCurtain,
+} from "./career-presentation.ts";
+
+export type { CareerPhase, FeatureCurtain } from "./career-presentation.ts";
 
 export type CareerOrigin = "raffle" | "passionate_letter" | "community_takeover";
 
 export type ActiveArc = "relegation_battle" | null;
+
+export interface StoryChoiceRecord {
+  season: number;
+  week: number;
+  option_id: string;
+}
+
+export interface ScheduledPayoff {
+  id: string;
+  choice_id: string;
+  due_season: number;
+  due_week: number;
+  effect: string;
+}
 
 export type StoryBeatSource =
   | "press"
@@ -52,6 +75,10 @@ export interface StoryState {
   arc_started_week: number | null;
   career_origin: CareerOrigin | null;
   opening_complete: boolean;
+  career_phase: CareerPhase;
+  feature_curtain: FeatureCurtain;
+  choices: Record<string, StoryChoiceRecord>;
+  scheduled_payoffs: ScheduledPayoff[];
   cast: StoryCast;
   beats_fired: string[];
   media_hype: number;
@@ -76,11 +103,16 @@ export function defaultStoryCast(): StoryCast {
 }
 
 export function defaultStoryState(week = 1): StoryState {
+  const career_phase = "act1_nordstern";
   return {
     active_arc: "relegation_battle",
     arc_started_week: week,
     career_origin: null,
     opening_complete: false,
+    career_phase,
+    feature_curtain: featureCurtainForPhase(career_phase),
+    choices: {},
+    scheduled_payoffs: [],
     cast: defaultStoryCast(),
     beats_fired: [],
     media_hype: 42,
@@ -89,12 +121,26 @@ export function defaultStoryState(week = 1): StoryState {
   };
 }
 
+/** Legacy / sandbox saves — full UI, no tutorial curtain. */
+export function fullGameStoryState(base: StoryState): StoryState {
+  return {
+    ...base,
+    career_phase: "full",
+    feature_curtain: fullFeatureCurtain(),
+  };
+}
+
 export function normalizeStoryState(state?: StoryState, week = 1): StoryState {
   const base = defaultStoryState(week);
   if (!state) return base;
+  const career_phase = state.career_phase ?? base.career_phase;
   return {
     ...base,
     ...state,
+    career_phase,
+    feature_curtain: state.feature_curtain ?? featureCurtainForPhase(career_phase),
+    choices: state.choices ?? {},
+    scheduled_payoffs: state.scheduled_payoffs ?? [],
     cast: { ...base.cast, ...state.cast },
     beats_fired: state.beats_fired ?? [],
     fan_feed: state.fan_feed ?? [],

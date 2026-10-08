@@ -19,5 +19,6 @@ We **prefer CC0 and open licenses wherever possible** (Open Peeps, Kenney, ambie
 | UI paper texture | [Paper003 from ambientCG.com](https://ambientcg.com/a/Paper003) (CC0) — `public/assets/textures/paper003-color.jpg` |
 | Browser favicon & PWA icons | Project-authored SVG/PNG (`public/favicon.svg`, `public/apple-touch-icon.png`) — Nordstern mark, design tokens §2 |
 | Fictional club crests (when shipped) | Designs exported from [Canva](https://www.canva.com/) (2026-10-06 batch), [Content License Agreement](https://www.canva.com/policies/content-license-agreement/) — fictional clubs only; sources in `assets/club_logos/` |
+| Storyboard opening POC (dev only) | Project-authored SVG via `npm run bake:storyboard-poc` — see `docs/design-refs/storyboard-opening-poc/ATTRIBUTION.md` |
 
 Full maintainer inventory: [assets/ATTRIBUTION.MD](../assets/ATTRIBUTION.MD).

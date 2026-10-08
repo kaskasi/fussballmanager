@@ -1,7 +1,7 @@
 # /docs/prd/09_ui_screens.md
 
-**Version:** 1.6
-**Last Updated:** 2026-10-04
+**Version:** 1.8
+**Last Updated:** 2026-10-08
 **Status:** Final  
 
 ---
@@ -207,6 +207,59 @@ Kalender-UI (`CalendarScreen`): Monatsfokus; **`isToday`** = Zivil-Datum aus `(s
 
 **Meilenstein-Chips (P2):** `collectCalendarMilestones(session)` liefert ETAs (Individualtraining-Ende, Verletzungsende, Camp-Leiter, Vertrags-Unlock, …). Anzeige über `filterCalendarMilestonesForReveal` — nur Meilensteine in der **aktuellen Spielwoche und früher**; spätere Wochen bleiben leer, bis `session.week` nachrückt (Montag-Reveal implizit beim Wochenwechsel, kein Postfach-Schritt, kein Save-Flag). Pro Zelltag max. zwei Chips + Overflow-Zähler; Vergangenheit als `is-past`. Montag: Kicker „Termine dieser Woche“; Chips der laufenden Woche optional `is-current-week`.
 
+### 09.5 Career curtain (PRD 19)
+
+Shell-Menü (⋮ TEAM) und Hub-Kacheln folgen `career_phase` / `feature_curtain` — nicht jeder Screen ist ab Tag 1 sichtbar.
+
+```text
+/** WIREFRAME: PRD 09.5 — Hub Act 1 vs full game */
+
+Act 1 (act1_nordstern)                    Full (full / act3)
+┌─────────────────────────────┐          ┌─────────────────────────────┐
+│ ACTION │ STATUS │ CONTEXT    │          │ ACTION │ STATUS │ CONTEXT    │
+│ Inbox  │ Season │ Board      │          │ (same)                       │
+│        │ Train* │ Chronicle  │          │ Train  │ Scouting chip        │
+│        │ Youth  │            │          │ Youth  │ Transfers/Stadium    │
+│ *auto  │        │            │          │ manual training              │
+└─────────────────────────────┘          └─────────────────────────────┘
+⋮ Menu: Hub, Postfach, Squad, Youth,      ⋮ All TEAM items (PRD 14 menu)
+        Calendar, Leagues, Help
+        (no Scouting / Transfers / Stadium / Finances)
+```
+
+| `career_phase` | Hidden ⋮ entries | Training UI | Header training warn |
+|----------------|------------------|-------------|----------------------|
+| `act1_nordstern` | scouting, transfers, stadium, finances | Read-only banner; plan auto-filled after week sim | Off when `auto_training` |
+| `act2_regional` | Per story beat (matrix PRD 19) | Unlocks with `manual_training` | On when manual |
+| `act3_empire` / `full` | None | Full F2.1 | On when manual |
+
+Deep-link: navigating to a hidden screen redirects to Hub (v1).
+
+### 09.6 Act 4 surfaces (PRD 21)
+
+Not shown on first launch (player goes straight to Nordstern opening). After international cup win + client unlock:
+
+| Screen | Role |
+|--------|------|
+| `VictoryEndScreen` | Full-viewport end stinger; trophy + chronicle line; routes to career select |
+| `TitleCareerSelect` | **Underdog saga** vs **Elite world** new career |
+| `EliteWorldSetup` | Pick `elite_fantasy` league band + club (generator UI TBD) |
+
+```text
+/** WIREFRAME: PRD 09.6 — TitleCareerSelect (minimal) */
+
+┌──────────────────────────────────────┐
+│  The Club                            │
+│  ┌────────────────┐ ┌──────────────┐ │
+│  │ Underdog saga  │ │ Elite world  │ │
+│  │ Nordstern · …  │ │ Unlocked ✓   │ │
+│  └────────────────┘ └──────────────┘ │
+│  [ Continue save ]   [ Spielstände ]   │
+└──────────────────────────────────────┘
+```
+
+Presentation: Elite path uses PRD 20 `manager_desk`; underdog uses `storybook`. Dev: `?elite_world=1`.
+
 ## References
 
 - Growth Engine: PRD 02.1 und PRD 02.4
@@ -216,3 +269,6 @@ Kalender-UI (`CalendarScreen`): Monatsfokus; **`isToday`** = Zivil-Datum aus `(s
 - Breakouts: PRD 06.5
 - Club-Cockpit (Dichte, Räume, Spielerakte, Jugend-Report): PRD 14
 - Feature-Lücken vs. Referenz-DNA: PRD 15
+- Career acts & curtain: PRD 19
+- Act 4 / Elite World: PRD 21
+- Live playtest gate: playtest_protocol.md

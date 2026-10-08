@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { isStoryboardPocUrl, StoryboardPocScreen } from "./ui/screens/StoryboardPocScreen.tsx";
 import "./ui/design/design-tokens.css";
 import "./ui/layout/screen-layout.css";
 import "./index.css";
@@ -12,8 +13,8 @@ if (!root) {
   throw new Error("Missing #root");
 }
 
+const poc = isStoryboardPocUrl();
+
 createRoot(root).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+  <StrictMode>{poc ? <StoryboardPocScreen /> : <App />}</StrictMode>,
 );

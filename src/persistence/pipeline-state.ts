@@ -2,6 +2,7 @@ import { defaultBoardState, type BoardState } from "../board/board-state.ts";
 import { startBoardSeason } from "../board/season-objectives.ts";
 import { defaultEmployerClubId } from "../board/job-offers.ts";
 import type { IndividualProgram } from "../development/individual-training.ts";
+import type { TrainingSlotOutcome } from "../development/training-unit-result.ts";
 import {
   defaultTrainingPlanPresets,
   type TrainingPlanPresetSlot,
@@ -66,6 +67,8 @@ export interface PipelineState {
   training_reminder_week?: { season: number; week: number };
   /** F2.1 — training units completed via NEXT this week (PRD 09.3 training nexus). */
   training_units_completed?: number;
+  /** Per-slot unit results for the current game week (manual training NEXT). */
+  training_unit_outcomes?: (TrainingSlotOutcome | null)[];
   /** Manual week: false until player acknowledges calendar / opponent scout once. */
   training_calendar_gate_done?: boolean;
   /** F4.3 — hired scout tiers and capacity. */

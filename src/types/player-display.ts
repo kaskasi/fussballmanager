@@ -59,8 +59,9 @@ export function roundStat(value: number): number {
 }
 
 export function formatPlayerName(player: Pick<Player, "name" | "portrait_seed">): string {
-  const first = player.name.first?.trim();
-  const last = player.name.last?.trim();
+  const name = player.name ?? { first: "", last: "" };
+  const first = name.first?.trim();
+  const last = name.last?.trim();
   if (first && last) return `${first} ${last}`;
   if (first) return first;
   if (last) return last;

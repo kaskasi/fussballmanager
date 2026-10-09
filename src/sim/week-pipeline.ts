@@ -28,7 +28,10 @@ import type { CareerLeagueStat } from "../persistence/league-state.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import { applyDepartureMoralePressure } from "../youth/departure-morale.ts";
 import { stampLastWeekCa } from "../player/ca-tracking.ts";
-import { stampWeeklyGrowthBatch } from "../player/growth-history.ts";
+import {
+  stampWeekStartAttributesBatch,
+  stampWeeklyGrowthBatch,
+} from "../player/growth-history.ts";
 import {
   advanceScoutWeek,
   discoveryAlertsForWeek,
@@ -460,11 +463,18 @@ export async function simulateGameWeek(
     leagueStep.playerFixture,
   );
 
+  const nextSeason = seasonEnded ? session.season + 1 : session.season;
+  const playersForNewWeek = stampWeekStartAttributesBatch(
+    narrativeStep.players,
+    nextSeason,
+    nextWeek,
+  );
+
   let nextSession: GameSession = {
     ...session,
-    season: seasonEnded ? session.season + 1 : session.season,
+    season: nextSeason,
     week: nextWeek,
-    players: narrativeStep.players,
+    players: playersForNewWeek,
     scoutBoard,
     youthInbox: narrativeStep.youthInbox,
     league: leagueWithCareerStats,
@@ -474,6 +484,7 @@ export async function simulateGameWeek(
     trainingPlan: resolveTrainingPlanAfterWeek(narrativeStep.storyState),
     trainingReminderWeek: undefined,
     trainingUnitsCompleted: 0,
+    trainingUnitOutcomes: [],
     trainingCalendarGateDone: resolveFeatureCurtain(narrativeStep.storyState).auto_training,
     rivalPlayers,
     transferState,

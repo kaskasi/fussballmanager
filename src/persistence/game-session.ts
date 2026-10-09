@@ -1,3 +1,4 @@
+import type { TrainingSlotOutcome } from "../development/training-unit-result.ts";
 import type { TrainingSlot } from "../development/training-units.ts";
 import {
   createScoutBoard,
@@ -123,6 +124,8 @@ export interface GameSession {
   trainingUnitsCompleted: number;
   /** Manual training: false at week start until one calendar NEXT (opponent scout). */
   trainingCalendarGateDone: boolean;
+  /** Highlights per completed training slot this game week. */
+  trainingUnitOutcomes: (TrainingSlotOutcome | null)[];
 }
 
 export function newGameSession(now = new Date()): GameSession {
@@ -283,6 +286,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
       pipeline,
       normalizeStoryState(pipeline.story_state, save.state.week),
     ),
+    trainingUnitOutcomes: pipeline.training_unit_outcomes ?? [],
   };
   return syncManagerClubWithBoard(session);
 }
@@ -313,6 +317,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     training_reminder_week: session.trainingReminderWeek,
     training_units_completed: session.trainingUnitsCompleted,
     training_calendar_gate_done: session.trainingCalendarGateDone,
+    training_unit_outcomes: session.trainingUnitOutcomes,
   };
   const iso = now.toISOString();
 

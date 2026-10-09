@@ -144,6 +144,8 @@ export interface GenerateIntakeInput {
   count?: number;
   youthSite?: string;
   meanShift?: number;
+  /** When set, overrides shuffled intake positions (length must cover `count`). */
+  fixedPositions?: readonly PositionPrimary[];
   nameFor?: (seed: number, index: number) => PlayerName;
   /** Weak CA today, ceiling via growth — camp purchase “diamond in the rough”. */
   hiddenProfile?: "max_development";
@@ -208,7 +210,10 @@ export function buildAcademyCohort(input: GenerateIntakeInput): Player[] {
   }
 
   const mixture = academyMixture(input.facility, input.meanShift ?? 0);
-  const positions = intakePositionsForCount(count, input.random);
+  const positions =
+    input.fixedPositions && input.fixedPositions.length >= count
+      ? input.fixedPositions.slice(0, count)
+      : intakePositionsForCount(count, input.random);
   const players: Player[] = [];
   for (let index = 0; index < count; index++) {
     players.push(generateOne(input, mixture, index, positions[index] ?? "CM"));

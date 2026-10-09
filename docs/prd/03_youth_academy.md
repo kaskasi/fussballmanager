@@ -233,7 +233,7 @@ Playtest-Slice: **6 Nationen** als **3×2-Kartenraster** (kein Split-Listen-Layo
 | Agentur | Brief-Icon (Lucide `Mail`) — beauftragt Kandidatensuche; erneuter Klick = gleicher Hinweis (NoticeToast) |
 | Roster | Portrait, Name, Position, CA; **In Jugend überführen** auf owned Camps |
 | Camp-Leiter | Nach Hub-Auswahl: Portrait + Name + Rolle (Klick entlässt); während Suche Brief-Icon; bei Kandidaten „Kandidaten im Hub“ |
-| Kauf | Sofort **1–2** schwache Talente (niedrige CA, **max** `anlage` + `drive`) im Camp |
+| Kauf | Sofort **3** Talente: **1 Headline** (CA über Support, Offensivrolle, Reveal-Modal + Flavor) + **2 Support**; alle **max** `anlage` + `drive`. Preise Premium (≈1,15–1,85 Mio.). |
 | Assets | Manifest `src/ui/assets/camp-photos.ts`; Bake `npm run bake:camp-photos` → `public/assets/photos/camps/` |
 
 Keine Camp-Aufstellungen, keine Scout-Karte — Gesetz 6 unverändert.

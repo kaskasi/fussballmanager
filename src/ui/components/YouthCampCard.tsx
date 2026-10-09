@@ -1,5 +1,5 @@
 /** WIREFRAME: design.md §9.12 + PRD 03.6.1 / 03.6.2 — Satelliten-Camp-Karte */
-import { Lock, Mail, UserCheck } from "lucide-react";
+import { Lock, Mail, Star, UserCheck } from "lucide-react";
 import type { Player } from "../../types/player.ts";
 import { estimateCa } from "../../transfers/market-value.ts";
 import { formatClubCash } from "../../economy/club-finances.ts";
@@ -166,9 +166,22 @@ export function YouthCampCard({
                   );
                 }
                 return (
-                  <li key={player.id} className="youth-camp-roster-row">
+                  <li
+                    key={player.id}
+                    className={`youth-camp-roster-row${player.state.camp_opening_headline ? " is-headline" : ""}`}
+                  >
                     <PlayerPortrait seed={player.portrait_seed} size="sm" />
-                    <span className="youth-camp-roster-name">{formatPlayerName(player)}</span>
+                    <span className="youth-camp-roster-name">
+                      {player.state.camp_opening_headline ? (
+                        <Star
+                          size={12}
+                          strokeWidth={2.5}
+                          className="youth-camp-headline-badge"
+                          aria-label="Camp-Debüt"
+                        />
+                      ) : null}
+                      {formatPlayerName(player)}
+                    </span>
                     <span className="youth-camp-roster-pos">{player.position}</span>
                     <span className="youth-camp-roster-ca">
                       {Math.round(estimateCa(player.attributes, player.position))}

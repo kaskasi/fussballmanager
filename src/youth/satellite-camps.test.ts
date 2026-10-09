@@ -9,6 +9,7 @@ import {
   campLeaderName,
   campNationById,
   canBuyYouthCamp,
+  generateCampOpeningBundle,
   generateCampOpeningProspects,
   MAX_YOUTH_CAMPS,
   pullCampPlayerToHq,
@@ -75,8 +76,8 @@ describe("satellite youth camps", () => {
     expect(a.length).toBeGreaterThan(3);
   });
 
-  it("seeds 2–3 youths in academy CA band with max development hidden stats on purchase", () => {
-    const opening = generateCampOpeningProspects({
+  it("seeds headline + two support talents with max development on purchase", () => {
+    const bundle = generateCampOpeningBundle({
       campId: "camp_pl",
       clubId: "cl_fc_nordstern",
       season: 2,
@@ -84,16 +85,22 @@ describe("satellite youth camps", () => {
       masterSeed: 99,
       players: [],
     });
-    expect(opening.length).toBeGreaterThanOrEqual(2);
-    expect(opening.length).toBeLessThanOrEqual(3);
+    expect(bundle.players).toHaveLength(3);
     const maxAnlage = maxAnlageProfile();
-    for (const player of opening) {
+    const headline = bundle.players.find((player) => player.id === bundle.headlinePlayerId)!;
+    const support = bundle.players.filter((player) => player.id !== bundle.headlinePlayerId);
+    expect(headline.state.camp_opening_headline).toBe(true);
+    expect(headline.state.camp_debut_hook_index).toBeGreaterThanOrEqual(0);
+    for (const player of bundle.players) {
       expect(player.state.youth_site).toBe("camp_pl");
       expect(player.hidden.drive).toBe(1.6);
       expect(player.hidden.anlage).toEqual(maxAnlage);
-      const ca = estimateCa(player.attributes, player.position);
-      expect(ca).toBeGreaterThanOrEqual(58);
-      expect(ca).toBeLessThanOrEqual(125);
     }
+    const headlineCa = estimateCa(headline.attributes, headline.position);
+    const bestSupport = Math.max(
+      ...support.map((player) => estimateCa(player.attributes, player.position)),
+    );
+    expect(headlineCa).toBeGreaterThan(bestSupport + 8);
+    expect(headlineCa).toBeGreaterThanOrEqual(88);
   });
 });

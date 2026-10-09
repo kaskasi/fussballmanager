@@ -11,6 +11,7 @@ import {
   type GrowthHeatCell,
   type HeatTone,
   type PipelineStageFill,
+  type SquadGrowthHeatmapMode,
   type WeeklyTrainingExtremes,
 } from "../../player/growth-heatmap.ts";
 
@@ -152,11 +153,13 @@ export function GrowthHeatmap({
   cells,
   onSelectPlayer,
   compact = false,
+  mode = "lastWeek",
 }: {
   cells: readonly GrowthHeatCell[];
   onSelectPlayer: (playerId: string) => void;
   /** Hub package: one packed bar. Training keeps stage labels under the same pixels. */
   compact?: boolean;
+  mode?: SquadGrowthHeatmapMode;
 }) {
   useT();
   const [legendOpen, setLegendOpen] = useState(false);
@@ -174,7 +177,11 @@ export function GrowthHeatmap({
     >
       <div className="pipeline-heat-head">
         <p className="pipeline-heat-label">
-          {compact ? t("hub.heat.compactTitle") : t("hub.heat.title")}
+          {mode === "weekSoFar"
+            ? t("training.heat.weekSoFarTitle")
+            : compact
+              ? t("hub.heat.compactTitle")
+              : t("hub.heat.title")}
         </p>
         <button
           type="button"

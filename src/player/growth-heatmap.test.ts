@@ -108,6 +108,22 @@ describe("growth heatmap (F2.7)", () => {
     expect(report.worst.map((cell) => cell.playerId)).toEqual(["pl_5", "pl_4", "pl_3"]);
   });
 
+  it("uses week-so-far baseline on the training screen", () => {
+    const hot = clonePlayer();
+    hot.id = "pl_hot";
+    hot.state.last_week_growth = -2;
+    hot.state.week_start_attributes = { ...hot.attributes };
+    hot.attributes.passing += 0.4;
+    hot.state.week_start_key = { season: 1, week: 2 };
+
+    const cells = squadGrowthHeatmap([hot], "cl_fc_nordstern", "weekSoFar", {
+      season: 1,
+      week: 2,
+    });
+    expect(cells[0]?.tone).toBe("up");
+    expect(cells[0]?.growth).toBeCloseTo(0.4, 5);
+  });
+
   it("stays empty before the first simulated week", () => {
     const player = clonePlayer();
     expect(weeklyTrainingExtremes([player], "cl_fc_nordstern").hasData).toBe(false);

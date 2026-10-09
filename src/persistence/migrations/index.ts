@@ -72,6 +72,7 @@ import { migration072CareerActs } from "./migration_072_career_acts.ts";
 import { migration073TrainingNextUnits } from "./migration_073_training_next_units.ts";
 import { migration074TrainingCalendarGate } from "./migration_074_training_calendar_gate.ts";
 import { migration075TrainingPlanPresets } from "./migration_075_training_plan_presets.ts";
+import { migration076WeekStartAttributes } from "./migration_076_week_start_attributes.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -153,6 +154,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration073TrainingNextUnits,
   migration074TrainingCalendarGate,
   migration075TrainingPlanPresets,
+  migration076WeekStartAttributes,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

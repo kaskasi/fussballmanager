@@ -109,6 +109,8 @@ export function stampLastWeekCa(player: Player): Player {
 export interface DevelopmentMover {
   playerId: string;
   displayName: string;
+  portraitSeed: number;
+  age: number;
   position: PositionPrimary;
   squadStatus: Player["squad_status"];
   ca: number;
@@ -126,6 +128,8 @@ export function listDevelopmentMovers(
     .map((player) => ({
       playerId: player.id,
       displayName: formatMoverName(player),
+      portraitSeed: player.portrait_seed,
+      age: player.age,
       position: player.position,
       squadStatus: player.squad_status,
       ca: playerCa(player),

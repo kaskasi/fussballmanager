@@ -64,6 +64,7 @@ import {
 import type { PositionPrimary } from "../../types/player.ts";
 import { Hint } from "../components/Hint.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
+import { AttributeTrainingHeatmap } from "../components/AttributeTrainingHeatmap.tsx";
 import { GrowthHeatmap } from "../components/GrowthHeatmap.tsx";
 import { squadGrowthHeatmap } from "../../player/growth-heatmap.ts";
 import type { Coach, CoachingStaff } from "../../staff/coaching-staff.ts";
@@ -71,7 +72,12 @@ import type {
   AssistantDelegation,
   AssistantDelegationTask,
 } from "../../staff/assistant-delegation.ts";
-import { Target } from "lucide-react";
+import { ChartNoAxesColumn, Target } from "lucide-react";
+import {
+  formatTrainingDelta,
+  trainingSlotOutcomeAt,
+  type TrainingSlotOutcome,
+} from "../../development/training-unit-result.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 
@@ -117,6 +123,7 @@ export function TrainingCenter({
   hasTrainingHall = false,
   injuryRiskFactor = 1,
   trainingUnitsCompleted = 0,
+  trainingUnitOutcomes = [],
   useTrainingUnitProgress = false,
   trainingPlanPresets,
   onTrainingPlanPresetsChange,
@@ -149,6 +156,7 @@ export function TrainingCenter({
   hasTrainingHall?: boolean;
   injuryRiskFactor?: number;
   trainingUnitsCompleted?: number;
+  trainingUnitOutcomes?: (TrainingSlotOutcome | null)[];
   useTrainingUnitProgress?: boolean;
   trainingPlanPresets: TrainingPlanPresetSlot[];
   onTrainingPlanPresetsChange: (presets: TrainingPlanPresetSlot[]) => void;
@@ -198,6 +206,7 @@ export function TrainingCenter({
             plan={plan}
             weekday={weekday}
             trainingUnitsCompleted={trainingUnitsCompleted}
+            trainingUnitOutcomes={trainingUnitOutcomes}
             useTrainingUnitProgress={useTrainingUnitProgress}
             trainingPlanPresets={trainingPlanPresets}
             onTrainingPlanPresetsChange={onTrainingPlanPresetsChange}
@@ -214,6 +223,8 @@ export function TrainingCenter({
             onPlanChange={onPlanChange}
             onIntensityChange={onIntensityChange}
             onSelectPlayer={onSelectPlayer}
+            season={season}
+            week={week}
           />
         </div>
       ) : null}
@@ -281,6 +292,7 @@ function TeamPlan({
   plan,
   weekday,
   trainingUnitsCompleted,
+  trainingUnitOutcomes,
   useTrainingUnitProgress,
   trainingPlanPresets,
   onTrainingPlanPresetsChange,
@@ -297,10 +309,13 @@ function TeamPlan({
   onPlanChange,
   onIntensityChange,
   onSelectPlayer,
+  season,
+  week,
 }: {
   plan: TrainingSlot[];
   weekday: number;
   trainingUnitsCompleted: number;
+  trainingUnitOutcomes: (TrainingSlotOutcome | null)[];
   useTrainingUnitProgress: boolean;
   trainingPlanPresets: TrainingPlanPresetSlot[];
   onTrainingPlanPresetsChange: (presets: TrainingPlanPresetSlot[]) => void;
@@ -317,9 +332,15 @@ function TeamPlan({
   onPlanChange: (plan: TrainingSlot[]) => void;
   onIntensityChange: (intensity: number) => void;
   onSelectPlayer?: (playerId: string) => void;
+  season: number;
+  week: number;
 }) {
-  const heatCells = useMemo(() => squadGrowthHeatmap(players, clubId), [players, clubId]);
+  const heatCells = useMemo(
+    () => squadGrowthHeatmap(players, clubId, "weekSoFar", { season, week }),
+    [players, clubId, season, week],
+  );
   const nextSlotIndex = currentTrainingSlotIndex(trainingUnitsCompleted, useTrainingUnitProgress);
+  const [outcomeModal, setOutcomeModal] = useState<TrainingSlotOutcome | null>(null);
 
   useEffect(() => {
     if (nextSlotIndex === null) return;
@@ -388,8 +409,13 @@ function TeamPlan({
                   past={slotPast}
                   current={slotCurrent}
                   active={pickSlot === index}
+                  outcome={trainingSlotOutcomeAt(trainingUnitOutcomes, index)}
                   onOpenPicker={() => {
                     if (!slotPast) onPickSlot(index);
+                  }}
+                  onShowOutcome={() => {
+                    const outcome = trainingSlotOutcomeAt(trainingUnitOutcomes, index);
+                    if (outcome) setOutcomeModal(outcome);
                   }}
                   onToggleFocus={() => onPlanChange(toggleFocus(plan, index))}
                   focusToggleDisabled={
@@ -409,9 +435,20 @@ function TeamPlan({
         <GrowthHeatmap
           cells={heatCells}
           compact
+          mode="weekSoFar"
           onSelectPlayer={(playerId) => onSelectPlayer?.(playerId)}
         />
+        <AttributeTrainingHeatmap
+          players={players}
+          clubId={clubId}
+          season={season}
+          week={week}
+        />
       </div>
+
+      {outcomeModal ? (
+        <TrainingSlotOutcomeModal outcome={outcomeModal} onClose={() => setOutcomeModal(null)} />
+      ) : null}
 
       {pickSlot !== null ? (
         <UnitPickerModal
@@ -469,7 +506,9 @@ function SlotCard({
   past,
   current,
   active,
+  outcome,
   onOpenPicker,
+  onShowOutcome,
   onToggleFocus,
   focusToggleDisabled,
 }: {
@@ -479,12 +518,15 @@ function SlotCard({
   past: boolean;
   current: boolean;
   active: boolean;
+  outcome: TrainingSlotOutcome | null;
   onOpenPicker: () => void;
+  onShowOutcome: () => void;
   onToggleFocus: () => void;
   focusToggleDisabled: boolean;
 }) {
   const empty = isTrainingSlotEmpty(slot);
   const unit = empty ? null : trainingUnit(slot.unitId);
+  const highlight = outcome?.highlight ?? null;
   const className = [
     "training-slot",
     empty ? "is-empty" : "",
@@ -535,7 +577,86 @@ function SlotCard({
           </>
         )}
       </button>
+      {past && highlight ? (
+        <div className="training-slot-outcome">
+          <p className="training-slot-outcome-teaser">
+            {highlight.playerName} · +{formatTrainingDelta(highlight.delta)}{" "}
+            {attributeLabel(highlight.attribute)}
+          </p>
+          <button
+            type="button"
+            className="training-slot-outcome-btn"
+            aria-label={t("training.slot.outcomeAria")}
+            title={t("training.slot.outcomeHint")}
+            onClick={(event) => {
+              event.stopPropagation();
+              onShowOutcome();
+            }}
+          >
+            <ChartNoAxesColumn size={14} strokeWidth={2.25} aria-hidden="true" />
+          </button>
+        </div>
+      ) : past && outcome && !highlight ? (
+        <p className="training-slot-outcome training-slot-outcome--quiet">
+          {t("training.slot.outcomeQuiet")}
+        </p>
+      ) : null}
     </article>
+  );
+}
+
+function TrainingSlotOutcomeModal({
+  outcome,
+  onClose,
+}: {
+  outcome: TrainingSlotOutcome;
+  onClose: () => void;
+}) {
+  useT();
+  const unit = trainingUnit(outcome.unitId);
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="training-modal-backdrop" onClick={onClose} role="presentation">
+      <div
+        className="training-modal training-slot-outcome-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("training.slot.outcomeDialogAria", { unit: unit.label })}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="training-modal-head">
+          <div>
+            <p className="eyebrow">{slotLabel(outcome.slotIndex)}</p>
+            <h2>{unit.label}</h2>
+          </div>
+          <button type="button" className="training-modal-close" onClick={onClose} aria-label={t("shell.modal.close")}>
+            ✕
+          </button>
+        </header>
+        {outcome.gains.length === 0 ? (
+          <p className="training-slot-outcome-empty">{t("training.slot.outcomeQuiet")}</p>
+        ) : (
+          <ul className="training-slot-outcome-list">
+            {outcome.gains.map((gain) => (
+              <li key={`${gain.playerId}-${gain.attribute}`}>
+                <strong>{gain.playerName}</strong>
+                <span>
+                  +{formatTrainingDelta(gain.delta)} {attributeLabel(gain.attribute)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 }
 

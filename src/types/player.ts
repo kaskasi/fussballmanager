@@ -43,6 +43,9 @@ export interface Player {
     last_week_ca?: number;
     /** Net attribute growth from the last simulated week (PRD 02.1 / F2.7). */
     last_week_growth?: number;
+    /** Skill snapshot at calendar week start — training heatmap “this week so far”. */
+    week_start_attributes?: Attributes;
+    week_start_key?: { season: number; week: number };
     /** Last four weekly minute totals, oldest first (PRD 03.5). */
     recent_weekly_minutes: number[];
     /** F3.5 — trains with pros for `ends_week` inclusive, then auto-promotion check. */
@@ -64,6 +67,10 @@ export interface Player {
     last_match_goals?: number;
     /** F3.9 — HQ vs satellite camp id. Missing means HQ. */
     youth_site?: "hq" | string;
+    /** F3.9 — face of the camp purchase reveal (max hidden profile). */
+    camp_opening_headline?: boolean;
+    /** Index into `youth.camp.debut.hook.{nation}.{index}` copy. */
+    camp_debut_hook_index?: number;
     /** F2.3 — failed position-retrain completions per target (PRD 07.7). */
     retrain_failures?: Partial<Record<PositionPrimary, number>>;
     modifiers: TemporaryModifier[];

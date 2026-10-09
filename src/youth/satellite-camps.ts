@@ -1,7 +1,15 @@
 import type { Player, PlayerName } from "../types/player.ts";
 import { generatePlayerName, formatPlayerName } from "../types/player-display.ts";
 import { seasonCalendarYear } from "../sim/season-label.ts";
+import type { PositionPrimary } from "../types/player.ts";
 import { buildAcademyCohort } from "./intake-generator.ts";
+import {
+  campDebutHookIndex,
+  CAMP_OPENING_HEADLINE_MEAN_SHIFT,
+  CAMP_OPENING_SUPPORT_MEAN_SHIFT,
+  CAMP_OPENING_TOTAL_PLAYERS,
+  pickCampHeadlinePosition,
+} from "./camp-opening-debut.ts";
 import { isHqYouth, withYouthSite, YOUTH_SITE_HQ } from "./youth-site.ts";
 
 export interface YouthCampNation {
@@ -47,13 +55,14 @@ export const CAMP_BETREUER_WAGE = 7_500;
 export const CAMP_INTAKE_STAFFED = 4;
 export const CAMP_INTAKE_UNSTAFFED = 2;
 
+/** Playtest 2026-10-09: premium opening bundle (headline + 2 support). */
 export const YOUTH_CAMP_NATIONS: readonly YouthCampNation[] = [
-  { id: "camp_br", code: "BR", flag: "🇧🇷", label: "Brasilien", region: "São Paulo", cost: 1_200_000, upkeepWeekly: 19_000 },
-  { id: "camp_ng", code: "NG", flag: "🇳🇬", label: "Nigeria", region: "Lagos", cost: 900_000, upkeepWeekly: 15_500 },
-  { id: "camp_pl", code: "PL", flag: "🇵🇱", label: "Polen", region: "Krakau", cost: 750_000, upkeepWeekly: 13_000 },
-  { id: "camp_fr", code: "FR", flag: "🇫🇷", label: "Frankreich", region: "Lyon", cost: 1_100_000, upkeepWeekly: 18_000 },
-  { id: "camp_tr", code: "TR", flag: "🇹🇷", label: "Türkei", region: "Istanbul", cost: 850_000, upkeepWeekly: 14_500 },
-  { id: "camp_hr", code: "HR", flag: "🇭🇷", label: "Kroatien", region: "Dubrovnik", cost: 800_000, upkeepWeekly: 13_500 },
+  { id: "camp_br", code: "BR", flag: "🇧🇷", label: "Brasilien", region: "São Paulo", cost: 1_850_000, upkeepWeekly: 22_000 },
+  { id: "camp_fr", code: "FR", flag: "🇫🇷", label: "Frankreich", region: "Lyon", cost: 1_700_000, upkeepWeekly: 21_000 },
+  { id: "camp_ng", code: "NG", flag: "🇳🇬", label: "Nigeria", region: "Lagos", cost: 1_400_000, upkeepWeekly: 18_000 },
+  { id: "camp_tr", code: "TR", flag: "🇹🇷", label: "Türkei", region: "Istanbul", cost: 1_300_000, upkeepWeekly: 17_000 },
+  { id: "camp_hr", code: "HR", flag: "🇭🇷", label: "Kroatien", region: "Dubrovnik", cost: 1_250_000, upkeepWeekly: 16_000 },
+  { id: "camp_pl", code: "PL", flag: "🇵🇱", label: "Polen", region: "Krakau", cost: 1_150_000, upkeepWeekly: 15_000 },
 ];
 
 /** Camp-Leiter: international pool, not tied to nation locale (PRD 03.6.1 UX). */
@@ -87,10 +96,10 @@ const CAMP_LEADER_LAST = [
   "Rossi",
 ] as const;
 
-/** Same CA mixture as HQ academy intake (PRD 03.1 base) — roughly 60–120 CA, max hidden ceiling. */
-export const CAMP_OPENING_MEAN_SHIFT = 0;
-export const CAMP_OPENING_PLAYER_MIN = 2;
-export const CAMP_OPENING_PLAYER_MAX = 3;
+/** @deprecated Use camp-opening-debut shifts; kept for tests/docs references. */
+export const CAMP_OPENING_MEAN_SHIFT = CAMP_OPENING_SUPPORT_MEAN_SHIFT;
+export const CAMP_OPENING_PLAYER_MIN = CAMP_OPENING_TOTAL_PLAYERS;
+export const CAMP_OPENING_PLAYER_MAX = CAMP_OPENING_TOTAL_PLAYERS;
 /** Fixed roster rows when all camp slots are owned (wide row layout). */
 export const CAMP_CARD_ROSTER_SLOTS = 5;
 /** Smaller camp cards in 6-up shop grid — at least three talents visible. */
@@ -159,9 +168,31 @@ export function campLeaderName(campId: string, masterSeed: number): string {
   return formatPlayerName({ name: { first, last }, portrait_seed: hash });
 }
 
-export function campOpeningPlayerCount(campId: string, masterSeed: number, season: number): number {
-  const random = mulberry32(hashCampKey(`${masterSeed}:${campId}:${season}:opening`));
-  return random() < 0.5 ? CAMP_OPENING_PLAYER_MIN : CAMP_OPENING_PLAYER_MAX;
+export function campOpeningPlayerCount(_campId: string, _masterSeed: number, _season: number): number {
+  return CAMP_OPENING_TOTAL_PLAYERS;
+}
+
+export interface CampOpeningBundle {
+  players: Player[];
+  headlinePlayerId: string;
+}
+
+function spotlightHeadline(
+  player: Player,
+  campId: string,
+  position: PositionPrimary,
+  hookIndex: number,
+): Player {
+  return {
+    ...player,
+    position,
+    state: {
+      ...player.state,
+      youth_site: campId,
+      camp_opening_headline: true,
+      camp_debut_hook_index: hookIndex,
+    },
+  };
 }
 
 export function nextYouthPlayerIdStart(players: readonly Player[]): number {
@@ -174,7 +205,60 @@ export function nextYouthPlayerIdStart(players: readonly Player[]): number {
   return max + 1;
 }
 
-/** 2–3 academy-band youths (60–120 CA) with max Anlage/Drive — immediate roster after camp purchase. */
+/** 1 headline + 2 support youths — max Anlage/Drive, purchase “loot box” payoff. */
+export function generateCampOpeningBundle(input: {
+  campId: string;
+  clubId: string;
+  season: number;
+  week: number;
+  masterSeed: number;
+  players: readonly Player[];
+}): CampOpeningBundle {
+  const nation = campNationById(input.campId);
+  if (!nation) return { players: [], headlinePlayerId: "" };
+  const idStart = nextYouthPlayerIdStart(input.players);
+  const random = mulberry32(hashCampKey(`${input.masterSeed}:${input.campId}:prospects:${input.season}`));
+  const hookIndex = campDebutHookIndex(input.campId, input.masterSeed, input.season);
+  const base = {
+    season: input.season,
+    week: input.week,
+    seasonYear: seasonCalendarYear(input.season),
+    clubId: input.clubId,
+    nationality: nation.code,
+    region: nation.region,
+    facility: "academy_basic" as const,
+    youthSite: input.campId,
+    hiddenProfile: "max_development" as const,
+    nameFor: (seed: number) => generateCampPlayerName(nation.code, seed),
+  };
+
+  const headlinePosition = pickCampHeadlinePosition(random);
+  const headlineRaw = buildAcademyCohort({
+    ...base,
+    idStart,
+    random,
+    count: 1,
+    meanShift: CAMP_OPENING_HEADLINE_MEAN_SHIFT,
+    fixedPositions: [headlinePosition],
+  })[0];
+  if (!headlineRaw) return { players: [], headlinePlayerId: "" };
+
+  const headline = spotlightHeadline(headlineRaw, input.campId, headlinePosition, hookIndex);
+
+  const support = buildAcademyCohort({
+    ...base,
+    idStart: idStart + 1,
+    random,
+    count: CAMP_OPENING_TOTAL_PLAYERS - 1,
+    meanShift: CAMP_OPENING_SUPPORT_MEAN_SHIFT,
+  });
+
+  return {
+    players: [headline, ...support],
+    headlinePlayerId: headline.id,
+  };
+}
+
 export function generateCampOpeningProspects(input: {
   campId: string;
   clubId: string;
@@ -183,27 +267,7 @@ export function generateCampOpeningProspects(input: {
   masterSeed: number;
   players: readonly Player[];
 }): Player[] {
-  const nation = campNationById(input.campId);
-  if (!nation) return [];
-  const count = campOpeningPlayerCount(input.campId, input.masterSeed, input.season);
-  const idStart = nextYouthPlayerIdStart(input.players);
-  const random = mulberry32(hashCampKey(`${input.masterSeed}:${input.campId}:prospects:${input.season}`));
-  return buildAcademyCohort({
-    season: input.season,
-    week: input.week,
-    seasonYear: seasonCalendarYear(input.season),
-    clubId: input.clubId,
-    nationality: nation.code,
-    region: nation.region,
-    facility: "academy_basic",
-    idStart,
-    random,
-    count,
-    youthSite: input.campId,
-    meanShift: CAMP_OPENING_MEAN_SHIFT,
-    hiddenProfile: "max_development",
-    nameFor: (seed) => generateCampPlayerName(nation.code, seed),
-  });
+  return generateCampOpeningBundle(input).players;
 }
 
 export function generateCampPlayerName(code: string, seed: number): PlayerName {

@@ -42,6 +42,17 @@ describe("training NEXT nexus", () => {
     }
     expect(current.trainingUnitsCompleted).toBe(SLOT_COUNT);
     expect(current.weekday).toBe(6);
+    expect(current.trainingUnitOutcomes.filter(Boolean)).toHaveLength(SLOT_COUNT);
+  });
+
+  it("stores slot outcomes for the training timetable", () => {
+    const session = newGameSession();
+    session.storyState = fullGameStoryState(normalizeStoryState(session.storyState, 1));
+    session.trainingPlan = act1AssistantTrainingPlan();
+    session.trainingCalendarGateDone = true;
+    const step = runTrainingNextStep(session);
+    expect(step.session.trainingUnitOutcomes[0]?.slotIndex).toBe(0);
+    expect(step.session.trainingUnitOutcomes[0]?.gains.length).toBeGreaterThan(0);
   });
 
   it("blocks NEXT when the weekly plan has too many focus slots", () => {

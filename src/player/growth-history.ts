@@ -2,7 +2,7 @@ import type { Attributes, Player } from "../types/player.ts";
 
 const GROWTH_WINDOW_WEEKS = 26;
 
-const SKILL_KEYS = [
+export const WEEKLY_SKILL_KEYS = [
   "shooting",
   "passing",
   "dribbling",
@@ -19,6 +19,12 @@ const SKILL_KEYS = [
   "weak_foot",
   "gk_handling",
 ] as const satisfies readonly (keyof Attributes)[];
+
+const SKILL_KEYS = WEEKLY_SKILL_KEYS;
+
+export function copyAttributes(attrs: Attributes): Attributes {
+  return { ...attrs };
+}
 
 export function weeklyAttributeGrowth(before: Attributes, after: Attributes): number {
   let total = 0;
@@ -41,6 +47,60 @@ export function netWeeklyAttributeGrowth(before: Attributes, after: Attributes):
 export function weeklyGrowthDelta(player: Player): number | null {
   const value = player.state.last_week_growth;
   return value === undefined ? null : value;
+}
+
+/** Net skill growth since the current calendar week started (manual training units). */
+export function weeklyGrowthSoFar(
+  player: Player,
+  season: number,
+  week: number,
+): number | null {
+  const key = player.state.week_start_key;
+  const baseline = player.state.week_start_attributes;
+  if (!baseline || !key || key.season !== season || key.week !== week) {
+    return null;
+  }
+  return netWeeklyAttributeGrowth(baseline, player.attributes);
+}
+
+export function ensureTrainingWeekBaselines(
+  players: readonly Player[],
+  season: number,
+  week: number,
+): Player[] {
+  return players.map((player) => {
+    const key = player.state.week_start_key;
+    if (
+      key?.season === season &&
+      key.week === week &&
+      player.state.week_start_attributes
+    ) {
+      return player;
+    }
+    return {
+      ...player,
+      state: {
+        ...player.state,
+        week_start_attributes: copyAttributes(player.attributes),
+        week_start_key: { season, week },
+      },
+    };
+  });
+}
+
+export function stampWeekStartAttributesBatch(
+  players: readonly Player[],
+  season: number,
+  week: number,
+): Player[] {
+  return players.map((player) => ({
+    ...player,
+    state: {
+      ...player.state,
+      week_start_attributes: copyAttributes(player.attributes),
+      week_start_key: { season, week },
+    },
+  }));
 }
 
 export function formatGrowthDelta(delta: number | null): string {

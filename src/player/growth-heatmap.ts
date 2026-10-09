@@ -1,6 +1,6 @@
 import type { Player, PositionPrimary } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
-import { weeklyGrowthDelta } from "./growth-history.ts";
+import { weeklyGrowthDelta, weeklyGrowthSoFar } from "./growth-history.ts";
 
 /** Pipeline stages on PRD 09 Screen 1 — youth before first team. */
 export const PIPELINE_STAGES = ["u17", "u19", "pro"] as const;
@@ -93,16 +93,27 @@ export function pipelineStageFill(
  * One cell per owned pipeline player. Tone comes from last week's 02.1 net
  * attribute change (`last_week_growth`) — the heatmap has no own formula.
  */
+export type SquadGrowthHeatmapMode = "lastWeek" | "weekSoFar";
+
 export function squadGrowthHeatmap(
   players: readonly Player[],
   clubId: string,
+  mode: SquadGrowthHeatmapMode = "lastWeek",
+  calendar?: { season: number; week: number },
 ): GrowthHeatCell[] {
+  const growthFor = (player: Player): number | null => {
+    if (mode === "weekSoFar" && calendar) {
+      return weeklyGrowthSoFar(player, calendar.season, calendar.week);
+    }
+    return weeklyGrowthDelta(player);
+  };
+
   return players
     .filter((player): player is Player & { squad_status: PipelineStage } =>
       isPipelinePlayer(player, clubId),
     )
     .map((player) => {
-      const growth = weeklyGrowthDelta(player);
+      const growth = growthFor(player);
       return {
         playerId: player.id,
         initials: heatCellInitials(player),

@@ -1,9 +1,12 @@
 import { environmentFromCoachingStaff } from "../staff/coaching-staff.ts";
 import { precinctTrainingEnvironment } from "../stadium/precinct-effects.ts";
 import { applyTrainingUnit } from "../development/pipeline-week.ts";
+import { ensureTrainingWeekBaselines } from "../player/growth-history.ts";
 import {
+  collectTrainingUnitGains,
   formatTrainingDelta,
   highlightTrainingUnitResult,
+  type TrainingSlotOutcome,
 } from "../development/training-unit-result.ts";
 import {
   isTrainingSlotEmpty,
@@ -104,19 +107,36 @@ export function runTrainingNextStep(session: GameSession): TrainingNextStepResul
 
   const unit = trainingUnit(slot.unitId);
   const context = buildTrainingWeekContext(session);
-  const playersBefore = session.players;
+  const playersBefore = ensureTrainingWeekBaselines(
+    session.players,
+    session.season,
+    session.week,
+  );
   const playersAfter = playersBefore.map((player) =>
     applyTrainingUnit(player, weekSessions, slotIndex, context),
   );
   const highlight = highlightTrainingUnitResult(playersBefore, playersAfter, unit);
+  const gains = collectTrainingUnitGains(playersBefore, playersAfter, unit);
   const completed = slotIndex + 1;
   const weekday =
     completed >= SLOT_COUNT ? SATURDAY : trainingSlotWeekday(completed);
+
+  const nextOutcomes: (TrainingSlotOutcome | null)[] = [
+    ...(session.trainingUnitOutcomes ?? []),
+  ];
+  while (nextOutcomes.length < SLOT_COUNT) nextOutcomes.push(null);
+  nextOutcomes[slotIndex] = {
+    slotIndex,
+    unitId: slot.unitId,
+    highlight,
+    gains,
+  };
 
   const nextSession: GameSession = {
     ...session,
     players: playersAfter,
     trainingUnitsCompleted: completed,
+    trainingUnitOutcomes: nextOutcomes,
     weekday,
   };
 

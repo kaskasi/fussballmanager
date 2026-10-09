@@ -229,6 +229,7 @@ import { scoutJobDismissOneLiner } from "./inbox/postfach-archive.ts";
 import { PostfachScreen } from "./ui/screens/PostfachScreen.tsx";
 import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
 import { NoticeToast, SaveToast } from "./ui/components/SaveToast.tsx";
+import { CampOpeningDebutModal } from "./ui/components/CampOpeningDebutModal.tsx";
 import { YouthCampus } from "./ui/screens/YouthCampus";
 import { CalendarScreen } from "./ui/screens/CalendarScreen.tsx";
 import {
@@ -240,7 +241,7 @@ import {
   buyYouthCamp,
   campNationById,
   canBuyYouthCamp,
-  generateCampOpeningProspects,
+  generateCampOpeningBundle,
   pullCampPlayerToHq,
 } from "./youth/satellite-camps.ts";
 import {
@@ -418,6 +419,11 @@ export default function App() {
     apply: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>;
   } | null>(null);
   const saveToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const campDebutAfterSpendRef = useRef<{ campId: string; playerId: string } | null>(null);
+  const [campDebutReveal, setCampDebutReveal] = useState<{
+    campId: string;
+    playerId: string;
+  } | null>(null);
 
   useEffect(() => {
     setProfileFeedback(null);
@@ -493,6 +499,7 @@ export default function App() {
     academyFacility,
     youthCamps,
     trainingUnitsCompleted,
+    trainingUnitOutcomes,
   } = session;
   const playerDivisionId = useMemo((): WorldDivisionId => {
     const club = world.clubs.find((entry) => worldCareerClubId(entry.id) === session.clubId);
@@ -569,6 +576,13 @@ export default function App() {
     flashNotice,
   });
 
+  const finalizeCampDebutReveal = useCallback(() => {
+    const pending = campDebutAfterSpendRef.current;
+    if (!pending) return;
+    setCampDebutReveal(pending);
+    campDebutAfterSpendRef.current = null;
+  }, []);
+
   const requestClubSpend = useCallback(
     (
       cost: number,
@@ -590,8 +604,9 @@ export default function App() {
         return;
       }
       patchSession(apply);
+      finalizeCampDebutReveal();
     },
-    [patchSession, players, session.clubId, session.week],
+    [finalizeCampDebutReveal, patchSession, players, session.clubId, session.week],
   );
 
   useEffect(() => {
@@ -633,6 +648,7 @@ export default function App() {
         ...result.session,
         weekday: MONDAY,
         trainingUnitsCompleted: 0,
+        trainingUnitOutcomes: [],
         trainingCalendarGateDone: !resolveFeatureCurtain(result.session.storyState).auto_training
           ? false
           : true,
@@ -887,17 +903,22 @@ export default function App() {
       } else if (screen !== "training") {
         setScreen("training");
       }
-      const toastParams =
-        "params" in preview.toast && preview.toast.params
-          ? { ...preview.toast.params }
-          : undefined;
-      if (toastParams?.attribute) {
-        toastParams.attribute = attributeLabel(toastParams.attribute as keyof Attributes);
+      const silentToast =
+        preview.toast.key === "training.next.unitResult" ||
+        preview.toast.key === "training.next.unitResultQuiet";
+      if (!silentToast) {
+        const toastParams =
+          "params" in preview.toast && preview.toast.params
+            ? { ...preview.toast.params }
+            : undefined;
+        if (toastParams?.attribute) {
+          toastParams.attribute = attributeLabel(toastParams.attribute as keyof Attributes);
+        }
+        flashNotice(
+          toastParams ? t(preview.toast.key, toastParams) : t(preview.toast.key),
+          preview.openTrainingScreen ? "warn" : "ok",
+        );
       }
-      flashNotice(
-        toastParams ? t(preview.toast.key, toastParams) : t(preview.toast.key),
-        preview.openTrainingScreen ? "warn" : "ok",
-      );
       return;
     }
 
@@ -1474,7 +1495,7 @@ export default function App() {
           const next = canBuyYouthCamp(current.youthCamps, nationId, current.finances.cash);
           if (!next.ok) return current;
           const youthCamps = buyYouthCamp(current.youthCamps, nationId, current.season);
-          const opening = generateCampOpeningProspects({
+          const opening = generateCampOpeningBundle({
             campId: nationId,
             clubId: current.clubId,
             season: current.season,
@@ -1482,14 +1503,32 @@ export default function App() {
             masterSeed: current.masterSeed,
             players: current.players,
           });
+          if (opening.headlinePlayerId) {
+            campDebutAfterSpendRef.current = {
+              campId: nationId,
+              playerId: opening.headlinePlayerId,
+            };
+          }
           const players =
-            opening.length > 0
-              ? refreshAllMarketValues([...current.players, ...opening], current.season)
+            opening.players.length > 0
+              ? refreshAllMarketValues([...current.players, ...opening.players], current.season)
               : current.players;
+          const headline = opening.players.find((p) => p.id === opening.headlinePlayerId);
+          const clubEvents =
+            headline && nation
+              ? withClubEvent(
+                  current.clubEvents,
+                  current.season,
+                  current.week,
+                  "info",
+                  `${nation.flag} Camp ${nation.label}: ${formatPlayerName(headline)} stellt sich vor — drei Talente im Kader.`,
+                )
+              : current.clubEvents;
           return {
             ...current,
             youthCamps,
             players,
+            clubEvents,
             finances: spendClubCash(current.finances, next.cost, current.week),
           };
         },
@@ -2305,12 +2344,37 @@ export default function App() {
         const apply = pendingSpend.apply;
         setPendingSpend(null);
         patchSession(apply);
+        finalizeCampDebutReveal();
       }}
       onCancel={() => setPendingSpend(null)}
     />
   ) : null;
 
   const noticeOverlay = <NoticeToast message={notice?.text ?? null} tone={notice?.tone ?? "ok"} />;
+
+  const campDebutPlayer =
+    campDebutReveal != null
+      ? players.find((entry) => entry.id === campDebutReveal.playerId)
+      : undefined;
+
+  useEffect(() => {
+    if (campDebutReveal && !campDebutPlayer) {
+      setCampDebutReveal(null);
+    }
+  }, [campDebutPlayer, campDebutReveal]);
+  const campDebutOverlay =
+    campDebutReveal && campDebutPlayer ? (
+      <CampOpeningDebutModal
+        campId={campDebutReveal.campId}
+        player={campDebutPlayer}
+        onClose={() => setCampDebutReveal(null)}
+        onViewPlayer={() => {
+          setProfileId(campDebutPlayer.id);
+          setCampDebutReveal(null);
+          setScreen("campus");
+        }}
+      />
+    ) : null;
 
   const careerBroadcastStory = useMemo(
     () =>
@@ -2681,6 +2745,7 @@ export default function App() {
           hasTrainingHall={precinctHasTrainingHall(stadium.precinct)}
           injuryRiskFactor={precinctInjuryRiskFactor(stadium.precinct)}
           trainingUnitsCompleted={trainingUnitsCompleted}
+          trainingUnitOutcomes={trainingUnitOutcomes}
           useTrainingUnitProgress={usesTrainingNextNexus(storyState)}
           trainingPlanPresets={trainingPlanPresets}
           onTrainingPlanPresetsChange={handleTrainingPlanPresetsChange}
@@ -2888,6 +2953,7 @@ export default function App() {
       ) : null}
       {saveManagerOverlay}
       {spendConfirmOverlay}
+      {campDebutOverlay}
       {noticeOverlay}
       <SaveToast visible={saveToastVisible} />
     </>

@@ -7,6 +7,7 @@ import {
   SATURDAY,
   type SmartSkipTarget,
 } from "../sim/day-calendar.ts";
+import { isTrainingCalendarGatePending, isTrainingNextActive } from "../sim/training-next.ts";
 
 /** Montag + offene Jugend-Inbox — NEXT geht zuerst ins Postfach (PRD 09.3). */
 export function hasInboxBlockerForNext(
@@ -31,7 +32,15 @@ export function shouldOpenLineupFromCalendar(
 export function shouldNavigateToCalendarBeforeTimeStep(
   screen: string,
   inboxBlocked: boolean,
+  session?: Pick<
+    GameSession,
+    "trainingUnitsCompleted" | "storyState" | "trainingCalendarGateDone"
+  >,
 ): boolean {
   if (inboxBlocked) return false;
+  if (session && isTrainingCalendarGatePending(session)) {
+    return screen !== "calendar";
+  }
+  if (session && isTrainingNextActive(session)) return false;
   return screen !== "calendar";
 }

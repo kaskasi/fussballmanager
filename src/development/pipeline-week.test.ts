@@ -13,7 +13,7 @@ import {
 describe("pipeline week", () => {
   it("projects the age-19 passing gain from two technical focus sessions", () => {
     const player = clonePlayer();
-    const passing = 0.06 * 1.5 * 1.1 * 1 * 1.5 * 0.7;
+    const passing = 0.06 * 1.5 * 1.1 * 1 * (1 + 0.33 * 2) * 0.7;
     const next = applyTrainingWeek(player, HUB_PLAN);
     expect(next.attributes.passing - player.attributes.passing).toBeCloseTo(passing, 5);
     expect(projectWeek(player, HUB_PLAN)).toBeGreaterThan(passing);

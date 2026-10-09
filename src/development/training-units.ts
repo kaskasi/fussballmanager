@@ -60,6 +60,51 @@ export function isTrainingDayPast(dayIndex: number, sessionWeekday: number): boo
   return isTrainingSlotPast(dayIndex * UNITS_PER_DAY, sessionWeekday);
 }
 
+/** Per-unit NEXT progress (PRD 09.3b) — slot already simulated this week. */
+export function isTrainingSlotCompleted(slotIndex: number, unitsCompleted: number): boolean {
+  return slotIndex < unitsCompleted;
+}
+
+/** Next slot to run via header NEXT; null when the week grid is finished. */
+export function currentTrainingSlotIndex(
+  unitsCompleted: number,
+  useUnitProgress: boolean,
+): number | null {
+  if (!useUnitProgress) return null;
+  if (unitsCompleted >= SLOT_COUNT) return null;
+  return unitsCompleted;
+}
+
+export function isTrainingSlotPastForSession(
+  slotIndex: number,
+  sessionWeekday: number,
+  unitsCompleted: number,
+  useUnitProgress: boolean,
+): boolean {
+  if (useUnitProgress) {
+    return isTrainingSlotCompleted(slotIndex, unitsCompleted);
+  }
+  return isTrainingSlotPast(slotIndex, sessionWeekday);
+}
+
+/** Day column muted only when all three units that day are completed. */
+export function isTrainingDayFullyPastForSession(
+  dayIndex: number,
+  sessionWeekday: number,
+  unitsCompleted: number,
+  useUnitProgress: boolean,
+): boolean {
+  const start = dayIndex * UNITS_PER_DAY;
+  for (let period = 0; period < UNITS_PER_DAY; period++) {
+    if (
+      !isTrainingSlotPastForSession(start + period, sessionWeekday, unitsCompleted, useUnitProgress)
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function slotLabel(slotIndex: number): string {
   const day = TRAINING_DAYS[slotDayIndex(slotIndex)] ?? "?";
   const period = slotPeriodIndex(slotIndex) + 1;

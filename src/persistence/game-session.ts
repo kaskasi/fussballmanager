@@ -40,6 +40,10 @@ import { defaultLeagueState, normalizeLeagueState, type LeagueState } from "./le
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
 import type { IndividualProgram } from "../development/individual-training.ts";
 import { normalizeTrainingIntensity } from "../development/training-load.ts";
+import {
+  normalizeTrainingPlanPresets,
+  type TrainingPlanPresetSlot,
+} from "../development/training-plan-presets.ts";
 import { migrateLegacyTrainingPlan } from "../development/training-units.ts";
 import { createSave, type SaveGame } from "./savegame-model.ts";
 import {
@@ -87,6 +91,7 @@ export interface GameSession {
   matchPlayedThisWeek: boolean;
   players: Player[];
   trainingPlan: TrainingSlot[];
+  trainingPlanPresets: TrainingPlanPresetSlot[];
   trainingIntensity: number;
   individualPrograms: IndividualProgram[];
   scoutBoard: ScoutBoard;
@@ -113,6 +118,10 @@ export interface GameSession {
   youthCamps: YouthCamp[];
   /** Set when training reminder Postfach item was shown/dismissed this game week. */
   trainingReminderWeek?: { season: number; week: number };
+  /** Mo–Fr units completed via header NEXT this game week (0–15). */
+  trainingUnitsCompleted: number;
+  /** Manual training: false at week start until one calendar NEXT (opponent scout). */
+  trainingCalendarGateDone: boolean;
 }
 
 export function newGameSession(now = new Date()): GameSession {
@@ -206,6 +215,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
       }
       return plan;
     })(),
+    trainingPlanPresets: normalizeTrainingPlanPresets(pipeline.training_plan_presets),
     trainingIntensity: normalizeTrainingIntensity(pipeline.training_intensity),
     individualPrograms: pipeline.individual_programs ?? [],
     scoutBoard: reconcileScoutBoard(pipeline.scout_board, rivalPlayers),
@@ -244,6 +254,8 @@ export function sessionFromSave(save: SaveGame): GameSession {
     academyFacility: pipeline.academy_facility ?? "academy_basic",
     youthCamps: normalizeYouthCamps(pipeline.youth_camps),
     trainingReminderWeek: pipeline.training_reminder_week,
+    trainingUnitsCompleted: pipeline.training_units_completed ?? 0,
+    trainingCalendarGateDone: pipeline.training_calendar_gate_done ?? true,
   };
   return syncManagerClubWithBoard(session);
 }
@@ -251,6 +263,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
 export function saveFromSession(session: GameSession, base?: SaveGame, now = new Date()): SaveGame {
   const pipeline: PipelineState = {
     training_plan: session.trainingPlan,
+    training_plan_presets: session.trainingPlanPresets,
     training_intensity: session.trainingIntensity,
     individual_programs: session.individualPrograms,
     scout_board: session.scoutBoard,
@@ -271,6 +284,8 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     academy_facility: session.academyFacility,
     youth_camps: session.youthCamps,
     training_reminder_week: session.trainingReminderWeek,
+    training_units_completed: session.trainingUnitsCompleted,
+    training_calendar_gate_done: session.trainingCalendarGateDone,
   };
   const iso = now.toISOString();
 

@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  currentTrainingSlotIndex,
   defaultTrainingPlan,
   isTrainingDayPast,
   isTrainingSlotPast,
+  isTrainingSlotPastForSession,
   migrateLegacyTrainingPlan,
   planToSessions,
   trainingUnit,
@@ -36,6 +38,13 @@ describe("training units", () => {
     expect(isTrainingDayPast(0, 3)).toBe(true);
     expect(isTrainingDayPast(2, 3)).toBe(false);
     expect(isTrainingSlotPast(0, 6)).toBe(true);
+  });
+
+  it("grays slots by unit progress without waiting for the full day", () => {
+    expect(isTrainingSlotPastForSession(0, 1, 1, true)).toBe(true);
+    expect(isTrainingSlotPastForSession(1, 1, 1, true)).toBe(false);
+    expect(currentTrainingSlotIndex(1, true)).toBe(1);
+    expect(isTrainingSlotPastForSession(1, 1, 1, false)).toBe(false);
   });
 
   it("maps a named plan to PRD session groups", () => {

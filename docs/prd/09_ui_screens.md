@@ -191,7 +191,7 @@ Der Wireframe-Kommentar steht in jeder neuen `.tsx`-Datei, bevor die Implementat
 
 ### 09.3 Kalender-Takt (P2)
 
-Header-**NEXT** ist **kalendergebunden**: erst orientieren, dann Zeit/Spiel.
+Header-**NEXT** ist **kalendergebunden**: erst orientieren, dann Zeit/Spiel — **außer** im manuellen Training-Nexus (09.3b).
 
 | Regel | Verhalten |
 |---|---|
@@ -206,6 +206,37 @@ Header-**NEXT** ist **kalendergebunden**: erst orientieren, dann Zeit/Spiel.
 Kalender-UI (`CalendarScreen`): Monatsfokus; **`isToday`** = Zivil-Datum aus `(season, week, weekday)`; Transferfenster nur im Raster (kein Shell-Header-Chrome); kein WeekdayStrip; kein klickbarer Zellsprung in P2.
 
 **Meilenstein-Chips (P2):** `collectCalendarMilestones(session)` liefert ETAs (Individualtraining-Ende, Verletzungsende, Camp-Leiter, Vertrags-Unlock, …). Anzeige über `filterCalendarMilestonesForReveal` — nur Meilensteine in der **aktuellen Spielwoche und früher**; spätere Wochen bleiben leer, bis `session.week` nachrückt (Montag-Reveal implizit beim Wochenwechsel, kein Postfach-Schritt, kein Save-Flag). Pro Zelltag max. zwei Chips + Overflow-Zähler; Vergangenheit als `is-past`. Montag: Kicker „Termine dieser Woche“; Chips der laufenden Woche optional `is-current-week`.
+
+### 09.3b Training-Nexus (NEXT, manuelles Training)
+
+Wenn `feature_curtain.auto_training` **aus** ist (Act 2+), ist die **Wochenplanung** der Zeit-Takt — nicht der Kalender.
+
+```text
+/** WIREFRAME: PRD 09.3b — Header NEXT = Trainingseinheit */
+
+Hub (oder Training)                    Flash-Toast (ok)
+┌──────────────────────────────┐      ┌─────────────────────────────┐
+│ [NEXT] Trainingseinheit (12) │ ──▶  │ Di E2 · Passspiel: Müller   │
+│                              │      │ +0.1 Passspiel              │
+│ Training-Kachel → Plan       │      └─────────────────────────────┘
+└──────────────────────────────┘
+
+Leerer Slot → NEXT warn + Screen Training (Plan ergänzen).
+15/15 Einheiten → `weekday` = Sa; danach Kalender-Takt (Spiel / So / Wochen-Sim).
+Wochen-Sim: Team-Growth nur über NEXT-Einheiten; Wochenende = Verfall + Jugend/Individual.
+
+Montag nach Spieltag abschließen: **1× NEXT → Kalender** (Gegner scouten), **2× NEXT auf Kalender → Training** (noch keine Einheit), ab **3× NEXT** Einheiten + Toasts (bleibt im Training-Flow).
+Stundenplan: **gelb** = aktuelle Einheit (`is-current`); **grau** = abgeschlossene Einheiten (`training_units_completed`), nicht erst ganzer Tag.
+```
+
+| Feld / Regel | Verhalten |
+|---|---|
+| `training_units_completed` | 0–15 pro Spielwoche; Reset Montag nach `simulate_week` |
+| `training_calendar_gate_done` | Nach Wochen-Sim `false` (manuell); erst nach NEXT auf Kalender `true`, dann Einheiten-NEXT |
+| NEXT (global) | Solange `< 15`: eine Einheit simulieren, Toast, Fortschritt +1 |
+| Leerer Slot | Kein Growth; Toast + Navigation **Training** |
+| Kalender | Nach 15/15 oder Act 1 (`auto_training`) wie 09.3 |
+| Save | `pipeline.training_units_completed`, Migration 073 |
 
 ### 09.5 Career curtain (PRD 19)
 

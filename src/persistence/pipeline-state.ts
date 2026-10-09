@@ -2,6 +2,10 @@ import { defaultBoardState, type BoardState } from "../board/board-state.ts";
 import { startBoardSeason } from "../board/season-objectives.ts";
 import { defaultEmployerClubId } from "../board/job-offers.ts";
 import type { IndividualProgram } from "../development/individual-training.ts";
+import {
+  defaultTrainingPlanPresets,
+  type TrainingPlanPresetSlot,
+} from "../development/training-plan-presets.ts";
 import { createInitialTrainingPlan, type TrainingSlot } from "../development/training-units.ts";
 import type { MatchLineupState } from "../match/lineup-board.ts";
 import { defaultTacticsPresets, type TacticsPresetSlot } from "../match/tactics-presets.ts";
@@ -26,6 +30,8 @@ import type { ScoutNetworkState } from "../scouting/scout-network.ts";
 /** Dynamic hub state stored in `state.json` (PRD 08). */
 export interface PipelineState {
   training_plan: TrainingSlot[];
+  /** F2.1 — three named weekly plan templates. */
+  training_plan_presets?: TrainingPlanPresetSlot[];
   /** F2.1 — weekly intensity (80–130, default 100). */
   training_intensity?: number;
   /** F2.3 — individual extra programs per player. */
@@ -58,6 +64,10 @@ export interface PipelineState {
   assistant_delegation?: AssistantDelegation;
   /** Assistenten-Training-Erinnerung — höchstens ein Blocker pro Spielwoche. */
   training_reminder_week?: { season: number; week: number };
+  /** F2.1 — training units completed via NEXT this week (PRD 09.3 training nexus). */
+  training_units_completed?: number;
+  /** Manual week: false until player acknowledges calendar / opponent scout once. */
+  training_calendar_gate_done?: boolean;
   /** F4.3 — hired scout tiers and capacity. */
   scout_network?: ScoutNetworkState;
 }
@@ -65,6 +75,7 @@ export interface PipelineState {
 export function defaultPipelineState(week = 1): PipelineState {
   return {
     training_plan: createInitialTrainingPlan(),
+    training_plan_presets: defaultTrainingPlanPresets(),
     scout_board: createScoutBoard(),
     youth_inbox: emptyInbox(week),
     transfer_state: emptyTransferState(),

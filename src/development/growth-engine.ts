@@ -116,26 +116,44 @@ export function sampleNoise(attribute: keyof Attributes, random: () => number = 
   return Math.max(0, 1 + z * sigma);
 }
 
-/**
- * Weekly delta for one attribute, after soft cap and the [−3, +5] clamp.
- * The stored 0–199 cap is applied by the caller when writing the attribute.
- */
-export function calculateWeeklyGrowth(input: WeeklyGrowthInput): number {
+/** Training term only (no weekly decay, soft cap, or final clamp). */
+export function calculateWeeklyTrainingGain(input: WeeklyGrowthInput): number {
   const age = effectiveAge(input.age, input.maturityOffset);
   const noise =
     input.noise === undefined
       ? sampleNoise(input.attribute, input.random)
       : Math.max(0, input.noise);
 
-  let growth =
+  return (
     learningBase(age) *
-      input.anlage *
-      input.drive *
-      environment(input.environmentFactor ?? 1) *
-      noise *
-      trainingFocus(input.focusSlots, input.injured) *
-      calculateMatchPractice(input.minutes, input.injured) -
-    decayPerWeek(input.attribute, age);
+    input.anlage *
+    input.drive *
+    environment(input.environmentFactor ?? 1) *
+    noise *
+    trainingFocus(input.focusSlots, input.injured) *
+    calculateMatchPractice(input.minutes, input.injured)
+  );
+}
+
+/** Subtractive weekly decay as a delta (≤ 0). */
+export function weeklyDecayDelta(
+  attribute: keyof Attributes,
+  age: number,
+  maturityOffset: number,
+): number {
+  const effectiveAgeValue = effectiveAge(age, maturityOffset);
+  const decay = decayPerWeek(attribute, effectiveAgeValue);
+  if (decay === 0) return 0;
+  return Math.max(GROWTH_MIN, -decay);
+}
+
+/**
+ * Weekly delta for one attribute, after soft cap and the [−3, +5] clamp.
+ * The stored 0–199 cap is applied by the caller when writing the attribute.
+ */
+export function calculateWeeklyGrowth(input: WeeklyGrowthInput): number {
+  const age = effectiveAge(input.age, input.maturityOffset);
+  let growth = calculateWeeklyTrainingGain(input) - decayPerWeek(input.attribute, age);
 
   if (input.value >= SOFT_CAP && growth > 0) {
     growth *= 0.3;

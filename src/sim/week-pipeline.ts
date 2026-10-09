@@ -7,12 +7,15 @@ import {
 import { evaluateClearStamps, evaluateEventStamps } from "../development/ability-stamps.ts";
 import { advanceIndividualTrainingWeek } from "../development/individual-training.ts";
 import { formatPlayerName } from "../types/player-display.ts";
-import { applyTrainingWeek } from "../development/pipeline-week.ts";
+import { applyTrainingWeek, applyWeeklyAttributeDecay } from "../development/pipeline-week.ts";
+import {
+  resolveFeatureCurtain,
+  resolveTrainingPlanAfterWeek,
+} from "../narrative/career-presentation.ts";
 import {
   emptyWeeklyTrainingPlan,
   planToSessions,
 } from "../development/training-units.ts";
-import { resolveTrainingPlanAfterWeek } from "../narrative/career-presentation.ts";
 import {
   applyTrainingNeglectMorale,
   isTrainingPlanNeglected,
@@ -187,8 +190,11 @@ export async function simulateGameWeek(
       environmentFromCoachingStaff(session.coachingStaff) *
       precinctTrainingEnvironment(session.stadium.precinct),
   };
+  const manualTrainingUnits = !resolveFeatureCurtain(session.storyState).auto_training;
   let players = tickInjuryRecoveryBatch(session.players).map((player) =>
-    applyTrainingWeek(player, sessions, trainingContext),
+    manualTrainingUnits
+      ? applyWeeklyAttributeDecay(player)
+      : applyTrainingWeek(player, sessions, trainingContext),
   );
 
   const individualStep = advanceIndividualTrainingWeek(
@@ -467,6 +473,8 @@ export async function simulateGameWeek(
     board: narrativeStep.board,
     trainingPlan: resolveTrainingPlanAfterWeek(narrativeStep.storyState),
     trainingReminderWeek: undefined,
+    trainingUnitsCompleted: 0,
+    trainingCalendarGateDone: resolveFeatureCurtain(narrativeStep.storyState).auto_training,
     rivalPlayers,
     transferState,
     clubEvents,

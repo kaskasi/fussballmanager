@@ -1,3 +1,6 @@
+/**
+ * WIREFRAME: PRD 09.3b — Training timetable; header NEXT runs units (toast), not calendar days.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { MapPinOff } from "lucide-react";
 import {
@@ -7,9 +10,10 @@ import {
   TRAINING_DAYS,
   TRAINING_UNITS,
   UNITS_PER_DAY,
-  isTrainingDayPast,
+  currentTrainingSlotIndex,
+  isTrainingDayFullyPastForSession,
   isTrainingSlotEmpty,
-  isTrainingSlotPast,
+  isTrainingSlotPastForSession,
   trainingUnit,
   trainingUnitUnlocked,
   type TrainingSlot,
@@ -30,6 +34,8 @@ import {
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import { RetrainPreviewPanel } from "../components/RetrainPreviewPanel.tsx";
+import { TrainingPlanPresetsBar } from "../components/TrainingPlanPresetsBar.tsx";
+import type { TrainingPlanPresetSlot } from "../../development/training-plan-presets.ts";
 import { ScreenEmptyState } from "../components/ScreenEmptyState.tsx";
 import {
   assignIndividualProgram,
@@ -110,6 +116,11 @@ export function TrainingCenter({
   onClearIndividualFocus,
   hasTrainingHall = false,
   injuryRiskFactor = 1,
+  trainingUnitsCompleted = 0,
+  useTrainingUnitProgress = false,
+  trainingPlanPresets,
+  onTrainingPlanPresetsChange,
+  onTrainingPresetNotice,
 }: {
   week: number;
   weekday: number;
@@ -137,6 +148,11 @@ export function TrainingCenter({
   onClearIndividualFocus?: () => void;
   hasTrainingHall?: boolean;
   injuryRiskFactor?: number;
+  trainingUnitsCompleted?: number;
+  useTrainingUnitProgress?: boolean;
+  trainingPlanPresets: TrainingPlanPresetSlot[];
+  onTrainingPlanPresetsChange: (presets: TrainingPlanPresetSlot[]) => void;
+  onTrainingPresetNotice: (text: string, tone?: "ok" | "warn") => void;
 }) {
   useT();
   const [tab, setTab] = useState<TrainingTab>("team");
@@ -181,6 +197,11 @@ export function TrainingCenter({
           <TeamPlan
             plan={plan}
             weekday={weekday}
+            trainingUnitsCompleted={trainingUnitsCompleted}
+            useTrainingUnitProgress={useTrainingUnitProgress}
+            trainingPlanPresets={trainingPlanPresets}
+            onTrainingPlanPresetsChange={onTrainingPlanPresetsChange}
+            onTrainingPresetNotice={onTrainingPresetNotice}
             pickSlot={pickSlot}
             focusCount={focusCount}
             check={check}
@@ -259,6 +280,11 @@ function TrainingIntensityStatus({
 function TeamPlan({
   plan,
   weekday,
+  trainingUnitsCompleted,
+  useTrainingUnitProgress,
+  trainingPlanPresets,
+  onTrainingPlanPresetsChange,
+  onTrainingPresetNotice,
   pickSlot,
   focusCount,
   check,
@@ -274,6 +300,11 @@ function TeamPlan({
 }: {
   plan: TrainingSlot[];
   weekday: number;
+  trainingUnitsCompleted: number;
+  useTrainingUnitProgress: boolean;
+  trainingPlanPresets: TrainingPlanPresetSlot[];
+  onTrainingPlanPresetsChange: (presets: TrainingPlanPresetSlot[]) => void;
+  onTrainingPresetNotice: (text: string, tone?: "ok" | "warn") => void;
   pickSlot: number | null;
   focusCount: number;
   check: ReturnType<typeof validateWeeklyPlan>;
@@ -288,6 +319,15 @@ function TeamPlan({
   onSelectPlayer?: (playerId: string) => void;
 }) {
   const heatCells = useMemo(() => squadGrowthHeatmap(players, clubId), [players, clubId]);
+  const nextSlotIndex = currentTrainingSlotIndex(trainingUnitsCompleted, useTrainingUnitProgress);
+
+  useEffect(() => {
+    if (nextSlotIndex === null) return;
+    const node = document.querySelector<HTMLElement>(
+      `[data-training-slot-index="${nextSlotIndex}"]`,
+    );
+    node?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+  }, [nextSlotIndex]);
 
   return (
     <section className="training-team">
@@ -309,22 +349,44 @@ function TeamPlan({
         onIntensityChange={onIntensityChange}
       />
 
+      <TrainingPlanPresetsBar
+        presets={trainingPlanPresets}
+        currentPlan={plan}
+        loadBlocked={useTrainingUnitProgress && trainingUnitsCompleted > 0}
+        onPresetsChange={onTrainingPlanPresetsChange}
+        onPlanChange={onPlanChange}
+        onNotice={onTrainingPresetNotice}
+      />
+
       <div className="training-timetable" aria-label={t("training.timetable.aria")}>
         {TRAINING_DAYS.map((day, dayIndex) => {
-          const dayPast = isTrainingDayPast(dayIndex, weekday);
+          const dayPast = isTrainingDayFullyPastForSession(
+            dayIndex,
+            weekday,
+            trainingUnitsCompleted,
+            useTrainingUnitProgress,
+          );
           return (
           <div key={day} className={dayPast ? "training-day-column is-past" : "training-day-column"}>
             <p className="training-day-header">{day}</p>
             {Array.from({ length: UNITS_PER_DAY }, (_, period) => {
               const index = dayIndex * UNITS_PER_DAY + period;
               const slot = plan[index]!;
-              const slotPast = isTrainingSlotPast(index, weekday);
+              const slotPast = isTrainingSlotPastForSession(
+                index,
+                weekday,
+                trainingUnitsCompleted,
+                useTrainingUnitProgress,
+              );
+              const slotCurrent = nextSlotIndex === index;
               return (
                 <SlotCard
                   key={index}
+                  slotIndex={index}
                   periodLabel={slotPeriodLabel(index)}
                   slot={slot}
                   past={slotPast}
+                  current={slotCurrent}
                   active={pickSlot === index}
                   onOpenPicker={() => {
                     if (!slotPast) onPickSlot(index);
@@ -401,17 +463,21 @@ function toggleFocus(plan: TrainingSlot[], index: number): TrainingSlot[] {
 }
 
 function SlotCard({
+  slotIndex,
   periodLabel,
   slot,
   past,
+  current,
   active,
   onOpenPicker,
   onToggleFocus,
   focusToggleDisabled,
 }: {
+  slotIndex: number;
   periodLabel: string;
   slot: TrainingSlot;
   past: boolean;
+  current: boolean;
   active: boolean;
   onOpenPicker: () => void;
   onToggleFocus: () => void;
@@ -424,13 +490,19 @@ function SlotCard({
     empty ? "is-empty" : "",
     slot.focus ? "is-focus" : "",
     active ? "is-active" : "",
+    current ? "is-current" : "",
     past ? "is-past" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <article className={className} aria-disabled={past || undefined}>
+    <article
+      className={className}
+      data-training-slot-index={slotIndex}
+      aria-disabled={past || undefined}
+      aria-current={current ? "step" : undefined}
+    >
       <button
         type="button"
         className={

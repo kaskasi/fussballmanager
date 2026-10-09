@@ -69,6 +69,9 @@ import { migration069OpponentScout } from "./migration_069_opponent_scout.ts";
 import { migration070TrainingFifteenSlots } from "./migration_070_training_fifteen_slots.ts";
 import { migration071YouthInboxWeeklyDelivery } from "./migration_071_youth_inbox_weekly_delivery.ts";
 import { migration072CareerActs } from "./migration_072_career_acts.ts";
+import { migration073TrainingNextUnits } from "./migration_073_training_next_units.ts";
+import { migration074TrainingCalendarGate } from "./migration_074_training_calendar_gate.ts";
+import { migration075TrainingPlanPresets } from "./migration_075_training_plan_presets.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -147,6 +150,9 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration070TrainingFifteenSlots,
   migration071YouthInboxWeeklyDelivery,
   migration072CareerActs,
+  migration073TrainingNextUnits,
+  migration074TrainingCalendarGate,
+  migration075TrainingPlanPresets,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

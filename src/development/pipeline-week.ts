@@ -1,9 +1,14 @@
 import type { Attributes, Player } from "../types/player.ts";
 import { isOnProTrial } from "../youth/pro-trial.ts";
-import { applyGrowth, calculateWeeklyGrowth } from "./growth-engine.ts";
+import {
+  applyGrowth,
+  calculateWeeklyGrowth,
+  calculateWeeklyTrainingGain,
+  weeklyDecayDelta,
+} from "./growth-engine.ts";
 import { trainingIntensityMultiplier } from "./training-load.ts";
 import { defaultTrainingPlan, planToSessions } from "./training-units.ts";
-import { focusSlotsFor, type TrainingSession } from "./weekly-plan.ts";
+import { focusSlotsFor, SLOT_COUNT, type TrainingSession } from "./weekly-plan.ts";
 
 export interface TrainingWeekContext {
   season: number;
@@ -94,6 +99,57 @@ export function applyTrainingWeek(
   return { ...player, attributes };
 }
 
+function resolveGrowthRandom(
+  player: Player,
+  key: keyof Attributes,
+  context?: TrainingWeekContext,
+  channel = "team",
+  random?: () => number,
+): (() => number) | undefined {
+  if (random) return random;
+  if (context?.masterSeed === undefined) return undefined;
+  return seededGrowthRandom(
+    context.masterSeed,
+    context.season,
+    context.week,
+    player.id,
+    key,
+    channel,
+  );
+}
+
+function trainingGainOf(
+  player: Player,
+  key: keyof Attributes,
+  sessions: readonly TrainingSession[],
+  context?: TrainingWeekContext,
+  channel = "team",
+  random?: () => number,
+): number {
+  const scale =
+    effectiveDevelopmentScale(player, context) *
+    trainingIntensityMultiplier(context?.intensity ?? 100);
+  const resolvedRandom = resolveGrowthRandom(player, key, context, channel, random);
+  let raw = calculateWeeklyTrainingGain({
+    age: player.age,
+    maturityOffset: player.hidden.maturity_offset,
+    attribute: key,
+    value: player.attributes[key],
+    anlage: player.hidden.anlage[key],
+    drive: player.hidden.drive,
+    minutes: developmentMinutes(player.squad_status, player.state.weekly_minutes),
+    injured: player.state.injury !== null,
+    focusSlots: focusSlotsFor(sessions, key),
+    environmentFactor: context?.environmentFactor ?? 1,
+    noise: resolvedRandom ? undefined : 1,
+    random: resolvedRandom,
+  });
+  if (player.attributes[key] >= 180 && raw > 0) {
+    raw *= 0.3;
+  }
+  return (raw * scale) / SLOT_COUNT;
+}
+
 function growthOf(
   player: Player,
   key: keyof Attributes,
@@ -104,18 +160,7 @@ function growthOf(
   const scale =
     effectiveDevelopmentScale(player, context) *
     trainingIntensityMultiplier(context?.intensity ?? 100);
-  const resolvedRandom =
-    random ??
-    (context?.masterSeed !== undefined
-      ? seededGrowthRandom(
-          context.masterSeed,
-          context.season,
-          context.week,
-          player.id,
-          key,
-          "team",
-        )
-      : undefined);
+  const resolvedRandom = resolveGrowthRandom(player, key, context, "team", random);
   const raw = calculateWeeklyGrowth({
     age: player.age,
     maturityOffset: player.hidden.maturity_offset,
@@ -131,6 +176,45 @@ function growthOf(
     random: resolvedRandom,
   });
   return raw * scale;
+}
+
+const EMPTY_UNIT_SESSION: TrainingSession = { group: "mental", focus: false };
+
+/** One real session in the week grid; other slots are inert for focus counting. */
+export function isolatedUnitSessions(
+  weekSessions: readonly TrainingSession[],
+  slotIndex: number,
+): TrainingSession[] {
+  if (weekSessions.length !== SLOT_COUNT) {
+    throw new Error(`expected ${SLOT_COUNT} sessions, received ${weekSessions.length}`);
+  }
+  return weekSessions.map((session, index) => (index === slotIndex ? session : EMPTY_UNIT_SESSION));
+}
+
+export function applyTrainingUnit(
+  player: Player,
+  weekSessions: readonly TrainingSession[],
+  slotIndex: number,
+  context?: TrainingWeekContext,
+): Player {
+  const channel = `team-unit-${slotIndex}`;
+  const attributes = { ...player.attributes };
+  for (const key of SKILLS) {
+    const delta = trainingGainOf(player, key, weekSessions, context, channel);
+    if (delta === 0) continue;
+    attributes[key] = applyGrowth(player.attributes[key], delta);
+  }
+  return { ...player, attributes };
+}
+
+export function applyWeeklyAttributeDecay(player: Player): Player {
+  const attributes = { ...player.attributes };
+  for (const key of SKILLS) {
+    const delta = weeklyDecayDelta(key, player.age, player.hidden.maturity_offset);
+    if (delta === 0) continue;
+    attributes[key] = applyGrowth(player.attributes[key], delta);
+  }
+  return { ...player, attributes };
 }
 
 export function seededGrowthRandom(

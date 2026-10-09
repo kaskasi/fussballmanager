@@ -6,10 +6,12 @@ import { needsTrainingPlanForToday } from "./development/training-plan-state.ts"
 import {
   filterTeamNavScreens,
   isNavScreenVisible,
+  resolveFeatureCurtain,
   suppressTrainingPlanWarning,
   type CurtainNavScreen,
 } from "./narrative/career-presentation.ts";
 import type { StoryState } from "./narrative/story-state.ts";
+import type { TrainingPlanPresetSlot } from "./development/training-plan-presets.ts";
 import type { TrainingSlot } from "./development/training-units.ts";
 import { CareerMatch } from "./match/CareerMatch";
 import { buildBroadcastStoryContext } from "./match/broadcast-story-context.ts";
@@ -76,6 +78,15 @@ import {
 } from "./ui/nav-next-flow.ts";
 import { formatSeasonLabel } from "./sim/season-label.ts";
 import { simulateGameWeek } from "./sim/week-pipeline.ts";
+import {
+  isTrainingCalendarGatePending,
+  isTrainingNextActive,
+  runTrainingNextStep,
+  trainingWeekSlotsRemaining,
+  usesTrainingNextNexus,
+} from "./sim/training-next.ts";
+import { attributeLabel } from "./ui/player-profile.ts";
+import type { Attributes } from "./types/player.ts";
 import { isTransferWindowOpen } from "./sim/transfer-windows.ts";
 import {
   applyPlayerSaleIncome,
@@ -457,6 +468,7 @@ export default function App() {
     weekday,
     players,
     trainingPlan,
+    trainingPlanPresets,
     trainingIntensity,
     individualPrograms,
     scoutBoard,
@@ -479,6 +491,7 @@ export default function App() {
     scoutNetwork,
     academyFacility,
     youthCamps,
+    trainingUnitsCompleted,
   } = session;
   const playerDivisionId = useMemo((): WorldDivisionId => {
     const club = world.clubs.find((entry) => worldCareerClubId(entry.id) === session.clubId);
@@ -618,6 +631,10 @@ export default function App() {
       let nextSession = {
         ...result.session,
         weekday: MONDAY,
+        trainingUnitsCompleted: 0,
+        trainingCalendarGateDone: !resolveFeatureCurtain(result.session.storyState).auto_training
+          ? false
+          : true,
         matchPlayedThisWeek: false,
         youthInbox: deliverDailyInbox(result.session.youthInbox, {
           season: result.session.season,
@@ -830,7 +847,50 @@ export default function App() {
       return;
     }
 
-    if (screen !== "calendar") {
+    if (isTrainingCalendarGatePending(session)) {
+      if (screen !== "calendar") {
+        setScreen("calendar");
+        return;
+      }
+      patchSession((current) => ({ ...current, trainingCalendarGateDone: true }));
+      setScreen("training");
+      flashNotice(t("training.next.weekStart"), "ok");
+      return;
+    }
+
+    if (isTrainingNextActive(session)) {
+      const preview = runTrainingNextStep(session);
+      patchSession((current) => {
+        const step = runTrainingNextStep(current);
+        let nextSession = step.session;
+        if (nextSession.weekday !== current.weekday) {
+          nextSession = {
+            ...nextSession,
+            scoutBoard: advanceScoutBoardForSession(current, nextSession.weekday),
+          };
+        }
+        return nextSession;
+      });
+      if (preview.openTrainingScreen) {
+        setScreen("training");
+      } else if (screen !== "training") {
+        setScreen("training");
+      }
+      const toastParams =
+        "params" in preview.toast && preview.toast.params
+          ? { ...preview.toast.params }
+          : undefined;
+      if (toastParams?.attribute) {
+        toastParams.attribute = attributeLabel(toastParams.attribute as keyof Attributes);
+      }
+      flashNotice(
+        toastParams ? t(preview.toast.key, toastParams) : t(preview.toast.key),
+        preview.openTrainingScreen ? "warn" : "ok",
+      );
+      return;
+    }
+
+    if (shouldNavigateToCalendarBeforeTimeStep(screen, false, session)) {
       setScreen("calendar");
       return;
     }
@@ -941,6 +1001,7 @@ export default function App() {
     }
   }, [
     advanceScoutBoardForSession,
+    flashNotice,
     openPostfach,
     patchSession,
     screen,
@@ -1888,6 +1949,13 @@ export default function App() {
     [patchSession],
   );
 
+  const handleTrainingPlanPresetsChange = useCallback(
+    (presets: TrainingPlanPresetSlot[]) => {
+      patchSession((current) => ({ ...current, trainingPlanPresets: presets }));
+    },
+    [patchSession],
+  );
+
   const handleAssistantDelegationChange = useCallback(
     (task: AssistantDelegationTask, enabled: boolean) => {
       patchSession((current) => ({
@@ -2165,11 +2233,23 @@ export default function App() {
     ? t("match.lineup.backToSelection")
     : careerMatchSetup
     ? t("shell.next")
-    : hasInboxBlockerForNext(session, youthInbox, players)
+      : hasInboxBlockerForNext(session, youthInbox, players)
       ? t("shell.nextToPostfach")
-      : screen !== "calendar"
-        ? t("shell.nextViaCalendar")
-        : t("shell.smartSkip");
+      : isTrainingCalendarGatePending(session)
+        ? screen === "calendar"
+          ? t("training.next.startTraining")
+          : t("training.next.mondayCalendar")
+        : isTrainingNextActive(session)
+        ? t("training.next.header", {
+            remaining: String(trainingWeekSlotsRemaining(session)),
+          })
+        : shouldNavigateToCalendarBeforeTimeStep(
+              screen,
+              hasInboxBlockerForNext(session, youthInbox, players),
+              session,
+            )
+          ? t("shell.nextViaCalendar")
+          : t("shell.smartSkip");
 
   const navActions: HubNavActions = {
     week,
@@ -2589,6 +2669,11 @@ export default function App() {
           onClearIndividualFocus={() => setTrainingFocusPlayerId(null)}
           hasTrainingHall={precinctHasTrainingHall(stadium.precinct)}
           injuryRiskFactor={precinctInjuryRiskFactor(stadium.precinct)}
+          trainingUnitsCompleted={trainingUnitsCompleted}
+          useTrainingUnitProgress={usesTrainingNextNexus(storyState)}
+          trainingPlanPresets={trainingPlanPresets}
+          onTrainingPlanPresetsChange={handleTrainingPlanPresetsChange}
+          onTrainingPresetNotice={flashNotice}
         />
       ) : null}
       {campLeaderDismissCampId && youthCamps.some((entry) => entry.id === campLeaderDismissCampId) ? (

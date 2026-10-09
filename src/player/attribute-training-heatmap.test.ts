@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { copyAttributes, stampWeekStartAttributesBatch } from "./growth-history.ts";
 import {
+  attributeHeatCellIntensity,
   formatAttributeHeatDelta,
   squadAttributeTrainingHeatmap,
 } from "./attribute-training-heatmap.ts";
+import { SLOT_COUNT } from "../development/weekly-plan.ts";
 
 describe("attribute training heatmap", () => {
   it("sums pipeline gains per attribute this week", () => {
@@ -41,6 +43,14 @@ describe("attribute training heatmap", () => {
     player.attributes.passing += 1;
     const cells = squadAttributeTrainingHeatmap([player], "cl_fc_nordstern", 1, 2);
     expect(cells.every((cell) => cell.gainSum === 0)).toBe(true);
+  });
+
+  it("caps heat intensity early in the week vs late for the same gain", () => {
+    const sum = 0.57;
+    const early = attributeHeatCellIntensity(sum, 2, SLOT_COUNT);
+    const late = attributeHeatCellIntensity(sum, SLOT_COUNT, SLOT_COUNT);
+    expect(early).toBeLessThan(late);
+    expect(early).toBeLessThan(0.55);
   });
 
   it("stamps baseline via batch helper for migration path", () => {

@@ -7,6 +7,7 @@ import { buildOpponentLineupPreview } from "./opponent-lineup-preview.ts";
 describe("opponent lineup preview", () => {
   it("builds opponent starters with career CA and form", () => {
     const session = newGameSession();
+    session.week = 1;
     const setup = prepareCareerMatch(session);
     expect(setup).not.toBeNull();
     const preview = buildOpponentLineupPreview(setup!, session.rivalPlayers);
@@ -20,6 +21,7 @@ describe("opponent lineup preview", () => {
 
   it("aligns top opponent CA with the club profile modal", () => {
     const session = newGameSession();
+    session.week = 1;
     const setup = prepareCareerMatch(session);
     expect(setup).not.toBeNull();
     const opponentId = setup!.isHome ? setup!.awayTeamId : setup!.homeTeamId;
@@ -37,6 +39,7 @@ describe("opponent lineup preview", () => {
 
   it("places opponents on the opposite half from the player club", () => {
     const session = newGameSession();
+    session.week = 1;
     const setup = prepareCareerMatch(session);
     expect(setup).not.toBeNull();
     const preview = buildOpponentLineupPreview(setup!, session.rivalPlayers);

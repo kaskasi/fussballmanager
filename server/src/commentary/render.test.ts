@@ -274,7 +274,7 @@ describe("template commentary", () => {
 
     expect(commentate(events[9]!, ctx)).toContain("Gelb-Rot");
     expect(commentate(events[14]!, ctx)).toBe(
-      "Schlusspfiff. FC Nordstern 2–1 SV Rheinwacht.",
+      "Schlusspfiff. Kieler FC 2–1 SV Rheinwacht.",
     );
     const restartKickoff: MatchEvent = {
       type: "kickoff",

@@ -12,6 +12,7 @@ import {
 } from "./precinct.ts";
 import { DEFAULT_FANBASE } from "./club-stadium.ts";
 import { formatClubCash } from "../economy/club-finances.ts";
+import type { HospitalityPreview } from "./hospitality.ts";
 
 /** Reference fanbase — commerce scale 1.0 at this value. */
 const NEUTRAL_FANBASE = 60;
@@ -174,6 +175,23 @@ function scaleCommerceIncome(
   state: PrecinctState | undefined,
   isHomeMatchWeek: boolean,
 ): number {
+  return scaleMerchFootfallIncome(
+    throughput,
+    occupancy,
+    fanbase,
+    state,
+    isHomeMatchWeek,
+  );
+}
+
+/** Footfall × fan pull — shared by kiosk/beer and merchandising engine. */
+export function scaleMerchFootfallIncome(
+  throughput: number,
+  occupancy: number,
+  fanbase: number,
+  state: PrecinctState | undefined,
+  isHomeMatchWeek: boolean,
+): number {
   if (throughput <= 0) return 0;
   return Math.round(
     throughput *
@@ -233,6 +251,14 @@ export function fanshopFullCapacity(state: PrecinctState | undefined): number {
   return Math.round(4_000 * shop * (1.15 - cogs) * (1 + Math.max(0, dockedOccupiedCells(state, "fanshop") - 4) * 0.08));
 }
 
+const ONLINE_MERCH_THROUGHPUT = 900;
+
+/** Fanshop level/area throughput; small online baseline when no docked shop. */
+export function fanshopMerchThroughput(state: PrecinctState | undefined): number {
+  const cap = fanshopFullCapacity(state);
+  return cap > 0 ? cap : ONLINE_MERCH_THROUGHPUT;
+}
+
 /** Weekly sausage-stall margin — throughput × visitors × fan pull. */
 export function weeklyKioskIncome(
   state: PrecinctState | undefined,
@@ -275,8 +301,8 @@ export function weeklyFanshopIncome(
   );
 }
 
-/** Wurst + Bier + Shop, paid weekly × footfall. */
-export function weeklyPrecinctCash(
+/** Kiosk + Bier — Fanshop revenue lives in merchandising (PRD 11). */
+export function weeklyPrecinctConcessionsCash(
   state: PrecinctState | undefined,
   occupancy = 1,
   fanbase = NEUTRAL_FANBASE,
@@ -284,9 +310,18 @@ export function weeklyPrecinctCash(
 ): number {
   return (
     weeklyKioskIncome(state, occupancy, fanbase, isHomeMatchWeek) +
-    weeklyBeerIncome(state, occupancy, fanbase, isHomeMatchWeek) +
-    weeklyFanshopIncome(state, occupancy, fanbase, isHomeMatchWeek)
+    weeklyBeerIncome(state, occupancy, fanbase, isHomeMatchWeek)
   );
+}
+
+/** @deprecated Use weeklyPrecinctConcessionsCash + merchandising ledger line. */
+export function weeklyPrecinctCash(
+  state: PrecinctState | undefined,
+  occupancy = 1,
+  fanbase = NEUTRAL_FANBASE,
+  isHomeMatchWeek = true,
+): number {
+  return weeklyPrecinctConcessionsCash(state, occupancy, fanbase, isHomeMatchWeek);
 }
 
 export type PrecinctStatusTone = "buff" | "hunger" | "warn";
@@ -348,7 +383,10 @@ function joinBits(bits: string[]): string | null {
   return present.length > 0 ? present.join(" · ") : null;
 }
 
-export function listPrecinctStatusEffects(state: PrecinctState | undefined): PrecinctStatusEffect[] {
+export function listPrecinctStatusEffects(
+  state: PrecinctState | undefined,
+  hospitalityPreview?: HospitalityPreview,
+): PrecinctStatusEffect[] {
   const empty = !state;
   const fill = empty ? null : fillParts(state);
   const fans = empty ? null : fanbaseParts(state);
@@ -426,7 +464,22 @@ export function listPrecinctStatusEffects(state: PrecinctState | undefined): Pre
     if (placed && def.id === "fanshop" && merch > 0) {
       bits.push(`Merch ${formatClubCash(merch)} bei voller Auslastung`);
     }
-    if (placed && (def.id === "hotel" || def.id === "restaurant")) {
+    if (placed && def.id === "hotel" && hospitalityPreview?.hotel) {
+      const h = hospitalityPreview.hotel;
+      bits.push(`${h.occupancyPct}% Auslastung`);
+      if (h.docked && h.weeklyIncome > 0) {
+        bits.push(`${formatClubCash(h.weeklyIncome)}/Wo`);
+      }
+    }
+    if (placed && def.id === "restaurant" && hospitalityPreview?.restaurant) {
+      const r = hospitalityPreview.restaurant;
+      bits.push(r.viral ? "100% · Story-Hype" : `${r.occupancyPct}% Auslastung`);
+      if (r.docked && r.weeklyIncome > 0) {
+        bits.push(`${formatClubCash(r.weeklyIncome)}/Wo`);
+      }
+      if (r.overtimeDueThisWeek) bits.push("Überstunden diese Woche");
+    }
+    if (placed && (def.id === "hotel" || def.id === "restaurant") && !hospitalityPreview) {
       bits.push("Auslastung");
     }
     if (placed && !buildingDocksStreetNetwork(state, def.id)) {
@@ -449,7 +502,19 @@ export function listPrecinctStatusEffects(state: PrecinctState | undefined): Pre
       group,
       icon: def.icon,
       label: def.label,
-      magnitude: tone === "buff" ? compactMagnitude(def.id, fill, fans, training, merch, kioskCash, beerCash) : null,
+      magnitude:
+        tone === "buff"
+          ? compactMagnitude(
+              def.id,
+              fill,
+              fans,
+              training,
+              merch,
+              kioskCash,
+              beerCash,
+              hospitalityPreview,
+            )
+          : null,
       detail,
       tone,
     };
@@ -465,7 +530,16 @@ function compactMagnitude(
   merch: number,
   kioskCash: number,
   beerCash: number,
+  hospitalityPreview?: HospitalityPreview,
 ): string | null {
+  if (id === "hotel" && hospitalityPreview?.hotel?.docked) {
+    return `${hospitalityPreview.hotel.occupancyPct}%`;
+  }
+  if (id === "restaurant" && hospitalityPreview?.restaurant?.docked) {
+    return hospitalityPreview.restaurant.viral
+      ? "100%"
+      : `${hospitalityPreview.restaurant.occupancyPct}%`;
+  }
   if (!fill || !fans || !training) return null;
   if (id === "parking") return fill.parking > 0 ? formatPct(fill.parking) : null;
   if (id === "kiosk") return kioskCash > 0 ? formatClubCash(kioskCash) : fill.kiosk > 0 ? formatPct(fill.kiosk) : null;

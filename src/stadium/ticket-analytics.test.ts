@@ -9,6 +9,7 @@ describe("ticket analytics", () => {
       cash: 1,
       transfer_budget: 0,
       wage_budget_weekly: 1,
+      last_closed_month: 0,
       pending_lines: [
         { kind: "matchday_tickets", amount: 120_000, week: 3 },
         { kind: "matchday_tickets", amount: 95_000, week: 7 },

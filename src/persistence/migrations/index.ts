@@ -75,6 +75,11 @@ import { migration075TrainingPlanPresets } from "./migration_075_training_plan_p
 import { migration076WeekStartAttributes } from "./migration_076_week_start_attributes.ts";
 import { migration077PrecinctFullFarm } from "./migration_077_precinct_full_farm.ts";
 import { migration078PitchCondition } from "./migration_078_pitch_condition.ts";
+import { migration079Merchandising } from "./migration_079_merchandising.ts";
+import { migration080MerchInventory } from "./migration_080_merch_inventory.ts";
+import { migration081MerchUnitScale } from "./migration_081_merch_unit_scale.ts";
+import { migration082MerchTimedSale } from "./migration_082_merch_timed_sale.ts";
+import { migration083MerchMarketSeed } from "./migration_083_merch_market_seed.ts";
 import { migration084KickerEditionArchive } from "./migration_084_kicker_edition_archive.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
@@ -160,6 +165,11 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration076WeekStartAttributes,
   migration077PrecinctFullFarm,
   migration078PitchCondition,
+  migration079Merchandising,
+  migration080MerchInventory,
+  migration081MerchUnitScale,
+  migration082MerchTimedSale,
+  migration083MerchMarketSeed,
   migration084KickerEditionArchive,
 ];
 

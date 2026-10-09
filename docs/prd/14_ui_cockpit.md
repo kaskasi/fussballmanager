@@ -242,6 +242,15 @@ Operations, Gehälter, Transfers, Ausbau). Kapital ≥ €100k (oder eine
 Gehaltswoche) öffnet das Runway-Sheet; Vorstand-Kasse warnen, nicht
 blocken. Gelände-Erweiterung kostet €320k.
 
+**Merchandising (F6.x Slice, save ≥ 79):**
+
+- **Team-Menü → Merchandising** — Steuerung: Trikot-Top-Verkäufer (Marktwert-Gewichte),
+  Kollektion-Mix (Schals/Textil/Heim), ein Liefervertrag (Budget/Standard/Oeko) + Retail-Modus;
+  Lieferwechsel = Infrastructure-Ledger, wirkt ab Folgewoche.
+- **Finanzen → Tab Merch** — nur Auswertung (wie Eintritt): Wochen-/Voll-netto, Top-Trikots,
+  Mix; keine zweite Fortschritts-CTA im Tab (design.md §10).
+- Übersicht: Budget-Karte „Merchandising“ neben Kasse/Transfer/Gehalt.
+
 ### 14.7 Stadion als Inventar (F7.1, F6.5, Gelände-Tab)
 
 Den bestehenden 2D-Grundriss behalten. Ausbau-Shop darf nicht die Karte
@@ -306,11 +315,13 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
 
 ### 14.8 Transfers (F5.1, F5.4, F5.7)
 
-Kein Dead-End bei geschlossenem Fenster. Oben sitzt ein Streifen
-**Nächste Aktion**: auslaufende Verträge, Vorvertrag-Fenster (F5.7),
-Jugend ohne Deal. Klick öffnet die Akte (eigen) oder das Scout-Profil
-(fremd). Liga-Historie ist sekundär. Fee-Verhandlung bleibt im bestehenden
-Flow; Spielergehalt-Slider ist F5.4 und teilt die Akte (14.3).
+Kein Dead-End bei geschlossenem Fenster. Oben **Vertragsgespräche**:
+max. drei Profis mit Restlaufzeit **unter zwölf Monaten** (kürzeste zuerst);
+Klick → Akte / Verhandeln (F5.4). Scouting-Markt und Vorverträge bleiben
+im Scouting-Screen. **Historie** nur eigener Verein: zwei Spalten Zugänge | Abgänge,
+Saison-Pills (Chevrons bei vielen Jahren). **Liga-Deals** nicht auf diesem
+Screen — siehe Dienstags-Kicker (PRD 09). Fee-Verhandlung bleibt im
+bestehenden Flow; Spielergehalt-Slider ist F5.4 und teilt die Akte (14.3).
 
 ### 14.9 Scouting (F4.1, F4.2; Karte F4.4 M2)
 

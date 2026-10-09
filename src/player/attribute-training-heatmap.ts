@@ -63,6 +63,27 @@ export function attributeHeatmapPeak(cells: readonly AttributeTrainingCell[]): n
   return Math.max(...cells.map((cell) => cell.gainSum), 0.000_1);
 }
 
+/** Squad sum (one attribute) that reads as “full heat” after a complete training week. */
+export const SQUAD_ATTR_HEAT_WEEKLY_SATURATE = 2;
+
+/**
+ * Pixel opacity: absolute gain vs weekly target, capped by how much of the plan has run.
+ * Prevents “black” cells on day one when one attribute leads the relative peak.
+ */
+export function attributeHeatCellIntensity(
+  sum: number,
+  unitsCompleted: number,
+  slotCount: number,
+): number {
+  if (sum <= 0.000_1) return 0.35;
+  if (slotCount <= 0) return 0.35;
+  const weekProgress = Math.min(1, unitsCompleted / slotCount);
+  const normalized = Math.min(1, sum / SQUAD_ATTR_HEAT_WEEKLY_SATURATE);
+  const progressCeiling = 0.28 + 0.72 * weekProgress;
+  const effective = normalized * progressCeiling;
+  return 0.35 + effective * 0.65;
+}
+
 export function attributeHeatmapTotal(cells: readonly AttributeTrainingCell[]): number {
   return cells.reduce((sum, cell) => sum + cell.gainSum, 0);
 }

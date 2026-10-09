@@ -55,7 +55,7 @@ import {
 } from "./scouting/scout-trip-queue.ts";
 import type { ScoutRouteScore } from "./scouting/scout-route-puzzle.ts";
 import { worldCareerClubId, type WorldDivisionId } from "./world/world-generator.ts";
-import { ArrowLeft, TriangleAlert } from "lucide-react";
+import { ArrowLeft, Package, TriangleAlert } from "lucide-react";
 import { ClubCrest } from "./ui/components/ClubCrest.tsx";
 import { clubLogoUrlForPlayerClub } from "./ui/assets/club-logo.ts";
 import { joinDocumentTitle, useDocumentTitle } from "./ui/document-title.ts";
@@ -161,6 +161,17 @@ import {
 } from "./scouting/scout-network.ts";
 import { FirstTeam } from "./ui/screens/FirstTeam.tsx";
 import { FinancesScreen } from "./ui/screens/FinancesScreen.tsx";
+import { MerchandisingScreen } from "./ui/screens/MerchandisingScreen.tsx";
+import {
+  buyBulkOffer,
+  deliverMerchandisingOrders,
+  ensureMerchBulkMarket,
+  orderMerchOnDemand,
+  canAffordMerchPurchase,
+  hasMerchStockout,
+  startMerchSkuSale,
+  type MerchSkuId,
+} from "./economy/merchandising.ts";
 import { ClubEventsScreen } from "./ui/screens/ClubEventsScreen.tsx";
 import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
 import { standings, type SandboxPlan, type TeamId } from "@fussballmanager/shared";
@@ -178,6 +189,7 @@ import {
   type ClubStadium,
 } from "./stadium/club-stadium.ts";
 import { clubDisplayName, clubShortLabel } from "./sim/league-divisions.ts";
+import { clubFlavorFanbase } from "./sim/club-profiles.ts";
 import { playerFixture } from "./sim/league-week.ts";
 import { fanbaseMood } from "./stadium/fanbase.ts";
 import { teamForm } from "./sim/league-form.ts";
@@ -311,6 +323,7 @@ type Screen =
   | "transfers"
   | "squad"
   | "finances"
+  | "merchandising"
   | "stadium"
   | "leagues"
   | "help"
@@ -327,6 +340,7 @@ const SCREEN_DOCUMENT_TITLE_KEYS: Record<Screen, string> = {
   transfers: "shell.nav.transfers",
   squad: "shell.nav.squad",
   finances: "shell.nav.finances",
+  merchandising: "shell.nav.merchandising",
   stadium: "shell.nav.stadium",
   leagues: "shell.nav.leagues",
   help: "shell.nav.help",
@@ -901,6 +915,12 @@ export default function App() {
         if (nextSession.weekday !== current.weekday) {
           nextSession = {
             ...nextSession,
+            stadium: deliverMerchandisingOrders(
+              current.stadium,
+              nextSession.season,
+              nextSession.week,
+              nextSession.weekday,
+            ),
             scoutBoard: advanceScoutBoardForSession(current, nextSession.weekday),
           };
         }
@@ -1420,6 +1440,86 @@ export default function App() {
       patchSession((current) => ({ ...current, matchLineup: lineup }));
     },
     [patchSession],
+  );
+
+  const handleMerchandisingChange = useCallback(
+    (next: typeof stadium) => {
+      patchSession((current) => ({
+        ...current,
+        stadium: normalizeClubStadium(next),
+      }));
+    },
+    [patchSession],
+  );
+
+  const handleMerchBulkPurchase = useCallback(
+    (offerId: string) => {
+      const fresh = ensureMerchBulkMarket(stadium, season, week, masterSeed);
+      const preview = buyBulkOffer(fresh, offerId, season, week);
+      if (!preview || !canAffordMerchPurchase(finances, preview.cost)) return;
+      requestClubSpend(
+        preview.cost,
+        "Merchandising · Whitelabel-Paket",
+        (session) => {
+          const synced = ensureMerchBulkMarket(
+            session.stadium,
+            session.season,
+            session.week,
+            session.masterSeed,
+          );
+          const next = buyBulkOffer(synced, offerId, session.season, session.week);
+          if (!next || !canAffordMerchPurchase(session.finances, next.cost)) return session;
+          return {
+            ...session,
+            stadium: normalizeClubStadium(next.stadium),
+            finances: spendClubCash(session.finances, next.cost, session.week),
+          };
+        },
+        { infrastructure: true },
+      );
+    },
+    [finances, masterSeed, requestClubSpend, season, stadium, week],
+  );
+
+  const handleMerchSaleStart = useCallback(
+    (sku: MerchSkuId, salePrice: number) => {
+      patchSession((current) => ({
+        ...current,
+        stadium: normalizeClubStadium(
+          startMerchSkuSale(current.stadium, sku, salePrice, current.season, current.week),
+        ),
+      }));
+    },
+    [patchSession],
+  );
+
+  const handleMerchOnDemand = useCallback(
+    (sku: MerchSkuId, qty: number) => {
+      const preview = orderMerchOnDemand(stadium, sku, qty, season, week, weekday);
+      if (!preview || !canAffordMerchPurchase(finances, preview.cost)) return;
+      requestClubSpend(
+        preview.cost,
+        "Merchandising · On Demand",
+        (session) => {
+          const next = orderMerchOnDemand(
+            session.stadium,
+            sku,
+            qty,
+            session.season,
+            session.week,
+            session.weekday,
+          );
+          if (!next || !canAffordMerchPurchase(session.finances, next.cost)) return session;
+          return {
+            ...session,
+            stadium: normalizeClubStadium(next.stadium),
+            finances: spendClubCash(session.finances, next.cost, session.week),
+          };
+        },
+        { infrastructure: true },
+      );
+    },
+    [finances, requestClubSpend, season, stadium, week, weekday],
   );
 
   const handlePurchaseStadiumUpgrade = useCallback(
@@ -2493,6 +2593,12 @@ export default function App() {
 
   const matchFanbaseMood = fanbaseMood(stadium.fanbase ?? DEFAULT_FANBASE);
   const matchPoorForm = teamPoorRecentForm(teamForm(league, board.employer_club_id, 3));
+  const stadiumWeekFixture = playerFixture(league, league.matchday);
+  const stadiumIsHomeMatchWeek = stadiumWeekFixture?.homeTeamId === session.clubId;
+  const stadiumOpponentFanbase =
+    stadiumIsHomeMatchWeek && stadiumWeekFixture
+      ? clubFlavorFanbase(stadiumWeekFixture.awayTeamId)
+      : DEFAULT_FANBASE;
 
   const browserDocumentTitle = useMemo(() => {
     const product = t("shell.productName");
@@ -2984,6 +3090,23 @@ export default function App() {
       {screen === "club-events" ? (
         <ClubEventsScreen events={clubEvents} />
       ) : null}
+      {screen === "merchandising" ? (
+        <MerchandisingScreen
+          stadium={stadium}
+          players={players}
+          clubId={session.clubId}
+          finances={finances}
+          season={season}
+          week={week}
+          weekday={weekday}
+          masterSeed={masterSeed}
+          isHomeMatchWeek={stadiumIsHomeMatchWeek}
+          onMerchandisingChange={handleMerchandisingChange}
+          onRequestBulkPurchase={handleMerchBulkPurchase}
+          onRequestOnDemand={handleMerchOnDemand}
+          onStartMerchSale={handleMerchSaleStart}
+        />
+      ) : null}
       {screen === "finances" ? (
         <FinancesScreen
           finances={finances}
@@ -3018,6 +3141,8 @@ export default function App() {
           finances={finances}
           season={season}
           week={week}
+          isHomeMatchWeek={stadiumIsHomeMatchWeek}
+          opponentFanbase={stadiumOpponentFanbase}
           onStadiumChange={(next) =>
             patchSession((current) => ({
               ...current,
@@ -3215,6 +3340,7 @@ function AppNav({
   const showTrainingPlanWarn =
     !suppressTrainingPlanWarning(storyState) &&
     needsTrainingPlanForToday(trainingPlan, weekday);
+  const showMerchStockoutWarn = hasMerchStockout(stadium);
   useEffect(() => {
     if (!menuOpen) return;
     function handlePointer(event: MouseEvent) {
@@ -3239,6 +3365,7 @@ function AppNav({
       { screen: "calendar" as const, labelKey: "shell.nav.calendar" },
       { screen: "leagues" as const, labelKey: "shell.nav.leagues" },
       { screen: "finances" as const, labelKey: "shell.nav.finances" },
+      { screen: "merchandising" as const, labelKey: "shell.nav.merchandising" },
       { screen: "stadium" as const, labelKey: "shell.nav.stadium" },
       { screen: "help" as const, labelKey: "shell.nav.help" },
     ],
@@ -3290,6 +3417,17 @@ function AppNav({
               title={tr("shell.training.todayMissing")}
             >
               <TriangleAlert size={18} strokeWidth={2.35} aria-hidden />
+            </button>
+          ) : null}
+          {showMerchStockoutWarn ? (
+            <button
+              type="button"
+              className="app-nav-training-warn"
+              onClick={() => onNavigate("merchandising")}
+              aria-label={tr("shell.merch.stockout")}
+              title={tr("shell.merch.stockout")}
+            >
+              <Package size={18} strokeWidth={2.35} aria-hidden />
             </button>
           ) : null}
           <span className="app-nav-cash" aria-label={tr("shell.cash")}>

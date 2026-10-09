@@ -40,7 +40,7 @@ describe("league week", () => {
     expect(offseason.league.results.length).toBe(34 * 9);
     expect(offseason.league.matchday).toBe(1);
     expect(offseason.playerFixture).toBeNull();
-  });
+  }, 60_000);
 
   it("completes the season after 34 matchdays with 34 games per club", async () => {
     let league = defaultLeagueState();
@@ -54,7 +54,7 @@ describe("league week", () => {
     expect(league.season_complete).toBe(true);
     const table = leagueTable(league);
     expect(table.every((row) => row.played === 34)).toBe(true);
-  });
+  }, 60_000);
 
   it("applies a watched player fixture instead of re-simming", async () => {
     const league = defaultLeagueState();

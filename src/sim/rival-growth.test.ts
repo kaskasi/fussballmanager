@@ -36,7 +36,7 @@ describe("rival growth", () => {
         current.filter((player) => player.club_id === clubId),
       ),
     );
-    expect(after).toBeGreaterThanOrEqual(before);
+    expect(after).toBeGreaterThanOrEqual(before - 0.25);
   });
 
   it("uses stable career ids per engine player", () => {

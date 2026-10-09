@@ -4,7 +4,7 @@ import { archiveKickerEdition } from "../../inbox/kicker-edition-archive.ts";
 export const migration084KickerEditionArchive: SaveMigration = {
   id: "migration_084_kicker_edition_archive",
   apply(save) {
-    save.manifest.save_version = 79;
+    save.manifest.save_version = 84;
     const pipeline = save.state.pipeline;
     if (!pipeline) return save;
     let archive = pipeline.kicker_edition_archive ?? [];

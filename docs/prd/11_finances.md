@@ -31,7 +31,7 @@ Diese PRD ersetzt den Mini-Stub in `src/economy/club-finances.ts` („one pool u
 |---|---|
 | F6.5 | Sponsor-Verhandlungen — M2 |
 | F6.6 | Kredite/Investoren — Stack-Regel (keine Deep Finance in v1) |
-| F6.7 | Merchandise dynamisch — M3; bis F7 Matchday-Commerce |
+| F6.7 | Volle SKU-Hölle — M3; v79 liefert Merch-Stream ohne Lager |
 | F6.8 | Finanzkrise-Szenario — M3 |
 
 Matchday-Commerce (Wurst/Bier/Shirt-Preise) und Stadion-Editor liegen in F7; bis dahin nutzt F6.2 feste Ticket-Defaults.
@@ -126,7 +126,8 @@ Alle Einnahmen laufen über `applyIncome(finances, line)` → erhöht `cash`. Tr
 | `sponsorship` | Jede Woche | `division.sponsorship_weekly` |
 | `tv_rights` | Jede Woche | `division.tv_weekly` |
 | `matchday_tickets` | Heimspiel-Woche (Sa) | `capacity × fill_rate × avg_ticket` |
-| `concessions` | Jede Woche | Imbiss/Shop × Occupancy (Heim = Ticket-Fill; sonst Visit-Fill 4–12 %). Hotel/Restaurant extra. Vollhaus z. B. €1000 je Kiosk-Zelle, nicht 1 Wurst pro Zuschauer geteilt durch Stände. |
+| `concessions` | Jede Woche | Kiosk/Bier × Occupancy + Hotel/Restaurant (Hospitality). **Kein Fanshop** — siehe `merchandising`. |
+| `merchandising` | Jede Woche | Netto nach COGS: Trikot-Schwerpunkt (~70 % UI-Anteil), Kollektion, Liefer-Tier + Retail-Modus; Fanshop auf dem Gelände = Durchsatz-Multiplikator (`src/economy/merchandising.ts`). |
 | `league_prize` | Saisonende | `division.prize_by_place[table_place]` |
 | `tv_bonus` | Saisonende | `division.tv_season_bonus[table_place]` |
 | `player_sale` | Transfer Verkauf | Ablöse (PRD 05) |

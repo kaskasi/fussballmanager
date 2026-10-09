@@ -117,12 +117,12 @@ describe("formatMatchLog", () => {
       finalScore: { home: 1, away: 0 },
     });
 
-    expect(log).toContain("FC Nordstern vs SV Rheinwacht");
+    expect(log).toContain("Kieler FC vs SV Rheinwacht");
     expect(log).toContain("seed 2026");
     expect(log).not.toContain("Theo Brandt findet Juri Holm.");
     expect(log).toContain("TOR! Juri Holm!  (1–0)");
-    expect(log).toContain("HT FC Nordstern 1–0 SV Rheinwacht");
-    expect(log).toContain("FT FC Nordstern 1–0 SV Rheinwacht");
+    expect(log).toContain("HT Kieler FC 1–0 SV Rheinwacht");
+    expect(log).toContain("FT Kieler FC 1–0 SV Rheinwacht");
     expect(log).toContain("5 events");
     expect(log.split("\n").some((line) => line.includes("12'22"))).toBe(true);
   });

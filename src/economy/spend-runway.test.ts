@@ -21,8 +21,8 @@ describe("spend runway", () => {
     const board = startBoardSeason(defaultBoardState(), NORDSTERN_ID, 1);
     const floor = boardCashFloor(board);
     expect(floor).toBe(3_500_000);
-    const runway = spendRunway(defaultClubFinances(), 50_000, 1_200_000, floor);
+    const runway = spendRunway(defaultClubFinances(), 50_000, 2_500_000, floor);
     expect(runway.belowFloor).toBe(true);
-    expect(runway.cashAfter).toBe(defaultClubFinances().cash - 1_200_000);
+    expect(runway.cashAfter).toBe(defaultClubFinances().cash - 2_500_000);
   });
 });

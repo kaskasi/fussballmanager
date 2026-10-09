@@ -223,6 +223,28 @@ main.scouting.club-shell-card-body .scouting-scouts {
   font-weight: 800;
 }
 
+.pipeline-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.pipeline-menu-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--terra);
+  color: var(--tinte);
+  font-size: 0.72rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
 .hub-decisions-head {
   display: flex;
   align-items: center;

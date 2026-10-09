@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { newGameSession } from "../persistence/game-session.ts";
 import { loadDemoRoster } from "../ui/demo-roster.ts";
 import { defaultTacticsPresets } from "../match/tactics-presets.ts";
-import { createScoutBoard, activeScoutCount } from "../scouting/scout-board.ts";
+import { createScoutBoard } from "../scouting/scout-board.ts";
 import { initializeRivalPlayers } from "../sim/rival-growth.ts";
 import { defaultCoachingStaff } from "./coaching-staff.ts";
 import { emptyWeeklyTrainingPlan } from "../development/training-plan-state.ts";
@@ -50,9 +51,10 @@ describe("assistant delegation", () => {
   });
 
   it("seeds scout assignments when board is empty", () => {
-    const board = assistantScoutBoard(createScoutBoard(rivals), rivals, 72, 1, 4, 2026);
+    const session = newGameSession();
+    const board = assistantScoutBoard(session.scoutBoard, rivals, 72, 1, 4, session.masterSeed);
     expect(board.assignments?.length).toBeGreaterThan(0);
-    expect(activeScoutCount(board)).toBeGreaterThan(0);
+    expect(board.assignments?.every((entry) => entry.active)).toBe(true);
   });
 
   it("normalizes delegation toggles", () => {

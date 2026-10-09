@@ -163,6 +163,7 @@ export function financeFlowCategory(kind: FinanceLineKind): FinanceFlowCategory 
   switch (kind) {
     case "matchday_tickets":
     case "concessions":
+    case "merchandising":
       return "matchday";
     case "sponsorship":
     case "tv_rights":

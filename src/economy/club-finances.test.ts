@@ -38,6 +38,7 @@ describe("club finances", () => {
       season: 1,
       week: 1,
       coachingStaff: staff,
+      merchandisingNet: 0,
     });
     expect(finances.cash).toBe(
       defaultClubFinances().cash + 55_000 + 12_000 - weeklyStaffWageBill(staff) - 9_000,
@@ -55,6 +56,7 @@ describe("club finances", () => {
       isHomeMatchWeek: false,
       season: 1,
       week: 1,
+      merchandisingNet: 0,
     });
     expect(finances.cash).toBe(defaultClubFinances().cash + 55_000 + 12_000 - 5_000 - 18_000 - 9_000);
     expect(finances.pending_lines).toHaveLength(5);
@@ -68,6 +70,7 @@ describe("club finances", () => {
       isHomeMatchWeek: true,
       season: 1,
       week: 2,
+      merchandisingNet: 0,
     });
     expect(finances.cash).toBe(
       defaultClubFinances().cash +
@@ -110,6 +113,7 @@ describe("club finances", () => {
         isHomeMatchWeek: false,
         season: 1,
         week,
+        merchandisingNet: 0,
       }).finances;
     }
     expect(financeMonthForWeek(4)).toBe(1);
@@ -146,6 +150,7 @@ describe("club finances", () => {
       season: 1,
       week: 1,
       stadium,
+      merchandisingNet: 0,
     });
     expect(finances.cash).toBe(
       defaultClubFinances().cash + 55_000 + offer.weeklyAmount + 12_000 - 18_000 - 9_000,
@@ -183,8 +188,8 @@ describe("club finances", () => {
 
   it("starts new clubs with a tight cash stack", () => {
     const finances = defaultClubFinances();
-    expect(finances.cash).toBe(4_500_000);
-    expect(finances.transfer_budget).toBe(1_800_000);
+    expect(finances.cash).toBe(5_500_000);
+    expect(finances.transfer_budget).toBe(2_200_000);
   });
 
   it("books infrastructure into the pending ledger", () => {

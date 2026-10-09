@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { emptyPrecinct, pathBuildingToCity, placePrecinctBuilding, placeStreetRun } from "./precinct.ts";
 import {
+  computeHospitalityPreview,
   hotelOccupancyPct,
+  hospitalityOvertimeCost,
   restaurantOccupancyPct,
   weeklyHotelIncome,
   weeklyRestaurantIncome,
@@ -30,5 +32,54 @@ describe("hospitality occupancy", () => {
     expect(weeklyHotelIncome(emptyPrecinct(), 80)).toBe(0);
     expect(weeklyHotelIncome(docked("hotel"), 50)).toBeGreaterThan(0);
     expect(weeklyRestaurantIncome(docked("restaurant"), 100)).toBeGreaterThan(0);
+  });
+});
+
+describe("computeHospitalityPreview", () => {
+  it("matches home vs away hotel occupancy in preview income", () => {
+    const precinct = docked("hotel");
+    const away = computeHospitalityPreview({
+      precinct,
+      ownFanbase: 50,
+      isHomeMatchWeek: false,
+      opponentFanbase: 80,
+      season: 1,
+      week: 10,
+    });
+    const home = computeHospitalityPreview({
+      precinct,
+      ownFanbase: 50,
+      isHomeMatchWeek: true,
+      opponentFanbase: 80,
+      season: 1,
+      week: 10,
+    });
+    expect(home.hotel?.weeklyIncome ?? 0).toBeGreaterThan(away.hotel?.weeklyIncome ?? 0);
+  });
+
+  it("flags viral restaurant and overtime cost week", () => {
+    const precinct = docked("restaurant");
+    const viral = computeHospitalityPreview({
+      precinct,
+      ownFanbase: 40,
+      isHomeMatchWeek: false,
+      opponentFanbase: 50,
+      season: 1,
+      week: 8,
+      restaurantViralUntilWeek: 20,
+    });
+    expect(viral.restaurant?.viral).toBe(true);
+    expect(viral.restaurant?.occupancyPct).toBe(100);
+
+    const overtime = computeHospitalityPreview({
+      precinct,
+      ownFanbase: 40,
+      isHomeMatchWeek: false,
+      opponentFanbase: 50,
+      season: 1,
+      week: 12,
+      restaurantOvertimeWeek: 12,
+    });
+    expect(overtime.overtimeCostThisWeek).toBe(hospitalityOvertimeCost(12, 1, 12));
   });
 });

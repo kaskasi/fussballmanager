@@ -15,7 +15,7 @@ describe("club profiles", () => {
       pools: league.league_pools,
       worldClubs: session.world.clubs,
     });
-    expect(profile?.name).toContain("Nordstern");
+    expect(profile?.name).toContain("Kieler");
     expect(profile?.place).toBe("Kiel");
     expect(profile?.coach).toBeTruthy();
     expect(profile?.bestPlayers.length).toBeGreaterThan(0);

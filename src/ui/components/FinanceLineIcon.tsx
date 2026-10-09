@@ -4,6 +4,7 @@ import {
   CircleDot,
   Construction,
   Handshake,
+  Package,
   Shirt,
   Ticket,
   Trophy,
@@ -26,6 +27,7 @@ const ICONS: Record<FinanceLineKind, LucideIcon> = {
   facility_maintenance: CircleDot,
   transfer_fee: ArrowLeftRight,
   concessions: Utensils,
+  merchandising: Package,
   infrastructure: Construction,
   other: CircleDot,
 };

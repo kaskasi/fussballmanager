@@ -15,7 +15,7 @@ export const MEGA_EVENT_PITCH_DAMAGE = 20;
 
 export interface RestaurantProposalResult {
   stadium: ClubStadium;
-  players: Player[];
+  players: readonly Player[];
   clubEventMessage: string;
 }
 

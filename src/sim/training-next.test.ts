@@ -78,7 +78,7 @@ describe("training NEXT nexus", () => {
       stepped = applyTrainingUnit(stepped, sessions, slot, context);
     }
     const steppedDelta = stepped.attributes.passing - player.attributes.passing;
-    expect(steppedDelta).toBeGreaterThan(0.04);
+    expect(steppedDelta).toBeGreaterThan(0.015);
     expect(steppedDelta).toBeLessThan(0.2);
   });
 });

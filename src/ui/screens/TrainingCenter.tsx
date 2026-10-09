@@ -445,6 +445,7 @@ function TeamPlan({
           clubId={clubId}
           season={season}
           week={week}
+          trainingUnitsCompleted={trainingUnitsCompleted}
         />
       </div>
 

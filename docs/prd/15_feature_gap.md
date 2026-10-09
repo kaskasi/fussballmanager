@@ -92,11 +92,11 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 
 | ID | M | Spec | Stand UI/Code | Lücke |
 |---|---|---|---|---|
-| F6.7 | M3 | Merch × Popularität | — | Fanshop-SKU, nicht das Brustlogo. Besuch *wegen* neuem Shirt ist Story, nicht Imbiss-Fill. |
+| F6.7 | M3 → **Slice v79** | Merch × Popularität | `merchandising.ts` | v1: eigener Ledger-Stream + Screen; kein SKU-Lager. Fanshop-Gelände = Durchsatz, nicht `concessions`. Brustlogo bleibt F6.5. |
 | F6.4 | M1 | Wasserfall 11.5 | Icon-Balken + 13-Mo-Sparkline | — |
 | F7.1 | M1 | 2D-Grundriss, Preise | Grundriss + Banden auf Tribünen + Shirt | Gelände-Tab separat |
 | F7.2 | M2 | Kapazität, VIP, Heizung | Shop-Liste + Levels · extra Banden bei Steh/Sitz | Shop unter der Karte |
-| F7.3 | M3 | Wurst, Fanshop, Hotel, Restaurant | Farm + Kiosk-Cash + Hotel/Restaurant-Auslastung | Museum, Wurst-SKU, 1×1-Deko später |
+| F7.3 | M3 | Wurst, Fanshop, Hotel, Restaurant | Farm + Kiosk + Hotel/Restaurant-Sim + Gelände/Finanzen-UI | Museum, Wurst-SKU, 1×1-Deko später |
 | F7.4 | M3 | Trainingsgelände-Ausbau | TZ-Stufen Halle/Fitness/Pool/Physio am bestehenden Gebäude | Verletzungs-Sim bleibt leicht |
 | F3.2 | M1 | Campus-Grid, Stufen | Report + Stufen-Grid | Iso-Stadtmodell gestrichen |
 | F3.3 | M1 | YouthReports | Report 14.4 + Auto-Sim; Grid sekundär | — |
@@ -141,7 +141,7 @@ Ohne Meilensteine in PRD 10 zu verschieben:
 
 1. **F6.5** — **Done 2026-10-06:** Modal am Slot, Laufzeit, Wochenbetrag, zwei Staffeln
    (`SponsorDealModal`, `sponsor-deals.ts`, PRD 11.10). Klausel-Enzyklopädie bleibt raus.
-2. **F7.3-Slice** Hotel + Restaurant (Auslastung + Story) — **nächster Katalog-Slice**, Museum raus.
+2. **F7.3-Slice** Hotel + Restaurant (Auslastung + Story) — **UI depth Done 2026-10-06** (`computeHospitalityPreview`, Gelände-Band, Finanzen-Hint); Museum/Wurst-SKU später.
 3. **F2.8** Phase-Makel + Spend-Bar + Hybrid + Archetypen — gebaut.
 4. **F3.9** Satelliten-Camps — gebaut.
 5. **C2** erst nach 07/10.
@@ -151,9 +151,8 @@ Shirt-Verkauf (F6.7) bleibt M3 und folgt der Bude, nicht dem Brustlogo.
 #### 15.5.1 Active slice (2026-10-06)
 
 P2/P3 cleanup slate ist frei (Monday reveal + i18n/Help committed). **Als Nächstes bauen:
-F7.3** — Hotel/Restaurant-Auslastung und Story im Gelände-Tab vertiefen (Backend:
-`hospitality.ts`, `precinct.ts`; UI noch dünn). Danach **F4.4** Scout-Map-Tiefe oder
-**PRD 14.3** Spielerakte-Dichte — nicht blockiert durch App-Split oder Engine-Package.
+F4.4** Scout-Map-Tiefe oder **PRD 14.3** Spielerakte-Dichte — F7.3 Hotel/Restaurant-UI
+ist auf dem Gelände-Tab sichtbar (Auslastung, €/Wo, Viral/Überstunden); Museum bleibt später.
 
 ### 15.7 Playtest-Backlog (Rohnotizen: `playtest_ideas.md`)
 

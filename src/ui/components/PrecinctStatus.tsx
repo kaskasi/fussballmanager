@@ -10,6 +10,7 @@ import {
   precinctStatusTotals,
   type PrecinctStatusEffect,
 } from "../../stadium/precinct-effects.ts";
+import type { HospitalityPreview } from "../../stadium/hospitality.ts";
 import type { PrecinctBuilding, PrecinctState } from "../../stadium/precinct.ts";
 import {
   PrecinctBuildingIcon,
@@ -35,14 +36,16 @@ export function PrecinctStatus({
   precinct,
   picked,
   selectedBuilding,
+  hospitalityPreview,
   onFocus,
 }: {
   precinct: PrecinctState;
   picked: PrecinctBuilding | "street" | null;
   selectedBuilding?: PrecinctBuilding;
+  hospitalityPreview?: HospitalityPreview;
   onFocus: (building: PrecinctBuilding) => void;
 }) {
-  const effects = listPrecinctStatusEffects(precinct);
+  const effects = listPrecinctStatusEffects(precinct, hospitalityPreview);
   const totals = precinctStatusTotals(precinct);
   const active = effects.filter((entry) => entry.tone === "buff").length;
 

@@ -12,6 +12,7 @@ export type FinanceLineKind =
   | "facility_maintenance"
   | "transfer_fee"
   | "concessions"
+  | "merchandising"
   | "infrastructure"
   | "other";
 
@@ -67,7 +68,9 @@ export function financeLineLabel(kind: FinanceLineKind): string {
     case "transfer_fee":
       return "Ablöse";
     case "concessions":
-      return "Imbiss & Shop";
+      return "Imbiss & Bewirtung";
+    case "merchandising":
+      return "Merchandising";
     case "infrastructure":
       return "Ausbau";
     default:

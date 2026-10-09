@@ -23,6 +23,8 @@ import {
 } from "../../transfers/contract-talks.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
+import { formatSeasonLabel } from "../../sim/season-label.ts";
+import { contractUntilSeasonAfterTerm } from "../../transfers/contract-until-season.ts";
 
 const ROLE_OPTIONS: { id: MinutesPromise; icon: string; label: string }[] = [
   { id: "none", icon: "🪑", label: "Keine" },
@@ -57,6 +59,7 @@ export function ContractTalksModal({
     wageDeltaFitsBudget(wageHeadroomWeekly, currentWage, offer.wageWeekly);
   const wageStep = bounds.wageMax - bounds.wageMin > 400 ? 5 : 1;
   const minutesOn = offer.minutesPromise !== "none";
+  const expirySeason = contractUntilSeasonAfterTerm(season, offer.termYears);
 
   function setPromise(minutesPromise: MinutesPromise) {
     const nextAsk = playerContractAsk(player, season, minutesPromise);
@@ -98,7 +101,8 @@ export function ContractTalksModal({
         </label>
         <label className="profile-talk-row">
           <span>
-            Jahre <strong>{offer.termYears}</strong>
+            Laufzeit <strong>{offer.termYears}</strong> · Sommer{" "}
+            <strong>{formatSeasonLabel(expirySeason)}</strong>
           </span>
           <input
             type="range"

@@ -23,6 +23,7 @@ import {
   TRAINING_NEGLECT_FANBASE_PENALTY,
 } from "../development/training-neglect.ts";
 import { advanceWeeklyClubFinances } from "../economy/club-finances.ts";
+import { advanceMerchandisingWeek } from "../economy/merchandising.ts";
 import type { FixtureResult } from "@fussballmanager/shared";
 import type { CareerLeagueStat } from "../persistence/league-state.ts";
 import type { GameSession } from "../persistence/game-session.ts";
@@ -327,16 +328,26 @@ export async function simulateGameWeek(
   const isHomeMatchWeek =
     leagueStep.playerFixture?.homeTeamId === session.league.player_club_id;
   const occupancy = weekCommerceOccupancy(isHomeMatchWeek, session.stadium);
+  const merchAdvance = advanceMerchandisingWeek(session.stadium, {
+    stadium: session.stadium,
+    players: playersWithMorale,
+    clubId: session.clubId,
+    occupancy,
+    isHomeMatchWeek,
+    week: nextWeek,
+    season: session.season,
+    masterSeed: session.masterSeed,
+  });
   const fanbaseDelta =
     weeklyFanbaseDelta(
       leagueWithCareerStats,
       session.clubId,
       leagueStep.playerFixture != null,
     ) +
-    precinctWeeklyFanbaseBonus(session.stadium.precinct, occupancy) +
+    precinctWeeklyFanbaseBonus(merchAdvance.stadium.precinct, occupancy) +
     (trainingPlanNeglected ? TRAINING_NEGLECT_FANBASE_PENALTY : 0);
   const stadiumAfterFanbase = advanceBlockExpansionProjects(
-    advanceClubFanbase(session.stadium, fanbaseDelta),
+    advanceClubFanbase(merchAdvance.stadium, fanbaseDelta),
     session.season,
     nextWeek,
   );
@@ -384,6 +395,7 @@ export async function simulateGameWeek(
     hospitalityIncome,
     overtimeCost: overtimeDue,
     commerceOccupancy: occupancy,
+    merchandisingNet: merchAdvance.economics.net,
   });
   const finances = financeStep.finances;
   const playersWithGrowth = stampWeeklyGrowthBatch(playersAtWeekStart, playersWithMorale);

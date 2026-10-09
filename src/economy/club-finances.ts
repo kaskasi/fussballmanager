@@ -2,7 +2,8 @@ import type { LeagueState } from "../persistence/league-state.ts";
 import { leagueTable, topScorers } from "../sim/league-week.ts";
 import { stadiumMatchdayIncome, type ClubStadium } from "../stadium/club-stadium.ts";
 import { weekCommerceOccupancy } from "../stadium/matchday-commerce.ts";
-import { weeklyPrecinctCash } from "../stadium/precinct-effects.ts";
+import { weeklyMerchandisingEconomics } from "./merchandising.ts";
+import { weeklyPrecinctConcessionsCash } from "../stadium/precinct-effects.ts";
 import {
   seasonSponsorBonusPayouts,
   SPONSOR_BONUS_PAYOUT,
@@ -46,6 +47,8 @@ export interface WeeklyFinanceContext {
   hospitalityIncome?: number;
   overtimeCost?: number;
   commerceOccupancy?: number;
+  /** Set after advanceMerchandisingWeek in pipeline (stock already sold). */
+  merchandisingNet?: number;
 }
 
 export interface WeeklyFinanceResult {
@@ -194,15 +197,29 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
   const occupancy =
     context.commerceOccupancy ?? weekCommerceOccupancy(context.isHomeMatchWeek, context.stadium);
   const fanbase = context.stadium?.fanbase;
-  const merch =
-    weeklyPrecinctCash(
+  const concessions =
+    weeklyPrecinctConcessionsCash(
       context.stadium?.precinct,
       occupancy,
       fanbase,
       context.isHomeMatchWeek,
     ) + (context.hospitalityIncome ?? 0);
-  if (merch > 0) {
-    lines.push({ kind: "concessions", amount: merch, week });
+  if (concessions > 0) {
+    lines.push({ kind: "concessions", amount: concessions, week });
+  }
+  const merchNet =
+    context.merchandisingNet ??
+    weeklyMerchandisingEconomics({
+      stadium: context.stadium,
+      players: context.players,
+      clubId: context.clubId,
+      occupancy,
+      isHomeMatchWeek: context.isHomeMatchWeek,
+      week: context.week,
+      season: context.season,
+    }).net;
+  if (merchNet > 0) {
+    lines.push({ kind: "merchandising", amount: merchNet, week });
   }
   if ((context.overtimeCost ?? 0) > 0) {
     lines.push({ kind: "other", amount: -context.overtimeCost!, week });

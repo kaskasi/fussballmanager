@@ -75,5 +75,10 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_076_week_start_attributes",
   "migration_077_precinct_full_farm",
   "migration_078_pitch_condition",
+  "migration_079_merchandising",
+  "migration_080_merch_inventory",
+  "migration_081_merch_unit_scale",
+  "migration_082_merch_timed_sale",
+  "migration_083_merch_market_seed",
   "migration_084_kicker_edition_archive",
 ] as const;

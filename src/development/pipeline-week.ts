@@ -8,7 +8,12 @@ import {
 } from "./growth-engine.ts";
 import { trainingIntensityMultiplier } from "./training-load.ts";
 import { defaultTrainingPlan, planToSessions, type TrainingUnit } from "./training-units.ts";
-import { focusSlotsFor, SLOT_COUNT, type TrainingSession } from "./weekly-plan.ts";
+import {
+  attributesIn,
+  focusSlotsFor,
+  SLOT_COUNT,
+  type TrainingSession,
+} from "./weekly-plan.ts";
 
 export interface TrainingWeekContext {
   season: number;
@@ -199,13 +204,16 @@ export function applyTrainingUnit(
   unit?: TrainingUnit,
 ): Player {
   const channel = `team-unit-${slotIndex}`;
+  const sessions = isolatedUnitSessions(weekSessions, slotIndex);
   const boost = unit?.growthBoost ?? 1;
-  const boostedSkills = unit ? new Set(unit.skills) : null;
+  const targetKeys: (keyof Attributes)[] = unit
+    ? [...unit.skills]
+    : [...attributesIn(sessions[slotIndex]!.group)];
   const attributes = { ...player.attributes };
-  for (const key of SKILLS) {
-    let delta = trainingGainOf(player, key, weekSessions, context, channel);
+  for (const key of targetKeys) {
+    let delta = trainingGainOf(player, key, sessions, context, channel);
     if (delta === 0) continue;
-    if (boostedSkills?.has(key)) delta *= boost;
+    if (unit) delta *= boost;
     attributes[key] = applyGrowth(player.attributes[key], delta);
   }
   return { ...player, attributes };

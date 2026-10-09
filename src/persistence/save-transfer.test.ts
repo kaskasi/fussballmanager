@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { initialEstimateForPlayer } from "../scouting/market-list.ts";
 import { newGameSession, saveFromSession } from "./game-session.ts";
 import { loadLocalSave } from "./local-save.ts";
 import {
@@ -53,9 +54,19 @@ describe("save transfer", () => {
   it("migrates scout snapshots to knowledge-only targets", () => {
     const session = newGameSession();
     const save = saveFromSession(session);
-    const player = session.rivalPlayers[0]!;
-    const target = save.state.pipeline!.scout_board.targets[player.id]!;
-    (target as typeof target & { player: typeof player }).player = player;
+    const player = session.rivalPlayers.find((entry) => entry.squad_status === "pro")!;
+    expect(player).toBeTruthy();
+    const legacyTarget = {
+      playerId: player.id,
+      estimate: initialEstimateForPlayer(player, 0),
+      assigned: false,
+      player,
+    };
+    save.state.pipeline!.scout_board.targets[player.id] = legacyTarget as typeof legacyTarget & {
+      playerId: string;
+      estimate: (typeof legacyTarget)["estimate"];
+      assigned: boolean;
+    };
     save.manifest.save_version = 35;
     save.manifest.migrations_applied = APPLIED_MIGRATION_IDS.filter(
       (id) => id !== "migration_036_scout_knowledge",
@@ -69,6 +80,6 @@ describe("save transfer", () => {
 
   it("builds a stable export filename", () => {
     const save = saveFromSession(newGameSession());
-    expect(saveExportFilename(save)).toMatch(/^fussballmanager_Jan_s\d+_w\d+\.json$/);
+    expect(saveExportFilename(save)).toMatch(/^fussballmanager_Jan_s\d+_w-?\d+\.json$/);
   });
 });

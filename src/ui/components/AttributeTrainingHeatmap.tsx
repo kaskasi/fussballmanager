@@ -2,12 +2,13 @@ import { useMemo, useState } from "react";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import {
-  attributeHeatmapPeak,
+  attributeHeatCellIntensity,
   formatAttributeHeatDelta,
   formatAttributeHeatSumPrecise,
   squadAttributeTrainingHeatmap,
   type AttributeTrainingCell,
 } from "../../player/attribute-training-heatmap.ts";
+import { SLOT_COUNT } from "../../development/weekly-plan.ts";
 import type { Attributes, Player } from "../../types/player.ts";
 import {
   ATTRIBUTE_GROUPS,
@@ -37,11 +38,6 @@ type AttrHeatTone = "idle" | "hot";
 
 const LEGEND_TONES: readonly AttrHeatTone[] = ["hot", "idle"];
 
-function cellIntensity(sum: number, peak: number): number {
-  if (sum <= 0.000_1) return 0.35;
-  return 0.45 + (sum / Math.max(peak, 0.000_1)) * 0.55;
-}
-
 function cellForKey(cells: readonly AttributeTrainingCell[], key: keyof Attributes) {
   return cells.find((cell) => cell.key === key) ?? { key, gainSum: 0 };
 }
@@ -54,11 +50,15 @@ export function AttributeTrainingHeatmap({
   clubId,
   season,
   week,
+  trainingUnitsCompleted = 0,
+  slotCount = SLOT_COUNT,
 }: {
   players: readonly Player[];
   clubId: string;
   season: number;
   week: number;
+  trainingUnitsCompleted?: number;
+  slotCount?: number;
 }) {
   useT();
   const [legendOpen, setLegendOpen] = useState(false);
@@ -67,7 +67,6 @@ export function AttributeTrainingHeatmap({
     () => squadAttributeTrainingHeatmap(players, clubId, season, week),
     [players, clubId, season, week],
   );
-  const peak = useMemo(() => attributeHeatmapPeak(cells), [cells]);
   const hovered = hoveredKey ? cellForKey(cells, hoveredKey) : null;
 
   const groups = [
@@ -144,7 +143,13 @@ export function AttributeTrainingHeatmap({
                     type="button"
                     role="listitem"
                     className={`attr-heat-pixel is-${tone}`}
-                    style={{ opacity: cellIntensity(cell.gainSum, peak) }}
+                    style={{
+                      opacity: attributeHeatCellIntensity(
+                        cell.gainSum,
+                        trainingUnitsCompleted,
+                        slotCount,
+                      ),
+                    }}
                     aria-label={`${attributeLabel(key)}, ${formatAttributeHeatSumPrecise(cell.gainSum)}`}
                     title={`${attributeLabel(key)} ${deltaLabel}`}
                     onMouseEnter={() => setHoveredKey(key)}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createScoutBoard } from "./scout-board.ts";
 import { defaultScoutNetwork } from "./scout-network.ts";
 import { canStartOpponentScout, startOpponentScoutJob } from "./opponent-scout-job.ts";
+import { scoutTripDurationFromClubStops } from "./scout-trip-duration.ts";
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
 import { asTeamId } from "@fussballmanager/shared";
 
@@ -27,7 +28,7 @@ describe("opponent scout parallel jobs", () => {
       career_club_ids_on_path: ["cl_rival"],
       target_club_id: "cl_rival",
       progress_multiplier: 1,
-      duration: { working_days: 3, club_stops: 1 },
+      duration: scoutTripDurationFromClubStops(3, "sh"),
       queued_at_week: 1,
       assigned_scout_id: "scout_a",
       working_days_done: 0,

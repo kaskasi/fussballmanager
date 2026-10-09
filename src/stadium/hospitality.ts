@@ -64,3 +64,104 @@ export function weeklyRestaurantIncome(
   if (!hospitalityDocked(precinct, "restaurant")) return 0;
   return Math.round((occupancyPct / 100) * RESTAURANT_FULL_WEEKLY);
 }
+
+export function restaurantOvertimeDueThisWeek(
+  restaurantOvertimeWeek: number | undefined,
+  season: number,
+  week: number,
+): boolean {
+  if (restaurantOvertimeWeek == null) return false;
+  return restaurantOvertimeWeek === careerWeekIndex(season, week);
+}
+
+export function hospitalityOvertimeCost(
+  restaurantOvertimeWeek: number | undefined,
+  season: number,
+  week: number,
+): number {
+  return restaurantOvertimeDueThisWeek(restaurantOvertimeWeek, season, week)
+    ? RESTAURANT_OVERTIME_COST
+    : 0;
+}
+
+export type HospitalityPreviewInput = {
+  precinct: PrecinctState | undefined;
+  ownFanbase: number;
+  isHomeMatchWeek: boolean;
+  opponentFanbase: number;
+  season: number;
+  week: number;
+  restaurantViralUntilWeek?: number;
+  restaurantOvertimeWeek?: number;
+};
+
+export type HospitalityVenuePreview = {
+  placed: boolean;
+  docked: boolean;
+  occupancyPct: number;
+  weeklyIncome: number;
+};
+
+export type RestaurantVenuePreview = HospitalityVenuePreview & {
+  viral: boolean;
+  overtimeDueThisWeek: boolean;
+};
+
+export type HospitalityPreview = {
+  hotel: HospitalityVenuePreview | null;
+  restaurant: RestaurantVenuePreview | null;
+  totalWeeklyIncome: number;
+  overtimeCostThisWeek: number;
+};
+
+export function computeHospitalityPreview(input: HospitalityPreviewInput): HospitalityPreview {
+  const viral = restaurantViralActive(
+    input.restaurantViralUntilWeek,
+    input.season,
+    input.week,
+  );
+  const hotelOcc = hotelOccupancyPct(
+    input.ownFanbase,
+    input.isHomeMatchWeek,
+    input.opponentFanbase,
+  );
+  const restOcc = restaurantOccupancyPct(input.ownFanbase, viral);
+  const overtimeCostThisWeek = hospitalityOvertimeCost(
+    input.restaurantOvertimeWeek,
+    input.season,
+    input.week,
+  );
+
+  let hotel: HospitalityVenuePreview | null = null;
+  let restaurant: RestaurantVenuePreview | null = null;
+
+  if (input.precinct && occupiedCells(input.precinct, "hotel") > 0) {
+    const docked = hospitalityDocked(input.precinct, "hotel");
+    hotel = {
+      placed: true,
+      docked,
+      occupancyPct: hotelOcc,
+      weeklyIncome: weeklyHotelIncome(input.precinct, hotelOcc),
+    };
+  }
+
+  if (input.precinct && occupiedCells(input.precinct, "restaurant") > 0) {
+    const docked = hospitalityDocked(input.precinct, "restaurant");
+    restaurant = {
+      placed: true,
+      docked,
+      occupancyPct: restOcc,
+      weeklyIncome: weeklyRestaurantIncome(input.precinct, restOcc),
+      viral,
+      overtimeDueThisWeek: restaurantOvertimeDueThisWeek(
+        input.restaurantOvertimeWeek,
+        input.season,
+        input.week,
+      ),
+    };
+  }
+
+  const totalWeeklyIncome = (hotel?.weeklyIncome ?? 0) + (restaurant?.weeklyIncome ?? 0);
+
+  return { hotel, restaurant, totalWeeklyIncome, overtimeCostThisWeek };
+}

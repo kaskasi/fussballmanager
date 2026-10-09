@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useT } from "../../i18n/react.ts";
 import { Construction, Dumbbell, Home, Hammer, Shirt, Star } from "lucide-react";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
@@ -63,6 +63,7 @@ import {
   stadiumPhotoTierFromCapacity,
 } from "../assets/mood-photos.ts";
 import { MoodPhotoBand } from "../components/MoodPhotoBand.tsx";
+import { computeHospitalityPreview } from "../../stadium/hospitality.ts";
 import { emptyPrecinct, type PrecinctBuilding, type PrecinctEdge } from "../../stadium/precinct.ts";
 import {
   dealForSlot,
@@ -88,6 +89,8 @@ export function StadiumScreen({
   finances,
   season,
   week,
+  isHomeMatchWeek,
+  opponentFanbase,
   onStadiumChange,
   onStartBlockExpansion,
   onPurchaseUpgrade,
@@ -107,6 +110,8 @@ export function StadiumScreen({
   finances: ClubFinances;
   season: number;
   week: number;
+  isHomeMatchWeek: boolean;
+  opponentFanbase: number;
   academyFacility?: AcademyFacility;
   onUpgradeAcademy?: () => void;
   onStadiumChange: (stadium: ClubStadium) => void;
@@ -139,6 +144,29 @@ export function StadiumScreen({
   const mood = fanbaseMood(fanbase);
   const delta = stadium.fanbase_last_delta;
   const precinct = stadium.precinct ?? emptyPrecinct();
+  const hospitalityPreview = useMemo(
+    () =>
+      computeHospitalityPreview({
+        precinct,
+        ownFanbase: fanbase,
+        isHomeMatchWeek,
+        opponentFanbase,
+        season,
+        week,
+        restaurantViralUntilWeek: stadium.restaurant_viral_until_week,
+        restaurantOvertimeWeek: stadium.restaurant_overtime_week,
+      }),
+    [
+      fanbase,
+      isHomeMatchWeek,
+      opponentFanbase,
+      precinct,
+      season,
+      stadium.restaurant_overtime_week,
+      stadium.restaurant_viral_until_week,
+      week,
+    ],
+  );
   const openSlot = SPONSOR_SLOTS.find((slot) => slot.id === openSlotId);
   const openDeal = openSlot ? dealForSlot(stadium.sponsor_deals, openSlot.id, season) : undefined;
 
@@ -258,6 +286,8 @@ export function StadiumScreen({
             precinct={precinct}
             cash={finances.cash}
             stadiumName={stadium.name}
+            hospitalityPreview={hospitalityPreview}
+            isHomeMatchWeek={isHomeMatchWeek}
             onPlace={onPlacePrecinct}
             onUpgrade={onUpgradePrecinct}
             onBuyParcel={onBuyParcel}

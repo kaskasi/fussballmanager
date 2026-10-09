@@ -382,6 +382,10 @@ main.pipeline.club-shell-card-body {
 
 .fm-tab {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   flex: 0 1 auto;
   margin: 0;
   padding: 0.5rem 1.15rem;
@@ -392,6 +396,7 @@ main.pipeline.club-shell-card-body {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.82rem;
+  line-height: 1.2;
   color: var(--tinte-weich);
   cursor: pointer;
   box-shadow: none;

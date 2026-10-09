@@ -6,6 +6,7 @@ import { buildBroadcastStoryContext } from "./broadcast-story-context.ts";
 describe("buildBroadcastStoryContext", () => {
   it("maps fan feed and table facts for career fixtures", () => {
     const session = newGameSession();
+    session.week = 1;
     session.storyState.fan_feed = [
       {
         id: "f1",

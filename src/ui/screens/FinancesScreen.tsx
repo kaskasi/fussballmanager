@@ -3,6 +3,7 @@ import {
   Briefcase,
   Flame,
   Landmark,
+  Package,
   Shirt,
   TrendingDown,
   TrendingUp,
@@ -42,7 +43,11 @@ import {
   type ClubStadium,
 } from "../../stadium/club-stadium.ts";
 import { weekCommerceOccupancy } from "../../stadium/matchday-commerce.ts";
-import { weeklyPrecinctCash } from "../../stadium/precinct-effects.ts";
+import { computeHospitalityPreview } from "../../stadium/hospitality.ts";
+import { weeklyPrecinctConcessionsCash } from "../../stadium/precinct-effects.ts";
+import { clubFlavorFanbase } from "../../sim/club-profiles.ts";
+import { buildMerchandisingAnalytics } from "../../economy/merchandising-analytics.ts";
+import { MerchandisingAnalyticsPanel } from "./MerchandisingAnalyticsPanel.tsx";
 import { fanbaseMood, formatFanbase, type FanbaseMood } from "../../stadium/fanbase.ts";
 import { useT } from "../../i18n/react.ts";
 import { Hint } from "../components/Hint.tsx";
@@ -51,7 +56,7 @@ import { formatSeasonLabel } from "../../sim/season-label.ts";
 
 import { StadiumTicketsPanel } from "./StadiumTicketsPanel.tsx";
 
-type FinancePanelTab = "overview" | "commerce" | "tickets" | "runway" | "season";
+type FinancePanelTab = "overview" | "commerce" | "merchandising" | "tickets" | "runway" | "season";
 
 const SPARK_W = 312;
 const SPARK_H = 56;
@@ -72,6 +77,7 @@ export function FinancesScreen({
   coachingStaff,
   scoutNetwork,
   boardCashFloor = 0,
+  masterSeed,
   onOpenStadium,
 }: {
   finances: ClubFinances;
@@ -79,6 +85,7 @@ export function FinancesScreen({
   clubId: string;
   season: number;
   week: number;
+  masterSeed: number;
   stadium: ClubStadium;
   league: LeagueState;
   coachingStaff: CoachingStaff;
@@ -93,6 +100,24 @@ export function FinancesScreen({
   const wageStatus = wageBudgetStatus(finances, players, clubId);
   const fixture = playerFixture(league, league.matchday);
   const isHomeMatchWeek = fixture?.homeTeamId === league.player_club_id;
+  const hospitalityPreview = useMemo(() => {
+    const ownFans = stadium.fanbase ?? DEFAULT_FANBASE;
+    const opponentId = isHomeMatchWeek && fixture ? fixture.awayTeamId : null;
+    return computeHospitalityPreview({
+      precinct: stadium.precinct,
+      ownFanbase: ownFans,
+      isHomeMatchWeek,
+      opponentFanbase: opponentId ? clubFlavorFanbase(opponentId) : DEFAULT_FANBASE,
+      season,
+      week,
+      restaurantViralUntilWeek: stadium.restaurant_viral_until_week,
+      restaurantOvertimeWeek: stadium.restaurant_overtime_week,
+    });
+  }, [fixture, isHomeMatchWeek, season, stadium, week]);
+  const showHospitalityHint =
+    hospitalityPreview.totalWeeklyIncome > 0 ||
+    hospitalityPreview.restaurant?.viral === true ||
+    hospitalityPreview.overtimeCostThisWeek > 0;
   const waterfall = useMemo(() => {
     const preview = weekPreviewFinanceLines({
       players,
@@ -104,12 +129,16 @@ export function FinancesScreen({
       stadium,
       coachingStaff,
       scoutWagesWeekly: scoutNetworkWeeklyWage(scoutNetwork),
+      hospitalityIncome: hospitalityPreview.totalWeeklyIncome,
+      overtimeCost: hospitalityPreview.overtimeCostThisWeek,
     });
     return resolveFinanceWaterfall(finances, season, week, preview);
   }, [
     coachingStaff,
     clubId,
     finances,
+    hospitalityPreview.overtimeCostThisWeek,
+    hospitalityPreview.totalWeeklyIncome,
     isHomeMatchWeek,
     league.division_id,
     players,
@@ -124,8 +153,27 @@ export function FinancesScreen({
   const sparkSpan = Math.max(sparkMax - sparkMin, Math.abs(sparkMax) * 0.04, 1);
   const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium);
   const fanbase = stadium.fanbase;
-  const merchFull = weeklyPrecinctCash(stadium.precinct, 1, fanbase, isHomeMatchWeek);
-  const merchWeek = weeklyPrecinctCash(stadium.precinct, occupancy, fanbase, isHomeMatchWeek);
+  const concessionsFull = weeklyPrecinctConcessionsCash(
+    stadium.precinct,
+    1,
+    fanbase,
+    isHomeMatchWeek,
+  );
+  const concessionsWeek = weeklyPrecinctConcessionsCash(
+    stadium.precinct,
+    occupancy,
+    fanbase,
+    isHomeMatchWeek,
+  );
+  const merchAnalytics = buildMerchandisingAnalytics(
+    stadium,
+    players,
+    clubId,
+    isHomeMatchWeek,
+    week,
+    season,
+    masterSeed,
+  );
   const tickets = stadiumMatchdayIncome(stadium, season, week);
   const weeksLeft = weeksOfWages(finances.cash, wageBill);
   const belowFloor = boardCashFloor > 0 && finances.cash < boardCashFloor;
@@ -139,32 +187,32 @@ export function FinancesScreen({
 
   return (
     <main className="finances club-shell-card-body">
-      <section className="finances-shell game-panel" aria-label={t("finances.title")}>
-        <div className="fm-tab-bar" role="tablist" aria-label="Finanz-Bereiche">
-          {(
-            [
-              ["overview", "Übersicht"],
-              ["commerce", "Commerce"],
-              ["tickets", "Eintritt"],
-              ["runway", "Runway"],
-              ["season", "Saison"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={panelTab === id}
-              className={panelTab === id ? "fm-tab is-active" : "fm-tab"}
-              onClick={() => setPanelTab(id)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <div className="fm-tab-bar" role="tablist" aria-label="Finanz-Bereiche">
+        {(
+          [
+            ["overview", "Übersicht"],
+            ["commerce", "Commerce"],
+            ["merchandising", "Merch"],
+            ["tickets", "Eintritt"],
+            ["runway", "Runway"],
+            ["season", "Saison"],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={panelTab === id}
+            className={panelTab === id ? "fm-tab is-active" : "fm-tab"}
+            onClick={() => setPanelTab(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
-        {panelTab === "overview" ? (
-          <div className="fm-tab-panel finances-hero" aria-label="Cashflow und Budget">
+      {panelTab === "overview" ? (
+          <div className="fm-tab-panel finances-shell finances-hero" aria-label="Cashflow und Budget">
         <div className="finances-hero-grid">
           <section className="finances-waterfall" aria-label={`Cashflow ${waterfall.title}`}>
             <div className="finances-waterfall-head">
@@ -196,10 +244,20 @@ export function FinancesScreen({
                       <span
                         className="finances-bar-label"
                         title={
-                          line.kind === "sponsorship" ? t("finances.sponsorshipInventoryHint") : undefined
+                          line.kind === "sponsorship"
+                            ? t("finances.sponsorshipInventoryHint")
+                            : line.kind === "concessions" && showHospitalityHint
+                              ? t("finances.concessionsHospitalityHint")
+                              : undefined
                         }
                       >
-                        {financeLineLabel(line.kind)}
+                        {line.kind === "concessions" && showHospitalityHint ? (
+                          <Hint text={t("finances.concessionsHospitalityHint")} block>
+                            {financeLineLabel(line.kind)}
+                          </Hint>
+                        ) : (
+                          financeLineLabel(line.kind)
+                        )}
                       </span>
                       <span className="finances-bar-track" aria-hidden="true">
                         <span className="finances-bar-fill" style={{ width: `${width}%` }} />
@@ -239,13 +297,20 @@ export function FinancesScreen({
               wageCapRatio={wageCapRatio}
               wageCapTone={wageStatus}
             />
+            <BudgetCard
+              icon={Package}
+              label="Merchandising"
+              value={formatClubCash(merchAnalytics.weekNet)}
+              tone="neutral"
+              detail={`voll ${formatClubCash(merchAnalytics.fullOccupancyNet)}`}
+            />
           </section>
         </div>
           </div>
         ) : null}
 
         {panelTab === "commerce" ? (
-          <div className="fm-tab-panel" aria-label="Commerce">
+          <div className="fm-tab-panel finances-shell" aria-label="Commerce">
       <section className="finances-detail-cards" aria-label="Kasse im Detail">
         <article className={`finances-detail`}>
           <h2>
@@ -257,14 +322,14 @@ export function FinancesScreen({
               decoding="async"
             />
             <Utensils size={18} strokeWidth={2.5} aria-hidden />
-            Imbiss & Shop
+            Imbiss & Bewirtung
           </h2>
           <p>
-            <strong>{formatClubCash(merchWeek)}</strong>
+            <strong>{formatClubCash(concessionsWeek)}</strong>
             <span> diese Woche</span>
           </p>
           <p className="finances-detail-sub">
-            voll {formatClubCash(merchFull)} · {Math.round(occupancy * 100)}% Auslastung
+            voll {formatClubCash(concessionsFull)} · {Math.round(occupancy * 100)}% Auslastung · ohne Shop
           </p>
         </article>
         <button type="button" className="finances-detail is-button" onClick={onOpenStadium}>
@@ -285,14 +350,28 @@ export function FinancesScreen({
           </div>
         ) : null}
 
+        {panelTab === "merchandising" ? (
+          <div className="fm-tab-panel finances-shell" aria-label="Merchandising">
+            <MerchandisingAnalyticsPanel
+              stadium={stadium}
+              players={players}
+              clubId={clubId}
+              isHomeMatchWeek={isHomeMatchWeek}
+              week={week}
+              season={season}
+              masterSeed={masterSeed}
+            />
+          </div>
+        ) : null}
+
         {panelTab === "tickets" ? (
-          <div className="fm-tab-panel" aria-label="Eintritt">
+          <div className="fm-tab-panel finances-shell" aria-label="Eintritt">
             <StadiumTicketsPanel stadium={stadium} finances={finances} season={season} week={week} />
           </div>
         ) : null}
 
         {panelTab === "runway" ? (
-          <div className="fm-tab-panel" aria-label="Runway">
+          <div className="fm-tab-panel finances-shell" aria-label="Runway">
         <article className={`finances-detail finances-detail--solo${belowFloor || finances.cash < 0 || monthNegative ? " is-warn" : ""}`}>
           <h2>
             <TrendingDown size={18} strokeWidth={2.5} aria-hidden />
@@ -312,7 +391,7 @@ export function FinancesScreen({
         ) : null}
 
         {panelTab === "season" ? (
-          <div className="fm-tab-panel" aria-label="Saison">
+          <div className="fm-tab-panel finances-shell" aria-label="Saison">
       <section className="finances-sparkline" aria-label="Saison-Cash-Verlauf">
         <Hint text="Kassenstand über 13 Monate. Flach in Woche 1 ist ehrlich." block>
           <h2>{formatSeasonLabel(season)}</h2>
@@ -347,7 +426,6 @@ export function FinancesScreen({
       </section>
           </div>
         ) : null}
-      </section>
     </main>
   );
 }
@@ -436,6 +514,7 @@ function BudgetCard({
   label,
   value,
   tone,
+  detail,
   wageCapRatio,
   wageCapTone,
 }: {
@@ -443,6 +522,7 @@ function BudgetCard({
   label: string;
   value: string;
   tone: "good" | "warn" | "bad" | "neutral";
+  detail?: string;
   wageCapRatio?: number;
   wageCapTone?: "good" | "warn" | "over";
 }) {
@@ -453,6 +533,7 @@ function BudgetCard({
         {label}
       </span>
       <strong className="finances-card-value">{value}</strong>
+      {detail ? <span className="finances-card-detail">{detail}</span> : null}
       {wageCapRatio !== undefined ? (
         <span className="finances-wage-cap-bar" aria-hidden="true">
           <span

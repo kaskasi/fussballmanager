@@ -37,6 +37,7 @@ export type CurtainNavScreen =
   | "calendar"
   | "leagues"
   | "finances"
+  | "merchandising"
   | "stadium"
   | "help"
   | "matchday";

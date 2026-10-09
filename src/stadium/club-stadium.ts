@@ -1,4 +1,5 @@
 import { DIVISION_ECONOMY, type DivisionEconomyId } from "../economy/division-economy.ts";
+import type { ClubMerchandising } from "../economy/merchandising.ts";
 import { pitchFillPenalty, normalizePitchCondition } from "./precinct-campus-events.ts";
 import { precinctFillRateBonus } from "./precinct-effects.ts";
 import { normalizePrecinct, type PrecinctState } from "./precinct.ts";
@@ -47,6 +48,8 @@ export interface ClubStadium {
   restaurant_story_last_season?: number;
   /** Match pitch quality 0–100 — mega events and recovery (F7.3). */
   pitch_condition?: number;
+  /** Merch supply, retail, collection mix (F6.x). */
+  merchandising?: ClubMerchandising;
 }
 
 export const DEFAULT_FANBASE = 52;
@@ -155,6 +158,7 @@ export function normalizeClubStadium(stadium: ClubStadium): ClubStadium {
       sponsor_deals: stadium.sponsor_deals ?? [],
       precinct: normalizePrecinct(stadium.precinct),
       block_expansion: stadium.block_expansion,
+      merchandising: stadium.merchandising,
     },
     STADIUM_BASE_BLOCKS,
   );

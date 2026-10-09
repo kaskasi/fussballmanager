@@ -8,6 +8,8 @@
  */
 import { formatClubCash } from "../../economy/club-finances.ts";
 import { infrastructureCostForWeek } from "../../economy/early-pacing.ts";
+import type { HospitalityPreview } from "../../stadium/hospitality.ts";
+import { HospitalitySummaryBand } from "./HospitalitySummaryBand.tsx";
 import { PrecinctStatus } from "./PrecinctStatus.tsx";
 import {
   PRECINCT_BUILDINGS,
@@ -57,6 +59,8 @@ export function PrecinctGrid({
   precinct,
   cash,
   stadiumName,
+  hospitalityPreview,
+  isHomeMatchWeek,
   onPlace,
   onUpgrade,
   onBuyParcel,
@@ -71,6 +75,8 @@ export function PrecinctGrid({
   cash: number;
   stadiumName: string;
   seasonWeek: number;
+  hospitalityPreview: HospitalityPreview;
+  isHomeMatchWeek: boolean;
   onPlace: (building: PrecinctBuilding, x: number, y: number, from?: { x: number; y: number }) => void;
   onUpgrade: (building: PrecinctBuilding) => void;
   onBuyParcel: () => void;
@@ -753,10 +759,12 @@ export function PrecinctGrid({
         )}
       </div>
       </div>
+      <HospitalitySummaryBand preview={hospitalityPreview} isHomeMatchWeek={isHomeMatchWeek} />
       <PrecinctStatus
         precinct={precinct}
         picked={picked}
         selectedBuilding={selected?.building}
+        hospitalityPreview={hospitalityPreview}
         onFocus={focusBuilding}
       />
     </section>

@@ -22,6 +22,7 @@ import {
   PrecinctTrainingIcon,
   PrecinctWarnIcon,
 } from "../icons/precinct-status-icons.tsx";
+import { useT } from "../../i18n/react.ts";
 
 function formatPct(rate: number): string {
   const pct = rate * 100;
@@ -37,67 +38,78 @@ export function PrecinctStatus({
   picked,
   selectedBuilding,
   hospitalityPreview,
+  layout = "stack",
   onFocus,
 }: {
   precinct: PrecinctState;
   picked: PrecinctBuilding | "street" | null;
   selectedBuilding?: PrecinctBuilding;
   hospitalityPreview?: HospitalityPreview;
+  layout?: "stack" | "rail";
   onFocus: (building: PrecinctBuilding) => void;
 }) {
+  const t = useT();
   const effects = listPrecinctStatusEffects(precinct, hospitalityPreview);
   const totals = precinctStatusTotals(precinct);
   const active = effects.filter((entry) => entry.tone === "buff").length;
 
+  const rail = layout === "rail";
+
   return (
-    <aside className="stadium-precinct-status" aria-label="Gelände-Effekte">
+    <aside
+      className={rail ? "stadium-precinct-status stadium-precinct-status--rail" : "stadium-precinct-status"}
+      aria-label={t("precinct.status.aria")}
+    >
       <div className="stadium-precinct-status-head">
         <p className="stadium-precinct-status-kicker">
-          <PrecinctSparkleIcon size={14} aria-hidden="true" strokeWidth={2.5} /> Effekte · {active}/
-          {effects.length}
+          <PrecinctSparkleIcon size={14} aria-hidden="true" strokeWidth={2.5} />{" "}
+          {t("precinct.status.effects")} ·{" "}
+          {t("precinct.status.effectsCount", { active, total: effects.length })}
         </p>
         <div className="stadium-precinct-status-sheet" aria-label="Summe">
-          <span title="Zuschauer-Füllung">
+          <span title={t("precinct.status.total.fill")}>
             <PrecinctFillIcon size={12} aria-hidden="true" strokeWidth={2.5} /> {formatPct(totals.fill)}
           </span>
-          <span title="Fanbase pro Woche">
+          <span title={t("precinct.status.total.fans")}>
             <PrecinctFansIcon size={12} aria-hidden="true" strokeWidth={2.5} /> {formatFans(totals.fans)}
           </span>
-          <span title="Training">
+          <span title={t("precinct.status.total.training")}>
             <PrecinctTrainingIcon size={12} aria-hidden="true" strokeWidth={2.5} /> ×
             {totals.training.toFixed(2).replace(".", ",")}
           </span>
-          <span title="Imbiss und Merch pro Woche">
+          <span title={t("precinct.status.total.merch")}>
             <PrecinctCashIcon size={12} aria-hidden="true" strokeWidth={2.5} /> {formatMerch(totals.merch)}
           </span>
         </div>
       </div>
-      {PRECINCT_STATUS_GROUPS.map((group) => {
-        const slots = effects.filter((entry) => entry.group === group.id);
-        if (slots.length === 0) return null;
-        return (
-          <section key={group.id} className="stadium-precinct-status-group" aria-label={group.label}>
-            <h3>
-              <PrecinctGroupIcon group={group.id} size={13} />
-              {group.label}
-            </h3>
-            <ul>
-              {slots.map((effect) => (
-                <li key={effect.id}>
-                  <StatusChip
-                    effect={effect}
-                    active={
-                      effect.id !== "arena" &&
-                      (picked === effect.id || selectedBuilding === effect.id)
-                    }
-                    onFocus={onFocus}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        );
-      })}
+      <div className={rail ? "stadium-precinct-status-columns" : "stadium-precinct-status-stack"}>
+        {PRECINCT_STATUS_GROUPS.map((group) => {
+          const slots = effects.filter((entry) => entry.group === group.id);
+          if (slots.length === 0) return null;
+          return (
+            <section key={group.id} className="stadium-precinct-status-group" aria-label={group.label}>
+              <h3 title={group.label} aria-label={group.label}>
+                <PrecinctGroupIcon group={group.id} size={rail ? 15 : 13} />
+                {rail ? null : group.label}
+              </h3>
+              <ul>
+                {slots.map((effect) => (
+                  <li key={effect.id}>
+                    <StatusChip
+                      effect={effect}
+                      active={
+                        effect.id !== "arena" &&
+                        (picked === effect.id || selectedBuilding === effect.id)
+                      }
+                      onFocus={onFocus}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })}
+      </div>
     </aside>
   );
 }

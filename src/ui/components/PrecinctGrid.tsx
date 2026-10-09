@@ -2,14 +2,14 @@
  * WIREFRAME: PRD 14.7 — Gelände-v2
  *
  * Palette 🌭🍺👕🅿️🚌🚇🏃🟩🌱♿🏠 + 🛣️
- * 14×10 · 10×10 Farm · 🧩 2×5-Plättchen L/R
+ * 18×12 · 2×6-Plättchen L/R
  * 🛣️ Straße ziehen · autoverbinden · Klick auf ⚠️ legt Weg zum Netz
  * Start: Straße Stadt → Arena. Gebäude ohne Netz: ⚠️
  */
 import { formatClubCash } from "../../economy/club-finances.ts";
 import { infrastructureCostForWeek } from "../../economy/early-pacing.ts";
 import type { HospitalityPreview } from "../../stadium/hospitality.ts";
-import { HospitalitySummaryBand } from "./HospitalitySummaryBand.tsx";
+import { HospitalityBuildingLiveStat } from "./HospitalitySummaryBand.tsx";
 import { PrecinctStatus } from "./PrecinctStatus.tsx";
 import {
   PRECINCT_BUILDINGS,
@@ -48,10 +48,36 @@ import {
   type PrecinctPatch,
   type PrecinctState,
 } from "../../stadium/precinct.ts";
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { ArrowUp, Landmark, Puzzle, Route, X } from "lucide-react";
+import { useRef, useState, type DragEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { createRoot } from "react-dom/client";
+import { useT } from "../../i18n/react.ts";
+import { PrecinctBuildingIcon, PrecinctWarnIcon } from "../icons/precinct-status-icons.tsx";
 
 const DRAG_TYPE = "application/x-fc-precinct";
 const TILE_SIZE = "1.85rem";
+
+type PrecinctBuildingDef = (typeof PRECINCT_BUILDINGS)[number];
+
+function attachBuildingDragImage(event: DragEvent<HTMLButtonElement>, building: PrecinctBuildingDef) {
+  const ghost = document.createElement("div");
+  ghost.className = "stadium-precinct-drag-ghost";
+  ghost.style.setProperty("--drag-w", String(building.minW));
+  ghost.style.setProperty("--drag-h", String(building.minH));
+  const iconHost = document.createElement("span");
+  iconHost.className = "stadium-precinct-drag-ghost-icon";
+  ghost.appendChild(iconHost);
+  document.body.appendChild(ghost);
+  const root = createRoot(iconHost);
+  root.render(<PrecinctBuildingIcon building={building.id} size={22} />);
+  const rootFont = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const tilePx = 1.85 * rootFont;
+  event.dataTransfer.setDragImage(ghost, tilePx * 0.5, tilePx * 0.5);
+  window.setTimeout(() => {
+    root.unmount();
+    ghost.remove();
+  }, 0);
+}
 
 type PalettePick = PrecinctBuilding | "street";
 
@@ -86,7 +112,10 @@ export function PrecinctGrid({
   onRemovePatch: (patchId: string) => void;
   onRemoveStreet: (x: number, y: number) => void;
 }) {
+  const t = useT();
   const [picked, setPicked] = useState<PalettePick | null>(null);
+  const [dragBuilding, setDragBuilding] = useState<PrecinctBuilding | null>(null);
+  const [dragAnchor, setDragAnchor] = useState<{ x: number; y: number } | null>(null);
   const [selectedPatchId, setSelectedPatchId] = useState<string | null>(null);
   const [selectedStreet, setSelectedStreet] = useState<{ x: number; y: number } | null>(null);
   const [roadFrom, setRoadFrom] = useState<{ x: number; y: number } | null>(null);
@@ -114,6 +143,24 @@ export function PrecinctGrid({
   const roadPreview = new Map(
     (roadPlan?.cells ?? []).map((cell) => [`${cell.x},${cell.y}`, cell.kind] as const),
   );
+
+  function dragFootprintCells(anchor: { x: number; y: number }, building: PrecinctBuilding) {
+    const def = precinctBuildingDef(building);
+    const cells: Array<{ x: number; y: number }> = [];
+    for (let dy = 0; dy < def.minH; dy += 1) {
+      for (let dx = 0; dx < def.minW; dx += 1) {
+        cells.push({ x: anchor.x + dx, y: anchor.y + dy });
+      }
+    }
+    return cells;
+  }
+
+  function isDragPreviewCell(x: number, y: number): boolean {
+    if (!dragBuilding || !dragAnchor) return false;
+    return dragFootprintCells(dragAnchor, dragBuilding).some(
+      (cell) => cell.x === x && cell.y === y,
+    );
+  }
 
   function tryPlace(x: number, y: number, building: PrecinctBuilding) {
     if (isPrecinctStadiumCell(x, y)) return;
@@ -195,6 +242,7 @@ export function PrecinctGrid({
 
   return (
     <section className="stadium-precinct" aria-label="Gelände">
+      <div className="stadium-precinct-cluster">
       <aside className="stadium-precinct-palette" aria-label="Gebäude">
         {PRECINCT_BUILDINGS.map((building) => {
           const count = countBuilding(precinct, building.id);
@@ -236,6 +284,13 @@ export function PrecinctGrid({
                   event.dataTransfer.setData(DRAG_TYPE, building.id);
                   event.dataTransfer.effectAllowed = "move";
                   setSelectedPatchId(null);
+                  setDragBuilding(building.id);
+                  setDragAnchor(null);
+                  attachBuildingDragImage(event, building);
+                }}
+                onDragEnd={() => {
+                  setDragBuilding(null);
+                  setDragAnchor(null);
                 }}
                 onClick={() => {
                   if (locked) return;
@@ -243,7 +298,7 @@ export function PrecinctGrid({
                   setPicked((current) => (current === building.id ? null : building.id));
                 }}
               >
-                <span aria-hidden="true">{building.icon}</span>
+                <PrecinctBuildingIcon building={building.id} size={20} />
                 {count > 1 ? <span className="stadium-precinct-count">{count}</span> : null}
                 {uniqueOwned && level > 1 ? (
                   <span className="stadium-precinct-level">Lv{level}</span>
@@ -285,7 +340,7 @@ export function PrecinctGrid({
               setPicked((current) => (current === "street" ? null : "street"));
             }}
           >
-            <span aria-hidden="true">🛣️</span>
+            <Route size={20} strokeWidth={2.5} aria-hidden="true" />
           </button>
         </div>
         <div className="stadium-precinct-hint">
@@ -302,6 +357,7 @@ export function PrecinctGrid({
         </div>
       </aside>
       <div className="stadium-precinct-map-stack">
+      <div className="stadium-precinct-playfield">
       <div
         className={picked === "street" ? "stadium-precinct-map is-paving" : "stadium-precinct-map"}
         onPointerDown={(event) => {
@@ -351,7 +407,7 @@ export function PrecinctGrid({
                   style={{ gridColumn: `span ${PRECINCT_CITY_LINK.w}` }}
                   title="Stadtanschluss · Autobahn"
                 >
-                  <span>🛣️</span>
+                  <Route size={16} strokeWidth={2.5} aria-hidden="true" />
                   <strong>Stadt</strong>
                 </div>
               );
@@ -371,6 +427,10 @@ export function PrecinctGrid({
           }}
           role="grid"
           aria-label="Stadiongelände"
+          onDragLeave={(event) => {
+            if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+            setDragAnchor(null);
+          }}
         >
         {Array.from({ length: precinct.height }, (_, y) =>
           Array.from({ length: precinct.width }, (_, x) => {
@@ -389,18 +449,18 @@ export function PrecinctGrid({
                   data-tooltip={
                     arenaDocked
                       ? `${stadiumName} · am Straßennetz`
-                      : `${stadiumName} · dockt nicht · 🛣️-Klick legt die Straße`
+                      : `${stadiumName} · dockt nicht · Straßen-Klick legt die Straße`
                   }
                   style={{
                     gridColumn: `${PRECINCT_STADIUM.x + 1} / span ${PRECINCT_STADIUM.w}`,
                     gridRow: `${PRECINCT_STADIUM.y + 1} / span ${PRECINCT_STADIUM.h}`,
                   }}
                 >
-                  <span aria-hidden="true">🏟️</span>
+                  <Landmark size={22} strokeWidth={2.5} aria-hidden="true" />
                   <strong>{stadiumName}</strong>
                   {arenaDocked ? null : (
                     <span className="stadium-precinct-dock" aria-label="Braucht Straßennetz">
-                      ⚠️
+                      <PrecinctWarnIcon size={12} aria-hidden="true" strokeWidth={2.5} />
                     </span>
                   )}
                 </div>
@@ -452,7 +512,7 @@ export function PrecinctGrid({
                   data-tooltip={
                     meta
                       ? hungry
-                        ? `${meta.label} · dockt nicht ans Straßennetz · 🛣️-Klick legt die Straße`
+                        ? `${meta.label} · dockt nicht ans Straßennetz · Straßen-Klick legt die Straße`
                         : `${meta.label} · ${stageLabel} · ${patch.w}×${patch.h}${canShrink ? " · ⊟ auf min, dann umsetzen" : " · Klick zum Umsetzen"}`
                       : "Gebäude"
                   }
@@ -476,12 +536,12 @@ export function PrecinctGrid({
                     }
                   }}
                 >
-                  {meta ? <span aria-hidden="true">{meta.icon}</span> : null}
+                  {meta ? <PrecinctBuildingIcon building={patch.building} size={18} /> : null}
                   {stageLabel ? <em className="stadium-precinct-stage">{stageLabel}</em> : null}
                   {level > 1 ? <span className="stadium-precinct-level">Lv{level}</span> : null}
                   {hungry ? (
                     <span className="stadium-precinct-dock" aria-label="Braucht Straßennetz">
-                      ⚠️
+                      <PrecinctWarnIcon size={12} aria-hidden="true" strokeWidth={2.5} />
                     </span>
                   ) : null}
                   {movingHere ? (
@@ -567,7 +627,7 @@ export function PrecinctGrid({
                   }
                   data-tooltip={
                     isNext
-                      ? `Erweiterung · ${expansionTile.label} · 2×5 · ${formatClubCash(PRECINCT_EXPANSION_COST)}`
+                      ? `Erweiterung · ${expansionTile.label} · 2×6 · ${formatClubCash(PRECINCT_EXPANSION_COST)}`
                       : `Erst ${expansion.tile?.label ?? "die nächste Seite"} kaufen`
                   }
                   onClick={() => {
@@ -575,8 +635,8 @@ export function PrecinctGrid({
                     if (isNext && expansion.allowed) onBuyParcel();
                   }}
                 >
-                  <span aria-hidden="true">🧩</span>
-                  <strong>2×5</strong>
+                  <Puzzle size={18} strokeWidth={2.5} aria-hidden="true" />
+                  <strong>2×6</strong>
                   <em>{isNext ? formatClubCash(PRECINCT_EXPANSION_COST) : expansionTile.label}</em>
                 </button>
               );
@@ -610,6 +670,7 @@ export function PrecinctGrid({
                     previewKind === "paint" ? "is-road-preview" : "",
                     previewKind === "blocked" ? "is-road-blocked" : "",
                     previewKind === "exist" ? "is-road-exist" : "",
+                    isDragPreviewCell(x, y) ? "is-drag-footprint" : "",
                   ]
                     .filter(Boolean)
                     .join(" ")
@@ -620,10 +681,13 @@ export function PrecinctGrid({
                 onDragOver={(event) => {
                   event.preventDefault();
                   event.dataTransfer.dropEffect = "move";
+                  if (dragBuilding) setDragAnchor({ x, y });
                 }}
                 onDrop={(event) => {
                   event.preventDefault();
                   const id = event.dataTransfer.getData(DRAG_TYPE) as PrecinctBuilding;
+                  setDragBuilding(null);
+                  setDragAnchor(null);
                   if (PRECINCT_BUILDINGS.some((entry) => entry.id === id)) {
                     tryPlace(x, y, id);
                   }
@@ -655,7 +719,9 @@ export function PrecinctGrid({
                 }}
               >
                 {street && links ? <RoadGlyph links={links} /> : null}
-                {!street && ramp ? <span aria-hidden="true">↑</span> : null}
+                {!street && ramp ? (
+                  <ArrowUp size={14} strokeWidth={2.5} aria-hidden="true" />
+                ) : null}
               </button>
             );
           }),
@@ -664,18 +730,22 @@ export function PrecinctGrid({
       </div>
       <div className="stadium-precinct-detail-slot">
         {selectedStreet && isStreetCell(precinct, selectedStreet.x, selectedStreet.y) ? (
-          <div className="stadium-precinct-detail" aria-label="Ausgewählte Straße">
+          <div className="stadium-precinct-detail" aria-label={t("precinct.detail.selectedStreet")}>
             <div className="stadium-precinct-detail-main">
-              <span className="stadium-precinct-detail-icon" aria-hidden="true">
-                🛣️
+              <span className="stadium-precinct-detail-icon">
+                <Route size={18} strokeWidth={2.5} aria-hidden="true" />
               </span>
-              <div>
-                <strong>Straße</strong>
-                <p>
-                  Zelle {selectedStreet.x + 1},{selectedStreet.y + 1} · Entfernen erstattet{" "}
-                  {formatClubCash(streetRefund)}
-                </p>
-              </div>
+              <p className="stadium-precinct-detail-line">
+                <strong>{t("precinct.detail.street")}</strong>
+                <span className="stadium-precinct-detail-meta">
+                  {" · "}
+                  {t("precinct.detail.streetCell", {
+                    x: selectedStreet.x + 1,
+                    y: selectedStreet.y + 1,
+                    amount: formatClubCash(streetRefund),
+                  })}
+                </span>
+              </p>
             </div>
             <button
               type="button"
@@ -685,30 +755,38 @@ export function PrecinctGrid({
                 setSelectedStreet(null);
               }}
             >
-              Entfernen · {formatClubCash(streetRefund)}
+              {t("precinct.detail.remove")} · {formatClubCash(streetRefund)}
             </button>
             <button
               type="button"
               className="stadium-precinct-detail-close"
-              aria-label="Auswahl aufheben"
+              aria-label={t("precinct.detail.clearSelection")}
               onClick={() => setSelectedStreet(null)}
             >
-              ✕
+              <X size={16} strokeWidth={2.5} aria-hidden="true" />
             </button>
           </div>
         ) : selected && selectedDef ? (
-          <div className="stadium-precinct-detail" aria-label="Ausgewähltes Gebäude">
+          <div className="stadium-precinct-detail" aria-label={t("precinct.detail.selectedBuilding")}>
             <div className="stadium-precinct-detail-main">
-              <span className="stadium-precinct-detail-icon" aria-hidden="true">
-                {selectedDef.icon}
+              <span className="stadium-precinct-detail-icon">
+                <PrecinctBuildingIcon building={selected.building} size={18} />
               </span>
-              <div>
+              <p className="stadium-precinct-detail-line">
                 <strong>{selectedDef.label}</strong>
-                <p>
+                <span className="stadium-precinct-detail-meta">
+                  {" · "}
                   {precinctBuildingStageLabel(selected.building, selectedLevel)} · {selected.w}×{selected.h}
-                  {!patchDocksStreetNetwork(precinct, selected) ? " · ⚠️ kein Straßennetz" : null}
-                </p>
-              </div>
+                  {!patchDocksStreetNetwork(precinct, selected)
+                    ? ` · ${t("precinct.detail.noNetwork")}`
+                    : null}
+                  <HospitalityBuildingLiveStat
+                    building={selected.building}
+                    preview={hospitalityPreview}
+                    isHomeMatchWeek={isHomeMatchWeek}
+                  />
+                </span>
+              </p>
             </div>
             {selectedDef.maxLevel > 1 && selectedLevel < selectedDef.maxLevel ? (
               <button
@@ -726,7 +804,7 @@ export function PrecinctGrid({
                 {formatClubCash(selectedUpgrade.cost)}
               </button>
             ) : selectedDef.maxLevel > 1 ? (
-              <span className="stadium-precinct-detail-maxed">Maximalstufe</span>
+              <span className="stadium-precinct-detail-maxed">{t("precinct.detail.maxLevel")}</span>
             ) : null}
             <button
               type="button"
@@ -738,35 +816,35 @@ export function PrecinctGrid({
                 setPicked(null);
               }}
             >
-              Entfernen · {formatClubCash(selectedRefund)}
+              {t("precinct.detail.remove")} · {formatClubCash(selectedRefund)}
             </button>
             <button
               type="button"
               className="stadium-precinct-detail-close"
-              aria-label="Auswahl aufheben"
+              aria-label={t("precinct.detail.clearSelection")}
               onClick={() => {
                 setSelectedPatchId(null);
                 setPicked(null);
               }}
             >
-              ✕
+              <X size={16} strokeWidth={2.5} aria-hidden="true" />
             </button>
           </div>
         ) : (
-          <p className="stadium-precinct-detail-hint">
-            Gebäude oder Straße antippen · Ausbau / Entfernen hier
-          </p>
+          <p className="stadium-precinct-detail-hint">{t("precinct.detail.hint")}</p>
         )}
       </div>
       </div>
-      <HospitalitySummaryBand preview={hospitalityPreview} isHomeMatchWeek={isHomeMatchWeek} />
+      </div>
       <PrecinctStatus
         precinct={precinct}
+        layout="rail"
         picked={picked}
         selectedBuilding={selected?.building}
         hospitalityPreview={hospitalityPreview}
         onFocus={focusBuilding}
       />
+      </div>
     </section>
   );
 }

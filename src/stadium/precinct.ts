@@ -47,20 +47,20 @@ export interface PrecinctState {
   levels: Partial<Record<PrecinctBuilding, number>>;
 }
 
-export const PRECINCT_WIDTH = 14;
-export const PRECINCT_HEIGHT = 10;
+export const PRECINCT_WIDTH = 18;
+export const PRECINCT_HEIGHT = 12;
 
-/** Starting farm: 10×10 owned. Side expansions add 2×5 tiles. */
-export const PRECINCT_CORE = { x: 2, y: 0, w: 10, h: 10 } as const;
+/** Starting farm reference (10×10) centered on the board. Side expansions add 2×6 tiles. */
+export const PRECINCT_CORE = { x: 4, y: 1, w: 10, h: 10 } as const;
 
-/** Stadium footprint — not a placeable building. Centered in the starting farm. */
-export const PRECINCT_STADIUM = { x: 5, y: 4, w: 4, h: 2 } as const;
+/** Stadium footprint — not a placeable building. Centered on the board. */
+export const PRECINCT_STADIUM = { x: 7, y: 5, w: 4, h: 2 } as const;
 
 /**
  * Off-grid city highway, Sim City-style: sits on the north rim (y = -1)
  * so the bus stop docks to the city, not to a gifted inner street.
  */
-export const PRECINCT_CITY_LINK = { x: 6, y: -1, w: 2, h: 1 } as const;
+export const PRECINCT_CITY_LINK = { x: 8, y: -1, w: 2, h: 1 } as const;
 
 /**
  * 1×1 decorative tiles (tree/bench/statue, zero buffs) — not land expansion.
@@ -83,12 +83,12 @@ export interface PrecinctExpansion {
   h: number;
 }
 
-/** Rosenberg tiles: alternate left/right. Four buys → 2 extra columns × 10 rows per side. */
+/** Rosenberg tiles: alternate left/right. Four buys → 2 extra columns × 12 rows per side. */
 export const PRECINCT_EXPANSIONS: readonly PrecinctExpansion[] = [
-  { id: "left_north", side: "left", label: "links oben", x: 0, y: 0, w: 2, h: 5 },
-  { id: "right_north", side: "right", label: "rechts oben", x: 12, y: 0, w: 2, h: 5 },
-  { id: "left_south", side: "left", label: "links unten", x: 0, y: 5, w: 2, h: 5 },
-  { id: "right_south", side: "right", label: "rechts unten", x: 12, y: 5, w: 2, h: 5 },
+  { id: "left_north", side: "left", label: "links oben", x: 0, y: 0, w: 2, h: 6 },
+  { id: "right_north", side: "right", label: "rechts oben", x: 16, y: 0, w: 2, h: 6 },
+  { id: "left_south", side: "left", label: "links unten", x: 0, y: 6, w: 2, h: 6 },
+  { id: "right_south", side: "right", label: "rechts unten", x: 16, y: 6, w: 2, h: 6 },
 ];
 
 export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
@@ -292,7 +292,7 @@ export function isCityRampCell(x: number, y: number): boolean {
   return y === 0 && x >= PRECINCT_CITY_LINK.x && x < PRECINCT_CITY_LINK.x + PRECINCT_CITY_LINK.w;
 }
 
-/** All playable cells on the 14×10 board except the arena footprint. */
+/** All playable cells on the board except the arena footprint. */
 export function defaultOwnedCells(): Record<string, true> {
   const owned: Record<string, true> = {};
   for (let y = 0; y < PRECINCT_HEIGHT; y += 1) {

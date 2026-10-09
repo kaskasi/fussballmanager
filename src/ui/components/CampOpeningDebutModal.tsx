@@ -23,7 +23,7 @@ export function CampOpeningDebutModal({
   const nation = campNationById(campId);
   const hookIndex = player.state.camp_debut_hook_index ?? 0;
   const hookKey = campDebutHookKey(campId, hookIndex);
-  const ca = estimateCa(player.attributes, player.position);
+  const ca = Math.round(estimateCa(player.attributes, player.position));
   const region = nation ? campDebutRegionLabel(nation) : campId;
 
   return (
@@ -47,7 +47,7 @@ export function CampOpeningDebutModal({
             <p className="camp-debut-meta">
               {t("youth.camp.debut.lead", {
                 position: player.position,
-                ca: String(ca),
+                ca,
               })}
             </p>
             <p className="camp-debut-hook">{t(hookKey)}</p>

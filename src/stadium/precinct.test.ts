@@ -49,7 +49,7 @@ const FARM_X = PRECINCT_CORE.x;
 const FARM_Y = 1;
 
 describe("precinct grid", () => {
-  it("starts as a full 14×10 owned farm with a city-to-arena road", () => {
+  it("starts as a full 18×12 owned farm with a city-to-arena road", () => {
     const grid = emptyPrecinct();
     expect(grid.width).toBe(PRECINCT_WIDTH);
     expect(grid.height).toBe(PRECINCT_HEIGHT);
@@ -161,7 +161,7 @@ describe("precinct grid", () => {
     expect(occupiedCells(min, "fanshop")).toBe(4);
   });
 
-  it("starts with the full 14×10 farm owned", () => {
+  it("starts with the full 18×12 farm owned", () => {
     const empty = emptyPrecinct();
     expect(nextPrecinctExpansion(empty)).toBeNull();
     expect(isOwnedCell(empty, 0, 0)).toBe(true);
@@ -202,7 +202,7 @@ describe("precinct grid", () => {
   });
 
   it("docks the bus on the off-grid city highway, or via a street to it", () => {
-    const abutting = placePrecinctBuilding(emptyPrecinct(), 7, 0, "bus");
+    const abutting = placePrecinctBuilding(emptyPrecinct(), PRECINCT_CITY_LINK.x - 1, 0, "bus");
     expect(patchDocksCityLink(abutting, "bus")).toBe(true);
 
     let viaRoad = placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "bus");
@@ -210,7 +210,11 @@ describe("precinct grid", () => {
     expect(patchTouchesStreet(viaRoad, "bus")).toBe(true);
     expect(patchDocksCityLink(viaRoad, "bus")).toBe(false);
 
-    const withStreet = placeStreet(placePrecinctBuilding(emptyPrecinct(), 9, 1, "transit"), 11, 1);
+    const withStreet = placeStreet(
+      placePrecinctBuilding(emptyPrecinct(), 15, 9, "transit"),
+      15,
+      8,
+    );
     expect(patchTouchesStreet(withStreet, "transit")).toBe(true);
     expect(patchDocksCityLink(withStreet, "transit")).toBe(false);
   });
@@ -239,13 +243,13 @@ describe("precinct grid", () => {
     });
     expect(countBuilding(migrated, "kiosk")).toBe(2);
     expect(countBuilding(migrated, "fanshop")).toBe(1);
-    expect(findBuildingCell(migrated, "kiosk")).toEqual({ x: 3, y: 2 });
-    expect(findBuildingCell(migrated, "fanshop")).toEqual({ x: 3, y: 3 });
+    expect(findBuildingCell(migrated, "kiosk")).toEqual({ x: 5, y: 3 });
+    expect(findBuildingCell(migrated, "fanshop")).toEqual({ x: 5, y: 4 });
     expect(occupiedCells(migrated, "fanshop")).toBe(4);
     expect(arenaDocksStreetNetwork(migrated)).toBe(true);
   });
 
-  it("shifts a 12×10 campus onto the 14-wide farm", () => {
+  it("shifts a 12×10 campus onto the 18-wide farm", () => {
     const migrated = normalizePrecinct({
       width: 12,
       height: 10,
@@ -254,8 +258,8 @@ describe("precinct grid", () => {
       streets: { "5,0": true, "5,1": true },
       levels: { kiosk: 1 },
     });
-    expect(migrated.width).toBe(14);
-    expect(findBuildingCell(migrated, "kiosk")).toEqual({ x: 2, y: 1 });
+    expect(migrated.width).toBe(18);
+    expect(findBuildingCell(migrated, "kiosk")).toEqual({ x: 4, y: 2 });
     expect(isOwnedCell(migrated, 0, 1)).toBe(true);
     expect(isStreetCell(migrated, PRECINCT_CITY_LINK.x, 0)).toBe(true);
     expect(arenaDocksStreetNetwork(migrated)).toBe(true);

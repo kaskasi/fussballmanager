@@ -58,7 +58,6 @@ import { Hint } from "../components/Hint.tsx";
 import { PrecinctGrid } from "../components/PrecinctGrid.tsx";
 import { SponsorDealModal } from "../components/SponsorDealModal.tsx";
 import {
-  PRECINCT_HEADER_PHOTO,
   STADIUM_MOOD_PHOTOS,
   stadiumPhotoTierFromCapacity,
 } from "../assets/mood-photos.ts";
@@ -281,7 +280,6 @@ export function StadiumScreen({
       {tab === "precinct" ? (
         <div className="fm-tab-panel">
           {stadiumContext}
-          <MoodPhotoBand src={PRECINCT_HEADER_PHOTO} className="stadium-precinct-header" />
           <PrecinctGrid
             precinct={precinct}
             cash={finances.cash}

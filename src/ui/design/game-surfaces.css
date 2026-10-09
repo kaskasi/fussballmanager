@@ -3442,3 +3442,100 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
+
+/* Gelände tab — design tokens (design.md §2); overrides legacy index.css */
+main.stadium.club-shell-card-body .stadium-precinct {
+  background: var(--panel);
+  border: var(--outline-weich);
+  box-shadow: var(--shadow-flat);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-cluster {
+  gap: 0.55rem;
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-status--rail {
+  border-left: var(--outline-weich);
+  padding-left: 0.35rem;
+  margin-left: 0.1rem;
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-status--rail .stadium-precinct-status-group h3 {
+  background: var(--panel-muted);
+  border: var(--outline-weich);
+  color: var(--tinte-weich);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-status-kicker {
+  color: var(--tinte-weich);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-status-sheet {
+  background: var(--tinte);
+  color: var(--panel);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-status-group h3 {
+  color: var(--tinte-weich);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-buff {
+  border-color: var(--rasen);
+  background: var(--rasen-hell);
+  color: var(--tinte);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-buff.is-hunger {
+  border-color: var(--tinte-weich);
+  background: var(--panel-muted);
+  color: var(--tinte-weich);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-buff.is-warn {
+  border-color: var(--terra);
+  background: var(--panel);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-buff.is-active {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rasen) 28%, transparent);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-buff[data-tooltip]:hover::after,
+main.stadium.club-shell-card-body .stadium-precinct-buff[data-tooltip]:focus-visible::after {
+  background: var(--tinte);
+  color: var(--panel);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-detail {
+  background: var(--panel-muted);
+  border: var(--outline-weich);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-detail-line strong {
+  color: var(--tinte);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-detail-meta,
+main.stadium.club-shell-card-body .stadium-precinct-detail-hint {
+  color: var(--tinte-weich);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-detail-live {
+  color: var(--tinte-weich);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-detail-upgrade {
+  border-color: var(--rasen);
+  background: var(--rasen-hell);
+  color: var(--rasen-dunkel);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-detail-remove {
+  border-color: var(--terra);
+  background: var(--panel);
+  color: var(--terra-dunkel);
+}
+
+main.stadium.club-shell-card-body .stadium-precinct-detail-close {
+  color: var(--tinte-weich);
+}

@@ -5408,32 +5408,59 @@ body {
 }
 
 .stadium-precinct {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) minmax(9.5rem, 12.5rem);
-  gap: 0.55rem 0.65rem;
-  align-items: start;
+  display: flex;
+  justify-content: center;
   margin-bottom: 1.25rem;
-  padding: 0.75rem;
+  padding: 0.85rem 0.95rem;
   border-radius: 1rem;
   background: #fff;
   box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
   overflow: visible;
 }
 
+.stadium-precinct-cluster {
+  --precinct-city-band: calc(1.7rem + 0.16rem);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.52rem;
+  max-width: 100%;
+}
+
+.stadium-precinct-cluster > .stadium-precinct-palette,
+.stadium-precinct-cluster > .stadium-precinct-status--rail {
+  padding-top: var(--precinct-city-band);
+  box-sizing: border-box;
+}
+
 .stadium-precinct-map-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  min-width: 0;
+  gap: 0.42rem;
+  flex: 0 0 auto;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.stadium-precinct-playfield {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.stadium-precinct-playfield .stadium-precinct-detail-slot {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .stadium-precinct-detail-slot {
-  min-height: 2.65rem;
+  min-height: 0;
 }
 
 .stadium-precinct-detail-hint {
   margin: 0;
-  padding: 0.35rem 0.45rem;
+  padding: 0.22rem 0.4rem;
   border: 1px dashed #cbd5e1;
   border-radius: 0.4rem;
   color: #94a3b8;
@@ -5447,11 +5474,16 @@ body {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  align-content: flex-start;
   align-items: flex-start;
-  justify-content: flex-start;
+  justify-content: flex-end;
   gap: 0.28rem;
+  flex: 0 0 auto;
   width: 8.8rem;
+  max-width: min(8.8rem, 28vw);
   min-width: 0;
+  padding-right: 0.2rem;
+  box-sizing: border-box;
 }
 
 .stadium-precinct-palette-item {
@@ -5525,6 +5557,91 @@ body {
   align-content: start;
   overflow: auto;
   padding-right: 0.1rem;
+}
+
+.stadium-precinct-status.stadium-precinct-status--rail {
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
+}
+
+.stadium-precinct-status-stack {
+  display: contents;
+}
+
+.stadium-precinct-status--rail {
+  max-height: none;
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  padding-left: 0.38rem;
+  margin-left: 0.12rem;
+  border-left: 1px solid #e2e8f0;
+  overflow: visible;
+  align-self: flex-start;
+}
+
+.stadium-precinct-status--rail .stadium-precinct-status-columns {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.38rem;
+  min-height: 0;
+  overflow: visible;
+  padding-bottom: 0;
+}
+
+.stadium-precinct-status--rail .stadium-precinct-status-group {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  gap: 0.18rem;
+}
+
+.stadium-precinct-status--rail .stadium-precinct-status-group h3 {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  margin: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.35rem;
+  background: #f8fafc;
+  color: #475569;
+  cursor: default;
+}
+
+.stadium-precinct-status--rail .stadium-precinct-status-group ul {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  flex: 1;
+  margin: 0;
+}
+
+.stadium-precinct-status--rail .stadium-precinct-status-head {
+  gap: 0.15rem;
+}
+
+.stadium-precinct-status--rail .stadium-precinct-status-sheet {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 0.12rem 0.2rem;
+  padding: 0.22rem 0.32rem;
+}
+
+.stadium-precinct-status--rail .stadium-precinct-buff[data-tooltip]:hover::after,
+.stadium-precinct-status--rail .stadium-precinct-buff[data-tooltip]:focus-visible::after {
+  left: auto;
+  right: calc(100% + 0.35rem);
+  bottom: 50%;
+  transform: translateY(50%);
 }
 
 .stadium-precinct-status-head {
@@ -5647,14 +5764,42 @@ body {
 
 .stadium-precinct-map {
   display: grid;
-  gap: 0.12rem;
+  gap: 0.16rem;
   justify-content: start;
   overflow: visible;
 }
 
+.stadium-precinct-drag-ghost {
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  z-index: -1;
+  box-sizing: border-box;
+  width: calc(var(--drag-w, 1) * 1.85rem);
+  height: calc(var(--drag-h, 1) * 1.85rem);
+  display: grid;
+  place-items: center;
+  border: 2px dashed #047857;
+  border-radius: 0.35rem;
+  background: rgb(236 253 245 / 88%);
+  color: #0f172a;
+  pointer-events: none;
+}
+
+.stadium-precinct-drag-ghost-icon {
+  display: grid;
+  place-items: center;
+}
+
+.stadium-precinct-tile.is-cell.is-drag-footprint {
+  background: rgb(236 253 245 / 92%);
+  box-shadow: inset 0 0 0 2px #047857;
+  z-index: 2;
+}
+
 .stadium-precinct-city-row {
   display: grid;
-  gap: 0.12rem;
+  gap: 0.16rem;
   height: 1.7rem;
 }
 
@@ -5770,44 +5915,72 @@ body {
 
 .stadium-precinct-detail {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.4rem 0.55rem;
+  gap: 0.32rem 0.45rem;
   margin: 0;
-  padding: 0.35rem 0.45rem;
+  padding: 0.26rem 0.42rem;
   border: 1px solid var(--panel-border, #cbd5e1);
-  border-radius: 0.45rem;
+  border-radius: 0.4rem;
   background: var(--panel-bg, #f8fafc);
 }
 
 .stadium-precinct-detail-main {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  flex: 1 1 12rem;
+  gap: 0.35rem;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
-.stadium-precinct-detail-main p {
-  margin: 0.08rem 0 0;
-  font-size: 0.72rem;
+.stadium-precinct-detail-line {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.68rem;
+  line-height: 1.25;
   color: var(--text-muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stadium-precinct-detail-line strong {
+  color: var(--text, #0f172a);
+  font-weight: 800;
+}
+
+.stadium-precinct-detail-meta {
+  font-weight: 600;
+}
+
+.stadium-precinct-detail-live {
+  color: #0369a1;
+  font-weight: 700;
+}
+
+.stadium-precinct-detail-live::before {
+  content: " · ";
+  color: var(--text-muted, #64748b);
+  font-weight: 600;
 }
 
 .stadium-precinct-detail-icon {
-  font-size: 1.35rem;
+  font-size: 1.1rem;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .stadium-precinct-detail-upgrade {
-  padding: 0.28rem 0.55rem;
+  padding: 0.18rem 0.42rem;
   border: 1px solid #047857;
   border-radius: 0.35rem;
   background: #ecfdf5;
   color: #065f46;
-  font-size: 0.72rem;
+  font-size: 0.64rem;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .stadium-precinct-detail-upgrade:disabled {
@@ -5816,14 +5989,16 @@ body {
 }
 
 .stadium-precinct-detail-remove {
-  padding: 0.28rem 0.55rem;
+  padding: 0.18rem 0.42rem;
   border: 1px solid #b91c1c;
   border-radius: 0.35rem;
   background: #fef2f2;
   color: #991b1b;
-  font-size: 0.72rem;
+  font-size: 0.64rem;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .stadium-precinct-detail-maxed {

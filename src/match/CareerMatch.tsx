@@ -477,6 +477,12 @@ function CareerMatchPlayback({
                 onPresentationModeChange={setPresentationMode}
                 speed={playback.speed}
                 onSpeedChange={(next) => playback.setSpeed(clampCareerMatchSpeed(next))}
+                playing={playback.playing}
+                onStepBack={playback.stepBack}
+                onStepForward={playback.stepForward}
+                onPlayPause={playback.toggle}
+                stepBackDisabled={playback.index <= 0}
+                stepForwardDisabled={playback.atEnd}
                 disabled={loading}
               />
             ) : null}

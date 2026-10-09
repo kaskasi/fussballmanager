@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { MatchViewFrame } from "@fussballmanager/shared";
 import { emptyPairStats } from "@fussballmanager/shared";
-import { frameDurationMs, holdPoint, lerp, mixDot, mixFrame } from "./lerp";
+import {
+  frameDurationMs,
+  holdPoint,
+  lerp,
+  mixDot,
+  mixFrame,
+  transitionDurationMs,
+} from "./lerp";
 
 const baseFrame = (): MatchViewFrame => ({
   seq: 1,
@@ -59,6 +66,54 @@ describe("pitch lerp", () => {
     expect(frameDurationMs(1)).toBe(280);
     expect(frameDurationMs(4)).toBe(70);
     expect(frameDurationMs(32)).toBe(9);
+  });
+
+  it("drives a shot out of the box quickly (ease-out, not hang mid-flight)", () => {
+    const from = {
+      ...baseFrame(),
+      ball: { x: 84, y: 52 },
+      ballCarrierId: "nord-9",
+      possessionTeamId: "fc-nordstern",
+      dots: [
+        { playerId: "nord-9", teamId: "fc-nordstern", x: 84, y: 52 },
+      ],
+    };
+    const to = {
+      ...baseFrame(),
+      seq: 2,
+      ball: { x: 6, y: 50 },
+      ballInAir: true,
+      cue: "shot" as const,
+    };
+    const role = () => "ST" as const;
+    const home = "fc-nordstern";
+    const start = holdPoint(from, home, role);
+    const early = mixFrame(from, to, 0.25, home, role);
+    const span = to.ball.x - start.x;
+    const easedProgress = (early.ball.x - start.x) / span;
+    expect(easedProgress).toBeGreaterThan(0.55);
+    expect(easedProgress).toBeGreaterThan(0.25);
+  });
+
+  it("cuts ball to restart after a miss shot instead of dragging across the pitch", () => {
+    const from = {
+      ...baseFrame(),
+      seq: 2,
+      ball: { x: 102, y: 40 },
+      ballInAir: true,
+      cue: "shot" as const,
+    };
+    const to = {
+      ...baseFrame(),
+      seq: 3,
+      ball: { x: 92, y: 50 },
+      ballInAir: false,
+      cue: null,
+    };
+    const mid = mixFrame(from, to, 0.2);
+    expect(mid.ball).toEqual(to.ball);
+    const ms = transitionDurationMs(from, to, "home", () => undefined, 1);
+    expect(ms).toBeLessThan(50);
   });
 
   it("flies the ball across a long pass instead of teleporting", () => {

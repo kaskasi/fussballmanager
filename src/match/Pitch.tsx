@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { GOAL_HIGHLIGHT_MS } from "./goal-highlight.ts";
 import type {
   MatchViewCueDetail,
@@ -41,15 +41,19 @@ function paint(svg: SVGSVGElement, pose: DisplayedPose): void {
   const shadow = svg.querySelector("[data-ball-shadow]");
   const ball = svg.querySelector("[data-ball]");
   if (shadow instanceof SVGEllipseElement) {
+    const airborne = pose.ballLift > 0.12;
     shadow.setAttribute("cx", grassX);
     shadow.setAttribute("cy", String(grassY));
-    shadow.setAttribute("rx", String(1.2 + pose.ballLift * 0.55));
-    shadow.setAttribute("ry", String(0.55 + pose.ballLift * 0.2));
-    shadow.setAttribute("opacity", String(0.18 + 0.42 * pose.ballLift));
+    shadow.setAttribute("rx", String(airborne ? 0.85 : 1.2 + pose.ballLift * 0.35));
+    shadow.setAttribute("ry", String(airborne ? 0.35 : 0.55 + pose.ballLift * 0.15));
+    shadow.setAttribute(
+      "opacity",
+      String(airborne ? 0.12 + 0.18 * (1 - pose.ballLift) : 0.18 + 0.28 * pose.ballLift),
+    );
   }
   if (ball instanceof SVGCircleElement) {
     ball.setAttribute("cx", grassX);
-    ball.setAttribute("cy", String(grassY));
+    ball.setAttribute("cy", String(grassY - pose.ballLift * 2.8));
     ball.setAttribute("r", "0.95");
   }
 }
@@ -67,7 +71,11 @@ type PitchProps = {
   cueDetail?: MatchViewCueDetail;
 };
 
-export function Pitch({
+function paintPose(svg: SVGSVGElement, pose: DisplayedPose): void {
+  paint(svg, pose);
+}
+
+export const Pitch = memo(function Pitch({
   from,
   to,
   playing,
@@ -80,6 +88,7 @@ export function Pitch({
   cueDetail,
 }: PitchProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const displayedPoseRef = useRef<DisplayedPose | null>(null);
   const [goalHighlightSeq, setGoalHighlightSeq] = useState<number | null>(null);
   const [goalScorerId, setGoalScorerId] = useState<string | null>(null);
   const shirts = new Map(roster.map((player) => [player.id, player]));
@@ -102,29 +111,45 @@ export function Pitch({
   }, [cueDetail?.label, roster, to.ballCarrierId, to.cue, to.seq]);
   const roleOf = (playerId: string) => shirts.get(playerId)?.role;
   const poseAt = (t: number) => mixFrame(from, to, t, homeId, roleOf);
-  const start = poseAt(playing ? 0 : 1);
+  const settledPose = poseAt(1);
+  if (!displayedPoseRef.current) {
+    displayedPoseRef.current = settledPose;
+  }
+  const renderPose =
+    !playing || durationMs <= 0 ? settledPose : displayedPoseRef.current;
 
   useLayoutEffect(() => {
     const svg = svgRef.current;
     if (!svg) {
       return;
     }
+    const commitPose = (pose: DisplayedPose) => {
+      displayedPoseRef.current = pose;
+      paintPose(svg, pose);
+    };
     if (!playing || durationMs <= 0) {
-      paint(svg, poseAt(1));
+      commitPose(settledPose);
       return;
     }
+    let cancelled = false;
     const begun = performance.now();
     let raf = 0;
     const tick = (now: number) => {
+      if (cancelled) {
+        return;
+      }
       const t = Math.min(1, (now - begun) / durationMs);
-      paint(svg, poseAt(t));
+      commitPose(poseAt(t));
       if (t < 1) {
         raf = window.requestAnimationFrame(tick);
       }
     };
-    paint(svg, poseAt(0));
+    commitPose(poseAt(0));
     raf = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(raf);
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(raf);
+    };
   }, [from, to, playing, durationMs, homeId, roster]);
 
   const highlightActive = goalHighlightSeq === to.seq && to.cue === "goal";
@@ -222,7 +247,7 @@ export function Pitch({
           stroke="#ecfdf5"
           strokeWidth={0.3}
         />
-        {start.dots.map((dot) => {
+        {renderPose.dots.map((dot) => {
           const homeDot = dot.teamId === homeId;
           const carrier = dot.playerId === to.ballCarrierId;
           const player = shirts.get(dot.playerId);
@@ -268,17 +293,17 @@ export function Pitch({
         })}
         <ellipse
           data-ball-shadow
-          cx={mapX(start.ball.x)}
-          cy={mapY(start.ball.y)}
-          rx={1.2 + start.ballLift * 0.55}
-          ry={0.55 + start.ballLift * 0.2}
+          cx={mapX(renderPose.ball.x)}
+          cy={mapY(renderPose.ball.y)}
+          rx={1.2 + renderPose.ballLift * 0.35}
+          ry={0.55 + renderPose.ballLift * 0.15}
           fill="#052e16"
-          opacity={0.18 + 0.42 * start.ballLift}
+          opacity={0.18 + 0.28 * renderPose.ballLift}
         />
         <circle
           data-ball
-          cx={mapX(start.ball.x)}
-          cy={mapY(start.ball.y)}
+          cx={mapX(renderPose.ball.x)}
+          cy={mapY(renderPose.ball.y) - renderPose.ballLift * 2.8}
           r={0.95}
           fill="#fff"
           stroke="#0f172a"
@@ -287,4 +312,4 @@ export function Pitch({
       </svg>
     </figure>
   );
-}
+});

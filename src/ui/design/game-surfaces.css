@@ -2992,6 +2992,52 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   background: rgb(100 116 139 / 35%);
 }
 
+.matchday-hero-playback {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0.08rem 0.1rem;
+}
+
+.matchday-hero-playback-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: 999px;
+  color: #0f172a;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 12%);
+  cursor: pointer;
+}
+
+.matchday-hero-playback-btn:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.matchday-hero-playback-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.matchday-hero-playback-btn:focus-visible {
+  outline: 2px solid var(--rasen);
+  outline-offset: 2px;
+}
+
+.matchday-hero-playback-btn svg {
+  display: block;
+  color: #0f172a;
+  stroke: currentColor;
+  fill: none;
+  pointer-events: none;
+}
+
 .matchday-hero-speed {
   display: inline-flex;
   align-items: center;

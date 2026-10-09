@@ -88,6 +88,25 @@ function bylineMissSpot(mouth: PitchPosition, shooterY: number): PitchPosition {
   };
 }
 
+/** One-shot flight endpoint for misses (wide / woodwork) — no second hop. */
+export function shotVizEndpoint(
+  event: Extract<MatchEvent, { type: "shot" }>,
+  frameBall: PitchPosition,
+  homeTeamId: TeamId,
+): PitchPosition {
+  const mouth = goalMouth(homeTeamId, event.shooter.teamId);
+  if (event.outcome === "woodwork") {
+    return {
+      x: mouth.x >= 50 ? 99.4 : 0.6,
+      y: clampY(event.target.y),
+    };
+  }
+  if (event.outcome === "wide") {
+    return bylineMissSpot(mouth, event.shooter.position.y);
+  }
+  return frameBall;
+}
+
 function withBall(
   frame: MatchViewFrame,
   ball: PitchPosition,
@@ -118,55 +137,21 @@ function insertShotFlightFrames(
   nextEvent: MatchEvent | undefined,
   homeTeamId: TeamId,
 ): void {
-  const start = event.shooter.position;
-  const mouth = goalMouth(homeTeamId, event.shooter.teamId);
-  const endBall = frame.ball;
-  const onTarget =
-    event.outcome === "goal" || event.outcome === "save" || event.outcome === "block";
+  const endBall =
+    event.outcome === "wide" || event.outcome === "woodwork"
+      ? shotVizEndpoint(event, frame.ball, homeTeamId)
+      : frame.ball;
 
-  if (onTarget) {
-    // Single impact tick — client lerps feet → end in one driven arc (no mid-frame kinks).
-    out.push(
-      withBall(frame, endBall, {
-        ballInAir: event.outcome !== "block",
-        ballCarrierId: event.outcome === "save" ? null : frame.ballCarrierId,
-        cue: "shot",
-      }),
-    );
-  } else {
-    const aim = event.target;
-    out.push(
-      withBall(frame, lerpPos(start, aim, 0.55), {
-        ballInAir: true,
-        ballCarrierId: null,
-        cue: null,
-      }),
-    );
-    out.push(
-      withBall(frame, endBall, {
-        ballInAir: true,
-        ballCarrierId: null,
-        cue: "shot",
-      }),
-    );
-  }
+  // One flight tick — client easeOut from feet → `endBall` (no mid-waypoints).
+  out.push(
+    withBall(frame, endBall, {
+      ballInAir: true,
+      ballCarrierId: null,
+      cue: "shot",
+    }),
+  );
 
   if (event.outcome === "wide" || event.outcome === "woodwork") {
-    const outSpot = bylineMissSpot(mouth, event.shooter.position.y);
-    out.push(
-      withBall(frame, lerpPos(endBall, outSpot, 0.45), {
-        ballInAir: true,
-        ballCarrierId: null,
-        cue: null,
-      }),
-    );
-    out.push(
-      withBall(frame, outSpot, {
-        ballInAir: true,
-        ballCarrierId: null,
-        cue: null,
-      }),
-    );
     return;
   }
 
@@ -182,21 +167,8 @@ function insertShotFlightFrames(
       );
     }
     if (isOutRestart(nextEvent)) {
+      const mouth = goalMouth(homeTeamId, event.shooter.teamId);
       const outSpot = bylineMissSpot(mouth, event.shooter.position.y);
-      out.push(
-        withBall(frame, lerpPos(endBall, outSpot, 0.35), {
-          ballInAir: true,
-          ballCarrierId: null,
-          cue: null,
-        }),
-      );
-      out.push(
-        withBall(frame, lerpPos(endBall, outSpot, 0.72), {
-          ballInAir: true,
-          ballCarrierId: null,
-          cue: null,
-        }),
-      );
       out.push(
         withBall(frame, outSpot, {
           ballInAir: true,

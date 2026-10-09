@@ -10,6 +10,7 @@ import {
   expandPresentationFrames,
   nearPostBallY,
   presentationBallForEvent,
+  shotVizEndpoint,
 } from "./match-presentation.ts";
 
 describe("match presentation", () => {
@@ -155,5 +156,67 @@ describe("match presentation", () => {
     expect(expanded[0]?.cue).toBe("shot");
     expect(expanded[0]?.ballInAir).toBe(true);
     expect(expanded[0]?.ball.x).toBe(6);
+  });
+
+  it("uses one driven flight frame for wide misses", () => {
+    const homeId = asTeamId("home");
+    const shotFrame: MatchViewFrame = {
+      seq: 8,
+      ball: { x: 98, y: 8 },
+      score: { home: 0, away: 0 },
+      possessionTeamId: homeId,
+      ballCarrierId: null,
+      clock: { period: "first_half", minute: 6, second: 0, stoppageMinute: 0 },
+      ballInAir: true,
+      cue: "shot",
+      stats: {
+        home: {
+          goals: 0,
+          shots: 2,
+          shotsOnTarget: 0,
+          passes: 0,
+          passesComplete: 0,
+          corners: 0,
+        },
+        away: {
+          goals: 0,
+          shots: 0,
+          shotsOnTarget: 0,
+          passes: 0,
+          passesComplete: 0,
+          corners: 0,
+        },
+      },
+      dots: [],
+    };
+    const event = {
+      type: "shot" as const,
+      seq: 8,
+      matchId: asMatchId("m"),
+      clock: shotFrame.clock,
+      ball: shotFrame.ball,
+      involved: [],
+      possessionTeamId: homeId,
+      shooter: {
+        playerId: asPlayerId("st"),
+        teamId: homeId,
+        position: { x: 86, y: 44 },
+      },
+      target: { x: 100, y: 50 },
+      outcome: "wide" as const,
+    };
+    const end = shotVizEndpoint(event, shotFrame.ball, homeId);
+    expect(end.x).toBeGreaterThan(100);
+    const expanded = expandPresentationFrames(
+      [shotFrame],
+      [event],
+      homeId,
+      asTeamId("away"),
+      [],
+      2026,
+    );
+    expect(expanded).toHaveLength(1);
+    expect(expanded[0]?.cue).toBe("shot");
+    expect(expanded[0]?.ball.x).toBe(end.x);
   });
 });

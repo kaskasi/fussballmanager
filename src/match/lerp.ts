@@ -14,10 +14,10 @@ export function easeInOut(t: number): number {
     : 1 - (-2 * clamped + 2) ** 2 / 2;
 }
 
-/** Accelerate into the goal on driven shots. */
-export function easeIn(t: number): number {
+/** Driven shots leave the foot fast, then settle at the target. */
+export function easeOutCubic(t: number): number {
   const clamped = Math.min(1, Math.max(0, t));
-  return clamped * clamped;
+  return 1 - (1 - clamped) ** 3;
 }
 
 function ballRenderPoint(
@@ -25,6 +25,9 @@ function ballRenderPoint(
   homeId: string,
   roleOf: (playerId: string) => string | undefined,
 ): PitchPosition {
+  if (frame.cue === "shot") {
+    return frame.ball;
+  }
   if (frame.ballInAir || !frame.ballCarrierId) {
     return frame.ball;
   }
@@ -51,10 +54,13 @@ export function transitionDurationMs(
   const toBall = ballRenderPoint(to, homeId, roleOf);
   const dist = Math.hypot(toBall.x - fromBall.x, toBall.y - fromBall.y);
   const inAir = from.ballInAir || to.ballInAir;
-  const shotRelease = to.cue === "shot" && !from.ballInAir;
-  const inShotArc = from.ballInAir && to.cue === "shot";
-  if (shotRelease || inShotArc) {
-    return Math.round(base * (shotRelease ? 0.52 : 0.65));
+  const shotRelease = to.cue === "shot" && from.cue !== "shot";
+  if (shotRelease) {
+    const distScale = Math.min(1.15, 0.75 + dist / 55);
+    return Math.round(base * 0.36 * distScale);
+  }
+  if (from.cue === "shot" && to.cue !== "shot") {
+    return Math.max(8, Math.round(base * 0.14));
   }
   if (inAir && dist > BALL_FLIGHT_DISTANCE) {
     return Math.round(base * (dist > BALL_OUT_DISTANCE ? 2.8 : 1.35));
@@ -81,11 +87,12 @@ export function mixDot(
   from: MatchViewDot | undefined,
   to: MatchViewDot,
   t: number,
+  snapFar = true,
 ): MatchViewDot {
   if (!from) {
     return to;
   }
-  const position = lerpPosition(from, to, t);
+  const position = lerpPosition(from, to, t, snapFar);
   return { ...to, x: position.x, y: position.y };
 }
 
@@ -140,15 +147,26 @@ export function mixFrame(
   const home = homeId ?? "";
   const inAir = from.ballInAir || to.ballInAir;
   const drivenShot = to.cue === "shot";
-  const ballT = drivenShot ? easeIn(clamped) : inAir ? easeInOut(clamped) : clamped;
-  const fromBall = ballRenderPoint(from, home, resolve);
+  const leavingShot = from.cue === "shot" && to.cue !== "shot";
+  const ballT = drivenShot ? easeOutCubic(clamped) : inAir ? easeInOut(clamped) : clamped;
+  const fromBall =
+    drivenShot && !from.ballInAir && from.cue !== "shot"
+      ? holdPoint(from, home, resolve)
+      : ballRenderPoint(from, home, resolve);
   const toBall = ballRenderPoint(to, home, resolve);
-  const liftT = drivenShot ? easeIn(clamped) : easeInOut(clamped);
+  const liftT = drivenShot
+    ? Math.sin(Math.PI * clamped)
+    : easeInOut(clamped);
+  const snapDots = !(drivenShot || inAir);
   return {
-    dots: to.dots.map((dot) => mixDot(previous.get(dot.playerId), dot, clamped)),
-    ball: lerpPosition(fromBall, toBall, ballT, false),
+    dots: to.dots.map((dot) => mixDot(previous.get(dot.playerId), dot, clamped, snapDots)),
+    ball: leavingShot ? toBall : lerpPosition(fromBall, toBall, ballT, false),
     ballLift: drivenShot
       ? liftT
-      : lerp(from.ballInAir ? 1 : 0, to.ballInAir ? 1 : 0, liftT),
+      : leavingShot
+        ? to.ballInAir
+          ? 1
+          : 0
+        : lerp(from.ballInAir ? 1 : 0, to.ballInAir ? 1 : 0, liftT),
   };
 }

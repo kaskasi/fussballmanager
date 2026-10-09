@@ -8,7 +8,21 @@ import {
   type SandboxPlan,
   type Squad,
 } from "@fussballmanager/shared";
-import { RefreshCw, Rocket, Save, Star } from "lucide-react";
+import { buildMatchConditions } from "@fussballmanager/shared";
+import {
+  Calendar,
+  CalendarDays,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CloudSun,
+  RefreshCw,
+  Rocket,
+  Save,
+  Star,
+  Users,
+} from "lucide-react";
+import type { MatchdayCashBreakdown } from "../stadium/matchday-commerce.ts";
 import type { NavPrimaryAction } from "../ui/nav-primary-action.ts";
 import type { Player } from "../types/player.ts";
 import type { FanbaseMood } from "../stadium/fanbase.ts";
@@ -39,7 +53,7 @@ import { MatchdayLineupAmbience } from "../ui/components/MatchdayLineupAmbience.
 import { buildOpponentLineupPreview } from "./opponent-lineup-preview.ts";
 import { clubShortName } from "../sim/league-week.ts";
 import { careerTeamId } from "../sim/rival-growth.ts";
-import { formatCalendarWeek } from "../sim/game-calendar.ts";
+import { formatLeagueMatchKickoffLabel } from "./match-kickoff-format.ts";
 import { listProSquad, sortProSquadRows } from "../squad/pro-roster.ts";
 import { formMark } from "../ui/player-profile.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
@@ -64,9 +78,12 @@ type CareerLineupScreenProps = {
   season?: number;
   scoutBoard?: ScoutBoard;
   onOpenOpponentScoutReport?: (postfachItemId: string) => void;
+  kasse?: MatchdayCashBreakdown;
 };
 
 const TACTICS_STYLE_IDS: TacticsPresetId[] = [1, 2, 3];
+/** Fixed bench rows per page — panel height stays constant (empty slots padded). */
+const LINEUP_BENCH_PAGE_SIZE = 9;
 
 export function CareerLineupScreen({
   setup,
@@ -86,6 +103,7 @@ export function CareerLineupScreen({
   season = 1,
   scoutBoard,
   onOpenOpponentScoutReport,
+  kasse,
 }: CareerLineupScreenProps) {
   const t = useT();
   const managerClubId = careerTeamId(setup.playerClubId);
@@ -97,6 +115,7 @@ export function CareerLineupScreen({
     normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId).assignments,
   );
   const [dragPlayerId, setDragPlayerId] = useState<string | null>(null);
+  const [benchPage, setBenchPage] = useState(0);
 
   const playersById = useMemo(
     () => new Map(players.map((player) => [player.id, player])),
@@ -106,6 +125,17 @@ export function CareerLineupScreen({
     () => benchPlayers(players, assignments, managerClubId),
     [players, assignments, managerClubId],
   );
+  const benchPageCount = Math.max(1, Math.ceil(bench.length / LINEUP_BENCH_PAGE_SIZE));
+
+  useEffect(() => {
+    setBenchPage((current) => Math.min(current, benchPageCount - 1));
+  }, [benchPageCount]);
+
+  const benchPageSlots = useMemo(() => {
+    const start = benchPage * LINEUP_BENCH_PAGE_SIZE;
+    const slice = bench.slice(start, start + LINEUP_BENCH_PAGE_SIZE);
+    return Array.from({ length: LINEUP_BENCH_PAGE_SIZE }, (_, index) => slice[index] ?? null);
+  }, [bench, benchPage]);
   const opponentPreview = useMemo(
     () => buildOpponentLineupPreview(setup, rivalPlayers),
     [setup, rivalPlayers],
@@ -217,6 +247,13 @@ export function CareerLineupScreen({
   }
 
   const matchdayLabel = setup.isHome ? t("match.career.side.home") : t("match.career.side.away");
+  const matchConditions = buildMatchConditions(setup.seed);
+  const kickoffLabel = formatLeagueMatchKickoffLabel(season, week, weekday);
+  const capacity = homeStadiumCapacity ?? 8_000;
+  const occupancy = kasse?.occupancy ?? (setup.isHome ? 0.72 : 0.06);
+  const expectedSpectators = setup.isHome
+    ? Math.round(capacity * occupancy)
+    : Math.round(12_000 + (setup.seed % 9_000));
 
   return (
     <main className="matchday career-lineup">
@@ -230,52 +267,49 @@ export function CareerLineupScreen({
         <header className="career-lineup-header">
           <div className="career-lineup-header-main">
             <h1>{t("match.lineup.title")}</h1>
-            <p className="career-lineup-sub">
-              {filledCount}/11 · {formatCalendarWeek(week)} {weekdayLabel(weekday)}
-            </p>
-            {scoutBoard && onOpenOpponentScoutReport ? (
-              <OpponentScoutMatchAction
-                mode="lineup"
-                setup={setup}
-                season={season}
-                scoutBoard={scoutBoard}
-                onViewReport={onOpenOpponentScoutReport}
-              />
-            ) : null}
           </div>
-          <label className="career-lineup-formation career-lineup-formation--inline">
-            {t("match.lineup.formation")}
-            <select
-              value={plan.formation}
-              onChange={(event) => changeFormation(event.target.value as FormationId)}
-            >
-              {FORMATION_IDS.map((id) => (
-                <option key={id} value={id}>
-                  {id}
-                </option>
-              ))}
-            </select>
-          </label>
         </header>
 
-        <div className="career-lineup-pills" aria-label={t("match.lineup.autoPickAria")}>
-          {AUTO_LINEUP_OPTIONS.map((option) => (
-            <button
-              key={option.mode}
-              type="button"
-              className={
-                activeAutoMode === option.mode ? "career-lineup-pill is-active" : "career-lineup-pill"
-              }
-              title={t(option.titleKey)}
-              onClick={() => applyAuto(option.mode)}
-            >
-              <AutoLineupIcon kind={option.icon} />
-              {t(option.labelKey)}
-            </button>
-          ))}
-        </div>
-
         <div className="career-lineup-hero">
+          <div
+            className="career-lineup-toolbar-row"
+            aria-label={t("match.lineup.autoPickAria")}
+          >
+            <div className="career-lineup-pills">
+              {AUTO_LINEUP_OPTIONS.map((option) => (
+                <button
+                  key={option.mode}
+                  type="button"
+                  className={
+                    activeAutoMode === option.mode ? "career-lineup-pill is-active" : "career-lineup-pill"
+                  }
+                  title={t(option.titleKey)}
+                  onClick={() => applyAuto(option.mode)}
+                >
+                  <AutoLineupIcon kind={option.icon} />
+                  {t(option.labelKey)}
+                </button>
+              ))}
+            </div>
+            <label className="career-lineup-pill career-lineup-formation-pill">
+              <span className="career-lineup-formation-pill-label">{t("match.lineup.formation")}</span>
+              <span className="career-lineup-formation-pill-value">
+                <select
+                  value={plan.formation}
+                  aria-label={t("match.lineup.formation")}
+                  onChange={(event) => changeFormation(event.target.value as FormationId)}
+                >
+                  {FORMATION_IDS.map((id) => (
+                    <option key={id} value={id}>
+                      {id}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={14} strokeWidth={2.5} aria-hidden />
+              </span>
+            </label>
+          </div>
+
           <div className="career-lineup-board">
             <div className="lineup-pitch-panel game-panel-inner">
               <LineupPitch
@@ -288,19 +322,67 @@ export function CareerLineupScreen({
                 onAssign={setSlot}
                 onDragPlayer={setDragPlayerId}
               />
+              {scoutBoard && onOpenOpponentScoutReport ? (
+                <OpponentScoutMatchAction
+                  mode="lineup"
+                  setup={setup}
+                  season={season}
+                  scoutBoard={scoutBoard}
+                  onViewReport={onOpenOpponentScoutReport}
+                />
+              ) : null}
             </div>
             <aside className="lineup-bench" aria-label={t("match.lineup.benchAria")}>
-              <h2 className="lineup-bench-title">{t("match.lineup.benchTitle", { count: bench.length })}</h2>
+              <div className="lineup-bench-head">
+                <h2 className="lineup-bench-title">{t("match.lineup.benchTitle", { count: bench.length })}</h2>
+                {benchPageCount > 1 ? (
+                  <div className="lineup-bench-pager" aria-label={t("match.lineup.benchPagerAria")}>
+                    <button
+                      type="button"
+                      className="lineup-bench-pager-btn"
+                      disabled={benchPage <= 0}
+                      title={t("match.lineup.benchPrev")}
+                      onClick={() => setBenchPage((page) => Math.max(0, page - 1))}
+                    >
+                      <ChevronLeft size={16} strokeWidth={2.5} aria-hidden />
+                      <span className="sr-only">{t("match.lineup.benchPrev")}</span>
+                    </button>
+                    <span className="lineup-bench-pager-label">
+                      {t("match.lineup.benchPage", { page: benchPage + 1, pages: benchPageCount })}
+                    </span>
+                    <button
+                      type="button"
+                      className="lineup-bench-pager-btn"
+                      disabled={benchPage >= benchPageCount - 1}
+                      title={t("match.lineup.benchNext")}
+                      onClick={() =>
+                        setBenchPage((page) => Math.min(benchPageCount - 1, page + 1))
+                      }
+                    >
+                      <ChevronRight size={16} strokeWidth={2.5} aria-hidden />
+                      <span className="sr-only">{t("match.lineup.benchNext")}</span>
+                    </button>
+                  </div>
+                ) : null}
+              </div>
               <p className="lineup-bench-hint">{t("match.lineup.benchHint")}</p>
-              <div className="lineup-bench-list">
-                {bench.map((player) => (
-                  <LineupPlayerCard
-                    key={player.id}
-                    player={player}
-                    onDragStart={setDragPlayerId}
-                    onDragEnd={() => setDragPlayerId(null)}
-                  />
-                ))}
+              <div className="lineup-bench-list lineup-bench-list--fixed">
+                {benchPageSlots.map((player, index) =>
+                  player ? (
+                    <LineupPlayerCard
+                      key={player.id}
+                      player={player}
+                      onDragStart={setDragPlayerId}
+                      onDragEnd={() => setDragPlayerId(null)}
+                    />
+                  ) : (
+                    <div
+                      key={`bench-empty-${benchPage}-${index}`}
+                      className="lineup-bench-slot lineup-bench-slot--empty"
+                      aria-hidden
+                    />
+                  ),
+                )}
               </div>
             </aside>
           </div>
@@ -309,13 +391,34 @@ export function CareerLineupScreen({
             <article className="lineup-opponent-card">
               <h2>{opponentPreview?.teamShortName ?? setup.opponentShortName}</h2>
               <p className="lineup-opponent-meta">
-                {opponentPreview?.formation ?? "—"} · {t("match.lineup.matchday", { matchday: setup.matchday })} ·{" "}
-                {matchdayLabel}
+                {opponentPreview?.formation ?? "—"} · {matchdayLabel}
               </p>
               <p className="lineup-opponent-meta">{t("match.lineup.vs", { opponent: setup.opponentShortName })}</p>
+              <ul className="lineup-match-facts">
+                <li>
+                  <CalendarDays size={15} strokeWidth={2.25} aria-hidden />
+                  <span>{t("match.lineup.matchday", { matchday: setup.matchday })}</span>
+                </li>
+                <li>
+                  <Calendar size={15} strokeWidth={2.25} aria-hidden />
+                  <span>{kickoffLabel}</span>
+                </li>
+                <li>
+                  <CloudSun size={15} strokeWidth={2.25} aria-hidden />
+                  <span>{matchConditions.weather}</span>
+                </li>
+                <li>
+                  <Users size={15} strokeWidth={2.25} aria-hidden />
+                  <span>
+                    {t("match.lineup.spectators", {
+                      count: expectedSpectators.toLocaleString("de-DE"),
+                    })}
+                  </span>
+                </li>
+              </ul>
             </article>
 
-            <article className="lineup-tactics-card">
+            <article className="lineup-tactics-card lineup-tactics-card--stretch">
               <h2>{t("match.lineup.tactics")}</h2>
               <div className="lineup-tactics-pills" role="group" aria-label={t("match.lineup.playStyleAria")}>
                 {TACTICS_STYLE_IDS.map((presetId) => {
@@ -491,6 +594,3 @@ function TacticSlider({
   );
 }
 
-function weekdayLabel(weekday: number): string {
-  return ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][weekday - 1] ?? "—";
-}

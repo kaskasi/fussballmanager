@@ -11,6 +11,7 @@ describe("buildMatchView", () => {
       away: SEED_MATCHUP.away,
     });
     expect(view.frames.length).toBe(view.eventCount);
+    expect(view.eventCount).toBeGreaterThan(100);
     expect(view.kickoff.dots).toHaveLength(22);
     const holm = view.roster.find((player) => player.name === "Juri Holm");
     expect(holm?.shirt).toBe(9);
@@ -26,9 +27,27 @@ describe("buildMatchView", () => {
       expect(seqs.has(line.seq)).toBe(true);
     }
     expect(view.kickoff.cue).toBeNull();
+    for (const dot of view.kickoff.dots) {
+      if (dot.teamId === view.home.id) {
+        expect(dot.x).toBeLessThanOrEqual(49);
+      } else {
+        expect(dot.x).toBeGreaterThanOrEqual(51);
+      }
+    }
+    const kickoffRestart = view.frames.find((frame) => frame.cue === "kickoff");
+    if (kickoffRestart) {
+      for (const dot of kickoffRestart.dots) {
+        if (dot.teamId === view.home.id) {
+          expect(dot.x).toBeLessThanOrEqual(49);
+        } else {
+          expect(dot.x).toBeGreaterThanOrEqual(51);
+        }
+      }
+    }
     expect(view.frames.some((frame) => frame.cue === "throw_in")).toBe(true);
     expect(view.frames.some((frame) => frame.cue === "goal")).toBe(true);
     expect(view.frames.some((frame) => frame.cue === "shot")).toBe(true);
+    expect(view.frames.some((frame) => frame.cue === "corner")).toBe(true);
     expect(view.kickoff.stats.home.shots).toBe(0);
     const last = view.frames.at(-1);
     expect(last?.stats.home.goals).toBe(view.finalScore.home);
@@ -55,8 +74,7 @@ describe("buildMatchView", () => {
     const home = view.kickoff.dots.filter(
       (dot) => dot.teamId === view.home.id,
     );
-    const high = home.filter((dot) => dot.x > 55).length;
-    expect(high).toBeGreaterThan(3);
+    expect(home.every((dot) => dot.x <= 49)).toBe(true);
   });
 });
 

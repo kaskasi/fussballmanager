@@ -116,7 +116,7 @@ export function LineupPitch({
                       onDragEnd={() => onDragPlayer(null)}
                     >
                       <PlayerSlotIcons player={player} />
-                      <span className="lineup-slot-name">{shortName(player)}</span>
+                      <span className="lineup-slot-name">{formatPlayerName(player)}</span>
                     </button>
                   ) : (
                     <div className="lineup-slot-empty" aria-label={`Slot ${slot.id} leer`}>+</div>
@@ -149,7 +149,7 @@ export function LineupPitch({
                     </span>
                     <span className="lineup-slot-ca" title="Current Ability">{entry.ca}</span>
                   </span>
-                  <span className="lineup-slot-name">{entry.shortName}</span>
+                  <span className="lineup-slot-name">{entry.name}</span>
                 </div>
               </div>
             ))}
@@ -198,9 +198,3 @@ function PlayerSlotIcons({ player }: { player: Player }) {
   );
 }
 
-function shortName(player: Player): string {
-  const full = formatPlayerName(player);
-  const parts = full.split(" ");
-  if (parts.length <= 1) return full.slice(0, 10);
-  return parts[parts.length - 1] ?? full;
-}

@@ -291,9 +291,9 @@ describe("template commentary", () => {
     );
   });
 
-  it("keeps quiet carries out of the text feed", () => {
+  it("keeps carries out of the text feed unless in the attacking third", () => {
     const nord = player("nord-8");
-    const first: MatchEvent = {
+    const midfield: MatchEvent = {
       type: "carry",
       seq: 1,
       matchId,
@@ -305,14 +305,22 @@ describe("template commentary", () => {
       from: { x: 50, y: 50 },
       to: { x: 62, y: 50 },
     };
-    const follow: MatchEvent = {
-      ...first,
+    const attack: MatchEvent = {
+      ...midfield,
       seq: 2,
-      from: { x: 62, y: 50 },
-      to: { x: 70, y: 50 },
+      ball: { x: 78, y: 50 },
+      from: { x: 70, y: 50 },
+      to: { x: 78, y: 50 },
     };
-    expect(isCommentaryWorthy(first, undefined)).toBe(true);
-    expect(isCommentaryWorthy(follow, first)).toBe(false);
+    const follow: MatchEvent = {
+      ...attack,
+      seq: 3,
+      from: { x: 78, y: 50 },
+      to: { x: 82, y: 50 },
+    };
+    expect(isCommentaryWorthy(midfield, undefined, { homeTeamId: homeId })).toBe(false);
+    expect(isCommentaryWorthy(attack, undefined, { homeTeamId: homeId })).toBe(true);
+    expect(isCommentaryWorthy(follow, attack, { homeTeamId: homeId })).toBe(false);
   });
 
   it("renders every event from a simulated match without throwing", () => {

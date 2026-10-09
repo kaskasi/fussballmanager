@@ -137,6 +137,7 @@ export function CareerMatch({
         season={season}
         scoutBoard={scoutBoard}
         onOpenOpponentScoutReport={onOpenOpponentScoutReport}
+        kasse={kasse}
       />
     );
   }
@@ -426,6 +427,7 @@ function CareerMatchPlayback({
         "career-match",
         reportOpen ? "career-match--report" : "",
         inPreview ? "career-match--preview" : "",
+        view && userStartedPlayback && !reportOpen && !inPreview ? "career-match--live" : "",
       ]
         .filter(Boolean)
         .join(" ")}

@@ -1,25 +1,22 @@
 import type { BroadcastStoryContext, MatchEvent, TeamId } from "@fussballmanager/shared";
-import { beatForCommentary, type BroadcastBeatId } from "./beats.ts";
+import { classifyBeat, type BroadcastBeatId } from "./beats.ts";
+import { chainFlushLine, shotLinePrefix, type MacroBeatId } from "./chain-copy.ts";
 import type { CommentaryContext } from "./render.ts";
 import { commentaryI18n, macroCommentaryI18n } from "./i18n-keys.ts";
-import { commentateLine, formatClock } from "./render.ts";
-import { shouldEmitPlayByPlay } from "./suppression.ts";
+import { momentI18nKey, momentI18nParams, momentLineText } from "./moment-copy.ts";
+import { attackingThird, defensiveThird } from "./pitch-thirds.ts";
+import { commentate, formatClock, isCommentaryWorthy } from "./render.ts";
+import { shouldEmitMoment, shouldEmitPlayByPlay } from "./suppression.ts";
 import { pickStoryColorLine, type StorySlotId } from "./story-slots.ts";
 
-export type MacroBeatId =
-  | "macro_press_turnover"
-  | "macro_wide_switch"
-  | "macro_box_siege"
-  | "macro_counter"
-  | "macro_set_piece_threat"
-  | "macro_near_miss";
+export type { MacroBeatId } from "./chain-copy.ts";
 
 export type DirectorMode = "idle" | "set_piece" | "attack" | "stoppage";
 
 export type DirectorEmittedLine = {
   seq: number;
   beatId: BroadcastBeatId;
-  voice: "pbp" | "color";
+  voice: "pbp" | "color" | "moment";
   text: string;
   macroId?: MacroBeatId;
   storySlot?: StorySlotId;
@@ -40,10 +37,25 @@ export type DirectorState = {
   pendingCounter: PendingCounter | null;
   pendingSetPiece: PendingSetPiece | null;
   storySlotsFired: Set<StorySlotId>;
+  lastMomentSeq: number;
+  lastMomentBeat: BroadcastBeatId | null;
 };
 
 const RECENT_MAX = 12;
-const COLOR_COOLDOWN_TICKS = 8;
+const COLOR_COOLDOWN_TICKS = 18;
+const MOMENT_DEDUPE_TICKS = 8;
+const CHAIN_BUFFER_BEATS: ReadonlySet<BroadcastBeatId> = new Set([
+  "pass_key",
+  "carry_progress",
+  "pass_incomplete",
+]);
+const CHAIN_BREAK_BEATS: ReadonlySet<BroadcastBeatId> = new Set([
+  "turnover",
+  "offside",
+  "restart_goal_kick",
+  "restart_throw_in",
+  "foul",
+]);
 const SET_PIECE_SHOT_WINDOW = 15;
 const COUNTER_SHOT_WINDOW = 12;
 const MACRO_NEAR_MISS_WINDOW = 6;
@@ -84,14 +96,6 @@ function hashPick(seed: number, seq: number, macroId: MacroBeatId, variants: num
     hash = Math.imul(hash ^ ch.charCodeAt(0), 0x9e3779b1);
   }
   return (hash >>> 0) % variants;
-}
-
-function attackingThird(x: number, teamId: TeamId, homeTeamId: TeamId): boolean {
-  return teamId === homeTeamId ? x > 66.67 : x < 33.34;
-}
-
-function defensiveThird(x: number, teamId: TeamId, homeTeamId: TeamId): boolean {
-  return teamId === homeTeamId ? x < 33.34 : x > 66.67;
 }
 
 function isSetPieceRestart(beat: BroadcastBeatId): boolean {
@@ -283,7 +287,27 @@ export function createInitialDirectorState(): DirectorState {
     pendingCounter: null,
     pendingSetPiece: null,
     storySlotsFired: new Set(),
+    lastMomentSeq: -99,
+    lastMomentBeat: null,
   };
+}
+
+function allowsMacroColorOnBeat(beat: BroadcastBeatId): boolean {
+  return (
+    isShotBeat(beat) ||
+    beat === "card_red" ||
+    beat === "card_yellow" ||
+    beat === "restart_penalty"
+  );
+}
+
+function allowsStoryColorOnBeat(beat: BroadcastBeatId): boolean {
+  return (
+    allowsMacroColorOnBeat(beat) ||
+    beat === "match_opening" ||
+    beat === "second_half_open" ||
+    beat === "full_time"
+  );
 }
 
 function applyDirectorStateAfterBeat(
@@ -327,68 +351,117 @@ export function createBroadcastDirector(input: {
     ctx: CommentaryContext,
   ): DirectorEmittedLine[] {
     pushRecent(state, event);
-    const beat = beatForCommentary(event, previous);
-    if (!beat) {
-      return [];
-    }
+    const beat = classifyBeat(event);
+    const worthy = isCommentaryWorthy(event, previous, { homeTeamId });
 
     notePendingFromEvent(state, event, beat, homeTeamId);
 
     const macroId = detectMacro(state, event, beat, homeTeamId);
+    const lines: DirectorEmittedLine[] = [];
 
-    if (!shouldEmitPlayByPlay(beat)) {
-      applyDirectorStateAfterBeat(state, beat, event);
-      return [];
-    }
-
-    const pbpI18n = commentaryI18n(event, ctx, beat);
-    const lines: DirectorEmittedLine[] = [
-      {
-        seq: event.seq,
-        beatId: beat,
-        voice: "pbp",
-        text: commentateLine(event, ctx),
-        i18nKey: pbpI18n?.key,
-        i18nParams: pbpI18n?.params,
-      },
-    ];
-
-    const allowColor =
-      macroId !== null &&
-      event.seq > state.cooldownColorUntilSeq &&
-      (macroId !== "macro_box_siege" || isShotBeat(beat));
-
-    if (allowColor && macroId) {
-      const variant = hashPick(seed, event.seq, macroId, COLOR_LINES[macroId].length);
-      const macroI18n = macroCommentaryI18n(macroId, variant);
+    const emitChainFlush = (): void => {
+      if (state.chainDepth < 3 || !state.attackTeamId) return;
+      if (
+        !attackingThird(event.ball.x, state.attackTeamId, homeTeamId)
+      ) {
+        return;
+      }
+      const teamLabel = ctx.teamName(state.attackTeamId);
       lines.push({
         seq: event.seq,
         beatId: beat,
-        voice: "color",
-        macroId,
-        text: `${formatClock(event.clock)}  ${colorTemplate(seed, event.seq, macroId)}`,
-        i18nKey: macroI18n.key,
-        i18nParams: macroI18n.params,
+        voice: "pbp",
+        text: `${formatClock(event.clock)}  ${chainFlushLine(seed, event.seq, teamLabel)}`,
       });
-      state.cooldownColorUntilSeq = event.seq + COLOR_COOLDOWN_TICKS;
-    } else if (event.seq > state.cooldownColorUntilSeq) {
-      const storyLine = pickStoryColorLine({
-        beat,
-        ctx: story,
-        fired: state.storySlotsFired,
-        seed,
+    };
+
+    if (
+      worthy &&
+      CHAIN_BREAK_BEATS.has(beat) &&
+      !isShotBeat(beat) &&
+      beat !== "restart_penalty"
+    ) {
+      emitChainFlush();
+    }
+
+    if (worthy && shouldEmitMoment(beat)) {
+      const duplicate =
+        state.lastMomentBeat === beat &&
+        event.seq - state.lastMomentSeq < MOMENT_DEDUPE_TICKS;
+      if (!duplicate) {
+        const key = momentI18nKey(beat);
+        lines.push({
+          seq: event.seq,
+          beatId: beat,
+          voice: "moment",
+          text: momentLineText(event, ctx, beat),
+          i18nKey: key ?? undefined,
+          i18nParams: momentI18nParams(event, ctx, beat),
+        });
+        state.lastMomentSeq = event.seq;
+        state.lastMomentBeat = beat;
+      }
+    }
+
+    if (worthy && CHAIN_BUFFER_BEATS.has(beat) && !isShotBeat(beat)) {
+      applyDirectorStateAfterBeat(state, beat, event);
+      return lines;
+    }
+
+    if (worthy && shouldEmitPlayByPlay(beat)) {
+      const pbpI18n = commentaryI18n(event, ctx, beat);
+      const prefix = isShotBeat(beat) ? shotLinePrefix(seed, event.seq, macroId) : "";
+      const body = commentate(event, ctx);
+      lines.push({
         seq: event.seq,
+        beatId: beat,
+        voice: "pbp",
+        text: `${formatClock(event.clock)}  ${prefix}${body}`,
+        i18nKey: pbpI18n?.key,
+        i18nParams: pbpI18n?.params,
       });
-      if (storyLine) {
+
+      const allowMacroColor =
+        allowsMacroColorOnBeat(beat) &&
+        macroId !== null &&
+        event.seq > state.cooldownColorUntilSeq &&
+        (macroId !== "macro_box_siege" || isShotBeat(beat));
+
+      if (allowMacroColor && macroId) {
+        const variant = hashPick(seed, event.seq, macroId, COLOR_LINES[macroId].length);
+        const macroI18n = macroCommentaryI18n(macroId, variant);
         lines.push({
           seq: event.seq,
           beatId: beat,
           voice: "color",
-          storySlot: storyLine.slot,
-          text: `${formatClock(event.clock)}  ${storyLine.text}`,
+          macroId,
+          text: `${formatClock(event.clock)}  ${colorTemplate(seed, event.seq, macroId)}`,
+          i18nKey: macroI18n.key,
+          i18nParams: macroI18n.params,
         });
-        state.storySlotsFired.add(storyLine.slot);
         state.cooldownColorUntilSeq = event.seq + COLOR_COOLDOWN_TICKS;
+      } else if (
+        allowsStoryColorOnBeat(beat) &&
+        event.seq > state.cooldownColorUntilSeq
+      ) {
+        const storyLine = pickStoryColorLine({
+          beat,
+          ctx: story,
+          fired: state.storySlotsFired,
+          seed,
+          seq: event.seq,
+        });
+        if (storyLine) {
+          lines.push({
+            seq: event.seq,
+            beatId: beat,
+            voice: "color",
+            storySlot: storyLine.slot,
+            text: `${formatClock(event.clock)}  ${storyLine.text}`,
+          });
+          state.storySlotsFired.add(storyLine.slot);
+          state.cooldownColorUntilSeq = event.seq + COLOR_COOLDOWN_TICKS;
+        }
       }
     }
 

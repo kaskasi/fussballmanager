@@ -4,6 +4,7 @@ import { useT } from "../i18n/react.ts";
 import { localizeMatchLine } from "./localize-match-line.ts";
 import { eventLineTone } from "./match-presentation-mode.ts";
 import { EventsHud } from "./EventsHud.tsx";
+import { momentIconForBeat } from "./moment-cue-icons.ts";
 import { PreMatchBlock } from "./PreMatchBlock.tsx";
 import type { PreMatchBrief } from "./pre-match-brief.ts";
 
@@ -56,12 +57,15 @@ export function EventsFeed({
           lines.map((line, index) => {
             const displayText = localizeMatchLine(line);
             const tone = eventLineTone(displayText);
+            const momentIcon =
+              line.voice === "moment" ? momentIconForBeat(line.beatId) : null;
             return (
               <li
                 key={`${line.seq}-${line.voice ?? "pbp"}-${index}`}
                 className={[
                   "events-feed-line",
                   line.voice === "color" ? "is-color" : "",
+                  line.voice === "moment" ? "is-moment" : "",
                   index === lines.length - 1 ? "is-latest" : "",
                   tone === "goal" ? "is-goal" : "",
                   tone === "shot" ? "is-shot" : "",
@@ -73,7 +77,17 @@ export function EventsFeed({
                 {line.voice === "color" ? (
                   <span className="events-feed-color-label">{t("match.commentary.expert")}</span>
                 ) : null}
-                {tone === "shot" && line.voice !== "color" ? (
+                {momentIcon ? (
+                  <img
+                    className="events-feed-moment-icon"
+                    src={momentIcon.src}
+                    alt=""
+                    width={18}
+                    height={18}
+                    decoding="async"
+                  />
+                ) : null}
+                {tone === "shot" && line.voice !== "color" && line.voice !== "moment" ? (
                   <span className="events-feed-shot-icon" aria-hidden="true">◎</span>
                 ) : null}
                 {displayText}

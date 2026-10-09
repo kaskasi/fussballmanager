@@ -12,6 +12,8 @@ export type MatchViewCue =
   | "goal"
   | "corner"
   | "penalty"
+  | "goal_kick"
+  | "kickoff"
   | "shot"
   | "substitution"
   | null;
@@ -49,8 +51,10 @@ export type MatchViewFrame = {
 export type MatchViewLine = {
   seq: number;
   text: string;
-  /** Play-by-play vs analyst; omitted lines are PBP. */
-  voice?: "pbp" | "color";
+  /** Play-by-play vs analyst vs compact set-piece moment. */
+  voice?: "pbp" | "color" | "moment";
+  /** PRD 16 beat id for styling / HUD. */
+  beatId?: string;
   /** PRD 16 B4 — fact-checked story slot when voice is color. */
   storySlot?: string;
   /** F12.8 — client locale pack key when presentation text is translatable. */

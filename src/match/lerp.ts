@@ -7,9 +7,62 @@ export function lerp(from: number, to: number, t: number): number {
   return from + (to - from) * t;
 }
 
+export function easeInOut(t: number): number {
+  const clamped = Math.min(1, Math.max(0, t));
+  return clamped < 0.5
+    ? 2 * clamped * clamped
+    : 1 - (-2 * clamped + 2) ** 2 / 2;
+}
+
+/** Accelerate into the goal on driven shots. */
+export function easeIn(t: number): number {
+  const clamped = Math.min(1, Math.max(0, t));
+  return clamped * clamped;
+}
+
+function ballRenderPoint(
+  frame: MatchViewFrame,
+  homeId: string,
+  roleOf: (playerId: string) => string | undefined,
+): PitchPosition {
+  if (frame.ballInAir || !frame.ballCarrierId) {
+    return frame.ball;
+  }
+  return holdPoint(frame, homeId, roleOf);
+}
+
 export function frameDurationMs(speed: number): number {
   const rate = Math.min(32, Math.max(1, speed));
   return Math.max(8, Math.round(280 / rate));
+}
+
+const BALL_FLIGHT_DISTANCE = 22;
+const BALL_OUT_DISTANCE = 38;
+
+export function transitionDurationMs(
+  from: MatchViewFrame,
+  to: MatchViewFrame,
+  homeId: string,
+  roleOf: (playerId: string) => string | undefined,
+  speed: number,
+): number {
+  const base = frameDurationMs(speed);
+  const fromBall = ballRenderPoint(from, homeId, roleOf);
+  const toBall = ballRenderPoint(to, homeId, roleOf);
+  const dist = Math.hypot(toBall.x - fromBall.x, toBall.y - fromBall.y);
+  const inAir = from.ballInAir || to.ballInAir;
+  const shotRelease = to.cue === "shot" && !from.ballInAir;
+  const inShotArc = from.ballInAir && to.cue === "shot";
+  if (shotRelease || inShotArc) {
+    return Math.round(base * (shotRelease ? 0.52 : 0.65));
+  }
+  if (inAir && dist > BALL_FLIGHT_DISTANCE) {
+    return Math.round(base * (dist > BALL_OUT_DISTANCE ? 2.8 : 1.35));
+  }
+  if (dist > BALL_OUT_DISTANCE) {
+    return Math.round(base * 2.4);
+  }
+  return base;
 }
 
 export function lerpPosition(
@@ -85,14 +138,17 @@ export function mixFrame(
   const previous = new Map(from.dots.map((dot) => [dot.playerId, dot]));
   const resolve = roleOf ?? (() => undefined);
   const home = homeId ?? "";
+  const inAir = from.ballInAir || to.ballInAir;
+  const drivenShot = to.cue === "shot";
+  const ballT = drivenShot ? easeIn(clamped) : inAir ? easeInOut(clamped) : clamped;
+  const fromBall = ballRenderPoint(from, home, resolve);
+  const toBall = ballRenderPoint(to, home, resolve);
+  const liftT = drivenShot ? easeIn(clamped) : easeInOut(clamped);
   return {
     dots: to.dots.map((dot) => mixDot(previous.get(dot.playerId), dot, clamped)),
-    ball: lerpPosition(
-      holdPoint(from, home, resolve),
-      holdPoint(to, home, resolve),
-      clamped,
-      false,
-    ),
-    ballLift: lerp(from.ballInAir ? 1 : 0, to.ballInAir ? 1 : 0, clamped),
+    ball: lerpPosition(fromBall, toBall, ballT, false),
+    ballLift: drivenShot
+      ? liftT
+      : lerp(from.ballInAir ? 1 : 0, to.ballInAir ? 1 : 0, liftT),
   };
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GOAL_HIGHLIGHT_MS } from "./goal-highlight.ts";
 import type { MatchView, MatchViewFrame } from "@fussballmanager/shared";
-import { frameDurationMs } from "./lerp";
+import { frameDurationMs, transitionDurationMs } from "./lerp";
 import {
   COLOR_LINE_DELAY_MS,
   filterVisibleCommentaryLines,
@@ -22,7 +22,6 @@ export function useMatchPlayback(view: MatchView | null) {
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [colorRevealSeq, setColorRevealSeq] = useState(-1);
-  const durationMs = frameDurationMs(speed);
   const playingRef = useRef(playing);
   playingRef.current = playing;
   const lastGoalHoldSeq = useRef(-1);
@@ -53,21 +52,6 @@ export function useMatchPlayback(view: MatchView | null) {
     return () => window.clearTimeout(resume);
   }, [presented, index]);
 
-  useEffect(() => {
-    if (!presented || !playing) {
-      return;
-    }
-    const last = presented.frames.length - 1;
-    if (index >= last) {
-      setPlaying(false);
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      setIndex((current) => Math.min(current + 1, last));
-    }, durationMs);
-    return () => window.clearTimeout(timer);
-  }, [presented, playing, index, durationMs]);
-
   const frame = useMemo(
     () => (presented ? frameAt(presented, index) : null),
     [presented, index],
@@ -82,6 +66,38 @@ export function useMatchPlayback(view: MatchView | null) {
     }
     return frameAt(presented, index - 1);
   }, [presented, index]);
+
+  const roleOf = useMemo(() => {
+    if (!presented) {
+      return () => undefined;
+    }
+    const roles = new Map(presented.roster.map((player) => [player.id, player.role]));
+    return (playerId: string) => roles.get(playerId);
+  }, [presented]);
+
+  const stepDurationMs = useMemo(() => {
+    if (!presented || !frame || !previous) {
+      return frameDurationMs(speed);
+    }
+    return transitionDurationMs(previous, frame, presented.home.id, roleOf, speed);
+  }, [presented, frame, previous, roleOf, speed]);
+
+  const durationMs = stepDurationMs;
+
+  useEffect(() => {
+    if (!presented || !playing) {
+      return;
+    }
+    const last = presented.frames.length - 1;
+    if (index >= last) {
+      setPlaying(false);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setIndex((current) => Math.min(current + 1, last));
+    }, stepDurationMs);
+    return () => window.clearTimeout(timer);
+  }, [presented, playing, index, stepDurationMs]);
 
   useEffect(() => {
     if (!presented || !frame) {

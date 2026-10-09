@@ -1,6 +1,16 @@
-import { asMatchId, asPlayerId, asTeamId } from "@fussballmanager/shared";
+import {
+  asMatchId,
+  asPlayerId,
+  asTeamId,
+  type MatchViewFrame,
+} from "@fussballmanager/shared";
 import { describe, expect, it } from "vitest";
-import { nearPostBallY, presentationBallForEvent } from "./match-presentation.ts";
+import {
+  applyKickoffHalfDiscipline,
+  expandPresentationFrames,
+  nearPostBallY,
+  presentationBallForEvent,
+} from "./match-presentation.ts";
 
 describe("match presentation", () => {
   it("places wide misses near the post instead of the corner", () => {
@@ -31,5 +41,119 @@ describe("match presentation", () => {
     expect(ball.y).toBeGreaterThan(30);
     expect(ball.y).toBeLessThan(45);
     expect(ball.x).toBe(98);
+  });
+
+  it("splits kickoff dots onto each half", () => {
+    const frame: MatchViewFrame = {
+      seq: 0,
+      ball: { x: 50, y: 50 },
+      score: { home: 0, away: 0 },
+      possessionTeamId: asTeamId("home"),
+      ballCarrierId: asPlayerId("st"),
+      clock: { period: "first_half", minute: 0, second: 0, stoppageMinute: 0 },
+      ballInAir: false,
+      cue: null,
+      stats: {
+        home: {
+          goals: 0,
+          shots: 0,
+          shotsOnTarget: 0,
+          passes: 0,
+          passesComplete: 0,
+          corners: 0,
+        },
+        away: {
+          goals: 0,
+          shots: 0,
+          shotsOnTarget: 0,
+          passes: 0,
+          passesComplete: 0,
+          corners: 0,
+        },
+      },
+      dots: [
+        {
+          playerId: asPlayerId("st"),
+          teamId: asTeamId("home"),
+          x: 62,
+          y: 50,
+        },
+        {
+          playerId: asPlayerId("cb"),
+          teamId: asTeamId("away"),
+          x: 38,
+          y: 50,
+        },
+      ],
+    };
+    const next = applyKickoffHalfDiscipline(frame, asTeamId("home"));
+    const home = next.dots.find((dot) => dot.teamId === asTeamId("home"))!;
+    const away = next.dots.find((dot) => dot.teamId !== asTeamId("home"))!;
+    expect(home.x).toBeLessThanOrEqual(49);
+    expect(away.x).toBeGreaterThanOrEqual(51);
+    expect(home.playerId).toBe(asPlayerId("st"));
+    expect(home.x).toBe(49);
+  });
+
+  it("inserts flight frames before a shot tick", () => {
+    const homeId = asTeamId("home");
+    const shotFrame: MatchViewFrame = {
+      seq: 5,
+      ball: { x: 6, y: 48 },
+      score: { home: 0, away: 0 },
+      possessionTeamId: homeId,
+      ballCarrierId: asPlayerId("gk"),
+      clock: { period: "first_half", minute: 12, second: 0, stoppageMinute: 0 },
+      ballInAir: false,
+      cue: "shot",
+      stats: {
+        home: {
+          goals: 0,
+          shots: 1,
+          shotsOnTarget: 1,
+          passes: 0,
+          passesComplete: 0,
+          corners: 0,
+        },
+        away: {
+          goals: 0,
+          shots: 0,
+          shotsOnTarget: 0,
+          passes: 0,
+          passesComplete: 0,
+          corners: 0,
+        },
+      },
+      dots: [],
+    };
+    const expanded = expandPresentationFrames(
+      [shotFrame],
+      [
+        {
+          type: "shot",
+          seq: 5,
+          matchId: asMatchId("m"),
+          clock: shotFrame.clock,
+          ball: shotFrame.ball,
+          involved: [],
+          possessionTeamId: homeId,
+          shooter: {
+            playerId: asPlayerId("st"),
+            teamId: asTeamId("away"),
+            position: { x: 82, y: 44 },
+          },
+          target: { x: 100, y: 50 },
+          outcome: "save",
+        },
+      ],
+      homeId,
+      asTeamId("away"),
+      [],
+      2026,
+    );
+    expect(expanded).toHaveLength(1);
+    expect(expanded[0]?.cue).toBe("shot");
+    expect(expanded[0]?.ballInAir).toBe(true);
+    expect(expanded[0]?.ball.x).toBe(6);
   });
 });

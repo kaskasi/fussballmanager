@@ -1,11 +1,9 @@
 /** WIREFRAME: docs/prd/design.md §9.12 — Jugend (eine Tabelle, U17/U19/Camps) */
-import { Fragment, useEffect, useMemo, useState, type DragEvent } from "react";
+import { useEffect, useMemo, useState, type DragEvent } from "react";
 import {
   AlertTriangle,
   ArrowUp,
   Calendar,
-  ChevronDown,
-  ChevronRight,
   Dumbbell,
   Flag,
   Frown,
@@ -254,7 +252,6 @@ function YouthUnifiedRoster({
   const [position, setPosition] = useState<PositionPrimary | "all">("all");
   const [sortKey, setSortKey] = useState<ProSquadSortKey>(DEFAULT_YOUTH_SORT.key);
   const [sortDirection, setSortDirection] = useState<ProSquadSortDirection>(DEFAULT_YOUTH_SORT.direction);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [dropAction, setDropAction] = useState<YouthReportDropAction | null>(null);
 
   const playersById = useMemo(() => new Map(players.map((player) => [player.id, player])), [players]);
@@ -323,7 +320,6 @@ function YouthUnifiedRoster({
         <table className="squad-table youth-roster-table">
           <thead>
             <tr>
-              <th scope="col" aria-label={tr("youth.roster.detailsCol")} />
               <SquadSortHeader label={tr("squad.col.name")} sortKey="name" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} align="left" />
               <SquadSortHeader label={tr("squad.col.pos")} sortKey="position" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
               <SquadSortHeader label={tr("squad.col.age")} sortKey="age" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
@@ -345,7 +341,7 @@ function YouthUnifiedRoster({
           <tbody>
             {visible.length === 0 ? (
               <tr>
-                <td colSpan={17} className="youth-report-empty">
+                <td colSpan={16} className="youth-report-empty">
                   {tr("youth.roster.empty", { team: team.toUpperCase() })}
                 </td>
               </tr>
@@ -355,35 +351,33 @@ function YouthUnifiedRoster({
                 if (!player) return null;
                 const target = youthReportTarget(player, individualPrograms, trainingPlan, week);
                 const status = youthReportStatus(player, youthInbox, season, report);
-                const expanded = expandedId === row.playerId;
                 return (
-                  <Fragment key={row.playerId}>
                     <tr
+                      key={row.playerId}
                       className={row.departureRisk ? "squad-table-row is-risk" : "squad-table-row"}
                       draggable
+                      tabIndex={0}
+                      role="button"
+                      onClick={() => onRowClick(row.playerId)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          onRowClick(row.playerId);
+                        }
+                      }}
                       onDragStart={(event) => {
                         event.dataTransfer.setData(DRAG_PLAYER, row.playerId);
                         event.dataTransfer.effectAllowed = "move";
                       }}
                     >
-                      <td>
-                        <button
-                          type="button"
-                          className="youth-expand-btn"
-                          aria-expanded={expanded}
-                          onClick={() => setExpandedId(expanded ? null : row.playerId)}
-                        >
-                          {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                        </button>
-                      </td>
                       <td className="squad-col-name">
-                        <button type="button" className="youth-report-badge" onClick={() => onRowClick(row.playerId)}>
+                        <span className="youth-report-badge">
                           {row.departureRisk ? (
                             <Flag size={14} strokeWidth={2.5} className="youth-risk-icon" aria-hidden />
                           ) : null}
                           <PlayerPortrait seed={player.portrait_seed} size="sm" className="campus-portrait" />
                           {formatYouthReportName(player)}
-                        </button>
+                        </span>
                       </td>
                       <td>{row.position}</td>
                       <td>{row.age}</td>
@@ -414,27 +408,6 @@ function YouthUnifiedRoster({
                         <CoachIconLucide icon={row.coachIcon} />
                       </td>
                     </tr>
-                    {expanded ? (
-                      <tr className="youth-expand-row">
-                        <td colSpan={17}>
-                          <div className="youth-expand-panel">
-                            <PlayerPortrait seed={player.portrait_seed} size="md" />
-                            <div>
-                              <p>
-                                <strong>Ziel:</strong> {target.title}
-                              </p>
-                              <p>
-                                <strong>Status:</strong> {status.label}
-                              </p>
-                              <button type="button" className="negotiation-btn" onClick={() => onSelectPlayer(row.playerId)}>
-                                Zum Profil
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : null}
-                  </Fragment>
                 );
               })
             )}

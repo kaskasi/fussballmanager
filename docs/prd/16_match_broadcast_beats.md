@@ -1,8 +1,8 @@
 # /docs/prd/16_match_broadcast_beats.md
 
 **Version:** 1.0  
-**Last Updated:** 2026-10-03  
-**Status:** Draft (Spezifikation — Director noch nicht implementiert)
+**Last Updated:** 2026-10-09  
+**Status:** Implementiert (Director B1–B4 + B3c Feintuning); B5 LLM offen
 
 ---
 
@@ -12,12 +12,11 @@ Match-**Beats** sind die narrative Einheit *über* einzelnen Engine-Ticks. Sie s
 Pacing, Doppelstimme (Play-by-Play + Farbkommentar) und spätere Story-Slots — ohne die
 Engine (`server/src/engine/`) zu verändern (Gesetz 4, PRD 14.10).
 
-**Heute:** `commentate()` + `isCommentaryWorthy()` → eine Template-Zeile pro
-worthy Event. Heimspiel-Spielbericht darf eine **Kasse** (Eintritt, Wurst,
-Zelt, Shop) zeigen — Stardew-Abrechnung, gleiche Formeln wie das Ledger.
-Auswärts-Tage in Finanzen später.  
-**Ziel:** **Broadcast Director** wählt Beats, füllt Slots aus Fakten, optional LLM
-nur in freigegebenen Slots (PRD 01 — Template-Fallback).
+**Heute:** **Broadcast Director** (`server/src/commentary/director.ts`) sitzt zwischen
+Engine-Stream und UI: sparse PBP (~80–200 Zeilen/Spiel), **Moment**-Zeilen für
+Standards/Abseits, Ketten-Puffer bis zum Schuss, Makro-**Color** an Abschlüssen.
+Templates via `commentate()`; kein LLM in v1 (B5). Heimspiel-Spielbericht: **Kasse**
+(Eintritt, Wurst, Zelt, Shop) — gleiche Formeln wie Ledger.
 
 ---
 
@@ -279,6 +278,8 @@ Wenn zwei Beats im selben Tick: **ein** PBP + höchstens **ein** Color.
 | **B2** | Director IDLE/SET_PIECE/ATTACK + Macro-Fenster | `server/src/commentary/director.ts` ✓ |
 | **B3** | P3-Unterdrückung (kein PBP für pass/carry/duel) | `server/src/commentary/suppression.ts` ✓ |
 | **B3b** | Doppelzeile PBP+Color + UI-Ticker (`voice`, Stagger) | `shared/match-view.ts`, `src/match/` ✓ |
+| **B3c** | Sparse PBP, chain buffer, `voice: moment`, Pitch-Moment-Icon | `director.ts`, `moment-copy.ts`, `chain-copy.ts`, UI ✓ |
+| **B3d** | Pitch-Viz (Präsentation): synthetische Flug-Frames (Schuss/Parade/Aus), Kickoff-Hälften, Eck-Cluster; Client easing + variable Tick-Dauer | `server/src/api/match-presentation.ts`, `src/match/lerp.ts`, `useMatchPlayback.ts` ✓ |
 | **B4** | Story-Slots + Chronik (fact-checked color) | `story-slots.ts`, `broadcast-story.ts` ✓ |
 | **B5** | Lokales LLM nur für `color` Slots mit Fallback | PRD 01 |
 

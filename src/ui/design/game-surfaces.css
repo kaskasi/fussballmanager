@@ -659,19 +659,84 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 
 .career-lineup-hero {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.65rem;
   margin-top: 0.65rem;
 }
 
 @media (min-width: 900px) {
   .career-lineup-hero {
     grid-template-columns: minmax(0, 1fr) 320px;
-    align-items: start;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
   }
+
+  .career-lineup-toolbar-row {
+    grid-column: 1 / -1;
+  }
+
+  .career-lineup-board {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: stretch;
+  }
+
+  .career-lineup-context {
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 0;
+  }
+}
+
+.career-lineup-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.45rem 0.75rem;
+}
+
+.career-lineup-toolbar-row .career-lineup-pills {
+  margin-top: 0;
+}
+
+.career-lineup-formation-pill {
+  cursor: default;
+  margin-left: auto;
+  padding-right: 0.55rem;
+}
+
+.career-lineup-formation-pill-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinte-weich);
+}
+
+.career-lineup-formation-pill-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  position: relative;
+}
+
+.career-lineup-formation-pill-value select {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 800;
+  color: var(--tinte);
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  min-width: 3.2rem;
 }
 
 .career-lineup-board {
   margin-top: 0;
+  min-height: 0;
+  align-items: stretch;
 }
 
 .lineup-bench {
@@ -688,6 +753,16 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   border: var(--outline);
   border-radius: var(--radius);
   box-shadow: var(--shadow-flat);
+}
+
+.lineup-pitch-panel .opponent-scout-action {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.lineup-pitch-panel .opponent-scout-action .inbox-action {
+  width: 100%;
+  justify-content: center;
 }
 
 .lineup-pitch-wrap {
@@ -718,6 +793,7 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-top: 0.5rem;
+  align-items: center;
 }
 
 .career-lineup-pill {
@@ -744,6 +820,42 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+  height: 100%;
+}
+
+.lineup-match-facts {
+  list-style: none;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.lineup-match-facts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--tinte);
+  line-height: 1.25;
+}
+
+.lineup-match-facts svg {
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+  color: var(--tinte-weich);
+}
+
+.lineup-tactics-card--stretch {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.lineup-tactics-card--stretch .lineup-tactics-pills {
+  flex: 1;
 }
 
 .lineup-opponent-card,
@@ -852,7 +964,8 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 }
 
 .career-lineup-context .career-lineup-disclosure {
-  margin-top: 0;
+  margin-top: auto;
+  flex-shrink: 0;
 }
 
 .career-lineup-squad {
@@ -3052,8 +3165,20 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   max-height: min(22rem, 45dvh);
 }
 
+.career-match--preview .matchday-cockpit {
+  align-items: stretch;
+}
+
 .career-match--preview .matchday-cockpit-hero {
-  min-height: min(28rem, 62dvh);
+  min-height: 0;
+  height: 100%;
+}
+
+.career-match--preview .matchday-cockpit-side--league {
+  position: static;
+  max-height: none;
+  height: auto;
+  align-self: stretch;
 }
 
 .career-match--preview .matchday-preview-main {
@@ -3061,6 +3186,7 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  margin-top: auto;
   padding: 0.65rem 0.75rem;
 }
 
@@ -3243,6 +3369,142 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 
 .career-match .career-match-stage {
   min-height: 0;
+}
+
+/* §9.15 — Live: gleiche Stage-Höhe (Spielfeld vs Kommentar), Side panel bündig unten */
+.career-match--live {
+  --career-match-hero-stage-h: min(46dvh, 26rem);
+}
+
+.career-match--live .matchday-cockpit {
+  align-items: stretch;
+}
+
+.career-match--live .matchday-cockpit-hero {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.career-match--live .matchday-cockpit-side--live {
+  position: static;
+  max-height: none;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.career-match--live .career-match-stage {
+  flex: 0 0 auto;
+  height: var(--career-match-hero-stage-h);
+  min-height: var(--career-match-hero-stage-h);
+  max-height: var(--career-match-hero-stage-h);
+  margin-top: auto;
+  margin-bottom: 0;
+}
+
+.career-match--live .career-match-stage .match-stage__foreground {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.career-match--live .career-match-stage.match-stage--pitch .pitch-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 1rem 1rem 0 0;
+}
+
+.career-match--live .career-match-stage.match-stage--pitch svg.pitch {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
+.career-match--live .career-match-stage.match-stage--pitch .commentary-ticker {
+  flex-shrink: 0;
+}
+
+.career-match--live .career-match-stage.match-stage--events {
+  display: flex;
+  flex-direction: column;
+  max-height: none;
+}
+
+.career-match--live .career-match-stage.match-stage--events .events-feed {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+}
+
+.career-match--live .matchday-cockpit-side--live {
+  display: flex;
+  flex-direction: column;
+}
+
+.career-match--live .matchday-side-tabs {
+  flex-shrink: 0;
+}
+
+.career-match--live .matchday-side-panel--live {
+  flex: 0 0 auto;
+  height: var(--career-match-hero-stage-h);
+  min-height: var(--career-match-hero-stage-h);
+  max-height: var(--career-match-hero-stage-h);
+  margin-top: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.career-match--live .matchday-side-lineups {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.career-match--live .matchday-side-lineup-meta {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--tinte-weich);
+  text-align: center;
+  line-height: 1.25;
+}
+
+.career-match--live .matchday-side-lineup-pitch {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.career-match--live .matchday-side-lineup-pitch .pitch-wrap {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0.35rem;
+  border-radius: var(--radius-klein);
+}
+
+.career-match--live .matchday-side-lineup-pitch svg.pitch {
+  width: 100%;
+  height: 100%;
+}
+
+.career-match--live .matchday-side-lineup-pitch [data-ball],
+.career-match--live .matchday-side-lineup-pitch [data-ball-shadow],
+.career-match--live .matchday-side-lineup-pitch .pitch-moment-icon,
+.career-match--live .matchday-side-lineup-pitch .match-sub-ticker {
+  visibility: hidden;
 }
 
 /* §9.15 — goal moment (~800ms): ball pulse + terra scorer ring */

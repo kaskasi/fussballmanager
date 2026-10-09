@@ -6,7 +6,7 @@ import type {
   MatchViewRosterPlayer,
   MatchViewSide,
 } from "@fussballmanager/shared";
-import { IncidentBanner } from "./IncidentBanner";
+import { PitchMomentIcon } from "./PitchMomentIcon.tsx";
 import { MatchSubstitutionTicker } from "./MatchSubstitutionTicker";
 import { mixFrame, type DisplayedPose } from "./lerp";
 
@@ -138,7 +138,7 @@ export function Pitch({
         .filter(Boolean)
         .join(" ")}
     >
-      <IncidentBanner cue={cue} cueDetail={cueDetail} seq={to.seq} />
+      <PitchMomentIcon cue={cue} cueDetail={cueDetail} seq={to.seq} />
       <MatchSubstitutionTicker cue={cue} cueDetail={cueDetail} seq={to.seq} />
       <svg
         ref={svgRef}

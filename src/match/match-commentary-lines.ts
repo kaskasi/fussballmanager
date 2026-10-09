@@ -19,7 +19,9 @@ export function filterVisibleCommentaryLines(
 }
 
 export function latestPlayByPlayAndColor(lines: readonly MatchViewLine[]) {
-  const latestPbp = lines.filter((line) => line.voice !== "color").at(-1);
+  const latestPbp = lines
+    .filter((line) => line.voice !== "color" && line.voice !== "moment")
+    .at(-1);
   const latestColor = lines.filter((line) => line.voice === "color").at(-1);
   return { latestPbp, latestColor };
 }

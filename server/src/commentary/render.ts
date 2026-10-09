@@ -5,6 +5,7 @@ import type {
   Squad,
   TeamId,
 } from "@fussballmanager/shared";
+import { attackingThird } from "./pitch-thirds.ts";
 
 export type CommentaryContext = {
   playerName: (playerId: PlayerId) => string;
@@ -247,7 +248,13 @@ function carryLength(event: Extract<MatchEvent, { type: "carry" }>): number {
 export function isCommentaryWorthy(
   event: MatchEvent,
   previous: MatchEvent | undefined,
+  options?: { homeTeamId?: TeamId },
 ): boolean {
+  const homeTeamId = options?.homeTeamId;
+
+  if (event.type === "duel") {
+    return false;
+  }
   if (event.type === "carry") {
     if (
       previous?.type === "carry" &&
@@ -255,15 +262,44 @@ export function isCommentaryWorthy(
     ) {
       return false;
     }
-    return carryLength(event) >= 7;
+    if (carryLength(event) < 7) return false;
+    if (homeTeamId && event.possessionTeamId) {
+      return attackingThird(event.ball.x, event.possessionTeamId, homeTeamId);
+    }
+    return false;
   }
-  if (event.type === "pass" && event.complete) {
+  if (event.type === "pass") {
+    const teamId = event.possessionTeamId ?? event.from.teamId;
+    const inAttack =
+      homeTeamId && teamId
+        ? attackingThird(event.ball.x, teamId, homeTeamId)
+        : false;
+    if (!event.complete) {
+      return inAttack;
+    }
     if (event.kind === "cross" || event.kind === "through" || event.kind === "switch") {
-      return true;
+      return inAttack;
     }
     if (previous?.type === "pass" && previous.complete && passLength(event) < 14) {
       return false;
     }
+    return inAttack;
+  }
+  if (event.type === "turnover") {
+    if (event.reason === "offside") return true;
+    if (homeTeamId) {
+      return attackingThird(event.ball.x, event.toTeamId, homeTeamId);
+    }
+    return false;
+  }
+  if (event.type === "foul") {
+    if (event.card) return true;
+    if (homeTeamId && event.possessionTeamId) {
+      return attackingThird(event.ball.x, event.possessionTeamId, homeTeamId);
+    }
+    return false;
+  }
+  if (event.type === "restart") {
     return true;
   }
   return true;

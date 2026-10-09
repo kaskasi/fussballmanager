@@ -25,7 +25,11 @@ import {
   type CommentaryContext,
 } from "../commentary/index.ts";
 import { createInitialState, step } from "../engine/index.ts";
-import { applyFramePresentation } from "./match-presentation.ts";
+import {
+  applyFramePresentation,
+  applyKickoffHalfDiscipline,
+  expandPresentationFrames,
+} from "./match-presentation.ts";
 
 function rosterOf(squad: Squad): MatchViewRosterPlayer[] {
   return [
@@ -74,6 +78,10 @@ function frameFrom(
     cue = "offside";
   } else if (event?.type === "restart" && event.phase === "throw_in") {
     cue = "throw_in";
+  } else if (event?.type === "restart" && event.phase === "goal_kick") {
+    cue = "goal_kick";
+  } else if (event?.type === "restart" && event.phase === "kickoff") {
+    cue = "kickoff";
   } else if (event?.type === "shot") {
     cue = "shot";
   }
@@ -174,6 +182,7 @@ export function buildMatchView(input: {
         seq: line.seq,
         text: line.text,
         voice: line.voice,
+        beatId: line.beatId,
         storySlot: line.storySlot,
         i18nKey: line.i18nKey,
         i18nParams: line.i18nParams,
@@ -188,6 +197,17 @@ export function buildMatchView(input: {
   if (frames.length === 0 || previousEvent?.type !== "match_end") {
     throw new Error("Match view did not reach match_end");
   }
+
+  const roster = [...rosterOf(home), ...rosterOf(away)];
+  const presentationFrames = expandPresentationFrames(
+    frames,
+    events,
+    home.team.id,
+    away.team.id,
+    roster,
+    initial.rng.seed,
+  );
+  const presentationKickoff = applyKickoffHalfDiscipline(kickoff, home.team.id);
 
   return {
     seed: initial.rng.seed,
@@ -205,12 +225,12 @@ export function buildMatchView(input: {
     },
     homePlan: sandboxPlanFromTactics(home.tactics),
     awayPlan: sandboxPlanFromTactics(away.tactics),
-    roster: [...rosterOf(home), ...rosterOf(away)],
-    kickoff,
-    frames,
+    roster,
+    kickoff: presentationKickoff,
+    frames: presentationFrames,
     lines,
     finalScore: current.score,
-    eventCount: frames.length,
+    eventCount: presentationFrames.length,
     report: buildMatchReport(events, home, away, seed, ctx),
   };
 }

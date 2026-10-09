@@ -129,7 +129,8 @@ describe("classifyBeat", () => {
 
   it("returns null for unworthy carries", () => {
     const nord = player("nord-8");
-    const first: MatchEvent = {
+    const opts = { homeTeamId: homeId };
+    const midfield: MatchEvent = {
       type: "carry",
       seq: 1,
       matchId,
@@ -142,13 +143,14 @@ describe("classifyBeat", () => {
       to: { x: 62, y: 50 },
     };
     const follow: MatchEvent = {
-      ...first,
+      ...midfield,
       seq: 2,
       from: { x: 62, y: 50 },
       to: { x: 70, y: 50 },
     };
-    expect(beatForCommentary(first, undefined)).toBe("carry_progress");
-    expect(beatForCommentary(follow, first)).toBeNull();
+    expect(classifyBeat(midfield)).toBe("carry_progress");
+    expect(beatForCommentary(midfield, undefined, opts)).toBeNull();
+    expect(beatForCommentary(follow, midfield, opts)).toBeNull();
   });
 });
 
@@ -168,7 +170,7 @@ describe("beatForCommentary golden stream", () => {
     for (let i = 0; i < events.length; i += 1) {
       const event = events[i];
       if (!event) continue;
-      const beat = beatForCommentary(event, events[i - 1]);
+      const beat = beatForCommentary(event, events[i - 1], { homeTeamId: homeId });
       if (beat) {
         out.push({ seq: event.seq, beat });
       }
@@ -179,25 +181,12 @@ describe("beatForCommentary golden stream", () => {
   it("classifies every worthy tick on seed 2026", () => {
     const rows = worthyBeats(2026);
     expect(rows.length).toBeGreaterThan(80);
+    expect(rows.length).toBeLessThan(550);
     expect(rows.some((row) => row.beat === "match_opening")).toBe(true);
     expect(rows.some((row) => row.beat.startsWith("shot_"))).toBe(true);
     expect(rows.some((row) => row.beat === "full_time")).toBe(true);
-    const keys = rows.map((row) => `${row.seq}:${row.beat}`);
-    expect(keys.slice(0, 12)).toMatchInlineSnapshot(`
-      [
-        "0:match_opening",
-        "1:pass_complete",
-        "2:carry_progress",
-        "3:duel_won",
-        "4:pass_incomplete",
-        "5:pass_key",
-        "6:duel_won",
-        "7:pass_complete",
-        "8:pass_key",
-        "9:pass_incomplete",
-        "10:pass_key",
-        "11:pass_key",
-      ]
-    `);
+    expect(rows.some((row) => row.beat.startsWith("restart_") || row.beat === "offside")).toBe(
+      true,
+    );
   });
 });

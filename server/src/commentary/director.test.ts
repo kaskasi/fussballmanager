@@ -48,8 +48,9 @@ describe("createBroadcastDirector", () => {
       phase: "corner",
       takingTeamId: homeId,
     };
-    director.emit(corner, opening, ctx);
+    const cornerLines = director.emit(corner, opening, ctx);
     expect(director.snapshot().mode).toBe("set_piece");
+    expect(cornerLines.some((line) => line.voice === "moment")).toBe(true);
   });
 
   it("adds color on macro_counter after defensive turnover and shot", () => {
@@ -158,8 +159,8 @@ describe("createBroadcastDirector", () => {
         expect(line.text.length).toBeGreaterThan(5);
       }
     }
-    expect(pbp).toBeGreaterThan(500);
-    expect(pbp).toBeLessThan(700);
+    expect(pbp).toBeGreaterThan(80);
+    expect(pbp).toBeLessThan(220);
     expect(color).toBeGreaterThan(0);
   });
 });

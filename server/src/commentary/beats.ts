@@ -40,11 +40,11 @@ export const BEAT_PRIORITY: Record<BroadcastBeatId, 0 | 1 | 2 | 3> = {
   shot_goal: 0,
   card_red: 0,
   restart_penalty: 0,
-  restart_throw_in: 1,
-  restart_corner: 1,
-  restart_free_kick: 1,
-  restart_goal_kick: 1,
-  restart_kickoff: 1,
+  restart_throw_in: 3,
+  restart_corner: 3,
+  restart_free_kick: 3,
+  restart_goal_kick: 3,
+  restart_kickoff: 3,
   shot_taken: 1,
   shot_saved: 1,
   shot_wide: 1,
@@ -52,11 +52,11 @@ export const BEAT_PRIORITY: Record<BroadcastBeatId, 0 | 1 | 2 | 3> = {
   shot_blocked: 1,
   card_yellow: 1,
   injury: 1,
-  pass_key: 2,
-  foul: 2,
-  offside: 2,
-  substitution: 2,
-  turnover: 2,
+  pass_key: 3,
+  foul: 3,
+  offside: 3,
+  substitution: 1,
+  turnover: 3,
   pass_complete: 3,
   pass_incomplete: 3,
   carry_progress: 3,
@@ -184,8 +184,9 @@ export function classifyBeat(event: MatchEvent): BroadcastBeatId {
 export function beatForCommentary(
   event: MatchEvent,
   previous?: MatchEvent,
+  options?: { homeTeamId?: import("@fussballmanager/shared").TeamId },
 ): BroadcastBeatId | null {
-  if (!isCommentaryWorthy(event, previous)) {
+  if (!isCommentaryWorthy(event, previous, options)) {
     return null;
   }
   return classifyBeat(event);

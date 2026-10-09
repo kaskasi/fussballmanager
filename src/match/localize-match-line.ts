@@ -5,9 +5,13 @@ export function localizeMatchLine(line: MatchViewLine): string {
   if (line.i18nKey) {
     const translated = t(line.i18nKey, line.i18nParams);
     if (translated !== line.i18nKey) {
-      return line.voice === "color" && line.text.includes("  ")
-        ? `${line.text.split("  ")[0]}  ${translated}`
-        : translated;
+      if (
+        (line.voice === "color" || line.voice === "moment") &&
+        line.text.includes("  ")
+      ) {
+        return `${line.text.split("  ")[0]}  ${translated}`;
+      }
+      return translated;
     }
   }
   return line.text;

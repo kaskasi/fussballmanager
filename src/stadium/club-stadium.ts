@@ -1,4 +1,5 @@
 import { DIVISION_ECONOMY, type DivisionEconomyId } from "../economy/division-economy.ts";
+import { pitchFillPenalty, normalizePitchCondition } from "./precinct-campus-events.ts";
 import { precinctFillRateBonus } from "./precinct-effects.ts";
 import { normalizePrecinct, type PrecinctState } from "./precinct.ts";
 import type { SponsorDeal } from "./sponsor-deals.ts";
@@ -7,6 +8,11 @@ import {
   stadiumFanbaseMultiplier,
   stadiumFillRateBonus,
 } from "./stadium-upgrades.ts";
+import {
+  applyBlockExpansionCapacities,
+  isBlockUnderConstruction,
+} from "./stadium-block-expansion.ts";
+import type { BlockExpansionState } from "./stadium-block-expansion.ts";
 
 export type StadiumTier = "standing" | "seating" | "vip";
 
@@ -27,6 +33,8 @@ export interface ClubStadium {
   fanbase_last_delta?: number;
   /** F7.2 — purchased upgrade levels keyed by upgrade id. */
   upgrade_levels?: Record<string, number>;
+  /** Per-tribune expansion level + optional construction lockout. */
+  block_expansion?: Record<string, BlockExpansionState>;
   /** F6.5 — board and shirt contracts. */
   sponsor_deals?: SponsorDeal[];
   /** Gelände-Raster (F7.3 furniture). */
@@ -35,6 +43,10 @@ export interface ClubStadium {
   restaurant_viral_until_week?: number;
   /** Career week index that still owes overtime wages. */
   restaurant_overtime_week?: number;
+  /** Last season the restaurant wedding story fired (repeat every few seasons). */
+  restaurant_story_last_season?: number;
+  /** Match pitch quality 0–100 — mega events and recovery (F7.3). */
+  pitch_condition?: number;
 }
 
 export const DEFAULT_FANBASE = 52;
@@ -132,19 +144,27 @@ export function defaultClubStadium(): ClubStadium {
 }
 
 export function normalizeClubStadium(stadium: ClubStadium): ClubStadium {
-  const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
-  return applyStadiumFillRates(
-    rebuildStadiumWithUpgrades(
-      {
-        ...stadium,
-        fanbase,
-        upgrade_levels: stadium.upgrade_levels ?? {},
-        sponsor_deals: stadium.sponsor_deals ?? [],
-        precinct: normalizePrecinct(stadium.precinct),
-      },
-      STADIUM_BASE_BLOCKS,
-    ),
+  const withPitch = normalizePitchCondition(stadium);
+  const fanbase = withPitch.fanbase ?? DEFAULT_FANBASE;
+  const savedBlocks = new Map(stadium.blocks.map((block) => [block.id, block]));
+  const rebuilt = rebuildStadiumWithUpgrades(
+    {
+      ...withPitch,
+      fanbase,
+      upgrade_levels: stadium.upgrade_levels ?? {},
+      sponsor_deals: stadium.sponsor_deals ?? [],
+      precinct: normalizePrecinct(stadium.precinct),
+      block_expansion: stadium.block_expansion,
+    },
+    STADIUM_BASE_BLOCKS,
   );
+  const withExpansion = { ...rebuilt, block_expansion: stadium.block_expansion };
+  const mergedBlocks = applyBlockExpansionCapacities(withExpansion, rebuilt.blocks).map((block) => {
+    const saved = savedBlocks.get(block.id);
+    if (!saved) return block;
+    return { ...block, ticket_price_eur: saved.ticket_price_eur };
+  });
+  return applyStadiumFillRates({ ...rebuilt, blocks: mergedBlocks });
 }
 
 export function referenceFillRate(blockId: string): number {
@@ -178,7 +198,10 @@ function normalizeFanbaseIndex(value: number): number {
 
 export function applyStadiumFillRates(stadium: ClubStadium): ClubStadium {
   const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
-  const fillBonus = stadiumFillRateBonus(stadium) + precinctFillRateBonus(stadium.precinct);
+  const fillBonus =
+    stadiumFillRateBonus(stadium) +
+    precinctFillRateBonus(stadium.precinct) -
+    pitchFillPenalty(stadium);
   const fanbaseMultiplier = stadiumFanbaseMultiplier(stadium);
   return {
     ...stadium,
@@ -241,12 +264,26 @@ export function stadiumAttendanceFill(stadium: ClubStadium): number {
   return Math.min(1, Math.max(0, sold / capacity));
 }
 
-export function stadiumBlockIncome(block: StadiumBlock): number {
+export function stadiumBlockIncome(
+  stadium: ClubStadium,
+  block: StadiumBlock,
+  season?: number,
+  week?: number,
+): number {
+  if (season != null && week != null && isBlockUnderConstruction(stadium, block.id, season, week)) {
+    return 0;
+  }
   return block.capacity * block.fill_rate * block.ticket_price_eur;
 }
 
-export function stadiumMatchdayIncome(stadium: ClubStadium): number {
-  return Math.round(stadium.blocks.reduce((sum, block) => sum + stadiumBlockIncome(block), 0));
+export function stadiumMatchdayIncome(
+  stadium: ClubStadium,
+  season?: number,
+  week?: number,
+): number {
+  return Math.round(
+    stadium.blocks.reduce((sum, block) => sum + stadiumBlockIncome(stadium, block, season, week), 0),
+  );
 }
 
 export function stadiumAverageTicket(stadium: ClubStadium): number {

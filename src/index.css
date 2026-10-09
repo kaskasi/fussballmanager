@@ -3682,6 +3682,154 @@ body {
   color: #64748b;
 }
 
+.finances-tickets-lead {
+  margin: 0 0 0.55rem;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.finances-ticket-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.finances-ticket-summary strong {
+  color: #0f172a;
+}
+
+.finances-ticket-arena {
+  display: grid;
+  grid-template-columns: 1fr 2.2fr 1fr;
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    "north north north"
+    "west pitch east"
+    "south south vip";
+  gap: 0.45rem;
+  max-width: 36rem;
+}
+
+.finances-ticket-pitch {
+  grid-area: pitch;
+  min-height: 5.5rem;
+  border-radius: 0.55rem;
+  background: linear-gradient(145deg, #15803d 0%, #166534 100%);
+  border: 2px solid #ecfdf5;
+}
+
+.finances-ticket-zone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.55rem;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.finances-ticket-zone[data-area="north"] {
+  grid-area: north;
+}
+
+.finances-ticket-zone[data-area="west"] {
+  grid-area: west;
+}
+
+.finances-ticket-zone[data-area="east"] {
+  grid-area: east;
+}
+
+.finances-ticket-zone[data-area="south"] {
+  grid-area: south;
+}
+
+.finances-ticket-zone[data-area="vip"] {
+  grid-area: vip;
+}
+
+.finances-ticket-zone-fill {
+  position: absolute;
+  inset: 0;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.finances-ticket-zone-body {
+  position: relative;
+  display: grid;
+  gap: 0.12rem;
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+.finances-ticket-zone-body > strong {
+  font-size: 0.78rem;
+  color: #0f172a;
+}
+
+.finances-ticket-zone-season {
+  margin: 0.08rem 0 0;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.finances-ticket-zone-season strong {
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.finances-ticket-zone-sub {
+  font-size: 0.65rem;
+}
+
+.finances-ticket-zone-body em {
+  font-style: normal;
+  font-weight: 700;
+}
+
+.finances-ticket-zone-body .is-up {
+  color: #047857;
+}
+
+.finances-ticket-zone-body .is-down {
+  color: #b91c1c;
+}
+
+.finances-ticket-modal-lead,
+.finances-ticket-modal-empty,
+.finances-ticket-modal-sum {
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.finances-ticket-modal-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.finances-ticket-modal-list li {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.5rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.4rem;
+  background: #f8fafc;
+  font-size: 0.75rem;
+}
+
 .finances-card {
   padding: 0.45rem 0.55rem;
   border-radius: 0.7rem;
@@ -4461,15 +4609,38 @@ body {
 
 .stadium-precinct {
   display: grid;
-  grid-template-columns: auto auto minmax(11rem, 1fr);
-  gap: 0.85rem;
+  grid-template-columns: auto minmax(0, 1fr) minmax(9.5rem, 12.5rem);
+  gap: 0.55rem 0.65rem;
   align-items: start;
   margin-bottom: 1.25rem;
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 1rem;
   background: #fff;
   box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
   overflow: visible;
+}
+
+.stadium-precinct-map-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.stadium-precinct-detail-slot {
+  min-height: 2.65rem;
+}
+
+.stadium-precinct-detail-hint {
+  margin: 0;
+  padding: 0.35rem 0.45rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.4rem;
+  color: #94a3b8;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
 }
 
 .stadium-precinct-palette {
@@ -4547,76 +4718,94 @@ body {
 }
 
 .stadium-precinct-status {
-  min-width: 11.5rem;
+  min-width: 0;
+  max-height: min(70vh, 28rem);
   display: grid;
-  gap: 0.55rem;
+  gap: 0.32rem;
   align-content: start;
+  overflow: auto;
+  padding-right: 0.1rem;
+}
+
+.stadium-precinct-status-head {
+  display: grid;
+  gap: 0.22rem;
 }
 
 .stadium-precinct-status-kicker {
   margin: 0;
-  color: #0f172a;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.stadium-precinct-status-sheet {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.28rem 0.4rem;
-  padding: 0.4rem 0.45rem;
-  border-radius: 0.55rem;
-  background: #0f172a;
-  color: #ecfdf5;
-  font-size: 0.68rem;
-  font-weight: 800;
-}
-
-.stadium-precinct-status-group h3 {
-  margin: 0 0 0.28rem;
   color: #64748b;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   display: flex;
   align-items: center;
-  gap: 0.28rem;
+  gap: 0.22rem;
+}
+
+.stadium-precinct-status-sheet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.18rem 0.35rem;
+  padding: 0.28rem 0.38rem;
+  border-radius: 0.4rem;
+  background: #0f172a;
+  color: #ecfdf5;
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.stadium-precinct-status-sheet span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  white-space: nowrap;
+}
+
+.stadium-precinct-status-group h3 {
+  margin: 0 0 0.15rem;
+  color: #64748b;
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
 }
 
 .stadium-precinct-status-group ul {
-  margin: 0;
+  margin: 0 0 0.08rem;
   padding: 0;
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.32rem;
+  gap: 0.2rem;
 }
 
 .stadium-precinct-buff {
   position: relative;
-  width: 2.7rem;
-  height: 2.85rem;
-  padding: 0.12rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0.08rem;
   display: grid;
   place-items: center;
   gap: 0;
-  border: 1.5px solid #047857;
-  border-radius: 0.45rem;
+  border: 1px solid #047857;
+  border-radius: 0.35rem;
   background: #ecfdf5;
   color: #0f172a;
   cursor: pointer;
 }
 
 .stadium-precinct-buff span {
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   line-height: 1;
 }
 
 .stadium-precinct-buff strong {
-  font-size: 0.52rem;
+  font-size: 0.48rem;
   font-weight: 800;
   line-height: 1;
 }
@@ -4717,6 +4906,12 @@ body {
   border-color: #d97706;
 }
 
+.stadium-precinct-palette .stadium-precinct-tile.is-street-erase {
+  border-style: dashed;
+  border-color: #64748b;
+  opacity: 0.92;
+}
+
 .stadium-precinct-plate {
   position: relative;
   display: grid;
@@ -4771,6 +4966,139 @@ body {
   border-style: dashed;
   border-color: #d97706;
   background: #fffbeb;
+}
+
+.stadium-precinct-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+  margin: 0;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--panel-border, #cbd5e1);
+  border-radius: 0.45rem;
+  background: var(--panel-bg, #f8fafc);
+}
+
+.stadium-precinct-detail-main {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.stadium-precinct-detail-main p {
+  margin: 0.08rem 0 0;
+  font-size: 0.72rem;
+  color: var(--text-muted, #64748b);
+}
+
+.stadium-precinct-detail-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.stadium-precinct-detail-upgrade {
+  padding: 0.28rem 0.55rem;
+  border: 1px solid #047857;
+  border-radius: 0.35rem;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stadium-precinct-detail-upgrade:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.stadium-precinct-detail-remove {
+  padding: 0.28rem 0.55rem;
+  border: 1px solid #b91c1c;
+  border-radius: 0.35rem;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stadium-precinct-detail-maxed {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+}
+
+.stadium-precinct-detail-close {
+  margin-left: auto;
+  padding: 0.2rem 0.45rem;
+  border: 0;
+  border-radius: 0.3rem;
+  background: transparent;
+  color: var(--text-muted, #64748b);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.stadium-precinct-stage {
+  position: absolute;
+  left: 0.12rem;
+  bottom: 0.1rem;
+  max-width: calc(100% - 0.3rem);
+  padding: 0.02rem 0.22rem;
+  border-radius: 0.2rem;
+  background: rgb(15 23 42 / 72%);
+  color: #f8fafc;
+  font-size: 0.52rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stadium-precinct-tile.is-patch.is-building-training_pitch.is-tier-2 {
+  border-color: #15803d;
+  background: linear-gradient(145deg, #dcfce7 0%, #bbf7d0 100%);
+}
+
+.stadium-precinct-tile.is-patch.is-building-training_pitch.is-tier-3 {
+  border-color: #047857;
+  background: linear-gradient(145deg, #bbf7d0 0%, #86efac 55%, #4ade80 100%);
+}
+
+.stadium-precinct-tile.is-patch.is-building-youth_pitch.is-tier-2 {
+  border-color: #65a30d;
+  background: linear-gradient(145deg, #ecfccb 0%, #d9f99d 100%);
+}
+
+.stadium-precinct-tile.is-patch.is-building-fanshop.is-tier-3,
+.stadium-precinct-tile.is-patch.is-building-fanshop.is-tier-4,
+.stadium-precinct-tile.is-patch.is-building-fanshop.is-tier-5 {
+  border-color: #0369a1;
+  background: linear-gradient(145deg, #e0f2fe 0%, #bae6fd 100%);
+}
+
+.stadium-precinct-tile.is-patch.is-building-fanshop.is-tier-5 {
+  box-shadow: inset 0 0 0 1px rgb(2 132 199 / 35%);
+}
+
+.stadium-precinct-tile.is-patch.is-building-kiosk.is-tier-2,
+.stadium-precinct-tile.is-patch.is-building-beer_tent.is-tier-2 {
+  border-color: #b45309;
+  background: linear-gradient(145deg, #fff7ed 0%, #ffedd5 100%);
+}
+
+.stadium-precinct-tile.is-patch.is-building-training_ground.is-tier-3,
+.stadium-precinct-tile.is-patch.is-building-training_ground.is-tier-4,
+.stadium-precinct-tile.is-patch.is-building-training_ground.is-tier-5 {
+  border-color: #4338ca;
+  background: linear-gradient(145deg, #eef2ff 0%, #e0e7ff 100%);
 }
 
 .stadium-precinct-dock {
@@ -5283,6 +5611,62 @@ body {
   align-items: stretch;
   gap: 0.4rem;
   margin-top: 0.45rem;
+}
+
+.stadium-block-expansion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  margin-top: 0.4rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.45rem;
+  background: #f1f5f9;
+  font-size: 0.68rem;
+  color: #475569;
+}
+
+.stadium-block-expansion.is-building {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.stadium-block-expansion.is-maxed {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.stadium-block-expansion-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
+.stadium-block-expansion-hint {
+  flex: 1;
+  min-width: 6rem;
+  line-height: 1.35;
+}
+
+.stadium-block-expansion-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.stadium-block-expansion-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .stadium-card-boards {

@@ -71,12 +71,22 @@ describe("training units", () => {
   });
 
   it("locks Hallentraining until the campus hall exists", () => {
-    const hall = trainingUnit("phys_hall");
+    const hall = trainingUnit("tech_hall_touch");
     expect(trainingUnitUnlocked(hall)).toBe(false);
     expect(trainingUnitUnlocked(hall, { hasTrainingHall: true })).toBe(true);
+    expect(trainingUnit("tech_hall_finish").growthBoost).toBeGreaterThan(1.3);
     expect(unitsForGroup("physical")).not.toContainEqual(expect.objectContaining({ id: "phys_hall" }));
     expect(unitsForGroup("physical", { hasTrainingHall: true }).some((unit) => unit.id === "phys_hall")).toBe(
       true,
     );
+  });
+
+  it("locks outdoor units until the training pitch is upgraded", () => {
+    const outdoorTech = trainingUnit("tech_outdoor");
+    const outdoorPhys = trainingUnit("phys_outdoor");
+    expect(trainingUnitUnlocked(outdoorTech, { trainingPitchLevel: 1 })).toBe(false);
+    expect(trainingUnitUnlocked(outdoorTech, { trainingPitchLevel: 2 })).toBe(true);
+    expect(trainingUnitUnlocked(outdoorPhys, { trainingPitchLevel: 2 })).toBe(false);
+    expect(trainingUnitUnlocked(outdoorPhys, { trainingPitchLevel: 3 })).toBe(true);
   });
 });

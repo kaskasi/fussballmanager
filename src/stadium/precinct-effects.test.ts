@@ -54,9 +54,11 @@ describe("precinct campus effects", () => {
 
   it("pays docked kiosks independently — occupancy scales, stands do not share a sausage pie", () => {
     expect(weeklyKioskIncome(placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "kiosk"))).toBe(0);
-    const kiosk = dockToCity(placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "kiosk"), "kiosk");
+    let kiosk = dockToCity(placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "kiosk"), "kiosk");
     expect(weeklyKioskIncome(kiosk)).toBe(1_000);
     expect(weeklyKioskIncome(kiosk, 0.5)).toBe(500);
+    kiosk = upgradePrecinctBuilding(kiosk, "kiosk");
+    expect(weeklyKioskIncome(kiosk)).toBeGreaterThan(1_000);
     const tent = dockToCity(placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "beer_tent"), "beer_tent");
     expect(weeklyBeerIncome(tent)).toBe(3_600);
     expect(listPrecinctStatusEffects(kiosk).find((entry) => entry.id === "kiosk")?.magnitude).toBe("€ 1k");
@@ -84,17 +86,39 @@ describe("precinct campus effects", () => {
     expect(precinctWeeklyFanbaseBonus(docked)).toBeGreaterThan(0);
   });
 
-  it("boosts training more after the hall upgrade", () => {
+  it("does not scale growth from campus — hall is an unlock flag", () => {
     let ground = dockToCity(
       placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "training_ground"),
       "training_ground",
     );
-    const outdoor = precinctTrainingEnvironment(ground);
+    expect(precinctTrainingEnvironment(ground)).toBe(1);
     ground = upgradePrecinctBuilding(ground, "training_ground");
-    expect(precinctTrainingEnvironment(ground)).toBeGreaterThan(outdoor);
+    expect(precinctTrainingEnvironment(ground)).toBe(1);
   });
 
-  it("adds fitness regen from Fitness/Pool/Physio, not from the hall", () => {
+  it("sells more merch when fanbase is higher at the same occupancy", () => {
+    const shop = dockToCity(placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "fanshop"), "fanshop");
+    const low = weeklyFanshopIncome(shop, 0.5, 35, true);
+    const high = weeklyFanshopIncome(shop, 0.5, 90, true);
+    expect(high).toBeGreaterThan(low);
+  });
+
+  it("rewards bus plus fan services on away weeks", () => {
+    let state = dockToCity(placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "bus"), "bus");
+    state = dockToCity(placePrecinctBuilding(state, FARM_X + 3, FARM_Y, "fan_services"), "fan_services");
+    const kiosk = dockToCity(placePrecinctBuilding(state, FARM_X, FARM_Y + 2, "kiosk"), "kiosk");
+    const awayOrganized = weeklyKioskIncome(kiosk, 0.1, 60, false);
+    expect(awayOrganized).toBeGreaterThan(
+      weeklyKioskIncome(
+        dockToCity(placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y + 2, "kiosk"), "kiosk"),
+        0.1,
+        60,
+        false,
+      ),
+    );
+  });
+
+  it("adds recovery from Fitness, Pool — not from Halle alone", () => {
     let ground = dockToCity(
       placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "training_ground"),
       "training_ground",
@@ -102,7 +126,9 @@ describe("precinct campus effects", () => {
     ground = upgradePrecinctBuilding(ground, "training_ground");
     expect(precinctFitnessRegen(ground)).toBe(1);
     ground = upgradePrecinctBuilding(ground, "training_ground");
-    expect(precinctFitnessRegen(ground)).toBeGreaterThan(1);
+    expect(precinctFitnessRegen(ground)).toBeCloseTo(1.05, 2);
+    ground = upgradePrecinctBuilding(ground, "training_ground");
+    expect(precinctFitnessRegen(ground)).toBeCloseTo(1.16, 2);
   });
 
   it("lists every campus building as a buff, hunger, or undocked warning", () => {

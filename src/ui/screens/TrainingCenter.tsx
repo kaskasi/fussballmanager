@@ -15,8 +15,10 @@ import {
   isTrainingSlotEmpty,
   isTrainingSlotPastForSession,
   trainingUnit,
+  trainingUnitLockHint,
   trainingUnitUnlocked,
   type TrainingSlot,
+  type TrainingUnlocks,
 } from "../../development/training-units.ts";
 import { attributeLabel, growthPolyline, growthSeries } from "../player-profile.ts";
 import {
@@ -120,7 +122,7 @@ export function TrainingCenter({
   onSelectPlayer,
   focusIndividualPlayerId = null,
   onClearIndividualFocus,
-  hasTrainingHall = false,
+  trainingUnlocks = {},
   injuryRiskFactor = 1,
   trainingUnitsCompleted = 0,
   trainingUnitOutcomes = [],
@@ -153,7 +155,7 @@ export function TrainingCenter({
   /** Öffnet Tab „Individuell“ und Programm-Modal für diesen Spieler (z. B. aus Spielerakte). */
   focusIndividualPlayerId?: string | null;
   onClearIndividualFocus?: () => void;
-  hasTrainingHall?: boolean;
+  trainingUnlocks?: TrainingUnlocks;
   injuryRiskFactor?: number;
   trainingUnitsCompleted?: number;
   trainingUnitOutcomes?: (TrainingSlotOutcome | null)[];
@@ -216,7 +218,7 @@ export function TrainingCenter({
             check={check}
             intensity={intensity}
             load={load}
-            hasTrainingHall={hasTrainingHall}
+            trainingUnlocks={trainingUnlocks}
             players={players}
             clubId={clubId}
             onPickSlot={setPickSlot}
@@ -302,7 +304,7 @@ function TeamPlan({
   check,
   intensity,
   load,
-  hasTrainingHall,
+  trainingUnlocks,
   players,
   clubId,
   onPickSlot,
@@ -325,7 +327,7 @@ function TeamPlan({
   check: ReturnType<typeof validateWeeklyPlan>;
   intensity: number;
   load: ReturnType<typeof squadTrainingLoad>;
-  hasTrainingHall: boolean;
+  trainingUnlocks: TrainingUnlocks;
   players: Player[];
   clubId: string;
   onPickSlot: (slot: number | null) => void;
@@ -453,7 +455,7 @@ function TeamPlan({
       {pickSlot !== null ? (
         <UnitPickerModal
           day={slotLabel(pickSlot)}
-          hasTrainingHall={hasTrainingHall}
+          trainingUnlocks={trainingUnlocks}
           onClose={() => onPickSlot(null)}
           onPick={(unitId) => {
             const next = [...plan];
@@ -664,12 +666,12 @@ const SESSION_GROUPS: SessionGroup[] = ["technical", "physical", "mental"];
 
 function UnitPickerModal({
   day,
-  hasTrainingHall,
+  trainingUnlocks,
   onClose,
   onPick,
 }: {
   day: string;
-  hasTrainingHall: boolean;
+  trainingUnlocks: TrainingUnlocks;
   onClose: () => void;
   onPick: (unitId: string) => void;
 }) {
@@ -706,21 +708,22 @@ function UnitPickerModal({
               <h3>{GROUP_LABELS[group]}</h3>
               <ul>
                 {TRAINING_UNITS.filter((unit) => unit.group === group).map((unit) => {
-                  const unlocked = trainingUnitUnlocked(unit, { hasTrainingHall });
+                  const unlocked = trainingUnitUnlocked(unit, trainingUnlocks);
+                  const lockHint = trainingUnitLockHint(unit);
                   return (
                     <li key={unit.id}>
                       <button
                         type="button"
                         className={unlocked ? "training-modal-unit" : "training-modal-unit is-locked"}
                         disabled={!unlocked}
-                        title={unlocked ? undefined : "Braucht Trainings-Halle"}
+                        title={unlocked ? undefined : lockHint}
                         onClick={() => onPick(unit.id)}
                       >
                         <strong>{unit.label}</strong>
                         <span>
                           {unlocked
                             ? unit.skills.map((skill) => attributeLabel(skill)).join(" · ")
-                            : "Braucht Trainings-Halle"}
+                            : lockHint}
                         </span>
                       </button>
                     </li>

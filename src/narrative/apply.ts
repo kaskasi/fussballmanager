@@ -1,5 +1,6 @@
 import type { BoardState } from "../board/board-state.ts";
 import type { ClubStadium } from "../stadium/club-stadium.ts";
+import { applyRestaurantWeddingRepeat } from "../stadium/precinct-campus-events.ts";
 import { careerWeekIndex, RESTAURANT_VIRAL_WEEKS } from "../stadium/hospitality.ts";
 import { advanceClubFanbase } from "../stadium/fanbase.ts";
 import type { Player } from "../types/player.ts";
@@ -179,6 +180,9 @@ export function applyFanFeedBeat(
         ...nextStadium,
         restaurant_overtime_week: now + 1,
       };
+    }
+    if (beat.id.startsWith("hospitality_wedding_s")) {
+      nextStadium = applyRestaurantWeddingRepeat(nextStadium, calendar.season, calendar.week);
     }
   }
   return { story: nextStory, stadium: nextStadium };

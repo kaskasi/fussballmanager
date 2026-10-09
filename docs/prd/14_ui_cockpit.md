@@ -277,10 +277,9 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
   Effekt folgt belegter Fläche, und nur wenn das Gebäude am Straßennetz hängt.
   Startfarm ist 10×10, komplett owned, mit einer Straße von der Autobahn (oben
   außen) zur Arena — wer daneben baut, verschenkt Buffs (⚠️).
-  Erweiterung wie bei Rosenberg: vier **2×5-Plättchen**, nur an den Seiten,
-  abwechselnd links/rechts über „Erweiterung kaufen“. Nach 4 Käufen sind
-  links und rechts je 2 Spalten × 10 Reihen dazugekommen (Board 14×10).
-  Kein Kranz aus 1×1-Schlössern.
+  **v2 (2026-03):** Das volle **14×10**-Board ist von Anfang an owned — keine
+  kostenpflichtigen 2×5-Erweiterungen mehr (Layout-Spiel, kein Land-Grind).
+  Legacy-Saves migrieren auf volle Fläche.
   Straße ziehen wie in Sim City — benachbarte Zellen verbinden sich zum Netz.
   Stadtanschluss sitzt außerhalb oben (Autobahn).
   Jedes Gebäude und die Arena docken an das Straßennetz — direkt an die Autobahn
@@ -292,12 +291,11 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
   Fanshop und Trainingszentrum haben weiter Qualitäts-Level (Shop / Halle /
   Fitness / Pool / Physio). 1×1-Parzellen bleiben als Haken für späteres Deko
   (Baum, Bank) ohne Buff — Landkauf ist 2×5-Plättchen.
-  Imbiss (Bude/Zelt) und Fanshop zahlen **jede Woche × Auslastung**: Heimspiel
-  nutzt die Ticket-Fill der Blöcke; Auswärts/kein Spiel eine kleine
-  Besucher-Quote (4–12 %, Fanbase + Gelände). Jeder Stand hat eigene
-  Vollhaus-Kapazität (z. B. €1000 je Würstchenbude-Zelle) — kein globaler
-  Wurst-Kuchen. Trainingseffekte skalieren nicht. Shirt-Besuch wegen neuem
-  Merch ist F6.7 (SKU, später).
+  Imbiss (Bude/Zelt) und Fanshop: **Durchsatz × Besucher × Fanbasis-Faktor**.
+  Heimspiel nutzt Ticket-Fill; Auswärts/Midweek `precinctAwayWeekCommerceFill`
+  (Fanbasis + **Bus + Fan-Service** = organisierte Auswärtsfahrten). Shop-Level
+  erhöht Durchsatz, kein hartes Umsatz-Cap. **Training:** Campus gibt keine
+  Growth-Multiplikatoren mehr — Halle = Unlock, Fitness/Pool/Physio = Regen.
   Hotel und Restaurant (einmal, docked-only) zahlen über **Auslastung**, nicht
   über Training: Hotel steigt in Heimspiel-Wochen mit der Fanbasis des Gasts;
   Restaurant mit der eigenen Fanbasis, Story kann 12 Wochen 100% pinnen.

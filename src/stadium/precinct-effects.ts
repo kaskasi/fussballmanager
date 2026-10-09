@@ -5,11 +5,19 @@ import {
   dockedOccupiedCells,
   occupiedCells,
   precinctBuildingLevel,
+  precinctBuildingStageLabel,
   precinctHasTrainingHall,
   type PrecinctBuilding,
   type PrecinctState,
 } from "./precinct.ts";
+import { DEFAULT_FANBASE } from "./club-stadium.ts";
 import { formatClubCash } from "../economy/club-finances.ts";
+
+/** Reference fanbase — commerce scale 1.0 at this value. */
+const NEUTRAL_FANBASE = 60;
+const VISIT_FILL_MIN = 0.04;
+const VISIT_FILL_MAX = 0.18;
+const AWAY_VISIT_CAP = 0.22;
 
 function fillParts(state: PrecinctState) {
   const parking = dockedOccupiedCells(state, "parking");
@@ -36,24 +44,65 @@ function fillParts(state: PrecinctState) {
 
 function trainingParts(state: PrecinctState) {
   const dockedGround = dockedOccupiedCells(state, "training_ground") > 0;
-  const ground = dockedGround ? precinctBuildingLevel(state, "training_ground") : 0;
-  const hall = dockedGround && precinctHasTrainingHall(state) ? 0.12 : ground > 0 ? 0.05 : 0;
-  const extraPitches = dockedOccupiedCells(state, "training_pitch") * 0.008;
-  const youth = dockedOccupiedCells(state, "youth_pitch") * 0.008;
+  const hall = dockedGround && precinctHasTrainingHall(state) ? 1 : 0;
+  const extraPitches =
+    dockedOccupiedCells(state, "training_pitch") > 0
+      ? precinctBuildingLevel(state, "training_pitch")
+      : 0;
+  const youth =
+    dockedOccupiedCells(state, "youth_pitch") > 0 ? precinctBuildingLevel(state, "youth_pitch") : 0;
   return { hall, extraPitches, youth };
 }
 
 function fanbaseParts(state: PrecinctState) {
   const shop = dockedOccupiedCells(state, "fanshop") > 0 ? precinctBuildingLevel(state, "fanshop") : 0;
   const shopArea = Math.max(0, dockedOccupiedCells(state, "fanshop") - 4) * 0.02;
-  const clubhouse = dockedOccupiedCells(state, "clubhouse") > 0 ? 0.06 : 0;
-  const beer = dockedOccupiedCells(state, "beer_tent") * 0.015;
+  const clubhouse = dockedOccupiedCells(state, "clubhouse") > 0 ? 0.08 : 0;
+  const beer = dockedOccupiedCells(state, "beer_tent") * 0.018;
+  const away = precinctAwayFanOrganizerBonus(state) * 0.45;
   return {
-    fanshop: shop > 0 ? shop * 0.12 + shopArea : 0,
+    fanshop: shop > 0 ? shop * 0.14 + shopArea : 0,
     clubhouse,
     beer,
-    services: dockedOccupiedCells(state, "fan_services") > 0 ? 0.04 : 0,
+    services: dockedOccupiedCells(state, "fan_services") > 0 ? 0.07 : 0,
+    away,
   };
+}
+
+export function precinctAwayFanOrganizerBonus(state: PrecinctState | undefined): number {
+  if (!state) return 0;
+  const bus = dockedOccupiedCells(state, "bus") > 0;
+  const services = dockedOccupiedCells(state, "fan_services") > 0;
+  const transit = dockedOccupiedCells(state, "transit") > 0;
+  if (transit && services) return 0.1;
+  if (bus && services) return 0.08;
+  if (bus) return 0.03;
+  if (services) return 0.025;
+  return 0;
+}
+
+function normalizeFanbase(fanbase?: number): number {
+  return Math.min(95, Math.max(25, fanbase ?? NEUTRAL_FANBASE));
+}
+
+/** Fan pull + Fan-Service buildings; away weeks add organized travel boost. */
+export function fanbaseCommerceScale(
+  fanbase: number,
+  state: PrecinctState | undefined,
+  isHomeMatchWeek: boolean,
+): number {
+  const norm = (normalizeFanbase(fanbase) - 25) / 70;
+  let scale = 0.72 + norm * 0.56;
+  if (state) {
+    if (dockedOccupiedCells(state, "fan_services") > 0) scale += 0.05;
+    if (dockedOccupiedCells(state, "clubhouse") > 0) scale += 0.04;
+    const shop = dockedOccupiedCells(state, "fanshop") > 0 ? precinctBuildingLevel(state, "fanshop") : 0;
+    if (shop > 0) scale += shop * 0.012;
+  }
+  if (!isHomeMatchWeek) {
+    scale += precinctAwayFanOrganizerBonus(state) * (0.75 + norm * 0.35);
+  }
+  return scale;
 }
 
 /** Additive fill-rate bonus from Gelände buildings (PRD 14.7). */
@@ -66,38 +115,39 @@ export function precinctFillRateBonus(state: PrecinctState | undefined): number 
 export function precinctWeeklyFanbaseBonus(state: PrecinctState | undefined, occupancy = 1): number {
   if (!state) return 0;
   const parts = fanbaseParts(state);
-  const full = parts.fanshop + parts.clubhouse + parts.beer + parts.services;
+  const full = parts.fanshop + parts.clubhouse + parts.beer + parts.services + parts.away;
   return full * clampOccupancy(occupancy);
 }
 
-/**
- * Training environment multiplier from campus (on top of coaching staff).
- * Hall is the big step; extra pitches add a small bump.
- */
-export function precinctTrainingEnvironment(state: PrecinctState | undefined): number {
-  if (!state) return 1;
-  const parts = trainingParts(state);
-  const extra = parts.hall + parts.extraPitches + parts.youth;
-  if (extra <= 0) return 1;
-  return 1 + extra;
+/** Campus no longer caps growth — hall unlock lives in `precinctHasTrainingHall`. */
+export function precinctTrainingEnvironment(_state: PrecinctState | undefined): number {
+  return 1;
 }
 
-/** Fitness/Pool/Physio recovery on the Trainingszentrum (docked). Halle stays growth. */
+/** Pool (Stufe 4+) — Erholung zwischen den Spielen. Fitness (3) leicht, Halle (2) nicht. */
 export function precinctFitnessRegen(state: PrecinctState | undefined): number {
   if (!state) return 1;
   if (dockedOccupiedCells(state, "training_ground") <= 0) return 1;
   const level = precinctBuildingLevel(state, "training_ground");
-  if (level >= 5) return 1.18;
-  if (level >= 4) return 1.14;
-  if (level >= 3) return 1.08;
+  if (level >= 4) return 1.16;
+  if (level >= 3) return 1.05;
   return 1;
 }
 
-/** Physio slightly cuts injury risk. */
+/** Physio (Stufe 5) am TZ + Kunstrasen/Hybrid auf dem Platz. */
 export function precinctInjuryRiskFactor(state: PrecinctState | undefined): number {
   if (!state) return 1;
-  if (dockedOccupiedCells(state, "training_ground") <= 0) return 1;
-  return precinctBuildingLevel(state, "training_ground") >= 5 ? 0.88 : 1;
+  let factor = 1;
+  if (dockedOccupiedCells(state, "training_ground") > 0) {
+    if (precinctBuildingLevel(state, "training_ground") >= 5) factor *= 0.86;
+  }
+  if (dockedOccupiedCells(state, "training_pitch") > 0) {
+    const pitch = precinctBuildingLevel(state, "training_pitch");
+    if (pitch >= 3) factor *= 0.9;
+    else if (pitch >= 2) factor *= 0.94;
+    else if (pitch >= 1) factor *= 0.97;
+  }
+  return factor;
 }
 
 /** Merch COGS multiplier: fanshop upgrade buys cheaper. */
@@ -112,38 +162,67 @@ export function precinctMerchCogsMultiplier(state: PrecinctState | undefined): n
 export const KIOSK_FULL_PER_CELL = 1000;
 /** Full-house margin per docked beer-tent cell. */
 export const BEER_FULL_PER_CELL = 900;
-const VISIT_FILL_MIN = 0.04;
-const VISIT_FILL_MAX = 0.12;
-
 function clampOccupancy(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.min(1, Math.max(0, value));
 }
 
-function scaleByOccupancy(full: number, occupancy = 1): number {
-  return Math.round(full * clampOccupancy(occupancy));
+function scaleCommerceIncome(
+  throughput: number,
+  occupancy: number,
+  fanbase: number,
+  state: PrecinctState | undefined,
+  isHomeMatchWeek: boolean,
+): number {
+  if (throughput <= 0) return 0;
+  return Math.round(
+    throughput *
+      clampOccupancy(occupancy) *
+      fanbaseCommerceScale(fanbase, state, isHomeMatchWeek),
+  );
 }
 
-/** Sightseeing / midweek visitors — never a full match crowd. */
+/** Sightseeing / midweek visitors — fanbase-driven, campus signage helps. */
 export function precinctVisitFill(fanbase: number, state: PrecinctState | undefined): number {
-  const fans = Math.min(95, Math.max(25, fanbase));
-  const fromFans = VISIT_FILL_MIN + ((fans - 25) / 70) * 0.05;
-  const fromCampus = Math.min(0.03, precinctFillRateBonus(state) * 0.2);
-  return Math.min(VISIT_FILL_MAX, Math.max(VISIT_FILL_MIN, fromFans + fromCampus));
+  const fans = normalizeFanbase(fanbase);
+  const fromFans = VISIT_FILL_MIN + ((fans - 25) / 70) * 0.08;
+  const fromCampus = Math.min(0.04, precinctFillRateBonus(state) * 0.22);
+  const fromSupport = state
+    ? (dockedOccupiedCells(state, "fan_services") > 0 ? 0.012 : 0) +
+      (dockedOccupiedCells(state, "clubhouse") > 0 ? 0.008 : 0)
+    : 0;
+  return Math.min(VISIT_FILL_MAX, Math.max(VISIT_FILL_MIN, fromFans + fromCampus + fromSupport));
+}
+
+/** Away / no-match weeks — organized away travel lifts Gelände footfall. */
+export function precinctAwayWeekCommerceFill(
+  fanbase: number,
+  state: PrecinctState | undefined,
+): number {
+  const base = precinctVisitFill(fanbase, state);
+  const norm = (normalizeFanbase(fanbase) - 25) / 70;
+  const away = precinctAwayFanOrganizerBonus(state) * (0.55 + norm * 0.45);
+  return Math.min(AWAY_VISIT_CAP, base + away);
+}
+
+function commerceLevelMultiplier(state: PrecinctState, building: "kiosk" | "beer_tent"): number {
+  const level = precinctBuildingLevel(state, building);
+  if (level <= 1) return 1;
+  return building === "kiosk" ? 1.35 : 1.28;
 }
 
 export function kioskFullCapacity(state: PrecinctState | undefined): number {
   if (!state) return 0;
   const cells = dockedOccupiedCells(state, "kiosk");
   if (cells <= 0) return 0;
-  return cells * KIOSK_FULL_PER_CELL;
+  return Math.round(cells * KIOSK_FULL_PER_CELL * commerceLevelMultiplier(state, "kiosk"));
 }
 
 export function beerFullCapacity(state: PrecinctState | undefined): number {
   if (!state) return 0;
   const cells = dockedOccupiedCells(state, "beer_tent");
   if (cells <= 0) return 0;
-  return cells * BEER_FULL_PER_CELL;
+  return Math.round(cells * BEER_FULL_PER_CELL * commerceLevelMultiplier(state, "beer_tent"));
 }
 
 export function fanshopFullCapacity(state: PrecinctState | undefined): number {
@@ -154,24 +233,60 @@ export function fanshopFullCapacity(state: PrecinctState | undefined): number {
   return Math.round(4_000 * shop * (1.15 - cogs) * (1 + Math.max(0, dockedOccupiedCells(state, "fanshop") - 4) * 0.08));
 }
 
-/** Weekly sausage-stall margin. Per-stand capacity × occupancy — no shared sausage pie. */
-export function weeklyKioskIncome(state: PrecinctState | undefined, occupancy = 1): number {
-  return scaleByOccupancy(kioskFullCapacity(state), occupancy);
+/** Weekly sausage-stall margin — throughput × visitors × fan pull. */
+export function weeklyKioskIncome(
+  state: PrecinctState | undefined,
+  occupancy = 1,
+  fanbase = NEUTRAL_FANBASE,
+  isHomeMatchWeek = true,
+): number {
+  return scaleCommerceIncome(
+    kioskFullCapacity(state),
+    occupancy,
+    fanbase,
+    state,
+    isHomeMatchWeek,
+  );
 }
 
-/** Weekly beer-tent margin. Scales with docked tent area × occupancy. */
-export function weeklyBeerIncome(state: PrecinctState | undefined, occupancy = 1): number {
-  return scaleByOccupancy(beerFullCapacity(state), occupancy);
+/** Weekly beer-tent margin. */
+export function weeklyBeerIncome(
+  state: PrecinctState | undefined,
+  occupancy = 1,
+  fanbase = NEUTRAL_FANBASE,
+  isHomeMatchWeek = true,
+): number {
+  return scaleCommerceIncome(beerFullCapacity(state), occupancy, fanbase, state, isHomeMatchWeek);
 }
 
-/** Weekly merch margin after wholesale (fanshop upgrade = cheaper buying). */
-export function weeklyFanshopIncome(state: PrecinctState | undefined, occupancy = 1): number {
-  return scaleByOccupancy(fanshopFullCapacity(state), occupancy);
+/** Weekly merch margin — shop level = throughput, sales = footfall. */
+export function weeklyFanshopIncome(
+  state: PrecinctState | undefined,
+  occupancy = 1,
+  fanbase = NEUTRAL_FANBASE,
+  isHomeMatchWeek = true,
+): number {
+  return scaleCommerceIncome(
+    fanshopFullCapacity(state),
+    occupancy,
+    fanbase,
+    state,
+    isHomeMatchWeek,
+  );
 }
 
-/** Wurst + Bier + Shop, paid weekly × occupancy. */
-export function weeklyPrecinctCash(state: PrecinctState | undefined, occupancy = 1): number {
-  return weeklyKioskIncome(state, occupancy) + weeklyBeerIncome(state, occupancy) + weeklyFanshopIncome(state, occupancy);
+/** Wurst + Bier + Shop, paid weekly × footfall. */
+export function weeklyPrecinctCash(
+  state: PrecinctState | undefined,
+  occupancy = 1,
+  fanbase = NEUTRAL_FANBASE,
+  isHomeMatchWeek = true,
+): number {
+  return (
+    weeklyKioskIncome(state, occupancy, fanbase, isHomeMatchWeek) +
+    weeklyBeerIncome(state, occupancy, fanbase, isHomeMatchWeek) +
+    weeklyFanshopIncome(state, occupancy, fanbase, isHomeMatchWeek)
+  );
 }
 
 export type PrecinctStatusTone = "buff" | "hunger" | "warn";
@@ -276,21 +391,31 @@ export function listPrecinctStatusEffects(state: PrecinctState | undefined): Pre
       if (def.id === "fan_services" && fans.services > 0) bits.push(`Fans ${formatFans(fans.services)}`);
     }
     if (placed && training) {
-      if (def.id === "training_ground" && training.hall > 0) {
-        bits.push(
-          precinctHasTrainingHall(state)
-            ? `Training ${formatPct(training.hall)} · Halle`
-            : `Training ${formatPct(training.hall)}`,
-        );
+      if (def.id === "training_ground") {
+        const tzLevel = precinctBuildingLevel(state, "training_ground");
+        if (precinctHasTrainingHall(state)) bits.push("Halle · Technikeinheiten+");
+        if (tzLevel >= 4) bits.push("Pool · Erholung");
+        if (tzLevel >= 5) bits.push("Physio · Verletzung↓");
         const regen = precinctFitnessRegen(state);
-        if (regen > 1) bits.push(`Fitness ×${regen.toFixed(2).replace(".", ",")}`);
+        if (regen > 1) bits.push(`Erholung ×${regen.toFixed(2).replace(".", ",")}`);
+        else if (dockedOccupiedCells(state, "training_ground") > 0) bits.push("Basis");
       }
       if (def.id === "training_pitch" && training.extraPitches > 0) {
-        bits.push(`Training ${formatPct(training.extraPitches)}`);
+        bits.push(precinctBuildingStageLabel("training_pitch", training.extraPitches));
+        if (training.extraPitches >= 1) bits.push("weniger Verletzungen");
+        if (training.extraPitches >= 2) bits.push("Outdoor-Einheiten");
+        if (training.extraPitches >= 3) bits.push("Sprint-Platz");
       }
       if (def.id === "youth_pitch" && training.youth > 0) {
-        bits.push(`Training ${formatPct(training.youth)}`);
+        bits.push(precinctBuildingStageLabel("youth_pitch", training.youth));
+        if (training.youth >= 2) bits.push("Jugend-Campus");
       }
+    }
+    if (placed && def.id === "bus" && precinctAwayFanOrganizerBonus(state) > 0) {
+      bits.push("Auswärtsfahrten");
+    }
+    if (placed && def.id === "fan_services" && precinctAwayFanOrganizerBonus(state) >= 0.08) {
+      bits.push("Auswärts-Organisation");
     }
     if (placed && def.id === "kiosk" && kioskCash > 0) {
       bits.push(`Kasse ${formatClubCash(kioskCash)} bei voller Auslastung`);
@@ -359,9 +484,15 @@ function compactMagnitude(
   }
   if (id === "bus") return fill.bus > 0 ? formatPct(fill.bus) : null;
   if (id === "transit") return fill.transit > 0 ? formatPct(fill.transit) : null;
-  if (id === "training_ground") return training.hall > 0 ? formatPct(training.hall) : null;
-  if (id === "training_pitch") return training.extraPitches > 0 ? formatPct(training.extraPitches) : null;
-  if (id === "youth_pitch") return training.youth > 0 ? formatPct(training.youth) : null;
+  if (id === "training_ground") return training.hall > 0 ? "Halle" : "Basis";
+  if (id === "training_pitch") {
+    return training.extraPitches > 0
+      ? precinctBuildingStageLabel("training_pitch", training.extraPitches)
+      : null;
+  }
+  if (id === "youth_pitch") {
+    return training.youth > 0 ? precinctBuildingStageLabel("youth_pitch", training.youth) : null;
+  }
   return null;
 }
 

@@ -49,7 +49,9 @@ import { Hint } from "../components/Hint.tsx";
 import { COMMERCE_KIOSK_PHOTO } from "../assets/hub-photos.ts";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
 
-type FinancePanelTab = "overview" | "commerce" | "runway" | "season";
+import { StadiumTicketsPanel } from "./StadiumTicketsPanel.tsx";
+
+type FinancePanelTab = "overview" | "commerce" | "tickets" | "runway" | "season";
 
 const SPARK_W = 312;
 const SPARK_H = 56;
@@ -121,9 +123,10 @@ export function FinancesScreen({
   const sparkMax = Math.max(...sparkline);
   const sparkSpan = Math.max(sparkMax - sparkMin, Math.abs(sparkMax) * 0.04, 1);
   const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium);
-  const merchFull = weeklyPrecinctCash(stadium.precinct, 1);
-  const merchWeek = weeklyPrecinctCash(stadium.precinct, occupancy);
-  const tickets = stadiumMatchdayIncome(stadium);
+  const fanbase = stadium.fanbase;
+  const merchFull = weeklyPrecinctCash(stadium.precinct, 1, fanbase, isHomeMatchWeek);
+  const merchWeek = weeklyPrecinctCash(stadium.precinct, occupancy, fanbase, isHomeMatchWeek);
+  const tickets = stadiumMatchdayIncome(stadium, season, week);
   const weeksLeft = weeksOfWages(finances.cash, wageBill);
   const belowFloor = boardCashFloor > 0 && finances.cash < boardCashFloor;
   const monthNegative = waterfall.net < 0;
@@ -142,6 +145,7 @@ export function FinancesScreen({
             [
               ["overview", "Übersicht"],
               ["commerce", "Commerce"],
+              ["tickets", "Eintritt"],
               ["runway", "Runway"],
               ["season", "Saison"],
             ] as const
@@ -278,6 +282,12 @@ export function FinancesScreen({
           </p>
         </button>
       </section>
+          </div>
+        ) : null}
+
+        {panelTab === "tickets" ? (
+          <div className="fm-tab-panel" aria-label="Eintritt">
+            <StadiumTicketsPanel stadium={stadium} finances={finances} season={season} week={week} />
           </div>
         ) : null}
 

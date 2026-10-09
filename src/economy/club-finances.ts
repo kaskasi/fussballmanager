@@ -119,9 +119,11 @@ export function matchdayTicketIncome(
   divisionId: DivisionEconomyId,
   isHomeMatch: boolean,
   stadium?: ClubStadium,
+  season?: number,
+  week?: number,
 ): number {
   if (!isHomeMatch) return 0;
-  if (stadium) return stadiumMatchdayIncome(stadium);
+  if (stadium) return stadiumMatchdayIncome(stadium, season, week);
   const defaults = divisionEconomy(divisionId).stadium_defaults;
   return Math.round(defaults.capacity * defaults.fill_rate * defaults.avg_ticket_eur);
 }
@@ -183,14 +185,21 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
     context.divisionId,
     context.isHomeMatchWeek,
     context.stadium,
+    context.season,
+    context.week,
   );
   if (tickets > 0) {
     lines.push({ kind: "matchday_tickets", amount: tickets, week });
   }
+  const occupancy =
+    context.commerceOccupancy ?? weekCommerceOccupancy(context.isHomeMatchWeek, context.stadium);
+  const fanbase = context.stadium?.fanbase;
   const merch =
     weeklyPrecinctCash(
       context.stadium?.precinct,
-      context.commerceOccupancy ?? weekCommerceOccupancy(context.isHomeMatchWeek, context.stadium),
+      occupancy,
+      fanbase,
+      context.isHomeMatchWeek,
     ) + (context.hospitalityIncome ?? 0);
   if (merch > 0) {
     lines.push({ kind: "concessions", amount: merch, week });
@@ -304,6 +313,20 @@ export function spendClubCash(
 ): ClubFinances {
   if (!Number.isFinite(amount) || amount <= 0) return finances;
   const line: FinanceLine = { kind, amount: -amount, week };
+  let next = applyFinanceLines(finances, [line]);
+  next = appendPendingFinanceLines(next, [line]);
+  return next;
+}
+
+/** Reverse capital spend — e.g. demolished Gelände refund (PRD 14.7). */
+export function creditClubCash(
+  finances: ClubFinances,
+  amount: number,
+  week: number,
+  kind: FinanceLineKind = "infrastructure",
+): ClubFinances {
+  if (!Number.isFinite(amount) || amount <= 0) return finances;
+  const line: FinanceLine = { kind, amount, week };
   let next = applyFinanceLines(finances, [line]);
   next = appendPendingFinanceLines(next, [line]);
   return next;

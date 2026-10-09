@@ -22,6 +22,7 @@ function fanTemplateId(beatId: string): string {
   if (beatId.startsWith("fan_table_worry_") || beatId.startsWith("fan_ambient_")) {
     return "fan_ambient";
   }
+  if (beatId.startsWith("hospitality_wedding_s")) return beatId;
   return beatId.replace(/_s\d+$/, "");
 }
 

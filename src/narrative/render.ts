@@ -85,6 +85,14 @@ export function fanFeedMessage(
         message: "Die Feier wollte nicht nach Hause. Überstunden fürs Personal — das kostet extra.",
       };
     default:
+      if (beatId.startsWith("hospitality_wedding_s")) {
+        return {
+          speaker: cast.bratwurst_vendor_name,
+          icon: "💍",
+          message:
+            "Wieder eine Hochzeit im Vereinsrestaurant — der Star des Teams war wieder mit am Tisch. Die Fans feiern, die Kasse klingelt.",
+        };
+      }
       return {
         speaker: cast.fan_rep_label,
         icon: "👥",

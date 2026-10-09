@@ -77,7 +77,9 @@ import {
   weeklyHotelIncome,
   weeklyRestaurantIncome,
 } from "../stadium/hospitality.ts";
-import { DEFAULT_FANBASE } from "../stadium/club-stadium.ts";
+import { DEFAULT_FANBASE, normalizeClubStadium } from "../stadium/club-stadium.ts";
+import { maybeStadiumMegaEventWeek } from "../stadium/precinct-campus-events.ts";
+import { advanceBlockExpansionProjects } from "../stadium/stadium-block-expansion.ts";
 import { clubFlavorFanbase } from "./club-profiles.ts";
 import { weeklyCampUpkeep } from "../youth/satellite-camps.ts";
 import { scoutNetworkWeeklyWage } from "../scouting/scout-network.ts";
@@ -333,7 +335,21 @@ export async function simulateGameWeek(
     ) +
     precinctWeeklyFanbaseBonus(session.stadium.precinct, occupancy) +
     (trainingPlanNeglected ? TRAINING_NEGLECT_FANBASE_PENALTY : 0);
-  const stadium = advanceClubFanbase(session.stadium, fanbaseDelta);
+  const stadiumAfterFanbase = advanceBlockExpansionProjects(
+    advanceClubFanbase(session.stadium, fanbaseDelta),
+    session.season,
+    nextWeek,
+  );
+  const megaEvent = maybeStadiumMegaEventWeek(
+    stadiumAfterFanbase,
+    session.season,
+    nextWeek,
+    session.masterSeed,
+  );
+  if (megaEvent.message) {
+    clubEvents = withClubEvent(clubEvents, session.season, nextWeek, "info", megaEvent.message);
+  }
+  const stadium = normalizeClubStadium(megaEvent.stadium);
   const opponentId =
     isHomeMatchWeek && leagueStep.playerFixture
       ? leagueStep.playerFixture.awayTeamId

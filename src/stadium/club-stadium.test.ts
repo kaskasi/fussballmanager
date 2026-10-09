@@ -28,6 +28,15 @@ describe("club stadium", () => {
     expect(Math.abs(fromBlocks - fromDivision)).toBeLessThan(15_000);
   });
 
+  it("keeps custom ticket prices after normalize", () => {
+    let stadium = defaultClubStadium();
+    stadium = adjustBlockTicketPrice(stadium, "north", 8);
+    const northPrice = stadium.blocks.find((block) => block.id === "north")!.ticket_price_eur;
+    expect(northPrice).toBeGreaterThan(12);
+    const again = normalizeClubStadium(stadium);
+    expect(again.blocks.find((block) => block.id === "north")!.ticket_price_eur).toBe(northPrice);
+  });
+
   it("lowers fill rate when ticket prices rise", () => {
     const stadium = defaultClubStadium();
     const north = stadium.blocks.find((block) => block.id === "north")!;

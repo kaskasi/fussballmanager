@@ -5,7 +5,7 @@ import {
   type ClubStadium,
 } from "./club-stadium.ts";
 import {
-  precinctVisitFill,
+  precinctAwayWeekCommerceFill,
   weeklyBeerIncome,
   weeklyFanshopIncome,
   weeklyKioskIncome,
@@ -26,8 +26,9 @@ export function weekCommerceOccupancy(
   stadium: ClubStadium | undefined,
 ): number {
   if (!stadium) return isHomeMatchWeek ? 0.72 : 0.06;
+  const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
   if (isHomeMatchWeek) return stadiumAttendanceFill(stadium);
-  return precinctVisitFill(stadium.fanbase ?? DEFAULT_FANBASE, stadium.precinct);
+  return precinctAwayWeekCommerceFill(fanbase, stadium.precinct);
 }
 
 export function matchdayCashBreakdown(
@@ -36,10 +37,11 @@ export function matchdayCashBreakdown(
 ): MatchdayCashBreakdown {
   const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium);
   const precinct = stadium?.precinct;
+  const fanbase = stadium?.fanbase ?? DEFAULT_FANBASE;
   const tickets = isHomeMatchWeek && stadium ? stadiumMatchdayIncome(stadium) : 0;
-  const kiosk = weeklyKioskIncome(precinct, occupancy);
-  const beer = weeklyBeerIncome(precinct, occupancy);
-  const shop = weeklyFanshopIncome(precinct, occupancy);
+  const kiosk = weeklyKioskIncome(precinct, occupancy, fanbase, isHomeMatchWeek);
+  const beer = weeklyBeerIncome(precinct, occupancy, fanbase, isHomeMatchWeek);
+  const shop = weeklyFanshopIncome(precinct, occupancy, fanbase, isHomeMatchWeek);
   return {
     home: isHomeMatchWeek,
     occupancy,

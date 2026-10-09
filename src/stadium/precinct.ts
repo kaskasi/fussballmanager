@@ -67,7 +67,8 @@ export const PRECINCT_CITY_LINK = { x: 6, y: -1, w: 2, h: 1 } as const;
  * Expansion uses 2×5 Rosenberg plates (`PRECINCT_EXPANSION_COST`).
  */
 export const PRECINCT_PARCEL_COST = 90_000;
-export const PRECINCT_EXPANSION_COST = 320_000;
+/** Land expansion is free — layout only (PRD 14.7 v2). */
+export const PRECINCT_EXPANSION_COST = 0;
 export const PRECINCT_STREET_COST = 15_000;
 
 export type PrecinctExpansionSide = "left" | "right";
@@ -99,9 +100,9 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     cap: "many",
     minW: 1,
     minH: 1,
-    maxLevel: 1,
-    upgradeCost: 0,
-    hint: "Mehrere Buden · 1×1 · Wurstverkauf + Zuschauer",
+    maxLevel: 2,
+    upgradeCost: 45_000,
+    hint: "Mehrere Buden · 1×1 · Ausbau: mehr Durchsatz",
   },
   {
     id: "beer_tent",
@@ -111,9 +112,9 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     cap: "unique",
     minW: 2,
     minH: 2,
-    maxLevel: 1,
-    upgradeCost: 0,
-    hint: "Nur eines · 2×2 · Bierverkauf + Zuschauer",
+    maxLevel: 2,
+    upgradeCost: 70_000,
+    hint: "Nur eines · 2×2 · Ausbau: mehr Bier-Umsatz",
   },
   {
     id: "fanshop",
@@ -123,9 +124,9 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     cap: "unique",
     minW: 2,
     minH: 2,
-    maxLevel: 3,
+    maxLevel: 5,
     upgradeCost: 160_000,
-    hint: "Nur einer · 2×2 · Ausbau: Fanwachstum",
+    hint: "Nur einer · 2×2 · Ausbau: Merch + Fans",
   },
   {
     id: "parking",
@@ -183,9 +184,9 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     cap: "unique",
     minW: 2,
     minH: 3,
-    maxLevel: 1,
-    upgradeCost: 0,
-    hint: "Nur einer · min. 2×3 · extra Rasen, mehr Training",
+    maxLevel: 3,
+    upgradeCost: 120_000,
+    hint: "Nur einer · min. 2×3 · Ausbau: Outdoor-Einheiten",
   },
   {
     id: "youth_pitch",
@@ -195,8 +196,8 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     cap: "unique",
     minW: 2,
     minH: 2,
-    maxLevel: 1,
-    upgradeCost: 0,
+    maxLevel: 2,
+    upgradeCost: 90_000,
     hint: "Nur einer · min. 2×2 · extra Jugend-Training",
   },
   {
@@ -209,7 +210,7 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     minH: 2,
     maxLevel: 1,
     upgradeCost: 0,
-    hint: "Nur einer · 1×2 · Fans + Zuschauer",
+    hint: "Nur einer · 1×2 · Fan-Service + Auswärtsfahrten mit Bus",
   },
   {
     id: "clubhouse",
@@ -291,15 +292,20 @@ export function isCityRampCell(x: number, y: number): boolean {
   return y === 0 && x >= PRECINCT_CITY_LINK.x && x < PRECINCT_CITY_LINK.x + PRECINCT_CITY_LINK.w;
 }
 
+/** All playable cells on the 14×10 board except the arena footprint. */
 export function defaultOwnedCells(): Record<string, true> {
   const owned: Record<string, true> = {};
-  for (let y = PRECINCT_CORE.y; y < PRECINCT_CORE.y + PRECINCT_CORE.h; y += 1) {
-    for (let x = PRECINCT_CORE.x; x < PRECINCT_CORE.x + PRECINCT_CORE.w; x += 1) {
+  for (let y = 0; y < PRECINCT_HEIGHT; y += 1) {
+    for (let x = 0; x < PRECINCT_WIDTH; x += 1) {
       if (isPrecinctStadiumCell(x, y)) continue;
       owned[precinctCellKey(x, y)] = true;
     }
   }
   return owned;
+}
+
+export function ensureFullPrecinctOwned(owned: Record<string, true>): Record<string, true> {
+  return { ...defaultOwnedCells(), ...owned };
 }
 
 /** One road from the highway down to the arena's north edge. */
@@ -355,7 +361,7 @@ export function canBuyPrecinctExpansion(
   if (!tile) {
     return { allowed: false, cost: 0, tile: null, reason: "Gelände ist voll." };
   }
-  if (cash < PRECINCT_EXPANSION_COST) {
+  if (PRECINCT_EXPANSION_COST > 0 && cash < PRECINCT_EXPANSION_COST) {
     return {
       allowed: false,
       cost: PRECINCT_EXPANSION_COST,
@@ -430,14 +436,50 @@ export function precinctHasTrainingHall(state: PrecinctState | undefined): boole
   return precinctBuildingLevel(state, "training_ground") >= 2;
 }
 
-export function precinctNextUpgradeLabel(building: PrecinctBuilding, currentLevel: number): string {
-  if (building === "training_ground") {
-    if (currentLevel === 1) return "Halle";
-    if (currentLevel === 2) return "Fitness";
-    if (currentLevel === 3) return "Pool";
-    if (currentLevel === 4) return "Physio";
+export function precinctTrainingPitchLevel(state: PrecinctState | undefined): number {
+  if (!state || dockedOccupiedCells(state, "training_pitch") <= 0) return 0;
+  return precinctBuildingLevel(state, "training_pitch");
+}
+
+export function precinctYouthPitchLevel(state: PrecinctState | undefined): number {
+  if (!state || dockedOccupiedCells(state, "youth_pitch") <= 0) return 0;
+  return precinctBuildingLevel(state, "youth_pitch");
+}
+
+/** Current upgrade stage name (Lv1 = placed baseline). */
+export function precinctBuildingStageLabel(building: PrecinctBuilding, level: number): string {
+  if (level <= 0) return "";
+  switch (building) {
+    case "training_ground":
+      if (level === 1) return "Basis";
+      if (level === 2) return "Halle";
+      if (level === 3) return "Fitness";
+      if (level === 4) return "Pool";
+      if (level === 5) return "Physio";
+      break;
+    case "fanshop":
+      return ["", "Shop", "Erweiterung", "Flagship", "Online", "Erlebnis"][level] ?? `Stufe ${level}`;
+    case "training_pitch":
+      return ["", "Rasen", "Kunstrasen", "Hybrid"][level] ?? `Stufe ${level}`;
+    case "youth_pitch":
+      return ["", "Kleinfeld", "Akademie-Rasen"][level] ?? `Stufe ${level}`;
+    case "kiosk":
+      return level >= 2 ? "Doppelstand" : "Bude";
+    case "beer_tent":
+      return level >= 2 ? "Festzelt" : "Zelt";
+    default:
+      break;
   }
-  return `Lv${currentLevel + 1}`;
+  return level > 1 ? `Stufe ${level}` : "Basis";
+}
+
+export function precinctNextUpgradeLabel(building: PrecinctBuilding, currentLevel: number): string {
+  const next = currentLevel + 1;
+  if (building === "training_ground") {
+    return precinctBuildingStageLabel(building, next);
+  }
+  const stage = precinctBuildingStageLabel(building, next);
+  return stage || `Lv${next}`;
 }
 
 export function precinctPlacementCost(
@@ -670,19 +712,16 @@ export function patchRectOnEdge(
     : { ...patch, y: patch.y + 1, h: patch.h - 1 };
 }
 
-export function precinctNudgeCost(patch: PrecinctPatch, edge: PrecinctEdge, delta: 1 | -1 = 1): number {
-  const next = patchRectOnEdge(patch, edge, delta);
-  if (!next) return 0;
-  const extra = next.w * next.h - patch.w * patch.h;
-  if (extra <= 0) return 0;
-  return extra * extraCellCost(patch.building);
+/** Resize / nudge footprint — layout only, no cash (PRD 14.7). */
+export function precinctNudgeCost(_patch: PrecinctPatch, _edge: PrecinctEdge, _delta: 1 | -1 = 1): number {
+  return 0;
 }
 
 export function canNudgePrecinctPatch(
   state: PrecinctState,
   patchId: string,
   edge: PrecinctEdge,
-  cash: number,
+  _cash: number,
   delta: 1 | -1 = 1,
 ): { allowed: boolean; cost: number; reason?: string } {
   const patch = state.patches.find((entry) => entry.id === patchId);
@@ -693,7 +732,6 @@ export function canNudgePrecinctPatch(
     return { allowed: false, cost: 0, reason: "Kein Platz." };
   }
   const cost = precinctNudgeCost(patch, edge, delta);
-  if (cost > cash) return { allowed: false, cost, reason: "Nicht genug Cash." };
   return { allowed: true, cost };
 }
 
@@ -723,6 +761,51 @@ export function nudgePrecinctPatch(
 export function patchIsMinSize(patch: PrecinctPatch): boolean {
   const def = precinctBuildingDef(patch.building);
   return patch.w <= def.minW && patch.h <= def.minH;
+}
+
+function precinctUpgradeInvested(def: PrecinctBuildingDef, level: number): number {
+  if (level <= 1 || def.upgradeCost <= 0) return 0;
+  let sum = 0;
+  for (let l = 1; l < level; l += 1) {
+    sum += Math.round(def.upgradeCost * (1 + (l - 1) * 0.35));
+  }
+  return sum;
+}
+
+/** Base purchase + upgrades when removing the last instance of a building type. */
+export function precinctPatchRefund(state: PrecinctState, patch: PrecinctPatch): number {
+  const def = precinctBuildingDef(patch.building);
+  let refund = def.cost;
+  if (countBuilding(state, patch.building) === 1) {
+    refund += precinctUpgradeInvested(def, precinctBuildingLevel(state, patch.building));
+  }
+  return refund;
+}
+
+export function removePrecinctPatch(
+  state: PrecinctState,
+  patchId: string,
+): { state: PrecinctState; refund: number } {
+  const patch = state.patches.find((entry) => entry.id === patchId);
+  if (!patch) return { state, refund: 0 };
+  const refund = precinctPatchRefund(state, patch);
+  const patches = state.patches.filter((entry) => entry.id !== patchId);
+  const levels = { ...state.levels };
+  if (countBuilding({ ...state, patches }, patch.building) === 0) {
+    delete levels[patch.building];
+  }
+  return { state: { ...state, patches, levels }, refund };
+}
+
+export function removeStreetCell(
+  state: PrecinctState,
+  x: number,
+  y: number,
+): { state: PrecinctState; refund: number } {
+  if (!isStreetCell(state, x, y)) return { state, refund: 0 };
+  const streets = { ...state.streets };
+  delete streets[precinctCellKey(x, y)];
+  return { state: { ...state, streets }, refund: PRECINCT_STREET_COST };
 }
 
 export function shrinkPrecinctPatchToMin(state: PrecinctState, patchId: string): PrecinctState {
@@ -1190,5 +1273,5 @@ export function normalizePrecinct(state?: PrecinctState & { cells?: Record<strin
       levels[def.id] = Math.min(def.maxLevel, Math.max(1, stored));
     }
   }
-  return { ...next, patches: valid, owned, streets, levels };
+  return { ...next, patches: valid, owned: ensureFullPrecinctOwned(owned), streets, levels };
 }

@@ -7,6 +7,7 @@
  * Start: Straße Stadt → Arena. Gebäude ohne Netz: ⚠️
  */
 import { formatClubCash } from "../../economy/club-finances.ts";
+import { infrastructureCostForWeek } from "../../economy/early-pacing.ts";
 import { PrecinctStatus } from "./PrecinctStatus.tsx";
 import {
   PRECINCT_BUILDINGS,
@@ -14,6 +15,7 @@ import {
   PRECINCT_EXPANSION_COST,
   PRECINCT_STADIUM,
   PRECINCT_STREET_COST,
+  isStreetCell,
   arenaDocksStreetNetwork,
   canBuyPrecinctExpansion,
   canNudgePrecinctPatch,
@@ -24,7 +26,6 @@ import {
   isCityRampCell,
   isOwnedCell,
   isPrecinctStadiumCell,
-  isStreetCell,
   manhattanStreetCells,
   patchAt,
   patchDocksStreetNetwork,
@@ -33,9 +34,10 @@ import {
   pathFootprintToCity,
   precinctBuildingDef,
   precinctBuildingLevel,
+  precinctBuildingStageLabel,
+  precinctPatchRefund,
   precinctExpansionAt,
   precinctExpansionOwned,
-  precinctNudgeCost,
   precinctNextUpgradeLabel,
   precinctPlacementCost,
   streetLinks,
@@ -61,24 +63,42 @@ export function PrecinctGrid({
   onPlaceStreet,
   onExpand,
   onShrinkToMin,
+  onRemovePatch,
+  onRemoveStreet,
+  seasonWeek,
 }: {
   precinct: PrecinctState;
   cash: number;
   stadiumName: string;
+  seasonWeek: number;
   onPlace: (building: PrecinctBuilding, x: number, y: number, from?: { x: number; y: number }) => void;
   onUpgrade: (building: PrecinctBuilding) => void;
   onBuyParcel: () => void;
   onPlaceStreet: (cells: Array<{ x: number; y: number }>) => void;
   onExpand: (patchId: string, edge: PrecinctEdge, delta?: 1 | -1) => void;
   onShrinkToMin: (patchId: string) => void;
+  onRemovePatch: (patchId: string) => void;
+  onRemoveStreet: (x: number, y: number) => void;
 }) {
   const [picked, setPicked] = useState<PalettePick | null>(null);
   const [selectedPatchId, setSelectedPatchId] = useState<string | null>(null);
+  const [selectedStreet, setSelectedStreet] = useState<{ x: number; y: number } | null>(null);
   const [roadFrom, setRoadFrom] = useState<{ x: number; y: number } | null>(null);
   const [roadTo, setRoadTo] = useState<{ x: number; y: number } | null>(null);
   const roadMoved = useRef(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const selected = precinct.patches.find((patch) => patch.id === selectedPatchId);
+  const selectedDef = selected ? precinctBuildingDef(selected.building) : null;
+  const selectedLevel = selected ? precinctBuildingLevel(precinct, selected.building) : 0;
+  const selectedUpgrade = selected
+    ? canUpgradePrecinctBuilding(precinct, selected.building, cash)
+    : { allowed: false as const, cost: 0, reason: undefined as string | undefined };
+  const selectedRefund =
+    selected && selectedDef
+      ? infrastructureCostForWeek(precinctPatchRefund(precinct, selected), seasonWeek)
+      : 0;
+  const streetRefund = infrastructureCostForWeek(PRECINCT_STREET_COST, seasonWeek);
+  const canPaintStreet = cash >= PRECINCT_STREET_COST;
   const arenaDocked = arenaDocksStreetNetwork(precinct);
   const expansion = canBuyPrecinctExpansion(precinct, cash);
   const roadPlan =
@@ -241,18 +261,21 @@ export function PrecinctGrid({
           <button
             type="button"
             className={
-              cash < PRECINCT_STREET_COST
-                ? "stadium-precinct-tile is-locked"
-                : picked === "street"
-                  ? "stadium-precinct-tile is-picked"
+              picked === "street"
+                ? "stadium-precinct-tile is-picked"
+                : !canPaintStreet
+                  ? "stadium-precinct-tile is-street-erase"
                   : "stadium-precinct-tile"
             }
-            disabled={cash < PRECINCT_STREET_COST}
-            data-tooltip={`Straße · ${formatClubCash(PRECINCT_STREET_COST)}/Zelle · ziehen wie in Sim City`}
-            aria-label="Straße legen"
+            data-tooltip={
+              canPaintStreet
+                ? `Straße · ${formatClubCash(PRECINCT_STREET_COST)}/Zelle · ziehen legt · Klick entfernt`
+                : `Straße · Klick auf Feld entfernt · Neubau: ${formatClubCash(PRECINCT_STREET_COST)}`
+            }
+            aria-label="Straße legen oder entfernen"
             onClick={() => {
-              if (cash < PRECINCT_STREET_COST) return;
               setSelectedPatchId(null);
+              setSelectedStreet(null);
               setPicked((current) => (current === "street" ? null : "street"));
             }}
           >
@@ -263,16 +286,26 @@ export function PrecinctGrid({
           {roadPlan && roadPlan.cost > 0 ? (
             <p>Straße {formatClubCash(roadPlan.cost)}</p>
           ) : picked === "street" ? (
-            <p>Ziehen baut die Straße. Klick auf ⚠️ legt den Weg zum Netz.</p>
+            <p>
+              {canPaintStreet
+                ? "Ziehen legt · Klick auf Straße entfernt"
+                : "Nur entfernen (zu wenig Cash für Neubau)"}{" "}
+              · ⚠️ legt Weg zum Netz.
+            </p>
           ) : null}
         </div>
       </aside>
+      <div className="stadium-precinct-map-stack">
       <div
         className={picked === "street" ? "stadium-precinct-map is-paving" : "stadium-precinct-map"}
         onPointerDown={(event) => {
           if (picked !== "street" || event.button !== 0) return;
+          const target = event.target instanceof Element ? event.target : null;
+          if (target?.closest(".stadium-precinct-tile.is-street")) return;
           const cell = cellFromPointer(event);
           if (!cell) return;
+          if (isStreetCell(precinct, cell.x, cell.y)) return;
+          if (!canPaintStreet) return;
           event.preventDefault();
           event.currentTarget.setPointerCapture(event.pointerId);
           roadMoved.current = false;
@@ -376,6 +409,7 @@ export function PrecinctGrid({
               const hungry = !patchDocksStreetNetwork(precinct, patch);
               const canShrink = !patchIsMinSize(patch);
               const def = precinctBuildingDef(patch.building);
+              const stageLabel = precinctBuildingStageLabel(patch.building, level);
               const growHandles: Array<{ edge: PrecinctEdge; icon: string; label: string }> = [
                 { edge: "n", icon: "↑", label: "Nach oben" },
                 { edge: "e", icon: "→", label: "Nach rechts" },
@@ -396,6 +430,8 @@ export function PrecinctGrid({
                   className={
                     [
                       "stadium-precinct-tile is-filled is-patch",
+                      `is-building-${patch.building}`,
+                      level > 0 ? `is-tier-${Math.min(level, 5)}` : "",
                       movingHere ? "is-picked" : "",
                       hungry ? "is-hungry" : "",
                     ]
@@ -411,7 +447,7 @@ export function PrecinctGrid({
                     meta
                       ? hungry
                         ? `${meta.label} · dockt nicht ans Straßennetz · 🛣️-Klick legt die Straße`
-                        : `${meta.label}${level > 1 ? ` Lv${level}` : ""} · ${patch.w}×${patch.h}${canShrink ? " · ⊟ auf min, dann umsetzen" : " · Klick zum Umsetzen"}`
+                        : `${meta.label} · ${stageLabel} · ${patch.w}×${patch.h}${canShrink ? " · ⊟ auf min, dann umsetzen" : " · Klick zum Umsetzen"}`
                       : "Gebäude"
                   }
                   onDragOver={(event) => event.preventDefault()}
@@ -421,18 +457,21 @@ export function PrecinctGrid({
                       tryPlace(x, y, picked);
                       return;
                     }
+                    setSelectedStreet(null);
                     setPicked(patch.building);
                     setSelectedPatchId(patch.id);
                   }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
+                      setSelectedStreet(null);
                       setPicked(patch.building);
                       setSelectedPatchId(patch.id);
                     }
                   }}
                 >
                   {meta ? <span aria-hidden="true">{meta.icon}</span> : null}
+                  {stageLabel ? <em className="stadium-precinct-stage">{stageLabel}</em> : null}
                   {level > 1 ? <span className="stadium-precinct-level">Lv{level}</span> : null}
                   {hungry ? (
                     <span className="stadium-precinct-dock" aria-label="Braucht Straßennetz">
@@ -443,18 +482,13 @@ export function PrecinctGrid({
                     <>
                       {growHandles.map((handle) => {
                         const check = canNudgePrecinctPatch(precinct, patch.id, handle.edge, cash, 1);
-                        const cost = precinctNudgeCost(patch, handle.edge, 1);
                         return (
                           <button
                             key={`grow-${handle.edge}`}
                             type="button"
                             className={`stadium-precinct-handle is-${handle.edge}${check.allowed ? "" : " is-blocked"}`}
                             disabled={!check.allowed}
-                            title={
-                              check.allowed
-                                ? `${handle.label} · ${formatClubCash(cost)}`
-                                : (check.reason ?? handle.label)
-                            }
+                            title={check.allowed ? handle.label : (check.reason ?? handle.label)}
                             onClick={(event) => {
                               event.stopPropagation();
                               nudge(patch, handle.edge, 1);
@@ -547,10 +581,12 @@ export function PrecinctGrid({
             const ramp = isCityRampCell(x, y);
             const previewKind = roadPreview.get(`${x},${y}`);
             const links = street ? streetLinks(precinct, x, y) : null;
+            const streetSelected =
+              street && selectedStreet?.x === x && selectedStreet?.y === y;
             const label = street
               ? ramp
                 ? "Straße · Stadtanschluss"
-                : "Straße"
+                : "Straße · antippen zum Entfernen"
               : ramp
                 ? "Anschluss zur Autobahn"
                 : "Frei";
@@ -563,6 +599,7 @@ export function PrecinctGrid({
                   [
                     "stadium-precinct-tile is-cell",
                     street ? "is-street" : "",
+                    streetSelected ? "is-picked" : "",
                     ramp ? "is-ramp" : "",
                     previewKind === "paint" ? "is-road-preview" : "",
                     previewKind === "blocked" ? "is-road-blocked" : "",
@@ -586,7 +623,19 @@ export function PrecinctGrid({
                   }
                 }}
                 onClick={() => {
+                  if (street) {
+                    if (picked === "street") {
+                      onRemoveStreet(x, y);
+                      setSelectedStreet(null);
+                      return;
+                    }
+                    setSelectedPatchId(null);
+                    setPicked(null);
+                    setSelectedStreet({ x, y });
+                    return;
+                  }
                   if (picked === "street") return;
+                  setSelectedStreet(null);
                   if (selected) {
                     const edge = edgeTowardCell(selected, x, y);
                     if (edge) {
@@ -606,6 +655,103 @@ export function PrecinctGrid({
           }),
         )}
         </div>
+      </div>
+      <div className="stadium-precinct-detail-slot">
+        {selectedStreet && isStreetCell(precinct, selectedStreet.x, selectedStreet.y) ? (
+          <div className="stadium-precinct-detail" aria-label="Ausgewählte Straße">
+            <div className="stadium-precinct-detail-main">
+              <span className="stadium-precinct-detail-icon" aria-hidden="true">
+                🛣️
+              </span>
+              <div>
+                <strong>Straße</strong>
+                <p>
+                  Zelle {selectedStreet.x + 1},{selectedStreet.y + 1} · Entfernen erstattet{" "}
+                  {formatClubCash(streetRefund)}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="stadium-precinct-detail-remove"
+              onClick={() => {
+                onRemoveStreet(selectedStreet.x, selectedStreet.y);
+                setSelectedStreet(null);
+              }}
+            >
+              Entfernen · {formatClubCash(streetRefund)}
+            </button>
+            <button
+              type="button"
+              className="stadium-precinct-detail-close"
+              aria-label="Auswahl aufheben"
+              onClick={() => setSelectedStreet(null)}
+            >
+              ✕
+            </button>
+          </div>
+        ) : selected && selectedDef ? (
+          <div className="stadium-precinct-detail" aria-label="Ausgewähltes Gebäude">
+            <div className="stadium-precinct-detail-main">
+              <span className="stadium-precinct-detail-icon" aria-hidden="true">
+                {selectedDef.icon}
+              </span>
+              <div>
+                <strong>{selectedDef.label}</strong>
+                <p>
+                  {precinctBuildingStageLabel(selected.building, selectedLevel)} · {selected.w}×{selected.h}
+                  {!patchDocksStreetNetwork(precinct, selected) ? " · ⚠️ kein Straßennetz" : null}
+                </p>
+              </div>
+            </div>
+            {selectedDef.maxLevel > 1 && selectedLevel < selectedDef.maxLevel ? (
+              <button
+                type="button"
+                className="stadium-precinct-detail-upgrade"
+                disabled={!selectedUpgrade.allowed}
+                title={
+                  selectedUpgrade.allowed
+                    ? `${formatClubCash(selectedUpgrade.cost)} · ${precinctNextUpgradeLabel(selected.building, selectedLevel)}`
+                    : (selectedUpgrade.reason ?? "Ausbau nicht möglich")
+                }
+                onClick={() => onUpgrade(selected.building)}
+              >
+                {precinctNextUpgradeLabel(selected.building, selectedLevel)} ·{" "}
+                {formatClubCash(selectedUpgrade.cost)}
+              </button>
+            ) : selectedDef.maxLevel > 1 ? (
+              <span className="stadium-precinct-detail-maxed">Maximalstufe</span>
+            ) : null}
+            <button
+              type="button"
+              className="stadium-precinct-detail-remove"
+              title={`Abreißen · ${formatClubCash(selectedRefund)} zurück`}
+              onClick={() => {
+                onRemovePatch(selected.id);
+                setSelectedPatchId(null);
+                setPicked(null);
+              }}
+            >
+              Entfernen · {formatClubCash(selectedRefund)}
+            </button>
+            <button
+              type="button"
+              className="stadium-precinct-detail-close"
+              aria-label="Auswahl aufheben"
+              onClick={() => {
+                setSelectedPatchId(null);
+                setPicked(null);
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <p className="stadium-precinct-detail-hint">
+            Gebäude oder Straße antippen · Ausbau / Entfernen hier
+          </p>
+        )}
+      </div>
       </div>
       <PrecinctStatus
         precinct={precinct}

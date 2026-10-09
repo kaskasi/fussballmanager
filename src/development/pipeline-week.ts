@@ -7,7 +7,7 @@ import {
   weeklyDecayDelta,
 } from "./growth-engine.ts";
 import { trainingIntensityMultiplier } from "./training-load.ts";
-import { defaultTrainingPlan, planToSessions } from "./training-units.ts";
+import { defaultTrainingPlan, planToSessions, type TrainingUnit } from "./training-units.ts";
 import { focusSlotsFor, SLOT_COUNT, type TrainingSession } from "./weekly-plan.ts";
 
 export interface TrainingWeekContext {
@@ -196,12 +196,16 @@ export function applyTrainingUnit(
   weekSessions: readonly TrainingSession[],
   slotIndex: number,
   context?: TrainingWeekContext,
+  unit?: TrainingUnit,
 ): Player {
   const channel = `team-unit-${slotIndex}`;
+  const boost = unit?.growthBoost ?? 1;
+  const boostedSkills = unit ? new Set(unit.skills) : null;
   const attributes = { ...player.attributes };
   for (const key of SKILLS) {
-    const delta = trainingGainOf(player, key, weekSessions, context, channel);
+    let delta = trainingGainOf(player, key, weekSessions, context, channel);
     if (delta === 0) continue;
+    if (boostedSkills?.has(key)) delta *= boost;
     attributes[key] = applyGrowth(player.attributes[key], delta);
   }
   return { ...player, attributes };

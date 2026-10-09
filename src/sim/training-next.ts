@@ -113,7 +113,7 @@ export function runTrainingNextStep(session: GameSession): TrainingNextStepResul
     session.week,
   );
   const playersAfter = playersBefore.map((player) =>
-    applyTrainingUnit(player, weekSessions, slotIndex, context),
+    applyTrainingUnit(player, weekSessions, slotIndex, context, unit),
   );
   const highlight = highlightTrainingUnitResult(playersBefore, playersAfter, unit);
   const gains = collectTrainingUnitGains(playersBefore, playersAfter, unit);

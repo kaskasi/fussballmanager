@@ -25,8 +25,15 @@ export interface TrainingUnit {
   group: TrainingSession["group"];
   /** Skills shown on the card — display only in M1. */
   skills: (keyof Attributes)[];
-  /** Campus gate — Hallentraining needs the upgraded training hall. */
-  requires?: "training_hall";
+  /** Campus gates — hall / outdoor pitch upgrades on the Gelände. */
+  requires?: "training_hall" | "training_pitch_2" | "training_pitch_3";
+  /** Premium campus units — stronger gains when the slot runs (Halle). */
+  growthBoost?: number;
+}
+
+export interface TrainingUnlocks {
+  hasTrainingHall?: boolean;
+  trainingPitchLevel?: number;
 }
 
 export interface TrainingSlot {
@@ -123,11 +130,42 @@ export const TRAINING_UNITS: readonly TrainingUnit[] = [
   { id: "phys_power", label: "Kraft & Zweikampf", group: "physical", skills: ["strength", "stamina"] },
   { id: "phys_gk", label: "TW-Einheit", group: "physical", skills: ["gk_handling", "positioning"] },
   {
-    id: "phys_hall",
-    label: "Hallentraining",
-    group: "physical",
-    skills: ["pace", "technique", "stamina"],
+    id: "tech_hall_touch",
+    label: "Ballgefühl Halle",
+    group: "technical",
+    skills: ["technique", "dribbling", "passing"],
     requires: "training_hall",
+    growthBoost: 1.38,
+  },
+  {
+    id: "tech_hall_finish",
+    label: "Abschluss Halle",
+    group: "technical",
+    skills: ["shooting", "technique", "composure"],
+    requires: "training_hall",
+    growthBoost: 1.35,
+  },
+  {
+    id: "phys_hall",
+    label: "Athletik Halle",
+    group: "physical",
+    skills: ["pace", "stamina", "strength"],
+    requires: "training_hall",
+    growthBoost: 1.22,
+  },
+  {
+    id: "tech_outdoor",
+    label: "Spiel auf dem Platz",
+    group: "technical",
+    skills: ["passing", "technique", "vision"],
+    requires: "training_pitch_2",
+  },
+  {
+    id: "phys_outdoor",
+    label: "Sprint auf dem Platz",
+    group: "physical",
+    skills: ["pace", "stamina"],
+    requires: "training_pitch_3",
   },
   { id: "ment_tactical", label: "Taktik", group: "mental", skills: ["positioning", "vision", "teamwork"] },
   { id: "ment_calm", label: "Ruhe & Fokus", group: "mental", skills: ["composure", "concentration"] },
@@ -196,21 +234,35 @@ export function planToSessions(plan: readonly TrainingSlot[]): TrainingSession[]
   });
 }
 
-export function trainingUnitUnlocked(
-  unit: TrainingUnit,
-  unlocks?: { hasTrainingHall?: boolean },
-): boolean {
-  if (unit.requires === "training_hall") return unlocks?.hasTrainingHall === true;
+function meetsTrainingRequire(requires: TrainingUnit["requires"], unlocks: TrainingUnlocks): boolean {
+  if (!requires) return true;
+  if (requires === "training_hall") return unlocks.hasTrainingHall === true;
+  if (requires === "training_pitch_2") return (unlocks.trainingPitchLevel ?? 0) >= 2;
+  if (requires === "training_pitch_3") return (unlocks.trainingPitchLevel ?? 0) >= 3;
   return true;
 }
 
-export function unitsForGroup(
-  group: TrainingSession["group"],
-  unlocks?: { hasTrainingHall?: boolean },
-): TrainingUnit[] {
+export function trainingUnitUnlocked(unit: TrainingUnit, unlocks?: TrainingUnlocks): boolean {
+  return meetsTrainingRequire(unit.requires, unlocks ?? {});
+}
+
+export function unitsForGroup(group: TrainingSession["group"], unlocks?: TrainingUnlocks): TrainingUnit[] {
   return TRAINING_UNITS.filter(
-    (unit) => unit.group === group && trainingUnitUnlocked(unit, unlocks ?? { hasTrainingHall: false }),
+    (unit) => unit.group === group && trainingUnitUnlocked(unit, unlocks ?? {}),
   );
+}
+
+export function trainingUnitLockHint(unit: TrainingUnit): string {
+  switch (unit.requires) {
+    case "training_hall":
+      return "Braucht Halle am Trainingszentrum";
+    case "training_pitch_2":
+      return "Braucht Kunstrasen (Trainingsplatz Stufe 2)";
+    case "training_pitch_3":
+      return "Braucht Hybrid-Rasen (Trainingsplatz Stufe 3)";
+    default:
+      return "Gesperrt";
+  }
 }
 
 export function createInitialTrainingPlan(): TrainingSlot[] {

@@ -10,6 +10,7 @@ import {
   arenaDocksStreetNetwork,
   buyPrecinctExpansion,
   canBuyPrecinctExpansion,
+  canNudgePrecinctPatch,
   canPlacePrecinctBuilding,
   countBuilding,
   emptyPrecinct,
@@ -34,21 +35,25 @@ import {
   precinctExpansionOwned,
   precinctHasTrainingHall,
   precinctPlacementCost,
+  precinctTrainingPitchLevel,
   precinctSpineCells,
   shrinkPrecinctPatchToMin,
   streetLinks,
   upgradePrecinctBuilding,
+  removePrecinctPatch,
+  removeStreetCell,
+  precinctPatchRefund,
 } from "./precinct.ts";
 
 const FARM_X = PRECINCT_CORE.x;
 const FARM_Y = 1;
 
 describe("precinct grid", () => {
-  it("starts as a 10×10 farm on a 14×10 board with a city-to-arena road", () => {
+  it("starts as a full 14×10 owned farm with a city-to-arena road", () => {
     const grid = emptyPrecinct();
     expect(grid.width).toBe(PRECINCT_WIDTH);
     expect(grid.height).toBe(PRECINCT_HEIGHT);
-    expect(isOwnedCell(grid, 0, 0)).toBe(false);
+    expect(isOwnedCell(grid, 0, 0)).toBe(true);
     expect(isOwnedCell(grid, FARM_X, FARM_Y)).toBe(true);
     expect(isOwnedCell(grid, PRECINCT_CITY_LINK.x, 0)).toBe(true);
     expect(isPrecinctStadiumCell(PRECINCT_STADIUM.x, PRECINCT_STADIUM.y)).toBe(true);
@@ -73,9 +78,9 @@ describe("precinct grid", () => {
     expect(countBuilding(grid, "fanshop")).toBe(1);
   });
 
-  it("reserves the stadium block and refuses locked expansion tiles", () => {
+  it("reserves the stadium block but allows building on side tiles", () => {
     expect(placePrecinctBuilding(emptyPrecinct(), PRECINCT_STADIUM.x, PRECINCT_STADIUM.y, "kiosk").patches).toHaveLength(0);
-    expect(canPlacePrecinctBuilding(emptyPrecinct(), 0, 0, "kiosk")).toBe(false);
+    expect(canPlacePrecinctBuilding(emptyPrecinct(), 0, 0, "kiosk")).toBe(true);
   });
 
   it("charges every extra kiosk but unique moves are free", () => {
@@ -95,6 +100,38 @@ describe("precinct grid", () => {
     grid = upgradePrecinctBuilding(grid, "training_ground");
     expect(precinctBuildingLevel(grid, "training_ground")).toBe(2);
     expect(precinctHasTrainingHall(grid)).toBe(true);
+  });
+
+  it("tracks outdoor pitch level only when docked to the street network", () => {
+    let grid = placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "training_pitch");
+    expect(precinctTrainingPitchLevel(grid)).toBe(0);
+    grid = upgradePrecinctBuilding(grid, "training_pitch");
+    expect(precinctTrainingPitchLevel(grid)).toBe(0);
+  });
+
+  it("does not charge cash to nudge a building footprint", () => {
+    const shop = placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "fanshop");
+    const check = canNudgePrecinctPatch(shop, shop.patches[0]!.id, "e", 0, 1);
+    expect(check.allowed).toBe(true);
+    expect(check.cost).toBe(0);
+  });
+
+  it("refunds purchase and upgrades when the last unique building is removed", () => {
+    let grid = placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "fanshop");
+    grid = upgradePrecinctBuilding(grid, "fanshop");
+    const patchId = grid.patches[0]!.id;
+    expect(precinctPatchRefund(grid, grid.patches[0]!)).toBeGreaterThan(220_000);
+    const removed = removePrecinctPatch(grid, patchId);
+    expect(removed.refund).toBeGreaterThan(220_000);
+    expect(countBuilding(removed.state, "fanshop")).toBe(0);
+    expect(removed.state.levels.fanshop).toBeUndefined();
+  });
+
+  it("refunds street cells when removed", () => {
+    let grid = placeStreet(emptyPrecinct(), 3, 3);
+    const removed = removeStreetCell(grid, 3, 3);
+    expect(removed.refund).toBe(PRECINCT_STREET_COST);
+    expect(isStreetCell(removed.state, 3, 3)).toBe(false);
   });
 
   it("grows a unique building across owned cells", () => {
@@ -124,28 +161,17 @@ describe("precinct grid", () => {
     expect(occupiedCells(min, "fanshop")).toBe(4);
   });
 
-  it("adds 2×5 tiles left then right, then the south pair", () => {
+  it("starts with the full 14×10 farm owned", () => {
     const empty = emptyPrecinct();
-    expect(nextPrecinctExpansion(empty)?.id).toBe("left_north");
-    expect(canBuyPrecinctExpansion(empty, PRECINCT_EXPANSION_COST - 1).allowed).toBe(false);
-    const leftNorth = buyPrecinctExpansion(empty);
-    expect(isOwnedCell(leftNorth, 0, 0)).toBe(true);
-    expect(isOwnedCell(leftNorth, 1, 4)).toBe(true);
-    expect(isOwnedCell(leftNorth, 0, 5)).toBe(false);
-    expect(nextPrecinctExpansion(leftNorth)?.id).toBe("right_north");
-    const rightNorth = buyPrecinctExpansion(leftNorth);
-    expect(nextPrecinctExpansion(rightNorth)?.id).toBe("left_south");
-    const leftSouth = buyPrecinctExpansion(rightNorth);
-    expect(nextPrecinctExpansion(leftSouth)?.id).toBe("right_south");
-    const full = buyPrecinctExpansion(leftSouth);
-    expect(nextPrecinctExpansion(full)).toBeNull();
-    expect(isOwnedCell(full, 0, 9)).toBe(true);
-    expect(isOwnedCell(full, 13, 9)).toBe(true);
-    expect(precinctExpansionOwned(full, nextPrecinctExpansion(empty)!)).toBe(true);
+    expect(nextPrecinctExpansion(empty)).toBeNull();
+    expect(isOwnedCell(empty, 0, 0)).toBe(true);
+    expect(isOwnedCell(empty, 13, 9)).toBe(true);
+    expect(isOwnedCell(empty, PRECINCT_STADIUM.x, PRECINCT_STADIUM.y)).toBe(false);
+    expect(canBuyPrecinctExpansion(empty, 0).allowed).toBe(false);
   });
 
-  it("keeps buildings on a bought expansion tile after normalize", () => {
-    let grid = buyPrecinctExpansion(emptyPrecinct());
+  it("keeps buildings on expansion tiles after normalize", () => {
+    let grid = emptyPrecinct();
     grid = placePrecinctBuilding(grid, 0, 1, "kiosk");
     const next = normalizePrecinct(grid);
     expect(findBuildingCell(next, "kiosk")).toEqual({ x: 0, y: 1 });

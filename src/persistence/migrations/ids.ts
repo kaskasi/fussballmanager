@@ -73,4 +73,6 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_074_training_calendar_gate",
   "migration_075_training_plan_presets",
   "migration_076_week_start_attributes",
+  "migration_077_precinct_full_farm",
+  "migration_078_pitch_condition",
 ] as const;

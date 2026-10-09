@@ -94,6 +94,7 @@ import {
   applyTransferFee,
   canAffordTransfer,
   formatClubCash,
+  creditClubCash,
   spendClubCash,
   transferBudget,
   wageBudgetHeadroom,
@@ -186,6 +187,10 @@ import {
   stadiumUpgradeCatalog,
 } from "./stadium/stadium-upgrades.ts";
 import {
+  canStartBlockExpansion,
+  startBlockExpansion,
+} from "./stadium/stadium-block-expansion.ts";
+import {
   buyPrecinctExpansion,
   canBuyPrecinctExpansion,
   canNudgePrecinctPatch,
@@ -194,14 +199,19 @@ import {
   nudgePrecinctPatch,
   placePrecinctBuilding,
   placeStreetRun,
+  removePrecinctPatch,
+  removeStreetCell,
   precinctHasTrainingHall,
+  precinctTrainingPitchLevel,
   precinctPlacementCost,
   PRECINCT_BUILDINGS,
   shrinkPrecinctPatchToMin,
   upgradePrecinctBuilding,
+  occupiedCells,
   type PrecinctBuilding,
   type PrecinctEdge,
 } from "./stadium/precinct.ts";
+import { applyRestaurantProposalStory } from "./stadium/precinct-campus-events.ts";
 import { precinctInjuryRiskFactor } from "./stadium/precinct-effects.ts";
 import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
 import { HelpScreen } from "./ui/screens/HelpScreen.tsx";
@@ -1428,6 +1438,40 @@ export default function App() {
     [finances, requestClubSpend, stadium, week],
   );
 
+  const handleStartBlockExpansion = useCallback(
+    (blockId: string) => {
+      const block = stadium.blocks.find((entry) => entry.id === blockId);
+      const check = canStartBlockExpansion(stadium, blockId, season, week, finances.cash);
+      if (!check.allowed || check.cost === undefined) return;
+      const quoted = infrastructureCostForWeek(check.cost, week);
+      requestClubSpend(
+        quoted,
+        block ? `${block.name} · Stufe ${check.nextLevel}` : "Tribünen-Ausbau",
+        (current) => {
+          const recheck = canStartBlockExpansion(
+            current.stadium,
+            blockId,
+            current.season,
+            current.week,
+            current.finances.cash,
+          );
+          if (!recheck.allowed || recheck.cost === undefined) return current;
+          const fee = infrastructureCostForWeek(recheck.cost, current.week);
+          if (fee > current.finances.cash) return current;
+          return {
+            ...current,
+            stadium: normalizeClubStadium(
+              startBlockExpansion(current.stadium, blockId, current.season, current.week),
+            ),
+            finances: spendClubCash(current.finances, fee, current.week),
+          };
+        },
+        { infrastructure: true },
+      );
+    },
+    [finances.cash, requestClubSpend, season, stadium, week],
+  );
+
   const handlePlacePrecinct = useCallback(
     (building: PrecinctBuilding, x: number, y: number, from?: { x: number; y: number }) => {
       const precinct = stadium.precinct ?? emptyPrecinct();
@@ -1443,11 +1487,35 @@ export default function App() {
           const actualBase = precinctPlacementCost(currentPrecinct, building, from);
           const actualCost = infrastructureCostForWeek(actualBase, current.week);
           if (actualCost > current.finances.cash) return current;
+          const hadRestaurant = occupiedCells(currentPrecinct, "restaurant") > 0;
           const nextPrecinct = placePrecinctBuilding(currentPrecinct, x, y, building, from);
           if (nextPrecinct === currentPrecinct) return current;
+          let nextStadium = normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct });
+          let nextPlayers = current.players;
+          let nextClubEvents = current.clubEvents;
+          if (building === "restaurant" && !hadRestaurant) {
+            const story = applyRestaurantProposalStory(
+              nextStadium,
+              current.players,
+              current.clubId,
+              current.season,
+              current.week,
+            );
+            nextStadium = normalizeClubStadium(story.stadium);
+            nextPlayers = story.players;
+            nextClubEvents = withClubEvent(
+              nextClubEvents,
+              current.season,
+              current.week,
+              "info",
+              story.clubEventMessage,
+            );
+          }
           return {
             ...current,
-            stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
+            stadium: nextStadium,
+            players: nextPlayers,
+            clubEvents: nextClubEvents,
             finances:
               actualCost === 0
                 ? current.finances
@@ -1683,37 +1751,53 @@ export default function App() {
 
   const handleExpandPrecinct = useCallback(
     (patchId: string, edge: PrecinctEdge, delta: 1 | -1 = 1) => {
-      const precinct = stadium.precinct ?? emptyPrecinct();
-      const check = canNudgePrecinctPatch(precinct, patchId, edge, finances.cash, delta);
-      if (!check.allowed) return;
-      const quoted = infrastructureCostForWeek(check.cost, week);
-      requestClubSpend(
-        quoted,
-        t("spend.precinctGrow"),
-        (current) => {
-          const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
-          const nextCheck = canNudgePrecinctPatch(
-            currentPrecinct,
-            patchId,
-            edge,
-            current.finances.cash,
-            delta,
-          );
-          if (!nextCheck.allowed) return current;
-          const nextPrecinct = nudgePrecinctPatch(currentPrecinct, patchId, edge, delta);
-          if (nextPrecinct === currentPrecinct) return current;
-          const fee = infrastructureCostForWeek(nextCheck.cost, current.week);
-          return {
-            ...current,
-            stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
-            finances:
-              fee === 0 ? current.finances : spendClubCash(current.finances, fee, current.week),
-          };
-        },
-        { infrastructure: true },
-      );
+      patchSession((current) => {
+        const precinct = current.stadium.precinct ?? emptyPrecinct();
+        const check = canNudgePrecinctPatch(precinct, patchId, edge, current.finances.cash, delta);
+        if (!check.allowed) return current;
+        const nextPrecinct = nudgePrecinctPatch(precinct, patchId, edge, delta);
+        if (nextPrecinct === precinct) return current;
+        return {
+          ...current,
+          stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
+        };
+      });
     },
-    [finances.cash, requestClubSpend, stadium.precinct, week],
+    [patchSession],
+  );
+
+  const handleRemovePrecinctPatch = useCallback(
+    (patchId: string) => {
+      patchSession((current) => {
+        const precinct = current.stadium.precinct ?? emptyPrecinct();
+        const result = removePrecinctPatch(precinct, patchId);
+        if (result.refund <= 0 && result.state === precinct) return current;
+        const credit = infrastructureCostForWeek(result.refund, current.week);
+        return {
+          ...current,
+          stadium: normalizeClubStadium({ ...current.stadium, precinct: result.state }),
+          finances: creditClubCash(current.finances, credit, current.week),
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handleRemoveStreet = useCallback(
+    (x: number, y: number) => {
+      patchSession((current) => {
+        const precinct = current.stadium.precinct ?? emptyPrecinct();
+        const result = removeStreetCell(precinct, x, y);
+        if (result.refund <= 0) return current;
+        const credit = infrastructureCostForWeek(result.refund, current.week);
+        return {
+          ...current,
+          stadium: normalizeClubStadium({ ...current.stadium, precinct: result.state }),
+          finances: creditClubCash(current.finances, credit, current.week),
+        };
+      });
+    },
+    [patchSession],
   );
 
   const handleShrinkPrecinctToMin = useCallback(
@@ -2742,7 +2826,10 @@ export default function App() {
           onSelectPlayer={setProfileId}
           focusIndividualPlayerId={trainingFocusPlayerId}
           onClearIndividualFocus={() => setTrainingFocusPlayerId(null)}
-          hasTrainingHall={precinctHasTrainingHall(stadium.precinct)}
+          trainingUnlocks={{
+            hasTrainingHall: precinctHasTrainingHall(stadium.precinct),
+            trainingPitchLevel: precinctTrainingPitchLevel(stadium.precinct),
+          }}
           injuryRiskFactor={precinctInjuryRiskFactor(stadium.precinct)}
           trainingUnitsCompleted={trainingUnitsCompleted}
           trainingUnitOutcomes={trainingUnitOutcomes}
@@ -2900,12 +2987,14 @@ export default function App() {
           stadium={stadium}
           finances={finances}
           season={season}
+          week={week}
           onStadiumChange={(next) =>
             patchSession((current) => ({
               ...current,
-              stadium: next,
+              stadium: normalizeClubStadium(next),
             }))
           }
+          onStartBlockExpansion={handleStartBlockExpansion}
           onPurchaseUpgrade={handlePurchaseStadiumUpgrade}
           onPlacePrecinct={handlePlacePrecinct}
           onUpgradePrecinct={handleUpgradePrecinct}
@@ -2913,6 +3002,9 @@ export default function App() {
           onPlaceStreet={handlePlaceStreet}
           onExpandPrecinct={handleExpandPrecinct}
           onShrinkPrecinctToMin={handleShrinkPrecinctToMin}
+          onRemovePrecinctPatch={handleRemovePrecinctPatch}
+          onRemoveStreet={handleRemoveStreet}
+          precinctSeasonWeek={week}
           academyFacility={academyFacility}
           onUpgradeAcademy={handleUpgradeAcademy}
         />

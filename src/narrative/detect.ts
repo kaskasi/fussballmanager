@@ -8,6 +8,7 @@ import { clubShortName, lastPlayerResult, leagueTable, playerFixture } from "../
 import { proSquad } from "./captain.ts";
 import { isInRelegationZone, RELEGATION_ZONE_PLACE } from "./season-objectives.ts";
 import { hospitalityDocked } from "../stadium/hospitality.ts";
+import { shouldRepeatRestaurantWedding } from "../stadium/precinct-campus-events.ts";
 import type { StoryState } from "./story-state.ts";
 
 export type NarrativeBeatKind = "fan_feed" | "inbox";
@@ -297,7 +298,12 @@ function detectHospitalityBeats(context: DetectContext): DetectedBeat[] {
   if (!hospitalityDocked(precinct, "restaurant")) return [];
   const fired = new Set(context.story.beats_fired);
   const beats: DetectedBeat[] = [];
-  if (!fired.has("hospitality_engagement") && context.week >= 6) {
+  const weddingRepeatId = `hospitality_wedding_s${context.season}`;
+  if (shouldRepeatRestaurantWedding(context.stadium, context.season) && !fired.has(weddingRepeatId)) {
+    beats.push({ beatId: weddingRepeatId, kind: "fan_feed", fanbaseDelta: 0.7 });
+  }
+  const legacyStory = context.stadium.restaurant_story_last_season == null;
+  if (legacyStory && !fired.has("hospitality_engagement") && context.week >= 6) {
     beats.push({ beatId: "hospitality_engagement", kind: "fan_feed", fanbaseDelta: 0.4 });
   }
   if (

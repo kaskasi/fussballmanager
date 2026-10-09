@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useT } from "../../i18n/react.ts";
-import { Construction, Dumbbell, Home, Shirt, Star } from "lucide-react";
+import { Construction, Dumbbell, Home, Hammer, Shirt, Star } from "lucide-react";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
 import {
   ACADEMY_FACILITIES,
@@ -22,9 +22,10 @@ import {
   stadiumTotalCapacity,
   tierIcon,
   tierLabel,
-  FILL_RATE_MIN,
   TICKET_PRICE_MAX,
   TICKET_PRICE_MIN,
+  TICKET_PRICE_STEP,
+  FILL_RATE_MIN,
   type ClubStadium,
   type StadiumBlock,
   type StadiumTier,
@@ -37,6 +38,15 @@ import {
   stadiumUpgradeCost,
   stadiumUpgradeLevel,
 } from "../../stadium/stadium-upgrades.ts";
+import {
+  BLOCK_EXPANSION_MAX_LEVEL,
+  blockCapacityAtExpansionLevel,
+  blockExpansionLevel,
+  blockExpansionWeeksRemaining,
+  canStartBlockExpansion,
+  isBlockUnderConstruction,
+} from "../../stadium/stadium-block-expansion.ts";
+import { infrastructureCostForWeek } from "../../economy/early-pacing.ts";
 import {
   fanbaseMood,
   fanbaseMoodIcon,
@@ -77,7 +87,9 @@ export function StadiumScreen({
   stadium,
   finances,
   season,
+  week,
   onStadiumChange,
+  onStartBlockExpansion,
   onPurchaseUpgrade,
   onPlacePrecinct,
   onUpgradePrecinct,
@@ -85,15 +97,20 @@ export function StadiumScreen({
   onPlaceStreet,
   onExpandPrecinct,
   onShrinkPrecinctToMin,
+  onRemovePrecinctPatch,
+  onRemoveStreet,
+  precinctSeasonWeek,
   academyFacility,
   onUpgradeAcademy,
 }: {
   stadium: ClubStadium;
   finances: ClubFinances;
   season: number;
+  week: number;
   academyFacility?: AcademyFacility;
   onUpgradeAcademy?: () => void;
   onStadiumChange: (stadium: ClubStadium) => void;
+  onStartBlockExpansion: (blockId: string) => void;
   onPurchaseUpgrade: (upgradeId: string) => void;
   onPlacePrecinct: (
     building: PrecinctBuilding,
@@ -106,6 +123,9 @@ export function StadiumScreen({
   onPlaceStreet: (cells: Array<{ x: number; y: number }>) => void;
   onExpandPrecinct: (patchId: string, edge: PrecinctEdge, delta?: 1 | -1) => void;
   onShrinkPrecinctToMin: (patchId: string) => void;
+  onRemovePrecinctPatch: (patchId: string) => void;
+  onRemoveStreet: (x: number, y: number) => void;
+  precinctSeasonWeek: number;
 }) {
   const t = useT();
   const [tab, setTab] = useState<StadiumTab>("plan");
@@ -188,7 +208,10 @@ export function StadiumScreen({
       {tab === "plan" ? (
         <div className="fm-tab-panel">
           {stadiumContext}
-          <Hint text="Leere Banden auf den Tribünen-Karten klicken — Laufzeit und Geld im Modal." block>
+          <Hint
+            text="Ticketpreis und Tribünen-Ausbau auf den Karten · leere Banden klicken für Sponsoring."
+            block
+          >
             <section className="stadium-layout" aria-label="Stadion-Grundriss">
             <StadiumPitchPlan
               blocks={stadium.blocks}
@@ -204,17 +227,21 @@ export function StadiumScreen({
               return (
                 <StadiumBlockCard
                   key={block.id}
+                  stadium={stadium}
                   block={block}
                   area={block.id}
                   selected={selectedId === block.id}
                   deals={stadium.sponsor_deals}
                   season={season}
+                  week={week}
                   upgradeLevels={stadium.upgrade_levels}
                   onSelect={() => setSelectedId(block.id)}
                   onOpenSlot={setOpenSlotId}
-                  onPriceChange={(priceDelta) =>
-                    onStadiumChange(adjustBlockTicketPrice(stadium, block.id, priceDelta))
+                  onPriceChange={(delta) =>
+                    onStadiumChange(adjustBlockTicketPrice(stadium, block.id, delta))
                   }
+                  cash={finances.cash}
+                  onStartExpansion={() => onStartBlockExpansion(block.id)}
                 />
               );
             })}
@@ -237,6 +264,9 @@ export function StadiumScreen({
             onPlaceStreet={onPlaceStreet}
             onExpand={onExpandPrecinct}
             onShrinkToMin={onShrinkPrecinctToMin}
+            onRemovePatch={onRemovePrecinctPatch}
+            onRemoveStreet={onRemoveStreet}
+            seasonWeek={precinctSeasonWeek}
           />
         </div>
       ) : null}
@@ -442,32 +472,50 @@ function StandBoardSlots({
 }
 
 function StadiumBlockCard({
+  stadium,
   block,
   area,
   selected,
   deals,
   season,
+  week,
   upgradeLevels,
   onSelect,
   onOpenSlot,
   onPriceChange,
+  cash,
+  onStartExpansion,
 }: {
+  stadium: ClubStadium;
   block: StadiumBlock;
   area: string;
   selected: boolean;
   deals: ClubStadium["sponsor_deals"];
   season: number;
+  week: number;
   upgradeLevels?: Record<string, number>;
   onSelect: () => void;
   onOpenSlot: (slotId: string) => void;
   onPriceChange: (delta: number) => void;
+  cash: number;
+  onStartExpansion: () => void;
 }) {
   const sold = stadiumBlockAttendees(block);
-  const income = Math.round(stadiumBlockIncome(block));
+  const income = Math.round(stadiumBlockIncome(stadium, block, season, week));
   const fillPct = Math.round(block.fill_rate * 100);
   const refPct = Math.round(referenceFillRate(block.id) * 100);
   const fillDeltaPts = Math.round(fillRateDeltaFromReference(block) * 100);
   const stand = block.id as SponsorStand;
+  const expansionLevel = blockExpansionLevel(stadium, block.id);
+  const underConstruction = isBlockUnderConstruction(stadium, block.id, season, week);
+  const buildWeeksLeft = blockExpansionWeeksRemaining(stadium, block.id, season, week);
+  const expansionCheck = canStartBlockExpansion(stadium, block.id, season, week, cash);
+  const nextLevel = expansionCheck.nextLevel;
+  const nextCapacity =
+    nextLevel != null ? blockCapacityAtExpansionLevel(block.id, nextLevel) : null;
+  const expansionCost =
+    expansionCheck.cost != null ? infrastructureCostForWeek(expansionCheck.cost, week) : null;
+  const expansionMaxed = expansionLevel >= BLOCK_EXPANSION_MAX_LEVEL && !underConstruction;
 
   return (
     <article
@@ -481,7 +529,8 @@ function StadiumBlockCard({
           <span aria-hidden="true">{tierIcon(block.tier)}</span> {block.name}
         </h2>
         <p className="stadium-block-meta">
-          {tierLabel(block.tier)} · {block.capacity.toLocaleString("de-DE")} Plätze
+          {tierLabel(block.tier)} · Stufe {expansionLevel}/{BLOCK_EXPANSION_MAX_LEVEL} ·{" "}
+          {block.capacity.toLocaleString("de-DE")} Plätze
         </p>
         <FillMeter fillPct={fillPct} refPct={refPct} deltaPts={fillDeltaPts} sold={sold} />
         <div className="stadium-block-controls">
@@ -490,7 +539,7 @@ function StadiumBlockCard({
               type="button"
               aria-label={`${block.name} Ticketpreis senken`}
               disabled={block.ticket_price_eur <= TICKET_PRICE_MIN}
-              onClick={() => onPriceChange(-2)}
+              onClick={() => onPriceChange(-TICKET_PRICE_STEP)}
             >
               −
             </button>
@@ -499,7 +548,7 @@ function StadiumBlockCard({
               type="button"
               aria-label={`${block.name} Ticketpreis erhöhen`}
               disabled={block.ticket_price_eur >= TICKET_PRICE_MAX}
-              onClick={() => onPriceChange(2)}
+              onClick={() => onPriceChange(TICKET_PRICE_STEP)}
             >
               +
             </button>
@@ -512,7 +561,46 @@ function StadiumBlockCard({
             onOpenSlot={onOpenSlot}
           />
         </div>
-        <p className="stadium-block-income">Heimspiel {formatClubCash(income)}</p>
+        <div
+          className={`stadium-block-expansion${underConstruction ? " is-building" : ""}${expansionMaxed ? " is-maxed" : ""}`}
+          onClick={(event) => event.stopPropagation()}
+        >
+          {underConstruction ? (
+            <span className="stadium-block-expansion-status">
+              <Construction size={14} strokeWidth={2.5} aria-hidden />
+              Im Bau · noch {buildWeeksLeft} Woche{buildWeeksLeft === 1 ? "" : "n"} · kein Eintritt
+            </span>
+          ) : expansionMaxed ? (
+            <span className="stadium-block-expansion-status">Ausbau voll ausgebaut</span>
+          ) : (
+            <>
+              <span className="stadium-block-expansion-hint">
+                {nextCapacity != null
+                  ? `→ ${nextCapacity.toLocaleString("de-DE")} Plätze · ${expansionCheck.weeks ?? "?"} Wo. offline`
+                  : null}
+              </span>
+              <button
+                type="button"
+                className="stadium-block-expansion-btn"
+                disabled={!expansionCheck.allowed}
+                title={
+                  expansionCheck.reason ??
+                  (expansionCost != null
+                    ? `${formatClubCash(expansionCost)} · Stufe ${nextLevel}`
+                    : undefined)
+                }
+                onClick={onStartExpansion}
+              >
+                <Hammer size={15} strokeWidth={2.5} aria-hidden />
+                Ausbau
+                {expansionCost != null ? ` ${formatClubCash(expansionCost)}` : ""}
+              </button>
+            </>
+          )}
+        </div>
+        <p className="stadium-block-income">
+          Heimspiel {underConstruction ? "— (Bau)" : formatClubCash(income)}
+        </p>
       </div>
     </article>
   );

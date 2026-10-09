@@ -3233,11 +3233,119 @@ body {
   color: #64748b;
 }
 
+.leagues-screen-split {
+  display: grid;
+  grid-template-columns: minmax(0, 17fr) minmax(0, 3fr);
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.leagues-screen-split .league-table {
+  min-width: 0;
+  width: 100%;
+}
+
+.leagues-screen-split .league-table-wrap {
+  overflow-x: visible;
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+}
+
 .leagues-screen-table {
+  min-width: 0;
   padding: 0.9rem 1rem;
   border-radius: 1rem;
   background: #fff;
   box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
+}
+
+.leagues-screen-scorers {
+  min-width: 0;
+  padding: 0.75rem 0.65rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
+}
+
+.leagues-screen-scorers .league-leaders.is-sidebar {
+  display: block;
+}
+
+.leagues-screen-scorers .league-leader-card.is-compact {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.leagues-screen-scorers .league-leader-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.leagues-screen-scorers .league-leader-list {
+  margin: 0;
+  padding: 0;
+  font-size: 0.68rem;
+}
+
+.leagues-screen-scorers .league-leader-list li {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.25rem 0.35rem;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.leagues-screen-scorers .league-leader-club {
+  display: none;
+}
+
+.leagues-screen-scorers .league-leader-name {
+  font-size: 0.68rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leagues-screen-scorers .league-leader-empty-state {
+  padding: 0.35rem 0;
+}
+
+.leagues-screen-scorers .league-leader-podium {
+  transform: scale(0.75);
+  transform-origin: top center;
+}
+
+.leagues-screen-scorers .league-leader-empty-line {
+  font-size: 0.62rem;
+  line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+  .leagues-screen-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .leagues-screen-split .league-table {
+    min-width: 35rem;
+  }
+
+  .leagues-screen-split .league-table-wrap {
+    overflow-x: auto;
+  }
+
+  .leagues-screen-scorers .league-leader-club {
+    display: block;
+    font-size: 0.62rem;
+  }
+
+  .leagues-screen-scorers .league-leader-list li {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
 }
 
 .leagues-screen-meta {

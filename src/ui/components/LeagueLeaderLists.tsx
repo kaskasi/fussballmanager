@@ -10,6 +10,7 @@ export function LeagueLeaderLists({
   playerClubId,
   worldClubs,
   matchdaysPlayed = 0,
+  layout = "full",
 }: {
   scorers: readonly PlayerSeasonStat[];
   assists: readonly PlayerSeasonStat[];
@@ -17,9 +18,27 @@ export function LeagueLeaderLists({
   playerClubId: LeagueState["player_club_id"];
   worldClubs?: readonly WorldClub[];
   matchdaysPlayed?: number;
+  layout?: "full" | "sidebar";
 }) {
+  const rootClass = layout === "sidebar" ? "league-leaders is-sidebar" : "league-leaders";
+  if (layout === "sidebar") {
+    return (
+      <div className={rootClass} aria-label="Torschützen">
+        <LeaderList
+          title="Torschützen"
+          rows={scorers}
+          field="goals"
+          kind="goals"
+          compact
+          matchdaysPlayed={matchdaysPlayed}
+          playerClubId={playerClubId}
+          worldClubs={worldClubs}
+        />
+      </div>
+    );
+  }
   return (
-    <div className="league-leaders" aria-label="Liga-Statistik">
+    <div className={rootClass} aria-label="Liga-Statistik">
       <LeaderList
         title="⚽ Torschützen"
         rows={scorers}
@@ -79,6 +98,7 @@ function LeaderList({
   matchdaysPlayed,
   playerClubId,
   worldClubs,
+  compact = false,
 }: {
   title: string;
   rows: readonly PlayerSeasonStat[];
@@ -87,10 +107,11 @@ function LeaderList({
   matchdaysPlayed: number;
   playerClubId: LeagueState["player_club_id"];
   worldClubs?: readonly WorldClub[];
+  compact?: boolean;
 }) {
   const empty = LEADER_EMPTY[kind];
   return (
-    <div className="league-leader-card">
+    <div className={compact ? "league-leader-card is-compact" : "league-leader-card"}>
       <p className="league-leader-title">{title}</p>
       {rows.length > 0 ? (
         <ol className="league-leader-list">

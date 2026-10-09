@@ -38,7 +38,6 @@ export function LeaguesScreen({
 }) {
   const t = useT();
   const [divisionId, setDivisionId] = useState<DivisionEconomyId>(league.division_id);
-  const [viewTab, setViewTab] = useState<"table" | "scorers">("table");
   const [selectedClubId, setSelectedClubId] = useState<TeamId | null>(null);
 
   const standings = useMemo(
@@ -83,28 +82,7 @@ export function LeaguesScreen({
         ))}
       </div>
 
-      <div className="leagues-screen-view-tabs" role="tablist" aria-label="Liga-Ansicht">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={viewTab === "table"}
-          className={viewTab === "table" ? "is-active" : undefined}
-          onClick={() => setViewTab("table")}
-        >
-          {t("leagues.tab.table")}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={viewTab === "scorers"}
-          className={viewTab === "scorers" ? "is-active" : undefined}
-          onClick={() => setViewTab("scorers")}
-        >
-          {t("leagues.tab.scorers")}
-        </button>
-      </div>
-
-      {viewTab === "table" ? (
+      <div className="leagues-screen-split">
         <section className="leagues-screen-table" aria-label={divisionLabel(divisionId)}>
           <p className="leagues-screen-meta">
             Spieltag {standings.matchdaysPlayed}/{matchdays}
@@ -123,9 +101,9 @@ export function LeaguesScreen({
             <span><i className="zone-relegated" /> Abstieg</span>
           </div>
         </section>
-      ) : (
-        <section className="leagues-screen-leaders" aria-label="Saisonstatistik">
+        <aside className="leagues-screen-scorers" aria-label={t("leagues.tab.scorers")}>
           <LeagueLeaderLists
+            layout="sidebar"
             scorers={leaders.scorers}
             assists={leaders.assists}
             yellows={leaders.yellows}
@@ -133,8 +111,8 @@ export function LeaguesScreen({
             playerClubId={league.player_club_id}
             worldClubs={worldClubs}
           />
-        </section>
-      )}
+        </aside>
+      </div>
 
       {selectedClubId ? (
         <ClubProfileModal

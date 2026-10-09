@@ -11,13 +11,21 @@ import {
   type DecisionInboxItem,
   type YouthInboxState,
 } from "../youth/decision-inbox.ts";
+import { parseKickerItemId } from "./kicker-inbox.ts";
 
 export type PostfachArchiveKind =
   | "club_event"
   | "scout_report"
   | "scout_discovery"
   | "scout_job"
-  | "inbox_resolved";
+  | "inbox_resolved"
+  | "kicker_edition";
+
+export type PostfachArchiveReopenRef =
+  | { type: "club_event"; eventId: string }
+  | { type: "scout_job"; noticeId: string }
+  | { type: "inbox_item"; itemId: string }
+  | { type: "kicker"; season: number; week: number };
 
 export interface PostfachArchiveEntry {
   id: string;
@@ -27,6 +35,7 @@ export interface PostfachArchiveEntry {
   detail: string;
   kind: PostfachArchiveKind;
   playerId?: string;
+  reopen: PostfachArchiveReopenRef;
 }
 
 export const POSTFACH_ARCHIVE_PAGE_SIZE = 6;
@@ -46,7 +55,7 @@ function calendarKey(season: number, week: number): number {
 }
 
 function oneLineEntry(
-  partial: Omit<PostfachArchiveEntry, "title" | "detail"> & { line: string },
+  partial: Omit<PostfachArchiveEntry, "title" | "detail"> & { line: string; detail?: string },
 ): PostfachArchiveEntry {
   const line = partial.line.trim();
   return {
@@ -55,8 +64,9 @@ function oneLineEntry(
     week: partial.week,
     kind: partial.kind,
     playerId: partial.playerId,
+    reopen: partial.reopen,
     title: line,
-    detail: "",
+    detail: partial.detail?.trim() ?? "",
   };
 }
 
@@ -90,6 +100,7 @@ function scoutJobArchiveLine(notice: ScoutJobCompleteNotice): PostfachArchiveEnt
     season: notice.season,
     week: notice.week,
     kind: "scout_job",
+    reopen: { type: "scout_job", noticeId: notice.id },
     line: t("postfach.archive.scoutJobComplete", { label }),
   });
 }
@@ -107,6 +118,22 @@ export function inboxResolvedArchiveEntry(
       : inboxItemLabel(item, cast);
   const player = players.find((entry) => entry.id === item.playerId);
   const who = player ? formatPlayerName(player) : "";
+  if (item.kind === "kicker_transfer") {
+    const stamp = parseKickerItemId(item.id);
+    const treterTitle = t("postfach.archive.treterEdition");
+    return oneLineEntry({
+      id: `inbox-${item.id}`,
+      season: stamp?.season ?? season,
+      week: stamp?.week ?? item.week,
+      kind: "kicker_edition",
+      reopen: {
+        type: "kicker",
+        season: stamp?.season ?? season,
+        week: stamp?.week ?? item.week,
+      },
+      line: treterTitle,
+    });
+  }
   const line = who
     ? t("postfach.archive.resolvedWithPlayer", { label, who })
     : t("postfach.archive.resolved", { label });
@@ -116,6 +143,7 @@ export function inboxResolvedArchiveEntry(
     week: item.week,
     kind: "inbox_resolved",
     playerId: item.playerId || undefined,
+    reopen: { type: "inbox_item", itemId: item.id },
     line,
   });
 }
@@ -162,7 +190,9 @@ export function buildPostfachArchive(input: {
         season: event.season,
         week: event.week,
         kind: "club_event",
+        reopen: { type: "club_event", eventId: event.id },
         line: event.message,
+        detail: event.message,
       }),
     );
   }

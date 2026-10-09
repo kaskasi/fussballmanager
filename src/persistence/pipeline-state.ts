@@ -65,6 +65,12 @@ export interface PipelineState {
   assistant_delegation?: AssistantDelegation;
   /** Assistenten-Training-Erinnerung — höchstens ein Blocker pro Spielwoche. */
   training_reminder_week?: { season: number; week: number };
+  /** Dienstags-Kicker gelesen / dismissed diese Spielwoche. */
+  kicker_consumed_week?: { season: number; week: number };
+  /** Snapshot für Postfach-Kicker (Liga-Ticker der Woche). */
+  kicker_edition?: import("../media/kicker-digest.ts").KickerEdition | null;
+  /** Gelesene «Der Treter»-Ausgaben (Snapshot, wieder öffnen im Archiv). */
+  kicker_edition_archive?: import("../media/kicker-digest.ts").KickerEdition[];
   /** F2.1 — training units completed via NEXT this week (PRD 09.3 training nexus). */
   training_units_completed?: number;
   /** Per-slot unit results for the current game week (manual training NEXT). */

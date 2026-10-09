@@ -10,13 +10,16 @@ import { useT } from "../../i18n/react.ts";
 
 export function PostfachArchiveList({
   entries,
+  activeEntryId = null,
+  onSelectEntry,
 }: {
   entries: readonly PostfachArchiveEntry[];
+  activeEntryId?: string | null;
+  onSelectEntry?: (entry: PostfachArchiveEntry) => void;
 }) {
   const t = useT();
   const totalPages = Math.max(1, Math.ceil(entries.length / POSTFACH_ARCHIVE_PAGE_SIZE));
   const [page, setPage] = useState(0);
-  const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
     setPage((current) => Math.min(current, totalPages - 1));
@@ -27,10 +30,7 @@ export function PostfachArchiveList({
     [entries, page],
   );
 
-  const active = activeId ? pageEntries.find((entry) => entry.id === activeId) : null;
-
   const goToPage = (nextPage: number) => {
-    setActiveId(null);
     setPage(Math.max(0, Math.min(nextPage, totalPages - 1)));
   };
 
@@ -51,8 +51,10 @@ export function PostfachArchiveList({
           <li key={`${page}-${entry.id}-${index}`}>
             <button
               type="button"
-              className={entry.id === activeId ? "postfach-archive-row is-active" : "postfach-archive-row"}
-              onClick={() => setActiveId(entry.id)}
+              className={
+                entry.id === activeEntryId ? "postfach-archive-row is-active" : "postfach-archive-row"
+              }
+              onClick={() => onSelectEntry?.(entry)}
             >
               <span className="postfach-archive-row-week">
                 {entry.season > 0
@@ -66,7 +68,6 @@ export function PostfachArchiveList({
           </li>
         ))}
       </ul>
-      {active && active.detail ? <p className="postfach-archive-detail">{active.detail}</p> : null}
       {totalPages > 1 ? (
         <nav className="postfach-archive-pagination" aria-label={t("postfach.archive.pagination")}>
           {Array.from({ length: totalPages }, (_, index) => (

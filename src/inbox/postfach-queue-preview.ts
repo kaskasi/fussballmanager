@@ -60,6 +60,12 @@ export function inboxQueuePreview(
       topic: inboxItemLabel(item, cast),
     };
   }
+  if (item.kind === "kicker_transfer") {
+    return {
+      name: t("postfach.treter.queueName"),
+      topic: t("postfach.treter.queueTopic"),
+    };
+  }
   const player = players.find((entry) => entry.id === item.playerId);
   return {
     name: player ? formatPlayerName(player) : t("inbox.modal.playerFallback"),

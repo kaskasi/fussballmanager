@@ -8,6 +8,7 @@ import {
 import { formatSeasonLabel } from "../sim/season-label.ts";
 import type { Contract, Player } from "../types/player.ts";
 import { estimateCa } from "./market-value.ts";
+import { contractUntilSeasonAfterTerm } from "./contract-until-season.ts";
 
 /** PRD 05.4 — market_value × 0.8% per year, paid weekly. */
 export const WAGE_ANCHOR_YEAR_RATE = 0.008;
@@ -257,7 +258,7 @@ export function applyContractOffer(player: Player, season: number, offer: Contra
       wage_weekly: Math.round(offer.wageWeekly),
       bonus_goal: player.contract?.bonus_goal ?? 0,
       bonus_appearance: Math.round(offer.bonusAppearance),
-      until_season: season + Math.round(offer.termYears),
+      until_season: contractUntilSeasonAfterTerm(season, offer.termYears),
       buyout_clause: player.contract?.buyout_clause,
       sell_on_percentage: player.contract?.sell_on_percentage,
       guaranteed_minutes_promise: offer.minutesPromise,

@@ -121,6 +121,13 @@ function DecisionTileVisual({
       </span>
     );
   }
+  if (item.kind === "kicker_transfer") {
+    return (
+      <span className="postfach-decision-tile-zone" aria-hidden>
+        <Newspaper size={22} strokeWidth={2.25} />
+      </span>
+    );
+  }
   const player = players.find((entry) => entry.id === item.playerId);
   if (player) {
     return (

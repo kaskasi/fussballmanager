@@ -3,7 +3,6 @@ import type { IndividualProgram } from "./development/individual-training.ts";
 import { assignIndividualProgram } from "./development/individual-training.ts";
 import { processTransferBreakout } from "./development/breakouts.ts";
 import { needsTrainingPlanForToday } from "./development/training-plan-state.ts";
-import { isTrainingPlanNeglected } from "./development/training-neglect.ts";
 import {
   filterTeamNavScreens,
   isNavScreenVisible,
@@ -66,12 +65,13 @@ import {
   startOpponentScoutJob,
 } from "./scouting/opponent-scout-job.ts";
 import type { WatchedPlayerMatch } from "./sim/watched-player-match.ts";
-import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
+import { MONDAY, resolveSmartSkip, TUESDAY } from "./sim/day-calendar.ts";
+import { archiveKickerEdition } from "./inbox/kicker-edition-archive.ts";
 import {
-  injectTrainingReminderInbox,
-  shouldInjectTrainingReminderBeforeAdvance,
-  trainingReminderItemId,
-} from "./inbox/training-reminder-inbox.ts";
+  applyTuesdayKickerDelivery,
+  kickerItemId,
+  shouldDeliverKickerOnTuesday,
+} from "./inbox/kicker-inbox.ts";
 import {
   hasInboxBlockerForNext,
   shouldNavigateToCalendarBeforeTimeStep,
@@ -175,6 +175,7 @@ import {
   STADIUM_BASE_BLOCKS,
   normalizeClubStadium,
   stadiumTotalCapacity,
+  type ClubStadium,
 } from "./stadium/club-stadium.ts";
 import { clubDisplayName, clubShortLabel } from "./sim/league-divisions.ts";
 import { playerFixture } from "./sim/league-week.ts";
@@ -885,18 +886,15 @@ export default function App() {
       return;
     }
 
-    if (
-      screen === "training" &&
-      session.trainingCalendarGateDone &&
-      session.trainingUnitsCompleted === 0 &&
-      isTrainingPlanNeglected(session.trainingPlan)
-    ) {
-      flashNotice(t("training.next.planRequired"), "warn");
-      return;
-    }
-
     if (isTrainingNextActive(session)) {
       const preview = runTrainingNextStep(session);
+      const deliverKickerAfterStep =
+        preview.session.weekday === TUESDAY &&
+        shouldDeliverKickerOnTuesday({
+          session: { ...session, weekday: TUESDAY },
+          inbox: session.youthInbox,
+          targetWeekday: TUESDAY,
+        });
       patchSession((current) => {
         const step = runTrainingNextStep(current);
         let nextSession = step.session;
@@ -906,8 +904,16 @@ export default function App() {
             scoutBoard: advanceScoutBoardForSession(current, nextSession.weekday),
           };
         }
-        return nextSession;
+        return deliverKickerAfterStep ? applyTuesdayKickerDelivery(nextSession) : nextSession;
       });
+      if (deliverKickerAfterStep) {
+        const treterId = kickerItemId(session.season, session.week);
+        setPostfachItemId(treterId);
+        setProfileId(null);
+        setForeignPlayerId(null);
+        setProfileFeedback(null);
+        setScreen("postfach");
+      }
       if (preview.openTrainingScreen) {
         setScreen("training");
       } else if (screen !== "training") {
@@ -999,30 +1005,17 @@ export default function App() {
       return;
     }
 
-    if (
-      skip.action === "advance" &&
-      skip.daysAdvanced > 0 &&
-      shouldInjectTrainingReminderBeforeAdvance({
-        delegation: session.assistantDelegation,
-        trainingPlan: session.trainingPlan,
-        youthInbox: session.youthInbox,
-        session,
-      })
-    ) {
-      const itemId = trainingReminderItemId(session.season, session.week);
-      patchSession((current) => ({
-        ...current,
-        youthInbox: injectTrainingReminderInbox(current.youthInbox, current.season, current.week),
-        trainingReminderWeek: { season: current.season, week: current.week },
-      }));
-      openPostfach(itemId);
-      return;
-    }
-
     if (skip.action === "advance" && skip.daysAdvanced > 0) {
+      const landOnTuesday =
+        skip.weekday === TUESDAY &&
+        shouldDeliverKickerOnTuesday({
+          session: { ...session, weekday: skip.weekday },
+          inbox: session.youthInbox,
+          targetWeekday: TUESDAY,
+        });
       patchSession((current) => {
         const now = { season: current.season, week: current.week, weekday: skip.weekday };
-        return {
+        let next = {
           ...current,
           weekday: skip.weekday,
           youthInbox: deliverInboxForDays(
@@ -1039,7 +1032,17 @@ export default function App() {
           youthCamps: tickCampLeaderHires(current.youthCamps, now),
           scoutBoard: advanceScoutBoardForSession(current, skip.weekday),
         };
+        next = applyTuesdayKickerDelivery(next);
+        return next;
       });
+      if (landOnTuesday) {
+        const treterId = kickerItemId(session.season, session.week);
+        setPostfachItemId(treterId);
+        setProfileId(null);
+        setForeignPlayerId(null);
+        setProfileFeedback(null);
+        setScreen("postfach");
+      }
     }
   }, [
     advanceScoutBoardForSession,
@@ -1081,6 +1084,21 @@ export default function App() {
           next = {
             ...next,
             trainingReminderWeek: { season: current.season, week: current.week },
+          };
+        }
+        if (item?.kind === "kicker_transfer") {
+          const edition =
+            next.kickerEdition ??
+            current.kickerEdition ??
+            null;
+          next = {
+            ...next,
+            kickerConsumedWeek: { season: current.season, week: current.week },
+            ...(edition
+              ? {
+                  kickerEditionArchive: archiveKickerEdition(next.kickerEditionArchive, edition),
+                }
+              : {}),
           };
         }
         if (item && isStoryInboxItem(item)) {
@@ -1502,7 +1520,7 @@ export default function App() {
               current.week,
             );
             nextStadium = normalizeClubStadium(story.stadium);
-            nextPlayers = story.players;
+            nextPlayers = [...story.players];
             nextClubEvents = withClubEvent(
               nextClubEvents,
               current.season,
@@ -1562,7 +1580,12 @@ export default function App() {
         (current) => {
           const next = canBuyYouthCamp(current.youthCamps, nationId, current.finances.cash);
           if (!next.ok) return current;
-          const youthCamps = buyYouthCamp(current.youthCamps, nationId, current.season);
+          const youthCamps = buyYouthCamp(
+            current.youthCamps,
+            nationId,
+            current.season,
+            current.week,
+          );
           const opening = generateCampOpeningBundle({
             campId: nationId,
             clubId: current.clubId,
@@ -2511,6 +2534,7 @@ export default function App() {
           trainingPlan={trainingPlan}
           storyState={storyState}
           cash={finances.cash}
+          stadium={stadium}
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
           clubLogoSrc={shellClub.logoSrc}
@@ -2577,6 +2601,7 @@ export default function App() {
           trainingPlan={trainingPlan}
           storyState={storyState}
           cash={finances.cash}
+          stadium={stadium}
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
           clubLogoSrc={shellClub.logoSrc}
@@ -2646,6 +2671,7 @@ export default function App() {
           trainingPlan={trainingPlan}
           storyState={storyState}
           cash={finances.cash}
+          stadium={stadium}
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
           clubLogoSrc={shellClub.logoSrc}
@@ -2713,6 +2739,7 @@ export default function App() {
         trainingPlan={trainingPlan}
         storyState={storyState}
         cash={finances.cash}
+        stadium={stadium}
         clubName={shellClub.name}
         clubInitials={shellClub.initials}
         clubLogoSrc={shellClub.logoSrc}
@@ -2783,6 +2810,12 @@ export default function App() {
           }}
           onApplyOpponentScoutPlan={handleApplyOpponentScoutPlan}
           clubEvents={clubEvents}
+          kickerEdition={session.kickerEdition ?? null}
+          kickerEditionArchive={session.kickerEditionArchive}
+          transferHistory={session.transferState.history ?? []}
+          rivalPlayers={session.rivalPlayers}
+          worldClubs={session.world.clubs}
+          treterSession={session}
         />
       ) : null}
       {openingBlocked(session) ? (
@@ -2919,16 +2952,12 @@ export default function App() {
       {screen === "transfers" ? (
         <TransfersScreen
           players={players}
-          rivalPlayers={rivalPlayers}
           clubId={session.clubId}
           season={season}
           week={week}
           history={transferState.history}
-          scoutTargetIds={Object.keys(scoutBoard.targets)}
-          pending={transferState.pending_transfers ?? []}
           worldClubs={world.clubs}
           onSelectPlayer={setProfileId}
-          onSelectForeignPlayer={setForeignPlayerId}
           onRecallLoan={handleRecallLoan}
         />
       ) : null}
@@ -2962,6 +2991,7 @@ export default function App() {
           clubId={session.clubId}
           season={season}
           week={week}
+          masterSeed={masterSeed}
           stadium={stadium}
           league={league}
           coachingStaff={coachingStaff}
@@ -3074,6 +3104,7 @@ function AppChrome({
   trainingPlan,
   storyState,
   cash,
+  stadium,
   clubName,
   clubInitials,
   clubLogoSrc,
@@ -3093,6 +3124,7 @@ function AppChrome({
   trainingPlan: TrainingSlot[];
   storyState: StoryState;
   cash: number;
+  stadium: ClubStadium;
   clubName: string;
   clubInitials: string;
   clubLogoSrc?: string;
@@ -3112,6 +3144,7 @@ function AppChrome({
       <AppNav
         screen={screen}
         cash={cash}
+        stadium={stadium}
         weekday={weekday}
         trainingPlan={trainingPlan}
         storyState={storyState}
@@ -3140,6 +3173,7 @@ function AppNav({
   trainingPlan,
   storyState,
   cash,
+  stadium,
   clubName,
   clubInitials,
   clubLogoSrc,
@@ -3159,6 +3193,7 @@ function AppNav({
   trainingPlan: TrainingSlot[];
   storyState: StoryState;
   cash: number;
+  stadium: ClubStadium;
   clubName: string;
   clubInitials: string;
   clubLogoSrc?: string;
@@ -3180,7 +3215,6 @@ function AppNav({
   const showTrainingPlanWarn =
     !suppressTrainingPlanWarning(storyState) &&
     needsTrainingPlanForToday(trainingPlan, weekday);
-
   useEffect(() => {
     if (!menuOpen) return;
     function handlePointer(event: MouseEvent) {
@@ -3196,12 +3230,7 @@ function AppNav({
   const teamMenu = filterTeamNavScreens(
     [
       { screen: "hub" as const, labelKey: "shell.nav.pipeline" },
-      {
-        screen: "postfach" as const,
-        labelKey: "shell.nav.postfach",
-        labelSuffix:
-          hubActions.openDecisionCount > 0 ? ` (${hubActions.openDecisionCount})` : undefined,
-      },
+      { screen: "postfach" as const, labelKey: "shell.nav.postfach" },
       { screen: "squad" as const, labelKey: "shell.nav.squad" },
       { screen: "training" as const, labelKey: "shell.nav.training" },
       { screen: "campus" as const, labelKey: "shell.nav.campus" },
@@ -3405,8 +3434,12 @@ function AppNav({
                         setMenuOpen(false);
                       }}
                     >
-                      {tr(item.labelKey)}
-                      {item.labelSuffix ?? ""}
+                      <span className="pipeline-menu-item-label">{tr(item.labelKey)}</span>
+                      {item.screen === "postfach" && hubActions.openDecisionCount > 0 ? (
+                        <span className="pipeline-menu-badge" aria-label={tr("hub.inbox.decisions")}>
+                          {hubActions.openDecisionCount}
+                        </span>
+                      ) : null}
                     </button>
                   ))}
                   <p className="pipeline-menu-section-title">{tr("shell.menu.options")}</p>

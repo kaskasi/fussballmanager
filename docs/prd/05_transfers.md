@@ -203,6 +203,8 @@ Frust-Spirale: 3 Fehlangebote in Folge → `morale` −10 und optional `desire_t
 UI (Akte, F5.4): Verhandeln öffnet ein **Modal**, nicht die Karte. Slider:
 Gehalt, Laufzeit, Einsatzbonus, Minuten-Garantie, Startplatz
 (`none` / `rotation` / `starter`). Jugend und Profis derselbe Dialog.
+**Laufzeit:** Verträge enden am **Sommerfenster** vor `until_season` — gleiche
+Saison-Semantik wie Leihen (`contractUntilSeasonAfterTerm`).
 
 **Fog of war:** Beim **ersten** Angebot kein Berater-Hinweis und kein Live-Verdikt
 (keine Zielvorgaben, keine 😤/🤝-Zeile). Nach **einer** Absage erscheint ein

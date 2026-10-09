@@ -85,6 +85,7 @@ export function OpponentScoutInboxCard({
   onDismiss,
   onApplyPlan,
   embedded = false,
+  readOnly = false,
 }: {
   notice: ScoutJobCompleteNotice;
   postIndex: number;
@@ -92,6 +93,7 @@ export function OpponentScoutInboxCard({
   onDismiss: () => void;
   onApplyPlan?: (plan: SandboxPlan) => void;
   embedded?: boolean;
+  readOnly?: boolean;
 }) {
   useT();
   const report = notice.report;
@@ -151,11 +153,13 @@ export function OpponentScoutInboxCard({
         ) : null}
         {rows.length > 0 ? <TacticResultsTable rows={rows} onApplyPlan={onApplyPlan} /> : null}
       </div>
-      <div className="inbox-actions inbox-scout-job-actions">
-        <button type="button" className="inbox-action is-primary" onClick={onDismiss}>
-          {t("postfach.opponentScout.dismissReport")}
-        </button>
-      </div>
+      {!readOnly ? (
+        <div className="inbox-actions inbox-scout-job-actions">
+          <button type="button" className="inbox-action is-primary" onClick={onDismiss}>
+            {t("postfach.opponentScout.dismissReport")}
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }

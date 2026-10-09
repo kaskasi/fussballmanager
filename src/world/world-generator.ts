@@ -446,8 +446,8 @@ export function generateClubs(masterSeed: number): WorldClub[] {
     if (index === 0) {
       clubs.push({
         id: NORDSTERN_TEAM_ID,
-        name: "FC Nordstern",
-        short_name: "NOR",
+        name: "Kieler FC",
+        short_name: "KFC",
         place: "Kiel",
         region: "Fördeküste",
         division_id,

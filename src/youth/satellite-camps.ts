@@ -43,6 +43,7 @@ export interface YouthCamp {
   id: string;
   staffed: boolean;
   purchased_season: number;
+  purchased_week?: number;
   leader_hire?: CampLeaderHireState;
   agency_commissioned_at?: CampDayStamp;
   leader?: CampLeaderRecord;
@@ -305,11 +306,22 @@ export function canBuyYouthCamp(
   return { ok: true, cost: nation.cost };
 }
 
-export function buyYouthCamp(camps: readonly YouthCamp[], nationId: string, season: number): YouthCamp[] {
+export function buyYouthCamp(
+  camps: readonly YouthCamp[],
+  nationId: string,
+  season: number,
+  week?: number,
+): YouthCamp[] {
   if (ownedCamp(camps, nationId)) return [...camps];
   return [
     ...camps,
-    { id: nationId, staffed: false, purchased_season: season, leader_hire: "none" as const },
+    {
+      id: nationId,
+      staffed: false,
+      purchased_season: season,
+      purchased_week: week,
+      leader_hire: "none" as const,
+    },
   ];
 }
 

@@ -38,6 +38,7 @@ describe("buildPostfachArchive", () => {
       title: `Title ${index}`,
       detail: `Detail ${index}`,
       kind: "club_event",
+      reopen: { type: "club_event", eventId: `e${index}` },
     }));
     const page0 = paginateArchiveEntries(entries, 0);
     const page1 = paginateArchiveEntries(entries, 1);

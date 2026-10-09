@@ -238,6 +238,13 @@ export function scoutJobNoticeById(
   );
 }
 
+export function scoutJobNoticeByIdAny(
+  board: ScoutBoard,
+  itemId: string,
+): ScoutJobCompleteNotice | undefined {
+  return (board.discovery_postfach_queue ?? []).find((entry) => entry.id === itemId);
+}
+
 /** Unread Postfach card for this fixture's opponent prep (PRD 22). */
 export function opponentScoutNoticeForMatch(
   board: ScoutBoard,

@@ -75,6 +75,7 @@ import { migration075TrainingPlanPresets } from "./migration_075_training_plan_p
 import { migration076WeekStartAttributes } from "./migration_076_week_start_attributes.ts";
 import { migration077PrecinctFullFarm } from "./migration_077_precinct_full_farm.ts";
 import { migration078PitchCondition } from "./migration_078_pitch_condition.ts";
+import { migration084KickerEditionArchive } from "./migration_084_kicker_edition_archive.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -159,6 +160,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration076WeekStartAttributes,
   migration077PrecinctFullFarm,
   migration078PitchCondition,
+  migration084KickerEditionArchive,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

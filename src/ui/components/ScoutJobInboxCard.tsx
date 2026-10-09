@@ -14,6 +14,7 @@ export function ScoutJobInboxCard({
   onOpenScoutingNetwork,
   onOpenScoutingHits,
   compact = false,
+  readOnly = false,
 }: {
   notice: ScoutJobCompleteNotice;
   postIndex: number;
@@ -22,6 +23,7 @@ export function ScoutJobInboxCard({
   onOpenScoutingNetwork?: () => void;
   onOpenScoutingHits?: () => void;
   compact?: boolean;
+  readOnly?: boolean;
 }) {
   useT();
   const isRegion = notice.kind === "region_complete";
@@ -70,21 +72,23 @@ export function ScoutJobInboxCard({
           </ul>
         ) : null}
       </div>
-      <div className="inbox-actions inbox-scout-job-actions">
-        {isRegion && onOpenScoutingNetwork ? (
-          <button type="button" className="inbox-action" onClick={onOpenScoutingNetwork}>
-            {t("postfach.scoutJob.ctaNetwork")}
+      {!readOnly ? (
+        <div className="inbox-actions inbox-scout-job-actions">
+          {isRegion && onOpenScoutingNetwork ? (
+            <button type="button" className="inbox-action" onClick={onOpenScoutingNetwork}>
+              {t("postfach.scoutJob.ctaNetwork")}
+            </button>
+          ) : null}
+          {!isRegion && onOpenScoutingHits ? (
+            <button type="button" className="inbox-action" onClick={onOpenScoutingHits}>
+              {t("postfach.scoutJob.ctaHits")}
+            </button>
+          ) : null}
+          <button type="button" className="inbox-action is-primary" onClick={onDismiss}>
+            {t("postfach.scoutJob.dismiss")}
           </button>
-        ) : null}
-        {!isRegion && onOpenScoutingHits ? (
-          <button type="button" className="inbox-action" onClick={onOpenScoutingHits}>
-            {t("postfach.scoutJob.ctaHits")}
-          </button>
-        ) : null}
-        <button type="button" className="inbox-action is-primary" onClick={onDismiss}>
-          {t("postfach.scoutJob.dismiss")}
-        </button>
-      </div>
+        </div>
+      ) : null}
     </section>
   );
 }

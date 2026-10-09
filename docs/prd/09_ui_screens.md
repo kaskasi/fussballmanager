@@ -127,6 +127,7 @@ Interaktion:
 - Queue, höchstens 4 offen (PRD 03.4); Zustellung aus der Queue **max. 1 Jugend-Post pro Kalenderwoche** (Mo–Fr-Slot).
 - Jugend-Callbacks: Kachel mit Portrait + Token (Position, Alter, CA); Aktionen inline (Lucide), **kein** zweites Spieler-Hero-Panel.
 - Schwere Post (Gegner-Analyse, Camp-Leiter): **Modal**; Scout-Job (Region/Verein): kompakte Inline-Zeile.
+- **Archiv** (Liste unten): erledigte Posts, Club-Events und gelesene Scout-Jobs bleiben gespeichert — Zeile antippen **öffnet wieder** (nur Lesen, kein erneutes Entscheiden). **Der Treter:** Snapshot pro Woche in `kicker_edition_archive` (Save v84), Zeitung wie beim Erstlesen.
 
 | Aktion | Icon (Lucide) |
 |---|---|
@@ -201,7 +202,8 @@ Header-**NEXT** ist **kalendergebunden**: erst orientieren, dann Zeit/Spiel — 
 | Nach Spiel / Freiwoche | Tagweise bis **So**, dann `simulate_week` (nur auf Kalender) |
 | Inbox | Montag + offene Jugend-Inbox → Postfach (global oder auf Kalender), **kein** Tag verbrauchen |
 | Jugend-Queue | `deliverInboxForDays` pro NEXT-Tag; **max. 1** Queue→offen pro Kalenderwoche am Release-Wochentag (Mo–Fr) |
-| Training-Erinnerung | Kalender + Assistenten-Toggle „Wochenplan“: fehlt Fokus am **aktuellen** Mo–Fr-Tag, **einmal pro Spielwoche** blockierendes Postfach vor Tag+1; danach normale NEXT-Kette |
+| Training-Erinnerung | **Entfernt** — kein blockierendes Postfach mehr für fehlenden Wochenplan (Training-NEXT ohne Plan-Gate). |
+| **Der Treter (Di)** | Tabloid **«Der Treter»** im Postfach (kein NEXT-Blocker). Nach Mo-Training (3. Slot) oder Kalender-Di: Item erscheint, **ein** NEXT öffnet Postfach, danach Training weiter. Copy `treter-copy.ts`, Build `buildTreterEdition`. |
 
 Kalender-UI (`CalendarScreen`): Monatsfokus; **`isToday`** = Zivil-Datum aus `(season, week, weekday)`; Transferfenster nur im Raster (kein Shell-Header-Chrome); kein WeekdayStrip; kein klickbarer Zellsprung in P2.
 

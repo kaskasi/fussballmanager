@@ -120,6 +120,9 @@ export interface GameSession {
   youthCamps: YouthCamp[];
   /** Set when training reminder Postfach item was shown/dismissed this game week. */
   trainingReminderWeek?: { season: number; week: number };
+  kickerConsumedWeek?: { season: number; week: number };
+  kickerEdition?: import("../media/kicker-digest.ts").KickerEdition | null;
+  kickerEditionArchive: import("../media/kicker-digest.ts").KickerEdition[];
   /** Mo–Fr units completed via header NEXT this game week (0–15). */
   trainingUnitsCompleted: number;
   /** Manual training: false at week start until one calendar NEXT (opponent scout). */
@@ -281,6 +284,9 @@ export function sessionFromSave(save: SaveGame): GameSession {
     academyFacility: pipeline.academy_facility ?? "academy_basic",
     youthCamps: normalizeYouthCamps(pipeline.youth_camps),
     trainingReminderWeek: pipeline.training_reminder_week,
+    kickerConsumedWeek: pipeline.kicker_consumed_week,
+    kickerEdition: pipeline.kicker_edition ?? null,
+    kickerEditionArchive: pipeline.kicker_edition_archive ?? [],
     trainingUnitsCompleted: pipeline.training_units_completed ?? 0,
     trainingCalendarGateDone: resolveTrainingCalendarGateDone(
       pipeline,
@@ -315,6 +321,9 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     academy_facility: session.academyFacility,
     youth_camps: session.youthCamps,
     training_reminder_week: session.trainingReminderWeek,
+    kicker_consumed_week: session.kickerConsumedWeek,
+    kicker_edition: session.kickerEdition ?? null,
+    kicker_edition_archive: session.kickerEditionArchive,
     training_units_completed: session.trainingUnitsCompleted,
     training_calendar_gate_done: session.trainingCalendarGateDone,
     training_unit_outcomes: session.trainingUnitOutcomes,

@@ -8,7 +8,7 @@ describe("club-display", () => {
     const clubs = [
       {
         id: NORDSTERN_TEAM_ID,
-        name: "FC Nordstern",
+        name: "Kieler FC",
         short_name: "NOR",
         place: "Kiel",
         region: "Fördeküste",
@@ -20,6 +20,6 @@ describe("club-display", () => {
     ];
     const teamId = asTeamId(NORDSTERN_TEAM_ID);
     expect(clubPlaceName(teamId, clubs)).toBe("Kiel");
-    expect(clubNameFromWorld(teamId, clubs)).toBe("FC Nordstern");
+    expect(clubNameFromWorld(teamId, clubs)).toBe("Kieler FC");
   });
 });

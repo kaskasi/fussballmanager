@@ -7,6 +7,7 @@ import {
   type TransferState,
 } from "./negotiations.ts";
 import { isPreContractWindow } from "./contract-remaining.ts";
+import { contractUntilSeasonAfterTerm } from "./contract-until-season.ts";
 import { appendTransferRecord, createPurchaseRecord } from "./transfer-history.ts";
 import { loanClubName } from "./loan-roster.ts";
 
@@ -241,7 +242,7 @@ export function activatePendingPreContracts(
             guaranteed_minutes_promise: "none",
           }),
           wage_weekly: entry.wage_weekly,
-          until_season: entry.effective_season + 3,
+          until_season: contractUntilSeasonAfterTerm(entry.effective_season, 3),
         },
       },
       entry.buyer_club_id,

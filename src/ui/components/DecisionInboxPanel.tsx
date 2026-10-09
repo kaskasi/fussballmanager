@@ -45,8 +45,16 @@ import { buildPostfachQueueIds } from "../../inbox/postfach-queue.ts";
 import type { ClubEvent } from "../../inbox/club-events.ts";
 import { PostfachDecisionGrid } from "./PostfachDecisionGrid.tsx";
 import { PostfachArchiveList } from "./PostfachArchiveList.tsx";
+import { PostfachArchiveDetail } from "./PostfachArchiveDetail.tsx";
+import type { PostfachArchiveEntry } from "../../inbox/postfach-archive.ts";
 import { PostfachExpandModal } from "./PostfachExpandModal.tsx";
 import { InboxActionButton } from "./InboxActionButton.tsx";
+import { KickerInboxCard } from "./KickerInboxCard.tsx";
+import type { KickerEdition, TreterEdition } from "../../media/kicker-digest.ts";
+import { buildTreterEdition } from "../../media/kicker-digest.ts";
+import type { GameSession } from "../../persistence/game-session.ts";
+import type { TransferRecord } from "../../transfers/transfer-history.ts";
+import type { WorldClub } from "../../world/world-generator.ts";
 
 /** WIREFRAME: docs/prd/design.md §9.4 — Postfach-Inhalt */
 export function DecisionInboxPanel({
@@ -69,6 +77,12 @@ export function DecisionInboxPanel({
   onOpenScoutingHits,
   onApplyOpponentScoutPlan,
   clubEvents = [],
+  kickerEdition = null,
+  kickerEditionArchive = [],
+  transferHistory = [],
+  rivalPlayers = [],
+  worldClubs = [],
+  treterSession,
 }: {
   inbox: YouthInboxState;
   players: Player[];
@@ -89,6 +103,12 @@ export function DecisionInboxPanel({
   onOpenScoutingHits?: () => void;
   onApplyOpponentScoutPlan?: (plan: SandboxPlan) => void;
   clubEvents?: readonly ClubEvent[];
+  kickerEdition?: KickerEdition | null;
+  kickerEditionArchive?: readonly TreterEdition[];
+  transferHistory?: readonly TransferRecord[];
+  rivalPlayers?: readonly Player[];
+  worldClubs?: readonly WorldClub[];
+  treterSession?: GameSession | null;
 }) {
   useT();
   const focus = useMemo(() => inboxWeekFocus(inbox, players), [inbox, players]);
@@ -124,6 +144,7 @@ export function DecisionInboxPanel({
       ? initialItemId
       : (postfachQueueIds[0] ?? null);
   const [activeId, setActiveId] = useState<string | null>(defaultQueueId);
+  const [archiveEntry, setArchiveEntry] = useState<PostfachArchiveEntry | null>(null);
   const [expandModalOpen, setExpandModalOpen] = useState(false);
   const presentation = postfachPresentation(activeId, scoutBoard);
 
@@ -167,6 +188,13 @@ export function DecisionInboxPanel({
   const showBlockedLoanAction =
     Boolean(loanBlock) && active?.kind === "departure_risk" && !activeActions.includes("loan");
   const primaryAction = active ? primaryInboxAction(active, activeActions) : null;
+  const kickerEditionResolved = useMemo((): KickerEdition => {
+    if (kickerEdition && kickerEdition.season === season && kickerEdition.week === week) {
+      return kickerEdition;
+    }
+    if (treterSession) return buildTreterEdition(treterSession);
+    return { season, week, masthead: "", articles: [] };
+  }, [kickerEdition, season, week, treterSession]);
 
   return (
     <>
@@ -294,6 +322,33 @@ export function DecisionInboxPanel({
                 onChoose={(action) => onDecision(active.id, action)}
               />
             </section>
+          ) : active?.kind === "kicker_transfer" ? (
+            <KickerInboxCard
+              edition={kickerEditionResolved}
+              postIndex={postfachQueueIds.indexOf(active.id) + 1}
+              postTotal={postfachOpenTotal}
+              onDismiss={() => onDecision(active.id, "dismiss")}
+              onSelectPlayer={onSelectPlayer}
+              compact
+            />
+          ) : active?.kind === "assistant_training_reminder" ? (
+            <section className="inbox-detail inbox-card-training-reminder">
+              <p className="inbox-post-count">
+                {t("postfach.scoutJob.postCount", {
+                  index: postfachQueueIds.indexOf(active.id) + 1,
+                  total: postfachOpenTotal,
+                })}
+              </p>
+              <p>
+                <strong>{storyCast.assistant_name}</strong>
+              </p>
+              <p>{inboxItemLabel(active, storyCast)}</p>
+              <div className="inbox-actions">
+                <button type="button" className="inbox-action" onClick={() => onDecision(active.id, "dismiss")}>
+                  {t("inbox.modal.remove")}
+                </button>
+              </div>
+            </section>
           ) : active && !player ? (
             <section className="inbox-detail inbox-card-orphan">
               <p>{t("inbox.modal.orphan")}</p>
@@ -345,7 +400,26 @@ export function DecisionInboxPanel({
         </>
       ) : null}
 
-      <PostfachArchiveList entries={archiveEntries} />
+      {archiveEntry ? (
+        <PostfachArchiveDetail
+          entry={archiveEntry}
+          onClose={() => setArchiveEntry(null)}
+          inbox={inbox}
+          players={players}
+          storyCast={storyCast}
+          clubEvents={clubEvents}
+          scoutBoard={scoutBoard}
+          kickerEditionArchive={kickerEditionArchive}
+          kickerEditionCurrent={kickerEdition}
+          onSelectPlayer={onSelectPlayer}
+        />
+      ) : null}
+
+      <PostfachArchiveList
+        entries={archiveEntries}
+        activeEntryId={archiveEntry?.id ?? null}
+        onSelectEntry={setArchiveEntry}
+      />
     </>
   );
 }
@@ -365,6 +439,8 @@ function primaryInboxAction(
             ? ["training_focus", "dismiss"]
             : item.kind === "assistant_training_reminder"
               ? ["dismiss"]
-              : [];
+              : item.kind === "kicker_transfer"
+                ? ["dismiss"]
+                : [];
   return preferred.find((action) => actions.includes(action)) ?? actions[0] ?? null;
 }

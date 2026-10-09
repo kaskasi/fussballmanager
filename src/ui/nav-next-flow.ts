@@ -9,7 +9,7 @@ import {
 } from "../sim/day-calendar.ts";
 import { isTrainingCalendarGatePending, isTrainingNextActive } from "../sim/training-next.ts";
 
-/** Montag + offene Jugend-Inbox — NEXT geht zuerst ins Postfach (PRD 09.3). */
+/** Montag + offene Jugend-Inbox — NEXT öffnet Postfach (PRD 09.3). Der Treter blockiert nicht. */
 export function hasInboxBlockerForNext(
   session: Pick<GameSession, "weekday">,
   youthInbox: YouthInboxState,

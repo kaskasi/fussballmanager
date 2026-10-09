@@ -7,6 +7,10 @@ import type { DecisionAction, YouthInboxState } from "../../youth/decision-inbox
 import type { StoryCast } from "../../narrative/story-state.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import type { ClubEvent } from "../../inbox/club-events.ts";
+import type { KickerEdition, TreterEdition } from "../../media/kicker-digest.ts";
+import type { TransferRecord } from "../../transfers/transfer-history.ts";
+import type { WorldClub } from "../../world/world-generator.ts";
+import type { GameSession } from "../../persistence/game-session.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { DecisionInboxPanel } from "../components/DecisionInboxPanel.tsx";
@@ -30,6 +34,12 @@ export function PostfachScreen({
   onOpenScoutingHits,
   onApplyOpponentScoutPlan,
   clubEvents,
+  kickerEdition = null,
+  kickerEditionArchive = [],
+  transferHistory = [],
+  rivalPlayers = [],
+  worldClubs = [],
+  treterSession = null,
 }: {
   players: Player[];
   youthInbox: YouthInboxState;
@@ -49,6 +59,12 @@ export function PostfachScreen({
   onOpenScoutingHits: () => void;
   onApplyOpponentScoutPlan?: (plan: SandboxPlan) => void;
   clubEvents: readonly ClubEvent[];
+  kickerEdition?: KickerEdition | null;
+  kickerEditionArchive?: readonly TreterEdition[];
+  transferHistory?: readonly TransferRecord[];
+  rivalPlayers?: readonly Player[];
+  worldClubs?: readonly WorldClub[];
+  treterSession?: GameSession | null;
 }) {
   useT();
 
@@ -77,6 +93,12 @@ export function PostfachScreen({
           onOpenScoutingHits={onOpenScoutingHits}
           onApplyOpponentScoutPlan={onApplyOpponentScoutPlan}
           clubEvents={clubEvents}
+          kickerEdition={kickerEdition}
+          kickerEditionArchive={kickerEditionArchive}
+          transferHistory={transferHistory}
+          rivalPlayers={rivalPlayers}
+          worldClubs={worldClubs}
+          treterSession={treterSession}
         />
       </section>
     </main>

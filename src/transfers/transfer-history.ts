@@ -36,6 +36,7 @@ export function displayTransferOtherClubs(
     })
     .join(" → ");
 }
+import { contractUntilSeasonAfterTerm } from "./contract-until-season.ts";
 import type { TransferState } from "./negotiations.ts";
 
 export type TransferKind = "in" | "out" | "loan_out" | "loan_return" | "ai";
@@ -106,9 +107,41 @@ export function recordsForSeason(history: readonly TransferRecord[], season: num
   return history.filter((record) => record.season === season);
 }
 
+export function isClubTransferRecord(record: TransferRecord): boolean {
+  return record.kind !== "ai";
+}
+
+/** Manager-club moves only (no league AI ticker). */
+export function clubRecordsForSeason(
+  history: readonly TransferRecord[],
+  season: number,
+): TransferRecord[] {
+  return history.filter((record) => record.season === season && isClubTransferRecord(record));
+}
+
+export function clubArrivalRecords(records: readonly TransferRecord[]): TransferRecord[] {
+  return records.filter((record) => record.kind === "in" || record.kind === "loan_return");
+}
+
+export function clubDepartureRecords(records: readonly TransferRecord[]): TransferRecord[] {
+  return records.filter((record) => record.kind === "out" || record.kind === "loan_out");
+}
+
 export function availableTransferSeasons(history: readonly TransferRecord[], currentSeason: number): number[] {
   const seasons = new Set<number>([currentSeason]);
   for (const record of history) seasons.add(record.season);
+  return [...seasons].sort((left, right) => right - left);
+}
+
+/** Seasons with at least one manager-club move (excludes AI-only seasons). */
+export function availableClubTransferSeasons(
+  history: readonly TransferRecord[],
+  currentSeason: number,
+): number[] {
+  const seasons = new Set<number>([currentSeason]);
+  for (const record of history) {
+    if (isClubTransferRecord(record)) seasons.add(record.season);
+  }
   return [...seasons].sort((left, right) => right - left);
 }
 
@@ -127,7 +160,7 @@ export function loanPlayerOut(
       current_loan: {
         from_club: fromClubId,
         to_club: toClubId,
-        until_season: season + 1,
+        until_season: contractUntilSeasonAfterTerm(season, 1),
         has_option: true,
         minute_guarantee: 900,
       },

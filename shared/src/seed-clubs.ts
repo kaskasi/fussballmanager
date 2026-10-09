@@ -272,8 +272,8 @@ export const RHEINWACHT_ID = asTeamId("sv-rheinwacht");
 
 export const nordsternTeam: Team = {
   id: NORDSTERN_ID,
-  name: "FC Nordstern",
-  shortName: "NOR",
+  name: "Kieler FC",
+  shortName: "KFC",
 };
 
 export const rheinwachtTeam: Team = {

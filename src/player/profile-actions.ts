@@ -8,7 +8,6 @@ import { formatSeasonLabel } from "../sim/season-label.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { canPromotePlayer } from "../youth/promotion-gate.ts";
-import { hasActiveProTrial, startProTrial } from "../youth/pro-trial.ts";
 
 export type PlayerProfileAction =
   | "praise"
@@ -44,7 +43,6 @@ export interface ProfileMenuItem {
 
 const U19_CA_READY = 55;
 const PRO_CA_READY = 68;
-const EARLY_PRO_CA = 66;
 
 function clampMorale(value: number): number {
   return Math.min(100, Math.max(0, value));
@@ -101,18 +99,13 @@ export function profileMenuItems(
     items.push({
       action: "promote_u19",
       label: "In U19",
-      hint: "Standard-Aufstieg in die U19.",
-    });
-    items.push({
-      action: "promote_pro",
-      label: "Profikader",
-      hint: "Früher Sprung ins erste Team — riskant ohne CA.",
+      hint: "Aufstieg in die U19 — nächster Schritt vor dem Profikader.",
     });
   } else if (player.squad_status === "u19") {
     items.push({
       action: "promote_pro",
-      label: "Probewoche",
-      hint: "Eine Woche Profiteam — danach Beförderung, wenn Platz im Kader.",
+      label: "Profikader",
+      hint: "Direkt ins erste Team, wenn Platz im Kader.",
     });
     items.push({
       action: "demote_u17",
@@ -219,6 +212,10 @@ export function applyProfileAction(
       if (player.squad_status !== "u17") {
         return { player, message: "Nur U17-Spieler können in die U19." };
       }
+      const roster = squad.length > 0 ? squad : [player];
+      if (!canPromotePlayer(roster, clubId, player).allowed) {
+        return { player, message: "U19-Kader voll — kein Platz zum Hochziehen." };
+      }
       const rating = ca(player);
       const moraleDelta = rating >= U19_CA_READY ? 6 : -8;
       let next: Player = {
@@ -235,36 +232,37 @@ export function applyProfileAction(
       };
     }
     case "promote_pro": {
-      if (player.squad_status !== "u17" && player.squad_status !== "u19") {
-        return { player, message: "Nur Jugendspieler können befördert werden." };
-      }
-      if (player.squad_status === "u19") {
-        if (hasActiveProTrial(player)) {
-          return { player, message: "Probewoche läuft bereits." };
-        }
-        const gate = canPromotePlayer(squad.length > 0 ? squad : [player], clubId, player);
-        if (!gate.allowed) {
-          return { player, message: "Kein Platz im Profikader für eine Probewoche." };
-        }
-        const next = startProTrial(player, season, week);
+      if (player.squad_status !== "u19") {
         return {
-          player: next,
-          message: "Probewoche im Profiteam gestartet — Training wie bei den Profis.",
+          player,
+          message: "Nur U19-Spieler können ins Profiteam — zuerst U17 → U19.",
         };
       }
+      const roster = squad.length > 0 ? squad : [player];
+      const gate = canPromotePlayer(roster, clubId, player);
+      if (!gate.allowed) {
+        return { player, message: "Kein Platz im Profikader zum Hochziehen." };
+      }
       const rating = ca(player);
-      const ready = rating >= EARLY_PRO_CA;
-      const moraleDelta = ready ? 12 : -15;
+      const ready = rating >= PRO_CA_READY;
+      const moraleDelta = ready ? 10 : -6;
       let next: Player = {
         ...withMorale(player, moraleDelta),
         squad_status: "pro",
+        state: {
+          ...player.state,
+          pro_trial: undefined,
+          modifiers: player.state.modifiers.filter(
+            (mod) => !mod.source_event_id.startsWith("pro_trial_"),
+          ),
+        },
       };
       next = grantAchievement(next, ACHIEVEMENT.promotedPro);
       return {
         player: next,
         message: ready
-          ? "Früher Sprung ins Profiteam — große Motivation."
-          : "Zu früh im Profikader — Moral sinkt stark.",
+          ? "Hochgezogen ins Profiteam — Spieler ist motiviert."
+          : "Ins Profiteam geholt — noch Entwicklung nötig, Moral leidet leicht.",
       };
     }
     case "demote_u19": {

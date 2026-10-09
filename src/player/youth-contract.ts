@@ -1,4 +1,5 @@
 import type { Contract, Player } from "../types/player.ts";
+import { contractUntilSeasonAfterTerm } from "../transfers/contract-until-season.ts";
 
 /** PRD 03.6 / F3.6 — simple youth wage bands until finances PRD exists. */
 export function defaultYouthContract(age: number, currentSeason: number): Contract {
@@ -7,7 +8,7 @@ export function defaultYouthContract(age: number, currentSeason: number): Contra
     wage_weekly: wageWeekly,
     bonus_goal: 0,
     bonus_appearance: 25,
-    until_season: currentSeason + (age <= 16 ? 3 : 2),
+    until_season: contractUntilSeasonAfterTerm(currentSeason, age <= 16 ? 3 : 2),
     guaranteed_minutes_promise: age >= 17 ? "rotation" : "none",
   };
 }

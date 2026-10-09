@@ -109,7 +109,7 @@ describe("decision inbox", () => {
     }
   });
 
-  it("starts a pro trial when promoting U19 players from the inbox", () => {
+  it("promotes U19 players directly to pro from the inbox", () => {
     const player = youthPlayer("pl_pro", 18, "u19");
     const inbox: YouthInboxState = {
       week: 34,
@@ -129,9 +129,9 @@ describe("decision inbox", () => {
       lastReport: null,
     };
     const result = applyInboxDecision(inbox, [player], "pro1_pl_pro_34", "promote", 1, 10);
-    expect(result.players[0]?.squad_status).toBe("u19");
-    expect(result.players[0]?.state.pro_trial?.ends_week).toBe(35);
-    expect(result.players[0]?.history.achievements).toContain(ACHIEVEMENT.proTrialWeek);
+    expect(result.players[0]?.squad_status).toBe("pro");
+    expect(result.players[0]?.state.pro_trial).toBeUndefined();
+    expect(result.players[0]?.history.achievements).toContain(ACHIEVEMENT.promotedPro);
   });
 
   it("applies a promotion decision to U17 players", () => {

@@ -45,14 +45,21 @@ describe("profile actions", () => {
     expect(ready.state.morale).toBeGreaterThan(50);
   });
 
-  it("starts a pro trial from the u19 profile menu", () => {
+  it("promotes u19 directly to pro from the profile menu", () => {
     const player = clonePlayer();
     player.squad_status = "u19";
     player.state.morale = 60;
     const { player: next } = applyProfileAction(player, "promote_pro", 1, 12, [player]);
-    expect(next.squad_status).toBe("u19");
-    expect(next.state.pro_trial?.started_week).toBe(12);
-    expect(next.state.morale).toBeGreaterThan(60);
+    expect(next.squad_status).toBe("pro");
+    expect(next.state.pro_trial).toBeUndefined();
+  });
+
+  it("does not offer pro promotion from u17 profile menu", () => {
+    const player = clonePlayer();
+    player.squad_status = "u17";
+    const items = profileMenuItems(player, true);
+    expect(items.some((item) => item.action === "promote_u19")).toBe(true);
+    expect(items.some((item) => item.action === "promote_pro")).toBe(false);
   });
 
   it("demotes young pro back to u19", () => {

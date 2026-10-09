@@ -70,7 +70,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F3.2 | Jugend-Campus 2D | M1 | Campus-Grid, Gebäude-Stufen, Badge-Gruppen — kein Iso-Stadtmodell |
 | F3.3 | Auto-Simulation U17/U19 | M1 | KEINE manuellen Aufstellungen — YouthReports (PRD 03.3) |
 | F3.4 | Decision Inbox | M1 | Max 4 Items/Woche: Leihen/Hochziehen/Vertrag/Fokus (PRD 03.4) |
-| F3.5 | Hochzieh-Workflow | M2 | Empfehlungen + Probewoche Profitraining |
+| F3.5 | Hochzieh-Workflow | M2 | Postfach-Empfehlungen: U17→U19, U19→Profikader (direkt, kein Probetraining) |
 | F3.6 | Jugendverträge | M2 | Profi-Verträge, Spielzeit-Klauseln — Dialog teilt F5.4 |
 | F3.7 | Akademie-Ausbau | M2 | 3 Stufen, Intake-Zahl + Qualität, Elite-Chance 1.5× (PRD 03.2) |
 | F3.8 | Abgangsrisiko | M2 | Trigger, 1-Wochen-Fenster, Gegenmaßnahmen (PRD 03.5) |
@@ -101,6 +101,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F5.4 | Vertragsverhandlungen | M2 | Player-Prioritäten, Fog beim 1. Angebot, Frustr-Spirale (PRD 05.4) |
 | F5.5 | Sell-On-Klauseln | M2 | Jugend-Anreiz, Track in fee_history |
 | F5.6 | KI-Transfermarkt | M2 | Dieselben Formeln, Budget-Disziplin (PRD 05.5) |
+| F5.6b | Kicker (Di) | M2 | Wöchentlicher Liga-Ticker im Postfach aus F5.6-Deals (PRD 09) |
 | F5.7 | Ablösefreie | M1 | Vorverträge ab 6 Monate Restlaufzeit (PRD 05.6) |
 | F5.8 | Beraterwesen | M3 | Beziehungs-System, Sympathie-Effekte |
 | F5.9 | Rückhol-Stories | M4 | Legenden kehren zurück |

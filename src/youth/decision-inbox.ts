@@ -8,7 +8,7 @@ import type { TransferRecord } from "../transfers/transfer-history.ts";
 import type { Player } from "../types/player.ts";
 import type { CoachIcon } from "./academy.ts";
 import { departureReasonLabel, departureRiskReasons } from "./departure-risk.ts";
-import { hasActiveProTrial, startProTrial } from "./pro-trial.ts";
+import { hasActiveProTrial } from "./pro-trial.ts";
 import { canPromotePlayer } from "./promotion-gate.ts";
 import { localizeStoryInbox } from "../i18n/story-display.ts";
 import { t } from "../i18n/index.ts";
@@ -460,13 +460,6 @@ export function actionLabel(action: DecisionAction, context?: DecisionActionCont
     const choice = narrative?.choices.find((entry) => entry.id === choiceId);
     return choice?.label ?? choiceId;
   }
-  if (
-    action === "promote" &&
-    context?.player?.squad_status === "u19" &&
-    context?.item?.reason === "ready_for_pro"
-  ) {
-    return t("inbox.action.trialWeek");
-  }
   switch (action) {
     case "loan":
       return t("inbox.action.loan");
@@ -490,13 +483,6 @@ export function actionIcon(action: DecisionAction, context?: DecisionActionConte
     if (mapped) return mapped.icon;
     const choice = context?.item?.narrative?.choices.find((entry) => entry.id === choiceId);
     return choice?.icon ?? "💬";
-  }
-  if (
-    action === "promote" &&
-    context?.player?.squad_status === "u19" &&
-    context?.item?.reason === "ready_for_pro"
-  ) {
-    return "🏃";
   }
   switch (action) {
     case "loan":
@@ -794,7 +780,9 @@ export function applyInboxDecision(
         );
       } else if (player.squad_status === "u19") {
         nextPlayers = nextPlayers.map((entry) =>
-          entry.id === item.playerId ? startProTrial(entry, season, item.week) : entry,
+          entry.id === item.playerId
+            ? grantAchievement({ ...entry, squad_status: "pro" }, ACHIEVEMENT.promotedPro)
+            : entry,
         );
       }
       break;

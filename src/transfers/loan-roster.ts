@@ -7,7 +7,7 @@ import type { WorldClub } from "../world/world-generator.ts";
 import { estimateCa } from "./market-value.ts";
 
 const CAREER_CLUB_NAMES: Record<string, string> = {
-  cl_fc_nordstern: "FC Nordstern",
+  cl_fc_nordstern: "Kieler FC",
   cl_loan_partner: "TSV Heideweg",
   cl_rival_pool: "Vereinspool",
 };

@@ -247,6 +247,12 @@ blocken. Gelände-Erweiterung kostet €320k.
 - **Team-Menü → Merchandising** — Steuerung: Trikot-Top-Verkäufer (Marktwert-Gewichte),
   Kollektion-Mix (Schals/Textil/Heim), ein Liefervertrag (Budget/Standard/Oeko) + Retail-Modus;
   Lieferwechsel = Infrastructure-Ledger, wirkt ab Folgewoche.
+  **Lager bleibt:** SKU-Bestände, Bulk-Markt, On-Demand-Lieferung und Firesale — Ausbau
+  (Fanshop-Level, Kapazität, Einkauf) ist Teil des Loops, keine reine Durchsatz-Simulation.
+  **Sale-Ende:** Kurz-Zusammenfassung (Stück, Umsatz, Gewinn/Verlust) als Modal + Club-Mail.
+  **Überfüllung > 4 Wochen:** Mitarbeiter entsorgen Überschuss (Buchwert-Verlust) + Mail.
+  **Lager Stufe 1:** Kapazität ≈ **8 Wochen** Referenz-Absatz bei vollem Bestand; Neustart **~25 %** gefüllt
+  (`merchandising-baseline.ts` / Fanshop-Stufe 1).
 - **Finanzen → Tab Merch** — nur Auswertung (wie Eintritt): Wochen-/Voll-netto, Top-Trikots,
   Mix; keine zweite Fortschritts-CTA im Tab (design.md §10).
 - Übersicht: Budget-Karte „Merchandising“ neben Kasse/Transfer/Gehalt.
@@ -265,14 +271,18 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
   nicht auf dem Rasen. Klick ▭ = Sponsor-Modal (F6.5).
   Lucide Shirt — Brustlogo-Slot neben dem Plan.
 
-  Gelände: 14×10. Stadion fest (4×2, Mitte). Start: 10×10 owned,
-  Straße von der Stadt zur Arena. 2×5-Plättchen links/rechts (abwechselnd).
+  Gelände: 18×12. Stadion fest (4×2). Start-Kern 10×10 owned (zentriert),
+  Straße von der Stadt zur Arena. **Seiten-Erweiterungen:** vier kaufliche 2×6-Plättchen
+  links/rechts (abwechselnd oben/unten) à €320k — volle Breite = 18 Spalten.
   Gebäude = Rechteck (Mindestgröße), Kante wachsen/schrumpfen, zurück auf min.
   Stadtanschluss außerhalb oben. Straße ziehen (Sim City): verbindet sich
   automatisch. Gebäude ohne Netz (inkl. Arena) tragen Warn-Icon wie die Bushaltestelle;
   Klick legt den Weg zur Autobahn.
   Bude (n) · Park (n) · Rest einmal, aber skalierbar.
-  Rechts: Effekt-Buffs (Zuschauer/Stadt/Training/Kasse), Hunger = leer, undocked = Warnung.
+  Layout: Palette + Effekt-Rail oben bündig mit erster Grid-Zeile; Detail-/CTA-Zeile
+  unter dem Board (Hotel/Restaurant-Live-Stats bei Auswahl).
+  **Später (deferred):** zweites Campus-Gelände / separater Precinct — eigener Slice,
+  kein v1-Scope; Erweiterungs-Kauf bleibt das v1-Landmodell.
 ```
 
 - Pro Stand sichtbare Werbe-Slots **auf den Karten** um den Grundriss
@@ -284,11 +294,10 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
 - Gelände-v2 (F7.3-Möbel, kein 3D): Patches mit Mindestgröße (z. B. Trainingsplatz
   2×3, Gelände 3×3, Park 2×2). **Mehrfach nur** Würstchenbude und Parkplatz.
   Effekt folgt belegter Fläche, und nur wenn das Gebäude am Straßennetz hängt.
-  Startfarm ist 10×10, komplett owned, mit einer Straße von der Autobahn (oben
-  außen) zur Arena — wer daneben baut, verschenkt Buffs (⚠️).
-  **v2 (2026-03):** Das volle **14×10**-Board ist von Anfang an owned — keine
-  kostenpflichtigen 2×5-Erweiterungen mehr (Layout-Spiel, kein Land-Grind).
-  Legacy-Saves migrieren auf volle Fläche.
+  Start-Kern ist 10×10 owned (innerhalb 18×12), mit Straße von der Autobahn (oben
+  außen) zur Arena — wer daneben baut ohne Netz, verschenkt Buffs (⚠️).
+  Seitenfläche wird **stückweise gekauft** (2×6-Plättchen, €320k, Reihenfolge
+  alternierend links/rechts); volles Board = 18×12 nach vier Käufen.
   Straße ziehen wie in Sim City — benachbarte Zellen verbinden sich zum Netz.
   Stadtanschluss sitzt außerhalb oben (Autobahn).
   Jedes Gebäude und die Arena docken an das Straßennetz — direkt an die Autobahn
@@ -299,7 +308,7 @@ verdrängen. Tabs: **Grundriss** · **Gelände** · Ausbau.
   zurückziehen (sonst ist Umsetzen nach dem Ausbau unmöglich).
   Fanshop und Trainingszentrum haben weiter Qualitäts-Level (Shop / Halle /
   Fitness / Pool / Physio). 1×1-Parzellen bleiben als Haken für späteres Deko
-  (Baum, Bank) ohne Buff — Landkauf ist 2×5-Plättchen.
+  (Baum, Bank) ohne Buff — Landkauf ist 2×6-Plättchen (nicht 1×1).
   Imbiss (Bude/Zelt) und Fanshop: **Durchsatz × Besucher × Fanbasis-Faktor**.
   Heimspiel nutzt Ticket-Fill; Auswärts/Midweek `precinctAwayWeekCommerceFill`
   (Fanbasis + **Bus + Fan-Service** = organisierte Auswärtsfahrten). Shop-Level

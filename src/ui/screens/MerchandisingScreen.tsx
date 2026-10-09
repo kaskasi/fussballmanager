@@ -14,10 +14,12 @@ import { formatClubCash, type ClubFinances } from "../../economy/club-finances.t
 import type { ClubStadium } from "../../stadium/club-stadium.ts";
 import { CashChip } from "../components/CashChip.tsx";
 import { MerchFiresaleModal } from "../components/MerchFiresaleModal.tsx";
+import { MerchSaleSummaryModal } from "../components/MerchSaleSummaryModal.tsx";
 import { MerchMarketplaceCanvas } from "../components/MerchMarketplaceCanvas.tsx";
 import {
   activeMerchSaleSkus,
   customOrderQuote,
+  dismissMerchSaleSummaries,
   deliverMerchandisingOrders,
   ensureMerchBulkMarket,
   JERSEY_REVENUE_SHARE,
@@ -34,6 +36,7 @@ import {
   merchMaxStockForSku,
   merchStockFillRatio,
   normalizeClubMerchandising,
+  primaryMerchSku,
   suggestedMerchSalePrice,
   weeklyMerchandisingEconomics,
   type MerchSkuId,
@@ -120,6 +123,7 @@ export function MerchandisingScreen({
   const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium);
   const fanshopLevel = fanshopMerchLevel(stadium.precinct);
   const activeSales = activeMerchSaleSkus(merch, careerWeek);
+  const pendingSaleSummaries = merch.pending_sale_summaries ?? [];
 
   const preview = useMemo(
     () =>
@@ -309,10 +313,20 @@ export function MerchandisingScreen({
                 <ul className="merch-inbound-list">
                   {merch.branding_queue.map((order) => {
                     const left = order.arrives_career_week - careerWeek;
+                    const sku = primaryMerchSku(order.units);
+                    const qty =
+                      sku != null
+                        ? (order.units[sku] ?? 0)
+                        : MERCH_SKU_IDS.reduce(
+                            (sum, id) => sum + (order.units[id] ?? 0),
+                            0,
+                          );
+                    const skuLabel =
+                      sku != null ? MERCH_SKU_LABEL[sku] : "Whitelabel-Paket";
                     return (
                       <li key={order.id}>
                         <span>
-                          Whitelabel ·{" "}
+                          {skuLabel} · {qty} St. · Whitelabel ·{" "}
                           {left <= 0 ? "Ankunft diese Woche" : `Ankunft in ${left} Wo.`}
                         </span>
                         <span>{formatClubCash(order.unit_cost)} Ø/Stück</span>
@@ -389,6 +403,14 @@ export function MerchandisingScreen({
         </div>
       ) : null}
 
+      {pendingSaleSummaries.length > 0 ? (
+        <MerchSaleSummaryModal
+          summaries={pendingSaleSummaries}
+          onDismiss={() =>
+            onMerchandisingChange(dismissMerchSaleSummaries(stadium))
+          }
+        />
+      ) : null}
       {firesaleModal}
     </main>
   );

@@ -8,16 +8,15 @@ import {
   defaultClubMerchandising,
   isMerchSkuOnSale,
   jerseySalesWeights,
+  MERCH_OVERCAP_DISCARD_AFTER_WEEKS,
   MERCH_SALE_DURATION_WEEKS,
+  merchMaxStockForSku,
   startMerchSkuSale,
   weeklyMerchandisingEconomics,
 } from "./merchandising.ts";
+import { MERCH_SKU_IDS } from "./merchandising-skus.ts";
 import { refreshMerchBulkMarket } from "./merchandising-market.ts";
-import {
-  fanshopMerchLevel,
-  merchMaxBulkOfferSlots,
-  merchMaxStockForSku,
-} from "./merchandising-capacity.ts";
+import { fanshopMerchLevel, merchMaxBulkOfferSlots } from "./merchandising-capacity.ts";
 
 describe("merchandising inventory", () => {
   it("weights jersey sales toward higher market value", () => {
@@ -74,6 +73,10 @@ describe("merchandising inventory", () => {
   it("spawns at least two starter bulk offers when empty", () => {
     const seeded = refreshMerchBulkMarket([], 1, 1, 99, undefined, 2);
     expect(seeded.offers.length).toBeGreaterThanOrEqual(2);
+    for (const offer of seeded.offers) {
+      const withStock = MERCH_SKU_IDS.filter((id) => (offer.units[id] ?? 0) > 0);
+      expect(withStock.length).toBe(1);
+    }
     const high = refreshMerchBulkMarket([], 1, 3, 99, undefined, 5);
     expect(high.offers.length).toBeGreaterThan(0);
     expect(high.offers.length).toBeLessThanOrEqual(5);
@@ -177,5 +180,56 @@ describe("merchandising inventory", () => {
     expect(row.retail_price).toBe(normal);
     expect(row.retail_price_normal).toBeUndefined();
     expect(row.sale_until_career_week).toBeUndefined();
+  });
+
+  it("records sale summary when a fire sale ends", () => {
+    let stadium: ClubStadium = {
+      ...defaultClubStadium(),
+      merchandising: defaultClubMerchandising(),
+    };
+    stadium = startMerchSkuSale(stadium, "shirts", 25, 1, 1);
+    const ctx = {
+      stadium,
+      players: [] as const,
+      clubId: "cl_fc_nordstern",
+      occupancy: 1,
+      isHomeMatchWeek: true,
+      season: 1,
+      masterSeed: 11,
+    };
+    for (let w = 1; w <= MERCH_SALE_DURATION_WEEKS; w++) {
+      const step = advanceMerchandisingWeek(stadium, { ...ctx, week: w });
+      stadium = step.stadium;
+    }
+    const endStep = advanceMerchandisingWeek(stadium, { ...ctx, week: 3 });
+    expect(endStep.saleSummaries.length).toBe(1);
+    expect(endStep.saleSummaries[0]!.sku).toBe("shirts");
+    expect(endStep.stadium.merchandising!.pending_sale_summaries?.length).toBe(1);
+  });
+
+  it("discards excess stock after more than four weeks over capacity", () => {
+    let stadium: ClubStadium = {
+      ...defaultClubStadium(),
+      merchandising: defaultClubMerchandising(),
+    };
+    const max = merchMaxStockForSku(0, "caps");
+    stadium.merchandising!.skus.caps.stock = max + 500;
+    const ctx = {
+      stadium,
+      players: [] as const,
+      clubId: "cl_fc_nordstern",
+      occupancy: 0.2,
+      isHomeMatchWeek: false,
+      season: 1,
+      masterSeed: 3,
+    };
+    let disposals = 0;
+    for (let w = 1; w <= MERCH_OVERCAP_DISCARD_AFTER_WEEKS + 1; w++) {
+      const step = advanceMerchandisingWeek(stadium, { ...ctx, week: w, stadium });
+      stadium = step.stadium;
+      disposals += step.stockDisposals.length;
+    }
+    expect(disposals).toBeGreaterThan(0);
+    expect(stadium.merchandising!.skus.caps.stock).toBeLessThanOrEqual(max);
   });
 });

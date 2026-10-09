@@ -15,20 +15,31 @@ function readToken(name: string, fallback: string): string {
 }
 
 function offerLines(offer: MerchBulkOffer): string[] {
-  const total = MERCH_SKU_IDS.reduce((sum, id) => sum + (offer.units[id] ?? 0), 0);
-  const unitAvg = total > 0 ? offer.ask_price / total : 0;
-  const lines: string[] = [];
   for (const id of MERCH_SKU_IDS) {
     const qty = offer.units[id] ?? 0;
     if (qty <= 0) continue;
-    lines.push(
-      `${MERCH_SKU_LABEL[id]} · ab ${qty} St. · ${formatClubCash(Math.round(unitAvg * 100) / 100)}/St.`,
-    );
+    const unit = Math.round((offer.ask_price / qty) * 100) / 100;
+    return [`${qty} St. · ${formatClubCash(unit)}/St.`];
   }
-  if (lines.length === 0) {
-    lines.push(`${formatClubCash(offer.ask_price)} gesamt`);
-  }
-  return lines.slice(0, 3);
+  return [`${formatClubCash(offer.ask_price)} gesamt`];
+}
+
+function roundRectPath(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+): void {
+  const radius = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + w, y, x + w, y + h, radius);
+  ctx.arcTo(x + w, y + h, x, y + h, radius);
+  ctx.arcTo(x, y + h, x, y, radius);
+  ctx.arcTo(x, y, x + w, y, radius);
+  ctx.closePath();
 }
 
 /**
@@ -57,16 +68,14 @@ export function MerchMarketplaceCanvas({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const tint = readToken("--tinte", "#0f172a");
-    const panel = readToken("--panel-bg", "#fffef8");
+    const panel = readToken("--surface-raised", readToken("--panel-bg", "#fffef8"));
     const muted = readToken("--text-muted", "#64748b");
     const accent = readToken("--club-accent", "#1e3a5f");
     const yellow = readToken("--sonnengelb", "#facc15");
+    const corner = 9;
 
     ctx.fillStyle = panel;
     ctx.fillRect(0, 0, width, height);
-    ctx.strokeStyle = tint;
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(0.75, 0.75, width - 1.5, height - 1.5);
 
     ctx.fillStyle = tint;
     ctx.font = "800 13px system-ui, sans-serif";
@@ -94,14 +103,16 @@ export function MerchMarketplaceCanvas({
       const x = pad + col * (stallW + gap);
       const y = startY + row * (stallH + gap);
 
-      ctx.fillStyle = "#fff";
+      ctx.fillStyle = readToken("--panel-bg", "#fff");
       ctx.strokeStyle = tint;
       ctx.lineWidth = 1.2;
-      ctx.fillRect(x, y, stallW, stallH);
-      ctx.strokeRect(x + 0.6, y + 0.6, stallW - 1.2, stallH - 1.2);
+      roundRectPath(ctx, x, y, stallW, stallH, corner);
+      ctx.fill();
+      ctx.stroke();
 
       ctx.fillStyle = accent;
-      ctx.fillRect(x, y, stallW, 5);
+      roundRectPath(ctx, x, y, stallW, 5, corner);
+      ctx.fill();
 
       ctx.fillStyle = tint;
       ctx.font = "800 11px system-ui, sans-serif";
@@ -120,8 +131,9 @@ export function MerchMarketplaceCanvas({
       const btnY = y + stallH - btnH - 10;
       ctx.fillStyle = yellow;
       ctx.strokeStyle = tint;
-      ctx.fillRect(btnX, btnY, btnW, btnH);
-      ctx.strokeRect(btnX + 0.6, btnY + 0.6, btnW - 1.2, btnH - 1.2);
+      roundRectPath(ctx, btnX, btnY, btnW, btnH, 6);
+      ctx.fill();
+      ctx.stroke();
       ctx.fillStyle = tint;
       ctx.font = "800 10px system-ui, sans-serif";
       ctx.fillText("Kaufen", btnX + 16, btnY + 17);
@@ -158,12 +170,14 @@ export function MerchMarketplaceCanvas({
   }
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="merch-market-canvas"
-      aria-label="Marktplatz Whitelabel"
-      role="img"
-      onClick={handleClick}
-    />
+    <div className="merch-market-canvas-wrap">
+      <canvas
+        ref={canvasRef}
+        className="merch-market-canvas"
+        aria-label="Marktplatz Whitelabel"
+        role="img"
+        onClick={handleClick}
+      />
+    </div>
   );
 }

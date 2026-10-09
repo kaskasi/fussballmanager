@@ -49,7 +49,7 @@ export function EventsFeed({
         {preMatch ? <PreMatchBlock brief={preMatch} /> : null}
         <EventsHud frame={frame} homeTeamId={homeTeamId} />
       </div>
-      <ol ref={listRef} className="events-feed-list">
+      <ol ref={listRef} className="events-feed-list surface-scrollbar match-events-scroll">
         {lines.length === 0 ? (
           <li className="events-feed-line is-placeholder">{t("match.commentary.kickoff")}</li>
         ) : (

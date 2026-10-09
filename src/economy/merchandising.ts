@@ -25,8 +25,10 @@ import {
   type MerchOnDemandOrder,
 } from "./merchandising-market.ts";
 import {
+  defaultMerchStartStock,
   fanshopMerchLevel,
   isMerchOverCapacity,
+  MERCH_SALES_DEMAND_MULTIPLIER,
   MERCH_UNIT_SCALE,
   merchMaxBulkOfferSlots,
   merchMaxStockForSku,
@@ -46,6 +48,7 @@ import {
 export {
   fanshopMerchLevel,
   isMerchOverCapacity,
+  MERCH_SALES_DEMAND_MULTIPLIER,
   MERCH_UNIT_SCALE,
   merchMaxBulkOfferSlots,
   merchMaxStockForSku,
@@ -57,6 +60,23 @@ export interface MerchSkuWeekSale {
   gross: Partial<Record<MerchSkuId, number>>;
   cogs: Partial<Record<MerchSkuId, number>>;
 }
+
+export interface MerchSaleSummary {
+  sku: MerchSkuId;
+  units: number;
+  gross: number;
+  cogs: number;
+  net: number;
+}
+
+export interface MerchStockDisposal {
+  sku: MerchSkuId;
+  unitsDiscarded: number;
+  writeOff: number;
+}
+
+/** Consecutive weeks with stock above Fanshop capacity before staff discard excess. */
+export const MERCH_OVERCAP_DISCARD_AFTER_WEEKS = 4;
 
 export type {
   MerchSkuId,
@@ -75,6 +95,8 @@ export type {
 export {
   MERCH_ON_DEMAND_LEAD_DAYS,
   merchCareerDayIndex,
+  merchSkuOfferLabel,
+  primaryMerchSku,
   seedInitialMerchBulkOffers,
 } from "./merchandising-market.ts";
 export {
@@ -95,12 +117,18 @@ export interface ClubMerchandising {
   firesale_prompts?: MerchSkuId[];
   last_week_sale?: MerchSkuWeekSale;
   on_demand_queue?: MerchOnDemandOrder[];
+  /** Laufende Überfüllung pro SKU (Karriere-Wochen in Folge). */
+  over_capacity_weeks?: Partial<Record<MerchSkuId, number>>;
+  /** UI-Modal nach Sale-Ende (Postfach-Mail zusätzlich via Wochen-Pipeline). */
+  pending_sale_summaries?: MerchSaleSummary[];
 }
 
 export interface MerchandisingEconomics {
   gross: number;
   cogs: number;
   net: number;
+  /** Entsorgung überfüllter Lagerbestand (COGS-Abschreibung). */
+  inventoryWriteOff: number;
   fanbaseDelta: number;
   unitsSold: Partial<Record<MerchSkuId, number>>;
   skuGross: Partial<Record<MerchSkuId, number>>;
@@ -125,8 +153,12 @@ export interface AdvanceMerchandisingContext extends WeeklyMerchandisingContext 
 }
 
 export function defaultClubMerchandising(): ClubMerchandising {
+  const skus = defaultSkuInventory();
+  for (const id of MERCH_SKU_IDS) {
+    skus[id] = { ...skus[id]!, stock: defaultMerchStartStock(id) };
+  }
   return {
-    skus: defaultSkuInventory(),
+    skus,
     bulk_offers: [],
     branding_queue: [],
     on_demand_queue: [],
@@ -156,6 +188,15 @@ function normalizeSkus(
       retail_price,
       ...(retail_price_normal != null ? { retail_price_normal } : {}),
       ...(sale_until_career_week != null ? { sale_until_career_week } : {}),
+      ...(row.sale_period_units != null
+        ? { sale_period_units: Math.max(0, Math.round(row.sale_period_units)) }
+        : {}),
+      ...(row.sale_period_gross != null
+        ? { sale_period_gross: Math.max(0, Math.round(row.sale_period_gross)) }
+        : {}),
+      ...(row.sale_period_cogs != null
+        ? { sale_period_cogs: Math.max(0, Math.round(row.sale_period_cogs)) }
+        : {}),
     };
   }
   return base;
@@ -173,6 +214,8 @@ export function migrateLegacyMerchandising(raw: unknown): ClubMerchandising {
       firesale_prompts: typed.firesale_prompts,
       last_week_sale: typed.last_week_sale,
       on_demand_queue: typed.on_demand_queue ?? [],
+      over_capacity_weeks: typed.over_capacity_weeks,
+      pending_sale_summaries: typed.pending_sale_summaries,
     };
   }
   return defaultClubMerchandising();
@@ -247,7 +290,10 @@ function simulateWeeklySales(
     let weight = MERCH_SKU_DEMAND_WEIGHT[id];
     if (id === "trikots") weight *= starBoost;
     const want = Math.round(
-      unitPool * weight * priceDemandMultiplier(row.retail_price, MERCH_SKU_REFERENCE_RETAIL[id]),
+      unitPool *
+        weight *
+        MERCH_SALES_DEMAND_MULTIPLIER *
+        priceDemandMultiplier(row.retail_price, MERCH_SKU_REFERENCE_RETAIL[id]),
     );
     const sold = Math.min(row.stock, Math.max(0, want));
     if (sold <= 0) continue;
@@ -271,6 +317,7 @@ function simulateWeeklySales(
     gross: Math.round(gross),
     cogs: Math.round(cogs),
     net: Math.max(0, Math.round(gross - cogs)),
+    inventoryWriteOff: 0,
     fanbaseDelta: 0,
     unitsSold,
     skuGross,
@@ -312,22 +359,108 @@ export function activeMerchSaleSkus(
   return MERCH_SKU_IDS.filter((id) => isMerchSkuOnSale(merch.skus[id]!, careerWeek));
 }
 
-function expireMerchSales(merch: ClubMerchandising, careerWeek: number): void {
+function accumulateSalePeriodStats(
+  merch: ClubMerchandising,
+  economics: MerchandisingEconomics,
+  careerWeek: number,
+): void {
+  for (const id of MERCH_SKU_IDS) {
+    const row = merch.skus[id]!;
+    if (!isMerchSkuOnSale(row, careerWeek)) continue;
+    const units = economics.unitsSold[id] ?? 0;
+    const lineGross = economics.skuGross[id] ?? 0;
+    const lineCogs = economics.skuCogs[id] ?? 0;
+    if (units <= 0 && lineGross <= 0) continue;
+    merch.skus[id] = {
+      ...row,
+      sale_period_units: (row.sale_period_units ?? 0) + units,
+      sale_period_gross: (row.sale_period_gross ?? 0) + lineGross,
+      sale_period_cogs: (row.sale_period_cogs ?? 0) + lineCogs,
+    };
+  }
+}
+
+function expireMerchSales(
+  merch: ClubMerchandising,
+  careerWeek: number,
+): MerchSaleSummary[] {
+  const summaries: MerchSaleSummary[] = [];
   for (const id of MERCH_SKU_IDS) {
     const row = merch.skus[id]!;
     if (
-      row.sale_until_career_week != null &&
-      careerWeek >= row.sale_until_career_week &&
-      row.retail_price_normal != null
+      row.sale_until_career_week == null ||
+      careerWeek < row.sale_until_career_week ||
+      row.retail_price_normal == null
     ) {
-      merch.skus[id] = {
-        ...row,
-        retail_price: row.retail_price_normal,
-        retail_price_normal: undefined,
-        sale_until_career_week: undefined,
-      };
+      continue;
+    }
+    const units = row.sale_period_units ?? 0;
+    const gross = row.sale_period_gross ?? 0;
+    const cogs = row.sale_period_cogs ?? 0;
+    summaries.push({
+      sku: id,
+      units,
+      gross,
+      cogs,
+      net: gross - cogs,
+    });
+    merch.skus[id] = {
+      ...row,
+      retail_price: row.retail_price_normal,
+      retail_price_normal: undefined,
+      sale_until_career_week: undefined,
+      sale_period_units: undefined,
+      sale_period_gross: undefined,
+      sale_period_cogs: undefined,
+    };
+  }
+  return summaries;
+}
+
+function applyMerchWarehousePressure(
+  merch: ClubMerchandising,
+  fanshopLevel: number,
+): { disposals: MerchStockDisposal[]; writeOff: number } {
+  const streaks: Partial<Record<MerchSkuId, number>> = {
+    ...(merch.over_capacity_weeks ?? {}),
+  };
+  const prompts = new Set(merch.firesale_prompts ?? []);
+  const disposals: MerchStockDisposal[] = [];
+  let writeOff = 0;
+
+  for (const id of MERCH_SKU_IDS) {
+    const row = merch.skus[id]!;
+    const maxStock = merchMaxStockForSku(fanshopLevel, id);
+    if (row.stock > maxStock) {
+      const streak = (streaks[id] ?? 0) + 1;
+      streaks[id] = streak;
+      prompts.add(id);
+      if (streak > MERCH_OVERCAP_DISCARD_AFTER_WEEKS) {
+        const unitsDiscarded = row.stock - maxStock;
+        const loss = Math.round(unitsDiscarded * row.avg_cost);
+        writeOff += loss;
+        disposals.push({ sku: id, unitsDiscarded, writeOff: loss });
+        merch.skus[id] = { ...row, stock: maxStock };
+        streaks[id] = 0;
+      }
+    } else {
+      delete streaks[id];
+      prompts.delete(id);
     }
   }
+
+  merch.over_capacity_weeks = streaks;
+  merch.firesale_prompts = [...prompts];
+  return { disposals, writeOff };
+}
+
+export function dismissMerchSaleSummaries(stadium: ClubStadium): ClubStadium {
+  const merch = normalizeClubMerchandising(stadium.merchandising);
+  if (!merch.pending_sale_summaries?.length) return stadium;
+  return {
+    ...stadium,
+    merchandising: { ...merch, pending_sale_summaries: undefined },
+  };
 }
 
 export function trikotWeekStats(merch: ClubMerchandising): {
@@ -397,17 +530,23 @@ export function deliverMerchandisingOrders(
   return { ...stadium, merchandising: merch };
 }
 
+export interface AdvanceMerchandisingResult {
+  stadium: ClubStadium;
+  economics: MerchandisingEconomics;
+  saleSummaries: MerchSaleSummary[];
+  stockDisposals: MerchStockDisposal[];
+}
+
 export function advanceMerchandisingWeek(
   stadium: ClubStadium,
   ctx: AdvanceMerchandisingContext,
-): { stadium: ClubStadium; economics: MerchandisingEconomics } {
+): AdvanceMerchandisingResult {
   const merch = normalizeClubMerchandising(stadium.merchandising);
   const careerWeek = merchCareerWeekIndex(ctx.season, ctx.week);
   const fanshopLevel = fanshopMerchLevel(stadium.precinct);
 
   deliverBrandingOrders(merch, careerWeek);
   deliverOnDemandOrders(merch, merchCareerDayIndex(ctx.season, ctx.week, 7));
-  expireMerchSales(merch, careerWeek);
 
   const market = refreshMerchBulkMarket(
     merch.bulk_offers,
@@ -421,14 +560,33 @@ export function advanceMerchandisingWeek(
   merch.last_market_refresh_career_week = market.refreshWeek;
 
   const economics = simulateWeeklySales(merch, ctx, true);
+  accumulateSalePeriodStats(merch, economics, careerWeek);
   merch.last_week_sale = {
     units: { ...economics.unitsSold },
     gross: { ...economics.skuGross },
     cogs: { ...economics.skuCogs },
   };
+
+  const saleSummaries = expireMerchSales(merch, careerWeek);
+  if (saleSummaries.length > 0) {
+    merch.pending_sale_summaries = [
+      ...(merch.pending_sale_summaries ?? []),
+      ...saleSummaries,
+    ];
+  }
+
+  const { disposals, writeOff } = applyMerchWarehousePressure(merch, fanshopLevel);
+  if (writeOff > 0) {
+    economics.inventoryWriteOff = writeOff;
+    economics.cogs += writeOff;
+    economics.net = Math.max(0, economics.net - writeOff);
+  }
+
   return {
     stadium: { ...stadium, merchandising: merch },
     economics,
+    saleSummaries,
+    stockDisposals: disposals,
   };
 }
 
@@ -662,6 +820,9 @@ export function startMerchSkuSale(
           retail_price: Math.max(1, Math.round(salePrice)),
           retail_price_normal: normal,
           sale_until_career_week: careerWeek + MERCH_SALE_DURATION_WEEKS,
+          sale_period_units: 0,
+          sale_period_gross: 0,
+          sale_period_cogs: 0,
         },
       },
     },

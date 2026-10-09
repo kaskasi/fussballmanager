@@ -5,14 +5,17 @@ const ROLE_ORDER = ["GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"] as const;
 type LineupProps = {
   view: MatchView;
   frame: MatchViewFrame;
+  fullClubNames?: boolean;
 };
 
-export function Lineup({ view, frame }: LineupProps) {
+export function Lineup({ view, frame, fullClubNames = false }: LineupProps) {
   const onPitch = new Set(frame.dots.map((dot) => dot.playerId));
+  const homeTitle = fullClubNames ? view.home.name : view.home.shortName;
+  const awayTitle = fullClubNames ? view.away.name : view.away.shortName;
   return (
     <div className="lineups">
       <Side
-        title={view.home.shortName}
+        title={homeTitle}
         teamId={view.home.id}
         view={view}
         onPitch={onPitch}
@@ -20,7 +23,7 @@ export function Lineup({ view, frame }: LineupProps) {
         accent="home"
       />
       <Side
-        title={view.away.shortName}
+        title={awayTitle}
         teamId={view.away.id}
         view={view}
         onPitch={onPitch}

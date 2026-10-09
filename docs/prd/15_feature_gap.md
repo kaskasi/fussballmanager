@@ -92,7 +92,7 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 
 | ID | M | Spec | Stand UI/Code | Lücke |
 |---|---|---|---|---|
-| F6.7 | M3 → **Slice v79** | Merch × Popularität | `merchandising.ts` | v1: eigener Ledger-Stream + Screen; kein SKU-Lager. Fanshop-Gelände = Durchsatz, nicht `concessions`. Brustlogo bleibt F6.5. |
+| F6.7 | M3 → **Slice v79+** | Merch × Popularität + Lager | `merchandising.ts`, Merch-Screen | Ledger + Screen + SKU-Bestand/Bulk/Firesale; Fanshop-Gelände = Durchsatz-Multiplikator, nicht `concessions`. Brustlogo F6.5. Offen: Lager-Tiefe (Kapazität, Analytics), kein Rückbau. |
 | F6.4 | M1 | Wasserfall 11.5 | Icon-Balken + 13-Mo-Sparkline | — |
 | F7.1 | M1 | 2D-Grundriss, Preise | Grundriss + Banden auf Tribünen + Shirt | Gelände-Tab separat |
 | F7.2 | M2 | Kapazität, VIP, Heizung | Shop-Liste + Levels · extra Banden bei Steh/Sitz | Shop unter der Karte |

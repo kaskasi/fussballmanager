@@ -3,9 +3,21 @@ import {
   precinctBuildingLevel,
   type PrecinctState,
 } from "../stadium/precinct.ts";
+import {
+  MERCH_START_STOCK_FILL,
+  MERCH_WEEKS_AT_FULL_STOCK,
+  referenceWeeklySkuDemandUnits,
+} from "./merchandising-baseline.ts";
 import { MERCH_UNIT_SCALE, type MerchSkuId } from "./merchandising-skus.ts";
 
-export { MERCH_UNIT_SCALE } from "./merchandising-skus.ts";
+export {
+  MERCH_SALES_DEMAND_MULTIPLIER,
+  MERCH_UNIT_SCALE,
+} from "./merchandising-skus.ts";
+export {
+  MERCH_START_STOCK_FILL,
+  MERCH_WEEKS_AT_FULL_STOCK,
+} from "./merchandising-baseline.ts";
 
 /** Docked Fanshop building level (0 = nur Online-Baseline). */
 export function fanshopMerchLevel(precinct: PrecinctState | undefined): number {
@@ -14,21 +26,17 @@ export function fanshopMerchLevel(precinct: PrecinctState | undefined): number {
   return precinctBuildingLevel(precinct, "fanshop");
 }
 
-const SKU_CAPACITY_FACTOR: Record<MerchSkuId, number> = {
-  trikots: 1.35,
-  shirts: 1.15,
-  caps: 1,
-  schals: 1.05,
-  socken: 0.85,
-  bettwaesche: 0.9,
-  handtuecher: 0.85,
-};
-
-/** Max units storable per SKU — scales with Fanshop-Stufe (1–5). */
+/** Max units storable per SKU — Stufe 1 ≈ {@link MERCH_WEEKS_AT_FULL_STOCK} Wochen Vollverkauf. */
 export function merchMaxStockForSku(fanshopLevel: number, sku: MerchSkuId): number {
   const level = Math.max(0, Math.min(5, fanshopLevel));
-  const base = (level <= 0 ? 45 : 35 + level * 52) * MERCH_UNIT_SCALE;
-  return Math.round(base * SKU_CAPACITY_FACTOR[sku]);
+  const weekly = referenceWeeklySkuDemandUnits(sku, level);
+  return Math.round(weekly * MERCH_WEEKS_AT_FULL_STOCK);
+}
+
+export function defaultMerchStartStock(sku: MerchSkuId): number {
+  return Math.round(
+    merchMaxStockForSku(1, sku) * MERCH_START_STOCK_FILL,
+  );
 }
 
 export function merchStockFillRatio(

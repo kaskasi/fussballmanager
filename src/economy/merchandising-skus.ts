@@ -1,5 +1,8 @@
 export const MERCH_UNIT_SCALE = 10;
 
+/** Weekly demand tuning — does not affect stock caps or bulk market pack sizes. */
+export const MERCH_SALES_DEMAND_MULTIPLIER = 2;
+
 export type MerchSkuId =
   | "trikots"
   | "shirts"
@@ -69,6 +72,10 @@ export interface MerchSkuState {
   retail_price_normal?: number;
   /** Erste Karriere-Woche nach Ende des Sales (VK zurück auf normal). */
   sale_until_career_week?: number;
+  /** Laufende Sale-Periode (wird beim Start zurückgesetzt, beim Ende → Summary). */
+  sale_period_units?: number;
+  sale_period_gross?: number;
+  sale_period_cogs?: number;
 }
 
 export function emptySkuState(id: MerchSkuId): MerchSkuState {
@@ -84,7 +91,7 @@ export function defaultSkuInventory(): Record<MerchSkuId, MerchSkuState> {
     MERCH_SKU_IDS.map((id) => [
       id,
       {
-        stock: id === "trikots" ? 480 : id === "shirts" ? 600 : 350,
+        stock: 0,
         avg_cost: MERCH_SKU_REFERENCE_COST[id],
         retail_price: MERCH_SKU_REFERENCE_RETAIL[id],
       },

@@ -57,8 +57,8 @@ export function MatchStage({
         <EventsFeed
           lines={visibleLines}
           score={frame.score}
-          homeShort={view.home.shortName}
-          awayShort={view.away.shortName}
+          homeShort={view.home.name}
+          awayShort={view.away.name}
           frame={frame}
           homeTeamId={view.home.id}
           preMatch={preMatch}

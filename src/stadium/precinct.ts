@@ -64,11 +64,11 @@ export const PRECINCT_CITY_LINK = { x: 8, y: -1, w: 2, h: 1 } as const;
 
 /**
  * 1×1 decorative tiles (tree/bench/statue, zero buffs) — not land expansion.
- * Expansion uses 2×5 Rosenberg plates (`PRECINCT_EXPANSION_COST`).
+ * Expansion uses 2×6 Rosenberg plates (`PRECINCT_EXPANSION_COST`).
  */
 export const PRECINCT_PARCEL_COST = 90_000;
-/** Land expansion is free — layout only (PRD 14.7 v2). */
-export const PRECINCT_EXPANSION_COST = 0;
+/** Side land plates — PRD 14.6/14.7 (€320k each, alternating left/right). */
+export const PRECINCT_EXPANSION_COST = 320_000;
 export const PRECINCT_STREET_COST = 15_000;
 
 export type PrecinctExpansionSide = "left" | "right";

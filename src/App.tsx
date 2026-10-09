@@ -2682,6 +2682,9 @@ export default function App() {
           fanbaseMood={matchFanbaseMood}
           poorForm={matchPoorForm}
           season={season}
+          masterSeed={masterSeed}
+          league={league}
+          worldClubs={world.clubs}
           scoutBoard={scoutBoard}
           onOpenOpponentScoutReport={handleOpenOpponentScoutReport}
           onLineupPhaseChange={(inLineup) => {

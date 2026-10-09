@@ -12,21 +12,7 @@ export function MatchPresentationToggle({
   disabled = false,
 }: MatchPresentationToggleProps) {
   return (
-    <div
-      className="segmented-control match-presentation-toggle"
-      role="tablist"
-      aria-label="Stream-Schwerpunkt: Spielfeld oder Ereignis-Log"
-    >
-      <button
-        type="button"
-        role="tab"
-        className={value === "events" ? "is-active" : undefined}
-        aria-selected={value === "events"}
-        disabled={disabled}
-        onClick={() => onChange("events")}
-      >
-        Ereignisse
-      </button>
+    <div className="match-presentation-toggle" role="tablist" aria-label="Hauptansicht: Spielfeld oder Kommentar">
       <button
         type="button"
         role="tab"
@@ -36,6 +22,16 @@ export function MatchPresentationToggle({
         onClick={() => onChange("pitch")}
       >
         Spielfeld
+      </button>
+      <button
+        type="button"
+        role="tab"
+        className={value === "events" ? "is-active" : undefined}
+        aria-selected={value === "events"}
+        disabled={disabled}
+        onClick={() => onChange("events")}
+      >
+        Kommentar
       </button>
     </div>
   );

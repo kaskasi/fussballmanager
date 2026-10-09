@@ -150,11 +150,13 @@ export function Matchday() {
         <button type="button" onClick={playback.restart} disabled={!view}>
           Restart
         </button>
-        <MatchPresentationToggle
-          value={presentationMode}
-          onChange={setPresentationMode}
-          disabled={!view || loading}
-        />
+        <div className="segmented-control">
+          <MatchPresentationToggle
+            value={presentationMode}
+            onChange={setPresentationMode}
+            disabled={!view || loading}
+          />
+        </div>
         <label>
           Speed
           <select

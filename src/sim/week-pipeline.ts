@@ -24,6 +24,10 @@ import {
 } from "../development/training-neglect.ts";
 import { advanceWeeklyClubFinances } from "../economy/club-finances.ts";
 import { advanceMerchandisingWeek } from "../economy/merchandising.ts";
+import {
+  merchSaleSummaryClubEventMessage,
+  merchStockDisposalClubEventMessage,
+} from "../inbox/merch-notifications.ts";
 import type { FixtureResult } from "@fussballmanager/shared";
 import type { CareerLeagueStat } from "../persistence/league-state.ts";
 import type { GameSession } from "../persistence/game-session.ts";
@@ -338,6 +342,24 @@ export async function simulateGameWeek(
     season: session.season,
     masterSeed: session.masterSeed,
   });
+  for (const summary of merchAdvance.saleSummaries) {
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "finance",
+      merchSaleSummaryClubEventMessage(summary),
+    );
+  }
+  for (const disposal of merchAdvance.stockDisposals) {
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "finance",
+      merchStockDisposalClubEventMessage(disposal),
+    );
+  }
   const fanbaseDelta =
     weeklyFanbaseDelta(
       leagueWithCareerStats,

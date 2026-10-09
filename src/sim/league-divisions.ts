@@ -22,6 +22,7 @@ import {
 import {
   generateClubs,
   generateWorld,
+  NORDSTERN_TEAM_ID,
   type ClubIdentity,
   type WorldClub,
 } from "../world/world-generator.ts";
@@ -85,7 +86,12 @@ export { clubPlaceName } from "../world/club-display.ts";
 
 export function clubDisplayName(teamId: TeamId, worldClubs?: readonly WorldClub[]): string {
   const fromWorld = clubNameFromWorld(teamId, worldClubs);
-  if (fromWorld) return fromWorld;
+  if (fromWorld) {
+    if (teamId === NORDSTERN_TEAM_ID && /nordstern/i.test(fromWorld)) {
+      return "Kieler FC";
+    }
+    return fromWorld;
+  }
   const worldClub = worldClubForTeam(teamId, worldClubs);
   if (worldClub) return worldClub.name;
   const template = templateSquadForClub(teamId);
@@ -94,7 +100,12 @@ export function clubDisplayName(teamId: TeamId, worldClubs?: readonly WorldClub[
 
 export function clubShortLabel(teamId: TeamId, worldClubs?: readonly WorldClub[]): string {
   const fromWorld = clubShortNameFromWorld(teamId, worldClubs);
-  if (fromWorld) return fromWorld;
+  if (fromWorld) {
+    if (teamId === NORDSTERN_TEAM_ID && /nordstern/i.test(fromWorld)) {
+      return "KFC";
+    }
+    return fromWorld;
+  }
   const worldClub = worldClubForTeam(teamId, worldClubs);
   if (worldClub) return worldClub.short_name;
   const template = templateSquadForClub(teamId);

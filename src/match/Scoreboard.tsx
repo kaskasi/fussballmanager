@@ -1,4 +1,5 @@
 import type { MatchClock, MatchView, MatchViewFrame } from "@fussballmanager/shared";
+import { formatLeagueMatchKickoffLabel } from "./match-kickoff-format.ts";
 import { MatchStats } from "./MatchStats";
 
 function clockLabel(clock: MatchClock): string {
@@ -24,23 +25,45 @@ type ScoreboardProps = {
   view: MatchView;
   frame: MatchViewFrame;
   compact?: boolean;
+  /** Pre-match Vorschau: volle Vereinsnamen statt Kürzel. */
+  fullClubNames?: boolean;
+  /** Vorschau: Datum und Anstoß statt 0–0. */
+  previewKickoff?: { season: number; week: number; weekday: number };
 };
 
-export function Scoreboard({ view, frame, compact = false }: ScoreboardProps) {
+export function Scoreboard({
+  view,
+  frame,
+  compact = false,
+  fullClubNames = false,
+  previewKickoff,
+}: ScoreboardProps) {
+  const homeLabel = fullClubNames ? view.home.name : view.home.shortName;
+  const awayLabel = fullClubNames ? view.away.name : view.away.shortName;
+  const kickoffScheduleLabel =
+    previewKickoff &&
+    formatLeagueMatchKickoffLabel(
+      previewKickoff.season,
+      previewKickoff.week,
+      previewKickoff.weekday,
+    );
+
   if (compact) {
     return (
       <header className="scoreboard scoreboard--compact">
         <div className="scoreboard-compact-main">
-          <span className="side home">{view.home.shortName}</span>
+          <span className="side home">{homeLabel}</span>
           <div className="scoreboard-compact-center">
-            <span className="score">
-              {frame.score.home}–{frame.score.away}
+            <span className={`score${kickoffScheduleLabel ? " score--schedule" : ""}`}>
+              {kickoffScheduleLabel ?? `${frame.score.home}–${frame.score.away}`}
             </span>
             <span className="clock">
-              {clockLabel(frame.clock)} · {view.home.formation} vs {view.away.formation}
+              {kickoffScheduleLabel
+                ? `${view.home.formation} vs ${view.away.formation}`
+                : `${clockLabel(frame.clock)} · ${view.home.formation} vs ${view.away.formation}`}
             </span>
           </div>
-          <span className="side away">{view.away.shortName}</span>
+          <span className="side away">{awayLabel}</span>
         </div>
         <details className="match-stats-drawer">
           <summary>

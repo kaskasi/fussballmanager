@@ -2,6 +2,7 @@ import { weeklySeed } from "../sim/league-week.ts";
 import { MERCH_UNIT_SCALE } from "./merchandising-capacity.ts";
 import {
   MERCH_SKU_IDS,
+  MERCH_SKU_LABEL,
   MERCH_SKU_REFERENCE_COST,
   type MerchSkuId,
 } from "./merchandising-skus.ts";
@@ -33,33 +34,6 @@ export interface MerchOnDemandOrder {
   arrives_career_day: number;
 }
 
-const OFFER_LABELS = [
-  "Whitelabel Mix S",
-  "Whitelabel Mix M",
-  "Textil-Paket Ost",
-  "Fan-Shop Restposten",
-  "Outlet-Kommission",
-  "Überproduktion L",
-  "Bio-Shirts",
-  "Socken-Kommission",
-] as const;
-
-const STARTER_OFFERS: readonly {
-  label: string;
-  units: Partial<Record<MerchSkuId, number>>;
-  unitCostOverride?: Partial<Record<MerchSkuId, number>>;
-}[] = [
-  {
-    label: "Socken · Whitelabel",
-    units: { socken: 100 * MERCH_UNIT_SCALE },
-    unitCostOverride: { socken: 3.5 },
-  },
-  {
-    label: "Bio-Shirts",
-    units: { shirts: 60 * MERCH_UNIT_SCALE },
-  },
-];
-
 const PRICE_DECAY = 0.93;
 const MIN_PRICE_RATIO = 0.52;
 const BRANDING_WEEKS_BASE = 2;
@@ -89,16 +63,43 @@ function unitTotal(units: Partial<Record<MerchSkuId, number>>): number {
   return MERCH_SKU_IDS.reduce((sum, id) => sum + (units[id] ?? 0), 0);
 }
 
-function blendedUnitCost(units: Partial<Record<MerchSkuId, number>>): number {
-  const total = unitTotal(units);
-  if (total <= 0) return 0;
-  let cost = 0;
+/** Exactly one SKU per bulk offer / branding order (v1 rule). */
+export function primaryMerchSku(
+  units: Partial<Record<MerchSkuId, number>>,
+): MerchSkuId | null {
+  let found: MerchSkuId | null = null;
   for (const id of MERCH_SKU_IDS) {
     const qty = units[id] ?? 0;
-    cost += qty * MERCH_SKU_REFERENCE_COST[id] * 0.62;
+    if (qty <= 0) continue;
+    if (found != null) return null;
+    found = id;
   }
-  return cost / total;
+  return found;
 }
+
+export function merchSkuOfferLabel(sku: MerchSkuId): string {
+  return `${MERCH_SKU_LABEL[sku]} · Whitelabel`;
+}
+
+function singleSkuUnitCost(sku: MerchSkuId, override?: number): number {
+  return override ?? MERCH_SKU_REFERENCE_COST[sku] * 0.62;
+}
+
+const STARTER_OFFERS: readonly {
+  label: string;
+  units: Partial<Record<MerchSkuId, number>>;
+  unitCostOverride?: Partial<Record<MerchSkuId, number>>;
+}[] = [
+  {
+    label: merchSkuOfferLabel("socken"),
+    units: { socken: 100 * MERCH_UNIT_SCALE },
+    unitCostOverride: { socken: 3.5 },
+  },
+  {
+    label: merchSkuOfferLabel("shirts"),
+    units: { shirts: 60 * MERCH_UNIT_SCALE },
+  },
+];
 
 export function brandingLeadWeeks(units: Partial<Record<MerchSkuId, number>>): number {
   const total = unitTotal(units);
@@ -153,26 +154,20 @@ function buildOffer(
   salt: number,
   careerWeek: number,
 ): MerchBulkOffer {
-  const label = OFFER_LABELS[Math.floor(seededRoll(seed, salt) * OFFER_LABELS.length)]!;
-  const units: Partial<Record<MerchSkuId, number>> = {};
-  const skuCount = 2 + Math.floor(seededRoll(seed, salt + 1) * 4);
-  const picked = [...MERCH_SKU_IDS].sort(
-    () => seededRoll(seed, salt + 2) - 0.5,
+  const sku =
+    MERCH_SKU_IDS[Math.floor(seededRoll(seed, salt) * MERCH_SKU_IDS.length)]!;
+  const qty = Math.round(
+    (30 + Math.floor(seededRoll(seed, salt + 1) * 110)) * MERCH_UNIT_SCALE,
   );
-  for (let i = 0; i < skuCount; i++) {
-    const id = picked[i % picked.length]!;
-    const qty = Math.round(
-      (20 + Math.floor(seededRoll(seed, salt + 10 + i) * 120)) * MERCH_UNIT_SCALE,
-    );
-    units[id] = (units[id] ?? 0) + qty;
-  }
-  const totalUnits = unitTotal(units);
-  const unitCost = blendedUnitCost(units);
-  const list_price = Math.round(totalUnits * unitCost * (1.05 + seededRoll(seed, salt + 20) * 0.25));
+  const units: Partial<Record<MerchSkuId, number>> = { [sku]: qty };
+  const unitCost = singleSkuUnitCost(sku);
+  const list_price = Math.round(
+    qty * unitCost * (1.05 + seededRoll(seed, salt + 20) * 0.22),
+  );
   const lifetime = 3 + Math.floor(seededRoll(seed, salt + 21) * 4);
   return {
     id: `offer_${careerWeek}_${salt}`,
-    label,
+    label: merchSkuOfferLabel(sku),
     listed_career_week: careerWeek,
     expires_career_week: careerWeek + lifetime,
     list_price,

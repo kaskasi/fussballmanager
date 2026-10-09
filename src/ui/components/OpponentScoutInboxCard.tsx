@@ -106,26 +106,43 @@ export function OpponentScoutInboxCard({
       }
     >
       <div className="inbox-story">
-        <p className="inbox-post-count">
-          {t("postfach.scoutJob.postCount", { index: postIndex, total: postTotal })}
-        </p>
-        <p className="inbox-scout-job-head">
-          <Swords size={18} aria-hidden />
-          <strong>
-            {t("postfach.opponentScout.title", {
-              opponent: notice.opponentShortName ?? "",
-            })}
-          </strong>
-        </p>
+        {embedded ? (
+          <p className="inbox-scout-job-lead inbox-scout-job-lead--compact">
+            {t("postfach.scoutJob.postCount", { index: postIndex, total: postTotal })}
+            {" · "}
+            {report?.bundleSummary
+              ? t("postfach.opponentScout.simRuns", { count: report.bundleSummary.simCount })
+              : null}
+            {notice.assignedScoutName
+              ? ` · ${t("postfach.opponentScout.scout", { name: notice.assignedScoutName })}`
+              : null}
+          </p>
+        ) : (
+          <>
+            <p className="inbox-post-count">
+              {t("postfach.scoutJob.postCount", { index: postIndex, total: postTotal })}
+            </p>
+            <p className="inbox-scout-job-head">
+              <Swords size={18} aria-hidden />
+              <strong>
+                {t("postfach.opponentScout.title", {
+                  opponent: notice.opponentShortName ?? "",
+                })}
+              </strong>
+            </p>
+          </>
+        )}
         {report?.bundleSummary ? (
           <>
-            <p className="inbox-scout-job-lead">
-              {t("postfach.opponentScout.simRuns", { count: report.bundleSummary.simCount })}
-              {notice.assignedScoutName
-                ? ` · ${t("postfach.opponentScout.scout", { name: notice.assignedScoutName })}`
-                : null}
-            </p>
-            <OpponentScoutSummaryGrid summary={report.bundleSummary} />
+            {!embedded ? (
+              <p className="inbox-scout-job-lead">
+                {t("postfach.opponentScout.simRuns", { count: report.bundleSummary.simCount })}
+                {notice.assignedScoutName
+                  ? ` · ${t("postfach.opponentScout.scout", { name: notice.assignedScoutName })}`
+                  : null}
+              </p>
+            ) : null}
+            <OpponentScoutSummaryGrid summary={report.bundleSummary} compact={embedded} />
           </>
         ) : report?.modeScoreline ? (
           <p className="inbox-scout-job-lead">

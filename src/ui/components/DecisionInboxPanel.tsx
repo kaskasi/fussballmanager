@@ -191,9 +191,7 @@ export function DecisionInboxPanel({
       <p className="inbox-focus-line">{inboxHeadline(focus)}</p>
       {pipelineHint ? <p className="inbox-queue-note">{pipelineHint}</p> : null}
 
-      {postfachOpenTotal === 0 ? (
-        <p className="inbox-empty">{t("inbox.modal.empty")}</p>
-      ) : (
+      {postfachOpenTotal > 0 ? (
         <>
           <PostfachDecisionGrid
             queueIds={postfachQueueIds}
@@ -242,12 +240,12 @@ export function DecisionInboxPanel({
                 notice={activeScoutJob}
                 postIndex={postfachQueueIds.indexOf(activeId ?? "") + 1}
                 postTotal={postfachOpenTotal}
+                embedded
                 onDismiss={() => {
                   onDismissScoutJob(activeScoutJob.id);
                   setExpandModalOpen(false);
                 }}
                 onApplyPlan={onApplyOpponentScoutPlan}
-                embedded
               />
             </PostfachExpandModal>
           ) : null}
@@ -345,7 +343,7 @@ export function DecisionInboxPanel({
             </section>
           ) : null}
         </>
-      )}
+      ) : null}
 
       <PostfachArchiveList entries={archiveEntries} />
     </>

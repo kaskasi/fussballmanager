@@ -138,7 +138,7 @@ export function normalizeStoryState(state?: StoryState, week = 1): StoryState {
     ...base,
     ...state,
     career_phase,
-    feature_curtain: state.feature_curtain ?? featureCurtainForPhase(career_phase),
+    feature_curtain: featureCurtainForPhase(career_phase),
     choices: state.choices ?? {},
     scheduled_payoffs: state.scheduled_payoffs ?? [],
     cast: { ...base.cast, ...state.cast },

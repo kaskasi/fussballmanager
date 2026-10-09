@@ -29,7 +29,7 @@ const setup: CareerMatchSetup = {
 };
 
 describe("opponent scout job (PRD 22)", () => {
-  it("blocks scout for five working days then queues Postfach notice", () => {
+  it("blocks scout for OPPONENT_SCOUT_WORKING_DAYS then queues Postfach notice", () => {
     vi.spyOn(opponentBundle, "buildOpponentScoutVariants").mockReturnValue({
       variants: Array.from({ length: 10 }, (_, index) => ({
         variantIndex: index,

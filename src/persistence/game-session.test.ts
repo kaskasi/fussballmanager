@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createInitialTrainingPlan } from "../development/training-units.ts";
+import { act1AssistantTrainingPlan } from "../narrative/career-presentation.ts";
+import { MONDAY } from "../sim/day-calendar.ts";
 import { assignScout, reconcileScoutBoard } from "../scouting/scout-board.ts";
 import { addPlayersToPool, ensureTargetsForPool, normalizeDiscovery } from "../scouting/scout-discovery.ts";
 import { loadDemoRoster } from "../ui/demo-roster.ts";
@@ -115,6 +117,27 @@ describe("game session", () => {
     expect(loaded?.state.world?.clubs).toHaveLength(36);
     expect(loaded?.state.league?.league_pools?.["regionalliga-nord"]).toHaveLength(18);
     removeLocalSave(1);
+  });
+
+  it("keeps training calendar gate true across save round-trips", () => {
+    const session = {
+      ...newGameSession(new Date("2026-09-22T14:00:00Z")),
+      weekday: MONDAY,
+      trainingCalendarGateDone: true,
+      trainingUnitsCompleted: 0,
+    };
+    const loaded = sessionFromSave(saveFromSession(session));
+    expect(loaded.trainingCalendarGateDone).toBe(true);
+  });
+
+  it("drops legacy assistant default plan when manual training is active", () => {
+    const session = newGameSession(new Date("2026-09-22T14:00:00Z"));
+    const withAssistant = {
+      ...session,
+      trainingPlan: act1AssistantTrainingPlan(),
+    };
+    const loaded = sessionFromSave(saveFromSession(withAssistant));
+    expect(loaded.trainingPlan.every((slot) => slot.unitId === "")).toBe(true);
   });
 
   it("keeps open purchase negotiations through sessionFromSave", () => {

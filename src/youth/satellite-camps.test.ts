@@ -75,7 +75,7 @@ describe("satellite youth camps", () => {
     expect(a.length).toBeGreaterThan(3);
   });
 
-  it("seeds 1–2 weak youths with max development hidden stats on purchase", () => {
+  it("seeds 2–3 youths in academy CA band with max development hidden stats on purchase", () => {
     const opening = generateCampOpeningProspects({
       campId: "camp_pl",
       clubId: "cl_fc_nordstern",
@@ -84,14 +84,16 @@ describe("satellite youth camps", () => {
       masterSeed: 99,
       players: [],
     });
-    expect(opening.length).toBeGreaterThanOrEqual(1);
-    expect(opening.length).toBeLessThanOrEqual(2);
+    expect(opening.length).toBeGreaterThanOrEqual(2);
+    expect(opening.length).toBeLessThanOrEqual(3);
     const maxAnlage = maxAnlageProfile();
     for (const player of opening) {
       expect(player.state.youth_site).toBe("camp_pl");
       expect(player.hidden.drive).toBe(1.6);
       expect(player.hidden.anlage).toEqual(maxAnlage);
-      expect(estimateCa(player.attributes, player.position)).toBeLessThan(75);
+      const ca = estimateCa(player.attributes, player.position);
+      expect(ca).toBeGreaterThanOrEqual(58);
+      expect(ca).toBeLessThanOrEqual(125);
     }
   });
 });

@@ -87,9 +87,10 @@ const CAMP_LEADER_LAST = [
   "Rossi",
 ] as const;
 
-export const CAMP_OPENING_MEAN_SHIFT = -38;
-export const CAMP_OPENING_PLAYER_MIN = 1;
-export const CAMP_OPENING_PLAYER_MAX = 2;
+/** Same CA mixture as HQ academy intake (PRD 03.1 base) — roughly 60–120 CA, max hidden ceiling. */
+export const CAMP_OPENING_MEAN_SHIFT = 0;
+export const CAMP_OPENING_PLAYER_MIN = 2;
+export const CAMP_OPENING_PLAYER_MAX = 3;
 /** Fixed roster rows when all camp slots are owned (wide row layout). */
 export const CAMP_CARD_ROSTER_SLOTS = 5;
 /** Smaller camp cards in 6-up shop grid — at least three talents visible. */
@@ -160,7 +161,7 @@ export function campLeaderName(campId: string, masterSeed: number): string {
 
 export function campOpeningPlayerCount(campId: string, masterSeed: number, season: number): number {
   const random = mulberry32(hashCampKey(`${masterSeed}:${campId}:${season}:opening`));
-  return random() < 0.45 ? CAMP_OPENING_PLAYER_MIN : CAMP_OPENING_PLAYER_MAX;
+  return random() < 0.5 ? CAMP_OPENING_PLAYER_MIN : CAMP_OPENING_PLAYER_MAX;
 }
 
 export function nextYouthPlayerIdStart(players: readonly Player[]): number {
@@ -173,7 +174,7 @@ export function nextYouthPlayerIdStart(players: readonly Player[]): number {
   return max + 1;
 }
 
-/** 1–2 weak-CA youths with max Anlage/Drive — immediate roster after camp purchase. */
+/** 2–3 academy-band youths (60–120 CA) with max Anlage/Drive — immediate roster after camp purchase. */
 export function generateCampOpeningProspects(input: {
   campId: string;
   clubId: string;

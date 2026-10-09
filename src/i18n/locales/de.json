@@ -859,6 +859,7 @@
   "training.next.mondayCalendar": "NEXT — Kalender (Gegner scouten)",
   "training.next.startTraining": "NEXT — Training starten",
   "training.next.weekStart": "Neue Woche — Training im Stundenplan",
+  "training.next.planRequired": "Zuerst Trainingsplan: Einheiten wählen und 2 Fokus setzen",
   "training.presets.aria": "Trainings-Vorlagen",
   "training.presets.loadTitle": "Vorlage „{label}“ laden",
   "training.presets.saveTitle": "Aktuellen Plan unter „{label}“ speichern",

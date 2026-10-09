@@ -24,8 +24,17 @@ describe("career season stats", () => {
     expect(stats?.rating).toBe("—");
   });
 
+  it("only lists stat seasons with archive rows or the current career season", () => {
+    const player = clonePlayer();
+    player.age = 28;
+    expect(listCareerStatSeasons(player, 1)).toEqual([1]);
+  });
+
   it("lists current and archived seasons for year pills", () => {
-    const player = appendSeasonSnapshot(clonePlayer(), 1);
+    const player = appendSeasonSnapshot(
+      { ...clonePlayer(), state: { ...clonePlayer().state, season_minutes: 720 } },
+      1,
+    );
     player.state.season_minutes = 120;
     expect(listCareerStatSeasons(player, 2)).toEqual([1, 2]);
     const archived = careerSeasonStatsForSeason(player, 1, 2, true);

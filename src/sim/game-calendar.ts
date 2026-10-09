@@ -8,16 +8,25 @@ export const WEEKS_PER_YEAR = 52;
 export const SEASON_END_WEEK = 34;
 export const LEAGUE_FIRST_WEEK = 1;
 export const LEAGUE_LAST_WEEK = 34;
+/** Prep weeks before Spieltag 1 (new careers start here). Playtest 2026-10-09. */
+export const PRESEASON_WEEKS = 2;
+export const CAREER_START_WEEK = LEAGUE_FIRST_WEEK - PRESEASON_WEEKS;
 /** ISO-style calendar week of Spieltag 1 (late August in Germany). */
 export const SEASON_START_CALENDAR_WEEK = 35;
-/** Four ISO weeks: late August (Sommer) and January (Winter). */
-export const SUMMER_WINDOW_CALENDAR_WEEKS = [35, 36, 37, 38] as const;
+/** ISO weeks: preseason (KW 33–34) + first league weeks (PRD 05 August window). */
+export const SUMMER_WINDOW_CALENDAR_WEEKS = [33, 34, 35, 36, 37, 38] as const;
 export const WINTER_WINDOW_CALENDAR_WEEKS = [2, 3, 4, 5] as const;
 
+function wrapIsoWeek(raw: number): number {
+  let iso = raw;
+  while (iso < 1) iso += WEEKS_PER_YEAR;
+  while (iso > WEEKS_PER_YEAR) iso -= WEEKS_PER_YEAR;
+  return iso;
+}
+
 export function calendarWeek(seasonWeek: number): number {
-  const week = Math.max(1, Math.round(seasonWeek));
-  const raw = SEASON_START_CALENDAR_WEEK + week - 1;
-  return ((raw - 1) % WEEKS_PER_YEAR) + 1;
+  const week = Math.round(seasonWeek);
+  return wrapIsoWeek(SEASON_START_CALENDAR_WEEK + week - 1);
 }
 
 export function formatCalendarWeek(seasonWeek: number): string {

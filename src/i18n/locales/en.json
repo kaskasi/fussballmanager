@@ -859,6 +859,7 @@
   "training.next.mondayCalendar": "NEXT — calendar (scout opponent)",
   "training.next.startTraining": "NEXT — start training",
   "training.next.weekStart": "New week — training on the timetable",
+  "training.next.planRequired": "Set your plan first — pick units and 2 focus slots",
   "training.presets.aria": "Training templates",
   "training.presets.loadTitle": "Load template “{label}”",
   "training.presets.saveTitle": "Save current plan to “{label}”",

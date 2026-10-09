@@ -36,6 +36,7 @@ function normalizeTransferState(state?: TransferState): TransferState {
   };
 }
 import { MONDAY } from "../sim/day-calendar.ts";
+import { CAREER_START_WEEK } from "../sim/game-calendar.ts";
 import { defaultLeagueState, normalizeLeagueState, type LeagueState } from "./league-state.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
 import type { IndividualProgram } from "../development/individual-training.ts";
@@ -44,7 +45,7 @@ import {
   normalizeTrainingPlanPresets,
   type TrainingPlanPresetSlot,
 } from "../development/training-plan-presets.ts";
-import { migrateLegacyTrainingPlan } from "../development/training-units.ts";
+import { createInitialTrainingPlan, migrateLegacyTrainingPlan } from "../development/training-units.ts";
 import { createSave, type SaveGame } from "./savegame-model.ts";
 import {
   defaultCoachingStaff,
@@ -132,7 +133,7 @@ export function newGameSession(now = new Date()): GameSession {
     playerClubId: DEFAULT_CLUB_ID,
     managerName: DEFAULT_MANAGER,
     season: 1,
-    week: 1,
+    week: CAREER_START_WEEK,
     masterSeed: DEFAULT_MASTER_SEED,
     players: [
       ...world.players.filter((player) => player.club_id === NORDSTERN_CLUB_ID),
@@ -192,6 +193,26 @@ function syncManagerClubWithBoard(session: GameSession): GameSession {
   return session;
 }
 
+function isAssistantDefaultTrainingPlan(plan: readonly TrainingSlot[]): boolean {
+  const assistant = act1AssistantTrainingPlan();
+  if (plan.length !== assistant.length) return false;
+  return plan.every(
+    (slot, index) =>
+      slot.unitId === assistant[index]?.unitId && slot.focus === false,
+  );
+}
+
+function resolveTrainingCalendarGateDone(
+  pipeline: PipelineState,
+  storyState: StoryState,
+): boolean {
+  const autoTraining = resolveFeatureCurtain(storyState).auto_training;
+  if (pipeline.training_calendar_gate_done !== undefined) {
+    return pipeline.training_calendar_gate_done;
+  }
+  return autoTraining;
+}
+
 export function sessionFromSave(save: SaveGame): GameSession {
   const pipeline = save.state.pipeline ?? defaultPipelineState(save.state.week);
   const rivalPlayers = normalizeRivalPlayers(
@@ -206,9 +227,12 @@ export function sessionFromSave(save: SaveGame): GameSession {
     players: save.players,
     trainingPlan: (() => {
       const storyState = normalizeStoryState(pipeline.story_state, save.state.week);
-      const plan = migrateLegacyTrainingPlan(pipeline.training_plan);
-      if (
-        resolveFeatureCurtain(storyState).auto_training &&
+      const manual = !resolveFeatureCurtain(storyState).auto_training;
+      let plan = migrateLegacyTrainingPlan(pipeline.training_plan);
+      if (manual && isAssistantDefaultTrainingPlan(plan)) {
+        plan = createInitialTrainingPlan();
+      } else if (
+        !manual &&
         isTrainingPlanNeglected(plan)
       ) {
         return act1AssistantTrainingPlan();
@@ -255,7 +279,10 @@ export function sessionFromSave(save: SaveGame): GameSession {
     youthCamps: normalizeYouthCamps(pipeline.youth_camps),
     trainingReminderWeek: pipeline.training_reminder_week,
     trainingUnitsCompleted: pipeline.training_units_completed ?? 0,
-    trainingCalendarGateDone: pipeline.training_calendar_gate_done ?? true,
+    trainingCalendarGateDone: resolveTrainingCalendarGateDone(
+      pipeline,
+      normalizeStoryState(pipeline.story_state, save.state.week),
+    ),
   };
   return syncManagerClubWithBoard(session);
 }

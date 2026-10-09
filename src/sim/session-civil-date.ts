@@ -1,4 +1,4 @@
-import { calendarWeek, SEASON_START_CALENDAR_WEEK } from "./game-calendar.ts";
+import { calendarWeek, LEAGUE_FIRST_WEEK, SEASON_START_CALENDAR_WEEK } from "./game-calendar.ts";
 import { seasonCalendarYear } from "./season-label.ts";
 
 export interface CivilDate {
@@ -31,9 +31,19 @@ export function civilDateFromSession(
 ): CivilDate {
   const isoWeek = calendarWeek(seasonWeek);
   const anchorYear = seasonCalendarYear(season);
-  const civilYear =
-    isoWeek >= SEASON_START_CALENDAR_WEEK ? anchorYear : anchorYear + 1;
+  const civilYear = civilYearForSessionWeek(seasonWeek, isoWeek, anchorYear);
   return civilDateFromIsoWeek(civilYear, isoWeek, weekday);
+}
+
+function civilYearForSessionWeek(
+  seasonWeek: number,
+  isoWeek: number,
+  anchorYear: number,
+): number {
+  if (seasonWeek < LEAGUE_FIRST_WEEK) {
+    return anchorYear;
+  }
+  return isoWeek >= SEASON_START_CALENDAR_WEEK ? anchorYear : anchorYear + 1;
 }
 
 /** Civil year shown on the month grid (Aug–Dec = label year, Jan–Jul = label year + 1). */

@@ -53,8 +53,9 @@ export interface WeeklyFinanceResult {
   lines: FinanceLine[];
 }
 
-export const STARTING_CLUB_CASH = 4_500_000;
-export const STARTING_TRANSFER_BUDGET = 1_800_000;
+/** Playtest 2026-10-09: more room for first-window squad moves. */
+export const STARTING_CLUB_CASH = 5_500_000;
+export const STARTING_TRANSFER_BUDGET = 2_200_000;
 export const STARTING_WAGE_BUDGET_WEEKLY = 85_000;
 /** @deprecated Use division economy sponsorship_weekly */
 export const WEEKLY_SPONSORSHIP = 55_000;

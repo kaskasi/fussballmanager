@@ -54,17 +54,9 @@ export function fullFeatureCurtain(): FeatureCurtain {
   };
 }
 
+/** Act 1 uses the same manual NEXT nexus + full nav as the open career (menu curtain lifted). */
 export function act1FeatureCurtain(): FeatureCurtain {
-  return {
-    auto_training: true,
-    manual_training: false,
-    scouting_nav: false,
-    transfers_nav: false,
-    stadium_nav: false,
-    finances_deep_nav: false,
-    opponent_scout_module: false,
-    tactics_sliders: false,
-  };
+  return fullFeatureCurtain();
 }
 
 export function featureCurtainForPhase(phase: CareerPhase): FeatureCurtain {
@@ -73,7 +65,7 @@ export function featureCurtainForPhase(phase: CareerPhase): FeatureCurtain {
 }
 
 export function resolveFeatureCurtain(state: CareerPresentationState): FeatureCurtain {
-  return state.feature_curtain ?? featureCurtainForPhase(state.career_phase);
+  return featureCurtainForPhase(state.career_phase);
 }
 
 const ACT1_UNIT_ROTATION = [

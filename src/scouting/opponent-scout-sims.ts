@@ -2,7 +2,8 @@
 import type { SandboxPlan } from "@fussballmanager/shared";
 
 export const OPPONENT_SCOUT_SIM_COUNT = 10;
-export const OPPONENT_SCOUT_WORKING_DAYS = 4;
+/** Playtest 2026-10-09: 2 Arbeitstage (was 4). */
+export const OPPONENT_SCOUT_WORKING_DAYS = 2;
 
 export type OpponentScoutRiskTag = "balanced" | "high_line" | "low_block";
 

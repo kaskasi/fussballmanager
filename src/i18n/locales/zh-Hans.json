@@ -847,6 +847,7 @@
   "training.next.mondayCalendar": "下一步 — 日历（侦察对手）",
   "training.next.startTraining": "下一步 — 开始训练",
   "training.next.weekStart": "新的一周 — 请在课表中安排训练",
+  "training.next.planRequired": "请先制定训练计划：选择单元并设置 2 个重点",
   "training.presets.aria": "训练模板",
   "training.presets.loadTitle": "加载模板「{label}」",
   "training.presets.saveTitle": "将当前计划保存到「{label}」",

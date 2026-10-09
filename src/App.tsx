@@ -3,6 +3,7 @@ import type { IndividualProgram } from "./development/individual-training.ts";
 import { assignIndividualProgram } from "./development/individual-training.ts";
 import { processTransferBreakout } from "./development/breakouts.ts";
 import { needsTrainingPlanForToday } from "./development/training-plan-state.ts";
+import { isTrainingPlanNeglected } from "./development/training-neglect.ts";
 import {
   filterTeamNavScreens,
   isNavScreenVisible,
@@ -855,6 +856,16 @@ export default function App() {
       patchSession((current) => ({ ...current, trainingCalendarGateDone: true }));
       setScreen("training");
       flashNotice(t("training.next.weekStart"), "ok");
+      return;
+    }
+
+    if (
+      screen === "training" &&
+      session.trainingCalendarGateDone &&
+      session.trainingUnitsCompleted === 0 &&
+      isTrainingPlanNeglected(session.trainingPlan)
+    ) {
+      flashNotice(t("training.next.planRequired"), "warn");
       return;
     }
 

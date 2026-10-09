@@ -24,7 +24,9 @@ export function listCareerStatSeasons(player: Player, currentSeason: number): nu
   for (let year = debutCalendarYear; year <= latestCalendarYear; year += 1) {
     seasons.push(careerSeasonIndex(year));
   }
-  return seasons;
+  const withArchive = new Set(player.history.growth.map((entry) => entry.season));
+  withArchive.add(currentSeason);
+  return seasons.filter((entry) => withArchive.has(entry));
 }
 
 export function careerSeasonStatsForSeason(

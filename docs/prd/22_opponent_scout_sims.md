@@ -18,7 +18,7 @@ Special scout assignment **scout next opponent**: run multiple **deterministic**
 ## Job rules
 
 - **When:** current calendar week is a **league match week** (`prepareCareerMatch` non-null).
-- **Cost:** 1 hired scout blocked for **4 working days** (Mo–Fr NEXT ticks; default `working_days_total = 4`).
+- **Cost:** 1 hired scout blocked for **2 working days** (Mo–Fr NEXT ticks; `OPPONENT_SCOUT_WORKING_DAYS`). Other scouts may keep map/region jobs in parallel.
 - **Scout pick:** highest `trust` among scouts not busy on map trips or another opponent job.
 - **Sims:** 10 variants at job completion; seed `opponentScoutSimSeed(master_seed, season, week, match_id, variant_i, tactic_hash)`.
 - **Squads:** same home/away resolution as career match; **only player `SandboxPlan` varies** per variant (presets + current lineup).

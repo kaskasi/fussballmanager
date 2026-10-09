@@ -17,6 +17,12 @@ describe("game calendar", () => {
     expect(isLeagueMatchWeek(35)).toBe(false);
   });
 
+  it("maps preseason weeks before Spieltag 1 (KW 35)", () => {
+    expect(calendarWeek(-1)).toBe(33);
+    expect(calendarWeek(0)).toBe(34);
+    expect(calendarWeek(1)).toBe(35);
+  });
+
   it("puts Spieltag 1 in late August and wraps past New Year", () => {
     expect(calendarWeek(1)).toBe(35);
     expect(calendarWeek(2)).toBe(36);

@@ -1,7 +1,15 @@
 import type { PitchPosition } from "./pitch.ts";
 import type { PlayerRole } from "./player.ts";
 
-export const FORMATION_IDS = ["4-3-3", "4-4-2", "2-3-5"] as const;
+export const FORMATION_IDS = [
+  "4-3-3",
+  "4-4-2",
+  "4-5-1",
+  "4-2-2-1-1",
+  "5-3-2",
+  "5-4-1",
+  "2-3-5",
+] as const;
 export type FormationId = (typeof FORMATION_IDS)[number];
 
 export type FormationSlotId =
@@ -11,8 +19,12 @@ export type FormationSlotId =
   | "RCB"
   | "RB"
   | "DM"
+  | "LDM"
+  | "RDM"
   | "LCM"
   | "RCM"
+  | "AM"
+  | "CB"
   | "LM"
   | "RM"
   | "LW"
@@ -65,6 +77,66 @@ export const FORMATION_442: readonly FormationSlot[] = [
   slot("RST", "ST", 68, 62),
 ];
 
+/** 4-5-1 — wide midfield five, lone CF. */
+export const FORMATION_451: readonly FormationSlot[] = [
+  slot("GK", "GK", 6, 50),
+  slot("LB", "FB", 20, 14),
+  slot("LCB", "CB", 18, 38),
+  slot("RCB", "CB", 18, 62),
+  slot("RB", "FB", 20, 86),
+  slot("LM", "W", 42, 12),
+  slot("LCM", "CM", 40, 36),
+  slot("DM", "DM", 36, 50),
+  slot("RCM", "CM", 40, 64),
+  slot("RM", "W", 42, 88),
+  slot("ST", "ST", 70, 50),
+];
+
+/** 4-2-2-1-1 — double pivot, wide 10s, central AM, CF. */
+export const FORMATION_42211: readonly FormationSlot[] = [
+  slot("GK", "GK", 6, 50),
+  slot("LB", "FB", 20, 14),
+  slot("LCB", "CB", 18, 38),
+  slot("RCB", "CB", 18, 62),
+  slot("RB", "FB", 20, 86),
+  slot("LDM", "DM", 32, 42),
+  slot("RDM", "DM", 32, 58),
+  slot("LM", "W", 52, 16),
+  slot("RM", "W", 52, 84),
+  slot("AM", "AM", 60, 50),
+  slot("ST", "ST", 72, 50),
+];
+
+/** 5-3-2 — wing-backs, back three, two strikers. */
+export const FORMATION_532: readonly FormationSlot[] = [
+  slot("GK", "GK", 6, 50),
+  slot("LB", "FB", 22, 10),
+  slot("LCB", "CB", 17, 32),
+  slot("CB", "CB", 15, 50),
+  slot("RCB", "CB", 17, 68),
+  slot("RB", "FB", 22, 90),
+  slot("LCM", "CM", 42, 34),
+  slot("DM", "DM", 38, 50),
+  slot("RCM", "CM", 42, 66),
+  slot("LST", "ST", 68, 38),
+  slot("RST", "ST", 68, 62),
+];
+
+/** 5-4-1 — low block, flat midfield four. */
+export const FORMATION_541: readonly FormationSlot[] = [
+  slot("GK", "GK", 6, 50),
+  slot("LB", "FB", 22, 10),
+  slot("LCB", "CB", 17, 32),
+  slot("CB", "CB", 15, 50),
+  slot("RCB", "CB", 17, 68),
+  slot("RB", "FB", 22, 90),
+  slot("LM", "W", 44, 14),
+  slot("LCM", "CM", 42, 38),
+  slot("RCM", "CM", 42, 62),
+  slot("RM", "W", 44, 86),
+  slot("ST", "ST", 70, 50),
+];
+
 export const FORMATION_235: readonly FormationSlot[] = [
   slot("GK", "GK", 6, 50),
   slot("LB", "FB", 16, 38),
@@ -82,6 +154,10 @@ export const FORMATION_235: readonly FormationSlot[] = [
 const FORMATIONS: Record<FormationId, readonly FormationSlot[]> = {
   "4-3-3": FORMATION_433,
   "4-4-2": FORMATION_442,
+  "4-5-1": FORMATION_451,
+  "4-2-2-1-1": FORMATION_42211,
+  "5-3-2": FORMATION_532,
+  "5-4-1": FORMATION_541,
   "2-3-5": FORMATION_235,
 };
 

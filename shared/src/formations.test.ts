@@ -13,8 +13,16 @@ import {
 } from "./squad.ts";
 
 describe("formations", () => {
-  it("lists 4-3-3, 4-4-2, and the 2-3-5 pyramid", () => {
-    expect(FORMATION_IDS).toEqual(["4-3-3", "4-4-2", "2-3-5"]);
+  it("lists selectable formations with eleven unique slots each", () => {
+    expect(FORMATION_IDS).toEqual([
+      "4-3-3",
+      "4-4-2",
+      "4-5-1",
+      "4-2-2-1-1",
+      "5-3-2",
+      "5-4-1",
+      "2-3-5",
+    ]);
     expect(isFormationId("2-3-5")).toBe(true);
     for (const id of FORMATION_IDS) {
       const slots = getFormation(id);

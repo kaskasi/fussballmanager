@@ -12,27 +12,27 @@ export type AutoLineupIcon = "star" | "refresh" | "rocket";
 
 export const AUTO_LINEUP_OPTIONS: {
   mode: AutoLineupMode;
-  label: string;
+  labelKey: string;
   icon: AutoLineupIcon;
-  title: string;
+  titleKey: string;
 }[] = [
   {
     mode: "best_eleven",
-    label: "Best XI",
+    labelKey: "match.lineup.auto.bestEleven",
     icon: "star",
-    title: "Stärkste Elf nach CA und Positions-Fit",
+    titleKey: "match.lineup.auto.bestElevenTitle",
   },
   {
     mode: "rotation",
-    label: "Rotation",
+    labelKey: "match.lineup.auto.rotation",
     icon: "refresh",
-    title: "Frische Spieler — hohe Fitness, wenig Minuten",
+    titleKey: "match.lineup.auto.rotationTitle",
   },
   {
     mode: "youth",
-    label: "Talente",
+    labelKey: "match.lineup.auto.youth",
     icon: "rocket",
-    title: "Junge Spieler mit Entwicklungspotenzial",
+    titleKey: "match.lineup.auto.youthTitle",
   },
 ];
 

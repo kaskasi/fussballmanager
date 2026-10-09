@@ -2378,29 +2378,7 @@ body {
   margin-top: 0.55rem;
 }
 
-.career-lineup-tactics {
-  margin-top: 0.45rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.55rem;
-  background: #f8fafc;
-}
-
-.career-lineup-tactics summary {
-  cursor: pointer;
-  padding: 0.4rem 0.65rem;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #334155;
-  list-style: none;
-}
-
-.career-lineup-tactics summary::-webkit-details-marker {
-  display: none;
-}
-
-.career-lineup-tactics[open] summary {
-  border-bottom: 1px solid #e2e8f0;
-}
+/* career-lineup-disclosure — game-surfaces.css §9.1 */
 
 .career-lineup-toolbar {
   display: grid;

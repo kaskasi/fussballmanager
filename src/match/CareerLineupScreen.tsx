@@ -44,6 +44,7 @@ import { listProSquad, sortProSquadRows } from "../squad/pro-roster.ts";
 import { formMark } from "../ui/player-profile.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
 import { OpponentScoutMatchAction } from "../ui/components/OpponentScoutMatchAction.tsx";
+import { useT } from "../i18n/react.ts";
 
 type CareerLineupScreenProps = {
   setup: CareerMatchSetup;
@@ -86,6 +87,7 @@ export function CareerLineupScreen({
   scoutBoard,
   onOpenOpponentScoutReport,
 }: CareerLineupScreenProps) {
+  const t = useT();
   const managerClubId = careerTeamId(setup.playerClubId);
   const fallbackPlan = useMemo(() => loadTacticsPreset(tacticsPresets, 1), [tacticsPresets]);
   const [plan, setPlan] = useState<SandboxPlan>(() => matchLineup?.plan ?? fallbackPlan);
@@ -115,7 +117,7 @@ export function CareerLineupScreen({
     const rows = listProSquad(players, managerClubId);
     return sortProSquadRows(rows, "position", "asc").map((row) => ({
       ...row,
-      role: assigned.has(row.playerId) ? "Start" : "Bank",
+      role: assigned.has(row.playerId) ? ("start" as const) : ("bench" as const),
     }));
   }, [players, managerClubId, assignments]);
   const squad = useMemo(
@@ -197,24 +199,24 @@ export function CareerLineupScreen({
       return;
     }
     onNavActionChange({
-      label: "Auswahl bestätigen",
+      label: t("match.lineup.confirmSelection"),
       onClick: () => {
         onConfirm(squad);
       },
-      title: "Startelf übernehmen — Simulation startest du im nächsten Schritt",
+      title: t("match.lineup.confirmSelectionTitle"),
     });
     return () => onNavActionChange(null);
-  }, [squad, filledCount, onConfirm, onNavActionChange]);
+  }, [squad, filledCount, onConfirm, onNavActionChange, t]);
 
   if (!squad) {
     return (
       <main className="matchday career-lineup">
-        <p className="status error">Kein Profikader für die Aufstellung verfügbar.</p>
+        <p className="status error">{t("match.lineup.noSquad")}</p>
       </main>
     );
   }
 
-  const matchdayLabel = setup.isHome ? "Heim" : "Auswärts";
+  const matchdayLabel = setup.isHome ? t("match.career.side.home") : t("match.career.side.away");
 
   return (
     <main className="matchday career-lineup">
@@ -224,10 +226,10 @@ export function CareerLineupScreen({
         fanbaseMood={fanbaseMood}
         poorForm={poorForm}
       />
-      <section className="career-lineup-panel" aria-label="Aufstellung">
+      <section className="career-lineup-panel" aria-label={t("match.lineup.title")}>
         <header className="career-lineup-header">
           <div className="career-lineup-header-main">
-            <h1>Aufstellung</h1>
+            <h1>{t("match.lineup.title")}</h1>
             <p className="career-lineup-sub">
               {filledCount}/11 · {formatCalendarWeek(week)} {weekdayLabel(weekday)}
             </p>
@@ -242,7 +244,7 @@ export function CareerLineupScreen({
             ) : null}
           </div>
           <label className="career-lineup-formation career-lineup-formation--inline">
-            Formation
+            {t("match.lineup.formation")}
             <select
               value={plan.formation}
               onChange={(event) => changeFormation(event.target.value as FormationId)}
@@ -256,7 +258,7 @@ export function CareerLineupScreen({
           </label>
         </header>
 
-        <div className="career-lineup-pills" aria-label="Schnellwahl">
+        <div className="career-lineup-pills" aria-label={t("match.lineup.autoPickAria")}>
           {AUTO_LINEUP_OPTIONS.map((option) => (
             <button
               key={option.mode}
@@ -264,11 +266,11 @@ export function CareerLineupScreen({
               className={
                 activeAutoMode === option.mode ? "career-lineup-pill is-active" : "career-lineup-pill"
               }
-              title={option.title}
+              title={t(option.titleKey)}
               onClick={() => applyAuto(option.mode)}
             >
               <AutoLineupIcon kind={option.icon} />
-              {option.label}
+              {t(option.labelKey)}
             </button>
           ))}
         </div>
@@ -287,9 +289,9 @@ export function CareerLineupScreen({
                 onDragPlayer={setDragPlayerId}
               />
             </div>
-            <aside className="lineup-bench" aria-label="Ersatzbank">
-              <h2 className="lineup-bench-title">Bank · {bench.length}</h2>
-              <p className="lineup-bench-hint">Ziehen · Form/Fit · WA</p>
+            <aside className="lineup-bench" aria-label={t("match.lineup.benchAria")}>
+              <h2 className="lineup-bench-title">{t("match.lineup.benchTitle", { count: bench.length })}</h2>
+              <p className="lineup-bench-hint">{t("match.lineup.benchHint")}</p>
               <div className="lineup-bench-list">
                 {bench.map((player) => (
                   <LineupPlayerCard
@@ -303,18 +305,19 @@ export function CareerLineupScreen({
             </aside>
           </div>
 
-          <aside className="career-lineup-context" aria-label="Gegner und Taktik">
+          <aside className="career-lineup-context" aria-label={t("match.lineup.contextAria")}>
             <article className="lineup-opponent-card">
               <h2>{opponentPreview?.teamShortName ?? setup.opponentShortName}</h2>
               <p className="lineup-opponent-meta">
-                {opponentPreview?.formation ?? "—"} · Spieltag {setup.matchday} · {matchdayLabel}
+                {opponentPreview?.formation ?? "—"} · {t("match.lineup.matchday", { matchday: setup.matchday })} ·{" "}
+                {matchdayLabel}
               </p>
-              <p className="lineup-opponent-meta">vs {setup.opponentShortName}</p>
+              <p className="lineup-opponent-meta">{t("match.lineup.vs", { opponent: setup.opponentShortName })}</p>
             </article>
 
             <article className="lineup-tactics-card">
-              <h2>Taktik</h2>
-              <div className="lineup-tactics-pills" role="group" aria-label="Spielstil">
+              <h2>{t("match.lineup.tactics")}</h2>
+              <div className="lineup-tactics-pills" role="group" aria-label={t("match.lineup.playStyleAria")}>
                 {TACTICS_STYLE_IDS.map((presetId) => {
                   const preset = tacticsPresets.find((entry) => entry.id === presetId);
                   const label = preset?.label ?? `Preset ${presetId}`;
@@ -334,14 +337,14 @@ export function CareerLineupScreen({
                       <button
                         type="button"
                         className="lineup-tactics-save"
-                        title={`Aktuelle Taktik in „${label}“ speichern`}
+                        title={t("match.lineup.savePresetTitle", { label })}
                         onClick={() => {
                           onSaveTacticsPreset(presetId, plan);
                           setActivePreset(presetId);
                         }}
                       >
                         <Save size={16} strokeWidth={2.5} aria-hidden />
-                        <span className="sr-only">Speichern</span>
+                        <span className="sr-only">{t("match.lineup.savePresetSr")}</span>
                       </button>
                     </div>
                   );
@@ -352,11 +355,11 @@ export function CareerLineupScreen({
               </p>
             </article>
 
-            <details className="career-lineup-tactics">
-              <summary>Feintuning</summary>
+            <details className="career-lineup-disclosure">
+              <summary>{t("match.lineup.fineTuning")}</summary>
               <div className="career-lineup-toolbar">
                 <TacticSlider
-                  label="Men"
+                  label={t("match.lineup.slider.mentalityShort")}
                   value={plan.mentality}
                   onChange={(mentality) => {
                     setActivePreset(null);
@@ -366,7 +369,7 @@ export function CareerLineupScreen({
                   }}
                 />
                 <TacticSlider
-                  label="Prs"
+                  label={t("match.lineup.slider.pressingShort")}
                   value={plan.pressing}
                   onChange={(pressing) => {
                     setActivePreset(null);
@@ -376,7 +379,7 @@ export function CareerLineupScreen({
                   }}
                 />
                 <TacticSlider
-                  label="Lin"
+                  label={t("match.lineup.slider.lineShort")}
                   value={plan.lineHeight}
                   min={25}
                   max={90}
@@ -394,43 +397,56 @@ export function CareerLineupScreen({
 
         {filledCount < 11 ? (
           <p className="career-lineup-warning" role="status">
-            Noch {11 - filledCount} Position{11 - filledCount === 1 ? "" : "en"} offen — Auto-Aufstellung oder
-            Spieler ziehen.
+            {t("match.lineup.slotsOpen", { count: 11 - filledCount })}
           </p>
         ) : null}
 
-        <section className="lineup-squad-table-wrap game-panel" aria-label="Kaderübersicht">
-          <h2 className="lineup-squad-table-title">Kader</h2>
-          <table className="lineup-squad-table">
-            <thead>
-              <tr>
-                <th scope="col">Pos</th>
-                <th scope="col">Name</th>
-                <th scope="col">Alter</th>
-                <th scope="col">CA</th>
-                <th scope="col">Form</th>
-                <th scope="col">Einsatz</th>
-              </tr>
-            </thead>
-            <tbody>
-              {squadTableRows.map((row) => {
-                const form = formMark(row.form);
-                return (
-                  <tr key={row.playerId}>
-                    <td>{row.position}</td>
-                    <td>{row.displayName}</td>
-                    <td>{row.age}</td>
-                    <td>{row.ca}</td>
-                    <td className={`lineup-squad-form is-${form.tone}`}>
-                      <span aria-hidden="true">{form.mark}</span> {row.form.toFixed(2)}
-                    </td>
-                    <td>{row.role}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </section>
+        <details className="career-lineup-disclosure career-lineup-squad">
+          <summary>{t("match.lineup.squadSummary", { count: squadTableRows.length })}</summary>
+          <div className="career-lineup-squad-body">
+            <table className="lineup-squad-table">
+              <thead>
+                <tr>
+                  <th scope="col">{t("squad.col.pos")}</th>
+                  <th scope="col">{t("squad.col.name")}</th>
+                  <th scope="col" className="col-num">
+                    {t("squad.col.age")}
+                  </th>
+                  <th scope="col" className="col-num">
+                    CA
+                  </th>
+                  <th scope="col" className="col-num">
+                    {t("match.lineup.col.form")}
+                  </th>
+                  <th scope="col" className="col-role">
+                    {t("match.lineup.col.usage")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {squadTableRows.map((row) => {
+                  const form = formMark(row.form);
+                  return (
+                    <tr key={row.playerId} className={row.role === "start" ? "is-starter" : undefined}>
+                      <td className="col-pos">{row.position}</td>
+                      <td className="col-name">{row.displayName}</td>
+                      <td className="col-num">{row.age}</td>
+                      <td className="col-num">{row.ca}</td>
+                      <td className={`lineup-squad-form col-num is-${form.tone}`}>
+                        <span aria-hidden="true">{form.mark}</span> {row.form.toFixed(2)}
+                      </td>
+                      <td className="col-role">
+                        <span className={`lineup-squad-role is-${row.role}`}>
+                          {row.role === "start" ? t("match.lineup.role.start") : t("match.lineup.role.bench")}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </details>
       </section>
     </main>
   );

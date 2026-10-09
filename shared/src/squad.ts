@@ -217,14 +217,57 @@ export function sandboxPlanFromTactics(tactics: TeamTactics): SandboxPlan {
   };
 }
 
+function defaultMentalityForFormation(formation: FormationId): number {
+  switch (formation) {
+    case "2-3-5":
+      return 62;
+    case "4-4-2":
+      return 46;
+    case "4-5-1":
+      return 44;
+    case "5-4-1":
+      return 42;
+    case "5-3-2":
+      return 48;
+    case "4-2-2-1-1":
+      return 56;
+    default:
+      return 58;
+  }
+}
+
+function defaultWidthForFormation(formation: FormationId): number {
+  switch (formation) {
+    case "2-3-5":
+      return 70;
+    case "4-4-2":
+    case "4-5-1":
+      return 50;
+    case "5-4-1":
+      return 46;
+    default:
+      return 62;
+  }
+}
+
+function defaultTempoForFormation(formation: FormationId): number {
+  switch (formation) {
+    case "4-4-2":
+    case "5-4-1":
+      return 42;
+    default:
+      return 56;
+  }
+}
+
 export function sandboxPlanFromFormation(formation: FormationId): SandboxPlan {
   const preset = FORMATION_PRESETS[formation];
   return {
     formation,
-    mentality: formation === "2-3-5" ? 62 : formation === "4-4-2" ? 46 : 58,
+    mentality: defaultMentalityForFormation(formation),
     pressing: preset.pressing,
-    width: formation === "2-3-5" ? 70 : formation === "4-4-2" ? 50 : 62,
-    tempo: formation === "4-4-2" ? 42 : 56,
+    width: defaultWidthForFormation(formation),
+    tempo: defaultTempoForFormation(formation),
     lineHeight: preset.lineHeight,
     intensity: preset.intensity,
     fluidity: preset.fluidity,

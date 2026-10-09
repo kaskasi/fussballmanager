@@ -812,13 +812,37 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   justify-content: center;
 }
 
-.career-lineup-tactics {
+.career-lineup-disclosure {
   border: 2px solid rgba(62, 49, 40, 0.2);
   background: var(--panel-muted);
+  border-radius: var(--radius-klein);
+  margin-top: 0.65rem;
 }
 
-.career-lineup-tactics summary {
+.career-lineup-disclosure summary {
+  cursor: pointer;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 800;
   color: var(--tinte);
+  list-style: none;
+  font-family: var(--font-display);
+}
+
+.career-lineup-disclosure summary::-webkit-details-marker {
+  display: none;
+}
+
+.career-lineup-disclosure[open] summary {
+  border-bottom: 2px solid rgba(62, 49, 40, 0.12);
+}
+
+.career-lineup-context .career-lineup-disclosure {
+  margin-top: 0;
+}
+
+.career-lineup-squad {
+  margin-top: 0.75rem;
 }
 
 .career-lineup-formation {
@@ -842,16 +866,10 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   border-color: var(--tinte);
 }
 
-/* §9.1 — Kader-Tabelle unter Pitch */
-.lineup-squad-table-wrap {
-  margin-top: 0.75rem;
-  padding: 0.65rem 0.75rem;
-}
-
-.lineup-squad-table-title {
-  margin: 0 0 0.5rem;
-  font-family: var(--font-display);
-  font-size: 0.95rem;
+/* §9.1 — Kader-Tabelle unter Pitch (ausklappbar wie Feintuning) */
+.career-lineup-squad-body {
+  padding: 0.5rem 0.65rem 0.65rem;
+  overflow-x: auto;
 }
 
 .lineup-squad-table {
@@ -859,20 +877,70 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   border-collapse: collapse;
   font-size: 0.82rem;
   font-weight: 600;
+  table-layout: fixed;
 }
 
 .lineup-squad-table th,
 .lineup-squad-table td {
   padding: 0.35rem 0.45rem;
-  border-bottom: 1px solid rgba(62, 49, 40, 0.15);
+  border-bottom: 1px solid rgba(62, 49, 40, 0.12);
   text-align: left;
+  vertical-align: middle;
 }
 
 .lineup-squad-table th {
   color: var(--tinte-weich);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  font-weight: 800;
+}
+
+.lineup-squad-table .col-num,
+.lineup-squad-table th.col-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.lineup-squad-table .col-pos {
+  width: 2.75rem;
+  font-weight: 800;
+  color: var(--tinte-weich);
+}
+
+.lineup-squad-table .col-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lineup-squad-table .col-role,
+.lineup-squad-table th.col-role {
+  width: 4.5rem;
+  text-align: center;
+}
+
+.lineup-squad-role {
+  display: inline-block;
+  padding: 0.12rem 0.4rem;
+  border-radius: var(--radius-klein);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border: var(--outline);
+  background: #fff;
+  color: var(--tinte-weich);
+}
+
+.lineup-squad-role.is-start {
+  background: var(--rasen);
+  color: var(--tinte);
+  border-color: var(--tinte);
+}
+
+.lineup-squad-table tbody tr.is-starter .col-name {
+  font-weight: 800;
 }
 
 /* §9.8 — Profil Hub-and-Spoke */

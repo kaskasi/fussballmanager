@@ -51,16 +51,14 @@
 }
 
 /* fm2001: tab band kantenbündig; Content mit Shell-Inset (Tabs = erstes Kind) */
-main.club-shell-card-body:has(> .fm-tab-bar):not(.help),
-main.club-shell-card-body:has(> .finances-shell > .fm-tab-bar) {
+main.club-shell-card-body:has(> .fm-tab-bar):not(.help) {
   padding-left: 0;
   padding-right: 0;
   padding-top: 0;
   padding-bottom: var(--club-shell-inset);
 }
 
-main.club-shell-card-body:has(> .fm-tab-bar):not(.help) .fm-tab-panel,
-main.club-shell-card-body:has(> .finances-shell > .fm-tab-bar) .fm-tab-panel {
+main.club-shell-card-body:has(> .fm-tab-bar):not(.help) .fm-tab-panel {
   padding: 1rem var(--club-shell-inset) 0;
 }
 
@@ -83,8 +81,10 @@ main.help.club-shell-card-body .fm-tab-bar + .help-panel {
   padding-top: 1rem;
 }
 
-main.finances.club-shell-card-body {
-  /* Override legacy index.css `.finances { max-width: 42rem }` for split-card alignment */
+main.finances.club-shell-card-body,
+main.merchandising.club-shell-card-body,
+main.leagues-screen.club-shell-card-body {
+  /* Override legacy index.css `.leagues-screen { max-width: 72rem }` — align with shell card */
   max-width: 80rem;
   width: 100%;
   margin: 0 auto;

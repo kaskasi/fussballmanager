@@ -63,8 +63,12 @@ export { matchdayFixtures, standings } from "./league.ts";
 export type { PlayerSeasonStat } from "./match-player-stats.ts";
 export {
   aggregatePlayerMatchStats,
+  disciplinePoints,
+  DISCIPLINE_RED_POINTS,
+  DISCIPLINE_YELLOW_POINTS,
   mergePlayerSeasonStats,
   topByStat,
+  topDiscipline,
 } from "./match-player-stats.ts";
 
 export type { CareerPlayerAttributes, CareerPlayerInput } from "./career-squad-bridge.ts";

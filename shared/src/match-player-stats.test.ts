@@ -103,6 +103,7 @@ describe("match player stats", () => {
       goals: 3,
       assists: 1,
       yellowCards: 1,
+      redCards: 0,
     });
   });
 

@@ -9,7 +9,16 @@ export type PlayerSeasonStat = {
   goals: number;
   assists: number;
   yellowCards: number;
+  /** Direct reds and second-yellow send-offs (optional on older saves). */
+  redCards?: number;
 };
+
+export const DISCIPLINE_YELLOW_POINTS = 2;
+export const DISCIPLINE_RED_POINTS = 5;
+
+export function disciplinePoints(row: Pick<PlayerSeasonStat, "yellowCards" | "redCards">): number {
+  return row.yellowCards * DISCIPLINE_YELLOW_POINTS + (row.redCards ?? 0) * DISCIPLINE_RED_POINTS;
+}
 
 function playerNameLookup(home: Squad, away: Squad): Map<PlayerId, string> {
   const names = new Map<PlayerId, string>();
@@ -32,7 +41,7 @@ export function aggregatePlayerMatchStats(
   const names = playerNameLookup(home, away);
   const rows = new Map<PlayerId, PlayerSeasonStat>();
 
-  const bump = (playerId: PlayerId, teamId: TeamId, field: "goals" | "assists" | "yellowCards") => {
+  const bump = (playerId: PlayerId, teamId: TeamId, field: "goals" | "assists" | "yellowCards" | "redCards") => {
     let row = rows.get(playerId);
     if (!row) {
       row = {
@@ -42,10 +51,15 @@ export function aggregatePlayerMatchStats(
         goals: 0,
         assists: 0,
         yellowCards: 0,
+        redCards: 0,
       };
       rows.set(playerId, row);
     }
-    row[field] += 1;
+    if (field === "redCards") {
+      row.redCards = (row.redCards ?? 0) + 1;
+    } else {
+      row[field] += 1;
+    }
   };
 
   for (const event of events) {
@@ -56,12 +70,26 @@ export function aggregatePlayerMatchStats(
       }
       continue;
     }
-    if (event.type === "foul" && event.card && (event.card === "yellow" || event.card === "second_yellow")) {
-      bump(event.fouler.playerId, event.fouler.teamId, "yellowCards");
+    if (event.type === "foul" && event.card) {
+      if (event.card === "yellow") {
+        bump(event.fouler.playerId, event.fouler.teamId, "yellowCards");
+      } else if (event.card === "second_yellow") {
+        bump(event.fouler.playerId, event.fouler.teamId, "yellowCards");
+        bump(event.fouler.playerId, event.fouler.teamId, "redCards");
+      } else if (event.card === "red") {
+        bump(event.fouler.playerId, event.fouler.teamId, "redCards");
+      }
       continue;
     }
-    if (event.type === "card" && (event.color === "yellow" || event.color === "second_yellow")) {
-      bump(event.player.playerId, event.player.teamId, "yellowCards");
+    if (event.type === "card") {
+      if (event.color === "yellow") {
+        bump(event.player.playerId, event.player.teamId, "yellowCards");
+      } else if (event.color === "second_yellow") {
+        bump(event.player.playerId, event.player.teamId, "yellowCards");
+        bump(event.player.playerId, event.player.teamId, "redCards");
+      } else if (event.color === "red") {
+        bump(event.player.playerId, event.player.teamId, "redCards");
+      }
     }
   }
 
@@ -79,6 +107,7 @@ export function mergePlayerSeasonStats(
       existing.goals += row.goals;
       existing.assists += row.assists;
       existing.yellowCards += row.yellowCards;
+      existing.redCards = (existing.redCards ?? 0) + (row.redCards ?? 0);
     } else {
       rows.set(row.playerId, { ...row });
     }
@@ -95,6 +124,17 @@ export function topByStat(
     .filter((row) => row[field] > 0)
     .sort((left, right) => {
       const delta = right[field] - left[field];
+      if (delta !== 0) return delta;
+      return left.name.localeCompare(right.name, "de");
+    })
+    .slice(0, limit);
+}
+
+export function topDiscipline(stats: readonly PlayerSeasonStat[], limit = 3): PlayerSeasonStat[] {
+  return [...stats]
+    .filter((row) => disciplinePoints(row) > 0)
+    .sort((left, right) => {
+      const delta = disciplinePoints(right) - disciplinePoints(left);
       if (delta !== 0) return delta;
       return left.name.localeCompare(right.name, "de");
     })

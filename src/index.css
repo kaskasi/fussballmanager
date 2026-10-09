@@ -3187,10 +3187,18 @@ body {
   color: #047857;
 }
 
-.leagues-screen {
+.leagues-screen:not(.club-shell-card-body) {
   max-width: 72rem;
   margin: 0 auto;
   padding: 0 1.5rem 2rem;
+}
+
+.leagues-screen.club-shell-card-body {
+  max-width: 80rem;
+}
+
+.leagues-screen.club-shell-card-body .leagues-screen-head {
+  margin: 0 0 0.65rem;
 }
 
 .leagues-screen-head h1 {
@@ -3213,7 +3221,7 @@ body {
 
 .leagues-screen-split {
   display: grid;
-  grid-template-columns: minmax(0, 17fr) minmax(0, 3fr);
+  grid-template-columns: minmax(0, 16fr) minmax(0, 4fr);
   gap: 0.65rem;
   align-items: start;
 }
@@ -3246,7 +3254,29 @@ body {
 }
 
 .leagues-screen-scorers .league-leaders.is-sidebar {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.leagues-screen-scorers .league-leader-card.is-compact + .league-leader-card.is-compact {
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(62, 49, 40, 0.1);
+}
+
+.leagues-screen-scorers .league-leader-hint {
+  margin: -0.25rem 0 0.35rem;
+  font-size: 0.58rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #94a3b8;
+}
+
+.leagues-screen-scorers .league-leader-empty-line.is-compact {
+  margin: 0;
+  font-size: 0.62rem;
+  line-height: 1.35;
+  color: #94a3b8;
 }
 
 .leagues-screen-scorers .league-leader-card.is-compact {

@@ -1,6 +1,7 @@
 import {
   standings,
   topByStat,
+  topDiscipline as topDisciplineFromStats,
   type FixtureResult,
   type PlayerSeasonStat,
   type TableRow,
@@ -13,6 +14,7 @@ import { clubIdsForDivision, defaultLeaguePools } from "./league-divisions.ts";
 import {
   playerStatsFromResults,
   topAssists,
+  topDisciplinePlayers,
   topScorers,
   topYellowCards,
 } from "./league-week.ts";
@@ -95,6 +97,7 @@ export interface DivisionLeaderLists {
   scorers: PlayerSeasonStat[];
   assists: PlayerSeasonStat[];
   yellows: PlayerSeasonStat[];
+  discipline: PlayerSeasonStat[];
 }
 
 export function divisionLeaderLists(
@@ -110,6 +113,7 @@ export function divisionLeaderLists(
       scorers: topScorers(league, limit),
       assists: topAssists(league, limit),
       yellows: topYellowCards(league, limit),
+      discipline: topDisciplinePlayers(league, limit),
     };
   }
 
@@ -123,5 +127,6 @@ export function divisionLeaderLists(
     scorers: topByStat(stats, "goals", limit),
     assists: topByStat(stats, "assists", limit),
     yellows: topByStat(stats, "yellowCards", limit),
+    discipline: topDisciplineFromStats(stats, limit),
   };
 }

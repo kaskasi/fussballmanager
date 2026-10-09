@@ -5,6 +5,7 @@ import {
   squadAverageStrength,
   standings,
   topByStat,
+  topDiscipline as rankDiscipline,
   type FixtureResult,
   type PlayerSeasonStat,
   type ScheduledFixture,
@@ -68,6 +69,7 @@ export function leaguePlayerStats(league: LeagueState): PlayerSeasonStat[] {
     goals: row.goals,
     assists: row.assists,
     yellowCards: row.yellowCards,
+    redCards: 0,
   }));
   return mergePlayerSeasonStats(engine, career);
 }
@@ -82,6 +84,10 @@ export function topAssists(league: LeagueState, limit = 3): PlayerSeasonStat[] {
 
 export function topYellowCards(league: LeagueState, limit = 3): PlayerSeasonStat[] {
   return topByStat(leaguePlayerStats(league), "yellowCards", limit);
+}
+
+export function topDisciplinePlayers(league: LeagueState, limit = 3): PlayerSeasonStat[] {
+  return rankDiscipline(leaguePlayerStats(league), limit);
 }
 
 export function playerTableRow(league: LeagueState): TableRow | undefined {

@@ -24,6 +24,7 @@ import {
 } from "../development/training-neglect.ts";
 import { advanceWeeklyClubFinances } from "../economy/club-finances.ts";
 import { advanceWeeklyLoanServicing } from "../economy/financing.ts";
+import { advanceFinancingStoryOffersWeek } from "../economy/financing-pipeline.ts";
 import { advanceMerchandisingWeek } from "../economy/merchandising.ts";
 import {
   merchSaleSummaryClubEventMessage,
@@ -567,9 +568,23 @@ export async function simulateGameWeek(
       clubEvents,
       individualPrograms: individualStep.programs,
       storyState: session.storyState,
+      financing: financingAfterLoans,
     },
     leagueStep.playerFixture,
   );
+
+  const financingOfferStep = advanceFinancingStoryOffersWeek({
+    ...session,
+    board: narrativeStep.board,
+    youthInbox: narrativeStep.youthInbox,
+    finances,
+    stadium: narrativeStep.stadium,
+    storyState: narrativeStep.storyState,
+    financing: financingAfterLoans,
+    season: seasonEnded ? session.season + 1 : session.season,
+    week: nextWeek,
+  });
+  financingAfterLoans = financingOfferStep.financing;
 
   const nextSeason = seasonEnded ? session.season + 1 : session.season;
   const playersForNewWeek = stampWeekStartAttributesBatch(
@@ -584,7 +599,7 @@ export async function simulateGameWeek(
     week: nextWeek,
     players: playersForNewWeek,
     scoutBoard,
-    youthInbox: narrativeStep.youthInbox,
+    youthInbox: financingOfferStep.youthInbox,
     league: leagueWithCareerStats,
       finances,
       financing: financingAfterLoans,

@@ -85,4 +85,5 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_086_f54_transfer_pillar",
   "migration_087_concession_prices",
   "migration_088_financing",
+  "migration_089_financing_story",
 ] as const;

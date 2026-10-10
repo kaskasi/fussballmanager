@@ -38,7 +38,8 @@ export type InboxItemKind =
   | "story_board"
   | "assistant_training_reminder"
   | "kicker_transfer"
-  | "contract_renegotiate";
+  | "contract_renegotiate"
+  | "financing_offer";
 
 export interface DecisionInboxItem {
   id: string;
@@ -56,6 +57,7 @@ const STORY_KINDS = new Set<InboxItemKind>([
   "story_captain",
   "story_assistant",
   "story_board",
+  "financing_offer",
 ]);
 
 export function isStoryInboxKind(kind: InboxItemKind): boolean {
@@ -109,6 +111,7 @@ export interface InboxDeliveryContext {
 const KIND_PRIORITY: Record<InboxItemKind, number> = {
   departure_risk: 0,
   story_board: 0,
+  financing_offer: 0,
   story_press: 1,
   story_captain: 1,
   promotion: 2,
@@ -154,6 +157,7 @@ function keepInboxItem(
   clubSquadIds: Set<string>,
 ): boolean {
   if (isStoryInboxItem(item)) return true;
+  if (item.kind === "financing_offer") return true;
   if (item.kind === "assistant_training_reminder") return true;
   if (item.kind === "kicker_transfer") return true;
   if (item.kind === "contract_renegotiate") return clubSquadIds.has(item.playerId);
@@ -312,6 +316,30 @@ export function deliverInboxForDays(
   return current;
 }
 
+export function enqueueFinancingInboxItem(
+  inbox: YouthInboxState,
+  week: number,
+  payload: StoryInboxPayload,
+): YouthInboxState {
+  const item: DecisionInboxItem = {
+    id: `financing_${payload.beatId}_${week}`,
+    playerId: "",
+    kind: "financing_offer",
+    week,
+    urgency: "now",
+    reason: payload.beatId,
+    narrative: payload,
+  };
+  if (inbox.items.some((entry) => entry.id === item.id) || inbox.queue.some((entry) => entry.id === item.id)) {
+    return inbox;
+  }
+  const openCount = pendingInboxItems(inbox).length;
+  if (openCount >= MAX_INBOX_ITEMS) {
+    return { ...inbox, queue: [...inbox.queue, item] };
+  }
+  return { ...inbox, items: [...inbox.items, item] };
+}
+
 export function enqueueStoryInboxItem(
   inbox: YouthInboxState,
   week: number,
@@ -432,11 +460,14 @@ export function allowedActions(
         return ["dismiss"];
       case "contract_renegotiate":
         return ["contract", "dismiss"];
+      case "financing_offer":
       case "story_press":
       case "story_fan":
       case "story_captain":
       case "story_assistant":
       case "story_board":
+        return [];
+      default:
         return [];
     }
   })();

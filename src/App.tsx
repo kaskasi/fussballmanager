@@ -118,6 +118,8 @@ import {
   weeksOfWages,
 } from "./economy/spend-runway.ts";
 import { drawBankLoan, evaluateBankLoan } from "./economy/financing.ts";
+import { isFinancingStoryChannel } from "./economy/financing-channels.ts";
+import { applyFinancingStoryChoice } from "./economy/financing-apply.ts";
 import type { DivisionEconomyId } from "./economy/division-economy.ts";
 import { matchdayCashBreakdown } from "./stadium/matchday-commerce.ts";
 import {
@@ -1131,7 +1133,25 @@ export default function App() {
         }
         if (item && isStoryInboxItem(item)) {
           const choiceId = storyChoiceId(action);
-          if (choiceId) {
+          if (choiceId && item.narrative && isFinancingStoryChannel(item.narrative.beatId)) {
+            const applied = applyFinancingStoryChoice(item.narrative.beatId, choiceId, {
+              finances: next.finances,
+              financing: next.financing,
+              stadium: next.stadium,
+              board: next.board,
+              players: next.players,
+              season: current.season,
+              week: current.week,
+            });
+            next = {
+              ...next,
+              finances: applied.finances,
+              financing: applied.financing,
+              stadium: applied.stadium ?? next.stadium,
+              board: applied.board ?? next.board,
+              players: applied.players ?? next.players,
+            };
+          } else if (choiceId) {
             next = resolveStoryInboxDecision(next, item, choiceId);
           }
           const localized = item.narrative

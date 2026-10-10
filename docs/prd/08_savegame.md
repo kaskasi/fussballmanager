@@ -146,8 +146,15 @@ interface FinancingCareerState {
 
 Stadion-Erweiterung bei Namensrecht (Slice F6.6-C): optional `naming_rights_sponsor`, `naming_rights_until_season` auf `ClubStadium` — eigene Migration.
 
+### 08.9 Cloud-Sync (M1, optional)
+
+Sync-Code + gzip-Blob auf Supabase; lokal unverändert PRD 08.1. Kein `save_version`-Bump für Cloud-Transport (gleiches JSON-Schema nach gunzip). Spezifikation: **PRD 18**.
+
+---
+
 ## References
 
+- Cloud M1: PRD 18
 - Player-Schema: PRD 07
 - Feature-Chronik: F11.4 in PRD 10
 - Meta-PRD `13_meta.md`: noch nicht geschrieben

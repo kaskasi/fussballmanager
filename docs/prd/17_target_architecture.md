@@ -160,7 +160,7 @@ Ziel: **Ubahn-Handy, gleicher Stand** ohne Gameplay-Server.
 | Stufe | Mechanismus | Mobile |
 |-------|-------------|--------|
 | **M0** | localStorage + Export/Import (Datei) | Browser/PWA, manuell |
-| **M1** | Account + verschlüsselter Blob (1 Slot aktiv) | Login in Web-App |
+| **M1** | Sync-Code + gzip-Blob (1 Stand pro Code) — PRD 18 | Code in Web-App |
 | **M2** | Steam Cloud (PC/Deck) + optional Web-Account verknüpft | Hybrid / Monetarisierung |
 
 **PM (2026-10-03):** Erste Tester-Welle kann vorbei sein; für neue Kohorten

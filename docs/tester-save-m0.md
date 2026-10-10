@@ -6,6 +6,8 @@ Vor einem Schema-Update (aktuell Save-Version 54, Hybrid-Stamps/Akte-Hex): einma
 
 Kein Login, kein Server — nur eine JSON-Datei, die du selbst bewegst.
 
+**M1 Cloud (Sync-Code):** Optional auf derselben Deploy-URL — Spielstände → **Cloud aktivieren** oder **Von Cloud laden**. Code wie `fuss-xxxx-xxxx` sichern (Screenshot). Details: [PRD 18](prd/18_cloud_save_m1.md). Export bleibt Notfall.
+
 ---
 
 ## Was du wissen solltest

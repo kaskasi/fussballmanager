@@ -1,0 +1,5 @@
+# Supabase local/dev — PRD 18 cloud-save
+project_id = "fussballmanager"
+
+[functions.cloud-save]
+verify_jwt = false

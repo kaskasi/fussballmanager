@@ -32,9 +32,10 @@ Geschrieben und verbindlich:
 - `15_feature_gap.md` — Keep/Refuse vs. Referenz-DNA; C1 → F2.8, Kandidat C2
 - `16_match_broadcast_beats.md` — Match-Kommentar, Beats, Director (Präsentation)
 - `17_target_architecture.md` — Zielbild: Engine-Modul, Client-Sim, Sync, Deploy
+- `18_cloud_save_m1.md` — M1 Sync-Code Cloud-Save (Supabase Blobs, Edge Function)
 - `design.md` — Visuelle Sprache, Tokens, Header, Wireframes §9 (UI-Darstellung)
 
-Tester-Hilfe (nicht PRD-Nummer): `docs/tester-save-m0.md` — Export/Import M0.
+Tester-Hilfe (nicht PRD-Nummer): `docs/tester-save-m0.md` — Export/Import M0; M1 Cloud → PRD 18 + `docs/ops-cloud-save-m1.md`.
 
 Noch nicht geschrieben, nicht erfinden:
 

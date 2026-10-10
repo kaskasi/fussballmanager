@@ -24,10 +24,15 @@ import {
 } from "./persistence/game-session.ts";
 import {
   loadLocalSave,
+  normalizeSave,
   removeLocalSave,
   tryWriteLocalSave,
   writeLocalSave,
 } from "./persistence/local-save.ts";
+import {
+  scheduleCloudUpload,
+  setCloudUploadListener,
+} from "./persistence/cloud-save-scheduler.ts";
 import { getActiveSlot, setActiveSlot } from "./persistence/save-slots.ts";
 import type { SaveGame } from "./persistence/savegame-model.ts";
 import {
@@ -498,6 +503,15 @@ export default function App() {
   }, [accessibility]);
 
   useEffect(() => {
+    setCloudUploadListener((result) => {
+      if (!result.ok) {
+        flashNotice(t("save.cloud.uploadFail"), "warn");
+      }
+    });
+    return () => setCloudUploadListener(null);
+  }, [flashNotice]);
+
+  useEffect(() => {
     if (screen !== "scouting") {
       scoutMapDetailBackRef.current = null;
       setScoutMapDetailNav(null);
@@ -583,13 +597,15 @@ export default function App() {
 
   const patchSession = useCallback((recipe: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>) => {
     let persisted = true;
+    let nextSave: SaveGame | null = null;
     setSave((current) => {
-      const next = saveFromSession(recipe(sessionFromSave(current)), current);
-      persisted = tryWriteLocalSave(activeSlot, next);
-      return next;
+      nextSave = saveFromSession(recipe(sessionFromSave(current)), current);
+      persisted = tryWriteLocalSave(activeSlot, nextSave);
+      return nextSave;
     });
     if (persisted) {
       flashSaveToast();
+      if (nextSave) scheduleCloudUpload(activeSlot, nextSave);
     } else {
       flashNotice(t("shell.saveWriteFailed"), "warn");
     }
@@ -681,6 +697,7 @@ export default function App() {
     const result = await simulateGameWeek(snapshot, override);
     setPendingWatchedMatch(null);
     let weekSimPersisted = true;
+    let weekSimSave: SaveGame | null = null;
     setSave((current) => {
       const weekStamp = {
         season: result.session.season,
@@ -718,11 +735,13 @@ export default function App() {
         };
       }
       const next = saveFromSession(nextSession, current);
+      weekSimSave = next;
       weekSimPersisted = tryWriteLocalSave(activeSlot, next);
       return next;
     });
     if (weekSimPersisted) {
       flashSaveToast();
+      if (weekSimSave) scheduleCloudUpload(activeSlot, weekSimSave);
     } else {
       flashNotice(t("shell.saveWriteFailed"), "warn");
     }
@@ -2623,6 +2642,30 @@ export default function App() {
     nextHeaderTitle,
   };
 
+  const applyCloudSave = useCallback(
+    (cloudSave: SaveGame, slot: number) => {
+      setActiveSlot(slot);
+      setActiveSlotState(slot);
+      const normalized = normalizeSave(cloudSave);
+      writeLocalSave(slot, normalized);
+      setSave(normalized);
+      clearTransientUi({
+        setProfileId,
+        setForeignPlayerId,
+        setPostfachItemId,
+        setProfileFeedback,
+        setCareerMatchSetup,
+        setCareerMatchUiVisible,
+        setMatchNavAction,
+        setMarketFilters,
+        setMarketSort,
+        setScreen,
+      });
+      flashNotice(t("save.cloud.pullOk"), "ok");
+    },
+    [flashNotice, setActiveSlot],
+  );
+
   const saveManagerOverlay = saveManagerOpen ? (
     <SaveManagerModal
       activeSlot={activeSlot}
@@ -2630,6 +2673,7 @@ export default function App() {
       onClose={() => setSaveManagerOpen(false)}
       onLoadSlot={loadSaveSlot}
       onNewGameInSlot={newGameInSlot}
+      onApplyCloudSave={applyCloudSave}
     />
   ) : null;
 

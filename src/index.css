@@ -14065,6 +14065,89 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   font-size: 0.8rem;
 }
 
+.save-cloud-panel {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.save-cloud-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.92rem;
+}
+
+.save-cloud-subtitle {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 0.85rem;
+}
+
+.save-cloud-muted {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.save-cloud-reveal {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+}
+
+.save-cloud-code-label {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #047857;
+}
+
+.save-cloud-code {
+  margin: 0.35rem 0;
+  font-family: ui-monospace, monospace;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  word-break: break-all;
+}
+
+.save-cloud-warn {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.save-cloud-reveal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.save-cloud-pull-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.save-cloud-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 @media (max-width: 800px) {
   .lineups,
   .score-row,

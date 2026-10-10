@@ -4,6 +4,7 @@ import {
   previewSuccessPercent,
   retrainDeterministicUnit,
   retrainLaneFactor,
+  retrainLaneSkillForTarget,
   retrainSuccessProbability,
   rollRetrainSuccess,
 } from "./position-retrain-roll.ts";
@@ -64,5 +65,58 @@ describe("position retrain roll", () => {
   it("rolls success when unit is below probability", () => {
     expect(rollRetrainSuccess(0.2, 0.5)).toBe(true);
     expect(rollRetrainSuccess(0.8, 0.5)).toBe(false);
+  });
+
+  it("treats full lane mastery as a strong success driver (AM → CM)", () => {
+    const player = clonePlayer();
+    player.position = "AM";
+    player.flexibility = [];
+    expect(retrainLaneSkillForTarget("AM", [], "CM")).toBe(1);
+    const eliteMental = {
+      ...player.attributes,
+      composure: 199,
+      concentration: 199,
+      teamwork: 199,
+    };
+    const p = retrainSuccessProbability({
+      plannedWeeks: 8,
+      from: "AM",
+      to: "CM",
+      attrs: eliteMental,
+      currentProficiency: 0,
+      flexibility: [],
+    });
+    expect(p).toBeCloseTo(0.83, 2);
+    expect(previewSuccessPercent({
+      plannedWeeks: 8,
+      from: "AM",
+      to: "CM",
+      attrs: eliteMental,
+      currentProficiency: 0,
+      flexibility: [],
+    })).toBe(83);
+  });
+
+  it("keeps cross-lane retrain riskier when lane skill is low", () => {
+    const player = clonePlayer();
+    player.position = "CB";
+    player.flexibility = [];
+    const sameLane = retrainSuccessProbability({
+      plannedWeeks: 8,
+      from: "CB",
+      to: "RB",
+      attrs: player.attributes,
+      currentProficiency: 0,
+      flexibility: [],
+    });
+    const crossLane = retrainSuccessProbability({
+      plannedWeeks: 8,
+      from: "CB",
+      to: "RW",
+      attrs: player.attributes,
+      currentProficiency: 0,
+      flexibility: [],
+    });
+    expect(sameLane).toBeGreaterThan(crossLane);
   });
 });

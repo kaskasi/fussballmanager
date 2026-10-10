@@ -3,6 +3,7 @@ import type { Player, PositionPrimary } from "../../types/player.ts";
 import {
   previewSuccessPercent,
   retrainDurationFactor,
+  retrainLaneSkillForTarget,
   retrainLaneTone,
   RETRAIN_DURATION_CAP_WEEKS,
 } from "../../development/position-retrain-roll.ts";
@@ -40,7 +41,13 @@ export function RetrainPreviewPanel({
     to: targetPosition,
     attrs: player.attributes,
     currentProficiency,
+    flexibility: player.flexibility,
   });
+  const laneSkill = retrainLaneSkillForTarget(
+    player.position,
+    player.flexibility,
+    targetPosition,
+  );
   const fromLane = positionLane(player.position);
   const toLane = positionLane(targetPosition);
   const tone = retrainLaneTone(player.position, targetPosition);
@@ -99,6 +106,11 @@ export function RetrainPreviewPanel({
       ) : null}
       {duration >= 1 && weeks <= RETRAIN_DURATION_CAP_WEEKS ? (
         <p className="training-retrain-hint is-muted">Dauer wirkt bis etwa {RETRAIN_DURATION_CAP_WEEKS} Wochen auf die Chance.</p>
+      ) : null}
+      {laneSkill > 0 ? (
+        <p className="training-retrain-hint is-muted">
+          Stärke in der Ziel-Linie: {Math.round(laneSkill * 100)} % — erhöht die Erfolgs-Chance.
+        </p>
       ) : null}
     </section>
   );

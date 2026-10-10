@@ -313,6 +313,7 @@ function resolvePositionRetrainFinal(
     to: target,
     attrs: player.attributes,
     currentProficiency,
+    flexibility: player.flexibility,
   });
   const masterSeed = context?.masterSeed ?? 0;
   const unit = retrainDeterministicUnit(

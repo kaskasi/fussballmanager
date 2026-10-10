@@ -1,4 +1,4 @@
-import type { Attributes, PositionPrimary } from "../types/player.ts";
+import type { Attributes, PositionFlexibility, PositionPrimary } from "../types/player.ts";
 import {
   laneOrderIndex,
   positionLane,
@@ -80,7 +80,25 @@ export interface RetrainProbabilityInput {
   from: PositionPrimary;
   to: PositionPrimary;
   attrs: Attributes;
+  /** Existing proficiency on the exact target position slot (0–1). */
   currentProficiency: number;
+  flexibility?: readonly PositionFlexibility[];
+}
+
+/** Lane mastery for the target role (same logic as profile “Stärke als…”). */
+export function retrainLaneSkillForTarget(
+  primary: PositionPrimary,
+  flexibility: readonly PositionFlexibility[],
+  target: PositionPrimary,
+): number {
+  const targetLane = positionLane(target);
+  let skill = positionLane(primary) === targetLane ? 1 : 0;
+  for (const slot of flexibility) {
+    if (positionLane(slot.trained_as) === targetLane) {
+      skill = Math.max(skill, slot.proficiency);
+    }
+  }
+  return Math.min(1, Math.max(0, skill));
 }
 
 /** Documented constants — PRD 07.7. */
@@ -88,8 +106,14 @@ export function retrainSuccessProbability(input: RetrainProbabilityInput): numbe
   const mental = retrainMentalFactor(input.attrs);
   const lane = retrainLaneFactor(input.from, input.to);
   const duration = retrainDurationFactor(input.plannedWeeks);
-  const proficiencyEase = 1 - Math.min(1, Math.max(0, input.currentProficiency)) * 0.25;
-  const raw = 0.12 + 0.78 * duration * mental * lane * proficiencyEase;
+  const laneSkill = retrainLaneSkillForTarget(
+    input.from,
+    input.flexibility ?? [],
+    input.to,
+  );
+  const targetHeadStart = Math.min(1, Math.max(0, input.currentProficiency));
+  const base = 0.12 + 0.71 * laneSkill + 0.08 * targetHeadStart;
+  const raw = base * duration * (0.7 + 0.3 * mental) * lane;
   return Math.min(PROB_CEIL, Math.max(PROB_FLOOR, raw));
 }
 

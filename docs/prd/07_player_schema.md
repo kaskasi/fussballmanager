@@ -185,8 +185,10 @@ interface Injury {
   - **Mental:** Mittelwert aus `composure`, `concentration`, `teamwork` ÷ (3 × 199).
   - **Positions-Nähe:** Grobe Lane `TW | IV | MF | ST` (PRD 14.3); gleiche Lane = 1,0; benachbart = 0,75; überspringend = 0,5; TW↔Feld = 0,35.
   - **Dauer:** Faktor `min(1, plannedWeeks / 8)` — ab **8 Wochen** keine höhere Chance (nur Opportunity Cost).
-  - **Bestehende Proficiency** des Ziels: leichter Bonus `(1 − proficiency × 0,25)` auf den Rohterm.
-  - Formel-Implementierung: `0,12 + 0,78 × duration × mental × lane × proficiencyEase`.
+  - **Stärke in der Ziel-Linie** (wie Profil „Stärke als…“): `laneSkill` 0–1 — Primärposition in derselben Lane wie Ziel = 1,0; sonst max. `flexibility.proficiency` in dieser Lane.
+  - **Ziel-Slot:** bestehende Proficiency auf exakt `target` (+0,08 × headStart im Basis-Term).
+  - Formel: `base = 0,12 + 0,71 × laneSkill + 0,08 × targetProficiency`; `p = clamp(0,05…0,95, base × duration × (0,70 + 0,30 × mental) × lane)`.
+  - Beispiel: AM → CM bei voller MF-Linie, 8 Wochen, starke Mental-Werte → ~83 %.
 - **RNG:** `hash(master_seed, player_id, target, season, startedWeek)` → Unit-Test `[0,1)`.
 - **Erfolg:** Slot `trained_as = target`, `proficiency = 1,0`, `weeks_trained += plannedWeeks`.
 - **Misserfolg:** Partieller Zuwachs `proficiency += plannedWeeks × 0,025 × mental` (cap &lt; 1); `state.retrain_failures[target] += 1`.

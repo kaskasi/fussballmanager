@@ -4,7 +4,9 @@ import { act1AssistantTrainingPlan } from "../narrative/career-presentation.ts";
 import { MONDAY } from "../sim/day-calendar.ts";
 import { assignScout, reconcileScoutBoard } from "../scouting/scout-board.ts";
 import { addPlayersToPool, ensureTargetsForPool, normalizeDiscovery } from "../scouting/scout-discovery.ts";
+import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { loadDemoRoster } from "../ui/demo-roster.ts";
+import { refreshPlayerMarketValue } from "../transfers/refresh-market-values.ts";
 import { newGameSession, saveFromSession, sessionFromSave } from "./game-session.ts";
 import { loadLocalSave, persistSession, removeLocalSave, writeLocalSave } from "./local-save.ts";
 import { createSave, SAVE_VERSION } from "./savegame.ts";
@@ -138,6 +140,28 @@ describe("game session", () => {
     };
     const loaded = sessionFromSave(saveFromSession(withAssistant));
     expect(loaded.trainingPlan.every((slot) => slot.unitId === "")).toBe(true);
+  });
+
+  it("recomputes stale market_value when hydrating from save", () => {
+    const session = newGameSession(new Date("2026-09-22T14:00:00Z"));
+    const youth = clonePlayer();
+    youth.age = 15;
+    youth.squad_status = "u17";
+    youth.market_value = 372_000;
+    youth.attributes = {
+      ...youth.attributes,
+      shooting: 92,
+      passing: 92,
+      dribbling: 92,
+      technique: 92,
+      pace: 92,
+    };
+    const save = saveFromSession({ ...session, players: [youth] });
+    save.players[0]!.market_value = 372_000;
+    const loaded = sessionFromSave(save);
+    const expected = refreshPlayerMarketValue(youth, save.state.season).market_value;
+    expect(loaded.players[0]!.market_value).toBe(expected);
+    expect(loaded.players[0]!.market_value).toBeGreaterThan(800_000);
   });
 
   it("keeps open purchase negotiations through sessionFromSave", () => {

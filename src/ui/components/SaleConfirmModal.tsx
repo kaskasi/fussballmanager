@@ -1,16 +1,19 @@
 import { formatClubCash } from "../../economy/club-finances.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import type { Player } from "../../types/player.ts";
+import { MarketValueBreakdownStrip } from "./MarketValueBreakdownStrip.tsx";
 
 /** Stufe 1 — confirm before instant AI sale. */
 export function SaleConfirmModal({
   player,
   offerEstimate,
+  season,
   onConfirm,
   onCancel,
 }: {
   player: Player;
   offerEstimate: number;
+  season?: number;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -22,6 +25,9 @@ export function SaleConfirmModal({
           <h2 id="sale-confirm-title">Verkauf anbieten</h2>
           <p className="negotiation-meta">{formatPlayerName(player)}</p>
         </header>
+        {season !== undefined ? (
+          <MarketValueBreakdownStrip player={player} season={season} />
+        ) : null}
         <p className="transfer-risk-copy">
           Ein Liga-Verein wird mit ca. <strong>{formatClubCash(offerEstimate)}</strong> gehandelt.
           Bei Zusage erhältst du die Ablöse; <strong>50&nbsp;%</strong> fließen in den Transfer-Topf.

@@ -23,7 +23,7 @@ import {
   type TransferRecord,
 } from "./transfer-history.ts";
 import { STARTING_TRANSFER_BUDGET } from "../economy/club-finances.ts";
-import { estimateCa, marketValue } from "./market-value.ts";
+import { estimateCa, marketValue, marketValueInputFromPlayer } from "./market-value.ts";
 import { refreshPlayerMarketValue } from "./refresh-market-values.ts";
 import { loanClubName } from "./loan-roster.ts";
 import type { WorldClub } from "../world/world-generator.ts";
@@ -127,16 +127,13 @@ export function buyerEstimatedValue(player: Player, season: number, noise: numbe
   const estimatedCa = Math.max(40, ca * estimateError);
   const wage = player.contract?.wage_weekly ?? 0;
   const seasonsLeft = player.contract ? Math.max(0, player.contract.until_season - season) : 0;
-  return marketValue({
-    ca: estimatedCa,
-    age: player.age,
-    monthsRemaining: seasonsLeft * 12,
-    wage,
-    marketWage: Math.max(1, wage),
-    demandFactor: 1,
-    reputationFactor: 1,
-    estimatedGrowthRateNormalized: player.age < 20 ? Math.min(1, player.state.recent_growth_26w / 40) : 0,
-  });
+  return marketValue(
+    marketValueInputFromPlayer(player, estimatedCa, season, {
+      wage,
+      marketWage: Math.max(1, wage),
+      monthsRemaining: seasonsLeft * 12,
+    }),
+  );
 }
 
 export function contractSeasonsLeft(player: Player, season: number): number {

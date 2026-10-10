@@ -2,7 +2,7 @@ import type { AbilityEstimate } from "./estimate-model.ts";
 import type { Player } from "../types/player.ts";
 import { roundStat } from "../types/player-display.ts";
 import { formatMarketValueShort } from "../squad/pro-roster.ts";
-import { estimateCa, marketValue } from "../transfers/market-value.ts";
+import { estimateCa, marketValue, marketValueInputFromPlayer } from "../transfers/market-value.ts";
 
 export interface ScoutValueBounds {
   low: number;
@@ -12,16 +12,9 @@ export interface ScoutValueBounds {
 
 function marketValueFromPlayerCa(player: Player, ca: number, season: number): number {
   const wage = player.contract?.wage_weekly ?? 0;
-  const seasonsLeft = player.contract ? Math.max(0, player.contract.until_season - season) : 0;
-  return marketValue({
-    ca,
-    age: player.age,
-    monthsRemaining: seasonsLeft * 12,
-    wage,
-    marketWage: Math.max(1, wage),
-    demandFactor: 1,
-    reputationFactor: 1,
-  });
+  return marketValue(
+    marketValueInputFromPlayer(player, ca, season, { marketWage: Math.max(1, wage), wage }),
+  );
 }
 
 /** How much of a foreign player the UI may reveal from scout knowledge. */

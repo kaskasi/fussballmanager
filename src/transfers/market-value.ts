@@ -1,13 +1,8 @@
-import type { Attributes, PositionPrimary } from "../types/player.ts";
+import type { Attributes, Player, PositionPrimary } from "../types/player.ts";
 
 /**
  * Deterministic market value (PRD 05.1).
- * File is kebab-case per the project naming rule.
- *
- * Demand and reputation are caller inputs clamped to the published bounds.
- * The weekly scarcity count and the fame score are not formulas yet.
- * `wage` and `marketWage` must be the same pay period. The wage anchor in
- * PRD 05.4 depends on this value, so it is not used inside the formula.
+ * Present value at age + development upside for youth (no hidden potential field).
  */
 
 export type CaGroup = "GK" | "CB" | "FB" | "MF" | "AM" | "W" | "CF";
@@ -16,6 +11,9 @@ export const DEMAND_MIN = 0.85;
 export const DEMAND_MAX = 1.2;
 export const REPUTATION_MIN = 0.95;
 export const REPUTATION_MAX = 1.15;
+
+/** Cap for under-21 valuations without awards (PRD 05.1). */
+export const YOUTH_MARKET_VALUE_CAP = 8_000_000;
 
 const CA_WEIGHTS: Record<CaGroup, Partial<Record<keyof Attributes, number>>> = {
   GK: { gk_handling: 0.35, concentration: 0.15, positioning: 0.15, composure: 0.1, leadership: 0.1, passing: 0.15 },
@@ -27,20 +25,7 @@ const CA_WEIGHTS: Record<CaGroup, Partial<Record<keyof Attributes, number>>> = {
   CF: { shooting: 0.35, composure: 0.15, pace: 0.15, strength: 0.1, positioning: 0.15, technique: 0.1 },
 };
 
-const AGE_CURVE: Record<number, number> = {
-  15: 0.15,
-  16: 0.25,
-  17: 0.4,
-  18: 0.55,
-  19: 0.7,
-  20: 0.82,
-  21: 0.9,
-  22: 0.95,
-  23: 0.98,
-  24: 1,
-  25: 1,
-  26: 0.98,
-  27: 0.95,
+const PEAK_DECLINE: Record<number, number> = {
   28: 0.9,
   29: 0.82,
   30: 0.7,
@@ -75,27 +60,65 @@ export function baseAttributeValue(ca: number): number {
   return 200_000 * Math.pow(ca / 60, 5.6);
 }
 
-/**
- * Table value for the completed year. Under 20, the buyer's normalised
- * 12-month growth rate from PRD 04.5 adds `1 + 0.6 × rate`. Hidden Anlage
- * and Drive are not an input.
- */
-export function ageCurveFactor(age: number, estimatedGrowthRateNormalized = 0): number {
+/** Career peak present value — light youth risk discount, not a 0.15 malus. */
+export function presentValueFactor(age: number): number {
   const year = Math.floor(age);
-  const base = year >= 35 ? 0.12 : (AGE_CURVE[Math.max(15, year)] ?? 0.12);
-  if (year >= 20) return base;
-  return base * (1 + 0.6 * estimatedGrowthRateNormalized);
+  if (year <= 17) return 0.88 + (year - 15) * 0.035;
+  if (year <= 22) return 0.95 + (year - 18) * 0.0125;
+  if (year <= 27) return 1;
+  if (year >= 35) return 0.12;
+  return PEAK_DECLINE[year] ?? 0.12;
 }
 
-export function contractFactor(monthsRemaining: number, wage: number, marketWage: number): number {
+/** Normalised 0–1 growth signal from rolling attribute momentum (owner + buyer). */
+export function normalizedGrowthSignal(player: Pick<Player, "age" | "state">): number {
+  if (player.age >= 21) return 0;
+  return Math.min(1, (player.state?.recent_growth_26w ?? 0) / 35);
+}
+
+/**
+ * Upside premium for players still developing (age &lt; 21).
+ * Uses public growth signal and CA headroom toward soft cap — not hidden anlage.
+ */
+export function developmentUpsideFactor(
+  age: number,
+  ca: number,
+  growthSignalNormalized: number,
+): number {
+  if (age >= 21) return 1;
+  const youthWeight = clamp((21 - age) / 6, 0, 1);
+  const headroom = clamp((180 - ca) / 81, 0, 1);
+  const signal = clamp(growthSignalNormalized, 0, 1);
+  const blend = youthWeight * (0.35 + 0.65 * signal) * (0.4 + 0.6 * headroom);
+  const upsideMax = 0.55;
+  return 1 + upsideMax * blend;
+}
+
+/** @deprecated PRD 05.1 legacy name — present × development. */
+export function ageCurveFactor(
+  age: number,
+  estimatedGrowthRateNormalized = 0,
+  ca = 100,
+): number {
+  return presentValueFactor(age) * developmentUpsideFactor(age, ca, estimatedGrowthRateNormalized);
+}
+
+export function contractFactor(
+  monthsRemaining: number,
+  wage: number,
+  marketWage: number,
+  options?: { youthAcademy?: boolean },
+): number {
   let factor = 1 + (monthsRemaining / 36) * 0.15;
-  if (monthsRemaining <= 6) factor *= 0.5;
+  if (monthsRemaining <= 6) {
+    factor *= 0.5;
+    if (options?.youthAcademy) factor = Math.max(factor, 0.82);
+  }
   if (wage > marketWage * 1.3) factor *= 0.85;
   return factor;
 }
 
 export interface MarketValueInput {
-  /** Buyer's estimate, or the true CA when the owner prices their own player. */
   ca: number;
   age: number;
   monthsRemaining: number;
@@ -103,18 +126,73 @@ export interface MarketValueInput {
   marketWage: number;
   demandFactor: number;
   reputationFactor: number;
-  /** Used only under age 20. Omit when there is no sparkline. */
   estimatedGrowthRateNormalized?: number;
+  squadStatus?: Player["squad_status"];
+}
+
+export interface MarketValueBreakdown {
+  base: number;
+  presentFactor: number;
+  developmentFactor: number;
+  contractFactor: number;
+  demandFactor: number;
+  reputationFactor: number;
+  total: number;
+  capped: boolean;
+}
+
+export function marketValueBreakdown(input: MarketValueInput): MarketValueBreakdown {
+  const base = baseAttributeValue(input.ca);
+  const growth = input.estimatedGrowthRateNormalized ?? 0;
+  const presentFactor = presentValueFactor(input.age);
+  const developmentFactor = developmentUpsideFactor(input.age, input.ca, growth);
+  const contract = contractFactor(input.monthsRemaining, input.wage, input.marketWage, {
+    youthAcademy: input.squadStatus === "u17" || input.squadStatus === "u19",
+  });
+  const demandFactor = clamp(input.demandFactor, DEMAND_MIN, DEMAND_MAX);
+  const reputationFactor = clamp(input.reputationFactor, REPUTATION_MIN, REPUTATION_MAX);
+  let total = base * presentFactor * developmentFactor * contract * demandFactor * reputationFactor;
+  let capped = false;
+  if (input.age < 21 && total > YOUTH_MARKET_VALUE_CAP) {
+    total = YOUTH_MARKET_VALUE_CAP;
+    capped = true;
+  }
+  return {
+    base,
+    presentFactor,
+    developmentFactor,
+    contractFactor: contract,
+    demandFactor,
+    reputationFactor,
+    total,
+    capped,
+  };
 }
 
 export function marketValue(input: MarketValueInput): number {
-  return (
-    baseAttributeValue(input.ca) *
-    ageCurveFactor(input.age, input.estimatedGrowthRateNormalized ?? 0) *
-    contractFactor(input.monthsRemaining, input.wage, input.marketWage) *
-    clamp(input.demandFactor, DEMAND_MIN, DEMAND_MAX) *
-    clamp(input.reputationFactor, REPUTATION_MIN, REPUTATION_MAX)
-  );
+  return marketValueBreakdown(input).total;
+}
+
+export function marketValueInputFromPlayer(
+  player: Player,
+  ca: number,
+  season: number,
+  overrides: Partial<MarketValueInput> = {},
+): MarketValueInput {
+  const wage = player.contract?.wage_weekly ?? 0;
+  const seasonsLeft = player.contract ? Math.max(0, player.contract.until_season - season) : 0;
+  return {
+    ca,
+    age: player.age,
+    monthsRemaining: seasonsLeft * 12,
+    wage,
+    marketWage: Math.max(1, (baseAttributeValue(ca) * 0.008) / 52),
+    demandFactor: 1,
+    reputationFactor: 1,
+    estimatedGrowthRateNormalized: normalizedGrowthSignal(player),
+    squadStatus: player.squad_status,
+    ...overrides,
+  };
 }
 
 function clamp(value: number, min: number, max: number): number {

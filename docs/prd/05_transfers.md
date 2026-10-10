@@ -1,7 +1,7 @@
 # /docs/prd/05_transfers.md
 
-**Version:** 1.4
-**Last Updated:** 2026-10-04
+**Version:** 1.5
+**Last Updated:** 2026-10-10
 **Status:** Final
 
 ---
@@ -44,10 +44,12 @@ Transfersystem, Vertragsverhandlungen und den KI-Transfermarkt spezifizieren. Ze
 ```text
 market_value =
     base_attribute_value(ca_estimated)
-  × age_curve_factor(age, position)
+  × present_value_factor(age)
+  × development_upside_factor(age, ca, growth_signal)   // age < 21, kann > 1 sein
   × contract_factor(months_remaining, wage)
   × demand_factor(position_supply)
   × reputation_factor(player, club)
+  // cap 8 Mio € wenn age < 21 (ohne Awards)
 ```
 
 **a) `ca_estimated`** — gewichtete Attributsumme. Positionsgruppen: PRD 07 (LB/RB → FB, DM/CM → MF, LM/RM/LW/RW → W).
@@ -78,25 +80,23 @@ function baseAttributeValue(ca: number): number {
 }
 ```
 
-**c) `age_curve_factor`:**
+**c) `present_value_factor` + `development_upside_factor` (ersetzt die alte `age_curve` mit 0,15 bei 15 J.):**
 
-```json
-{
-  "age_curve": {
-    "age_15": 0.15, "age_16": 0.25, "age_17": 0.40, "age_18": 0.55,
-    "age_19": 0.70, "age_20": 0.82, "age_21": 0.90, "age_22": 0.95,
-    "age_23": 0.98, "age_24": 1.00, "age_25": 1.00, "age_26": 0.98,
-    "age_27": 0.95, "age_28": 0.90, "age_29": 0.82, "age_30": 0.70,
-    "age_31": 0.55, "age_32": 0.42, "age_33": 0.30, "age_34": 0.20,
-    "age_35_plus": 0.12
-  },
-  "youth_potential_premium": {
-    "rule": "Bei age < 20 den vom Käufer geschätzten Wachstumstrend einrechnen",
-    "premium_factor": "1.0 + 0.6 × estimated_growth_rate_normalized",
-    "note": "estimated_growth_rate kommt aus der Scout-Sparkline der letzten 12 Monate (PRD 04.5), nicht aus hidden-Werten"
-  }
-}
-```
+- **`present_value_factor(age)`** — Karriere-Reife, Peak 23–27 = 1,0. 15–17 leichter Risikoabschlag (~0,88–0,95), **nicht** 85 % Malus. Ab 28 wie bisher fallend bis 0,12 (35+).
+- **`development_upside_factor(age, ca, growth_signal)`** — nur **`age < 21`**, sonst 1,0. Multiplikator **> 1** für verbleibende Entwicklung:
+  - **`growth_signal`**: normalisiert 0–1 aus `recent_growth_26w` (Owner) bzw. Scout-Sparkline (Käufer, PRD 04.5) — **keine** hidden Anlage/Drive.
+  - **`ca_headroom`**: Abstand Richtung Soft-Cap 180 skaliert den Upside-Anteil.
+  - Form in Code: `src/transfers/market-value.ts` (`developmentUpsideFactor`, `upsideMax ≈ 0,55`).
+- **Jugend-Deckel:** `market_value ≤ 8 Mio €` wenn `age < 21` (ohne Award-Multiplikatoren).
+
+**Beispiel (gleiche CA 99, AM, normales Wachstum, Vertrag 24 Monate):**
+
+| Alter | Richtwert |
+|------|-----------|
+| 15 | ~4–5 Mio € (über 25-Jährigem) |
+| 25 | ~3,3 Mio € (Peak-Leistungswert) |
+
+Wöchentliches Recompute — **kein** Save-Migration nötig.
 
 **d) `contract_factor`:**
 
@@ -106,12 +106,13 @@ function contractFactor(monthsRemaining: number, wage: number, marketWage: numbe
   let factor = 1.0 + (monthsRemaining / 36) * 0.15;
   // 6 Monate oder weniger: halbieren (6 Monate → ca. 0.51, 5 Monate → ca. 0.51)
   if (monthsRemaining <= 6) factor *= 0.5;
+  if (monthsRemaining <= 6 && youthAcademy) factor = max(factor, 0.82);
   if (wage > marketWage * 1.3) factor *= 0.85;
   return factor;
 }
 ```
 
-Ohne Vertrag (`contract == null`) ist `monthsRemaining` 0, der Faktor also 0.5 vor dem Gehaltsmalus.
+Ohne Vertrag (`contract == null`) ist `monthsRemaining` 0, der Faktor also 0.5 vor dem Gehaltsmalus. **U17/U19:** Floor 0,82 bei kurzer Restlaufzeit, damit Akademie-Verträge den Marktwert nicht halbieren.
 
 **e) `demand_factor`:** Knappheit der Positionsgruppe in der Liga. Viele Vereine brauchen Stürmer und wenige sind verfügbar: bis 1.2×. Überangebot: bis 0.85×. Wöchentlich neu.
 

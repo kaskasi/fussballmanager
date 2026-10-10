@@ -53,6 +53,7 @@ import { useT } from "../../i18n/react.ts";
 import { transferWindowClosedReason } from "../../transfers/purchase-block.ts";
 import { ContractTalksModal } from "../components/ContractTalksModal.tsx";
 import { SaleConfirmModal } from "../components/SaleConfirmModal.tsx";
+import { MarketValueBreakdownStrip } from "../components/MarketValueBreakdownStrip.tsx";
 import { formatPlayerName, formatPlayerPositionLabel } from "../../types/player-display.ts";
 import { confidenceLabel, type AbilityEstimate } from "../../scouting/estimate-model.ts";
 import {
@@ -644,6 +645,10 @@ export function PlayerProfile({
                       onStartStamp={onStartStampProgram}
                     />
 
+                    {owned ? (
+                      <MarketValueBreakdownStrip player={player} season={season} />
+                    ) : null}
+
                     <Hint text="Vertragsstatus. Verhandeln öffnet Gehalt, Jahre, Bonus, Minuten und Startplatz." block>
                       <div className="profile-vertrag">
                         <p className="profile-section-label">Vertrag</p>
@@ -732,6 +737,7 @@ export function PlayerProfile({
         <SaleConfirmModal
           player={player}
           offerEstimate={saleOffer}
+          season={season}
           onCancel={() => setSaleConfirmOpen(false)}
           onConfirm={() => {
             setSaleConfirmOpen(false);

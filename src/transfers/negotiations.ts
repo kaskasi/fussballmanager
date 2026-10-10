@@ -1,7 +1,7 @@
 import { t } from "../i18n/index.ts";
 import type { Player } from "../types/player.ts";
 import type { TransferRecord } from "./transfer-history.ts";
-import { estimateCa, marketValue } from "./market-value.ts";
+import { estimateCa, marketValue, marketValueInputFromPlayer } from "./market-value.ts";
 
 /** F5.7 — pre-contract signed before contract expiry (PRD 05.6). */
 export interface PendingTransfer {
@@ -94,16 +94,9 @@ export function toggleShortlist(state: TransferState, playerId: string): Transfe
 export function sellerAskingPrice(player: Player, season: number): number {
   const ca = estimateCa(player.attributes, player.position);
   const wage = player.contract?.wage_weekly ?? 0;
-  const seasonsLeft = player.contract ? Math.max(0, player.contract.until_season - season) : 0;
-  return marketValue({
-    ca,
-    age: player.age,
-    monthsRemaining: seasonsLeft * 12,
-    wage,
-    marketWage: Math.max(1, wage),
-    demandFactor: 1,
-    reputationFactor: 1,
-  });
+  return marketValue(
+    marketValueInputFromPlayer(player, ca, season, { marketWage: Math.max(1, wage), wage }),
+  );
 }
 
 /** PRD 05.3 reaction matrix (simplified to three outcomes). */

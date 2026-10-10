@@ -287,9 +287,11 @@ function generateOne(
       age: 15,
       monthsRemaining: 0,
       wage: 0,
-      marketWage: 0,
+      marketWage: 1,
       demandFactor: 1,
       reputationFactor: 1,
+      estimatedGrowthRateNormalized: 0,
+      squadStatus: "u17",
     }),
     attributes,
     hidden: {

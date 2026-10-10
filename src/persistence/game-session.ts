@@ -101,6 +101,7 @@ import {
   normalizeFinancingState,
   type FinancingCareerState,
 } from "../economy/financing.ts";
+import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
 
 export const DEFAULT_SLOT = 1;
 export const DEFAULT_CLUB_ID = "cl_fc_nordstern";
@@ -256,7 +257,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     week: save.state.week,
     weekday: save.state.weekday ?? MONDAY,
     matchPlayedThisWeek: save.state.match_played_this_week ?? false,
-    players: save.players,
+    players: refreshAllMarketValues(save.players, save.state.season),
     trainingPlan: (() => {
       const storyState = normalizeStoryState(pipeline.story_state, save.state.week);
       const manual = !resolveFeatureCurtain(storyState).auto_training;

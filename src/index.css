@@ -9741,6 +9741,53 @@ body {
 .profile-staerke,
 .profile-ziel,
 .profile-hunger,
+.market-value-breakdown {
+  margin: 0.65rem 0;
+  padding: 0.5rem 0.55rem;
+  border: 1px solid var(--panel-border, #e2e8f0);
+  border-radius: 0.45rem;
+  background: var(--panel-bg, #fff);
+  font-size: 0.72rem;
+}
+
+.market-value-breakdown-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.market-value-breakdown-total {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.market-value-breakdown-label {
+  color: var(--text-muted, #64748b);
+  font-weight: 600;
+}
+
+.market-value-breakdown-factors {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.2rem 0.75rem;
+}
+
+.market-value-breakdown-factors li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.market-value-breakdown-cap {
+  margin: 0.35rem 0 0;
+  font-size: 0.65rem;
+  color: var(--text-muted, #64748b);
+}
+
 .profile-vertrag {
   display: grid;
   gap: 0.35rem;

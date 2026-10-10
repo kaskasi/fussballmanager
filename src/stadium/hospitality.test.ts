@@ -6,10 +6,11 @@ import {
   hospitalityOvertimeCost,
   restaurantOccupancyPct,
   weeklyHotelIncome,
+  weeklyMuseumIncome,
   weeklyRestaurantIncome,
 } from "./hospitality.ts";
 
-function docked(kind: "hotel" | "restaurant") {
+function docked(kind: "hotel" | "restaurant" | "museum") {
   const placed = placePrecinctBuilding(emptyPrecinct(), 2, 1, kind);
   const path = pathBuildingToCity(placed, kind);
   if (!path || path.length === 0) return placed;
@@ -32,6 +33,8 @@ describe("hospitality occupancy", () => {
     expect(weeklyHotelIncome(emptyPrecinct(), 80)).toBe(0);
     expect(weeklyHotelIncome(docked("hotel"), 50)).toBeGreaterThan(0);
     expect(weeklyRestaurantIncome(docked("restaurant"), 100)).toBeGreaterThan(0);
+    expect(weeklyMuseumIncome(docked("museum"), 60)).toBeGreaterThan(0);
+    expect(weeklyMuseumIncome(emptyPrecinct(), 60)).toBe(0);
   });
 });
 
@@ -81,5 +84,18 @@ describe("computeHospitalityPreview", () => {
       restaurantOvertimeWeek: 12,
     });
     expect(overtime.overtimeCostThisWeek).toBe(hospitalityOvertimeCost(12, 1, 12));
+  });
+
+  it("adds museum income into hospitality concessions total", () => {
+    const precinct = docked("museum");
+    const preview = computeHospitalityPreview({
+      precinct,
+      ownFanbase: 70,
+      isHomeMatchWeek: false,
+      opponentFanbase: 50,
+      season: 2,
+      week: 4,
+    });
+    expect(preview.totalWeeklyIncome).toBe(weeklyMuseumIncome(precinct, 70));
   });
 });

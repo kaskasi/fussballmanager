@@ -295,9 +295,18 @@ export function detectWeeklyBeats(context: DetectContext): DetectedBeat[] {
 
 function detectHospitalityBeats(context: DetectContext): DetectedBeat[] {
   const precinct = context.stadium.precinct;
-  if (!hospitalityDocked(precinct, "restaurant")) return [];
   const fired = new Set(context.story.beats_fired);
   const beats: DetectedBeat[] = [];
+
+  if (
+    context.season >= 3 &&
+    hospitalityDocked(precinct, "hotel") &&
+    !fired.has("empire_hotel_vs_pitch")
+  ) {
+    beats.push({ beatId: "empire_hotel_vs_pitch", kind: "inbox" });
+  }
+
+  if (!hospitalityDocked(precinct, "restaurant")) return beats;
   const weddingRepeatId = `hospitality_wedding_s${context.season}`;
   if (shouldRepeatRestaurantWedding(context.stadium, context.season) && !fired.has(weddingRepeatId)) {
     beats.push({ beatId: weddingRepeatId, kind: "fan_feed", fanbaseDelta: 0.7 });

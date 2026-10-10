@@ -11,7 +11,8 @@ export type PrecinctBuilding =
   | "fan_services"
   | "clubhouse"
   | "hotel"
-  | "restaurant";
+  | "restaurant"
+  | "museum";
 
 export type PrecinctCap = "unique" | "many";
 
@@ -247,6 +248,18 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     maxLevel: 1,
     upgradeCost: 0,
     hint: "Nur eines · 2×2 · Auslastung + Story",
+  },
+  {
+    id: "museum",
+    icon: "🏛️",
+    label: "Vereinsmuseum",
+    cost: 900_000,
+    cap: "unique",
+    minW: 2,
+    minH: 2,
+    maxLevel: 1,
+    upgradeCost: 0,
+    hint: "Nur eines · 2×2 · passive Besucher + kleiner Fanbonus",
   },
 ];
 

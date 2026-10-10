@@ -1,5 +1,5 @@
 import type { BoardState } from "../board/board-state.ts";
-import type { ClubStadium } from "../stadium/club-stadium.ts";
+import { normalizeClubStadium, type ClubStadium } from "../stadium/club-stadium.ts";
 import { applyRestaurantWeddingRepeat } from "../stadium/precinct-campus-events.ts";
 import { careerWeekIndex, RESTAURANT_VIRAL_WEEKS } from "../stadium/hospitality.ts";
 import { advanceClubFanbase } from "../stadium/fanbase.ts";
@@ -146,6 +146,20 @@ export function applyStoryChoice(
         adjustHype(4);
       } else {
         adjustPressure(-2);
+      }
+      break;
+    case "empire_hotel_vs_pitch":
+      if (choiceId === "expand_hotel") {
+        adjustFanbase(1.4);
+        adjustHype(8);
+      } else if (choiceId === "expand_pitch") {
+        const levels = stadium.upgrade_levels ?? {};
+        if ((levels.pitch_heating ?? 0) < 1) {
+          stadium = normalizeClubStadium({
+            ...stadium,
+            upgrade_levels: { ...levels, pitch_heating: 1 },
+          });
+        }
       }
       break;
     default:

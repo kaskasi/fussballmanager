@@ -18,7 +18,7 @@ import {
 } from "./concession-prices.ts";
 import { DEFAULT_FANBASE } from "./club-stadium.ts";
 import { formatClubCash } from "../economy/club-finances.ts";
-import type { HospitalityPreview } from "./hospitality.ts";
+import { weeklyMuseumIncome, type HospitalityPreview } from "./hospitality.ts";
 
 /** Reference fanbase — commerce scale 1.0 at this value. */
 const NEUTRAL_FANBASE = 60;
@@ -67,12 +67,14 @@ function fanbaseParts(state: PrecinctState) {
   const clubhouse = dockedOccupiedCells(state, "clubhouse") > 0 ? 0.08 : 0;
   const beer = dockedOccupiedCells(state, "beer_tent") * 0.018;
   const away = precinctAwayFanOrganizerBonus(state) * 0.45;
+  const museum = dockedOccupiedCells(state, "museum") > 0 ? 0.05 : 0;
   return {
     fanshop: shop > 0 ? shop * 0.14 + shopArea : 0,
     clubhouse,
     beer,
     services: dockedOccupiedCells(state, "fan_services") > 0 ? 0.07 : 0,
     away,
+    museum,
   };
 }
 
@@ -122,7 +124,7 @@ export function precinctFillRateBonus(state: PrecinctState | undefined): number 
 export function precinctWeeklyFanbaseBonus(state: PrecinctState | undefined, occupancy = 1): number {
   if (!state) return 0;
   const parts = fanbaseParts(state);
-  const full = parts.fanshop + parts.clubhouse + parts.beer + parts.services + parts.away;
+  const full = parts.fanshop + parts.clubhouse + parts.beer + parts.services + parts.away + parts.museum;
   return full * clampOccupancy(occupancy);
 }
 
@@ -382,6 +384,7 @@ const BUILDING_GROUP: Record<PrecinctBuilding, PrecinctStatusGroup> = {
   youth_pitch: "training",
   hotel: "cash",
   restaurant: "cash",
+  museum: "cash",
 };
 
 function formatPct(rate: number): string {
@@ -445,6 +448,7 @@ export function listPrecinctStatusEffects(
       if (def.id === "beer_tent" && fans.beer > 0) bits.push(`Fans ${formatFans(fans.beer)}`);
       if (def.id === "clubhouse" && fans.clubhouse > 0) bits.push(`Fans ${formatFans(fans.clubhouse)}`);
       if (def.id === "fanshop" && fans.fanshop > 0) bits.push(`Fans ${formatFans(fans.fanshop)}`);
+      if (def.id === "museum" && fans.museum > 0) bits.push(`Fans ${formatFans(fans.museum)}`);
       if (def.id === "fan_services" && fans.services > 0) bits.push(`Fans ${formatFans(fans.services)}`);
     }
     if (placed && training) {
@@ -489,6 +493,11 @@ export function listPrecinctStatusEffects(
       if (h.docked && h.weeklyIncome > 0) {
         bits.push(`${formatClubCash(h.weeklyIncome)}/Wo`);
       }
+    }
+    if (placed && def.id === "museum") {
+      const museumCash = weeklyMuseumIncome(state, DEFAULT_FANBASE);
+      if (museumCash > 0) bits.push(`Kasse ${formatClubCash(museumCash)}/Wo`);
+      if (fans?.museum) bits.push(`Fans ${formatFans(fans.museum)}`);
     }
     if (placed && def.id === "restaurant" && hospitalityPreview?.restaurant) {
       const r = hospitalityPreview.restaurant;

@@ -219,6 +219,15 @@ describe("precinct grid", () => {
     expect(patchDocksCityLink(withStreet, "transit")).toBe(false);
   });
 
+  it("allows one docked 2×2 museum on the farm", () => {
+    let grid = placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "museum");
+    expect(grid.patches).toHaveLength(1);
+    expect(grid.patches[0]?.w).toBeGreaterThanOrEqual(2);
+    expect(grid.patches[0]?.h).toBeGreaterThanOrEqual(2);
+    grid = placePrecinctBuilding(grid, FARM_X + 3, FARM_Y, "museum");
+    expect(grid.patches.filter((patch) => patch.building === "museum")).toHaveLength(1);
+  });
+
   it("warns off-spine buildings until they touch the city street network", () => {
     const kiosk = placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "kiosk");
     expect(patchDocksStreetNetwork(kiosk, kiosk.patches[0]!)).toBe(false);

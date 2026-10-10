@@ -14,7 +14,12 @@ export function careerWeekIndex(season: number, week: number): number {
   return (season - 1) * 52 + week;
 }
 
-export function hospitalityDocked(state: PrecinctState | undefined, id: "hotel" | "restaurant"): boolean {
+export type HospitalityVenueId = "hotel" | "restaurant" | "museum";
+
+export function hospitalityDocked(
+  state: PrecinctState | undefined,
+  id: HospitalityVenueId,
+): boolean {
   if (!state) return false;
   return occupiedCells(state, id) > 0 && buildingDocksStreetNetwork(state, id);
 }
@@ -63,6 +68,19 @@ export function weeklyRestaurantIncome(
 ): number {
   if (!hospitalityDocked(precinct, "restaurant")) return 0;
   return Math.round((occupancyPct / 100) * RESTAURANT_FULL_WEEKLY);
+}
+
+export const MUSEUM_FULL_WEEKLY = 2_400;
+
+export function museumVisitPct(ownFanbase: number): number {
+  const own = Number.isFinite(ownFanbase) ? ownFanbase : DEFAULT_FANBASE;
+  return Math.round(Math.min(90, Math.max(18, own * 0.48)));
+}
+
+export function weeklyMuseumIncome(precinct: PrecinctState | undefined, ownFanbase: number): number {
+  if (!hospitalityDocked(precinct, "museum")) return 0;
+  const pct = museumVisitPct(ownFanbase);
+  return Math.round((pct / 100) * MUSEUM_FULL_WEEKLY);
 }
 
 export function restaurantOvertimeDueThisWeek(
@@ -161,7 +179,9 @@ export function computeHospitalityPreview(input: HospitalityPreviewInput): Hospi
     };
   }
 
-  const totalWeeklyIncome = (hotel?.weeklyIncome ?? 0) + (restaurant?.weeklyIncome ?? 0);
+  const museumWeeklyIncome = weeklyMuseumIncome(input.precinct, input.ownFanbase);
+  const totalWeeklyIncome =
+    (hotel?.weeklyIncome ?? 0) + (restaurant?.weeklyIncome ?? 0) + museumWeeklyIncome;
 
   return { hotel, restaurant, totalWeeklyIncome, overtimeCostThisWeek };
 }

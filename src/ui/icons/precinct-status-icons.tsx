@@ -46,6 +46,7 @@ const BUILDING_ICONS: Record<PrecinctBuilding, LucideIcon> = {
   youth_pitch: Sprout,
   hotel: Hotel,
   restaurant: UtensilsCrossed,
+  museum: Landmark,
 };
 
 export function PrecinctGroupIcon({

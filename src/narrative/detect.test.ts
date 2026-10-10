@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { defaultLeagueState } from "../persistence/league-state.ts";
 import { defaultBoardState } from "../board/board-state.ts";
 import { defaultClubStadium } from "../stadium/club-stadium.ts";
+import { emptyPrecinct, pathBuildingToCity, placePrecinctBuilding, placeStreetRun } from "../stadium/precinct.ts";
 import { defaultStoryState } from "./story-state.ts";
 import { detectWeeklyBeats } from "./detect.ts";
 import { legacyWorldState } from "../world/world-generator.ts";
@@ -39,5 +40,27 @@ describe("detectWeeklyBeats", () => {
       playerFixture: null,
     });
     expect(beats.some((beat) => beat.beatId === "board_survival_intro")).toBe(true);
+  });
+
+  it("offers empire hotel vs pitch when hotel docks from season 3", () => {
+    let precinct = placePrecinctBuilding(emptyPrecinct(), 2, 1, "hotel");
+    const path = pathBuildingToCity(precinct, "hotel");
+    if (path?.length) {
+      precinct = placeStreetRun(precinct, path, 1_000_000).state;
+    }
+    const beats = detectWeeklyBeats({
+      story: { ...defaultStoryState(1), opening_complete: true },
+      league: defaultLeagueState(),
+      board: defaultBoardState(),
+      stadium: { ...defaultClubStadium(), precinct },
+      players: [],
+      clubId: "cl_fc_nordstern",
+      season: 3,
+      week: 4,
+      masterSeed: 42,
+      world: legacyWorldState(42),
+      playerFixture: null,
+    });
+    expect(beats.some((beat) => beat.beatId === "empire_hotel_vs_pitch")).toBe(true);
   });
 });

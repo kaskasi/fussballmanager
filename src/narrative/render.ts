@@ -199,6 +199,17 @@ export function storyInboxPayload(
           { id: "calm", label: "Ruhe bewahren", icon: "🧘" },
         ],
       };
+    case "empire_hotel_vs_pitch":
+      return {
+        beatId,
+        title: "Vorstand · Imperium",
+        body: `${cast.bratwurst_vendor_name} am Stand, ${cast.groundskeeper_name} am Rasen — wohin fließt das nächste Kapital?`,
+        source: "board",
+        choices: [
+          { id: "expand_hotel", label: "Hotel ausbauen", icon: "▲" },
+          { id: "expand_pitch", label: "Rasenheizung", icon: "●" },
+        ],
+      };
     default:
       return {
         beatId,

@@ -2891,6 +2891,7 @@ export default function App() {
           lastSeasonAwards={lastSeasonAwards}
           storyState={storyState}
           youthCamps={youthCamps}
+          transferState={transferState}
         />
       ) : null}
       {screen === "postfach" ? (

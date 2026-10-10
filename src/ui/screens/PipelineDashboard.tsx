@@ -35,6 +35,10 @@ import { fatigueAmpelClassName, squadTrainingLoad } from "../../development/trai
 import type { BoardState } from "../../board/board-state.ts";
 import { BoardObjectivesPanel } from "../components/BoardObjectivesPanel.tsx";
 import { DevelopmentHubPanel } from "../components/DevelopmentHubPanel.tsx";
+import { TransferHubPanel } from "../components/TransferHubPanel.tsx";
+import type { TransferState } from "../../transfers/negotiations.ts";
+import { listExpiringClubContracts } from "../../transfers/expiring-contracts.ts";
+import { listPendingInboundOffers } from "../../transfers/inbound-offers.ts";
 import { HubActionColumn } from "../components/HubActionColumn.tsx";
 import { Eye, ArrowLeftRight } from "lucide-react";
 import { SeasonAwardsGallery } from "../components/SeasonAwardsGallery.tsx";
@@ -84,6 +88,7 @@ export function PipelineDashboard({
   activeScouts,
   storyState,
   youthCamps,
+  transferState,
 }: {
   players: Player[];
   season: number;
@@ -112,6 +117,7 @@ export function PipelineDashboard({
   lastSeasonAwards?: SeasonAwardsSnapshot;
   storyState: StoryState;
   youthCamps: readonly YouthCamp[];
+  transferState: TransferState;
 }) {
   useT();
   const curtain = resolveFeatureCurtain(storyState);
@@ -123,6 +129,9 @@ export function PipelineDashboard({
     [players, clubId, trainingIntensity, focusCount, individualPrograms.length],
   );
   const loanCount = players.filter((player) => player.squad_status === "loaned_out").length;
+  const transferUrgent =
+    listExpiringClubContracts(players, clubId, season, week).length > 0 ||
+    listPendingInboundOffers(transferState, clubId, players).length > 0;
   const tableRow = playerTableRow(league);
   const lastResult = lastPlayerResult(league);
   const nextFixture = playerFixture(league, league.matchday);
@@ -242,6 +251,10 @@ export function PipelineDashboard({
             ) : null}
             {curtain.transfers_nav ? (
               <button type="button" className="pipeline-tile" onClick={onOpenTransfers}>
+                <span
+                  className={`pipeline-light ${transferUrgent ? "ampel-warn" : "ampel-ok"}`}
+                  aria-hidden="true"
+                />
                 <ArrowLeftRight size={18} aria-hidden="true" />
                 <span>
                   {loanCount > 0 ? t("hub.loans.out", { count: loanCount }) : t("hub.loans")}
@@ -260,6 +273,15 @@ export function PipelineDashboard({
             <BoardObjectivesPanel board={board} league={league} finances={finances} season={season} />
           ) : null}
           <DevelopmentHubPanel movers={developmentMovers} onSelectPlayer={onSelectPlayer} />
+          <TransferHubPanel
+            players={players}
+            clubId={clubId}
+            season={season}
+            week={week}
+            finances={finances}
+            transferState={transferState}
+            onSelectPlayer={onSelectPlayer}
+          />
           <ChroniclePanel entries={storyState.chronicle_entries} />
         </div>
       </div>

@@ -12217,6 +12217,61 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   box-shadow: 0 20px 50px rgb(15 23 42 / 25%);
 }
 
+.negotiation-modal--purchase-contract {
+  width: min(56rem, calc(100vw - 1.5rem));
+  max-height: min(90vh, 720px);
+  overflow: auto;
+}
+
+.negotiation-modal-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .negotiation-modal-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.negotiation-modal-contract {
+  border-left: 1px solid var(--panel-border, #e2e8f0);
+  padding-left: 1rem;
+}
+
+@media (max-width: 720px) {
+  .negotiation-modal-contract {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid var(--panel-border, #e2e8f0);
+    padding-top: 1rem;
+  }
+}
+
+.transfer-hub-card {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.65rem;
+  border: 1px solid var(--panel-border, #e2e8f0);
+  border-radius: 0.65rem;
+  background: var(--panel-bg, #fff);
+  text-align: left;
+}
+
+.transfer-hub-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.transfer-hub-warn {
+  color: var(--warn-text, #b45309);
+}
+
 .negotiation-head h2 {
   margin: 0.25rem 0;
 }

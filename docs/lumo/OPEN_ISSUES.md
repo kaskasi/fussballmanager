@@ -12,7 +12,7 @@ Per PRD 15.5.1 (2026-10-06), after sponsor deals (F6.5 done):
 1. **F7.3 — Hospitality / precinct**  
    **Done (v87):** Imbiss/Bier-Preissteuerung (Finanzen Commerce), Museum-Gebäude + Ledger, Hotel/Restaurant-Auslastung-UI, `empire_hotel_vs_pitch` Inbox. **Offen:** 1×1-Deko, zweites Campus-Gelände (PRD 14).
 
-2. **Then (not blocked):** **F4.4 Scout map** (regions colored by knowledge, pins) **or** **PRD 14.3 player profile density** (hex + full skill list on player file).
+2. **Then (not blocked):** **F4.4 Scout map** (regions colored by knowledge, pins). **PRD 14.3 Akte** — hex + Enzyklopädie shipped; **Spoke-IA/Dichte** (Übersicht-Grid, Rail-Erfahrung) in 14.3-P polish.
 
 ---
 
@@ -22,14 +22,14 @@ Per PRD 15.5.1 (2026-10-06), after sponsor deals (F6.5 done):
 |----------|-----|-----------|-----|
 | High | **F4.4** | M2 | Scout **map** not built — network is list/tiers only (F4.3 partial). |
 | High | **F5.4** | M2 | Full **contract negotiations** (player priorities, fog, frustration spiral) — youth contracts still default; slider UX tied to 2002 campaign USP. |
-| High | **PRD 14.3** | M1 polish | **Player profile** behind spec: tabs/flavor exist; dense hex + full attribute list missing. |
+| High | **PRD 14.3** | M1 polish | **Akte Spoke** — identity rail OK; **Übersicht** 2-col (hex/Stärke/Enzyklopädie | Ziel/Stempel/Vertrag), sekundäre Tabs Verlauf/Saisonwerte (14.3-P). |
 | Medium | **F6.7** | M3 | **Merch SKU** shipped (v79+); **v87** Kapazitäts-UX + kein Shop in Matchday-Kasse. Saisonkollektionen deferred. |
 | Medium | **F7.3** | M3 | Kern shipped (v87); Rest: 1×1-Deko, F7.4–F7.6. |
 | Medium | **F3.6** | M2 | Youth **pro contracts** + minutes clauses — shares F5.4 dialog. |
 | Medium | **F4.7 / F4.8** | M2 | Shortlist sparklines, false positives (prodigy trap). |
 | Medium | **F5.6** | M2 | AI transfer market discipline at full spec. |
 | Lower (M3+) | **F1.9** | M3 | Live tactical intervention during match — do not pull forward. |
-| Medium | **F6.6** | M3 | **PRD 11.12** spezifiziert (Bank + Story-Kanäle). Code pending: **F6.6-A** Bank/ Ledger, dann B/C Story. Investoren weiter out. |
+| Lower | **F6.6** | M3 | **Shipped** v88–90: Bank (Runway), Story-Kanäle Postfach, F6.8 Krisen-Abgabe. Investoren weiter out. |
 | Blocked | **C2** | — | **Bloodline intake** beat — needs PRD 07/10 entry before any code (`F11.8` candidate). |
 | Doc | **`13_meta.md`** | M4 | **Unwritten** — do not invent meta features until authored. |
 
@@ -40,7 +40,7 @@ Per PRD 15.5.1 (2026-10-06), after sponsor deals (F6.5 done):
 These are **catalog M1** but called “UI hinterher” or partial in PRD 15.3 / 15.6:
 
 - **F3.2** Campus: report + stage grid OK; full **2D campus fantasy** vs iso city still evolving.
-- **F1.5** Profiles vs **F2.7** heatmap: heatmap shipped on Hub/Training; **akte density** open (14.3).
+- **F1.5** Profiles vs **F2.7** heatmap: heatmap shipped on Hub/Training; **akte spoke polish** tracked as 14.3-P (not missing hex/list).
 - **F4.1/F4.2** Scouting knowledge: CI/bars exist; **F4.4 map** is the big missing M2 piece.
 - **F5.1** Transfers: window next-actions exist; deep **F5.4** negotiations not.
 - **F7.1** Stadium: footprint + bands + shirt slots; **F7.2** shop-under-map polish ongoing.

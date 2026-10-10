@@ -603,6 +603,7 @@
   "opening.story.title": "How did you become manager?",
   "opening.story.welcome": "Welcome, {name}",
   "profile.tab.attributes": "Attributes",
+  "profile.tab.overview": "Overview",
   "profile.tab.contract": "Contract",
   "profile.tab.development": "History",
   "profile.tab.stats": "Season stats",

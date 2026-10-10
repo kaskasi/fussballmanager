@@ -82,6 +82,11 @@ import {
 } from "../scouting/scout-network.ts";
 import type { AcademyFacility } from "../youth/intake-generator.ts";
 import { normalizeYouthCamps, type YouthCamp } from "../youth/satellite-camps.ts";
+import {
+  defaultFinancingState,
+  normalizeFinancingState,
+  type FinancingCareerState,
+} from "../economy/financing.ts";
 
 export const DEFAULT_SLOT = 1;
 export const DEFAULT_CLUB_ID = "cl_fc_nordstern";
@@ -131,6 +136,8 @@ export interface GameSession {
   trainingCalendarGateDone: boolean;
   /** Highlights per completed training slot this game week. */
   trainingUnitOutcomes: (TrainingSlotOutcome | null)[];
+  /** F6.6 — bank loan + story financing state. */
+  financing: FinancingCareerState;
 }
 
 export function newGameSession(now = new Date()): GameSession {
@@ -295,6 +302,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
       normalizeStoryState(pipeline.story_state, save.state.week),
     ),
     trainingUnitOutcomes: pipeline.training_unit_outcomes ?? [],
+    financing: normalizeFinancingState(pipeline.financing ?? defaultFinancingState()),
   };
   return syncManagerClubWithBoard(session);
 }
@@ -329,6 +337,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     training_units_completed: session.trainingUnitsCompleted,
     training_calendar_gate_done: session.trainingCalendarGateDone,
     training_unit_outcomes: session.trainingUnitOutcomes,
+    financing: session.financing,
   };
   const iso = now.toISOString();
 

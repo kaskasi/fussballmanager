@@ -84,6 +84,7 @@ import { migration084KickerEditionArchive } from "./migration_084_kicker_edition
 import { migration085PlayerClubKieler } from "./migration_085_player_club_kieler.ts";
 import { migration086F54TransferPillar } from "./migration_086_f54_transfer_pillar.ts";
 import { migration087ConcessionPrices } from "./migration_087_concession_prices.ts";
+import { migration088Financing } from "./migration_088_financing.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -177,6 +178,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration085PlayerClubKieler,
   migration086F54TransferPillar,
   migration087ConcessionPrices,
+  migration088Financing,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

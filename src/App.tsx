@@ -99,6 +99,7 @@ import {
   transferBudget,
   wageBudgetHeadroom,
   weeklyWageBill,
+  leagueTablePlace,
 } from "./economy/club-finances.ts";
 import { clearPlayerFromLineup } from "./match/lineup-board.ts";
 import { formatPlayerName } from "./types/player-display.ts";
@@ -114,7 +115,10 @@ import {
   boardCashFloor,
   needsSpendConfirm,
   spendRunway,
+  weeksOfWages,
 } from "./economy/spend-runway.ts";
+import { drawBankLoan, evaluateBankLoan } from "./economy/financing.ts";
+import type { DivisionEconomyId } from "./economy/division-economy.ts";
 import { matchdayCashBreakdown } from "./stadium/matchday-commerce.ts";
 import {
   attemptPreContract,
@@ -527,6 +531,7 @@ export default function App() {
     youthCamps,
     trainingUnitsCompleted,
     trainingUnitOutcomes,
+    financing,
   } = session;
   const playerDivisionId = useMemo((): WorldDivisionId => {
     const club = world.clubs.find((entry) => worldCareerClubId(entry.id) === session.clubId);
@@ -1531,6 +1536,41 @@ export default function App() {
       );
     },
     [finances, requestClubSpend, season, stadium, week, weekday],
+  );
+
+  const handleDrawBankLoan = useCallback(
+    (amount: number) => {
+      patchSession((current) => {
+        const wageBill = weeklyWageBill(current.players, current.clubId);
+        const eligibility = evaluateBankLoan({
+          finances: current.finances,
+          wageBillWeekly: wageBill,
+          runwayWeeks: weeksOfWages(current.finances.cash, wageBill),
+          leaguePlace: leagueTablePlace(current.league),
+          leagueSize: current.league.club_ids.length,
+          boardPressure: current.board.pressure,
+          divisionId: current.league.division_id as DivisionEconomyId,
+          financing: current.financing,
+          season: current.season,
+          week: current.week,
+        });
+        const drawn = drawBankLoan(
+          current.finances,
+          current.financing,
+          amount,
+          eligibility,
+          current.season,
+          current.week,
+        );
+        if (!drawn) return current;
+        return {
+          ...current,
+          finances: drawn.finances,
+          financing: drawn.financing,
+        };
+      });
+    },
+    [patchSession],
   );
 
   const handlePurchaseStadiumUpgrade = useCallback(
@@ -3140,6 +3180,9 @@ export default function App() {
           coachingStaff={coachingStaff}
           scoutNetwork={scoutNetwork}
           boardCashFloor={boardCashFloor(board)}
+          boardPressure={board.pressure}
+          financing={financing}
+          onDrawBankLoan={handleDrawBankLoan}
           onOpenStadium={() => setScreen("stadium")}
           onStadiumChange={(next) =>
             patchSession((current) => ({

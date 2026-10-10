@@ -179,6 +179,14 @@ export function financeFlowCategory(kind: FinanceLineKind): FinanceFlowCategory 
       return "transfers";
     case "infrastructure":
       return "infrastructure";
+    case "loan_draw":
+    case "loan_interest":
+    case "loan_repayment":
+    case "financing_fan_coop_grant":
+    case "financing_naming_fee":
+    case "financing_shark_fee":
+    case "crisis_admin_levy":
+      return "other";
     default:
       return "other";
   }

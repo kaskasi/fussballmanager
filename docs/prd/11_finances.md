@@ -394,6 +394,7 @@ pipeline.club_finances = {
 3. **Plausibilität vor Drama:** Bank lehnt untilgbare Profile ab; Story-Kanäle dürfen härter sein (Roguelike), aber nur mit informierter Wahl (Icon-first: Zins, Fanbase, Chronik).
 4. **Kein Pay-to-win:** Kein Geld ohne laufende Kosten; Knochenbrecher kann den Verein belasten — absichtlich, **einmal pro Story-Kanal**.
 5. **Determinismus:** Angebots-Timing aus Seed + Meilenstein (Liga, Runway, Gelände), kein wöchentliches Zufalls-Lotto.
+6. **Infrastruktur-Liquidität (kein Pay-to-skip):** Der Bankkredit **verschiebt** den Engpass — du kannst z. B. eine **Geländeplatte**, **Tribünen-Ausbau** oder ein **Satelliten-Camp** finanzieren, wenn die Kasse knapp ist. Er **ersetzt** keine Tradeoffs dauerhaft (Tilgung + Zins). **Kein** FM11-Mega-Kredit: absolutes Cap **2 Mio €** pro Darlehen; typische Obergrenze in unteren Ligen eher **0,5–1 Mio €**. Nicht für Transfer-Ablösen oder Gehalts-Explosion gedacht.
 
 #### 11.12.2 Kanäle
 
@@ -451,13 +452,17 @@ interface FinancingCareerState {
 Pseudocode (Unit-Tests in F6.6-A):
 
 ```typescript
+const ABS_MAX_BANK_PRINCIPAL = 2_000_000; // hard ceiling — never 100M-style loans
+// Division caps ≈ 1× Camp-Anzahlung oder 2–3 Geländeplatten (Regionalliga ~950k)
 projected_season_revenue = sponsorship*52 + tv*52 + ticket_heuristic;
 serviceable = max(0, projected_season_revenue - wage_bill * 52);
-max_principal = min(CAP_BY_DIVISION, K * serviceable);
+max_principal = min(ABS_MAX_BANK_PRINCIPAL, CAP_BY_DIVISION, K * serviceable);
 allowed = max_principal >= MIN_LOAN
   && !active_bank_loan
   && !(runway_weeks < 2 && relegation_zone && pressure > 70);
 ```
+
+**Produkt-Check:** Slider-Maximum in der UI darf `max_principal` nie überschreiten; Copy nennt Infrastruktur (Gelände / Tribüne / Camp), nicht „Transferbudget“.
 
 **UI:** [`FinancesScreen`](../../src/ui/screens/FinancesScreen.tsx) Runway-Tab — Betrag-Slider, Rate/Woche, Ampel Ja/Nein, Ablehnungsgrund. **Kein** gelber Header-NEXT (design.md §10).
 

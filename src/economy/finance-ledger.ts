@@ -14,6 +14,13 @@ export type FinanceLineKind =
   | "concessions"
   | "merchandising"
   | "infrastructure"
+  | "loan_draw"
+  | "loan_interest"
+  | "loan_repayment"
+  | "financing_fan_coop_grant"
+  | "financing_naming_fee"
+  | "financing_shark_fee"
+  | "crisis_admin_levy"
   | "other";
 
 export interface FinanceLine {
@@ -73,6 +80,20 @@ export function financeLineLabel(kind: FinanceLineKind): string {
       return "Merchandising";
     case "infrastructure":
       return "Ausbau";
+    case "loan_draw":
+      return "Bankdarlehen";
+    case "loan_interest":
+      return "Kreditzins";
+    case "loan_repayment":
+      return "Kredittilgung";
+    case "financing_fan_coop_grant":
+      return "Fan-Anteil";
+    case "financing_naming_fee":
+      return "Namensrecht";
+    case "financing_shark_fee":
+      return "Knochenbrecher";
+    case "crisis_admin_levy":
+      return "Verwaltung (Krise)";
     default:
       return "Sonstiges";
   }

@@ -83,4 +83,6 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_084_kicker_edition_archive",
   "migration_085_player_club_kieler",
   "migration_086_f54_transfer_pillar",
+  "migration_087_concession_prices",
+  "migration_088_financing",
 ] as const;

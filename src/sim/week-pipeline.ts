@@ -23,6 +23,7 @@ import {
   TRAINING_NEGLECT_FANBASE_PENALTY,
 } from "../development/training-neglect.ts";
 import { advanceWeeklyClubFinances } from "../economy/club-finances.ts";
+import { advanceWeeklyLoanServicing } from "../economy/financing.ts";
 import { advanceMerchandisingWeek } from "../economy/merchandising.ts";
 import {
   merchSaleSummaryClubEventMessage,
@@ -425,7 +426,14 @@ export async function simulateGameWeek(
     commerceOccupancy: occupancy,
     merchandisingNet: merchAdvance.economics.net,
   });
-  const finances = financeStep.finances;
+  const loanStep = advanceWeeklyLoanServicing(
+    financeStep.finances,
+    session.financing,
+    session.season,
+    nextWeek,
+  );
+  const finances = loanStep.finances;
+  let financingAfterLoans = loanStep.financing;
   const playersWithGrowth = stampWeeklyGrowthBatch(playersAtWeekStart, playersWithMorale);
   let playersWithCaStamp = playersWithGrowth.map(stampLastWeekCa);
 
@@ -578,9 +586,10 @@ export async function simulateGameWeek(
     scoutBoard,
     youthInbox: narrativeStep.youthInbox,
     league: leagueWithCareerStats,
-    finances,
-    stadium: narrativeStep.stadium,
-    board: narrativeStep.board,
+      finances,
+      financing: financingAfterLoans,
+      stadium: narrativeStep.stadium,
+      board: narrativeStep.board,
     trainingPlan: resolveTrainingPlanAfterWeek(narrativeStep.storyState),
     trainingReminderWeek: undefined,
     trainingUnitsCompleted: 0,

@@ -27,6 +27,11 @@ import {
   type AssistantDelegation,
 } from "../staff/assistant-delegation.ts";
 import type { ScoutNetworkState } from "../scouting/scout-network.ts";
+import {
+  defaultFinancingState,
+  normalizeFinancingState,
+  type FinancingCareerState,
+} from "../economy/financing.ts";
 
 /** Dynamic hub state stored in `state.json` (PRD 08). */
 export interface PipelineState {
@@ -79,6 +84,8 @@ export interface PipelineState {
   training_calendar_gate_done?: boolean;
   /** F4.3 — hired scout tiers and capacity. */
   scout_network?: ScoutNetworkState;
+  /** F6.6 — bank + story financing caps (PRD 11.12). */
+  financing?: FinancingCareerState;
 }
 
 export function defaultPipelineState(week = 1): PipelineState {
@@ -94,5 +101,6 @@ export function defaultPipelineState(week = 1): PipelineState {
     tactics_presets: defaultTacticsPresets(),
     board: startBoardSeason(defaultBoardState(defaultEmployerClubId()), defaultEmployerClubId(), 1),
     story_state: defaultStoryState(week),
+    financing: defaultFinancingState(),
   };
 }

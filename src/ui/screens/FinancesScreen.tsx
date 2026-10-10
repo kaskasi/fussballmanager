@@ -15,11 +15,18 @@ import type { Player } from "../../types/player.ts";
 import {
   formatClubCash,
   formatSignedCash,
+  leagueTablePlace,
   transferBudget,
   wageBudgetStatus,
   weeklyWageBill,
   type ClubFinances,
 } from "../../economy/club-finances.ts";
+import {
+  evaluateBankLoan,
+  MIN_BANK_LOAN,
+  type FinancingCareerState,
+} from "../../economy/financing.ts";
+import type { DivisionEconomyId } from "../../economy/division-economy.ts";
 import { financeLineLabel, financeMonthForWeek } from "../../economy/finance-ledger.ts";
 import { FinanceLineIcon } from "../components/FinanceLineIcon.tsx";
 import {
@@ -82,9 +89,12 @@ export function FinancesScreen({
   coachingStaff,
   scoutNetwork,
   boardCashFloor = 0,
+  boardPressure = 0,
+  financing,
   masterSeed,
   onOpenStadium,
   onStadiumChange,
+  onDrawBankLoan,
 }: {
   finances: ClubFinances;
   players: readonly Player[];
@@ -97,11 +107,15 @@ export function FinancesScreen({
   coachingStaff: CoachingStaff;
   scoutNetwork: ScoutNetworkState;
   boardCashFloor?: number;
+  boardPressure?: number;
+  financing: FinancingCareerState;
   onOpenStadium: () => void;
   onStadiumChange?: (stadium: ClubStadium) => void;
+  onDrawBankLoan?: (amount: number) => void;
 }) {
   const t = useT();
   const [panelTab, setPanelTab] = useState<FinancePanelTab>("overview");
+  const [loanDraft, setLoanDraft] = useState(MIN_BANK_LOAN);
   const month = financeMonthForWeek(week);
   const wageBill = weeklyWageBill(players, clubId);
   const wageStatus = wageBudgetStatus(finances, players, clubId);
@@ -195,6 +209,23 @@ export function FinancesScreen({
     finances.wage_budget_weekly > 0
       ? Math.min(1, wageBill / finances.wage_budget_weekly)
       : 0;
+
+  const bankOffer = evaluateBankLoan({
+    finances,
+    wageBillWeekly: wageBill,
+    runwayWeeks: weeksLeft,
+    leaguePlace: leagueTablePlace(league),
+    leagueSize: league.club_ids.length,
+    boardPressure,
+    divisionId: league.division_id as DivisionEconomyId,
+    financing,
+    season,
+    week,
+  });
+  const loanAmount = Math.min(
+    bankOffer.max_principal,
+    Math.max(MIN_BANK_LOAN, loanDraft),
+  );
 
   return (
     <main className="finances club-shell-card-body">
@@ -454,6 +485,64 @@ export function FinancesScreen({
               ? `unter Vorstand ${formatClubCash(boardCashFloor)}`
               : `Puffer ${formatSignedCash(finances.cash - boardCashFloor)}`}
           </p>
+        </article>
+        <article className="finances-detail finances-detail--solo" aria-label="Regionalbank">
+          <h2>
+            <Landmark size={18} strokeWidth={2.5} aria-hidden />
+            Bank
+          </h2>
+          {financing.active_bank_loan ? (
+            <>
+              <p>
+                <strong>{formatClubCash(financing.active_bank_loan.remaining)}</strong>
+                <span> Restschuld</span>
+              </p>
+              <p className="finances-detail-sub">
+                Rate {formatClubCash(financing.active_bank_loan.weekly_payment)}/Wo
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="finances-detail-sub">
+                Für Gelände, Tribüne oder Camp — Tilgung läuft wöchentlich.
+              </p>
+              <p className={`finances-bank-status${bankOffer.allowed ? " is-ok" : " is-warn"}`}>
+                {bankOffer.allowed ? "Bank sagt ja" : bankOffer.reason ?? "Kein Kredit"}
+              </p>
+              {bankOffer.allowed && onDrawBankLoan ? (
+                <>
+                  <label className="finances-bank-slider">
+                    <span>{formatClubCash(loanAmount)}</span>
+                    <input
+                      type="range"
+                      min={MIN_BANK_LOAN}
+                      max={bankOffer.max_principal}
+                      step={50_000}
+                      value={loanAmount}
+                      onChange={(event) => setLoanDraft(Number(event.target.value))}
+                    />
+                  </label>
+                  <p className="finances-detail-sub">
+                    Tilgung ca.{" "}
+                    {formatClubCash(
+                      Math.ceil(
+                        loanAmount / bankOffer.term_weeks +
+                          loanAmount * bankOffer.apr_weekly * 0.5,
+                      ),
+                    )}
+                    /Wo
+                  </p>
+                  <button
+                    type="button"
+                    className="fm-btn fm-btn-secondary"
+                    onClick={() => onDrawBankLoan(loanAmount)}
+                  >
+                    Darlehen aufnehmen
+                  </button>
+                </>
+              ) : null}
+            </>
+          )}
         </article>
           </div>
         ) : null}

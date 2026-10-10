@@ -3,6 +3,7 @@ import {
   ArrowLeftRight,
   CircleDot,
   Construction,
+  Landmark,
   Handshake,
   Package,
   Shirt,
@@ -29,6 +30,13 @@ const ICONS: Record<FinanceLineKind, LucideIcon> = {
   concessions: Utensils,
   merchandising: Package,
   infrastructure: Construction,
+  loan_draw: Landmark,
+  loan_interest: Landmark,
+  loan_repayment: Landmark,
+  financing_fan_coop_grant: Handshake,
+  financing_naming_fee: Handshake,
+  financing_shark_fee: Wallet,
+  crisis_admin_levy: CircleDot,
   other: CircleDot,
 };
 

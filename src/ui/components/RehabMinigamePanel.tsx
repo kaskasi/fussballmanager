@@ -3,6 +3,7 @@ import { Activity } from "lucide-react";
 import {
   rehabHitScore,
   rehabMinigameSuccess,
+  rehabPhysioAssistSuccess,
   rehabTimingWindows,
   canUseRehabMinigame,
 } from "../../medical/rehab-minigame.ts";
@@ -17,6 +18,8 @@ export function RehabMinigamePanel({
   masterSeed,
   medicalState,
   onComplete,
+  bypassWeeklyCap = false,
+  embedded = false,
 }: {
   playerId: string;
   playerName: string;
@@ -28,33 +31,56 @@ export function RehabMinigamePanel({
     rehab_minigame_week?: { season: number; week: number };
   };
   onComplete: (success: boolean) => void;
+  /** Physio Mithelfen modal — no weekly rehab bonus cap. */
+  bypassWeeklyCap?: boolean;
+  embedded?: boolean;
 }) {
   const t = useT();
-  const windows = useMemo(
-    () => rehabTimingWindows(masterSeed, season, week, playerId),
-    [masterSeed, season, week, playerId],
-  );
+  const windows = useMemo(() => {
+    const raw = rehabTimingWindows(masterSeed, season, week, playerId);
+    if (!embedded) return raw;
+    return raw.map((window) => ({
+      ...window,
+      width: Math.min(24, window.width + 5),
+    }));
+  }, [embedded, masterSeed, season, week, playerId]);
   const [hits, setHits] = useState<number[]>([]);
   const [cursor, setCursor] = useState(0);
   const [running, setRunning] = useState(false);
 
-  const allowed = canUseRehabMinigame(
-    medicalState.rehab_minigame_player_ids,
-    season,
-    week,
-    medicalState.rehab_minigame_week,
-    playerId,
-  );
+  const allowed =
+    bypassWeeklyCap ||
+    canUseRehabMinigame(
+      medicalState.rehab_minigame_player_ids,
+      season,
+      week,
+      medicalState.rehab_minigame_week,
+      playerId,
+    );
 
   const finish = useCallback(
     (finalHits: number[]) => {
       const score = rehabHitScore(windows, finalHits);
-      onComplete(rehabMinigameSuccess(score));
+      const success = embedded
+        ? rehabPhysioAssistSuccess(score, windows.length)
+        : rehabMinigameSuccess(score);
+      onComplete(success);
       setRunning(false);
-      setHits([]);
-      setCursor(0);
+      if (!embedded) {
+        setHits([]);
+        setCursor(0);
+      }
     },
-    [onComplete, windows],
+    [embedded, onComplete, windows],
+  );
+
+  const hitInWindow = useCallback(
+    (hit: number, index: number) => {
+      const window = windows[index];
+      if (!window) return false;
+      return Math.abs(hit - window.center) <= window.width / 2;
+    },
+    [windows],
   );
 
   const tap = useCallback(() => {
@@ -74,12 +100,19 @@ export function RehabMinigamePanel({
   }
 
   return (
-    <section className="medical-rehab-panel" aria-label={t("medical.rehab.aria")}>
-      <header className="medical-rehab-head">
-        <Activity size={18} strokeWidth={2.2} aria-hidden />
-        <strong>{t("medical.rehab.title", { name: playerName })}</strong>
-      </header>
-      <p className="medical-muted">{t("medical.rehab.hint")}</p>
+    <section
+      className={embedded ? "medical-rehab-panel medical-rehab-panel--embedded" : "medical-rehab-panel"}
+      aria-label={t("medical.rehab.aria")}
+    >
+      {!embedded ? (
+        <header className="medical-rehab-head">
+          <Activity size={18} strokeWidth={2.2} aria-hidden />
+          <strong>{t("medical.rehab.title", { name: playerName })}</strong>
+        </header>
+      ) : null}
+      <p className="medical-muted">
+        {embedded ? t("medical.physio.rehabTimingHint") : t("medical.rehab.hint")}
+      </p>
       {!running ? (
         <button type="button" className="ui-btn ui-btn--sm" onClick={() => setRunning(true)}>
           {t("medical.rehab.start")}
@@ -102,6 +135,16 @@ export function RehabMinigamePanel({
             onClick={tap}
           >
             <div className="medical-rehab-cursor" style={{ left: `${cursor}%` }} />
+            {hits.map((hit, index) => (
+              <div
+                key={`hit-${index}-${hit}`}
+                className={
+                  hitInWindow(hit, index) ? "medical-rehab-hit is-good" : "medical-rehab-hit is-miss"
+                }
+                style={{ left: `${hit}%` }}
+                aria-hidden
+              />
+            ))}
             {windows.map((window, index) => (
               <div
                 key={index}
@@ -119,18 +162,26 @@ export function RehabMinigamePanel({
         </>
       )}
       {running ? (
-        <RehabCursorLoop onTick={setCursor} />
+        <RehabCursorLoop onTick={setCursor} relaxed={embedded} />
       ) : null}
     </section>
   );
 }
 
-function RehabCursorLoop({ onTick }: { onTick: (value: number) => void }) {
+function RehabCursorLoop({
+  onTick,
+  relaxed = false,
+}: {
+  onTick: (value: number) => void;
+  relaxed?: boolean;
+}) {
   useEffect(() => {
     let dir = 1;
     let pos = 0;
+    const step = relaxed ? 1.25 : 2.4;
+    const intervalMs = relaxed ? 42 : 32;
     const id = window.setInterval(() => {
-      pos += dir * 2.4;
+      pos += dir * step;
       if (pos >= 100) {
         pos = 100;
         dir = -1;
@@ -140,8 +191,8 @@ function RehabCursorLoop({ onTick }: { onTick: (value: number) => void }) {
         dir = 1;
       }
       onTick(pos);
-    }, 32);
+    }, intervalMs);
     return () => window.clearInterval(id);
-  }, [onTick]);
+  }, [onTick, relaxed]);
   return null;
 }

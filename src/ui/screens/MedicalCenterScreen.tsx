@@ -62,7 +62,7 @@ export function MedicalCenterScreen({
   onRehabMinigameComplete: (playerId: string, success: boolean) => void;
   onDoctorExamComplete: (playerId: string) => void;
   onSurgery: (playerId: string) => void;
-  onPhysioManual: (playerId: string) => void;
+  onPhysioManual: (playerId: string, success: boolean) => void;
 }) {
   const t = useT();
   const [tab, setTab] = useState<MedicalTab>("staff");

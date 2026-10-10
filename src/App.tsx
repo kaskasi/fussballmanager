@@ -252,7 +252,12 @@ import {
 import { applyRestaurantProposalStory } from "./stadium/precinct-campus-events.ts";
 import { careerInjuryRiskFactor } from "./medical/career-injury-risk.ts";
 import { tickMedicalSessionDay, tickMedicalSessionDays } from "./medical/medical-session.ts";
-import { applyRehabMinigameBonus, applyPendingRowToPlayer, reduceInjuryWeeks } from "./medical/diagnosis-queue.ts";
+import {
+  applyRehabMinigameBonus,
+  applyPendingRowToPlayer,
+  extendInjuryWeeks,
+  reduceInjuryWeeks,
+} from "./medical/diagnosis-queue.ts";
 import {
   completeDoctorExam,
   completeInHouseSurgery,
@@ -2624,15 +2629,19 @@ export default function App() {
   );
 
   const handlePhysioManual = useCallback(
-    (playerId: string) => {
+    (playerId: string, success: boolean) => {
       patchSession((current) => ({
         ...current,
-        medicalState: markPhysioManualDone(current.medicalState, playerId),
-        players: current.players.map((player) =>
-          player.id === playerId ? reduceInjuryWeeks(player, 0.2) : player,
-        ),
+        medicalState: markPhysioManualDone(current.medicalState, playerId, success),
+        players: current.players.map((player) => {
+          if (player.id !== playerId) return player;
+          return success ? reduceInjuryWeeks(player, 0.2) : extendInjuryWeeks(player, 1);
+        }),
       }));
-      flashNotice(t("medical.physio.manualDone"), "ok");
+      flashNotice(
+        t(success ? "medical.physio.manualDone" : "medical.physio.manualFail"),
+        success ? "ok" : "warn",
+      );
     },
     [flashNotice, patchSession],
   );

@@ -5,11 +5,17 @@ import {
   hireMedicalDoctor,
   medicalCandidates,
   medicalDiagnosisDaysForBuilding,
+  medicalDoctorWage,
   medicalModifiers,
+  medicalPhysioWage,
   medicalSlotCaps,
 } from "./medical-staff.ts";
 
 describe("medical-staff", () => {
+  it("doctor wage is 5× physio at same quality", () => {
+    expect(medicalDoctorWage(68, false)).toBe(medicalPhysioWage(68, false) * 5);
+  });
+
   it("gates slots by building level", () => {
     expect(medicalSlotCaps(0).doctor).toBe(0);
     expect(medicalSlotCaps(1)).toEqual({ doctor: 1, physios: 1, orthopedist: 0 });

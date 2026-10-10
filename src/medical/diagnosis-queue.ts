@@ -38,6 +38,7 @@ export interface ClubMedicalState {
   physio_auto_week?: { season: number; week: number };
   physio_auto_player_ids?: string[];
   physio_manual_done_ids?: string[];
+  physio_manual_outcomes?: Record<string, "success" | "fail">;
 }
 
 export function defaultClubMedicalState(): ClubMedicalState {
@@ -58,6 +59,9 @@ export function normalizeClubMedicalState(state: ClubMedicalState | undefined): 
       : undefined,
     physio_manual_done_ids: state.physio_manual_done_ids
       ? [...state.physio_manual_done_ids]
+      : undefined,
+    physio_manual_outcomes: state.physio_manual_outcomes
+      ? { ...state.physio_manual_outcomes }
       : undefined,
   };
 }
@@ -193,13 +197,25 @@ export function applyRehabMinigameBonus(
 export function reduceInjuryWeeks(player: Player, amount: number): Player {
   const injury = player.state.injury;
   if (!injury) return player;
-  const weeks = Math.max(0, injury.weeks_remaining - amount);
+  const weeks = Math.max(0, Math.round((injury.weeks_remaining - amount) * 10) / 10);
   if (weeks <= 0) {
     return { ...player, state: { ...player.state, injury: null } };
   }
   return {
     ...player,
     state: { ...player.state, injury: { ...injury, weeks_remaining: weeks } },
+  };
+}
+
+export function extendInjuryWeeks(player: Player, extraWeeks: number): Player {
+  const injury = player.state.injury;
+  if (!injury || extraWeeks <= 0) return player;
+  return {
+    ...player,
+    state: {
+      ...player.state,
+      injury: { ...injury, weeks_remaining: injury.weeks_remaining + extraWeeks },
+    },
   };
 }
 

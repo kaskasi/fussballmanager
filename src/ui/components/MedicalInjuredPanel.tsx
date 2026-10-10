@@ -7,6 +7,7 @@ import {
   diagnosisRevealLabel,
   physioAutoSlotsPerWeek,
   physioManualPlayerIds,
+  physioManualOutcomeForPlayer,
 } from "../../medical/injury-care.ts";
 import { injuryTypeLabel } from "../../development/injury-roll.ts";
 import { symptomPresentation } from "../../medical/medical-symptoms.ts";
@@ -36,7 +37,7 @@ export function MedicalInjuredPanel({
   onSelectPlayer: (playerId: string) => void;
   onDoctorExam: (playerId: string) => void;
   onSurgery: (playerId: string) => void;
-  onPhysioManual: (playerId: string) => void;
+  onPhysioManual: (playerId: string, success: boolean) => void;
   masterSeed: number;
 }) {
   const t = useT();
@@ -148,6 +149,12 @@ export function MedicalInjuredPanel({
             {rehab.map((player) => {
               const injury = player.state.injury!;
               const needsManual = manualPhysioIds.includes(player.id);
+              const manualOutcome = physioManualOutcomeForPlayer(
+                medicalState,
+                season,
+                week,
+                player.id,
+              );
               const region = symptomPresentation(injury.type_id, player.id, masterSeed).body_region;
               return (
                 <li key={player.id} className="medical-case-row">
@@ -168,6 +175,18 @@ export function MedicalInjuredPanel({
                     >
                       {t("medical.physio.help")}
                     </button>
+                  ) : manualOutcome ? (
+                    <span
+                      className={
+                        manualOutcome === "success"
+                          ? "medical-physio-result is-success"
+                          : "medical-physio-result is-fail"
+                      }
+                    >
+                      {manualOutcome === "success"
+                        ? t("medical.physio.resultSuccess")
+                        : t("medical.physio.resultFail")}
+                    </span>
                   ) : (
                     <span className="medical-tag-auto">{t("medical.physio.auto")}</span>
                   )}
@@ -182,8 +201,12 @@ export function MedicalInjuredPanel({
         <MedicalPhysioTreatModal
           player={physioTarget.player}
           targetRegion={physioTarget.region}
-          onTreat={() => {
-            onPhysioManual(physioTarget.player.id);
+          season={season}
+          week={week}
+          masterSeed={masterSeed}
+          medicalState={medicalState}
+          onPhysioComplete={(success) => {
+            onPhysioManual(physioTarget.player.id, success);
             setPhysioTarget(null);
           }}
           onClose={() => setPhysioTarget(null)}

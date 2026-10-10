@@ -15607,6 +15607,27 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   background: color-mix(in srgb, var(--pitch-gruen, #2d6a4f) 35%, transparent);
 }
 
+.medical-rehab-hit {
+  position: absolute;
+  top: 50%;
+  width: 3px;
+  height: 72%;
+  transform: translate(-50%, -50%);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.medical-rehab-hit.is-good {
+  background: var(--pitch-gruen, #2d6a4f);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--pitch-gruen, #2d6a4f) 40%, transparent);
+}
+
+.medical-rehab-hit.is-miss {
+  background: var(--warn-rot, #c0392b);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--warn-rot, #c0392b) 35%, transparent);
+}
+
 .medical-rehab-cursor {
   position: absolute;
   top: 0.2rem;
@@ -15748,6 +15769,146 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 
 .medical-physio-modal {
   max-width: 22rem;
+}
+
+.medical-physio-modal--xray {
+  max-width: 26rem;
+}
+
+.medical-physio-modal--rehab {
+  max-width: 24rem;
+}
+
+.medical-xray-minigame {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.medical-xray-track {
+  position: relative;
+  height: 14rem;
+  margin: 0.25rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--line-soft, #ddd6ce);
+  background: color-mix(in srgb, var(--surface-panel, #faf8f5) 92%, #e8e4dc);
+  touch-action: none;
+  cursor: ns-resize;
+  overflow: hidden;
+}
+
+.medical-xray-track--horizontal {
+  height: 11rem;
+  cursor: ew-resize;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-top: 2.75rem;
+}
+
+.medical-xray-player {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.medical-xray-player--horizontal {
+  height: auto;
+  flex: 0 0 auto;
+  max-height: 5.5rem;
+}
+
+.medical-xray-table {
+  fill: color-mix(in srgb, var(--line-soft, #ccc) 25%, transparent);
+  stroke: var(--line-soft, #ccc);
+  stroke-width: 0.8;
+}
+
+.medical-xray-mark {
+  fill: color-mix(in srgb, var(--pitch-gruen, #2d6a4f) 55%, transparent);
+  stroke: var(--pitch-gruen, #2d6a4f);
+  stroke-width: 1.2;
+}
+
+.medical-xray-lamp {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 72%;
+  pointer-events: none;
+  transition: filter 0.15s ease;
+}
+
+.medical-xray-lamp--over {
+  top: 0.65rem;
+  left: 8%;
+  width: auto;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.medical-xray-lamp.is-aligned .medical-xray-lamp-head {
+  border-color: var(--pitch-gruen, #2d6a4f);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pitch-gruen, #2d6a4f) 35%, transparent);
+}
+
+.medical-xray-lamp-head {
+  height: 0.55rem;
+  margin: 0 auto;
+  width: 3.2rem;
+  border-radius: 3px;
+  background: var(--tinte-secondary, #4a5568);
+  border: 2px solid var(--tinte-primary, #1a1a1a);
+}
+
+.medical-xray-beam {
+  height: 2.5rem;
+  margin: 0 auto;
+  width: 2.5rem;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--sonnengelb, #f4c430) 55%, transparent) 0%,
+    transparent 100%
+  );
+  clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+  opacity: 0.85;
+}
+
+.medical-xray-beam--down {
+  height: 3rem;
+  width: 1.6rem;
+}
+
+.medical-physio-result {
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.medical-physio-result.is-success {
+  color: var(--pitch-gruen, #2d6a4f);
+}
+
+.medical-physio-result.is-fail {
+  color: var(--warn-rot, #c0392b);
+}
+
+.medical-xray-status {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--tinte-muted);
+  min-height: 1.2em;
+}
+
+.medical-rehab-panel--embedded {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 .medical-exam-modal {

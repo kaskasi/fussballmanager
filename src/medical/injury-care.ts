@@ -256,11 +256,36 @@ export function startPhysioWeek(
     physio_auto_week: { season, week },
     physio_auto_player_ids: autoIds,
     physio_manual_done_ids: [],
+    physio_manual_outcomes: {},
   };
 }
 
-export function markPhysioManualDone(state: ClubMedicalState, playerId: string): ClubMedicalState {
+export function physioManualOutcomeForPlayer(
+  state: ClubMedicalState,
+  season: number,
+  week: number,
+  playerId: string,
+): "success" | "fail" | null {
+  const weekMatch =
+    state.physio_auto_week?.season === season && state.physio_auto_week?.week === week;
+  if (!weekMatch) return null;
+  if (!(state.physio_manual_done_ids ?? []).includes(playerId)) return null;
+  return state.physio_manual_outcomes?.[playerId] ?? null;
+}
+
+export function markPhysioManualDone(
+  state: ClubMedicalState,
+  playerId: string,
+  success: boolean,
+): ClubMedicalState {
   const done = [...(state.physio_manual_done_ids ?? [])];
   if (!done.includes(playerId)) done.push(playerId);
-  return { ...state, physio_manual_done_ids: done };
+  return {
+    ...state,
+    physio_manual_done_ids: done,
+    physio_manual_outcomes: {
+      ...(state.physio_manual_outcomes ?? {}),
+      [playerId]: success ? "success" : "fail",
+    },
+  };
 }

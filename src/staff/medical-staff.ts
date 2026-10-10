@@ -69,9 +69,24 @@ export function medicalWeeklyWage(member: MedicalMember): number {
   return member.wage_weekly;
 }
 
-export function medicalMemberWage(quality: number, legendary: boolean): number {
-  const base = 2_200 + quality * 85;
-  return Math.round(legendary ? base * 1.35 : base);
+export function medicalPhysioWage(quality: number, legendary: boolean): number {
+  const base = 1_100 + quality * 42;
+  return Math.round(legendary ? base * 1.2 : base);
+}
+
+/** Club doctor earns 5× a physio at the same quality tier. */
+export function medicalDoctorWage(quality: number, legendary: boolean): number {
+  return medicalPhysioWage(quality, legendary) * 5;
+}
+
+export function medicalMemberWage(
+  role: MedicalMember["role"],
+  quality: number,
+  legendary: boolean,
+): number {
+  if (role === "doctor") return medicalDoctorWage(quality, legendary);
+  if (role === "physio") return medicalPhysioWage(quality, legendary);
+  return medicalPhysioWage(quality, legendary);
 }
 
 function makeMember(
@@ -95,7 +110,7 @@ function makeMember(
     role,
     portrait_seed: hashSeed([id, name, role]),
     quality: legendary?.quality ?? quality,
-    wage_weekly: medicalMemberWage(legendary?.quality ?? quality, Boolean(legendary)),
+    wage_weekly: medicalMemberWage(role, legendary?.quality ?? quality, Boolean(legendary)),
     contract_until_season: season + 2 + Math.floor(rng() * 2),
     ...(legendary ? { legendary_id: legendary.id } : {}),
   };

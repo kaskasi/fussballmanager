@@ -63,6 +63,11 @@ export function rehabMinigameSuccess(score: number): boolean {
   return score >= 2;
 }
 
+/** Physio Mithelfen — all three taps must land in the green zones. */
+export function rehabPhysioAssistSuccess(score: number, hitCount = 3): boolean {
+  return score >= hitCount;
+}
+
 export function canUseRehabMinigame(
   usedIds: readonly string[] | undefined,
   season: number,

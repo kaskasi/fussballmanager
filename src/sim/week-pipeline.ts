@@ -33,7 +33,7 @@ import {
   merchStockDisposalClubEventMessage,
 } from "../inbox/merch-notifications.ts";
 import type { FixtureResult } from "@fussballmanager/shared";
-import type { CareerLeagueStat } from "../persistence/league-state.ts";
+import { normalizeLeagueState, type CareerLeagueStat } from "../persistence/league-state.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import { applyDepartureMoralePressure } from "../youth/departure-morale.ts";
 import { stampLastWeekCa } from "../player/ca-tracking.ts";
@@ -134,7 +134,10 @@ export async function simulateGameWeek(
   sessionInput: GameSession,
   watchedPlayerMatch?: WatchedPlayerMatch | null,
 ): Promise<WeekSimResult> {
-  let session = sessionInput;
+  let session: GameSession = {
+    ...sessionInput,
+    league: normalizeLeagueState(sessionInput.league, sessionInput.masterSeed),
+  };
   const { nextWeek, footballSeasonEnded } = advanceCalendarWeek(session.week);
   const leagueStep = await advanceLeagueWeek(
     session.league,

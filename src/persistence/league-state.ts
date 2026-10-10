@@ -54,29 +54,30 @@ export function resetLeagueSeason(league: LeagueState): LeagueState {
 }
 
 export function normalizeLeagueState(
-  league: LeagueState,
+  league: LeagueState | null | undefined,
   masterSeed = DEFAULT_WORLD_SEED,
 ): LeagueState {
-  const division_id = league.division_id ?? "regionalliga-nord";
-  const storedPools = league.league_pools;
+  const base = league ?? defaultLeagueState();
+  const division_id = base.division_id ?? "regionalliga-nord";
+  const storedPools = base.league_pools;
   const regCount = storedPools?.["regionalliga-nord"]?.length ?? 0;
   const oberCount = storedPools?.["oberliga-nord"]?.length ?? 0;
   const poolsIncomplete = regCount < CLUBS_PER_DIVISION || oberCount < CLUBS_PER_DIVISION;
   const pools = poolsIncomplete || !storedPools
     ? defaultLeaguePools(masterSeed)
     : storedPools;
-  const clubIdsIncomplete = (league.club_ids?.length ?? 0) < CLUBS_PER_DIVISION;
+  const clubIdsIncomplete = (base.club_ids?.length ?? 0) < CLUBS_PER_DIVISION;
   return {
-    ...league,
+    ...base,
     division_id,
     league_pools: pools,
-    club_ids: clubIdsIncomplete || !league.club_ids?.length
+    club_ids: clubIdsIncomplete || !base.club_ids?.length
       ? [...(pools[division_id] ?? [])]
-      : [...league.club_ids],
-    meetings_per_opponent: league.meetings_per_opponent ?? LEAGUE_MEETINGS_PER_OPPONENT,
-    player_stats: league.player_stats ?? [],
-    career_player_stats: league.career_player_stats ?? [],
-    season_complete: league.season_complete ?? false,
+      : [...base.club_ids],
+    meetings_per_opponent: base.meetings_per_opponent ?? LEAGUE_MEETINGS_PER_OPPONENT,
+    player_stats: base.player_stats ?? [],
+    career_player_stats: base.career_player_stats ?? [],
+    season_complete: base.season_complete ?? false,
   };
 }
 

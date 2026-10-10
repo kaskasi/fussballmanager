@@ -15,7 +15,7 @@ import {
 } from "@fussballmanager/shared";
 import type { PlayerRole } from "@fussballmanager/shared";
 import {
-  LEAGUE_MEETINGS_PER_OPPONENT,
+  normalizeLeagueState,
   totalSeasonMatchdays,
   type LeagueState,
 } from "../persistence/league-state.ts";
@@ -278,15 +278,6 @@ export interface LeagueWeekAdvance {
   clubPlayerStats: PlayerSeasonStat[];
 }
 
-function normalizeLeague(league: LeagueState): LeagueState {
-  return {
-    ...league,
-    meetings_per_opponent: league.meetings_per_opponent ?? LEAGUE_MEETINGS_PER_OPPONENT,
-    player_stats: league.player_stats ?? [],
-    season_complete: league.season_complete ?? false,
-  };
-}
-
 function applyWatchedPlayerFixture(
   payload: MatchdayPayload,
   scheduled: ScheduledFixture,
@@ -310,7 +301,7 @@ function applyWatchedPlayerFixture(
 }
 
 export async function advanceLeagueWeek(
-  league: LeagueState,
+  league: LeagueState | undefined,
   season: number,
   calendarWeek: number,
   masterSeed: number,
@@ -318,7 +309,7 @@ export async function advanceLeagueWeek(
   rivalPlayers: readonly Player[] = [],
   watchedPlayerMatch?: WatchedPlayerMatch | null,
 ): Promise<LeagueWeekAdvance> {
-  const current = normalizeLeague(league);
+  const current = normalizeLeagueState(league, masterSeed);
 
   if (!isLeagueMatchWeek(calendarWeek) || current.season_complete) {
     return {

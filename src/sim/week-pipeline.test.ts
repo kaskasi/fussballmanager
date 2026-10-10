@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { weeklyFocusCount } from "../development/training-plan-state.ts";
 import { defaultTrainingPlan } from "../development/training-units.ts";
-import { newGameSession } from "../persistence/game-session.ts";
+import { newGameSession, type GameSession } from "../persistence/game-session.ts";
 import { appendBreakoutNarrativesToEvents, simulateGameWeek } from "./week-pipeline.ts";
 
 describe("week pipeline breakout narratives", () => {
@@ -44,6 +44,17 @@ describe("simulateGameWeek training plan", () => {
     expect(weeklyFocusCount(result.session.trainingPlan)).toBe(0);
     expect(result.session.trainingPlan).toHaveLength(15);
     expect(result.session.trainingPlan.every((slot) => slot.unitId === "")).toBe(true);
+    expect(result.session.week).toBe(session.week + 1);
+  });
+
+  it("survives missing league state (regression: blank screen on week sim)", async () => {
+    const session = newGameSession();
+    const result = await simulateGameWeek({
+      ...session,
+      league: undefined as unknown as GameSession["league"],
+      weekday: 7,
+    });
+    expect(result.session.league.club_ids.length).toBeGreaterThan(0);
     expect(result.session.week).toBe(session.week + 1);
   });
 });

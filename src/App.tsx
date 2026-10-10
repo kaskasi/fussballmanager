@@ -718,10 +718,13 @@ export default function App() {
     setSimulating(true);
     try {
       await finishWeekSimulation();
+    } catch (error) {
+      console.error("Week simulation failed", error);
+      flashNotice(t("shell.weekSimFailed"), "warn");
     } finally {
       setSimulating(false);
     }
-  }, [finishWeekSimulation, simulating]);
+  }, [finishWeekSimulation, flashNotice, simulating]);
 
   const completeCareerMatch = useCallback(
     async (outcome: WatchedPlayerMatch, skipPlayback = false) => {
@@ -739,6 +742,9 @@ export default function App() {
           setCareerMatchSetup(null);
           setCareerMatchUiVisible(true);
           await finishWeekSimulation(outcome);
+        } catch (error) {
+          console.error("Week simulation failed", error);
+          flashNotice(t("shell.weekSimFailed"), "warn");
         } finally {
           setSimulating(false);
         }
@@ -753,7 +759,7 @@ export default function App() {
       setCareerMatchSetup(null);
       setCareerMatchUiVisible(true);
     },
-    [finishWeekSimulation, patchSession, simulating],
+    [finishWeekSimulation, flashNotice, patchSession, simulating],
   );
   const handleCareerMatchComplete = useCallback(
     (outcome: WatchedPlayerMatch) => void completeCareerMatch(outcome, false),

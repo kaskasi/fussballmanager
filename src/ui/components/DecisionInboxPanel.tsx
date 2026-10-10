@@ -33,6 +33,12 @@ import { campsAwaitingLeaderChoice, type CampLeaderCandidate } from "../../youth
 import type { YouthCamp } from "../../youth/satellite-camps.ts";
 import { parseCampLeaderPostfachItemId } from "../../inbox/postfach-camp-leader.ts";
 import { CampLeaderInboxCard } from "./CampLeaderInboxCard.tsx";
+import { OrthopedistInboxCard } from "./OrthopedistInboxCard.tsx";
+import {
+  orthopedistAwaitingPostfach,
+  type OrthopedistCandidate,
+  type OrthopedistHireState,
+} from "../../medical/orthopedist-hire.ts";
 import { ScoutJobInboxCard } from "./ScoutJobInboxCard.tsx";
 import { OpponentScoutInboxCard } from "./OpponentScoutInboxCard.tsx";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
@@ -71,6 +77,9 @@ export function DecisionInboxPanel({
   youthCamps,
   masterSeed,
   onHireCampLeader,
+  orthopedistHire,
+  hasOrthopedist = false,
+  onHireOrthopedist,
   scoutBoard,
   onDismissScoutJob,
   onOpenScoutingNetwork,
@@ -97,6 +106,9 @@ export function DecisionInboxPanel({
   youthCamps?: readonly YouthCamp[];
   masterSeed?: number;
   onHireCampLeader?: (campId: string, candidate: CampLeaderCandidate) => void;
+  orthopedistHire?: OrthopedistHireState;
+  hasOrthopedist?: boolean;
+  onHireOrthopedist?: (candidate: OrthopedistCandidate) => void;
   scoutBoard?: ScoutBoard;
   onDismissScoutJob?: (itemId: string) => void;
   onOpenScoutingNetwork?: () => void;
@@ -133,9 +145,12 @@ export function DecisionInboxPanel({
       }),
     [clubEvents, inbox, players, scoutBoard, season, storyCast],
   );
+  const orthopedistReady = orthopedistHire
+    ? orthopedistAwaitingPostfach(orthopedistHire, hasOrthopedist)
+    : false;
   const postfachQueueIds = useMemo(
-    () => buildPostfachQueueIds(pending, campLeaderCamps, scoutJobNotices),
-    [campLeaderCamps, pending, scoutJobNotices],
+    () => buildPostfachQueueIds(pending, campLeaderCamps, scoutJobNotices, orthopedistReady),
+    [campLeaderCamps, orthopedistReady, pending, scoutJobNotices],
   );
   const postfachOpenTotal = postfachQueueIds.length;
   const pipelineHint = inboxPipelineHint(focus);
@@ -230,6 +245,23 @@ export function DecisionInboxPanel({
             scoutJobNotices={scoutJobNotices}
             onSelect={setActiveId}
           />
+
+          {presentation === "modal-orthopedist" && expandModalOpen && onHireOrthopedist && masterSeed != null ? (
+            <PostfachExpandModal
+              title={t("medical.ortho.modalTitle")}
+              onClose={() => setExpandModalOpen(false)}
+            >
+              <OrthopedistInboxCard
+                masterSeed={masterSeed}
+                season={season}
+                week={week}
+                onHire={(candidate) => {
+                  onHireOrthopedist(candidate);
+                  setExpandModalOpen(false);
+                }}
+              />
+            </PostfachExpandModal>
+          ) : null}
 
           {presentation === "modal-camp" && activeCamp && expandModalOpen ? (
             <PostfachExpandModal

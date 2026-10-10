@@ -20,6 +20,7 @@ import {
   Utensils,
   UtensilsCrossed,
   Home,
+  Stethoscope,
 } from "lucide-react";
 import type { PrecinctBuilding } from "../../stadium/precinct.ts";
 import type { PrecinctStatusGroup } from "../../stadium/precinct-effects.ts";
@@ -47,6 +48,7 @@ const BUILDING_ICONS: Record<PrecinctBuilding, LucideIcon> = {
   hotel: Hotel,
   restaurant: UtensilsCrossed,
   museum: Landmark,
+  medical_center: Stethoscope,
 };
 
 export function PrecinctGroupIcon({

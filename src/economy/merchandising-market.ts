@@ -1,3 +1,4 @@
+import { phillipMerchSaleMultiplier } from "./phillip-merch-sale.ts";
 import { weeklySeed } from "../sim/league-week.ts";
 import { MERCH_UNIT_SCALE } from "./merchandising-capacity.ts";
 import {
@@ -58,6 +59,8 @@ export function merchCareerDayIndex(season: number, week: number, weekday: numbe
 
 export const MERCH_ON_DEMAND_LEAD_DAYS = 2;
 export const MERCH_MIN_BULK_OFFERS = 2;
+/** Rush premium over best visible bulk offer (or reference wholesale). */
+export const MERCH_ON_DEMAND_MARKET_PREMIUM = 1.42;
 
 function unitTotal(units: Partial<Record<MerchSkuId, number>>): number {
   return MERCH_SKU_IDS.reduce((sum, id) => sum + (units[id] ?? 0), 0);
@@ -227,14 +230,46 @@ export function refreshMerchBulkMarket(
   return { offers: next.slice(0, cap), refreshWeek: careerWeek };
 }
 
-export function customOrderQuote(sku: MerchSkuId, qty: number, avgCost: number): number {
-  const ref = MERCH_SKU_REFERENCE_COST[sku];
-  const unit = Math.max(ref, avgCost) * 2.75;
+/** Lowest €/unit among live bulk offers for this SKU (whitelabel packs). */
+export function bestMarketBulkUnitCost(
+  sku: MerchSkuId,
+  offers: readonly MerchBulkOffer[],
+): number | null {
+  let best: number | null = null;
+  for (const offer of offers) {
+    if (primaryMerchSku(offer.units) !== sku) continue;
+    const unit = bulkOfferUnitCost(offer);
+    if (unit <= 0) continue;
+    best = best == null ? unit : Math.min(best, unit);
+  }
+  return best;
+}
+
+export function customOrderQuote(
+  sku: MerchSkuId,
+  qty: number,
+  _avgCost: number,
+  seasonWeek?: number,
+  bulkOffers?: readonly MerchBulkOffer[],
+): number {
+  const unit = customOrderUnitCost(sku, _avgCost, seasonWeek, bulkOffers);
   return Math.round(unit * qty);
 }
 
-export function customOrderUnitCost(sku: MerchSkuId, avgCost: number): number {
-  return Math.round(Math.max(MERCH_SKU_REFERENCE_COST[sku], avgCost) * 2.75 * 100) / 100;
+export function customOrderUnitCost(
+  sku: MerchSkuId,
+  _avgCost: number,
+  seasonWeek?: number,
+  bulkOffers?: readonly MerchBulkOffer[],
+): number {
+  const wholesale =
+    (bulkOffers != null ? bestMarketBulkUnitCost(sku, bulkOffers) : null) ??
+    singleSkuUnitCost(sku);
+  let unit = wholesale * MERCH_ON_DEMAND_MARKET_PREMIUM;
+  if (seasonWeek != null) {
+    unit *= phillipMerchSaleMultiplier(seasonWeek);
+  }
+  return Math.round(unit * 100) / 100;
 }
 
 export function bulkOfferUnitCost(offer: MerchBulkOffer): number {

@@ -143,13 +143,23 @@ export function precinctFitnessRegen(state: PrecinctState | undefined): number {
   return 1;
 }
 
-/** Physio (Stufe 5) am TZ + Kunstrasen/Hybrid auf dem Platz. */
-export function precinctInjuryRiskFactor(state: PrecinctState | undefined): number {
+/** TZ Stufe 5 Physio — stacks ~8 % with Medical Center (PRD F7.9). */
+export function precinctTzPhysioStack(state: PrecinctState | undefined): number {
+  if (!state) return 1;
+  if (dockedOccupiedCells(state, "training_ground") <= 0) return 1;
+  if (precinctBuildingLevel(state, "training_ground") >= 5) return 0.92;
+  return 1;
+}
+
+export function precinctMedicalCenterLevel(state: PrecinctState | undefined): number {
+  if (!state) return 0;
+  if (dockedOccupiedCells(state, "medical_center") <= 0) return 0;
+  return precinctBuildingLevel(state, "medical_center");
+}
+
+export function precinctPitchInjuryFactor(state: PrecinctState | undefined): number {
   if (!state) return 1;
   let factor = 1;
-  if (dockedOccupiedCells(state, "training_ground") > 0) {
-    if (precinctBuildingLevel(state, "training_ground") >= 5) factor *= 0.86;
-  }
   if (dockedOccupiedCells(state, "training_pitch") > 0) {
     const pitch = precinctBuildingLevel(state, "training_pitch");
     if (pitch >= 3) factor *= 0.9;
@@ -157,6 +167,11 @@ export function precinctInjuryRiskFactor(state: PrecinctState | undefined): numb
     else if (pitch >= 1) factor *= 0.97;
   }
   return factor;
+}
+
+/** Pitch + TZ stack only — combine with medicalModifiers for full risk. */
+export function precinctInjuryRiskFactor(state: PrecinctState | undefined): number {
+  return precinctPitchInjuryFactor(state) * precinctTzPhysioStack(state);
 }
 
 /** Merch COGS multiplier: fanshop upgrade buys cheaper. */
@@ -385,6 +400,7 @@ const BUILDING_GROUP: Record<PrecinctBuilding, PrecinctStatusGroup> = {
   hotel: "cash",
   restaurant: "cash",
   museum: "cash",
+  medical_center: "training",
 };
 
 function formatPct(rate: number): string {

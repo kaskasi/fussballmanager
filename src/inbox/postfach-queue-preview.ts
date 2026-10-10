@@ -34,6 +34,13 @@ export function scoutJobQueuePreview(notice: ScoutJobCompleteNotice | undefined)
   };
 }
 
+export function orthopedistQueuePreview(): { name: string; topic: string } {
+  return {
+    name: t("medical.ortho.queueName"),
+    topic: t("medical.ortho.queueTopic"),
+  };
+}
+
 export function campLeaderQueuePreview(campId: string): { name: string; topic: string } {
   const nation = campNationById(campId);
   return {

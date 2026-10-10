@@ -87,6 +87,8 @@ import { migration087ConcessionPrices } from "./migration_087_concession_prices.
 import { migration088Financing } from "./migration_088_financing.ts";
 import { migration089FinancingStory } from "./migration_089_financing_story.ts";
 import { migration090FinancialCrisis } from "./migration_090_financial_crisis.ts";
+import { migration091MedicalStaff } from "./migration_091_medical_staff.ts";
+import { migration092MedicalCareFlow } from "./migration_092_medical_care_flow.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -183,6 +185,8 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration088Financing,
   migration089FinancingStory,
   migration090FinancialCrisis,
+  migration091MedicalStaff,
+  migration092MedicalCareFlow,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

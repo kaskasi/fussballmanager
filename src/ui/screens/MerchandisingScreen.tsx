@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useT } from "../../i18n/react.ts";
 import {
   Bath,
   BedDouble,
@@ -20,7 +21,12 @@ import { MerchMarketplaceCanvas } from "../components/MerchMarketplaceCanvas.tsx
 import {
   activeMerchSaleSkus,
   customOrderQuote,
+  customOrderUnitCost,
+  effectiveMerchCustomerRetail,
+  bestMarketBulkUnitCost,
   dismissMerchSaleSummaries,
+  isPhillipMerchSaleWeek,
+  PHILLIP_MERCH_SALE_DISCOUNT,
   deliverMerchandisingOrders,
   ensureMerchBulkMarket,
   JERSEY_REVENUE_SHARE,
@@ -99,6 +105,7 @@ export function MerchandisingScreen({
   onRequestOnDemand: (sku: MerchSkuId, qty: number) => void;
   onStartMerchSale: (sku: MerchSkuId, salePrice: number) => void;
 }) {
+  const t = useT();
   const [tab, setTab] = useState<MerchTab>("preise");
   const [customSku, setCustomSku] = useState<MerchSkuId>("trikots");
   const [customQty, setCustomQty] = useState(120);
@@ -106,11 +113,21 @@ export function MerchandisingScreen({
   const [modalSalePrice, setModalSalePrice] = useState(1);
 
   const merch = normalizeClubMerchandising(stadium.merchandising);
+  const phillipSaleActive = isPhillipMerchSaleWeek(week);
+  const onDemandUnit = customOrderUnitCost(
+    customSku,
+    merch.skus[customSku]?.avg_cost ?? 0,
+    week,
+    merch.bulk_offers,
+  );
   const onDemandQuote = customOrderQuote(
     customSku,
     customQty,
     merch.skus[customSku]?.avg_cost ?? 0,
+    week,
+    merch.bulk_offers,
   );
+  const onDemandMarketUnit = bestMarketBulkUnitCost(customSku, merch.bulk_offers);
 
   useEffect(() => {
     let next = deliverMerchandisingOrders(stadium, season, week, weekday);
@@ -229,6 +246,20 @@ export function MerchandisingScreen({
       </section>
     ) : null;
 
+  const phillipSaleBanner = phillipSaleActive ? (
+    <section className="merch-phillip-sale-banner" aria-label={t("merch.phillipSale.bannerAria")}>
+      <Tag size={20} strokeWidth={2.4} aria-hidden className="merch-phillip-sale-icon" />
+      <div className="merch-sale-flame-copy">
+        <strong>{t("merch.phillipSale.bannerTitle")}</strong>
+        <span>
+          {t("merch.phillipSale.bannerBody", {
+            pct: Math.round(PHILLIP_MERCH_SALE_DISCOUNT * 100),
+          })}
+        </span>
+      </div>
+    </section>
+  ) : null;
+
   const saleFlameBanner =
     activeSales.length > 0 ? (
       <section className="merch-sale-flame-banner" aria-label="Aktive Sales">
@@ -289,6 +320,8 @@ export function MerchandisingScreen({
       {tab === "preise" ? (
         <div className="fm-tab-panel merch-panel" role="tabpanel" aria-label="Preise">
           {screenHeader}
+          {phillipSaleBanner}
+          {phillipSaleBanner}
           {overCapacityBanner}
           {saleFlameBanner}
           <div className="merch-a4-sheet">
@@ -297,6 +330,8 @@ export function MerchandisingScreen({
               hero
               row={merch.skus.trikots!}
               fanshopLevel={fanshopLevel}
+              careerWeek={careerWeek}
+              seasonWeek={week}
               onPriceChange={setRetail}
               topSellers={sellers}
               {...tileProps("trikots")}
@@ -308,6 +343,8 @@ export function MerchandisingScreen({
                   sku={sku}
                   row={merch.skus[sku]!}
                   fanshopLevel={fanshopLevel}
+                  careerWeek={careerWeek}
+                  seasonWeek={week}
                   onPriceChange={setRetail}
                   {...tileProps(sku)}
                 />
@@ -320,6 +357,7 @@ export function MerchandisingScreen({
       {tab === "einkauf" ? (
         <div className="fm-tab-panel merch-panel" role="tabpanel" aria-label="Einkauf">
           {screenHeader}
+          {phillipSaleBanner}
           {overCapacityBanner}
           {saleFlameBanner}
           <div className="merch-einkauf-row">
@@ -378,12 +416,26 @@ export function MerchandisingScreen({
           <section className="merch-on-demand" aria-label="On Demand Produktion">
             <header className="merch-on-demand-head">
               <h2 className="merch-section-title">On Demand Produktion</h2>
-              <p className="merch-on-demand-tag">Kein Stammgast am Markt</p>
+              <p className="merch-on-demand-tag">
+                {phillipSaleActive
+                  ? t("merch.phillipSale.onDemandTag", {
+                      pct: Math.round(PHILLIP_MERCH_SALE_DISCOUNT * 100),
+                    })
+                  : t("merch.onDemand.supplierTag")}
+              </p>
             </header>
             <p className="merch-on-demand-copy">
-              Teuer, diskret — Lieferung in{" "}
-              <strong>{MERCH_ON_DEMAND_LEAD_DAYS} Tagen</strong>, nicht sofort. Auch über 100&nbsp;%
-              Lager möglich.
+              {t("merch.onDemand.marketCopy", { days: MERCH_ON_DEMAND_LEAD_DAYS })}
+            </p>
+            <p className="merch-on-demand-meta merch-muted">
+              {onDemandMarketUnit != null
+                ? t("merch.onDemand.marketBasis", {
+                    unit: formatClubCash(onDemandMarketUnit),
+                    total: formatClubCash(onDemandUnit),
+                  })
+                : t("merch.onDemand.marketBasisFallback", {
+                    total: formatClubCash(onDemandUnit),
+                  })}
             </p>
             <div className="merch-custom-row">
               <select
@@ -470,12 +522,14 @@ function MerchGridInventory({
 function MerchRetailStepper({
   value,
   onSale,
+  phillipSale,
   onDecrement,
   onIncrement,
   hero = false,
 }: {
   value: number;
   onSale?: boolean;
+  phillipSale?: boolean;
   onDecrement: () => void;
   onIncrement: () => void;
   hero?: boolean;
@@ -495,6 +549,11 @@ function MerchRetailStepper({
         {onSale ? (
           <>
             <span className="merch-step-sale-tag">Sale</span> {formatClubCash(value)}
+          </>
+        ) : phillipSale ? (
+          <>
+            <span className="merch-step-sale-tag merch-step-sale-tag--phillip">Phillip</span>{" "}
+            {formatClubCash(value)}
           </>
         ) : (
           <>VK {formatClubCash(value)}</>
@@ -538,6 +597,8 @@ function MerchPriceTile({
   sku,
   row,
   fanshopLevel,
+  seasonWeek,
+  careerWeek,
   onPriceChange,
   hero = false,
   topSellers,
@@ -549,6 +610,8 @@ function MerchPriceTile({
   sku: MerchSkuId;
   row: { stock: number; avg_cost: number; retail_price: number; retail_price_normal?: number };
   fanshopLevel: number;
+  seasonWeek: number;
+  careerWeek: number;
   onPriceChange: (sku: MerchSkuId, value: number) => void;
   hero?: boolean;
   topSellers?: JerseySellerRow[];
@@ -560,8 +623,11 @@ function MerchPriceTile({
   const Icon = SKU_ICON[sku];
   const maxStock = merchMaxStockForSku(fanshopLevel, sku);
   const fill = merchStockFillRatio(row.stock, fanshopLevel, sku);
-  const price = row.retail_price;
-  const normal = row.retail_price_normal ?? price;
+  const listPrice = row.retail_price;
+  const normal = row.retail_price_normal ?? listPrice;
+  const customerPrice = effectiveMerchCustomerRetail(row, seasonWeek, careerWeek);
+  const phillipSale = !onSale && customerPrice < listPrice;
+  const stepperValue = onSale ? listPrice : phillipSale ? customerPrice : listPrice;
   const clickable = Boolean(onOverCapacityClick);
 
   return (
@@ -598,13 +664,17 @@ function MerchPriceTile({
       {hero && topSellers ? <MerchHeroSellers rows={topSellers} /> : null}
       <MerchRetailStepper
         hero={hero}
-        value={price}
+        value={stepperValue}
         onSale={onSale}
-        onDecrement={() => onPriceChange(sku, price - MERCH_PRICE_STEP)}
-        onIncrement={() => onPriceChange(sku, price + MERCH_PRICE_STEP)}
+        phillipSale={phillipSale}
+        onDecrement={() => onPriceChange(sku, listPrice - MERCH_PRICE_STEP)}
+        onIncrement={() => onPriceChange(sku, listPrice + MERCH_PRICE_STEP)}
       />
-      {onSale && normal !== price ? (
+      {onSale && normal !== listPrice ? (
         <p className="merch-grid-meta merch-muted">Normal {formatClubCash(normal)}</p>
+      ) : null}
+      {phillipSale ? (
+        <p className="merch-grid-meta merch-muted">Listenpreis {formatClubCash(listPrice)}</p>
       ) : null}
     </article>
   );

@@ -9,6 +9,7 @@ import {
   Newspaper,
   Radar,
   Shield,
+  Stethoscope,
   TrendingUp,
   Users,
   type LucideIcon,
@@ -22,10 +23,12 @@ import { isStoryInboxItem } from "../../youth/decision-inbox.ts";
 import type { StoryCast } from "../../narrative/story-state.ts";
 import type { ScoutJobCompleteNotice } from "../../scouting/scout-job-postfach.ts";
 import { isCampLeaderPostfachItemId, parseCampLeaderPostfachItemId } from "../../inbox/postfach-camp-leader.ts";
+import { isOrthopedistPostfachItemId } from "../../medical/orthopedist-hire.ts";
 import { isScoutJobPostfachItemId } from "../../inbox/postfach-scout-job.ts";
 import {
   campLeaderQueuePreview,
   inboxQueuePreview,
+  orthopedistQueuePreview,
   scoutJobQueuePreview,
 } from "../../inbox/postfach-queue-preview.ts";
 import { clubLogoUrlForId } from "../assets/club-logo.ts";
@@ -78,6 +81,13 @@ function DecisionTileVisual({
     return (
       <span className="postfach-decision-tile-zone" aria-hidden>
         <MapPin size={22} strokeWidth={2.25} />
+      </span>
+    );
+  }
+  if (isOrthopedistPostfachItemId(queueId)) {
+    return (
+      <span className="postfach-decision-tile-zone" aria-hidden>
+        <Stethoscope size={22} strokeWidth={2.25} />
       </span>
     );
   }
@@ -162,6 +172,7 @@ function tileExpandHint(
   scoutJobNotices: readonly ScoutJobCompleteNotice[],
 ): string | null {
   if (isCampLeaderPostfachItemId(queueId)) return t("postfach.tile.openCandidates");
+  if (isOrthopedistPostfachItemId(queueId)) return t("postfach.tile.openCandidates");
   const notice = scoutJobNotices.find((entry) => entry.id === queueId);
   if (notice?.kind === "opponent_scout_complete") return t("postfach.tile.openReport");
   return null;
@@ -189,13 +200,15 @@ export function PostfachDecisionGrid({
       {queueIds.map((queueId) => {
         const preview = isCampLeaderPostfachItemId(queueId)
           ? campLeaderQueuePreview(parseCampLeaderPostfachItemId(queueId)!)
-          : isScoutJobPostfachItemId(queueId)
-            ? scoutJobQueuePreview(scoutJobNotices.find((notice) => notice.id === queueId))
-            : inboxQueuePreview(
-                pending.find((item) => item.id === queueId)!,
-                players,
-                storyCast,
-              );
+          : isOrthopedistPostfachItemId(queueId)
+            ? orthopedistQueuePreview()
+            : isScoutJobPostfachItemId(queueId)
+              ? scoutJobQueuePreview(scoutJobNotices.find((notice) => notice.id === queueId))
+              : inboxQueuePreview(
+                  pending.find((item) => item.id === queueId)!,
+                  players,
+                  storyCast,
+                );
         const isActive = queueId === activeId;
         const expandHint = tileExpandHint(queueId, scoutJobNotices);
         return (

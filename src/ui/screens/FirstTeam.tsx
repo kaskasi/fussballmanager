@@ -3,7 +3,6 @@ import { Users } from "lucide-react";
 import { MentoringPanel } from "../components/MentoringPanel.tsx";
 import { CoachingStaffPanel } from "../components/CoachingStaffPanel.tsx";
 import { AssistantDelegationPanel } from "../components/AssistantDelegationPanel.tsx";
-import { FitnessManagementPanel } from "../components/FitnessManagementPanel.tsx";
 import type { Coach, CoachingStaff } from "../../staff/coaching-staff.ts";
 import type { AssistantDelegation, AssistantDelegationTask } from "../../staff/assistant-delegation.ts";
 
@@ -56,7 +55,7 @@ export function FirstTeam({
   onAssistantDelegationChange,
   onAssignMentor,
   onClearMentor,
-  injuryRiskFactor = 1,
+  onOpenMedical,
 }: {
   players: readonly Player[];
   clubId: string;
@@ -73,7 +72,7 @@ export function FirstTeam({
   onAssistantDelegationChange?: (task: AssistantDelegationTask, enabled: boolean) => void;
   onAssignMentor?: (menteeId: string, mentorId: string) => void;
   onClearMentor?: (menteeId: string) => void;
-  injuryRiskFactor?: number;
+  onOpenMedical?: () => void;
 }) {
   useT();
   const [squadTab, setSquadTab] = useState<SquadTab>("list");
@@ -254,12 +253,14 @@ export function FirstTeam({
                 cash={cash}
                 onHire={onHireCoach}
               />
-              <FitnessManagementPanel
-                players={players}
-                clubId={clubId}
-                intensity={trainingIntensity}
-                injuryRiskFactor={injuryRiskFactor}
-              />
+              {onOpenMedical ? (
+                <p className="medical-muted">
+                  {t("medical.squadHint")}{" "}
+                  <button type="button" className="ui-btn ui-btn--ghost ui-btn--sm" onClick={onOpenMedical}>
+                    {t("shell.nav.medical")}
+                  </button>
+                </p>
+              ) : null}
             </>
           ) : (
             <p className="hub-inbox-empty">Staff-Bereich im Kader — Daten aus Training migriert.</p>

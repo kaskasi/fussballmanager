@@ -31,6 +31,7 @@ export type CurtainNavScreen =
   | "postfach"
   | "squad"
   | "training"
+  | "medical"
   | "campus"
   | "scouting"
   | "transfers"

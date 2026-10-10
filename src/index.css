@@ -2754,8 +2754,11 @@ body {
 .lineup-slot-card-opponent {
   border-color: rgb(191 219 254 / 90%);
   background: rgb(239 246 255 / 94%);
-  cursor: default;
+  cursor: pointer;
   box-shadow: 0 4px 12px rgb(30 64 175 / 12%);
+  pointer-events: auto;
+  font: inherit;
+  color: inherit;
 }
 
 .lineup-slot-ca {
@@ -2807,6 +2810,110 @@ body {
   border-radius: 0.2rem;
   background: #fef3c7;
   color: #92400e;
+}
+
+.lineup-form-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.65rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.lineup-form-value.is-compact {
+  min-width: 1.45rem;
+  font-size: 0.58rem;
+}
+
+.lineup-form-value.is-good {
+  color: #047857;
+}
+
+.lineup-form-value.is-mid {
+  color: #b45309;
+}
+
+.lineup-form-value.is-low {
+  color: #b91c1c;
+}
+
+.lineup-fatigue {
+  display: inline-flex;
+  align-items: flex-end;
+  height: 1.25rem;
+}
+
+.lineup-fatigue.is-compact {
+  height: 1.05rem;
+}
+
+.lineup-fatigue-bars {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: stretch;
+  gap: 1px;
+  width: 0.42rem;
+  height: 100%;
+}
+
+.lineup-fatigue-bar {
+  flex: 1;
+  min-height: 2px;
+  border-radius: 1px;
+  background: rgb(226 232 240 / 85%);
+}
+
+.lineup-fatigue-bar.is-on {
+  background: #94a3b8;
+}
+
+.lineup-fatigue-bars.is-good .lineup-fatigue-bar.is-on {
+  background: #16a34a;
+}
+
+.lineup-fatigue-bars.is-mid .lineup-fatigue-bar.is-on {
+  background: #eab308;
+}
+
+.lineup-fatigue-bars.is-low .lineup-fatigue-bar.is-on,
+.lineup-fatigue-bars.is-empty .lineup-fatigue-bar.is-on {
+  background: #f97316;
+}
+
+.lineup-fatigue-bars.is-empty .lineup-fatigue-bar {
+  background: rgb(254 226 226 / 90%);
+}
+
+.lineup-slot-icons,
+.lineup-player-icons {
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.lineup-legend-examples li {
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.lineup-player-open,
+.lineup-squad-name-btn {
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.lineup-player-open:hover,
+.lineup-squad-name-btn:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .lineup-bench {
@@ -2869,10 +2976,18 @@ body {
   cursor: not-allowed;
 }
 
+.lineup-bench-legend-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  min-width: 0;
+}
+
 .lineup-bench-legend-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 0.35rem 0.75rem;
 }
@@ -2885,62 +3000,8 @@ body {
   min-width: 8rem;
 }
 
-.lineup-indicator-legend {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.lineup-indicator-legend-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.45rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
-  background: #fff;
-  font-size: 0.68rem;
-  color: #475569;
-  cursor: pointer;
-}
-
-.lineup-indicator-legend-toggle:hover {
-  background: #f8fafc;
-}
-
-.lineup-indicator-legend-panel {
-  position: absolute;
-  right: 0;
-  z-index: 20;
-  margin-top: 0.25rem;
-  width: min(18rem, 85vw);
-  padding: 0.55rem 0.65rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.65rem;
-  background: #fff;
-  box-shadow: 0 8px 24px rgb(15 23 42 / 0.12);
-}
-
-.lineup-indicator-legend-title {
-  margin: 0 0 0.35rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #334155;
-}
-
-.lineup-indicator-legend-list {
+.lineup-bench-legend-block .pipeline-heat-legend {
   margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.25rem;
-  font-size: 0.65rem;
-  color: #64748b;
-}
-
-.lineup-indicator-legend-list li {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
 }
 
 .lineup-bench-list {
@@ -3005,7 +3066,8 @@ body {
   align-self: center;
 }
 
-.lineup-player-name {
+.lineup-player-name,
+.lineup-player-open {
   grid-column: 2;
   font-weight: 700;
   white-space: normal;
@@ -4197,6 +4259,13 @@ body {
   color: var(--text-muted, #64748b);
 }
 
+.merchandising.club-shell-card-body {
+  width: 100%;
+  max-width: 52rem;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
 .merchandising-head {
   display: flex;
   align-items: flex-start;
@@ -4741,7 +4810,8 @@ body {
   );
 }
 
-.merch-sale-flame-banner {
+.merch-sale-flame-banner,
+.merch-phillip-sale-banner {
   display: flex;
   align-items: flex-start;
   gap: 0.55rem;
@@ -4754,6 +4824,25 @@ body {
     color-mix(in srgb, var(--warn-tinte, #ca8a04) 22%, #fff),
     color-mix(in srgb, var(--warn, #c2410c) 8%, #fff)
   );
+}
+
+.merch-phillip-sale-banner {
+  border-color: color-mix(in srgb, var(--club-gruen, #059669) 45%, #0f172a);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--club-gruen, #059669) 18%, #fff),
+    color-mix(in srgb, var(--club-gruen, #059669) 6%, #fff)
+  );
+}
+
+.merch-phillip-sale-icon {
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--club-gruen, #059669) 90%, #064e3b);
+}
+
+.merch-step-sale-tag--phillip {
+  background: color-mix(in srgb, var(--club-gruen, #059669) 22%, #fff);
+  color: #047857;
 }
 
 .merch-sale-flame-icon {
@@ -8198,6 +8287,35 @@ body {
   margin: 0 0 0.85rem;
   color: #64748b;
   font-weight: 700;
+}
+
+.training-auto-next-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.55rem;
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  font-size: 0.78rem;
+  color: #047857;
+}
+
+.training-auto-next-stop {
+  padding: 0.2rem 0.55rem;
+  border: 1px solid #6ee7b7;
+  border-radius: 0.45rem;
+  background: #fff;
+  font-size: 0.72rem;
+  color: #047857;
+  cursor: pointer;
+}
+
+.training-auto-next-stop:hover {
+  background: #f0fdf4;
 }
 
 .training-warn {
@@ -15458,4 +15576,216 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   font-size: 0.85rem;
   color: var(--tinte-muted, #6b5c52);
   word-break: break-word;
+}
+
+.medical-muted {
+  color: var(--tinte-muted);
+  font-size: 0.9rem;
+}
+
+.medical-tab-badge {
+  margin-left: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.medical-rehab-track {
+  position: relative;
+  height: 2.5rem;
+  margin: 0.75rem 0;
+  border-radius: 6px;
+  background: var(--panel-bg, #f4f1ec);
+  border: 1px solid var(--line-soft, #ddd6ce);
+  cursor: pointer;
+}
+
+.medical-rehab-window {
+  position: absolute;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--pitch-gruen, #2d6a4f) 35%, transparent);
+}
+
+.medical-rehab-cursor {
+  position: absolute;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  width: 3px;
+  margin-left: -1px;
+  background: var(--tinte-strong, #1a1512);
+  pointer-events: none;
+}
+
+.medical-injured-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.5rem 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.medical-legend-badge {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 0.25rem;
+  color: var(--sonnengelb, #f5c518);
+}
+
+.medical-staff-panel.training-staff {
+  gap: 0.65rem;
+}
+
+.medical-staff-panel .training-staff-head {
+  margin-bottom: 0.25rem;
+}
+
+.medical-staff-panel .merch-section-title {
+  margin: 0.35rem 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.medical-member-row,
+.medical-candidate-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+}
+
+.medical-member-meta {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--tinte-muted);
+}
+
+.medical-candidate-list,
+.medical-physio-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.medical-injured-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.medical-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  margin: 0 0 0.35rem;
+}
+
+.medical-case-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.medical-case-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--line-soft, #e8e2da);
+}
+
+.medical-case-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.medical-case-name {
+  border: none;
+  background: none;
+  padding: 0;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.medical-case-symptom {
+  margin: 0.15rem 0 0;
+  font-size: 0.88rem;
+}
+
+.medical-tag-auto {
+  font-size: 0.75rem;
+  color: var(--tinte-muted);
+}
+
+.medical-body-silhouette {
+  fill: none;
+  stroke: var(--line-soft, #ccc);
+  stroke-width: 1.2;
+}
+
+.medical-body-limb {
+  stroke: var(--line-soft, #ccc);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.medical-body-hotspot {
+  fill: transparent;
+  stroke: transparent;
+  cursor: pointer;
+}
+
+.medical-body-hotspot.is-active {
+  fill: color-mix(in srgb, var(--pitch-gruen, #2d6a4f) 45%, transparent);
+  stroke: var(--pitch-gruen, #2d6a4f);
+  stroke-width: 1.5;
+}
+
+.medical-physio-modal {
+  max-width: 22rem;
+}
+
+.medical-exam-modal {
+  max-width: 24rem;
+}
+
+.medical-exam-player {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+
+.medical-exam-quote {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-left: 3px solid var(--line-soft, #ddd6ce);
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+.medical-exam-verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.65rem 0;
+  margin-bottom: 0.75rem;
+}
+
+.medical-exam-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinte-muted);
+}
+
+.medical-exam-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }

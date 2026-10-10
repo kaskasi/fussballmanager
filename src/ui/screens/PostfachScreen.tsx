@@ -2,6 +2,7 @@
 import type { SandboxPlan } from "@fussballmanager/shared";
 import type { Player } from "../../types/player.ts";
 import type { CampLeaderCandidate } from "../../youth/camp-leader-hire.ts";
+import type { OrthopedistCandidate, OrthopedistHireState } from "../../medical/orthopedist-hire.ts";
 import type { YouthCamp } from "../../youth/satellite-camps.ts";
 import type { DecisionAction, YouthInboxState } from "../../youth/decision-inbox.ts";
 import type { StoryCast } from "../../narrative/story-state.ts";
@@ -28,6 +29,9 @@ export function PostfachScreen({
   onDecision,
   onSelectPlayer,
   onHireCampLeader,
+  orthopedistHire,
+  hasOrthopedist,
+  onHireOrthopedist,
   scoutBoard,
   onDismissScoutJob,
   onOpenScoutingNetwork,
@@ -53,6 +57,9 @@ export function PostfachScreen({
   onDecision: (itemId: string, action: DecisionAction) => void;
   onSelectPlayer: (playerId: string) => void;
   onHireCampLeader: (campId: string, candidate: CampLeaderCandidate) => void;
+  orthopedistHire?: OrthopedistHireState;
+  hasOrthopedist?: boolean;
+  onHireOrthopedist?: (candidate: OrthopedistCandidate) => void;
   scoutBoard: ScoutBoard;
   onDismissScoutJob: (itemId: string) => void;
   onOpenScoutingNetwork: () => void;
@@ -87,6 +94,9 @@ export function PostfachScreen({
           youthCamps={youthCamps}
           masterSeed={masterSeed}
           onHireCampLeader={onHireCampLeader}
+          orthopedistHire={orthopedistHire}
+          hasOrthopedist={hasOrthopedist}
+          onHireOrthopedist={onHireOrthopedist}
           scoutBoard={scoutBoard}
           onDismissScoutJob={onDismissScoutJob}
           onOpenScoutingNetwork={onOpenScoutingNetwork}

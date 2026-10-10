@@ -44,6 +44,7 @@ import {
   type MerchSkuId,
   type MerchSkuState,
 } from "./merchandising-skus.ts";
+import { phillipMerchSaleMultiplier } from "./phillip-merch-sale.ts";
 
 export {
   fanshopMerchLevel,
@@ -101,9 +102,17 @@ export {
 } from "./merchandising-market.ts";
 export {
   customOrderQuote,
+  customOrderUnitCost,
+  bestMarketBulkUnitCost,
+  MERCH_ON_DEMAND_MARKET_PREMIUM,
   brandingLeadWeeks,
   bulkOfferUnitCost,
 } from "./merchandising-market.ts";
+export {
+  isPhillipMerchSaleWeek,
+  PHILLIP_MERCH_SALE_DISCOUNT,
+  phillipMerchSaleMultiplier,
+} from "./phillip-merch-sale.ts";
 
 /** Share of trikot revenue explained by star names (UI). */
 export const JERSEY_REVENUE_SHARE = 0.7;
@@ -299,9 +308,19 @@ function simulateWeeklySales(
     ? { ...merch.skus }
     : normalizeSkus(merch.skus);
 
+  const careerWeekNow =
+    ctx.season != null && ctx.week != null
+      ? merchCareerWeekIndex(ctx.season, ctx.week)
+      : 0;
+  const seasonWeek = ctx.week ?? 0;
+
   for (const id of MERCH_SKU_IDS) {
     const row = skus[id]!;
     if (row.stock <= 0 || unitPool <= 0) continue;
+    const unitRetail =
+      ctx.week != null
+        ? effectiveMerchCustomerRetail(row, seasonWeek, careerWeekNow)
+        : row.retail_price;
     let weight = MERCH_SKU_DEMAND_WEIGHT[id];
     if (id === "trikots") weight *= starBoost;
     const want = Math.round(
@@ -309,12 +328,12 @@ function simulateWeeklySales(
         weight *
         MERCH_SALES_DEMAND_MULTIPLIER *
         limitedDropScale *
-        priceDemandMultiplier(row.retail_price, MERCH_SKU_REFERENCE_RETAIL[id]),
+        priceDemandMultiplier(unitRetail, MERCH_SKU_REFERENCE_RETAIL[id]),
     );
     const sold = Math.min(row.stock, Math.max(0, want));
     if (sold <= 0) continue;
     unitsSold[id] = sold;
-    const lineGross = sold * row.retail_price;
+    const lineGross = sold * unitRetail;
     const lineCogs = sold * row.avg_cost;
     skuGross[id] = lineGross;
     skuCogs[id] = lineCogs;
@@ -359,6 +378,19 @@ export function merchSaleWeeksRemaining(row: MerchSkuState, careerWeek: number):
 
 export function merchSkuNormalRetail(row: MerchSkuState): number {
   return row.retail_price_normal ?? row.retail_price;
+}
+
+/** Fan-facing VK this week (Phillip seasonal sale or active Fire Sale). */
+export function effectiveMerchCustomerRetail(
+  row: MerchSkuState,
+  seasonWeek: number,
+  careerWeek: number,
+): number {
+  if (isMerchSkuOnSale(row, careerWeek)) {
+    return row.retail_price;
+  }
+  const base = merchSkuNormalRetail(row);
+  return Math.max(1, Math.round(base * phillipMerchSaleMultiplier(seasonWeek)));
 }
 
 export function suggestedMerchSalePrice(normalRetail: number): number {
@@ -776,8 +808,8 @@ export function orderMerchOnDemand(
   if (qty <= 0) return null;
   const merch = normalizeClubMerchandising(stadium.merchandising);
   const row = merch.skus[sku] ?? emptySkuState(sku);
-  const cost = customOrderQuote(sku, qty, row.avg_cost);
-  const unitCost = customOrderUnitCost(sku, row.avg_cost);
+  const cost = customOrderQuote(sku, qty, row.avg_cost, week, merch.bulk_offers);
+  const unitCost = customOrderUnitCost(sku, row.avg_cost, week, merch.bulk_offers);
   const orderedDay = merchCareerDayIndex(season, week, weekday);
   const order: MerchOnDemandOrder = {
     id: `od_${sku}_${orderedDay}_${merch.on_demand_queue?.length ?? 0}`,

@@ -1,6 +1,8 @@
 import { injuryRiskScore } from "./fitness-management.ts";
 import type { Injury, Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
+import type { PendingDiagnosis } from "../medical/diagnosis-queue.ts";
+import { buildPendingFromRoll } from "../medical/diagnosis-queue.ts";
 
 export const INJURY_MIN_SCORE = 40;
 export const INJURY_SCORE_CAP = 92;
@@ -49,6 +51,9 @@ export interface WeeklyInjuryRollContext {
   intensity: number;
   injuryRiskFactor: number;
   managerClubId: string;
+  /** When set, injuries go to diagnosis queue instead of immediate player.injury. */
+  medicalDiagnosisDays?: number;
+  careerDay?: number;
 }
 
 export interface InjuryRollNotice {
@@ -129,8 +134,13 @@ export function injuryTypeLabel(typeId: string): string {
 export function rollWeeklyInjuries(
   players: readonly Player[],
   context: WeeklyInjuryRollContext,
-): { players: Player[]; notices: InjuryRollNotice[] } {
+): { players: Player[]; notices: InjuryRollNotice[]; pendingDiagnoses: PendingDiagnosis[] } {
   const notices: InjuryRollNotice[] = [];
+  const pendingDiagnoses: PendingDiagnosis[] = [];
+  const useQueue =
+    context.medicalDiagnosisDays != null &&
+    context.medicalDiagnosisDays > 0 &&
+    context.careerDay != null;
   const nextPlayers = players.map((player) => {
     if (player.club_id !== context.managerClubId) return player;
     if (player.squad_status !== "pro") return player;
@@ -146,6 +156,27 @@ export function rollWeeklyInjuries(
 
     const injury = createInjuryForPlayer(player, score, context.season, context.week, context.masterSeed);
     const label = injuryTypeLabel(injury.type_id);
+    if (useQueue) {
+      pendingDiagnoses.push(
+        buildPendingFromRoll(
+          player,
+          score,
+          context.season,
+          context.week,
+          context.masterSeed,
+          context.careerDay!,
+          context.medicalDiagnosisDays!,
+        ),
+      );
+      notices.push({
+        playerId: player.id,
+        playerName: formatPlayerName(player),
+        label: `${label} — Diagnose`,
+        weeks: injury.weeks_remaining,
+        severity: injury.severity,
+      });
+      return player;
+    }
     notices.push({
       playerId: player.id,
       playerName: formatPlayerName(player),
@@ -155,7 +186,7 @@ export function rollWeeklyInjuries(
     });
     return { ...player, state: { ...player.state, injury } };
   });
-  return { players: nextPlayers, notices };
+  return { players: nextPlayers, notices, pendingDiagnoses };
 }
 
 export function tickInjuryRecoveryBatch(players: readonly Player[]): Player[] {

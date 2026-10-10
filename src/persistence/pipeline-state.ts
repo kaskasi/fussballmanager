@@ -27,6 +27,9 @@ import {
   type AssistantDelegation,
 } from "../staff/assistant-delegation.ts";
 import type { ScoutNetworkState } from "../scouting/scout-network.ts";
+import type { MedicalStaff } from "../staff/medical-staff.ts";
+import type { ClubMedicalState } from "../medical/diagnosis-queue.ts";
+import type { OrthopedistHireState } from "../medical/orthopedist-hire.ts";
 import {
   defaultFinancingState,
   normalizeFinancingState,
@@ -86,6 +89,12 @@ export interface PipelineState {
   scout_network?: ScoutNetworkState;
   /** F6.6 — bank + story financing caps (PRD 11.12). */
   financing?: FinancingCareerState;
+  /** F8.2 — medical staff. */
+  medical_staff?: MedicalStaff;
+  /** F8.2 — diagnosis queue + rehab minigame tracking. */
+  medical_state?: ClubMedicalState;
+  /** F8.2 — orthopedist story hire. */
+  orthopedist_hire?: OrthopedistHireState;
 }
 
 export function defaultPipelineState(week = 1): PipelineState {

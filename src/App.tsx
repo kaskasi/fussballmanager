@@ -65,7 +65,7 @@ import {
 } from "./scouting/scout-trip-queue.ts";
 import type { ScoutRouteScore } from "./scouting/scout-route-puzzle.ts";
 import { worldCareerClubId, type WorldDivisionId } from "./world/world-generator.ts";
-import { ArrowLeft, Package, TriangleAlert } from "lucide-react";
+import { ArrowLeft, HeartPulse, Package, TriangleAlert } from "lucide-react";
 import { ClubCrest } from "./ui/components/ClubCrest.tsx";
 import { clubLogoUrlForPlayerClub } from "./ui/assets/club-logo.ts";
 import { joinDocumentTitle, useDocumentTitle } from "./ui/document-title.ts";
@@ -96,6 +96,10 @@ import {
   trainingWeekSlotsRemaining,
   usesTrainingNextNexus,
 } from "./sim/training-next.ts";
+import {
+  shouldPauseTrainingAutoNext,
+  TRAINING_AUTO_NEXT_INTERVAL_MS,
+} from "./sim/training-auto-next.ts";
 import { attributeLabel } from "./ui/player-profile.ts";
 import type { Attributes } from "./types/player.ts";
 import { isTransferWindowOpen } from "./sim/transfer-windows.ts";
@@ -246,7 +250,32 @@ import {
   type PrecinctEdge,
 } from "./stadium/precinct.ts";
 import { applyRestaurantProposalStory } from "./stadium/precinct-campus-events.ts";
-import { precinctInjuryRiskFactor } from "./stadium/precinct-effects.ts";
+import { careerInjuryRiskFactor } from "./medical/career-injury-risk.ts";
+import { tickMedicalSessionDay, tickMedicalSessionDays } from "./medical/medical-session.ts";
+import { applyRehabMinigameBonus, applyPendingRowToPlayer, reduceInjuryWeeks } from "./medical/diagnosis-queue.ts";
+import {
+  completeDoctorExam,
+  completeInHouseSurgery,
+  countMedicalHeaderAlerts,
+  markPhysioManualDone,
+} from "./medical/injury-care.ts";
+import { medicalModifiers, normalizeMedicalStaff } from "./staff/medical-staff.ts";
+import { precinctMedicalCenterLevel } from "./stadium/precinct-effects.ts";
+import {
+  clearOrthopedistHireAfterPick,
+  isOrthopedistPostfachItemId,
+  orthopedistAwaitingPostfach,
+  orthopedistFromCandidate,
+  orthopedistPostfachItemId,
+  type OrthopedistCandidate,
+} from "./medical/orthopedist-hire.ts";
+import {
+  hireMedicalDoctor,
+  hireMedicalPhysio,
+  hireMedicalOrthopedist,
+  type MedicalMember,
+} from "./staff/medical-staff.ts";
+import { MedicalCenterScreen } from "./ui/screens/MedicalCenterScreen.tsx";
 import { TransfersScreen } from "./ui/screens/TransfersScreen.tsx";
 import { HelpScreen } from "./ui/screens/HelpScreen.tsx";
 import { PipelineDashboard } from "./ui/screens/PipelineDashboard";
@@ -344,6 +373,7 @@ type Screen =
   | "scouting"
   | "transfers"
   | "squad"
+  | "medical"
   | "finances"
   | "merchandising"
   | "stadium"
@@ -361,6 +391,7 @@ const SCREEN_DOCUMENT_TITLE_KEYS: Record<Screen, string> = {
   scouting: "shell.nav.scouting",
   transfers: "shell.nav.transfers",
   squad: "shell.nav.squad",
+  medical: "shell.nav.medical",
   finances: "shell.nav.finances",
   merchandising: "shell.nav.merchandising",
   stadium: "shell.nav.stadium",
@@ -457,6 +488,7 @@ export default function App() {
     key: "position",
     direction: "asc",
   });
+  const [trainingAutoNext, setTrainingAutoNext] = useState(false);
   const [scoutingInitialTab, setScoutingInitialTab] = useState<ScoutingInitialTab | null>(null);
   const scoutMapDetailBackRef = useRef<(() => void) | null>(null);
   const [scoutMapDetailNav, setScoutMapDetailNav] = useState<{
@@ -562,7 +594,27 @@ export default function App() {
     trainingUnitsCompleted,
     trainingUnitOutcomes,
     financing,
+    medicalStaff,
+    medicalState,
+    orthopedistHire,
   } = session;
+  const injuryRiskFactor = useMemo(
+    () => careerInjuryRiskFactor(stadium.precinct, medicalStaff),
+    [medicalStaff, stadium.precinct],
+  );
+  const orthopedistPostfachOpen = orthopedistAwaitingPostfach(
+    orthopedistHire,
+    Boolean(medicalStaff.orthopedist),
+  );
+  const medicalAttentionCount = useMemo(
+    () =>
+      countMedicalHeaderAlerts(
+        medicalState,
+        players.filter((p) => p.club_id === session.clubId && p.squad_status === "pro"),
+        precinctMedicalCenterLevel(stadium.precinct),
+      ),
+    [medicalState, players, session.clubId, stadium.precinct],
+  );
   const playerDivisionId = useMemo((): WorldDivisionId => {
     const club = world.clubs.find((entry) => worldCareerClubId(entry.id) === session.clubId);
     return club?.division_id ?? "regionalliga-nord";
@@ -847,24 +899,34 @@ export default function App() {
 
   const openPostfach = useCallback(
     (itemId?: string) => {
-      const count = postfachOpenCount(youthInbox, players, youthCamps, scoutBoard);
+      const count = postfachOpenCount(
+        youthInbox,
+        players,
+        youthCamps,
+        scoutBoard,
+        orthopedistHire,
+        Boolean(medicalStaff.orthopedist),
+      );
       const pending = pendingInboxItems(youthInbox, players);
       const campItemIds = campsAwaitingLeaderChoice(youthCamps).map((camp) =>
         campLeaderPostfachItemId(camp.id),
       );
       const scoutJobIds = unconsumedScoutJobNotices(scoutBoard).map((notice) => notice.id);
+      const orthoId = orthopedistPostfachOpen ? orthopedistPostfachItemId() : null;
       if (count === 0) return;
       if (
         itemId &&
         !pending.some((item) => item.id === itemId) &&
         !campItemIds.includes(itemId) &&
         !scoutJobIds.includes(itemId) &&
-        !isScoutJobPostfachItemId(itemId)
+        itemId !== orthoId &&
+        !isScoutJobPostfachItemId(itemId) &&
+        !isOrthopedistPostfachItemId(itemId)
       ) {
         setPostfachItemId(null);
       } else {
         setPostfachItemId(
-          itemId ?? pending[0]?.id ?? campItemIds[0] ?? scoutJobIds[0] ?? null,
+          itemId ?? pending[0]?.id ?? campItemIds[0] ?? orthoId ?? scoutJobIds[0] ?? null,
         );
       }
       setProfileId(null);
@@ -872,7 +934,7 @@ export default function App() {
       setProfileFeedback(null);
       setScreen("postfach");
     },
-    [players, scoutBoard, youthCamps, youthInbox],
+    [medicalStaff.orthopedist, orthopedistHire, orthopedistPostfachOpen, players, scoutBoard, youthCamps, youthInbox],
   );
 
   const handleDismissScoutJob = useCallback(
@@ -969,8 +1031,28 @@ export default function App() {
     [flashNotice, patchSession, session.league.player_club_id],
   );
 
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback((trigger?: { fromAuto?: boolean }) => {
+    const fromAuto = trigger?.fromAuto === true;
     if (simulating) return;
+
+    const careerMatchActive = Boolean(careerMatchSetup && careerMatchUiVisible);
+    const pauseAuto = shouldPauseTrainingAutoNext({
+      session,
+      youthInbox,
+      players,
+      screen,
+      simulating,
+      careerMatchActive,
+    });
+
+    if (fromAuto) {
+      if (pauseAuto) {
+        setTrainingAutoNext(false);
+        return;
+      }
+    } else if (screen === "training") {
+      setTrainingAutoNext(!pauseAuto);
+    }
 
     if (hasInboxBlockerForNext(session, youthInbox, players)) {
       openPostfach();
@@ -1011,6 +1093,7 @@ export default function App() {
             ),
             scoutBoard: advanceScoutBoardForSession(current, nextSession.weekday),
           };
+          nextSession = tickMedicalSessionDay(nextSession);
         }
         return deliverKickerAfterStep ? applyTuesdayKickerDelivery(nextSession) : nextSession;
       });
@@ -1085,7 +1168,7 @@ export default function App() {
       if (skip.daysAdvanced > 0) {
         patchSession((current) => {
           const now = { season: current.season, week: current.week, weekday: skip.weekday };
-          return {
+          const stepped = {
             ...current,
             weekday: skip.weekday,
             youthInbox: deliverInboxForDays(
@@ -1102,6 +1185,7 @@ export default function App() {
             youthCamps: tickCampLeaderHires(current.youthCamps, now),
             scoutBoard: advanceScoutBoardForSession(current, skip.weekday),
           };
+          return tickMedicalSessionDays(stepped, skip.daysAdvanced);
         });
       }
       const setup = prepareCareerMatch(sessionAtTarget);
@@ -1146,6 +1230,7 @@ export default function App() {
           youthCamps: tickCampLeaderHires(current.youthCamps, now),
           scoutBoard: advanceScoutBoardForSession(current, skip.weekday),
         };
+        next = tickMedicalSessionDays(next, skip.daysAdvanced);
         next = applyTuesdayKickerDelivery(next);
         return next;
       });
@@ -1169,7 +1254,26 @@ export default function App() {
     simulateWeek,
     youthInbox,
     players,
+    careerMatchSetup,
+    careerMatchUiVisible,
   ]);
+
+  const handleNextRef = useRef(handleNext);
+  handleNextRef.current = handleNext;
+
+  useEffect(() => {
+    if (screen !== "training") {
+      setTrainingAutoNext(false);
+    }
+  }, [screen]);
+
+  useEffect(() => {
+    if (!trainingAutoNext || simulating) return;
+    const timer = window.setInterval(() => {
+      handleNextRef.current({ fromAuto: true });
+    }, TRAINING_AUTO_NEXT_INTERVAL_MS);
+    return () => window.clearInterval(timer);
+  }, [trainingAutoNext, simulating]);
 
   const handleInboxDecision = useCallback(
     (itemId: string, action: DecisionAction) => {
@@ -2416,6 +2520,148 @@ export default function App() {
     [patchSession],
   );
 
+  const handleHireMedicalDoctor = useCallback(
+    (member: MedicalMember) => {
+      patchSession((current) => {
+        if (current.finances.cash < member.wage_weekly * 4) {
+          return sessionWithEvent(current, "finance", t("medical.event.insufficientCash"));
+        }
+        if (current.medicalStaff.doctor) {
+          return sessionWithEvent(current, "info", t("medical.event.doctorSlotFull"));
+        }
+        return {
+          ...current,
+          medicalStaff: hireMedicalDoctor(current.medicalStaff, member),
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handleHireMedicalPhysio = useCallback(
+    (member: MedicalMember) => {
+      patchSession((current) => {
+        if (current.finances.cash < member.wage_weekly * 4) {
+          return sessionWithEvent(current, "finance", t("medical.event.insufficientCash"));
+        }
+        return {
+          ...current,
+          medicalStaff: hireMedicalPhysio(current.medicalStaff, member),
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handleHireOrthopedist = useCallback(
+    (candidate: OrthopedistCandidate) => {
+      patchSession((current) => {
+        const member = orthopedistFromCandidate(candidate, current.season);
+        return {
+          ...current,
+          medicalStaff: hireMedicalOrthopedist(current.medicalStaff, member),
+          orthopedistHire: clearOrthopedistHireAfterPick(),
+        };
+      });
+      flashNotice(t("medical.event.orthoHired", { name: candidate.name }), "ok");
+    },
+    [flashNotice, patchSession],
+  );
+
+  const handleDoctorExamComplete = useCallback(
+    (playerId: string) => {
+      patchSession((current) => {
+        const row = current.medicalState.pending_diagnoses.find((entry) => entry.player_id === playerId);
+        if (!row) return current;
+        const level = precinctMedicalCenterLevel(current.stadium.precinct);
+        const mods = medicalModifiers(
+          normalizeMedicalStaff(current.medicalStaff),
+          level,
+          1,
+        );
+        const exam = completeDoctorExam(
+          current.medicalState,
+          row,
+          level,
+          current.medicalStaff,
+          current.masterSeed,
+        );
+        let next: typeof current = { ...current, medicalState: exam.state };
+        if (exam.nextPhase === "rehab") {
+          next = {
+            ...next,
+            players: applyPendingRowToPlayer(next.players, row, mods.recoveryMultiplier, false),
+          };
+        }
+        return next;
+      });
+    },
+    [patchSession],
+  );
+
+  const handleSurgery = useCallback(
+    (playerId: string) => {
+      patchSession((current) => {
+        const row = current.medicalState.pending_diagnoses.find(
+          (entry) => entry.player_id === playerId && entry.phase === "awaiting_surgery",
+        );
+        if (!row) return current;
+        const level = precinctMedicalCenterLevel(current.stadium.precinct);
+        const mods = medicalModifiers(
+          normalizeMedicalStaff(current.medicalStaff),
+          level,
+          1,
+        );
+        return {
+          ...current,
+          medicalState: completeInHouseSurgery(current.medicalState, row),
+          players: applyPendingRowToPlayer(current.players, row, mods.recoveryMultiplier, true),
+        };
+      });
+      flashNotice(t("medical.event.surgeryDone"), "ok");
+    },
+    [flashNotice, patchSession],
+  );
+
+  const handlePhysioManual = useCallback(
+    (playerId: string) => {
+      patchSession((current) => ({
+        ...current,
+        medicalState: markPhysioManualDone(current.medicalState, playerId),
+        players: current.players.map((player) =>
+          player.id === playerId ? reduceInjuryWeeks(player, 0.2) : player,
+        ),
+      }));
+      flashNotice(t("medical.physio.manualDone"), "ok");
+    },
+    [flashNotice, patchSession],
+  );
+
+  const handleRehabMinigameComplete = useCallback(
+    (playerId: string, success: boolean) => {
+      patchSession((current) => {
+        const applied = applyRehabMinigameBonus(
+          current.medicalState,
+          current.players,
+          current.season,
+          current.week,
+          playerId,
+          success,
+        );
+        return {
+          ...current,
+          medicalState: applied.medicalState,
+          players: applied.players,
+        };
+      });
+      flashNotice(
+        success ? t("medical.rehab.success") : t("medical.rehab.fail"),
+        success ? "ok" : "warn",
+      );
+    },
+    [flashNotice, patchSession],
+  );
+
   const handleTrainingIntensityChange = useCallback(
     (intensity: number) => {
       patchSession((current) => ({ ...current, trainingIntensity: intensity }));
@@ -2534,7 +2780,14 @@ export default function App() {
 
   const jobOffers = listJobOffers(board.employer_club_id, season, league);
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
-  const openDecisionCount = postfachOpenCount(youthInbox, players, youthCamps, scoutBoard);
+  const openDecisionCount = postfachOpenCount(
+    youthInbox,
+    players,
+    youthCamps,
+    scoutBoard,
+    orthopedistHire,
+    Boolean(medicalStaff.orthopedist),
+  );
 
   const closePlayerProfile = useCallback(() => {
     setProfileId(null);
@@ -2564,6 +2817,7 @@ export default function App() {
       "club-events": t("hub.events.screenTitle"),
       training: t("shell.nav.training"),
       squad: t("shell.nav.squad"),
+      medical: t("shell.nav.medical"),
     };
     const drillTitle = hubDrilldownTitle[screen];
     if (drillTitle) {
@@ -2664,12 +2918,32 @@ export default function App() {
           ? t("shell.nextViaCalendar")
           : t("shell.smartSkip");
 
+  const nextHeaderButtonLabel =
+    matchFlowBrowsing
+      ? t("match.lineup.backToSelection")
+      : careerMatchSetup && careerMatchUiVisible && matchNavAction?.label
+        ? matchNavAction.label
+        : trainingAutoNext && screen === "training"
+          ? t("training.autoNext.buttonLabel")
+          : isTrainingNextActive(session) &&
+              !careerMatchSetup &&
+              !hasInboxBlockerForNext(session, youthInbox, players)
+            ? t("training.next.header", {
+                remaining: String(trainingWeekSlotsRemaining(session)),
+              })
+            : t("shell.next");
+
+  const nextHeaderButtonTitle =
+    trainingAutoNext && screen === "training" && !(careerMatchSetup && careerMatchUiVisible)
+      ? t("training.autoNext.active")
+      : undefined;
+
   const navActions: HubNavActions = {
     week,
     weekday,
     simulating,
     openDecisionCount,
-    onNext: () => void handleNext(),
+    onNext: () => void handleNext(undefined),
     onHeaderPrimaryClick: handleHeaderPrimaryClick,
     onNewGame: resetGame,
     onOpenSaves: () => setSaveManagerOpen(true),
@@ -2681,6 +2955,8 @@ export default function App() {
         : null,
     matchSkipToReport: careerMatchSetup ? matchSkipToReport : null,
     nextHeaderTitle,
+    nextHeaderButtonLabel,
+    nextHeaderButtonTitle,
   };
 
   const applyCloudSave = useCallback(
@@ -2832,6 +3108,7 @@ export default function App() {
           accessibility={accessibility}
           onAccessibilityChange={setAccessibility}
           shellChrome="plain"
+          medicalAttentionCount={medicalAttentionCount}
         />
         <CareerMatch
           setup={careerMatchSetup}
@@ -2903,6 +3180,7 @@ export default function App() {
           hubActions={navActions}
           accessibility={accessibility}
           onAccessibilityChange={setAccessibility}
+          medicalAttentionCount={medicalAttentionCount}
         />
         <PlayerProfile
           player={foreignView.player}
@@ -2976,6 +3254,7 @@ export default function App() {
           hubActions={navActions}
           accessibility={accessibility}
           onAccessibilityChange={setAccessibility}
+          medicalAttentionCount={medicalAttentionCount}
         />
         <PlayerProfile
           player={profilePlayer}
@@ -3046,6 +3325,7 @@ export default function App() {
         accessibility={accessibility}
         onAccessibilityChange={setAccessibility}
         shellChrome="card"
+        medicalAttentionCount={medicalAttentionCount}
       />
       {screen === "hub" ? (
         <PipelineDashboard
@@ -3097,6 +3377,9 @@ export default function App() {
           onDecision={handleInboxDecision}
           onSelectPlayer={setProfileId}
           onHireCampLeader={handleHireCampLeader}
+          orthopedistHire={orthopedistHire}
+          hasOrthopedist={Boolean(medicalStaff.orthopedist)}
+          onHireOrthopedist={handleHireOrthopedist}
           scoutBoard={scoutBoard}
           onDismissScoutJob={handleDismissScoutJob}
           onOpenScoutingNetwork={() => {
@@ -3162,13 +3445,15 @@ export default function App() {
             hasTrainingHall: precinctHasTrainingHall(stadium.precinct),
             trainingPitchLevel: precinctTrainingPitchLevel(stadium.precinct),
           }}
-          injuryRiskFactor={precinctInjuryRiskFactor(stadium.precinct)}
+          injuryRiskFactor={injuryRiskFactor}
           trainingUnitsCompleted={trainingUnitsCompleted}
           trainingUnitOutcomes={trainingUnitOutcomes}
           useTrainingUnitProgress={usesTrainingNextNexus(storyState)}
           trainingPlanPresets={trainingPlanPresets}
           onTrainingPlanPresetsChange={handleTrainingPlanPresetsChange}
           onTrainingPresetNotice={flashNotice}
+          trainingAutoNext={trainingAutoNext}
+          onStopTrainingAutoNext={() => setTrainingAutoNext(false)}
         />
       ) : null}
       {campLeaderDismissCampId && youthCamps.some((entry) => entry.id === campLeaderDismissCampId) ? (
@@ -3281,8 +3566,32 @@ export default function App() {
           onAssistantDelegationChange={handleAssistantDelegationChange}
           onAssignMentor={handleAssignMentor}
           onClearMentor={handleClearMentor}
-          injuryRiskFactor={precinctInjuryRiskFactor(stadium.precinct)}
+          onOpenMedical={() => setScreen("medical")}
           onSelectPlayer={setProfileId}
+        />
+      ) : null}
+      {screen === "medical" ? (
+        <MedicalCenterScreen
+          players={players}
+          clubId={session.clubId}
+          stadium={stadium}
+          season={season}
+          week={week}
+          masterSeed={masterSeed}
+          cash={finances.cash}
+          medicalStaff={medicalStaff}
+          medicalState={medicalState}
+          orthopedistHire={orthopedistHire}
+          trainingIntensity={trainingIntensity}
+          injuryRiskFactor={injuryRiskFactor}
+          onSelectPlayer={setProfileId}
+          onHireDoctor={handleHireMedicalDoctor}
+          onHirePhysio={handleHireMedicalPhysio}
+          onHireOrthopedist={handleHireOrthopedist}
+          onRehabMinigameComplete={handleRehabMinigameComplete}
+          onDoctorExamComplete={handleDoctorExamComplete}
+          onSurgery={handleSurgery}
+          onPhysioManual={handlePhysioManual}
         />
       ) : null}
       {screen === "club-events" ? (
@@ -3428,6 +3737,8 @@ interface HubNavActions {
   primaryAction?: NavPrimaryAction | null;
   matchSkipToReport?: (() => void) | null;
   nextHeaderTitle?: string;
+  nextHeaderButtonLabel?: string;
+  nextHeaderButtonTitle?: string;
 }
 
 function AppChrome({
@@ -3450,6 +3761,7 @@ function AppChrome({
   accessibility,
   onAccessibilityChange,
   shellChrome = "card",
+  medicalAttentionCount = 0,
 }: {
   week: number;
   weekday: number;
@@ -3457,6 +3769,7 @@ function AppChrome({
   storyState: StoryState;
   cash: number;
   stadium: ClubStadium;
+  medicalAttentionCount?: number;
   clubName: string;
   clubInitials: string;
   clubLogoSrc?: string;
@@ -3493,6 +3806,7 @@ function AppChrome({
         onAccessibilityChange={onAccessibilityChange}
         shellChrome={shellChrome}
         week={week}
+        medicalAttentionCount={medicalAttentionCount}
       />
     </>
   );
@@ -3518,6 +3832,7 @@ function AppNav({
   accessibility,
   onAccessibilityChange,
   shellChrome = "card",
+  medicalAttentionCount = 0,
 }: {
   screen: Screen;
   week: number;
@@ -3526,6 +3841,7 @@ function AppNav({
   storyState: StoryState;
   cash: number;
   stadium: ClubStadium;
+  medicalAttentionCount?: number;
   clubName: string;
   clubInitials: string;
   clubLogoSrc?: string;
@@ -3548,6 +3864,7 @@ function AppNav({
     !suppressTrainingPlanWarning(storyState) &&
     needsTrainingPlanForToday(trainingPlan, weekday);
   const showMerchStockoutWarn = hasMerchStockout(stadium);
+  const showMedicalWarn = medicalAttentionCount > 0;
   useEffect(() => {
     if (!menuOpen) return;
     function handlePointer(event: MouseEvent) {
@@ -3566,6 +3883,7 @@ function AppNav({
       { screen: "postfach" as const, labelKey: "shell.nav.postfach" },
       { screen: "squad" as const, labelKey: "shell.nav.squad" },
       { screen: "training" as const, labelKey: "shell.nav.training" },
+      { screen: "medical" as const, labelKey: "shell.nav.medical" },
       { screen: "campus" as const, labelKey: "shell.nav.campus" },
       { screen: "scouting" as const, labelKey: "shell.nav.scouting" },
       { screen: "transfers" as const, labelKey: "shell.nav.transfers" },
@@ -3635,6 +3953,17 @@ function AppNav({
               title={tr("shell.merch.stockout")}
             >
               <Package size={18} strokeWidth={2.35} aria-hidden />
+            </button>
+          ) : null}
+          {showMedicalWarn ? (
+            <button
+              type="button"
+              className="app-nav-training-warn"
+              onClick={() => onNavigate("medical")}
+              aria-label={tr("shell.medical.attention")}
+              title={tr("shell.medical.attention")}
+            >
+              <HeartPulse size={18} strokeWidth={2.35} aria-hidden />
             </button>
           ) : null}
           <span className="app-nav-cash" aria-label={tr("shell.cash")}>
@@ -3849,16 +4178,25 @@ function AppNav({
           }
           title={
             hubActions.primaryAction?.title ??
+            hubActions.nextHeaderButtonTitle ??
             (hubActions.primaryAction
               ? hubActions.primaryAction.label
               : hubActions.nextHeaderTitle ?? tr("shell.smartSkip"))
           }
         >
-          <span className="app-nav-next-mobile">{tr("shell.next")}</span>
+          <span className="app-nav-next-mobile">
+            {hubActions.simulating && !hubActions.primaryAction
+              ? "…"
+              : hubActions.primaryAction?.label ??
+                hubActions.nextHeaderButtonLabel ??
+                tr("shell.next")}
+          </span>
           <span className="app-nav-next-desktop">
             {hubActions.simulating && !hubActions.primaryAction
               ? "…"
-              : hubActions.primaryAction?.label ?? tr("shell.next")}
+              : hubActions.primaryAction?.label ??
+                hubActions.nextHeaderButtonLabel ??
+                tr("shell.next")}
             {hubActions.openDecisionCount > 0 && !hubActions.primaryAction ? (
               <span className="app-nav-next-badge" aria-label={tr("hub.inbox.decisions")}>
                 {hubActions.openDecisionCount}

@@ -55,6 +55,20 @@ import {
   normalizeCoachingStaff,
   type CoachingStaff,
 } from "../staff/coaching-staff.ts";
+import {
+  defaultMedicalStaff,
+  normalizeMedicalStaff,
+  type MedicalStaff,
+} from "../staff/medical-staff.ts";
+import {
+  defaultClubMedicalState,
+  normalizeClubMedicalState,
+  type ClubMedicalState,
+} from "../medical/diagnosis-queue.ts";
+import {
+  defaultOrthopedistHireState,
+  type OrthopedistHireState,
+} from "../medical/orthopedist-hire.ts";
 import { normalizeRivalPlayers } from "../sim/rival-growth.ts";
 import { switchManagerClub } from "../board/manager-club-switch.ts";
 import type { SeasonAwardsSnapshot } from "../sim/season-awards.ts";
@@ -138,6 +152,9 @@ export interface GameSession {
   trainingUnitOutcomes: (TrainingSlotOutcome | null)[];
   /** F6.6 — bank loan + story financing state. */
   financing: FinancingCareerState;
+  medicalStaff: MedicalStaff;
+  medicalState: ClubMedicalState;
+  orthopedistHire: OrthopedistHireState;
 }
 
 export function newGameSession(now = new Date()): GameSession {
@@ -303,6 +320,9 @@ export function sessionFromSave(save: SaveGame): GameSession {
     ),
     trainingUnitOutcomes: pipeline.training_unit_outcomes ?? [],
     financing: normalizeFinancingState(pipeline.financing ?? defaultFinancingState()),
+    medicalStaff: normalizeMedicalStaff(pipeline.medical_staff),
+    medicalState: normalizeClubMedicalState(pipeline.medical_state),
+    orthopedistHire: pipeline.orthopedist_hire ?? defaultOrthopedistHireState(),
   };
   return syncManagerClubWithBoard(session);
 }
@@ -338,6 +358,9 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     training_calendar_gate_done: session.trainingCalendarGateDone,
     training_unit_outcomes: session.trainingUnitOutcomes,
     financing: session.financing,
+    medical_staff: session.medicalStaff,
+    medical_state: session.medicalState,
+    orthopedist_hire: session.orthopedistHire,
   };
   const iso = now.toISOString();
 

@@ -724,7 +724,22 @@ Für jeden Spieler: Name, Position, Alter, Moral, aktueller Mentor (falls vorhan
 Dropdown-Menü "Mentor wählen", das eine Liste der verfügbaren, erfahrenen Spieler anzeigt.
 Visuelles Feedback, wenn ein Mentor zugewiesen wurde (z.B. grüner Haken oder Icon).
 Tab "Staff":
-Übersicht aller Trainer und Mitarbeiter (Head Coach, Angriffstrainer, Verteidigungstrainer, Torwarttrainer, Scout, Physiotherapeut).
+Übersicht Trainer (Angriff/Verteidigung/Fitness) und Assistenten-Delegation. **Fitness/Verletzungen/Ermüdung → Screen Medizin (§9.16).**
+
+### 9.16 Medizin
+
+```text
+/** WIREFRAME: design.md §9.16 — Medical Center */
+┌────────────────────────────────────────────────────────────┐
+│ [Staff] [Verletzte] [Ermüdung & Praxis]                    │
+├────────────────────────────────────────────────────────────┤
+│ Staff: Arzt · Physios (1–4) · Orthopäde (Story) · Hire     │
+│ Verletzte: Diagnose-Warteschlange + aktive Reha            │
+│ Praxis: Belastungstabelle · Reha-Timing-Minigame (1/Wo)   │
+└────────────────────────────────────────────────────────────┘
+```
+
+Regeln: Kein zweiter NEXT im Content; Gelände-Gebäude `medical_center` Stufe 1–3 gate’t Slots.
 Für jede Rolle: Aktueller Inhaber, Qualitätsmetriken, Vertrag, Gehalt, Aufgaben (mit Checkboxen).
 Bereich "Kandidaten" für jede Rolle, um neue Mitarbeiter einzustellen.
 Button [Einstellen] neben Kandidaten, um sie zu verpflichten.

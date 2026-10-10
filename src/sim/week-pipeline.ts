@@ -79,7 +79,19 @@ import {
   rollWeeklyInjuries,
   tickInjuryRecoveryBatch,
 } from "../development/injury-roll.ts";
-import { precinctInjuryRiskFactor } from "../stadium/precinct-effects.ts";
+import {
+  precinctMedicalCenterLevel,
+  precinctTzPhysioStack,
+} from "../stadium/precinct-effects.ts";
+import { careerInjuryRiskFactor } from "../medical/career-injury-risk.ts";
+import {
+  medicalModifiers,
+  medicalStaffWageBill,
+  normalizeMedicalStaff,
+} from "../staff/medical-staff.ts";
+import { appendPendingDiagnoses } from "../medical/medical-session.ts";
+import { startPhysioWeek } from "../medical/injury-care.ts";
+import { merchCareerDayIndex } from "../economy/merchandising-market.ts";
 import type { WatchedPlayerMatch } from "./watched-player-match.ts";
 import { advanceNarrativeWeek } from "../narrative/pipeline-week.ts";
 import { advanceMentorshipWeek } from "../development/mentoring.ts";
@@ -265,15 +277,25 @@ export async function simulateGameWeek(
     coachingStaff: session.coachingStaff,
     precinctRegen: precinctFitnessRegen(session.stadium.precinct),
   });
+  const medLevel = precinctMedicalCenterLevel(session.stadium.precinct);
+  const medMods = medicalModifiers(
+    normalizeMedicalStaff(session.medicalStaff),
+    medLevel,
+    precinctTzPhysioStack(session.stadium.precinct),
+  );
   const injuryRoll = rollWeeklyInjuries(players, {
     masterSeed: session.masterSeed,
     season: session.season,
     week: nextWeek,
     intensity: session.trainingIntensity,
-    injuryRiskFactor: precinctInjuryRiskFactor(session.stadium.precinct),
+    injuryRiskFactor: careerInjuryRiskFactor(session.stadium.precinct, session.medicalStaff),
     managerClubId: session.clubId,
+    medicalDiagnosisDays: medLevel > 0 ? medMods.diagnosisDays : undefined,
+    careerDay:
+      medLevel > 0 ? merchCareerDayIndex(session.season, nextWeek, 6) : undefined,
   });
   players = injuryRoll.players;
+  session = appendPendingDiagnoses(session, injuryRoll.pendingDiagnoses);
   for (const notice of injuryRoll.notices) {
     clubEvents = withClubEvent(
       clubEvents,
@@ -426,6 +448,7 @@ export async function simulateGameWeek(
     stadium,
     coachingStaff: session.coachingStaff,
     scoutWagesWeekly: scoutNetworkWeeklyWage(session.scoutNetwork),
+    medicalWagesWeekly: medicalStaffWageBill(session.medicalStaff),
     campUpkeepWeekly: weeklyCampUpkeep(session.youthCamps),
     hospitalityIncome,
     overtimeCost: overtimeDue,
@@ -628,6 +651,15 @@ export async function simulateGameWeek(
     clubEvents,
     individualPrograms: individualStep.programs,
     storyState: narrativeStep.storyState,
+    medicalState: startPhysioWeek(
+      session.medicalState,
+      playersForNewWeek,
+      nextSeason,
+      nextWeek,
+      precinctMedicalCenterLevel(stadiumAfterNaming.precinct),
+    ),
+    medicalStaff: session.medicalStaff,
+    orthopedistHire: session.orthopedistHire,
   };
 
   let intakeCount = 0;

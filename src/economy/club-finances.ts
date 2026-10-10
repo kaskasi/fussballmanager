@@ -44,6 +44,7 @@ export interface WeeklyFinanceContext {
   stadium?: ClubStadium;
   coachingStaff?: CoachingStaff;
   scoutWagesWeekly?: number;
+  medicalWagesWeekly?: number;
   campUpkeepWeekly?: number;
   hospitalityIncome?: number;
   overtimeCost?: number;
@@ -179,6 +180,7 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
           ? weeklyStaffWageBill(context.coachingStaff)
           : economy.staff_wages_weekly) +
         (context.scoutWagesWeekly ?? 0) +
+        (context.medicalWagesWeekly ?? 0) +
         (context.campUpkeepWeekly ?? 0)
       ),
       week,

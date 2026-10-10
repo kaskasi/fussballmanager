@@ -131,6 +131,8 @@ export function TrainingCenter({
   trainingPlanPresets,
   onTrainingPlanPresetsChange,
   onTrainingPresetNotice,
+  trainingAutoNext = false,
+  onStopTrainingAutoNext,
 }: {
   week: number;
   weekday: number;
@@ -164,8 +166,10 @@ export function TrainingCenter({
   trainingPlanPresets: TrainingPlanPresetSlot[];
   onTrainingPlanPresetsChange: (presets: TrainingPlanPresetSlot[]) => void;
   onTrainingPresetNotice: (text: string, tone?: "ok" | "warn") => void;
+  trainingAutoNext?: boolean;
+  onStopTrainingAutoNext?: () => void;
 }) {
-  useT();
+  const tr = useT();
   const [tab, setTab] = useState<TrainingTab>("team");
   const [pickSlot, setPickSlot] = useState<number | null>(null);
   const check = useMemo(() => validateWeeklyPlan(planToSessions(plan)), [plan]);
@@ -202,6 +206,17 @@ export function TrainingCenter({
           </button>
         ))}
       </div>
+
+      {trainingAutoNext ? (
+        <div className="training-auto-next-banner" role="status">
+          <span>{tr("training.autoNext.active")}</span>
+          {onStopTrainingAutoNext ? (
+            <button type="button" className="training-auto-next-stop" onClick={onStopTrainingAutoNext}>
+              {tr("training.autoNext.stop")}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       {tab === "team" ? (
         <div className="fm-tab-panel">

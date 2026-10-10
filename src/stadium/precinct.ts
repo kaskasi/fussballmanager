@@ -12,7 +12,8 @@ export type PrecinctBuilding =
   | "clubhouse"
   | "hotel"
   | "restaurant"
-  | "museum";
+  | "museum"
+  | "medical_center";
 
 export type PrecinctCap = "unique" | "many";
 
@@ -212,6 +213,18 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     maxLevel: 1,
     upgradeCost: 0,
     hint: "Nur einer · 1×2 · Fan-Service + Auswärtsfahrten mit Bus",
+  },
+  {
+    id: "medical_center",
+    icon: "medical",
+    label: "Medical Center",
+    cost: 380_000,
+    cap: "unique",
+    minW: 2,
+    minH: 2,
+    maxLevel: 3,
+    upgradeCost: 520_000,
+    hint: "Praxis → Imaging → OP · Diagnose & Reha",
   },
   {
     id: "clubhouse",
@@ -476,6 +489,11 @@ export function precinctBuildingStageLabel(building: PrecinctBuilding, level: nu
       return ["", "Rasen", "Kunstrasen", "Hybrid"][level] ?? `Stufe ${level}`;
     case "youth_pitch":
       return ["", "Kleinfeld", "Akademie-Rasen"][level] ?? `Stufe ${level}`;
+    case "medical_center":
+      if (level === 1) return "Praxis";
+      if (level === 2) return "Große Praxis · Imaging";
+      if (level >= 3) return "Arztzentrum · OP";
+      break;
     case "kiosk":
       return level >= 2 ? "Doppelstand" : "Bude";
     case "beer_tent":

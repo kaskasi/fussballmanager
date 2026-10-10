@@ -126,7 +126,8 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F7.1 | Stadion 2D-Iso-Ansicht | M1 | Grundriss, Blöcke, Preiskategorien |
 | F7.2 | Stadionausbau | M2 | Kapazität, VIP, Rasenheizung |
 | F7.3 | Nebengebäude platzieren | M3 | Würstchenbude, Fanshop, Hotel, Restaurant (Auslastung+Story); Museum später |
-| F7.4 | Trainingsgelände-Ausbau | M3 | Verletzungsrate ↓, Physio-Boni |
+| F7.4 | Trainingsgelände-Ausbau | M3 | Verletzungsrate ↓, Physio-Boni (Stufe 5 stackt ~8 % mit Medical Center) |
+| F7.9 | Medical Center (Gelände) | M2 | Eigenes Gebäude 3 Stufen: Praxis → Imaging → OP; Diagnose-Tage, Reha-Multiplikator |
 | F7.5 | Fanbase-Wachstum | M3 | Erfolgs-/Populäritätskurve → Zuschauerschnitt |
 | F7.6 | Ambiance-Effekte | M3 | Attraktivität für Spieler & Fans |
 | F7.7 | Havarie-Events | M4 | Sturm, Rohrbruch |
@@ -137,7 +138,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | ID | Feature | M | Beschreibung |
 |---|---|---|---|
 | F8.1 | Trainer einstellen | M1 | Gruppen: Angriff/Verteidigung/Fitness — `environment()`-Faktor |
-| F8.2 | Physios/Ärzte | M2 | Prävention + Rehadauer (koppelt an F2.6) |
+| F8.2 | Physios/Ärzte | M2 | Screen **Medizin** (Staff / Verletzte / Ermüdung & Praxis); 1 Arzt, 4 Physios, Orthopäde (Story); Hiring wie Scouts; legendäre Docs möglich |
 | F8.3 | Jugendtrainer-Typen | M2 | Entwicklungsspezialist vs. Ergebnisorientiert |
 | F8.4 | Staff-Entwicklung | M3 | Trainer wachsen/altern ebenfalls |
 | F8.5 | Assistenten-Vorschläge | M3 | Auto-Delegation Aufstellung/Scouting; **Wochenplan = Erinnerung** (kein Auto-Plan), optional Postfach-Blocker |

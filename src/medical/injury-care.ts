@@ -206,20 +206,22 @@ export function diagnosisRevealLabel(row: PendingDiagnosis): string {
   return injuryTypeLabel(row.type_id);
 }
 
+/** Header heart icon: undiagnosed cases + rehab players with active Mithelfen only. */
 export function countMedicalHeaderAlerts(
   state: ClubMedicalState,
   players: readonly Player[],
+  season: number,
+  week: number,
   medicalCenterLevel: number,
 ): number {
   let count = 0;
   for (const row of state.pending_diagnoses) {
-    if (row.phase === "ready_doctor" || row.doctor_ready) count += 1;
-    else if (row.phase === "waiting_praxis") count += 1;
-    else if (row.phase === "awaiting_surgery") count += 1;
+    const phase = row.phase ?? (row.doctor_ready ? "ready_doctor" : "waiting_praxis");
+    if (phase === "waiting_praxis" || phase === "ready_doctor" || row.doctor_ready) {
+      count += 1;
+    }
   }
-  const rehabIds = players.filter((p) => p.state.injury).map((p) => p.id);
-  const auto = physioAutoSlotsPerWeek(medicalCenterLevel);
-  if (rehabIds.length > auto) count += rehabIds.length - auto;
+  count += physioManualPlayerIds(state, players, season, week, medicalCenterLevel).length;
   return count;
 }
 

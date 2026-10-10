@@ -617,9 +617,11 @@ export default function App() {
       countMedicalHeaderAlerts(
         medicalState,
         players.filter((p) => p.club_id === session.clubId && p.squad_status === "pro"),
+        season,
+        week,
         precinctMedicalCenterLevel(stadium.precinct),
       ),
-    [medicalState, players, session.clubId, stadium.precinct],
+    [medicalState, players, season, week, session.clubId, stadium.precinct],
   );
   const playerDivisionId = useMemo((): WorldDivisionId => {
     const club = world.clubs.find((entry) => worldCareerClubId(entry.id) === session.clubId);

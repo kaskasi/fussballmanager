@@ -3,9 +3,11 @@ import type { ClubStadium } from "../stadium/club-stadium.ts";
 import { weekCommerceOccupancy } from "../stadium/matchday-commerce.ts";
 import {
   fanshopMerchLevel,
+  isMerchOverCapacity,
   jerseySalesWeights,
   jerseySellersWithWeekly,
   JERSEY_REVENUE_SHARE,
+  MERCH_OVERCAP_DISCARD_AFTER_WEEKS,
   merchChannelScale,
   merchMaxBulkOfferSlots,
   normalizeClubMerchandising,
@@ -32,6 +34,8 @@ export interface MerchandisingAnalyticsView {
   maxOfferSlots: number;
   pendingBranding: number;
   activeOffers: number;
+  overCapacitySkuCount: number;
+  weeksUntilDiscard: number;
 }
 
 export function buildMerchandisingAnalytics(
@@ -59,6 +63,11 @@ export function buildMerchandisingAnalytics(
   const merch = normalizeClubMerchandising(stadium.merchandising);
   const fanshopLevel = fanshopMerchLevel(stadium.precinct);
   const jerseyPoolNet = Math.round(weekEcon.net * JERSEY_REVENUE_SHARE);
+  let overCapacitySkuCount = 0;
+  for (const id of MERCH_SKU_IDS) {
+    const stock = merch.skus[id]?.stock ?? 0;
+    if (isMerchOverCapacity(stock, fanshopLevel, id)) overCapacitySkuCount += 1;
+  }
   return {
     weekNet: weekEcon.net,
     fullOccupancyNet: fullEcon.net,
@@ -84,5 +93,7 @@ export function buildMerchandisingAnalytics(
     maxOfferSlots: merchMaxBulkOfferSlots(fanshopLevel),
     pendingBranding: merch.branding_queue.length,
     activeOffers: merch.bulk_offers.length,
+    overCapacitySkuCount,
+    weeksUntilDiscard: MERCH_OVERCAP_DISCARD_AFTER_WEEKS,
   };
 }

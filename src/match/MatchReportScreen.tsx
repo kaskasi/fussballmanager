@@ -179,7 +179,7 @@ function MatchReportKasseCompact({ kasse }: { kasse?: MatchdayCashBreakdown }) {
     `Eintritt ${formatClubCash(kasse.tickets)}`,
     `Wurst ${formatClubCash(kasse.kiosk)}`,
     `Bier ${formatClubCash(kasse.beer)}`,
-    `Shop ${formatClubCash(kasse.shop)}`,
+    "Merch → Menü",
     `Summe ${formatClubCash(kasse.total)}`,
   ].join(" · ");
   return (

@@ -55,6 +55,12 @@ export function MerchandisingAnalyticsPanel({
           Fanshop Stufe {view.fanshopLevel} · Whitelabel {view.activeOffers}/{view.maxOfferSlots} ·{" "}
           {view.pendingBranding} inbound
         </p>
+        {view.overCapacitySkuCount > 0 ? (
+          <p className="finances-detail-sub is-warn">
+            {view.overCapacitySkuCount} SKU über Lagerkapazität · Firesale empfohlen (Abstoß nach{" "}
+            {view.weeksUntilDiscard} Wochen)
+          </p>
+        ) : null}
       </article>
 
       <article className="finances-detail">

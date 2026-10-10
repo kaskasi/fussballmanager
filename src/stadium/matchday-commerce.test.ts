@@ -26,6 +26,7 @@ describe("matchday commerce occupancy", () => {
     expect(home.home).toBe(true);
     expect(home.tickets).toBeGreaterThan(0);
     expect(away.tickets).toBe(0);
-    expect(home.total).toBe(home.tickets + home.kiosk + home.beer + home.shop);
+    expect(home.shop).toBe(0);
+    expect(home.total).toBe(home.tickets + home.kiosk + home.beer);
   });
 });

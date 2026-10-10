@@ -127,7 +127,7 @@ Alle Einnahmen laufen über `applyIncome(finances, line)` → erhöht `cash`. Tr
 | `tv_rights` | Jede Woche | `division.tv_weekly` |
 | `matchday_tickets` | Heimspiel-Woche (Sa) | `capacity × fill_rate × avg_ticket` |
 | `concessions` | Jede Woche | Kiosk/Bier × Occupancy + Hotel/Restaurant (Hospitality). **Kein Fanshop** — siehe `merchandising`. |
-| `merchandising` | Jede Woche | Netto nach COGS: Trikot-Schwerpunkt (~70 % UI-Anteil), Kollektion, Liefer-Tier + Retail-Modus; Fanshop auf dem Gelände = Durchsatz-Multiplikator; Verkäufe ziehen **SKU-Bestand** ab (Bulk/On-Demand auffüllen) — `src/economy/merchandising.ts`. |
+| `merchandising` | Jede Woche | Netto nach COGS: Trikot-Schwerpunkt (~70 % UI-Anteil), Kollektion, Liefer-Tier + Retail-Modus; Fanshop auf dem Gelände = Durchsatz-Multiplikator (**skaliert Nachfrage in F6.7, zählt nicht doppelt in `concessions`/`matchdayCashBreakdown`**); Verkäufe ziehen **SKU-Bestand** ab (Bulk/On-Demand auffüllen) — `src/economy/merchandising.ts`. |
 | `league_prize` | Saisonende | `division.prize_by_place[table_place]` |
 | `tv_bonus` | Saisonende | `division.tv_season_bonus[table_place]` |
 | `player_sale` | Transfer Verkauf | Ablöse (PRD 05) |

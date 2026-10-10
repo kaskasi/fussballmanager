@@ -5,12 +5,7 @@ import {
   stadiumMatchdayIncome,
   type ClubStadium,
 } from "./club-stadium.ts";
-import {
-  precinctAwayWeekCommerceFill,
-  weeklyBeerIncome,
-  weeklyFanshopIncome,
-  weeklyKioskIncome,
-} from "./precinct-effects.ts";
+import { precinctAwayWeekCommerceFill, weeklyBeerIncome, weeklyKioskIncome } from "./precinct-effects.ts";
 
 export interface MatchdayCashBreakdown {
   home: boolean;
@@ -18,6 +13,7 @@ export interface MatchdayCashBreakdown {
   tickets: number;
   kiosk: number;
   beer: number;
+  /** Always 0 — merch lives in F6.7 ledger line. */
   shop: number;
   total: number;
 }
@@ -43,14 +39,13 @@ export function matchdayCashBreakdown(
   const tickets = isHomeMatchWeek && stadium ? stadiumMatchdayIncome(stadium) : 0;
   const kiosk = weeklyKioskIncome(precinct, occupancy, fanbase, isHomeMatchWeek, prices);
   const beer = weeklyBeerIncome(precinct, occupancy, fanbase, isHomeMatchWeek, prices);
-  const shop = weeklyFanshopIncome(precinct, occupancy, fanbase, isHomeMatchWeek);
   return {
     home: isHomeMatchWeek,
     occupancy,
     tickets,
     kiosk,
     beer,
-    shop,
-    total: tickets + kiosk + beer + shop,
+    shop: 0,
+    total: tickets + kiosk + beer,
   };
 }

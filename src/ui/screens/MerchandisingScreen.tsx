@@ -4,6 +4,7 @@ import {
   BedDouble,
   Flame,
   Footprints,
+  Package,
   Shirt,
   Wind,
   ShoppingBag,
@@ -27,6 +28,7 @@ import {
   isMerchSkuOnSale,
   MERCH_ON_DEMAND_LEAD_DAYS,
   MERCH_SKU_IDS,
+  MERCH_OVERCAP_DISCARD_AFTER_WEEKS,
   MERCH_SKU_LABEL,
   merchSaleWeeksRemaining,
   merchSkuNormalRetail,
@@ -179,6 +181,10 @@ export function MerchandisingScreen({
     setFiresaleSku(sku);
   }
 
+  const overCapacitySkuCount = MERCH_SKU_IDS.filter((id) =>
+    isMerchOverCapacity(merch.skus[id]!.stock, fanshopLevel, id),
+  ).length;
+
   function tileProps(sku: MerchSkuId) {
     const row = merch.skus[sku]!;
     const over = isMerchOverCapacity(row.stock, fanshopLevel, sku);
@@ -206,6 +212,22 @@ export function MerchandisingScreen({
       <CashChip cash={finances.cash} />
     </header>
   );
+
+  const overCapacityBanner =
+    overCapacitySkuCount > 0 ? (
+      <section className="merch-sale-flame-banner" aria-label="Lager über Kapacität">
+        <Package size={20} strokeWidth={2.4} aria-hidden className="merch-sale-flame-icon" />
+        <div className="merch-sale-flame-copy">
+          <strong>
+            {overCapacitySkuCount} SKU über Kapazität
+          </strong>
+          <span>
+            Firesale oder Abverkauf — sonst Abstoß nach {MERCH_OVERCAP_DISCARD_AFTER_WEEKS} Wochen
+            Überbestand.
+          </span>
+        </div>
+      </section>
+    ) : null;
 
   const saleFlameBanner =
     activeSales.length > 0 ? (
@@ -267,6 +289,7 @@ export function MerchandisingScreen({
       {tab === "preise" ? (
         <div className="fm-tab-panel merch-panel" role="tabpanel" aria-label="Preise">
           {screenHeader}
+          {overCapacityBanner}
           {saleFlameBanner}
           <div className="merch-a4-sheet">
             <MerchPriceTile
@@ -297,6 +320,7 @@ export function MerchandisingScreen({
       {tab === "einkauf" ? (
         <div className="fm-tab-panel merch-panel" role="tabpanel" aria-label="Einkauf">
           {screenHeader}
+          {overCapacityBanner}
           {saleFlameBanner}
           <div className="merch-einkauf-row">
             <div className="merch-einkauf-market">

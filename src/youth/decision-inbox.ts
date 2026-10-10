@@ -1,7 +1,5 @@
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { ACHIEVEMENT, grantAchievement } from "../player/achievements.ts";
-import { signYouthContract } from "../player/youth-contract.ts";
-import { CONTRACT_SIGN_COOLDOWN_DAYS, lockContractTalks } from "../transfers/contract-talks.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import { canLoanPlayerOut, loanYouthPlayer } from "../transfers/loans.ts";
 import type { TransferRecord } from "../transfers/transfer-history.ts";
@@ -39,7 +37,8 @@ export type InboxItemKind =
   | "story_assistant"
   | "story_board"
   | "assistant_training_reminder"
-  | "kicker_transfer";
+  | "kicker_transfer"
+  | "contract_renegotiate";
 
 export interface DecisionInboxItem {
   id: string;
@@ -119,6 +118,7 @@ const KIND_PRIORITY: Record<InboxItemKind, number> = {
   training_focus: 4,
   assistant_training_reminder: 0,
   kicker_transfer: 1,
+  contract_renegotiate: 2,
 };
 
 export function emptyInbox(week: number): YouthInboxState {
@@ -144,17 +144,28 @@ function youthPlayerIds(players: readonly Player[]): Set<string> {
   );
 }
 
-function keepInboxItem(item: DecisionInboxItem, validIds: Set<string>): boolean {
+function clubSquadPlayerIds(players: readonly Player[], clubId: string): Set<string> {
+  return new Set(players.filter((player) => player.club_id === clubId).map((player) => player.id));
+}
+
+function keepInboxItem(
+  item: DecisionInboxItem,
+  youthIds: Set<string>,
+  clubSquadIds: Set<string>,
+): boolean {
   if (isStoryInboxItem(item)) return true;
   if (item.kind === "assistant_training_reminder") return true;
   if (item.kind === "kicker_transfer") return true;
-  return validIds.has(item.playerId);
+  if (item.kind === "contract_renegotiate") return clubSquadIds.has(item.playerId);
+  return youthIds.has(item.playerId);
 }
 
 /** Drop inbox rows for players who left youth or the club. */
 export function pruneYouthInbox(inbox: YouthInboxState, players: readonly Player[]): YouthInboxState {
-  const validIds = youthPlayerIds(players);
-  const keep = (item: DecisionInboxItem) => keepInboxItem(item, validIds);
+  const youthIds = youthPlayerIds(players);
+  const clubId = resolveClubId(players);
+  const squadIds = clubSquadPlayerIds(players, clubId);
+  const keep = (item: DecisionInboxItem) => keepInboxItem(item, youthIds, squadIds);
   return {
     ...inbox,
     items: inbox.items.filter(keep),
@@ -168,8 +179,9 @@ export function pendingInboxItems(
 ): DecisionInboxItem[] {
   const open = inbox.items.filter((item) => !inbox.resolvedIds.includes(item.id));
   if (!players) return open;
-  const validIds = youthPlayerIds(players);
-  return open.filter((item) => keepInboxItem(item, validIds));
+  const youthIds = youthPlayerIds(players);
+  const squadIds = clubSquadPlayerIds(players, resolveClubId(players));
+  return open.filter((item) => keepInboxItem(item, youthIds, squadIds));
 }
 
 export function queuedInboxItems(
@@ -181,8 +193,9 @@ export function queuedInboxItems(
     (item) => !inbox.resolvedIds.includes(item.id) && !openIds.has(item.id),
   );
   if (!players) return queued;
-  const validIds = youthPlayerIds(players);
-  return queued.filter((item) => keepInboxItem(item, validIds));
+  const youthIds = youthPlayerIds(players);
+  const squadIds = clubSquadPlayerIds(players, resolveClubId(players));
+  return queued.filter((item) => keepInboxItem(item, youthIds, squadIds));
 }
 
 export interface InboxWeekFocus {
@@ -324,6 +337,19 @@ export function enqueueStoryInboxItem(
   return { ...inbox, items: [...inbox.items, item] };
 }
 
+export function inboxActionOpensContractTalk(
+  action: DecisionAction,
+  item: DecisionInboxItem,
+): boolean {
+  if (action !== "contract") return false;
+  return (
+    item.kind === "contract_offer" ||
+    item.kind === "contract_renegotiate" ||
+    item.kind === "promotion" ||
+    item.kind === "departure_risk"
+  );
+}
+
 export function storyChoiceId(action: DecisionAction): string | null {
   if (!action.startsWith("story:")) return null;
   return action.slice("story:".length);
@@ -370,6 +396,12 @@ export function inboxItemLabel(item: DecisionInboxItem, cast?: StoryCast): strin
       return t("inbox.reason.training_plan_missing");
     case "kicker_weekly":
       return t("postfach.treter.queueTopic");
+    case "underpaid_3mo":
+      return t("inbox.reason.underpaid3mo");
+    case "underpaid_9mo":
+      return t("inbox.reason.underpaid9mo");
+    case "underpaid_12mo":
+      return t("inbox.reason.underpaid12mo");
     default:
       return item.reason;
   }
@@ -398,6 +430,8 @@ export function allowedActions(
         return ["dismiss"];
       case "kicker_transfer":
         return ["dismiss"];
+      case "contract_renegotiate":
+        return ["contract", "dismiss"];
       case "story_press":
       case "story_fan":
       case "story_captain":
@@ -786,21 +820,8 @@ export function applyInboxDecision(
         );
       }
       break;
-    case "contract": {
-      const moraleBoost =
-        item.reason === "no_contract" || item.kind === "contract_offer" ? 10 : 6;
-      nextPlayers = nextPlayers.map((entry) => {
-        if (entry.id !== item.playerId) return entry;
-        const signed = signYouthContract(entry, season, { moraleBoost });
-        const locked = lockContractTalks(
-          signed,
-          { season, week: currentWeek, weekday: 1 },
-          CONTRACT_SIGN_COOLDOWN_DAYS,
-        );
-        return grantAchievement(locked, ACHIEVEMENT.contractSigned);
-      });
+    case "contract":
       break;
-    }
     case "training_focus":
       nextPlayers = nextPlayers.map((entry) => {
         if (entry.id !== item.playerId) return entry;

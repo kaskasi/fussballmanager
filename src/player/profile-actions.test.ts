@@ -99,14 +99,15 @@ describe("profile actions", () => {
     expect(next.length).toBe(squad.length - 1);
   });
 
-  it("signs a youth contract from the profile menu", () => {
+  it("does not one-click sign youth contracts from profile actions", () => {
     const player = clonePlayer();
     player.squad_status = "u17";
     player.contract = null;
     player.state.morale = 50;
-    const { player: next } = applyProfileAction(player, "sign_contract", 1);
-    expect(next.contract?.wage_weekly).toBeGreaterThan(0);
-    expect(next.state.morale).toBeGreaterThan(50);
+    const { player: next, message } = applyProfileAction(player, "sign_contract", 1);
+    expect(next.contract).toBeNull();
+    expect(next.state.morale).toBe(50);
+    expect(message).toContain("Verhandeln");
   });
 
   it("blocks release when the pro squad would drop below 11", () => {

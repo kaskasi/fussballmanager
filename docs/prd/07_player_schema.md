@@ -1,7 +1,7 @@
 # /docs/prd/07_player_schema.md
 
 **Version:** 1.5
-**Last Updated:** 2026-10-04
+**Last Updated:** 2026-10-10
 **Status:** Final
 
 ---
@@ -65,6 +65,7 @@ interface Player {
     drive: number;               // 0.4–1.6, mutabel
     maturity_offset: number;     // -5 bis +5 Jahre, Eingang in effective_age (PRD 02.1)
     breakout_flags: string[];    // bereits gefeuerte Breakout-IDs
+    contract_weights?: ContractWeights; // F5.4 Berater-Prioritäten (Export entfernt)
   };
 
   // ── Dynamischer Zustand ────────────────────
@@ -79,6 +80,10 @@ interface Player {
     contract_failed_offers?: number; // F5.4, consecutive rejects
     desire_to_leave?: boolean;       // F5.4 after 3 fails
     contract_talks_locked_until_day?: number; // F5.4, calendar day index
+    contract_wage_cut_allowed?: boolean;      // F5.4 story-only wage cuts
+    contract_underpaid_since_day?: number;    // F5.4 underpaid arc start
+    contract_renegotiation_prompts?: number;  // 3 / 9 / 12 months mailed
+    contract_demoralized?: boolean;           // F5.4 permanent after 12mo arc
     scoring_streak?: number;                 // F2.8 Chancentod
     last_match_goals?: number;               // F2.8 hat-trick clear
     youth_site?: "hq" | string;              // F3.9; missing = "hq"
@@ -395,5 +400,6 @@ strings may remain as chronicle crumbs.
 - Savegame Sanitizer: PRD 08.3
 - UI Player Profile: PRD 09.2 (Screen 4), PRD 14.3
 - Market Value: PRD 05.1
-- Vertragsverhandlung: PRD 05.4 (`contract_failed_offers`, `desire_to_leave`)
+- Vertragsverhandlung: PRD 05.4 (`contract_failed_offers`, `desire_to_leave`,
+  `contract_underpaid_since_day`, `contract_renegotiation_prompts`, `contract_demoralized`)
 - Former candidate C1: PRD 15 (promoted)

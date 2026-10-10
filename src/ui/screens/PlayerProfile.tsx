@@ -155,6 +155,9 @@ export interface PlayerProfileProps {
   weekday?: number;
   actionFeedback?: string | null;
   onTransferNotice?: (message: string) => void;
+  /** Deep-link from Postfach / inbox — opens Verhandeln once on mount. */
+  openContractTalkOnMount?: boolean;
+  onContractTalkOpened?: () => void;
 }
 
 export function PlayerProfile({
@@ -188,6 +191,8 @@ export function PlayerProfile({
   weekday = 1,
   actionFeedback = null,
   onTransferNotice,
+  openContractTalkOnMount = false,
+  onContractTalkOpened,
 }: PlayerProfileProps) {
   const t = useT();
   const [tab, setTab] = useState<ProfileTab>("attributes");
@@ -201,6 +206,14 @@ export function PlayerProfile({
     setTab("attributes");
     setSaleConfirmOpen(false);
   }, [player.id]);
+
+  useEffect(() => {
+    if (!openContractTalkOnMount || !onContractOffer) return;
+    setTab("contract");
+    setOffer(defaultContractOffer(player, season));
+    setTalksOpen(true);
+    onContractTalkOpened?.();
+  }, [openContractTalkOnMount, onContractOffer, onContractTalkOpened, player.id, season]);
   const menuItems = profileMenuItems(player, owned, season, week ?? 1);
   const reveal = scoutEstimate ? scoutReveal(scoutEstimate.uncertaintyRange) : null;
   const hasScoutIntel = Boolean(scoutEstimate);
@@ -445,7 +458,15 @@ export function PlayerProfile({
                           <ProfileActionButton
                             label={item.label}
                             className={railProfileActionClass(item)}
-                            onClick={() => onProfileAction(item.action)}
+                            onClick={() => {
+                              if (item.action === "sign_contract") {
+                                setTab("contract");
+                                setOffer(defaultContractOffer(player, season));
+                                setTalksOpen(true);
+                                return;
+                              }
+                              onProfileAction(item.action);
+                            }}
                           />
                         </Hint>
                       </div>

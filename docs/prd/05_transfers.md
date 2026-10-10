@@ -224,6 +224,26 @@ Sperre ohne Tageszähler in der UI (Akte zeigt den Grund, nicht die Dauer):
 Intern: `state.contract_talks_locked_until_day` für die stille Frist nach
 Unterschrift und nach der dritten Absage.
 
+**Gehalts-Floor (v1):** Kein Gehalts-**cut** ohne Story-Flag
+`state.contract_wage_cut_allowed`. Angebote unter dem aktuellen Vertrag werden
+abgelehnt (außer Story).
+
+**Fair Startgehalt:** Neue Profiverträge und KI-Rivalen nutzen
+`fairInitialProContract` / `playerContractAsk` — kein künstlich aufgeblähtes
+Startgehalt.
+
+**Kauf atomar:** Ablöse vereinbart → `pending_purchases` → Vertrag im gleichen
+Flow → `commitPendingPurchase`; scheitert der Vertrag, Rollback via
+`abortPendingPurchase`.
+
+**Unterbezahlt-Arc:** Gehalt dauerhaft unter 85 % der fairen Forderung
+(`UNDERPAID_WAGE_RATIO`), mindestens eine Saison im Verein. Postfach-Items bei
+3 / 9 / 12 Monaten (`contract_renegotiate`); Deep-Link **Verhandeln**. Ohne
+Lösung nach 12 Monaten: `contract_demoralized`, Moral-Cap 45.
+
+**Jugend (F3.6):** Postfach-Aktion **Verhandeln** — kein One-Click
+`signYouthContract`; derselbe Modal-Dialog wie F5.4.
+
 Saison-Anzeige in der UI ist das Kalenderjahr: Startjahr 2026 plus
 abgeschlossene Saisons (`Saison 1` → `Saison 2026`). Intern bleibt der
 Zähler 1, 2, 3.

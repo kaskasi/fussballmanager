@@ -288,6 +288,7 @@ import {
   applyInboxDecision,
   deliverDailyInbox,
   deliverInboxForDays,
+  inboxActionOpensContractTalk,
   isStoryInboxItem,
   pendingInboxItems,
   storyChoiceId,
@@ -394,6 +395,7 @@ export default function App() {
   const [save, setSave] = useState<SaveGame>(() => bootstrapSave(getActiveSlot()));
   const [saveManagerOpen, setSaveManagerOpen] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
+  const [profileOpenContractTalk, setProfileOpenContractTalk] = useState(false);
   const [foreignPlayerId, setForeignPlayerId] = useState<string | null>(null);
   const [postfachItemId, setPostfachItemId] = useState<string | null>(null);
   const [campLeaderDismissCampId, setCampLeaderDismissCampId] = useState<string | null>(null);
@@ -1079,6 +1081,7 @@ export default function App() {
 
   const handleInboxDecision = useCallback(
     (itemId: string, action: DecisionAction) => {
+      let openContractTalkPlayerId: string | null = null;
       patchSession((current) => {
         const item = current.youthInbox.items.find((entry) => entry.id === itemId);
         const player = item?.playerId
@@ -1156,8 +1159,16 @@ export default function App() {
               ? `Entscheidung vertagt: ${playerName}`
               : `${actionLabel(action)}: ${playerName}`;
         const kind = action === "loan" ? "transfer" : "inbox";
+        if (item && inboxActionOpensContractTalk(action, item)) {
+          openContractTalkPlayerId = item.playerId;
+        }
         return sessionWithEvent(next, kind, message);
       });
+      if (openContractTalkPlayerId) {
+        setProfileId(openContractTalkPlayerId);
+        setProfileOpenContractTalk(true);
+        setProfileFeedback(null);
+      }
     },
     [patchSession],
   );
@@ -2787,7 +2798,10 @@ export default function App() {
           leaguePlace={shellClub.leaguePlace}
           onNavigate={handleAppNavigate}
           headerBack={shellHeaderBack}
-          onCloseProfile={() => setProfileId(null)}
+          onCloseProfile={() => {
+            setProfileId(null);
+            setProfileOpenContractTalk(false);
+          }}
           onCampusNavigate={() => undefined}
           hubActions={navActions}
           accessibility={accessibility}
@@ -2799,6 +2813,8 @@ export default function App() {
           week={week}
           season={season}
           weekday={weekday}
+          openContractTalkOnMount={profileOpenContractTalk}
+          onContractTalkOpened={() => setProfileOpenContractTalk(false)}
           transferWindowOpen={isTransferWindowOpen(week)}
           saleOffer={estimateSaleOffer(profilePlayer, season)}
           saleBlockedReason={(() => {

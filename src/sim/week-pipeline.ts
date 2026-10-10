@@ -47,6 +47,10 @@ import { withClubEvent, type ClubEvent } from "../inbox/club-events.ts";
 import { advanceAiTransferWeek } from "../transfers/ai-transfer-market.ts";
 import { scanInboundOffers } from "../transfers/inbound-offers.ts";
 import { advanceUnderpaidContractWeek } from "../transfers/underpaid-contract.ts";
+import {
+  enqueueUnderpaidRenegotiateItems,
+  type UnderpaidInboxPrompt,
+} from "../transfers/underpaid-inbox.ts";
 import { loanReturnMessage } from "../transfers/transfer-history.ts";
 import { isTransferWindowOpen } from "./transfer-windows.ts";
 import { advanceInboxWeek } from "../youth/decision-inbox.ts";
@@ -500,10 +504,22 @@ export async function simulateGameWeek(
     week: nextWeek,
     weekday: 1,
   };
+  const underpaidPrompts: UnderpaidInboxPrompt[] = [];
   playersWithCaStamp = playersWithCaStamp.map((player) => {
     if (player.club_id !== session.clubId) return player;
-    return advanceUnderpaidContractWeek(player, session.season, calendar).player;
+    const step = advanceUnderpaidContractWeek(player, session.season, calendar);
+    if (step.newPromptMonth) {
+      underpaidPrompts.push({ playerId: player.id, month: step.newPromptMonth });
+    }
+    return step.player;
   });
+  const youthInboxWithUnderpaid = enqueueUnderpaidRenegotiateItems(
+    advanced.inbox,
+    underpaidPrompts,
+    nextWeek,
+    playersWithCaStamp,
+    session.clubId,
+  );
 
   const scoutBoard = reconcileScoutBoard(
     advanceScoutWeek(
@@ -534,7 +550,7 @@ export async function simulateGameWeek(
       week: nextWeek,
       players: playersWithCaStamp,
       scoutBoard,
-      youthInbox: advanced.inbox,
+      youthInbox: youthInboxWithUnderpaid,
       league: leagueWithCareerStats,
       finances,
       stadium,

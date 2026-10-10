@@ -1,10 +1,8 @@
 import { ACHIEVEMENT, grantAchievement } from "./achievements.ts";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
-import { needsYouthContract, signYouthContract } from "./youth-contract.ts";
+import { needsYouthContract } from "./youth-contract.ts";
 import { estimateCa } from "../transfers/market-value.ts";
-import { CONTRACT_SIGN_COOLDOWN_DAYS, lockContractTalks } from "../transfers/contract-talks.ts";
 import { LEAGUE_LAST_WEEK } from "../sim/game-calendar.ts";
-import { formatSeasonLabel } from "../sim/season-label.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { canPromotePlayer } from "../youth/promotion-gate.ts";
@@ -121,11 +119,10 @@ export function profileMenuItems(
   }
 
   if (needsYouthContract(player, season)) {
-    const wageHint = player.age <= 15 ? 80 : player.age === 16 ? 120 : 175;
     items.push({
       action: "sign_contract",
-      label: "Jugendvertrag",
-      hint: `Vertrag bis ${formatSeasonLabel(season + (player.age <= 16 ? 3 : 2))} · ca. € ${wageHint}/Woche`,
+      label: "Verhandeln",
+      hint: "Jugendvertrag — Gehalt und Laufzeit im Vertragsdialog.",
     });
   }
 
@@ -285,18 +282,11 @@ export function applyProfileAction(
       };
       return { player: next, message: "Abstieg in U17 — Spieler ist enttäuscht." };
     }
-    case "sign_contract": {
-      if (!needsYouthContract(player, season)) {
-        return { player, message: "Für diesen Spieler ist kein neuer Jugendvertrag nötig." };
-      }
-      const signed = grantAchievement(signYouthContract(player, season, { moraleBoost: 8 }), ACHIEVEMENT.contractSigned);
-      const next = lockContractTalks(signed, { season, week, weekday }, CONTRACT_SIGN_COOLDOWN_DAYS);
-      const wage = next.contract?.wage_weekly ?? 0;
+    case "sign_contract":
       return {
-        player: next,
-        message: `Jugendvertrag bis ${formatSeasonLabel(next.contract?.until_season ?? season)} · € ${wage}/Woche · Moral steigt.`,
+        player,
+        message: "Jugendvertrag über Verhandeln im Vertrags-Tab abschließen.",
       };
-    }
     case "release": {
       return {
         player,

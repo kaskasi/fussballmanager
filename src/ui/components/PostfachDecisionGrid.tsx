@@ -54,6 +54,7 @@ function playerIcon(kind: DecisionInboxItem["kind"]): LucideIcon {
     case "promotion":
       return TrendingUp;
     case "contract_offer":
+    case "contract_renegotiate":
       return FileSignature;
     default:
       return ClipboardList;

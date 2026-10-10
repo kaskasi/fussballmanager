@@ -431,7 +431,7 @@ function primaryInboxAction(
   const preferred: DecisionAction[] =
     item.kind === "promotion"
       ? ["promote", "contract", "training_focus", "dismiss"]
-      : item.kind === "contract_offer"
+      : item.kind === "contract_offer" || item.kind === "contract_renegotiate"
         ? ["contract", "dismiss"]
         : item.kind === "departure_risk"
           ? ["contract", "loan", "dismiss"]

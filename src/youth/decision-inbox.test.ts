@@ -179,9 +179,8 @@ describe("decision inbox", () => {
       lastReport: null,
     };
     const result = applyInboxDecision(inbox, [player], "con_pl_contract_34", "contract", 1, 10);
-    expect(result.players[0]?.contract?.wage_weekly).toBe(175);
-    expect(result.players[0]?.state.morale).toBeGreaterThan(player.state.morale);
-    expect(result.players[0]?.history.achievements).toContain(ACHIEVEMENT.contractSigned);
+    expect(result.players[0]?.contract).toBeNull();
+    expect(result.inbox.resolvedIds).toContain("con_pl_contract_34");
   });
 
   it("drops players who ignore a departure warning", () => {

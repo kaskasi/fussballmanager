@@ -108,6 +108,19 @@ Canon choices use `story_state.choices` + `scheduled_payoffs`. Payoffs fire 1–
 
 ---
 
+## Finanzierung (F6.6 — PRD 11.12)
+
+Story-Kanäle: max. **3 Angebote** pro Karriere (lifetime), jeder Kanal **einmal** (Accept oder Decline schließt dauerhaft). Bank (`bank_term_loan`) ist **nicht** hier — nur Finanzscreen.
+
+| ID | Beat | Choice A | Choice B | Payoff A | Payoff B |
+|----|------|----------|----------|----------|----------|
+| `fan_stadium_coop` | Fanrat / Kurve | Genossenschaft — Anteile | Ablehnen | Einmal-Cash; Merch-Anteil Fans; Chronik | Kanal zu |
+| `loan_shark_instant` | Knochenbrecher | Sofortkredit nehmen | Ablehnen | Cash; extremer Wochenzins (§11.12.6) | Kanal zu |
+| `naming_rights_sale` | Vorstand / Sponsor | Namen verkaufen | Name behalten | Cash; `naming_rights_sponsor`; Fanbase-Dip | Kanal zu |
+| `merch_digi_drop` | Merch / Marketing | Limited Digi-Drop | Standard-Kollektion | `limited_drop` Boost 8–12 Wo | Kanal zu |
+
+---
+
 ## Player availability (Story–Sim Input Boundary)
 
 Canon beats may set **availability** only — not match scores. See PRD 01.

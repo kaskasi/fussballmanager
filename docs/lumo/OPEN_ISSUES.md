@@ -29,7 +29,7 @@ Per PRD 15.5.1 (2026-10-06), after sponsor deals (F6.5 done):
 | Medium | **F4.7 / F4.8** | M2 | Shortlist sparklines, false positives (prodigy trap). |
 | Medium | **F5.6** | M2 | AI transfer market discipline at full spec. |
 | Lower (M3+) | **F1.9** | M3 | Live tactical intervention during match — do not pull forward. |
-| Lower (M3+) | **F6.6** | M3 | Loans/investors — **blocked by v1 stack rule** until product lifts ban. |
+| Medium | **F6.6** | M3 | **PRD 11.12** spezifiziert (Bank + Story-Kanäle). Code pending: **F6.6-A** Bank/ Ledger, dann B/C Story. Investoren weiter out. |
 | Blocked | **C2** | — | **Bloodline intake** beat — needs PRD 07/10 entry before any code (`F11.8` candidate). |
 | Doc | **`13_meta.md`** | M4 | **Unwritten** — do not invent meta features until authored. |
 

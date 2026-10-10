@@ -1,8 +1,8 @@
 # /docs/prd/11_finances.md
 
-**Version:** 1.1  
-**Last Updated:** 2026-10-03  
-**Status:** Final (M1: F6.1–F6.4; F6.5 Stadion-Inventar gezogen)
+**Version:** 1.2  
+**Last Updated:** 2026-10-10  
+**Status:** Final (M1: F6.1–F6.4; F6.5–F6.7 teils shipped; **F6.6 ab Slice F6.6-A** spezifiziert in §11.12)
 
 ---
 
@@ -25,14 +25,20 @@ Diese PRD ersetzt den Mini-Stub in `src/economy/club-finances.ts` („one pool u
 | F6.3 | Ausgaben | Gehälter, Personal, Unterhalt |
 | F6.4 | Cashflow-Visualisierung | Wasserfall monatlich, Icon-first |
 
-**Out (v1, explizit deferred):**
+**In ab Slice F6.6-A (M3 — §11.12):**
+
+| ID | Feature |
+|---|---|
+| F6.6 | Bankkredit (Finanzscreen) + story-gated Notfall-Liquidität (Karriere-Caps) |
+
+**Out / deferred:**
 
 | ID | Grund |
 |---|---|
-| F6.5 | Sponsor-Verhandlungen — M2 |
-| F6.6 | Kredite/Investoren — Stack-Regel (keine Deep Finance in v1) |
-| F6.7 | Volle SKU-Hölle (M3) — v79+ liefert Merch-Stream **mit** Lager/Einkauf; fehlende Tiefe (z. B. Saisonkollektionen) bleibt deferred |
-| F6.8 | Finanzkrise-Szenario — M3 |
+| F6.5 | Sponsor-Verhandlungen — M2 (shipped separat, 11.10) |
+| F6.6 (Investoren) | Externe Investoren, Börsengang, Kredit-Derivate, Rating-Agenturen — **nicht** §11.12 |
+| F6.7 | Volle SKU-Hölle (M3) — v79+ Merch-Stream; Saisonkollektionen deferred |
+| F6.8 | Finanzkrise-Szenario — M3 (optional an Knochenbrecher-Default gekoppelt) |
 
 Matchday-Commerce (Wurst/Bier/Shirt-Preise) und Stadion-Editor liegen in F7; bis dahin nutzt F6.2 feste Ticket-Defaults.
 
@@ -55,7 +61,7 @@ Matchday-Commerce (Wurst/Bier/Shirt-Preise) und Stadion-Editor liegen in F7; bis
 3. **Cash ist Wahrheit:** `cash` ist die liquide Bilanz nach allen Buchungen. Budgets sind **Caps**, keine zweite Währung.
 4. **Wöchentliche Simulation, monatliche Berichte:** Die Woche simuliert (PRD 08); der Spieler sieht Cashflow in **4-Wochen-Monaten** (13 Perioden/Jahr).
 5. **Icon-first:** Finanzscreen = Wasserfall + Ampeln, keine Tabelle mit 40 Zeilen.
-6. **Keine Kredite in v1:** Negatives Cash ist erlaubt (Warnung), aber kein Kreditprodukt (F6.6).
+6. **Finanzierung (F6.6):** Negatives Cash ist erlaubt (Warnung). **Bankdarlehen** nur ab Slice F6.6-A (§11.12) — ein aktives Darlehen, Plausibilitätsprüfung. **Story-Kanäle** (Fan-Anteil, Knochenbrecher, …) nur Postfach, karrierebegrenzt; **kein** Knochenbrecher-Button im Finanzscreen. Investoren/Deep Debt bleiben out.
 
 ---
 
@@ -227,7 +233,14 @@ export type FinanceLineKind =
   | "facility_maintenance"
   | "transfer_fee"
   | "concessions"
+  | "merchandising"
   | "infrastructure"
+  | "loan_draw"
+  | "loan_interest"
+  | "loan_repayment"
+  | "financing_fan_coop_grant"
+  | "financing_naming_fee"
+  | "financing_shark_fee"
   | "other";
 
 export interface FinanceLine {
@@ -368,7 +381,119 @@ pipeline.club_finances = {
 
 - **Wochen 1–6:** Precinct- und Stadion-Käufe nutzen `infrastructureCostForWeek(base, week)` — bis **+20 %** Aufschlag in Woche 1, linear abnehmend bis Woche 7 = Basispreis (`src/economy/early-pacing.ts`).
 - **Confirm:** Gelände- und Tribünen-Ausgaben ≥ 25 000 € oder in Wochen 1–6 **immer** über Spend-Runway-Sheet (PRD 11.5), auch wenn der Betrag unter der normalen 100 k-Schwelle liegt.
-- **Kein** Kreditprodukt (F6.6 bleibt out). Kein hartes Wochenlimit an Käufen in v1 — nur Preis + Reibung.
+- **Kein** Kreditprodukt **bis F6.6-A** shipped ist. Kein hartes Wochenlimit an Käufen in v1 — nur Preis + Reibung.
+
+### 11.12 Finanzierung & Notfall-Liquidität (F6.6)
+
+**Slice F6.6-A:** Bankkredit + `FinancingCareerState` + Ledger. **F6.6-B/C:** Story-Kanäle. Code erst nach PRD; Migration bump pro Slice.
+
+#### 11.12.1 Design-Grundsätze
+
+1. **Zwei Ebenen:** `routine` (Regionalbank) vs. `story` (Postfach) — nie dieselbe UX.
+2. **Cash ist Wahrheit:** Kredit erhöht `cash` sofort; Zins und Tilgung als feste Wochenbuchungen.
+3. **Plausibilität vor Drama:** Bank lehnt untilgbare Profile ab; Story-Kanäle dürfen härter sein (Roguelike), aber nur mit informierter Wahl (Icon-first: Zins, Fanbase, Chronik).
+4. **Kein Pay-to-win:** Kein Geld ohne laufende Kosten; Knochenbrecher kann den Verein belasten — absichtlich, **einmal pro Story-Kanal**.
+5. **Determinismus:** Angebots-Timing aus Seed + Meilenstein (Liga, Runway, Gelände), kein wöchentliches Zufalls-Lotto.
+
+#### 11.12.2 Kanäle
+
+| ID | Kanal | UI | Auslöser (Beispiele) | Pro Karriere |
+|---|---|---|---|---|
+| `bank_term_loan` | Regionalbank — Tilgungsdarlehen | Finanzen → Runway / Panel „Bank“ | Runway niedrig, Board-Floor, nicht in Abstiegs-Not | Mehrere Darlehen **nacheinander** möglich, max. **1 aktiv** |
+| `fan_stadium_coop` | Fan-Anteil — Kurve finanziert Tribüne/Gelände | Postfach | Fanshop ≥ Stufe 2, hohe Fanbase, teure Erweiterung | **Ein Angebot**, danach Kanal tot |
+| `loan_shark_instant` | Knochenbrecher — Sofortkredit | Postfach | Cash &lt; 0, Abstiegszone, hoher Board-Druck | **Ein Angebot**, danach Kanal tot |
+| `naming_rights_sale` | Stadionnamen verkaufen | Postfach | Umbau / Act 3 / neues Stadion-Fenster | **Ein Angebot**, danach Kanal tot |
+| `merch_digi_drop` | Limited Edition Digi-Merch (kein Crypto/NFT) | Postfach + Merch-Hook | Merch-Overcap oder Saison-Highlight | **Ein Angebot**, danach Kanal tot |
+
+Neue Kanäle nur mit PRD-Eintrag + optional `financing_channels.json`.
+
+**Fan-Anteil:** Einmal-Cash oder kurze Entlastung; Gegenleistung z. B. Merch-Anteil an Genossenschaft, Fanbase-Risiko bei Misserfolg, Chronik „Kurve hält Anteile“.
+
+**Digi-Merch:** Limitierte Auflage (z. B. 500), Merch-Boost 8–12 Wochen; SKU-Flag `limited_drop`, **kein** Blockchain (F6.7-Slice separat).
+
+#### 11.12.3 Karriere-Caps
+
+Persistenz: `state.pipeline.financing` (PRD 08.8).
+
+```typescript
+interface BankLoan {
+  principal: number;
+  remaining: number;
+  apr_weekly: number;
+  weekly_payment: number;
+  drawn_season: number;
+  drawn_week: number;
+}
+
+interface FinancingCareerState {
+  /** Story-Kanäle (ohne Bank): wie viele Angebote insgesamt erschienen. */
+  story_offers_shown: number;
+  /** Kanal-ID → offered | accepted | declined | expired */
+  channel_status: Record<string, string>;
+  active_bank_loan?: BankLoan;
+  /** Nach vollständiger Tilgung: earliest week index for next bank draw */
+  bank_cooldown_until_week?: number;
+}
+```
+
+**Regeln:**
+
+- **Karriere-lifetime:** höchstens **3** Story-Finanzierungs-**Angebote** insgesamt (`story_offers_shown ≤ 3`). Fenster-Referenz: erste **10 abgeschlossenen Saisons** — Counter **reset nicht**.
+- Jeder Story-Kanal: nach **Accept** oder **Decline** → Kanal **dauerhaft** geschlossen (kein zweites Angebot desselben IDs).
+- **Bank** zählt **nicht** gegen die 3 Story-Angebote; max. 1 aktives Darlehen; Cooldown nach Tilgung (Slice F6.6-A Konstante).
+
+#### 11.12.4 Bank — Plausibilität (deterministisch)
+
+**Input:** `cash`, Wochenlohnsumme, `runway_weeks`, Tabellenplatz, `board.pressure`, optional Monats-Snapshots.
+
+**Output:** `{ allowed, max_principal, apr_weekly, term_weeks, reason? }`
+
+Pseudocode (Unit-Tests in F6.6-A):
+
+```typescript
+projected_season_revenue = sponsorship*52 + tv*52 + ticket_heuristic;
+serviceable = max(0, projected_season_revenue - wage_bill * 52);
+max_principal = min(CAP_BY_DIVISION, K * serviceable);
+allowed = max_principal >= MIN_LOAN
+  && !active_bank_loan
+  && !(runway_weeks < 2 && relegation_zone && pressure > 70);
+```
+
+**UI:** [`FinancesScreen`](../../src/ui/screens/FinancesScreen.tsx) Runway-Tab — Betrag-Slider, Rate/Woche, Ampel Ja/Nein, Ablehnungsgrund. **Kein** gelber Header-NEXT (design.md §10).
+
+#### 11.12.5 Story-Pipeline
+
+- Wochenende: `evaluateFinancingOffers(session)` → höchstens **ein** neues Story-Angebot pro Woche, wenn Caps erlauben.
+- Postfach: Kind `financing_offer` oder Story-Source `board` / `fan` — zählt gegen **max. 4** offene Inbox-Items (PRD 03.4).
+- Accept → `applyFinancingChoice(channelId, choiceId)` → Ledger + Side-Effects (Stadionname, Merch-Flag, …).
+
+Story-Seeds: PRD 19 (Finanzierung); `empire_hotel_vs_pitch` bleibt Imperium (F7), nicht Liquidität.
+
+#### 11.12.6 Ledger & Folgen
+
+Wochenbuchungen (ergänzen 11.4):
+
+| Kind | Richtung | Bedeutung |
+|---|---|---|
+| `loan_draw` | + | Auszahlung Bank / Shark |
+| `loan_interest` | − | Zins (Bank moderat; Shark hoch, z. B. 2–4 % **pro Woche** auf Restschuld) |
+| `loan_repayment` | − | Tilgung |
+| `financing_fan_coop_grant` | + | Fan-Anteil Einmalzahlung |
+| `financing_naming_fee` | + | Namensrecht |
+| `financing_shark_fee` | − | Shark-Gebühren / Strafzins |
+
+**Shark-Default:** Board-Druck, Moral-Cap, Flavor „Verkauf nötig“ — **kein** Auto-Verkauf.
+
+**Namensrecht:** `stadium.name` + `naming_rights_sponsor` bis `until_season`; einmaliger Fanbase-Dip.
+
+#### 11.12.7 Bewusst deferred
+
+- Externe Investoren, Aktien, Kredit-Rating
+- Sportliche **Player-Loans** (PRD 05) ≠ Vereins-Schulden
+- Sekundärmarkt Fan-Anteile
+- Blockchain / NFT
+
+**Implementierungs-Slices (Code):** F6.6-A Bank → F6.6-B Fan+Shark → F6.6-C Naming+Digi-Drop; F6.8 Finanzkrise separat.
 
 ### 11.10 Sponsor-Inventar (F6.5)
 
@@ -383,7 +508,7 @@ belegte Slots addieren.
 
 ## References
 
-- Feature-IDs: F6.1–F6.4 in PRD 10; F6.5 Inventar-Slice (11.10)
+- Feature-IDs: F6.1–F6.4 in PRD 10; F6.5 (11.10); **F6.6 (11.12)**
 - Transfers & Verträge: PRD 05
 - Stadion-Tickets (später dynamisch): F7.1, F7.5
 - Liga-Tabellenplatz: `src/persistence/league-state.ts`

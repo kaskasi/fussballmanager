@@ -274,7 +274,7 @@ H1 "Finanzen · Monat 1"                     [Monat ◀ ▶]
 - Pro Zeile: Icon (Lucide) links vom Postennamen. Zahlen rechtsbündig, Display-Font.
 - KPI-Karten: gestapelt in Context-Spalte.
 
-
+**Runway / Bank (F6.6-A, PRD 11.12):** Tab **Runway** (oder Unterpanel) zeigt neben Runway-Wochen eine **Bank**-Karte: Restschuld, Rate/Woche, Ampel „Bank sagt ja/nein“, Slider Darlehensbetrag. Story-Kanäle (Fan-Anteil, Knochenbrecher, …) **nur** Postfach — keine zweite Bank-Karte im Content. Kein gelber Fortschritts-CTA (§10).
 
 ### 9.3 Stadion (Tabs: Grundriss | Gelände | Ausbau)
 

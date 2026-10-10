@@ -115,7 +115,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F6.3 | Ausgaben | M1 | Gehälter, Personal, Unterhalt |
 | F6.4 | Cashflow-Visualisierung | M1 | Wasserfall-Diagramm monatlich, Icon-first |
 | F6.5 | Sponsor-Verhandlungen | M2 | Laufzeiten, Erfolgsstaffelung |
-| F6.6 | Investoren/Kredit | M3 | Notfall-Option, Zinsen. Liegt außerhalb der v1-Stack-Regel (keine Kredite/Investoren) und wird erst gebaut, wenn diese Regel fällt |
+| F6.6 | Finanzierung & Notfall-Liquidität | M3 | **Ab Slice F6.6-A:** Bankkredit im Finanzscreen (§11.12); story-gated Kanäle (Fan-Anteil, Knochenbrecher, Namensrecht, Digi-Merch) mit Karriere-Caps. **Keine** Investoren / Deep-Debt-Instrumente |
 | F6.7 | Merchandise | M3 | An Popularität gekoppelt |
 | F6.8 | Finanzkrise-Szenario | M3 | Abzüge, Verwaltung (Härte!) |
 

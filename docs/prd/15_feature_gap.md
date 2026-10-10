@@ -82,7 +82,7 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 | Jugend-XI, Arcade-Talent-Loadout (FuMaFu max. 3 click-swap) | Gesetz 6; Stamps sind Identität, kein Weekly-Respec |
 | Manager-Haus, Auto, Villa | PRD 01: keine private Lebenssimulation |
 | Dating-Sim / Haushalts-Minispiel | dasselbe; C2 ist Intake-Tag, kein Sims |
-| Kredite / Investoren | F6.6, Stack-Regel v1 |
+| Externe Investoren / Deep Debt | F6.6 Investoren-Teil — weiter deferred (§11.12.7) |
 | FuMaFu: Imbiss bewusst weglassen | widerspricht Economy-Säule |
 | FM11-Sponsor-Klausel-Enzyklopädie | F6.5 ist Ort + Laufzeit, kein Juristen-Screen |
 | Relatives 5-Sterne-Potential | Gesetz 1 |
@@ -93,6 +93,7 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 | ID | M | Spec | Stand UI/Code | Lücke |
 |---|---|---|---|---|
 | F6.7 | M3 → **Slice v79+** | Merch × Popularität + Lager | `merchandising.ts`, Merch-Screen | Ledger + Screen + SKU-Bestand/Bulk/Firesale; **Kapazitäts-Hinweise** (Overcap-Banner, Finanzen-Analytics); Matchday-Vorschau ohne Shop-Doppelzählung. Brustlogo F6.5. Saisonkollektionen deferred. |
+| F6.6 | M3 | Finanzierung §11.12 | — | **PRD 11.12 done;** Code **F6.6-A** Bank + Ledger pending; Story-Kanäle F6.6-B/C |
 | F6.4 | M1 | Wasserfall 11.5 | Icon-Balken + 13-Mo-Sparkline | — |
 | F7.1 | M1 | 2D-Grundriss, Preise | Grundriss + Banden auf Tribünen + Shirt | Gelände-Tab separat |
 | F7.2 | M2 | Kapazität, VIP, Heizung | Shop-Liste + Levels · extra Banden bei Steh/Sitz | Shop unter der Karte |
@@ -216,7 +217,7 @@ nicht F10.6 (Cup). **F2.8** ist der Spieler-Identitäts-USP (2003-Stamps).
 
 #### M3 — Imperium
 
-F1.9 · F2.6 · F4.5 F4.6 F4.9 · F5.8 · F6.6 (nur wenn Stack-Regel fällt) ·
+F1.9 · F2.6 · F4.5 F4.6 F4.9 · F5.8 · **F6.6** (11.12 spec; Code F6.6-A pending) ·
 **F6.7 F6.8** · **F7.3–F7.6 F7.8** · F8.4–F8.6 · F9.5 F9.6 · F10.7 ·
 F11.4–F11.6 · F12.5
 

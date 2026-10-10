@@ -1,7 +1,7 @@
 # /docs/prd/08_savegame.md
 
-**Version:** 1.1
-**Last Updated:** 2026-09-22
+**Version:** 1.2
+**Last Updated:** 2026-10-10
 **Status:** Final
 
 ---
@@ -121,6 +121,30 @@ Ein Crash zwischen zwei Dateien lässt die ältere Datei intakt. Der Lade-Pfad p
 | Speichern nur am Wochenende, nach Abschluss der Sim | Aufruf während der Sim wirft |
 | Migrationen laufen linear | `migration_001` vor `migration_002` |
 | Export entfernt `hidden` | Kein `anlage` und kein `drive` im Export |
+
+### 08.8 Finanzierung (F6.6 — ab Migration F6.6-A)
+
+Block in `state.json` unter `pipeline.financing` (vollständige Felder PRD 11.12.3):
+
+```typescript
+interface BankLoan {
+  principal: number;
+  remaining: number;
+  apr_weekly: number;
+  weekly_payment: number;
+  drawn_season: number;
+  drawn_week: number;
+}
+
+interface FinancingCareerState {
+  story_offers_shown: number;
+  channel_status: Record<string, "offered" | "accepted" | "declined" | "expired">;
+  active_bank_loan?: BankLoan;
+  bank_cooldown_until_week?: number;
+}
+```
+
+Stadion-Erweiterung bei Namensrecht (Slice F6.6-C): optional `naming_rights_sponsor`, `naming_rights_until_season` auf `ClubStadium` — eigene Migration.
 
 ## References
 

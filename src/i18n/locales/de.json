@@ -852,6 +852,7 @@
   "shell.weekSimFailed": "Wochenabschluss fehlgeschlagen — bitte erneut versuchen oder neu laden.",
   "shell.crashMessage": "Etwas ist schiefgelaufen. Dein Spielstand ist lokal gespeichert — Seite neu laden.",
   "shell.crashReload": "Neu laden",
+  "shell.saveWriteFailed": "Spielstand konnte nicht im Browser gespeichert werden — bitte exportieren und Speicher freimachen.",
   "shell.modal.close": "Schließen",
   "shell.weekday.fri": "Fr",
   "shell.weekday.mon": "Mo",

@@ -852,6 +852,7 @@
   "shell.weekSimFailed": "Week advance failed — try again or reload the page.",
   "shell.crashMessage": "Something went wrong. Your save is stored locally — reload the page.",
   "shell.crashReload": "Reload",
+  "shell.saveWriteFailed": "Could not write save to browser storage — export your game and free space.",
   "shell.modal.close": "Close",
   "shell.weekday.fri": "Fri",
   "shell.weekday.mon": "Mon",

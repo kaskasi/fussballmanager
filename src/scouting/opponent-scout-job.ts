@@ -56,7 +56,7 @@ export function canStartOpponentScout(
   if (board.active_opponent_scout) return { ok: false, reason: "job_active" };
   const matchId = opponentScoutMatchIdFromSetup(season, setup);
   const busy = busyScoutIds(board);
-  const free = network.scouts.filter((scout) => !busy.includes(scout.id));
+  const free = (network.scouts ?? []).filter((scout) => !busy.includes(scout.id));
   if (free.length === 0) return { ok: false, reason: "no_scout" };
   void matchId;
   return { ok: true, reason: "ok" };

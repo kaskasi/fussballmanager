@@ -29,9 +29,15 @@ export class AppErrorBoundary extends Component<Props, State> {
     if (!this.state.error) {
       return this.props.children;
     }
+    const detail = this.state.error?.message?.trim();
     return (
       <div className="app-error-boundary" role="alert">
         <p>{t("shell.crashMessage")}</p>
+        {detail ? (
+          <p className="app-error-boundary-detail">
+            <code>{detail.slice(0, 240)}</code>
+          </p>
+        ) : null}
         <button type="button" className="btn btn-secondary" onClick={this.reload}>
           {t("shell.crashReload")}
         </button>

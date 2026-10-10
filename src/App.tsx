@@ -22,7 +22,12 @@ import {
   saveFromSession,
   sessionFromSave,
 } from "./persistence/game-session.ts";
-import { loadLocalSave, removeLocalSave, writeLocalSave } from "./persistence/local-save.ts";
+import {
+  loadLocalSave,
+  removeLocalSave,
+  tryWriteLocalSave,
+  writeLocalSave,
+} from "./persistence/local-save.ts";
 import { getActiveSlot, setActiveSlot } from "./persistence/save-slots.ts";
 import type { SaveGame } from "./persistence/savegame-model.ts";
 import {
@@ -577,13 +582,18 @@ export default function App() {
   }
 
   const patchSession = useCallback((recipe: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>) => {
+    let persisted = true;
     setSave((current) => {
       const next = saveFromSession(recipe(sessionFromSave(current)), current);
-      writeLocalSave(activeSlot, next);
+      persisted = tryWriteLocalSave(activeSlot, next);
       return next;
     });
-    flashSaveToast();
-  }, [activeSlot, flashSaveToast]);
+    if (persisted) {
+      flashSaveToast();
+    } else {
+      flashNotice(t("shell.saveWriteFailed"), "warn");
+    }
+  }, [activeSlot, flashNotice, flashSaveToast]);
 
   const {
     handleOpenNegotiation,
@@ -670,6 +680,7 @@ export default function App() {
     const override = watchedMatch ?? pendingWatchedMatch;
     const result = await simulateGameWeek(snapshot, override);
     setPendingWatchedMatch(null);
+    let weekSimPersisted = true;
     setSave((current) => {
       const weekStamp = {
         season: result.session.season,
@@ -707,11 +718,15 @@ export default function App() {
         };
       }
       const next = saveFromSession(nextSession, current);
-      writeLocalSave(activeSlot, next);
+      weekSimPersisted = tryWriteLocalSave(activeSlot, next);
       return next;
     });
-    flashSaveToast();
-  }, [activeSlot, flashSaveToast, pendingWatchedMatch, save]);
+    if (weekSimPersisted) {
+      flashSaveToast();
+    } else {
+      flashNotice(t("shell.saveWriteFailed"), "warn");
+    }
+  }, [activeSlot, flashNotice, flashSaveToast, pendingWatchedMatch, save]);
 
   const simulateWeek = useCallback(async () => {
     if (simulating) return;
@@ -971,7 +986,13 @@ export default function App() {
       return;
     }
 
-    if (shouldNavigateToCalendarBeforeTimeStep(screen, false, session)) {
+    if (
+      shouldNavigateToCalendarBeforeTimeStep(
+        screen,
+        hasInboxBlockerForNext(session, youthInbox, players),
+        session,
+      )
+    ) {
       setScreen("calendar");
       return;
     }

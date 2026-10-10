@@ -15301,3 +15301,10 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   max-width: 28rem;
   margin: 0 auto;
 }
+
+.app-error-boundary-detail {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--tinte-muted, #6b5c52);
+  word-break: break-word;
+}

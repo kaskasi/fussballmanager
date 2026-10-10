@@ -823,6 +823,7 @@
   "shell.weekSimFailed": "周推进失败 — 请重试或刷新页面。",
   "shell.crashMessage": "出错了。存档在本地 — 请刷新页面。",
   "shell.crashReload": "刷新",
+  "shell.saveWriteFailed": "无法写入浏览器存档 — 请导出并释放存储空间。",
   "shell.modal.close": "关闭",
   "shell.weekday.fri": "五",
   "shell.weekday.mon": "一",

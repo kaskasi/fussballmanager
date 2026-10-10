@@ -77,7 +77,21 @@ export function loadLocalSave(slot: number): SaveGame | null {
 }
 
 export function writeLocalSave(slot: number, save: SaveGame): void {
-  localStorage.setItem(storageKey(slot), JSON.stringify(save));
+  const ok = tryWriteLocalSave(slot, save);
+  if (!ok) {
+    throw new Error("localStorage save failed (quota or private mode)");
+  }
+}
+
+/** Persist without throwing — use inside React setState updaters. */
+export function tryWriteLocalSave(slot: number, save: SaveGame): boolean {
+  try {
+    localStorage.setItem(storageKey(slot), JSON.stringify(save));
+    return true;
+  } catch (error) {
+    console.error("Failed to write local save", error);
+    return false;
+  }
 }
 
 export function removeLocalSave(slot: number): void {

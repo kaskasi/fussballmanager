@@ -55,6 +55,10 @@ export interface ClubStadium {
   kiosk_unit_price_eur?: number;
   /** F7.3 — Bier unit price (€). */
   beer_unit_price_eur?: number;
+  /** F6.6-C — sold naming rights revert after season. */
+  naming_rights_sponsor?: string;
+  naming_rights_until_season?: number;
+  stadium_name_before_naming?: string;
 }
 
 export const DEFAULT_FANBASE = 52;
@@ -149,6 +153,23 @@ function defaultClubStadiumSeed(): ClubStadium {
 /** Default layout — totals ~8k seats and matches division economy ticket yield. */
 export function defaultClubStadium(): ClubStadium {
   return defaultClubStadiumSeed();
+}
+
+export function revertExpiredNamingRights(stadium: ClubStadium, season: number): ClubStadium {
+  if (
+    stadium.naming_rights_until_season == null ||
+    season <= stadium.naming_rights_until_season ||
+    !stadium.stadium_name_before_naming
+  ) {
+    return stadium;
+  }
+  return normalizeClubStadium({
+    ...stadium,
+    name: stadium.stadium_name_before_naming,
+    naming_rights_sponsor: undefined,
+    naming_rights_until_season: undefined,
+    stadium_name_before_naming: undefined,
+  });
 }
 
 export function normalizeClubStadium(stadium: ClubStadium): ClubStadium {

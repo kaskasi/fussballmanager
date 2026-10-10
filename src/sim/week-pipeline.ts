@@ -25,6 +25,8 @@ import {
 import { advanceWeeklyClubFinances } from "../economy/club-finances.ts";
 import { advanceWeeklyLoanServicing } from "../economy/financing.ts";
 import { advanceFinancingStoryOffersWeek } from "../economy/financing-pipeline.ts";
+import { advanceFinancialCrisisWeek } from "../economy/financing-crisis.ts";
+import { revertExpiredNamingRights } from "../stadium/club-stadium.ts";
 import { advanceMerchandisingWeek } from "../economy/merchandising.ts";
 import {
   merchSaleSummaryClubEventMessage,
@@ -587,6 +589,7 @@ export async function simulateGameWeek(
   financingAfterLoans = financingOfferStep.financing;
 
   const nextSeason = seasonEnded ? session.season + 1 : session.season;
+  const stadiumAfterNaming = revertExpiredNamingRights(narrativeStep.stadium, nextSeason);
   const playersForNewWeek = stampWeekStartAttributesBatch(
     narrativeStep.players,
     nextSeason,
@@ -603,7 +606,7 @@ export async function simulateGameWeek(
     league: leagueWithCareerStats,
       finances,
       financing: financingAfterLoans,
-      stadium: narrativeStep.stadium,
+      stadium: stadiumAfterNaming,
       board: narrativeStep.board,
     trainingPlan: resolveTrainingPlanAfterWeek(narrativeStep.storyState),
     trainingReminderWeek: undefined,

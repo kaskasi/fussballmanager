@@ -121,6 +121,9 @@ export interface ClubMerchandising {
   over_capacity_weeks?: Partial<Record<MerchSkuId, number>>;
   /** UI-Modal nach Sale-Ende (Postfach-Mail zusätzlich via Wochen-Pipeline). */
   pending_sale_summaries?: MerchSaleSummary[];
+  /** F6.6-C — limited digi drop demand boost until career week index. */
+  limited_drop_until_career_week?: number;
+  limited_drop_demand_multiplier?: number;
 }
 
 export interface MerchandisingEconomics {
@@ -274,6 +277,18 @@ function simulateWeeklySales(
     Math.round((footfall / 24) * channel * MERCH_UNIT_SCALE),
   );
   const starBoost = trikotStarBoost(ctx.players, ctx.clubId);
+  let limitedDropScale = 1;
+  if (
+    ctx.season != null &&
+    ctx.week != null &&
+    merch.limited_drop_until_career_week != null &&
+    merch.limited_drop_demand_multiplier != null
+  ) {
+    const now = merchCareerWeekIndex(ctx.season, ctx.week);
+    if (now <= merch.limited_drop_until_career_week) {
+      limitedDropScale = merch.limited_drop_demand_multiplier;
+    }
+  }
 
   let gross = 0;
   let cogs = 0;
@@ -293,6 +308,7 @@ function simulateWeeklySales(
       unitPool *
         weight *
         MERCH_SALES_DEMAND_MULTIPLIER *
+        limitedDropScale *
         priceDemandMultiplier(row.retail_price, MERCH_SKU_REFERENCE_RETAIL[id]),
     );
     const sold = Math.min(row.stock, Math.max(0, want));

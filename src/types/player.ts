@@ -22,6 +22,8 @@ export interface Player {
     drive: number;
     maturity_offset: number;
     breakout_flags: string[];
+    /** F5.4 — Dirichlet weights at generation (PRD 05.4). */
+    contract_weights?: import("../transfers/contract-priorities.ts").ContractWeights;
   };
 
   state: {
@@ -58,6 +60,16 @@ export interface Player {
     desire_to_leave?: boolean;
     /** F5.4 — calendar day index; no new talks until this day. */
     contract_talks_locked_until_day?: number;
+    /** Story-only — allows wage below current contract (PRD 05.4). */
+    contract_wage_cut_allowed?: boolean;
+    /** F5.4 — calendar day when underpaid unrest started. */
+    contract_underpaid_since_day?: number;
+    /** F5.4 — renegotiation prompts sent (3 / 9 / 12 months). */
+    contract_renegotiation_prompts?: number;
+    /** F5.4 — permanent demoralization after failed underpaid arc. */
+    contract_demoralized?: boolean;
+    /** F5.6 — seasons in club youth/pro pipeline for talent watch. */
+    academy_tenure_seasons?: number;
     /** Manager praise / encourage — last use (4-week cooldown). */
     last_praise_season?: number;
     last_praise_week?: number;

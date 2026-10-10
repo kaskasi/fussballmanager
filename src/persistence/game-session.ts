@@ -34,6 +34,8 @@ function normalizeTransferState(state?: TransferState): TransferState {
     negotiations: base.negotiations ?? [],
     ai_budgets: base.ai_budgets ?? {},
     pending_transfers: base.pending_transfers ?? [],
+    pending_purchases: base.pending_purchases ?? [],
+    inbound_offers: base.inbound_offers ?? [],
   };
 }
 import { MONDAY } from "../sim/day-calendar.ts";

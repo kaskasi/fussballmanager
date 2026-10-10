@@ -10,6 +10,11 @@ export {
 export { openPurchaseNegotiation } from "./open-purchase-negotiation.ts";
 export { finalizePlayerPurchase } from "./finalize-player-purchase.ts";
 export {
+  abortPendingPurchase,
+  commitPendingPurchase,
+  stagePendingPurchase,
+} from "./pending-player-purchase.ts";
+export {
   canSubmitNegotiationOffer,
   negotiationGates,
 } from "./negotiation-readiness.ts";

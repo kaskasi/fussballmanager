@@ -49,6 +49,7 @@ export interface AiClubBudget {
   transfer_budget: number;
   spent: number;
   earned: number;
+  distressed?: boolean;
 }
 
 export interface TransferState {
@@ -61,6 +62,10 @@ export interface TransferState {
   ai_budgets?: Record<string, AiClubBudget>;
   /** F5.7 — pre-contracts effective at contract end (PRD 05.6). */
   pending_transfers?: PendingTransfer[];
+  /** F5.4 — fee agreed, awaiting player contract before roster move. */
+  pending_purchases?: import("./pending-player-purchase.ts").PendingPlayerPurchase[];
+  /** F5.6 — inbound bid on user's player. */
+  inbound_offers?: import("./inbound-offers.ts").InboundTransferOffer[];
 }
 
 export function emptyTransferState(): TransferState {
@@ -71,6 +76,8 @@ export function emptyTransferState(): TransferState {
     negotiations: [],
     ai_budgets: {},
     pending_transfers: [],
+    pending_purchases: [],
+    inbound_offers: [],
   };
 }
 
@@ -474,10 +481,15 @@ export function completePurchase(
   buyerClubId: string,
   season: number,
 ): Player {
+  const morale =
+    player.state.desire_to_leave && player.club_id !== buyerClubId
+      ? Math.min(player.state.morale, 60)
+      : player.state.morale;
   return {
     ...player,
     club_id: buyerClubId,
     squad_status: player.age >= 18 ? "pro" : player.squad_status === "u19" ? "u19" : "u17",
+    state: { ...player.state, morale },
     contract: player.contract ?? {
       wage_weekly: Math.max(200, Math.round(player.market_value * 0.008 / 52)),
       bonus_goal: 0,

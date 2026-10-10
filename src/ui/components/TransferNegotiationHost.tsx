@@ -7,6 +7,7 @@ import {
   transferBudget,
   weeklyWageBill,
   formatClubCash,
+  wageBudgetHeadroom,
   type ClubFinances,
 } from "../../economy/club-finances.ts";
 import { boardCashFloor } from "../../economy/spend-runway.ts";
@@ -28,10 +29,21 @@ import {
   openPurchaseNegotiation,
   resolvePurchaseTarget,
 } from "../../transfers/index.ts";
+import {
+  abortPendingPurchase,
+  commitPendingPurchase,
+} from "../../transfers/pending-player-purchase.ts";
+import {
+  defaultContractOffer,
+  type ContractOffer,
+} from "../../transfers/contract-talks.ts";
 import type { TransferState } from "../../transfers/negotiations.ts";
 import { TransferNegotiationModal } from "./TransferNegotiationModal.tsx";
+import { ContractTalksPanel } from "./ContractTalksPanel.tsx";
 
 type PatchSession = (updater: (current: GameSession) => GameSession) => void;
+
+export type NegotiationUiPhase = "active" | "contract" | "won" | "lost";
 
 export function useTransferNegotiation(args: {
   session: GameSession;
@@ -52,7 +64,7 @@ export function useTransferNegotiation(args: {
 }): {
   handleOpenNegotiation: (playerId: string) => void;
   negotiationOverlay: ReactNode;
-  negotiationUiPhase: "active" | "won" | "lost";
+  negotiationUiPhase: NegotiationUiPhase;
   foreignProfileTarget: BoardTarget | null;
 } {
   const {
@@ -76,14 +88,16 @@ export function useTransferNegotiation(args: {
   const [negotiationPlayerId, setNegotiationPlayerId] = useState<string | null>(null);
   const [negotiationMessage, setNegotiationMessage] = useState<string | null>(null);
   const [negotiationOpenError, setNegotiationOpenError] = useState<string | null>(null);
-  const [negotiationUiPhase, setNegotiationUiPhase] = useState<"active" | "won" | "lost">("active");
+  const [negotiationUiPhase, setNegotiationUiPhase] = useState<NegotiationUiPhase>("active");
   const [negotiationModalEpoch, setNegotiationModalEpoch] = useState(0);
+  const [agreedFee, setAgreedFee] = useState<number | null>(null);
+  const [contractOffer, setContractOffer] = useState<ContractOffer | null>(null);
 
   const foreignTarget = foreignPlayerId
     ? resolvePurchaseTarget(scoutBoard, foreignPlayerId, rivalPlayers)
     : null;
 
-  const completeNegotiationPurchase = useCallback(
+  const stageFeeAgreement = useCallback(
     (playerId: string, fee: number, afterNegotiationState: GameSession) => {
       const purchase = finalizePlayerPurchase(afterNegotiationState, playerId, fee);
       if (purchase.kind === "blocked") {
@@ -92,17 +106,38 @@ export function useTransferNegotiation(args: {
         return false;
       }
       patchSession((current) =>
-        sessionWithEvent(purchase.session, "transfer", purchase.summary),
+        sessionWithEvent(
+          { ...current, transferState: purchase.session.transferState },
+          "transfer",
+          t("transfer.purchase.feeAgreed"),
+        ),
       );
-      const signed = purchase.session.players.find((player) => player.id === playerId);
-      setNegotiationMessage(
-        t("transfer.negotiation.resolution.won", {
-          name: signed ? formatPlayerName(signed) : playerId,
-          fee: formatClubCash(fee),
-        }),
+      const target = resolvePurchaseTarget(
+        purchase.session.scoutBoard,
+        playerId,
+        purchase.session.rivalPlayers,
       );
-      setNegotiationUiPhase("won");
+      if (target) {
+        setContractOffer(defaultContractOffer(target.player, season));
+      }
+      setAgreedFee(fee);
+      setNegotiationMessage(t("transfer.purchase.contractRequiredHint"));
+      setNegotiationUiPhase("contract");
       return true;
+    },
+    [patchSession, season, sessionWithEvent],
+  );
+
+  const abortPendingDeal = useCallback(
+    (playerId: string) => {
+      patchSession((current) => {
+        const aborted = abortPendingPurchase(current, playerId);
+        return sessionWithEvent(aborted.session, "transfer", aborted.summary);
+      });
+      setNegotiationMessage(t("transfer.purchase.dealCollapsed"));
+      setNegotiationUiPhase("lost");
+      setAgreedFee(null);
+      setContractOffer(null);
     },
     [patchSession, sessionWithEvent],
   );
@@ -113,6 +148,8 @@ export function useTransferNegotiation(args: {
       setNegotiationMessage(null);
       setNegotiationOpenError(null);
       setNegotiationUiPhase("active");
+      setAgreedFee(null);
+      setContractOffer(null);
       setNegotiationModalEpoch((epoch) => epoch + 1);
       const result = openPurchaseNegotiation({
         scoutBoard: session.scoutBoard,
@@ -185,7 +222,7 @@ export function useTransferNegotiation(args: {
         return { ...current, transferState: round.state };
       });
       if (round.accepted) {
-        completeNegotiationPurchase(negotiationPlayerId, fee, afterNeg);
+        stageFeeAgreement(negotiationPlayerId, fee, afterNeg);
         return;
       }
       setNegotiationMessage(round.message);
@@ -194,12 +231,12 @@ export function useTransferNegotiation(args: {
       }
     },
     [
-      completeNegotiationPurchase,
       finances,
       negotiationPlayerId,
       patchSession,
       session,
       sessionWithEvent,
+      stageFeeAgreement,
       week,
     ],
   );
@@ -236,14 +273,49 @@ export function useTransferNegotiation(args: {
       setNegotiationUiPhase("lost");
       return;
     }
-    completeNegotiationPurchase(negotiationPlayerId, fee, afterNeg);
-  }, [completeNegotiationPurchase, negotiationPlayerId, patchSession, session, week]);
+    stageFeeAgreement(negotiationPlayerId, fee, afterNeg);
+  }, [negotiationPlayerId, patchSession, session, stageFeeAgreement, week]);
+
+  const handleContractSubmit = useCallback(() => {
+    if (!negotiationPlayerId || !contractOffer) return;
+    patchSession((current) => {
+      const result = commitPendingPurchase(current, negotiationPlayerId, contractOffer);
+      if (result.kind === "blocked") {
+        setNegotiationMessage(result.reason);
+        return current;
+      }
+      if (result.kind === "contract_rejected") {
+        setNegotiationMessage(result.message);
+        if (result.abort) {
+          queueMicrotask(() => abortPendingDeal(negotiationPlayerId));
+        }
+        return result.session;
+      }
+      setNegotiationUiPhase("won");
+      setNegotiationMessage(
+        t("transfer.negotiation.resolution.won", {
+          name: formatPlayerName(
+            result.session.players.find((player) => player.id === negotiationPlayerId)!,
+          ),
+          fee: formatClubCash(agreedFee ?? 0),
+        }),
+      );
+      return sessionWithEvent(result.session, "transfer", result.summary);
+    });
+  }, [
+    abortPendingDeal,
+    agreedFee,
+    contractOffer,
+    negotiationPlayerId,
+    patchSession,
+    sessionWithEvent,
+  ]);
 
   const foreignProfileTarget = useMemo((): BoardTarget | null => {
     if (foreignTarget) return foreignTarget;
     if (
       foreignPlayerId &&
-      negotiationUiPhase === "won" &&
+      (negotiationUiPhase === "won" || negotiationUiPhase === "contract") &&
       negotiationPlayerId === foreignPlayerId
     ) {
       const signed = players.find((player) => player.id === foreignPlayerId);
@@ -261,7 +333,10 @@ export function useTransferNegotiation(args: {
   useEffect(() => {
     if (!foreignPlayerId || foreignTarget) return;
     if (players.some((player) => player.id === foreignPlayerId)) {
-      if (negotiationUiPhase === "won" && negotiationPlayerId === foreignPlayerId) {
+      if (
+        (negotiationUiPhase === "won" || negotiationUiPhase === "contract") &&
+        negotiationPlayerId === foreignPlayerId
+      ) {
         return;
       }
       setForeignPlayerId(null);
@@ -286,22 +361,29 @@ export function useTransferNegotiation(args: {
     setNegotiationMessage(null);
     setNegotiationOpenError(null);
     setNegotiationUiPhase("active");
+    setAgreedFee(null);
+    setContractOffer(null);
   }, [foreignPlayerId]);
 
   const dismissNegotiationModal = useCallback(
     (options?: { afterPurchase?: boolean }) => {
+      if (negotiationPlayerId && negotiationUiPhase === "contract") {
+        abortPendingDeal(negotiationPlayerId);
+      }
       const signedId =
         options?.afterPurchase && negotiationUiPhase === "won" ? negotiationPlayerId : null;
       setNegotiationPlayerId(null);
       setNegotiationMessage(null);
       setNegotiationOpenError(null);
       setNegotiationUiPhase("active");
+      setAgreedFee(null);
+      setContractOffer(null);
       if (signedId) {
         setProfileId(signedId);
         setForeignPlayerId(null);
       }
     },
-    [negotiationPlayerId, negotiationUiPhase, setForeignPlayerId, setProfileId],
+    [abortPendingDeal, negotiationPlayerId, negotiationUiPhase, setForeignPlayerId, setProfileId],
   );
 
   const negotiationOverlayContext = useMemo(() => {
@@ -310,10 +392,11 @@ export function useTransferNegotiation(args: {
     if (ownedPlayer) {
       return { player: ownedPlayer, estimate: undefined, owned: true as const };
     }
-    if (foreignTarget?.player.id === negotiationPlayerId) {
+    const pendingTarget = resolvePurchaseTarget(scoutBoard, negotiationPlayerId, rivalPlayers);
+    if (pendingTarget?.player.id === negotiationPlayerId) {
       return {
-        player: foreignTarget.player,
-        estimate: foreignTarget.estimate,
+        player: pendingTarget.player,
+        estimate: pendingTarget.estimate,
         owned: false as const,
       };
     }
@@ -324,7 +407,16 @@ export function useTransferNegotiation(args: {
       }
     }
     return null;
-  }, [foreignPlayerId, foreignTarget, negotiationPlayerId, negotiationUiPhase, players]);
+  }, [
+    foreignPlayerId,
+    negotiationPlayerId,
+    negotiationUiPhase,
+    players,
+    rivalPlayers,
+    scoutBoard,
+  ]);
+
+  const headroom = wageBudgetHeadroom(finances, players, session.clubId);
 
   const negotiationOverlay = negotiationOverlayContext ? (
     <TransferNegotiationModal
@@ -363,6 +455,23 @@ export function useTransferNegotiation(args: {
       onSubmitOffer={handleNegotiationOffer}
       onAcceptCounter={handleAcceptCounter}
       uiPhase={negotiationUiPhase}
+      agreedFee={agreedFee ?? undefined}
+      contractPanel={
+        negotiationUiPhase === "contract" && contractOffer ? (
+          <ContractTalksPanel
+            compactTitle
+            player={negotiationOverlayContext.player}
+            season={season}
+            offer={contractOffer}
+            wageHeadroomWeekly={headroom}
+            onChange={setContractOffer}
+            onSubmit={handleContractSubmit}
+            onCancel={() => {
+              if (negotiationPlayerId) abortPendingDeal(negotiationPlayerId);
+            }}
+          />
+        ) : undefined
+      }
       onContinueTalk={() => {
         setNegotiationUiPhase("active");
         setNegotiationMessage(null);

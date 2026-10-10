@@ -66,9 +66,10 @@ describe("contract talks (PRD 05.4 / F5.4)", () => {
   it("accepts an offer at the wage floor with enough years and bonus", () => {
     const player = clonePlayer();
     const ask = playerContractAsk(player, 1);
+    const currentWage = player.contract?.wage_weekly ?? 0;
     expect(
       evaluateContractOffer(player, 1, {
-        wageWeekly: Math.ceil(ask.wageWeekly * ACCEPT_WAGE_RATIO),
+        wageWeekly: Math.max(currentWage, Math.ceil(ask.wageWeekly * ACCEPT_WAGE_RATIO)),
         termYears: ask.termYearsMin,
         bonusAppearance: ask.bonusAppearance,
         minutesPromise: "rotation",
@@ -99,7 +100,7 @@ describe("contract talks (PRD 05.4 / F5.4)", () => {
         bonusAppearance: ask.bonusAppearance,
         minutesPromise: "rotation",
       }).reason,
-    ).toBe("Zu wenig Gehalt.");
+    ).toMatch(/Gehalt/);
   });
 
   it("rejects a minutes / startplatz downgrade", () => {
@@ -160,13 +161,15 @@ describe("contract talks (PRD 05.4 / F5.4)", () => {
     player.state.desire_to_leave = true;
     const ask = playerContractAsk(player, 1);
     const result = submitContractOffer(player, 1, {
-      wageWeekly: ask.wageWeekly,
+      wageWeekly: Math.max(ask.wageWeekly, player.contract?.wage_weekly ?? 0),
       termYears: ask.termYearsMin,
       bonusAppearance: ask.bonusAppearance,
       minutesPromise: "rotation",
     }, DAY_ONE);
     expect(result.accepted).toBe(true);
-    expect(result.player.contract?.wage_weekly).toBe(ask.wageWeekly);
+    expect(result.player.contract?.wage_weekly).toBe(
+      Math.max(ask.wageWeekly, player.contract?.wage_weekly ?? 0),
+    );
     expect(result.player.contract?.until_season).toBe(1 + ask.termYearsMin);
     expect(result.player.state.contract_failed_offers).toBe(0);
     expect(result.player.state.desire_to_leave).toBe(false);

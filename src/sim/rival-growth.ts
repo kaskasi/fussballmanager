@@ -13,6 +13,9 @@ import {
   NORDSTERN_CLUB_ID,
 } from "../world/world-generator.ts";
 import { isLeagueMatchWeek } from "./game-calendar.ts";
+import { generateContractWeights } from "../transfers/contract-priorities.ts";
+import { fairInitialProContract } from "../transfers/fair-initial-contract.ts";
+import { refreshPlayerMarketValue } from "../transfers/refresh-market-values.ts";
 
 const AI_TRAINING = planToSessions(defaultTrainingPlan());
 
@@ -116,6 +119,7 @@ function hiddenForEnginePlayer(enginePlayer: EnginePlayer, masterSeed: number): 
     drive: 0.75 + rng() * 0.55,
     maturity_offset: Math.round((rng() - 0.5) * 4) / 10,
     breakout_flags: [],
+    contract_weights: generateContractWeights(enginePlayer.id, masterSeed),
   };
 }
 
@@ -151,13 +155,7 @@ export function enginePlayerToCareer(
     squad_status: "pro",
     position: engineRoleToPosition(enginePlayer.role),
     flexibility: [],
-    contract: {
-      wage_weekly: 1_200,
-      bonus_goal: 0,
-      bonus_appearance: 0,
-      until_season: 2 + Math.floor(rng() * 3),
-      guaranteed_minutes_promise: "none",
-    },
+    contract: null,
     market_value: 120_000,
     attributes: engineAttributesToCareer(enginePlayer.attributes, enginePlayer.role),
     hidden: hiddenForEnginePlayer(enginePlayer, masterSeed),
@@ -187,7 +185,12 @@ export function enginePlayerToCareer(
     stamps: [],
     portrait_seed: hashString(enginePlayer.id),
   };
-  return seedPhaseStamps(built, 1, 1);
+  const valued = refreshPlayerMarketValue(built, 1);
+  const withContract: Player = {
+    ...valued,
+    contract: fairInitialProContract(valued, 1, 2 + Math.floor(rng() * 3)),
+  };
+  return seedPhaseStamps(withContract, 1, 1);
 }
 
 export function initializeRivalPlayers(masterSeed: number): Player[] {

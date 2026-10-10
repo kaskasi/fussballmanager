@@ -9,6 +9,12 @@ import { formatSeasonLabel } from "../sim/season-label.ts";
 import type { Contract, Player } from "../types/player.ts";
 import { estimateCa } from "./market-value.ts";
 import { contractUntilSeasonAfterTerm } from "./contract-until-season.ts";
+import {
+  advisorHintFromWeights,
+  contractWeightsFor,
+  loyaltyWageModifier,
+  loyaltyYearsAtClub,
+} from "./contract-priorities.ts";
 
 /** PRD 05.4 — market_value × 0.8% per year, paid weekly. */
 export const WAGE_ANCHOR_YEAR_RATE = 0.008;
@@ -21,7 +27,7 @@ export const ACCEPT_BONUS_RATIO = 0.45;
 export const TERM_YEARS_MIN = 1;
 export const TERM_YEARS_MAX = 5;
 export const CONTRACT_SIGN_COOLDOWN_DAYS = 60;
-export const CONTRACT_FAIL_COOLDOWN_DAYS = 45;
+export const CONTRACT_FAIL_COOLDOWN_DAYS = 30;
 
 export type MinutesPromise = NonNullable<Contract["guaranteed_minutes_promise"]>;
 
@@ -102,8 +108,13 @@ export function playerContractAsk(
     wage = Math.max(wage, MIN_PRO_WEEKLY_WAGE);
   }
   wage = Math.round(wage * roleWageModifier(player, promise));
+  const loyaltyYears = loyaltyYearsAtClub(player, player.club_id);
+  wage = Math.round(wage * loyaltyWageModifier(loyaltyYears));
   if (player.state.desire_to_leave) {
     wage = Math.round(wage * 1.2);
+  }
+  if (player.contract?.buyout_clause != null && player.contract.buyout_clause > 0) {
+    wage = Math.round(wage * 1.08);
   }
 
   const slump = isSlumpTalk(player);
@@ -120,6 +131,7 @@ export function playerContractAsk(
   } else if (roleWageModifier(player, promise) >= 1.3) {
     advisorHint = "Sieht sich als Stammkraft — Gehalt zuerst.";
   }
+  advisorHint = advisorHintFromWeights(contractWeightsFor(player), advisorHint);
 
   return { wageWeekly: wage, termYearsMin, bonusAppearance, advisorHint };
 }
@@ -143,6 +155,14 @@ export function describeContractOffer(
   }
   if (offer.termYears < ask.termYearsMin) {
     return { accepted: false, reason: `Laufzeit zu kurz — will mindestens ${ask.termYearsMin} Jahre.` };
+  }
+  const currentWage = player.contract?.wage_weekly ?? 0;
+  if (
+    currentWage > 0 &&
+    offer.wageWeekly < currentWage &&
+    !player.state.contract_wage_cut_allowed
+  ) {
+    return { accepted: false, reason: "Geht nicht unter das aktuelle Gehalt runter." };
   }
   if (offer.wageWeekly < ask.wageWeekly * ACCEPT_WAGE_RATIO) {
     return { accepted: false, reason: "Zu wenig Gehalt." };
@@ -208,7 +228,12 @@ export function contractTalkBounds(
   const currentWage = player.contract?.wage_weekly ?? 0;
   const currentBonus = player.contract?.bonus_appearance ?? 0;
   const wageFloor = Math.max(1, Math.round(ask.wageWeekly * 0.55));
-  const wageMin = currentWage > 0 ? Math.min(wageFloor, currentWage) : wageFloor;
+  const wageMin =
+    currentWage > 0 && !player.state.contract_wage_cut_allowed
+      ? currentWage
+      : currentWage > 0
+        ? Math.min(wageFloor, currentWage)
+        : wageFloor;
   const wageMax = Math.max(Math.round(ask.wageWeekly * 1.8), currentWage, ask.wageWeekly);
   const bonusMax = Math.max(ask.bonusAppearance * 2, currentBonus, 25);
   return {

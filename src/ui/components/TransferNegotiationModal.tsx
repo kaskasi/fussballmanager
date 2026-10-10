@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Check, X } from "lucide-react";
 import { formatClubCash, type ClubFinances } from "../../economy/club-finances.ts";
 import { spendRunway, spendRunwayLines } from "../../economy/spend-runway.ts";
@@ -33,6 +33,8 @@ export function TransferNegotiationModal({
   scoutEstimate,
   valueBounds = null,
   uiPhase = "active",
+  agreedFee,
+  contractPanel,
   onSubmitOffer,
   onAcceptCounter,
   onContinueTalk,
@@ -51,7 +53,9 @@ export function TransferNegotiationModal({
   season: number;
   scoutEstimate?: AbilityEstimate;
   valueBounds?: ScoutValueBounds | null;
-  uiPhase?: "active" | "won" | "lost";
+  uiPhase?: "active" | "contract" | "won" | "lost";
+  agreedFee?: number;
+  contractPanel?: ReactNode;
   onSubmitOffer: (fee: number) => void;
   onAcceptCounter: () => void;
   onContinueTalk: () => void;
@@ -103,6 +107,7 @@ export function TransferNegotiationModal({
   const canSubmit =
     uiPhase === "active" && canSubmitNegotiationOffer(gates) && !openError;
   const resolved = uiPhase !== "active";
+  const contractPhase = uiPhase === "contract";
 
   const metaText = (() => {
     if (valueBounds && !valueBounds.exact) {
@@ -127,7 +132,17 @@ export function TransferNegotiationModal({
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <dialog className="negotiation-modal" open aria-labelledby="negotiation-title">
+      <dialog
+        className={
+          contractPhase
+            ? "negotiation-modal negotiation-modal--purchase-contract"
+            : "negotiation-modal"
+        }
+        open
+        aria-labelledby="negotiation-title"
+      >
+        <div className={contractPhase ? "negotiation-modal-split" : undefined}>
+          <div className="negotiation-modal-fee">
         <header className="negotiation-head">
           <p className="eyebrow">{t("transfer.negotiation.title")}</p>
           <h2 id="negotiation-title">{formatPlayerName(player)}</h2>
@@ -140,7 +155,13 @@ export function TransferNegotiationModal({
           </p>
         ) : null}
 
-        {!resolved ? (
+        {contractPhase && agreedFee != null ? (
+          <p className="negotiation-resolution is-success">
+            {t("transfer.purchase.feeAgreedSummary", { fee: formatClubCash(agreedFee) })}
+          </p>
+        ) : null}
+
+        {!resolved && !contractPhase ? (
         <section className="negotiation-rules" aria-labelledby="negotiation-rules-title">
           <h3 id="negotiation-rules-title" className="negotiation-rules-title">
             {t("transfer.negotiation.rules.title")}
@@ -165,7 +186,7 @@ export function TransferNegotiationModal({
         </section>
         ) : null}
 
-        {!resolved ? (
+        {!resolved && !contractPhase ? (
         <div className="negotiation-patience" aria-label={t("transfer.negotiation.patience")}>
           <span>{t("transfer.negotiation.patience")}</span>
           <div className="negotiation-patience-bar">
@@ -190,7 +211,7 @@ export function TransferNegotiationModal({
         </div>
         ) : null}
 
-        {!resolved && negotiation.counter_offer ? (
+        {!resolved && !contractPhase && negotiation.counter_offer ? (
           <p className="negotiation-counter">
             {t("transfer.negotiation.counter", {
               amount: formatClubCash(negotiation.counter_offer),
@@ -213,7 +234,7 @@ export function TransferNegotiationModal({
           </p>
         ) : null}
 
-        {!resolved ? (
+        {!resolved && !contractPhase ? (
           <>
             <Hint text={hintText} block>
               <div className="negotiation-offer">
@@ -255,6 +276,7 @@ export function TransferNegotiationModal({
           </>
         ) : null}
 
+        {!contractPhase ? (
         <div className="negotiation-actions">
           {uiPhase === "won" ? (
             <button
@@ -327,6 +349,12 @@ export function TransferNegotiationModal({
               </button>
             </>
           )}
+        </div>
+        ) : null}
+          </div>
+          {contractPhase && contractPanel ? (
+            <div className="negotiation-modal-contract">{contractPanel}</div>
+          ) : null}
         </div>
       </dialog>
     </div>

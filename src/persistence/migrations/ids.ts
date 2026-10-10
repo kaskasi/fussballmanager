@@ -81,4 +81,6 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_082_merch_timed_sale",
   "migration_083_merch_market_seed",
   "migration_084_kicker_edition_archive",
+  "migration_085_player_club_kieler",
+  "migration_086_f54_transfer_pillar",
 ] as const;

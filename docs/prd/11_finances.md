@@ -392,4 +392,4 @@ belegte Slots addieren.
 ## Offene Punkte (nicht M1-blockierend)
 
 - Mehrere Divisionen / TV-Skalierung: PRD 12
-- Matchday-Commerce-Preise: F7.3-Sim
+- ~~Matchday-Commerce-Preise~~ — **v87:** `kiosk_unit_price_eur` / `beer_unit_price_eur` auf `ClubStadium` (Defaults 4,50 / 5,00 €); Elastizität σ≈0,4 auf effektive Nachfrage (`concession-prices.ts`); Finanzen-Tab Commerce.

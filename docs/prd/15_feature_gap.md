@@ -96,7 +96,7 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 | F6.4 | M1 | Wasserfall 11.5 | Icon-Balken + 13-Mo-Sparkline | — |
 | F7.1 | M1 | 2D-Grundriss, Preise | Grundriss + Banden auf Tribünen + Shirt | Gelände-Tab separat |
 | F7.2 | M2 | Kapazität, VIP, Heizung | Shop-Liste + Levels · extra Banden bei Steh/Sitz | Shop unter der Karte |
-| F7.3 | M3 | Wurst, Fanshop, Hotel, Restaurant | Farm + Kiosk + Hotel/Restaurant-Sim + Gelände/Finanzen-UI | Museum, Wurst-SKU, 1×1-Deko später |
+| F7.3 | M3 | Wurst, Fanshop, Hotel, Restaurant | Farm + Kiosk + Hotel/Restaurant-Sim + Gelände/Finanzen-UI | **Wurst-SKU = Imbiss-Preissteuerung** (v87, kein Inventar); Museum, 1×1-Deko später |
 | F7.4 | M3 | Trainingsgelände-Ausbau | TZ-Stufen Halle/Fitness/Pool/Physio am bestehenden Gebäude | Verletzungs-Sim bleibt leicht |
 | F3.2 | M1 | Campus-Grid, Stufen | Report + Stufen-Grid | Iso-Stadtmodell gestrichen |
 | F3.3 | M1 | YouthReports | Report 14.4 + Auto-Sim; Grid sekundär | — |

@@ -42,7 +42,12 @@ import {
   stadiumMatchdayIncome,
   type ClubStadium,
 } from "../../stadium/club-stadium.ts";
-import { weekCommerceOccupancy } from "../../stadium/matchday-commerce.ts";
+import {
+  adjustConcessionPrice,
+  CONCESSION_PRICE_STEP,
+  resolveConcessionPrices,
+} from "../../stadium/concession-prices.ts";
+import { matchdayCashBreakdown, weekCommerceOccupancy } from "../../stadium/matchday-commerce.ts";
 import { computeHospitalityPreview } from "../../stadium/hospitality.ts";
 import { weeklyPrecinctConcessionsCash } from "../../stadium/precinct-effects.ts";
 import { clubFlavorFanbase } from "../../sim/club-profiles.ts";
@@ -79,6 +84,7 @@ export function FinancesScreen({
   boardCashFloor = 0,
   masterSeed,
   onOpenStadium,
+  onStadiumChange,
 }: {
   finances: ClubFinances;
   players: readonly Player[];
@@ -92,6 +98,7 @@ export function FinancesScreen({
   scoutNetwork: ScoutNetworkState;
   boardCashFloor?: number;
   onOpenStadium: () => void;
+  onStadiumChange?: (stadium: ClubStadium) => void;
 }) {
   const t = useT();
   const [panelTab, setPanelTab] = useState<FinancePanelTab>("overview");
@@ -153,18 +160,22 @@ export function FinancesScreen({
   const sparkSpan = Math.max(sparkMax - sparkMin, Math.abs(sparkMax) * 0.04, 1);
   const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium);
   const fanbase = stadium.fanbase;
+  const concessionPrices = resolveConcessionPrices(stadium);
   const concessionsFull = weeklyPrecinctConcessionsCash(
     stadium.precinct,
     1,
     fanbase,
     isHomeMatchWeek,
+    concessionPrices,
   );
   const concessionsWeek = weeklyPrecinctConcessionsCash(
     stadium.precinct,
     occupancy,
     fanbase,
     isHomeMatchWeek,
+    concessionPrices,
   );
+  const matchdayKasse = matchdayCashBreakdown(stadium, isHomeMatchWeek);
   const merchAnalytics = buildMerchandisingAnalytics(
     stadium,
     players,
@@ -347,6 +358,63 @@ export function FinancesScreen({
           </p>
         </button>
       </section>
+      {onStadiumChange ? (
+        <section className="finances-detail-cards" aria-label="Imbiss-Preise">
+          <article className="finances-detail">
+            <h2>
+              <Utensils size={18} strokeWidth={2.5} aria-hidden />
+              Würstchen · €/Portion
+            </h2>
+            <div className="stadium-price">
+              <button
+                type="button"
+                aria-label="Würstchenpreis senken"
+                onClick={() => onStadiumChange(adjustConcessionPrice(stadium, "kiosk", -CONCESSION_PRICE_STEP))}
+              >
+                −
+              </button>
+              <span>€ {concessionPrices.kiosk_unit_price_eur.toFixed(2).replace(".", ",")}</span>
+              <button
+                type="button"
+                aria-label="Würstchenpreis erhöhen"
+                onClick={() => onStadiumChange(adjustConcessionPrice(stadium, "kiosk", CONCESSION_PRICE_STEP))}
+              >
+                +
+              </button>
+            </div>
+            <p className="finances-detail-sub">
+              Kasse {formatClubCash(matchdayKasse.kiosk)} · voll {formatClubCash(matchdayKasse.kiosk / Math.max(occupancy, 0.01))}
+            </p>
+          </article>
+          <article className="finances-detail">
+            <h2>
+              <Flame size={18} strokeWidth={2.5} aria-hidden />
+              Bier · €/Maß
+            </h2>
+            <div className="stadium-price">
+              <button
+                type="button"
+                aria-label="Bierpreis senken"
+                onClick={() => onStadiumChange(adjustConcessionPrice(stadium, "beer", -CONCESSION_PRICE_STEP))}
+              >
+                −
+              </button>
+              <span>€ {concessionPrices.beer_unit_price_eur.toFixed(2).replace(".", ",")}</span>
+              <button
+                type="button"
+                aria-label="Bierpreis erhöhen"
+                onClick={() => onStadiumChange(adjustConcessionPrice(stadium, "beer", CONCESSION_PRICE_STEP))}
+              >
+                +
+              </button>
+            </div>
+            <p className="finances-detail-sub">
+              Kasse {formatClubCash(matchdayKasse.beer)} · voll{" "}
+              {formatClubCash(matchdayKasse.beer / Math.max(occupancy, 0.01))}
+            </p>
+          </article>
+        </section>
+      ) : null}
           </div>
         ) : null}
 

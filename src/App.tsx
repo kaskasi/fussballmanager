@@ -3141,6 +3141,12 @@ export default function App() {
           scoutNetwork={scoutNetwork}
           boardCashFloor={boardCashFloor(board)}
           onOpenStadium={() => setScreen("stadium")}
+          onStadiumChange={(next) =>
+            patchSession((current) => ({
+              ...current,
+              stadium: normalizeClubStadium(next),
+            }))
+          }
         />
       ) : null}
       {screen === "leagues" ? (

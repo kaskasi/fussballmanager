@@ -1,6 +1,7 @@
 import { DIVISION_ECONOMY, type DivisionEconomyId } from "../economy/division-economy.ts";
 import type { ClubMerchandising } from "../economy/merchandising.ts";
 import { pitchFillPenalty, normalizePitchCondition } from "./precinct-campus-events.ts";
+import { resolveConcessionPrices } from "./concession-prices.ts";
 import { precinctFillRateBonus } from "./precinct-effects.ts";
 import { normalizePrecinct, type PrecinctState } from "./precinct.ts";
 import type { SponsorDeal } from "./sponsor-deals.ts";
@@ -50,6 +51,10 @@ export interface ClubStadium {
   pitch_condition?: number;
   /** Merch supply, retail, collection mix (F6.x). */
   merchandising?: ClubMerchandising;
+  /** F7.3 — Imbiss unit price (€), elasticity in precinct-effects. */
+  kiosk_unit_price_eur?: number;
+  /** F7.3 — Bier unit price (€). */
+  beer_unit_price_eur?: number;
 }
 
 export const DEFAULT_FANBASE = 52;
@@ -168,7 +173,13 @@ export function normalizeClubStadium(stadium: ClubStadium): ClubStadium {
     if (!saved) return block;
     return { ...block, ticket_price_eur: saved.ticket_price_eur };
   });
-  return applyStadiumFillRates({ ...rebuilt, blocks: mergedBlocks });
+  const prices = resolveConcessionPrices(stadium);
+  return applyStadiumFillRates({
+    ...rebuilt,
+    blocks: mergedBlocks,
+    kiosk_unit_price_eur: prices.kiosk_unit_price_eur,
+    beer_unit_price_eur: prices.beer_unit_price_eur,
+  });
 }
 
 export function referenceFillRate(blockId: string): number {

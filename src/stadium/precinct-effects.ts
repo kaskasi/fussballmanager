@@ -10,6 +10,12 @@ import {
   type PrecinctBuilding,
   type PrecinctState,
 } from "./precinct.ts";
+import {
+  applyConcessionPriceToIncome,
+  DEFAULT_BEER_UNIT_PRICE_EUR,
+  DEFAULT_KIOSK_UNIT_PRICE_EUR,
+  type ConcessionUnitPrices,
+} from "./concession-prices.ts";
 import { DEFAULT_FANBASE } from "./club-stadium.ts";
 import { formatClubCash } from "../economy/club-finances.ts";
 import type { HospitalityPreview } from "./hospitality.ts";
@@ -265,14 +271,17 @@ export function weeklyKioskIncome(
   occupancy = 1,
   fanbase = NEUTRAL_FANBASE,
   isHomeMatchWeek = true,
+  prices?: ConcessionUnitPrices,
 ): number {
-  return scaleCommerceIncome(
+  const base = scaleCommerceIncome(
     kioskFullCapacity(state),
     occupancy,
     fanbase,
     state,
     isHomeMatchWeek,
   );
+  const unitPrice = prices?.kiosk_unit_price_eur ?? DEFAULT_KIOSK_UNIT_PRICE_EUR;
+  return applyConcessionPriceToIncome(base, unitPrice, DEFAULT_KIOSK_UNIT_PRICE_EUR);
 }
 
 /** Weekly beer-tent margin. */
@@ -281,8 +290,17 @@ export function weeklyBeerIncome(
   occupancy = 1,
   fanbase = NEUTRAL_FANBASE,
   isHomeMatchWeek = true,
+  prices?: ConcessionUnitPrices,
 ): number {
-  return scaleCommerceIncome(beerFullCapacity(state), occupancy, fanbase, state, isHomeMatchWeek);
+  const base = scaleCommerceIncome(
+    beerFullCapacity(state),
+    occupancy,
+    fanbase,
+    state,
+    isHomeMatchWeek,
+  );
+  const unitPrice = prices?.beer_unit_price_eur ?? DEFAULT_BEER_UNIT_PRICE_EUR;
+  return applyConcessionPriceToIncome(base, unitPrice, DEFAULT_BEER_UNIT_PRICE_EUR);
 }
 
 /** Weekly merch margin — shop level = throughput, sales = footfall. */
@@ -307,10 +325,11 @@ export function weeklyPrecinctConcessionsCash(
   occupancy = 1,
   fanbase = NEUTRAL_FANBASE,
   isHomeMatchWeek = true,
+  prices?: ConcessionUnitPrices,
 ): number {
   return (
-    weeklyKioskIncome(state, occupancy, fanbase, isHomeMatchWeek) +
-    weeklyBeerIncome(state, occupancy, fanbase, isHomeMatchWeek)
+    weeklyKioskIncome(state, occupancy, fanbase, isHomeMatchWeek, prices) +
+    weeklyBeerIncome(state, occupancy, fanbase, isHomeMatchWeek, prices)
   );
 }
 

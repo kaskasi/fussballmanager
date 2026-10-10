@@ -3,6 +3,7 @@ import { leagueTable, topScorers } from "../sim/league-week.ts";
 import { stadiumMatchdayIncome, type ClubStadium } from "../stadium/club-stadium.ts";
 import { weekCommerceOccupancy } from "../stadium/matchday-commerce.ts";
 import { weeklyMerchandisingEconomics } from "./merchandising.ts";
+import { resolveConcessionPrices } from "../stadium/concession-prices.ts";
 import { weeklyPrecinctConcessionsCash } from "../stadium/precinct-effects.ts";
 import {
   seasonSponsorBonusPayouts,
@@ -197,12 +198,14 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
   const occupancy =
     context.commerceOccupancy ?? weekCommerceOccupancy(context.isHomeMatchWeek, context.stadium);
   const fanbase = context.stadium?.fanbase;
+  const concessionPrices = resolveConcessionPrices(context.stadium);
   const concessions =
     weeklyPrecinctConcessionsCash(
       context.stadium?.precinct,
       occupancy,
       fanbase,
       context.isHomeMatchWeek,
+      concessionPrices,
     ) + (context.hospitalityIncome ?? 0);
   if (concessions > 0) {
     lines.push({ kind: "concessions", amount: concessions, week });

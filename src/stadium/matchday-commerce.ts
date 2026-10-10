@@ -1,3 +1,4 @@
+import { resolveConcessionPrices } from "./concession-prices.ts";
 import {
   DEFAULT_FANBASE,
   stadiumAttendanceFill,
@@ -38,9 +39,10 @@ export function matchdayCashBreakdown(
   const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium);
   const precinct = stadium?.precinct;
   const fanbase = stadium?.fanbase ?? DEFAULT_FANBASE;
+  const prices = resolveConcessionPrices(stadium);
   const tickets = isHomeMatchWeek && stadium ? stadiumMatchdayIncome(stadium) : 0;
-  const kiosk = weeklyKioskIncome(precinct, occupancy, fanbase, isHomeMatchWeek);
-  const beer = weeklyBeerIncome(precinct, occupancy, fanbase, isHomeMatchWeek);
+  const kiosk = weeklyKioskIncome(precinct, occupancy, fanbase, isHomeMatchWeek, prices);
+  const beer = weeklyBeerIncome(precinct, occupancy, fanbase, isHomeMatchWeek, prices);
   const shop = weeklyFanshopIncome(precinct, occupancy, fanbase, isHomeMatchWeek);
   return {
     home: isHomeMatchWeek,

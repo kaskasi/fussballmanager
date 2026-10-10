@@ -27,11 +27,13 @@ import { estimateCa, marketValue } from "./market-value.ts";
 import { refreshPlayerMarketValue } from "./refresh-market-values.ts";
 import { loanClubName } from "./loan-roster.ts";
 import type { WorldClub } from "../world/world-generator.ts";
+import { buildAiClubShortlist } from "./ai-scout-shortlist.ts";
 
 export interface AiClubBudget {
   transfer_budget: number;
   spent: number;
   earned: number;
+  distressed?: boolean;
 }
 
 const POSITION_SLOTS: Record<PositionPrimary, number> = {
@@ -267,40 +269,42 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
     const headroom = buyerBudget.transfer_budget - buyerBudget.spent;
     if (headroom < 80_000) continue;
 
-    const sellerClubId = pickSellerClub(careerClubIds, buyerClubId, squads, input.season, rng);
-    if (!sellerClubId) continue;
+    const tier = DIVISION_ECONOMY[input.divisionId].tier;
+    const shortlist = buildAiClubShortlist({
+      buyerClubId,
+      buyerSquad,
+      marketPlayers: players,
+      season: input.season,
+      week: input.week,
+      masterSeed: input.masterSeed,
+      topClub: tier <= 2,
+    });
 
-    const sellerSquad = squads.get(sellerClubId) ?? [];
-    const overflowIds = new Set(
-      [...academyOverflowPlayers(sellerSquad), ...sellPressurePlayers(sellerSquad, input.season)].map(
-        (player) => player.id,
-      ),
-    );
-    const candidates = sellerSquad
-      .filter((player) => player.position === targetPosition || needs.length === 0)
-      .map((player) => ({
-        player,
-        asking: sellerAskingPrice(player, input.season),
-        forced: overflowIds.has(player.id),
-      }))
-      .filter((entry) => entry.asking <= headroom * 1.15)
-      .sort((left, right) => {
-        if (left.forced !== right.forced) return left.forced ? -1 : 1;
-        return left.asking - right.asking;
-      });
-
-    let deal: { player: Player; fee: number } | null = null;
-    for (const candidate of candidates.slice(0, 10)) {
-      const fee = negotiateFee(candidate.asking, headroom, rng);
+    let deal: { player: Player; fee: number; distressed?: boolean } | null = null;
+    for (const entry of shortlist.slice(0, 8)) {
+      const player = players.find((row) => row.id === entry.playerId);
+      if (!player?.club_id || player.club_id === buyerClubId) continue;
+      const sellerSquad = squads.get(player.club_id) ?? [];
+      const overflowIds = new Set(
+        [...academyOverflowPlayers(sellerSquad), ...sellPressurePlayers(sellerSquad, input.season)].map(
+          (p) => p.id,
+        ),
+      );
+      const forced = overflowIds.has(player.id);
+      const sellerBudget = budgets[player.club_id];
+      const distressed = Boolean(sellerBudget?.distressed);
+      let asking = sellerAskingPrice(player, input.season);
+      if (distressed && player.age <= 21) asking = Math.round(asking * 0.65);
+      if (asking > headroom * 1.15) continue;
+      const fee = negotiateFee(asking, headroom, rng);
       if (fee <= 0) continue;
-      if (!sellerWillSell(candidate.player, input.season, fee, candidate.asking, candidate.forced)) {
-        continue;
-      }
-      deal = { player: candidate.player, fee };
+      if (!sellerWillSell(player, input.season, fee, asking, forced || distressed)) continue;
+      deal = { player, fee, distressed };
       break;
     }
     if (!deal) continue;
 
+    const sellerClubId = deal.player.club_id ?? "cl_rival_pool";
     const bought = completePurchase(deal.player, buyerClubId, input.season);
     const shifted = processTransferBreakout(bought, {
       masterSeed: input.masterSeed,
@@ -342,6 +346,25 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
 
     const message = `Liga: ${formatPlayerName(valued)} · ${loanClubName(sellerClubId, input.worldClubs)} → ${loanClubName(buyerClubId, input.worldClubs)} (${formatFeeShort(deal.fee)})`;
     messages.push(message);
+  }
+
+  for (const clubId of careerClubIds) {
+    const budget = budgets[clubId];
+    if (!budget) continue;
+    const headroom = budget.transfer_budget - budget.spent;
+    if (headroom >= 120_000) {
+      budgets = {
+        ...budgets,
+        [clubId]: { ...budget, distressed: false },
+      };
+      continue;
+    }
+    if (budget.spent >= budget.transfer_budget * 0.92) {
+      budgets = {
+        ...budgets,
+        [clubId]: { ...budget, distressed: true },
+      };
+    }
   }
 
   return {

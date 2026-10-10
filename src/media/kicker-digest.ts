@@ -2,6 +2,7 @@ import type { TransferRecord } from "../transfers/transfer-history.ts";
 import { displayTransferOtherClubs, isClubTransferRecord } from "../transfers/transfer-history.ts";
 import type { WorldClub } from "../world/world-generator.ts";
 import type { Player } from "../types/player.ts";
+import { formatPlayerName } from "../types/player-display.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import { divisionStandings, divisionLeaderLists } from "../sim/league-standings.ts";
@@ -30,6 +31,7 @@ export type TreterArticleKind =
   | "camp"
   | "transfer_user"
   | "transfer_ai"
+  | "transfer_inbound"
   | "table"
   | "scorers"
   | "scout"
@@ -176,6 +178,24 @@ function collectTransferArticles(
   weekRecords: TransferRecord[],
 ): TreterArticle[] {
   const articles: TreterArticle[] = [];
+  for (const inbound of session.transferState.inbound_offers ?? []) {
+    if (inbound.season !== session.season || inbound.week !== session.week) continue;
+    if (inbound.status !== "pending") continue;
+    const player = session.players.find((row) => row.id === inbound.player_id);
+    const name = player ? formatPlayerName(player) : inbound.player_id;
+    articles.push({
+      id: `treter-in-${inbound.id}`,
+      kind: "transfer_inbound",
+      headline: `Anfrage für ${name}`,
+      kicker: "Angebot",
+      body: `${clubLabel} soll ${name} für € ${Math.round(inbound.fee).toLocaleString("de-DE")} ablösen wollen — Entscheidung offen.`,
+      imageSrc: TRETER_IMAGE.stadion,
+      imageAlt: "Transfer",
+      layout: "column",
+      priority: 85,
+      playerId: inbound.player_id,
+    });
+  }
   for (const record of weekRecords) {
     const isUser = isClubTransferRecord(record);
     const fee =

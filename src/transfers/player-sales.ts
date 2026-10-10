@@ -100,10 +100,12 @@ export function attemptPlayerSale(
 }
 
 export function completeSale(player: Player, buyerClubId: string, season: number): Player {
+  const morale = player.state.desire_to_leave ? Math.min(player.state.morale, 60) : player.state.morale;
   const moved: Player = {
     ...player,
     club_id: buyerClubId,
     squad_status: player.age >= 18 ? "pro" : player.squad_status === "u19" ? "u19" : "u17",
+    state: { ...player.state, morale },
   };
   return refreshPlayerMarketValue(moved, season);
 }

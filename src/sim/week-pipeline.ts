@@ -45,6 +45,8 @@ import {
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
 import { withClubEvent, type ClubEvent } from "../inbox/club-events.ts";
 import { advanceAiTransferWeek } from "../transfers/ai-transfer-market.ts";
+import { scanInboundOffers } from "../transfers/inbound-offers.ts";
+import { advanceUnderpaidContractWeek } from "../transfers/underpaid-contract.ts";
 import { loanReturnMessage } from "../transfers/transfer-history.ts";
 import { isTransferWindowOpen } from "./transfer-windows.ts";
 import { advanceInboxWeek } from "../youth/decision-inbox.ts";
@@ -421,7 +423,7 @@ export async function simulateGameWeek(
   });
   const finances = financeStep.finances;
   const playersWithGrowth = stampWeeklyGrowthBatch(playersAtWeekStart, playersWithMorale);
-  const playersWithCaStamp = playersWithGrowth.map(stampLastWeekCa);
+  let playersWithCaStamp = playersWithGrowth.map(stampLastWeekCa);
 
   const seasonEnded = footballSeasonEnded;
   let rivalPlayers = advanceRivalGrowthWeek(
@@ -469,7 +471,39 @@ export async function simulateGameWeek(
         t("clubEvent.transferAi", { message }),
       );
     }
+    const inbound = scanInboundOffers({
+      players: playersWithCaStamp,
+      clubId: session.clubId,
+      season: session.season,
+      week: nextWeek,
+      masterSeed: session.masterSeed,
+      leagueClubIds: leagueWithCareerStats.club_ids,
+      transferState,
+    });
+    transferState = inbound.transferState;
+    for (const offer of inbound.newOffers) {
+      clubEvents = withClubEvent(
+        clubEvents,
+        session.season,
+        nextWeek,
+        "transfer",
+        t("clubEvent.inboundOffer", {
+          fee: offer.fee,
+          playerId: offer.player_id,
+        }),
+      );
+    }
   }
+
+  const calendar = {
+    season: seasonEnded ? session.season + 1 : session.season,
+    week: nextWeek,
+    weekday: 1,
+  };
+  playersWithCaStamp = playersWithCaStamp.map((player) => {
+    if (player.club_id !== session.clubId) return player;
+    return advanceUnderpaidContractWeek(player, session.season, calendar).player;
+  });
 
   const scoutBoard = reconcileScoutBoard(
     advanceScoutWeek(

@@ -4,6 +4,7 @@ import App from "./App";
 import { isStoryboardPocUrl, StoryboardPocScreen } from "./ui/screens/StoryboardPocScreen.tsx";
 import "./ui/design/design-tokens.css";
 import "./ui/layout/screen-layout.css";
+import "./ui/layout/mobile-pass.css";
 import "./index.css";
 import "./ui/design/design-repair.css";
 import "./ui/design/game-surfaces.css";

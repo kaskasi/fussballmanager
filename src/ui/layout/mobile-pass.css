@@ -1,0 +1,129 @@
+/**
+ * Mobile-only layout (≤720px). Desktop rules above this breakpoint stay unchanged.
+ */
+
+@media (max-width: 720px) {
+  .app-nav.club-shell-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "identity actions"
+      "center center";
+    gap: 0.35rem 0.5rem;
+  }
+
+  .app-nav.club-shell-header .club-shell-identity {
+    grid-area: identity;
+    max-width: 100%;
+  }
+
+  .app-nav.club-shell-header .club-shell-subscreen-title {
+    max-width: 100%;
+  }
+
+  .app-nav.club-shell-header .app-nav-center {
+    grid-area: center;
+    justify-self: stretch;
+  }
+
+  .app-nav.club-shell-header .app-nav-actions {
+    grid-area: actions;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+    max-width: 100%;
+  }
+
+  .app-nav-menu .row-menu-popover.pipeline-menu-popover {
+    position: fixed;
+    top: calc(var(--club-header-height, 56px) + env(safe-area-inset-top, 0px) + 0.35rem);
+    right: max(0.65rem, env(safe-area-inset-right));
+    left: max(0.65rem, env(safe-area-inset-left));
+    width: auto;
+    min-width: 0;
+    max-height: min(75vh, 36rem);
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 200;
+  }
+
+  .pipeline-menu-item,
+  .pipeline-menu-item-label {
+    min-width: 0;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .training-timetable-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    margin-inline: -0.1rem;
+    padding: 0 0.1rem 0.35rem;
+  }
+
+  .training-timetable-scroll .training-timetable {
+    min-width: 34rem;
+  }
+
+  .training-plan-presets {
+    flex-wrap: wrap;
+  }
+
+  .training-schedule-heatmap .training-pixel-pack.is-compact .training-pixel-bar {
+    display: grid;
+    gap: 0.55rem;
+    overflow: visible;
+  }
+
+  .training-schedule-heatmap .training-pixel-pack.is-compact .training-pixel-stage {
+    display: grid;
+    align-items: stretch;
+  }
+
+  .training-schedule-heatmap .training-pixel-pack.is-compact .training-pixel-stage + .training-pixel-stage {
+    border-left: none;
+    padding-left: 0;
+    padding-top: 0.4rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .training-schedule-heatmap .training-pixel-pack.is-compact .training-pixel-row {
+    flex-wrap: wrap;
+  }
+
+  .training-schedule-heatmap .training-pixel-pack.is-compact .heat-pixel,
+  .training-schedule-heatmap .attr-heat-pixel {
+    flex: 0 0 3.1rem;
+    width: 3.1rem;
+    height: 3.35rem;
+  }
+
+  .merch-a4-sheet {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: none;
+  }
+
+  .merch-a4-side {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .merch-grid-tile .merch-price-stepper {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .scout-discovery-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scout-discovery-zone.has-flavor {
+    min-height: 0;
+  }
+
+  .scout-discovery-zone-card-inner {
+    min-height: 0;
+  }
+
+  .scout-discovery-zone-lore {
+    overflow-wrap: anywhere;
+  }
+}

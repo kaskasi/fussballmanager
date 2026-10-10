@@ -52,6 +52,7 @@ export function AttributeTrainingHeatmap({
   week,
   trainingUnitsCompleted = 0,
   slotCount = SLOT_COUNT,
+  compact = true,
 }: {
   players: readonly Player[];
   clubId: string;
@@ -59,6 +60,8 @@ export function AttributeTrainingHeatmap({
   week: number;
   trainingUnitsCompleted?: number;
   slotCount?: number;
+  /** Desktop training uses compact strip; mobile uses full grouped layout. */
+  compact?: boolean;
 }) {
   useT();
   const [legendOpen, setLegendOpen] = useState(false);
@@ -84,7 +87,7 @@ export function AttributeTrainingHeatmap({
 
   return (
     <section
-      className="attr-training-heat training-pixel-pack is-compact"
+      className={`attr-training-heat training-pixel-pack ${compact ? "is-compact" : "is-full"}`}
       aria-label={t("training.attrHeat.aria")}
     >
       <div className="pipeline-heat-head">

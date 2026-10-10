@@ -82,6 +82,7 @@ import {
 } from "../../development/training-unit-result.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
+import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
 
 type TrainingTab = "team" | "individual";
 
@@ -337,6 +338,8 @@ function TeamPlan({
   season: number;
   week: number;
 }) {
+  const mobileNarrow = useMobileNarrow();
+  const heatmapFullLayout = mobileNarrow;
   const heatCells = useMemo(
     () => squadGrowthHeatmap(players, clubId, "weekSoFar", { season, week }),
     [players, clubId, season, week],
@@ -381,6 +384,7 @@ function TeamPlan({
         onNotice={onTrainingPresetNotice}
       />
 
+      <div className="training-timetable-scroll">
       <div className="training-timetable" aria-label={t("training.timetable.aria")}>
         {TRAINING_DAYS.map((day, dayIndex) => {
           const dayPast = isTrainingDayFullyPastForSession(
@@ -432,11 +436,12 @@ function TeamPlan({
           );
         })}
       </div>
+      </div>
 
       <div className="training-schedule-heatmap">
         <GrowthHeatmap
           cells={heatCells}
-          compact
+          compact={!heatmapFullLayout}
           mode="weekSoFar"
           onSelectPlayer={(playerId) => onSelectPlayer?.(playerId)}
         />
@@ -446,6 +451,7 @@ function TeamPlan({
           season={season}
           week={week}
           trainingUnitsCompleted={trainingUnitsCompleted}
+          compact={!heatmapFullLayout}
         />
       </div>
 

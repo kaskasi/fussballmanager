@@ -175,7 +175,7 @@ export function FirstTeam({
                         <button type="button" className="squad-player-card-main" onClick={() => onSelectPlayer(row.playerId)}>
                           <strong>{row.displayName}</strong>
                           <span className="squad-player-card-meta">
-                            {row.position} · {row.age} J. · CA {row.ca}
+                            {row.positionLabel} · {row.age} J. · CA {row.ca}
                             <span className={caDeltaClassName(row.caDelta)} title="CA Δ">
                               {" "}
                               {caDeltaMark(row.caDelta)}

@@ -1,5 +1,5 @@
 import type { Player } from "../types/player.ts";
-import { formatPlayerName, roundStat } from "../types/player-display.ts";
+import { formatPlayerName, formatPlayerPositionLabel, roundStat } from "../types/player-display.ts";
 import { attributeLabel, profileAttributeKeys } from "./player-profile.ts";
 import { careerSeasonStats } from "../player/season-stats.ts";
 import { defaultYouthContract } from "../player/youth-contract.ts";
@@ -167,7 +167,7 @@ export function flavorForScout(player: Player, owned: boolean, estimate?: Abilit
   if (estimate.uncertaintyRange >= 20) {
     return {
       headline: "Gerüchte aus dem Markt",
-      body: `Über ${formatPlayerName(player)} kursieren nur vage Hinweise aus ${player.birth.region}. Position: ${player.position}.`,
+      body: `Über ${formatPlayerName(player)} kursieren nur vage Hinweise aus ${player.birth.region}. Position: ${formatPlayerPositionLabel(player)}.`,
       traits: [{ label: "Noch wenig belastbare Details", tone: "neutral" }],
     };
   }

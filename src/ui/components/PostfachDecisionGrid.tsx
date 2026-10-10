@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Player } from "../../types/player.ts";
-import { roundStat } from "../../types/player-display.ts";
+import { formatPlayerPositionLabel, roundStat } from "../../types/player-display.ts";
 import { estimateCa } from "../../transfers/market-value.ts";
 import { t } from "../../i18n/index.ts";
 import type { DecisionInboxItem } from "../../youth/decision-inbox.ts";
@@ -160,7 +160,7 @@ function PlayerTileTokens({ player }: { player: Player }) {
   const ca = roundStat(estimateCa(player.attributes, player.position));
   return (
     <div className="postfach-decision-tile-tokens" aria-hidden>
-      <span className="postfach-tile-token">{player.position}</span>
+      <span className="postfach-tile-token">{formatPlayerPositionLabel(player)}</span>
       <span className="postfach-tile-token">{player.age}</span>
       <span className="postfach-tile-token">CA {ca}</span>
     </div>

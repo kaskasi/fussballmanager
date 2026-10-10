@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { Player } from "../../types/player.ts";
-import { formatPlayerName } from "../../types/player-display.ts";
+import { formatPlayerName, formatPlayerPositionLabel } from "../../types/player-display.ts";
 import {
   isPlayerTired,
   playerInjuryRisk,
@@ -37,7 +37,7 @@ export function FitnessManagementPanel({
         return {
           playerId: player.id,
           name: formatPlayerName(player),
-          position: player.position,
+          position: formatPlayerPositionLabel(player),
           fitness,
           fitnessValue: player.state.fitness,
           weeklyMinutes: player.state.weekly_minutes,

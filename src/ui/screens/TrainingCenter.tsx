@@ -35,7 +35,7 @@ import {
   type SessionGroup,
 } from "../../development/weekly-plan.ts";
 import type { Player } from "../../types/player.ts";
-import { formatPlayerName } from "../../types/player-display.ts";
+import { formatPlayerName, formatPlayerPositionLabel } from "../../types/player-display.ts";
 import { RetrainPreviewPanel } from "../components/RetrainPreviewPanel.tsx";
 import { TrainingPlanPresetsBar } from "../components/TrainingPlanPresetsBar.tsx";
 import type { TrainingPlanPresetSlot } from "../../development/training-plan-presets.ts";
@@ -841,7 +841,7 @@ function IndividualPlan({
                   </svg>
                 </span>
                 <span className="training-roster-meta">
-                  <span>{player.position} · {ca}</span>
+                  <span>{formatPlayerPositionLabel(player)} · {ca}</span>
                   <span
                     className={caDeltaClassName(seasonDelta)}
                     title="CA Δ diese Saison"
@@ -961,7 +961,7 @@ function IndividualProgramModal({
               className="training-modal-portrait"
             />
             <div>
-              <p className="eyebrow">{player.position} · {player.age} J.</p>
+              <p className="eyebrow">{formatPlayerPositionLabel(player)} · {player.age} J.</p>
               <h2>{formatPlayerName(player)}</h2>
             </div>
           </div>

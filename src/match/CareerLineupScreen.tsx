@@ -590,7 +590,7 @@ export function CareerLineupScreen({
                   const fit = stateMark(row.fitness, 75, 50);
                   return (
                     <tr key={row.playerId} className={row.role === "start" ? "is-starter" : undefined}>
-                      <td className="col-pos">{row.position}</td>
+                      <td className="col-pos">{row.positionLabel}</td>
                       <td className="col-name">
                         {onOpenPlayer ? (
                           <button

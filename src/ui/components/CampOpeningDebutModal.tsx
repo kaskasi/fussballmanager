@@ -3,7 +3,7 @@ import type { Player } from "../../types/player.ts";
 import { estimateCa } from "../../transfers/market-value.ts";
 import { campDebutHookKey, campDebutRegionLabel } from "../../youth/camp-opening-debut.ts";
 import { campNationById } from "../../youth/satellite-camps.ts";
-import { formatPlayerName } from "../../types/player-display.ts";
+import { formatPlayerName, formatPlayerPositionLabel } from "../../types/player-display.ts";
 import { useT } from "../../i18n/react.ts";
 import { ModalShell } from "./primitives/ModalShell.tsx";
 import { PlayerPortrait } from "./PlayerPortrait.tsx";
@@ -46,7 +46,7 @@ export function CampOpeningDebutModal({
             <p className="camp-debut-name">{formatPlayerName(player)}</p>
             <p className="camp-debut-meta">
               {t("youth.camp.debut.lead", {
-                position: player.position,
+                position: formatPlayerPositionLabel(player),
                 ca,
               })}
             </p>

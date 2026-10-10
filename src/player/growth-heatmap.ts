@@ -1,5 +1,5 @@
 import type { Player, PositionPrimary } from "../types/player.ts";
-import { formatPlayerName } from "../types/player-display.ts";
+import { formatPlayerName, formatPlayerPositionLabel } from "../types/player-display.ts";
 import { weeklyGrowthDelta, weeklyGrowthSoFar } from "./growth-history.ts";
 
 /** Pipeline stages on PRD 09 Screen 1 — youth before first team. */
@@ -118,7 +118,7 @@ export function squadGrowthHeatmap(
         playerId: player.id,
         initials: heatCellInitials(player),
         label: formatPlayerName(player),
-        position: player.position,
+        position: formatPlayerPositionLabel(player),
         squadStatus: player.squad_status,
         growth,
         tone: heatTone(growth),

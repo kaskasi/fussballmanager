@@ -218,7 +218,7 @@ export function TransfersScreen({
                         <td className="squad-col-name" onClick={() => onSelectPlayer(row.playerId)}>
                           {row.displayName}
                         </td>
-                        <td onClick={() => onSelectPlayer(row.playerId)}>{row.position}</td>
+                        <td onClick={() => onSelectPlayer(row.playerId)}>{row.positionLabel}</td>
                         <td onClick={() => onSelectPlayer(row.playerId)}>{row.age}</td>
                         <td className="squad-col-ca" onClick={() => onSelectPlayer(row.playerId)}>
                           {row.ca}

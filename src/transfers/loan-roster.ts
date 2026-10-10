@@ -2,7 +2,7 @@ import type { TeamId } from "@fussballmanager/shared";
 import { clubShortLabel } from "../sim/league-divisions.ts";
 import { engineTeamId } from "../sim/rival-growth.ts";
 import type { Player, PositionPrimary } from "../types/player.ts";
-import { formatPlayerName } from "../types/player-display.ts";
+import { formatPlayerName, formatPlayerPositionLabel } from "../types/player-display.ts";
 import type { WorldClub } from "../world/world-generator.ts";
 import { estimateCa } from "./market-value.ts";
 
@@ -16,6 +16,7 @@ export interface LoanRow {
   playerId: string;
   displayName: string;
   position: PositionPrimary;
+  positionLabel: string;
   age: number;
   ca: number;
   toClubId: string;
@@ -60,6 +61,7 @@ export function listLoanedPlayers(
         playerId: player.id,
         displayName: formatPlayerName(player),
         position: player.position,
+        positionLabel: formatPlayerPositionLabel(player),
         age: player.age,
         ca: Math.round(estimateCa(player.attributes, player.position)),
         toClubId: loan.to_club,

@@ -279,7 +279,8 @@ function YouthUnifiedRoster({
   );
   const positions = useMemo(() => positionsInRoster(rows), [rows]);
   const visible = useMemo(() => {
-    const filtered = position === "all" ? rows : rows.filter((row) => row.position === position);
+    const filtered =
+      position === "all" ? rows : rows.filter((row) => row.positions.includes(position));
     return sortYouthSquadRows(filtered, sortKey, sortDirection);
   }, [rows, position, sortKey, sortDirection]);
 
@@ -401,7 +402,7 @@ function YouthUnifiedRoster({
                           {formatYouthReportName(player)}
                         </span>
                       </td>
-                      <td>{row.position}</td>
+                      <td>{row.positionLabel}</td>
                       <td>{row.age}</td>
                       <td className="squad-col-ca">{row.ca}</td>
                       <td className={caDeltaClassName(row.caDelta)}>
@@ -591,6 +592,9 @@ function enrichYouthRows(
 }
 
 function positionsInRoster(rows: readonly YouthSquadRow[]): PositionPrimary[] {
-  const present = new Set(rows.map((row) => row.position));
+  const present = new Set<PositionPrimary>();
+  for (const row of rows) {
+    for (const slot of row.positions) present.add(slot);
+  }
   return POSITION_ORDER.filter((slot) => present.has(slot));
 }

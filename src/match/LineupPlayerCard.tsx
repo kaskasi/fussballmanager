@@ -1,5 +1,5 @@
 import type { Player } from "../types/player.ts";
-import { formatPlayerName } from "../types/player-display.ts";
+import { formatPlayerName, formatPlayerPositionLabel } from "../types/player-display.ts";
 import {
   LineupPlayerStatusStrip,
   lineupStatusFromPlayer,
@@ -31,7 +31,7 @@ export function LineupPlayerCard({
       }}
       onDragEnd={() => onDragEnd?.()}
     >
-      <span className="lineup-player-pos">{player.position}</span>
+      <span className="lineup-player-pos">{formatPlayerPositionLabel(player)}</span>
       <button
         type="button"
         className="lineup-player-name lineup-player-open"

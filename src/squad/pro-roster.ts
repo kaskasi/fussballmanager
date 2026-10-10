@@ -1,5 +1,9 @@
 import type { Player, PositionPrimary } from "../types/player.ts";
-import { formatPlayerName } from "../types/player-display.ts";
+import {
+  formatPlayerName,
+  formatPlayerPositionLabel,
+  playerPositionSet,
+} from "../types/player-display.ts";
 import { seasonMatchRating } from "../player/season-stats.ts";
 import { weeklyCaDelta } from "../player/ca-tracking.ts";
 import { injuryRiskScore } from "../development/fitness-management.ts";
@@ -9,6 +13,8 @@ export interface ProSquadRow {
   playerId: string;
   displayName: string;
   position: PositionPrimary;
+  positionLabel: string;
+  positions: PositionPrimary[];
   age: number;
   ca: number;
   caDelta: number | null;
@@ -74,6 +80,8 @@ export function listProSquad(
       playerId: player.id,
       displayName: formatPlayerName(player),
       position: player.position,
+      positionLabel: formatPlayerPositionLabel(player),
+      positions: playerPositionSet(player),
       age: player.age,
       ca: Math.round(estimateCa(player.attributes, player.position)),
       caDelta: weeklyCaDelta(player),

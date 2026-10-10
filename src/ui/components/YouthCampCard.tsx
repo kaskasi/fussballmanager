@@ -14,7 +14,7 @@ import {
   type YouthCamp,
   type YouthCampNation,
 } from "../../youth/satellite-camps.ts";
-import { formatPlayerName } from "../../types/player-display.ts";
+import { formatPlayerName, formatPlayerPositionLabel } from "../../types/player-display.ts";
 import { campPhotoGradient } from "../assets/camp-photos.ts";
 import { PlayerPortrait } from "./PlayerPortrait.tsx";
 
@@ -182,7 +182,7 @@ export function YouthCampCard({
                       ) : null}
                       {formatPlayerName(player)}
                     </span>
-                    <span className="youth-camp-roster-pos">{player.position}</span>
+                    <span className="youth-camp-roster-pos">{formatPlayerPositionLabel(player)}</span>
                     <span className="youth-camp-roster-ca">
                       {Math.round(estimateCa(player.attributes, player.position))}
                     </span>

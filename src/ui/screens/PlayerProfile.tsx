@@ -53,7 +53,7 @@ import { useT } from "../../i18n/react.ts";
 import { transferWindowClosedReason } from "../../transfers/purchase-block.ts";
 import { ContractTalksModal } from "../components/ContractTalksModal.tsx";
 import { SaleConfirmModal } from "../components/SaleConfirmModal.tsx";
-import { formatPlayerName } from "../../types/player-display.ts";
+import { formatPlayerName, formatPlayerPositionLabel } from "../../types/player-display.ts";
 import { confidenceLabel, type AbilityEstimate } from "../../scouting/estimate-model.ts";
 import {
   formatScoutCa,
@@ -347,7 +347,7 @@ export function PlayerProfile({
             </Hint>
             <div className="profile-identity-stats">
               <Hint text="Hauptposition auf dem Platz.">
-                <span className="profile-stat">{player.position}</span>
+                <span className="profile-stat">{formatPlayerPositionLabel(player)}</span>
               </Hint>
               <Hint text="Alter in Jahren.">
                 <span className="profile-stat">{player.age} J.</span>

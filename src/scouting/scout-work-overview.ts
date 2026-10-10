@@ -10,7 +10,7 @@ import type { ScoutNetworkState } from "./scout-network.ts";
 import type { ActiveScoutTrip, ScoutTripPlan } from "./scout-trip.ts";
 import type { WorldClub } from "../world/world-generator.ts";
 import { worldCareerClubId } from "../world/world-generator.ts";
-import { formatPlayerName } from "../types/player-display.ts";
+import { formatPlayerName, formatPlayerPositionLabel } from "../types/player-display.ts";
 import { REGION_SCOUT_WORKING_DAYS_PER_JOB } from "./scout-discovery.ts";
 import type { ScoutCalendarDay } from "./scout-calendar-day.ts";
 import {
@@ -172,7 +172,7 @@ export function buildScoutWorkTiles(input: {
       kind: "player_watch",
       status: tileStatus("active", target.assigned_cancelling_since),
       title: formatPlayerName(target.player),
-      subtitle: `${target.player.age} · ${target.player.position}`,
+      subtitle: `${target.player.age} · ${formatPlayerPositionLabel(target.player)}`,
       scoutName: cancelling
         ? null
         : scoutDisplayName(input.network, target.assigned_scout_id),

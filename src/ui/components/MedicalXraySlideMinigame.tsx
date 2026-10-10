@@ -10,10 +10,10 @@ import { useT } from "../../i18n/react.ts";
 /** Slide the X-ray lamp horizontally above a player lying on a table. */
 export function MedicalXraySlideMinigame({
   targetRegion,
-  onSuccess,
+  onComplete,
 }: {
   targetRegion: BodyRegion;
-  onSuccess: () => void;
+  onComplete: (success: boolean) => void;
 }) {
   const t = useT();
   const trackRef = useRef<HTMLDivElement>(null);
@@ -31,9 +31,9 @@ export function MedicalXraySlideMinigame({
 
   const tryFinish = useCallback(
     (x: number) => {
-      if (xrayLampAligned(x, targetX)) onSuccess();
+      onComplete(xrayLampAligned(x, targetX));
     },
-    [onSuccess, targetX],
+    [onComplete, targetX],
   );
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {

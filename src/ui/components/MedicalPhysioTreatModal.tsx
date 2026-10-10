@@ -33,6 +33,10 @@ export function MedicalPhysioTreatModal({
     [masterSeed, season, week, player.id],
   );
 
+  const finishAssist = (success: boolean) => {
+    onPhysioComplete(success);
+  };
+
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
       <div
@@ -52,10 +56,7 @@ export function MedicalPhysioTreatModal({
           </button>
         </header>
         {minigame === "xray_slide" ? (
-          <MedicalXraySlideMinigame
-            targetRegion={targetRegion}
-            onSuccess={() => onPhysioComplete(true)}
-          />
+          <MedicalXraySlideMinigame targetRegion={targetRegion} onComplete={finishAssist} />
         ) : (
           <RehabMinigamePanel
             playerId={player.id}
@@ -66,7 +67,7 @@ export function MedicalPhysioTreatModal({
             medicalState={medicalState}
             bypassWeeklyCap
             embedded
-            onComplete={(success) => onPhysioComplete(success)}
+            onComplete={finishAssist}
           />
         )}
       </div>

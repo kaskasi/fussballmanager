@@ -262,6 +262,7 @@ import {
   completeDoctorExam,
   completeInHouseSurgery,
   countMedicalHeaderAlerts,
+  ensurePhysioWeek,
   markPhysioManualDone,
 } from "./medical/injury-care.ts";
 import { medicalModifiers, normalizeMedicalStaff } from "./staff/medical-staff.ts";
@@ -1271,6 +1272,22 @@ export default function App() {
       setTrainingAutoNext(false);
     }
   }, [screen]);
+
+  useEffect(() => {
+    if (screen !== "medical") return;
+    patchSession((current) => {
+      const level = precinctMedicalCenterLevel(current.stadium.precinct);
+      const medicalState = ensurePhysioWeek(
+        current.medicalState,
+        current.players,
+        current.season,
+        current.week,
+        level,
+      );
+      if (medicalState === current.medicalState) return current;
+      return { ...current, medicalState };
+    });
+  }, [patchSession, screen, season, week]);
 
   useEffect(() => {
     if (!trainingAutoNext || simulating) return;
@@ -2630,14 +2647,28 @@ export default function App() {
 
   const handlePhysioManual = useCallback(
     (playerId: string, success: boolean) => {
-      patchSession((current) => ({
-        ...current,
-        medicalState: markPhysioManualDone(current.medicalState, playerId, success),
-        players: current.players.map((player) => {
-          if (player.id !== playerId) return player;
-          return success ? reduceInjuryWeeks(player, 0.2) : extendInjuryWeeks(player, 1);
-        }),
-      }));
+      patchSession((current) => {
+        const level = precinctMedicalCenterLevel(current.stadium.precinct);
+        const medicalState = markPhysioManualDone(
+          ensurePhysioWeek(
+            current.medicalState,
+            current.players,
+            current.season,
+            current.week,
+            level,
+          ),
+          playerId,
+          success,
+        );
+        return {
+          ...current,
+          medicalState,
+          players: current.players.map((player) => {
+            if (player.id !== playerId) return player;
+            return success ? reduceInjuryWeeks(player, 0.2) : extendInjuryWeeks(player, 1);
+          }),
+        };
+      });
       flashNotice(
         t(success ? "medical.physio.manualDone" : "medical.physio.manualFail"),
         success ? "ok" : "warn",

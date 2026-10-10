@@ -234,11 +234,26 @@ export function physioManualPlayerIds(
   const auto = physioAutoSlotsPerWeek(medicalCenterLevel);
   const weekMatch =
     state.physio_auto_week?.season === season && state.physio_auto_week?.week === week;
-  const autoIds = weekMatch ? (state.physio_auto_player_ids ?? []) : [];
-  const done = weekMatch ? (state.physio_manual_done_ids ?? []) : [];
+  const autoIds = weekMatch
+    ? (state.physio_auto_player_ids ?? [])
+    : rehab.slice(0, auto);
+  const done = state.physio_manual_done_ids ?? [];
   const needManual = rehab.filter((id) => !autoIds.includes(id) && !done.includes(id));
   if (rehab.length <= auto) return [];
   return needManual.slice(0, Math.max(0, rehab.length - auto));
+}
+
+export function ensurePhysioWeek(
+  state: ClubMedicalState,
+  players: readonly Player[],
+  season: number,
+  week: number,
+  medicalCenterLevel: number,
+): ClubMedicalState {
+  const weekMatch =
+    state.physio_auto_week?.season === season && state.physio_auto_week?.week === week;
+  if (weekMatch) return state;
+  return startPhysioWeek(state, players, season, week, medicalCenterLevel);
 }
 
 export function startPhysioWeek(
@@ -262,13 +277,10 @@ export function startPhysioWeek(
 
 export function physioManualOutcomeForPlayer(
   state: ClubMedicalState,
-  season: number,
-  week: number,
+  _season: number,
+  _week: number,
   playerId: string,
 ): "success" | "fail" | null {
-  const weekMatch =
-    state.physio_auto_week?.season === season && state.physio_auto_week?.week === week;
-  if (!weekMatch) return null;
   if (!(state.physio_manual_done_ids ?? []).includes(playerId)) return null;
   return state.physio_manual_outcomes?.[playerId] ?? null;
 }

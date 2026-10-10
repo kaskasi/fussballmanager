@@ -137,6 +137,7 @@ export function CareerMatch({
         season={season}
         scoutBoard={scoutBoard}
         onOpenOpponentScoutReport={onOpenOpponentScoutReport}
+        onOpenPlayer={onSelectMatchPlayer}
         kasse={kasse}
       />
     );

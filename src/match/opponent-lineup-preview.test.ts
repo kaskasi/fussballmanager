@@ -15,7 +15,8 @@ describe("opponent lineup preview", () => {
     expect(preview!.starters.length).toBe(11);
     expect(preview!.starters[0]?.ca).toBeGreaterThan(0);
     expect(preview!.starters[0]?.ca).toBeLessThanOrEqual(199);
-    expect(preview!.starters[0]?.formMark).toBeTruthy();
+    expect(preview!.starters[0]?.formDisplay).toMatch(/^\d+\.\d$/);
+    expect(preview!.starters[0]?.playerId).toBeTruthy();
     expect(preview!.formation).toBeTruthy();
   });
 

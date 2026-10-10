@@ -14,16 +14,22 @@ import { indexRivalRoster, resolveCareerPlayer } from "../sim/rival-roster-match
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
 import { rivalPlayersForTeam } from "../sim/rival-engine-squad.ts";
 import { estimateCa } from "../transfers/market-value.ts";
-import { formMark } from "../ui/player-profile.ts";
+import {
+  lineupFormFromCareer,
+  lineupFormFromEngineForm,
+  engineFormToCareerForm,
+} from "./lineup-player-status.ts";
 
 export interface OpponentLineupEntry {
   slotId: FormationSlotId;
+  playerId: string;
   name: string;
   shortName: string;
   ca: number;
-  formMark: string;
+  fitness: number;
+  formDisplay: string;
   formTone: "good" | "mid" | "low";
-  formTitle: string;
+  careerForm: number;
   position: PitchPosition;
 }
 
@@ -47,20 +53,6 @@ function shortDisplayName(name: string): string {
   return parts[parts.length - 1] ?? name;
 }
 
-function engineFormToCareer(form: number): number {
-  return Math.min(4, Math.max(-4, Math.round((form / 100) * 8 - 4)));
-}
-
-function formDisplay(form: number, careerScale: boolean) {
-  const careerForm = careerScale ? form : engineFormToCareer(form);
-  const mark = formMark(careerForm);
-  return {
-    formMark: mark.mark,
-    formTone: mark.tone,
-    formTitle: `Form ${careerForm >= 0 ? "+" : ""}${careerForm}`,
-  };
-}
-
 export function previewFromSquad(
   squad: Squad,
   teamShortName: string,
@@ -78,18 +70,26 @@ export function previewFromSquad(
     const ca = rival
       ? Math.round(estimateCa(rival.attributes, rival.position))
       : 0;
-    const form = rival ? rival.state.form : place.player.form;
-    const formInfo = formDisplay(form, Boolean(rival));
+    const careerForm = rival
+      ? rival.state.form
+      : engineFormToCareerForm(place.player.form);
+    const formInfo = rival
+      ? lineupFormFromCareer(careerForm)
+      : lineupFormFromEngineForm(place.player.form);
+    const fitness = rival ? rival.state.fitness : 72;
     const name = rival ? formatPlayerName(rival) : place.player.name;
+    const playerId = rival?.id ?? place.player.id;
 
     return {
       slotId: place.slot,
+      playerId,
       name,
       shortName: shortDisplayName(name),
       ca,
-      formMark: formInfo.formMark,
-      formTone: formInfo.formTone,
-      formTitle: formInfo.formTitle,
+      fitness,
+      formDisplay: formInfo.label,
+      formTone: formInfo.tone,
+      careerForm,
       position: slotPosition(homePosition, opponentSide),
     };
   });

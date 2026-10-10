@@ -14,7 +14,10 @@ import { estimateCa } from "../transfers/market-value.ts";
 import { formatPlayerName, roundStat } from "../types/player-display.ts";
 import type { LineupAssignments } from "./lineup-board.ts";
 import type { OpponentLineupEntry, OpponentLineupPreview } from "./opponent-lineup-preview.ts";
-import { matchPlayerIcons } from "./player-match-icons.ts";
+import { LineupFatigueBars } from "./LineupFatigueBars.tsx";
+import { LineupFormValue } from "./LineupFormValue.tsx";
+import { matchPlayerWeakFoot } from "./player-match-icons.ts";
+import { useT } from "../i18n/react.ts";
 
 type LineupPitchView = "own" | "opponent";
 
@@ -27,6 +30,7 @@ type LineupPitchProps = {
   opponent?: OpponentLineupPreview | null;
   onAssign: (slotId: FormationSlotId, playerId: string | null) => void;
   onDragPlayer: (playerId: string | null) => void;
+  onOpenPlayer?: (playerId: string) => void;
 };
 
 export function LineupPitch({
@@ -38,7 +42,9 @@ export function LineupPitch({
   opponent,
   onAssign,
   onDragPlayer,
+  onOpenPlayer,
 }: LineupPitchProps) {
+  const t = useT();
   const [view, setView] = useState<LineupPitchView>("own");
   const slots = getFormation(formation);
   const opponentEntries = opponent ? opponentFullPitchEntries(opponent) : [];
@@ -106,8 +112,8 @@ export function LineupPitch({
                       type="button"
                       className="lineup-slot-card"
                       draggable
-                      title={`${formatPlayerName(player)} — Klick zum Entfernen`}
-                      onClick={() => onAssign(slot.id, null)}
+                      title={t("match.lineup.openPlayerProfile", { name: formatPlayerName(player) })}
+                      onClick={() => onOpenPlayer?.(player.id)}
                       onDragStart={(event) => {
                         event.dataTransfer.setData("text/player-id", player.id);
                         event.dataTransfer.effectAllowed = "move";
@@ -115,7 +121,7 @@ export function LineupPitch({
                       }}
                       onDragEnd={() => onDragPlayer(null)}
                     >
-                      <PlayerSlotIcons player={player} />
+                      <PlayerSlotStatus player={player} />
                       <span className="lineup-slot-name">{formatPlayerName(player)}</span>
                     </button>
                   ) : (
@@ -142,15 +148,21 @@ export function LineupPitch({
                 }}
               >
                 <span className="lineup-slot-label">{entry.slotId}</span>
-                <div className="lineup-slot-card lineup-slot-card-opponent" title={`${entry.name} · CA ${entry.ca}`}>
+                <button
+                  type="button"
+                  className="lineup-slot-card lineup-slot-card-opponent"
+                  title={t("match.lineup.openPlayerProfile", { name: entry.name })}
+                  onClick={() => onOpenPlayer?.(entry.playerId)}
+                >
                   <span className="lineup-slot-icons">
-                    <span className={`lineup-icon is-${entry.formTone}`} title={entry.formTitle}>
-                      {entry.formMark}
+                    <LineupFormValue careerForm={entry.careerForm} />
+                    <LineupFatigueBars fitness={entry.fitness} compact />
+                    <span className="lineup-slot-ca" title="Current Ability">
+                      {entry.ca}
                     </span>
-                    <span className="lineup-slot-ca" title="Current Ability">{entry.ca}</span>
                   </span>
                   <span className="lineup-slot-name">{entry.name}</span>
-                </div>
+                </button>
               </div>
             ))}
           </div>
@@ -185,16 +197,21 @@ function opponentFullPitchEntries(preview: OpponentLineupPreview): OpponentLineu
     .filter((entry): entry is OpponentLineupEntry => entry !== null);
 }
 
-function PlayerSlotIcons({ player }: { player: Player }) {
-  const icons = matchPlayerIcons(player);
+function PlayerSlotStatus({ player }: { player: Player }) {
   const ca = roundStat(estimateCa(player.attributes, player.position));
+  const weakFoot = matchPlayerWeakFoot(player);
   return (
     <span className="lineup-slot-icons">
-      <span className={`lineup-icon is-${icons.form.tone}`} title={icons.form.title}>
-        {icons.form.mark}
+      <LineupFormValue careerForm={player.state.form} compact />
+      <LineupFatigueBars fitness={player.state.fitness} compact />
+      {weakFoot.show ? (
+        <span className="lineup-icon lineup-icon-wa" title={weakFoot.title}>
+          {weakFoot.label}
+        </span>
+      ) : null}
+      <span className="lineup-slot-ca" title="Current Ability">
+        {ca}
       </span>
-      <span className="lineup-slot-ca" title="Current Ability">{ca}</span>
     </span>
   );
 }
-

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   FORMATION_IDS,
+  getFormation,
   sandboxPlanFromFormation,
   type FormationId,
   type FormationSlotId,
@@ -56,7 +57,7 @@ import { clubShortName } from "../sim/league-week.ts";
 import { careerTeamId } from "../sim/rival-growth.ts";
 import { formatLeagueMatchKickoffLabel } from "./match-kickoff-format.ts";
 import { listProSquad, sortProSquadRows } from "../squad/pro-roster.ts";
-import { formMark } from "../ui/player-profile.ts";
+import { lineupFormFromCareer } from "./lineup-player-status.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
 import { OpponentScoutMatchAction } from "../ui/components/OpponentScoutMatchAction.tsx";
 import { LineupIndicatorLegend } from "../ui/components/LineupIndicatorLegend.tsx";
@@ -80,6 +81,7 @@ type CareerLineupScreenProps = {
   season?: number;
   scoutBoard?: ScoutBoard;
   onOpenOpponentScoutReport?: (postfachItemId: string) => void;
+  onOpenPlayer?: (playerId: string) => void;
   kasse?: MatchdayCashBreakdown;
 };
 
@@ -105,6 +107,7 @@ export function CareerLineupScreen({
   season = 1,
   scoutBoard,
   onOpenOpponentScoutReport,
+  onOpenPlayer,
   kasse,
 }: CareerLineupScreenProps) {
   const t = useT();
@@ -195,6 +198,22 @@ export function CareerLineupScreen({
           next[slotId] = playerId;
         } else {
           delete next[slotId];
+        }
+        persistLineup(next, plan);
+        return next;
+      });
+    },
+    [persistLineup, plan],
+  );
+
+  const unassignPlayer = useCallback(
+    (playerId: string) => {
+      setAssignments((current) => {
+        const next = { ...current };
+        for (const slot of getFormation(plan.formation)) {
+          if (next[slot.id] === playerId) {
+            delete next[slot.id];
+          }
         }
         persistLineup(next, plan);
         return next;
@@ -339,6 +358,7 @@ export function CareerLineupScreen({
                 opponent={opponentPreview}
                 onAssign={setSlot}
                 onDragPlayer={setDragPlayerId}
+                onOpenPlayer={onOpenPlayer}
               />
               {scoutBoard && onOpenOpponentScoutReport ? (
                 <OpponentScoutMatchAction
@@ -383,11 +403,22 @@ export function CareerLineupScreen({
                   </div>
                 ) : null}
               </div>
-              <div className="lineup-bench-legend-row">
-                <p className="lineup-bench-hint">{t("match.lineup.benchHint")}</p>
-                <LineupIndicatorLegend />
-              </div>
-              <div className="lineup-bench-list lineup-bench-list--fixed">
+              <LineupIndicatorLegend />
+              <div
+                className="lineup-bench-list lineup-bench-list--fixed"
+                onDragOver={(event) => {
+                  if (dragPlayerId) event.preventDefault();
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const playerId = event.dataTransfer.getData("text/player-id");
+                  if (!playerId) return;
+                  if (Object.values(assignments).includes(playerId)) {
+                    unassignPlayer(playerId);
+                  }
+                  setDragPlayerId(null);
+                }}
+              >
                 {benchPageSlots.map((player, index) =>
                   player ? (
                     <LineupPlayerCard
@@ -395,6 +426,7 @@ export function CareerLineupScreen({
                       player={player}
                       onDragStart={setDragPlayerId}
                       onDragEnd={() => setDragPlayerId(null)}
+                      onOpenPlayer={onOpenPlayer}
                     />
                   ) : (
                     <div
@@ -549,16 +581,26 @@ export function CareerLineupScreen({
               </thead>
               <tbody>
                 {squadTableRows.map((row) => {
-                  const form = formMark(row.form);
+                  const form = lineupFormFromCareer(row.form);
                   return (
                     <tr key={row.playerId} className={row.role === "start" ? "is-starter" : undefined}>
                       <td className="col-pos">{row.position}</td>
-                      <td className="col-name">{row.displayName}</td>
+                      <td className="col-name">
+                        {onOpenPlayer ? (
+                          <button
+                            type="button"
+                            className="lineup-squad-name-btn"
+                            onClick={() => onOpenPlayer(row.playerId)}
+                          >
+                            {row.displayName}
+                          </button>
+                        ) : (
+                          row.displayName
+                        )}
+                      </td>
                       <td className="col-num">{row.age}</td>
                       <td className="col-num">{row.ca}</td>
-                      <td className={`lineup-squad-form col-num is-${form.tone}`}>
-                        <span aria-hidden="true">{form.mark}</span> {row.form.toFixed(2)}
-                      </td>
+                      <td className={`lineup-squad-form col-num is-${form.tone}`}>{form.label}</td>
                       <td className="col-role">
                         <span className={`lineup-squad-role is-${row.role}`}>
                           {row.role === "start" ? t("match.lineup.role.start") : t("match.lineup.role.bench")}

@@ -1,65 +1,55 @@
 /** WIREFRAME: PRD 09 — matchday lineup icon legend (Form / Fitness / weak foot) */
-import { CircleHelp } from "lucide-react";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useT } from "../../i18n/react.ts";
+import { LineupFatigueBars } from "../../match/LineupFatigueBars.tsx";
+import { LineupFormValue } from "../../match/LineupFormValue.tsx";
 
 export function LineupIndicatorLegend() {
   const t = useT();
   const [open, setOpen] = useState(false);
-  const panelId = useId();
 
   return (
-    <div className="lineup-indicator-legend">
-      <button
-        type="button"
-        className="lineup-indicator-legend-toggle"
-        aria-expanded={open}
-        aria-controls={panelId}
-        title={t("match.lineup.legend.toggle")}
-        onClick={() => setOpen((current) => !current)}
-      >
-        <CircleHelp size={16} strokeWidth={2.25} aria-hidden />
-        <span>{t("match.lineup.legend.toggle")}</span>
-      </button>
+    <div className="lineup-bench-legend-block">
+      <div className="lineup-bench-legend-row">
+        <p className="lineup-bench-hint">{t("match.lineup.benchHint")}</p>
+        <button
+          type="button"
+          className="pipeline-legend-toggle"
+          aria-label={t("match.lineup.legend.toggle")}
+          aria-pressed={open}
+          title={t("match.lineup.legend.toggle")}
+          onClick={() => setOpen((current) => !current)}
+        >
+          ?
+        </button>
+      </div>
       {open ? (
-        <div id={panelId} className="lineup-indicator-legend-panel" role="region" aria-label={t("match.lineup.legend.title")}>
-          <p className="lineup-indicator-legend-title">{t("match.lineup.legend.title")}</p>
-          <ul className="lineup-indicator-legend-list">
+        <div className="pipeline-heat-legend" role="note" aria-label={t("match.lineup.legend.title")}>
+          <p className="pipeline-heat-legend-lead">{t("match.lineup.legend.title")}</p>
+          <ul className="pipeline-heat-legend-list lineup-legend-examples">
             <li>
-              <span className="lineup-icon is-good" aria-hidden>
-                ●
-              </span>
-              {t("match.lineup.legend.formGood")}
+              <LineupFormValue careerForm={4} compact />
+              <span>{t("match.lineup.legend.formHigh")}</span>
             </li>
             <li>
-              <span className="lineup-icon is-mid" aria-hidden>
-                ▲
-              </span>
-              {t("match.lineup.legend.formMid")}
+              <LineupFormValue careerForm={0} compact />
+              <span>{t("match.lineup.legend.formMid")}</span>
             </li>
             <li>
-              <span className="lineup-icon is-low" aria-hidden>
-                ◆
-              </span>
-              {t("match.lineup.legend.formLow")}
+              <LineupFormValue careerForm={-4} compact />
+              <span>{t("match.lineup.legend.formLow")}</span>
             </li>
             <li>
-              <span className="lineup-icon is-good" aria-hidden>
-                ●
-              </span>
-              {t("match.lineup.legend.fitnessGood")}
+              <LineupFatigueBars fitness={95} compact />
+              <span>{t("match.lineup.legend.fatigueFull")}</span>
             </li>
             <li>
-              <span className="lineup-icon is-mid" aria-hidden>
-                ▲
-              </span>
-              {t("match.lineup.legend.fitnessMid")}
+              <LineupFatigueBars fitness={55} compact />
+              <span>{t("match.lineup.legend.fatigueMid")}</span>
             </li>
             <li>
-              <span className="lineup-icon is-low" aria-hidden>
-                ◆
-              </span>
-              {t("match.lineup.legend.fitnessLow")}
+              <LineupFatigueBars fitness={8} compact />
+              <span>{t("match.lineup.legend.fatigueEmpty")}</span>
             </li>
             <li>
               <span className="lineup-icon lineup-icon-wa" aria-hidden>

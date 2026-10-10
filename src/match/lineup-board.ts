@@ -22,6 +22,20 @@ import type { TeamId } from "@fussballmanager/shared";
 
 export type LineupAssignments = Partial<Record<FormationSlotId, string>>;
 
+export function lineupAssignmentsEqual(
+  left: LineupAssignments,
+  right: LineupAssignments,
+): boolean {
+  const keys = new Set([
+    ...Object.keys(left),
+    ...Object.keys(right),
+  ]) as Set<FormationSlotId>;
+  for (const key of keys) {
+    if (left[key] !== right[key]) return false;
+  }
+  return true;
+}
+
 export interface MatchLineupState {
   formation: FormationId;
   assignments: LineupAssignments;

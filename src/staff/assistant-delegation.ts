@@ -12,7 +12,11 @@ import {
   autoLineupAssignments,
   type AutoLineupMode,
 } from "../match/auto-lineup.ts";
-import type { MatchLineupState } from "../match/lineup-board.ts";
+import {
+  fillMissingAssignments,
+  lineupSlotCount,
+  type MatchLineupState,
+} from "../match/lineup-board.ts";
 import { loadTacticsPreset, type TacticsPresetSlot } from "../match/tactics-presets.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
@@ -171,6 +175,16 @@ export function buildAssistantMatchLineup(
   const plan = existing?.plan ?? fallbackPlan;
   const formation = existing?.formation ?? plan.formation;
   const nextPlan = { ...plan, formation };
+  if (existing?.assignments) {
+    const filled = fillMissingAssignments(players, formation, existing.assignments, clubId);
+    if (lineupSlotCount(filled, formation) >= 11) {
+      return {
+        formation,
+        plan: nextPlan,
+        assignments: filled,
+      };
+    }
+  }
   return {
     formation,
     plan: nextPlan,

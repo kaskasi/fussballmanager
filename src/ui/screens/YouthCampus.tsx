@@ -82,9 +82,11 @@ const POSITION_ORDER: PositionPrimary[] = [
   "CF",
 ];
 
-const DEFAULT_YOUTH_SORT: { key: ProSquadSortKey; direction: ProSquadSortDirection } = {
-  key: "position",
-  direction: "asc",
+export type YouthCampusTab = YouthTab;
+
+export type YouthCampusSortState = {
+  key: ProSquadSortKey;
+  direction: ProSquadSortDirection;
 };
 
 export function YouthCampus({
@@ -106,6 +108,10 @@ export function YouthCampus({
   onCommissionCampLeader,
   onRequestDismissCampLeader,
   onPullCampPlayer,
+  campusTab,
+  onCampusTabChange,
+  youthSort,
+  onYouthSortChange,
   initialTab,
   onInitialTabApplied,
 }: {
@@ -128,17 +134,21 @@ export function YouthCampus({
   onCommissionCampLeader: (nationId: string) => void;
   onRequestDismissCampLeader: (nationId: string) => void;
   onPullCampPlayer: (playerId: string) => void;
-  initialTab?: "u17" | "u19" | "camps" | null;
+  campusTab: YouthTab;
+  onCampusTabChange: (tab: YouthTab) => void;
+  youthSort: YouthCampusSortState;
+  onYouthSortChange: (sort: YouthCampusSortState) => void;
+  initialTab?: YouthTab | null;
   onInitialTabApplied?: () => void;
 }) {
   const tr = useT();
-  const [tab, setTab] = useState<YouthTab>("u17");
+  const tab = campusTab;
 
   useEffect(() => {
     if (!initialTab) return;
-    setTab(initialTab);
+    onCampusTabChange(initialTab);
     onInitialTabApplied?.();
-  }, [initialTab, onInitialTabApplied]);
+  }, [initialTab, onInitialTabApplied, onCampusTabChange]);
   const report = youthInbox.lastReport;
   const u17Count = useMemo(
     () => players.filter((player) => player.squad_status === "u17").length,
@@ -169,7 +179,7 @@ export function YouthCampus({
             role="tab"
             aria-selected={tab === id}
             className={tab === id ? "fm-tab is-active" : "fm-tab"}
-            onClick={() => setTab(id)}
+            onClick={() => onCampusTabChange(id)}
           >
             {label}
           </button>
@@ -193,6 +203,9 @@ export function YouthCampus({
             clubId={clubId}
             trainingPlan={trainingPlan}
             individualPrograms={individualPrograms}
+            sortKey={youthSort.key}
+            sortDirection={youthSort.direction}
+            onSortChange={onYouthSortChange}
             onSelectPlayer={onSelectPlayer}
             onOpenInbox={onOpenInbox}
             onInboxDecision={onInboxDecision}
@@ -234,6 +247,9 @@ function YouthUnifiedRoster({
   onSelectPlayer,
   onOpenInbox,
   onInboxDecision,
+  sortKey,
+  sortDirection,
+  onSortChange,
 }: {
   team: "u17" | "u19";
   players: readonly Player[];
@@ -247,11 +263,12 @@ function YouthUnifiedRoster({
   onSelectPlayer: (playerId: string) => void;
   onOpenInbox: (itemId?: string) => void;
   onInboxDecision: (itemId: string, action: DecisionAction) => void;
+  sortKey: ProSquadSortKey;
+  sortDirection: ProSquadSortDirection;
+  onSortChange: (sort: YouthCampusSortState) => void;
 }) {
   const tr = useT();
   const [position, setPosition] = useState<PositionPrimary | "all">("all");
-  const [sortKey, setSortKey] = useState<ProSquadSortKey>(DEFAULT_YOUTH_SORT.key);
-  const [sortDirection, setSortDirection] = useState<ProSquadSortDirection>(DEFAULT_YOUTH_SORT.direction);
   const [dropAction, setDropAction] = useState<YouthReportDropAction | null>(null);
 
   const playersById = useMemo(() => new Map(players.map((player) => [player.id, player])), [players]);
@@ -268,11 +285,16 @@ function YouthUnifiedRoster({
 
   const toggleSort = (key: ProSquadSortKey) => {
     if (sortKey === key) {
-      setSortDirection((current) => (current === "desc" ? "asc" : "desc"));
+      onSortChange({
+        key,
+        direction: sortDirection === "desc" ? "asc" : "desc",
+      });
       return;
     }
-    setSortKey(key);
-    setSortDirection(key === "name" || key === "position" ? "asc" : "desc");
+    onSortChange({
+      key,
+      direction: key === "name" || key === "position" ? "asc" : "desc",
+    });
   };
 
   const applyDrop = (playerId: string, action: YouthReportDropAction) => {

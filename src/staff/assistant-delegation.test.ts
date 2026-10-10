@@ -44,6 +44,26 @@ describe("assistant delegation", () => {
     expect(Object.keys(lineup.assignments).length).toBeGreaterThanOrEqual(11);
   });
 
+  it("keeps an existing XI when the assistant sets lineup", () => {
+    const seed = buildAssistantMatchLineup(
+      players,
+      clubId,
+      defaultTacticsPresets(),
+      undefined,
+      72,
+      2026,
+    );
+    const next = buildAssistantMatchLineup(
+      players,
+      clubId,
+      defaultTacticsPresets(),
+      seed,
+      45,
+      999,
+    );
+    expect(next.assignments).toEqual(seed.assignments);
+  });
+
   it("creates a valid five-slot training plan with at most three focus slots", () => {
     const plan = assistantTrainingPlan(players, clubId, 75, 1, 3, 2026);
     expect(plan).toHaveLength(15);

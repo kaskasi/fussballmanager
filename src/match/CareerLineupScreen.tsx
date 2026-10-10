@@ -39,6 +39,7 @@ import {
   benchPlayers,
   buildSquadFromAssignments,
   fillMissingAssignments,
+  lineupAssignmentsEqual,
   lineupSlotCount,
   normalizeMatchLineup,
   type LineupAssignments,
@@ -58,6 +59,7 @@ import { listProSquad, sortProSquadRows } from "../squad/pro-roster.ts";
 import { formMark } from "../ui/player-profile.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
 import { OpponentScoutMatchAction } from "../ui/components/OpponentScoutMatchAction.tsx";
+import { LineupIndicatorLegend } from "../ui/components/LineupIndicatorLegend.tsx";
 import { useT } from "../i18n/react.ts";
 
 type CareerLineupScreenProps = {
@@ -130,6 +132,22 @@ export function CareerLineupScreen({
   useEffect(() => {
     setBenchPage((current) => Math.min(current, benchPageCount - 1));
   }, [benchPageCount]);
+
+  useEffect(() => {
+    const normalized = normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId);
+    setPlan((current) =>
+      current.formation === normalized.plan.formation &&
+      current.mentality === normalized.plan.mentality &&
+      current.pressing === normalized.plan.pressing &&
+      current.lineHeight === normalized.plan.lineHeight
+        ? current
+        : normalized.plan,
+    );
+    setAssignments((current) =>
+      lineupAssignmentsEqual(current, normalized.assignments) ? current : normalized.assignments,
+    );
+    setActivePreset(matchLineup ? null : 1);
+  }, [matchLineup, players, fallbackPlan, managerClubId]);
 
   const benchPageSlots = useMemo(() => {
     const start = benchPage * LINEUP_BENCH_PAGE_SIZE;
@@ -365,7 +383,10 @@ export function CareerLineupScreen({
                   </div>
                 ) : null}
               </div>
-              <p className="lineup-bench-hint">{t("match.lineup.benchHint")}</p>
+              <div className="lineup-bench-legend-row">
+                <p className="lineup-bench-hint">{t("match.lineup.benchHint")}</p>
+                <LineupIndicatorLegend />
+              </div>
               <div className="lineup-bench-list lineup-bench-list--fixed">
                 {benchPageSlots.map((player, index) =>
                   player ? (

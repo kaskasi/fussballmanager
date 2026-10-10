@@ -2869,10 +2869,78 @@ body {
   cursor: not-allowed;
 }
 
+.lineup-bench-legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+}
+
 .lineup-bench-hint {
   margin: 0;
   font-size: 0.68rem;
   color: #64748b;
+  flex: 1;
+  min-width: 8rem;
+}
+
+.lineup-indicator-legend {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.lineup-indicator-legend-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: #fff;
+  font-size: 0.68rem;
+  color: #475569;
+  cursor: pointer;
+}
+
+.lineup-indicator-legend-toggle:hover {
+  background: #f8fafc;
+}
+
+.lineup-indicator-legend-panel {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  margin-top: 0.25rem;
+  width: min(18rem, 85vw);
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.12);
+}
+
+.lineup-indicator-legend-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.lineup-indicator-legend-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+.lineup-indicator-legend-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .lineup-bench-list {

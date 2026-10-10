@@ -194,7 +194,12 @@ import { standings, type SandboxPlan, type TeamId } from "@fussballmanager/share
 import { listJobOffers } from "./board/job-offers.ts";
 import { switchManagerClub } from "./board/manager-club-switch.ts";
 import { startBoardSeason } from "./board/season-objectives.ts";
-import { applyScoutPlanToMatchLineup, type MatchLineupState } from "./match/lineup-board.ts";
+import {
+  applyScoutPlanToMatchLineup,
+  fillMissingAssignments,
+  lineupAssignmentsEqual,
+  type MatchLineupState,
+} from "./match/lineup-board.ts";
 import { saveTacticsPreset, type TacticsPresetId } from "./match/tactics-presets.ts";
 import { JobOffersModal } from "./ui/components/JobOffersModal.tsx";
 import {
@@ -269,7 +274,7 @@ import { PostfachScreen } from "./ui/screens/PostfachScreen.tsx";
 import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
 import { NoticeToast, SaveToast } from "./ui/components/SaveToast.tsx";
 import { CampOpeningDebutModal } from "./ui/components/CampOpeningDebutModal.tsx";
-import { YouthCampus } from "./ui/screens/YouthCampus";
+import { YouthCampus, type YouthCampusSortState } from "./ui/screens/YouthCampus";
 import { CalendarScreen } from "./ui/screens/CalendarScreen.tsx";
 import {
   collectCalendarMilestones,
@@ -420,6 +425,7 @@ export default function App() {
   const [careerMatchSetup, setCareerMatchSetup] = useState<CareerMatchSetup | null>(null);
   const [careerMatchUiVisible, setCareerMatchUiVisible] = useState(true);
   const careerMatchInLineupRef = useRef(true);
+  const matchLineupPrepKeyRef = useRef<string | null>(null);
   const [matchNavAction, setMatchNavActionState] = useState<NavPrimaryAction | null>(null);
   const matchNavActionRef = useRef<NavPrimaryAction | null>(null);
   const careerMatchFlowRef = useRef(false);
@@ -446,6 +452,11 @@ export default function App() {
   const [saveToastVisible, setSaveToastVisible] = useState(false);
   const [notice, setNotice] = useState<{ text: string; tone: "ok" | "warn" } | null>(null);
   const [campusInitialTab, setCampusInitialTab] = useState<"u17" | "u19" | "camps" | null>(null);
+  const [campusTab, setCampusTab] = useState<"u17" | "u19" | "camps">("u17");
+  const [campusYouthSort, setCampusYouthSort] = useState<YouthCampusSortState>({
+    key: "position",
+    direction: "asc",
+  });
   const [scoutingInitialTab, setScoutingInitialTab] = useState<ScoutingInitialTab | null>(null);
   const scoutMapDetailBackRef = useRef<(() => void) | null>(null);
   const [scoutMapDetailNav, setScoutMapDetailNav] = useState<{
@@ -667,9 +678,39 @@ export default function App() {
     [finalizeCampDebutReveal, patchSession, players, session.clubId, session.week],
   );
 
+  const matchLineupFlowKey = careerMatchSetup
+    ? `${careerMatchSetup.matchday}-${careerMatchSetup.calendarWeek}-${careerMatchSetup.fixture.homeTeamId}-${careerMatchSetup.fixture.awayTeamId}`
+    : null;
+
   useEffect(() => {
-    if (!careerMatchSetup || !assistantDelegation.lineup) return;
+    if (!matchLineupFlowKey || !assistantDelegation.lineup) {
+      if (!matchLineupFlowKey) {
+        matchLineupPrepKeyRef.current = null;
+      }
+      return;
+    }
+    if (matchLineupPrepKeyRef.current === matchLineupFlowKey) {
+      return;
+    }
+    matchLineupPrepKeyRef.current = matchLineupFlowKey;
+
     patchSession((current) => {
+      const managerClubId = careerTeamId(current.league.player_club_id);
+      if (current.matchLineup) {
+        const filled = fillMissingAssignments(
+          current.players,
+          current.matchLineup.formation,
+          current.matchLineup.assignments,
+          managerClubId,
+        );
+        if (lineupAssignmentsEqual(filled, current.matchLineup.assignments)) {
+          return current;
+        }
+        return {
+          ...current,
+          matchLineup: { ...current.matchLineup, assignments: filled },
+        };
+      }
       const delegated = applyAssistantDelegationWeek({
         delegation: { lineup: true, training: false, scouting: false },
         assistantName: current.storyState.cast.assistant_name,
@@ -680,7 +721,7 @@ export default function App() {
         scoutBoard: current.scoutBoard,
         rivalPlayers: current.rivalPlayers,
         tacticsPresets: current.tacticsPresets,
-        matchLineup: current.matchLineup,
+        matchLineup: undefined,
         season: current.season,
         week: current.week,
         masterSeed: current.masterSeed,
@@ -689,7 +730,7 @@ export default function App() {
       if (!delegated.matchLineup) return current;
       return { ...current, matchLineup: delegated.matchLineup };
     });
-  }, [careerMatchSetup, assistantDelegation.lineup, patchSession]);
+  }, [matchLineupFlowKey, assistantDelegation.lineup, patchSession]);
 
   const finishWeekSimulation = useCallback(async (watchedMatch?: WatchedPlayerMatch | null) => {
     const snapshot = sessionFromSave(save);
@@ -3152,6 +3193,10 @@ export default function App() {
           masterSeed={session.masterSeed}
           cash={finances.cash}
           onSelectPlayer={setProfileId}
+          campusTab={campusTab}
+          onCampusTabChange={setCampusTab}
+          youthSort={campusYouthSort}
+          onYouthSortChange={setCampusYouthSort}
           onOpenInbox={openPostfach}
           onInboxDecision={handleInboxDecision}
           onBuyCamp={handleBuyYouthCamp}

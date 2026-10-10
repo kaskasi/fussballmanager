@@ -435,8 +435,15 @@ export async function simulateGameWeek(
     session.season,
     nextWeek,
   );
-  const finances = loanStep.finances;
-  let financingAfterLoans = loanStep.financing;
+  const crisisStep = advanceFinancialCrisisWeek(
+    loanStep.finances,
+    loanStep.financing,
+    board,
+    nextWeek,
+  );
+  const finances = crisisStep.finances;
+  let financingAfterLoans = crisisStep.financing;
+  board = crisisStep.board;
   const playersWithGrowth = stampWeeklyGrowthBatch(playersAtWeekStart, playersWithMorale);
   let playersWithCaStamp = playersWithGrowth.map(stampLastWeekCa);
 

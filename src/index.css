@@ -4504,6 +4504,121 @@ body {
   min-width: 0;
 }
 
+.merch-market-teaser {
+  border: var(--outline, 1px solid #0f172a);
+  border-radius: var(--merch-r, var(--radius-klein, 0.55rem));
+  background: var(--surface-raised, var(--panel-bg, #fffef8));
+  padding: 0.65rem 0.75rem;
+  min-height: 12rem;
+}
+
+.merch-market-teaser-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.merch-market-teaser-head .merch-section-title {
+  margin: 0;
+}
+
+.merch-market-teaser-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.merch-market-teaser-foot {
+  margin-top: 0.65rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.merch-market-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line-soft, #ddd6ce) 80%, transparent);
+}
+
+.merch-market-row:last-child {
+  border-bottom: none;
+}
+
+.merch-market-row-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.merch-market-row-copy strong {
+  font-size: 0.88rem;
+}
+
+.merch-market-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.merch-market-total {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.merch-market-modal {
+  max-width: 46rem;
+  width: min(46rem, calc(100vw - 2rem));
+}
+
+.merch-market-modal-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.merch-market-modal-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.merch-market-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+}
+
+.merch-market-modal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: min(22rem, 55vh);
+  overflow-y: auto;
+}
+
+.merch-market-row--modal {
+  padding: 0.5rem 0.15rem;
+}
+
+.merch-market-modal-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--line-soft, #ddd6ce);
+}
+
 .merch-market-canvas-wrap {
   border: var(--outline, 1px solid #0f172a);
   border-radius: var(--merch-r, var(--radius-klein, 0.55rem));

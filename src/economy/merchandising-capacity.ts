@@ -57,11 +57,19 @@ export function isMerchOverCapacity(
   return stock > merchMaxStockForSku(fanshopLevel, sku);
 }
 
-/** Whitelabel slots on the market (1 without shop → 5 at max level). */
-export function merchMaxBulkOfferSlots(fanshopLevel: number): number {
+export const MERCH_MARKET_POOL_MIN = 48;
+export const MERCH_MARKET_POOL_MAX = 96;
+
+/** Active whitelabel offers in the weekly market pool (Fanshop level 0→48 … 5→96). */
+export function merchMarketPoolSize(fanshopLevel: number): number {
   const level = Math.max(0, Math.min(5, fanshopLevel));
-  if (level <= 0) return 2;
-  return Math.min(5, level + 1);
+  const span = MERCH_MARKET_POOL_MAX - MERCH_MARKET_POOL_MIN;
+  return MERCH_MARKET_POOL_MIN + Math.round((span * level) / 5);
+}
+
+/** @deprecated Use merchMarketPoolSize — same value, legacy name for migrations. */
+export function merchMaxBulkOfferSlots(fanshopLevel: number): number {
+  return merchMarketPoolSize(fanshopLevel);
 }
 
 export function merchStockRoom(

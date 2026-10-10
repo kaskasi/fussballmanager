@@ -16,7 +16,7 @@ import {
 } from "./merchandising.ts";
 import { MERCH_SKU_IDS } from "./merchandising-skus.ts";
 import { refreshMerchBulkMarket } from "./merchandising-market.ts";
-import { fanshopMerchLevel, merchMaxBulkOfferSlots } from "./merchandising-capacity.ts";
+import { fanshopMerchLevel, merchMarketPoolSize } from "./merchandising-capacity.ts";
 
 describe("merchandising inventory", () => {
   it("weights jersey sales toward higher market value", () => {
@@ -99,9 +99,9 @@ describe("merchandising inventory", () => {
   });
 
   it("raises stock cap and offer slots with fanshop level", () => {
-    expect(merchMaxBulkOfferSlots(0)).toBe(2);
-    expect(merchMaxBulkOfferSlots(1)).toBe(2);
-    expect(merchMaxBulkOfferSlots(5)).toBe(5);
+    expect(merchMarketPoolSize(0)).toBe(48);
+    expect(merchMarketPoolSize(1)).toBe(58);
+    expect(merchMarketPoolSize(5)).toBe(96);
     expect(merchMaxStockForSku(4, "trikots")).toBeGreaterThan(
       merchMaxStockForSku(1, "trikots"),
     );

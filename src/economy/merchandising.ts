@@ -30,6 +30,7 @@ import {
   isMerchOverCapacity,
   MERCH_SALES_DEMAND_MULTIPLIER,
   MERCH_UNIT_SCALE,
+  merchMarketPoolSize,
   merchMaxBulkOfferSlots,
   merchMaxStockForSku,
   merchStockFillRatio,
@@ -51,6 +52,7 @@ export {
   isMerchOverCapacity,
   MERCH_SALES_DEMAND_MULTIPLIER,
   MERCH_UNIT_SCALE,
+  merchMarketPoolSize,
   merchMaxBulkOfferSlots,
   merchMaxStockForSku,
   merchStockFillRatio,
@@ -105,8 +107,13 @@ export {
   customOrderUnitCost,
   bestMarketBulkUnitCost,
   MERCH_ON_DEMAND_MARKET_PREMIUM,
+  MERCH_MARKET_PAGE_SIZE,
   brandingLeadWeeks,
   bulkOfferUnitCost,
+  filterBulkOffersBySku,
+  offerPrimaryQty,
+  sortBulkOffersByUnitCost,
+  topBulkOfferDeals,
 } from "./merchandising-market.ts";
 export {
   isPhillipMerchSaleWeek,
@@ -602,7 +609,7 @@ export function advanceMerchandisingWeek(
     ctx.week,
     ctx.masterSeed,
     merch.last_market_refresh_career_week,
-    merchMaxBulkOfferSlots(fanshopLevel),
+    merchMarketPoolSize(fanshopLevel),
   );
   merch.bulk_offers = market.offers;
   merch.last_market_refresh_career_week = market.refreshWeek;
@@ -652,7 +659,7 @@ export function ensureMerchBulkMarket(
     week,
     masterSeed,
     merch.last_market_refresh_career_week,
-    merchMaxBulkOfferSlots(fanshopLevel),
+    merchMarketPoolSize(fanshopLevel),
   );
   if (
     market.refreshWeek === merch.last_market_refresh_career_week &&
@@ -685,7 +692,7 @@ export function weeklyMerchandisingEconomics(
       ctx.week,
       ctx.masterSeed,
       merch.last_market_refresh_career_week,
-      merchMaxBulkOfferSlots(fanshopLevel),
+      merchMarketPoolSize(fanshopLevel),
     );
     const aged = {
       ...merch,

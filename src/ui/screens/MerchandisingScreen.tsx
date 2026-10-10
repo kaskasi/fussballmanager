@@ -17,7 +17,8 @@ import type { ClubStadium } from "../../stadium/club-stadium.ts";
 import { CashChip } from "../components/CashChip.tsx";
 import { MerchFiresaleModal } from "../components/MerchFiresaleModal.tsx";
 import { MerchSaleSummaryModal } from "../components/MerchSaleSummaryModal.tsx";
-import { MerchMarketplaceCanvas } from "../components/MerchMarketplaceCanvas.tsx";
+import { MerchMarketplaceModal } from "../components/MerchMarketplaceModal.tsx";
+import { MerchMarketplaceTeaser } from "../components/MerchMarketplaceTeaser.tsx";
 import {
   activeMerchSaleSkus,
   customOrderQuote,
@@ -111,6 +112,7 @@ export function MerchandisingScreen({
   const [customQty, setCustomQty] = useState(120);
   const [firesaleSku, setFiresaleSku] = useState<MerchSkuId | null>(null);
   const [modalSalePrice, setModalSalePrice] = useState(1);
+  const [marketBrowseOpen, setMarketBrowseOpen] = useState(false);
 
   const merch = normalizeClubMerchandising(stadium.merchandising);
   const phillipSaleActive = isPhillipMerchSaleWeek(week);
@@ -362,9 +364,10 @@ export function MerchandisingScreen({
           {saleFlameBanner}
           <div className="merch-einkauf-row">
             <div className="merch-einkauf-market">
-              <MerchMarketplaceCanvas
+              <MerchMarketplaceTeaser
                 offers={merch.bulk_offers}
                 onBuyOffer={(offerId) => onRequestBulkPurchase(offerId)}
+                onBrowse={() => setMarketBrowseOpen(true)}
               />
             </div>
             <section className="merch-inbound merch-inbound--side" aria-label="Ware unterwegs">
@@ -488,6 +491,15 @@ export function MerchandisingScreen({
         />
       ) : null}
       {firesaleModal}
+      {marketBrowseOpen ? (
+        <MerchMarketplaceModal
+          offers={merch.bulk_offers}
+          onBuyOffer={(offerId) => {
+            onRequestBulkPurchase(offerId);
+          }}
+          onClose={() => setMarketBrowseOpen(false)}
+        />
+      ) : null}
     </main>
   );
 }

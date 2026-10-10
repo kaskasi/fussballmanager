@@ -1,6 +1,6 @@
 import { phillipMerchSaleMultiplier } from "./phillip-merch-sale.ts";
 import { weeklySeed } from "../sim/league-week.ts";
-import { MERCH_UNIT_SCALE } from "./merchandising-capacity.ts";
+import { merchMarketPoolSize } from "./merchandising-capacity.ts";
 import {
   MERCH_SKU_IDS,
   MERCH_SKU_LABEL,
@@ -40,6 +40,14 @@ const MIN_PRICE_RATIO = 0.52;
 const BRANDING_WEEKS_BASE = 2;
 const BRANDING_WEEKS_PER_400_UNITS = 1;
 
+const LOT_TIERS = [
+  { min: 10, max: 50, weight: 0.35 },
+  { min: 60, max: 200, weight: 0.25 },
+  { min: 250, max: 800, weight: 0.2 },
+  { min: 1000, max: 3000, weight: 0.12 },
+  { min: 4000, max: 10000, weight: 0.08 },
+] as const;
+
 function seededRoll(seed: number, salt: number): number {
   let hash = seed ^ salt;
   hash = Math.imul(hash ^ (hash >>> 16), 0x7feb352d);
@@ -59,11 +67,18 @@ export function merchCareerDayIndex(season: number, week: number, weekday: numbe
 
 export const MERCH_ON_DEMAND_LEAD_DAYS = 2;
 export const MERCH_MIN_BULK_OFFERS = 2;
+export const MERCH_MARKET_PAGE_SIZE = 16;
 /** Rush premium over best visible bulk offer (or reference wholesale). */
 export const MERCH_ON_DEMAND_MARKET_PREMIUM = 1.42;
 
 function unitTotal(units: Partial<Record<MerchSkuId, number>>): number {
   return MERCH_SKU_IDS.reduce((sum, id) => sum + (units[id] ?? 0), 0);
+}
+
+export function offerPrimaryQty(offer: MerchBulkOffer): number {
+  const sku = primaryMerchSku(offer.units);
+  if (sku == null) return unitTotal(offer.units);
+  return offer.units[sku] ?? 0;
 }
 
 /** Exactly one SKU per bulk offer / branding order (v1 rule). */
@@ -88,21 +103,18 @@ function singleSkuUnitCost(sku: MerchSkuId, override?: number): number {
   return override ?? MERCH_SKU_REFERENCE_COST[sku] * 0.62;
 }
 
-const STARTER_OFFERS: readonly {
-  label: string;
-  units: Partial<Record<MerchSkuId, number>>;
-  unitCostOverride?: Partial<Record<MerchSkuId, number>>;
-}[] = [
-  {
-    label: merchSkuOfferLabel("socken"),
-    units: { socken: 100 * MERCH_UNIT_SCALE },
-    unitCostOverride: { socken: 3.5 },
-  },
-  {
-    label: merchSkuOfferLabel("shirts"),
-    units: { shirts: 60 * MERCH_UNIT_SCALE },
-  },
-];
+function pickLotQuantity(seed: number, salt: number): number {
+  const roll = seededRoll(seed, salt);
+  let acc = 0;
+  for (const tier of LOT_TIERS) {
+    acc += tier.weight;
+    if (roll <= acc) {
+      const inner = seededRoll(seed, salt + 2);
+      return Math.round(tier.min + inner * (tier.max - tier.min));
+    }
+  }
+  return 100;
+}
 
 export function brandingLeadWeeks(units: Partial<Record<MerchSkuId, number>>): number {
   const total = unitTotal(units);
@@ -124,34 +136,6 @@ export function ageBulkOffers(
     });
 }
 
-function buildStarterOffer(
-  template: (typeof STARTER_OFFERS)[number],
-  salt: number,
-  careerWeek: number,
-): MerchBulkOffer {
-  const units = { ...template.units };
-  let costSum = 0;
-  for (const id of MERCH_SKU_IDS) {
-    const qty = units[id] ?? 0;
-    if (qty <= 0) continue;
-    const unit =
-      template.unitCostOverride?.[id] ??
-      MERCH_SKU_REFERENCE_COST[id] * 0.62;
-    costSum += qty * unit;
-  }
-  const list_price = Math.round(costSum * 1.08);
-  const lifetime = 5 + (salt % 3);
-  return {
-    id: `offer_starter_${careerWeek}_${salt}`,
-    label: template.label,
-    listed_career_week: careerWeek,
-    expires_career_week: careerWeek + lifetime,
-    list_price,
-    ask_price: list_price,
-    units,
-  };
-}
-
 function buildOffer(
   seed: number,
   salt: number,
@@ -159,15 +143,15 @@ function buildOffer(
 ): MerchBulkOffer {
   const sku =
     MERCH_SKU_IDS[Math.floor(seededRoll(seed, salt) * MERCH_SKU_IDS.length)]!;
-  const qty = Math.round(
-    (30 + Math.floor(seededRoll(seed, salt + 1) * 110)) * MERCH_UNIT_SCALE,
-  );
+  const qty = pickLotQuantity(seed, salt + 1);
   const units: Partial<Record<MerchSkuId, number>> = { [sku]: qty };
-  const unitCost = singleSkuUnitCost(sku);
-  const list_price = Math.round(
-    qty * unitCost * (1.05 + seededRoll(seed, salt + 20) * 0.22),
-  );
-  const lifetime = 3 + Math.floor(seededRoll(seed, salt + 21) * 4);
+  const wholesale = singleSkuUnitCost(sku);
+  const whale = qty >= 4000;
+  const bargainRoll = seededRoll(seed, salt + 20);
+  const sizeBias = whale ? 0.06 + seededRoll(seed, salt + 21) * 0.28 : 0;
+  const priceMult = 0.76 + bargainRoll * 0.42 + sizeBias;
+  const list_price = Math.max(Math.round(qty * wholesale * priceMult), Math.round(wholesale * qty * 0.55));
+  const lifetime = 3 + Math.floor(seededRoll(seed, salt + 22) * 5);
   return {
     id: `offer_${careerWeek}_${salt}`,
     label: merchSkuOfferLabel(sku),
@@ -179,25 +163,26 @@ function buildOffer(
   };
 }
 
+function poolCap(poolSize: number): number {
+  return Math.max(MERCH_MIN_BULK_OFFERS, poolSize);
+}
+
 export function seedInitialMerchBulkOffers(
   masterSeed: number,
   season: number,
   week: number,
-  maxOfferSlots: number,
+  poolSize: number,
 ): MerchBulkOffer[] {
   const careerWeek = merchCareerWeekIndex(season, week);
-  const cap = Math.max(MERCH_MIN_BULK_OFFERS, Math.min(5, maxOfferSlots));
+  const cap = poolCap(poolSize);
   const seed = weeklySeed(masterSeed, season, week);
   const offers: MerchBulkOffer[] = [];
-  for (let i = 0; i < Math.min(STARTER_OFFERS.length, cap); i++) {
-    offers.push(buildStarterOffer(STARTER_OFFERS[i]!, 100 + i, careerWeek));
-  }
-  let salt = 200;
-  while (offers.length < Math.min(MERCH_MIN_BULK_OFFERS, cap)) {
+  let salt = 100;
+  while (offers.length < cap) {
     offers.push(buildOffer(seed, salt, careerWeek));
     salt += 17;
   }
-  return offers.slice(0, cap);
+  return offers;
 }
 
 export function refreshMerchBulkMarket(
@@ -206,10 +191,10 @@ export function refreshMerchBulkMarket(
   week: number,
   masterSeed: number,
   lastRefreshCareerWeek: number | undefined,
-  maxOfferSlots: number,
+  poolSize: number,
 ): { offers: MerchBulkOffer[]; refreshWeek: number } {
   const careerWeek = merchCareerWeekIndex(season, week);
-  const cap = Math.max(MERCH_MIN_BULK_OFFERS, Math.min(5, maxOfferSlots));
+  const cap = poolCap(poolSize);
   if (lastRefreshCareerWeek === careerWeek) {
     return {
       offers: ageBulkOffers(offers, careerWeek).slice(0, cap),
@@ -217,17 +202,47 @@ export function refreshMerchBulkMarket(
     };
   }
   const seed = weeklySeed(masterSeed, season, week);
-  let next = ageBulkOffers(offers, careerWeek).slice(0, cap);
+  let next = ageBulkOffers(offers, careerWeek);
   if (next.length === 0) {
     next = seedInitialMerchBulkOffers(masterSeed, season, week, cap);
+  } else {
+    next = next.slice(0, cap);
   }
-  const spawnRolls = 2 + Math.floor(seededRoll(seed, 901) * 2);
-  for (let i = 0; i < spawnRolls && next.length < cap; i++) {
-    if (seededRoll(seed, 902 + i) > 0.12) {
-      next = [...next, buildOffer(seed, 910 + i * 17, careerWeek)];
-    }
+  let salt = 1000 + next.length * 17;
+  while (next.length < cap) {
+    next = [...next, buildOffer(seed, salt, careerWeek)];
+    salt += 17;
   }
   return { offers: next.slice(0, cap), refreshWeek: careerWeek };
+}
+
+export function bulkOfferUnitCost(offer: MerchBulkOffer): number {
+  const total = unitTotal(offer.units);
+  if (total <= 0) return 0;
+  return Math.round((offer.ask_price / total) * 100) / 100;
+}
+
+export function sortBulkOffersByUnitCost(offers: readonly MerchBulkOffer[]): MerchBulkOffer[] {
+  return [...offers].sort((a, b) => {
+    const diff = bulkOfferUnitCost(a) - bulkOfferUnitCost(b);
+    if (diff !== 0) return diff;
+    return offerPrimaryQty(a) - offerPrimaryQty(b);
+  });
+}
+
+export function topBulkOfferDeals(
+  offers: readonly MerchBulkOffer[],
+  count = 4,
+): MerchBulkOffer[] {
+  return sortBulkOffersByUnitCost(offers).slice(0, count);
+}
+
+export function filterBulkOffersBySku(
+  offers: readonly MerchBulkOffer[],
+  sku: MerchSkuId | "all",
+): MerchBulkOffer[] {
+  if (sku === "all") return [...offers];
+  return offers.filter((offer) => primaryMerchSku(offer.units) === sku);
 }
 
 /** Lowest €/unit among live bulk offers for this SKU (whitelabel packs). */
@@ -272,8 +287,5 @@ export function customOrderUnitCost(
   return Math.round(unit * 100) / 100;
 }
 
-export function bulkOfferUnitCost(offer: MerchBulkOffer): number {
-  const total = unitTotal(offer.units);
-  if (total <= 0) return 0;
-  return Math.round((offer.ask_price / total) * 100) / 100;
-}
+export { merchMarketPoolSize } from "./merchandising-capacity.ts";
+export { MERCH_MARKET_POOL_MIN, MERCH_MARKET_POOL_MAX } from "./merchandising-capacity.ts";

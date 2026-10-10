@@ -9,7 +9,7 @@ import {
   JERSEY_REVENUE_SHARE,
   MERCH_OVERCAP_DISCARD_AFTER_WEEKS,
   merchChannelScale,
-  merchMaxBulkOfferSlots,
+  merchMarketPoolSize,
   normalizeClubMerchandising,
   weeklyMerchandisingEconomics,
 } from "./merchandising.ts";
@@ -90,7 +90,7 @@ export function buildMerchandisingAnalytics(
       };
     }).sort((a, b) => b.gross - a.gross),
     fanshopLevel,
-    maxOfferSlots: merchMaxBulkOfferSlots(fanshopLevel),
+    maxOfferSlots: merchMarketPoolSize(fanshopLevel),
     pendingBranding: merch.branding_queue.length,
     activeOffers: merch.bulk_offers.length,
     overCapacitySkuCount,

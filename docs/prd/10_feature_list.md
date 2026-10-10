@@ -61,6 +61,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F2.6 | Rehasystem | M3 | Verletzungsverlauf-Stufen, Reha-Trainer-Qualität |
 | F2.7 | Wachstums-Heatmap | M1 | Team-Leiste: 1 Quadrat = 1 Spieler-Wochenzuwachs (PRD 09 Screen 1) |
 | F2.8 | Fähigkeiten / Bonus-Stamps | M2 | Named bonuses: train / event / hybrid (unlock then F2.3 seal); signed −4…+4 on 2–3 attrs (PRD 07.5). Six archetype stamps in catalog |
+| F2.9 | Breakout/Slump Story (Tier 2) | M2 | Seltene Karriere-Risse mit Wachstums-Multiplikator + Narrative (PRD 06.11); eigene + Rivalen |
 
 ### Modul 3 · Jugendakademie *(PRD 03)*
 

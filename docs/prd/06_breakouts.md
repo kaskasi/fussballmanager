@@ -1,7 +1,7 @@
 # /docs/prd/06_breakouts.md
 
-**Version:** 1.1
-**Last Updated:** 2026-09-22
+**Version:** 1.2
+**Last Updated:** 2026-10-10
 **Status:** Final
 
 ---
@@ -351,6 +351,15 @@ Kalibriert gegen die Punkteformel in PRD 02.1 (Basis 1.0 pro Woche vor den Fakto
 | Modifier mit `until_injury_end`, Verletzung vorbei | Modifier im nächsten Wochenupdate weg, Flagge bleibt |
 | Identischer RNG-Seed, identische Woche | Dieselben Events |
 | `environment_shift_*` ohne Transfer | Wird im Wochen-Loop nicht gewürfelt |
+
+### 06.11 Tier-2 Story-Szenarien (v1.2)
+
+Zusätzlich zu den Tier-1-Events (Drive/Moral) gibt es **zehn Tier-2-Risse** mit `weekly_growth_multiplier` (Produkt, Clamp 0.4–2.5 in der Growth Engine). IDs: `obscure_to_main_striker`, `finishing_school_click`, `call_up_spark`, `rehab_rebirth`, `tactical_unlock`, `golden_boy_fracture`, `after_the_summit` (event-gekoppelt an Event-Stamp `torjaeger_saison`), `bench_identity_crisis`, `hype_backlash`, `injury_spiral`.
+
+- **Seltenheit:** Basis-`weekly_probability` 0.0008–0.002; Karma bei hohem Drive (+Breakout) bzw. hohem Drive (−Slump) wie in 06.4.
+- **Länderspiel:** bis F10.6 Proxy über Tor/Assist-Serie + Marktwert (`call_up_spark`).
+- **Fremdspieler:** Narrative in Club-Events (Scout) und «Der Treter» (`rival_breakout_narratives` in Pipeline).
+- **UI:** Profil-Timeline für `full` + `partial` (PRD 09.2 Screen 4a).
 
 ## References
 

@@ -48,6 +48,8 @@ export interface WeeklyGrowthInput {
   noise?: number;
   /** F8.1 coaching staff environment bonus. Default 1.0. */
   environmentFactor?: number;
+  /** PRD 06 Tier-2 breakout/slump product multiplier. Default 1.0. */
+  growthMultiplier?: number;
   squadStatus?: "pro" | "u17" | "u19" | "loaned_out";
   seasonApps?: number;
   /** League matchdays already completed this season (for pro playing-time gate). */
@@ -166,6 +168,7 @@ export function calculateWeeklyTrainingGain(input: WeeklyGrowthInput): number {
     input.anlage *
     input.drive *
     environment(input.environmentFactor ?? 1) *
+    (input.growthMultiplier ?? 1) *
     noise *
     trainingFocus(input.focusSlots, input.injured) *
     calculateMatchPractice(input.minutes, input.injured, playingTime)

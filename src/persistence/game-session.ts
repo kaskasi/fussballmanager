@@ -129,6 +129,8 @@ export interface GameSession {
   board: BoardState;
   clubEvents: ClubEvent[];
   rivalPlayers: Player[];
+  /** PRD 06 — Liga-Spieler Breakout-Texte der laufenden Woche (Treter/Scout). */
+  rivalBreakoutNarratives: import("../development/breakouts.ts").BreakoutNarrative[];
   coachingStaff: CoachingStaff;
   clubId: string;
   managerName: string;
@@ -295,6 +297,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     ),
     clubEvents: pipeline.club_events ?? emptyClubEvents(),
     rivalPlayers,
+    rivalBreakoutNarratives: pipeline.rival_breakout_narratives ?? [],
     coachingStaff: normalizeCoachingStaff(pipeline.coaching_staff, save.state.season),
     clubId: save.manifest.player_club_id,
     managerName: save.manifest.manager_name,
@@ -344,6 +347,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     board: session.board,
     club_events: session.clubEvents,
     rival_players: session.rivalPlayers,
+    rival_breakout_narratives: session.rivalBreakoutNarratives,
     coaching_staff: session.coachingStaff,
     last_season_awards: session.lastSeasonAwards,
     story_state: session.storyState,

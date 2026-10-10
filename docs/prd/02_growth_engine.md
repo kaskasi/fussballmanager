@@ -48,8 +48,11 @@ growth(attr) =
   × N(1, σ)                          // PRD 02.3, multiplikativ
   × training_focus(attr)             // PRD 02.4
   × match_practice(minutes)          // PRD 02.5
+  × breakout_growth_multiplier       // PRD 06 Tier-2, Produkt aus state.modifiers, Clamp 0.4–2.5
   − decay_per_week(attr, effective_age)
 ```
+
+`breakout_growth_multiplier` wird **nach** Drive/Alter/Umfeld und **vor** Noise angewendet (Implementierung: `growthMultiplier` in der Pipeline-Woche).
 
 `learning_base` ist `0.07 × ageDevelopmentFactor`. Die Namen `bell`,
 `early_peak`, `late_peak`, `plateau`, `continuous_growth` in 02.2 sind Labels.

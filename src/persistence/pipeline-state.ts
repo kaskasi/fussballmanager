@@ -95,6 +95,8 @@ export interface PipelineState {
   medical_state?: ClubMedicalState;
   /** F8.2 — orthopedist story hire. */
   orthopedist_hire?: OrthopedistHireState;
+  /** PRD 06 — rival breakout headlines for Der Treter (current week). */
+  rival_breakout_narratives?: import("../development/breakouts.ts").BreakoutNarrative[];
 }
 
 export function defaultPipelineState(week = 1): PipelineState {

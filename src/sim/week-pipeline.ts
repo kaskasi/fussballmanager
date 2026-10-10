@@ -1,7 +1,9 @@
 import { t } from "../i18n/index.ts";
 import {
   expireBreakoutModifiers,
+  processSummitBreakout,
   processWeeklyBreakoutChecks,
+  trackBenchWeek,
   type BreakoutNarrative,
 } from "../development/breakouts.ts";
 import { evaluateClearStamps, evaluateEventStamps } from "../development/ability-stamps.ts";
@@ -233,7 +235,7 @@ export async function simulateGameWeek(
       precinctTrainingEnvironment(session.stadium.precinct),
   };
   const manualTrainingUnits = !resolveFeatureCurtain(session.storyState).auto_training;
-  let players = tickInjuryRecoveryBatch(session.players).map((player) => {
+  let players = tickInjuryRecoveryBatch(session.players, nextWeek).map((player) => {
     if (manualTrainingUnits) return applyWeeklyAttributeDecay(player);
     const trained = applyTrainingWeek(player, sessions, trainingContext);
     return applyPlanFitnessRecovery(trained, session.trainingPlan);
@@ -283,7 +285,7 @@ export async function simulateGameWeek(
     intensity: session.trainingIntensity,
     coachingStaff: session.coachingStaff,
     precinctRegen: precinctFitnessRegen(session.stadium.precinct),
-  });
+  }).map((player) => trackBenchWeek(player, player.state.weekly_minutes));
   const medLevel = precinctMedicalCenterLevel(session.stadium.precinct);
   const medMods = medicalModifiers(
     normalizeMedicalStaff(session.medicalStaff),
@@ -337,6 +339,22 @@ export async function simulateGameWeek(
       "profile",
       `${award.icon} ${who} verdient ${award.label}`,
     );
+    if (named) {
+      const summit = processSummitBreakout(
+        named,
+        award.stampId,
+        nextWeek,
+        session.masterSeed,
+        session.season,
+      );
+      players = players.map((entry) => (entry.id === named.id ? summit.player : entry));
+      clubEvents = appendBreakoutNarrativesToEvents(
+        clubEvents,
+        summit.narratives,
+        session.season,
+        nextWeek,
+      );
+    }
   }
   const leagueWithCareerStats = {
     ...leagueStep.league,
@@ -503,6 +521,7 @@ export async function simulateGameWeek(
   );
   rivalPlayers = expireBreakoutModifiers(rivalBreakouts.players, nextWeek);
   rivalPlayers = evaluateClearStamps(rivalPlayers).players;
+  const rivalBreakoutNarratives = rivalBreakouts.narratives;
 
   let transferState = session.transferState;
   clubEvents = appendBreakoutNarrativesToEvents(
@@ -511,6 +530,17 @@ export async function simulateGameWeek(
     session.season,
     nextWeek,
   );
+  for (const narrative of rivalBreakoutNarratives) {
+    const rival = rivalPlayers.find((entry) => entry.id === narrative.playerId);
+    const who = rival ? formatPlayerName(rival) : narrative.playerId;
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "info",
+      `Formexplosion: ${who} — ${narrative.narrative}`,
+    );
+  }
   if (isTransferWindowOpen(nextWeek)) {
     const aiTransfers = advanceAiTransferWeek({
       rivalPlayers,
@@ -661,6 +691,7 @@ export async function simulateGameWeek(
     trainingUnitOutcomes: [],
     trainingCalendarGateDone: resolveFeatureCurtain(narrativeStep.storyState).auto_training,
     rivalPlayers,
+    rivalBreakoutNarratives,
     transferState,
     clubEvents,
     individualPrograms: individualStep.programs,

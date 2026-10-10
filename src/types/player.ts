@@ -79,6 +79,10 @@ export interface Player {
     last_match_goals?: number;
     /** F3.9 — HQ vs satellite camp id. Missing means HQ. */
     youth_site?: "hq" | string;
+    /** PRD 06 — consecutive weeks under ~45 min (bench slump trigger). */
+    bench_weeks_streak?: number;
+    /** PRD 06 — logged severe injuries for injury_spiral. */
+    severe_injuries_logged?: number;
     /** F3.9 — face of the camp purchase reveal (max hidden profile). */
     camp_opening_headline?: boolean;
     /** Index into `youth.camp.debut.hook.{nation}.{index}` copy. */
@@ -174,6 +178,12 @@ export interface TemporaryModifier {
   attribute?: keyof Attributes;
   delta?: number;
   fitness_regen_multiplier?: number;
+  /** PRD 06 Tier-2 — multiplies weekly training growth (product, clamped in engine). */
+  weekly_growth_multiplier?: number;
+  /** When set with weekly_growth_multiplier, applies only to that attribute cluster. */
+  attribute_group?: "technical" | "physical";
+  /** PRD 06 — one-week form/morale shock (display + morale delta applied at fire). */
+  form_shock?: boolean;
   until_week?: number;
   until_injury_end?: boolean;
 }

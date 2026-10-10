@@ -22,6 +22,10 @@ import {
   SLOT_COUNT,
   type TrainingSession,
 } from "./weekly-plan.ts";
+import {
+  aggregateWeeklyGrowthMultiplier,
+  attributeGroupGrowthBias,
+} from "./growth-breakout-modifiers.ts";
 
 export interface TrainingWeekContext {
   season: number;
@@ -145,6 +149,26 @@ function resolveGrowthRandom(
   );
 }
 
+function growthMultiplierFor(
+  player: Player,
+  key: keyof Attributes,
+  context?: TrainingWeekContext,
+): number {
+  const week = context?.week ?? 1;
+  const base = aggregateWeeklyGrowthMultiplier(
+    player.state.modifiers,
+    week,
+    player.state.injury !== null,
+  );
+  const group = attributeGroupGrowthBias(
+    player.state.modifiers,
+    week,
+    player.state.injury !== null,
+    key,
+  );
+  return base * group;
+}
+
 function trainingGainOf(
   player: Player,
   key: keyof Attributes,
@@ -171,6 +195,7 @@ function trainingGainOf(
     squadStatus: player.squad_status,
     seasonApps: player.state.season_apps,
     leagueMatchdaysPlayed: context?.leagueMatchdaysPlayed ?? 0,
+    growthMultiplier: growthMultiplierFor(player, key, context),
     noise: resolvedRandom ? undefined : 1,
     random: resolvedRandom,
   });
@@ -205,6 +230,7 @@ function growthOf(
     squadStatus: player.squad_status,
     seasonApps: player.state.season_apps,
     leagueMatchdaysPlayed: context?.leagueMatchdaysPlayed ?? 0,
+    growthMultiplier: growthMultiplierFor(player, key, context),
     noise: resolvedRandom ? undefined : 1,
     random: resolvedRandom,
   });

@@ -17,14 +17,7 @@ import type { AbilityEstimate } from "../scouting/estimate-model.ts";
 import { scoutReveal } from "../scouting/scout-visibility.ts";
 import { formatSeasonLabel } from "../sim/season-label.ts";
 
-/** PRD 06.5: only `full` events get 💡. Generational flags stay off the timeline. */
-const VISIBLE_BREAKOUTS = new Set([
-  "mentor_ignition",
-  "prodigy_pressure",
-  "late_bloomer_kick",
-  "underdog_resolve",
-  "environment_shift_positive",
-]);
+import { breakoutDisplayLabel, isTimelineVisibleBreakout } from "../development/breakouts.ts";
 
 const CA_WEIGHTS: Record<
   ReturnType<typeof caGroup>,
@@ -218,7 +211,11 @@ export function layoutGrowthChart(
 }
 
 export function visibleBreakoutFlags(flags: readonly string[]): string[] {
-  return flags.filter((flag) => VISIBLE_BREAKOUTS.has(flag));
+  return flags.filter((flag) => isTimelineVisibleBreakout(flag));
+}
+
+export function visibleBreakoutLabel(eventId: string): string {
+  return breakoutDisplayLabel(eventId);
 }
 
 export function stateMark(value: number, goodFrom = 70, midFrom = 40): { mark: StateMark; tone: StateTone } {

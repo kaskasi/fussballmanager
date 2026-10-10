@@ -36,6 +36,7 @@ export type TreterArticleKind =
   | "table"
   | "scorers"
   | "scout"
+  | "breakout"
   | "goal_month"
   | "form"
   | "board"
@@ -389,6 +390,25 @@ function collectMerchArticle(session: GameSession, clubLabel: string): TreterArt
   };
 }
 
+function collectRivalBreakoutArticles(session: GameSession): TreterArticle[] {
+  const narratives = session.rivalBreakoutNarratives ?? [];
+  if (narratives.length === 0) return [];
+  return narratives.map((entry) => {
+    const rival = session.rivalPlayers.find((player) => player.id === entry.playerId);
+    const name = rival ? formatPlayerName(rival) : entry.playerId;
+    return {
+      id: `treter-breakout-${entry.playerId}-${session.season}-${entry.week}`,
+      kind: "breakout" as const,
+      headline: `Formexplosion: ${name}`,
+      kicker: "Liga beobachtet",
+      body: entry.narrative,
+      layout: "column" as const,
+      priority: 6,
+      playerId: entry.playerId,
+    };
+  });
+}
+
 function collectRotatingTabloid(session: GameSession, clubLabel: string): TreterArticle {
   const seed = `${session.masterSeed}:${session.season}:${session.week}:tabloid`;
   const templates = [
@@ -468,6 +488,7 @@ export function buildTreterEdition(session: GameSession): TreterEdition {
   const candidates: TreterArticle[] = [
     ...collectCampArticles(session, clubLabel),
     ...collectTransferArticles(session, clubLabel, weekRecords),
+    ...collectRivalBreakoutArticles(session),
     ...collectScoutArticles(session, clubLabel),
     ...collectStadiumArticles(session, clubLabel),
     collectRotatingTabloid(session, clubLabel),

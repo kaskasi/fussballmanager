@@ -135,6 +135,9 @@ interface TemporaryModifier {
   attribute?: keyof Attributes;
   delta?: number;
   fitness_regen_multiplier?: number;
+  weekly_growth_multiplier?: number;   // PRD 06 Tier-2
+  attribute_group?: "technical" | "physical";
+  form_shock?: boolean;
   until_week?: number;
   until_injury_end?: boolean;
 }

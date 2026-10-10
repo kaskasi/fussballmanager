@@ -99,6 +99,7 @@ import {
   stampGateTitle,
   stateMark,
   visibleBreakoutFlags,
+  visibleBreakoutLabel,
   type AttributeBar,
   type DossierTrainingAccent,
   type ExperienceBar,
@@ -822,8 +823,8 @@ function DevelopmentTab({
       {owned && timeline.length > 0 ? (
         <div className="profile-timeline" aria-label="Breakouts">
           {timeline.map((flag) => (
-            <span key={flag} title={flag}>
-              <Lightbulb className="profile-timeline-icon" size={16} aria-label={flag} />
+            <span key={flag} title={visibleBreakoutLabel(flag)}>
+              <Lightbulb className="profile-timeline-icon" size={16} aria-label={visibleBreakoutLabel(flag)} />
             </span>
           ))}
         </div>

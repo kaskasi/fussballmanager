@@ -1,4 +1,5 @@
 import { injuryRiskScore } from "./fitness-management.ts";
+import { noteSevereInjury, signalRehabReturn } from "./breakouts.ts";
 import type { Injury, Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import type { PendingDiagnosis } from "../medical/diagnosis-queue.ts";
@@ -42,6 +43,18 @@ export function tickInjuryRecovery(player: Player): Player {
       injury: { ...injury, weeks_remaining: weeksRemaining },
     },
   };
+}
+
+/** PRD 06 — severe injury cleared → rehab_rebirth eligibility signal. */
+export function tickInjuryRecoveryWithSignals(player: Player, week: number): Player {
+  const injury = player.state.injury;
+  if (!injury) return player;
+  const wasSevere = injury.severity === "severe";
+  const next = tickInjuryRecovery(player);
+  if (wasSevere && next.state.injury === null) {
+    return signalRehabReturn(next, week);
+  }
+  return next;
 }
 
 export interface WeeklyInjuryRollContext {
@@ -184,11 +197,14 @@ export function rollWeeklyInjuries(
       weeks: injury.weeks_remaining,
       severity: injury.severity,
     });
-    return { ...player, state: { ...player.state, injury } };
+    const injured =
+      injury.severity === "severe" ? noteSevereInjury({ ...player, state: { ...player.state, injury } }) : { ...player, state: { ...player.state, injury } };
+    return injured;
   });
   return { players: nextPlayers, notices, pendingDiagnoses };
 }
 
-export function tickInjuryRecoveryBatch(players: readonly Player[]): Player[] {
-  return players.map(tickInjuryRecovery);
+export function tickInjuryRecoveryBatch(players: readonly Player[], week?: number): Player[] {
+  if (week === undefined) return players.map(tickInjuryRecovery);
+  return players.map((player) => tickInjuryRecoveryWithSignals(player, week));
 }

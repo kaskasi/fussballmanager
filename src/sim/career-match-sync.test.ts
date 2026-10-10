@@ -68,4 +68,60 @@ describe("career match sync", () => {
 
     expect(result.players.find((player) => player.id === "pl_engine_st")?.state.season_goals).toBe(1);
   });
+
+  it("falls back to distribution when engine stats are an empty array (watched match bug)", () => {
+    const striker = clonePlayer();
+    striker.id = "pl_st";
+    striker.position = "CF";
+    striker.squad_status = "pro";
+    striker.club_id = "cl_fc_nordstern";
+    striker.attributes.shooting = 160;
+
+    const fixture = {
+      homeTeamId: NORDSTERN_ID,
+      awayTeamId: asTeamId("tsv-holzweg"),
+      homeGoals: 3,
+      awayGoals: 0,
+    };
+
+    const result = applyCareerMatchWeek([striker], fixture, NORDSTERN_ID, 5, 2026, 1, []);
+    const goals = result.players.reduce((sum, player) => sum + player.state.season_goals, 0);
+    expect(goals).toBe(3);
+  });
+
+  it("applies multiple goals from engine stats to one scorer", () => {
+    const striker = clonePlayer();
+    striker.id = "pl_hat";
+    striker.position = "CF";
+    striker.squad_status = "pro";
+    striker.club_id = "cl_fc_nordstern";
+
+    const fixture = {
+      homeTeamId: NORDSTERN_ID,
+      awayTeamId: asTeamId("tsv-holzweg"),
+      homeGoals: 4,
+      awayGoals: 2,
+    };
+
+    const result = applyCareerMatchWeek(
+      [striker],
+      fixture,
+      NORDSTERN_ID,
+      6,
+      2026,
+      1,
+      [
+        {
+          playerId: asPlayerId("pl_hat"),
+          teamId: NORDSTERN_ID,
+          name: "Hat-trick Hero",
+          goals: 4,
+          assists: 0,
+          yellowCards: 0,
+        },
+      ],
+    );
+
+    expect(result.players.find((player) => player.id === "pl_hat")?.state.season_goals).toBe(4);
+  });
 });

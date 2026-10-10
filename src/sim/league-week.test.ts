@@ -66,6 +66,34 @@ describe("league week", () => {
       homeGoals: 4,
       awayGoals: 0,
       matchday: league.matchday,
+      playerClubStats: [
+        {
+          playerId: "pl_test_striker",
+          teamId: league.player_club_id,
+          name: "Test Striker",
+          goals: 4,
+          assists: 1,
+          yellowCards: 0,
+        },
+      ],
+      fixtureStats: [
+        {
+          playerId: "pl_test_striker",
+          teamId: scheduled!.homeTeamId,
+          name: "Test Striker",
+          goals: scheduled!.homeTeamId === league.player_club_id ? 4 : 0,
+          assists: scheduled!.homeTeamId === league.player_club_id ? 1 : 0,
+          yellowCards: 0,
+        },
+        {
+          playerId: "pl_opp",
+          teamId: scheduled!.awayTeamId,
+          name: "Opponent",
+          goals: scheduled!.awayTeamId === league.player_club_id ? 4 : 0,
+          assists: scheduled!.awayTeamId === league.player_club_id ? 1 : 0,
+          yellowCards: 0,
+        },
+      ],
     };
     const advanced = await advanceLeagueWeek(league, 1, 1, 2026, [], [], watched);
     expect(advanced.playerFixture).toEqual({
@@ -74,6 +102,7 @@ describe("league week", () => {
       homeGoals: 4,
       awayGoals: 0,
     });
+    expect(advanced.clubPlayerStats).toEqual(watched.playerClubStats);
   });
 
   it("assigns pro minutes after a club fixture", () => {

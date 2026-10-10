@@ -3486,6 +3486,7 @@ export default function App() {
           trainingUnlocks={{
             hasTrainingHall: precinctHasTrainingHall(stadium.precinct),
             trainingPitchLevel: precinctTrainingPitchLevel(stadium.precinct),
+            medicalCenterLevel: precinctMedicalCenterLevel(stadium.precinct),
           }}
           injuryRiskFactor={injuryRiskFactor}
           trainingUnitsCompleted={trainingUnitsCompleted}

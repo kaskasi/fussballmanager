@@ -7,7 +7,15 @@ import {
   weeklyDecayDelta,
 } from "./growth-engine.ts";
 import { trainingIntensityMultiplier } from "./training-load.ts";
-import { defaultTrainingPlan, planToSessions, type TrainingUnit } from "./training-units.ts";
+import { applyFitnessRecoveryFraction } from "./fitness-management.ts";
+import {
+  defaultTrainingPlan,
+  isTrainingSlotEmpty,
+  planToSessions,
+  trainingUnit,
+  type TrainingSlot,
+  type TrainingUnit,
+} from "./training-units.ts";
 import {
   attributesIn,
   focusSlotsFor,
@@ -22,6 +30,8 @@ export interface TrainingWeekContext {
   intensity?: number;
   /** F8.1 — from coaching staff; default 1.0. */
   environmentFactor?: number;
+  /** Completed league matchdays this season (pro playing-time gate). */
+  leagueMatchdaysPlayed?: number;
 }
 
 /**
@@ -36,9 +46,9 @@ export const HUB_PLAN: readonly TrainingSession[] = planToSessions(defaultTraini
 export function developmentScale(status: Player["squad_status"]): number {
   switch (status) {
     case "u17":
-      return 0.3;
+      return 0.88;
     case "u19":
-      return 0.55;
+      return 0.94;
     default:
       return 1;
   }
@@ -58,9 +68,9 @@ export function effectiveDevelopmentScale(
 export function developmentMinutes(status: Player["squad_status"], minutes: number): number {
   switch (status) {
     case "u17":
-      return Math.min(minutes, 45);
+      return Math.min(minutes, 75);
     case "u19":
-      return Math.min(minutes, 70);
+      return Math.min(minutes, 85);
     default:
       return minutes;
   }
@@ -102,6 +112,18 @@ export function applyTrainingWeek(
     );
   }
   return { ...player, attributes };
+}
+
+/** Auto-training week sim — stacks Erholung / Massagen from the timetable. */
+export function applyPlanFitnessRecovery(player: Player, plan: readonly TrainingSlot[]): Player {
+  let next = player;
+  for (const slot of plan) {
+    if (isTrainingSlotEmpty(slot)) continue;
+    const unit = trainingUnit(slot.unitId);
+    if (unit.fitnessRecoveryFraction === undefined) continue;
+    next = applyFitnessRecoveryFraction(next, unit.fitnessRecoveryFraction);
+  }
+  return next;
 }
 
 function resolveGrowthRandom(
@@ -146,6 +168,9 @@ function trainingGainOf(
     injured: player.state.injury !== null,
     focusSlots: focusSlotsFor(sessions, key),
     environmentFactor: context?.environmentFactor ?? 1,
+    squadStatus: player.squad_status,
+    seasonApps: player.state.season_apps,
+    leagueMatchdaysPlayed: context?.leagueMatchdaysPlayed ?? 0,
     noise: resolvedRandom ? undefined : 1,
     random: resolvedRandom,
   });
@@ -177,6 +202,9 @@ function growthOf(
     injured: player.state.injury !== null,
     focusSlots: focusSlotsFor(sessions, key),
     environmentFactor: context?.environmentFactor ?? 1,
+    squadStatus: player.squad_status,
+    seasonApps: player.state.season_apps,
+    leagueMatchdaysPlayed: context?.leagueMatchdaysPlayed ?? 0,
     noise: resolvedRandom ? undefined : 1,
     random: resolvedRandom,
   });
@@ -203,6 +231,9 @@ export function applyTrainingUnit(
   context?: TrainingWeekContext,
   unit?: TrainingUnit,
 ): Player {
+  if (unit?.fitnessRecoveryFraction !== undefined) {
+    return applyFitnessRecoveryFraction(player, unit.fitnessRecoveryFraction);
+  }
   const channel = `team-unit-${slotIndex}`;
   const sessions = isolatedUnitSessions(weekSessions, slotIndex);
   const boost = unit?.growthBoost ?? 1;

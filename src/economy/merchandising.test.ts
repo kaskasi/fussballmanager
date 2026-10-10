@@ -11,6 +11,7 @@ import {
   MERCH_OVERCAP_DISCARD_AFTER_WEEKS,
   MERCH_SALE_DURATION_WEEKS,
   merchMaxStockForSku,
+  merchFiresaleDemandMultiplier,
   startMerchSkuSale,
   weeklyMerchandisingEconomics,
 } from "./merchandising.ts";
@@ -147,6 +148,50 @@ describe("merchandising inventory", () => {
       masterSeed: 1,
     });
     expect(priceyEcon.unitsSold.shirts ?? 0).toBeLessThanOrEqual(cheapEcon.unitsSold.shirts ?? 0);
+  });
+
+  it("scales fire sale demand from 1× to 10× by discount depth", () => {
+    expect(merchFiresaleDemandMultiplier(100, 100)).toBe(1);
+    expect(merchFiresaleDemandMultiplier(50, 100)).toBe(10);
+    expect(merchFiresaleDemandMultiplier(25, 100)).toBe(10);
+    expect(merchFiresaleDemandMultiplier(75, 100)).toBeCloseTo(5.5, 5);
+  });
+
+  it("deep fire sale clears far more stock than normal pricing", () => {
+    const stadiumBase: ClubStadium = {
+      ...defaultClubStadium(),
+      merchandising: defaultClubMerchandising(),
+    };
+    const normalRetail = stadiumBase.merchandising!.skus.shirts.retail_price;
+    stadiumBase.merchandising!.skus.shirts.stock = 80_000;
+    const ctxBase = {
+      stadium: stadiumBase,
+      players: [] as const,
+      clubId: "cl_fc_nordstern",
+      occupancy: 1,
+      isHomeMatchWeek: true,
+      season: 1,
+      week: 8,
+      masterSeed: 42,
+    };
+    const baseline = weeklyMerchandisingEconomics(ctxBase).unitsSold.shirts ?? 0;
+
+    const onSale = startMerchSkuSale(
+      stadiumBase,
+      "shirts",
+      Math.round(normalRetail * 0.5),
+      1,
+      1,
+    );
+    const saleUnits =
+      weeklyMerchandisingEconomics({
+        ...ctxBase,
+        stadium: onSale,
+        week: 1,
+      }).unitsSold.shirts ?? 0;
+
+    expect(baseline).toBeGreaterThan(0);
+    expect(saleUnits).toBeGreaterThanOrEqual(baseline * 8);
   });
 
   it("runs timed fire sale for two weeks then restores normal retail", () => {

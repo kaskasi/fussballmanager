@@ -1,7 +1,7 @@
 # /docs/prd/02_growth_engine.md
 
-**Version:** 1.3
-**Last Updated:** 2026-10-04
+**Version:** 1.4
+**Last Updated:** 2026-10-10
 **Status:** Final
 
 ---
@@ -41,7 +41,7 @@ Pro Skill-Attribut `attr` (alle `Attributes`-Schlüssel außer `weak_foot`):
 effective_age = clamp(age + maturity_offset, 14, 45)
 
 growth(attr) =
-    learning_base(effective_age)     // 0.06 Punkte × age_factor
+    learning_base(effective_age)     // 0.07 Punkte × ageDevelopmentFactor
   × anlage(attr)                     // 0.85–1.50
   × drive                            // 0.4–1.6
   × environment()                    // M1: immer 1.0
@@ -51,27 +51,27 @@ growth(attr) =
   − decay_per_week(attr, effective_age)
 ```
 
-`learning_base` ist `0.06 × age_factor`. Die frühere Basis `1.0` war um mehr
-als eine Größenordnung zu hoch: Ein durchschnittlicher Jugendspieler gewann
-dadurch in einer Saison dutzende Punkte pro Attribut. Die Namen `bell`,
+`learning_base` ist `0.07 × ageDevelopmentFactor`. Die Namen `bell`,
 `early_peak`, `late_peak`, `plateau`, `continuous_growth` in 02.2 sind Labels.
 Sie sind kein zweiter Multiplikator. Der numerische Alterseffekt ist
-`age_factor` plus der subtraktive Decay.
+`ageDevelopmentFactor` plus der subtraktive Decay.
 
-`environment()` ist in M1 konstant 1.0. Trainer, Gebäude und Mentoring dürfen später einen Bonus liefern. Sie dürfen Minuten und Fokus-Slots nicht noch einmal zählen. `match_practice` und `training_focus` sind dafür da.
+`environment()` kommt aus Trainerstab (F8.1) und Gelände-Training (`precinctTrainingEnvironment`). Mentoring ist kein Wochenfaktor. Minuten und Fokus-Slots werden nicht doppelt in `environment()` gezählt.
 
 `weak_foot` wächst mit derselben Formel, σ der technischen Attribute, Decay der Gruppe `all_other`. `gk_handling` zählt als physisches Attribut für σ und als `all_other` für Decay.
 
-**age_factor** (`effective_age`):
+**ageDevelopmentFactor** (`effective_age`):
 
 ```text
-age_factor =
-    (15 <= age <= 23 ? 1.5 : 1.0)
-  × (age > 27 ? 0.7 : 1.0)
-  × (age > 32 ? 0.4 : 1.0)
+age < 15        → 1.1
+15 <= age <= 20 → 2.4   // starker Lernspurt
+20 < age <= 25  → 1.45  // normal
+25 < age <= 27  → 1.0
+27 < age <= 32  → 0.65
+age > 32        → 0.28
 ```
 
-15 und 16 liegen im Jugendfenster. Intake startet mit 15 (PRD 03). Ab 28 gilt 0.7, ab 33 zusätzlich 0.4 (also 0.28).
+Intake startet mit 15 (PRD 03). Ab ~25 flacht Entwicklung ab; ab 33 kaum noch positives Lernen ohne Decay.
 
 **Constraints:**
 
@@ -158,12 +158,14 @@ nicht über Fokus-Slots. Sie ändern `training_focus()` nicht.
 ### 02.5 Match-Practice-Bonus
 
 ```typescript
-// src/development/growth_engine.ts
-function calculateMatchPractice(minutes: number, injured: boolean): number {
+function calculateMatchPractice(minutes: number, injured: boolean, playingTimeFactor = 1): number {
   if (injured) return 0.3;
-  if (minutes === 0) return 0.7;
-  return 1.0 + (minutes / 90) * 0.15; // 90 Minuten → 1.15
+  if (minutes === 0) return 0.7 * playingTimeFactor;
+  return (1.0 + (minutes / 90) * 0.15) * playingTimeFactor;
 }
+
+// Profis: `playingTimeFactor` skaliert 0.55→1.0 wenn season_apps / matchdays < 0.5 (ab 4 Spieltagen).
+// U17/U19 nutzen den Faktor nicht — wenig Einsatz → eher zurück in die Jugend.
 ```
 
 ### 02.6 Decay-Regeln
@@ -179,19 +181,19 @@ Annahmen der Tests: `environment = 1`, Noise = 1, kein Fokus, `maturity_offset =
 
 | Testfall | Erwartetes Ergebnis |
 |---|---|
-| Spieler age 19, attribute 100, anlage 1.2, drive 1.4, 90 Min | growth = 0.06 × 1.5 × 1.2 × 1.4 × 1.15 = 0.17388 |
-| Spieler age 30, attribute 140, anlage 1.0, drive 0.8, 0 Min | growth = 0.06 × 0.7 × 1.0 × 0.8 × 0.7 = 0.02352 |
+| Spieler age 19, attribute 100, anlage 1.2, drive 1.4, 90 Min | growth ≈ 0.07 × 2.4 × 1.2 × 1.4 × 1.15 |
+| Spieler age 30, attribute 140, anlage 1.0, drive 0.8, 0 Min | growth ≈ 0.07 × 0.65 × 1.0 × 0.8 × 0.7 |
 | Spieler age 25, attribute 180, anlage 1.1, drive 1.2, 45 Min | positives Wachstum × 0.3 (soft cap), danach Clamp |
-| Spieler age 33, pace 130, anlage 1.0, drive 1.0, 0 Min, gesund | Wachstumsteil 0.01176, Decay 1.5/52 ≈ 0.02885, Netto ≈ −0.01709. Tempo sinkt |
+| Spieler age 33, pace 130, anlage 1.0, drive 1.0, 0 Min, gesund | Wachstumsteil klein, Decay 1.5/52, Netto negativ — Tempo sinkt |
 
 ### 02.8 Balance-Korridore
 
 Diese Korridore sind Regression-Gates, keine Potentialgrenzen:
 
-- Durchschnittlicher gesunder Profi von 19 Jahren ohne Fokus: relevante
-  Attribute wachsen über 52 Wochen typischerweise um etwa 4–7 Punkte.
-- U17-Spieler mit `developmentScale = 0.3` gewinnt über 30 Wochen weniger als
-  3 CA-Punkte.
+- Gesunder Profi (19–20) mit Einsatz und Plan: CA-Zuwachs über 52 Wochen typisch
+  etwa 10–20 Punkte unter guten Bedingungen (Trainer, Gelände, Fokus, Minuten).
+- U17-Spieler (`developmentScale ≈ 0.88`) mit Talent und Einsatz: über 30 Wochen
+  oft 4–14 CA — deutlich langsamer als im Profi mit Volleinsatz, aber spürbar.
 - Ein gesunder 33-Jähriger ohne Einsatz verliert über 52 Wochen mindestens
   0.5 Pace-Punkte.
 - Ein Spieler darf durch eine normale Saison niemals von Intake-Niveau zum

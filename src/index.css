@@ -2761,11 +2761,66 @@ body {
   color: inherit;
 }
 
-.lineup-slot-ca {
+.lineup-slot-ca,
+.lineup-status-ca {
   font-size: 0.58rem;
   font-weight: 900;
   color: #334155;
   font-variant-numeric: tabular-nums;
+}
+
+.lineup-status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.18rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.lineup-status-strip.is-bench {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-content: flex-end;
+  max-width: 9.5rem;
+}
+
+.lineup-status-strip.is-pitch .lineup-form-value.is-compact {
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.lineup-status-strip .lineup-status-ca {
+  margin-left: auto;
+}
+
+.lineup-fitness-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.06rem;
+  font-size: 0.52rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.lineup-fitness-pill.is-good {
+  color: #047857;
+}
+
+.lineup-fitness-pill.is-mid {
+  color: #b45309;
+}
+
+.lineup-fitness-pill.is-low {
+  color: #b91c1c;
+}
+
+.lineup-shape-mark {
+  font-size: 0.48rem;
+  line-height: 1;
 }
 
 .lineup-slot-name {
@@ -3077,19 +3132,13 @@ body {
   min-width: 0;
 }
 
-.lineup-player-ca {
-  grid-column: 2;
-  grid-row: 2;
-  font-size: 0.62rem;
-  color: #64748b;
+.lineup-squad-fitness {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-}
-
-.lineup-player-icons {
-  grid-column: 3;
-  grid-row: 1 / span 2;
-  align-self: center;
 }
 
 .career-lineup-warning {
@@ -11148,6 +11197,82 @@ body {
   font-weight: 700;
 }
 
+.treter-sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(9.5rem, 11.5rem);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.treter-league-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid rgb(15 23 42 / 12%);
+  border-radius: 0.45rem;
+  background: rgb(255 255 255 / 92%);
+  font-size: 0.62rem;
+}
+
+.treter-league-title {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #334155;
+}
+
+.treter-league-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.treter-league-table th,
+.treter-league-table td {
+  padding: 0.12rem 0.15rem;
+  text-align: left;
+  border-bottom: 1px solid rgb(226 232 240 / 90%);
+}
+
+.treter-league-table th {
+  font-weight: 700;
+  color: #64748b;
+}
+
+.treter-league-table tr.is-own-club td {
+  font-weight: 800;
+  color: #047857;
+}
+
+.treter-scorer-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.treter-scorer-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.treter-scorer-goals {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.treter-league-empty,
+.treter-league-meta {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.58rem;
+}
+
 .treter-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -11225,6 +11350,10 @@ button.treter-article {
 }
 
 @media (max-width: 720px) {
+  .treter-sheet {
+    grid-template-columns: 1fr;
+  }
+
   .treter-grid {
     grid-template-columns: 1fr;
   }

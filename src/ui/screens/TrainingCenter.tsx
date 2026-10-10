@@ -16,6 +16,7 @@ import {
   isTrainingSlotPastForSession,
   trainingUnit,
   trainingUnitLockHint,
+  trainingUnitPickerDetail,
   trainingUnitUnlocked,
   type TrainingSlot,
   type TrainingUnlocks,
@@ -78,6 +79,7 @@ import { ChartNoAxesColumn, Target } from "lucide-react";
 import {
   formatTrainingDelta,
   trainingSlotOutcomeAt,
+  type TrainingHighlightMetric,
   type TrainingSlotOutcome,
 } from "../../development/training-unit-result.ts";
 import { t } from "../../i18n/index.ts";
@@ -91,6 +93,11 @@ const GROUP_LABELS: Record<SessionGroup, string> = {
   physical: "Athletik",
   mental: "Mental",
 };
+
+function trainingHighlightLabel(metric: TrainingHighlightMetric): string {
+  if (metric === "fitness") return "Fitness";
+  return attributeLabel(metric);
+}
 
 /**
  * WIREFRAME: docs/prd/design.md §9.10 — Training
@@ -596,7 +603,9 @@ function SlotCard({
             <strong className="training-unit-name">{unit!.label}</strong>
             <span className="training-group">{GROUP_LABELS[unit!.group]}</span>
             <span className="training-skills">
-              {unit!.skills.map((skill) => attributeLabel(skill)).join(" · ")}
+              {unit!.fitnessRecoveryFraction !== undefined
+                ? trainingUnitPickerDetail(unit!, true)
+                : unit!.skills.map((skill) => attributeLabel(skill)).join(" · ")}
             </span>
           </>
         )}
@@ -605,7 +614,7 @@ function SlotCard({
         <div className="training-slot-outcome">
           <p className="training-slot-outcome-teaser">
             {highlight.playerName} · +{formatTrainingDelta(highlight.delta)}{" "}
-            {attributeLabel(highlight.attribute)}
+            {trainingHighlightLabel(highlight.metric)}
           </p>
           <button
             type="button"
@@ -670,10 +679,10 @@ function TrainingSlotOutcomeModal({
         ) : (
           <ul className="training-slot-outcome-list">
             {outcome.gains.map((gain) => (
-              <li key={`${gain.playerId}-${gain.attribute}`}>
+              <li key={`${gain.playerId}-${gain.metric}`}>
                 <strong>{gain.playerName}</strong>
                 <span>
-                  +{formatTrainingDelta(gain.delta)} {attributeLabel(gain.attribute)}
+                  +{formatTrainingDelta(gain.delta)} {trainingHighlightLabel(gain.metric)}
                 </span>
               </li>
             ))}
@@ -743,9 +752,11 @@ function UnitPickerModal({
                       >
                         <strong>{unit.label}</strong>
                         <span>
-                          {unlocked
-                            ? unit.skills.map((skill) => attributeLabel(skill)).join(" · ")
-                            : lockHint}
+                          {!unlocked
+                            ? lockHint
+                            : unit.fitnessRecoveryFraction !== undefined
+                              ? trainingUnitPickerDetail(unit, true)
+                              : unit.skills.map((skill) => attributeLabel(skill)).join(" · ")}
                         </span>
                       </button>
                     </li>

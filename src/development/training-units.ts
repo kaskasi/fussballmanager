@@ -1,5 +1,9 @@
 import type { Attributes } from "../types/player.ts";
 import {
+  MASSAGE_UNIT_FITNESS_FRACTION,
+  RECOVERY_UNIT_FITNESS_FRACTION,
+} from "./fitness-management.ts";
+import {
   emptyTrainingSlot,
   emptyWeeklyTrainingPlan,
   assertWeeklyPlanLength,
@@ -25,15 +29,18 @@ export interface TrainingUnit {
   group: TrainingSession["group"];
   /** Skills shown on the card — display only in M1. */
   skills: (keyof Attributes)[];
-  /** Campus gates — hall / outdoor pitch upgrades on the Gelände. */
-  requires?: "training_hall" | "training_pitch_2" | "training_pitch_3";
+  /** Campus gates — hall / outdoor pitch / medical center upgrades on the Gelände. */
+  requires?: "training_hall" | "training_pitch_2" | "training_pitch_3" | "medical_center_2";
   /** Premium campus units — stronger gains when the slot runs (Halle). */
   growthBoost?: number;
+  /** Closes this fraction of the gap to Fit 100 for the whole squad (no skill focus). */
+  fitnessRecoveryFraction?: number;
 }
 
 export interface TrainingUnlocks {
   hasTrainingHall?: boolean;
   trainingPitchLevel?: number;
+  medicalCenterLevel?: number;
 }
 
 export interface TrainingSlot {
@@ -170,6 +177,21 @@ export const TRAINING_UNITS: readonly TrainingUnit[] = [
   { id: "ment_tactical", label: "Taktik", group: "mental", skills: ["positioning", "vision", "teamwork"] },
   { id: "ment_calm", label: "Ruhe & Fokus", group: "mental", skills: ["composure", "concentration"] },
   { id: "ment_leader", label: "Führung", group: "mental", skills: ["leadership", "teamwork"] },
+  {
+    id: "ment_recovery",
+    label: "Erholung",
+    group: "mental",
+    skills: [],
+    fitnessRecoveryFraction: RECOVERY_UNIT_FITNESS_FRACTION,
+  },
+  {
+    id: "ment_massage",
+    label: "Erholungsmassagen",
+    group: "mental",
+    skills: [],
+    fitnessRecoveryFraction: MASSAGE_UNIT_FITNESS_FRACTION,
+    requires: "medical_center_2",
+  },
 ];
 
 const UNIT_BY_ID = new Map(TRAINING_UNITS.map((unit) => [unit.id, unit]));
@@ -239,6 +261,7 @@ function meetsTrainingRequire(requires: TrainingUnit["requires"], unlocks: Train
   if (requires === "training_hall") return unlocks.hasTrainingHall === true;
   if (requires === "training_pitch_2") return (unlocks.trainingPitchLevel ?? 0) >= 2;
   if (requires === "training_pitch_3") return (unlocks.trainingPitchLevel ?? 0) >= 3;
+  if (requires === "medical_center_2") return (unlocks.medicalCenterLevel ?? 0) >= 2;
   return true;
 }
 
@@ -260,9 +283,20 @@ export function trainingUnitLockHint(unit: TrainingUnit): string {
       return "Braucht Kunstrasen (Trainingsplatz Stufe 2)";
     case "training_pitch_3":
       return "Braucht Hybrid-Rasen (Trainingsplatz Stufe 3)";
+    case "medical_center_2":
+      return "Braucht Medizinisches Zentrum Stufe 2";
     default:
       return "Gesperrt";
   }
+}
+
+export function trainingUnitPickerDetail(unit: TrainingUnit, unlocked: boolean): string {
+  if (!unlocked) return trainingUnitLockHint(unit);
+  if (unit.fitnessRecoveryFraction !== undefined) {
+    const pct = Math.round(unit.fitnessRecoveryFraction * 100);
+    return `Fitness +${pct}% (Ermüdung runter)`;
+  }
+  return unit.skills.map((skill) => skill).join(" · ");
 }
 
 export function createInitialTrainingPlan(): TrainingSlot[] {

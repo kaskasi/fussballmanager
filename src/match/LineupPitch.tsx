@@ -10,13 +10,14 @@ import {
   type FormationSlotId,
 } from "@fussballmanager/shared";
 import type { Player } from "../types/player.ts";
-import { estimateCa } from "../transfers/market-value.ts";
-import { formatPlayerName, roundStat } from "../types/player-display.ts";
+import { formatPlayerName } from "../types/player-display.ts";
 import type { LineupAssignments } from "./lineup-board.ts";
 import type { OpponentLineupEntry, OpponentLineupPreview } from "./opponent-lineup-preview.ts";
-import { LineupFatigueBars } from "./LineupFatigueBars.tsx";
-import { LineupFormValue } from "./LineupFormValue.tsx";
-import { matchPlayerWeakFoot } from "./player-match-icons.ts";
+import {
+  LineupPlayerStatusStrip,
+  lineupStatusFromPlayer,
+  type LineupStatusView,
+} from "./LineupPlayerStatusStrip.tsx";
 import { useT } from "../i18n/react.ts";
 
 type LineupPitchView = "own" | "opponent";
@@ -154,13 +155,10 @@ export function LineupPitch({
                   title={t("match.lineup.openPlayerProfile", { name: entry.name })}
                   onClick={() => onOpenPlayer?.(entry.playerId)}
                 >
-                  <span className="lineup-slot-icons">
-                    <LineupFormValue careerForm={entry.careerForm} />
-                    <LineupFatigueBars fitness={entry.fitness} compact />
-                    <span className="lineup-slot-ca" title="Current Ability">
-                      {entry.ca}
-                    </span>
-                  </span>
+                  <LineupPlayerStatusStrip
+                    status={opponentStatusFromEntry(entry)}
+                    variant="pitch"
+                  />
                   <span className="lineup-slot-name">{entry.name}</span>
                 </button>
               </div>
@@ -198,20 +196,15 @@ function opponentFullPitchEntries(preview: OpponentLineupPreview): OpponentLineu
 }
 
 function PlayerSlotStatus({ player }: { player: Player }) {
-  const ca = roundStat(estimateCa(player.attributes, player.position));
-  const weakFoot = matchPlayerWeakFoot(player);
   return (
-    <span className="lineup-slot-icons">
-      <LineupFormValue careerForm={player.state.form} compact />
-      <LineupFatigueBars fitness={player.state.fitness} compact />
-      {weakFoot.show ? (
-        <span className="lineup-icon lineup-icon-wa" title={weakFoot.title}>
-          {weakFoot.label}
-        </span>
-      ) : null}
-      <span className="lineup-slot-ca" title="Current Ability">
-        {ca}
-      </span>
-    </span>
+    <LineupPlayerStatusStrip status={lineupStatusFromPlayer(player)} variant="pitch" />
   );
+}
+
+function opponentStatusFromEntry(entry: OpponentLineupEntry): LineupStatusView {
+  return {
+    careerForm: entry.careerForm,
+    fitness: entry.fitness,
+    ca: entry.ca,
+  };
 }

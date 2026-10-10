@@ -208,7 +208,13 @@ export function DecisionInboxPanel({
       return kickerEdition;
     }
     if (treterSession) return buildTreterEdition(treterSession);
-    return { season, week, masthead: "", articles: [] };
+    return {
+      season,
+      week,
+      masthead: "",
+      articles: [],
+      league: { matchdaysPlayed: 0, table: [], scorers: [] },
+    };
   }, [kickerEdition, season, week, treterSession]);
 
   return (

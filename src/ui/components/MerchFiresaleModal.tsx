@@ -3,6 +3,7 @@ import { formatClubCash } from "../../economy/club-finances.ts";
 import {
   MERCH_SALE_DURATION_WEEKS,
   MERCH_SKU_LABEL,
+  merchFiresaleDemandMultiplier,
   type MerchSkuId,
 } from "../../economy/merchandising.ts";
 
@@ -28,6 +29,8 @@ export function MerchFiresaleModal({
   onCancel: () => void;
 }) {
   const fillPct = maxStock > 0 ? Math.round((stock / maxStock) * 100) : 0;
+  const demandMult = merchFiresaleDemandMultiplier(salePrice, normalRetail);
+  const discountPct = Math.round((1 - salePrice / Math.max(1, normalRetail)) * 100);
   return (
     <div className="modal-backdrop" role="presentation" onClick={onCancel}>
       <dialog
@@ -73,6 +76,11 @@ export function MerchFiresaleModal({
             </button>
           </div>
         </div>
+        <p className="transfer-risk-copy">
+          Rabatt ca. {discountPct}&nbsp;% → erwarteter Abverkauf ca.{" "}
+          <strong>{demandMult.toFixed(1).replace(".0", "")}×</strong> gegenüber Normalpreis (bis
+          10× ab 50&nbsp;% Rabatt).
+        </p>
         <footer className="negotiation-actions">
           <button type="button" className="ui-btn ui-btn--ghost" onClick={onCancel}>
             Abbrechen

@@ -106,9 +106,10 @@ describe("focus multipliers", () => {
       { group: "mental", focus: false },
       { group: "mental", focus: false },
     ]);
-    expect(passingGrowthForPlan(quiet)).toBeCloseTo(0.17388, 5);
-    expect(passingGrowthForPlan(one)).toBeCloseTo(0.17388 * 1.33, 5);
-    expect(passingGrowthForPlan(full)).toBeCloseTo(0.17388 * 1.66, 5);
+    const base = 0.07 * 2.4 * 1.2 * 1.4 * 1.15;
+    expect(passingGrowthForPlan(quiet)).toBeCloseTo(base, 5);
+    expect(passingGrowthForPlan(one)).toBeCloseTo(base * 1.33, 5);
+    expect(passingGrowthForPlan(full)).toBeCloseTo(base * 1.66, 5);
   });
 
   it("refuses to read focus off an illegal plan", () => {

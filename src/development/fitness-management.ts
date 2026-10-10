@@ -28,8 +28,33 @@ export function isPlayerTired(player: Player): boolean {
   return lastTwo >= 140;
 }
 
-function clampFitness(value: number): number {
+export function clampFitness(value: number): number {
   return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+/** Share of the gap to full fitness (100) closed in one step — training or rest week. */
+export const RECOVERY_UNIT_FITNESS_FRACTION = 0.2;
+export const MASSAGE_UNIT_FITNESS_FRACTION = 0.33;
+/** Match minutes = 0 this week — passive rest between fixtures. */
+export const IDLE_WEEK_FITNESS_FRACTION = 0.25;
+
+export function fitnessRecoveryDelta(fitness: number, fraction: number): number {
+  if (fitness >= 100 || fraction <= 0) return 0;
+  const gap = 100 - fitness;
+  return clampFitness(fitness + gap * fraction) - fitness;
+}
+
+export function applyFitnessRecoveryFraction(player: Player, fraction: number): Player {
+  if (player.state.injury !== null || fraction <= 0) return player;
+  const delta = fitnessRecoveryDelta(player.state.fitness, fraction);
+  if (delta === 0) return player;
+  return {
+    ...player,
+    state: {
+      ...player.state,
+      fitness: clampFitness(player.state.fitness + delta),
+    },
+  };
 }
 
 export function modifierFitnessRegenMultiplier(player: Player): number {
@@ -57,7 +82,13 @@ export function weeklyFitnessDelta(
   const lightWeekBonus = weeklyMinutes < 30 ? 3 : 0;
   const baseRecovery = (weeklyMinutes < 45 ? 9 : 5) * regenFactor + lightWeekBonus;
   const trainingRecovery = intensityNorm < 95 ? (95 - intensityNorm) * 0.05 : 0;
-  return clampFitness(fitness - matchDrain - trainingDrain + baseRecovery + trainingRecovery) - fitness;
+  const idleRecovery =
+    weeklyMinutes <= 0 ? fitnessRecoveryDelta(fitness, IDLE_WEEK_FITNESS_FRACTION) : 0;
+  return (
+    clampFitness(
+      fitness - matchDrain - trainingDrain + baseRecovery + trainingRecovery + idleRecovery,
+    ) - fitness
+  );
 }
 
 export function applyWeeklyFitness(player: Player, context: WeeklyFitnessContext): Player {

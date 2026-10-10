@@ -7,7 +7,11 @@ import {
 import { evaluateClearStamps, evaluateEventStamps } from "../development/ability-stamps.ts";
 import { advanceIndividualTrainingWeek } from "../development/individual-training.ts";
 import { formatPlayerName } from "../types/player-display.ts";
-import { applyTrainingWeek, applyWeeklyAttributeDecay } from "../development/pipeline-week.ts";
+import {
+  applyPlanFitnessRecovery,
+  applyTrainingWeek,
+  applyWeeklyAttributeDecay,
+} from "../development/pipeline-week.ts";
 import {
   resolveFeatureCurtain,
   resolveTrainingPlanAfterWeek,
@@ -63,6 +67,7 @@ import { advanceProTrials } from "../youth/pro-trial.ts";
 import { simulateYouthWeek } from "../youth/youth-sim.ts";
 import { careerStarterIds } from "../match/lineup-board.ts";
 import { mergeCareerLeagueStats, applyCareerMatchWeek } from "./career-match-sync.ts";
+import { applyRivalMatchdayStats } from "./rival-matchday-stats.ts";
 import { advanceCalendarWeek, SEASON_END_WEEK } from "./game-calendar.ts";
 import { advanceLeagueWeek } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
@@ -216,21 +221,23 @@ export async function simulateGameWeek(
     );
   }
   const sessions = planToSessions(session.trainingPlan);
+  const leagueMatchdaysPlayed = Math.max(0, session.league.matchday - 1);
   const trainingContext = {
     season: session.season,
     week: nextWeek,
     masterSeed: session.masterSeed,
     intensity: session.trainingIntensity,
+    leagueMatchdaysPlayed,
     environmentFactor:
       environmentFromCoachingStaff(session.coachingStaff) *
       precinctTrainingEnvironment(session.stadium.precinct),
   };
   const manualTrainingUnits = !resolveFeatureCurtain(session.storyState).auto_training;
-  let players = tickInjuryRecoveryBatch(session.players).map((player) =>
-    manualTrainingUnits
-      ? applyWeeklyAttributeDecay(player)
-      : applyTrainingWeek(player, sessions, trainingContext),
-  );
+  let players = tickInjuryRecoveryBatch(session.players).map((player) => {
+    if (manualTrainingUnits) return applyWeeklyAttributeDecay(player);
+    const trained = applyTrainingWeek(player, sessions, trainingContext);
+    return applyPlanFitnessRecovery(trained, session.trainingPlan);
+  });
 
   const individualStep = advanceIndividualTrainingWeek(
     players,
@@ -481,6 +488,13 @@ export async function simulateGameWeek(
     session.masterSeed,
     leagueStep.matchdayPlayed > 0,
   );
+  if (leagueStep.matchdayPlayed > 0 && leagueStep.matchdayPlayerStats.length > 0) {
+    rivalPlayers = applyRivalMatchdayStats(
+      rivalPlayers,
+      leagueStep.matchdayPlayerStats,
+      leagueStep.league.player_club_id,
+    );
+  }
   const rivalBreakouts = processWeeklyBreakoutChecks(
     rivalPlayers,
     nextWeek,

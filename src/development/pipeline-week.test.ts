@@ -3,17 +3,28 @@ import { estimateCa } from "../transfers/market-value.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { startProTrial } from "../youth/pro-trial.ts";
 import {
+  applyPlanFitnessRecovery,
+  applyTrainingUnit,
   applyTrainingWeek,
   developmentScale,
   effectiveDevelopmentScale,
   HUB_PLAN,
   projectWeek,
 } from "./pipeline-week.ts";
+import { ageDevelopmentFactor, LEARNING_BASE_POINTS_PER_WEEK } from "./growth-engine.ts";
+import { emptyWeeklyTrainingPlan } from "./training-plan-state.ts";
+import { planToSessions, trainingUnit } from "./training-units.ts";
 
 describe("pipeline week", () => {
   it("projects the age-19 passing gain from two technical focus sessions", () => {
     const player = clonePlayer();
-    const passing = 0.06 * 1.5 * 1.1 * 1 * (1 + 0.33 * 2) * 0.7;
+    const passing =
+      LEARNING_BASE_POINTS_PER_WEEK *
+      ageDevelopmentFactor(19) *
+      1.1 *
+      1 *
+      (1 + 0.33 * 2) *
+      0.7;
     const next = applyTrainingWeek(player, HUB_PLAN);
     expect(next.attributes.passing - player.attributes.passing).toBeCloseTo(passing, 5);
     expect(projectWeek(player, HUB_PLAN)).toBeGreaterThan(passing);
@@ -25,7 +36,7 @@ describe("pipeline week", () => {
     youth.squad_status = "u19";
     const onTrial = startProTrial(youth, 1, 8);
     expect(effectiveDevelopmentScale(onTrial, { season: 1, week: 8 })).toBe(1);
-    expect(effectiveDevelopmentScale(youth, { season: 1, week: 8 })).toBe(0.55);
+    expect(effectiveDevelopmentScale(youth, { season: 1, week: 8 })).toBe(0.94);
   });
 
   it("uses reproducible weekly variance from player, week, and attribute", () => {
@@ -45,11 +56,11 @@ describe("pipeline week", () => {
     youth.squad_status = "u17";
     youth.state.weekly_minutes = 70;
     pro.state.weekly_minutes = 70;
-    expect(developmentScale("u17")).toBe(0.3);
-    expect(projectWeek(youth, HUB_PLAN)).toBeLessThan(projectWeek(pro, HUB_PLAN) * 0.5);
+    expect(developmentScale("u17")).toBe(0.88);
+    expect(projectWeek(youth, HUB_PLAN)).toBeLessThan(projectWeek(pro, HUB_PLAN));
   });
 
-  it("keeps U17 CA gains below three points over thirty weeks", () => {
+  it("lets talented U17 players gain meaningful CA over thirty weeks", () => {
     let player = clonePlayer();
     player.squad_status = "u17";
     player.age = 15;
@@ -63,8 +74,8 @@ describe("pipeline week", () => {
       player = applyTrainingWeek(player, HUB_PLAN);
     }
     const end = estimateCa(player.attributes, player.position);
-    expect(end - start).toBeGreaterThan(0.5);
-    expect(end - start).toBeLessThan(3);
+    expect(end - start).toBeGreaterThan(4);
+    expect(end - start).toBeLessThan(14);
   });
 
   it("keeps a typical young pro inside the annual growth corridor", () => {
@@ -76,8 +87,8 @@ describe("pipeline week", () => {
       player = applyTrainingWeek(player, HUB_PLAN);
     }
     const gained = estimateCa(player.attributes, player.position) - start;
-    expect(gained).toBeGreaterThan(4);
-    expect(gained).toBeLessThan(8);
+    expect(gained).toBeGreaterThan(10);
+    expect(gained).toBeLessThan(22);
   });
 
   it("makes veteran pace decline over a full season", () => {
@@ -111,6 +122,20 @@ describe("pipeline week", () => {
 
     const gained = estimateCa(player.attributes, player.position) - start;
     expect(gained).toBeGreaterThan(8);
-    expect(gained).toBeLessThan(25);
+    expect(gained).toBeLessThan(70);
+  });
+
+  it("raises fitness when a recovery unit runs", () => {
+    const player = clonePlayer();
+    player.state.fitness = 8;
+    const sessions = planToSessions(emptyWeeklyTrainingPlan());
+    const unit = trainingUnit("ment_recovery");
+    const next = applyTrainingUnit(player, sessions, 0, undefined, unit);
+    expect(next.state.fitness).toBeGreaterThan(8);
+    const plan = emptyWeeklyTrainingPlan();
+    plan[0] = { unitId: "ment_recovery", focus: false };
+    plan[1] = { unitId: "ment_massage", focus: false };
+    const stacked = applyPlanFitnessRecovery(player, plan);
+    expect(stacked.state.fitness).toBeGreaterThan(next.state.fitness);
   });
 });

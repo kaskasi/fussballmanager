@@ -11,7 +11,7 @@ import type { Attributes } from "../types/player.ts";
 const SOFT_CAP = 180;
 const GROWTH_MIN = -3;
 const GROWTH_MAX = 5;
-export const LEARNING_BASE_POINTS_PER_WEEK = 0.06;
+export const LEARNING_BASE_POINTS_PER_WEEK = 0.07;
 
 const TECHNICAL = new Set<keyof Attributes>([
   "shooting",
@@ -48,6 +48,10 @@ export interface WeeklyGrowthInput {
   noise?: number;
   /** F8.1 coaching staff environment bonus. Default 1.0. */
   environmentFactor?: number;
+  squadStatus?: "pro" | "u17" | "u19" | "loaned_out";
+  seasonApps?: number;
+  /** League matchdays already completed this season (for pro playing-time gate). */
+  leagueMatchdaysPlayed?: number;
   random?: () => number;
 }
 
@@ -55,12 +59,22 @@ export function effectiveAge(age: number, maturityOffset: number): number {
   return Math.min(45, Math.max(14, age + maturityOffset));
 }
 
-/** `0.06 × age_factor`. Curve labels in PRD 02.2 are not a second multiplier. */
+/**
+ * Age multiplier for learning speed (PRD 02.1 — steep 15–20, taper from 25).
+ * Curve labels in PRD 02.2 are not a second multiplier.
+ */
+export function ageDevelopmentFactor(effectiveAgeValue: number): number {
+  if (effectiveAgeValue < 15) return 1.1;
+  if (effectiveAgeValue <= 20) return 2.4;
+  if (effectiveAgeValue <= 25) return 1.45;
+  if (effectiveAgeValue <= 27) return 1;
+  if (effectiveAgeValue <= 32) return 0.65;
+  return 0.28;
+}
+
+/** `LEARNING_BASE × ageDevelopmentFactor`. */
 export function learningBase(effectiveAgeValue: number): number {
-  const youth = effectiveAgeValue >= 15 && effectiveAgeValue <= 23 ? 1.5 : 1;
-  const late = effectiveAgeValue > 27 ? 0.7 : 1;
-  const veteran = effectiveAgeValue > 32 ? 0.4 : 1;
-  return LEARNING_BASE_POINTS_PER_WEEK * youth * late * veteran;
+  return LEARNING_BASE_POINTS_PER_WEEK * ageDevelopmentFactor(effectiveAgeValue);
 }
 
 export function attributeSigma(attribute: keyof Attributes): number {
@@ -80,10 +94,27 @@ export function trainingFocus(slots: FocusSlots, injured: boolean): number {
   return 1;
 }
 
-export function calculateMatchPractice(minutes: number, injured: boolean): number {
+/** Profis unter 50 % Einsatzquote lernen langsamer — U19 oft sinnvoller (PRD 02.5). */
+export function proPlayingTimeLearningFactor(
+  squadStatus: WeeklyGrowthInput["squadStatus"],
+  seasonApps: number,
+  leagueMatchdaysPlayed: number,
+): number {
+  if (squadStatus !== "pro") return 1;
+  if (leagueMatchdaysPlayed < 4) return 1;
+  const rate = seasonApps / leagueMatchdaysPlayed;
+  if (rate >= 0.5) return 1;
+  return 0.55 + (rate / 0.5) * 0.45;
+}
+
+export function calculateMatchPractice(
+  minutes: number,
+  injured: boolean,
+  playingTimeFactor = 1,
+): number {
   if (injured) return 0.3;
-  if (minutes === 0) return 0.7;
-  return 1 + (minutes / 90) * 0.15;
+  if (minutes === 0) return 0.7 * playingTimeFactor;
+  return (1 + (minutes / 90) * 0.15) * playingTimeFactor;
 }
 
 /** Coaching/building environment multiplier. Callers must not fold minutes or focus into it. */
@@ -124,6 +155,12 @@ export function calculateWeeklyTrainingGain(input: WeeklyGrowthInput): number {
       ? sampleNoise(input.attribute, input.random)
       : Math.max(0, input.noise);
 
+  const playingTime = proPlayingTimeLearningFactor(
+    input.squadStatus,
+    input.seasonApps ?? 0,
+    input.leagueMatchdaysPlayed ?? 0,
+  );
+
   return (
     learningBase(age) *
     input.anlage *
@@ -131,7 +168,7 @@ export function calculateWeeklyTrainingGain(input: WeeklyGrowthInput): number {
     environment(input.environmentFactor ?? 1) *
     noise *
     trainingFocus(input.focusSlots, input.injured) *
-    calculateMatchPractice(input.minutes, input.injured)
+    calculateMatchPractice(input.minutes, input.injured, playingTime)
   );
 }
 

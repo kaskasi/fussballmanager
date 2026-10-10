@@ -5,6 +5,7 @@ import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { GameSession } from "../persistence/game-session.ts";
+import { defaultLeagueState } from "../persistence/league-state.ts";
 import { divisionStandings, divisionLeaderLists } from "../sim/league-standings.ts";
 import { teamForm, formSparkline } from "../sim/league-form.ts";
 import { civilDateFromSession } from "../sim/session-civil-date.ts";
@@ -54,11 +55,32 @@ export interface TreterArticle {
   playerId?: string;
 }
 
+export interface TreterTableRow {
+  rank: number;
+  name: string;
+  played: number;
+  points: number;
+  isPlayerClub: boolean;
+}
+
+export interface TreterScorerRow {
+  rank: number;
+  name: string;
+  goals: number;
+}
+
+export interface TreterLeagueSnapshot {
+  matchdaysPlayed: number;
+  table: TreterTableRow[];
+  scorers: TreterScorerRow[];
+}
+
 export interface TreterEdition {
   season: number;
   week: number;
   masthead: string;
   articles: TreterArticle[];
+  league: TreterLeagueSnapshot;
 }
 
 /** @deprecated use TreterEdition */
@@ -154,9 +176,12 @@ function collectCampArticles(session: GameSession, clubLabel: string): TreterArt
   const articles: TreterArticle[] = [];
   for (const camp of session.youthCamps) {
     if (camp.purchased_season !== session.season) continue;
-    const purchaseWeek = camp.purchased_week ?? session.week;
-    if (purchaseWeek !== session.week) continue;
-    const copy = treterCampHeroCopy(camp.id, clubLabel);
+    if (camp.purchased_week == null || camp.purchased_week !== session.week) continue;
+    const copy = treterCampHeroCopy(
+      camp.id,
+      clubLabel,
+      `${session.masterSeed}:${session.season}:${session.week}:${camp.id}`,
+    );
     articles.push({
       id: `treter-camp-${camp.id}-${session.season}-${session.week}`,
       kind: "camp",
@@ -235,36 +260,7 @@ function collectTransferArticles(
   return articles;
 }
 
-function collectTableArticle(session: GameSession, clubLabel: string): TreterArticle | null {
-  const standings = divisionStandings(
-    session.league,
-    session.league.division_id,
-    session.masterSeed,
-    session.season,
-    session.rivalPlayers,
-  );
-  const top = standings.table.slice(0, 4);
-  if (top.length === 0) return null;
-  const lines = top.map((row, index) => {
-    const name =
-      clubNameFromWorld(row.teamId, session.world.clubs) ?? row.teamId;
-    return `${index + 1}. ${name} (${row.points} Pkt)`;
-  });
-  const own = standings.table.find((row) => row.teamId === session.league.player_club_id);
-  return {
-    id: `treter-table-${session.season}-${session.week}`,
-    kind: "table",
-    headline: "Tabellenführung",
-    kicker: "Liga",
-    body: `${lines.join(" · ")}${own ? ` — ${clubLabel} auf Platz ${standings.table.indexOf(own) + 1}.` : ""}`,
-    imageSrc: TRETER_IMAGE.moodCrowd,
-    imageAlt: "Liga",
-    layout: "column",
-    priority: 45,
-  };
-}
-
-function collectScorersArticle(session: GameSession): TreterArticle | null {
+function buildTreterLeagueSnapshot(session: GameSession): TreterLeagueSnapshot {
   const standings = divisionStandings(
     session.league,
     session.league.division_id,
@@ -278,18 +274,25 @@ function collectScorersArticle(session: GameSession): TreterArticle | null {
     session.masterSeed,
     session.season,
     session.rivalPlayers,
-    3,
+    8,
   );
-  if (leaders.scorers.length === 0) return null;
-  const lines = leaders.scorers.map((row, index) => `${index + 1}. ${row.name} (${row.goals})`);
+  const playerClubId = session.league.player_club_id;
+  const table = standings.table.slice(0, 10).map((row, index) => ({
+    rank: index + 1,
+    name: clubNameFromWorld(row.teamId, session.world.clubs) ?? row.teamId,
+    played: row.played,
+    points: row.points,
+    isPlayerClub: row.teamId === playerClubId,
+  }));
+  const scorers = leaders.scorers.slice(0, 8).map((row, index) => ({
+    rank: index + 1,
+    name: row.name,
+    goals: row.goals,
+  }));
   return {
-    id: `treter-scorers-${session.season}-${session.week}`,
-    kind: "scorers",
-    headline: "Torschützen",
-    kicker: "Statistik",
-    body: lines.join(" · "),
-    layout: "column",
-    priority: 40,
+    matchdaysPlayed: standings.matchdaysPlayed,
+    table,
+    scorers,
   };
 }
 
@@ -386,6 +389,54 @@ function collectMerchArticle(session: GameSession, clubLabel: string): TreterArt
   };
 }
 
+function collectRotatingTabloid(session: GameSession, clubLabel: string): TreterArticle {
+  const seed = `${session.masterSeed}:${session.season}:${session.week}:tabloid`;
+  const templates = [
+    {
+      headline: "Liga-Whisper",
+      body: `${clubLabel} dominiert die Kaffeeküche — auf dem Platz suchen andere noch den Ton.`,
+    },
+    {
+      headline: "Transfer-Radar",
+      body: `Kein eigener Deal diese Woche, aber der Markt brodelt. Scouts aus ${clubLabel} sollen « zwei, drei Namen » notiert haben.`,
+    },
+    {
+      headline: "Trainingseindruck",
+      body: `Montag hard, Dienstag laut: ${clubLabel} arbeitet an Details. « Kleine Schritte », sagt der Co-Trainer — Der Treter glaubt's, wenn's Punkte regnet.`,
+    },
+    {
+      headline: "Fan-Stimmung",
+      body: `Ausverkaufte Sektor-Rituale? Nicht überall. ${clubLabel} braucht Ergebnisse, damit die Kurve wieder mitzieht.`,
+    },
+    {
+      headline: "Jugend blinkt auf",
+      body: `U19 und U17 liefern Neugier — ${clubLabel} hält die Pipeline im Blick, ohne sie zu überhöhen.`,
+    },
+    {
+      headline: "Kassen-Blick",
+      body: `Merch, Eintritt, Sponsoring: ${clubLabel} jongliert Zahlen. Sportlich muss es passen — sonst wird's eng.`,
+    },
+    {
+      headline: "Gegner-Check",
+      body: `Nächster Gegner in Form? ${clubLabel} studiert Video — « Respekt, aber kein Angstschweiß », heißt es intern.`,
+    },
+    {
+      headline: "Medizin & Fitness",
+      body: `Der Kader ist kein Krankenhaus — trotzdem achtet ${clubLabel} auf Load. Rotation wird zum Thema.`,
+    },
+  ];
+  const pick = templates[Math.abs(hashString(seed)) % templates.length]!;
+  return {
+    id: `treter-rotate-${session.season}-${session.week}`,
+    kind: "form",
+    headline: pick.headline,
+    kicker: "Redaktion",
+    body: pick.body,
+    layout: "column",
+    priority: 32,
+  };
+}
+
 function pickArticles(candidates: TreterArticle[]): TreterArticle[] {
   const sorted = [...candidates].sort((left, right) => right.priority - left.priority);
   const picked: TreterArticle[] = [];
@@ -419,29 +470,19 @@ export function buildTreterEdition(session: GameSession): TreterEdition {
     ...collectTransferArticles(session, clubLabel, weekRecords),
     ...collectScoutArticles(session, clubLabel),
     ...collectStadiumArticles(session, clubLabel),
+    collectRotatingTabloid(session, clubLabel),
   ];
   const optional = [
     goalOfMonthArticle(session, clubLabel),
     collectFormArticle(session, clubLabel),
     collectBoardArticle(session, clubLabel),
     collectMerchArticle(session, clubLabel),
-    collectTableArticle(session, clubLabel),
-    collectScorersArticle(session),
   ];
   for (const article of optional) {
     if (article) candidates.push(article);
   }
 
   let articles = pickArticles(candidates);
-  if (articles.length < TRETER_ARTICLE_LIMIT) {
-    const fillers = [collectTableArticle(session, clubLabel), collectScorersArticle(session)].filter(
-      (entry): entry is TreterArticle => entry != null,
-    );
-    for (const filler of fillers) {
-      if (articles.length >= TRETER_ARTICLE_LIMIT) break;
-      if (!articles.some((entry) => entry.kind === filler.kind)) articles.push(filler);
-    }
-  }
   if (articles.length === 0 && weekRecords.length === 0) {
     articles = [
       {
@@ -456,12 +497,14 @@ export function buildTreterEdition(session: GameSession): TreterEdition {
   }
   articles = articles.slice(0, TRETER_ARTICLE_LIMIT);
   const masthead = `${TRETER_MASTHEAD} · ${formatCalendarWeek(session.week)} · ${clubLabel}`;
+  const league = buildTreterLeagueSnapshot(session);
 
   return {
     season: session.season,
     week: session.week,
     masthead,
     articles,
+    league,
   };
 }
 
@@ -484,14 +527,15 @@ export function buildKickerEdition(input: {
     rivalPlayers: [...input.rivalPlayers],
     world: { clubs: input.worldClubs ?? [] },
     youthCamps: [],
-    league: { player_club_id: "fc-nordstern", results: [], player_season_stats: [] },
+    league: defaultLeagueState(),
     players: [],
     scoutBoard: { targets: {} },
     board: { pressure: 0, objectives: [], employer_club_id: "fc-nordstern", job_status: "employed", promotions_this_season: 0 },
     stadium: {},
     clubEvents: [],
   } as unknown as GameSession;
-  return buildTreterEdition(stub);
+  const edition = buildTreterEdition(stub);
+  return edition;
 }
 
 export function aiTransfersForKickerWeek(

@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import {
+  applyFitnessRecoveryFraction,
   applyWeeklyFitness,
+  fitnessRecoveryDelta,
+  IDLE_WEEK_FITNESS_FRACTION,
   injuryRiskScore,
   isPlayerTired,
+  RECOVERY_UNIT_FITNESS_FRACTION,
   weeklyFitnessDelta,
 } from "./fitness-management.ts";
 import { defaultCoachingStaff } from "../staff/coaching-staff.ts";
@@ -53,6 +57,22 @@ describe("fitness-management", () => {
       precinctRegen: 1.18,
     });
     expect(boosted.state.fitness).toBeGreaterThan(plain.state.fitness);
+  });
+
+  it("closes a fraction of the fitness gap for recovery units", () => {
+    expect(fitnessRecoveryDelta(8, RECOVERY_UNIT_FITNESS_FRACTION)).toBe(18);
+    expect(fitnessRecoveryDelta(100, RECOVERY_UNIT_FITNESS_FRACTION)).toBe(0);
+    const player = clonePlayer();
+    player.state.fitness = 8;
+    const next = applyFitnessRecoveryFraction(player, RECOVERY_UNIT_FITNESS_FRACTION);
+    expect(next.state.fitness).toBe(26);
+  });
+
+  it("adds idle-week recovery when a player had no match minutes", () => {
+    const withMinutes = weeklyFitnessDelta(8, 45, 100, 1);
+    const idle = weeklyFitnessDelta(8, 0, 100, 1);
+    expect(idle).toBeGreaterThan(withMinutes);
+    expect(fitnessRecoveryDelta(8, IDLE_WEEK_FITNESS_FRACTION)).toBe(23);
   });
 
   it("scores injury risk higher when tired and intense", () => {

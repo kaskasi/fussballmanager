@@ -62,6 +62,7 @@ export function KickerInboxCard({
   readOnly?: boolean;
 }) {
   useT();
+  const league = edition.league ?? { matchdaysPlayed: 0, table: [], scorers: [] };
 
   return (
     <section className={compact ? "inbox-detail inbox-treter-inline" : "inbox-card inbox-card-treter"}>
@@ -78,19 +79,77 @@ export function KickerInboxCard({
             <p>{edition.masthead}</p>
           </div>
         </header>
-        {edition.articles.length === 0 ? (
-          <p className="inbox-treter-empty">{t("postfach.treter.empty")}</p>
-        ) : (
-          <div className="treter-grid" aria-label={t("postfach.treter.gridAria")}>
-            {edition.articles.map((article) => (
-              <TreterArticleBlock
-                key={article.id}
-                article={article}
-                onSelectPlayer={onSelectPlayer}
-              />
-            ))}
+        <div className="treter-sheet">
+          <div className="treter-main">
+            {edition.articles.length === 0 ? (
+              <p className="inbox-treter-empty">{t("postfach.treter.empty")}</p>
+            ) : (
+              <div className="treter-grid" aria-label={t("postfach.treter.gridAria")}>
+                {edition.articles.map((article) => (
+                  <TreterArticleBlock
+                    key={article.id}
+                    article={article}
+                    onSelectPlayer={onSelectPlayer}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        )}
+          <aside className="treter-league-panel" aria-label={t("postfach.treter.leaguePanelAria")}>
+            <section className="treter-league-block">
+              <h3 className="treter-league-title">{t("postfach.treter.tableTitle")}</h3>
+              {league.table.length ? (
+                <table className="treter-league-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">#</th>
+                      <th scope="col">{t("postfach.treter.colClub")}</th>
+                      <th scope="col">{t("postfach.treter.colPlayed")}</th>
+                      <th scope="col">{t("postfach.treter.colPoints")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {league.table.map((row) => (
+                      <tr
+                        key={`${row.rank}-${row.name}`}
+                        className={row.isPlayerClub ? "is-own-club" : undefined}
+                      >
+                        <td>{row.rank}</td>
+                        <td>{row.name}</td>
+                        <td>{row.played}</td>
+                        <td>{row.points}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="treter-league-empty">{t("postfach.treter.noTableYet")}</p>
+              )}
+            </section>
+            <section className="treter-league-block">
+              <h3 className="treter-league-title">{t("postfach.treter.scorersTitle")}</h3>
+              {league.scorers.length ? (
+                <ol className="treter-scorer-list">
+                  {league.scorers.map((row) => (
+                    <li key={`${row.rank}-${row.name}`}>
+                      <span className="treter-scorer-name">{row.name}</span>
+                      <span className="treter-scorer-goals">{row.goals}</span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="treter-league-empty">{t("postfach.treter.noScorersYet")}</p>
+              )}
+            </section>
+            {league.matchdaysPlayed ? (
+              <p className="treter-league-meta">
+                {t("postfach.treter.matchdaysPlayed", {
+                  count: league.matchdaysPlayed,
+                })}
+              </p>
+            ) : null}
+          </aside>
+        </div>
         <p className="treter-photo-note">{t("postfach.treter.photoTodo")}</p>
       </div>
       {!readOnly && onDismiss ? (

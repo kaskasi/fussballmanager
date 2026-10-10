@@ -81,6 +81,16 @@ describe("training units", () => {
     );
   });
 
+  it("locks massage recovery until medical center level 2", () => {
+    const massage = trainingUnit("ment_massage");
+    const recovery = trainingUnit("ment_recovery");
+    expect(recovery.fitnessRecoveryFraction).toBeCloseTo(0.2);
+    expect(massage.fitnessRecoveryFraction).toBeCloseTo(0.33);
+    expect(trainingUnitUnlocked(massage, { medicalCenterLevel: 1 })).toBe(false);
+    expect(trainingUnitUnlocked(massage, { medicalCenterLevel: 2 })).toBe(true);
+    expect(unitsForGroup("mental").some((unit) => unit.id === "ment_recovery")).toBe(true);
+  });
+
   it("locks outdoor units until the training pitch is upgraded", () => {
     const outdoorTech = trainingUnit("tech_outdoor");
     const outdoorPhys = trainingUnit("phys_outdoor");

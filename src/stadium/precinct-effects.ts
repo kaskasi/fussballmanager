@@ -128,9 +128,25 @@ export function precinctWeeklyFanbaseBonus(state: PrecinctState | undefined, occ
   return full * clampOccupancy(occupancy);
 }
 
-/** Campus no longer caps growth — hall unlock lives in `precinctHasTrainingHall`. */
-export function precinctTrainingEnvironment(_state: PrecinctState | undefined): number {
-  return 1;
+/** Training campus → growth `environment()` multiplier (PRD 02.1, F7 Gelände). */
+export function precinctTrainingEnvironment(state: PrecinctState | undefined): number {
+  if (!state) return 1;
+  let bonus = 0;
+  if (dockedOccupiedCells(state, "training_ground") > 0) {
+    const level = precinctBuildingLevel(state, "training_ground");
+    bonus += 0.018 + level * 0.024;
+    if (precinctHasTrainingHall(state)) bonus += 0.04;
+  }
+  if (dockedOccupiedCells(state, "training_pitch") > 0) {
+    bonus += precinctBuildingLevel(state, "training_pitch") * 0.014;
+  }
+  if (dockedOccupiedCells(state, "youth_pitch") > 0) {
+    bonus += precinctBuildingLevel(state, "youth_pitch") * 0.01;
+  }
+  if (dockedOccupiedCells(state, "medical_center") > 0) {
+    bonus += Math.min(3, precinctBuildingLevel(state, "medical_center")) * 0.008;
+  }
+  return 1 + bonus;
 }
 
 /** Pool (Stufe 4+) — Erholung zwischen den Spielen. Fitness (3) leicht, Halle (2) nicht. */

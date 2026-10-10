@@ -58,6 +58,8 @@ import { careerTeamId } from "../sim/rival-growth.ts";
 import { formatLeagueMatchKickoffLabel } from "./match-kickoff-format.ts";
 import { listProSquad, sortProSquadRows } from "../squad/pro-roster.ts";
 import { lineupFormFromCareer } from "./lineup-player-status.ts";
+import { LineupFatigueBars } from "./LineupFatigueBars.tsx";
+import { stateMark } from "../ui/player-profile.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
 import { OpponentScoutMatchAction } from "../ui/components/OpponentScoutMatchAction.tsx";
 import { LineupIndicatorLegend } from "../ui/components/LineupIndicatorLegend.tsx";
@@ -574,6 +576,9 @@ export function CareerLineupScreen({
                   <th scope="col" className="col-num">
                     {t("match.lineup.col.form")}
                   </th>
+                  <th scope="col" className="col-num">
+                    {t("match.lineup.col.fitness")}
+                  </th>
                   <th scope="col" className="col-role">
                     {t("match.lineup.col.usage")}
                   </th>
@@ -582,6 +587,7 @@ export function CareerLineupScreen({
               <tbody>
                 {squadTableRows.map((row) => {
                   const form = lineupFormFromCareer(row.form);
+                  const fit = stateMark(row.fitness, 75, 50);
                   return (
                     <tr key={row.playerId} className={row.role === "start" ? "is-starter" : undefined}>
                       <td className="col-pos">{row.position}</td>
@@ -601,6 +607,13 @@ export function CareerLineupScreen({
                       <td className="col-num">{row.age}</td>
                       <td className="col-num">{row.ca}</td>
                       <td className={`lineup-squad-form col-num is-${form.tone}`}>{form.label}</td>
+                      <td className={`lineup-squad-fitness col-num is-${fit.tone}`}>
+                        <LineupFatigueBars fitness={row.fitness} compact />
+                        <span className="lineup-shape-mark" aria-hidden>
+                          {fit.mark}
+                        </span>
+                        {row.fitness}
+                      </td>
                       <td className="col-role">
                         <span className={`lineup-squad-role is-${row.role}`}>
                           {row.role === "start" ? t("match.lineup.role.start") : t("match.lineup.role.bench")}

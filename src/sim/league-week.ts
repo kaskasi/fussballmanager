@@ -25,6 +25,7 @@ import { isLeagueMatchWeek } from "./game-calendar.ts";
 import { clubShortLabel, squadForLeagueClub } from "./league-divisions.ts";
 import type { WorldClub } from "../world/world-generator.ts";
 import type { WatchedPlayerMatch } from "./watched-player-match.ts";
+import { assertFixtureStatsConsistent } from "./league-player-stats-integrity.ts";
 
 export function weeklySeed(masterSeed: number, season: number, week: number): number {
   let hash = masterSeed ^ season ^ week;
@@ -276,6 +277,8 @@ export interface LeagueWeekAdvance {
   matchdayPlayed: number;
   seasonComplete: boolean;
   clubPlayerStats: PlayerSeasonStat[];
+  /** All rows merged into league.player_stats this week (foreign fixtures included). */
+  matchdayPlayerStats: PlayerSeasonStat[];
 }
 
 function applyWatchedPlayerFixture(
@@ -295,8 +298,11 @@ function applyWatchedPlayerFixture(
       ? override
       : result,
   );
-  // Drop engine stats for the player club — career sync derives minutes from the fixture.
-  const playerStats = payload.playerStats.filter((row) => row.teamId !== playerClubId);
+  const fixtureTeams = new Set<TeamId>([scheduled.homeTeamId, scheduled.awayTeamId]);
+  const playerStats = [
+    ...payload.playerStats.filter((row) => !fixtureTeams.has(row.teamId)),
+    ...(watched.fixtureStats ?? watched.playerClubStats ?? []),
+  ];
   return { results, playerStats };
 }
 
@@ -318,6 +324,7 @@ export async function advanceLeagueWeek(
       matchdayPlayed: 0,
       seasonComplete: current.season_complete ?? false,
       clubPlayerStats: [],
+      matchdayPlayerStats: [],
     };
   }
 
@@ -349,8 +356,9 @@ export async function advanceLeagueWeek(
   }
   const playerResult = scheduled ? fixtureResult(payload.results, scheduled) ?? null : null;
   const seasonComplete = matchdayPlayed >= maxMatchday;
+  assertFixtureStatsConsistent(payload.results, payload.playerStats);
   const clubPlayerStats = watchedApplies
-    ? []
+    ? [...(watchedPlayerMatch?.playerClubStats ?? [])]
     : payload.playerStats.filter((row) => row.teamId === current.player_club_id);
 
   return {
@@ -365,6 +373,7 @@ export async function advanceLeagueWeek(
     matchdayPlayed,
     seasonComplete,
     clubPlayerStats,
+    matchdayPlayerStats: payload.playerStats,
   };
 }
 

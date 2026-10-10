@@ -29,7 +29,19 @@ export function treterCampImage(campId: string): string {
   return CAMP_IMAGE[campId] ?? TRETER_IMAGE.moodCrowd;
 }
 
-export function treterCampHeroCopy(campId: string, clubLabel: string): {
+function hashPick(seed: string, mod: number): number {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (Math.imul(31, hash) + seed.charCodeAt(index)) | 0;
+  }
+  return Math.abs(hash) % mod;
+}
+
+export function treterCampHeroCopy(
+  campId: string,
+  clubLabel: string,
+  variantSeed = campId,
+): {
   headline: string;
   kicker: string;
   body: string;
@@ -38,33 +50,94 @@ export function treterCampHeroCopy(campId: string, clubLabel: string): {
   const label = nation?.label ?? campId;
   const region = nation?.region ?? "";
 
-  if (campId === "camp_br") {
-    return {
-      kicker: `${clubLabel} · Satelliten-Akademie`,
-      headline: `Tropen-Offensive: ${clubLabel} eröffnet Camp in ${label}`,
-      body: `São Paulo atmet Fußball — und ${clubLabel} hat jetzt einen Fuß in der Wärme. Unser Fototeam zeigt Palmen, Nachttraining unter Flutlicht und den ersten Kontakt mit U17-Talenten aus ${region}. Die Vereinsführung nennt es «den mutigsten Schachzug seit Jahren». Kritiker fragen nach den Kosten; der Sportliche Direktor antwortet nur: «Wir wollen Spieler mit Frechheit, nicht mit Excel.» Drei solche Camps pro Karriere — dieses hier zählt.`,
-    };
-  }
-  if (campId === "camp_ng") {
-    return {
-      kicker: "Akademie · Lagos",
-      headline: `${clubLabel} setzt auf Tempo aus ${label}`,
-      body: `Das neue Camp in ${region} soll Rohdiamanten früh sichtbar machen. «Geschwindigkeit und Mut», laut interner Notiz, «bevor der Markt zuschlägt.» Bilder aus dem Compound zeigen Sandplätze, enges Pressing in Kleingruppen und den Stolz der Betreuer.`,
-    };
-  }
-  if (campId === "camp_fr") {
-    return {
-      kicker: "Technik · Lyon",
-      headline: `Französische Schule für ${clubLabel}`,
-      body: `In ${region} trainieren künftig die besten Passfüße der Akademie-Familie. Der Treter war vor Ort: strukturierte Einheiten, viel Ballkontakt, wenig Show. «Genau die Adresse für Spieler, die zwischen den Linien denken», kommentiert ein Beobachter.`,
-    };
-  }
-
-  return {
-    kicker: `${clubLabel} · Camp`,
-    headline: `Neues Jugendlager: ${label}`,
-    body: `${clubLabel} investiert in ${label} (${region}). Das Camp ist live — Intake, Betreuer und erste Talente folgen in den nächsten Wochen. Der Klub bleibt bei maximal drei Camps; jeder Eröffnungsschlag wird in der Redaktion gross aufgezogen.`,
+  const byCamp: Record<string, readonly { kicker: string; headline: string; body: string }[]> = {
+    camp_br: [
+      {
+        kicker: `${clubLabel} · Satelliten-Akademie`,
+        headline: `Tropen-Offensive: ${clubLabel} eröffnet Camp in ${label}`,
+        body: `São Paulo atmet Fußball — ${clubLabel} hat einen Fuß in der Wärme. Palmen, Nachttraining, erste U17-Kontakte aus ${region}. «Mutiger Schachzug», sagt die Führung; Kritiker nennen die Kasse.`,
+      },
+      {
+        kicker: "Brasilien · Eröffnung",
+        headline: `${label}: ${clubLabel} baut die Fernwärme-Pipeline`,
+        body: `Reporter vor Ort in ${region}: viel Ball, wenig Büro. Das Camp soll Frechheit und Tempo liefern — «bevor der Markt die Preise kennt», flüstert ein Scout.`,
+      },
+      {
+        kicker: "Akademie global",
+        headline: `Samba und Struktur — ${clubLabel} in ${label}`,
+        body: `Neues Satelliten-Camp live. Betreuer, Intake-Routinen und erste Talente: ${clubLabel} investiert in ${region}. Maximal drei Camps pro Klub — dieses zählt.`,
+      },
+    ],
+    camp_ng: [
+      {
+        kicker: "Akademie · Lagos",
+        headline: `${clubLabel} setzt auf Tempo aus ${label}`,
+        body: `Sandplätze, enges Pressing, laute Betreuer: das Camp in ${region} sucht Rohdiamanten mit Mut.`,
+      },
+      {
+        kicker: "Westafrika",
+        headline: `${clubLabel} eröffnet Lagos-Pipeline`,
+        body: `Geschwindigkeit vor dem Excel-Sheet — so lautet die interne Notiz zum Camp in ${label}. Der Treter zeigt Bilder aus dem Compound.`,
+      },
+    ],
+    camp_fr: [
+      {
+        kicker: "Technik · Lyon",
+        headline: `Französische Schule für ${clubLabel}`,
+        body: `In ${region}: Passfüße, Ballkontakt, wenig Show. «Spieler, die zwischen den Linien denken», sagt ein Beobachter.`,
+      },
+      {
+        kicker: "Lyon · Campus",
+        headline: `${clubLabel} holt ${label}-Routine ins Netz`,
+        body: `Strukturierte Einheiten, klare Hierarchie — das neue Camp soll Technik exportieren, nicht nur Fotos.`,
+      },
+    ],
+    camp_tr: [
+      {
+        kicker: "Istanbul · Camp",
+        headline: `${clubLabel} verankert sich am Bosporus`,
+        body: `Zwischen Kontinenten: ${clubLabel} startet in ${region}. Enges Spiel, körperliche Duellkultur — «genau unser Mix», heißt es intern.`,
+      },
+      {
+        kicker: "Türkei · Akademie",
+        headline: `Neues Lager: ${label} für ${clubLabel}`,
+        body: `Der Klub erweitert die Satelliten-Karte. Erste Talente aus ${region} sollen ab Sommer sichtbar werden.`,
+      },
+    ],
+    camp_hr: [
+      {
+        kicker: "Adria · Dubrovnik",
+        headline: `${clubLabel} trainiert an der Küste`,
+        body: `Technik und Spielintelligenz — das Camp in ${region} wirbt mit kleinen Gruppen und viel Video.`,
+      },
+      {
+        kicker: "Kroatien",
+        headline: `Mediterrane Adresse für ${clubLabel}`,
+        body: `${label} ist live: ${clubLabel} setzt auf die balkanische Spielschule — kompakt, zweikampfstark, lernwillig.`,
+      },
+    ],
+    camp_pl: [
+      {
+        kicker: "Polen · Krakau",
+        headline: `${clubLabel} baut Ost-Pipeline`,
+        body: `Disziplin und Laufarbeit: das Camp in ${region} soll robuste Talente früh binden.`,
+      },
+      {
+        kicker: "Akademie Ost",
+        headline: `${label}: ${clubLabel} erweitert das Netz`,
+        body: `Neues Satelliten-Camp — Intake und Betreuer folgen. Der Verein bleibt bei höchstens drei Adressen weltweit.`,
+      },
+    ],
   };
+
+  const variants = byCamp[campId] ?? [
+    {
+      kicker: `${clubLabel} · Camp`,
+      headline: `Neues Jugendlager: ${label}`,
+      body: `${clubLabel} investiert in ${label} (${region}). Das Camp ist live — Intake und Talente folgen.`,
+    },
+  ];
+  return variants[hashPick(variantSeed, variants.length)] ?? variants[0]!;
 }
 
 export function treterFormCopy(clubLabel: string, lossesInRow: number, formLine: string): {

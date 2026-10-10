@@ -330,12 +330,15 @@ function simulateWeeklySales(
         : row.retail_price;
     let weight = MERCH_SKU_DEMAND_WEIGHT[id];
     if (id === "trikots") weight *= starBoost;
+    let demandScale = priceDemandMultiplier(unitRetail, MERCH_SKU_REFERENCE_RETAIL[id]);
+    if (isMerchSkuOnSale(row, careerWeekNow)) {
+      demandScale *= merchFiresaleDemandMultiplier(
+        row.retail_price,
+        merchSkuNormalRetail(row),
+      );
+    }
     const want = Math.round(
-      unitPool *
-        weight *
-        MERCH_SALES_DEMAND_MULTIPLIER *
-        limitedDropScale *
-        priceDemandMultiplier(unitRetail, MERCH_SKU_REFERENCE_RETAIL[id]),
+      unitPool * weight * MERCH_SALES_DEMAND_MULTIPLIER * limitedDropScale * demandScale,
     );
     const sold = Math.min(row.stock, Math.max(0, want));
     if (sold <= 0) continue;
@@ -369,6 +372,24 @@ function simulateWeeklySales(
 
 export const MERCH_SALE_DURATION_WEEKS = 2;
 export const MERCH_FIRESALE_SUGGESTED_DISCOUNT = 0.18;
+/** VK ≤ 50 % of normal → this factor on top of regular price elasticity. */
+export const MERCH_FIRESALE_MAX_DEMAND_MULTIPLIER = 10;
+export const MERCH_FIRESALE_DEEP_DISCOUNT_RATIO = 0.5;
+
+/** Fire Sale only — steep demand vs. normal retail (1× at full price, 10× at half price or less). */
+export function merchFiresaleDemandMultiplier(
+  saleRetail: number,
+  normalRetail: number,
+): number {
+  if (normalRetail <= 0 || saleRetail >= normalRetail) return 1;
+  const ratio = saleRetail / normalRetail;
+  if (ratio <= MERCH_FIRESALE_DEEP_DISCOUNT_RATIO) {
+    return MERCH_FIRESALE_MAX_DEMAND_MULTIPLIER;
+  }
+  const span = 1 - MERCH_FIRESALE_DEEP_DISCOUNT_RATIO;
+  const t = (ratio - MERCH_FIRESALE_DEEP_DISCOUNT_RATIO) / span;
+  return MERCH_FIRESALE_MAX_DEMAND_MULTIPLIER + t * (1 - MERCH_FIRESALE_MAX_DEMAND_MULTIPLIER);
+}
 
 export function isMerchSkuOnSale(row: MerchSkuState, careerWeek: number): boolean {
   return (

@@ -2,10 +2,12 @@ import type { Attributes, Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import type { TrainingUnit } from "./training-units.ts";
 
+export type TrainingHighlightMetric = keyof Attributes | "fitness";
+
 export interface TrainingUnitHighlight {
   playerId: string;
   playerName: string;
-  attribute: keyof Attributes;
+  metric: TrainingHighlightMetric;
   delta: number;
 }
 
@@ -30,6 +32,25 @@ export function highlightTrainingUnitResult(
   after: readonly Player[],
   unit: TrainingUnit,
 ): TrainingUnitHighlight | null {
+  if (unit.fitnessRecoveryFraction !== undefined) {
+    let best: TrainingUnitHighlight | null = null;
+    let bestDelta = 0;
+    for (const player of before) {
+      const updated = after.find((entry) => entry.id === player.id);
+      if (!updated) continue;
+      const delta = updated.state.fitness - player.state.fitness;
+      if (delta <= 0 || delta <= bestDelta) continue;
+      bestDelta = delta;
+      best = {
+        playerId: player.id,
+        playerName: formatPlayerName(player),
+        metric: "fitness",
+        delta,
+      };
+    }
+    return best;
+  }
+
   let best: TrainingUnitHighlight | null = null;
   let bestScore = -Infinity;
 
@@ -45,7 +66,7 @@ export function highlightTrainingUnitResult(
         best = {
           playerId: player.id,
           playerName: formatPlayerName(player),
-          attribute: key,
+          metric: key,
           delta,
         };
       }
@@ -65,13 +86,24 @@ export function collectTrainingUnitGains(
   for (const player of before) {
     const updated = after.find((entry) => entry.id === player.id);
     if (!updated) continue;
+    if (unit.fitnessRecoveryFraction !== undefined) {
+      const delta = updated.state.fitness - player.state.fitness;
+      if (delta <= 0) continue;
+      rows.push({
+        playerId: player.id,
+        playerName: formatPlayerName(player),
+        metric: "fitness",
+        delta,
+      });
+      continue;
+    }
     for (const key of unit.skills) {
       const delta = updated.attributes[key] - player.attributes[key];
       if (delta <= 0.000_1) continue;
       rows.push({
         playerId: player.id,
         playerName: formatPlayerName(player),
-        attribute: key,
+        metric: key,
         delta,
       });
     }

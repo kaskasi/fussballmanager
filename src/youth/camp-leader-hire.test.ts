@@ -59,4 +59,11 @@ describe("camp leader hire", () => {
     ]);
     expect(camps[0]?.staffed).toBe(false);
   });
+
+  it("normalize preserves purchased_week for Treter timing", () => {
+    const camps = normalizeYouthCamps([
+      { id: "camp_br", staffed: true, purchased_season: 1, purchased_week: 4, leader_hire: "hired" },
+    ]);
+    expect(camps[0]?.purchased_week).toBe(4);
+  });
 });

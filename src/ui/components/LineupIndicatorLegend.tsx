@@ -49,6 +49,12 @@ export function LineupIndicatorLegend() {
             </li>
             <li>
               <LineupFatigueBars fitness={8} compact />
+              <span className="lineup-fitness-pill is-low">
+                <span className="lineup-shape-mark" aria-hidden>
+                  ◆
+                </span>
+                <span className="lineup-fitness-num">8</span>
+              </span>
               <span>{t("match.lineup.legend.fatigueEmpty")}</span>
             </li>
             <li>

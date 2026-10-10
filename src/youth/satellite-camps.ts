@@ -376,6 +376,7 @@ export function normalizeYouthCamps(camps: readonly YouthCamp[] | undefined): Yo
       id: camp.id,
       staffed,
       purchased_season: camp.purchased_season ?? 1,
+      ...(camp.purchased_week != null ? { purchased_week: camp.purchased_week } : {}),
       leader_hire,
       agency_commissioned_at: camp.agency_commissioned_at,
       leader: camp.leader,

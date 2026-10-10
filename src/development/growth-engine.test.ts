@@ -43,7 +43,7 @@ describe("PRD 02.7 growth invariants", () => {
     expect(boosted).toBeCloseTo(baseline * 1.08, 4);
   });
 
-  it("age 19, 90 minutes, grows by 0.17388", () => {
+  it("age 19, 90 minutes, grows faster in the 15–20 window", () => {
     const delta = growth({
       age: 19,
       attribute: "passing",
@@ -52,11 +52,11 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 1.4,
       minutes: 90,
     });
-    expect(delta).toBeCloseTo(0.17388, 5);
-    expect(delta).toBeLessThan(0.2);
+    expect(delta).toBeCloseTo(0.07 * 2.4 * 1.2 * 1.4 * 1.15, 5);
+    expect(delta).toBeGreaterThan(0.25);
   });
 
-  it("age 30, unused, grows by 0.02352", () => {
+  it("age 30, unused, grows slowly", () => {
     const delta = growth({
       age: 30,
       attribute: "passing",
@@ -65,8 +65,8 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 0.8,
       minutes: 0,
     });
-    expect(delta).toBeCloseTo(0.02352, 5);
-    expect(delta).toBeLessThan(0.03);
+    expect(delta).toBeCloseTo(0.07 * 0.65 * 1 * 0.8 * 0.7, 5);
+    expect(delta).toBeLessThan(0.04);
   });
 
   it("age 25 at 180 applies the 0.3 soft cap before the clamp", () => {
@@ -78,7 +78,7 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 1.2,
       minutes: 45,
     });
-    const uncapped = 0.06 * 1.1 * 1.2 * (1 + (45 / 90) * 0.15);
+    const uncapped = 0.07 * 1.45 * 1.1 * 1.2 * (1 + (45 / 90) * 0.15);
     expect(delta).toBeCloseTo(uncapped * 0.3, 5);
     expect(delta).toBeGreaterThan(0);
     expect(delta).toBeLessThanOrEqual(5);
@@ -93,9 +93,37 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 1,
       minutes: 0,
     });
-    expect(delta).toBeCloseTo(0.06 * 0.28 * 0.7 - 1.5 / 52, 5);
+    expect(delta).toBeCloseTo(0.07 * 0.28 * 0.7 - 1.5 / 52, 5);
     expect(delta).toBeLessThan(0);
     expect(decayPerWeek("pace", 33)).toBeCloseTo(1.5 / 52, 8);
+  });
+});
+
+describe("playing time gate", () => {
+  it("dampens pro growth when season apps fall below half of matchdays", () => {
+    const full = growth({
+      age: 20,
+      attribute: "passing",
+      value: 100,
+      anlage: 1.1,
+      drive: 1.1,
+      minutes: 70,
+      squadStatus: "pro",
+      seasonApps: 12,
+      leagueMatchdaysPlayed: 20,
+    });
+    const bench = growth({
+      age: 20,
+      attribute: "passing",
+      value: 100,
+      anlage: 1.1,
+      drive: 1.1,
+      minutes: 70,
+      squadStatus: "pro",
+      seasonApps: 2,
+      leagueMatchdaysPlayed: 20,
+    });
+    expect(full).toBeGreaterThan(bench * 1.2);
   });
 });
 
@@ -128,7 +156,7 @@ describe("growth constraints", () => {
       stamina: { decline_start: number };
       leadership: { per_year: number };
     };
-    expect(curves.learning_base_points_per_week).toBe(0.06);
+    expect(curves.learning_base_points_per_week).toBe(0.07);
     expect(curves.pace.decline_start).toBe(25);
     expect(curves.stamina.decline_start).toBe(27);
     expect(curves.leadership.per_year).toBe(0);

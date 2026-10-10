@@ -232,6 +232,10 @@ function weakFootWeeklyGrowth(
     minutes: developmentMinutes(player.squad_status, player.state.weekly_minutes),
     injured: player.state.injury !== null,
     focusSlots: 1,
+    environmentFactor: context?.environmentFactor ?? 1,
+    squadStatus: player.squad_status,
+    seasonApps: player.state.season_apps,
+    leagueMatchdaysPlayed: context?.leagueMatchdaysPlayed ?? 0,
     noise: resolvedRandom ? undefined : 1,
     random: resolvedRandom,
   });

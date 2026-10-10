@@ -59,18 +59,16 @@ export function applyCareerMatchWeek(
   const goalsAgainst =
     fixture.homeTeamId === playerClubEngineId ? fixture.awayGoals : fixture.homeGoals;
 
-  const goalMap =
-    engineClubStats !== undefined
-      ? statsFieldMap(engineClubStats, squad, "goals")
-      : distributeGoals(lineup.played, goalsFor, masterSeed, season, matchday, "goal");
-  const assistMap =
-    engineClubStats !== undefined
-      ? statsFieldMap(engineClubStats, squad, "assists")
-      : distributeGoals(lineup.played, goalsFor, masterSeed, season, matchday, "assist", goalMap);
-  const cardMap =
-    engineClubStats !== undefined
-      ? statsFieldMap(engineClubStats, squad, "yellowCards")
-      : distributeCards(lineup.played, masterSeed, season, matchday);
+  const useEngineStats = engineClubStats !== undefined && engineClubStats.length > 0;
+  const goalMap = useEngineStats
+    ? statsFieldMap(engineClubStats, squad, "goals")
+    : distributeGoals(lineup.played, goalsFor, masterSeed, season, matchday, "goal");
+  const assistMap = useEngineStats
+    ? statsFieldMap(engineClubStats, squad, "assists")
+    : distributeGoals(lineup.played, goalsFor, masterSeed, season, matchday, "assist", goalMap);
+  const cardMap = useEngineStats
+    ? statsFieldMap(engineClubStats, squad, "yellowCards")
+    : distributeCards(lineup.played, masterSeed, season, matchday);
 
   const minutesById = new Map(lineup.minutes);
   const matchdayStats: CareerLeagueStat[] = [];

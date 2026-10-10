@@ -55,11 +55,13 @@ export function isTrainingNextActive(
 }
 
 export function buildTrainingWeekContext(session: GameSession) {
+  const leagueMatchdaysPlayed = Math.max(0, session.league.matchday - 1);
   return {
     season: session.season,
     week: session.week,
     masterSeed: session.masterSeed,
     intensity: session.trainingIntensity,
+    leagueMatchdaysPlayed,
     environmentFactor:
       environmentFromCoachingStaff(session.coachingStaff) *
       precinctTrainingEnvironment(session.stadium.precinct),
@@ -150,7 +152,8 @@ export function runTrainingNextStep(session: GameSession): TrainingNextStepResul
     : "training.next.unitResultQuiet";
   if (highlight) {
     toastParams.player = highlight.playerName;
-    toastParams.attribute = highlight.attribute;
+    toastParams.attribute =
+      highlight.metric === "fitness" ? "Fitness" : String(highlight.metric);
     toastParams.delta = formatTrainingDelta(highlight.delta);
   }
 

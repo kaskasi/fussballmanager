@@ -1,9 +1,9 @@
 import type { Player } from "../types/player.ts";
-import { formatPlayerName, roundStat } from "../types/player-display.ts";
-import { estimateCa } from "../transfers/market-value.ts";
-import { matchPlayerWeakFoot } from "./player-match-icons.ts";
-import { LineupFatigueBars } from "./LineupFatigueBars.tsx";
-import { LineupFormValue } from "./LineupFormValue.tsx";
+import { formatPlayerName } from "../types/player-display.ts";
+import {
+  LineupPlayerStatusStrip,
+  lineupStatusFromPlayer,
+} from "./LineupPlayerStatusStrip.tsx";
 
 export function LineupPlayerCard({
   player,
@@ -18,8 +18,7 @@ export function LineupPlayerCard({
   onDragEnd?: () => void;
   onOpenPlayer?: (playerId: string) => void;
 }) {
-  const weakFoot = matchPlayerWeakFoot(player);
-  const ca = roundStat(estimateCa(player.attributes, player.position));
+  const status = lineupStatusFromPlayer(player);
 
   return (
     <div
@@ -40,16 +39,7 @@ export function LineupPlayerCard({
       >
         {formatPlayerName(player)}
       </button>
-      {!compact ? <span className="lineup-player-ca">{ca}</span> : null}
-      <span className="lineup-player-icons">
-        <LineupFormValue careerForm={player.state.form} compact />
-        <LineupFatigueBars fitness={player.state.fitness} compact />
-        {weakFoot.show ? (
-          <span className="lineup-icon lineup-icon-wa" title={weakFoot.title}>
-            {weakFoot.label}
-          </span>
-        ) : null}
-      </span>
+      <LineupPlayerStatusStrip status={status} variant="bench" />
     </div>
   );
 }

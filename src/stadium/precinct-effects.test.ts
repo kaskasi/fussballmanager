@@ -86,14 +86,15 @@ describe("precinct campus effects", () => {
     expect(precinctWeeklyFanbaseBonus(docked)).toBeGreaterThan(0);
   });
 
-  it("does not scale growth from campus — hall is an unlock flag", () => {
+  it("raises training environment from campus upgrades", () => {
     let ground = dockToCity(
       placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "training_ground"),
       "training_ground",
     );
-    expect(precinctTrainingEnvironment(ground)).toBe(1);
+    expect(precinctTrainingEnvironment(ground)).toBeGreaterThan(1);
+    const base = precinctTrainingEnvironment(ground);
     ground = upgradePrecinctBuilding(ground, "training_ground");
-    expect(precinctTrainingEnvironment(ground)).toBe(1);
+    expect(precinctTrainingEnvironment(ground)).toBeGreaterThan(base);
   });
 
   it("sells more merch when fanbase is higher at the same occupancy", () => {

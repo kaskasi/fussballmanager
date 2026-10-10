@@ -109,8 +109,8 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 | F2.7 | M1 | Wachstums-Heatmap | Team-Pixelbar Hub+Training (1□=1 Spieler) | 09 Screen 1 |
 | F2.8 | M2 | Bonus-Stamps | Katalog + Earn-Loop + Akte + Phase-Makel + signed −1 + hybrid unlock→seal + six archetypes | False 9 / Raumdeuter / Box-to-Box later |
 | F4.3 | M2 | Scout-Netz 3 Tiers | Einstellungsliste | vorgezogen, keine Karte |
-| F4.4 | M2 | Scout-Karte | — | |
-| F1.5 | M1 | Profil Charts, Icons | Tabs + Flavor | Akte: Hex + volle Skill-Liste (14.3) |
+| F4.4 | M2 | Scout-Karte | v1: 2×2 Grid, Region-Tier, Detail-Route, Pool | F4.4-P polish; 04.2 Scout-Shop auf Karte optional |
+| F1.5 | M1 | Profil Charts, Icons | Tabs + Flavor | 14.3-P Übersicht-Spoke shipped |
 | F5.1 | M1 | Markt, Fenster | Next-Action bei Fenster zu | Historie sekundär |
 | F1.9 | M3 | Live-Eingriff | Pause/Speed | nicht vorziehen |
 

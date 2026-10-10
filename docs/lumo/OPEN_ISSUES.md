@@ -12,7 +12,7 @@ Per PRD 15.5.1 (2026-10-06), after sponsor deals (F6.5 done):
 1. **F7.3 — Hospitality / precinct**  
    **Done (v87):** Imbiss/Bier-Preissteuerung (Finanzen Commerce), Museum-Gebäude + Ledger, Hotel/Restaurant-Auslastung-UI, `empire_hotel_vs_pitch` Inbox. **Offen:** 1×1-Deko, zweites Campus-Gelände (PRD 14).
 
-2. **Then (not blocked):** **F4.4 Scout map** (regions colored by knowledge, pins). **PRD 14.3 Akte** — hex + Enzyklopädie shipped; **Spoke-IA/Dichte** (Übersicht-Grid, Rail-Erfahrung) in 14.3-P polish.
+2. **Then (not blocked):** **F4.4-P** Scout-Karte polish (Onboarding, Legende, Hub-Chip). **PRD 14.3 Akte** shipped (14.3-P Übersicht-Spoke).
 
 ---
 
@@ -20,9 +20,9 @@ Per PRD 15.5.1 (2026-10-06), after sponsor deals (F6.5 done):
 
 | Priority | ID | Milestone | Gap |
 |----------|-----|-----------|-----|
-| High | **F4.4** | M2 | Scout **map** not built — network is list/tiers only (F4.3 partial). |
+| High | **F4.4** | M2 | **Discovery map v1 shipped** (2×2, trips, pool); **F4.4-P** = findability + visual polish; **04.2** hiring-on-map optional. |
 | High | **F5.4** | M2 | Full **contract negotiations** (player priorities, fog, frustration spiral) — youth contracts still default; slider UX tied to 2002 campaign USP. |
-| High | **PRD 14.3** | M1 polish | **Akte Spoke** — identity rail OK; **Übersicht** 2-col (hex/Stärke/Enzyklopädie | Ziel/Stempel/Vertrag), sekundäre Tabs Verlauf/Saisonwerte (14.3-P). |
+| High | **PRD 14.3** | M1 polish | **Shipped** 14.3-P (Übersicht-Spoke, Rail-Erfahrung). |
 | Medium | **F6.7** | M3 | **Merch SKU** shipped (v79+); **v87** Kapazitäts-UX + kein Shop in Matchday-Kasse. Saisonkollektionen deferred. |
 | Medium | **F7.3** | M3 | Kern shipped (v87); Rest: 1×1-Deko, F7.4–F7.6. |
 | Medium | **F3.6** | M2 | Youth **pro contracts** + minutes clauses — shares F5.4 dialog. |

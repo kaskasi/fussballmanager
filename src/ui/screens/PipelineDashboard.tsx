@@ -99,7 +99,7 @@ export function PipelineDashboard({
   onTrainingPlanChange: (plan: TrainingSlot[]) => void;
   activeScouts: number;
   onSelectPlayer: (playerId: string) => void;
-  onOpenScouting: () => void;
+  onOpenScouting: (initialTab?: "map") => void;
   onOpenTransfers: () => void;
   onOpenPostfach: (itemId?: string) => void;
   onStoryChoice: (itemId: string, action: DecisionAction) => void;
@@ -157,6 +157,7 @@ export function PipelineDashboard({
         total: seasonMatchdays,
       });
   const showObjectives = board.objectives.length > 0 && board.job_status !== "dismissed";
+  const scoutPoolEmpty = (scoutBoard.discovery?.scout_pool?.length ?? 0) === 0;
   const hubArchivePreview = useMemo(
     () =>
       buildPostfachArchive({
@@ -244,9 +245,17 @@ export function PipelineDashboard({
               <span>{youthTileLabel(youthInbox)}</span>
             </button>
             {curtain.scouting_nav ? (
-              <button type="button" className="pipeline-tile" onClick={onOpenScouting}>
+              <button
+                type="button"
+                className="pipeline-tile"
+                onClick={() => onOpenScouting(scoutPoolEmpty ? "map" : undefined)}
+              >
                 <Eye size={18} aria-hidden="true" />
-                <span>{t("hub.scouting.active", { count: activeScouts })}</span>
+                <span>
+                  {scoutPoolEmpty
+                    ? t("hub.scouting.mapEmpty")
+                    : t("hub.scouting.active", { count: activeScouts })}
+                </span>
               </button>
             ) : null}
             {curtain.transfers_nav ? (

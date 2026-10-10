@@ -3809,6 +3809,63 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   gap: 0.35rem 0.65rem;
 }
 
+/* F4.4-P — Scout map discoverability & legibility */
+.scout-region-map-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.scout-region-map-staff-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.55rem;
+}
+
+.scout-region-map-legend--compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.85rem;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.72rem;
+}
+
+.scout-region-map-legend--compact li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.scout-discovery-zone-card.is-locked {
+  border: var(--outline);
+  background: var(--panel-muted);
+  box-shadow: inset 0 0 0 1px var(--panel);
+}
+
+.scout-discovery-zone.has-flavor .scout-discovery-zone-crests {
+  margin-top: 0.35rem;
+  padding: 0.25rem 0.35rem;
+  border-radius: var(--radius);
+  background: rgb(15 23 42 / 38%);
+  backdrop-filter: blur(4px);
+}
+
+.scout-route-club.is-visited .scout-route-node {
+  stroke: var(--rasen);
+  stroke-width: 2.2;
+  fill: var(--panel);
+}
+
+.scout-route-club.is-visited .scout-route-node.is-done {
+  fill: color-mix(in srgb, var(--rasen) 22%, var(--panel));
+}
+
 .scout-region-map-confidence-counts span {
   display: inline-flex;
   align-items: center;

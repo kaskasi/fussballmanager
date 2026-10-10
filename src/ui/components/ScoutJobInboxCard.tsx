@@ -76,7 +76,7 @@ export function ScoutJobInboxCard({
         <div className="inbox-actions inbox-scout-job-actions">
           {isRegion && onOpenScoutingNetwork ? (
             <button type="button" className="inbox-action" onClick={onOpenScoutingNetwork}>
-              {t("postfach.scoutJob.ctaNetwork")}
+              {t("postfach.scoutJob.ctaMap")}
             </button>
           ) : null}
           {!isRegion && onOpenScoutingHits ? (

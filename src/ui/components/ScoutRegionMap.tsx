@@ -1,6 +1,8 @@
 /** WIREFRAME: PRD 09 Screen 3a — Scout-Karte (F4.4 discovery) */
 import { useMemo } from "react";
-import { MapPin, Radar } from "lucide-react";
+import { MapPin, Radar, Users } from "lucide-react";
+import type { ScoutNetworkState } from "../../scouting/scout-network.ts";
+import { scoutDisplayName } from "../../scouting/scout-player-assignment.ts";
 import type { BoardTarget } from "../../scouting/scout-board.ts";
 import type { ActiveRegionScout, ScoutDiscoveryState } from "../../scouting/scout-discovery.ts";
 import { layoutForZone } from "../../scouting/scout-map-layout.ts";
@@ -24,6 +26,8 @@ export function ScoutRegionMap({
   scoutTripQueue,
   onScoutRegion,
   onOpenRegionDetail,
+  scoutNetwork,
+  onOpenStaffTab,
 }: {
   clubs: readonly WorldClub[];
   targets: readonly BoardTarget[];
@@ -37,6 +41,8 @@ export function ScoutRegionMap({
   scoutTripQueue?: readonly ScoutTripPlan[];
   onScoutRegion: (zoneId: string) => void;
   onOpenRegionDetail?: (zoneId: string) => void;
+  scoutNetwork?: ScoutNetworkState;
+  onOpenStaffTab?: () => void;
 }) {
   const t = useT();
   const model = useMemo(
@@ -57,8 +63,24 @@ export function ScoutRegionMap({
   return (
     <section className="scout-region-map" aria-label={t("scouting.map.title")}>
       <header className="scout-region-map-head">
-        <h2>{t("scouting.map.title")}</h2>
+        <div className="scout-region-map-head-row">
+          <h2>{t("scouting.map.title")}</h2>
+          {onOpenStaffTab ? (
+            <button type="button" className="ui-btn ui-btn--ghost scout-region-map-staff-btn" onClick={onOpenStaffTab}>
+              <Users size={16} aria-hidden />
+              {t("scouting.map.openStaff")}
+            </button>
+          ) : null}
+        </div>
         <p className="scout-region-map-hint">{t("scouting.map.poolVsKnowledge")}</p>
+        <ul className="scout-region-map-legend scout-region-map-legend--compact" aria-label={t("scouting.map.legend.aria")}>
+          {(["strong", "mixed", "weak", "empty"] as const).map((tone) => (
+            <li key={tone}>
+              <span className={`scout-region-map-swatch is-${tone}`} aria-hidden />
+              <span className="scout-region-map-legend-label">{t(`scouting.map.legend.${tone}`)}</span>
+            </li>
+          ))}
+        </ul>
       </header>
       <div className="scout-region-map-body scout-discovery-grid">
         {model.zones.map((zone, index) => {
@@ -79,6 +101,10 @@ export function ScoutRegionMap({
           const tripQueuedHere =
             !tripActiveHere &&
             (scoutTripQueue?.some((plan) => plan.zone_id === zone.id) ?? false);
+          const tripScoutName =
+            zoneActiveTrip && scoutNetwork
+              ? scoutDisplayName(scoutNetwork, zoneActiveTrip.assigned_scout_id)
+              : null;
 
           return (
             <article
@@ -144,10 +170,16 @@ export function ScoutRegionMap({
                   ) : null}
                   {unlocked && tripActiveHere && zoneActiveTrip ? (
                     <span className="scout-discovery-zone-meta scout-discovery-zone-trip-status">
-                      {t("scouting.map.tripInProgress", {
-                        done: zoneActiveTrip.working_days_done,
-                        total: zoneActiveTrip.duration.totalWorkingDays,
-                      })}
+                      {tripScoutName
+                        ? t("scouting.map.tripInProgressScout", {
+                            scout: tripScoutName,
+                            done: zoneActiveTrip.working_days_done,
+                            total: zoneActiveTrip.duration.totalWorkingDays,
+                          })
+                        : t("scouting.map.tripInProgress", {
+                            done: zoneActiveTrip.working_days_done,
+                            total: zoneActiveTrip.duration.totalWorkingDays,
+                          })}
                     </span>
                   ) : null}
                   {unlocked && tripQueuedHere ? (
@@ -164,7 +196,7 @@ export function ScoutRegionMap({
                   </div>
                 ) : null}
 
-                {unlocked && !flavor && discoveredClubs.length > 0 ? (
+                {unlocked && discoveredClubs.length > 0 ? (
                   <ul
                     className="scout-discovery-zone-crests"
                     aria-label={t("scouting.map.discoveredClubsAria")}

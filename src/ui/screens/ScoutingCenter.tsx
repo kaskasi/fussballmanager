@@ -53,8 +53,9 @@ import type { ScoutRouteScore } from "../../scouting/scout-route-puzzle.ts";
 import { ScoutNetworkPanel } from "../components/ScoutNetworkPanel.tsx";
 import { ScoutConfidenceIcon } from "../components/ScoutConfidenceIcon.tsx";
 import { formatClubCash } from "../../economy/club-finances.ts";
-import { Circle, ClipboardList, Pause, Search, Star } from "lucide-react";
+import { Circle, ClipboardList, MapPin, Pause, Search, Star } from "lucide-react";
 import { ScreenEmptyState } from "../components/ScreenEmptyState.tsx";
+import type { CareerPhase } from "../../narrative/story-state.ts";
 
 type ScoutingTab = "map" | "staff" | "orders" | "pool" | "watchlist";
 export type ScoutingInitialTab =
@@ -70,6 +71,16 @@ function resolveInitialScoutingTab(initial: ScoutingInitialTab): ScoutingTab {
   if (initial === "network") return "map";
   if (initial === "hits") return "pool";
   return initial;
+}
+
+function defaultScoutingTab(
+  discovery: ScoutDiscoveryState | undefined,
+  careerPhase: CareerPhase | undefined,
+): ScoutingTab {
+  const poolLen = discovery?.scout_pool?.length ?? 0;
+  if (poolLen === 0) return "map";
+  if (careerPhase === "act2_regional") return "map";
+  return "pool";
 }
 
 const POSITIONS: PositionPrimary[] = [
@@ -156,6 +167,7 @@ export function ScoutingCenter({
   onScoutMapDetailChange,
   opponentLabel,
   matchSetup,
+  careerPhase,
 }: {
   targets: BoardTarget[];
   rivalPlayers: readonly Player[];
@@ -200,10 +212,12 @@ export function ScoutingCenter({
   onScoutMapDetailChange?: (open: boolean, onBack: () => void, title?: string) => void;
   opponentLabel?: string;
   matchSetup?: import("../../sim/career-match-setup.ts").CareerMatchSetup | null;
+  careerPhase?: CareerPhase;
 }) {
   const t = useT();
-  const [tab, setTab] = useState<ScoutingTab>("pool");
+  const [tab, setTab] = useState<ScoutingTab>(() => defaultScoutingTab(discovery, careerPhase));
   const [detailZoneId, setDetailZoneId] = useState<string | null>(null);
+  const scoutPoolEmpty = (discovery?.scout_pool?.length ?? 0) === 0;
 
   const notifyScoutMapDetailRef = useRef(onScoutMapDetailChange);
   notifyScoutMapDetailRef.current = onScoutMapDetailChange;
@@ -413,8 +427,10 @@ export function ScoutingCenter({
                 activeRegionScout={activeRegionScout}
                 activeScoutTrips={activeScoutTrips}
                 scoutTripQueue={scoutTripQueue}
+                scoutNetwork={scoutNetwork}
                 onScoutRegion={onScoutRegion}
                 onOpenRegionDetail={setDetailZoneId}
+                onOpenStaffTab={() => setTab("staff")}
               />
             </section>
           </div>
@@ -461,6 +477,20 @@ export function ScoutingCenter({
 
       {tab === "pool" ? (
         <div className="fm-tab-panel">
+          {scoutPoolEmpty ? (
+            <ScreenEmptyState
+              icon={MapPin}
+              title={t("scouting.pool.emptyOnboarding.title")}
+              hint={t("scouting.pool.emptyOnboarding.hint")}
+              aria-label={t("scouting.pool.emptyOnboarding.aria")}
+              className="scouting-empty"
+            >
+              <button type="button" className="ui-btn ui-btn--ghost" onClick={() => setTab("map")}>
+                {t("scouting.pool.emptyOnboarding.cta")}
+              </button>
+            </ScreenEmptyState>
+          ) : (
+            <>
           <Hint text={t("scouting.hint")} block>
             <p className="scouting-summary">
               <span>{t("scouting.summary.known", { count: counts.known })}</span>
@@ -573,6 +603,8 @@ export function ScoutingCenter({
           onToggleShortlist={onToggleShortlist}
         />
       )}
+            </>
+          )}
         </div>
       ) : null}
 

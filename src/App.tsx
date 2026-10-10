@@ -245,7 +245,7 @@ import {
   type MarketFilters,
   type MarketSort,
 } from "./scouting/market-list.ts";
-import { ScoutingCenter } from "./ui/screens/ScoutingCenter";
+import { ScoutingCenter, type ScoutingInitialTab } from "./ui/screens/ScoutingCenter";
 import { CampLeaderDismissModal } from "./ui/components/CampLeaderDismissModal.tsx";
 import { postfachOpenCount } from "./inbox/postfach-open-count.ts";
 import { isScoutJobPostfachItemId } from "./inbox/postfach-scout-job.ts";
@@ -436,9 +436,7 @@ export default function App() {
   const [saveToastVisible, setSaveToastVisible] = useState(false);
   const [notice, setNotice] = useState<{ text: string; tone: "ok" | "warn" } | null>(null);
   const [campusInitialTab, setCampusInitialTab] = useState<"u17" | "u19" | "camps" | null>(null);
-  const [scoutingInitialTab, setScoutingInitialTab] = useState<"network" | "hits" | null>(
-    null,
-  );
+  const [scoutingInitialTab, setScoutingInitialTab] = useState<ScoutingInitialTab | null>(null);
   const scoutMapDetailBackRef = useRef<(() => void) | null>(null);
   const [scoutMapDetailNav, setScoutMapDetailNav] = useState<{
     onBack: () => void;
@@ -2953,7 +2951,10 @@ export default function App() {
           board={board}
           clubId={session.clubId}
           onSelectPlayer={setProfileId}
-          onOpenScouting={() => setScreen("scouting")}
+          onOpenScouting={(tab) => {
+            setScoutingInitialTab(tab === "map" ? "map" : null);
+            setScreen("scouting");
+          }}
           onOpenTransfers={() => setScreen("transfers")}
           onOpenPostfach={openPostfach}
           onStoryChoice={handleInboxDecision}
@@ -2987,7 +2988,7 @@ export default function App() {
           scoutBoard={scoutBoard}
           onDismissScoutJob={handleDismissScoutJob}
           onOpenScoutingNetwork={() => {
-            setScoutingInitialTab("network");
+            setScoutingInitialTab("map");
             setScreen("scouting");
           }}
           onOpenScoutingHits={() => {
@@ -3133,6 +3134,7 @@ export default function App() {
           onScoutMapDetailChange={handleScoutMapDetailChange}
           opponentLabel={prepareCareerMatch(session)?.opponentShortName}
           matchSetup={prepareCareerMatch(session)}
+          careerPhase={storyState.career_phase}
         />
       ) : null}
       {screen === "transfers" ? (

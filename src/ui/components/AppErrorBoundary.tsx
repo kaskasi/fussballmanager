@@ -11,13 +11,13 @@ interface State {
 
 /** Keeps a playtest session usable when a screen throws during render. */
 export class AppErrorBoundary extends Component<Props, State> {
-  state: State = { error: null };
+  override state: State = { error: null };
 
   static getDerivedStateFromError(error: Error): State {
     return { error };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo): void {
+  override componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error("App render error", error, info.componentStack);
   }
 
@@ -25,7 +25,7 @@ export class AppErrorBoundary extends Component<Props, State> {
     window.location.reload();
   };
 
-  render(): ReactNode {
+  override render(): ReactNode {
     if (!this.state.error) {
       return this.props.children;
     }

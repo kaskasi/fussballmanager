@@ -2,6 +2,7 @@ import { shouldDeliverKickerOnTuesday } from "../inbox/kicker-inbox.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import type { Player } from "../types/player.ts";
 import { pendingInboxItems, type YouthInboxState } from "../youth/decision-inbox.ts";
+import { MANAGER_DESK_HUB_ENABLED } from "../hub/config.ts";
 import { hasInboxBlockerForNext } from "../ui/nav-next-flow.ts";
 import { resolveSmartSkip, TUESDAY } from "./day-calendar.ts";
 import {
@@ -21,7 +22,11 @@ export function shouldPauseTrainingAutoNext(input: {
   careerMatchActive: boolean;
 }): boolean {
   if (input.simulating || input.careerMatchActive) return true;
-  if (input.screen !== "training") return true;
+  if (MANAGER_DESK_HUB_ENABLED) {
+    if (input.screen !== "training" && input.screen !== "hub") return true;
+  } else if (input.screen !== "training") {
+    return true;
+  }
   if (hasInboxBlockerForNext(input.session, input.youthInbox, input.players)) return true;
   if (isTrainingCalendarGatePending(input.session)) return true;
 

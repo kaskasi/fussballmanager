@@ -54,6 +54,18 @@ One simulation, three **product modes**. Only **Regionalliga Manager** is the ac
 
 Stale saves (older `save_version`, missing `game_mode`, act1 `career_phase` without `story_mode`) are **not** migrated. Load/import/cloud-pull rejects them per **PRD 08.10**. New games set `game_mode` explicitly; Story Mode later only on **new** saves at creation time.
 
+### Load-time `normalizeStoryState` (current-version saves only)
+
+When a save **does** load (`save_version === SAVE_VERSION`), [`normalizeStoryState`](../../src/narrative/story-state.ts) runs as part of session hydration:
+
+| Input | Behavior |
+|--------|----------|
+| Missing `game_mode` | Resolved via [`resolveProductGameMode`](../../src/narrative/game-mode.ts) → defaults to **`regionalliga_manager`**. |
+| `regionalliga_manager` or `new_game_plus` | **`career_phase` forced to `full`** and curtain from [`featureCurtainForPhase`](../../src/narrative/career-presentation.ts) — act1/storybook curtain is **not** preserved on these modes. |
+| `story_mode` (future) | Keeps stored `career_phase`; curtain follows phase. |
+
+Pre-release: ambiguous legacy act1 slots are rejected (08.10), not silently upgraded. When Story Mode ships, new saves must set `game_mode: story_mode` at creation; do not rely on act1 `career_phase` alone.
+
 ## Invariants
 
 - **Sim unchanged** across modes — only presentation, curtain, and world template differ.

@@ -371,6 +371,10 @@ import { GameScreenRouter } from "./ui/shell/GameScreenRouter.tsx";
 import { clearTransientUi } from "./ui/shell/bootstrap.ts";
 import { usePersistedGameSession } from "./ui/session/usePersistedGameSession.ts";
 import { useScoutingActions } from "./ui/actions/useScoutingActions.ts";
+import { useTrainingActions } from "./ui/actions/useTrainingActions.ts";
+import { useMedicalActions } from "./ui/actions/useMedicalActions.ts";
+import { useYouthCampActions } from "./ui/actions/useYouthCampActions.ts";
+import { GameSessionProvider } from "./ui/session/GameSessionContext.tsx";
 import { useMerchActions } from "./ui/actions/useMerchActions.ts";
 import { useStadiumActions } from "./ui/actions/useStadiumActions.ts";
 import type { LocaleId } from "./i18n/locale-id.ts";
@@ -774,6 +778,46 @@ export default function App() {
   });
 
   const {
+    handleTrainingPlanChange,
+    handleTrainingPlanPresetsChange,
+    handleTrainingIntensityChange,
+    handleIndividualProgramsChange,
+    handleAssistantDelegationChange,
+    handleHireCoach,
+    handleAssignMentor,
+    handleClearMentor,
+    handleStartStampProgram,
+  } = useTrainingActions({ patchSession, sessionWithEvent });
+
+  const {
+    handleHireMedicalDoctor,
+    handleHireMedicalPhysio,
+    handleHireOrthopedist,
+    handleDoctorExamComplete,
+    handleSurgery,
+    handlePhysioManual,
+    handleRehabMinigameComplete,
+  } = useMedicalActions({ patchSession, sessionWithEvent, flashNotice });
+
+  const {
+    handleBuyYouthCamp,
+    handleCommissionCampLeader,
+    handleRequestDismissCampLeader,
+    handleConfirmDismissCampLeader,
+    handleHireCampLeader,
+    handlePullCampPlayer,
+  } = useYouthCampActions({
+    youthCamps,
+    finances,
+    campLeaderDismissCampId,
+    setCampLeaderDismissCampId,
+    patchSession,
+    requestClubSpend,
+    flashNotice,
+    campDebutAfterSpendRef,
+  });
+
+  const {
     handleMerchandisingChange,
     handleMerchBulkPurchase,
     handleMerchSaleStart,
@@ -828,6 +872,7 @@ export default function App() {
     setSimulating,
     setScreen,
     setTrainingAutoNext,
+    trainingAutoNext,
     patchSession,
     replaceSave,
     setSave,
@@ -1050,43 +1095,6 @@ export default function App() {
     [patchSession],
   );
 
-  const handleAssignMentor = useCallback(
-    (menteeId: string, mentorId: string) => {
-      patchSession((current) => {
-        const mentee = current.players.find((player) => player.id === menteeId);
-        const mentor = current.players.find((player) => player.id === mentorId);
-        if (!mentee || !mentor) return current;
-        const result = assignMentor(mentee, mentor, current.season, current.week);
-        if ("error" in result) {
-          return sessionWithEvent(current, "info", result.error);
-        }
-        return sessionWithEvent(
-          {
-            ...current,
-            players: current.players.map((player) =>
-              player.id === menteeId ? result.player : player,
-            ),
-          },
-          "profile",
-          result.message,
-        );
-      });
-    },
-    [patchSession],
-  );
-
-  const handleClearMentor = useCallback(
-    (menteeId: string) => {
-      patchSession((current) => ({
-        ...current,
-        players: current.players.map((player) =>
-          player.id === menteeId ? clearMentor(player) : player,
-        ),
-      }));
-    },
-    [patchSession],
-  );
-
   const handleAcceptJobOffer = useCallback(
     (clubId: TeamId) => {
       patchSession((current) => {
@@ -1150,125 +1158,6 @@ export default function App() {
   const handleSaveMatchLineup = useCallback(
     (lineup: MatchLineupState) => {
       patchSession((current) => ({ ...current, matchLineup: lineup }));
-    },
-    [patchSession],
-  );
-
-  const handleBuyYouthCamp = useCallback(
-    (nationId: string) => {
-      const check = canBuyYouthCamp(youthCamps, nationId, finances.cash);
-      if (!check.ok) return;
-      const nation = campNationById(nationId);
-      requestClubSpend(
-        check.cost,
-        nation ? `${nation.flag} Camp ${nation.label}` : "Jugend-Camp",
-        (current) => {
-          const next = canBuyYouthCamp(current.youthCamps, nationId, current.finances.cash);
-          if (!next.ok) return current;
-          const youthCamps = buyYouthCamp(
-            current.youthCamps,
-            nationId,
-            current.season,
-            current.week,
-          );
-          const opening = generateCampOpeningBundle({
-            campId: nationId,
-            clubId: current.clubId,
-            season: current.season,
-            week: current.week,
-            masterSeed: current.masterSeed,
-            players: current.players,
-            facility: current.academyFacility,
-          });
-          if (opening.headlinePlayerId) {
-            campDebutAfterSpendRef.current = {
-              campId: nationId,
-              playerId: opening.headlinePlayerId,
-            };
-          }
-          const players =
-            opening.players.length > 0
-              ? refreshAllMarketValues([...current.players, ...opening.players], current.season)
-              : current.players;
-          const headline = opening.players.find((p) => p.id === opening.headlinePlayerId);
-          const clubEvents =
-            headline && nation
-              ? withClubEvent(
-                  current.clubEvents,
-                  current.season,
-                  current.week,
-                  "info",
-                  `${nation.flag} Camp ${nation.label}: ${formatPlayerName(headline)} stellt sich vor — drei Talente im Kader.`,
-                )
-              : current.clubEvents;
-          return {
-            ...current,
-            youthCamps,
-            players,
-            clubEvents,
-            finances: spendClubCash(current.finances, next.cost, current.week),
-          };
-        },
-      );
-    },
-    [finances.cash, requestClubSpend, youthCamps],
-  );
-
-  const handleCommissionCampLeader = useCallback(
-    (nationId: string) => {
-      const owned = youthCamps.find((camp) => camp.id === nationId);
-      if (!owned || owned.leader_hire === "hired" || owned.leader_hire === "candidates_ready") {
-        return;
-      }
-      if (owned.leader_hire === "agency_pending") {
-        flashNotice(CAMP_LEADER_AGENCY_NOTICE, "ok");
-        return;
-      }
-      patchSession((current) => ({
-        ...current,
-        youthCamps: commissionCampLeaderAgency(current.youthCamps, nationId, {
-          season: current.season,
-          week: current.week,
-          weekday: current.weekday,
-        }),
-      }));
-      flashNotice(CAMP_LEADER_AGENCY_NOTICE, "ok");
-    },
-    [flashNotice, patchSession, youthCamps],
-  );
-
-  const handleRequestDismissCampLeader = useCallback((nationId: string) => {
-    setCampLeaderDismissCampId(nationId);
-  }, []);
-
-  const handleConfirmDismissCampLeader = useCallback(() => {
-    if (!campLeaderDismissCampId) return;
-    const nationId = campLeaderDismissCampId;
-    setCampLeaderDismissCampId(null);
-    patchSession((current) => ({
-      ...current,
-      youthCamps: dismissCampLeader(current.youthCamps, nationId),
-    }));
-  }, [campLeaderDismissCampId, patchSession]);
-
-  const handleHireCampLeader = useCallback(
-    (campId: string, candidate: CampLeaderCandidate) => {
-      patchSession((current) => ({
-        ...current,
-        youthCamps: hireCampLeader(current.youthCamps, campId, candidate),
-      }));
-    },
-    [patchSession],
-  );
-
-  const handlePullCampPlayer = useCallback(
-    (playerId: string) => {
-      patchSession((current) => ({
-        ...current,
-        players: current.players.map((player) =>
-          player.id === playerId ? pullCampPlayerToHq(player) : player,
-        ),
-      }));
     },
     [patchSession],
   );
@@ -1534,268 +1423,6 @@ export default function App() {
     [patchSession],
   );
 
-  const handleTrainingPlanChange = useCallback(
-    (plan: TrainingSlot[]) => {
-      patchSession((current) => ({ ...current, trainingPlan: plan }));
-    },
-    [patchSession],
-  );
-
-  const handleTrainingPlanPresetsChange = useCallback(
-    (presets: TrainingPlanPresetSlot[]) => {
-      patchSession((current) => ({ ...current, trainingPlanPresets: presets }));
-    },
-    [patchSession],
-  );
-
-  const handleAssistantDelegationChange = useCallback(
-    (task: AssistantDelegationTask, enabled: boolean) => {
-      patchSession((current) => ({
-        ...current,
-        assistantDelegation: normalizeAssistantDelegation({
-          ...current.assistantDelegation,
-          [task]: enabled,
-        }),
-      }));
-    },
-    [patchSession],
-  );
-
-  const handleHireCoach = useCallback(
-    (coach: Coach) => {
-      patchSession((current) => {
-        if (current.finances.cash < coach.wage_weekly * 2) {
-          return sessionWithEvent(
-            current,
-            "finance",
-            t("clubEvent.coachInsufficientCash", {
-              name: coach.name,
-              amount: formatClubCash(coach.wage_weekly * 2),
-            }),
-          );
-        }
-        const currentCoach = current.coachingStaff[coach.role];
-        if (currentCoach && coach.quality <= currentCoach.quality) {
-          return sessionWithEvent(current, "info", t("clubEvent.coachNotBetter"));
-        }
-        return sessionWithEvent(
-          {
-            ...current,
-            coachingStaff: hireCoach(current.coachingStaff, coach),
-          },
-          "info",
-          t("clubEvent.coachHired", {
-            role: COACH_ROLE_LABELS[coach.role],
-            name: coach.name,
-            quality: coach.quality,
-          }),
-        );
-      });
-    },
-    [patchSession],
-  );
-
-  const handleHireMedicalDoctor = useCallback(
-    (member: MedicalMember) => {
-      patchSession((current) => {
-        if (current.finances.cash < member.wage_weekly * 4) {
-          return sessionWithEvent(current, "finance", t("medical.event.insufficientCash"));
-        }
-        if (current.medicalStaff.doctor) {
-          return sessionWithEvent(current, "info", t("medical.event.doctorSlotFull"));
-        }
-        return {
-          ...current,
-          medicalStaff: hireMedicalDoctor(current.medicalStaff, member),
-        };
-      });
-    },
-    [patchSession],
-  );
-
-  const handleHireMedicalPhysio = useCallback(
-    (member: MedicalMember) => {
-      patchSession((current) => {
-        if (current.finances.cash < member.wage_weekly * 4) {
-          return sessionWithEvent(current, "finance", t("medical.event.insufficientCash"));
-        }
-        return {
-          ...current,
-          medicalStaff: hireMedicalPhysio(current.medicalStaff, member),
-        };
-      });
-    },
-    [patchSession],
-  );
-
-  const handleHireOrthopedist = useCallback(
-    (candidate: OrthopedistCandidate) => {
-      patchSession((current) => {
-        const member = orthopedistFromCandidate(candidate, current.season);
-        return {
-          ...current,
-          medicalStaff: hireMedicalOrthopedist(current.medicalStaff, member),
-          orthopedistHire: clearOrthopedistHireAfterPick(),
-        };
-      });
-      flashNotice(t("medical.event.orthoHired", { name: candidate.name }), "ok");
-    },
-    [flashNotice, patchSession],
-  );
-
-  const handleDoctorExamComplete = useCallback(
-    (playerId: string) => {
-      patchSession((current) => {
-        const row = current.medicalState.pending_diagnoses.find((entry) => entry.player_id === playerId);
-        if (!row) return current;
-        const level = precinctMedicalCenterLevel(current.stadium.precinct);
-        const mods = medicalModifiers(
-          normalizeMedicalStaff(current.medicalStaff),
-          level,
-          1,
-        );
-        const exam = completeDoctorExam(
-          current.medicalState,
-          row,
-          level,
-          current.medicalStaff,
-          current.masterSeed,
-        );
-        let next: typeof current = { ...current, medicalState: exam.state };
-        if (exam.nextPhase === "rehab") {
-          next = {
-            ...next,
-            players: applyPendingRowToPlayer(next.players, row, mods.recoveryMultiplier, false),
-          };
-        }
-        return next;
-      });
-    },
-    [patchSession],
-  );
-
-  const handleSurgery = useCallback(
-    (playerId: string) => {
-      patchSession((current) => {
-        const row = current.medicalState.pending_diagnoses.find(
-          (entry) => entry.player_id === playerId && entry.phase === "awaiting_surgery",
-        );
-        if (!row) return current;
-        const level = precinctMedicalCenterLevel(current.stadium.precinct);
-        const mods = medicalModifiers(
-          normalizeMedicalStaff(current.medicalStaff),
-          level,
-          1,
-        );
-        return {
-          ...current,
-          medicalState: completeInHouseSurgery(current.medicalState, row),
-          players: applyPendingRowToPlayer(current.players, row, mods.recoveryMultiplier, true),
-        };
-      });
-      flashNotice(t("medical.event.surgeryDone"), "ok");
-    },
-    [flashNotice, patchSession],
-  );
-
-  const handlePhysioManual = useCallback(
-    (playerId: string, success: boolean) => {
-      patchSession((current) => {
-        const level = precinctMedicalCenterLevel(current.stadium.precinct);
-        const medicalState = markPhysioManualDone(
-          ensurePhysioWeek(
-            current.medicalState,
-            current.players,
-            current.season,
-            current.week,
-            level,
-          ),
-          playerId,
-          success,
-        );
-        return {
-          ...current,
-          medicalState,
-          players: current.players.map((player) => {
-            if (player.id !== playerId) return player;
-            return success ? reduceInjuryWeeks(player, 0.2) : extendInjuryWeeks(player, 1);
-          }),
-        };
-      });
-      flashNotice(
-        t(success ? "medical.physio.manualDone" : "medical.physio.manualFail"),
-        success ? "ok" : "warn",
-      );
-    },
-    [flashNotice, patchSession],
-  );
-
-  const handleRehabMinigameComplete = useCallback(
-    (playerId: string, success: boolean) => {
-      patchSession((current) => {
-        const applied = applyRehabMinigameBonus(
-          current.medicalState,
-          current.players,
-          current.season,
-          current.week,
-          playerId,
-          success,
-        );
-        return {
-          ...current,
-          medicalState: applied.medicalState,
-          players: applied.players,
-        };
-      });
-      flashNotice(
-        success ? t("medical.rehab.success") : t("medical.rehab.fail"),
-        success ? "ok" : "warn",
-      );
-    },
-    [flashNotice, patchSession],
-  );
-
-  const handleTrainingIntensityChange = useCallback(
-    (intensity: number) => {
-      patchSession((current) => ({ ...current, trainingIntensity: intensity }));
-    },
-    [patchSession],
-  );
-
-  const handleIndividualProgramsChange = useCallback(
-    (programs: IndividualProgram[]) => {
-      patchSession((current) => ({ ...current, individualPrograms: programs }));
-    },
-    [patchSession],
-  );
-
-  const handleStartStampProgram = useCallback(
-    (playerId: string, stampId: string) => {
-      patchSession((current) => {
-        const player = current.players.find((entry) => entry.id === playerId);
-        if (!player) return current;
-        try {
-          return {
-            ...current,
-            individualPrograms: assignIndividualProgram(
-              current.individualPrograms,
-              player,
-              "stamp",
-              8,
-              current.season,
-              current.week,
-              undefined,
-              stampId,
-            ),
-          };
-        } catch {
-          return current;
-        }
-      });
-    },
-    [patchSession],
-  );
-
   const jobOffers = listJobOffers(board.employer_club_id, season, league);
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
   const openDecisionCount = postfachOpenCount(
@@ -1942,7 +1569,7 @@ export default function App() {
       ? t("match.lineup.backToSelection")
       : careerMatchSetup && careerMatchUiVisible && matchNavAction?.label
         ? matchNavAction.label
-        : trainingAutoNext && screen === "training"
+        : trainingAutoNext && (screen === "training" || screen === "hub")
           ? t("training.autoNext.buttonLabel")
           : isTrainingNextActive(session) &&
               !careerMatchSetup &&
@@ -1953,7 +1580,9 @@ export default function App() {
             : t("shell.next");
 
   const nextHeaderButtonTitle =
-    trainingAutoNext && screen === "training" && !(careerMatchSetup && careerMatchUiVisible)
+    trainingAutoNext &&
+      (screen === "training" || screen === "hub") &&
+      !(careerMatchSetup && careerMatchUiVisible)
       ? t("training.autoNext.active")
       : undefined;
 
@@ -2306,10 +1935,10 @@ export default function App() {
         boardCashFloor={boardCashFloor(board)}
         weeklyWageBill={weeklyWageBill(players, session.clubId)}
       />
+      <GameSessionProvider value={{ session, patchSession, flashNotice }}>
       <GameScreenRouter
               screen={screen}
               save={save}
-              session={session}
               players={players}
               season={season}
               week={week}
@@ -2376,8 +2005,16 @@ export default function App() {
               setMarketFilters={setMarketFilters}
               setMarketSort={setMarketSort}
               setAccessibility={setAccessibility}
-              patchSession={patchSession}
               openPostfach={openPostfach}
+              handleInboxDecision={handleInboxDecision}
+              handleOpeningComplete={handleOpeningComplete}
+              handleDismissScoutJob={handleDismissScoutJob}
+              handleApplyOpponentScoutPlan={handleApplyOpponentScoutPlan}
+              handleConfirmDismissCampLeader={handleConfirmDismissCampLeader}
+              handleBuyYouthCamp={handleBuyYouthCamp}
+              handleCommissionCampLeader={handleCommissionCampLeader}
+              handleRequestDismissCampLeader={handleRequestDismissCampLeader}
+              handlePullCampPlayer={handlePullCampPlayer}
               handleTrainingPlanChange={handleTrainingPlanChange}
               handleTrainingIntensityChange={handleTrainingIntensityChange}
               handleIndividualProgramsChange={handleIndividualProgramsChange}
@@ -2386,17 +2023,8 @@ export default function App() {
               handleHireCoach={handleHireCoach}
               handleAssignMentor={handleAssignMentor}
               handleClearMentor={handleClearMentor}
-              handleInboxDecision={handleInboxDecision}
-              handleOpeningComplete={handleOpeningComplete}
               handleHireCampLeader={handleHireCampLeader}
               handleHireOrthopedist={handleHireOrthopedist}
-              handleDismissScoutJob={handleDismissScoutJob}
-              handleApplyOpponentScoutPlan={handleApplyOpponentScoutPlan}
-              handleConfirmDismissCampLeader={handleConfirmDismissCampLeader}
-              handleBuyYouthCamp={handleBuyYouthCamp}
-              handleCommissionCampLeader={handleCommissionCampLeader}
-              handleRequestDismissCampLeader={handleRequestDismissCampLeader}
-              handlePullCampPlayer={handlePullCampPlayer}
               handleEnqueueScoutTrip={handleEnqueueScoutTrip}
               handleScoutRegion={handleScoutRegion}
               handleAddScoutAssignment={handleAddScoutAssignment}
@@ -2434,8 +2062,8 @@ export default function App() {
               handleOpenOpponentScoutReport={handleOpenOpponentScoutReport}
               handleFastForwardToMonth={handleFastForwardToMonth}
               handleAcceptJobOffer={handleAcceptJobOffer}
-              flashNotice={flashNotice}
             />
+      </GameSessionProvider>
       {board.job_status === "dismissed" ? (
         <JobOffersModal offers={jobOffers} onAccept={handleAcceptJobOffer} />
       ) : null}

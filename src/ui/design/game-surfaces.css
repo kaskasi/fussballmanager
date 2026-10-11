@@ -492,6 +492,9 @@ button.cash-chip:hover {
 }
 
 @import "./surfaces/finances.css";
+@import "./surfaces/scouting.css";
+@import "./surfaces/training.css";
+@import "./surfaces/hub-desk.css";
 
 .career-lineup-panel {
   background: var(--panel);

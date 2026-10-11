@@ -15,6 +15,7 @@ import {
 } from "../../stadium/precinct.ts";
 import { precinctMedicalCenterLevel } from "../../stadium/precinct-effects.ts";
 import type { PersistedSession } from "../session/usePersistedGameSession.ts";
+import { useGameSession } from "../session/GameSessionContext.tsx";
 import type { LocaleId } from "../../i18n/locale-id.ts";
 import { CampLeaderDismissModal } from "../components/CampLeaderDismissModal.tsx";
 import { ClubProfileModal } from "../components/ClubProfileModal.tsx";
@@ -29,6 +30,8 @@ import { LeaguesScreen } from "../screens/LeaguesScreen.tsx";
 import { Matchday } from "../../match/Matchday.tsx";
 import { MedicalCenterScreen } from "../screens/MedicalCenterScreen.tsx";
 import { MerchandisingScreen } from "../screens/MerchandisingScreen.tsx";
+import { MANAGER_DESK_HUB_ENABLED } from "../../hub/config.ts";
+import { ManagerDeskHub } from "../screens/ManagerDeskHub.tsx";
 import { PipelineDashboard } from "../screens/PipelineDashboard.tsx";
 import { PostfachScreen } from "../screens/PostfachScreen.tsx";
 import { ScoutingCenter } from "../screens/ScoutingCenter.tsx";
@@ -39,10 +42,10 @@ import { YouthCampus } from "../screens/YouthCampus.tsx";
 import type { GameScreenRouterProps } from "./game-screen-router-props.ts";
 
 export function GameScreenRouter(props: GameScreenRouterProps) {
+  const { session, patchSession, flashNotice } = useGameSession();
   const {
     screen,
     save,
-    session,
     players,
     season,
     week,
@@ -109,7 +112,6 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
     setMarketFilters,
     setMarketSort,
     setAccessibility,
-    patchSession,
     openPostfach,
     handleTrainingPlanChange,
     handleTrainingIntensityChange,
@@ -167,46 +169,72 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
     handleOpenOpponentScoutReport,
     handleFastForwardToMonth,
     handleAcceptJobOffer,
-    flashNotice,
   } = props;
 
   return (
     <>
       {screen === "hub" ? (
-        <PipelineDashboard
-          key={save.manifest.created}
-          players={players}
-          season={season}
-          week={week}
-          trainingPlan={trainingPlan}
-          trainingIntensity={trainingIntensity}
-          individualPrograms={individualPrograms}
-          onTrainingPlanChange={handleTrainingPlanChange}
-          activeScouts={activeScoutCount(scoutBoard)}
-          league={league}
-          finances={finances}
-          board={board}
-          clubId={session.clubId}
-          onSelectPlayer={setProfileId}
-          onOpenScouting={(tab) => {
-            setScoutingInitialTab(tab === "map" ? "map" : null);
-            setScreen("scouting");
-          }}
-          onOpenTransfers={() => setScreen("transfers")}
-          onOpenPostfach={openPostfach}
-          onStoryChoice={handleInboxDecision}
-          onOpenJugend={() => setScreen("campus")}
-          onSelectScoutTarget={(playerId) => setForeignPlayerId(playerId)}
-          youthInbox={youthInbox}
-          scoutBoard={scoutBoard}
-          clubEvents={clubEvents}
-          onOpenTraining={() => setScreen("training")}
-          onViewAllEvents={() => setScreen("club-events")}
-          lastSeasonAwards={lastSeasonAwards}
-          storyState={storyState}
-          youthCamps={youthCamps}
-          transferState={transferState}
-        />
+        MANAGER_DESK_HUB_ENABLED ? (
+          <ManagerDeskHub
+            key={save.manifest.created}
+            session={session}
+            players={players}
+            trainingPlan={trainingPlan}
+            youthInbox={youthInbox}
+            youthCamps={youthCamps}
+            scoutBoard={scoutBoard}
+            clubEvents={clubEvents}
+            storyState={storyState}
+            league={league}
+            finances={finances}
+            board={board}
+            stadium={stadium}
+            onOpenPostfach={openPostfach}
+            onStoryChoice={handleInboxDecision}
+            onViewAllEvents={() => setScreen("club-events")}
+            onSelectPlayer={setProfileId}
+            onOpenTraining={() => setScreen("training")}
+            onOpenScouting={() => {
+              setScoutingInitialTab(null);
+              setScreen("scouting");
+            }}
+          />
+        ) : (
+          <PipelineDashboard
+            key={save.manifest.created}
+            players={players}
+            season={season}
+            week={week}
+            trainingPlan={trainingPlan}
+            trainingIntensity={trainingIntensity}
+            individualPrograms={individualPrograms}
+            onTrainingPlanChange={handleTrainingPlanChange}
+            activeScouts={activeScoutCount(scoutBoard)}
+            league={league}
+            finances={finances}
+            board={board}
+            clubId={session.clubId}
+            onSelectPlayer={setProfileId}
+            onOpenScouting={(tab) => {
+              setScoutingInitialTab(tab === "map" ? "map" : null);
+              setScreen("scouting");
+            }}
+            onOpenTransfers={() => setScreen("transfers")}
+            onOpenPostfach={openPostfach}
+            onStoryChoice={handleInboxDecision}
+            onOpenJugend={() => setScreen("campus")}
+            onSelectScoutTarget={(playerId) => setForeignPlayerId(playerId)}
+            youthInbox={youthInbox}
+            scoutBoard={scoutBoard}
+            clubEvents={clubEvents}
+            onOpenTraining={() => setScreen("training")}
+            onViewAllEvents={() => setScreen("club-events")}
+            lastSeasonAwards={lastSeasonAwards}
+            storyState={storyState}
+            youthCamps={youthCamps}
+            transferState={transferState}
+          />
+        )
       ) : null}
       {screen === "postfach" ? (
         <PostfachScreen

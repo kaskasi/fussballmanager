@@ -1,0 +1,187 @@
+/** PRD 20 B4 / design.md §9.9 — Manager Desk hub grid */
+.manager-desk {
+  display: grid;
+  grid-template-columns: minmax(14rem, 22rem) minmax(0, 1fr) minmax(12rem, 18rem);
+  grid-template-rows: auto auto auto;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem 1rem;
+  min-height: 0;
+}
+
+.manager-desk__inbox {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  min-height: 0;
+  overflow: auto;
+}
+
+.manager-desk__wildcard {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.manager-desk__center-top {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.manager-desk__calendar-band {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.manager-desk__calendar-chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0.45rem;
+  border: var(--outline);
+  border-radius: var(--radius);
+  background: var(--panel-muted);
+}
+
+.manager-desk__training-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.manager-desk__training-day {
+  border: var(--outline);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 0.45rem 0.5rem;
+  min-width: 0;
+}
+
+.manager-desk__training-day.is-today {
+  box-shadow: inset 0 0 0 2px var(--rasen);
+}
+
+.manager-desk__training-day-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin-bottom: 0.35rem;
+}
+
+.manager-desk__match-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.manager-desk__slot {
+  font-size: 0.68rem;
+  padding: 0.15rem 0;
+  border-bottom: 1px solid var(--panel-muted);
+}
+
+.manager-desk__slot.is-focus {
+  font-weight: 800;
+  color: var(--rasen-dunkel);
+}
+
+.manager-desk__heatmaps {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.manager-desk__heatmap-panel {
+  border: var(--outline);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 0.4rem 0.45rem;
+  min-height: 4.5rem;
+  overflow: auto;
+}
+
+.manager-desk__heatmap-title {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.35rem;
+  color: var(--tinte-weich);
+}
+
+.manager-desk__side-stack {
+  grid-column: 3;
+  grid-row: 2 / span 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.manager-desk__commerce {
+  grid-column: 1 / span 2;
+  grid-row: 3;
+  border: var(--outline);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 0.55rem 0.65rem;
+}
+
+.manager-desk__commerce.is-crisis {
+  border-color: var(--terra);
+}
+
+.manager-desk__wildcard-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.manager-desk__wildcard-tab {
+  border: var(--outline);
+  background: var(--panel-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.manager-desk__wildcard-tab.is-active {
+  background: var(--panel);
+}
+
+@media (max-width: 960px) {
+  .manager-desk {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .manager-desk__inbox,
+  .manager-desk__wildcard,
+  .manager-desk__center-top,
+  .manager-desk__heatmaps,
+  .manager-desk__side-stack,
+  .manager-desk__commerce {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .manager-desk__training-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-desk__heatmaps {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,1042 @@
+/** PRD 20 B4 — Scouting surfaces (moved from index.css) */
+.scout-region-map {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem 1rem;
+  border-radius: 1rem;
+  background-color: #fafaf9;
+  background-image:
+    linear-gradient(rgb(250 250 249 / 92%), rgb(250 250 249 / 92%)),
+    url("/assets/textures/paper003-color.jpg");
+  background-size: auto, 280px;
+  box-shadow: 0 10px 28px rgb(15 23 42 / 6%);
+}
+
+.scout-region-map-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.scout-region-map-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.scout-region-map-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.65rem;
+}
+
+.scout-discovery-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.scout-discovery-zone {
+  position: relative;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--panel-border, #e2e8f0);
+  background: rgb(255 255 255 / 72%);
+}
+
+.scout-discovery-zone.has-flavor {
+  min-height: 10rem;
+  border-color: rgb(255 255 255 / 25%);
+  background-color: var(--tinte, #3e3128);
+}
+
+.scout-discovery-zone-card {
+  position: relative;
+  color: #0f172a;
+}
+
+.scout-discovery-zone-card.is-locked {
+  min-height: 9.5rem;
+  background: var(--panel-bg, #f8fafc);
+}
+
+.scout-discovery-zone-card-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+  min-height: inherit;
+}
+
+.scout-discovery-zone-lore {
+  flex: 1;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-muted, #64748b);
+}
+
+.scout-discovery-zone-lore p {
+  margin: 0;
+}
+
+.scout-discovery-zone-locked-hint {
+  margin-top: 0.35rem !important;
+  font-size: 0.72rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.scout-discovery-zone-open-map {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  border: 1px solid var(--panel-border, #cbd5e1);
+  border-radius: 0.35rem;
+  background: rgb(255 255 255 / 88%);
+}
+
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-open-map {
+  color: #fff;
+  border-color: rgb(255 255 255 / 45%);
+  background: rgb(15 23 42 / 42%);
+  backdrop-filter: blur(4px);
+}
+
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-open-map:hover {
+  background: rgb(15 23 42 / 58%);
+}
+
+.scout-discovery-zone-trip-status {
+  display: block;
+  width: 100%;
+  font-size: 0.72rem;
+}
+
+.scout-trip-route {
+  fill: none;
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.scout-trip-route.is-mini {
+  stroke-width: 0.85;
+}
+
+.scout-trip-route.is-queued {
+  stroke-dasharray: 3 2;
+  opacity: 0.75;
+}
+
+.scout-trip-route.is-color-0 {
+  stroke: var(--tinte-blau, #1d4ed8);
+}
+
+.scout-trip-route.is-color-1 {
+  stroke: var(--warn-tinte, #ca8a04);
+}
+
+.scout-trip-route.is-color-2 {
+  stroke: #0d9488;
+}
+
+.scout-trip-route.is-color-3 {
+  stroke: #7c3aed;
+}
+
+.scout-trip-route.is-color-4 {
+  stroke: #c2410c;
+}
+
+.scout-trip-marker-halo {
+  fill: rgb(255 255 255 / 55%);
+  stroke: var(--tinte, #1e293b);
+  stroke-width: 0.35;
+}
+
+.scout-trip-marker-dot {
+  fill: var(--sonnengelb, #facc15);
+  stroke: var(--tinte, #1e293b);
+  stroke-width: 0.4;
+}
+
+.scout-trip-map-overlay.is-mini .scout-trip-marker-halo {
+  stroke-width: 0.25;
+}
+
+.scout-discovery-zone-card.has-flavor {
+  color: #fff;
+}
+
+.scout-discovery-zone-card-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 55%,
+    rgb(15 23 42 / 45%) 78%,
+    rgb(15 23 42 / 82%) 100%
+  );
+  pointer-events: none;
+}
+
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-head {
+  position: relative;
+  z-index: 1;
+  color: inherit;
+}
+
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-head h3,
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-meta {
+  color: #fff;
+  text-shadow: 0 1px 3px rgb(15 23 42 / 80%);
+}
+
+.scout-discovery-zone-card.has-flavor .scout-discovery-region-btn {
+  color: #fff;
+  text-shadow: 0 1px 2px rgb(15 23 42 / 70%);
+  border-color: rgb(255 255 255 / 45%);
+  background: rgb(15 23 42 / 35%);
+  backdrop-filter: blur(4px);
+}
+
+.scout-discovery-zone-card.has-flavor .scout-discovery-region-btn:hover:not(:disabled) {
+  background: rgb(15 23 42 / 52%);
+  border-color: rgb(255 255 255 / 65%);
+}
+
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-crests .club-crest,
+.scout-discovery-zone-card.has-flavor .scout-discovery-zone-crests .club-crest-img {
+  filter: drop-shadow(0 1px 3px rgb(15 23 42 / 55%));
+}
+
+.scout-discovery-zone-pool {
+  flex-basis: 100%;
+  font-size: 0.7rem;
+}
+
+.scout-route-node.is-done {
+  fill: #94a3b8;
+}
+
+.scout-route-pin {
+  fill: #fff;
+  stroke: #0f172a;
+  stroke-width: 0.45;
+  pointer-events: none;
+}
+
+.scout-route-club-logo {
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 0.5px 1.5px rgb(15 23 42 / 35%));
+}
+
+.scout-route-club-logo.is-on-route {
+  filter: drop-shadow(0 0 2px rgb(250 204 21 / 85%))
+    drop-shadow(0 0.5px 1.5px rgb(15 23 42 / 45%));
+}
+
+.scout-route-stop-badge-bg {
+  fill: var(--sonnengelb, #facc15);
+  stroke: none;
+}
+
+.scout-route-stop-badge .scout-route-stop-num {
+  font-size: 5px;
+}
+
+.scout-route-node.is-muted {
+  fill: #e2e8f0;
+  cursor: not-allowed;
+}
+
+.scout-discovery-ring-inline {
+  display: inline-block;
+  width: 2.5rem;
+  height: 0.35rem;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
+.scout-discovery-zone-flavor-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background: transparent;
+  border-radius: inherit;
+}
+
+.scout-discovery-zone.has-flavor .scout-discovery-zone-head,
+.scout-discovery-zone.has-flavor .scout-discovery-zone-crests,
+.scout-discovery-zone.has-flavor .scout-discovery-clubs,
+.scout-discovery-zone.has-flavor .scout-discovery-locked {
+  position: relative;
+  z-index: 1;
+}
+
+.scout-region-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.scout-region-detail-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.scout-region-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary, #334155);
+}
+
+.scout-region-detail-speed {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+}
+
+.scout-region-detail-map-wrap {
+  position: relative;
+  border-radius: 0.65rem;
+  overflow: hidden;
+  border: 1px solid var(--panel-border, #e2e8f0);
+  aspect-ratio: 4 / 3;
+  max-height: 22rem;
+}
+
+.scouting-region-detail-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.scouting-region-detail-screen .scout-region-detail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.scouting-region-detail-screen .scout-region-detail-map-wrap {
+  flex: 1;
+  max-height: min(58vh, 32rem);
+  min-height: 14rem;
+}
+
+.scout-region-detail-flavor {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scout-region-detail-graph {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
+
+.scout-route-edge {
+  stroke: rgb(15 23 42 / 35%);
+  stroke-width: 0.65;
+}
+
+.scout-route-edge.is-infrastructure {
+  stroke: rgb(15 23 42 / 18%);
+  stroke-width: 0.45;
+  stroke-dasharray: 2 2;
+}
+
+.scout-route-edge.is-active {
+  stroke: var(--tinte-blau, #1d4ed8);
+  stroke-width: 1.1;
+}
+
+.scout-route-edge.is-dup {
+  stroke: var(--warn-tinte, #ca8a04);
+  stroke-width: 1.2;
+  stroke-dasharray: 2 1.5;
+}
+
+.scout-route-node {
+  fill: #fff;
+  stroke: #0f172a;
+  stroke-width: 0.5;
+  cursor: pointer;
+}
+
+.scout-route-node.is-selected {
+  fill: var(--sonnengelb, #facc15);
+}
+
+.scout-route-node.is-on-route {
+  fill: var(--sonnengelb, #facc15);
+  stroke: var(--tinte, #1e293b);
+  stroke-width: 2;
+}
+
+.scout-route-stop-num {
+  font-size: 6px;
+  font-weight: 800;
+  fill: var(--tinte, #1e293b);
+  pointer-events: none;
+  user-select: none;
+}
+
+.scout-route-mode-btn.is-active {
+  outline: 2px solid var(--sonnengelb, #facc15);
+}
+
+.scout-route-label {
+  font-size: 3px;
+  fill: #0f172a;
+  pointer-events: none;
+}
+
+.scout-city-place-hit {
+  cursor: default;
+  outline: none;
+}
+
+.scout-city-place-hit circle {
+  fill: transparent;
+  stroke: transparent;
+  pointer-events: all;
+}
+
+.scout-city-place-hit:hover circle,
+.scout-city-place-hit:focus-visible circle {
+  fill: rgb(255 255 255 / 0.22);
+  stroke: var(--panel-border, #cbd5e1);
+  stroke-width: 0.35;
+}
+
+.scout-city-place-popover {
+  position: absolute;
+  z-index: 4;
+  max-width: min(16rem, 92%);
+  padding: 0.5rem 0.55rem;
+  border-radius: 0.55rem;
+  border: 1px solid var(--panel-border, #e2e8f0);
+  background: var(--panel-bg, #fff);
+  box-shadow: 0 8px 24px rgb(15 23 42 / 12%);
+  pointer-events: none;
+}
+
+.scout-city-place-popover-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted, #64748b);
+}
+
+.scout-city-place-popover-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.scout-city-place-popover-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.scout-city-place-popover-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.scout-city-place-popover-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.scout-city-place-popover-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted, #64748b);
+  line-height: 1.3;
+}
+
+.scout-region-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+  align-items: center;
+}
+
+.scout-discovery-zone.is-strong {
+  border-color: #6ee7b7;
+}
+
+.scout-discovery-zone.is-mixed {
+  border-color: #fcd34d;
+}
+
+.scout-discovery-zone.is-weak {
+  border-color: #cbd5e1;
+}
+
+.scout-discovery-zone-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.scout-discovery-zone-head h3 {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.scout-discovery-region-btn,
+.scout-discovery-club-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.35rem;
+  border: 1px solid #94a3b8;
+  background: #fff;
+  cursor: pointer;
+}
+
+.scout-discovery-region-btn:disabled,
+.scout-discovery-club-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.scout-discovery-zone-crests {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scout-discovery-zone-crests .club-crest,
+.scout-discovery-zone-crests .club-crest-img {
+  filter: drop-shadow(0 1px 2px rgb(15 23 42 / 35%));
+}
+
+.scout-discovery-clubs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.scout-discovery-club {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.scout-discovery-club.is-done {
+  opacity: 0.92;
+}
+
+.scout-discovery-club-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.scout-discovery-club-pool {
+  margin-left: 0.25rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.scout-discovery-locked {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.scout-discovery-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 0.4rem;
+  pointer-events: none;
+  background: conic-gradient(
+    var(--sonnengelb, #facc15) calc(var(--scout-progress, 0) * 1%),
+    transparent 0
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  padding: 2px;
+  opacity: 0.35;
+}
+
+.scout-region-map-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.scout-region-map-legend {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+}
+
+.scout-region-map-legend li {
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+}
+
+.scout-region-map-swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 0.2rem;
+  border: 1px solid #94a3b8;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.scout-region-map-swatch.is-strong {
+  background: #a7f3d0;
+}
+
+.scout-region-map-swatch.is-mixed {
+  background: #fde68a;
+}
+
+.scout-region-map-swatch.is-weak {
+  background: #cbd5e1;
+}
+
+.scout-region-map-swatch.is-empty {
+  background: #f1f5f9;
+}
+
+.scout-region-map-legend-label {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.scout-region-map-legend-meta {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.matchday-lineup-hero {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 28rem;
+}
+
+.matchday-lineup-kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #047857;
+}
+
+.matchday-lineup-ambience--away .matchday-lineup-kicker {
+  color: #1d4ed8;
+}
+
+.matchday-lineup-dot {
+  color: #059669;
+  margin-right: 0.35rem;
+  animation: transfer-pulse 2.4s ease-in-out infinite;
+}
+
+.matchday-lineup-ambience--away .matchday-lineup-dot {
+  color: #2563eb;
+}
+
+.matchday-lineup-title {
+  margin: 0.2rem 0 0;
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.matchday-lineup-mood {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #92400e;
+}
+
+.matchday-lineup-ambience--away .matchday-lineup-mood {
+  color: #1e40af;
+}
+
+.matchday-lineup-mood-hint {
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.85;
+}
+
+.career-lineup-panel {
+  background: rgb(255 255 255 / 92%);
+  border: 1px solid rgb(167 243 208 / 70%);
+  border-radius: 1rem;
+  padding: 1rem 1rem 1.15rem;
+  box-shadow: 0 12px 40px rgb(15 23 42 / 6%);
+  backdrop-filter: blur(6px);
+}
+
+.career-lineup-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.career-lineup-header-main h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.career-lineup-sub {
+  margin: 0.15rem 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.career-lineup-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.55rem;
+}
+
+/* career-lineup-disclosure — game-surfaces.css §9.1 */
+
+.career-lineup-toolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(6rem, 1fr));
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem 0.65rem;
+}
+
+.career-lineup-formation {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #047857;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.career-lineup-formation--inline {
+  flex-shrink: 0;
+}
+
+.career-lineup-formation select {
+  font: inherit;
+  border-radius: 0.55rem;
+  border: 1px solid #a7f3d0;
+  padding: 0.45rem 0.7rem;
+  background: #fff;
+  min-width: 7rem;
+}
+
+.career-lineup-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.career-preset-group {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.career-preset-btn {
+  display: grid;
+  gap: 0.05rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.55rem 0 0 0.55rem;
+  padding: 0.28rem 0.45rem;
+  background: #f8fafc;
+  font-size: 0.72rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.career-preset-save-mini {
+  border: 1px solid #cbd5e1;
+  border-left: 0;
+  border-radius: 0 0.55rem 0.55rem 0;
+  padding: 0 0.4rem;
+  background: #fff;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.career-preset-btn.is-active {
+  border-color: #059669;
+  background: #ecfdf5;
+}
+
+.career-preset-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+.opponent-scout-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.opponent-scout-action--progress {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.opponent-scout-action-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted, #64748b);
+}
+
+.opponent-scout-overview {
+  margin: 0.45rem 0 0.55rem;
+  padding: 0;
+}
+
+.opponent-scout-wdl-bar {
+  display: flex;
+  height: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 2px solid var(--tinte, #3e3128);
+  background: var(--panel-muted, #f1f5f9);
+}
+
+.opponent-scout-wdl-seg {
+  flex-shrink: 0;
+  min-width: 2px;
+}
+
+.opponent-scout-wdl-seg.is-win {
+  background: var(--rasen, #047857);
+}
+
+.opponent-scout-wdl-seg.is-draw {
+  background: color-mix(in srgb, var(--tinte-weich) 55%, var(--panel));
+}
+
+.opponent-scout-wdl-seg.is-loss {
+  background: color-mix(in srgb, var(--warn, #c2410c) 75%, var(--tinte));
+}
+
+.opponent-scout-wdl-nums {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+  margin: 0.3rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.opponent-scout-wdl-nums li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+}
+
+.opponent-scout-wdl-key {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--tinte-weich);
+}
+
+.opponent-scout-wdl-val {
+  font-size: 0.82rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinte);
+}
+
+.opponent-scout-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0.45rem 0 0;
+}
+
+.opponent-scout-stat-token {
+  border: 2px solid color-mix(in srgb, var(--tinte) 22%, transparent);
+  border-radius: var(--radius-klein, 0.55rem);
+  padding: 0.3rem 0.35rem;
+  text-align: center;
+  min-width: 0;
+}
+
+.opponent-scout-stat-token dt {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--tinte-weich);
+  line-height: 1.25;
+}
+
+.opponent-scout-stat-token dd {
+  margin: 0.12rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinte);
+  line-height: 1.2;
+}
+
+.opponent-scout-overview-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.68rem;
+  color: var(--tinte-weich);
+  line-height: 1.35;
+}
+
+.opponent-scout-tactic-table-wrap {
+  margin-top: 0.25rem;
+}
+
+.opponent-scout-tactic-table-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted, #64748b);
+}
+
+.opponent-scout-tactic-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.opponent-scout-tactic-table th {
+  text-align: left;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted, #64748b);
+  font-weight: 600;
+  padding: 0.25rem 0.35rem 0.35rem 0;
+  border-bottom: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.opponent-scout-tactic-table th:not(:first-child):not(:last-child) {
+  text-align: right;
+}
+
+.opponent-scout-tactic-table th:last-child,
+.opponent-scout-tactic-table th.opponent-scout-tactic-action {
+  text-align: right;
+  padding-right: 0;
+}
+
+.opponent-scout-tactic-table td {
+  padding: 0.4rem 0.35rem 0.4rem 0;
+  border-bottom: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.06));
+  vertical-align: middle;
+}
+
+.opponent-scout-tactic-table td:not(:first-child) {
+  text-align: right;
+}
+
+.opponent-scout-tactic-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.opponent-scout-tactic-num {
+  font-weight: 700;
+}
+
+.opponent-scout-tactic-apply {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-right: 0;
+  white-space: nowrap;
+}
+
+.opponent-scout-apply-btn {
+  width: auto;
+  flex: 0 0 auto;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.78rem;
+}

@@ -34,6 +34,9 @@ import type { TeamId } from "@fussballmanager/shared";
 import type { ScoutingActionHandlers } from "../actions/useScoutingActions.ts";
 import type { StadiumActionHandlers } from "../actions/useStadiumActions.ts";
 import type { MerchActionHandlers } from "../actions/useMerchActions.ts";
+import type { TrainingActionHandlers } from "../actions/useTrainingActions.ts";
+import type { MedicalActionHandlers } from "../actions/useMedicalActions.ts";
+import type { YouthCampActionHandlers } from "../actions/useYouthCampActions.ts";
 import type { Screen } from "./types.ts";
 import type { ScoutingInitialTab } from "../screens/ScoutingCenter.tsx";
 import type { YouthCampusSortState } from "../screens/YouthCampus.tsx";
@@ -52,7 +55,6 @@ import type { JobOffer } from "../../board/job-offers.ts";
 export interface GameScreenRouterCoreProps {
   screen: Screen;
   save: SaveGame;
-  session: GameSession;
   players: Player[];
   season: number;
   week: number;
@@ -119,38 +121,15 @@ export interface GameScreenRouterCoreProps {
   setMarketFilters: (filters: MarketFilters) => void;
   setMarketSort: (sort: MarketSort) => void;
   setAccessibility: Dispatch<SetStateAction<AccessibilityPreferences>>;
-  patchSession: (recipe: (current: PersistedSession) => PersistedSession) => void;
   openPostfach: (itemId?: string) => void;
-  flashNotice: (text: string, tone?: "ok" | "warn") => void;
-  handleTrainingPlanChange: (plan: TrainingSlot[]) => void;
-  handleTrainingIntensityChange: (value: number) => void;
-  handleIndividualProgramsChange: (programs: IndividualProgram[]) => void;
-  handleTrainingPlanPresetsChange: (presets: TrainingPlanPresetSlot[]) => void;
-  handleAssistantDelegationChange: (task: AssistantDelegationTask, enabled: boolean) => void;
-  handleHireCoach: (coach: Coach) => void;
-  handleAssignMentor: (menteeId: string, mentorId: string) => void;
-  handleClearMentor: (menteeId: string) => void;
   handleInboxDecision: (itemId: string, action: DecisionAction) => void;
   handleOpeningComplete: (
     origin: CareerOrigin,
     captainPlayerId: string,
     managerName: string,
   ) => void;
-  handleHireCampLeader: (campId: string, candidate: CampLeaderCandidate) => void;
-  handleHireOrthopedist: (candidate: OrthopedistCandidate) => void;
-  handleConfirmDismissCampLeader: () => void;
-  handleBuyYouthCamp: (nationId: string) => void;
-  handleCommissionCampLeader: (nationId: string) => void;
-  handleRequestDismissCampLeader: (nationId: string) => void;
-  handlePullCampPlayer: (playerId: string) => void;
   handleToggleShortlist: (playerId: string) => void;
   handleRecallLoan: (playerId: string) => void;
-  handleHireMedicalDoctor: (doctor: MedicalMember) => void;
-  handleHireMedicalPhysio: (physio: MedicalMember) => void;
-  handleRehabMinigameComplete: (playerId: string, success: boolean) => void;
-  handleDoctorExamComplete: (playerId: string) => void;
-  handleSurgery: (playerId: string) => void;
-  handlePhysioManual: (playerId: string, success: boolean) => void;
   handleFastForwardToMonth: (targetMonthIndex: number) => Promise<void>;
   handleAcceptJobOffer: (clubId: TeamId) => void;
 }
@@ -158,4 +137,7 @@ export interface GameScreenRouterCoreProps {
 export type GameScreenRouterProps = GameScreenRouterCoreProps &
   ScoutingActionHandlers &
   StadiumActionHandlers &
-  MerchActionHandlers;
+  MerchActionHandlers &
+  TrainingActionHandlers &
+  MedicalActionHandlers &
+  YouthCampActionHandlers;

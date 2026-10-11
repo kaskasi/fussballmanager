@@ -7,6 +7,7 @@ import {
   SATURDAY,
   type SmartSkipTarget,
 } from "../sim/day-calendar.ts";
+import { MANAGER_DESK_HUB_ENABLED } from "../hub/config.ts";
 import { isTrainingCalendarGatePending, isTrainingNextActive } from "../sim/training-next.ts";
 
 /** Montag + offene Jugend-Inbox — NEXT öffnet Postfach (PRD 09.3). Der Treter blockiert nicht. */
@@ -39,6 +40,9 @@ export function shouldNavigateToCalendarBeforeTimeStep(
   >,
 ): boolean {
   if (inboxBlocked) return false;
+  if (MANAGER_DESK_HUB_ENABLED && screen === "hub") {
+    return false;
+  }
   if (session && isTrainingCalendarGatePending(session)) {
     return screen !== "calendar";
   }

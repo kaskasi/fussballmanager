@@ -52,8 +52,9 @@ describe("nav-next-flow", () => {
   });
 
   it("requires calendar navigation when not on calendar and inbox clear", () => {
-    expect(shouldNavigateToCalendarBeforeTimeStep("hub", false)).toBe(true);
+    expect(shouldNavigateToCalendarBeforeTimeStep("hub", false)).toBe(false);
     expect(shouldNavigateToCalendarBeforeTimeStep("calendar", false)).toBe(false);
     expect(shouldNavigateToCalendarBeforeTimeStep("hub", true)).toBe(false);
+    expect(shouldNavigateToCalendarBeforeTimeStep("training", false)).toBe(true);
   });
 });

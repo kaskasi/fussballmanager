@@ -34,6 +34,7 @@ import {
   pendingInboxItems,
 } from "../../youth/decision-inbox.ts";
 import { tickCampLeaderHires } from "../../youth/camp-leader-hire.ts";
+import { MANAGER_DESK_HUB_ENABLED } from "../../hub/config.ts";
 import {
   hasInboxBlockerForNext,
   shouldNavigateToCalendarBeforeTimeStep,
@@ -71,6 +72,7 @@ export interface UseWeekAdvanceParams {
   setSimulating: (value: boolean) => void;
   setScreen: (screen: Screen) => void;
   setTrainingAutoNext: (value: boolean | ((prev: boolean) => boolean)) => void;
+  trainingAutoNext: boolean;
   patchSession: (recipe: (current: PersistedSession) => PersistedSession) => void;
   replaceSave: (updater: (current: SaveGame) => SaveGame) => void;
   setSave: (updater: (current: SaveGame) => SaveGame) => void;
@@ -119,6 +121,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
     setSimulating,
     setScreen,
     setTrainingAutoNext,
+    trainingAutoNext,
     patchSession,
     replaceSave,
     setSave,
@@ -342,6 +345,12 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
         }
       } else if (screen === "training") {
         setTrainingAutoNext(!pauseAuto);
+      } else if (MANAGER_DESK_HUB_ENABLED && screen === "hub" && !fromAuto) {
+        if (trainingAutoNext) {
+          setTrainingAutoNext(false);
+          return;
+        }
+        setTrainingAutoNext(true);
       }
 
       if (hasInboxBlockerForNext(session, youthInbox, players)) {
@@ -350,6 +359,11 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
       }
 
       if (isTrainingCalendarGatePending(session)) {
+        if (MANAGER_DESK_HUB_ENABLED && screen === "hub") {
+          patchSession((current) => ({ ...current, trainingCalendarGateDone: true }));
+          flashNotice(t("training.next.weekStart"), "ok");
+          return;
+        }
         if (screen !== "calendar") {
           setScreen("calendar");
           return;
@@ -395,9 +409,10 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
           setProfileFeedback(null);
           setScreen("postfach");
         }
+        const stayOnHub = MANAGER_DESK_HUB_ENABLED && screen === "hub";
         if (preview.openTrainingScreen) {
-          setScreen("training");
-        } else if (screen !== "training") {
+          if (!stayOnHub) setScreen("training");
+        } else if (screen !== "training" && !stayOnHub) {
           setScreen("training");
         }
         const silentToast =
@@ -554,6 +569,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
       setTrainingAutoNext,
       simulating,
       simulateWeek,
+      trainingAutoNext,
       youthInbox,
     ],
   );

@@ -17,7 +17,7 @@
     "deploy:cloudflare": "npm run build && npm run deploy -w @fussballmanager/worker",
     "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w @fussballmanager/shared && npm run typecheck -w @fussballmanager/server && npm run typecheck -w @fussballmanager/worker",
     "test": "npm test -w @fussballmanager/shared && npm test -w @fussballmanager/server",
-    "test:client": "vitest run src/persistence",
+    "test:client": "vitest run src/persistence src/ui src/sim src/narrative",
     "play-match": "npm run play-match -w @fussballmanager/server",
     "play-matchday": "npm run play-matchday -w @fussballmanager/server",
     "play-probe": "npm run play-probe -w @fussballmanager/server",

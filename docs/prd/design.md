@@ -568,11 +568,25 @@ Damit ist das Profil von einer 3-Box-Skizze zu einem echten Screen geworden, der
 
 
 
-### 9.9 Hub (Start-Screen)
+### 9.9 Hub — Manager Desk (Start-Screen, PRD 14.15)
 
-- Spaltenlogik: LINKS Handlungsqueue / MITTE Status / RECHTS Kontext. Neu
-  eingehende Inhalte werden einer dieser drei Rollen zugeordnet – niemals
-  einfach untergestapelt.
+**Presentation:** PRD 24 `manager_desk`. Kein zweiter Fortschritts-CTA im Content; Header-NEXT steuert Wochen-Autoplay (Pause bei Blocker/Match). Matchday-Header-Labels unverändert §9.14–9.15. Fach-Screens über TEAM-Menü oder Widget-Klick (Training-Drawer).
+
+**Grid:** AA Post/Pflicht · Mitte Kalenderband + 3-Tage-Training (XXXX) + 3 Heatmaps (BBBB) · EE Karussell (Board/Liga) · CC Top-Dev · FF Finanzkrise oder Merch-Engpass.
+
+```text
+/** WIREFRAME: design.md §9.9 — Manager Desk */
+┌──────────┬─────────────────────────────┬──────────┐
+│ AA Post  │ [Kalenderband 3 Tage]       │ EE       │
+│          │ XXXX Training 3-Tage        │ Board/   │
+│          │ BBBB Heatmaps ×3            │ Liga ±3  │
+│          │                             │ CC · FF  │
+└──────────┴─────────────────────────────┴──────────┘
+```
+
+Mobile: AA → XXXX → EE → BBBB → CC → FF. Implementierung: [`ManagerDeskHub`](../../src/ui/screens/ManagerDeskHub.tsx), CSS [`hub-desk.css`](../../src/ui/design/surfaces/hub-desk.css).
+
+- Spaltenlogik (legacy Hinweis): LINKS Handlungsqueue / MITTE Status / RECHTS Kontext.
 - Entscheidungen stehen IMMER oben links und sind der Gate für den
   NEXT-Button: offene Entscheidungen = NEXT-Button zeigt terra-Badge mit
   Anzahl, leer = NEXT "sauber".

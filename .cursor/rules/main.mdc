@@ -45,7 +45,7 @@ Noch nicht geschrieben, nicht erfinden:
 
 **Regel 1:** Die nummerierten Dateien unter `/docs/prd/` sind die **verbindliche Quelle**. Wenn etwas unklar ist, zuerst die passende PRD lesen. Code nicht ändern, ohne die PRD verstanden zu haben.
 
-**Regel 2:** Bei Änderungen der PRDs **bump `save_version`** in `manifest.json` und eine Migrations-Datei schreiben (`/src/persistence/migrations/`).
+**Regel 2:** Bei Änderungen der PRDs **bump `save_version`** in `manifest.json` und eine Migrations-Datei schreiben (`/src/persistence/migrations/`). Pre-Release: Spieler-Laufzeit lädt nur aktuelle Version — **PRD 08.10**.
 
 ---
 

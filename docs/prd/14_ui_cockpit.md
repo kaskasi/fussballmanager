@@ -411,6 +411,20 @@ story spine visible.
 Icon-first onboarding panel (post-opening): one card, Lucide `Play` or calendar
 glyph, copy „Woche mit NEXT voranbringen“ — kein zweiter gelber CTA im Content.
 
+### 14.15 Manager Desk Hub (Hub v2)
+
+**Status:** Product law for Regionalliga Manager home (`manager_desk`, PRD 24).
+
+**Goals:** One-click week autoplay from hub; illusion of time (3-day training window); surface duties (training, merch, medical, inbox) without routine screen jumps; club overview in one grid.
+
+**Layout zones:** AA inbox/duty queue · XXXX calendar band + 3-day training strip (opponent crest on pre-match Friday) · BBBB player growth + attribute rollup + fitness raster · CC development movers (week/month/year pills) · EE carousel (board objectives or league ±3) · FF finance crisis if cash below board floor else merchandising stock alerts.
+
+**NEXT autoplay:** Header NEXT toggles run/pause. Autoplay runs day/training steps on hub (no redirect to Calendar/Training). Pauses on: youth inbox blocker, invalid/empty training plan, medical attention, match setup, season end, failed local save write. Terra badge = blocker count ([`hub-blockers`](../../src/hub/hub-blockers.ts)). Match flow unchanged (design.md §9.14–9.15).
+
+**Non-goals:** Second yellow CTA; changing match simulation header behavior; migrating legacy PipelineDashboard tiles as primary UX.
+
+Wireframe: design.md §9.9 (Manager Desk grid).
+
 ### 14.14 Act 4 endgame shell (PRD 21)
 
 **VictoryEndScreen:** Outside club shell (no header-NEXT). Dark or sand full bleed;

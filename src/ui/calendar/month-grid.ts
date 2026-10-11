@@ -121,3 +121,23 @@ export function buildMonthGrid(
     };
   });
 }
+
+/** One civil day for a session weekday — same rules as the month grid (match, transfer, milestones). */
+export function calendarCellForSessionWeekday(
+  season: number,
+  week: number,
+  weekday: number,
+  league: LeagueState,
+  milestones: readonly CalendarMilestone[],
+  today: { week: number; weekday: number },
+): CalendarMonthCell {
+  const civil = civilDateFromSession(season, week, weekday);
+  const grid = buildMonthGrid(season, civil.monthIndex, league, today, milestones);
+  const found = grid.find((cell) => cell.day === civil.day);
+  if (found) return found;
+  return {
+    key: `session-${week}-${weekday}`,
+    day: civil.day,
+    isToday: today.week === week && today.weekday === weekday,
+  };
+}

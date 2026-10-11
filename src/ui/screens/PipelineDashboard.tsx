@@ -23,7 +23,6 @@ import {
 } from "../../sim/league-week.ts";
 import type { ClubFinances } from "../../economy/club-finances.ts";
 import type { ClubEvent } from "../../inbox/club-events.ts";
-import { buildPostfachArchive } from "../../inbox/postfach-archive.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import { inboxSummary, type YouthInboxState } from "../../youth/decision-inbox.ts";
 import type { DecisionAction } from "../../youth/decision-inbox.ts";
@@ -39,7 +38,7 @@ import { TransferHubPanel } from "../components/TransferHubPanel.tsx";
 import type { TransferState } from "../../transfers/negotiations.ts";
 import { listExpiringClubContracts } from "../../transfers/expiring-contracts.ts";
 import { listPendingInboundOffers } from "../../transfers/inbound-offers.ts";
-import { HubActionColumn } from "../components/HubActionColumn.tsx";
+import { DecisionInboxPanel } from "../components/DecisionInboxPanel.tsx";
 import { Eye, ArrowLeftRight } from "lucide-react";
 import { SeasonAwardsGallery } from "../components/SeasonAwardsGallery.tsx";
 import { SummerChecklistPanel } from "../components/SummerChecklistPanel.tsx";
@@ -71,8 +70,12 @@ export function PipelineDashboard({
   onSelectPlayer,
   onOpenScouting,
   onOpenTransfers,
-  onOpenPostfach,
   onStoryChoice,
+  masterSeed,
+  onHireCampLeader,
+  onDismissScoutJob,
+  onOpenScoutingNetwork,
+  onOpenScoutingHits,
   onOpenJugend,
   onSelectScoutTarget,
   youthInbox,
@@ -101,8 +104,12 @@ export function PipelineDashboard({
   onSelectPlayer: (playerId: string) => void;
   onOpenScouting: (initialTab?: "map") => void;
   onOpenTransfers: () => void;
-  onOpenPostfach: (itemId?: string) => void;
   onStoryChoice: (itemId: string, action: DecisionAction) => void;
+  masterSeed: number;
+  onHireCampLeader: (campId: string, candidate: import("../../youth/camp-leader-hire.ts").CampLeaderCandidate) => void;
+  onDismissScoutJob: (itemId: string) => void;
+  onOpenScoutingNetwork: () => void;
+  onOpenScoutingHits: () => void;
   onOpenJugend: () => void;
   onSelectScoutTarget: (playerId: string) => void;
   youthInbox: YouthInboxState;
@@ -158,19 +165,6 @@ export function PipelineDashboard({
       });
   const showObjectives = board.objectives.length > 0 && board.job_status !== "dismissed";
   const scoutPoolEmpty = (scoutBoard.discovery?.scout_pool?.length ?? 0) === 0;
-  const hubArchivePreview = useMemo(
-    () =>
-      buildPostfachArchive({
-        scoutBoard,
-        clubEvents,
-        youthInbox,
-        players,
-        season,
-        storyCast: storyState.cast,
-      }).slice(0, 2),
-    [clubEvents, players, scoutBoard, season, storyState.cast, youthInbox],
-  );
-
   const tablePlace = leagueTablePlace(league);
   const matchdayStrip = [
     formatCalendarWeekDisplay(week),
@@ -196,18 +190,26 @@ export function PipelineDashboard({
 
       <div className="hub-cockpit-grid">
         <div className="hub-col-action">
-          <HubActionColumn
-            players={players}
-            youthInbox={youthInbox}
-            youthCamps={youthCamps}
-            scoutBoard={scoutBoard}
-            clubEvents={clubEvents}
-            storyCast={storyState.cast}
-            onOpenPostfach={onOpenPostfach}
-            onStoryChoice={onStoryChoice}
-            onViewAllEvents={onViewAllEvents}
-            archivePreview={hubArchivePreview}
-          />
+          <section className="game-panel postfach-decisions" aria-label={t("postfach.open.panelAria")}>
+            <DecisionInboxPanel
+              inbox={youthInbox}
+              players={players}
+              clubId={clubId}
+              season={season}
+              week={week}
+              onDecision={onStoryChoice}
+              storyCast={storyState.cast}
+              onSelectPlayer={onSelectPlayer}
+              youthCamps={youthCamps}
+              masterSeed={masterSeed}
+              onHireCampLeader={onHireCampLeader}
+              scoutBoard={scoutBoard}
+              onDismissScoutJob={onDismissScoutJob}
+              onOpenScoutingNetwork={onOpenScoutingNetwork}
+              onOpenScoutingHits={onOpenScoutingHits}
+              clubEvents={clubEvents}
+            />
+          </section>
         </div>
 
         <div className="hub-col-status">

@@ -52,6 +52,8 @@ export function KickerInboxCard({
   onSelectPlayer,
   compact = false,
   readOnly = false,
+  hubTeaser = false,
+  onOpenFullPostfach,
 }: {
   edition: TreterEdition;
   postIndex: number;
@@ -60,9 +62,47 @@ export function KickerInboxCard({
   onSelectPlayer?: (playerId: string) => void;
   compact?: boolean;
   readOnly?: boolean;
+  /** Manager Desk: headlines only; full edition in Postfach screen. */
+  hubTeaser?: boolean;
+  onOpenFullPostfach?: () => void;
 }) {
   useT();
   const league = edition.league ?? { matchdaysPlayed: 0, table: [], scorers: [] };
+
+  if (hubTeaser) {
+    return (
+      <section className="inbox-detail inbox-treter-hub-teaser">
+        <header className="treter-masthead treter-masthead--compact">
+          <Newspaper size={18} aria-hidden />
+          <div>
+            <strong>{t("postfach.treter.title")}</strong>
+            {edition.masthead ? <p>{edition.masthead}</p> : null}
+          </div>
+        </header>
+        {edition.articles.length === 0 ? (
+          <p className="inbox-treter-empty">{t("postfach.treter.empty")}</p>
+        ) : (
+          <ul className="inbox-treter-headline-list" aria-label={t("postfach.treter.gridAria")}>
+            {edition.articles.map((article) => (
+              <li key={article.id}>{article.headline}</li>
+            ))}
+          </ul>
+        )}
+        <div className="inbox-actions inbox-actions--hub-treter">
+          {onOpenFullPostfach ? (
+            <button type="button" className="hub-events-all-link" onClick={onOpenFullPostfach}>
+              {t("hub.inbox.treterOpenPostfach")}
+            </button>
+          ) : null}
+          {onDismiss ? (
+            <button type="button" className="inbox-action" onClick={onDismiss}>
+              {t("postfach.treter.dismiss")}
+            </button>
+          ) : null}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className={compact ? "inbox-detail inbox-treter-inline" : "inbox-card inbox-card-treter"}>

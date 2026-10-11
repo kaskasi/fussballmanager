@@ -180,23 +180,53 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
             session={session}
             players={players}
             trainingPlan={trainingPlan}
-            youthInbox={youthInbox}
-            youthCamps={youthCamps}
-            scoutBoard={scoutBoard}
-            clubEvents={clubEvents}
-            storyState={storyState}
             league={league}
             finances={finances}
             board={board}
             stadium={stadium}
-            onOpenPostfach={openPostfach}
-            onStoryChoice={handleInboxDecision}
-            onViewAllEvents={() => setScreen("club-events")}
+            calendarMilestones={calendarMilestones}
+            scoutBoard={scoutBoard}
             onSelectPlayer={setProfileId}
             onOpenTraining={() => setScreen("training")}
             onOpenScouting={() => {
               setScoutingInitialTab(null);
               setScreen("scouting");
+            }}
+            postfach={{
+              players,
+              youthInbox,
+              youthCamps,
+              clubId: session.clubId,
+              season,
+              week,
+              storyCast: session.storyState.cast,
+              masterSeed: session.masterSeed,
+              initialItemId: postfachItemId,
+              onDecision: handleInboxDecision,
+              onSelectPlayer: setProfileId,
+              onHireCampLeader: handleHireCampLeader,
+              orthopedistHire,
+              hasOrthopedist: Boolean(medicalStaff.orthopedist),
+              onHireOrthopedist: handleHireOrthopedist,
+              scoutBoard,
+              onDismissScoutJob: handleDismissScoutJob,
+              onOpenScoutingNetwork: () => {
+                setScoutingInitialTab("map");
+                setScreen("scouting");
+              },
+              onOpenScoutingHits: () => {
+                setScoutingInitialTab("hits");
+                setScreen("scouting");
+              },
+              onApplyOpponentScoutPlan: handleApplyOpponentScoutPlan,
+              clubEvents,
+              kickerEdition: session.kickerEdition ?? null,
+              kickerEditionArchive: session.kickerEditionArchive,
+              transferHistory: session.transferState.history ?? [],
+              rivalPlayers: session.rivalPlayers,
+              worldClubs: session.world.clubs,
+              treterSession: session,
+              onOpenPostfach: openPostfach,
             }}
           />
         ) : (
@@ -220,8 +250,18 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
               setScreen("scouting");
             }}
             onOpenTransfers={() => setScreen("transfers")}
-            onOpenPostfach={openPostfach}
             onStoryChoice={handleInboxDecision}
+            masterSeed={session.masterSeed}
+            onHireCampLeader={handleHireCampLeader}
+            onDismissScoutJob={handleDismissScoutJob}
+            onOpenScoutingNetwork={() => {
+              setScoutingInitialTab("map");
+              setScreen("scouting");
+            }}
+            onOpenScoutingHits={() => {
+              setScoutingInitialTab("hits");
+              setScreen("scouting");
+            }}
             onOpenJugend={() => setScreen("campus")}
             onSelectScoutTarget={(playerId) => setForeignPlayerId(playerId)}
             youthInbox={youthInbox}

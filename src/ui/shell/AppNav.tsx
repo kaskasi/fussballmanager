@@ -444,9 +444,12 @@ export function AppNav({
                 : (hubActions.primaryAction?.label ??
                   hubActions.nextHeaderButtonLabel ??
                   tr("shell.next"))}
-              {hubActions.openDecisionCount > 0 && !hubActions.primaryAction ? (
-                <span className="app-nav-next-badge" aria-label={tr("hub.inbox.decisions")}>
-                  {hubActions.openDecisionCount}
+              {hubActions.nextHeaderBadgeCount > 0 && !hubActions.primaryAction ? (
+                <span
+                  className="app-nav-next-badge"
+                  aria-label={hubActions.nextHeaderBadgeAria ?? tr("hub.inbox.decisions")}
+                >
+                  {hubActions.nextHeaderBadgeCount}
                 </span>
               ) : null}
             </span>

@@ -1,16 +1,7 @@
-import { useMemo, useState, type ComponentType } from "react";
+import { useMemo, useState } from "react";
 import { useT } from "../../i18n/react.ts";
-import {
-  Bath,
-  BedDouble,
-  Flame,
-  Footprints,
-  Package,
-  Shirt,
-  Wind,
-  ShoppingBag,
-  Tag,
-} from "lucide-react";
+import { Flame, Package, Tag } from "lucide-react";
+import { MERCH_SKU_ICON } from "../merch/merch-sku-icons.ts";
 import type { Player } from "../../types/player.ts";
 import { formatClubCash, type ClubFinances } from "../../economy/club-finances.ts";
 import type { ClubStadium } from "../../stadium/club-stadium.ts";
@@ -55,16 +46,6 @@ import { weekCommerceOccupancy } from "../../stadium/matchday-commerce.ts";
 type MerchTab = "preise" | "einkauf";
 
 const OTHER_SKUS = MERCH_SKU_IDS.filter((id) => id !== "trikots");
-
-const SKU_ICON: Record<MerchSkuId, ComponentType<{ size?: number; strokeWidth?: number }>> = {
-  trikots: Shirt,
-  shirts: ShoppingBag,
-  caps: Tag,
-  schals: Wind,
-  socken: Footprints,
-  bettwaesche: BedDouble,
-  handtuecher: Bath,
-};
 
 type JerseySellerRow = {
   playerId: string;
@@ -551,7 +532,7 @@ function MerchPriceTile({
   onDemandInbound?: number;
   onOverCapacityClick?: () => void;
 }) {
-  const Icon = SKU_ICON[sku];
+  const Icon = MERCH_SKU_ICON[sku];
   const maxStock = merchMaxStockForSku(fanshopLevel, sku);
   const stockFill = merchStockFillRatio(row.stock, fanshopLevel, sku);
   const onDemandFill = maxStock > 0 ? onDemandInbound / maxStock : 0;

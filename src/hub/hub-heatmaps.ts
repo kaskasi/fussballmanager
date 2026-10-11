@@ -1,4 +1,4 @@
-import type { Player } from "../types/player.ts";
+import type { Attributes, Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import {
   heatTone,
@@ -6,7 +6,7 @@ import {
   type GrowthHeatCell,
   type HeatTone,
 } from "../player/growth-heatmap.ts";
-import { weeklyGrowthSoFar } from "../player/growth-history.ts";
+import { attributesIn, type SessionGroup } from "../development/weekly-plan.ts";
 
 export interface HubAttributeRollup {
   group: "technical" | "physical" | "mental";
@@ -32,7 +32,29 @@ function fitnessTone(fitness: number): HeatTone {
   return "down";
 }
 
-/** Sum of weekly growth so far per training group (display rollup, not a new sim formula). */
+function netGroupGrowth(before: Attributes, after: Attributes, group: SessionGroup): number {
+  let total = 0;
+  for (const key of attributesIn(group)) {
+    total += after[key] - before[key];
+  }
+  return total;
+}
+
+function groupGrowthSoFar(
+  player: Player,
+  season: number,
+  week: number,
+  group: SessionGroup,
+): number | null {
+  const key = player.state.week_start_key;
+  const baseline = player.state.week_start_attributes;
+  if (!baseline || !key || key.season !== season || key.week !== week) {
+    return null;
+  }
+  return netGroupGrowth(baseline, player.attributes, group);
+}
+
+/** Net attribute change this week per PRD 02.3 σ group (week-start baseline). */
 export function hubAttributeRollup(
   players: readonly Player[],
   clubId: string,
@@ -49,15 +71,15 @@ export function hubAttributeRollup(
     const totalDelta = players
       .filter((player) => isProPlayer(player, clubId))
       .reduce((sum, player) => {
-        const growth = weeklyGrowthSoFar(player, season, week);
+        const growth = groupGrowthSoFar(player, season, week, group);
         return sum + (growth ?? 0);
       }, 0);
-    const scaled = totalDelta / 3;
+    const rounded = Math.round(totalDelta * 10) / 10;
     return {
       group,
       label: labels[group],
-      totalDelta: Math.round(scaled * 10) / 10,
-      tone: heatTone(scaled === 0 ? null : scaled),
+      totalDelta: rounded,
+      tone: heatTone(rounded === 0 ? null : rounded),
     };
   });
 }

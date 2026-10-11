@@ -27,13 +27,22 @@ export interface HubTrainingDayColumn {
   slots: HubTrainingSlotView[];
   isMatchPreview: boolean;
   opponentShortName: string | null;
+  opponentClubId: string | null;
 }
 
+/** Calendar weekday 1=Mo … 7=So; wraps so Monday −1 → Sunday, not duplicate Monday. */
 function weekdayForOffset(sessionWeekday: number, offset: HubDayOffset): number {
-  const next = sessionWeekday + offset;
-  if (next < 1) return 1;
-  if (next > 7) return 7;
-  return next;
+  const wrapped = ((sessionWeekday - 1 + offset) % 7 + 7) % 7;
+  return wrapped + 1;
+}
+
+function hubSlotLabel(slot: TrainingSlot): string {
+  if (isTrainingSlotEmpty(slot)) return "—";
+  try {
+    return trainingUnit(slot.unitId).label;
+  } catch {
+    return "—";
+  }
 }
 
 export function buildHubTrainingWindow(
@@ -55,7 +64,7 @@ export function buildHubTrainingWindow(
       const slot = trainingPlan[i]!;
       slots.push({
         slotIndex: i,
-        label: isTrainingSlotEmpty(slot) ? "—" : trainingUnit(slot.unitId).label,
+        label: hubSlotLabel(slot),
         empty: isTrainingSlotEmpty(slot),
         focus: slot.focus,
       });
@@ -76,14 +85,28 @@ export function buildHubTrainingWindow(
       Boolean(matchSetup);
     const isSaturdayMatch =
       offset === 1 && weekday === SATURDAY && matchWeek && !session.matchPlayedThisWeek;
+    const isSaturdayMatchToday =
+      offset === 0 &&
+      weekday === SATURDAY &&
+      matchWeek &&
+      !session.matchPlayedThisWeek &&
+      Boolean(matchSetup);
 
     return {
       offset,
       weekday,
       weekdayLabel: weekdayLabel(weekday),
       slots: slots.slice(0, UNITS_PER_DAY),
-      isMatchPreview: isFridayBeforeMatch || isSaturdayMatch,
+      isMatchPreview: isFridayBeforeMatch || isSaturdayMatch || isSaturdayMatchToday,
       opponentShortName: isFridayBeforeMatch || isSaturdayMatch ? matchSetup?.opponentShortName ?? null : null,
+      opponentClubId:
+        isFridayBeforeMatch || isSaturdayMatch
+          ? matchSetup
+            ? matchSetup.isHome
+              ? matchSetup.awayTeamId
+              : matchSetup.homeTeamId
+            : null
+          : null,
     };
   });
 }

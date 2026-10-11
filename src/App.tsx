@@ -378,6 +378,8 @@ import { GameSessionProvider } from "./ui/session/GameSessionContext.tsx";
 import { useMerchActions } from "./ui/actions/useMerchActions.ts";
 import { useStadiumActions } from "./ui/actions/useStadiumActions.ts";
 import type { LocaleId } from "./i18n/locale-id.ts";
+import { MANAGER_DESK_HUB_ENABLED } from "./hub/config.ts";
+import { hubBlockerCount } from "./hub/hub-blockers.ts";
 
 export default function App() {
   const locale = useLocale();
@@ -1434,6 +1436,50 @@ export default function App() {
     Boolean(medicalStaff.orthopedist),
   );
 
+  const hubNextBlockerCount = useMemo(
+    () => hubBlockerCount({ session, youthInbox, players }),
+    [session, youthInbox, players],
+  );
+
+  const managerDeskHubScreen =
+    MANAGER_DESK_HUB_ENABLED && screen === "hub" && !(careerMatchSetup && careerMatchUiVisible);
+
+  const hubHeaderNextCopy = useMemo((): { label: string; title: string } | null => {
+    if (!managerDeskHubScreen) return null;
+    if (hasInboxBlockerForNext(session, youthInbox, players)) {
+      return { label: t("hub.desk.next.runWeek"), title: t("hub.desk.next.runWeekTitle") };
+    }
+    if (trainingAutoNext) {
+      return { label: t("hub.desk.next.pause"), title: t("hub.desk.next.pauseTitle") };
+    }
+    if (isTrainingCalendarGatePending(session)) {
+      return {
+        label: t("hub.desk.next.weekStart"),
+        title: t("training.next.mondayCalendar"),
+      };
+    }
+    if (isTrainingNextActive(session)) {
+      return {
+        label: t("hub.desk.next.runWeek"),
+        title:
+          hubNextBlockerCount > 0
+            ? t("hub.desk.next.blockersTitle", { count: String(hubNextBlockerCount) })
+            : t("hub.desk.next.runWeekTitle"),
+      };
+    }
+    return { label: t("hub.desk.next.advance"), title: t("shell.smartSkip") };
+  }, [
+    careerMatchSetup,
+    careerMatchUiVisible,
+    hubNextBlockerCount,
+    managerDeskHubScreen,
+    players,
+    session,
+    trainingAutoNext,
+    youthInbox,
+    locale,
+  ]);
+
   const closePlayerProfile = useCallback(() => {
     setProfileId(null);
     setProfileFeedback(null);
@@ -1483,6 +1529,12 @@ export default function App() {
   matchNavActionRef.current = matchNavAction;
 
   const matchFlowBrowsing = Boolean(careerMatchSetup && !careerMatchUiVisible);
+
+  const offHubDeskNext =
+    MANAGER_DESK_HUB_ENABLED &&
+    !managerDeskHubScreen &&
+    !matchFlowBrowsing &&
+    !(careerMatchSetup && careerMatchUiVisible);
 
   const returnToCareerLineup = useCallback(() => {
     setCareerMatchUiVisible(true);
@@ -1544,53 +1596,70 @@ export default function App() {
 
   const nextHeaderTitle = matchFlowBrowsing
     ? t("match.lineup.backToSelection")
-    : careerMatchSetup
-    ? t("shell.next")
-      : hasInboxBlockerForNext(session, youthInbox, players)
-      ? t("shell.nextToPostfach")
-      : isTrainingCalendarGatePending(session)
-        ? screen === "calendar"
-          ? t("training.next.startTraining")
-          : t("training.next.mondayCalendar")
-        : isTrainingNextActive(session)
-        ? t("training.next.header", {
-            remaining: String(trainingWeekSlotsRemaining(session)),
-          })
-        : shouldNavigateToCalendarBeforeTimeStep(
-              screen,
-              hasInboxBlockerForNext(session, youthInbox, players),
-              session,
-            )
-          ? t("shell.nextViaCalendar")
-          : t("shell.smartSkip");
+    : offHubDeskNext
+      ? t("shell.next")
+      : hubHeaderNextCopy
+        ? hubHeaderNextCopy.title
+        : careerMatchSetup
+          ? t("shell.next")
+          : hasInboxBlockerForNext(session, youthInbox, players)
+            ? t("shell.nextToPostfach")
+            : isTrainingCalendarGatePending(session)
+              ? screen === "calendar"
+                ? t("training.next.startTraining")
+                : t("training.next.mondayCalendar")
+              : isTrainingNextActive(session)
+                ? t("training.next.header", {
+                    remaining: String(trainingWeekSlotsRemaining(session)),
+                  })
+                : shouldNavigateToCalendarBeforeTimeStep(
+                      screen,
+                      hasInboxBlockerForNext(session, youthInbox, players),
+                      session,
+                    )
+                  ? t("shell.nextViaCalendar")
+                  : t("shell.smartSkip");
 
   const nextHeaderButtonLabel =
     matchFlowBrowsing
       ? t("match.lineup.backToSelection")
       : careerMatchSetup && careerMatchUiVisible && matchNavAction?.label
         ? matchNavAction.label
-        : trainingAutoNext && (screen === "training" || screen === "hub")
-          ? t("training.autoNext.buttonLabel")
-          : isTrainingNextActive(session) &&
-              !careerMatchSetup &&
-              !hasInboxBlockerForNext(session, youthInbox, players)
-            ? t("training.next.header", {
-                remaining: String(trainingWeekSlotsRemaining(session)),
-              })
-            : t("shell.next");
+        : offHubDeskNext
+          ? t("shell.next")
+          : hubHeaderNextCopy
+            ? hubHeaderNextCopy.label
+            : trainingAutoNext && screen === "training"
+              ? t("training.autoNext.buttonLabel")
+              : isTrainingNextActive(session) &&
+                  !careerMatchSetup &&
+                  !hasInboxBlockerForNext(session, youthInbox, players)
+                ? t("training.next.header", {
+                    remaining: String(trainingWeekSlotsRemaining(session)),
+                  })
+                : t("shell.next");
 
   const nextHeaderButtonTitle =
-    trainingAutoNext &&
-      (screen === "training" || screen === "hub") &&
-      !(careerMatchSetup && careerMatchUiVisible)
+    hubHeaderNextCopy && trainingAutoNext
       ? t("training.autoNext.active")
-      : undefined;
+      : trainingAutoNext &&
+          screen === "training" &&
+          !(careerMatchSetup && careerMatchUiVisible)
+        ? t("training.autoNext.active")
+        : undefined;
+
+  const nextHeaderBadgeCount = managerDeskHubScreen ? hubNextBlockerCount : openDecisionCount;
+  const nextHeaderBadgeAria = managerDeskHubScreen
+    ? t("hub.desk.next.blockerBadge")
+    : t("hub.inbox.decisions");
 
   const navActions: HubNavActions = {
     week,
     weekday,
     simulating,
     openDecisionCount,
+    nextHeaderBadgeCount,
+    nextHeaderBadgeAria,
     onNext: () => void handleNext(undefined),
     onHeaderPrimaryClick: handleHeaderPrimaryClick,
     onNewGame: resetGame,

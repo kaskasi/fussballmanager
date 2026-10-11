@@ -118,6 +118,30 @@ export interface DevelopmentMover {
   recentGrowth: number;
 }
 
+export type DevelopmentMoverPeriod = "week" | "month" | "year";
+
+/** Display delta for hub dev pills (week = CA, month ≈ 4-week pace, year = season CA). */
+export function developmentMoverPeriodDelta(
+  player: Player,
+  period: DevelopmentMoverPeriod,
+  season: number,
+): number | null {
+  if (period === "week") return weeklyCaDelta(player);
+  if (period === "year") return seasonCaDelta(player, season);
+  const weekly = weeklyCaDelta(player);
+  const growth26 = player.state.recent_growth_26w;
+  if (weekly !== null) return weekly * 4;
+  if (growth26 !== undefined) return growth26 / 6;
+  return null;
+}
+
+export function formatDevelopmentPeriodDelta(delta: number | null): string {
+  if (delta === null) return "—";
+  if (delta > 0) return `+${delta.toFixed(1)}`;
+  if (delta < 0) return delta.toFixed(1);
+  return "0";
+}
+
 export function listDevelopmentMovers(
   players: readonly Player[],
   clubId: string,

@@ -840,6 +840,8 @@
   font-weight: 800;
   color: #64748b;
   text-transform: uppercase;
+}
+
 .opponent-scout-action {
   display: flex;
   flex-direction: column;

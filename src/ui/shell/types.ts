@@ -44,6 +44,9 @@ export interface HubNavActions {
   weekday: number;
   simulating: boolean;
   openDecisionCount: number;
+  /** Terra badge on header NEXT (hub: hub-blockers count; else postfach open count). */
+  nextHeaderBadgeCount: number;
+  nextHeaderBadgeAria?: string;
   onNext: () => void;
   onHeaderPrimaryClick?: () => void;
   onNewGame: () => void;

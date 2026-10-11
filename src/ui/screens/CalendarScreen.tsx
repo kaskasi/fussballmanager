@@ -1,6 +1,6 @@
 /** WIREFRAME: docs/prd/design.md §9.5 — Kalender */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeftRight, Dumbbell, Radar } from "lucide-react";
+import { CalendarMonthGridCell } from "../components/CalendarMonthGridCell.tsx";
 import { ClubCrest } from "../components/ClubCrest.tsx";
 import { clubLogoUrlForId } from "../assets/club-logo.ts";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
@@ -188,78 +188,13 @@ export function CalendarScreen({
                 cell.day != null &&
                 scoutTripCount > 0 &&
                 scoutBusyDayKeys.has(civilDateKey({ year: gridYear, monthIndex, day: cell.day }));
-              const transferClass =
-                cell.transferWindow === "summer"
-                  ? " is-transfer-summer"
-                  : cell.transferWindow === "winter"
-                    ? " is-transfer-winter"
-                    : "";
               return (
-                <div
-                  key={cell.key}
-                  ref={cell.isToday ? todayCellRef : undefined}
-                  className={`calendar-cell${cell.isToday ? " is-today" : ""}${cell.match ? " has-match" : ""}${scoutBusy ? " has-scout-trip" : ""}${transferClass}${cell.transferLastDay ? " is-transfer-last" : ""}`}
-                >
-                  {cell.transferWindow ? (
-                    <span
-                      className="calendar-transfer-earmark"
-                      title={
-                        cell.transferWindow === "summer"
-                          ? t("calendar.transferSummerTitle")
-                          : t("calendar.transferWinterTitle")
-                      }
-                      aria-hidden
-                    />
-                  ) : null}
-                  <span className="calendar-day">{cell.day}</span>
-                  {cell.transferLastDay ? (
-                    <p className="calendar-transfer-close">
-                      <ArrowLeftRight size={12} strokeWidth={2.5} aria-hidden />
-                      {t("calendar.transferClose")}
-                    </p>
-                  ) : null}
-                  {cell.milestones?.length ? (
-                    <ul className="calendar-milestone-list" aria-label={t("calendar.milestoneListAria")}>
-                      {cell.milestones.map((entry) => (
-                        <li
-                          key={entry.id}
-                          className={`calendar-milestone-chip is-${entry.kind}${entry.isPast ? " is-past" : ""}${entry.isCurrentWeek ? " is-current-week" : ""}`}
-                          title={entry.title}
-                        >
-                          {entry.shortLabel}
-                        </li>
-                      ))}
-                      {cell.milestoneOverflow ? (
-                        <li className="calendar-milestone-overflow">
-                          +{cell.milestoneOverflow}
-                        </li>
-                      ) : null}
-                    </ul>
-                  ) : null}
-                  {scoutBusy && !cell.match ? (
-                    <p
-                      className="calendar-scout-chip"
-                      title={t("calendar.scoutTrips", { count: scoutTripCount })}
-                    >
-                      <Radar size={12} strokeWidth={2.5} aria-hidden />
-                      <span className="calendar-scout-chip-label">{scoutTripCount}</span>
-                    </p>
-                  ) : null}
-                  {cell.match ? (
-                    <p className="calendar-match-chip">
-                      <ClubCrest
-                        initials={cell.match.initials}
-                        logoSrc={clubLogoUrlForId(cell.match.clubId)}
-                        size={44}
-                      />
-                      {cell.match.label}
-                    </p>
-                  ) : cell.isToday ? (
-                    <p className="calendar-day-chip calendar-day-chip--today" aria-label={t("calendar.todayAria")}>
-                      <Dumbbell size={14} strokeWidth={2.5} aria-hidden />
-                      {t("calendar.todayAria")}
-                    </p>
-                  ) : null}
+                <div key={cell.key} ref={cell.isToday ? todayCellRef : undefined}>
+                  <CalendarMonthGridCell
+                    cell={cell}
+                    scoutBusy={scoutBusy}
+                    scoutTripCount={scoutTripCount}
+                  />
                 </div>
               );
             })}

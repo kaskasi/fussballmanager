@@ -69,13 +69,13 @@ import { Hint } from "../components/Hint.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { AttributeTrainingHeatmap } from "../components/AttributeTrainingHeatmap.tsx";
 import { GrowthHeatmap } from "../components/GrowthHeatmap.tsx";
+import { TrainingSlotCard } from "../components/TrainingSlotCard.tsx";
 import { squadGrowthHeatmap } from "../../player/growth-heatmap.ts";
 import type { Coach, CoachingStaff } from "../../staff/coaching-staff.ts";
 import type {
   AssistantDelegation,
   AssistantDelegationTask,
 } from "../../staff/assistant-delegation.ts";
-import { ChartNoAxesColumn, Target } from "lucide-react";
 import {
   formatTrainingDelta,
   trainingSlotOutcomeAt,
@@ -427,7 +427,7 @@ function TeamPlan({
               );
               const slotCurrent = nextSlotIndex === index;
               return (
-                <SlotCard
+                <TrainingSlotCard
                   key={index}
                   slotIndex={index}
                   periodLabel={slotPeriodLabel(index)}
@@ -526,114 +526,6 @@ function toggleFocus(plan: TrainingSlot[], index: number): TrainingSlot[] {
   const next = [...plan];
   next[index] = { ...slot, focus: true };
   return next;
-}
-
-function SlotCard({
-  slotIndex,
-  periodLabel,
-  slot,
-  past,
-  current,
-  active,
-  outcome,
-  onOpenPicker,
-  onShowOutcome,
-  onToggleFocus,
-  focusToggleDisabled,
-}: {
-  slotIndex: number;
-  periodLabel: string;
-  slot: TrainingSlot;
-  past: boolean;
-  current: boolean;
-  active: boolean;
-  outcome: TrainingSlotOutcome | null;
-  onOpenPicker: () => void;
-  onShowOutcome: () => void;
-  onToggleFocus: () => void;
-  focusToggleDisabled: boolean;
-}) {
-  const empty = isTrainingSlotEmpty(slot);
-  const unit = empty ? null : trainingUnit(slot.unitId);
-  const highlight = outcome?.highlight ?? null;
-  const className = [
-    "training-slot",
-    empty ? "is-empty" : "",
-    slot.focus ? "is-focus" : "",
-    active ? "is-active" : "",
-    current ? "is-current" : "",
-    past ? "is-past" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  return (
-    <article
-      className={className}
-      data-training-slot-index={slotIndex}
-      aria-disabled={past || undefined}
-      aria-current={current ? "step" : undefined}
-    >
-      <button
-        type="button"
-        className={
-          slot.focus ? "training-slot-focus-toggle is-on" : "training-slot-focus-toggle"
-        }
-        disabled={focusToggleDisabled}
-        aria-label={t("training.slot.toggleFocus")}
-        aria-pressed={slot.focus}
-        onClick={(event) => {
-          event.stopPropagation();
-          if (!focusToggleDisabled) onToggleFocus();
-        }}
-      >
-        <Target size={13} strokeWidth={2.5} aria-hidden="true" />
-      </button>
-      <button type="button" className="training-slot-main" disabled={past} onClick={onOpenPicker}>
-        <span className="training-period">{periodLabel}</span>
-        {empty ? (
-          <>
-            <strong className="training-unit-name training-unit-name--empty">{t("training.slot.empty")}</strong>
-            <span className="training-group training-group--muted">{t("training.slot.emptyHint")}</span>
-          </>
-        ) : (
-          <>
-            <strong className="training-unit-name">{unit!.label}</strong>
-            <span className="training-group">{GROUP_LABELS[unit!.group]}</span>
-            <span className="training-skills">
-              {unit!.fitnessRecoveryFraction !== undefined
-                ? trainingUnitPickerDetail(unit!, true)
-                : unit!.skills.map((skill) => attributeLabel(skill)).join(" · ")}
-            </span>
-          </>
-        )}
-      </button>
-      {past && highlight ? (
-        <div className="training-slot-outcome">
-          <p className="training-slot-outcome-teaser">
-            {highlight.playerName} · +{formatTrainingDelta(highlight.delta)}{" "}
-            {trainingHighlightLabel(highlight.metric)}
-          </p>
-          <button
-            type="button"
-            className="training-slot-outcome-btn"
-            aria-label={t("training.slot.outcomeAria")}
-            title={t("training.slot.outcomeHint")}
-            onClick={(event) => {
-              event.stopPropagation();
-              onShowOutcome();
-            }}
-          >
-            <ChartNoAxesColumn size={14} strokeWidth={2.25} aria-hidden="true" />
-          </button>
-        </div>
-      ) : past && outcome && !highlight ? (
-        <p className="training-slot-outcome training-slot-outcome--quiet">
-          {t("training.slot.outcomeQuiet")}
-        </p>
-      ) : null}
-    </article>
-  );
 }
 
 function TrainingSlotOutcomeModal({

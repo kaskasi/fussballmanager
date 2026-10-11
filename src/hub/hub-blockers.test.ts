@@ -27,6 +27,14 @@ describe("hub training window", () => {
     expect(columns.map((c) => c.offset)).toEqual([-1, 0, 1]);
     expect(columns[1]!.weekday).toBe(3);
   });
+
+  it("uses Sunday for day before Monday (no duplicate Monday labels)", () => {
+    const session = newGameSession();
+    session.weekday = MONDAY;
+    const columns = buildHubTrainingWindow(session, session.trainingPlan);
+    expect(columns.map((c) => c.weekday)).toEqual([7, 1, 2]);
+    expect(columns.map((c) => c.weekdayLabel)).toEqual(["So", "Mo", "Di"]);
+  });
 });
 
 describe("hubBlockerCount", () => {

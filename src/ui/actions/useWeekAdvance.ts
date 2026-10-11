@@ -338,6 +338,16 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
         careerMatchActive,
       });
 
+      if (
+        MANAGER_DESK_HUB_ENABLED &&
+        screen !== "hub" &&
+        screen !== "calendar" &&
+        !careerMatchActive
+      ) {
+        setScreen("hub");
+        return;
+      }
+
       if (fromAuto) {
         if (pauseAuto) {
           setTrainingAutoNext(false);
@@ -354,14 +364,28 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
       }
 
       if (hasInboxBlockerForNext(session, youthInbox, players)) {
-        openPostfach();
+        if (MANAGER_DESK_HUB_ENABLED) {
+          setScreen("hub");
+        } else {
+          openPostfach();
+        }
         return;
       }
 
       if (isTrainingCalendarGatePending(session)) {
-        if (MANAGER_DESK_HUB_ENABLED && screen === "hub") {
-          patchSession((current) => ({ ...current, trainingCalendarGateDone: true }));
-          flashNotice(t("training.next.weekStart"), "ok");
+        if (MANAGER_DESK_HUB_ENABLED) {
+          if (screen === "hub") {
+            patchSession((current) => ({ ...current, trainingCalendarGateDone: true }));
+            flashNotice(t("training.next.weekStart"), "ok");
+            return;
+          }
+          if (screen === "calendar") {
+            patchSession((current) => ({ ...current, trainingCalendarGateDone: true }));
+            setScreen("hub");
+            flashNotice(t("training.next.weekStart"), "ok");
+            return;
+          }
+          setScreen("hub");
           return;
         }
         if (screen !== "calendar") {
@@ -407,13 +431,16 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
           setProfileId(null);
           setForeignPlayerId(null);
           setProfileFeedback(null);
-          setScreen("postfach");
+          if (!MANAGER_DESK_HUB_ENABLED) {
+            setScreen("postfach");
+          }
         }
         const stayOnHub = MANAGER_DESK_HUB_ENABLED && screen === "hub";
+        const trainingNavScreen: Screen = MANAGER_DESK_HUB_ENABLED ? "hub" : "training";
         if (preview.openTrainingScreen) {
-          if (!stayOnHub) setScreen("training");
+          if (!stayOnHub) setScreen(trainingNavScreen);
         } else if (screen !== "training" && !stayOnHub) {
-          setScreen("training");
+          setScreen(trainingNavScreen);
         }
         const silentToast =
           preview.toast.key === "training.next.unitResult" ||
@@ -449,7 +476,11 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
       const skip = resolveSmartSkip(session, hasInbox);
 
       if (skip.action === "inbox") {
-        openPostfach();
+        if (MANAGER_DESK_HUB_ENABLED) {
+          setScreen("hub");
+        } else {
+          openPostfach();
+        }
         return;
       }
 
@@ -545,7 +576,11 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
           setProfileId(null);
           setForeignPlayerId(null);
           setProfileFeedback(null);
-          setScreen("postfach");
+          if (!MANAGER_DESK_HUB_ENABLED) {
+            setScreen("postfach");
+          } else {
+            setScreen("hub");
+          }
         }
       }
     },

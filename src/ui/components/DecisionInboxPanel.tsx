@@ -92,6 +92,8 @@ export function DecisionInboxPanel({
   rivalPlayers = [],
   worldClubs = [],
   treterSession,
+  layout = "postfach",
+  onOpenPostfach,
 }: {
   inbox: YouthInboxState;
   players: Player[];
@@ -121,6 +123,9 @@ export function DecisionInboxPanel({
   rivalPlayers?: readonly Player[];
   worldClubs?: readonly WorldClub[];
   treterSession?: GameSession | null;
+  /** Hub embed: compact Treter, link out to Postfach screen. */
+  layout?: "postfach" | "hub";
+  onOpenPostfach?: (itemId?: string) => void;
 }) {
   useT();
   const focus = useMemo(() => inboxWeekFocus(inbox, players), [inbox, players]);
@@ -367,7 +372,14 @@ export function DecisionInboxPanel({
               postTotal={postfachOpenTotal}
               onDismiss={() => onDecision(active.id, "dismiss")}
               onSelectPlayer={onSelectPlayer}
-              compact
+              compact={layout !== "hub"}
+              hubTeaser={layout === "hub"}
+              onOpenFullPostfach={
+                layout === "hub" && onOpenPostfach
+                  ? () => onOpenPostfach(active.id)
+                  : undefined
+              }
+              readOnly={layout === "hub"}
             />
           ) : active?.kind === "assistant_training_reminder" ? (
             <section className="inbox-detail inbox-card-training-reminder">

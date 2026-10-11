@@ -639,25 +639,6 @@
   flex-shrink: 0;
 }
 
-.manager-desk__heatmaps.training-schedule-heatmap .training-pixel-hover.is-idle {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.manager-desk__heatmaps.training-schedule-heatmap > .training-pixel-pack:hover .training-pixel-hover.is-idle,
-.manager-desk__heatmaps.training-schedule-heatmap
-  > .training-pixel-pack:focus-within
-  .training-pixel-hover.is-idle {
-  opacity: 0;
-}
-
-.manager-desk__heatmaps.training-schedule-heatmap > .training-pixel-pack:hover .training-pixel-hover:not(.is-idle),
-.manager-desk__heatmaps.training-schedule-heatmap
-  > .training-pixel-pack:focus-within
-  .training-pixel-hover:not(.is-idle) {
-  opacity: 1;
-}
-
 .manager-desk__heatmaps.training-schedule-heatmap .pipeline-heat-head {
   margin: 0 0 0.15rem;
   padding: 0 0.15rem;

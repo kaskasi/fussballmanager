@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { TrainingPixelHoverLine } from "./TrainingPixelHoverLine.tsx";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import {
@@ -172,21 +173,18 @@ export function AttributeTrainingHeatmap({
         ))}
       </div>
 
-      {hovered ? (
-        <p className="training-pixel-hover" role="status">
-          <strong>{attributeLabel(hovered.key)}</strong>
-          <span>
-            {t("training.attrHeat.hoverDetail", {
-              delta: formatAttributeHeatDelta(hovered.gainSum),
-              precise: formatAttributeHeatSumPrecise(hovered.gainSum),
-            })}
-          </span>
-        </p>
-      ) : (
-        <p className="training-pixel-hover is-idle" aria-hidden="true">
-          {t("training.attrHeat.hoverCompact")}
-        </p>
-      )}
+      <TrainingPixelHoverLine
+        idleLabel={t("training.attrHeat.hoverCompact")}
+        activeTitle={hovered ? attributeLabel(hovered.key) : null}
+        activeDetail={
+          hovered
+            ? t("training.attrHeat.hoverDetail", {
+                delta: formatAttributeHeatDelta(hovered.gainSum),
+                precise: formatAttributeHeatSumPrecise(hovered.gainSum),
+              })
+            : null
+        }
+      />
     </section>
   );
 }

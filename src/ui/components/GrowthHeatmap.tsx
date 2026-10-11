@@ -14,6 +14,7 @@ import {
   type SquadGrowthHeatmapMode,
   type WeeklyTrainingExtremes,
 } from "../../player/growth-heatmap.ts";
+import { TrainingPixelHoverLine } from "./TrainingPixelHoverLine.tsx";
 
 const HEATMAP_LEGEND_TONES: readonly HeatTone[] = ["up", "down", "flat", "pending"];
 
@@ -260,19 +261,15 @@ export function GrowthHeatmap({
         })}
       </div>
 
-      {hovered ? (
-        <p className="training-pixel-hover" role="status">
-          <strong>{hovered.label}</strong>
-          <span>
-            {hovered.position} · {pipelineStageDisplay(hovered.squadStatus)} ·{" "}
-            {formatGrowthDelta(hovered.growth)}
-          </span>
-        </p>
-      ) : (
-        <p className="training-pixel-hover is-idle" aria-hidden="true">
-          {compact ? t("hub.heat.hoverCompact") : t("hub.heat.hover")}
-        </p>
-      )}
+      <TrainingPixelHoverLine
+        idleLabel={compact ? t("hub.heat.hoverCompact") : t("hub.heat.hover")}
+        activeTitle={hovered?.label ?? null}
+        activeDetail={
+          hovered
+            ? `${hovered.position} · ${pipelineStageDisplay(hovered.squadStatus)} · ${formatGrowthDelta(hovered.growth)}`
+            : null
+        }
+      />
     </section>
   );
 }

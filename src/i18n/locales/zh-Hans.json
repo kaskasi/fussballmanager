@@ -894,6 +894,7 @@
   "medical.ortho.queueName": "医疗中心",
   "medical.ortho.queueTopic": "骨科候选人",
   "medical.injured.diagnosisQueue": "诊断队列",
+  "medical.injured.waitingRoom": "检查室",
   "medical.injured.none": "无伤病或待诊断球员。",
   "medical.injured.daysLeft": "诊断 · {days} 天",
   "medical.injured.weeksLeft": "康复 · {weeks} 周",

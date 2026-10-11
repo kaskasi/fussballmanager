@@ -158,21 +158,45 @@
 .training-pixel-hover {
   margin: 0;
   min-height: 1.2rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.65rem;
-  align-items: baseline;
+  display: grid;
+  grid-template-areas: "hoverLine";
+  align-items: start;
   font-size: 0.78rem;
   font-weight: 700;
   color: #0f172a;
 }
 
-.training-pixel-hover span {
+.training-pixel-hover__layer {
+  grid-area: hoverLine;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  align-items: baseline;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.training-pixel-hover__layer.is-visible {
+  opacity: 1;
+}
+
+.training-pixel-hover__layer--idle {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.training-pixel-hover__layer:not(.training-pixel-hover__layer--idle) span {
   color: #64748b;
   font-weight: 600;
 }
 
-.training-pixel-hover.is-idle {
+/* Legacy: single-line idle hint on old markup */
+.training-pixel-hover.is-idle:not(:has(.training-pixel-hover__layer)) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  align-items: baseline;
   color: #94a3b8;
   font-weight: 600;
 }
@@ -285,13 +309,13 @@
     border: 0;
   }
 
-  .training-pixel-hover.is-idle {
+  .training-pixel-hover__layer--idle.is-visible {
     display: flex;
   }
 }
 
 @media (hover: none), (pointer: coarse) {
-  .training-pixel-hover.is-idle {
+  .training-pixel-hover__layer--idle.is-visible {
     display: none;
   }
 }
@@ -735,14 +759,14 @@
   font-size: 0.68rem;
 }
 
-.training-schedule-heatmap .training-pixel-hover.is-idle {
+.training-schedule-heatmap .training-pixel-hover__layer--idle {
   display: none;
 }
 
-.training-schedule-heatmap .training-pixel-hover:not(.is-idle) {
+.training-schedule-heatmap .training-pixel-hover {
   margin-top: 0.15rem;
   font-size: 0.72rem;
-  min-height: 0;
+  min-height: 1.25rem;
 }
 
 .training-schedule-heatmap {

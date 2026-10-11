@@ -178,7 +178,7 @@ interface Injury {
 - **Outcome:** `Injury` mit `type_id` (Text-Labels), `severity`, `weeks_remaining` (minor 1–2, moderate 2–4, severe 4–7), `sustained_week`.
 - **Heilung:** Zu Wochenbeginn `weeks_remaining -= 1`, bei 0 `injury = null`. Während Verletzung kein Fitness-Update, kein Einsatz (Aufstellung/Auto-XI).
 - **Diagnose-Queue (F8.2 M2-Slice):** Wenn `medical_center` am Gelände platziert (Stufe ≥ 1), landet ein frischer Roll zuerst in `state.medical.pending_diagnoses[]` (`player_id`, `type_id`, `severity`, `days_remaining`, `sustained_week`, `sustained_career_day`). Tick **pro Karriere-Tag** (Training-NEXT / Kalender). Stufe 1: **3 Tage** Diagnose; Stufe ≥ 2 (Imaging): **1 Tag**. Erst danach wird `player.state.injury` gesetzt; `weeks_remaining` × **Reha-Multiplikator** (Medical-Staff + Stufe 3 OP). Ohne Medical-Gebäude: sofortiges `injury` wie bisher.
-- **Wartezimmer (M2+):** Symptom-Text sichtbar, Diagnose verborgen bis **Arzt untersucht** (Button). OP schwerer Fälle: in-house nur Medical Stufe 3 + Orthopäde, sonst externe OP (Wochenverzögerung). **Physio-Kapazität/Wo:** Stufe 1 → 2 Auto, Stufe 2 → 4, Stufe 3 → 6; Rest **Mithelfen** (Körper-Wireframe-Modal).
+- **Untersuchungszimmer (M2+):** Symptom-Text sichtbar, Diagnose verborgen bis **Arzt untersucht** (Button). OP schwerer Fälle: in-house nur Medical Stufe 3 + Orthopäde, sonst externe OP (Wochenverzögerung). **Physio-Kapazität/Wo:** Stufe 1 → 2 Auto, Stufe 2 → 4, Stufe 3 → 6; Rest **Mithelfen** (Körper-Wireframe-Modal).
 - **Reha-Tiefe:** F2.6 volle Stufen-Sim bleibt M3; M2-Slice = Modifier + leichtes Praxis-Minigame (max. 1 Bonus/Spieler/Woche).
 - **Engine:** Match-Engine unverändert; keine Sync-Pflicht zu Engine-`injury`-Events in v1.
 

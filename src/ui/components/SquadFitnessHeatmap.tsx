@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import type { HubFitnessCell } from "../../hub/hub-heatmaps.ts";
+import { TrainingPixelHoverLine } from "./TrainingPixelHoverLine.tsx";
 
 /**
  * WIREFRAME: PRD 14.15 — Squad fitness raster (same pixel band language as training heatmaps).
@@ -52,16 +53,13 @@ export function SquadFitnessHeatmap({
           </button>
         ))}
       </div>
-      {hovered ? (
-        <p className="training-pixel-hover" role="status">
-          <strong>{hovered.initials}</strong>
-          <span>{t("training.fitnessHeat.hover", { fitness: String(hovered.fitness) })}</span>
-        </p>
-      ) : (
-        <p className="training-pixel-hover is-idle" aria-hidden="true">
-          {t("training.fitnessHeat.hoverCompact")}
-        </p>
-      )}
+      <TrainingPixelHoverLine
+        idleLabel={t("training.fitnessHeat.hoverCompact")}
+        activeTitle={hovered?.initials ?? null}
+        activeDetail={
+          hovered ? t("training.fitnessHeat.hover", { fitness: String(hovered.fitness) }) : null
+        }
+      />
     </section>
   );
 }

@@ -1,53 +1,4 @@
-:root {
-  --text-scale: 1;
-  color: var(--tinte, #3e3128);
-  background: var(--bg-sand, #f5efe0);
-  font-family: var(--font-body, "Nunito", system-ui, sans-serif);
-  line-height: 1.45;
-  font-size: calc(16px * var(--text-scale));
-}
-
-html[data-color-scheme="contrast"] {
-  color: #020617;
-  background: #f8fafc;
-}
-
-html[data-color-scheme="contrast"] .scoreboard,
-html[data-color-scheme="contrast"] .training,
-html[data-color-scheme="contrast"] .squad,
-html[data-color-scheme="contrast"] .fitness-panel {
-  border: 2px solid #0f172a;
-}
-
-html[data-color-scheme="contrast"] .pipeline-light.is-set,
-html[data-color-scheme="contrast"] .squad-form.is-good,
-html[data-color-scheme="contrast"] .squad-fitness.is-good,
-html[data-color-scheme="contrast"] .fitness-col-mark.is-good {
-  color: #065f46;
-}
-
-html[data-color-scheme="contrast"] .pipeline-light.is-watch,
-html[data-color-scheme="contrast"] .squad-form.is-mid,
-html[data-color-scheme="contrast"] .squad-fitness.is-mid,
-html[data-color-scheme="contrast"] .fitness-col-mark.is-mid {
-  color: #92400e;
-}
-
-html[data-color-scheme="contrast"] .pipeline-light.is-risk,
-html[data-color-scheme="contrast"] .squad-form.is-low,
-html[data-color-scheme="contrast"] .squad-fitness.is-low,
-html[data-color-scheme="contrast"] .fitness-col-mark.is-low,
-html[data-color-scheme="contrast"] .squad-risk.is-risk {
-  color: #991b1b;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
+/* document defaults — global-base.css (PRD 20) */
 
 .matchday {
   max-width: 72rem;
@@ -7933,22 +7884,7 @@ body {
   color: #047857;
 }
 
-.pipeline-menu-popover {
-  min-width: 11rem;
-}
-
-.pipeline-menu-note {
-  margin: 0 0 0.35rem;
-  padding: 0 0.15rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #991b1b;
-  line-height: 1.35;
-}
-
-.pipeline-menu-danger {
-  color: #b91c1c;
-}
+/* pipeline-menu-* — game-surfaces.css */
 
 .pipeline-head button:not(.pipeline-go),
 .pipeline button[aria-label^="Zurück"] {
@@ -13143,16 +13079,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   color: #64748b;
 }
 
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: rgb(15 23 42 / 45%);
-}
+/* modal-backdrop — game-surfaces.css */
 
 .contract-talk-modal {
   display: grid;
@@ -13208,7 +13135,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   border: 0;
 }
 
-/* Layout/padding: game-surfaces.css (.app-nav.club-shell-header) */
+/* club shell + TEAM menu — game-surfaces.css */
 .app-nav:not(.club-shell-header) {
   display: flex;
   align-items: center;
@@ -13217,64 +13144,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   margin: 0 auto;
   padding: 0 1.5rem;
   min-height: var(--club-header-height, 56px);
-}
-
-.club-shell-identity {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  min-width: 0;
-}
-
-.club-shell-identity-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-.club-shell-name {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--tinte);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.club-shell-meta {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--tinte-weich);
-  font-variant-numeric: tabular-nums;
-}
-
-.app-nav-menu-link {
-  border: 0;
-  background: transparent;
-  color: var(--tinte);
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  padding: 0.35rem 0.5rem;
-}
-
-.pipeline-menu-section-title {
-  margin: 0.35rem 0 0.15rem;
-  padding: 0 0.65rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--tinte-weich);
-}
-
-.pipeline-menu-item.is-active {
-  background: var(--rasen);
-  color: var(--tinte);
-  font-weight: 700;
 }
 
 @media (min-width: 1024px) {
@@ -13287,18 +13156,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-}
-
-.app-nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.app-nav-toggle,
-.app-nav-next-mobile {
-  display: none;
 }
 
 .weekday-strip {
@@ -13328,25 +13185,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 .weekday-strip-day.is-matchday:not(.is-today) {
   color: #047857;
   border: 1px dashed #6ee7b7;
-}
-
-.app-nav-next {
-  border: var(--outline-width, 2px) solid var(--tinte);
-  background: var(--sonnengelb);
-  color: var(--tinte);
-  box-shadow: var(--shadow-flat);
-  font-family: var(--font-display);
-  border-radius: 999px;
-  padding: 0.4rem 0.9rem;
-  font-size: 0.88rem;
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.app-nav-next:disabled {
-  opacity: 0.65;
-  cursor: wait;
 }
 
 .app-nav-menu .row-menu-trigger {
@@ -14791,7 +14629,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
     overflow-x: hidden;
   }
 
-  .app-nav {
+  .app-nav:not(.club-shell-header) {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 0.4rem;
@@ -14802,7 +14640,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
     backdrop-filter: blur(10px);
   }
 
-  .app-nav-actions {
+  .app-nav:not(.club-shell-header) .app-nav-actions {
     order: 1;
     width: 100%;
     min-width: 0;
@@ -14810,71 +14648,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
     gap: 0.35rem;
   }
 
-  .club-shell-identity {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  min-width: 0;
-}
-
-.club-shell-identity-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-.club-shell-name {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--tinte);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.club-shell-meta {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--tinte-weich);
-  font-variant-numeric: tabular-nums;
-}
-
-.app-nav-menu-link {
-  border: 0;
-  background: transparent;
-  color: var(--tinte);
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  padding: 0.35rem 0.5rem;
-}
-
-.pipeline-menu-section-title {
-  margin: 0.35rem 0 0.15rem;
-  padding: 0 0.65rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--tinte-weich);
-}
-
-.pipeline-menu-item.is-active {
-  background: var(--rasen);
-  color: var(--tinte);
-  font-weight: 700;
-}
-
-@media (min-width: 1024px) {
   .app-nav-tabs {
-    display: none;
-  }
-}
-
-.app-nav-tabs {
     order: 2;
     width: 100%;
     min-width: 0;

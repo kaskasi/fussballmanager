@@ -1,0 +1,274 @@
+/** PRD 20 B4 — Finanzen / fm-tab surfaces (imported from game-surfaces.css). */
+/* — Finanzen tab panel (fm2001) — */
+.finances-shell {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* fm2001 tab band — square segments, not bookmark ears (see fmscreens/fm2001/squad.png) */
+.fm-tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  background: var(--panel-muted);
+  border-bottom: var(--outline);
+}
+
+.fm-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex: 0 1 auto;
+  margin: 0;
+  padding: 0.5rem 1.15rem;
+  border: 0;
+  border-right: var(--outline);
+  border-radius: 0;
+  background: var(--panel-muted);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  color: var(--tinte-weich);
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.fm-tab:last-child {
+  border-right: none;
+}
+
+.fm-tab.is-active {
+  background: var(--sonnengelb);
+  color: var(--tinte);
+}
+
+.fm-tab:not(.is-active):hover {
+  background: var(--panel);
+}
+
+.fm-tab-panel {
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+main.campus.club-shell-card-body .youth-strip {
+  margin: 0 0 0.75rem;
+}
+
+main.stadium.club-shell-card-body .stadium-scoreboard {
+  margin: 0 0 0.75rem;
+}
+
+main.stadium.club-shell-card-body .stadium-scoreboard-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--tinte);
+}
+
+main.stadium.club-shell-card-body .stadium-hero {
+  margin-bottom: 0.75rem;
+}
+
+main.stadium.club-shell-card-body .stadium-fanbase {
+  margin-bottom: 0.85rem;
+}
+
+.finances-shell .finances-hero {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.finances-detail--solo {
+  max-width: 28rem;
+}
+
+.finances-hero.game-panel {
+  margin-bottom: 1rem;
+}
+
+.finances-hero .finances-waterfall {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+
+.finances-waterfall,
+.finances-sparkline {
+  background: var(--panel);
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-flat) !important;
+}
+
+.finances-sparkline {
+  color: var(--rasen);
+}
+
+.finances-sparkline svg polyline,
+.finances-sparkline svg circle {
+  stroke: var(--rasen);
+  fill: var(--rasen);
+}
+
+.finances-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.finances-hero .finances-summary {
+  gap: 0.45rem;
+}
+
+.finances-card {
+  background: var(--panel-muted);
+  border: 2px solid rgba(62, 49, 40, 0.2);
+  border-radius: var(--radius-klein);
+  padding: 0.55rem 0.65rem;
+}
+
+.finances-card-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--tinte-weich);
+}
+
+.finances-card-value {
+  font-family: var(--font-display);
+  color: var(--tinte);
+}
+
+.finances-card.is-good .finances-card-value {
+  color: var(--rasen-dunkel);
+}
+
+.finances-card.is-warn .finances-card-value {
+  color: var(--terra-dunkel);
+}
+
+.finances-card.is-bad .finances-card-value {
+  color: var(--terra-dunkel);
+}
+
+.finances-wage-cap-bar {
+  margin-top: 0.45rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid rgba(62, 49, 40, 0.2);
+  overflow: hidden;
+}
+
+.finances-wage-cap-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--rasen);
+}
+
+.finances-wage-cap-fill.is-warn {
+  background: var(--terra);
+}
+
+.finances-wage-cap-fill.is-over {
+  background: var(--terra-dunkel);
+}
+
+.finances-sub,
+.finances-caption,
+.finances-range,
+.finances-empty {
+  color: var(--tinte-weich);
+}
+
+.finances-net {
+  font-family: var(--font-display);
+}
+
+.finances-net.is-up {
+  color: var(--rasen-dunkel);
+}
+
+.finances-net.is-down {
+  color: var(--terra-dunkel);
+}
+
+.finances-bar-track {
+  background: var(--panel-muted);
+}
+
+.finances-bar.is-income .finances-bar-fill {
+  background: var(--rasen);
+}
+
+.finances-bar.is-expense .finances-bar-fill {
+  background: var(--terra);
+}
+
+.finances-bar-value {
+  font-family: var(--font-display);
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(62, 49, 40, 0.15);
+}
+
+.finances-bar.is-income .finances-bar-value {
+  background: var(--rasen-hell);
+  color: var(--tinte);
+}
+
+.finances-bar.is-expense .finances-bar-value {
+  background: rgba(224, 122, 63, 0.25);
+  color: var(--tinte);
+}
+
+.finances-detail,
+.finances-detail.is-button {
+  background: var(--panel);
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-flat) !important;
+}
+
+.finances-detail h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.finances-month-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.finances-month-nav button {
+  width: 2rem;
+  height: 2rem;
+  border: var(--outline);
+  border-radius: var(--radius-klein);
+  background: #fff;
+  color: var(--tinte);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.finances-month-nav button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

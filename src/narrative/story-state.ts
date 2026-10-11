@@ -6,8 +6,10 @@ import {
   type CareerPhase,
   type FeatureCurtain,
 } from "./career-presentation.ts";
+import { resolveProductGameMode, type ProductGameMode } from "./game-mode.ts";
 
 export type { CareerPhase, FeatureCurtain } from "./career-presentation.ts";
+export type { ProductGameMode } from "./game-mode.ts";
 
 export type CareerOrigin = "raffle" | "passionate_letter" | "community_takeover";
 
@@ -75,6 +77,8 @@ export interface StoryState {
   arc_started_week: number | null;
   career_origin: CareerOrigin | null;
   opening_complete: boolean;
+  /** PRD 24 — product mode; default regionalliga_manager for new saves. */
+  game_mode?: ProductGameMode;
   career_phase: CareerPhase;
   feature_curtain: FeatureCurtain;
   choices: Record<string, StoryChoiceRecord>;
@@ -102,15 +106,17 @@ export function defaultStoryCast(): StoryCast {
   };
 }
 
-export function defaultStoryState(week = 1): StoryState {
-  const career_phase = "act1_nordstern";
+/** PRD 24 — full features, regional world, PRD 13 story layer without act curtain. */
+export function regionalligaManagerStoryState(week = 1): StoryState {
+  const career_phase = "full";
   return {
     active_arc: "relegation_battle",
     arc_started_week: week,
     career_origin: null,
     opening_complete: false,
+    game_mode: "regionalliga_manager",
     career_phase,
-    feature_curtain: featureCurtainForPhase(career_phase),
+    feature_curtain: fullFeatureCurtain(),
     choices: {},
     scheduled_payoffs: [],
     cast: defaultStoryCast(),
@@ -119,6 +125,21 @@ export function defaultStoryState(week = 1): StoryState {
     fan_feed: [],
     chronicle_entries: [],
   };
+}
+
+/** PRD 19 / Story Mode — act 1 tutorial curtain (not default for new games). */
+export function storyModeAct1StoryState(week = 1): StoryState {
+  const career_phase = "act1_nordstern";
+  return {
+    ...regionalligaManagerStoryState(week),
+    game_mode: "story_mode",
+    career_phase,
+    feature_curtain: featureCurtainForPhase(career_phase),
+  };
+}
+
+export function defaultStoryState(week = 1): StoryState {
+  return regionalligaManagerStoryState(week);
 }
 
 /** Legacy / sandbox saves — full UI, no tutorial curtain. */
@@ -133,10 +154,15 @@ export function fullGameStoryState(base: StoryState): StoryState {
 export function normalizeStoryState(state?: StoryState, week = 1): StoryState {
   const base = defaultStoryState(week);
   if (!state) return base;
-  const career_phase = state.career_phase ?? base.career_phase;
+  const game_mode = resolveProductGameMode(state);
+  let career_phase = state.career_phase ?? base.career_phase;
+  if (game_mode === "regionalliga_manager" || game_mode === "new_game_plus") {
+    career_phase = "full";
+  }
   return {
     ...base,
     ...state,
+    game_mode,
     career_phase,
     feature_curtain: featureCurtainForPhase(career_phase),
     choices: state.choices ?? {},

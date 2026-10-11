@@ -1,0 +1,18 @@
+/** PRD 20 / PRD 19 — presentation density skins (no gameplay changes). */
+
+html[data-presentation="storybook"] {
+  --club-shell-inset: 1.75rem;
+}
+
+html[data-presentation="storybook"] .game-panel {
+  padding: 1.15rem 1.25rem 1.35rem;
+}
+
+html[data-presentation="manager_desk"] {
+  --club-shell-inset: 1.15rem;
+  font-size: calc(15px * var(--text-scale));
+}
+
+html[data-presentation="manager_desk"] .game-panel {
+  padding: 0.75rem 0.85rem 0.9rem;
+}

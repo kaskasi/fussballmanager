@@ -1,0 +1,52 @@
+/** PRD 20 — document defaults (after design-tokens, before game-surfaces). */
+
+:root {
+  --text-scale: 1;
+  color: var(--tinte, #3e3128);
+  background: var(--bg-sand, #f5efe0);
+  font-family: var(--font-body, "Nunito", system-ui, sans-serif);
+  line-height: 1.45;
+  font-size: calc(16px * var(--text-scale));
+}
+
+html[data-color-scheme="contrast"] {
+  color: #020617;
+  background: #f8fafc;
+}
+
+html[data-color-scheme="contrast"] .scoreboard,
+html[data-color-scheme="contrast"] .training,
+html[data-color-scheme="contrast"] .squad,
+html[data-color-scheme="contrast"] .fitness-panel {
+  border: 2px solid #0f172a;
+}
+
+html[data-color-scheme="contrast"] .pipeline-light.is-set,
+html[data-color-scheme="contrast"] .squad-form.is-good,
+html[data-color-scheme="contrast"] .squad-fitness.is-good,
+html[data-color-scheme="contrast"] .fitness-col-mark.is-good {
+  color: #065f46;
+}
+
+html[data-color-scheme="contrast"] .pipeline-light.is-watch,
+html[data-color-scheme="contrast"] .squad-form.is-mid,
+html[data-color-scheme="contrast"] .squad-fitness.is-mid,
+html[data-color-scheme="contrast"] .fitness-col-mark.is-mid {
+  color: #92400e;
+}
+
+html[data-color-scheme="contrast"] .pipeline-light.is-risk,
+html[data-color-scheme="contrast"] .squad-form.is-low,
+html[data-color-scheme="contrast"] .squad-fitness.is-low,
+html[data-color-scheme="contrast"] .fitness-col-mark.is-low,
+html[data-color-scheme="contrast"] .squad-risk.is-risk {
+  color: #991b1b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}

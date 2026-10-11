@@ -5,7 +5,7 @@ import { startBoardSeason } from "../board/season-objectives.ts";
 import { generateStoryCast } from "./cast.ts";
 import { applyChronicleEntry } from "./apply.ts";
 import {
-  defaultStoryState,
+  regionalligaManagerStoryState,
   type CareerOrigin,
   type ChronicleEntry,
   type StoryState,
@@ -41,7 +41,7 @@ export function initializeStoryForNewGame(
 ): StoryState {
   const cast = generateStoryCast(masterSeed);
   return {
-    ...defaultStoryState(week),
+    ...regionalligaManagerStoryState(week),
     cast,
     fan_feed: [
       {

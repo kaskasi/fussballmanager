@@ -1,5 +1,6 @@
 /** Career act presentation layer (PRD 19) — curtain + auto training, not sim changes. */
 
+import { resolveProductGameMode, type GameModeState } from "./game-mode.ts";
 import { emptyWeeklyTrainingPlan } from "../development/training-plan-state.ts";
 import type { TrainingSlot } from "../development/training-units.ts";
 import { SLOT_COUNT } from "../development/weekly-plan.ts";
@@ -9,6 +10,22 @@ export type CareerPhase =
   | "act2_regional"
   | "act3_empire"
   | "full";
+
+export type PresentationMode = "storybook" | "manager_desk";
+
+/** PRD 20 / PRD 24 — CSS `data-presentation` (curtain unchanged). */
+export function resolvePresentationMode(
+  state: CareerPresentationState & GameModeState,
+): PresentationMode {
+  const mode = resolveProductGameMode(state);
+  if (mode === "regionalliga_manager" || mode === "new_game_plus") {
+    return "manager_desk";
+  }
+  if (state.career_phase === "act1_nordstern" || state.career_phase === "act2_regional") {
+    return "storybook";
+  }
+  return "manager_desk";
+}
 
 export interface FeatureCurtain {
   auto_training: boolean;

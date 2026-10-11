@@ -4,9 +4,14 @@ import {
   featureCurtainForPhase,
   filterTeamNavScreens,
   isNavScreenVisible,
+  resolvePresentationMode,
   resolveTrainingPlanAfterWeek,
 } from "./career-presentation.ts";
-import { defaultStoryState, fullGameStoryState } from "./story-state.ts";
+import {
+  defaultStoryState,
+  fullGameStoryState,
+  storyModeAct1StoryState,
+} from "./story-state.ts";
 import { SLOT_COUNT } from "../development/weekly-plan.ts";
 
 describe("career presentation (PRD 19)", () => {
@@ -28,7 +33,7 @@ describe("career presentation (PRD 19)", () => {
   });
 
   it("act1 keeps full team nav (story arc no longer hides menu screens)", () => {
-    const state = defaultStoryState();
+    const state = storyModeAct1StoryState();
     expect(state.career_phase).toBe("act1_nordstern");
     expect(isNavScreenVisible("scouting", state)).toBe(true);
     expect(isNavScreenVisible("finances", state)).toBe(true);
@@ -46,7 +51,7 @@ describe("career presentation (PRD 19)", () => {
       { screen: "hub" as const, labelKey: "a" },
       { screen: "scouting" as const, labelKey: "b" },
     ];
-    const filtered = filterTeamNavScreens(items, defaultStoryState());
+    const filtered = filterTeamNavScreens(items, storyModeAct1StoryState());
     expect(filtered.map((i) => i.screen)).toEqual(["hub", "scouting"]);
   });
 
@@ -58,7 +63,7 @@ describe("career presentation (PRD 19)", () => {
   });
 
   it("resolveTrainingPlanAfterWeek clears plan in act1 (manual training)", () => {
-    const plan = resolveTrainingPlanAfterWeek(defaultStoryState());
+    const plan = resolveTrainingPlanAfterWeek(storyModeAct1StoryState());
     expect(plan.every((slot) => slot.unitId === "")).toBe(true);
   });
 
@@ -72,5 +77,23 @@ describe("career presentation (PRD 19)", () => {
     const curtain = featureCurtainForPhase("act2_regional");
     expect(curtain.manual_training).toBe(true);
     expect(curtain.scouting_nav).toBe(true);
+  });
+});
+
+describe("resolvePresentationMode (PRD 20)", () => {
+  it("uses storybook for early career acts in story mode", () => {
+    expect(
+      resolvePresentationMode({ ...storyModeAct1StoryState(), career_phase: "act2_regional" }),
+    ).toBe("storybook");
+  });
+
+  it("uses manager_desk for regionalliga and empire", () => {
+    expect(resolvePresentationMode(defaultStoryState())).toBe("manager_desk");
+    expect(
+      resolvePresentationMode({
+        ...storyModeAct1StoryState(),
+        career_phase: "act3_empire",
+      }),
+    ).toBe("manager_desk");
   });
 });

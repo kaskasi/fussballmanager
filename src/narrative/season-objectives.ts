@@ -1,5 +1,6 @@
 import { NORDSTERN_ID, type TeamId } from "@fussballmanager/shared";
 import type { BoardObjective } from "../board/board-state.ts";
+import { defaultLeagueState } from "../persistence/league-state.ts";
 import { generateSeasonObjectives } from "../board/season-objectives.ts";
 
 /** Bottom three places in an 18-team league. */
@@ -10,7 +11,9 @@ export function survivalSeasonObjectives(
   employerClubId: TeamId,
   season: number,
 ): BoardObjective[] {
-  const generic = generateSeasonObjectives(employerClubId, season);
+  const generic = generateSeasonObjectives(employerClubId, season, defaultLeagueState(), {
+    avg_ca: 70,
+  });
   const suffix = season > 1 ? ` (S${season})` : "";
   return generic.map((objective) => {
     if (objective.id !== "league_place") return objective;

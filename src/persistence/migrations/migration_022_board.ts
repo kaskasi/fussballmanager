@@ -1,6 +1,7 @@
 import { defaultBoardState } from "../../board/board-state.ts";
 import { startBoardSeason } from "../../board/season-objectives.ts";
 import { defaultEmployerClubId } from "../../board/job-offers.ts";
+import { defaultLeagueState } from "../league-state.ts";
 import type { SaveMigration } from "./index.ts";
 
 export const migration022Board: SaveMigration = {
@@ -12,6 +13,7 @@ export const migration022Board: SaveMigration = {
         defaultBoardState(defaultEmployerClubId()),
         defaultEmployerClubId(),
         save.state.season,
+        save.state.league ?? defaultLeagueState(),
       );
     }
     save.manifest.save_version = 22;

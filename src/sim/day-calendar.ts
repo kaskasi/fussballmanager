@@ -45,7 +45,12 @@ export function resolveSmartSkip(
     return { weekday: SUNDAY, action: "simulate_week", daysAdvanced: 0 };
   }
 
-  if (matchWeek && !matchPlayedThisWeek && weekday === SATURDAY) {
+  if (
+    matchWeek &&
+    !session.league.season_complete &&
+    !matchPlayedThisWeek &&
+    weekday === SATURDAY
+  ) {
     return { weekday: SATURDAY, action: "match", daysAdvanced: 0 };
   }
 

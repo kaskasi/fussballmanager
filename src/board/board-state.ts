@@ -1,6 +1,24 @@
 import { NORDSTERN_ID, type TeamId } from "@fussballmanager/shared";
 
-export type BoardObjectiveKind = "league_place_max" | "min_points" | "min_cash";
+export type BoardObjectiveKind =
+  | "league_place_max"
+  | "min_points"
+  | "min_cash"
+  | "min_runway_weeks"
+  | "avg_ca_min"
+  | "goal_difference_min"
+  | "project";
+
+export type BoardProjectId =
+  | "youth_camps"
+  | "stadium_expand"
+  | "medical_center"
+  | "merch_revenue";
+
+export interface BoardSeasonBaselines {
+  avg_ca: number;
+  merch_weekly_net?: number;
+}
 
 export interface BoardObjective {
   id: string;
@@ -8,6 +26,8 @@ export interface BoardObjective {
   target: number;
   label: string;
   icon: string;
+  mandatory?: boolean;
+  projectId?: BoardProjectId;
 }
 
 export interface ObjectiveProgress {
@@ -34,6 +54,7 @@ export interface BoardState {
   job_status: BoardJobStatus;
   promotions_this_season: number;
   last_evaluation?: SeasonObjectiveEvaluation;
+  season_baselines?: BoardSeasonBaselines;
 }
 
 export function defaultBoardState(employerClubId: TeamId = NORDSTERN_ID): BoardState {

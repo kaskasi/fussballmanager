@@ -10,6 +10,7 @@ describe("watched-player-match", () => {
       matchday: 22,
       calendarWeek: 22,
       fixture: {
+        id: "fixture-md22-eck-nord",
         homeTeamId: asTeamId("eck"),
         awayTeamId: NORDSTERN_ID,
         matchday: 22,
@@ -46,7 +47,7 @@ describe("watched-player-match", () => {
           },
         ],
       },
-    } as Parameters<typeof watchedMatchFromView>[1]);
+    } as unknown as Parameters<typeof watchedMatchFromView>[1]);
 
     expect(outcome.homeGoals).toBe(2);
     expect(outcome.awayGoals).toBe(7);

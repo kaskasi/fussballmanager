@@ -408,6 +408,52 @@ export function merchSkuNormalRetail(row: MerchSkuState): number {
   return row.retail_price_normal ?? row.retail_price;
 }
 
+/** Whitelabel / Marktplatz units still in transit per SKU. */
+export function merchBrandingInboundQtyBySku(
+  merch: Pick<ClubMerchandising, "branding_queue">,
+): Record<MerchSkuId, number> {
+  const totals = Object.fromEntries(MERCH_SKU_IDS.map((id) => [id, 0])) as Record<
+    MerchSkuId,
+    number
+  >;
+  for (const order of merch.branding_queue) {
+    for (const id of MERCH_SKU_IDS) {
+      totals[id] += order.units[id] ?? 0;
+    }
+  }
+  return totals;
+}
+
+/** On-demand production still in transit per SKU. */
+export function merchOnDemandQtyBySku(
+  merch: Pick<ClubMerchandising, "on_demand_queue">,
+): Record<MerchSkuId, number> {
+  const totals = Object.fromEntries(MERCH_SKU_IDS.map((id) => [id, 0])) as Record<
+    MerchSkuId,
+    number
+  >;
+  for (const order of merch.on_demand_queue ?? []) {
+    totals[order.sku] += order.qty;
+  }
+  return totals;
+}
+
+/** All units in transit (branding + on-demand). */
+export function merchInboundQtyBySku(
+  merch: Pick<ClubMerchandising, "branding_queue" | "on_demand_queue">,
+): Record<MerchSkuId, number> {
+  const branding = merchBrandingInboundQtyBySku(merch);
+  const onDemand = merchOnDemandQtyBySku(merch);
+  const totals = Object.fromEntries(MERCH_SKU_IDS.map((id) => [id, 0])) as Record<
+    MerchSkuId,
+    number
+  >;
+  for (const id of MERCH_SKU_IDS) {
+    totals[id] = branding[id]! + onDemand[id]!;
+  }
+  return totals;
+}
+
 /** Fan-facing VK this week (Phillip seasonal sale or active Fire Sale). */
 export function effectiveMerchCustomerRetail(
   row: MerchSkuState,
@@ -685,7 +731,15 @@ export function ensureMerchBulkMarket(
   if (
     market.refreshWeek === merch.last_market_refresh_career_week &&
     market.offers.length === merch.bulk_offers.length &&
-    market.offers.every((offer, index) => offer.id === merch.bulk_offers[index]?.id)
+    market.offers.every((offer, index) => {
+      const prev = merch.bulk_offers[index];
+      return (
+        prev != null &&
+        offer.id === prev.id &&
+        offer.ask_price === prev.ask_price &&
+        offer.expires_career_week === prev.expires_career_week
+      );
+    })
   ) {
     return stadium;
   }

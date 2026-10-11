@@ -21,8 +21,9 @@ export function hasInboxBlockerForNext(
 /** Kalender-NEXT: Spiel einleiten (Aufstellung), inkl. Fr→Sa in Spielwoche. */
 export function shouldOpenLineupFromCalendar(
   skip: SmartSkipTarget,
-  session: Pick<GameSession, "week" | "matchPlayedThisWeek">,
+  session: Pick<GameSession, "week" | "matchPlayedThisWeek" | "league">,
 ): boolean {
+  if (session.league.season_complete) return false;
   if (skip.action === "match") return true;
   if (skip.action !== "advance") return false;
   if (skip.weekday !== SATURDAY) return false;
@@ -34,7 +35,7 @@ export function shouldNavigateToCalendarBeforeTimeStep(
   inboxBlocked: boolean,
   session?: Pick<
     GameSession,
-    "trainingUnitsCompleted" | "storyState" | "trainingCalendarGateDone"
+    "trainingUnitsCompleted" | "storyState" | "trainingCalendarGateDone" | "league"
   >,
 ): boolean {
   if (inboxBlocked) return false;

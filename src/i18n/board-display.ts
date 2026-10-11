@@ -20,7 +20,16 @@ export function objectiveDisplayLabel(objective: BoardObjective, season: number)
       const millions = Math.round(objective.target / 100_000) / 10;
       return t("board.objective.cash", { millions, suffix });
     }
+    case "min_runway_weeks":
+      return t("board.objective.runway", { weeks: objective.target, suffix });
+    case "avg_ca_min":
+      return t("board.objective.avgCa", { target: objective.target, suffix });
+    case "goal_difference_min":
+      return t("board.objective.goalDiff", { suffix });
+    case "project":
+      return objective.label;
   }
+  return objective.label;
 }
 
 export function formatObjectiveProgressDisplay(
@@ -36,5 +45,18 @@ export function formatObjectiveProgressDisplay(
       const millions = progress.current / 1_000_000;
       return `€ ${millions.toFixed(1)}M`;
     }
+    case "min_runway_weeks":
+      return t("board.progress.weeks", { value: progress.current });
+    case "avg_ca_min":
+      return t("board.progress.avgCa", { value: progress.current });
+    case "goal_difference_min":
+      return progress.current > 0
+        ? t("board.progress.goalDiffPlus", { value: progress.current })
+        : String(progress.current);
+    case "project":
+      return objective.projectId === "merch_revenue"
+        ? t("board.progress.percent", { value: progress.current })
+        : String(progress.current);
   }
+  return String(progress.current);
 }

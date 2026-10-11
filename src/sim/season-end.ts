@@ -31,6 +31,7 @@ import {
   type YouthCamp,
 } from "../youth/satellite-camps.ts";
 import { evaluateSeasonObjectives, startBoardSeason } from "../board/season-objectives.ts";
+import { weeklyWageBill } from "../economy/club-finances.ts";
 import { applySeasonEndFinances } from "../economy/club-finances.ts";
 import type { SeasonObjectiveEvaluation } from "../board/board-state.ts";
 import { expireSponsorDeals } from "../stadium/sponsor-deals.ts";
@@ -102,6 +103,7 @@ export function runSeasonEnd(
     endingSeason,
     session.masterSeed,
     idStart + intake.length,
+    facility,
   );
   const players = refreshAllMarketValues(
     [...preContractStep.players, ...intake, ...campIntake],
@@ -114,16 +116,30 @@ export function runSeasonEnd(
     SEASON_END_WEEK,
     session.stadium,
   );
+  const boardCtx = {
+    players: session.players,
+    clubId: session.clubId,
+    stadium: session.stadium,
+    youthCamps: session.youthCamps,
+    weeklyWageBill: weeklyWageBill(session.players, session.clubId),
+  };
   const boardStep = evaluateSeasonObjectives(
     session.board,
     session.league,
     financesAfterPrizes,
     endingSeason,
+    boardCtx,
   );
   let finances = boardStep.finances;
   let board = boardStep.board;
   if (!boardStep.evaluation.dismissed) {
-    board = startBoardSeason(board, board.employer_club_id, session.season);
+    board = startBoardSeason(
+      board,
+      board.employer_club_id,
+      session.season,
+      session.league,
+      session,
+    );
   }
   let transferState = preContractStep.transferState;
   for (const record of loanReturns) {
@@ -194,6 +210,7 @@ function generateCampIntakes(
   endingSeason: number,
   masterSeed: number,
   idStart: number,
+  facility: AcademyFacility,
 ) {
   const players: Player[] = [];
   let cursor = idStart;
@@ -207,7 +224,7 @@ function generateCampIntakes(
       clubId,
       nationality: nation.code,
       region: nation.region,
-      facility: "academy_basic",
+      facility,
       idStart: cursor,
       random: mulberry32(masterSeed ^ endingSeason ^ cursor),
       count: campIntakeCountForCamp(camp),

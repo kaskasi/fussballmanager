@@ -40,7 +40,7 @@ function minimalTreterSession(overrides: Partial<GameSession> = {}): GameSession
     },
     stadium: {},
     clubEvents: [],
-    pipeline: {} as GameSession["pipeline"],
+    rivalBreakoutNarratives: [],
     merchandising: {},
     narrative: {},
     rng: {},

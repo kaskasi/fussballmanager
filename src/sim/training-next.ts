@@ -47,9 +47,10 @@ export function isTrainingCalendarGatePending(
 export function isTrainingNextActive(
   session: Pick<
     GameSession,
-    "trainingUnitsCompleted" | "storyState" | "trainingCalendarGateDone"
+    "trainingUnitsCompleted" | "storyState" | "trainingCalendarGateDone" | "league"
   >,
 ): boolean {
+  if (session.league.season_complete) return false;
   if (isTrainingCalendarGatePending(session)) return false;
   return usesTrainingNextNexus(session.storyState) && session.trainingUnitsCompleted < SLOT_COUNT;
 }

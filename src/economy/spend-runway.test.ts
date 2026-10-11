@@ -2,6 +2,7 @@ import { NORDSTERN_ID } from "@fussballmanager/shared";
 import { describe, expect, it } from "vitest";
 import { defaultBoardState } from "../board/board-state.ts";
 import { startBoardSeason } from "../board/season-objectives.ts";
+import { newGameSession } from "../persistence/game-session.ts";
 import { defaultClubFinances } from "./club-finances.ts";
 import {
   boardCashFloor,
@@ -18,9 +19,12 @@ describe("spend runway", () => {
   });
 
   it("flags a buy that would miss the board cash floor", () => {
-    const board = startBoardSeason(defaultBoardState(), NORDSTERN_ID, 1);
+    const session = newGameSession();
+    const board = startBoardSeason(defaultBoardState(), NORDSTERN_ID, 1, session.league, session);
     const floor = boardCashFloor(board);
-    expect(floor).toBe(3_500_000);
+    const cashTarget = board.objectives.find((objective) => objective.kind === "min_cash")?.target ?? 0;
+    expect(floor).toBe(cashTarget);
+    if (floor <= 0) return;
     const runway = spendRunway(defaultClubFinances(), 50_000, 2_500_000, floor);
     expect(runway.belowFloor).toBe(true);
     expect(runway.cashAfter).toBe(defaultClubFinances().cash - 2_500_000);

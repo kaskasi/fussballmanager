@@ -1,6 +1,7 @@
 import { NORDSTERN_ID } from "@fussballmanager/shared";
 import { describe, expect, it } from "vitest";
 import { generateSeasonObjectives } from "../board/season-objectives.ts";
+import { defaultLeagueState } from "../persistence/league-state.ts";
 import {
   applySurvivalObjectivesToBoard,
   isInRelegationZone,
@@ -10,7 +11,7 @@ import {
 describe("survival season objectives", () => {
   it("replaces league place goal with klassenerhalt target", () => {
     const objectives = applySurvivalObjectivesToBoard(
-      generateSeasonObjectives(NORDSTERN_ID, 1),
+      generateSeasonObjectives(NORDSTERN_ID, 1, defaultLeagueState(), { avg_ca: 70 }),
       1,
       NORDSTERN_ID,
     );

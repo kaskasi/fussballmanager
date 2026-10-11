@@ -212,10 +212,75 @@ main.pipeline.club-shell-card-body {
   background: transparent;
 }
 
-.app-nav-cash-wrap {
+.app-nav-trailing-cluster {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.app-nav-status-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cash-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  margin: 0;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  border: 0;
+  background: var(--panel, #fff);
+  color: var(--tinte, #0f172a);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  box-shadow: 0 0 0 1px rgb(62 49 40 / 12%);
+  transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+  cursor: default;
+}
+
+button.cash-chip {
+  cursor: pointer;
+}
+
+button.cash-chip:hover {
+  background: color-mix(in srgb, var(--panel) 92%, var(--tinte-weich));
+}
+
+.cash-chip strong {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cash-chip.is-warn {
+  color: var(--warn, #c2410c);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--warn, #c2410c) 35%, transparent);
+}
+
+.cash-chip.is-pulse-down,
+.cash-chip.is-pulse-up {
+  font-weight: 800;
+}
+
+.cash-chip.is-pulse-down strong,
+.cash-chip.is-pulse-up strong {
+  font-weight: 800;
+}
+
+.cash-chip.is-pulse-down {
+  background: #fff7ed;
+  color: #9a3412;
+  box-shadow: 0 0 0 2px rgb(234 88 12 / 35%);
+}
+
+.cash-chip.is-pulse-up {
+  background: #ecfdf5;
+  color: #047857;
+  box-shadow: 0 0 0 2px rgb(4 120 87 / 35%);
 }
 
 .app-nav-training-warn {
@@ -238,15 +303,6 @@ main.pipeline.club-shell-card-body {
 .app-nav-training-warn:focus-visible {
   outline: 2px solid var(--tinte);
   outline-offset: 2px;
-}
-
-.app-nav-cash {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--tinte);
-  white-space: nowrap;
 }
 
 .app-nav-menu .row-menu-trigger.app-nav-menu-trigger {
@@ -1904,6 +1960,26 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   font-weight: 700;
   min-width: 10rem;
   text-align: center;
+}
+
+.calendar-playtest-row {
+  margin: -0.35rem 0 0.75rem;
+  text-align: center;
+}
+
+.calendar-playtest-ff {
+  border: 1px dashed var(--tinte-weich);
+  border-radius: var(--radius-klein);
+  background: var(--panel-muted);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.calendar-playtest-ff:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }
 
 /* §9.12 Jugend */

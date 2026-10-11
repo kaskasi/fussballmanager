@@ -20,6 +20,14 @@ describe("training NEXT nexus", () => {
     expect(isTrainingNextActive(session)).toBe(true);
   });
 
+  it("is inactive after the league season is complete", () => {
+    const session = newGameSession();
+    session.storyState = fullGameStoryState(normalizeStoryState(session.storyState, 1));
+    session.trainingCalendarGateDone = true;
+    session.league.season_complete = true;
+    expect(isTrainingNextActive(session)).toBe(false);
+  });
+
   it("waits for calendar gate before unit NEXT", () => {
     const session = newGameSession();
     session.storyState = fullGameStoryState(normalizeStoryState(session.storyState, 1));

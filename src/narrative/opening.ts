@@ -1,5 +1,6 @@
 import type { BoardState } from "../board/board-state.ts";
 import type { GameSession } from "../persistence/game-session.ts";
+import { defaultLeagueState } from "../persistence/league-state.ts";
 import { startBoardSeason } from "../board/season-objectives.ts";
 import { generateStoryCast } from "./cast.ts";
 import { applyChronicleEntry } from "./apply.ts";
@@ -55,7 +56,12 @@ export function initializeStoryForNewGame(
 }
 
 export function boardWithSurvivalArc(board: BoardState, season: number): BoardState {
-  const started = startBoardSeason(board, board.employer_club_id, season);
+  const started = startBoardSeason(
+    board,
+    board.employer_club_id,
+    season,
+    defaultLeagueState(),
+  );
   return {
     ...started,
     objectives: applySurvivalObjectivesToBoard(started.objectives, season, board.employer_club_id),

@@ -279,7 +279,15 @@ export function PipelineDashboard({
         <div className="hub-col-context">
           <p className="hub-col-label">{t("hub.column.context")}</p>
           {showObjectives ? (
-            <BoardObjectivesPanel board={board} league={league} finances={finances} season={season} />
+            <BoardObjectivesPanel
+              board={board}
+              league={league}
+              finances={finances}
+              season={season}
+              players={players}
+              clubId={clubId}
+              youthCamps={youthCamps}
+            />
           ) : null}
           <DevelopmentHubPanel movers={developmentMovers} onSelectPlayer={onSelectPlayer} />
           <TransferHubPanel

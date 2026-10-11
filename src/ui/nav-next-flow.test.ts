@@ -31,6 +31,17 @@ describe("nav-next-flow", () => {
     expect(shouldOpenLineupFromCalendar(advanceSa, session)).toBe(true);
   });
 
+  it("does not open lineup when the league season is complete", () => {
+    const session = newGameSession();
+    session.week = 16;
+    session.weekday = SATURDAY;
+    session.matchPlayedThisWeek = false;
+    session.league.season_complete = true;
+    const skip = resolveSmartSkip(session, false);
+    expect(skip.action).toBe("advance");
+    expect(shouldOpenLineupFromCalendar(skip, session)).toBe(false);
+  });
+
   it("does not open lineup on advance to non-match Saturday", () => {
     const session = newGameSession();
     session.week = 35;

@@ -6,6 +6,7 @@ import { clubLogoUrlForId } from "../assets/club-logo.ts";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { sessionMonthIndex } from "../../sim/session-civil-date.ts";
+import { civilDateEndOfMonth, hasReachedFastForwardTarget } from "../../sim/fast-forward-to-month.ts";
 import { buildMonthGrid } from "../calendar/month-grid.ts";
 import type { CalendarMilestone } from "../calendar/calendar-milestones.ts";
 import { formatCalendarWeekDisplay, weekdayShortDisplay } from "../../i18n/calendar-display.ts";
@@ -23,6 +24,7 @@ import {
   countActiveScoutTrips,
 } from "../../scouting/scout-calendar-day.ts";
 import { calendarGridYear } from "../../sim/session-civil-date.ts";
+import { isPlaytestShortcutsEnabled } from "../playtest-flags.ts";
 
 const MONTH_KEYS = [
   "calendar.month.january",
@@ -50,6 +52,8 @@ export function CalendarScreen({
   scoutNetwork,
   onStartOpponentScout,
   onViewOpponentScoutReport,
+  onFastForwardToMonth,
+  fastForwardBusy = false,
 }: {
   season: number;
   week: number;
@@ -61,6 +65,8 @@ export function CalendarScreen({
   scoutNetwork?: ScoutNetworkState;
   onStartOpponentScout?: () => void;
   onViewOpponentScoutReport?: (postfachItemId: string) => void;
+  onFastForwardToMonth?: (monthIndex: number) => void;
+  fastForwardBusy?: boolean;
 }) {
   const t = useT();
   const [monthIndex, setMonthIndex] = useState(() => sessionMonthIndex(season, week, weekday));
@@ -82,6 +88,12 @@ export function CalendarScreen({
     [activeTrips, season, week],
   );
   const gridYear = calendarGridYear(season, monthIndex);
+  const monthTargetReached = hasReachedFastForwardTarget(
+    season,
+    week,
+    weekday,
+    civilDateEndOfMonth(season, monthIndex),
+  );
 
   useEffect(() => {
     todayCellRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
@@ -111,6 +123,26 @@ export function CalendarScreen({
             ▶
           </button>
         </nav>
+        {isPlaytestShortcutsEnabled() && onFastForwardToMonth ? (
+          <p className="calendar-playtest-row">
+            <button
+              type="button"
+              className="calendar-playtest-ff"
+              disabled={fastForwardBusy || monthTargetReached}
+              onClick={() => onFastForwardToMonth(monthIndex)}
+            >
+              {fastForwardBusy
+                ? t("calendar.fastForward.busy")
+                : monthTargetReached
+                  ? t("calendar.fastForward.alreadyThere", {
+                      month: t(MONTH_KEYS[monthIndex] ?? "calendar.month.january"),
+                    })
+                  : t("calendar.fastForward.toMonth", {
+                      month: t(MONTH_KEYS[monthIndex] ?? "calendar.month.january"),
+                    })}
+            </button>
+          </p>
+        ) : null}
         {weekday === MONDAY ? (
           <p className="calendar-context-kicker">{t("calendar.mondayRevealKicker")}</p>
         ) : null}

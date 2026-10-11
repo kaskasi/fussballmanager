@@ -1,4 +1,4 @@
-import { NORDSTERN_ID, asTeamId } from "@fussballmanager/shared";
+import { NORDSTERN_ID, asPlayerId, asTeamId } from "@fussballmanager/shared";
 import { describe, expect, it } from "vitest";
 import { defaultLeagueState, totalSeasonMatchdays } from "../persistence/league-state.ts";
 import {
@@ -68,7 +68,7 @@ describe("league week", () => {
       matchday: league.matchday,
       playerClubStats: [
         {
-          playerId: "pl_test_striker",
+          playerId: asPlayerId("pl_test_striker"),
           teamId: league.player_club_id,
           name: "Test Striker",
           goals: 4,
@@ -78,7 +78,7 @@ describe("league week", () => {
       ],
       fixtureStats: [
         {
-          playerId: "pl_test_striker",
+          playerId: asPlayerId("pl_test_striker"),
           teamId: scheduled!.homeTeamId,
           name: "Test Striker",
           goals: scheduled!.homeTeamId === league.player_club_id ? 4 : 0,
@@ -86,7 +86,7 @@ describe("league week", () => {
           yellowCards: 0,
         },
         {
-          playerId: "pl_opp",
+          playerId: asPlayerId("pl_opp"),
           teamId: scheduled!.awayTeamId,
           name: "Opponent",
           goals: scheduled!.awayTeamId === league.player_club_id ? 4 : 0,

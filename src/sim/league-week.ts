@@ -22,7 +22,7 @@ import {
 import type { Player } from "../types/player.ts";
 import { careerEngineSquadFromPlayers } from "./career-engine-squad.ts";
 import { isLeagueMatchWeek } from "./game-calendar.ts";
-import { clubShortLabel, squadForLeagueClub } from "./league-divisions.ts";
+import { clubShortLabel, squadForLeagueClub, templateSquadForClub } from "./league-divisions.ts";
 import type { WorldClub } from "../world/world-generator.ts";
 import type { WatchedPlayerMatch } from "./watched-player-match.ts";
 import { assertFixtureStatsConsistent } from "./league-player-stats-integrity.ts";
@@ -261,8 +261,9 @@ export async function fetchMatchdayPayload(
   playerClubSquad?: Squad,
   rivalPlayers?: readonly Player[],
 ): Promise<MatchdayPayload> {
-  const squads = clubIds.map((teamId) =>
-    squadForTeam(teamId, playerClubSquad, rivalPlayers),
+  const squads = clubIds.map(
+    (teamId) =>
+      squadForTeam(teamId, playerClubSquad, rivalPlayers) ?? templateSquadForClub(teamId),
   );
   if (squads.some((squad) => squad === undefined)) {
     throw new Error("Generated league squad is missing");

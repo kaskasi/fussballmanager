@@ -66,6 +66,7 @@ import {
 import type { ScoutRouteScore } from "./scouting/scout-route-puzzle.ts";
 import { worldCareerClubId, type WorldDivisionId } from "./world/world-generator.ts";
 import { ArrowLeft, HeartPulse, Package, TriangleAlert } from "lucide-react";
+import { CashChip } from "./ui/components/CashChip.tsx";
 import { ClubCrest } from "./ui/components/ClubCrest.tsx";
 import { clubLogoUrlForPlayerClub } from "./ui/assets/club-logo.ts";
 import { joinDocumentTitle, useDocumentTitle } from "./ui/document-title.ts";
@@ -89,6 +90,10 @@ import {
 } from "./ui/nav-next-flow.ts";
 import { formatSeasonLabel } from "./sim/season-label.ts";
 import { simulateGameWeek } from "./sim/week-pipeline.ts";
+import {
+  fastForwardToMonthEnd,
+  sessionAfterWeekSimulation,
+} from "./sim/fast-forward-to-month.ts";
 import {
   isTrainingCalendarGatePending,
   isTrainingNextActive,
@@ -197,6 +202,12 @@ import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
 import { standings, type SandboxPlan, type TeamId } from "@fussballmanager/shared";
 import { listJobOffers } from "./board/job-offers.ts";
 import { switchManagerClub } from "./board/manager-club-switch.ts";
+import {
+  applyCompanionPick,
+  enqueueCompanionPickInbox,
+  isCompanionPickBeat,
+  pickCompanionCandidates,
+} from "./board/companion-pick.ts";
 import { startBoardSeason } from "./board/season-objectives.ts";
 import {
   applyScoutPlanToMatchLineup,
@@ -468,7 +479,16 @@ export default function App() {
   const careerMatchFlowRef = useRef(false);
   const setMatchNavAction = useCallback((action: NavPrimaryAction | null) => {
     matchNavActionRef.current = action;
-    setMatchNavActionState(action);
+    setMatchNavActionState((prev) => {
+      const same =
+        prev === action ||
+        (prev != null &&
+          action != null &&
+          prev.label === action.label &&
+          prev.disabled === action.disabled &&
+          prev.title === action.title);
+      return same ? prev : action;
+    });
   }, []);
   const [matchSkipToReport, setMatchSkipToReport] = useState<(() => void) | null>(null);
   /** Store skip handler in state — never pass it raw to setState (React treats functions as updaters). */
@@ -567,7 +587,7 @@ export default function App() {
     }
   }, [screen]);
 
-  const session = sessionFromSave(save);
+  const session = useMemo(() => sessionFromSave(save), [save]);
   const {
     season,
     week,
@@ -670,7 +690,9 @@ export default function App() {
     let persisted = true;
     let nextSave: SaveGame | null = null;
     setSave((current) => {
-      nextSave = saveFromSession(recipe(sessionFromSave(current)), current);
+      const before = sessionFromSave(current, { refreshMarketValues: false });
+      const after = recipe(before);
+      nextSave = saveFromSession(after, current);
       persisted = tryWriteLocalSave(activeSlot, nextSave);
       return nextSave;
     });
@@ -984,6 +1006,159 @@ export default function App() {
     [],
   );
 
+  const CALENDAR_MONTH_KEYS = [
+    "calendar.month.january",
+    "calendar.month.february",
+    "calendar.month.march",
+    "calendar.month.april",
+    "calendar.month.may",
+    "calendar.month.june",
+    "calendar.month.july",
+    "calendar.month.august",
+    "calendar.month.september",
+    "calendar.month.october",
+    "calendar.month.november",
+    "calendar.month.december",
+  ] as const;
+
+  const handleFastForwardToMonth = useCallback(
+    async (targetMonthIndex: number) => {
+      if (simulating) return;
+      setSimulating(true);
+      try {
+        const snapshot = sessionFromSave(save);
+        const advanceSessionDays = (
+          current: typeof snapshot,
+          daysAdvanced: number,
+          targetWeekday: number,
+        ) => {
+          const now = {
+            season: current.season,
+            week: current.week,
+            weekday: targetWeekday,
+          };
+          let next = {
+            ...current,
+            weekday: targetWeekday,
+            youthInbox: deliverInboxForDays(
+              current.youthInbox,
+              {
+                season: current.season,
+                week: current.week,
+                weekday: current.weekday,
+                masterSeed: current.masterSeed,
+              },
+              daysAdvanced,
+              current.players,
+            ),
+            youthCamps: tickCampLeaderHires(current.youthCamps, now),
+            scoutBoard: advanceScoutBoardForSession(current, targetWeekday),
+          };
+          next = tickMedicalSessionDays(next, daysAdvanced);
+          return applyTuesdayKickerDelivery(next);
+        };
+        const simulateWeekForFastForward = async (current: typeof snapshot) => {
+          const result = await simulateGameWeek(current);
+          let next = sessionAfterWeekSimulation(result.session);
+          const weekStamp = {
+            season: next.season,
+            week: next.week,
+            weekday: MONDAY,
+          };
+          next = {
+            ...next,
+            trainingCalendarGateDone: !resolveFeatureCurtain(next.storyState).auto_training
+              ? false
+              : true,
+            youthInbox: deliverDailyInbox(
+              next.youthInbox,
+              {
+                season: next.season,
+                week: next.week,
+                weekday: MONDAY,
+                masterSeed: next.masterSeed,
+              },
+              next.players,
+            ),
+            youthCamps: tickCampLeaderHires(next.youthCamps, weekStamp),
+          };
+          return next;
+        };
+        const outcome = await Promise.race([
+          fastForwardToMonthEnd(snapshot, targetMonthIndex, {
+            simulateWeek: simulateWeekForFastForward,
+            advanceSessionDays,
+            onProgress: async (sessionAfterStep) => {
+              await new Promise<void>((resolve) => {
+                window.setTimeout(resolve, 0);
+              });
+              setSave((current) => saveFromSession(sessionAfterStep, current));
+            },
+          }),
+          new Promise<never>((_, reject) => {
+            window.setTimeout(
+              () => reject(new Error("Fast-forward timeout (90s)")),
+              90_000,
+            );
+          }),
+        ]);
+        const monthLabel = t(
+          CALENDAR_MONTH_KEYS[targetMonthIndex] ?? "calendar.month.january",
+        );
+        let weekSimPersisted = true;
+        setSave((current) => {
+          const next = saveFromSession(outcome.session, current);
+          weekSimPersisted = tryWriteLocalSave(activeSlot, next);
+          return next;
+        });
+        if (weekSimPersisted) {
+          flashSaveToast();
+        } else {
+          flashNotice(t("shell.saveWriteFailed"), "warn");
+        }
+        if (outcome.reason === "reached") {
+          flashNotice(
+            t("calendar.fastForward.done", {
+              month: monthLabel,
+              steps: String(outcome.steps),
+            }),
+            "ok",
+          );
+        } else if (outcome.reason === "training_plan") {
+          flashNotice(t("calendar.fastForward.trainingPlan"), "warn");
+        } else if (outcome.reason === "season_complete") {
+          flashNotice(t("calendar.fastForward.seasonComplete"), "warn");
+        } else if (outcome.reason === "limit") {
+          flashNotice(
+            t("calendar.fastForward.limit", { steps: String(outcome.steps) }),
+            "warn",
+          );
+        } else if (outcome.reason === "stall") {
+          flashNotice(t("calendar.fastForward.stall"), "warn");
+        }
+      } catch (error) {
+        console.error("Fast-forward failed", error);
+        const detail = error instanceof Error ? error.message : String(error);
+        flashNotice(
+          import.meta.env.DEV
+            ? `${t("shell.weekSimFailed")} (${detail})`
+            : t("shell.weekSimFailed"),
+          "warn",
+        );
+      } finally {
+        setSimulating(false);
+      }
+    },
+    [
+      activeSlot,
+      advanceScoutBoardForSession,
+      flashNotice,
+      flashSaveToast,
+      save,
+      simulating,
+    ],
+  );
+
   const handleStartOpponentScout = useCallback(() => {
     const setup = prepareCareerMatch(session);
     if (!setup) {
@@ -1202,8 +1377,8 @@ export default function App() {
         setCareerMatchUiVisible(true);
         setCareerMatchSetup(setup);
         setScreen("hub");
+        return;
       }
-      return;
     }
 
     if (skip.action === "simulate_week") {
@@ -1277,6 +1452,8 @@ export default function App() {
 
   useEffect(() => {
     if (screen !== "medical") return;
+    const stamp = session.medicalState.physio_auto_week;
+    if (stamp?.season === season && stamp?.week === week) return;
     patchSession((current) => {
       const level = precinctMedicalCenterLevel(current.stadium.precinct);
       const medicalState = ensurePhysioWeek(
@@ -1289,7 +1466,14 @@ export default function App() {
       if (medicalState === current.medicalState) return current;
       return { ...current, medicalState };
     });
-  }, [patchSession, screen, season, week]);
+  }, [
+    patchSession,
+    screen,
+    season,
+    week,
+    session.medicalState.physio_auto_week?.season,
+    session.medicalState.physio_auto_week?.week,
+  ]);
 
   useEffect(() => {
     if (!trainingAutoNext || simulating) return;
@@ -1364,6 +1548,8 @@ export default function App() {
               board: applied.board ?? next.board,
               players: applied.players ?? next.players,
             };
+          } else if (choiceId && item.narrative && isCompanionPickBeat(item.narrative.beatId)) {
+            next = applyCompanionPick(next, choiceId);
           } else if (choiceId) {
             next = resolveStoryInboxDecision(next, item, choiceId);
           }
@@ -1651,19 +1837,39 @@ export default function App() {
           (entry) => entry.clubId === clubId,
         );
         const bonus = offer?.signingBonus ?? 0;
+        const oldTeamId = current.league.player_club_id;
+        const oldCareerId = current.clubId;
+        const oldPros = current.players.filter(
+          (player) => player.squad_status === "pro" && player.club_id === oldCareerId,
+        );
+        const companions = pickCompanionCandidates(
+          oldPros,
+          current.masterSeed,
+          oldTeamId,
+          current.season,
+        );
         const nextBoard = startBoardSeason(
           { ...current.board, job_status: "employed", pressure: 0 },
           clubId,
           current.season,
+          current.league,
+          current,
         );
-        const switched = switchManagerClub(
+        let switched = switchManagerClub(
           {
             ...current,
             board: nextBoard,
-            finances: { ...current.finances, cash: current.finances.cash + bonus },
           },
           clubId,
         );
+        switched = {
+          ...switched,
+          finances: {
+            ...switched.finances,
+            cash: switched.finances.cash + bonus,
+          },
+          youthInbox: enqueueCompanionPickInbox(switched.youthInbox, switched.week, companions, oldTeamId),
+        };
         return sessionWithEvent(
           switched,
           "info",
@@ -1693,13 +1899,37 @@ export default function App() {
 
   const handleMerchandisingChange = useCallback(
     (next: typeof stadium) => {
-      patchSession((current) => ({
-        ...current,
-        stadium: normalizeClubStadium(next),
-      }));
+      patchSession((current) => {
+        if (next === current.stadium) return current;
+        return { ...current, stadium: next };
+      });
     },
     [patchSession],
   );
+
+  const merchSyncStampRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (screen !== "merchandising") return;
+    const stamp = `${season}-${week}-${weekday}`;
+    if (merchSyncStampRef.current === stamp) return;
+    merchSyncStampRef.current = stamp;
+    patchSession((current) => {
+      let nextStadium = deliverMerchandisingOrders(
+        current.stadium,
+        current.season,
+        current.week,
+        current.weekday,
+      );
+      nextStadium = ensureMerchBulkMarket(
+        nextStadium,
+        current.season,
+        current.week,
+        current.masterSeed,
+      );
+      if (nextStadium === current.stadium) return current;
+      return { ...current, stadium: nextStadium };
+    });
+  }, [screen, season, week, weekday, patchSession]);
 
   const handleMerchBulkPurchase = useCallback(
     (offerId: string) => {
@@ -1977,6 +2207,7 @@ export default function App() {
             week: current.week,
             masterSeed: current.masterSeed,
             players: current.players,
+            facility: current.academyFacility,
           });
           if (opening.headlinePlayerId) {
             campDebutAfterSpendRef.current = {
@@ -2907,7 +3138,8 @@ export default function App() {
   );
 
   useEffect(() => {
-    if (!isNavScreenVisible(screen as CurtainNavScreen, storyState)) {
+    const visible = isNavScreenVisible(screen as CurtainNavScreen, storyState);
+    if (!visible) {
       setScreen("hub");
     }
   }, [screen, storyState]);
@@ -3138,7 +3370,6 @@ export default function App() {
           weekday={weekday}
           trainingPlan={trainingPlan}
           storyState={storyState}
-          cash={finances.cash}
           stadium={stadium}
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
@@ -3151,6 +3382,9 @@ export default function App() {
           onAccessibilityChange={setAccessibility}
           shellChrome="plain"
           medicalAttentionCount={medicalAttentionCount}
+          cash={finances.cash}
+          boardCashFloor={boardCashFloor(board)}
+          weeklyWageBill={weeklyWageBill(players, session.clubId)}
         />
         <CareerMatch
           setup={careerMatchSetup}
@@ -3209,7 +3443,6 @@ export default function App() {
           weekday={weekday}
           trainingPlan={trainingPlan}
           storyState={storyState}
-          cash={finances.cash}
           stadium={stadium}
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
@@ -3223,6 +3456,9 @@ export default function App() {
           accessibility={accessibility}
           onAccessibilityChange={setAccessibility}
           medicalAttentionCount={medicalAttentionCount}
+          cash={finances.cash}
+          boardCashFloor={boardCashFloor(board)}
+          weeklyWageBill={weeklyWageBill(players, session.clubId)}
         />
         <PlayerProfile
           player={foreignView.player}
@@ -3280,7 +3516,6 @@ export default function App() {
           weekday={weekday}
           trainingPlan={trainingPlan}
           storyState={storyState}
-          cash={finances.cash}
           stadium={stadium}
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
@@ -3297,6 +3532,9 @@ export default function App() {
           accessibility={accessibility}
           onAccessibilityChange={setAccessibility}
           medicalAttentionCount={medicalAttentionCount}
+          cash={finances.cash}
+          boardCashFloor={boardCashFloor(board)}
+          weeklyWageBill={weeklyWageBill(players, session.clubId)}
         />
         <PlayerProfile
           player={profilePlayer}
@@ -3354,7 +3592,6 @@ export default function App() {
         weekday={weekday}
         trainingPlan={trainingPlan}
         storyState={storyState}
-        cash={finances.cash}
         stadium={stadium}
         clubName={shellClub.name}
         clubInitials={shellClub.initials}
@@ -3368,6 +3605,9 @@ export default function App() {
         onAccessibilityChange={setAccessibility}
         shellChrome="card"
         medicalAttentionCount={medicalAttentionCount}
+        cash={finances.cash}
+        boardCashFloor={boardCashFloor(board)}
+        weeklyWageBill={weeklyWageBill(players, session.clubId)}
       />
       {screen === "hub" ? (
         <PipelineDashboard
@@ -3473,7 +3713,6 @@ export default function App() {
           clubId={session.clubId}
           coachingStaff={coachingStaff}
           masterSeed={masterSeed}
-          cash={finances.cash}
           onHireCoach={handleHireCoach}
           assistantName={storyState.cast.assistant_name}
           assistantDelegation={assistantDelegation}
@@ -3513,13 +3752,13 @@ export default function App() {
           stadiumCapacity={stadiumTotalCapacity(stadium)}
           season={season}
           week={week}
+          cash={finances.cash}
           clubId={session.clubId}
           trainingPlan={trainingPlan}
           individualPrograms={individualPrograms}
           academyFacility={academyFacility}
           youthCamps={youthCamps}
           masterSeed={session.masterSeed}
-          cash={finances.cash}
           onSelectPlayer={setProfileId}
           campusTab={campusTab}
           onCampusTabChange={setCampusTab}
@@ -3537,6 +3776,7 @@ export default function App() {
       ) : null}
       {screen === "scouting" ? (
         <ScoutingCenter
+          cash={finances.cash}
           targets={listBoardTargets(scoutBoard, rivalPlayers, world.clubs)}
           rivalPlayers={rivalPlayers}
           worldClubs={world.clubs}
@@ -3568,7 +3808,6 @@ export default function App() {
           season={season}
           week={week}
           masterSeed={masterSeed}
-          cash={finances.cash}
           onHireScout={handleHireScout}
           onFireScout={handleFireScout}
           shortlistIds={transferState.shortlist}
@@ -3602,7 +3841,6 @@ export default function App() {
           trainingIntensity={trainingIntensity}
           coachingStaff={coachingStaff}
           masterSeed={masterSeed}
-          cash={finances.cash}
           onHireCoach={handleHireCoach}
           assistantName={storyState.cast.assistant_name}
           assistantDelegation={assistantDelegation}
@@ -3620,8 +3858,8 @@ export default function App() {
           stadium={stadium}
           season={season}
           week={week}
-          masterSeed={masterSeed}
           cash={finances.cash}
+          masterSeed={masterSeed}
           medicalStaff={medicalStaff}
           medicalState={medicalState}
           orthopedistHire={orthopedistHire}
@@ -3735,6 +3973,8 @@ export default function App() {
           scoutNetwork={scoutNetwork}
           onStartOpponentScout={handleStartOpponentScout}
           onViewOpponentScoutReport={handleOpenOpponentScoutReport}
+          onFastForwardToMonth={handleFastForwardToMonth}
+          fastForwardBusy={simulating}
         />
       ) : null}
       {clubProfileId && screen !== "leagues" ? (
@@ -3789,7 +4029,6 @@ function AppChrome({
   weekday,
   trainingPlan,
   storyState,
-  cash,
   stadium,
   clubName,
   clubInitials,
@@ -3805,14 +4044,19 @@ function AppChrome({
   onAccessibilityChange,
   shellChrome = "card",
   medicalAttentionCount = 0,
+  cash = 0,
+  boardCashFloor = 0,
+  weeklyWageBill = 0,
 }: {
   week: number;
   weekday: number;
   trainingPlan: TrainingSlot[];
   storyState: StoryState;
-  cash: number;
   stadium: ClubStadium;
   medicalAttentionCount?: number;
+  cash?: number;
+  boardCashFloor?: number;
+  weeklyWageBill?: number;
   clubName: string;
   clubInitials: string;
   clubLogoSrc?: string;
@@ -3831,7 +4075,6 @@ function AppChrome({
     <>
       <AppNav
         screen={screen}
-        cash={cash}
         stadium={stadium}
         weekday={weekday}
         trainingPlan={trainingPlan}
@@ -3850,6 +4093,9 @@ function AppChrome({
         shellChrome={shellChrome}
         week={week}
         medicalAttentionCount={medicalAttentionCount}
+        cash={cash}
+        boardCashFloor={boardCashFloor}
+        weeklyWageBill={weeklyWageBill}
       />
     </>
   );
@@ -3861,7 +4107,6 @@ function AppNav({
   weekday,
   trainingPlan,
   storyState,
-  cash,
   stadium,
   clubName,
   clubInitials,
@@ -3876,15 +4121,20 @@ function AppNav({
   onAccessibilityChange,
   shellChrome = "card",
   medicalAttentionCount = 0,
+  cash = 0,
+  boardCashFloor = 0,
+  weeklyWageBill = 0,
 }: {
   screen: Screen;
   week: number;
   weekday: number;
   trainingPlan: TrainingSlot[];
   storyState: StoryState;
-  cash: number;
   stadium: ClubStadium;
   medicalAttentionCount?: number;
+  cash?: number;
+  boardCashFloor?: number;
+  weeklyWageBill?: number;
   clubName: string;
   clubInitials: string;
   clubLogoSrc?: string;
@@ -3908,6 +4158,14 @@ function AppNav({
     needsTrainingPlanForToday(trainingPlan, weekday);
   const showMerchStockoutWarn = hasMerchStockout(stadium);
   const showMedicalWarn = medicalAttentionCount > 0;
+  const runwayWeeks = weeksOfWages(cash, weeklyWageBill);
+  const showCashWarn =
+    (boardCashFloor > 0 && cash < boardCashFloor) ||
+    (weeklyWageBill > 0 && runwayWeeks != null && runwayWeeks < 4);
+  const cashChipWarn =
+    boardCashFloor > 0 && cash < boardCashFloor
+      ? true
+      : weeklyWageBill > 0 && runwayWeeks != null && runwayWeeks < 4;
   useEffect(() => {
     if (!menuOpen) return;
     function handlePointer(event: MouseEvent) {
@@ -3975,44 +4233,6 @@ function AppNav({
       </div>
       <div className="app-nav-center" aria-live="polite" />
       <div className="app-nav-actions">
-        <div className="app-nav-cash-wrap">
-          {showTrainingPlanWarn ? (
-            <button
-              type="button"
-              className="app-nav-training-warn"
-              onClick={() => onNavigate("training")}
-              aria-label={tr("shell.training.todayMissing")}
-              title={tr("shell.training.todayMissing")}
-            >
-              <TriangleAlert size={18} strokeWidth={2.35} aria-hidden />
-            </button>
-          ) : null}
-          {showMerchStockoutWarn ? (
-            <button
-              type="button"
-              className="app-nav-training-warn"
-              onClick={() => onNavigate("merchandising")}
-              aria-label={tr("shell.merch.stockout")}
-              title={tr("shell.merch.stockout")}
-            >
-              <Package size={18} strokeWidth={2.35} aria-hidden />
-            </button>
-          ) : null}
-          {showMedicalWarn ? (
-            <button
-              type="button"
-              className="app-nav-training-warn"
-              onClick={() => onNavigate("medical")}
-              aria-label={tr("shell.medical.attention")}
-              title={tr("shell.medical.attention")}
-            >
-              <HeartPulse size={18} strokeWidth={2.35} aria-hidden />
-            </button>
-          ) : null}
-          <span className="app-nav-cash" aria-label={tr("shell.cash")}>
-            {formatClubCash(cash)}
-          </span>
-        </div>
         {hubActions.matchSkipToReport ? (
           <button
             type="button"
@@ -4023,7 +4243,65 @@ function AppNav({
             {tr("shell.match.simulate")}
           </button>
         ) : null}
-        <div className="row-menu app-nav-menu" ref={menuRef}>
+        <div className="app-nav-trailing-cluster">
+          {showTrainingPlanWarn ||
+          showMerchStockoutWarn ||
+          showMedicalWarn ||
+          showCashWarn ? (
+            <div className="app-nav-status-wrap">
+              {showTrainingPlanWarn ? (
+                <button
+                  type="button"
+                  className="app-nav-training-warn"
+                  onClick={() => onNavigate("training")}
+                  aria-label={tr("shell.training.todayMissing")}
+                  title={tr("shell.training.todayMissing")}
+                >
+                  <TriangleAlert size={18} strokeWidth={2.35} aria-hidden />
+                </button>
+              ) : null}
+              {showMerchStockoutWarn ? (
+                <button
+                  type="button"
+                  className="app-nav-training-warn"
+                  onClick={() => onNavigate("merchandising")}
+                  aria-label={tr("shell.merch.stockout")}
+                  title={tr("shell.merch.stockout")}
+                >
+                  <Package size={18} strokeWidth={2.35} aria-hidden />
+                </button>
+              ) : null}
+              {showMedicalWarn ? (
+                <button
+                  type="button"
+                  className="app-nav-training-warn"
+                  onClick={() => onNavigate("medical")}
+                  aria-label={tr("shell.medical.attention")}
+                  title={tr("shell.medical.attention")}
+                >
+                  <HeartPulse size={18} strokeWidth={2.35} aria-hidden />
+                </button>
+              ) : null}
+              {showCashWarn ? (
+                <button
+                  type="button"
+                  className="app-nav-training-warn"
+                  onClick={() => onNavigate("finances")}
+                  aria-label={tr("shell.cash.warn")}
+                  title={tr("shell.cash.warn")}
+                >
+                  <TriangleAlert size={18} strokeWidth={2.35} aria-hidden />
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+          <CashChip
+            cash={cash}
+            compact
+            warn={cashChipWarn}
+            onClick={() => onNavigate("finances")}
+          />
+          <div className="row-menu app-nav-menu" ref={menuRef}>
           <button
             type="button"
             className="row-menu-trigger app-nav-menu-trigger"
@@ -4247,6 +4525,7 @@ function AppNav({
             ) : null}
           </span>
         </button>
+        </div>
       </div>
     </nav>
   );

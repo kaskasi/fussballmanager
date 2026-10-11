@@ -120,7 +120,6 @@ export function TrainingCenter({
   clubId,
   coachingStaff,
   masterSeed,
-  cash,
   onHireCoach,
   assistantName,
   assistantDelegation,
@@ -154,7 +153,6 @@ export function TrainingCenter({
   clubId: string;
   coachingStaff: CoachingStaff;
   masterSeed: number;
-  cash: number;
   onHireCoach: (coach: Coach) => void;
   assistantName: string;
   assistantDelegation: AssistantDelegation;

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { TreterEdition } from "../media/kicker-digest.ts";
 import {
   archiveKickerEdition,
   kickerEditionFromArchive,
@@ -6,10 +7,16 @@ import {
   sessionKickerEditionLookup,
 } from "./kicker-edition-archive.ts";
 
+const emptyLeague: TreterEdition["league"] = { matchdaysPlayed: 0, table: [], scorers: [] };
+
+function edition(partial: Omit<TreterEdition, "league">): TreterEdition {
+  return { ...partial, league: emptyLeague };
+}
+
 describe("kicker-edition-archive", () => {
   it("stores and replaces same week", () => {
-    const a = { season: 1, week: 2, masthead: "A", articles: [] };
-    const b = { season: 1, week: 2, masthead: "B", articles: [] };
+    const a = edition({ season: 1, week: 2, masthead: "A", articles: [] });
+    const b = edition({ season: 1, week: 2, masthead: "B", articles: [] });
     const once = archiveKickerEdition([], a);
     const twice = archiveKickerEdition(once, b);
     expect(twice).toHaveLength(1);
@@ -17,9 +24,12 @@ describe("kicker-edition-archive", () => {
   });
 
   it("caps archive size", () => {
-    let archive = archiveKickerEdition([], { season: 1, week: 1, masthead: "x", articles: [] });
+    let archive = archiveKickerEdition([], edition({ season: 1, week: 1, masthead: "x", articles: [] }));
     for (let week = 2; week <= MAX_KICKER_EDITION_ARCHIVE + 5; week += 1) {
-      archive = archiveKickerEdition(archive, { season: 1, week, masthead: `w${week}`, articles: [] });
+      archive = archiveKickerEdition(
+        archive,
+        edition({ season: 1, week, masthead: `w${week}`, articles: [] }),
+      );
     }
     expect(archive).toHaveLength(MAX_KICKER_EDITION_ARCHIVE);
     expect(kickerEditionFromArchive(archive, 1, 1)).toBeNull();
@@ -29,8 +39,8 @@ describe("kicker-edition-archive", () => {
   });
 
   it("prefers stored snapshot over current edition", () => {
-    const stored = { season: 1, week: 3, masthead: "stored", articles: [] };
-    const current = { season: 1, week: 3, masthead: "live", articles: [] };
+    const stored = edition({ season: 1, week: 3, masthead: "stored", articles: [] });
+    const current = edition({ season: 1, week: 3, masthead: "live", articles: [] });
     const found = sessionKickerEditionLookup([stored], current, 1, 3);
     expect(found?.masthead).toBe("stored");
   });

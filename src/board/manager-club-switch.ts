@@ -1,21 +1,27 @@
 import type { TeamId } from "@fussballmanager/shared";
 import type { GameSession } from "../persistence/game-session.ts";
+import { resetClubPipelineForTeam, seedYouthSquad } from "./club-pipeline-reset.ts";
 import { defaultLeaguePools } from "../sim/league-divisions.ts";
 import { leagueStateAfterMovement } from "../sim/promotion-relegation.ts";
 import { careerTeamId } from "../sim/rival-growth.ts";
 import { rivalPlayersForTeam } from "../sim/rival-engine-squad.ts";
 
-/** Move the manager to a new club: league id, squad, and rival pool. */
-export function switchManagerClub(session: GameSession, newTeamId: TeamId): GameSession {
+export interface SwitchManagerClubOptions {
+  /** When false, only swap squads/league (sync path). Default true for job accept. */
+  resetPipeline?: boolean;
+}
+
+/** Move the manager to a new club: league id, squad, rival pool, and club infrastructure. */
+export function switchManagerClub(
+  session: GameSession,
+  newTeamId: TeamId,
+  options?: SwitchManagerClubOptions,
+): GameSession {
   const oldTeamId = session.league.player_club_id;
   const oldCareerId = session.clubId;
   const newCareerId = careerTeamId(newTeamId);
 
   if (newTeamId === oldTeamId) return session;
-
-  const youth = session.players
-    .filter((player) => player.squad_status === "u17" || player.squad_status === "u19")
-    .map((player) => ({ ...player, club_id: newCareerId }));
 
   const oldPros = session.players.filter(
     (player) => player.squad_status === "pro" && player.club_id === oldCareerId,
@@ -37,7 +43,29 @@ export function switchManagerClub(session: GameSession, newTeamId: TeamId): Game
     newTeamId,
   );
 
-  return {
+  const resetPipeline = options?.resetPipeline !== false;
+
+  if (!resetPipeline) {
+    const youth = session.players
+      .filter((player) => player.squad_status === "u17" || player.squad_status === "u19")
+      .map((player) => ({ ...player, club_id: newCareerId }));
+    return {
+      ...session,
+      clubId: newCareerId,
+      league,
+      players: [...youth, ...newPros],
+      rivalPlayers,
+      matchLineup: undefined,
+    };
+  }
+
+  const youth = seedYouthSquad(newTeamId, {
+    season: session.season,
+    masterSeed: session.masterSeed,
+    players: newPros,
+  });
+
+  let next: GameSession = {
     ...session,
     clubId: newCareerId,
     league,
@@ -45,4 +73,6 @@ export function switchManagerClub(session: GameSession, newTeamId: TeamId): Game
     rivalPlayers,
     matchLineup: undefined,
   };
+
+  return resetClubPipelineForTeam(next, newTeamId);
 }

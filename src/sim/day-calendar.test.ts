@@ -36,6 +36,19 @@ describe("day calendar smart skip", () => {
     });
   });
 
+  it("steps past Saturday when the league season is already complete", () => {
+    const session = newGameSession();
+    session.week = 16;
+    session.weekday = SATURDAY;
+    session.matchPlayedThisWeek = false;
+    session.league.season_complete = true;
+    expect(resolveSmartSkip(session, false)).toEqual({
+      weekday: SUNDAY,
+      action: "advance",
+      daysAdvanced: 1,
+    });
+  });
+
   it("steps daily toward Sunday on a non-match week", () => {
     const session = newGameSession();
     session.week = 35;

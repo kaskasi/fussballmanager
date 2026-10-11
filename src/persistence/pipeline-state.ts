@@ -1,5 +1,6 @@
 import { defaultBoardState, type BoardState } from "../board/board-state.ts";
 import { startBoardSeason } from "../board/season-objectives.ts";
+import { defaultLeagueState } from "./league-state.ts";
 import { defaultEmployerClubId } from "../board/job-offers.ts";
 import type { IndividualProgram } from "../development/individual-training.ts";
 import type { TrainingSlotOutcome } from "../development/training-unit-result.ts";
@@ -110,7 +111,12 @@ export function defaultPipelineState(week = 1): PipelineState {
     club_stadium: defaultClubStadium(),
     club_events: emptyClubEvents(),
     tactics_presets: defaultTacticsPresets(),
-    board: startBoardSeason(defaultBoardState(defaultEmployerClubId()), defaultEmployerClubId(), 1),
+    board: startBoardSeason(
+      defaultBoardState(defaultEmployerClubId()),
+      defaultEmployerClubId(),
+      1,
+      defaultLeagueState(),
+    ),
     story_state: defaultStoryState(week),
     financing: defaultFinancingState(),
   };

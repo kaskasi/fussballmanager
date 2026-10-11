@@ -1,5 +1,9 @@
 import type { Player } from "../types/player.ts";
-import { formatPlayerName } from "../types/player-display.ts";
+import {
+  formatPlayerName,
+  formatPlayerPositionLabel,
+  playerPositionSet,
+} from "../types/player-display.ts";
 import { seasonMatchRating } from "../player/season-stats.ts";
 import type { ProSquadRow, ProSquadSortDirection, ProSquadSortKey } from "../squad/pro-roster.ts";
 import { sortProSquadRows } from "../squad/pro-roster.ts";
@@ -26,6 +30,8 @@ export function listMarketRows(
     playerId: player.id,
     displayName: formatPlayerName(player),
     position: player.position,
+    positionLabel: formatPlayerPositionLabel(player),
+    positions: playerPositionSet(player),
     age: player.age,
     ca: Math.round(estimateCa(player.attributes, player.position)),
     caDelta: null,

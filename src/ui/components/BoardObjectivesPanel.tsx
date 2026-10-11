@@ -3,11 +3,13 @@ import type { LeagueState } from "../../persistence/league-state.ts";
 import {
   boardObjectiveProgress,
   boardPressureTone,
+  formatObjectiveProgress,
 } from "../../board/season-objectives.ts";
-import {
-  formatObjectiveProgressDisplay,
-  objectiveDisplayLabel,
-} from "../../i18n/board-display.ts";
+import { weeklyWageBill } from "../../economy/club-finances.ts";
+import type { Player } from "../../types/player.ts";
+import type { YouthCamp } from "../../youth/satellite-camps.ts";
+import type { ClubStadium } from "../../stadium/club-stadium.ts";
+import { objectiveDisplayLabel } from "../../i18n/board-display.ts";
 import type { BoardState } from "../../board/board-state.ts";
 import { SURVIVAL_TARGET_PLACE } from "../../narrative/season-objectives.ts";
 import { t } from "../../i18n/index.ts";
@@ -22,15 +24,29 @@ export function BoardObjectivesPanel({
   league,
   finances,
   season,
+  players = [],
+  clubId = "",
+  stadium,
+  youthCamps = [],
 }: {
   board: BoardState;
   league: LeagueState;
   finances: ClubFinances;
   season: number;
+  players?: readonly Player[];
+  clubId?: string;
+  stadium?: ClubStadium;
+  youthCamps?: readonly YouthCamp[];
 }) {
   useT();
   if (board.objectives.length === 0) return null;
-  const progress = boardObjectiveProgress(board, league, finances);
+  const progress = boardObjectiveProgress(board, league, finances, {
+    players,
+    clubId,
+    stadium: stadium ?? { name: "", blocks: [] },
+    youthCamps: [...youthCamps],
+    weeklyWageBill: weeklyWageBill(players, clubId),
+  });
   const tone = boardPressureTone(board.pressure);
   const employer = clubShortName(board.employer_club_id);
 
@@ -64,7 +80,9 @@ export function BoardObjectivesPanel({
           const entry = progress.find((item) => item.objectiveId === objective.id);
           const met = entry?.met ?? false;
           const survival =
-            objective.id === "league_place" && objective.target === SURVIVAL_TARGET_PLACE;
+            objective.kind === "league_place_max" &&
+            objective.target === SURVIVAL_TARGET_PLACE &&
+            objective.mandatory;
           return (
             <li
               key={objective.id}
@@ -77,9 +95,11 @@ export function BoardObjectivesPanel({
               }
             >
               <span className="board-objective-icon" aria-hidden="true">{objective.icon}</span>
-              <span className="board-objective-label">{objectiveDisplayLabel(objective, season)}</span>
+              <span className="board-objective-label">
+                {objective.label || objectiveDisplayLabel(objective, season)}
+              </span>
               <span className="board-objective-value">
-                {entry ? formatObjectiveProgressDisplay(objective, entry) : "—"}
+                {entry ? formatObjectiveProgress(objective, entry) : "—"}
                 <span aria-hidden="true">{met ? " ✓" : ""}</span>
               </span>
             </li>

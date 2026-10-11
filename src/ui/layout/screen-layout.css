@@ -353,10 +353,6 @@ main.scouting.club-shell-card-body .scouting-scouts {
     gap: 0.35rem;
   }
 
-  .app-nav-cash {
-    font-size: 0.82rem;
-  }
-
   .app-nav-actions .app-nav-next,
   .app-nav-menu .row-menu-trigger.app-nav-menu-trigger {
     min-height: 2.75rem;

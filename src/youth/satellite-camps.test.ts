@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { estimateCa } from "../transfers/market-value.ts";
-import { maxAnlageProfile } from "./intake-generator.ts";
+import { generateYouthIntake, maxAnlageProfile } from "./intake-generator.ts";
+import { SEASON_END_WEEK } from "../sim/game-calendar.ts";
+import { seasonCalendarYear } from "../sim/season-label.ts";
 import {
   buyYouthCamp,
   campIntakeCount,
@@ -54,7 +56,7 @@ describe("satellite youth camps", () => {
       leader: { first: "A", last: "B", portrait_seed: 1, training_mod: 0.1, mental_mod: 0 },
     };
     expect(campMixtureShift(camp)).toBe(10);
-    expect(campMixtureShift({ ...camp, leader_hire: "none", staffed: false })).toBe(-8);
+    expect(campMixtureShift({ ...camp, leader_hire: "none", staffed: false })).toBe(0);
   });
 
   it("pulls a camp player into HQ", () => {
@@ -74,6 +76,64 @@ describe("satellite youth camps", () => {
     expect(a).toBe(b);
     expect(c).not.toBe(a);
     expect(a.length).toBeGreaterThan(3);
+  });
+
+  it("camp season intake uses the same mixture floor as HQ campus", () => {
+    const facility = "academy_basic" as const;
+    const seed = 4242;
+    const sharedRandom = (() => {
+      let state = seed | 0;
+      return () => {
+        state = (state + 0x6d2b79f5) | 0;
+        let t = Math.imul(state ^ (state >>> 15), 1 | state);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    })();
+    const hq = generateYouthIntake({
+      season: 1,
+      week: SEASON_END_WEEK,
+      seasonYear: seasonCalendarYear(1),
+      clubId: "cl_test",
+      nationality: "DE",
+      region: "Test",
+      facility,
+      idStart: 100,
+      random: sharedRandom,
+      count: 4,
+    });
+    const campRandom = (() => {
+      let state = seed | 0;
+      return () => {
+        state = (state + 0x6d2b79f5) | 0;
+        let t = Math.imul(state ^ (state >>> 15), 1 | state);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    })();
+    const camp = generateYouthIntake({
+      season: 1,
+      week: SEASON_END_WEEK,
+      seasonYear: seasonCalendarYear(1),
+      clubId: "cl_test",
+      nationality: "BR",
+      region: "São Paulo",
+      facility,
+      idStart: 200,
+      random: campRandom,
+      count: 4,
+      meanShift: campMixtureShift({
+        id: "camp_br",
+        staffed: false,
+        purchased_season: 1,
+        leader_hire: "none",
+      }),
+    });
+    const hqCa = hq.map((player) => estimateCa(player.attributes, player.position));
+    const campCa = camp.map((player) => estimateCa(player.attributes, player.position));
+    for (let index = 0; index < hqCa.length; index++) {
+      expect(campCa[index]).toBeGreaterThanOrEqual(hqCa[index]! - 1);
+    }
   });
 
   it("seeds headline + two support talents with max development on purchase", () => {

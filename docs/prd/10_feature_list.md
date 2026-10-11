@@ -149,7 +149,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 
 | ID | Feature | M | Beschreibung |
 |---|---|---|---|
-| F9.1 | Saisonziele | M1 | Vorstand-Vorgaben, Erfolg = Bonus/Fail = Konsequenz |
+| F9.1 | Saisonziele | M1 | Tier aus Tabellenplatz, Pflicht vs. Nebenziele, Entlassung nur bei Pflicht-Fail — PRD 23 |
 | F9.2 | Job-Gefahr & Bewerbungsphase | M1 | Entlassung → neuer Job (KEIN Game Over) — Härte-Feature |
 | F9.3 | Fan-Stimmungs-Feed | M2 | Emoji-Feed in Header-Bar |
 | F9.4 | Interviews | M2 | Icon-getriebene Antworten, `media_hype` beeinflusst PRD 06 Trigger |

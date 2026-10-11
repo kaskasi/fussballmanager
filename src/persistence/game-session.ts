@@ -192,16 +192,29 @@ export function newGameSession(now = new Date()): GameSession {
       1,
     );
     save.state.pipeline.board = boardWithSurvivalArc(
-      save.state.pipeline.board ?? startBoardSeason(defaultBoardState(defaultEmployerClubId()), defaultEmployerClubId(), 1),
+      save.state.pipeline.board ??
+        startBoardSeason(
+          defaultBoardState(defaultEmployerClubId()),
+          defaultEmployerClubId(),
+          1,
+          defaultLeagueState(),
+        ),
       1,
     );
   }
   return withFreshInbox(sessionFromSave(save));
 }
 
-function ensureBoardObjectives(board: BoardState, season: number): BoardState {
+function ensureBoardObjectives(session: GameSession): BoardState {
+  const board = session.board;
   if (board.objectives.length > 0 || board.job_status === "dismissed") return board;
-  return startBoardSeason(board, board.employer_club_id, season);
+  return startBoardSeason(
+    board,
+    board.employer_club_id,
+    session.season,
+    session.league,
+    session,
+  );
 }
 
 export function withFreshInbox(session: GameSession): GameSession {
@@ -223,7 +236,7 @@ function syncManagerClubWithBoard(session: GameSession): GameSession {
     session.board.job_status === "employed" &&
     session.board.employer_club_id !== session.league.player_club_id
   ) {
-    return switchManagerClub(session, session.board.employer_club_id);
+    return switchManagerClub(session, session.board.employer_club_id, { resetPipeline: false });
   }
   return session;
 }
@@ -248,7 +261,12 @@ function resolveTrainingCalendarGateDone(
   return autoTraining;
 }
 
-export function sessionFromSave(save: SaveGame): GameSession {
+export interface SessionFromSaveOptions {
+  /** Default true. Set false inside patchSession to avoid rewrite loops. */
+  refreshMarketValues?: boolean;
+}
+
+export function sessionFromSave(save: SaveGame, options?: SessionFromSaveOptions): GameSession {
   const pipeline = save.state.pipeline ?? defaultPipelineState(save.state.week);
   const rivalPlayers = normalizeRivalPlayers(
     pipeline.rival_players,
@@ -259,7 +277,10 @@ export function sessionFromSave(save: SaveGame): GameSession {
     week: save.state.week,
     weekday: save.state.weekday ?? MONDAY,
     matchPlayedThisWeek: save.state.match_played_this_week ?? false,
-    players: refreshAllMarketValues(save.players, save.state.season),
+    players:
+      options?.refreshMarketValues === false
+        ? save.players
+        : refreshAllMarketValues(save.players, save.state.season),
     trainingPlan: (() => {
       const storyState = normalizeStoryState(pipeline.story_state, save.state.week);
       const manual = !resolveFeatureCurtain(storyState).auto_training;
@@ -291,10 +312,7 @@ export function sessionFromSave(save: SaveGame): GameSession {
     stadium: normalizeClubStadium(pipeline.club_stadium ?? defaultClubStadium()),
     tacticsPresets: normalizeTacticsPresets(pipeline.tactics_presets),
     matchLineup: pipeline.match_lineup,
-    board: ensureBoardObjectives(
-      normalizeBoardState(pipeline.board, defaultEmployerClubId()),
-      save.state.season,
-    ),
+    board: normalizeBoardState(pipeline.board, defaultEmployerClubId()),
     clubEvents: pipeline.club_events ?? emptyClubEvents(),
     rivalPlayers,
     rivalBreakoutNarratives: pipeline.rival_breakout_narratives ?? [],
@@ -328,7 +346,8 @@ export function sessionFromSave(save: SaveGame): GameSession {
     medicalState: normalizeClubMedicalState(pipeline.medical_state),
     orthopedistHire: pipeline.orthopedist_hire ?? defaultOrthopedistHireState(),
   };
-  return syncManagerClubWithBoard(session);
+  const withBoard = { ...session, board: ensureBoardObjectives(session) };
+  return syncManagerClubWithBoard(withBoard);
 }
 
 export function saveFromSession(session: GameSession, base?: SaveGame, now = new Date()): SaveGame {

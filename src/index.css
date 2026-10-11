@@ -4539,14 +4539,103 @@ body {
   color: var(--text-muted, #64748b);
 }
 
+.merchandising--einkauf.club-shell-card-body,
+.merchandising--preise.club-shell-card-body {
+  max-width: 68rem;
+}
+
+.merch-preise-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 0.75rem;
+}
+
+.merch-preise-row .merch-a4-sheet {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  margin-top: 0;
+}
+
+.merch-preise-row .merch-on-demand--preise {
+  flex: 0 1 14.5rem;
+  width: min(100%, 14.5rem);
+  min-width: 13rem;
+  margin-top: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+
+.merch-custom-row--stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.merch-custom-row--stacked .merch-price-stepper,
+.merch-custom-row--stacked .merch-on-demand-action {
+  width: 100%;
+  max-width: none;
+}
+
 .merch-einkauf-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 0.75rem;
+}
+
+.merch-einkauf-cluster {
+  flex: 1 1 auto;
+  min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(9.5rem, 0.72fr);
+  grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr);
   gap: 0.75rem;
   align-items: stretch;
-  width: 100%;
-  max-width: 52rem;
-  margin-top: 0.75rem;
+}
+
+.merch-einkauf-row > .merch-sku-overview {
+  flex: 0 1 15.5rem;
+  width: min(100%, 15.5rem);
+  min-width: 13.5rem;
+  align-self: stretch;
+}
+
+.merch-einkauf-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 12rem;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.merch-einkauf-panel-body {
+  flex: 1 1 auto;
+  min-height: calc(4 * 2.75rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.merch-einkauf-panel-empty {
+  margin: 0;
+}
+
+.merch-einkauf-panel-spacer {
+  flex-shrink: 0;
+  min-height: 2.35rem;
+  margin-top: 0.65rem;
+}
+
+.merch-inbound-pager {
+  flex-shrink: 0;
+  margin-top: 0.65rem;
+  padding-top: 0.5rem;
 }
 
 .merch-einkauf-market {
@@ -4561,15 +4650,26 @@ body {
   min-height: 12rem;
 }
 
-.merch-market-teaser-head {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.5rem;
+.merch-market-teaser .merch-market-teaser-list {
+  flex: 1 1 auto;
 }
 
-.merch-market-teaser-head .merch-section-title {
+.merch-einkauf-panel-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+  min-height: 1.35rem;
+  margin: 0 0 0.5rem;
+  flex-shrink: 0;
+}
+
+.merch-einkauf-panel-head .merch-section-title {
   margin: 0;
+  line-height: 1.15;
+}
+
+.merch-market-teaser-head {
+  align-items: flex-end;
 }
 
 .merch-market-teaser-list {
@@ -4579,9 +4679,12 @@ body {
 }
 
 .merch-market-teaser-foot {
+  flex-shrink: 0;
   margin-top: 0.65rem;
   display: flex;
   justify-content: flex-end;
+  min-height: 2.35rem;
+  align-items: center;
 }
 
 .merch-market-row {
@@ -4704,9 +4807,58 @@ body {
   min-height: 12rem;
 }
 
-.merch-inbound--side .merch-section-title {
-  margin-top: 0;
-  margin-bottom: 0.45rem;
+.merch-inbound-list--paged {
+  flex: 1 1 auto;
+}
+
+.merch-sku-overview {
+  padding: 0.65rem 0.75rem;
+  border: var(--outline, 1px solid #0f172a);
+  border-radius: var(--merch-r, var(--radius-klein, 0.55rem));
+  background: var(--surface-raised, var(--panel-bg, #fffef8));
+  min-height: 0;
+}
+
+.merch-sku-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 0.55rem;
+  align-content: start;
+}
+
+.merch-sku-overview-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.12rem;
+  padding: 0.35rem 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--line-soft, #ddd6ce) 85%, transparent);
+  border-radius: var(--radius-klein, 0.35rem);
+  min-width: 0;
+}
+
+.merch-sku-overview-cell h3 {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.merch-fill-bar--compact {
+  width: 100%;
+  height: 0.28rem;
+}
+
+.merch-sku-overview-ordered {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.merch-sku-overview-capacity {
+  margin: 0;
+  font-size: 0.6rem;
+  line-height: 1.2;
 }
 
 .merch-inbound--side .merch-inbound-list li {
@@ -4716,9 +4868,39 @@ body {
   padding: 0.45rem 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
+  .merch-preise-row {
+    flex-direction: column;
+  }
+
+  .merch-preise-row .merch-on-demand--preise {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+  }
+
   .merch-einkauf-row {
+    flex-direction: column;
+  }
+
+  .merch-einkauf-cluster {
     grid-template-columns: 1fr;
+  }
+
+  .merch-einkauf-row > .merch-sku-overview {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+  }
+
+  .merch-sku-overview-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .merch-sku-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -4960,13 +5142,36 @@ body {
   overflow: hidden;
 }
 
+.merch-fill-bar--stacked {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
 .merch-fill-bar span {
   display: block;
   height: 100%;
   background: color-mix(in srgb, var(--club-accent, #1e3a5f) 82%, var(--tinte, #0f172a));
 }
 
-.merch-fill-bar.is-over span {
+.merch-fill-bar-segment {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.merch-fill-bar-segment--ondemand {
+  background: color-mix(in srgb, var(--club-gruen, #059669) 72%, #0f172a);
+}
+
+.merch-fill-bar.is-over .merch-fill-bar-segment--stock {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--warn-tinte, #ca8a04) 90%, #ea580c),
+    color-mix(in srgb, var(--warn, #c2410c) 85%, #b91c1c)
+  );
+}
+
+.merch-fill-bar:not(.merch-fill-bar--stacked).is-over span {
   background: linear-gradient(
     90deg,
     color-mix(in srgb, var(--warn-tinte, #ca8a04) 90%, #ea580c),
@@ -5459,11 +5664,6 @@ body {
   margin-bottom: 1rem;
 }
 
-.stadium-head .cash-chip {
-  margin-top: 0.35rem;
-  flex-shrink: 0;
-}
-
 .stadium-head button {
   border: 0;
   background: #fff;
@@ -5650,10 +5850,6 @@ body {
 .stadium-upgrades h2 {
   margin: 0 0 0.55rem;
   font-size: 1rem;
-}
-
-.stadium-upgrades .cash-chip {
-  margin: 0 0 0.7rem;
 }
 
 .stadium-upgrade-list {
@@ -13098,55 +13294,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
-}
-
-.cash-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.28rem;
-  margin: 0;
-  padding: 0.22rem 0.55rem;
-  border-radius: 999px;
-  background: #fff;
-  color: #0f172a;
-  font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 1.2;
-  box-shadow: 0 0 0 1px rgb(15 23 42 / 8%);
-  transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
-}
-
-.cash-chip strong {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.cash-chip.is-pulse-down,
-.cash-chip.is-pulse-up {
-  font-weight: 800;
-}
-
-.cash-chip.is-pulse-down strong,
-.cash-chip.is-pulse-up strong {
-  font-weight: 800;
-}
-
-.cash-chip.is-pulse-down {
-  background: #fff7ed;
-  color: #9a3412;
-  box-shadow: 0 0 0 2px rgb(234 88 12 / 35%);
-}
-
-.cash-chip.is-pulse-up {
-  background: #ecfdf5;
-  color: #047857;
-  box-shadow: 0 0 0 2px rgb(4 120 87 / 35%);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cash-chip {
-    transition: none;
-  }
 }
 
 .app-nav-toggle,

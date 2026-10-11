@@ -31,7 +31,6 @@ import {
   type StadiumTier,
 } from "../../stadium/club-stadium.ts";
 import { formatClubCash, type ClubFinances } from "../../economy/club-finances.ts";
-import { CashChip } from "../components/CashChip.tsx";
 import {
   canPurchaseStadiumUpgrade,
   stadiumUpgradeCatalog,
@@ -303,7 +302,6 @@ export function StadiumScreen({
         <div className="fm-tab-panel">
           {stadiumContext}
           <section className="stadium-upgrades" aria-label="Stadionausbau">
-            <CashChip cash={finances.cash} />
           {academyFacility && onUpgradeAcademy ? (
             <AcademyUpgradeSection
               ownedId={academyFacility}

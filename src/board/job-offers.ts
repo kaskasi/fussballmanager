@@ -1,6 +1,6 @@
 import { NORDSTERN_ID, squadAverageStrength, type TeamId } from "@fussballmanager/shared";
 import type { DivisionEconomyId } from "../economy/division-economy.ts";
-import type { LeagueState } from "../persistence/league-state.ts";
+import { defaultLeagueState, type LeagueState } from "../persistence/league-state.ts";
 import { defaultLeaguePools, divisionLabel, squadForLeagueClub } from "../sim/league-divisions.ts";
 import { divisionForClub } from "../sim/club-profiles.ts";
 import { clubShortName } from "../sim/league-week.ts";
@@ -41,9 +41,10 @@ export function listJobOffers(
     .sort((left, right) => left.strength - right.strength)
     .slice(0, 3);
 
+  const leagueContext: LeagueState = { ...defaultLeagueState(), ...league };
   return offers.map(({ clubId }) => {
-    const objectives = generateSeasonObjectives(clubId, season);
-    const primary = objectives.find((entry) => entry.id === "league_place");
+    const objectives = generateSeasonObjectives(clubId, season, leagueContext, { avg_ca: 70 });
+    const primary = objectives.find((entry) => entry.mandatory) ?? objectives[0];
     return {
       clubId,
       clubName: clubShortName(clubId),

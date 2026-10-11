@@ -2,7 +2,7 @@ import type { Player, PlayerName } from "../types/player.ts";
 import { generatePlayerName, formatPlayerName } from "../types/player-display.ts";
 import { seasonCalendarYear } from "../sim/season-label.ts";
 import type { PositionPrimary } from "../types/player.ts";
-import { buildAcademyCohort } from "./intake-generator.ts";
+import { buildAcademyCohort, type AcademyFacility } from "./intake-generator.ts";
 import {
   campDebutHookIndex,
   CAMP_OPENING_HEADLINE_MEAN_SHIFT,
@@ -58,12 +58,12 @@ export const CAMP_INTAKE_UNSTAFFED = 2;
 
 /** Playtest 2026-10-09: premium opening bundle (headline + 2 support). */
 export const YOUTH_CAMP_NATIONS: readonly YouthCampNation[] = [
-  { id: "camp_br", code: "BR", flag: "🇧🇷", label: "Brasilien", region: "São Paulo", cost: 1_850_000, upkeepWeekly: 22_000 },
-  { id: "camp_fr", code: "FR", flag: "🇫🇷", label: "Frankreich", region: "Lyon", cost: 1_700_000, upkeepWeekly: 21_000 },
-  { id: "camp_ng", code: "NG", flag: "🇳🇬", label: "Nigeria", region: "Lagos", cost: 1_400_000, upkeepWeekly: 18_000 },
-  { id: "camp_tr", code: "TR", flag: "🇹🇷", label: "Türkei", region: "Istanbul", cost: 1_300_000, upkeepWeekly: 17_000 },
-  { id: "camp_hr", code: "HR", flag: "🇭🇷", label: "Kroatien", region: "Dubrovnik", cost: 1_250_000, upkeepWeekly: 16_000 },
-  { id: "camp_pl", code: "PL", flag: "🇵🇱", label: "Polen", region: "Krakau", cost: 1_150_000, upkeepWeekly: 15_000 },
+  { id: "camp_br", code: "BR", flag: "🇧🇷", label: "Brasilien", region: "São Paulo", cost: 2_460_000, upkeepWeekly: 29_000 },
+  { id: "camp_fr", code: "FR", flag: "🇫🇷", label: "Frankreich", region: "Lyon", cost: 2_260_000, upkeepWeekly: 28_000 },
+  { id: "camp_ng", code: "NG", flag: "🇳🇬", label: "Nigeria", region: "Lagos", cost: 1_860_000, upkeepWeekly: 24_000 },
+  { id: "camp_tr", code: "TR", flag: "🇹🇷", label: "Türkei", region: "Istanbul", cost: 1_730_000, upkeepWeekly: 23_000 },
+  { id: "camp_hr", code: "HR", flag: "🇭🇷", label: "Kroatien", region: "Dubrovnik", cost: 1_660_000, upkeepWeekly: 21_000 },
+  { id: "camp_pl", code: "PL", flag: "🇵🇱", label: "Polen", region: "Krakau", cost: 1_530_000, upkeepWeekly: 20_000 },
 ];
 
 /** Camp-Leiter: international pool, not tied to nation locale (PRD 03.6.1 UX). */
@@ -214,12 +214,15 @@ export function generateCampOpeningBundle(input: {
   week: number;
   masterSeed: number;
   players: readonly Player[];
+  /** Same campus tier as HQ intake — camp talents never below own youth baseline. */
+  facility?: AcademyFacility;
 }): CampOpeningBundle {
   const nation = campNationById(input.campId);
   if (!nation) return { players: [], headlinePlayerId: "" };
   const idStart = nextYouthPlayerIdStart(input.players);
   const random = mulberry32(hashCampKey(`${input.masterSeed}:${input.campId}:prospects:${input.season}`));
   const hookIndex = campDebutHookIndex(input.campId, input.masterSeed, input.season);
+  const facility = input.facility ?? "academy_basic";
   const base = {
     season: input.season,
     week: input.week,
@@ -227,7 +230,7 @@ export function generateCampOpeningBundle(input: {
     clubId: input.clubId,
     nationality: nation.code,
     region: nation.region,
-    facility: "academy_basic" as const,
+    facility,
     youthSite: input.campId,
     hiddenProfile: "max_development" as const,
     nameFor: (seed: number) => generateCampPlayerName(nation.code, seed),
@@ -251,7 +254,7 @@ export function generateCampOpeningBundle(input: {
     idStart: idStart + 1,
     random,
     count: CAMP_OPENING_TOTAL_PLAYERS - 1,
-    meanShift: CAMP_OPENING_SUPPORT_MEAN_SHIFT,
+    meanShift: campSupportMeanShift(facility),
   });
 
   return {
@@ -356,11 +359,19 @@ export function campIntakeCountForCamp(camp: YouthCamp): number {
   return campIntakeCount(isCampStaffed(camp));
 }
 
-/** Mean shift for season-end camp intake; leader `training_mod` adds points when staffed. */
+/**
+ * Extra mean shift on top of the club's HQ campus facility.
+ * Never below HQ parity (0); staffed camps can add leader training_mod bonus.
+ */
 export function campMixtureShift(camp: YouthCamp): number {
-  if (!isCampStaffed(camp)) return -8;
+  if (!isCampStaffed(camp)) return 0;
   const mod = camp.leader?.training_mod ?? 0;
-  return Math.round(mod * 100);
+  return Math.max(0, Math.round(mod * 100));
+}
+
+/** Opening-bundle support: same attribute floor as HQ intake for this facility. */
+export function campSupportMeanShift(_facility: AcademyFacility): number {
+  return 0;
 }
 
 export function normalizeYouthCamps(camps: readonly YouthCamp[] | undefined): YouthCamp[] {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useMemo, useState, type ComponentType } from "react";
 import { useT } from "../../i18n/react.ts";
 import {
   Bath,
@@ -14,11 +14,13 @@ import {
 import type { Player } from "../../types/player.ts";
 import { formatClubCash, type ClubFinances } from "../../economy/club-finances.ts";
 import type { ClubStadium } from "../../stadium/club-stadium.ts";
-import { CashChip } from "../components/CashChip.tsx";
 import { MerchFiresaleModal } from "../components/MerchFiresaleModal.tsx";
 import { MerchSaleSummaryModal } from "../components/MerchSaleSummaryModal.tsx";
 import { MerchMarketplaceModal } from "../components/MerchMarketplaceModal.tsx";
+import { MerchEinkaufInboundPanel } from "../components/MerchEinkaufInboundPanel.tsx";
+import { MerchEinkaufStockOverview } from "../components/MerchEinkaufStockOverview.tsx";
 import { MerchMarketplaceTeaser } from "../components/MerchMarketplaceTeaser.tsx";
+import { MerchOnDemandPanel } from "../components/MerchOnDemandPanel.tsx";
 import {
   activeMerchSaleSkus,
   customOrderQuote,
@@ -28,12 +30,9 @@ import {
   dismissMerchSaleSummaries,
   isPhillipMerchSaleWeek,
   PHILLIP_MERCH_SALE_DISCOUNT,
-  deliverMerchandisingOrders,
-  ensureMerchBulkMarket,
   JERSEY_REVENUE_SHARE,
   isMerchOverCapacity,
   isMerchSkuOnSale,
-  MERCH_ON_DEMAND_LEAD_DAYS,
   MERCH_SKU_IDS,
   MERCH_OVERCAP_DISCARD_AFTER_WEEKS,
   MERCH_SKU_LABEL,
@@ -43,14 +42,14 @@ import {
   jerseySalesWeights,
   jerseySellersWithWeekly,
   merchMaxStockForSku,
+  merchOnDemandQtyBySku,
   merchStockFillRatio,
   normalizeClubMerchandising,
-  primaryMerchSku,
   suggestedMerchSalePrice,
   weeklyMerchandisingEconomics,
   type MerchSkuId,
 } from "../../economy/merchandising.ts";
-import { merchCareerDayIndex, merchCareerWeekIndex } from "../../economy/merchandising-market.ts";
+import { merchCareerWeekIndex } from "../../economy/merchandising-market.ts";
 import { weekCommerceOccupancy } from "../../stadium/matchday-commerce.ts";
 
 type MerchTab = "preise" | "einkauf";
@@ -131,16 +130,7 @@ export function MerchandisingScreen({
   );
   const onDemandMarketUnit = bestMarketBulkUnitCost(customSku, merch.bulk_offers);
 
-  useEffect(() => {
-    let next = deliverMerchandisingOrders(stadium, season, week, weekday);
-    next = ensureMerchBulkMarket(next, season, week, masterSeed);
-    if (next !== stadium) {
-      onMerchandisingChange(next);
-    }
-  }, [stadium, season, week, weekday, masterSeed, onMerchandisingChange]);
-
   const careerWeek = merchCareerWeekIndex(season, week);
-  const careerDay = merchCareerDayIndex(season, week, weekday);
   const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium);
   const fanshopLevel = fanshopMerchLevel(stadium.precinct);
   const activeSales = activeMerchSaleSkus(merch, careerWeek);
@@ -204,6 +194,11 @@ export function MerchandisingScreen({
     isMerchOverCapacity(merch.skus[id]!.stock, fanshopLevel, id),
   ).length;
 
+  const onDemandBySku = useMemo(
+    () => merchOnDemandQtyBySku({ on_demand_queue: merch.on_demand_queue }),
+    [merch.on_demand_queue],
+  );
+
   function tileProps(sku: MerchSkuId) {
     const row = merch.skus[sku]!;
     const over = isMerchOverCapacity(row.stock, fanshopLevel, sku);
@@ -212,9 +207,26 @@ export function MerchandisingScreen({
       overCapacity: over,
       onSale,
       saleWeeksLeft: merchSaleWeeksRemaining(row, careerWeek),
+      onDemandInbound: onDemandBySku[sku] ?? 0,
       onOverCapacityClick: over && !onSale ? () => openFiresaleModal(sku) : undefined,
     };
   }
+
+  const onDemandPanel = (
+    <MerchOnDemandPanel
+      customSku={customSku}
+      customQty={customQty}
+      onDemandUnit={onDemandUnit}
+      onDemandQuote={onDemandQuote}
+      onDemandMarketUnit={onDemandMarketUnit}
+      phillipSaleActive={phillipSaleActive}
+      phillipDiscountPct={Math.round(PHILLIP_MERCH_SALE_DISCOUNT * 100)}
+      onSkuChange={setCustomSku}
+      onQtyDecrement={() => setCustomQty((qty) => Math.max(10, qty - 10))}
+      onQtyIncrement={() => setCustomQty((qty) => qty + 10)}
+      onOrder={() => onRequestOnDemand(customSku, customQty)}
+    />
+  );
 
   const screenHeader = (
     <header className="merchandising-head">
@@ -228,7 +240,6 @@ export function MerchandisingScreen({
           {formatClubCash(fullPreview.net)}
         </p>
       </div>
-      <CashChip cash={finances.cash} />
     </header>
   );
 
@@ -298,7 +309,15 @@ export function MerchandisingScreen({
     ) : null;
 
   return (
-    <main className="merchandising club-shell-card-body">
+    <main
+      className={
+        tab === "einkauf"
+          ? "merchandising merchandising--einkauf club-shell-card-body"
+          : tab === "preise"
+            ? "merchandising merchandising--preise club-shell-card-body"
+            : "merchandising club-shell-card-body"
+      }
+    >
       <div className="fm-tab-bar" role="tablist" aria-label="Merchandising Bereiche">
         {(
           [
@@ -323,35 +342,37 @@ export function MerchandisingScreen({
         <div className="fm-tab-panel merch-panel" role="tabpanel" aria-label="Preise">
           {screenHeader}
           {phillipSaleBanner}
-          {phillipSaleBanner}
           {overCapacityBanner}
           {saleFlameBanner}
-          <div className="merch-a4-sheet">
-            <MerchPriceTile
-              sku="trikots"
-              hero
-              row={merch.skus.trikots!}
-              fanshopLevel={fanshopLevel}
-              careerWeek={careerWeek}
-              seasonWeek={week}
-              onPriceChange={setRetail}
-              topSellers={sellers}
-              {...tileProps("trikots")}
-            />
-            <div className="merch-a4-side">
-              {OTHER_SKUS.map((sku) => (
-                <MerchPriceTile
-                  key={sku}
-                  sku={sku}
-                  row={merch.skus[sku]!}
-                  fanshopLevel={fanshopLevel}
-                  careerWeek={careerWeek}
-                  seasonWeek={week}
-                  onPriceChange={setRetail}
-                  {...tileProps(sku)}
-                />
-              ))}
+          <div className="merch-preise-row">
+            <div className="merch-a4-sheet">
+              <MerchPriceTile
+                sku="trikots"
+                hero
+                row={merch.skus.trikots!}
+                fanshopLevel={fanshopLevel}
+                careerWeek={careerWeek}
+                seasonWeek={week}
+                onPriceChange={setRetail}
+                topSellers={sellers}
+                {...tileProps("trikots")}
+              />
+              <div className="merch-a4-side">
+                {OTHER_SKUS.map((sku) => (
+                  <MerchPriceTile
+                    key={sku}
+                    sku={sku}
+                    row={merch.skus[sku]!}
+                    fanshopLevel={fanshopLevel}
+                    careerWeek={careerWeek}
+                    seasonWeek={week}
+                    onPriceChange={setRetail}
+                    {...tileProps(sku)}
+                  />
+                ))}
+              </div>
             </div>
+            {onDemandPanel}
           </div>
         </div>
       ) : null}
@@ -363,122 +384,18 @@ export function MerchandisingScreen({
           {overCapacityBanner}
           {saleFlameBanner}
           <div className="merch-einkauf-row">
-            <div className="merch-einkauf-market">
-              <MerchMarketplaceTeaser
-                offers={merch.bulk_offers}
-                onBuyOffer={(offerId) => onRequestBulkPurchase(offerId)}
-                onBrowse={() => setMarketBrowseOpen(true)}
-              />
-            </div>
-            <section className="merch-inbound merch-inbound--side" aria-label="Ware unterwegs">
-              <h2 className="merch-section-title">Unterwegs</h2>
-              {merch.branding_queue.length === 0 && (merch.on_demand_queue?.length ?? 0) === 0 ? (
-                <p className="merch-muted">Keine Lieferungen aktiv.</p>
-              ) : (
-                <ul className="merch-inbound-list">
-                  {merch.branding_queue.map((order) => {
-                    const left = order.arrives_career_week - careerWeek;
-                    const sku = primaryMerchSku(order.units);
-                    const qty =
-                      sku != null
-                        ? (order.units[sku] ?? 0)
-                        : MERCH_SKU_IDS.reduce(
-                            (sum, id) => sum + (order.units[id] ?? 0),
-                            0,
-                          );
-                    const skuLabel =
-                      sku != null ? MERCH_SKU_LABEL[sku] : "Whitelabel-Paket";
-                    return (
-                      <li key={order.id}>
-                        <span>
-                          {skuLabel} · {qty} St. · Whitelabel ·{" "}
-                          {left <= 0 ? "Ankunft diese Woche" : `Ankunft in ${left} Wo.`}
-                        </span>
-                        <span>{formatClubCash(order.unit_cost)} Ø/Stück</span>
-                      </li>
-                    );
-                  })}
-                  {(merch.on_demand_queue ?? []).map((order) => {
-                    const daysLeft = Math.max(0, order.arrives_career_day - careerDay);
-                    return (
-                      <li key={order.id}>
-                        <span>
-                          On Demand · {MERCH_SKU_LABEL[order.sku]} ·{" "}
-                          {daysLeft <= 0 ? "Ankunft heute" : `Ankunft in ${daysLeft} T.`}
-                        </span>
-                        <span>
-                          {order.qty} St. · {formatClubCash(order.unit_cost)}/St.
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </section>
-          </div>
-          <section className="merch-on-demand" aria-label="On Demand Produktion">
-            <header className="merch-on-demand-head">
-              <h2 className="merch-section-title">On Demand Produktion</h2>
-              <p className="merch-on-demand-tag">
-                {phillipSaleActive
-                  ? t("merch.phillipSale.onDemandTag", {
-                      pct: Math.round(PHILLIP_MERCH_SALE_DISCOUNT * 100),
-                    })
-                  : t("merch.onDemand.supplierTag")}
-              </p>
-            </header>
-            <p className="merch-on-demand-copy">
-              {t("merch.onDemand.marketCopy", { days: MERCH_ON_DEMAND_LEAD_DAYS })}
-            </p>
-            <p className="merch-on-demand-meta merch-muted">
-              {onDemandMarketUnit != null
-                ? t("merch.onDemand.marketBasis", {
-                    unit: formatClubCash(onDemandMarketUnit),
-                    total: formatClubCash(onDemandUnit),
-                  })
-                : t("merch.onDemand.marketBasisFallback", {
-                    total: formatClubCash(onDemandUnit),
-                  })}
-            </p>
-            <div className="merch-custom-row">
-              <select
-                value={customSku}
-                onChange={(event) => setCustomSku(event.target.value as MerchSkuId)}
-              >
-                {MERCH_SKU_IDS.map((sku) => (
-                  <option key={sku} value={sku}>
-                    {MERCH_SKU_LABEL[sku]}
-                  </option>
-                ))}
-              </select>
-              <div className="merch-price-stepper">
-                <button
-                  type="button"
-                  className="merch-step-btn"
-                  aria-label="Menge verringern"
-                  onClick={() => setCustomQty((qty) => Math.max(10, qty - 10))}
-                >
-                  −
-                </button>
-                <span className="merch-step-value">{customQty} St.</span>
-                <button
-                  type="button"
-                  className="merch-step-btn"
-                  aria-label="Menge erhöhen"
-                  onClick={() => setCustomQty((qty) => qty + 10)}
-                >
-                  +
-                </button>
+            <div className="merch-einkauf-cluster">
+              <div className="merch-einkauf-market">
+                <MerchMarketplaceTeaser
+                  offers={merch.bulk_offers}
+                  onBuyOffer={(offerId) => onRequestBulkPurchase(offerId)}
+                  onBrowse={() => setMarketBrowseOpen(true)}
+                />
               </div>
-              <button
-                type="button"
-                className="merch-on-demand-action"
-                onClick={() => onRequestOnDemand(customSku, customQty)}
-              >
-                Bestellen · {formatClubCash(onDemandQuote)}
-              </button>
+              <MerchEinkaufInboundPanel merch={merch} careerWeek={careerWeek} />
             </div>
-          </section>
+            <MerchEinkaufStockOverview merch={merch} fanshopLevel={fanshopLevel} />
+          </div>
         </div>
       ) : null}
 
@@ -617,6 +534,7 @@ function MerchPriceTile({
   overCapacity = false,
   onSale = false,
   saleWeeksLeft = 0,
+  onDemandInbound = 0,
   onOverCapacityClick,
 }: {
   sku: MerchSkuId;
@@ -630,11 +548,14 @@ function MerchPriceTile({
   overCapacity?: boolean;
   onSale?: boolean;
   saleWeeksLeft?: number;
+  onDemandInbound?: number;
   onOverCapacityClick?: () => void;
 }) {
   const Icon = SKU_ICON[sku];
   const maxStock = merchMaxStockForSku(fanshopLevel, sku);
-  const fill = merchStockFillRatio(row.stock, fanshopLevel, sku);
+  const stockFill = merchStockFillRatio(row.stock, fanshopLevel, sku);
+  const onDemandFill = maxStock > 0 ? onDemandInbound / maxStock : 0;
+  const totalFill = stockFill + onDemandFill;
   const listPrice = row.retail_price;
   const normal = row.retail_price_normal ?? listPrice;
   const customerPrice = effectiveMerchCustomerRetail(row, seasonWeek, careerWeek);
@@ -669,8 +590,20 @@ function MerchPriceTile({
       ) : null}
       <Icon size={hero ? 42 : 22} strokeWidth={2.2} aria-hidden />
       <h3>{MERCH_SKU_LABEL[sku]}</h3>
-      <span className={`merch-fill-bar${fill > 1 ? " is-over" : ""}`} aria-hidden>
-        <span style={{ width: `${Math.min(100, fill * 100)}%` }} />
+      <span
+        className={`merch-fill-bar merch-fill-bar--stacked${totalFill > 1 ? " is-over" : stockFill > 1 ? " is-over" : ""}`}
+        aria-hidden
+      >
+        <span
+          className="merch-fill-bar-segment merch-fill-bar-segment--stock"
+          style={{ width: `${Math.min(100, stockFill * 100)}%` }}
+        />
+        {onDemandInbound > 0 ? (
+          <span
+            className="merch-fill-bar-segment merch-fill-bar-segment--ondemand"
+            style={{ width: `${onDemandFill * 100}%` }}
+          />
+        ) : null}
       </span>
       <MerchGridInventory stock={row.stock} maxStock={maxStock} avgCost={row.avg_cost} hero={hero} />
       {hero && topSellers ? <MerchHeroSellers rows={topSellers} /> : null}

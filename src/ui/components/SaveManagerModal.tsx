@@ -6,6 +6,7 @@ import {
   MAX_SAVE_SLOTS,
   type SaveSlotInfo,
 } from "../../persistence/save-slots.ts";
+import { saveLoadErrorMessage, isSaveVersionMismatch } from "../../persistence/save-load-message.ts";
 import { downloadSaveAsFile, importSaveJson } from "../../persistence/save-transfer.ts";
 import { isCloudSaveEnabled } from "../../persistence/cloud-save-config.ts";
 import {
@@ -66,7 +67,7 @@ export function SaveManagerModal({
         onLoadSlot(activeSlot);
         onClose();
       } catch (error) {
-        setImportError(error instanceof Error ? error.message : "Import fehlgeschlagen");
+        setImportError(saveLoadErrorMessage(error, t));
       }
     };
     reader.onerror = () => setImportError("Datei konnte nicht gelesen werden");
@@ -119,12 +120,16 @@ export function SaveManagerModal({
       refreshSlots();
       onClose();
     } catch (error) {
-      const raw = error instanceof Error ? error.message : "";
-      setCloudError(
-        raw.includes("not_found") || raw.includes("404")
-          ? t("save.cloud.notFound")
-          : t("save.cloud.pullFail"),
-      );
+      if (isSaveVersionMismatch(error)) {
+        setCloudError(saveLoadErrorMessage(error, t));
+      } else {
+        const raw = error instanceof Error ? error.message : "";
+        setCloudError(
+          raw.includes("not_found") || raw.includes("404")
+            ? t("save.cloud.notFound")
+            : t("save.cloud.pullFail"),
+        );
+      }
     } finally {
       setCloudBusy(false);
     }

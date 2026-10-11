@@ -1,12 +1,12 @@
 # Spielstand Export/Import (M0) — Tester-Anleitung
 
-**Stand:** 2026-10-04 · **PRD:** [17_target_architecture.md](prd/17_target_architecture.md) (Save-Sync M0)
+**Stand:** 2026-10-11 · **PRD:** [17_target_architecture.md](prd/17_target_architecture.md) (Save-Sync M0), [08_savegame.md §08.10](prd/08_savegame.md)
 
-Vor einem Schema-Update (aktuell Save-Version 54, Hybrid-Stamps/Akte-Hex): einmal **Export** aus dem Hub, dann weiterspielen. Die Migration erhält den Kader; der Export ist das Backup für den Save, den du behalten willst.
+**Pre-Release:** Import akzeptiert nur Saves mit derselben **Save-Version** wie der laufende Build (siehe `SAVE_VERSION` im Code, derzeit 92). Vor einem Deploy mit Schema-Bump: **Export** aus dem aktuellen Build, wenn du den Stand behalten willst. Alte Browser-Slots können nach Update **leer werden** oder abgelehnt werden — erwartet, kein Bug.
 
 Kein Login, kein Server — nur eine JSON-Datei, die du selbst bewegst.
 
-**M1 Cloud (Sync-Code):** Optional auf derselben Deploy-URL — Spielstände → **Cloud aktivieren** oder **Von Cloud laden**. Code wie `fuss-xxxx-xxxx` sichern (Screenshot). Details: [PRD 18](prd/18_cloud_save_m1.md). Export bleibt Notfall.
+**M1 Cloud (Sync-Code):** Optional auf derselben Deploy-URL — Spielstände → **Cloud aktivieren** oder **Von Cloud laden**. Code wie `fuss-xxxx-xxxx` sichern (Screenshot). Details: [PRD 18](prd/18_cloud_save_m1.md). Cloud-Stand muss dieselbe Save-Version haben wie die App. Export bleibt Notfall.
 
 ---
 
@@ -15,9 +15,9 @@ Kein Login, kein Server — nur eine JSON-Datei, die du selbst bewegst.
 | Thema | Kurz |
 |--------|------|
 | Wo liegt der Save? | Im **Browser** dieses Geräts (3 Slots). |
-| Zweites Gerät | **Export** am Gerät A → Datei rüber → **Import** am Gerät B. |
-| Automatischer Sync | **Nein** — nur manuell. |
-| Nach Deploy-Update | Meist weiter spielbar; sehr alte/neue Versionen können Import warnen. |
+| Zweites Gerät | **Export** am Gerät A → Datei rüber → **Import** am Gerät B (**gleiche Deploy-URL / gleiche Save-Version**). |
+| Automatischer Sync | **Nein** — nur manuell (oder M1 Cloud mit Sync-Code). |
+| Nach Deploy-Update | Alte Slots/Imports können **abgelehnt** werden → Export vorher oder Neues Spiel. |
 | Daten weg | Cache leeren, privates Fenster, anderer Browser = Save weg → **vorher exportieren**. |
 
 ---
@@ -50,7 +50,7 @@ Du siehst **3 Slots**, den **aktiven** Slot und ob ein Slot leer oder belegt ist
    - iCloud Drive / Google Drive / Dropbox
    - USB / AirDrop zum Handy
 
-**Tipp:** Nach einer längeren Session oder vor dem Schließen des Tabs einmal exportieren.
+**Tipp:** Nach einer längeren Session oder vor dem Schließen des Tabs einmal exportieren — **besonders vor einem neuen Deploy**.
 
 ---
 
@@ -64,7 +64,7 @@ Du siehst **3 Slots**, den **aktiven** Slot und ob ein Slot leer oder belegt ist
 
 <!-- SCREENSHOT: Import-Button und Dateiauswahl -->
 
-Bei Fehlermeldung: Datei kaputt, falsches Format oder Save zu neu für diese App-Version — Team mit Dateiname melden.
+Bei Fehlermeldung: Datei kaputt, falsches Format, **Save-Version passt nicht zu dieser App** (älterer oder neuerer Build) — aktuellen Stand neu exportieren oder Neues Spiel.
 
 ---
 
@@ -72,14 +72,14 @@ Bei Fehlermeldung: Datei kaputt, falsches Format oder Save zu neu für diese App
 
 ### PC spielen, unterwegs am Handy weiterspielen
 
-1. PC: Export nach Spielsession.
+1. PC: Export nach Spielsession (gleicher Build wie Handy-URL).
 2. Datei ins Handy (Drive, Mail, AirDrop).
 3. Handy: Browser öffnen → Import in Slot 1 (oder freien Slot).
 4. Am Handy spielen; für Rückweg erneut exportieren.
 
 ### Neuer Tester, frischer Browser
 
-- Slot leer → **Neues Spiel** im Slot starten **oder** Import, wenn du einen Demo-Save vom Team bekommen hast.
+- Slot leer → **Neues Spiel** im Slot starten **oder** Import, wenn du einen Demo-Save vom Team bekommen hast (**von diesem Build**).
 
 ### Zwei Saves parallel testen
 
@@ -97,7 +97,7 @@ Zum **öffentlichen Teilen** von Saves (ohne Spoiler/Hidden-Werte) ist später e
 ## Checkliste vor Feedback-Session
 
 - [ ] Deploy-URL und ungefähres Datum der Version notiert
-- [ ] Nach wichtigen Fortschritten exportiert
+- [ ] Nach wichtigen Fortschritten exportiert (vor Deploy-Bumps)
 - [ ] Bug-Report: Browser (Chrome/Safari/Firefox), Desktop oder Mobile
 - [ ] Bei „Save weg“: ob Cache geleert / anderes Gerät ohne Import
 
@@ -108,5 +108,5 @@ Zum **öffentlichen Teilen** von Saves (ohne Spoiler/Hidden-Werte) ist später e
 ## Fragen ans Team
 
 - Link zur aktuellen Test-URL
-- Ob ein **Referenz-Save** (JSON) zum Import mitgeschickt wird
+- Ob ein **Referenz-Save** (JSON) zum Import mitgeschickt wird (muss **dieselbe Save-Version** haben)
 - Bekannte Limits (z. B. iOS Dateiauswahl)

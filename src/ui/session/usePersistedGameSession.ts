@@ -20,6 +20,7 @@ import {
 } from "../../persistence/cloud-save-scheduler.ts";
 import { getActiveSlot, setActiveSlot } from "../../persistence/save-slots.ts";
 import type { SaveGame } from "../../persistence/savegame-model.ts";
+import { saveLoadErrorMessage } from "../../persistence/save-load-message.ts";
 import { bootstrapSave } from "../shell/bootstrap.ts";
 
 export type PersistedSession = ReturnType<typeof sessionFromSave>;
@@ -166,15 +167,19 @@ export function usePersistedGameSession(options: {
 
   const applyCloudSave = useCallback(
     (cloudSave: SaveGame, slot: number) => {
-      setActiveSlot(slot);
-      setActiveSlotState(slot);
-      const normalized = normalizeSave(cloudSave);
-      writeLocalSave(slot, normalized);
-      setSave(normalized);
-      onSlotChange?.();
-      flashNotice(t("save.cloud.pullOk"), "ok");
+      try {
+        setActiveSlot(slot);
+        setActiveSlotState(slot);
+        const normalized = normalizeSave(cloudSave);
+        writeLocalSave(slot, normalized);
+        setSave(normalized);
+        onSlotChange?.();
+        flashNotice(t("save.cloud.pullOk"), "ok");
+      } catch (error) {
+        flashNotice(saveLoadErrorMessage(error, t), "warn");
+      }
     },
-    [flashNotice, onSlotChange],
+    [flashNotice, onSlotChange, t],
   );
 
   return {

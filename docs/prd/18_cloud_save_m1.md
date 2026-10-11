@@ -45,7 +45,7 @@ Optional `display_name` = `manifest.manager_name` (Label, kein Login).
 
 1. Client: `normalizeSave` → `compactSaveForCloudBlob` (History/Chronicle/Club-Events kappen) → JSON → **gzip**.
 2. Upload: **last-write-wins** anhand `updated_at` (Server) vs. optional `client_updated_at` im Push (Konflikt-UI später; M1 Push überschreibt).
-3. Download: gunzip → `parseSaveJson` / Migrationen wie Import.
+3. Download: gunzip → `parseSaveJson` — gleicher Lade-Pfad wie Import (**PRD 08.10**: nur `save_version === SAVE_VERSION`).
 
 Lokal: weiter `localStorage` + Autorität Client. Cloud = Replikat.
 

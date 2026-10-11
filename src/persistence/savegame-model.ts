@@ -36,6 +36,33 @@ export class SaveIncompleteError extends Error {
   }
 }
 
+/** PRD 08.10 — save_version must match SAVE_VERSION (no migration-on-load pre-GA). */
+export class SaveVersionMismatchError extends SaveIncompleteError {
+  readonly kind: "too_old" | "too_new";
+
+  readonly foundVersion: number;
+
+  constructor(kind: "too_old" | "too_new", foundVersion: number) {
+    super(
+      kind === "too_old"
+        ? `save_version_mismatch:too_old:${foundVersion}`
+        : `save_version_mismatch:too_new:${foundVersion}`,
+    );
+    this.name = "SaveVersionMismatchError";
+    this.kind = kind;
+    this.foundVersion = foundVersion;
+  }
+}
+
+export function assertSupportedSaveVersion(saveVersion: number): void {
+  if (saveVersion < SAVE_VERSION) {
+    throw new SaveVersionMismatchError("too_old", saveVersion);
+  }
+  if (saveVersion > SAVE_VERSION) {
+    throw new SaveVersionMismatchError("too_new", saveVersion);
+  }
+}
+
 export interface SaveManifest {
   save_version: number;
   created: string;

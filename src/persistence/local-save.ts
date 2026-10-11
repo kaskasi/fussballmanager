@@ -1,8 +1,10 @@
-import { applyMigrations, MIGRATIONS } from "./migrations/index.ts";
 import { saveFromSession, sessionFromSave, type GameSession } from "./game-session.ts";
-import { defaultPipelineState } from "./pipeline-state.ts";
 import { normalizeYouthInbox, pruneYouthInbox } from "../youth/decision-inbox.ts";
-import { SaveIncompleteError, SAVE_VERSION, type SaveGame } from "./savegame-model.ts";
+import {
+  assertSupportedSaveVersion,
+  SaveIncompleteError,
+  type SaveGame,
+} from "./savegame-model.ts";
 
 const STORAGE_PREFIX = "fm_save_slot_";
 
@@ -17,26 +19,11 @@ export function hasLocalSave(slot: number): boolean {
   return localStorage.getItem(storageKey(slot)) !== null;
 }
 
-/** Migrate and validate a save without persisting (import preview). */
+/** Validate save at current schema (PRD 08.10 — no migration-on-load). */
 export function normalizeSave(save: SaveGame): SaveGame {
+  assertSupportedSaveVersion(save.manifest.save_version);
+
   let next = save;
-  const pending = MIGRATIONS.some((migration) => !next.manifest.migrations_applied.includes(migration.id));
-  if (pending || next.manifest.save_version < SAVE_VERSION) {
-    next = applyMigrations(next, MIGRATIONS);
-  }
-  if (!next.state.pipeline) {
-    next = {
-      ...next,
-      state: { ...next.state, pipeline: defaultPipelineState(next.state.week) },
-      manifest: {
-        ...next.manifest,
-        save_version: SAVE_VERSION,
-        migrations_applied: next.manifest.migrations_applied.includes("migration_002_pipeline_state")
-          ? next.manifest.migrations_applied
-          : [...next.manifest.migrations_applied, "migration_002_pipeline_state"],
-      },
-    };
-  }
   if (
     next.state.season !== next.manifest.current_week.season ||
     next.state.week !== next.manifest.current_week.week

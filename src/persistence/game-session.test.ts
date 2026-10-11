@@ -93,7 +93,7 @@ describe("game session", () => {
     removeLocalSave(1);
   });
 
-  it("migrates a v1 save without pipeline state", () => {
+  it("rejects a v1 save without pipeline state (PRD 08.10)", () => {
     removeLocalSave(1);
     const legacy = createSave({
       nowIso: "2026-09-22T14:00:00Z",
@@ -108,16 +108,7 @@ describe("game session", () => {
     legacy.manifest.migrations_applied = [];
     delete legacy.state.pipeline;
     writeLocalSave(1, legacy);
-    const loaded = loadLocalSave(1);
-    expect(loaded?.manifest.save_version).toBe(SAVE_VERSION);
-    expect(loaded?.state.pipeline?.training_plan).toHaveLength(15);
-    expect(loaded?.state.pipeline?.youth_inbox.queue.length).toBeGreaterThan(0);
-    expect(loaded?.state.world).toMatchObject({
-      generation_version: 1,
-      world_seed: 2026,
-    });
-    expect(loaded?.state.world?.clubs).toHaveLength(36);
-    expect(loaded?.state.league?.league_pools?.["regionalliga-nord"]).toHaveLength(18);
+    expect(() => loadLocalSave(1)).toThrow();
     removeLocalSave(1);
   });
 

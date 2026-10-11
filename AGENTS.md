@@ -24,5 +24,8 @@ A text- and event-driven football management sim (no 3D). An event-driven match 
 ## Core pillars (all ship in v1, Tactics/Transfers/Economy weighted highest)
 Tactics & Formations · Transfers & Scouting · Club Economy (finances + matchday commerce + simple non-3D stadium editor + league TV/prize money) · Youth Development · Staff Management · Press & Morale
 
+## Save compatibility (pre-release)
+Until GA: **PRD 08.10** — only current `SAVE_VERSION` loads; still bump `save_version` + migration file on schema edits, but no legacy migration guarantee for players.
+
 ## Scope discipline
 When in doubt about whether something is in scope, check `docs/PRD.md` Section 4 (Scope table) before building it. Things explicitly rejected: 3D rendering, multiplayer, deep financial instruments (loans/debt/investors) in v1.

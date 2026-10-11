@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { initialEstimateForPlayer } from "../scouting/market-list.ts";
 import { newGameSession, saveFromSession } from "./game-session.ts";
 import { loadLocalSave } from "./local-save.ts";
 import {
@@ -8,8 +7,7 @@ import {
   saveExportFilename,
   serializeSaveForExport,
 } from "./save-transfer.ts";
-import { SAVE_VERSION } from "./savegame-model.ts";
-import { APPLIED_MIGRATION_IDS } from "./migrations/ids.ts";
+import { SaveVersionMismatchError, SAVE_VERSION } from "./savegame-model.ts";
 
 const memory = new Map<string, string>();
 
@@ -42,40 +40,19 @@ describe("save transfer", () => {
     expect(loadLocalSave(2)?.state.season).toBe(save.state.season);
   });
 
-  it("migrates an older save on import", () => {
+  it("rejects save_version below SAVE_VERSION on import", () => {
     const save = saveFromSession(newGameSession());
     save.manifest.save_version = 1;
     save.manifest.migrations_applied = [];
-    const imported = parseSaveJson(serializeSaveForExport(save));
-    expect(imported.manifest.save_version).toBe(SAVE_VERSION);
-    expect(imported.state.pipeline?.training_plan.length).toBeGreaterThan(0);
+    const raw = serializeSaveForExport(save);
+    expect(() => parseSaveJson(raw)).toThrow(SaveVersionMismatchError);
   });
 
-  it("migrates scout snapshots to knowledge-only targets", () => {
-    const session = newGameSession();
-    const save = saveFromSession(session);
-    const player = session.rivalPlayers.find((entry) => entry.squad_status === "pro")!;
-    expect(player).toBeTruthy();
-    const legacyTarget = {
-      playerId: player.id,
-      estimate: initialEstimateForPlayer(player, 0),
-      assigned: false,
-      player,
-    };
-    save.state.pipeline!.scout_board.targets[player.id] = legacyTarget as typeof legacyTarget & {
-      playerId: string;
-      estimate: (typeof legacyTarget)["estimate"];
-      assigned: boolean;
-    };
-    save.manifest.save_version = 35;
-    save.manifest.migrations_applied = APPLIED_MIGRATION_IDS.filter(
-      (id) => id !== "migration_036_scout_knowledge",
-    );
-
-    const imported = parseSaveJson(serializeSaveForExport(save));
-    const migrated = imported.state.pipeline!.scout_board.targets[player.id]!;
-    expect(migrated.playerId).toBe(player.id);
-    expect("player" in migrated).toBe(false);
+  it("rejects save_version above SAVE_VERSION on import", () => {
+    const save = saveFromSession(newGameSession());
+    save.manifest.save_version = SAVE_VERSION + 5;
+    const raw = serializeSaveForExport(save);
+    expect(() => parseSaveJson(raw)).toThrow(SaveVersionMismatchError);
   });
 
   it("builds a stable export filename", () => {

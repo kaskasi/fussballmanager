@@ -176,8 +176,9 @@ Spielstände“** → **Export** (JSON-Datei) → Datei sicher ablegen (Mail, Dr
 AirDrop) → auf dem anderen Gerät **dieselbe Deploy-URL** öffnen → **Import**
 in einen freien oder bewusst gewählten Slot. **Vor „Website-Daten löschen“
 oder Browser-Wechsel immer exportieren.** Gleiche **App-Version** (Deploy)
-wie beim Export empfohlen — Import migriert ältere Saves nach vorn, nicht
-neuere auf alte Builds. Vollständige Schritte: [`docs/tester-save-m0.md`](../tester-save-m0.md).
+wie beim Export **erforderlich** (Pre-Release: **PRD 08.10** — kein Upgrade alter
+Schemas beim Import; gleiche `save_version` wie der Build). Vollständige Schritte:
+[`docs/tester-save-m0.md`](../tester-save-m0.md).
 
 **Kapazität ~200 gleichzeitige Nutzer (nur Sync):** Größenordnung
 wenige Requests/Minute, Speicher << 1 GB — ein kleiner Dienst oder

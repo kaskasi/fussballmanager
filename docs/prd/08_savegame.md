@@ -1,8 +1,8 @@
 # /docs/prd/08_savegame.md
 
-**Version:** 1.2
-**Last Updated:** 2026-10-10
-**Status:** Final
+**Version:** 1.3
+**Last Updated:** 2026-10-11
+**Status:** Final (§08.10 pre-release override active until GA)
 
 ---
 
@@ -148,13 +148,29 @@ Stadion-Erweiterung bei Namensrecht (Slice F6.6-C): optional `naming_rights_spon
 
 ### 08.9 Cloud-Sync (M1, optional)
 
-Sync-Code + gzip-Blob auf Supabase; lokal unverändert PRD 08.1. Kein `save_version`-Bump für Cloud-Transport (gleiches JSON-Schema nach gunzip). Spezifikation: **PRD 18**.
+Sync-Code + gzip-Blob auf Supabase; lokal unverändert PRD 08.1. Kein `save_version`-Bump für Cloud-Transport (gleiches JSON-Schema nach gunzip). Spezifikation: **PRD 18**. Cloud-Pull nutzt denselben Lade-Pfad wie Import (§08.10).
+
+### 08.10 Pre-release compatibility (until GA)
+
+**Gilt bis** öffentlicher Launch oder explizite PRD-Änderung („save compatibility: GA“). **Überschreibt** §08.4 migration-on-load für Spieler-Laufzeit.
+
+| Regel | Bedeutung |
+|--------|-----------|
+| **Unterstützt** | Nur Saves mit `manifest.save_version === SAVE_VERSION` (Code: [`SAVE_VERSION`](../../src/persistence/savegame-model.ts)). |
+| **Nicht unterstützt** | Ältere localStorage-Slots, alte JSON-Exports, Cloud-Blobs von früheren Deploys — **Ablehnung** mit Hinweis; **Neues Spiel** oder Import einer Datei aus **diesem Build**. |
+| **Neuer als App** | `save_version > SAVE_VERSION` → Ablehnung („App aktualisieren“). |
+| **Schema-Disziplin** | Persistente Schema-Änderungen weiter **`save_version` +1** und Migrations-Datei (§08.4) für Repo, Tests und Dev-Skripte — **nicht** für automatisches Upgrade alter Spielstände in Pre-Release. |
+| **Export/Import-Vertrag** | JSON Export → Import auf gleichem Build: Round-Trip muss halten; Sanitizer §08.3 unverändert für Share-Export. |
+| **GA-Flip** | Danach §08.4 wieder verbindlich; minimale unterstützte Version und Migrations-Kette produktseitig festlegen. |
+
+Implementierung: [`assertSupportedSaveVersion`](../../src/persistence/savegame-model.ts) in [`normalizeSave`](../../src/persistence/local-save.ts).
 
 ---
 
 ## References
 
 - Cloud M1: PRD 18
+- Pre-release load policy: §08.10; Game modes: PRD 24
 - Player-Schema: PRD 07
 - Feature-Chronik: F11.4 in PRD 10
 - Meta-PRD `13_meta.md`: noch nicht geschrieben

@@ -50,6 +50,10 @@ One simulation, three **product modes**. Only **Regionalliga Manager** is the ac
 
 ---
 
+## Compatibility (pre-release)
+
+Stale saves (older `save_version`, missing `game_mode`, act1 `career_phase` without `story_mode`) are **not** migrated. Load/import/cloud-pull rejects them per **PRD 08.10**. New games set `game_mode` explicitly; Story Mode later only on **new** saves at creation time.
+
 ## Invariants
 
 - **Sim unchanged** across modes — only presentation, curtain, and world template differ.

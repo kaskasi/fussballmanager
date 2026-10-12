@@ -954,6 +954,8 @@
   "shell.crashMessage": "出错了。存档在本地 — 请刷新页面。",
   "shell.crashReload": "刷新",
   "shell.saveWriteFailed": "无法写入浏览器存档 — 请导出并释放存储空间。",
+  "shell.saveDirtyBanner": "最近的进度未写入磁盘。请立即导出或释放浏览器存储；仅在保存成功后再刷新页面。",
+  "shell.saveDirtyExport": "导出存档",
   "save.importFailed": "导入失败。",
   "save.versionMismatch.old": "存档版本 {version} 与当前构建不符（当前 {current}）。请从同一部署导出或开始新游戏。",
   "save.versionMismatch.new": "存档版本 {version} 高于本应用 — 请刷新页面。",

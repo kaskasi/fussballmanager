@@ -5,13 +5,14 @@
 
 ---
 
-## 1. localStorage quota / write failure
+## 1. Browser storage quota / write failure
 
-1. Open DevTools → Application → Storage → set **localStorage** quota low (Chrome: simulate via private mode + fill storage, or block third-party storage).
-2. Play until a spend or week advance triggers `tryWriteLocalSave`.
-3. **Expect:** warning toast (`shell.saveWriteFailed` or equivalent); UI may show in-memory state.
-4. **Reload tab.**
-5. **Expect:** disk state wins — recent ghost progress **not** persisted (known P0; document if behavior differs).
+1. Open DevTools → Application → **IndexedDB** → `fc_tycoon_saves` (and legacy **localStorage** `fm_save_slot_*` if present).
+2. Fill origin storage or block site data until a gameplay action triggers persist.
+3. **Expect:** warning toast (`shell.saveWriteFailed`) **and** persistent banner (`shell.saveDirtyBanner`) with **Export save**.
+4. Tap export — full in-memory save downloads as JSON.
+5. **Reload tab.**
+6. **Expect:** last **successful** disk write wins — progress after failed writes is **not** on disk (banner explains this).
 
 ---
 

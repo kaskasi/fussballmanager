@@ -1,4 +1,4 @@
-import { hasLocalSave, loadLocalSave } from "./local-save.ts";
+import { hasLocalSave, hasLocalSaveAsync, hydrateLocalSaveFromBackend, loadLocalSave } from "./local-save.ts";
 
 export const MAX_SAVE_SLOTS = 3;
 const ACTIVE_SLOT_KEY = "fm_active_slot";
@@ -55,4 +55,34 @@ export function peekSaveSlot(slot: number): SaveSlotInfo {
 
 export function listSaveSlots(): SaveSlotInfo[] {
   return Array.from({ length: MAX_SAVE_SLOTS }, (_, index) => peekSaveSlot(index + 1));
+}
+
+export async function peekSaveSlotAsync(slot: number): Promise<SaveSlotInfo> {
+  const occupied = await hasLocalSaveAsync(slot);
+  if (!occupied) {
+    return { slot, occupied: false, label: `Slot ${slot} — leer` };
+  }
+  try {
+    const save = (await hydrateLocalSaveFromBackend(slot)) ?? loadLocalSave(slot);
+    if (!save) {
+      return { slot, occupied: false, label: `Slot ${slot} — leer` };
+    }
+    return {
+      slot,
+      occupied: true,
+      label: `Slot ${slot} · S${save.state.season} W${save.state.week}`,
+      lastPlayed: save.manifest.last_played,
+      managerName: save.manifest.manager_name,
+      season: save.state.season,
+      week: save.state.week,
+    };
+  } catch {
+    return { slot, occupied: true, corrupt: true, label: `Slot ${slot} — beschädigt` };
+  }
+}
+
+export async function listSaveSlotsAsync(): Promise<SaveSlotInfo[]> {
+  return Promise.all(
+    Array.from({ length: MAX_SAVE_SLOTS }, (_, index) => peekSaveSlotAsync(index + 1)),
+  );
 }

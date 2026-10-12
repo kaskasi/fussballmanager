@@ -8,11 +8,12 @@ import {
   type GameSession,
 } from "../../persistence/game-session.ts";
 import {
+  hydrateLocalSaveFromBackend,
   loadLocalSave,
   normalizeSave,
   removeLocalSave,
-  tryWriteLocalSave,
-  writeLocalSave,
+  tryWriteLocalSaveAsync,
+  writeLocalSaveAsync,
 } from "../../persistence/local-save.ts";
 import {
   scheduleCloudUpload,
@@ -25,6 +26,22 @@ import { bootstrapSave } from "../shell/bootstrap.ts";
 
 export type PersistedSession = ReturnType<typeof sessionFromSave>;
 
+async function persistSlot(
+  slot: number,
+  nextSave: SaveGame,
+  onSuccess: () => void,
+  onFailure: () => void,
+): Promise<boolean> {
+  const persisted = await tryWriteLocalSaveAsync(slot, nextSave);
+  if (persisted) {
+    onSuccess();
+    scheduleCloudUpload(slot, nextSave);
+  } else {
+    onFailure();
+  }
+  return persisted;
+}
+
 export function usePersistedGameSession(options: {
   flashNotice: (text: string, tone?: "ok" | "warn") => void;
   onSlotChange?: () => void;
@@ -33,7 +50,9 @@ export function usePersistedGameSession(options: {
   const [activeSlot, setActiveSlotState] = useState(() => getActiveSlot());
   const [save, setSave] = useState<SaveGame>(() => bootstrapSave(getActiveSlot()));
   const [saveToastVisible, setSaveToastVisible] = useState(false);
+  const [persistDirty, setPersistDirty] = useState(false);
   const saveToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hydrateGenerationRef = useRef(0);
 
   const flashSaveToast = useCallback(() => {
     if (saveToastTimerRef.current) clearTimeout(saveToastTimerRef.current);
@@ -56,6 +75,17 @@ export function usePersistedGameSession(options: {
     return () => setCloudUploadListener(null);
   }, [flashNotice]);
 
+  useEffect(() => {
+    const generation = hydrateGenerationRef.current + 1;
+    hydrateGenerationRef.current = generation;
+    void hydrateLocalSaveFromBackend(activeSlot).then((hydrated) => {
+      if (hydrated && hydrateGenerationRef.current === generation) {
+        setSave(hydrated);
+        setPersistDirty(false);
+      }
+    });
+  }, [activeSlot]);
+
   const session = useMemo(() => sessionFromSave(save), [save]);
 
   const sessionWithEvent = useCallback(
@@ -66,90 +96,94 @@ export function usePersistedGameSession(options: {
     [],
   );
 
+  const handlePersistFailure = useCallback(() => {
+    setPersistDirty(true);
+    flashNotice(t("shell.saveWriteFailed"), "warn");
+  }, [flashNotice]);
+
+  const handlePersistSuccess = useCallback(() => {
+    setPersistDirty(false);
+    flashSaveToast();
+  }, [flashSaveToast]);
+
   const commitSave = useCallback(
     (nextSave: SaveGame) => {
-      const persisted = tryWriteLocalSave(activeSlot, nextSave);
-      if (persisted) {
-        flashSaveToast();
-        scheduleCloudUpload(activeSlot, nextSave);
-      } else {
-        flashNotice(t("shell.saveWriteFailed"), "warn");
-      }
-      return persisted;
+      setSave(nextSave);
+      void persistSlot(activeSlot, nextSave, handlePersistSuccess, handlePersistFailure);
     },
-    [activeSlot, flashNotice, flashSaveToast],
+    [activeSlot, handlePersistFailure, handlePersistSuccess],
   );
 
   const patchSession = useCallback(
     (recipe: (current: PersistedSession) => PersistedSession) => {
       let nextSave: SaveGame | null = null;
-      let persisted = true;
       setSave((current) => {
         const before = sessionFromSave(current, { refreshMarketValues: false });
         const after = recipe(before);
         nextSave = saveFromSession(after, current);
-        persisted = tryWriteLocalSave(activeSlot, nextSave);
         return nextSave;
       });
-      if (persisted) {
-        flashSaveToast();
-        if (nextSave) scheduleCloudUpload(activeSlot, nextSave);
-      } else {
-        flashNotice(t("shell.saveWriteFailed"), "warn");
+      if (nextSave) {
+        void persistSlot(activeSlot, nextSave, handlePersistSuccess, handlePersistFailure);
       }
     },
-    [activeSlot, flashNotice, flashSaveToast],
+    [activeSlot, handlePersistFailure, handlePersistSuccess],
   );
 
   const replaceSave = useCallback(
     (updater: (current: SaveGame) => SaveGame) => {
       let nextSave: SaveGame | null = null;
-      let persisted = true;
       setSave((current) => {
         nextSave = updater(current);
-        persisted = tryWriteLocalSave(activeSlot, nextSave);
         return nextSave;
       });
-      if (persisted) {
-        flashSaveToast();
-        if (nextSave) scheduleCloudUpload(activeSlot, nextSave);
-      } else {
-        flashNotice(t("shell.saveWriteFailed"), "warn");
+      if (nextSave) {
+        void persistSlot(activeSlot, nextSave, handlePersistSuccess, handlePersistFailure);
       }
     },
-    [activeSlot, flashNotice, flashSaveToast],
+    [activeSlot, handlePersistFailure, handlePersistSuccess],
   );
 
   const resetGame = useCallback(() => {
     removeLocalSave(activeSlot);
     const fresh = saveFromSession(newGameSession());
-    writeLocalSave(activeSlot, fresh);
     setSave(fresh);
+    setPersistDirty(false);
+    void writeLocalSaveAsync(activeSlot, fresh).catch(() => handlePersistFailure());
     onSlotChange?.();
-  }, [activeSlot, onSlotChange]);
+  }, [activeSlot, handlePersistFailure, onSlotChange]);
 
   const loadSaveSlot = useCallback(
     (slot: number) => {
       setActiveSlot(slot);
       setActiveSlotState(slot);
-      try {
-        const loaded = loadLocalSave(slot);
-        if (loaded) {
-          setSave(loaded);
-        } else {
+      void (async () => {
+        try {
+          const loaded = (await hydrateLocalSaveFromBackend(slot)) ?? loadLocalSave(slot);
+          if (loaded) {
+            setSave(loaded);
+            setPersistDirty(false);
+          } else {
+            const fresh = saveFromSession(newGameSession());
+            setSave(fresh);
+            await writeLocalSaveAsync(slot, fresh);
+            setPersistDirty(false);
+          }
+        } catch {
+          removeLocalSave(slot);
           const fresh = saveFromSession(newGameSession());
-          writeLocalSave(slot, fresh);
           setSave(fresh);
+          try {
+            await writeLocalSaveAsync(slot, fresh);
+            setPersistDirty(false);
+          } catch {
+            handlePersistFailure();
+          }
         }
-      } catch {
-        removeLocalSave(slot);
-        const fresh = saveFromSession(newGameSession());
-        writeLocalSave(slot, fresh);
-        setSave(fresh);
-      }
-      onSlotChange?.();
+        onSlotChange?.();
+      })();
     },
-    [onSlotChange],
+    [handlePersistFailure, onSlotChange],
   );
 
   const newGameInSlot = useCallback(
@@ -158,29 +192,37 @@ export function usePersistedGameSession(options: {
       setActiveSlot(slot);
       setActiveSlotState(slot);
       const fresh = saveFromSession(newGameSession());
-      writeLocalSave(slot, fresh);
       setSave(fresh);
+      setPersistDirty(false);
+      void writeLocalSaveAsync(slot, fresh).catch(() => handlePersistFailure());
       onSlotChange?.();
     },
-    [onSlotChange],
+    [handlePersistFailure, onSlotChange],
   );
 
   const applyCloudSave = useCallback(
     (cloudSave: SaveGame, slot: number) => {
-      try {
-        setActiveSlot(slot);
-        setActiveSlotState(slot);
-        const normalized = normalizeSave(cloudSave);
-        writeLocalSave(slot, normalized);
-        setSave(normalized);
-        onSlotChange?.();
-        flashNotice(t("save.cloud.pullOk"), "ok");
-      } catch (error) {
-        flashNotice(saveLoadErrorMessage(error, t), "warn");
-      }
+      void (async () => {
+        try {
+          setActiveSlot(slot);
+          setActiveSlotState(slot);
+          const normalized = normalizeSave(cloudSave);
+          await writeLocalSaveAsync(slot, normalized);
+          setSave(normalized);
+          setPersistDirty(false);
+          onSlotChange?.();
+          flashNotice(t("save.cloud.pullOk"), "ok");
+        } catch (error) {
+          flashNotice(saveLoadErrorMessage(error, t), "warn");
+        }
+      })();
     },
-    [flashNotice, onSlotChange, t],
+    [flashNotice, onSlotChange],
   );
+
+  const dismissPersistDirty = useCallback(() => {
+    setPersistDirty(false);
+  }, []);
 
   return {
     save,
@@ -194,6 +236,8 @@ export function usePersistedGameSession(options: {
     sessionWithEvent,
     saveToastVisible,
     flashSaveToast,
+    persistDirty,
+    dismissPersistDirty,
     resetGame,
     loadSaveSlot,
     newGameInSlot,

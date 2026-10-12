@@ -1056,6 +1056,8 @@
   "shell.crashMessage": "Etwas ist schiefgelaufen. Dein Spielstand ist lokal gespeichert — Seite neu laden.",
   "shell.crashReload": "Neu laden",
   "shell.saveWriteFailed": "Spielstand konnte nicht im Browser gespeichert werden — bitte exportieren und Speicher freimachen.",
+  "shell.saveDirtyBanner": "Dein letzter Stand ist nicht auf der Festplatte. Bitte exportieren oder Speicher freimachen — neu laden erst nach erfolgreichem Speichern.",
+  "shell.saveDirtyExport": "Spielstand exportieren",
   "save.importFailed": "Import fehlgeschlagen.",
   "save.versionMismatch.old": "Save-Version {version} passt nicht zu diesem Build (aktuell {current}). Bitte aus dem gleichen Deploy exportieren oder Neues Spiel.",
   "save.versionMismatch.new": "Save-Version {version} ist neuer als diese App — bitte die Seite aktualisieren.",

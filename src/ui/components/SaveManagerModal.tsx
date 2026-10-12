@@ -1,8 +1,9 @@
 /** WIREFRAME: PRD 08 + PRD 18 — Slots, Export/Import, Cloud Sync-Code */
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { SaveGame } from "../../persistence/savegame-model.ts";
 import {
   listSaveSlots,
+  listSaveSlotsAsync,
   MAX_SAVE_SLOTS,
   type SaveSlotInfo,
 } from "../../persistence/save-slots.ts";
@@ -38,6 +39,9 @@ export function SaveManagerModal({
 }) {
   const t = useT();
   const [slots, setSlots] = useState<SaveSlotInfo[]>(() => listSaveSlots());
+  useEffect(() => {
+    void listSaveSlotsAsync().then(setSlots);
+  }, []);
   const [importError, setImportError] = useState<string | null>(null);
   const [cloudError, setCloudError] = useState<string | null>(null);
   const [cloudBusy, setCloudBusy] = useState(false);
@@ -49,7 +53,7 @@ export function SaveManagerModal({
   const slotMeta = useMemo(() => readCloudSlotMeta(activeSlot), [activeSlot, revealedCode]);
 
   function refreshSlots() {
-    setSlots(listSaveSlots());
+    void listSaveSlotsAsync().then(setSlots);
   }
 
   function handleExport() {

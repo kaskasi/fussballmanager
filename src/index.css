@@ -6641,6 +6641,44 @@
   }
 }
 
+.save-dirty-banner {
+  position: fixed;
+  left: 50%;
+  top: 4.75rem;
+  z-index: 2999;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  max-width: min(36rem, calc(100vw - 2rem));
+  padding: 0.65rem 0.95rem;
+  border-radius: 0.85rem;
+  background: var(--panel-bg, #fff7ed);
+  border: 1px solid #c2410c;
+  color: var(--text-primary, #431407);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 12%);
+  transform: translateX(-50%);
+}
+
+.save-dirty-banner p {
+  margin: 0;
+  flex: 1 1 12rem;
+}
+
+.save-dirty-banner__action {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #c2410c;
+  background: #fff;
+  color: #9a3412;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .save-toast {
   position: fixed;
   right: 1rem;

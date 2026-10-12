@@ -1056,6 +1056,8 @@
   "shell.crashMessage": "Something went wrong. Your save is stored locally — reload the page.",
   "shell.crashReload": "Reload",
   "shell.saveWriteFailed": "Could not write save to browser storage — export your game and free space.",
+  "shell.saveDirtyBanner": "Your last changes are not on disk. Export now or free browser storage, then reload only after a successful save.",
+  "shell.saveDirtyExport": "Export save",
   "save.importFailed": "Import failed.",
   "save.versionMismatch.old": "Save version {version} does not match this build (current {current}). Export from the same deploy or start a new game.",
   "save.versionMismatch.new": "Save version {version} is newer than this app — please refresh the page.",

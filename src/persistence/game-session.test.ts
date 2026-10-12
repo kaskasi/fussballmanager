@@ -8,13 +8,22 @@ import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { loadDemoRoster } from "../ui/demo-roster.ts";
 import { refreshPlayerMarketValue } from "../transfers/refresh-market-values.ts";
 import { newGameSession, saveFromSession, sessionFromSave } from "./game-session.ts";
-import { loadLocalSave, persistSession, removeLocalSave, writeLocalSave } from "./local-save.ts";
+import {
+  clearLocalSaveCacheForTests,
+  loadLocalSave,
+  removeLocalSave,
+  writeLocalSave,
+  writeLocalSaveAsync,
+} from "./local-save.ts";
+import { MemoryBrowserSaveBackend, setBrowserSaveBackendForTests } from "./browser-save-adapter.ts";
 import { createSave, SAVE_VERSION } from "./savegame.ts";
 
 const memory = new Map<string, string>();
 
 beforeEach(() => {
   memory.clear();
+  clearLocalSaveCacheForTests();
+  setBrowserSaveBackendForTests(new MemoryBrowserSaveBackend());
   vi.stubGlobal("localStorage", {
     getItem: (key: string) => memory.get(key) ?? null,
     setItem: (key: string, value: string) => {
@@ -28,6 +37,8 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  setBrowserSaveBackendForTests(null);
+  clearLocalSaveCacheForTests();
 });
 
 describe("game session", () => {
@@ -77,10 +88,10 @@ describe("game session", () => {
     expect(sessionFromSave(renamed).managerName).toBe("Kim");
   });
 
-  it("persists to localStorage and reloads with pipeline state", () => {
+  it("persists to browser storage and reloads with pipeline state", async () => {
     removeLocalSave(1);
     const session = newGameSession();
-    persistSession(session, 1);
+    await writeLocalSaveAsync(1, saveFromSession(session));
     const loaded = loadLocalSave(1);
     expect(sessionFromSave(loaded!).scoutBoard).toEqual(session.scoutBoard);
     expect(loaded?.state.pipeline?.youth_inbox.queue.length).toBeGreaterThan(0);

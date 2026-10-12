@@ -300,8 +300,9 @@ import {
 } from "./scouting/scout-job-postfach.ts";
 import { scoutJobDismissOneLiner } from "./inbox/postfach-archive.ts";
 import { PostfachScreen } from "./ui/screens/PostfachScreen.tsx";
+import { downloadSaveAsFile } from "./persistence/save-transfer.ts";
 import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
-import { NoticeToast, SaveToast } from "./ui/components/SaveToast.tsx";
+import { NoticeToast, SaveDirtyBanner, SaveToast } from "./ui/components/SaveToast.tsx";
 import { CampOpeningDebutModal } from "./ui/components/CampOpeningDebutModal.tsx";
 import { YouthCampus, type YouthCampusSortState } from "./ui/screens/YouthCampus";
 import { CalendarScreen } from "./ui/screens/CalendarScreen.tsx";
@@ -482,6 +483,7 @@ export default function App() {
     replaceSave,
     sessionWithEvent,
     saveToastVisible,
+    persistDirty,
     resetGame,
     loadSaveSlot,
     newGameInSlot,
@@ -2140,6 +2142,10 @@ export default function App() {
       {spendConfirmOverlay}
       {campDebutOverlay}
       {noticeOverlay}
+      <SaveDirtyBanner
+        visible={persistDirty}
+        onExport={() => downloadSaveAsFile(save)}
+      />
       <SaveToast visible={saveToastVisible} />
     </>
   );

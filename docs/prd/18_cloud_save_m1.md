@@ -47,7 +47,7 @@ Optional `display_name` = `manifest.manager_name` (Label, kein Login).
 2. Upload: **last-write-wins** anhand `updated_at` (Server) vs. optional `client_updated_at` im Push (Konflikt-UI später; M1 Push überschreibt).
 3. Download: gunzip → `parseSaveJson` — gleicher Lade-Pfad wie Import (**PRD 08.10**: nur `save_version === SAVE_VERSION`).
 
-Lokal: weiter `localStorage` + Autorität Client. Cloud = Replikat.
+Lokal: **Browser-Adapter** (IndexedDB primär, Legacy-`localStorage`-Slots werden beim Laden migriert) + Client-Autorität. Cloud = Replikat.
 
 ---
 

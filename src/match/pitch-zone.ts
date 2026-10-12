@@ -1,26 +1,15 @@
 import type { PitchPosition } from "@fussballmanager/shared";
+import { t } from "../i18n/index.ts";
 
 export type PitchThird = "defensive" | "middle" | "attacking";
 export type PitchLateral = "left" | "center" | "right";
 
-const THIRD_LABEL: Record<PitchThird, string> = {
-  defensive: "Def",
-  middle: "Mitte",
-  attacking: "Angriff",
-};
-
-const LATERAL_LABEL: Record<PitchLateral, string> = {
-  left: "Links",
-  center: "Zentrum",
-  right: "Rechts",
-};
-
 export function pitchThirdLabel(third: PitchThird): string {
-  return THIRD_LABEL[third];
+  return t(`match.hud.third.${third}`);
 }
 
 export function pitchLateralLabel(lateral: PitchLateral): string {
-  return LATERAL_LABEL[lateral];
+  return t(`match.hud.lateral.${lateral}`);
 }
 
 /** Ball depth in the attacking team's thirds (x: 0 home goal → 100 away goal). */

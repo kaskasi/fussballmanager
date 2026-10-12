@@ -51,7 +51,7 @@ import {
   type YouthInboxState,
 } from "../../youth/decision-inbox.ts";
 import type { YouthReport } from "../../youth/youth-sim.ts";
-import { formatCalendarWeek } from "../../sim/game-calendar.ts";
+import { formatCalendarWeekDisplay } from "../../i18n/calendar-display.ts";
 import {
   formatYouthReportName,
   resolveYouthReportDrop,
@@ -160,13 +160,16 @@ export function YouthCampus({
   );
   const owned = facilityById(academyFacility);
   const matchLine = report
-    ? `U17 ${formatResults(report.u17_results)} · U19 ${formatResults(report.u19_results)}`
-    : "Noch kein Spiel — Woche simulieren";
+    ? tr("youth.campus.matchResults", {
+        u17: formatResults(report.u17_results),
+        u19: formatResults(report.u19_results),
+      })
+    : tr("youth.campus.noMatchYet");
 
   const youthTabs: { id: YouthTab; label: string }[] = [
-    { id: "u17", label: `U17 · ${u17Count}` },
-    { id: "u19", label: `U19 · ${u19Count}` },
-    { id: "camps", label: "Camps" },
+    { id: "u17", label: tr("youth.tab.u17Count", { count: u17Count }) },
+    { id: "u19", label: tr("youth.tab.u19Count", { count: u19Count }) },
+    { id: "camps", label: tr("youth.tab.camps") },
   ];
 
   return (
@@ -189,9 +192,17 @@ export function YouthCampus({
       {tab === "u17" || tab === "u19" ? (
         <div className="fm-tab-panel">
           <p className="youth-strip game-panel">
-            Campus Stufe {academyStage(academyFacility)}/3 · Intake {hqIntakeCount(academyFacility)} ·{" "}
-            {formatCalendarWeek(week)}: {matchLine}
-            <span className="youth-strip-facility"> · {owned.name}</span>
+            {tr("youth.campus.strip", {
+              stage: academyStage(academyFacility),
+              intake: hqIntakeCount(academyFacility),
+              week: formatCalendarWeekDisplay(week),
+              matchLine,
+              facility: (() => {
+                const key = `youth.facility.${academyFacility}.name`;
+                const label = tr(key);
+                return label !== key ? label : owned.name;
+              })(),
+            })}
           </p>
           <YouthUnifiedRoster
             team={tab}
@@ -354,11 +365,11 @@ function YouthUnifiedRoster({
               <SquadSortHeader label="A" sortKey="assists" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
               <SquadSortHeader label="Ø" sortKey="avgRating" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
               <SquadSortHeader label="Form" sortKey="form" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-              <th scope="col">Ziel</th>
-              <th scope="col">Fortschritt</th>
-              <th scope="col">Status</th>
-              <th scope="col">Region</th>
-              <th scope="col">Coach</th>
+              <th scope="col">{tr("youth.col.target")}</th>
+              <th scope="col">{tr("youth.col.progress")}</th>
+              <th scope="col">{tr("youth.col.status")}</th>
+              <th scope="col">{tr("youth.col.region")}</th>
+              <th scope="col">{tr("youth.col.coach")}</th>
             </tr>
           </thead>
           <tbody>
@@ -495,8 +506,8 @@ function YouthCampsPanel({
     <section className="game-panel youth-camps-grid-wrap" aria-label={tr("youth.camps.panelAria")}>
       <p className="youth-camps-meta">
         {atCampLimit
-          ? `${camps.length} Camps aktiv · Unterhalt gesamt siehe Finanzen`
-          : `Max. ${MAX_YOUTH_CAMPS} · Unterhalt gesamt siehe Finanzen`}
+          ? tr("youth.camps.metaActive", { count: camps.length })
+          : tr("youth.camps.metaLimit", { max: MAX_YOUTH_CAMPS })}
       </p>
       <ul className={`youth-camps-grid${atCampLimit ? " is-camp-roster-full" : ""}`}>
         {nations.map((entry) => (

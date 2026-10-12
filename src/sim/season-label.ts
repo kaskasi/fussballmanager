@@ -1,3 +1,5 @@
+import { t } from "../i18n/index.ts";
+
 /** Career season 1 is calendar year 2026. Completed seasons add to that year. */
 export const CAREER_START_YEAR = 2026;
 
@@ -11,5 +13,5 @@ export function careerSeasonIndex(calendarYear: number): number {
 }
 
 export function formatSeasonLabel(season: number): string {
-  return `Saison ${seasonCalendarYear(season)}`;
+  return t("calendar.season", { year: seasonCalendarYear(season) });
 }

@@ -6,6 +6,7 @@ import { LeagueFormStrip, LeaguePointsSparkline } from "./LeagueFormVisuals.tsx"
 import { promotionZoneRank } from "../../sim/promotion-relegation.ts";
 import { clubDisplayName, clubPlaceName } from "../../sim/league-divisions.ts";
 import type { WorldClub } from "../../world/world-generator.ts";
+import { useT } from "../../i18n/react.ts";
 
 export function LeagueTable({
   table,
@@ -25,6 +26,7 @@ export function LeagueTable({
   highlightTeamIds?: readonly TeamId[];
   compact?: boolean;
 }) {
+  const t = useT();
   const highlight = new Set(highlightTeamIds ?? []);
   return (
     <div className="league-table-wrap">
@@ -32,27 +34,27 @@ export function LeagueTable({
         <thead>
           <tr>
             <th>#</th>
-            {compact ? null : <th>Ort</th>}
-            <th>Verein</th>
-            <th>Sp</th>
+            {compact ? null : <th>{t("leagues.table.place")}</th>}
+            <th>{t("leagues.table.club")}</th>
+            <th>{t("leagues.table.played")}</th>
             {compact ? (
               <>
-                <th>Tore</th>
-                <th>Pkt</th>
+                <th>{t("leagues.table.goals")}</th>
+                <th>{t("leagues.table.points")}</th>
               </>
             ) : (
               <>
-                <th>S</th>
-                <th>U</th>
-                <th>N</th>
-                <th>Tore</th>
-                <th>Diff</th>
-                <th title="Letzte 5 Spiele (▲ Sieg · ■ Remis · ▼ Niederlage)">Form</th>
-                <th className="league-th-trend" title="Punkte der letzten 5 Spiele (0–3)">
+                <th>{t("leagues.table.wins")}</th>
+                <th>{t("leagues.table.draws")}</th>
+                <th>{t("leagues.table.losses")}</th>
+                <th>{t("leagues.table.goals")}</th>
+                <th>{t("leagues.table.diff")}</th>
+                <th title={t("leagues.table.formTitle")}>{t("leagues.table.form")}</th>
+                <th className="league-th-trend" title={t("leagues.table.trendTitle")}>
                   <TrendingUp size={14} strokeWidth={2.5} aria-hidden="true" />
-                  <span className="sr-only">Trend</span>
+                  <span className="sr-only">{t("leagues.table.trend")}</span>
                 </th>
-                <th>Pkt</th>
+                <th>{t("leagues.table.points")}</th>
               </>
             )}
           </tr>

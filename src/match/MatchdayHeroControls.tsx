@@ -33,7 +33,7 @@ export function MatchdayHeroControls({
   const transportDisabled = disabled ?? false;
 
   return (
-    <div className="matchday-hero-controls segmented-control" aria-label="Match-Ansicht und Tempo">
+    <div className="matchday-hero-controls segmented-control" aria-label={t("match.hero.controlsAria")}>
       <MatchPresentationToggle
         value={presentationMode}
         onChange={onPresentationModeChange}
@@ -75,12 +75,12 @@ export function MatchdayHeroControls({
       </div>
       <span className="matchday-hero-controls-sep" aria-hidden="true" />
       <label className="matchday-hero-speed">
-        <span className="matchday-hero-speed-label">Speed</span>
+        <span className="matchday-hero-speed-label">{t("match.hero.speedLabel")}</span>
         <select
           value={speed}
           onChange={(event) => onSpeedChange(Number(event.target.value))}
           disabled={disabled}
-          aria-label="Simulationsgeschwindigkeit"
+          aria-label={t("match.hero.speedAria")}
         >
           {CAREER_MATCH_SPEED_OPTIONS.map((rate) => (
             <option key={rate} value={rate}>

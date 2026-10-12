@@ -15,6 +15,7 @@ import { roundStat } from "../types/player-display.ts";
 import { caGroup, estimateCa } from "../transfers/market-value.ts";
 import type { AbilityEstimate } from "../scouting/estimate-model.ts";
 import { scoutReveal } from "../scouting/scout-visibility.ts";
+import { t } from "../i18n/index.ts";
 import { formatSeasonLabel } from "../sim/season-label.ts";
 
 import { breakoutDisplayLabel, isTimelineVisibleBreakout } from "../development/breakouts.ts";
@@ -109,7 +110,10 @@ const ATTRIBUTE_LABELS: Partial<Record<keyof Attributes, string>> = {
 };
 
 export function attributeLabel(key: keyof Attributes): string {
-  return ATTRIBUTE_LABELS[key] ?? key;
+  const i18nKey = `player.attribute.${key}`;
+  const translated = t(i18nKey);
+  if (translated !== i18nKey) return translated;
+  return ATTRIBUTE_LABELS[key] ?? String(key);
 }
 
 export function profileFacts(player: Player, owned: boolean): ProfileFact[] {

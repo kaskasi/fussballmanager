@@ -167,6 +167,7 @@ export type {
 } from "./match-report.ts";
 export {
   buildMatchConditions,
+  matchWeatherIndex,
   buildMatchReport,
   formatMatchMinuteLabel,
 } from "./match-report.ts";

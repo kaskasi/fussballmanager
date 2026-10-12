@@ -302,18 +302,6 @@ export function AppNav({
                     <button
                       type="button"
                       role="menuitem"
-                      className="row-menu-item"
-                      onClick={() => {
-                        onCloseProfile?.();
-                        onNavigate("matchday");
-                        setMenuOpen(false);
-                      }}
-                    >
-                      {tr("shell.menu.matchdaySandbox")}
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
                       className="row-menu-item pipeline-menu-danger"
                       onClick={() => setResetAsk(true)}
                     >

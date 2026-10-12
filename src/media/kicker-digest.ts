@@ -43,11 +43,19 @@ export type TreterArticleKind =
   | "stadium"
   | "merch";
 
+export interface TreterArticleTickerI18n {
+  kickerKey?: string;
+  headlineKey?: string;
+  params?: Record<string, string | number>;
+}
+
 export interface TreterArticle {
   id: string;
   kind: TreterArticleKind;
   headline: string;
   kicker?: string;
+  /** Preferred over raw kicker/headline in UI ticker */
+  tickerI18n?: TreterArticleTickerI18n;
   body: string;
   imageSrc?: string;
   imageAlt?: string;
@@ -414,34 +422,42 @@ function collectRotatingTabloid(session: GameSession, clubLabel: string): Treter
   const templates = [
     {
       headline: "Liga-Whisper",
+      headlineKey: "media.treter.rotate.ligaWhisper",
       body: `${clubLabel} dominiert die Kaffeeküche — auf dem Platz suchen andere noch den Ton.`,
     },
     {
       headline: "Transfer-Radar",
+      headlineKey: "media.treter.rotate.transferRadar",
       body: `Kein eigener Deal diese Woche, aber der Markt brodelt. Scouts aus ${clubLabel} sollen « zwei, drei Namen » notiert haben.`,
     },
     {
       headline: "Trainingseindruck",
+      headlineKey: "media.treter.rotate.trainingImpression",
       body: `Montag hard, Dienstag laut: ${clubLabel} arbeitet an Details. « Kleine Schritte », sagt der Co-Trainer — Der Treter glaubt's, wenn's Punkte regnet.`,
     },
     {
       headline: "Fan-Stimmung",
+      headlineKey: "media.treter.rotate.fanMood",
       body: `Ausverkaufte Sektor-Rituale? Nicht überall. ${clubLabel} braucht Ergebnisse, damit die Kurve wieder mitzieht.`,
     },
     {
       headline: "Jugend blinkt auf",
+      headlineKey: "media.treter.rotate.youthSpotlight",
       body: `U19 und U17 liefern Neugier — ${clubLabel} hält die Pipeline im Blick, ohne sie zu überhöhen.`,
     },
     {
       headline: "Kassen-Blick",
+      headlineKey: "media.treter.rotate.finances",
       body: `Merch, Eintritt, Sponsoring: ${clubLabel} jongliert Zahlen. Sportlich muss es passen — sonst wird's eng.`,
     },
     {
       headline: "Gegner-Check",
+      headlineKey: "media.treter.rotate.opponentCheck",
       body: `Nächster Gegner in Form? ${clubLabel} studiert Video — « Respekt, aber kein Angstschweiß », heißt es intern.`,
     },
     {
       headline: "Medizin & Fitness",
+      headlineKey: "media.treter.rotate.medicalFitness",
       body: `Der Kader ist kein Krankenhaus — trotzdem achtet ${clubLabel} auf Load. Rotation wird zum Thema.`,
     },
   ];
@@ -451,6 +467,11 @@ function collectRotatingTabloid(session: GameSession, clubLabel: string): Treter
     kind: "form",
     headline: pick.headline,
     kicker: "Redaktion",
+    tickerI18n: {
+      kickerKey: "media.treter.kicker.editorial",
+      headlineKey: pick.headlineKey,
+      params: { clubLabel },
+    },
     body: pick.body,
     layout: "column",
     priority: 32,

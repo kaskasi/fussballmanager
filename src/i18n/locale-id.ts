@@ -10,6 +10,13 @@ export function htmlLang(locale: LocaleId): string {
   return locale;
 }
 
+/** BCP 47 tag for `Intl` date/time formatting. */
+export function localeBcp47(locale: LocaleId): string {
+  if (locale === "zh-Hans") return "zh-CN";
+  if (locale === "en") return "en-GB";
+  return "de-DE";
+}
+
 export function detectBrowserLocale(): LocaleId {
   if (typeof navigator === "undefined") return "de";
   const tag = navigator.language.toLowerCase();

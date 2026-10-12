@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import type { Player } from "../types/player.ts";
 import type { CoachingStaff } from "../staff/coaching-staff.ts";
 import { coachEnvironmentFactor } from "../staff/coaching-staff.ts";
@@ -149,10 +150,10 @@ export function playerInjuryRisk(
 ): InjuryRiskSummary {
   const score = injuryRiskScore(player, intensity, injuryRiskFactor);
   if (score >= 70) {
-    return { ampel: "risk", icon: "◆", label: `Verletzungsrisiko hoch (${score})`, score };
+    return { ampel: "risk", icon: "◆", label: t("fitness.risk.high", { score }), score };
   }
   if (score >= 40) {
-    return { ampel: "watch", icon: "▲", label: `Risiko beobachten (${score})`, score };
+    return { ampel: "watch", icon: "▲", label: t("fitness.risk.watch", { score }), score };
   }
-  return { ampel: "good", icon: "●", label: `Risiko niedrig (${score})`, score };
+  return { ampel: "good", icon: "●", label: t("fitness.risk.low", { score }), score };
 }

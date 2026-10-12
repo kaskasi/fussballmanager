@@ -46,13 +46,21 @@ const WEATHER = [
   "Herbstsonne, 16 °C",
 ] as const;
 
-function hashPick(seed: number, salt: string, options: readonly string[]): string {
+function hashPickIndex(seed: number, salt: string, length: number): number {
   let hash = seed;
   for (let index = 0; index < salt.length; index += 1) {
     hash = Math.imul(hash ^ salt.charCodeAt(index), 0x9e3779b1);
   }
-  const index = Math.abs(hash) % options.length;
-  return options[index]!;
+  return Math.abs(hash) % length;
+}
+
+function hashPick(seed: number, salt: string, options: readonly string[]): string {
+  return options[hashPickIndex(seed, salt, options.length)]!;
+}
+
+/** Stable weather variant for display i18n (`match.weather.{index}`). */
+export function matchWeatherIndex(seed: number): number {
+  return hashPickIndex(seed, "weather", WEATHER.length);
 }
 
 export function formatMatchMinuteLabel(clock: MatchClock): string {

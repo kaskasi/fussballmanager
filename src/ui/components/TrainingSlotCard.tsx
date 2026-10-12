@@ -11,17 +11,11 @@ import {
   type TrainingHighlightMetric,
   type TrainingSlotOutcome,
 } from "../../development/training-unit-result.ts";
-import type { SessionGroup } from "../../development/weekly-plan.ts";
+import { trainingGroupDisplayLabel, trainingUnitDisplayLabel } from "../../i18n/training-unit-display.ts";
 import { t } from "../../i18n/index.ts";
 
-const GROUP_LABELS: Record<SessionGroup, string> = {
-  technical: "Technik",
-  physical: "Athletik",
-  mental: "Mental",
-};
-
 function trainingHighlightLabel(metric: TrainingHighlightMetric): string {
-  if (metric === "fitness") return "Fitness";
+  if (metric === "fitness") return t("squad.col.fitness");
   return attributeLabel(metric);
 }
 
@@ -100,8 +94,8 @@ export function TrainingSlotCard({
           </>
         ) : (
           <>
-            <strong className="training-unit-name">{unit!.label}</strong>
-            <span className="training-group">{GROUP_LABELS[unit!.group]}</span>
+            <strong className="training-unit-name">{trainingUnitDisplayLabel(unit!)}</strong>
+            <span className="training-group">{trainingGroupDisplayLabel(unit!.group)}</span>
             <span className="training-skills">
               {unit!.fitnessRecoveryFraction !== undefined
                 ? trainingUnitPickerDetail(unit!, true)

@@ -44,6 +44,22 @@ export function commentaryI18n(
       };
     }
     case "shot_goal": {
+      if (event.type === "goal") {
+        const scorer = player(ctx, event.scorer.playerId);
+        if (event.assist) {
+          return {
+            key: "match.beat.goal_assist",
+            params: {
+              scorer,
+              assist: player(ctx, event.assist.playerId),
+            },
+          };
+        }
+        return {
+          key: "match.beat.goal_plain",
+          params: { scorer },
+        };
+      }
       if (event.type !== "shot" || event.outcome !== "goal") return null;
       const attackTeam = event.possessionTeamId ?? event.shooter.teamId;
       return {

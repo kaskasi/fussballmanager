@@ -1,8 +1,9 @@
 import type { MatchClock, MatchView, MatchViewFrame } from "@fussballmanager/shared";
+import { useT } from "../i18n/react.ts";
 import { formatLeagueMatchKickoffLabel } from "./match-kickoff-format.ts";
 import { MatchStats } from "./MatchStats";
 
-function clockLabel(clock: MatchClock): string {
+function clockLabel(clock: MatchClock, fullTimeLabel: string): string {
   const sec = String(clock.second).padStart(2, "0");
   const firstStoppage =
     clock.period === "first_half" &&
@@ -16,7 +17,7 @@ function clockLabel(clock: MatchClock): string {
     return `${clock.minute}+${clock.stoppageMinute}'${sec}`;
   }
   if (clock.period === "full_time") {
-    return "FT";
+    return fullTimeLabel;
   }
   return `${clock.minute}'${sec}`;
 }
@@ -38,6 +39,7 @@ export function Scoreboard({
   fullClubNames = false,
   previewKickoff,
 }: ScoreboardProps) {
+  const t = useT();
   const homeLabel = fullClubNames ? view.home.name : view.home.shortName;
   const awayLabel = fullClubNames ? view.away.name : view.away.shortName;
   const kickoffScheduleLabel =
@@ -47,6 +49,7 @@ export function Scoreboard({
       previewKickoff.week,
       previewKickoff.weekday,
     );
+  const ftLabel = t("match.scoreboard.fullTimeShort");
 
   if (compact) {
     return (
@@ -60,15 +63,19 @@ export function Scoreboard({
             <span className="clock">
               {kickoffScheduleLabel
                 ? `${view.home.formation} vs ${view.away.formation}`
-                : `${clockLabel(frame.clock)} · ${view.home.formation} vs ${view.away.formation}`}
+                : `${clockLabel(frame.clock, ftLabel)} · ${view.home.formation} vs ${view.away.formation}`}
             </span>
           </div>
           <span className="side away">{awayLabel}</span>
         </div>
         <details className="match-stats-drawer">
           <summary>
-            Statistik · Tore {frame.stats.home.goals}–{frame.stats.away.goals} · Schüsse{" "}
-            {frame.stats.home.shots}–{frame.stats.away.shots}
+            {t("match.scoreboard.statsSummary", {
+              homeGoals: frame.stats.home.goals,
+              awayGoals: frame.stats.away.goals,
+              homeShots: frame.stats.home.shots,
+              awayShots: frame.stats.away.shots,
+            })}
           </summary>
           <MatchStats view={view} stats={frame.stats} compact />
         </details>
@@ -78,7 +85,7 @@ export function Scoreboard({
 
   return (
     <header className="scoreboard">
-      <p className="eyebrow">Matchday</p>
+      <p className="eyebrow">{t("match.scoreboard.matchdayEyebrow")}</p>
       <div className="score-row">
         <span className="side home">{view.home.name}</span>
         <span className="score">
@@ -87,7 +94,7 @@ export function Scoreboard({
         <span className="side away">{view.away.name}</span>
       </div>
       <p className="clock">
-        {clockLabel(frame.clock)}
+        {clockLabel(frame.clock, ftLabel)}
         <span className="formations">
           {view.home.formation} vs {view.away.formation}
         </span>

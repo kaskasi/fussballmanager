@@ -94,28 +94,14 @@ export function LeagueLeaderLists({
 
 type LeaderKind = "goals" | "assists" | "yellows" | "discipline";
 
-const LEADER_EMPTY: Record<LeaderKind, { icon: string; line: (matchdays: number) => string }> = {
-  goals: {
-    icon: "⚽",
-    line: (matchdays) =>
-      matchdays === 0 ? "Noch kein Spieltag — Tore folgen nach Anpfiff." : "Noch keine Tore in dieser Liga.",
-  },
-  assists: {
-    icon: "🅰️",
-    line: (matchdays) =>
-      matchdays === 0 ? "Noch kein Spieltag — Vorlagen folgen nach Anpfiff." : "Noch keine Vorlagen erfasst.",
-  },
-  yellows: {
-    icon: "🟨",
-    line: (matchdays) =>
-      matchdays === 0 ? "Noch kein Spieltag — Karten folgen nach Anpfiff." : "Noch keine gelben Karten.",
-  },
-  discipline: {
-    icon: "▮",
-    line: (matchdays) =>
-      matchdays === 0 ? "Noch kein Spieltag — Karten folgen nach Anpfiff." : "Noch keine Kartenpunkte.",
-  },
-};
+function leaderEmptyLine(
+  kind: LeaderKind,
+  matchdays: number,
+  tr: (key: string, params?: Record<string, string | number>) => string,
+): string {
+  const phase = matchdays === 0 ? "pre" : "none";
+  return tr(`leagues.leaders.empty.${kind}.${phase}`);
+}
 
 function LeaderList({
   title,
@@ -136,7 +122,10 @@ function LeaderList({
   compact?: boolean;
   scoreHint?: string;
 }) {
-  const empty = LEADER_EMPTY[kind];
+  const tr = useT();
+  const emptyLine = leaderEmptyLine(kind, matchdaysPlayed, tr);
+  const emptyIcon =
+    kind === "goals" ? "⚽" : kind === "assists" ? "🅰️" : kind === "yellows" ? "🟨" : "▮";
   const displayScore = (row: PlayerSeasonStat) => {
     if (kind === "goals") return row.goals;
     if (kind === "assists") return row.assists;
@@ -166,15 +155,15 @@ function LeaderList({
           ))}
         </ol>
       ) : compact ? (
-        <p className="league-leader-empty-line is-compact">{empty.line(matchdaysPlayed)}</p>
+        <p className="league-leader-empty-line is-compact">{emptyLine}</p>
       ) : (
         <div className="league-leader-empty-state">
           <div className="league-leader-podium" aria-hidden>
-            <span className="league-leader-podium-slot is-second">{empty.icon}</span>
-            <span className="league-leader-podium-slot is-first">{empty.icon}</span>
-            <span className="league-leader-podium-slot is-third">{empty.icon}</span>
+            <span className="league-leader-podium-slot is-second">{emptyIcon}</span>
+            <span className="league-leader-podium-slot is-first">{emptyIcon}</span>
+            <span className="league-leader-podium-slot is-third">{emptyIcon}</span>
           </div>
-          <p className="league-leader-empty-line">{empty.line(matchdaysPlayed)}</p>
+          <p className="league-leader-empty-line">{emptyLine}</p>
         </div>
       )}
     </div>

@@ -8,6 +8,7 @@ import {
   type PitchLateral,
   type PitchThird,
 } from "./pitch-zone.ts";
+import { useT } from "../i18n/react.ts";
 import { PITCH_H, PITCH_W, SimplePitchMarkings } from "./pitch-markings.tsx";
 
 const THIRDS: PitchThird[] = ["defensive", "middle", "attacking"];
@@ -45,6 +46,7 @@ type EventsHudProps = {
 };
 
 export function EventsHud({ frame, homeTeamId }: EventsHudProps) {
+  const t = useT();
   const { third, lateral } = ballZone(frame.ball, frame.possessionTeamId, homeTeamId);
   const targetX = clampPct(frame.ball.x);
   const targetY = clampPct(frame.ball.y);
@@ -75,10 +77,10 @@ export function EventsHud({ frame, homeTeamId }: EventsHudProps) {
   }, [targetX, targetY, frame.seq]);
 
   return (
-    <div className="events-hud" aria-label="Spielraum">
+    <div className="events-hud" aria-label={t("match.hud.playSpaceAria")}>
       <div className="events-hud-panels">
         <div className="events-hud-panel">
-          <p className="events-hud-panel-title">Drittel</p>
+          <p className="events-hud-panel-title">{t("match.hud.thirdsTitle")}</p>
           <div className="events-hud-thirds" role="img" aria-label={pitchThirdLabel(third)}>
             <PitchPanelBackground />
             {THIRDS.map((zone) => (
@@ -100,7 +102,7 @@ export function EventsHud({ frame, homeTeamId }: EventsHudProps) {
         </div>
 
         <div className="events-hud-panel">
-          <p className="events-hud-panel-title">Seite</p>
+          <p className="events-hud-panel-title">{t("match.hud.sideTitle")}</p>
           <div className="events-hud-lateral" role="img" aria-label={pitchLateralLabel(lateral)}>
             <PitchPanelBackground />
             {LATERALS.map((zone) => (

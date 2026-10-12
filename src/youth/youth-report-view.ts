@@ -15,15 +15,17 @@ import {
   type YouthInboxState,
 } from "./decision-inbox.ts";
 import { isHqYouth } from "./youth-site.ts";
+import { t } from "../i18n/index.ts";
+import { trainingGroupDisplayLabel } from "../i18n/training-unit-display.ts";
 import type { YouthReport } from "./youth-sim.ts";
 
 export const YOUTH_REPORT_ACTIONS = ["loan", "promote", "contract", "training_focus"] as const;
 export type YouthReportDropAction = (typeof YOUTH_REPORT_ACTIONS)[number];
 
-const GROUP_TARGET: Record<"technical" | "physical" | "mental", { icon: string; title: string }> = {
-  physical: { icon: "💪", title: "Physis" },
-  technical: { icon: "🎯", title: "Technik" },
-  mental: { icon: "🧠", title: "Mental" },
+const GROUP_TARGET: Record<"technical" | "physical" | "mental", { icon: string; group: "technical" | "physical" | "mental" }> = {
+  physical: { icon: "💪", group: "physical" },
+  technical: { icon: "🎯", group: "technical" },
+  mental: { icon: "🧠", group: "mental" },
 };
 
 export function formatYouthReportName(player: Pick<Player, "name" | "portrait_seed">): string {
@@ -125,10 +127,10 @@ export function youthReportTarget(
   const firstConfigured = plan.find((slot) => !isTrainingSlotEmpty(slot));
   const slot = focused ?? firstConfigured;
   if (!slot || isTrainingSlotEmpty(slot)) {
-    return { icon: "🏋️", title: "Kein Plan", progress: null };
+    return { icon: "🏋️", title: t("training.program.noPlan"), progress: null };
   }
   const group = GROUP_TARGET[trainingUnit(slot.unitId).group];
-  return { icon: group.icon, title: group.title, progress: null };
+  return { icon: group.icon, title: trainingGroupDisplayLabel(group.group), progress: null };
 }
 
 export type YouthReportDropResult =

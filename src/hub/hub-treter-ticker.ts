@@ -1,5 +1,6 @@
 import type { GameSession } from "../persistence/game-session.ts";
 import { buildTreterEdition, type TreterEdition } from "../media/kicker-digest.ts";
+import { formatTreterTickerLine } from "../i18n/treter-display.ts";
 
 export function compareTreterEditionRecency(a: TreterEdition, b: TreterEdition): number {
   if (a.season !== b.season) return b.season - a.season;
@@ -26,7 +27,5 @@ export function hubLatestTreterEdition(input: {
 }
 
 export function treterTickerLines(edition: TreterEdition): string[] {
-  return edition.articles.map((article) =>
-    article.kicker ? `${article.kicker} — ${article.headline}` : article.headline,
-  );
+  return edition.articles.map((article) => formatTreterTickerLine(article));
 }

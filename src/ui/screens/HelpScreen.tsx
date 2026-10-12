@@ -132,6 +132,22 @@ function StoryPanel() {
   const t = useT();
   return (
     <div className="help-panel">
+      <section className="help-card" aria-labelledby="help-mission">
+        <h2 id="help-mission">
+          <HelpInlineIcon icon={Heart} /> {t("help.story.mission.title")}
+        </h2>
+        <p>{t("help.story.mission.body")}</p>
+        <p className="help-note">
+          <a
+            href="https://kaskasi.itch.io/the-club/devlog/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("help.story.mission.devlogLink")}
+          </a>
+        </p>
+      </section>
+
       <section className="help-card" aria-labelledby="help-promise">
         <h2 id="help-promise">
           <HelpInlineIcon icon={Landmark} /> {t("help.story.promise.title")}

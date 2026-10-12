@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hubLatestTreterEdition, treterTickerLines } from "./hub-treter-ticker.ts";
 import type { TreterArticle, TreterEdition } from "../media/kicker-digest.ts";
+import { setLocale } from "../i18n/index.ts";
 
 const emptyLeague: TreterEdition["league"] = { matchdaysPlayed: 0, table: [], scorers: [] };
 
@@ -50,9 +51,27 @@ describe("hubLatestTreterEdition", () => {
 
 describe("treterTickerLines", () => {
   it("joins kicker and headline", () => {
+    setLocale("en");
     const lines = treterTickerLines(
       edition({ season: 1, week: 1, masthead: "", articles: [article("Title", "Liga")] }),
     );
     expect(lines).toEqual(["Liga — Title"]);
+  });
+
+  it("localizes rotating tabloid filler in Chinese", () => {
+    setLocale("zh-Hans");
+    const rotate: TreterArticle = {
+      id: "treter-rotate-1-1",
+      kind: "form",
+      headline: "Trainingseindruck",
+      kicker: "Redaktion",
+      body: "",
+      layout: "column",
+      priority: 32,
+    };
+    const lines = treterTickerLines(
+      edition({ season: 1, week: 1, masthead: "", articles: [rotate] }),
+    );
+    expect(lines).toEqual(["编辑部 — 训练印象"]);
   });
 });

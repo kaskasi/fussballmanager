@@ -409,17 +409,20 @@ export function createBroadcastDirector(input: {
     }
 
     if (worthy && shouldEmitPlayByPlay(beat)) {
-      const pbpI18n = commentaryI18n(event, ctx, beat);
-      const prefix = isShotBeat(beat) ? shotLinePrefix(seed, event.seq, macroId) : "";
-      const body = commentate(event, ctx);
-      lines.push({
-        seq: event.seq,
-        beatId: beat,
-        voice: "pbp",
-        text: `${formatClock(event.clock)}  ${prefix}${body}`,
-        i18nKey: pbpI18n?.key,
-        i18nParams: pbpI18n?.params,
-      });
+      const deferGoalPbp = event.type === "shot" && event.outcome === "goal";
+      if (!deferGoalPbp) {
+        const pbpI18n = commentaryI18n(event, ctx, beat);
+        const prefix = isShotBeat(beat) ? shotLinePrefix(seed, event.seq, macroId) : "";
+        const body = commentate(event, ctx);
+        lines.push({
+          seq: event.seq,
+          beatId: beat,
+          voice: "pbp",
+          text: `${formatClock(event.clock)}  ${prefix}${body}`,
+          i18nKey: pbpI18n?.key,
+          i18nParams: pbpI18n?.params,
+        });
+      }
 
       const allowMacroColor =
         allowsMacroColorOnBeat(beat) &&

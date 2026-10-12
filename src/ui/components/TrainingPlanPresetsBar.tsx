@@ -7,6 +7,7 @@ import {
   type TrainingPlanPresetSlot,
 } from "../../development/training-plan-presets.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
+import { trainingPresetDisplayLabel } from "../../i18n/training-preset-display.ts";
 import { useT } from "../../i18n/react.ts";
 
 export function TrainingPlanPresetsBar({
@@ -30,7 +31,7 @@ export function TrainingPlanPresetsBar({
     const next = saveTrainingPlanPreset(presets, id, currentPlan);
     onPresetsChange(next);
     const slot = next.find((entry) => entry.id === id);
-    onNotice(tr("training.presets.saved", { label: slot?.label ?? String(id) }), "ok");
+    onNotice(tr("training.presets.saved", { label: trainingPresetDisplayLabel(id) }), "ok");
   }
 
   function handleLoad(id: TrainingPlanPresetId) {
@@ -40,11 +41,11 @@ export function TrainingPlanPresetsBar({
     }
     const slot = presets.find((entry) => entry.id === id);
     if (!slot || !trainingPresetHasContent(slot)) {
-      onNotice(tr("training.presets.empty", { label: slot?.label ?? String(id) }), "warn");
+      onNotice(tr("training.presets.empty", { label: trainingPresetDisplayLabel(id) }), "warn");
       return;
     }
     onPlanChange(loadTrainingPlanPreset(presets, id));
-    onNotice(tr("training.presets.loaded", { label: slot.label }), "ok");
+    onNotice(tr("training.presets.loaded", { label: trainingPresetDisplayLabel(id) }), "ok");
   }
 
   return (
@@ -58,17 +59,17 @@ export function TrainingPlanPresetsBar({
                 ? "training-plan-preset-load"
                 : "training-plan-preset-load is-empty"
             }
-            title={tr("training.presets.loadTitle", { label: slot.label })}
+            title={tr("training.presets.loadTitle", { label: trainingPresetDisplayLabel(slot.id) })}
             onClick={() => handleLoad(slot.id)}
           >
             <Download size={14} strokeWidth={2.25} aria-hidden="true" />
-            <span className="training-plan-preset-label">{slot.label}</span>
+            <span className="training-plan-preset-label">{trainingPresetDisplayLabel(slot.id)}</span>
           </button>
           <button
             type="button"
             className="training-plan-preset-save"
-            title={tr("training.presets.saveTitle", { label: slot.label })}
-            aria-label={tr("training.presets.saveTitle", { label: slot.label })}
+            title={tr("training.presets.saveTitle", { label: trainingPresetDisplayLabel(slot.id) })}
+            aria-label={tr("training.presets.saveTitle", { label: trainingPresetDisplayLabel(slot.id) })}
             onClick={() => handleSave(slot.id)}
           >
             <Upload size={14} strokeWidth={2.25} aria-hidden="true" />

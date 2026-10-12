@@ -15,6 +15,8 @@ import {
   type YouthCampNation,
 } from "../../youth/satellite-camps.ts";
 import { formatPlayerName, formatPlayerPositionLabel } from "../../types/player-display.ts";
+import { useT } from "../../i18n/react.ts";
+import { youthCampNationLabel } from "../../i18n/youth-camp-display.ts";
 import { campPhotoGradient } from "../assets/camp-photos.ts";
 import { PlayerPortrait } from "./PlayerPortrait.tsx";
 
@@ -41,6 +43,8 @@ export function YouthCampCard({
   onRequestDismissLeader: (nationId: string) => void;
   onPull: (playerId: string) => void;
 }) {
+  const t = useT();
+  const nationLabel = youthCampNationLabel(nation.id, nation.label);
   const buy = canBuyYouthCamp(camps, nation.id, cash);
   const roster = owned ? campRoster(players, nation.id) : [];
   const hireState = owned?.leader_hire ?? "none";
@@ -54,7 +58,7 @@ export function YouthCampCard({
   return (
     <article
       className={`youth-camp-card${owned ? " is-owned" : buy.ok ? " is-available" : " is-locked"}${rosterSlots <= 3 ? " is-compact-roster" : ""}`}
-      aria-label={`${nation.label} ${nation.region}`}
+      aria-label={`${nationLabel} ${nation.region}`}
       style={{ ["--youth-camp-roster-slots" as string]: rosterSlots }}
     >
       <header className="youth-camp-card-header">
@@ -67,7 +71,7 @@ export function YouthCampCard({
         <div className="youth-camp-card-head-row">
           <div className="youth-camp-card-head">
             <h3>
-              {nation.label}
+              {nationLabel}
               <span className="youth-camp-card-region">{nation.region}</span>
             </h3>
             {!owned ? (
@@ -132,7 +136,7 @@ export function YouthCampCard({
         {!owned && buy.ok ? (
           <div className="youth-camp-card-actions">
             <button type="button" className="negotiation-btn negotiation-btn-primary" onClick={() => onBuy(nation.id)}>
-              Kaufen
+              {t("youth.camp.buy")}
             </button>
           </div>
         ) : null}

@@ -16,4 +16,17 @@ describe("board-display", () => {
     };
     expect(objectiveDisplayLabel(objective, 1)).toContain("Stay up");
   });
+
+  it("localizes medical project objective in Chinese", () => {
+    setLocale("zh-Hans");
+    const objective: BoardObjective = {
+      id: "project_medical",
+      kind: "project",
+      projectId: "medical_center",
+      target: 1,
+      label: "Arztzentrum im Gelände",
+      icon: "medical",
+    };
+    expect(objectiveDisplayLabel(objective, 1)).toBe("园区医疗中心");
+  });
 });

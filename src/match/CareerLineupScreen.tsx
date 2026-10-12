@@ -9,7 +9,6 @@ import {
   type SandboxPlan,
   type Squad,
 } from "@fussballmanager/shared";
-import { buildMatchConditions } from "@fussballmanager/shared";
 import {
   Calendar,
   CalendarDays,
@@ -55,7 +54,10 @@ import { MatchdayLineupAmbience } from "../ui/components/MatchdayLineupAmbience.
 import { buildOpponentLineupPreview } from "./opponent-lineup-preview.ts";
 import { clubShortName } from "../sim/league-week.ts";
 import { careerTeamId } from "../sim/rival-growth.ts";
+import { getLocale } from "../i18n/index.ts";
+import { localeBcp47 } from "../i18n/locale-id.ts";
 import { formatLeagueMatchKickoffLabel } from "./match-kickoff-format.ts";
+import { formatMatchWeatherDisplay } from "./match-weather-display.ts";
 import { listProSquad, sortProSquadRows } from "../squad/pro-roster.ts";
 import { lineupFormFromCareer } from "./lineup-player-status.ts";
 import { LineupFatigueBars } from "./LineupFatigueBars.tsx";
@@ -286,8 +288,9 @@ export function CareerLineupScreen({
   }
 
   const matchdayLabel = setup.isHome ? t("match.career.side.home") : t("match.career.side.away");
-  const matchConditions = buildMatchConditions(setup.seed);
+  const weatherLabel = formatMatchWeatherDisplay(setup.seed);
   const kickoffLabel = formatLeagueMatchKickoffLabel(season, week, weekday);
+  const numberFormat = localeBcp47(getLocale());
   const capacity = homeStadiumCapacity ?? 8_000;
   const occupancy = kasse?.occupancy ?? (setup.isHome ? 0.72 : 0.06);
   const expectedSpectators = setup.isHome
@@ -460,13 +463,13 @@ export function CareerLineupScreen({
                 </li>
                 <li>
                   <CloudSun size={15} strokeWidth={2.25} aria-hidden />
-                  <span>{matchConditions.weather}</span>
+                  <span>{weatherLabel}</span>
                 </li>
                 <li>
                   <Users size={15} strokeWidth={2.25} aria-hidden />
                   <span>
                     {t("match.lineup.spectators", {
-                      count: expectedSpectators.toLocaleString("de-DE"),
+                      count: expectedSpectators.toLocaleString(numberFormat),
                     })}
                   </span>
                 </li>
@@ -477,8 +480,7 @@ export function CareerLineupScreen({
               <h2>{t("match.lineup.tactics")}</h2>
               <div className="lineup-tactics-pills" role="group" aria-label={t("match.lineup.playStyleAria")}>
                 {TACTICS_STYLE_IDS.map((presetId) => {
-                  const preset = tacticsPresets.find((entry) => entry.id === presetId);
-                  const label = preset?.label ?? `Preset ${presetId}`;
+                  const label = t(`match.tactics.preset.${presetId}`);
                   return (
                     <div key={presetId} className="lineup-tactics-pill-row">
                       <button

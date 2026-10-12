@@ -1,3 +1,5 @@
+import { getLocale } from "../i18n/index.ts";
+import { localeBcp47 } from "../i18n/locale-id.ts";
 import { SATURDAY } from "../sim/day-calendar.ts";
 import { civilDateFromSession } from "../sim/session-civil-date.ts";
 
@@ -18,13 +20,14 @@ export function formatLeagueMatchKickoffLabel(
     LEAGUE_MATCH_KICKOFF_HOUR,
     LEAGUE_MATCH_KICKOFF_MINUTE,
   );
-  const datePart = kickoff.toLocaleDateString("de-DE", {
+  const intlTag = localeBcp47(getLocale());
+  const datePart = kickoff.toLocaleDateString(intlTag, {
     weekday: "short",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
-  const timePart = kickoff.toLocaleTimeString("de-DE", {
+  const timePart = kickoff.toLocaleTimeString(intlTag, {
     hour: "2-digit",
     minute: "2-digit",
   });

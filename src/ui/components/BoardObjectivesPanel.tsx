@@ -1,20 +1,17 @@
 import type { ClubFinances } from "../../economy/club-finances.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
-import {
-  boardObjectiveProgress,
-  boardPressureTone,
-  formatObjectiveProgress,
-} from "../../board/season-objectives.ts";
+import { boardObjectiveProgress, boardPressureTone } from "../../board/season-objectives.ts";
 import { weeklyWageBill } from "../../economy/club-finances.ts";
 import type { Player } from "../../types/player.ts";
 import type { YouthCamp } from "../../youth/satellite-camps.ts";
 import type { ClubStadium } from "../../stadium/club-stadium.ts";
-import { objectiveDisplayLabel } from "../../i18n/board-display.ts";
+import { formatObjectiveProgressDisplay, objectiveDisplayLabel } from "../../i18n/board-display.ts";
 import type { BoardState } from "../../board/board-state.ts";
 import { SURVIVAL_TARGET_PLACE } from "../../narrative/season-objectives.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { clubShortName } from "../../sim/league-week.ts";
+import { BoardObjectiveIcon } from "./BoardObjectiveIcon.tsx";
 
 /**
  * WIREFRAME: PRD 09 — Vorstand-Saisonziele auf dem Pipeline-Hub
@@ -69,7 +66,7 @@ export function BoardObjectivesPanel({
             aria-valuenow={board.pressure}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label={`Vorstand-Druck ${board.pressure} Prozent`}
+            aria-label={t("hub.board.pressureMeter", { percent: board.pressure })}
           >
             <span className="board-pressure-fill" style={{ width: `${board.pressure}%` }} />
           </div>
@@ -94,12 +91,12 @@ export function BoardObjectivesPanel({
                     : "board-objective"
               }
             >
-              <span className="board-objective-icon" aria-hidden="true">{objective.icon}</span>
+              <BoardObjectiveIcon icon={objective.icon} />
               <span className="board-objective-label">
-                {objective.label || objectiveDisplayLabel(objective, season)}
+                {objectiveDisplayLabel(objective, season)}
               </span>
               <span className="board-objective-value">
-                {entry ? formatObjectiveProgress(objective, entry) : "—"}
+                {entry ? formatObjectiveProgressDisplay(objective, entry) : "—"}
                 <span aria-hidden="true">{met ? " ✓" : ""}</span>
               </span>
             </li>

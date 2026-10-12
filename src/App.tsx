@@ -1085,8 +1085,11 @@ export default function App() {
           action === "loan" && result.transferRecord
             ? loanOutMessage(result.transferRecord)
             : action === "dismiss"
-              ? `Entscheidung vertagt: ${playerName}`
-              : `${actionLabel(action)}: ${playerName}`;
+              ? t("inbox.event.deferredDecision", { player: playerName })
+              : t("inbox.event.actionWithPlayer", {
+                  action: actionLabel(action),
+                  player: playerName,
+                });
         const kind = action === "loan" ? "transfer" : "inbox";
         if (item && inboxActionOpensContractTalk(action, item)) {
           openContractTalkPlayerId = item.playerId;

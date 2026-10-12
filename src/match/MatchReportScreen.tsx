@@ -10,6 +10,8 @@ import type { MatchdayCashBreakdown } from "../stadium/matchday-commerce.ts";
 import { MatchStats } from "./MatchStats.tsx";
 import { MatchThreeStars } from "./MatchThreeStars.tsx";
 import { pickMatchThreeStars } from "./match-three-stars.ts";
+import { useT } from "../i18n/react.ts";
+import { formatMatchWeatherDisplay } from "./match-weather-display.ts";
 import { normalizeMatchView } from "./normalize-match-view.ts";
 import { MatchGoalTimeline } from "./MatchGoalTimeline.tsx";
 import { PlayerPortrait } from "../ui/components/PlayerPortrait.tsx";
@@ -33,6 +35,7 @@ export function MatchReportScreen({
   portraitSeedForPlayerId?: (id: string) => number | undefined;
   onSelectPlayer?: (playerId: string) => void;
 }) {
+  const t = useT();
   const normalized = normalizeMatchView(view);
   const lastFrame = normalized.frames[normalized.frames.length - 1] ?? normalized.kickoff;
   const stats = lastFrame.stats;
@@ -43,8 +46,8 @@ export function MatchReportScreen({
   const activeTeamLabel = teamTab === "home" ? normalized.home.shortName : normalized.away.shortName;
 
   const metaLine = [
-    report.conditions.weather,
-    `Schiri: ${report.conditions.referee}`,
+    formatMatchWeatherDisplay(normalized.seed),
+    t("match.report.referee", { name: report.conditions.referee }),
     `${normalized.home.shortName} ${normalized.home.formation}`,
     `${normalized.away.shortName} ${normalized.away.formation}`,
   ].join(" · ");

@@ -4883,6 +4883,13 @@
   font-size: 0.78rem;
 }
 
+.board-objective-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #64748b);
+}
+
 .board-objective.is-met {
   color: #047857;
 }

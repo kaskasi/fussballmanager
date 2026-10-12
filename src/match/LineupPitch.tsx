@@ -60,7 +60,7 @@ export function LineupPitch({
 
   return (
     <div className="lineup-pitch-panel">
-      <div className="lineup-pitch-tabs" role="tablist" aria-label="Aufstellungsansicht">
+      <div className="lineup-pitch-tabs" role="tablist" aria-label={t("match.lineup.pitchViewAria")}>
         <button
           type="button"
           role="tab"
@@ -126,7 +126,9 @@ export function LineupPitch({
                       <span className="lineup-slot-name">{formatPlayerName(player)}</span>
                     </button>
                   ) : (
-                    <div className="lineup-slot-empty" aria-label={`Slot ${slot.id} leer`}>+</div>
+                    <div className="lineup-slot-empty" aria-label={t("match.lineup.slotEmpty", { slot: slot.id })}>
+                      +
+                    </div>
                   )}
                 </div>
               );

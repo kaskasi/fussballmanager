@@ -1,5 +1,6 @@
 /** WIREFRAME: docs/prd/design.md §9.15 — Live side panel: kickoff XI on pitch */
 import type { MatchView, MatchViewFrame } from "@fussballmanager/shared";
+import { useT } from "../i18n/react.ts";
 import { Pitch } from "./Pitch.tsx";
 
 export function MatchSideLineupPitch({
@@ -9,8 +10,10 @@ export function MatchSideLineupPitch({
   view: MatchView;
   kickoffFrame: MatchViewFrame;
 }) {
+  const t = useT();
+
   return (
-    <div className="matchday-side-lineup-pitch" aria-label="Aufstellungen auf dem Spielfeld">
+    <div className="matchday-side-lineup-pitch" aria-label={t("match.sideLineup.pitchAria")}>
       <Pitch
         from={kickoffFrame}
         to={kickoffFrame}

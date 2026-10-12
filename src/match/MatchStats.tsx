@@ -1,5 +1,6 @@
 import type { MatchPairStats, MatchSideStats, MatchView } from "@fussballmanager/shared";
 import { passCompletionPct } from "@fussballmanager/shared";
+import { useT } from "../i18n/react.ts";
 
 function pctLabel(side: MatchSideStats): string {
   const pct = passCompletionPct(side);
@@ -16,7 +17,7 @@ function barWidth(value: number, other: number): string {
 
 type Row = {
   id: string;
-  label: string;
+  labelKey: string;
   home: string;
   away: string;
   homeBar: number;
@@ -27,7 +28,7 @@ function rows(stats: MatchPairStats): Row[] {
   return [
     {
       id: "goals",
-      label: "Tore",
+      labelKey: "match.stats.goals",
       home: String(stats.home.goals),
       away: String(stats.away.goals),
       homeBar: stats.home.goals,
@@ -35,7 +36,7 @@ function rows(stats: MatchPairStats): Row[] {
     },
     {
       id: "shots",
-      label: "Schüsse",
+      labelKey: "match.stats.shots",
       home: String(stats.home.shots),
       away: String(stats.away.shots),
       homeBar: stats.home.shots,
@@ -43,7 +44,7 @@ function rows(stats: MatchPairStats): Row[] {
     },
     {
       id: "sot",
-      label: "auf Tor",
+      labelKey: "match.stats.shotsOnTarget",
       home: String(stats.home.shotsOnTarget),
       away: String(stats.away.shotsOnTarget),
       homeBar: stats.home.shotsOnTarget,
@@ -51,7 +52,7 @@ function rows(stats: MatchPairStats): Row[] {
     },
     {
       id: "corners",
-      label: "Ecken",
+      labelKey: "match.stats.corners",
       home: String(stats.home.corners),
       away: String(stats.away.corners),
       homeBar: stats.home.corners,
@@ -59,7 +60,7 @@ function rows(stats: MatchPairStats): Row[] {
     },
     {
       id: "pass",
-      label: "Pässe %",
+      labelKey: "match.stats.passPct",
       home: pctLabel(stats.home),
       away: pctLabel(stats.away),
       homeBar: passCompletionPct(stats.home) ?? 0,
@@ -75,10 +76,12 @@ type MatchStatsProps = {
 };
 
 export function MatchStats({ view, stats, compact = false }: MatchStatsProps) {
+  const t = useT();
+
   return (
     <section
       className={compact ? "match-stats match-stats--compact" : "match-stats"}
-      aria-label="Match statistics"
+      aria-label={t("match.stats.aria")}
     >
       <div className="stat-teams">
         <span>{view.home.shortName}</span>
@@ -89,7 +92,7 @@ export function MatchStats({ view, stats, compact = false }: MatchStatsProps) {
           <li key={row.id}>
             <span className="stat-home">{row.home}</span>
             <div className="stat-mid">
-              <span className="stat-label">{row.label}</span>
+              <span className="stat-label">{t(row.labelKey)}</span>
               <div className="stat-track" aria-hidden="true">
                 <span
                   className="stat-fill home"

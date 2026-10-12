@@ -23,6 +23,7 @@ import {
   stampLabel,
   type StampAwardNotice,
 } from "./ability-stamps.ts";
+import { t } from "../i18n/index.ts";
 
 /** F2.3 + F2.8 — extra programs on top of the team plan (PRD 09.2 Screen 1a). */
 export type IndividualProgramKind = "weak_foot" | "position_retrain" | "stamp";
@@ -61,18 +62,24 @@ export const RETRAIN_POSITIONS: readonly PositionPrimary[] = [
 
 export function programLabel(program: IndividualProgram): string {
   if (program.kind === "weak_foot") {
-    return `Schwaches Bein · ${program.weeksRemaining} Wo.`;
+    return t("training.program.weakFootWeeks", { weeks: program.weeksRemaining });
   }
   if (program.kind === "stamp") {
-    return `${stampLabel(program.stampId ?? "?")} · ${program.weeksRemaining} Wo.`;
+    return t("training.program.stampWeeks", {
+      stamp: stampLabel(program.stampId ?? "?"),
+      weeks: program.weeksRemaining,
+    });
   }
-  return `${program.targetPosition ?? "?"} umbauen · ${program.weeksRemaining} Wo.`;
+  return t("training.program.retrainWeeks", {
+    position: program.targetPosition ?? "?",
+    weeks: program.weeksRemaining,
+  });
 }
 
 export function programKindLabel(kind: IndividualProgramKind): string {
-  if (kind === "weak_foot") return "Schwaches Bein";
-  if (kind === "stamp") return "Fähigkeit / Stempel";
-  return "Position umbauen";
+  if (kind === "weak_foot") return t("training.program.kind.weakFoot");
+  if (kind === "stamp") return t("training.program.kind.stamp");
+  return t("training.program.kind.retrain");
 }
 
 export function retrainFailureCount(player: Player, target: PositionPrimary): number {

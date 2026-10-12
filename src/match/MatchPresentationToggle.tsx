@@ -1,3 +1,4 @@
+import { useT } from "../i18n/react.ts";
 import type { MatchPresentationMode } from "./match-presentation-mode.ts";
 
 type MatchPresentationToggleProps = {
@@ -11,8 +12,14 @@ export function MatchPresentationToggle({
   onChange,
   disabled = false,
 }: MatchPresentationToggleProps) {
+  const t = useT();
+
   return (
-    <div className="match-presentation-toggle" role="tablist" aria-label="Hauptansicht: Spielfeld oder Kommentar">
+    <div
+      className="match-presentation-toggle"
+      role="tablist"
+      aria-label={t("match.presentation.tabsAria")}
+    >
       <button
         type="button"
         role="tab"
@@ -21,7 +28,7 @@ export function MatchPresentationToggle({
         disabled={disabled}
         onClick={() => onChange("pitch")}
       >
-        Spielfeld
+        {t("match.presentation.pitch")}
       </button>
       <button
         type="button"
@@ -31,7 +38,7 @@ export function MatchPresentationToggle({
         disabled={disabled}
         onClick={() => onChange("events")}
       >
-        Kommentar
+        {t("match.presentation.commentary")}
       </button>
     </div>
   );

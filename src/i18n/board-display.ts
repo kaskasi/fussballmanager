@@ -27,7 +27,18 @@ export function objectiveDisplayLabel(objective: BoardObjective, season: number)
     case "goal_difference_min":
       return t("board.objective.goalDiff", { suffix });
     case "project":
-      return objective.label;
+      switch (objective.projectId) {
+        case "merch_revenue":
+          return t("board.objective.merchRevenue", { suffix });
+        case "medical_center":
+          return t("board.objective.medicalCenter", { suffix });
+        case "youth_camps":
+          return t("board.objective.youthCamps", { suffix });
+        case "stadium_expand":
+          return t("board.objective.stadiumExpand", { suffix });
+        default:
+          return objective.label;
+      }
   }
   return objective.label;
 }

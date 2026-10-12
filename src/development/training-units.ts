@@ -9,6 +9,11 @@ import {
   assertWeeklyPlanLength,
   isTrainingSlotEmpty,
 } from "./training-plan-state.ts";
+import {
+  trainingPeriodShortLabel,
+  trainingSlotDayUnitLabel,
+} from "../i18n/training-schedule-display.ts";
+import { t } from "../i18n/index.ts";
 import { MONDAY, SATURDAY } from "../sim/day-calendar.ts";
 import { SLOT_COUNT, TRAINING_DAYS, UNITS_PER_DAY, type TrainingSession } from "./weekly-plan.ts";
 
@@ -120,13 +125,11 @@ export function isTrainingDayFullyPastForSession(
 }
 
 export function slotLabel(slotIndex: number): string {
-  const day = TRAINING_DAYS[slotDayIndex(slotIndex)] ?? "?";
-  const period = slotPeriodIndex(slotIndex) + 1;
-  return `${day} · Einheit ${period}`;
+  return trainingSlotDayUnitLabel(slotDayIndex(slotIndex), slotPeriodIndex(slotIndex));
 }
 
 export function slotPeriodLabel(slotIndex: number): string {
-  return `E${slotPeriodIndex(slotIndex) + 1}`;
+  return trainingPeriodShortLabel(slotPeriodIndex(slotIndex));
 }
 
 export const TRAINING_UNITS: readonly TrainingUnit[] = [
@@ -278,15 +281,15 @@ export function unitsForGroup(group: TrainingSession["group"], unlocks?: Trainin
 export function trainingUnitLockHint(unit: TrainingUnit): string {
   switch (unit.requires) {
     case "training_hall":
-      return "Braucht Halle am Trainingszentrum";
+      return t("training.unit.lock.trainingHall");
     case "training_pitch_2":
-      return "Braucht Kunstrasen (Trainingsplatz Stufe 2)";
+      return t("training.unit.lock.pitch2");
     case "training_pitch_3":
-      return "Braucht Hybrid-Rasen (Trainingsplatz Stufe 3)";
+      return t("training.unit.lock.pitch3");
     case "medical_center_2":
-      return "Braucht Medizinisches Zentrum Stufe 2";
+      return t("training.unit.lock.medical2");
     default:
-      return "Gesperrt";
+      return t("training.unit.lock.default");
   }
 }
 
@@ -294,9 +297,15 @@ export function trainingUnitPickerDetail(unit: TrainingUnit, unlocked: boolean):
   if (!unlocked) return trainingUnitLockHint(unit);
   if (unit.fitnessRecoveryFraction !== undefined) {
     const pct = Math.round(unit.fitnessRecoveryFraction * 100);
-    return `Fitness +${pct}% (Ermüdung runter)`;
+    return t("training.unit.recoveryDetail", { pct });
   }
-  return unit.skills.map((skill) => skill).join(" · ");
+  return unit.skills
+    .map((skill) => {
+      const key = `player.attribute.${skill}`;
+      const label = t(key);
+      return label !== key ? label : skill;
+    })
+    .join(" · ");
 }
 
 export function createInitialTrainingPlan(): TrainingSlot[] {

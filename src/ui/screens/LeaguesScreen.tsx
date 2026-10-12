@@ -59,14 +59,15 @@ export function LeaguesScreen({
       <header className="leagues-screen-head">
         <div>
           <p className="eyebrow">{t("leagues.eyebrow")}</p>
-          <h1>Ligen</h1>
+          <h1>{t("leagues.title")}</h1>
           <p className="leagues-screen-sub">
-            Klick auf einen Verein für Kurzprofil · {standings.simulated ? "Fremdliga simuliert" : "Deine Liga live"}
+            {t("leagues.subtitle")} ·{" "}
+            {standings.simulated ? t("leagues.mode.simulated") : t("leagues.mode.live")}
           </p>
         </div>
       </header>
 
-      <div className="leagues-screen-tabs" role="tablist" aria-label="Spielklassen">
+      <div className="leagues-screen-tabs" role="tablist" aria-label={t("leagues.tabsAria")}>
         {DIVISIONS.map((id) => (
           <button
             key={id}
@@ -77,7 +78,9 @@ export function LeaguesScreen({
             onClick={() => setDivisionId(id)}
           >
             {divisionLabel(id)}
-            {id === league.division_id ? <span className="leagues-screen-own"> · dein Verein</span> : null}
+            {id === league.division_id ? (
+              <span className="leagues-screen-own"> · {t("leagues.yourClub")}</span>
+            ) : null}
           </button>
         ))}
       </div>
@@ -85,8 +88,11 @@ export function LeaguesScreen({
       <div className="leagues-screen-split">
         <section className="leagues-screen-table" aria-label={divisionLabel(divisionId)}>
           <p className="leagues-screen-meta">
-            Spieltag {standings.matchdaysPlayed}/{matchdays}
-            {standings.simulated ? " · Auto-Sim" : ""}
+            {t("leagues.matchdayProgress", {
+              played: standings.matchdaysPlayed,
+              total: matchdays,
+            })}
+            {standings.simulated ? ` · ${t("leagues.autoSim")}` : ""}
           </p>
           <LeagueTable
             table={standings.table}
@@ -95,10 +101,16 @@ export function LeaguesScreen({
             worldClubs={worldClubs}
             onSelectClub={setSelectedClubId}
           />
-          <div className="leagues-screen-legend" aria-label="Tabellenzonen">
-            <span><i className="zone-promoted" /> Aufstieg</span>
-            <span><i className="zone-playoff" /> Relegation</span>
-            <span><i className="zone-relegated" /> Abstieg</span>
+          <div className="leagues-screen-legend" aria-label={t("leagues.legendAria")}>
+            <span>
+              <i className="zone-promoted" /> {t("leagues.legend.promotion")}
+            </span>
+            <span>
+              <i className="zone-playoff" /> {t("leagues.legend.playoff")}
+            </span>
+            <span>
+              <i className="zone-relegated" /> {t("leagues.legend.relegation")}
+            </span>
           </div>
         </section>
         <aside className="leagues-screen-scorers" aria-label={t("leagues.tab.scorers")}>

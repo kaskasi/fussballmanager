@@ -28,6 +28,7 @@ import { MatchdayLeagueSidePanel } from "./MatchdayLeagueSidePanel.tsx";
 import type { LeagueState } from "../persistence/league-state.ts";
 import type { WorldClub } from "../world/world-generator.ts";
 import type { MatchdayCashBreakdown } from "../stadium/matchday-commerce.ts";
+import { useT } from "../i18n/react.ts";
 import type { FanbaseMood } from "../stadium/fanbase.ts";
 import { matchAmbiencePhotoUrl } from "../ui/assets/mood-photos.ts";
 import { t } from "../i18n/index.ts";
@@ -90,6 +91,7 @@ export function CareerMatch({
   league: LeagueState;
   worldClubs?: readonly WorldClub[];
 }) {
+  const t = useT();
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
   const capacity = homeStadiumCapacity ?? 8_000;
   const mood = fanbaseMood ?? "steady";
@@ -509,12 +511,12 @@ function CareerMatchPlayback({
           {view && frame && !reportOpen && userStartedPlayback ? (
             <MatchdayLivePanel view={view} frame={frame} />
           ) : !view && !error ? (
-            <aside className="matchday-cockpit-side matchday-cockpit-side--preview game-panel" aria-label="Vorschau">
-              <h2 className="match-report-section-title">Vorschau</h2>
-              <p className="matchday-preview-copy">
-                Aufstellung bestätigt — Header startet die Simulation. Steuerung und Log erscheinen rechts nach dem
-                Anpfiff.
-              </p>
+            <aside
+              className="matchday-cockpit-side matchday-cockpit-side--preview game-panel"
+              aria-label={t("match.preview.kicker")}
+            >
+              <h2 className="match-report-section-title">{t("match.preview.kicker")}</h2>
+              <p className="matchday-preview-copy">{t("match.preview.confirmedHint")}</p>
             </aside>
           ) : view && inPreview ? (
             <MatchdayLeagueSidePanel

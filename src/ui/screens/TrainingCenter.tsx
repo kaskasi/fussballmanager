@@ -82,20 +82,16 @@ import {
   type TrainingHighlightMetric,
   type TrainingSlotOutcome,
 } from "../../development/training-unit-result.ts";
+import { trainingDayShortLabel } from "../../i18n/training-schedule-display.ts";
+import { trainingGroupDisplayLabel, trainingUnitDisplayLabel } from "../../i18n/training-unit-display.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
 
 type TrainingTab = "team" | "individual";
 
-const GROUP_LABELS: Record<SessionGroup, string> = {
-  technical: "Technik",
-  physical: "Athletik",
-  mental: "Mental",
-};
-
 function trainingHighlightLabel(metric: TrainingHighlightMetric): string {
-  if (metric === "fitness") return "Fitness";
+  if (metric === "fitness") return t("squad.col.fitness");
   return attributeLabel(metric);
 }
 
@@ -410,7 +406,7 @@ function TeamPlan({
         }
       >
       <div className="training-timetable" aria-label={t("training.timetable.aria")}>
-        {TRAINING_DAYS.map((day, dayIndex) => {
+        {TRAINING_DAYS.map((_day, dayIndex) => {
           const dayPast = isTrainingDayFullyPastForSession(
             dayIndex,
             weekday,
@@ -418,8 +414,8 @@ function TeamPlan({
             useTrainingUnitProgress,
           );
           return (
-          <div key={day} className={dayPast ? "training-day-column is-past" : "training-day-column"}>
-            <p className="training-day-header">{day}</p>
+          <div key={dayIndex} className={dayPast ? "training-day-column is-past" : "training-day-column"}>
+            <p className="training-day-header">{trainingDayShortLabel(dayIndex)}</p>
             {Array.from({ length: UNITS_PER_DAY }, (_, period) => {
               const index = dayIndex * UNITS_PER_DAY + period;
               const slot = plan[index]!;
@@ -600,6 +596,7 @@ function UnitPickerModal({
   onClose: () => void;
   onPick: (unitId: string) => void;
 }) {
+  const tr = useT();
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
@@ -620,7 +617,7 @@ function UnitPickerModal({
         <header className="training-modal-head">
           <div>
             <p className="eyebrow">{day}</p>
-            <h2>Trainingseinheit wählen</h2>
+            <h2>{tr("training.modal.pickTitle")}</h2>
           </div>
           <button type="button" className="training-modal-close" onClick={onClose} aria-label={t("shell.modal.close")}>
             ✕
@@ -629,8 +626,8 @@ function UnitPickerModal({
 
         <div className="training-modal-columns">
           {SESSION_GROUPS.map((group) => (
-            <section key={group} className="training-modal-col" aria-label={GROUP_LABELS[group]}>
-              <h3>{GROUP_LABELS[group]}</h3>
+            <section key={group} className="training-modal-col" aria-label={trainingGroupDisplayLabel(group)}>
+              <h3>{trainingGroupDisplayLabel(group)}</h3>
               <ul>
                 {TRAINING_UNITS.filter((unit) => unit.group === group).map((unit) => {
                   const unlocked = trainingUnitUnlocked(unit, trainingUnlocks);
@@ -644,7 +641,7 @@ function UnitPickerModal({
                         title={unlocked ? undefined : lockHint}
                         onClick={() => onPick(unit.id)}
                       >
-                        <strong>{unit.label}</strong>
+                        <strong>{trainingUnitDisplayLabel(unit)}</strong>
                         <span>
                           {!unlocked
                             ? lockHint
@@ -682,6 +679,7 @@ function IndividualPlan({
   openPlayerId?: string | null;
   onDismissOpenPlayer?: () => void;
 }) {
+  const tr = useT();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const roster = players.filter((player) => player.squad_status !== "loaned_out");
   const selected = roster.find((player) => player.id === selectedId) ?? null;
@@ -698,12 +696,12 @@ function IndividualPlan({
 
   return (
     <section className="training-individual">
-      <Hint
-        text="Extra-Programme wirken zusätzlich zum Team-Plan. Max. 3 gleichzeitig · ab kommender Woche."
-        block
-      >
+      <Hint text={tr("training.individual.rulesHint")} block>
         <p className="training-rules">
-          {programs.length}/{MAX_INDIVIDUAL_PROGRAMS} Programme aktiv · Klick auf Spieler zum Planen
+          {tr("training.individual.programsActive", {
+            active: programs.length,
+            max: MAX_INDIVIDUAL_PROGRAMS,
+          })}
         </p>
       </Hint>
       <ul className="training-roster">
@@ -744,7 +742,7 @@ function IndividualPlan({
                   </span>
                 </span>
                 <span className={program ? "training-roster-program is-active" : "training-roster-program"}>
-                  {program ? programLabel(program) : "Kein Programm"}
+                  {program ? programLabel(program) : tr("training.individual.noProgram")}
                 </span>
                 {playerFatigueWarning(player) ? (
                   <span className="training-roster-fatigue" title="Erhöhte Ermüdung — Extra-Training riskant">

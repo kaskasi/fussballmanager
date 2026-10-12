@@ -11,10 +11,11 @@ describe("localizeMatchLine", () => {
       i18nKey: "match.beat.shot_goal",
       i18nParams: { shooter: "Max", team: "FC" },
     };
+    line.text = "12'34  Tor! Max trifft für FC!";
     setLocale("en");
-    expect(localizeMatchLine(line)).toBe("Goal! Max scores for FC!");
+    expect(localizeMatchLine(line)).toBe("12'34  Goal! Max scores for FC!");
     setLocale("de");
-    expect(localizeMatchLine(line)).toBe("Tor! Max trifft für FC!");
+    expect(localizeMatchLine(line)).toBe("12'34  Tor! Max trifft für FC!");
   });
 
   it("falls back to raw text when key missing", () => {

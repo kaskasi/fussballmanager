@@ -37,6 +37,7 @@ export function SettingsScreen({
   onLoadSlot,
   onNewGameInSlot,
   onApplyCloudSave,
+  onOpenMatchdaySandbox,
 }: {
   preferences: ClientPreferences;
   onPreferencesChange: (next: ClientPreferences) => void;
@@ -45,6 +46,7 @@ export function SettingsScreen({
   onLoadSlot: (slot: number) => void;
   onNewGameInSlot: (slot: number) => void;
   onApplyCloudSave: (save: SaveGame, slot: number) => void;
+  onOpenMatchdaySandbox: () => void;
 }) {
   const t = useT();
   const [logPreview, setLogPreview] = useState(() => getDiagnosticLogPreview());
@@ -156,6 +158,16 @@ export function SettingsScreen({
           onNewGameInSlot={onNewGameInSlot}
           onApplyCloudSave={onApplyCloudSave}
         />
+      </section>
+
+      <section className="game-panel settings-section" aria-labelledby="settings-dev-title">
+        <h2 id="settings-dev-title" className="settings-section-title">
+          {t("settings.developer.title")}
+        </h2>
+        <p className="settings-section-lead">{t("settings.developer.lead")}</p>
+        <button type="button" className="save-modal-btn" onClick={onOpenMatchdaySandbox}>
+          {t("shell.menu.matchdaySandbox")}
+        </button>
       </section>
 
       <section className="game-panel settings-section" aria-labelledby="settings-privacy-title">

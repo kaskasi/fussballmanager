@@ -7,6 +7,7 @@ import { clubDisplayName } from "../sim/league-divisions.ts";
 import { divisionStandings, leagueSliceForForm } from "../sim/league-standings.ts";
 import type { Player } from "../types/player.ts";
 import type { WorldClub } from "../world/world-generator.ts";
+import { useT } from "../i18n/react.ts";
 import { LeagueTable } from "../ui/components/LeagueTable.tsx";
 
 export function MatchdayLeagueSidePanel({
@@ -24,6 +25,7 @@ export function MatchdayLeagueSidePanel({
   rivalPlayers: readonly Player[];
   worldClubs?: readonly WorldClub[];
 }) {
+  const t = useT();
   const highlightTeamIds: TeamId[] = [setup.homeTeamId, setup.awayTeamId];
 
   const standings = useMemo(
@@ -44,10 +46,10 @@ export function MatchdayLeagueSidePanel({
   return (
     <aside
       className="matchday-cockpit-side matchday-cockpit-side--league game-panel"
-      aria-label="Liga und Spieltag"
+      aria-label={t("match.leagueSide.aria")}
     >
-      <p className="matchday-preview-kicker">Spieltag {setup.matchday}</p>
-      <h2 className="match-report-section-title">Tabelle</h2>
+      <p className="matchday-preview-kicker">{t("match.lineup.matchday", { matchday: setup.matchday })}</p>
+      <h2 className="match-report-section-title">{t("match.leagueSide.tableTitle")}</h2>
       <div className="matchday-side-panel matchday-league-table-panel">
         <LeagueTable
           table={standings.table}
@@ -61,7 +63,7 @@ export function MatchdayLeagueSidePanel({
       {fixtures.length > 0 ? (
         <details className="matchday-fixtures-block">
           <summary className="matchday-fixtures-title">
-            Weitere Spiele
+            {t("match.leagueSide.moreFixtures")}
             <span className="matchday-fixtures-count">{fixtures.length}</span>
           </summary>
           <ul className="matchday-fixtures-compact">
@@ -80,7 +82,7 @@ export function MatchdayLeagueSidePanel({
                     {home} – {away}
                   </span>
                   {isCurrent ? (
-                    <span className="matchday-fixture-you">dein Spiel</span>
+                    <span className="matchday-fixture-you">{t("match.leagueSide.yourMatch")}</span>
                   ) : null}
                 </li>
               );

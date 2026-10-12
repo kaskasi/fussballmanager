@@ -638,6 +638,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           onLoadSlot={loadSaveSlot}
           onNewGameInSlot={newGameInSlot}
           onApplyCloudSave={applyCloudSave}
+          onOpenMatchdaySandbox={() => setScreen("matchday")}
         />
       ) : null}
       {screen === "matchday" ? <Matchday /> : null}

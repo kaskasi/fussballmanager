@@ -76,7 +76,7 @@ export function AttributeTrainingHeatmap({
   const groups = [
     ...ATTRIBUTE_GROUPS.map((group) => ({
       id: group.id,
-      label: group.label,
+      label: t(`player.attributeGroup.${group.id}`),
       keys: group.keys,
     })),
     {

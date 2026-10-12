@@ -17,6 +17,16 @@ export interface HubTimetableDayColumn {
   slotIndices: readonly number[];
 }
 
+/** Manager Desk mobile: one column (session weekday), not the −1/0/+1 strip. */
+export function hubTimetableColumnsForDisplay(
+  columns: readonly HubTimetableDayColumn[],
+  mobileSingleDay: boolean,
+): HubTimetableDayColumn[] {
+  if (!mobileSingleDay) return [...columns];
+  const today = columns.find((column) => column.offset === 0);
+  return today ? [today] : [...columns];
+}
+
 export function hubThreeDayTimetableColumns(
   session: Pick<GameSession, "season" | "week" | "weekday" | "league" | "matchPlayedThisWeek">,
   _plan: TrainingSlot[],

@@ -170,6 +170,15 @@ main.pipeline.club-shell-card-body {
   box-sizing: border-box;
 }
 
+.app-nav.club-shell-header .app-nav-center:not(:empty) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
 .app-nav.club-shell-header .app-nav-center {
   justify-self: center;
   display: flex;

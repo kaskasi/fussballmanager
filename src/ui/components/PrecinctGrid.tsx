@@ -50,16 +50,21 @@ import {
 } from "../../stadium/precinct.ts";
 import { ArrowUp, Landmark, Puzzle, Route, X } from "lucide-react";
 import { useRef, useState, type DragEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
+import { usePrecinctMobileTileSize } from "../hooks/use-precinct-mobile-tile-size.ts";
 import { createRoot } from "react-dom/client";
 import { useT } from "../../i18n/react.ts";
 import { PrecinctBuildingIcon, PrecinctWarnIcon } from "../icons/precinct-status-icons.tsx";
 
 const DRAG_TYPE = "application/x-fc-precinct";
-const TILE_SIZE = "1.85rem";
 
 type PrecinctBuildingDef = (typeof PRECINCT_BUILDINGS)[number];
 
-function attachBuildingDragImage(event: DragEvent<HTMLButtonElement>, building: PrecinctBuildingDef) {
+function attachBuildingDragImage(
+  event: DragEvent<HTMLButtonElement>,
+  building: PrecinctBuildingDef,
+  tilePx: number,
+) {
   const ghost = document.createElement("div");
   ghost.className = "stadium-precinct-drag-ghost";
   ghost.style.setProperty("--drag-w", String(building.minW));
@@ -70,8 +75,6 @@ function attachBuildingDragImage(event: DragEvent<HTMLButtonElement>, building: 
   document.body.appendChild(ghost);
   const root = createRoot(iconHost);
   root.render(<PrecinctBuildingIcon building={building.id} size={22} />);
-  const rootFont = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-  const tilePx = 1.85 * rootFont;
   event.dataTransfer.setDragImage(ghost, tilePx * 0.5, tilePx * 0.5);
   window.setTimeout(() => {
     root.unmount();
@@ -113,6 +116,13 @@ export function PrecinctGrid({
   onRemoveStreet: (x: number, y: number) => void;
 }) {
   const t = useT();
+  const mobileNarrow = useMobileNarrow();
+  const mapHostRef = useRef<HTMLDivElement>(null);
+  const { tileCss, tilePx } = usePrecinctMobileTileSize(
+    mobileNarrow,
+    mapHostRef,
+    precinct.width,
+  );
   const [picked, setPicked] = useState<PalettePick | null>(null);
   const [dragBuilding, setDragBuilding] = useState<PrecinctBuilding | null>(null);
   const [dragAnchor, setDragAnchor] = useState<{ x: number; y: number } | null>(null);
@@ -286,7 +296,7 @@ export function PrecinctGrid({
                   setSelectedPatchId(null);
                   setDragBuilding(building.id);
                   setDragAnchor(null);
-                  attachBuildingDragImage(event, building);
+                  attachBuildingDragImage(event, building, tilePx);
                 }}
                 onDragEnd={() => {
                   setDragBuilding(null);
@@ -357,7 +367,7 @@ export function PrecinctGrid({
         </div>
       </aside>
       <div className="stadium-precinct-map-stack">
-      <div className="stadium-precinct-playfield">
+      <div className="stadium-precinct-playfield" ref={mapHostRef}>
       <div
         className={picked === "street" ? "stadium-precinct-map is-paving" : "stadium-precinct-map"}
         onPointerDown={(event) => {
@@ -395,7 +405,7 @@ export function PrecinctGrid({
       >
         <div
           className="stadium-precinct-city-row"
-          style={{ gridTemplateColumns: `repeat(${precinct.width}, ${TILE_SIZE})` }}
+          style={{ gridTemplateColumns: `repeat(${precinct.width}, ${tileCss})` }}
           aria-hidden="true"
         >
           {Array.from({ length: precinct.width }, (_, x) => {
@@ -422,8 +432,8 @@ export function PrecinctGrid({
           ref={gridRef}
           className="stadium-precinct-grid"
           style={{
-            gridTemplateColumns: `repeat(${precinct.width}, ${TILE_SIZE})`,
-            gridTemplateRows: `repeat(${precinct.height}, ${TILE_SIZE})`,
+            gridTemplateColumns: `repeat(${precinct.width}, ${tileCss})`,
+            gridTemplateRows: `repeat(${precinct.height}, ${tileCss})`,
           }}
           role="grid"
           aria-label="Stadiongelände"
@@ -838,7 +848,7 @@ export function PrecinctGrid({
       </div>
       <PrecinctStatus
         precinct={precinct}
-        layout="rail"
+        layout={mobileNarrow ? "stack" : "rail"}
         picked={picked}
         selectedBuilding={selected?.building}
         hospitalityPreview={hospitalityPreview}

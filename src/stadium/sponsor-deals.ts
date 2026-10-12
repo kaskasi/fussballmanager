@@ -261,7 +261,7 @@ export function defaultSponsorOffer(slotId: string, brandId?: string): SponsorOf
     bonusLeagueTitle: false,
   };
   const cap = sponsorWeeklyCap(slotId, draft);
-  return { ...draft, weeklyAmount: Math.round(cap * 1.12) };
+  return { ...draft, weeklyAmount: Math.round(cap * 0.9) };
 }
 
 export function evaluateSponsorOffer(

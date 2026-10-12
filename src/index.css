@@ -5171,6 +5171,10 @@
 }
 
 .stadium-commerce-slot.is-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
   border-style: dashed;
   border-color: #d97706;
   background: #fffbeb;
@@ -6478,10 +6482,19 @@
 }
 
 .stadium-card-board.is-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
   background-image:
     linear-gradient(rgb(255 251 235 / 88%), rgb(255 251 235 / 88%)),
     url("/assets/textures/wood066-color.jpg");
   background-size: auto, 120px;
+}
+
+.stadium-sponsor-warn-icon {
+  flex-shrink: 0;
+  color: var(--warn, #c2410c);
 }
 
 .stadium-card-board:not(.is-empty) {

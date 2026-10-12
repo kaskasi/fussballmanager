@@ -29,6 +29,7 @@ import type { PostfachPanelProps } from "./postfach-panel-props.ts";
 import { usesTrainingNextNexus } from "../../sim/training-next.ts";
 import { hubLatestTreterEdition, treterTickerLines } from "../../hub/hub-treter-ticker.ts";
 import { HubTreterTicker } from "../components/HubTreterTicker.tsx";
+import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
 
 export function ManagerDeskHub({
   session,
@@ -62,6 +63,9 @@ export function ManagerDeskHub({
   useT();
   const [wildcard, setWildcard] = useState<"board" | "league">("board");
   const [devPeriod, setDevPeriod] = useState<"week" | "month" | "year">("week");
+  const mobileNarrow = useMobileNarrow();
+  /** Same heatmaps as Training screen on phone (is-full); desktop hub keeps compact strip. */
+  const heatmapCompact = !mobileNarrow;
 
   const { season, week, clubId, trainingUnitsCompleted } = session;
 
@@ -238,7 +242,7 @@ export function ManagerDeskHub({
           <GrowthHeatmap
             cells={growthCells}
             onSelectPlayer={onSelectPlayer}
-            compact
+            compact={heatmapCompact}
             mode="weekSoFar"
           />
           <AttributeTrainingHeatmap
@@ -247,9 +251,13 @@ export function ManagerDeskHub({
             season={season}
             week={week}
             trainingUnitsCompleted={trainingUnitsCompleted}
-            compact
+            compact={heatmapCompact}
           />
-          <SquadFitnessHeatmap cells={fitnessCells} onSelectPlayer={onSelectPlayer} compact />
+          <SquadFitnessHeatmap
+            cells={fitnessCells}
+            onSelectPlayer={onSelectPlayer}
+            compact={heatmapCompact}
+          />
         </div>
 
         <div className="manager-desk__development">

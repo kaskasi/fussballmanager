@@ -37,8 +37,8 @@ export function resolveSmartSkip(
     return { weekday: TUESDAY, action: "inbox", daysAdvanced: 0 };
   }
 
-  if (hasPendingInbox && weekday === MONDAY) {
-    return { weekday: MONDAY, action: "inbox", daysAdvanced: 0 };
+  if (hasPendingInbox) {
+    return { weekday, action: "inbox", daysAdvanced: 0 };
   }
 
   if (weekday >= SUNDAY) {

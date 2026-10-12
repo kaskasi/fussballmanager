@@ -82,6 +82,8 @@ export function AppNav({
     boardCashFloor > 0 && cash < boardCashFloor
       ? true
       : weeklyWageBill > 0 && runwayWeeks != null && runwayWeeks < 4;
+  const hasStatusAlerts =
+    showTrainingPlanWarn || showMerchStockoutWarn || showMedicalWarn || showCashWarn;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -148,7 +150,56 @@ export function AppNav({
           </>
         )}
       </div>
-      <div className="app-nav-center" aria-live="polite" />
+      <div className="app-nav-center" aria-live="polite">
+        {hasStatusAlerts ? (
+          <div className="app-nav-status-wrap">
+            {showTrainingPlanWarn ? (
+              <button
+                type="button"
+                className="app-nav-training-warn"
+                onClick={() => onNavigate("training")}
+                aria-label={tr("shell.training.todayMissing")}
+                title={tr("shell.training.todayMissing")}
+              >
+                <TriangleAlert size={18} strokeWidth={2.35} aria-hidden />
+              </button>
+            ) : null}
+            {showMerchStockoutWarn ? (
+              <button
+                type="button"
+                className="app-nav-training-warn"
+                onClick={() => onNavigate("merchandising")}
+                aria-label={tr("shell.merch.stockout")}
+                title={tr("shell.merch.stockout")}
+              >
+                <Package size={18} strokeWidth={2.35} aria-hidden />
+              </button>
+            ) : null}
+            {showMedicalWarn ? (
+              <button
+                type="button"
+                className="app-nav-training-warn"
+                onClick={() => onNavigate("medical")}
+                aria-label={tr("shell.medical.attention")}
+                title={tr("shell.medical.attention")}
+              >
+                <HeartPulse size={18} strokeWidth={2.35} aria-hidden />
+              </button>
+            ) : null}
+            {showCashWarn ? (
+              <button
+                type="button"
+                className="app-nav-training-warn"
+                onClick={() => onNavigate("finances")}
+                aria-label={tr("shell.cash.warn")}
+                title={tr("shell.cash.warn")}
+              >
+                <TriangleAlert size={18} strokeWidth={2.35} aria-hidden />
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
       <div className="app-nav-actions">
         {hubActions.matchSkipToReport ? (
           <button
@@ -161,57 +212,6 @@ export function AppNav({
           </button>
         ) : null}
         <div className="app-nav-trailing-cluster">
-          {showTrainingPlanWarn ||
-          showMerchStockoutWarn ||
-          showMedicalWarn ||
-          showCashWarn ? (
-            <div className="app-nav-status-wrap">
-              {showTrainingPlanWarn ? (
-                <button
-                  type="button"
-                  className="app-nav-training-warn"
-                  onClick={() => onNavigate("training")}
-                  aria-label={tr("shell.training.todayMissing")}
-                  title={tr("shell.training.todayMissing")}
-                >
-                  <TriangleAlert size={18} strokeWidth={2.35} aria-hidden />
-                </button>
-              ) : null}
-              {showMerchStockoutWarn ? (
-                <button
-                  type="button"
-                  className="app-nav-training-warn"
-                  onClick={() => onNavigate("merchandising")}
-                  aria-label={tr("shell.merch.stockout")}
-                  title={tr("shell.merch.stockout")}
-                >
-                  <Package size={18} strokeWidth={2.35} aria-hidden />
-                </button>
-              ) : null}
-              {showMedicalWarn ? (
-                <button
-                  type="button"
-                  className="app-nav-training-warn"
-                  onClick={() => onNavigate("medical")}
-                  aria-label={tr("shell.medical.attention")}
-                  title={tr("shell.medical.attention")}
-                >
-                  <HeartPulse size={18} strokeWidth={2.35} aria-hidden />
-                </button>
-              ) : null}
-              {showCashWarn ? (
-                <button
-                  type="button"
-                  className="app-nav-training-warn"
-                  onClick={() => onNavigate("finances")}
-                  aria-label={tr("shell.cash.warn")}
-                  title={tr("shell.cash.warn")}
-                >
-                  <TriangleAlert size={18} strokeWidth={2.35} aria-hidden />
-                </button>
-              ) : null}
-            </div>
-          ) : null}
           <CashChip
             cash={cash}
             compact

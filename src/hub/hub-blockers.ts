@@ -34,7 +34,7 @@ export function listHubBlockers(input: {
   const blockers: HubBlocker[] = [];
 
   if (hasInboxBlockerForNext(session, youthInbox, players)) {
-    blockers.push({ kind: "inbox", id: "inbox_monday", priority: 0 });
+    blockers.push({ kind: "inbox", id: "inbox_open", priority: 0 });
   }
 
   const planCheck = validateWeeklyPlan(planToSessions(session.trainingPlan));

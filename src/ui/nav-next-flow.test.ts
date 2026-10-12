@@ -8,7 +8,7 @@ import {
 } from "./nav-next-flow.ts";
 
 describe("nav-next-flow", () => {
-  it("blocks NEXT to calendar on Monday with pending youth inbox", () => {
+  it("has no inbox blocker when youth inbox is empty", () => {
     const session = newGameSession();
     session.weekday = MONDAY;
     const youthInbox = session.youthInbox;

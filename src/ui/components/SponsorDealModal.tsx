@@ -12,6 +12,7 @@
  * └─────────────────────────────────────┘
  */
 import { useState } from "react";
+import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
 import { Angry, Goal, Handshake, Megaphone, Shirt, Trophy } from "lucide-react";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import { useT } from "../../i18n/react.ts";
@@ -52,6 +53,7 @@ export function SponsorDealModal({
   onClose: () => void;
 }) {
   const t = useT();
+  const mobileNarrow = useMobileNarrow();
   const [offer, setOffer] = useState<SponsorOffer>(() => {
     const open = SPONSOR_BRANDS.find(
       (entry) => !takenBrandKeys.has(entry.id) && !takenBrandKeys.has(entry.name),
@@ -181,34 +183,19 @@ export function SponsorDealModal({
             </div>
             {brand ? <p className="sponsor-brand-hint">{brand.hint}</p> : null}
 
-            <label className="profile-talk-row">
-              <span>
-                {t("sponsor.modal.term")}{" "}
-                <strong>{t("sponsor.modal.termValue", { seasons: offer.seasons })}</strong>
-              </span>
-              <input
-                type="range"
-                min={SPONSOR_SEASON_MIN}
-                max={SPONSOR_SEASON_MAX}
-                step={1}
-                value={offer.seasons}
-                onChange={(event) => patch({ seasons: Number(event.target.value) })}
-              />
-            </label>
-            <label className="profile-talk-row">
-              <span>
-                {t("sponsor.modal.weekly")} <strong>{formatClubCash(offer.weeklyAmount)}</strong>
-                <em>{t("sponsor.modal.weeklyCap", { cap: formatClubCash(cap) })}</em>
-              </span>
-              <input
-                type="range"
-                min={1_000}
-                max={askMax}
-                step={500}
-                value={Math.min(askMax, offer.weeklyAmount)}
-                onChange={(event) => patch({ weeklyAmount: Number(event.target.value) })}
-              />
-            </label>
+            <SponsorTermControl
+              mobileNarrow={mobileNarrow}
+              seasons={offer.seasons}
+              onChange={(seasons) => patch({ seasons })}
+            />
+            <SponsorWeeklyControl
+              mobileNarrow={mobileNarrow}
+              weeklyAmount={offer.weeklyAmount}
+              cap={cap}
+              askMax={askMax}
+              onChange={(weeklyAmount) => patch({ weeklyAmount })}
+              onSetCap={() => patch({ weeklyAmount: cap })}
+            />
             <div className="sponsor-bonus-row" role="group" aria-label={t("sponsor.modal.bonusAria")}>
               <button
                 type="button"
@@ -253,5 +240,115 @@ export function SponsorDealModal({
           </>
         )}
     </ModalShell>
+  );
+}
+
+function SponsorTermControl({
+  mobileNarrow,
+  seasons,
+  onChange,
+}: {
+  mobileNarrow: boolean;
+  seasons: number;
+  onChange: (seasons: number) => void;
+}) {
+  const t = useT();
+  return (
+    <label className="profile-talk-row sponsor-negotiation-row">
+      <span>
+        {t("sponsor.modal.term")}{" "}
+        <strong>{t("sponsor.modal.termValue", { seasons })}</strong>
+      </span>
+      {mobileNarrow ? (
+        <div className="sponsor-negotiation-stepper">
+          <button
+            type="button"
+            aria-label={t("sponsor.modal.termDecrease")}
+            disabled={seasons <= SPONSOR_SEASON_MIN}
+            onClick={() => onChange(seasons - 1)}
+          >
+            −
+          </button>
+          <span className="sponsor-negotiation-stepper-value">{seasons}</span>
+          <button
+            type="button"
+            aria-label={t("sponsor.modal.termIncrease")}
+            disabled={seasons >= SPONSOR_SEASON_MAX}
+            onClick={() => onChange(seasons + 1)}
+          >
+            +
+          </button>
+        </div>
+      ) : (
+        <input
+          type="range"
+          min={SPONSOR_SEASON_MIN}
+          max={SPONSOR_SEASON_MAX}
+          step={1}
+          value={seasons}
+          onChange={(event) => onChange(Number(event.target.value))}
+        />
+      )}
+    </label>
+  );
+}
+
+function SponsorWeeklyControl({
+  mobileNarrow,
+  weeklyAmount,
+  cap,
+  askMax,
+  onChange,
+  onSetCap,
+}: {
+  mobileNarrow: boolean;
+  weeklyAmount: number;
+  cap: number;
+  askMax: number;
+  onChange: (weeklyAmount: number) => void;
+  onSetCap: () => void;
+}) {
+  const t = useT();
+  const value = Math.min(askMax, weeklyAmount);
+  return (
+    <label className="profile-talk-row sponsor-negotiation-row">
+      <span>
+        {t("sponsor.modal.weekly")} <strong>{formatClubCash(value)}</strong>
+        <em>{t("sponsor.modal.weeklyCap", { cap: formatClubCash(cap) })}</em>
+      </span>
+      {mobileNarrow ? (
+        <div className="sponsor-negotiation-stepper sponsor-negotiation-stepper--wide">
+          <button
+            type="button"
+            aria-label={t("sponsor.modal.weeklyDecrease")}
+            disabled={value <= 1_000}
+            onClick={() => onChange(value - 500)}
+          >
+            −
+          </button>
+          <span className="sponsor-negotiation-stepper-value">{formatClubCash(value)}</span>
+          <button
+            type="button"
+            aria-label={t("sponsor.modal.weeklyIncrease")}
+            disabled={value >= askMax}
+            onClick={() => onChange(value + 500)}
+          >
+            +
+          </button>
+        </div>
+      ) : (
+        <input
+          type="range"
+          min={1_000}
+          max={askMax}
+          step={500}
+          value={value}
+          onChange={(event) => onChange(Number(event.target.value))}
+        />
+      )}
+      <button type="button" className="sponsor-negotiation-cap-btn" onClick={onSetCap}>
+        {t("sponsor.modal.useCap", { cap: formatClubCash(cap) })}
+      </button>
+    </label>
   );
 }

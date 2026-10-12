@@ -3,11 +3,17 @@ import { newGameSession } from "../persistence/game-session.ts";
 import { MONDAY, resolveSmartSkip, SATURDAY, SUNDAY } from "./day-calendar.ts";
 
 describe("day calendar smart skip", () => {
-  it("stops on Monday when the inbox has pending decisions", () => {
+  it("stops on the current weekday when the inbox has pending decisions", () => {
     const session = newGameSession();
     session.weekday = MONDAY;
     expect(resolveSmartSkip(session, true)).toEqual({
       weekday: MONDAY,
+      action: "inbox",
+      daysAdvanced: 0,
+    });
+    session.weekday = 3;
+    expect(resolveSmartSkip(session, true)).toEqual({
+      weekday: 3,
       action: "inbox",
       daysAdvanced: 0,
     });

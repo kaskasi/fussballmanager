@@ -13,6 +13,11 @@ describe("sponsor deals (F6.5)", () => {
     expect(evaluateSponsorOffer("shirt", offer).accepted).toBe(false);
   });
 
+  it("default offer is inside the brand cap and accepted", () => {
+    const offer = defaultSponsorOffer("board_north_a");
+    expect(evaluateSponsorOffer("board_north_a", offer).accepted).toBe(true);
+  });
+
   it("signs a deal and counts it in weekly inventory income", () => {
     const offer = defaultSponsorOffer("board_north_a");
     const deals = signSponsorDeal([], "board_north_a", 1, offer);

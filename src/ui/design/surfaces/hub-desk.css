@@ -994,10 +994,13 @@
 }
 
 @media (max-width: 960px) {
+  /* Stack layout: page scrolls (desktop keeps viewport-locked desk). */
   .manager-desk {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
     min-height: 0;
+    max-height: none;
+    overflow: visible;
   }
 
   .manager-desk__inbox,
@@ -1011,6 +1014,34 @@
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .manager-desk__postfach,
+  .manager-desk__postfach-scroll {
+    overflow: visible;
+  }
+
+  .manager-desk__center {
+    overflow: visible;
+  }
+
+  .manager-desk__center .manager-desk__timetable-scroll {
+    overflow: visible;
+    flex: 0 1 auto;
+  }
+
+  .manager-desk__heatmaps.training-schedule-heatmap {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .manager-desk__bottom .manager-desk__development {
+    overflow: visible;
   }
 
   .manager-desk__commerce {
@@ -1038,7 +1069,7 @@
   .manager-desk__center {
     height: auto;
     max-height: none;
-    min-height: clamp(18rem, 42vh, 26rem);
+    min-height: 0;
   }
 
   .manager-desk__inbox {
@@ -1068,7 +1099,28 @@
     grid-template-columns: 1fr;
   }
 
-  .manager-desk__heatmaps {
+  /* Heatmaps: stack panels (override desktop repeat(3)); pixel layout = training-schedule-heatmap is-full */
+  .manager-desk__heatmaps.training-schedule-heatmap {
     grid-template-columns: 1fr;
+    gap: 0.55rem;
+    align-items: stretch;
+  }
+
+  .manager-desk__heatmaps.training-schedule-heatmap > .training-pixel-pack {
+    height: auto;
+    max-height: none;
+    align-items: stretch;
+  }
+
+  .manager-desk__heatmaps.training-schedule-heatmap > .training-pixel-pack.is-full {
+    box-shadow: 0 4px 18px rgb(15 23 42 / 7%);
+  }
+
+  /* Desktop-only compact strip sizing — do not shrink is-full mobile widgets */
+  .manager-desk__heatmaps.training-schedule-heatmap .training-pixel-pack.is-compact .heat-pixel,
+  .manager-desk__heatmaps.training-schedule-heatmap .training-pixel-pack.is-compact .attr-heat-pixel {
+    flex: 0 0 var(--desk-heatmap-pixel);
+    width: var(--desk-heatmap-pixel);
+    height: var(--desk-heatmap-pixel);
   }
 }

@@ -133,7 +133,7 @@ export async function decodeSavePayload(record: SaveSlotRecord): Promise<string>
     if (!supportsCompressionStream()) {
       throw new Error("gzip_save_requires_decompression_stream");
     }
-    const stream = new Blob([record.bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+    const stream = new Blob([new Uint8Array(record.bytes)]).stream().pipeThrough(new DecompressionStream("gzip"));
     return await new Response(stream).text();
   }
   return new TextDecoder().decode(record.bytes);

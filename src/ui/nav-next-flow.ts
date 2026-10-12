@@ -1,22 +1,17 @@
 import type { GameSession } from "../persistence/game-session.ts";
 import type { Player } from "../types/player.ts";
 import { pendingInboxItems, type YouthInboxState } from "../youth/decision-inbox.ts";
-import {
-  isMatchSaturday,
-  MONDAY,
-  SATURDAY,
-  type SmartSkipTarget,
-} from "../sim/day-calendar.ts";
+import { isMatchSaturday, SATURDAY, type SmartSkipTarget } from "../sim/day-calendar.ts";
 import { MANAGER_DESK_HUB_ENABLED } from "../hub/config.ts";
 import { isTrainingCalendarGatePending, isTrainingNextActive } from "../sim/training-next.ts";
 
-/** Montag + offene Jugend-Inbox — NEXT öffnet Postfach (PRD 09.3). Der Treter blockiert nicht. */
+/** Offene Jugend-Inbox blockiert NEXT (jeder Wochentag). Der Treter blockiert nicht. */
 export function hasInboxBlockerForNext(
-  session: Pick<GameSession, "weekday">,
+  _session: Pick<GameSession, "weekday">,
   youthInbox: YouthInboxState,
   players: readonly Player[],
 ): boolean {
-  return session.weekday === MONDAY && pendingInboxItems(youthInbox, players).length > 0;
+  return pendingInboxItems(youthInbox, players).length > 0;
 }
 
 /** Kalender-NEXT: Spiel einleiten (Aufstellung), inkl. Fr→Sa in Spielwoche. */

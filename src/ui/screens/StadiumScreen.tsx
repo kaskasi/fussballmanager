@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useT } from "../../i18n/react.ts";
-import { Construction, Dumbbell, Home, Hammer, Shirt, Star } from "lucide-react";
+import { Construction, Dumbbell, Hammer, Home, Shirt, Star, TriangleAlert } from "lucide-react";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
 import {
   ACADEMY_FACILITIES,
@@ -74,11 +74,11 @@ import {
   type SponsorStand,
 } from "../../stadium/sponsor-deals.ts";
 
-type StadiumTab = "plan" | "precinct" | "upgrades";
+type StadiumTab = "plan" | "precinct";
 
 /**
  * WIREFRAME: docs/prd/design.md §9.3 — Stadion
- * [Grundriss] [Gelände] [Ausbau]
+ * [Grundriss] [Gelände] — Ausbau im Grundriss
  * Banden sitzen auf den Tribünen-Karten um den Grundriss.
  * Klick = F6.5-Modal. Gelände: 🏟️ Mitte, 2×5-Plättchen, Startstraße Stadt→Arena.
  */
@@ -181,7 +181,6 @@ export function StadiumScreen({
   const stadiumTabs: { id: StadiumTab; labelKey: string }[] = [
     { id: "plan", labelKey: "stadium.tab.plan" },
     { id: "precinct", labelKey: "stadium.tab.precinct" },
-    { id: "upgrades", labelKey: "stadium.tab.upgrades" },
   ];
 
   const stadiumContext = (
@@ -273,6 +272,14 @@ export function StadiumScreen({
             })}
             </section>
           </Hint>
+          <StadiumUpgradesPanel
+            stadium={stadium}
+            finances={finances}
+            capacity={capacity}
+            academyFacility={academyFacility}
+            onPurchaseUpgrade={onPurchaseUpgrade}
+            onUpgradeAcademy={onUpgradeAcademy}
+          />
         </div>
       ) : null}
 
@@ -295,55 +302,6 @@ export function StadiumScreen({
             onRemoveStreet={onRemoveStreet}
             seasonWeek={precinctSeasonWeek}
           />
-        </div>
-      ) : null}
-
-      {tab === "upgrades" ? (
-        <div className="fm-tab-panel">
-          {stadiumContext}
-          <section className="stadium-upgrades" aria-label="Stadionausbau">
-          {academyFacility && onUpgradeAcademy ? (
-            <AcademyUpgradeSection
-              ownedId={academyFacility}
-              stadiumCapacity={capacity}
-              cash={finances.cash}
-              onUpgrade={onUpgradeAcademy}
-            />
-          ) : null}
-          <h3 className="stadium-upgrade-category">Stadion</h3>
-          <ul className="stadium-upgrade-list">
-            {stadiumUpgradeCatalog().map((upgrade) => {
-              const level = stadiumUpgradeLevel(stadium, upgrade.id);
-              const maxed = level >= upgrade.max_level;
-              const nextCost = maxed ? null : stadiumUpgradeCost(upgrade, level + 1);
-              const check = canPurchaseStadiumUpgrade(stadium, finances, upgrade.id);
-              return (
-                <li key={upgrade.id} className="stadium-upgrade-card">
-                  <span className="stadium-upgrade-icon" aria-hidden="true">
-                    <Construction size={20} strokeWidth={2.5} />
-                  </span>
-                  <div className="stadium-upgrade-body">
-                    <strong>{upgrade.name}</strong>
-                    <p>{upgrade.description}</p>
-                    <p className="stadium-upgrade-meta">
-                      Stufe {level}/{upgrade.max_level}
-                      {nextCost != null ? ` · ${formatClubCash(nextCost)}` : " · Max"}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="stadium-upgrade-buy"
-                    disabled={!check.allowed}
-                    title={check.reason}
-                    onClick={() => onPurchaseUpgrade(upgrade.id)}
-                  >
-                    {maxed ? "✓" : "Kaufen"}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-          </section>
         </div>
       ) : null}
 
@@ -449,6 +407,9 @@ function StadiumPitchPlan({
             onClick={() => onOpenSlot(shirt.id)}
           >
             <Shirt size={18} aria-hidden="true" strokeWidth={2.5} />
+            {!shirtDeal ? (
+              <TriangleAlert size={14} strokeWidth={2.35} aria-hidden className="stadium-sponsor-warn-icon" />
+            ) : null}
             <span>{shirtDeal?.brand ?? t("stadium.sponsor.shirtEmpty")}</span>
           </button>
         </aside>
@@ -489,6 +450,9 @@ function StandBoardSlots({
             }
             onClick={() => onOpenSlot(slot.id)}
           >
+            {!deal ? (
+              <TriangleAlert size={14} strokeWidth={2.35} aria-hidden className="stadium-sponsor-warn-icon" />
+            ) : null}
             {deal ? deal.brand : t("stadium.sponsor.boardEmpty")}
           </button>
         );
@@ -666,6 +630,68 @@ function FillMeter({
       </div>
       <p className="stadium-fill-sold">~{sold.toLocaleString("de-DE")} Zuschauer</p>
     </div>
+  );
+}
+
+function StadiumUpgradesPanel({
+  stadium,
+  finances,
+  capacity,
+  academyFacility,
+  onPurchaseUpgrade,
+  onUpgradeAcademy,
+}: {
+  stadium: ClubStadium;
+  finances: ClubFinances;
+  capacity: number;
+  academyFacility?: AcademyFacility;
+  onPurchaseUpgrade: (upgradeId: string) => void;
+  onUpgradeAcademy?: () => void;
+}) {
+  return (
+    <section className="stadium-upgrades" aria-label="Stadionausbau">
+      {academyFacility && onUpgradeAcademy ? (
+        <AcademyUpgradeSection
+          ownedId={academyFacility}
+          stadiumCapacity={capacity}
+          cash={finances.cash}
+          onUpgrade={onUpgradeAcademy}
+        />
+      ) : null}
+      <h3 className="stadium-upgrade-category">Stadion</h3>
+      <ul className="stadium-upgrade-list">
+        {stadiumUpgradeCatalog().map((upgrade) => {
+          const level = stadiumUpgradeLevel(stadium, upgrade.id);
+          const maxed = level >= upgrade.max_level;
+          const nextCost = maxed ? null : stadiumUpgradeCost(upgrade, level + 1);
+          const check = canPurchaseStadiumUpgrade(stadium, finances, upgrade.id);
+          return (
+            <li key={upgrade.id} className="stadium-upgrade-card">
+              <span className="stadium-upgrade-icon" aria-hidden="true">
+                <Construction size={20} strokeWidth={2.5} />
+              </span>
+              <div className="stadium-upgrade-body">
+                <strong>{upgrade.name}</strong>
+                <p>{upgrade.description}</p>
+                <p className="stadium-upgrade-meta">
+                  Stufe {level}/{upgrade.max_level}
+                  {nextCost != null ? ` · ${formatClubCash(nextCost)}` : " · Max"}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="stadium-upgrade-buy"
+                disabled={!check.allowed}
+                title={check.reason}
+                onClick={() => onPurchaseUpgrade(upgrade.id)}
+              >
+                {maxed ? "✓" : "Kaufen"}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

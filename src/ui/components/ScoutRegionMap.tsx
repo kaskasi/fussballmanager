@@ -83,7 +83,7 @@ export function ScoutRegionMap({
         </ul>
       </header>
       <div className="scout-region-map-body scout-discovery-grid">
-        {model.zones.map((zone, index) => {
+        {model.zones.map((zone) => {
           const unlocked = zone.cardMode === "unlocked";
           const flavor = unlocked ? layoutForZone(zone.id)?.flavorAsset : undefined;
           const hasLayout = Boolean(layoutForZone(zone.id));
@@ -110,17 +110,15 @@ export function ScoutRegionMap({
             <article
               key={zone.id}
               className={`scout-discovery-zone scout-discovery-zone-card is-${zone.tone}${unlocked && flavor ? " has-flavor" : ""}${!unlocked ? " is-locked" : ""}`}
-              style={{
-                gridColumn: (index % 2) + 1,
-                gridRow: Math.floor(index / 2) + 1,
-                ...(flavor
+              style={
+                flavor
                   ? {
                       backgroundImage: `url(${flavor})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                     }
-                  : {}),
-              }}
+                  : undefined
+              }
             >
               {flavor ? <div className="scout-discovery-zone-card-shade" aria-hidden /> : null}
               <div className="scout-discovery-zone-card-inner">

@@ -23,6 +23,90 @@
   .app-nav.club-shell-header .app-nav-center {
     grid-area: center;
     justify-self: stretch;
+    justify-content: flex-start;
+    padding-top: 0.1rem;
+  }
+
+  .app-nav.club-shell-header .app-nav-status-wrap {
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .app-nav.club-shell-header .app-nav-training-warn {
+    width: 2.15rem;
+    height: 2.15rem;
+    padding: 0;
+    border-radius: 0.45rem;
+    background: color-mix(in srgb, var(--warn, #c2410c) 10%, var(--panel, #fff));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--warn, #c2410c) 28%, transparent);
+  }
+
+  .sponsor-deal-modal .sponsor-negotiation-stepper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    max-width: 100%;
+    border: var(--outline-weich, 2px solid rgba(62, 49, 40, 0.25));
+    border-radius: var(--radius-klein, 8px);
+    overflow: hidden;
+    background: var(--panel, #fff);
+  }
+
+  .sponsor-deal-modal .sponsor-negotiation-stepper button {
+    flex: 0 0 2.75rem;
+    min-height: 2.75rem;
+    border: 0;
+    background: var(--panel-muted, #efebe0);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--tinte, #3e3128);
+    cursor: pointer;
+  }
+
+  .sponsor-deal-modal .sponsor-negotiation-stepper button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .sponsor-deal-modal .sponsor-negotiation-stepper-value {
+    flex: 1 1 auto;
+    display: grid;
+    place-items: center;
+    min-width: 0;
+    padding: 0 0.35rem;
+    font-size: 0.88rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sponsor-deal-modal .sponsor-negotiation-cap-btn {
+    align-self: flex-start;
+    margin-top: 0.35rem;
+    padding: 0.35rem 0.55rem;
+    border: var(--outline-weich, 2px solid rgba(62, 49, 40, 0.25));
+    border-radius: var(--radius-klein, 8px);
+    background: var(--panel-muted, #efebe0);
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--tinte-weich, #6b5d4f);
+    cursor: pointer;
+  }
+
+  .sponsor-deal-modal .sponsor-negotiation-row {
+    gap: 0.45rem;
+  }
+
+  main.stadium .stadium-card-board.is-empty,
+  main.stadium .stadium-commerce-slot.is-empty {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+  }
+
+  main.stadium .stadium-sponsor-warn-icon {
+    flex-shrink: 0;
+    color: var(--warn, #c2410c);
   }
 
   .app-nav.club-shell-header .app-nav-actions {
@@ -60,8 +144,75 @@
     padding: 0 0.1rem 0.35rem;
   }
 
-  .training-timetable-scroll .training-timetable {
+  .training-timetable-scroll:not(.is-mobile-week-stack) .training-timetable {
     min-width: 34rem;
+  }
+
+  /* Training screen: full week, stacked days (no horizontal scroll) */
+  .training-timetable-scroll.is-mobile-week-stack {
+    overflow-x: visible;
+    margin-inline: 0;
+    padding: 0 0 0.35rem;
+  }
+
+  .training-timetable-scroll.is-mobile-week-stack .training-timetable {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-width: 0;
+    width: 100%;
+    grid-template-columns: unset;
+    grid-template-rows: unset;
+  }
+
+  .training-timetable-scroll.is-mobile-week-stack .training-day-column {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto minmax(0, auto);
+    grid-row: auto;
+    gap: 0.4rem;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--tinte, #3e3128) 12%, transparent);
+  }
+
+  .training-timetable-scroll.is-mobile-week-stack .training-day-column:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .training-timetable-scroll.is-mobile-week-stack .training-day-header {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+
+  .training-timetable-scroll.is-mobile-week-stack .training-slot {
+    min-height: 5.25rem;
+  }
+
+  /* Manager Desk: current day only (see HubThreeDayTrainingCalendar) */
+  .manager-desk__timetable-scroll.training-timetable-scroll.is-single-day {
+    overflow-x: visible;
+    margin-inline: 0;
+    padding: 0;
+  }
+
+  .manager-desk__timetable-scroll.is-single-day .training-timetable.manager-desk__timetable {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  main.manager-desk.club-shell-card-body {
+    overflow: visible;
+    max-height: none;
+  }
+
+  .manager-desk__inbox,
+  .manager-desk__center {
+    min-height: 0;
+  }
+
+  .manager-desk__timetable {
+    grid-template-rows: auto repeat(3, minmax(4.5rem, auto));
   }
 
   .training-plan-presets {
@@ -90,40 +241,237 @@
     flex-wrap: wrap;
   }
 
+  /* Training screen compact touch targets */
   .training-schedule-heatmap .training-pixel-pack.is-compact .heat-pixel,
-  .training-schedule-heatmap .attr-heat-pixel {
+  .training-schedule-heatmap .training-pixel-pack.is-compact .attr-heat-pixel {
     flex: 0 0 3.1rem;
     width: 3.1rem;
     height: 3.35rem;
   }
 
-  .merch-a4-sheet {
+  .training-schedule-heatmap {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  /* Training + Manager Desk mobile: is-full heatmaps — tiles fill available width */
+  .training-schedule-heatmap .training-pixel-pack.is-full {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .training-schedule-heatmap .training-pixel-pack.is-full .training-pixel-bar,
+  .training-schedule-heatmap .training-pixel-pack.is-full .attr-training-pixel-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .training-schedule-heatmap .training-pixel-pack.is-full .training-pixel-stage {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .training-schedule-heatmap .training-pixel-pack.is-full .training-pixel-stage + .training-pixel-stage {
+    border-left: none;
+    padding-left: 0;
+    margin-top: 0;
+    padding-top: 0.45rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .training-schedule-heatmap .training-pixel-pack.is-full .training-pixel-row,
+  .training-schedule-heatmap .training-pixel-pack.is-full .pipeline-heat.training-pixel-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(2.15rem, 1fr));
+    gap: 0.3rem;
+    width: 100%;
+    max-width: 100%;
+    flex-wrap: unset;
+    overflow: visible;
+    padding-bottom: 0;
+    justify-content: stretch;
+    align-content: start;
+  }
+
+  .training-schedule-heatmap .training-pixel-pack.is-full .heat-pixel,
+  .training-schedule-heatmap .training-pixel-pack.is-full .attr-heat-pixel {
+    flex: unset;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    min-width: 0;
+    min-height: 2.15rem;
+    box-sizing: border-box;
+  }
+
+  .training-schedule-heatmap .training-pixel-pack.is-full .heat-pixel-face,
+  .training-schedule-heatmap .training-pixel-pack.is-full .attr-heat-pixel-face {
+    display: grid;
+    position: static;
+    width: auto;
+    height: auto;
+    clip: auto;
+    overflow: visible;
+    font-size: clamp(0.48rem, 2.8vw, 0.62rem);
+    line-height: 1.05;
+  }
+
+  .training-schedule-heatmap .training-pixel-pack.is-full .heat-pixel-face small,
+  .training-schedule-heatmap .training-pixel-pack.is-full .attr-heat-pixel-face small {
+    font-size: clamp(0.42rem, 2.4vw, 0.52rem);
+  }
+
+  .manager-desk__heatmaps.training-schedule-heatmap {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .manager-desk__heatmaps.training-schedule-heatmap .training-pixel-pack.is-full .pipeline-legend-toggle {
+    display: inline-flex !important;
+  }
+
+  .treter-figure,
+  .treter-figure-hero {
+    max-height: none;
+    width: 100%;
+  }
+
+  .treter-figure img {
+    width: 100%;
+    height: auto;
+    max-height: min(42vw, 12rem);
+    object-fit: cover;
+  }
+
+  .treter-figure-hero img {
+    max-height: min(52vw, 16rem);
+  }
+
+  /* Preise tab: row 1 = Trikots hero, row 2 = other SKUs in 2 cols (index.css loads after this file) */
+  .merchandising--preise .merch-preise-row {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .merchandising--preise .merch-preise-row .merch-a4-sheet {
+    display: grid;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "hero"
+      "side";
+    gap: 0.65rem;
+    width: 100%;
+    min-width: 0;
     max-width: none;
+    margin-top: 0;
   }
 
-  .merch-a4-side {
-    grid-template-columns: minmax(0, 1fr);
+  .merchandising--preise .merch-a4-sheet > .merch-grid-tile--hero {
+    grid-area: hero;
+    width: 100%;
+    min-width: 0;
   }
 
-  .merch-grid-tile .merch-price-stepper {
+  .merchandising--preise .merch-a4-side {
+    grid-area: side;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .merchandising--preise .merch-grid-tile {
+    min-width: 0;
+  }
+
+  .merchandising--preise .merch-grid-tile .merch-price-stepper,
+  .merchandising--preise .merch-grid-tile .merch-price-stepper--hero {
     width: 100%;
     max-width: 100%;
   }
 
-  .scout-discovery-grid {
+  .merchandising--preise .merch-preise-row .merch-on-demand--preise {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Stadium Gelände: stack palette → map → effects; map width drives tile scale in JS */
+  main.stadium .stadium-precinct-cluster {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  main.stadium .stadium-precinct-cluster > .stadium-precinct-palette,
+  main.stadium .stadium-precinct-cluster > .stadium-precinct-status--rail,
+  main.stadium .stadium-precinct-cluster > .stadium-precinct-status:not(.stadium-precinct-status--rail) {
+    padding-top: 0;
+  }
+
+  main.stadium .stadium-precinct-palette {
+    flex: none;
+    width: 100%;
+    max-width: none;
+    justify-content: flex-start;
+    padding-right: 0;
+    gap: 0.35rem;
+  }
+
+  main.stadium .stadium-precinct-map-stack {
+    width: 100%;
+    max-width: 100%;
+    align-self: stretch;
+  }
+
+  main.stadium .stadium-precinct-playfield {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  main.stadium .stadium-precinct-map {
+    max-width: 100%;
+  }
+
+  main.stadium .stadium-precinct-status {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+    overflow: visible;
+  }
+
+  main.stadium .stadium-precinct-hint {
+    flex-basis: auto;
+  }
+
+  .scout-region-map-body.scout-discovery-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .scout-discovery-zone.has-flavor {
-    min-height: 0;
+    min-height: 8.5rem;
   }
 
   .scout-discovery-zone-card-inner {
     min-height: 0;
   }
 
+  .scout-discovery-zone-head h3 {
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
   .scout-discovery-zone-lore {
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: normal;
   }
 }

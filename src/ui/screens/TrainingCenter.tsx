@@ -404,7 +404,11 @@ function TeamPlan({
         onNotice={onTrainingPresetNotice}
       />
 
-      <div className="training-timetable-scroll">
+      <div
+        className={
+          mobileNarrow ? "training-timetable-scroll is-mobile-week-stack" : "training-timetable-scroll"
+        }
+      >
       <div className="training-timetable" aria-label={t("training.timetable.aria")}>
         {TRAINING_DAYS.map((day, dayIndex) => {
           const dayPast = isTrainingDayFullyPastForSession(

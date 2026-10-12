@@ -8,7 +8,11 @@ import {
   type TrainingSlot,
 } from "../../development/training-units.ts";
 import { trainingSlotOutcomeAt, type TrainingSlotOutcome } from "../../development/training-unit-result.ts";
-import { hubThreeDayTimetableColumns } from "../../hub/hub-training-timetable.ts";
+import {
+  hubThreeDayTimetableColumns,
+  hubTimetableColumnsForDisplay,
+} from "../../hub/hub-training-timetable.ts";
+import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
 import type { GameSession } from "../../persistence/game-session.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
@@ -123,9 +127,14 @@ export function HubThreeDayTrainingCalendar({
   useT();
   const { season, week, weekday, trainingUnitsCompleted, trainingUnitOutcomes, league } = session;
 
+  const mobileSingleDay = useMobileNarrow();
   const columns = useMemo(
-    () => hubThreeDayTimetableColumns(session, plan),
-    [session, plan],
+    () =>
+      hubTimetableColumnsForDisplay(
+        hubThreeDayTimetableColumns(session, plan),
+        mobileSingleDay,
+      ),
+    [session, plan, mobileSingleDay],
   );
 
   const nextSlotIndex = currentTrainingSlotIndex(trainingUnitsCompleted, useTrainingUnitProgress);
@@ -144,7 +153,15 @@ export function HubThreeDayTrainingCalendar({
   );
 
   return (
-    <div className="manager-desk__timetable-scroll training-timetable-scroll">
+    <div
+      className={[
+        "manager-desk__timetable-scroll",
+        "training-timetable-scroll",
+        mobileSingleDay ? "is-single-day" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div
         className="training-timetable manager-desk__timetable"
         aria-label={t("training.timetable.aria")}

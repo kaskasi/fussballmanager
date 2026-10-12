@@ -20,6 +20,7 @@ import {
   Flame,
   Gamepad2,
   Globe,
+  Handshake,
   Hourglass,
   Landmark,
   Link2,
@@ -29,6 +30,8 @@ import {
   Scale,
   School,
   ScrollText,
+  Settings,
+  Smartphone,
   Smile,
   Sparkles,
   Sprout,
@@ -371,12 +374,68 @@ function PlayPanel() {
             <span>{t("help.play.club.item1")}</span>
           </li>
           <li>
+            <HelpInlineIcon icon={Ticket} />
+            <span>{t("help.play.club.item4")}</span>
+          </li>
+          <li>
             <HelpInlineIcon icon={ClipboardList} />
             <span>{t("help.play.club.item2")}</span>
           </li>
           <li>
             <HelpInlineIcon icon={ArrowDown} />
             <span>{t("help.play.club.item3")}</span>
+          </li>
+        </ul>
+      </section>
+
+      <section className="help-card" aria-labelledby="help-settings">
+        <h2 id="help-settings">
+          <HelpInlineIcon icon={Settings} /> {t("help.play.settings.title")}
+        </h2>
+        <ul className="help-icon-list">
+          <li>
+            <HelpInlineIcon icon={ClipboardList} />
+            <span>{t("help.play.settings.item1")}</span>
+          </li>
+          <li>
+            <HelpInlineIcon icon={Landmark} />
+            <span>{t("help.play.settings.item2")}</span>
+          </li>
+          <li>
+            <HelpInlineIcon icon={Eye} />
+            <span>{t("help.play.settings.item3")}</span>
+          </li>
+        </ul>
+      </section>
+
+      <section className="help-card" aria-labelledby="help-mobile">
+        <h2 id="help-mobile">
+          <HelpInlineIcon icon={Smartphone} /> {t("help.play.mobile.title")}
+        </h2>
+        <ul className="help-icon-list">
+          <li>
+            <HelpInlineIcon icon={AlertTriangle} />
+            <span>{t("help.play.mobile.item1")}</span>
+          </li>
+          <li>
+            <HelpInlineIcon icon={Dumbbell} />
+            <span>{t("help.play.mobile.item2")}</span>
+          </li>
+          <li>
+            <HelpInlineIcon icon={Repeat} />
+            <span>{t("help.play.mobile.item3")}</span>
+          </li>
+          <li>
+            <HelpInlineIcon icon={Globe} />
+            <span>{t("help.play.mobile.item4")}</span>
+          </li>
+          <li>
+            <HelpInlineIcon icon={Construction} />
+            <span>{t("help.play.mobile.item5")}</span>
+          </li>
+          <li>
+            <HelpInlineIcon icon={Handshake} />
+            <span>{t("help.play.mobile.item6")}</span>
           </li>
         </ul>
       </section>

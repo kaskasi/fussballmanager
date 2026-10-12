@@ -26,6 +26,7 @@ import { ClubEventsScreen } from "../screens/ClubEventsScreen.tsx";
 import { FinancesScreen } from "../screens/FinancesScreen.tsx";
 import { FirstTeam } from "../screens/FirstTeam.tsx";
 import { HelpScreen } from "../screens/HelpScreen.tsx";
+import { SettingsScreen } from "../screens/SettingsScreen.tsx";
 import { LeaguesScreen } from "../screens/LeaguesScreen.tsx";
 import { Matchday } from "../../match/Matchday.tsx";
 import { MedicalCenterScreen } from "../screens/MedicalCenterScreen.tsx";
@@ -98,6 +99,10 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
     simulating,
     jobOffers,
     accessibility,
+    activeSlot,
+    loadSaveSlot,
+    newGameInSlot,
+    applyCloudSave,
     setScreen,
     setScoutingInitialTab,
     setCampusInitialTab,
@@ -624,6 +629,17 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
         />
       ) : null}
       {screen === "help" ? <HelpScreen /> : null}
+      {screen === "settings" ? (
+        <SettingsScreen
+          preferences={accessibility}
+          onPreferencesChange={setAccessibility}
+          activeSlot={activeSlot}
+          currentSave={save}
+          onLoadSlot={loadSaveSlot}
+          onNewGameInSlot={newGameInSlot}
+          onApplyCloudSave={applyCloudSave}
+        />
+      ) : null}
       {screen === "matchday" ? <Matchday /> : null}
     </>
   );

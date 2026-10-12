@@ -15,6 +15,7 @@ Kein Login, kein Server — nur eine JSON-Datei, die du selbst bewegst.
 | Thema | Kurz |
 |--------|------|
 | Wo liegt der Save? | Im **Browser** dieses Geräts (3 Slots, IndexedDB; alte `localStorage`-Slots werden beim ersten Laden übernommen). |
+| Einstellungen / Export | Menü → **Einstellungen**: Anzeige, Spielstände, Diagnose-Protokoll (Copy für Bugreports). |
 | Zweites Gerät | **Export** am Gerät A → Datei rüber → **Import** am Gerät B (**gleiche Deploy-URL / gleiche Save-Version**). |
 | Automatischer Sync | **Nein** — nur manuell (oder M1 Cloud mit Sync-Code). |
 | Nach Deploy-Update | Alte Slots/Imports können **abgelehnt** werden → Export vorher oder Neues Spiel. |

@@ -13,6 +13,7 @@ import {
 } from "../../economy/merchandising.ts";
 import { normalizeClubStadium, type ClubStadium } from "../../stadium/club-stadium.ts";
 import type { Screen } from "../shell/types.ts";
+import { trackEvent } from "../../telemetry/analytics.ts";
 
 type PatchSession = (updater: (current: GameSession) => GameSession) => void;
 
@@ -105,6 +106,7 @@ export function useMerchActions(args: {
         },
         { infrastructure: true },
       );
+      trackEvent("merch_bulk_purchase_completed");
     },
     [finances, masterSeed, requestClubSpend, season, stadium, week],
   );
@@ -146,6 +148,7 @@ export function useMerchActions(args: {
         },
         { infrastructure: true },
       );
+      trackEvent("merch_on_demand_order_completed", { quantity: qty });
     },
     [finances, requestClubSpend, season, stadium, week, weekday],
   );

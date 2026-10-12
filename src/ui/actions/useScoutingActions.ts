@@ -45,6 +45,7 @@ import { worldCareerClubId } from "../../world/world-generator.ts";
 import type { ClubEventKind } from "../../inbox/club-events.ts";
 import type { MarketFilters } from "../../scouting/market-list.ts";
 import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
+import { trackEvent } from "../../telemetry/analytics.ts";
 
 type PatchSession = (updater: (current: GameSession) => GameSession) => void;
 type SessionWithEvent = (
@@ -160,6 +161,7 @@ export function useScoutingActions(args: {
         ...current,
         scoutBoard: assignScout(current.scoutBoard, playerId, current.scoutNetwork),
       }));
+      trackEvent("scout_assigned");
     },
     [patchSession],
   );
@@ -243,6 +245,7 @@ export function useScoutingActions(args: {
           scoutBoard: startRegionScoutJob(current.scoutBoard, zoneId),
         };
       });
+      trackEvent("scout_region_started", { zone: zoneId });
     },
     [patchSession],
   );
@@ -274,6 +277,7 @@ export function useScoutingActions(args: {
           t("clubEvent.scoutHired", { name: scout.name }),
         );
       });
+      trackEvent("scout_hired");
     },
     [patchSession, sessionWithEvent],
   );

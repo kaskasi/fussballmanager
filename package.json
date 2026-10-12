@@ -17,7 +17,7 @@
     "deploy:cloudflare": "npm run build && npm run deploy -w @fussballmanager/worker",
     "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w @fussballmanager/shared && npm run typecheck -w @fussballmanager/server && npm run typecheck -w @fussballmanager/worker",
     "test": "npm test -w @fussballmanager/shared && npm test -w @fussballmanager/server",
-    "test:client": "vitest run src/persistence src/ui src/sim src/narrative",
+    "test:client": "vitest run src/persistence src/ui src/sim src/narrative src/telemetry",
     "play-match": "npm run play-match -w @fussballmanager/server",
     "play-matchday": "npm run play-matchday -w @fussballmanager/server",
     "play-probe": "npm run play-probe -w @fussballmanager/server",
@@ -34,7 +34,9 @@
   },
   "dependencies": {
     "@fussballmanager/shared": "*",
+    "@sentry/react": "^11.6.0",
     "lucide-react": "^1.52.0",
+    "posthog-js": "^1.438.7",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

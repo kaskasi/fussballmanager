@@ -12,17 +12,9 @@ import {
 } from "../../narrative/career-presentation.ts";
 import type { StoryState } from "../../narrative/story-state.ts";
 import type { ClubStadium } from "../../stadium/club-stadium.ts";
-import {
-  COLOR_SCHEME_OPTIONS,
-  LOCALE_OPTIONS,
-  TEXT_SCALE_OPTIONS,
-  type AccessibilityPreferences,
-  type ColorSchemeId,
-  type TextScaleId,
-} from "../accessibility.ts";
+import type { AccessibilityPreferences } from "../accessibility.ts";
 import { CashChip } from "../components/CashChip.tsx";
 import { ClubCrest } from "../components/ClubCrest.tsx";
-import type { LocaleId } from "../../i18n/locale-id.ts";
 import { useT } from "../../i18n/react.ts";
 import type { HubNavActions, Screen } from "./types.ts";
 
@@ -75,7 +67,6 @@ export function AppNav({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [resetAsk, setResetAsk] = useState(false);
-  const [a11yOpen, setA11yOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const tr = useT();
   const showTrainingPlanWarn =
@@ -238,7 +229,6 @@ export function AppNav({
                 setMenuOpen((open) => !open);
                 if (menuOpen) {
                   setResetAsk(false);
-                  setA11yOpen(false);
                 }
               }}
             >
@@ -268,73 +258,6 @@ export function AppNav({
                       onClick={() => setResetAsk(false)}
                     >
                       {tr("shell.menu.cancel")}
-                    </button>
-                  </>
-                ) : a11yOpen ? (
-                  <>
-                    <p className="pipeline-menu-note">{tr("shell.menu.displayNote")}</p>
-                    <label className="a11y-menu-field">
-                      <span>{tr("shell.menu.language")}</span>
-                      <select
-                        value={accessibility.locale}
-                        onChange={(event) =>
-                          onAccessibilityChange({
-                            ...accessibility,
-                            locale: event.target.value as LocaleId,
-                            localeChosen: true,
-                          })
-                        }
-                      >
-                        {LOCALE_OPTIONS.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.nativeLabel}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="a11y-menu-field">
-                      <span>{tr("shell.menu.textScale")}</span>
-                      <select
-                        value={accessibility.textScale}
-                        onChange={(event) =>
-                          onAccessibilityChange({
-                            ...accessibility,
-                            textScale: event.target.value as TextScaleId,
-                          })
-                        }
-                      >
-                        {TEXT_SCALE_OPTIONS.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {tr(option.labelKey)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="a11y-menu-field">
-                      <span>{tr("shell.menu.colorScheme")}</span>
-                      <select
-                        value={accessibility.colorScheme}
-                        onChange={(event) =>
-                          onAccessibilityChange({
-                            ...accessibility,
-                            colorScheme: event.target.value as ColorSchemeId,
-                          })
-                        }
-                      >
-                        {COLOR_SCHEME_OPTIONS.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {tr(option.labelKey)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="row-menu-item"
-                      onClick={() => setA11yOpen(false)}
-                    >
-                      {tr("shell.menu.back")}
                     </button>
                   </>
                 ) : (
@@ -369,19 +292,12 @@ export function AppNav({
                       role="menuitem"
                       className="row-menu-item"
                       onClick={() => {
-                        hubActions.onOpenSaves();
+                        onCloseProfile?.();
+                        onNavigate("settings");
                         setMenuOpen(false);
                       }}
                     >
-                      {tr("shell.menu.saves")}
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="row-menu-item"
-                      onClick={() => setA11yOpen(true)}
-                    >
-                      {tr("shell.menu.display")}
+                      {tr("shell.nav.settings")}
                     </button>
                     <button
                       type="button"

@@ -107,6 +107,10 @@ export interface GameScreenRouterCoreProps {
   simulating: boolean;
   jobOffers: JobOffer[];
   accessibility: AccessibilityPreferences;
+  activeSlot: number;
+  loadSaveSlot: (slot: number) => void;
+  newGameInSlot: (slot: number) => void;
+  applyCloudSave: (save: SaveGame, slot: number) => void;
   setScreen: (screen: Screen) => void;
   setScoutingInitialTab: (tab: ScoutingInitialTab | null) => void;
   setCampusInitialTab: (tab: "u17" | "u19" | "camps" | null) => void;

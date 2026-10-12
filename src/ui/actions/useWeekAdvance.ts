@@ -35,6 +35,8 @@ import {
 } from "../../youth/decision-inbox.ts";
 import { tickCampLeaderHires } from "../../youth/camp-leader-hire.ts";
 import { MANAGER_DESK_HUB_ENABLED } from "../../hub/config.ts";
+import { logPostHogInfo, trackEvent } from "../../telemetry/analytics.ts";
+import { Diag } from "../../telemetry/diagnostic-log.ts";
 import {
   hasInboxBlockerForNext,
   shouldNavigateToCalendarBeforeTimeStep,
@@ -188,6 +190,11 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
         }
         return saveFromSession(nextSession, current);
       });
+      trackEvent("week_simulation_completed", { watched_match: Boolean(override) });
+      logPostHogInfo("Game week simulation completed", {
+        event: "game_week_simulation_completed",
+        watched_match: Boolean(override),
+      });
     },
     [pendingWatchedMatch, replaceSave, save, setPendingWatchedMatch],
   );
@@ -287,6 +294,10 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
           CALENDAR_MONTH_KEYS[targetMonthIndex] ?? "calendar.month.january",
         );
         replaceSave((current) => saveFromSession(outcome.session, current));
+        trackEvent("calendar_fast_forward_completed", {
+          outcome: outcome.reason,
+          steps: outcome.steps,
+        });
         if (outcome.reason === "reached") {
           flashNotice(
             t("calendar.fastForward.done", {
@@ -355,17 +366,28 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
         }
       } else if (screen === "training") {
         setTrainingAutoNext(!pauseAuto);
-      } else if (MANAGER_DESK_HUB_ENABLED && screen === "hub" && !fromAuto) {
-        if (trainingAutoNext) {
-          setTrainingAutoNext(false);
-          return;
-        }
-        setTrainingAutoNext(true);
+      } else if (MANAGER_DESK_HUB_ENABLED && screen === "hub" && !fromAuto && trainingAutoNext) {
+        setTrainingAutoNext(false);
+        return;
       }
 
+      const focusHubInboxDecision = () => {
+        const pending = pendingInboxItems(youthInbox, players);
+        setPostfachItemId(pending[0]?.id ?? null);
+        setProfileId(null);
+        setForeignPlayerId(null);
+        setProfileFeedback(null);
+        flashNotice(t("shell.nextToPostfach"), "warn");
+      };
+
       if (hasInboxBlockerForNext(session, youthInbox, players)) {
+        Diag.next("blocked_inbox");
         if (MANAGER_DESK_HUB_ENABLED) {
-          setScreen("hub");
+          if (screen === "hub") {
+            focusHubInboxDecision();
+          } else {
+            setScreen("hub");
+          }
         } else {
           openPostfach();
         }
@@ -399,6 +421,9 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
       }
 
       if (isTrainingNextActive(session)) {
+        if (MANAGER_DESK_HUB_ENABLED && screen === "hub" && !fromAuto && !trainingAutoNext) {
+          setTrainingAutoNext(true);
+        }
         const preview = runTrainingNextStep(session);
         const deliverKickerAfterStep =
           preview.session.weekday === TUESDAY &&
@@ -425,6 +450,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
           }
           return deliverKickerAfterStep ? applyTuesdayKickerDelivery(nextSession) : nextSession;
         });
+        trackEvent("training_step_completed", { automated: fromAuto });
         if (deliverKickerAfterStep) {
           const treterId = kickerItemId(session.season, session.week);
           setPostfachItemId(treterId);
@@ -477,11 +503,19 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
 
       if (skip.action === "inbox") {
         if (MANAGER_DESK_HUB_ENABLED) {
-          setScreen("hub");
+          if (screen === "hub") {
+            focusHubInboxDecision();
+          } else {
+            setScreen("hub");
+          }
         } else {
           openPostfach();
         }
         return;
+      }
+
+      if (MANAGER_DESK_HUB_ENABLED && screen === "hub" && !fromAuto && !trainingAutoNext) {
+        setTrainingAutoNext(true);
       }
 
       const inboxAfterDays =

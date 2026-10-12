@@ -19,6 +19,9 @@ export class AppErrorBoundary extends Component<Props, State> {
 
   override componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error("App render error", error, info.componentStack);
+    void import("../../telemetry/analytics.ts").then(({ captureException }) => {
+      captureException(error, { component_stack: info.componentStack?.slice(0, 200) ?? "" });
+    });
   }
 
   private reload = (): void => {

@@ -23,6 +23,8 @@ import { getActiveSlot, setActiveSlot } from "../../persistence/save-slots.ts";
 import type { SaveGame } from "../../persistence/savegame-model.ts";
 import { saveLoadErrorMessage } from "../../persistence/save-load-message.ts";
 import { bootstrapSave } from "../shell/bootstrap.ts";
+import { logPostHogWarning, trackEvent } from "../../telemetry/analytics.ts";
+import { Diag } from "../../telemetry/diagnostic-log.ts";
 
 export type PersistedSession = ReturnType<typeof sessionFromSave>;
 
@@ -34,9 +36,16 @@ async function persistSlot(
 ): Promise<boolean> {
   const persisted = await tryWriteLocalSaveAsync(slot, nextSave);
   if (persisted) {
+    Diag.persist(true, slot);
     onSuccess();
     scheduleCloudUpload(slot, nextSave);
   } else {
+    Diag.persist(false, slot, "dirty=true");
+    trackEvent("save_write_failed", { slot });
+    logPostHogWarning("Local game save persistence failed", {
+      event: "game_save_persist_failed",
+      slot,
+    });
     onFailure();
   }
   return persisted;
@@ -69,6 +78,7 @@ export function usePersistedGameSession(options: {
   useEffect(() => {
     setCloudUploadListener((result) => {
       if (!result.ok) {
+        Diag.cloud("upload", false);
         flashNotice(t("save.cloud.uploadFail"), "warn");
       }
     });
@@ -150,6 +160,7 @@ export function usePersistedGameSession(options: {
     setSave(fresh);
     setPersistDirty(false);
     void writeLocalSaveAsync(activeSlot, fresh).catch(() => handlePersistFailure());
+    trackEvent("game_reset", { slot: activeSlot });
     onSlotChange?.();
   }, [activeSlot, handlePersistFailure, onSlotChange]);
 
@@ -180,6 +191,7 @@ export function usePersistedGameSession(options: {
             handlePersistFailure();
           }
         }
+        trackEvent("save_slot_loaded", { slot });
         onSlotChange?.();
       })();
     },
@@ -195,6 +207,7 @@ export function usePersistedGameSession(options: {
       setSave(fresh);
       setPersistDirty(false);
       void writeLocalSaveAsync(slot, fresh).catch(() => handlePersistFailure());
+      trackEvent("new_game_started", { slot });
       onSlotChange?.();
     },
     [handlePersistFailure, onSlotChange],
@@ -210,6 +223,7 @@ export function usePersistedGameSession(options: {
           await writeLocalSaveAsync(slot, normalized);
           setSave(normalized);
           setPersistDirty(false);
+          trackEvent("cloud_save_imported", { slot });
           onSlotChange?.();
           flashNotice(t("save.cloud.pullOk"), "ok");
         } catch (error) {

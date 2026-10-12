@@ -301,7 +301,6 @@ import {
 import { scoutJobDismissOneLiner } from "./inbox/postfach-archive.ts";
 import { PostfachScreen } from "./ui/screens/PostfachScreen.tsx";
 import { downloadSaveAsFile } from "./persistence/save-transfer.ts";
-import { SaveManagerModal } from "./ui/components/SaveManagerModal.tsx";
 import { NoticeToast, SaveDirtyBanner, SaveToast } from "./ui/components/SaveToast.tsx";
 import { CampOpeningDebutModal } from "./ui/components/CampOpeningDebutModal.tsx";
 import { YouthCampus, type YouthCampusSortState } from "./ui/screens/YouthCampus";
@@ -381,11 +380,12 @@ import { useStadiumActions } from "./ui/actions/useStadiumActions.ts";
 import type { LocaleId } from "./i18n/locale-id.ts";
 import { MANAGER_DESK_HUB_ENABLED } from "./hub/config.ts";
 import { hubBlockerCount } from "./hub/hub-blockers.ts";
+import { initAnalytics, trackScreen } from "./telemetry/analytics.ts";
+import { weekContextLabel } from "./telemetry/context.ts";
 
 export default function App() {
   const locale = useLocale();
   const [screen, setScreen] = useState<Screen>("hub");
-  const [saveManagerOpen, setSaveManagerOpen] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [profileOpenContractTalk, setProfileOpenContractTalk] = useState(false);
   const [foreignPlayerId, setForeignPlayerId] = useState<string | null>(null);
@@ -502,6 +502,7 @@ export default function App() {
   useEffect(() => {
     applyAccessibilityPreferences(accessibility);
     saveAccessibilityPreferences(accessibility);
+    initAnalytics(accessibility);
   }, [accessibility]);
 
   useEffect(() => {
@@ -547,6 +548,15 @@ export default function App() {
     medicalState,
     orthopedistHire,
   } = session;
+
+  const prevScreenRef = useRef<Screen | null>(null);
+  useEffect(() => {
+    trackScreen(screen, {
+      previous_screen: prevScreenRef.current,
+      week_context: weekContextLabel(season, week, weekday, activeSlot),
+    });
+    prevScreenRef.current = screen;
+  }, [activeSlot, screen, season, week, weekday]);
 
   useEffect(() => {
     document.documentElement.dataset.presentation = resolvePresentationMode(storyState);
@@ -1449,7 +1459,7 @@ export default function App() {
   const hubHeaderNextCopy = useMemo((): { label: string; title: string } | null => {
     if (!managerDeskHubScreen) return null;
     if (hasInboxBlockerForNext(session, youthInbox, players)) {
-      return { label: t("hub.desk.next.runWeek"), title: t("hub.desk.next.runWeekTitle") };
+      return { label: t("shell.next"), title: t("shell.nextToPostfach") };
     }
     if (trainingAutoNext) {
       return { label: t("hub.desk.next.pause"), title: t("hub.desk.next.pauseTitle") };
@@ -1665,7 +1675,7 @@ export default function App() {
     onNext: () => void handleNext(undefined),
     onHeaderPrimaryClick: handleHeaderPrimaryClick,
     onNewGame: resetGame,
-    onOpenSaves: () => setSaveManagerOpen(true),
+    onOpenSaves: () => setScreen("settings"),
     matchFlowActive: Boolean(careerMatchSetup && careerMatchUiVisible),
     primaryAction: matchFlowBrowsing
       ? backToLineupAction
@@ -1677,17 +1687,6 @@ export default function App() {
     nextHeaderButtonLabel,
     nextHeaderButtonTitle,
   };
-
-  const saveManagerOverlay = saveManagerOpen ? (
-    <SaveManagerModal
-      activeSlot={activeSlot}
-      currentSave={save}
-      onClose={() => setSaveManagerOpen(false)}
-      onLoadSlot={loadSaveSlot}
-      onNewGameInSlot={newGameInSlot}
-      onApplyCloudSave={applyCloudSave}
-    />
-  ) : null;
 
   const spendConfirmOverlay = pendingSpend ? (
     <SpendConfirmSheet
@@ -1820,7 +1819,6 @@ export default function App() {
         }}
         overlays={
           <>
-            {saveManagerOverlay}
             {spendConfirmOverlay}
             {noticeOverlay}
           </>
@@ -1897,7 +1895,6 @@ export default function App() {
           onPreContract={() => handlePreContract(foreignView.player.id)}
         />
         {negotiationOverlay}
-        {saveManagerOverlay}
         {spendConfirmOverlay}
         {noticeOverlay}
       </>
@@ -1974,7 +1971,6 @@ export default function App() {
           }
         />
         {negotiationOverlay}
-        {saveManagerOverlay}
         {spendConfirmOverlay}
         {noticeOverlay}
       </>
@@ -2062,6 +2058,10 @@ export default function App() {
               simulating={simulating}
               jobOffers={jobOffers}
               accessibility={accessibility}
+              activeSlot={activeSlot}
+              loadSaveSlot={loadSaveSlot}
+              newGameInSlot={newGameInSlot}
+              applyCloudSave={applyCloudSave}
               setScreen={setScreen}
               setScoutingInitialTab={setScoutingInitialTab}
               setCampusInitialTab={setCampusInitialTab}
@@ -2138,7 +2138,6 @@ export default function App() {
       {board.job_status === "dismissed" ? (
         <JobOffersModal offers={jobOffers} onAccept={handleAcceptJobOffer} />
       ) : null}
-      {saveManagerOverlay}
       {spendConfirmOverlay}
       {campDebutOverlay}
       {noticeOverlay}

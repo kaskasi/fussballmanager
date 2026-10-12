@@ -18,7 +18,8 @@ export type Screen =
   | "help"
   | "club-events"
   | "calendar"
-  | "postfach";
+  | "postfach"
+  | "settings";
 
 export const SCREEN_DOCUMENT_TITLE_KEYS: Record<Screen, string> = {
   hub: "shell.nav.pipeline",
@@ -37,6 +38,7 @@ export const SCREEN_DOCUMENT_TITLE_KEYS: Record<Screen, string> = {
   "club-events": "shell.nav.clubEvents",
   calendar: "shell.nav.calendar",
   postfach: "shell.nav.postfach",
+  settings: "shell.nav.settings",
 };
 
 export interface HubNavActions {
@@ -50,7 +52,8 @@ export interface HubNavActions {
   onNext: () => void;
   onHeaderPrimaryClick?: () => void;
   onNewGame: () => void;
-  onOpenSaves: () => void;
+  /** @deprecated use onNavigate("settings") */
+  onOpenSaves?: () => void;
   /** When true, header NEXT must never fall back to smart-skip (match lineup / live). */
   matchFlowActive?: boolean;
   primaryAction?: NavPrimaryAction | null;

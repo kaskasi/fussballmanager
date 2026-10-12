@@ -22,3 +22,4 @@ fmscreens/**/*.png
 # WIP club logos / precinct refs — bake via docs/design-refs/logos before commit (PRD 15.7)
 assets/club_logos/
 pd_images/
+.env.local

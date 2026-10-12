@@ -50,6 +50,7 @@ import { canBuyAcademyUpgrade, ACADEMY_FACILITIES } from "../../youth/academy.ts
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
 import { withClubEvent } from "../../inbox/club-events.ts";
 import { t } from "../../i18n/index.ts";
+import { trackEvent } from "../../telemetry/analytics.ts";
 
 type PatchSession = (updater: (current: GameSession) => GameSession) => void;
 
@@ -110,6 +111,7 @@ export function useStadiumActions(args: {
           financing: drawn.financing,
         };
       });
+      trackEvent("bank_loan_drawn", { amount });
     },
     [patchSession],
   );
@@ -144,6 +146,7 @@ export function useStadiumActions(args: {
         },
         { infrastructure: true },
       );
+      trackEvent("stadium_upgrade_purchased", { upgrade_id: upgradeId });
     },
     [finances, requestClubSpend, stadium, week],
   );
@@ -259,6 +262,7 @@ export function useStadiumActions(args: {
         finances: spendClubCash(current.finances, next.cost, current.week),
       };
     });
+    trackEvent("academy_upgraded", { facility: check.target });
   }, [academyFacility, finances.cash, requestClubSpend, stadium]);
 
   const handleUpgradePrecinct = useCallback(

@@ -72,6 +72,36 @@ export interface StoryInboxPayload {
   choices: Array<{ id: string; label: string; icon: string }>;
 }
 
+/** PRD 25 — per-save coach mark progress (screen ids match shell Screen). */
+export interface TutorialState {
+  version: 1;
+  disabled: boolean;
+  completed_step_ids: string[];
+  dismissed_screens: string[];
+}
+
+export function defaultTutorialState(): TutorialState {
+  return {
+    version: 1,
+    disabled: false,
+    completed_step_ids: [],
+    dismissed_screens: [],
+  };
+}
+
+export function normalizeTutorialState(raw?: TutorialState): TutorialState {
+  const base = defaultTutorialState();
+  if (!raw) return base;
+  return {
+    version: 1,
+    disabled: Boolean(raw.disabled),
+    completed_step_ids: Array.isArray(raw.completed_step_ids)
+      ? [...raw.completed_step_ids]
+      : [],
+    dismissed_screens: Array.isArray(raw.dismissed_screens) ? [...raw.dismissed_screens] : [],
+  };
+}
+
 export interface StoryState {
   active_arc: ActiveArc;
   arc_started_week: number | null;
@@ -88,6 +118,7 @@ export interface StoryState {
   media_hype: number;
   fan_feed: FanFeedBeat[];
   chronicle_entries: ChronicleEntry[];
+  tutorial?: TutorialState;
 }
 
 export const FAN_FEED_MAX = 8;
@@ -124,6 +155,7 @@ export function regionalligaManagerStoryState(week = 1): StoryState {
     media_hype: 42,
     fan_feed: [],
     chronicle_entries: [],
+    tutorial: defaultTutorialState(),
   };
 }
 
@@ -172,6 +204,7 @@ export function normalizeStoryState(state?: StoryState, week = 1): StoryState {
     fan_feed: state.fan_feed ?? [],
     chronicle_entries: state.chronicle_entries ?? [],
     media_hype: clampMediaHype(state.media_hype ?? base.media_hype),
+    tutorial: normalizeTutorialState(state.tutorial ?? base.tutorial),
   };
 }
 

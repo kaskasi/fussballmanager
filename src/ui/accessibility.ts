@@ -15,6 +15,8 @@ export interface ClientPreferences {
   locale: LocaleId;
   localeChosen?: boolean;
   analyticsEnabled: boolean;
+  /** PRD 25 — FM-style screen coach marks */
+  coachMarksEnabled: boolean;
   diagnosticLogLevel: DiagnosticLogLevel;
 }
 
@@ -50,6 +52,7 @@ const DEFAULT_PREFERENCES: ClientPreferences = {
   locale: "de",
   localeChosen: false,
   analyticsEnabled: true,
+  coachMarksEnabled: true,
   diagnosticLogLevel: "error",
 };
 
@@ -79,6 +82,10 @@ function parsePartial(raw: string): ClientPreferences {
       typeof parsed.analyticsEnabled === "boolean"
         ? parsed.analyticsEnabled
         : DEFAULT_PREFERENCES.analyticsEnabled,
+    coachMarksEnabled:
+      typeof parsed.coachMarksEnabled === "boolean"
+        ? parsed.coachMarksEnabled
+        : DEFAULT_PREFERENCES.coachMarksEnabled,
     diagnosticLogLevel: parseDiagnosticLevel(parsed.diagnosticLogLevel),
   };
 }

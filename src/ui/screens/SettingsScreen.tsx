@@ -22,6 +22,7 @@ import {
 } from "../../telemetry/diagnostic-log.ts";
 import { initAnalytics } from "../../telemetry/analytics.ts";
 import { setDiagnosticLogLevel } from "../../telemetry/diagnostic-log.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 
 const DIAG_LEVEL_OPTIONS: readonly { id: DiagnosticLogLevel; labelKey: string }[] = [
   { id: "off", labelKey: "settings.diagnostics.levelOff" },
@@ -115,6 +116,15 @@ export function SettingsScreen({
             ))}
           </select>
         </label>
+        <label className="settings-toggle-row">
+          <input
+            type="checkbox"
+            checked={preferences.coachMarksEnabled}
+            onChange={(event) => patchPrefs({ coachMarksEnabled: event.target.checked })}
+          />
+          <span>{t("settings.display.coachMarks")}</span>
+        </label>
+        <p className="settings-section-lead">{t("settings.display.coachMarksNote")}</p>
         <label className="a11y-menu-field">
           <span>{t("shell.menu.textScale")}</span>
           <select
@@ -147,7 +157,11 @@ export function SettingsScreen({
         </label>
       </section>
 
-      <section className="game-panel settings-section" aria-labelledby="settings-saves-title">
+      <section
+        className="game-panel settings-section"
+        aria-labelledby="settings-saves-title"
+        data-coach-target={COACH_TARGET.settingsSaveExport}
+      >
         <h2 id="settings-saves-title" className="settings-section-title">
           {t("shell.menu.saves")}
         </h2>

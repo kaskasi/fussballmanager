@@ -227,14 +227,14 @@ Leerer Slot → NEXT warn + Screen Training (Plan ergänzen).
 15/15 Einheiten → `weekday` = Sa; danach Kalender-Takt (Spiel / So / Wochen-Sim).
 Wochen-Sim: Team-Growth nur über NEXT-Einheiten; Wochenende = Verfall + Jugend/Individual.
 
-Montag nach Spieltag abschließen: **1× NEXT → Kalender** (Gegner scouten), **2× NEXT auf Kalender → Training** (noch keine Einheit), ab **3× NEXT** Einheiten + Toasts (bleibt im Training-Flow).
+Manager Desk (Hub v2): Montag nach Wochen-Sim wie jeder Werktag — **NEXT** startet Einheiten-/Tages-Flow ohne Kalender-Gate; Gegner scouten am **Hub** (Pflicht-Spalte unten links), nicht am Kalender.
 Stundenplan: **gelb** = aktuelle Einheit (`is-current`); **grau** = abgeschlossene Einheiten (`training_units_completed`), nicht erst ganzer Tag.
 ```
 
 | Feld / Regel | Verhalten |
 |---|---|
 | `training_units_completed` | 0–15 pro Spielwoche; Reset Montag nach `simulate_week` |
-| `training_calendar_gate_done` | Nach Wochen-Sim `false` (manuell); erst nach NEXT auf Kalender `true`, dann Einheiten-NEXT |
+| `training_calendar_gate_done` | Legacy Pipeline-Kalender: nach Wochen-Sim `false` bis Kalender-NEXT. **Hub Desk:** Gate ignoriert (`MANAGER_DESK_HUB_ENABLED`). |
 | NEXT (global) | Solange `< 15`: eine Einheit simulieren, Toast, Fortschritt +1 |
 | Leerer Slot | Kein Growth; Toast + Navigation **Training** |
 | Kalender | Nach 15/15 oder Act 1 (`auto_training`) wie 09.3 |

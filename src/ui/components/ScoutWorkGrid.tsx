@@ -13,6 +13,7 @@ import { clubLogoUrlForId } from "../assets/club-logo.ts";
 import { ClubCrest } from "./ClubCrest.tsx";
 import { PlayerPortrait } from "./PlayerPortrait.tsx";
 import { ScreenEmptyState } from "./ScreenEmptyState.tsx";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { useT } from "../../i18n/react.ts";
 
 function WorkTileVisual({ tile }: { tile: ScoutWorkTile }) {
@@ -203,7 +204,11 @@ export function ScoutWorkGrid({
   });
 
   return (
-    <section className="scout-work-grid-wrap game-panel scouting-section" aria-label={t("scouting.workGrid.aria")}>
+    <section
+      className="scout-work-grid-wrap game-panel scouting-section"
+      aria-label={t("scouting.workGrid.aria")}
+      data-coach-target={COACH_TARGET.scoutingOpponentReport}
+    >
       <h2 className="scouting-section-title">{t("scouting.workGrid.title")}</h2>
       {tiles.length === 0 ? (
         <ScreenEmptyState

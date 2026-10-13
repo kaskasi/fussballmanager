@@ -13638,3 +13638,145 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   justify-content: flex-end;
   gap: 0.5rem;
 }
+
+/* PRD 25 — contextual tutorial coach marks */
+.tutorial-coach-root {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  pointer-events: none;
+}
+
+.tutorial-coach-scrim--full {
+  position: fixed;
+  inset: 0;
+  background: rgb(62 49 40 / 45%);
+  pointer-events: auto;
+}
+
+.tutorial-coach-spotlight {
+  position: fixed;
+  z-index: 181;
+  border-radius: 12px;
+  border: 2px solid var(--tinte, #3e3128);
+  box-shadow: 0 0 0 9999px rgb(62 49 40 / 45%);
+  pointer-events: none;
+}
+
+.tutorial-coach-panel {
+  position: fixed;
+  z-index: 182;
+  max-width: min(420px, calc(100vw - 2rem));
+  padding: 1rem 1.1rem;
+  background: var(--panel, #fdfbf4);
+  border: 4px solid var(--tinte, #3e3128);
+  border-radius: var(--radius, 12px);
+  box-shadow: 0 12px 32px rgb(62 49 40 / 18%);
+  pointer-events: auto;
+}
+
+.tutorial-coach-panel--center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.tutorial-coach-panel--below-header {
+  /* position from inline style when anchored to header NEXT */
+}
+
+.tutorial-coach-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.tutorial-coach-panel-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--tinte);
+}
+
+.tutorial-coach-body {
+  margin: 0 0 0.75rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--tinte-weich, #6b5d4f);
+}
+
+.tutorial-coach-missions {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+}
+
+.tutorial-coach-mission {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  color: var(--tinte-weich);
+  opacity: 0.72;
+}
+
+.tutorial-coach-mission-icon {
+  flex-shrink: 0;
+  margin-top: 0.12rem;
+}
+
+.tutorial-coach-mission.is-pending {
+  opacity: 0.88;
+  color: var(--tinte-weich);
+  font-weight: 600;
+}
+
+.tutorial-coach-mission.is-pending .tutorial-coach-mission-icon {
+  color: var(--tinte-weich);
+  fill: transparent;
+}
+
+.tutorial-coach-mission.is-done {
+  opacity: 1;
+  color: var(--tinte);
+  font-weight: 700;
+}
+
+.tutorial-coach-mission.is-done .tutorial-coach-mission-icon {
+  color: var(--rasen);
+}
+
+.tutorial-coach-dismiss-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  margin-bottom: 0.75rem;
+  color: var(--tinte-weich);
+}
+
+.tutorial-coach-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tutorial-coach-primary {
+  font-weight: 700;
+}
+
+.tutorial-coach-disable-all {
+  display: block;
+  margin: 0.65rem auto 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  color: var(--tinte-weich);
+  cursor: pointer;
+}

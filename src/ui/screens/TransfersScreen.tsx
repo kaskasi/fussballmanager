@@ -23,6 +23,7 @@ import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { ChevronLeft, ChevronRight, FileSignature } from "lucide-react";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 
 /**
  * WIREFRAME: PRD 14.8 — Transfers
@@ -129,7 +130,7 @@ export function TransfersScreen({
   const showSeasonArrows = seasons.length > 6;
 
   return (
-    <main className="transfers club-shell-card-body">
+    <main className="transfers club-shell-card-body" data-coach-target={COACH_TARGET.transfersMarket}>
       <div className="fm-tab-panel">
         <header className="transfers-meta" aria-label={t("transfers.windowAria")}>
           <p className={windowOpen ? "transfers-window-chip" : "transfers-window-chip is-closed"}>

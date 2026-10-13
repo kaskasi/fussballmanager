@@ -3,6 +3,7 @@ import { isLeagueMatchWeek } from "./game-calendar.ts";
 
 export const MONDAY = 1;
 export const TUESDAY = 2;
+export const THURSDAY = 4;
 export const SATURDAY = 6;
 export const SUNDAY = 7;
 
@@ -28,13 +29,13 @@ export function isMatchSaturday(week: number): boolean {
 export function resolveSmartSkip(
   session: GameSession,
   hasPendingInbox: boolean,
-  blockTuesdayKicker = false,
+  blockKickerDeliveryDay = false,
 ): SmartSkipTarget {
   const { week, weekday, matchPlayedThisWeek } = session;
   const matchWeek = isMatchSaturday(week);
 
-  if (blockTuesdayKicker && weekday === TUESDAY) {
-    return { weekday: TUESDAY, action: "inbox", daysAdvanced: 0 };
+  if (blockKickerDeliveryDay && weekday === THURSDAY) {
+    return { weekday: THURSDAY, action: "inbox", daysAdvanced: 0 };
   }
 
   if (hasPendingInbox) {

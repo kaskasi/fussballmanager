@@ -18,6 +18,7 @@ import { useT } from "../../i18n/react.ts";
 import { MedicalInjuredPanel } from "../components/MedicalInjuredPanel.tsx";
 import { MedicalDoctorExamModal } from "../components/MedicalDoctorExamModal.tsx";
 import { precinctMedicalCenterLevel } from "../../stadium/precinct-effects.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 
 type MedicalTab = "staff" | "injured" | "practice";
 
@@ -182,7 +183,7 @@ export function MedicalCenterScreen({
       ) : null}
 
       {tab === "practice" ? (
-        <div className="fm-tab-panel">
+        <div className="fm-tab-panel" data-coach-target={COACH_TARGET.medicalFitness}>
           <FitnessManagementPanel
             players={players}
             clubId={clubId}

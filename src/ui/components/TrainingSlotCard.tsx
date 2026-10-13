@@ -32,6 +32,7 @@ export function TrainingSlotCard({
   onToggleFocus,
   focusToggleDisabled,
   readOnly = false,
+  coachTarget,
 }: {
   slotIndex: number;
   periodLabel: string;
@@ -46,6 +47,7 @@ export function TrainingSlotCard({
   focusToggleDisabled: boolean;
   /** Hub desk: no focus toggle; slot opens training screen. */
   readOnly?: boolean;
+  coachTarget?: string;
 }) {
   const empty = isTrainingSlotEmpty(slot);
   const unit = empty ? null : trainingUnit(slot.unitId);
@@ -65,6 +67,7 @@ export function TrainingSlotCard({
     <article
       className={className}
       data-training-slot-index={slotIndex}
+      {...(coachTarget ? { "data-coach-target": coachTarget } : {})}
       aria-disabled={past || undefined}
       aria-current={current ? "step" : undefined}
     >

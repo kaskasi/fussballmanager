@@ -28,6 +28,7 @@ import { campNationById } from "../../youth/satellite-camps.ts";
 import { useT } from "../../i18n/react.ts";
 import { localizeStoryInbox } from "../../i18n/story-display.ts";
 import type { StoryCast } from "../../narrative/story-state.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { InboxStanceButtons } from "./InboxStanceButtons.tsx";
 import { campsAwaitingLeaderChoice, type CampLeaderCandidate } from "../../youth/camp-leader-hire.ts";
 import type { YouthCamp } from "../../youth/satellite-camps.ts";
@@ -348,7 +349,10 @@ export function DecisionInboxPanel({
               compact
             />
           ) : active && isStoryInboxItem(active) && active.narrative ? (
-            <section className="inbox-detail inbox-card-story">
+            <section
+              className="inbox-detail inbox-card-story"
+              data-coach-target={COACH_TARGET.postfachInboxActions}
+            >
               <div className="inbox-story">
                 <p className="inbox-post-count">
                   {t("postfach.scoutJob.postCount", {
@@ -425,7 +429,11 @@ export function DecisionInboxPanel({
               {promotionBlock ? <p className="inbox-promotion-block">{promotionBlock}</p> : null}
               {trialHint ? <p className="inbox-trial-hint">{trialHint}</p> : null}
 
-              <div className="inbox-actions" aria-label={t("inbox.modal.actionsAria")}>
+              <div
+                className="inbox-actions"
+                aria-label={t("inbox.modal.actionsAria")}
+                data-coach-target={COACH_TARGET.postfachInboxActions}
+              >
                 {activeActions.map((action) => (
                   <InboxActionButton
                     key={action}

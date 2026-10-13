@@ -22,6 +22,7 @@ import { formMark, stateMark } from "../player-profile.ts";
 import { useT } from "../../i18n/react.ts";
 import { t } from "../../i18n/index.ts";
 import { FilterChip, FilterToolbar } from "../components/primitives/index.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 
 /**
  * WIREFRAME: docs/prd/design.md §9.11 — Kader
@@ -162,7 +163,7 @@ export function FirstTeam({
                 </Hint>
               </div>
               <ul className="squad-player-cards" aria-label={t("squad.title")}>
-                {rows.map((row) => {
+                {rows.map((row, rowIndex) => {
                   const player = players.find((entry) => entry.id === row.playerId);
                   const fit = stateMark(row.fitness, 75, 50);
                   const form = formMark(row.form);
@@ -172,7 +173,14 @@ export function FirstTeam({
                         <PlayerPortrait seed={player.portrait_seed} size="sm" className="squad-player-card-portrait" />
                       ) : null}
                       <div className="squad-player-card-body">
-                        <button type="button" className="squad-player-card-main" onClick={() => onSelectPlayer(row.playerId)}>
+                        <button
+                          type="button"
+                          className="squad-player-card-main"
+                          {...(rowIndex === 0
+                            ? { "data-coach-target": COACH_TARGET.squadFirstRow }
+                            : {})}
+                          onClick={() => onSelectPlayer(row.playerId)}
+                        >
                           <strong>{row.displayName}</strong>
                           <span className="squad-player-card-meta">
                             {row.positionLabel} · {row.age} J. · CA {row.ca}

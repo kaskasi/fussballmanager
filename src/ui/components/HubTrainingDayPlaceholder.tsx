@@ -8,12 +8,10 @@ export function HubTrainingDayPlaceholder({
   variant,
   opponentShortName,
   opponentClubId,
-  onOpenScouting,
 }: {
   variant: "sunday-off" | "match";
   opponentShortName?: string;
   opponentClubId?: string | null;
-  onOpenScouting?: () => void;
 }) {
   useT();
 
@@ -35,11 +33,6 @@ export function HubTrainingDayPlaceholder({
           ) : null}
           <strong className="training-unit-name">{opponentShortName}</strong>
           <span className="training-group training-group--muted">{t("hub.desk.matchBlock.hint")}</span>
-          {onOpenScouting ? (
-            <button type="button" className="link-btn hub-desk-day-block__link" onClick={onOpenScouting}>
-              {t("shell.nav.scouting")}
-            </button>
-          ) : null}
         </div>
       </article>
     );

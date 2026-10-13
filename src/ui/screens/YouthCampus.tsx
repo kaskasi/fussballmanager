@@ -27,6 +27,7 @@ import { estimateCa } from "../../transfers/market-value.ts";
 import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 import { FilterChip, FilterToolbar } from "../components/primitives/index.ts";
 import { useT } from "../../i18n/react.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import {
   academyStage,
   coachIconLabel,
@@ -191,7 +192,7 @@ export function YouthCampus({
 
       {tab === "u17" || tab === "u19" ? (
         <div className="fm-tab-panel">
-          <p className="youth-strip game-panel">
+          <p className="youth-strip game-panel" data-coach-target={COACH_TARGET.campusOverview}>
             {tr("youth.campus.strip", {
               stage: academyStage(academyFacility),
               intake: hqIntakeCount(academyFacility),
@@ -208,6 +209,7 @@ export function YouthCampus({
             team={tab}
             players={players}
             youthInbox={youthInbox}
+            coachInboxTarget={COACH_TARGET.campusYouthInbox}
             report={report}
             season={season}
             week={week}
@@ -261,8 +263,10 @@ function YouthUnifiedRoster({
   sortKey,
   sortDirection,
   onSortChange,
+  coachInboxTarget,
 }: {
   team: "u17" | "u19";
+  coachInboxTarget?: string;
   players: readonly Player[];
   youthInbox: YouthInboxState;
   report: YouthReport | null;
@@ -450,11 +454,14 @@ function YouthUnifiedRoster({
       </div>
 
       <footer className="youth-report-actions" aria-label={tr("youth.roster.decisionsAria")}>
-        {YOUTH_REPORT_ACTIONS.map((action) => (
+        {YOUTH_REPORT_ACTIONS.map((action, actionIndex) => (
           <button
             key={action}
             type="button"
             className={dropAction === action ? "youth-report-drop is-hot" : "youth-report-drop"}
+            {...(actionIndex === 0 && coachInboxTarget
+              ? { "data-coach-target": coachInboxTarget }
+              : {})}
             aria-label={actionLabel(action)}
             onClick={() => onOpenInbox()}
             onDragOver={(event) => {

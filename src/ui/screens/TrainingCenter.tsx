@@ -87,6 +87,7 @@ import { trainingGroupDisplayLabel, trainingUnitDisplayLabel } from "../../i18n/
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
+import { COACH_TARGET } from "../../tutorial/index.ts";
 
 type TrainingTab = "team" | "individual";
 
@@ -133,6 +134,8 @@ export function TrainingCenter({
   trainingPlanPresets,
   onTrainingPlanPresetsChange,
   onTrainingPresetNotice,
+  onTrainingPresetLoaded,
+  onTrainingPresetSaved,
   trainingAutoNext = false,
   onStopTrainingAutoNext,
 }: {
@@ -167,6 +170,8 @@ export function TrainingCenter({
   trainingPlanPresets: TrainingPlanPresetSlot[];
   onTrainingPlanPresetsChange: (presets: TrainingPlanPresetSlot[]) => void;
   onTrainingPresetNotice: (text: string, tone?: "ok" | "warn") => void;
+  onTrainingPresetLoaded?: () => void;
+  onTrainingPresetSaved?: () => void;
   trainingAutoNext?: boolean;
   onStopTrainingAutoNext?: () => void;
 }) {
@@ -230,6 +235,8 @@ export function TrainingCenter({
             trainingPlanPresets={trainingPlanPresets}
             onTrainingPlanPresetsChange={onTrainingPlanPresetsChange}
             onTrainingPresetNotice={onTrainingPresetNotice}
+            onTrainingPresetLoaded={onTrainingPresetLoaded}
+            onTrainingPresetSaved={onTrainingPresetSaved}
             pickSlot={pickSlot}
             focusCount={focusCount}
             check={check}
@@ -316,6 +323,8 @@ function TeamPlan({
   trainingPlanPresets,
   onTrainingPlanPresetsChange,
   onTrainingPresetNotice,
+  onTrainingPresetLoaded,
+  onTrainingPresetSaved,
   pickSlot,
   focusCount,
   check,
@@ -339,6 +348,8 @@ function TeamPlan({
   trainingPlanPresets: TrainingPlanPresetSlot[];
   onTrainingPlanPresetsChange: (presets: TrainingPlanPresetSlot[]) => void;
   onTrainingPresetNotice: (text: string, tone?: "ok" | "warn") => void;
+  onTrainingPresetLoaded?: () => void;
+  onTrainingPresetSaved?: () => void;
   pickSlot: number | null;
   focusCount: number;
   check: ReturnType<typeof validateWeeklyPlan>;
@@ -362,6 +373,21 @@ function TeamPlan({
   );
   const nextSlotIndex = currentTrainingSlotIndex(trainingUnitsCompleted, useTrainingUnitProgress);
   const [outcomeModal, setOutcomeModal] = useState<TrainingSlotOutcome | null>(null);
+
+  const coachPickSlotIndex = useMemo(() => {
+    for (let index = 0; index < plan.length; index += 1) {
+      const slot = plan[index]!;
+      if (!isTrainingSlotEmpty(slot)) continue;
+      const slotPast = isTrainingSlotPastForSession(
+        index,
+        weekday,
+        trainingUnitsCompleted,
+        useTrainingUnitProgress,
+      );
+      if (!slotPast) return index;
+    }
+    return null;
+  }, [plan, weekday, trainingUnitsCompleted, useTrainingUnitProgress]);
 
   useEffect(() => {
     if (nextSlotIndex === null) return;
@@ -398,6 +424,8 @@ function TeamPlan({
         onPresetsChange={onTrainingPlanPresetsChange}
         onPlanChange={onPlanChange}
         onNotice={onTrainingPresetNotice}
+        onPresetLoaded={() => onTrainingPresetLoaded?.()}
+        onPresetSaved={() => onTrainingPresetSaved?.()}
       />
 
       <div
@@ -436,6 +464,9 @@ function TeamPlan({
                   current={slotCurrent}
                   active={pickSlot === index}
                   outcome={trainingSlotOutcomeAt(trainingUnitOutcomes, index)}
+                  coachTarget={
+                    index === coachPickSlotIndex ? COACH_TARGET.trainingPickSlot : undefined
+                  }
                   onOpenPicker={() => {
                     if (!slotPast) onPickSlot(index);
                   }}

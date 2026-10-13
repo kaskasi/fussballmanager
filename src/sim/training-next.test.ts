@@ -28,12 +28,12 @@ describe("training NEXT nexus", () => {
     expect(isTrainingNextActive(session)).toBe(false);
   });
 
-  it("waits for calendar gate before unit NEXT", () => {
+  it("skips calendar gate on manager desk hub", () => {
     const session = newGameSession();
     session.storyState = fullGameStoryState(normalizeStoryState(session.storyState, 1));
     session.trainingCalendarGateDone = false;
-    expect(isTrainingCalendarGatePending(session)).toBe(true);
-    expect(isTrainingNextActive(session)).toBe(false);
+    expect(isTrainingCalendarGatePending(session)).toBe(false);
+    expect(isTrainingNextActive(session)).toBe(true);
   });
 
   it("runs fifteen units with toasts and lands on Saturday", () => {

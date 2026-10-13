@@ -195,6 +195,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F12.7 | Hilfe & Doku | M1 | Eigener Screen: Welt/Story, Spielablauf, **Taktik-Guide**, Stempel-Katalog (F2.8); Kanon `docs/help/tactics-player-guide.*.md` |
 | F12.8 | Anzeigesprache | M1 | DE / EN / 简体 JSON-Packs; Sprache in Opening Schritt 1 + ⋮ Anzeige (PRD 18) |
 | F12.9 | Karriere-Unlock-Profil | M4 | Client-Prefs: Elite World freigeschaltet nach PRD 21 — kein Meta-Währung; Spez in PRD 21 |
+| F12.10 | Kontext-Tutorial (Coach Marks) | M1 | Phase 1 Hub + eingefrorenes Training-Onboarding; Phasen 2–4 PRD 25 (Inbox/Match/Scout/Squad/Campus/Club), keine weiteren Training-Tips |
 
 ---
 

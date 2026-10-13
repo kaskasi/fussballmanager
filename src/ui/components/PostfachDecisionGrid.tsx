@@ -32,6 +32,7 @@ import {
   scoutJobQueuePreview,
 } from "../../inbox/postfach-queue-preview.ts";
 import { clubLogoUrlForId } from "../assets/club-logo.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { ClubCrest } from "./ClubCrest.tsx";
 import { PlayerPortrait } from "./PlayerPortrait.tsx";
 
@@ -196,7 +197,11 @@ export function PostfachDecisionGrid({
   onSelect: (id: string) => void;
 }) {
   return (
-    <ul className="postfach-decision-grid" role="list">
+    <ul
+      className="postfach-decision-grid"
+      role="list"
+      data-coach-target={COACH_TARGET.postfachQueue}
+    >
       {queueIds.map((queueId) => {
         const preview = isCampLeaderPostfachItemId(queueId)
           ? campLeaderQueuePreview(parseCampLeaderPostfachItemId(queueId)!)

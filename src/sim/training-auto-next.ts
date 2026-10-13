@@ -1,10 +1,10 @@
-import { shouldDeliverKickerOnTuesday } from "../inbox/kicker-inbox.ts";
+import { KICKER_DELIVERY_WEEKDAY, shouldDeliverWeeklyKicker } from "../inbox/kicker-inbox.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import type { Player } from "../types/player.ts";
 import { pendingInboxItems, type YouthInboxState } from "../youth/decision-inbox.ts";
 import { MANAGER_DESK_HUB_ENABLED } from "../hub/config.ts";
 import { hasInboxBlockerForNext } from "../ui/nav-next-flow.ts";
-import { resolveSmartSkip, TUESDAY } from "./day-calendar.ts";
+import { resolveSmartSkip } from "./day-calendar.ts";
 import {
   isTrainingCalendarGatePending,
   isTrainingNextActive,
@@ -48,11 +48,11 @@ export function shouldPauseTrainingAutoNext(input: {
 
   if (
     skip.action === "advance" &&
-    skip.weekday === TUESDAY &&
-    shouldDeliverKickerOnTuesday({
-      session: { ...input.session, weekday: TUESDAY },
+    skip.weekday === KICKER_DELIVERY_WEEKDAY &&
+    shouldDeliverWeeklyKicker({
+      session: { ...input.session, weekday: KICKER_DELIVERY_WEEKDAY },
       inbox: input.youthInbox,
-      targetWeekday: TUESDAY,
+      targetWeekday: KICKER_DELIVERY_WEEKDAY,
     })
   ) {
     return true;

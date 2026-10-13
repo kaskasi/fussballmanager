@@ -21,7 +21,7 @@ export function OpponentScoutMatchAction({
   onStart,
   onViewReport,
 }: {
-  mode?: "calendar" | "lineup";
+  mode?: "calendar" | "lineup" | "hub";
   setup: CareerMatchSetup | null;
   season: number;
   scoutBoard: ScoutBoard;
@@ -36,6 +36,20 @@ export function OpponentScoutMatchAction({
   const notice = opponentScoutNoticeForMatch(scoutBoard, matchId);
 
   if (notice && onViewReport) {
+    if (mode === "hub") {
+      return (
+        <div className="opponent-scout-action opponent-scout-action--hub">
+          <button
+            type="button"
+            className="hub-opponent-scout-tile"
+            onClick={() => onViewReport(notice.id)}
+          >
+            <FileBarChart size={32} strokeWidth={2} aria-hidden />
+            <span className="hub-opponent-scout-tile__label">{t("scouting.opponent.viewReport")}</span>
+          </button>
+        </div>
+      );
+    }
     return (
       <div className="opponent-scout-action">
         <button
@@ -60,7 +74,10 @@ export function OpponentScoutMatchAction({
 
   if (progressForFixture) {
     return (
-      <div className="opponent-scout-action opponent-scout-action--progress" role="status">
+      <div
+        className={`opponent-scout-action opponent-scout-action--progress${mode === "hub" ? " opponent-scout-action--hub" : ""}`}
+        role="status"
+      >
         <Radar size={16} aria-hidden />
         <span>
           {t("scouting.opponent.progress", {
@@ -80,6 +97,24 @@ export function OpponentScoutMatchAction({
   if (gate.reason === "no_scout") hint = t("scouting.opponent.noScout");
   else if (gate.reason === "job_active") hint = t("scouting.opponent.jobElsewhere");
   else if (gate.reason === "not_match_week") hint = t("scouting.opponent.notMatchWeek");
+
+  if (mode === "hub") {
+    return (
+      <div className="opponent-scout-action opponent-scout-action--hub">
+        <button
+          type="button"
+          className="hub-opponent-scout-tile"
+          disabled={disabled}
+          title={hint || t("scouting.opponent.start")}
+          onClick={onStart}
+        >
+          <Radar size={32} strokeWidth={2} aria-hidden />
+          <span className="hub-opponent-scout-tile__label">{t("scouting.opponent.start")}</span>
+        </button>
+        {hint ? <p className="opponent-scout-action-hint">{hint}</p> : null}
+      </div>
+    );
+  }
 
   return (
     <div className="opponent-scout-action">

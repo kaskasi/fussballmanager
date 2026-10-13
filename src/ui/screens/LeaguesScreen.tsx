@@ -11,6 +11,7 @@ import { LeagueLeaderLists } from "../components/LeagueLeaderLists.tsx";
 import { LeagueTable } from "../components/LeagueTable.tsx";
 import type { WorldClub } from "../../world/world-generator.ts";
 import { useT } from "../../i18n/react.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 
 const DIVISIONS: DivisionEconomyId[] = [REGIONALLIGA_ID, OBERLIGA_ID];
 
@@ -86,7 +87,11 @@ export function LeaguesScreen({
       </div>
 
       <div className="leagues-screen-split">
-        <section className="leagues-screen-table" aria-label={divisionLabel(divisionId)}>
+        <section
+          className="leagues-screen-table"
+          aria-label={divisionLabel(divisionId)}
+          data-coach-target={COACH_TARGET.leaguesTable}
+        >
           <p className="leagues-screen-meta">
             {t("leagues.matchdayProgress", {
               played: standings.matchdaysPlayed,

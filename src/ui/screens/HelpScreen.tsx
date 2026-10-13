@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useGameSession } from "../session/GameSessionContext.tsx";
+import { resetTutorialProgress } from "../../tutorial/index.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import {
   AlertTriangle,
   ArrowDown,
@@ -298,8 +301,31 @@ function StoryPanel() {
 
 function PlayPanel() {
   const t = useT();
+  const { patchSession } = useGameSession();
+  const [resetNotice, setResetNotice] = useState<string | null>(null);
   return (
     <div className="help-panel">
+      <section className="help-card" aria-labelledby="help-tutorial-reset" data-coach-target={COACH_TARGET.helpResetTips}>
+        <h2 id="help-tutorial-reset">
+          <HelpInlineIcon icon={BookOpen} /> {t("help.tutorial.resetTitle")}
+        </h2>
+        <p>{t("help.tutorial.resetLead")}</p>
+        <button
+          type="button"
+          className="save-modal-btn"
+          onClick={() => {
+            patchSession((current) => ({
+              ...current,
+              storyState: resetTutorialProgress(current.storyState),
+            }));
+            setResetNotice(t("help.tutorial.resetDone"));
+          }}
+        >
+          {t("help.tutorial.resetButton")}
+        </button>
+        {resetNotice ? <p className="settings-copy-notice">{resetNotice}</p> : null}
+      </section>
+
       <section className="help-card help-figures" aria-label={t("help.tab.play")}>
         <div className="help-figure-grid">
           {HELP_PLAY_FIGURES.map((figure) => (

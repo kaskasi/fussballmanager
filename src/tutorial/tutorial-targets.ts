@@ -1,0 +1,33 @@
+/** Stable DOM targets for coach marks (data-coach-target). */
+export const COACH_TARGET = {
+  headerNext: "header-next",
+  hubTrainingCalendar: "hub-training-calendar",
+  trainingPickSlot: "training-pick-slot",
+  trainingPlanPresets: "training-plan-presets",
+  hubHeatmaps: "hub-heatmaps",
+  hubTopDevelopment: "hub-top-development",
+  hubOpponentScout: "hub-opponent-scout",
+  hubPostfach: "hub-postfach",
+  hubDutyBlockers: "hub-duty-blockers",
+  postfachQueue: "postfach-queue",
+  postfachInboxActions: "postfach-inbox-actions",
+  postfachTreter: "postfach-treter",
+  matchSkipMenu: "match-skip-menu",
+  scoutingMap: "scouting-map",
+  scoutingPool: "scouting-pool",
+  scoutingOpponentReport: "scouting-opponent-report",
+  squadFirstRow: "squad-first-row",
+  campusOverview: "campus-overview",
+  campusYouthInbox: "campus-youth-inbox",
+  financesCashflow: "finances-cashflow",
+  stadiumPrecinct: "stadium-precinct",
+  merchOrders: "merch-orders",
+  transfersMarket: "transfers-market",
+  medicalFitness: "medical-fitness",
+  leaguesTable: "leagues-table",
+  settingsSaveExport: "settings-save-export",
+  calendarMilestones: "calendar-milestones",
+  helpResetTips: "help-reset-tips",
+} as const;
+
+export type CoachTargetId = (typeof COACH_TARGET)[keyof typeof COACH_TARGET];

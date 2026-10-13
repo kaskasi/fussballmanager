@@ -166,6 +166,8 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 }
 
 .finances-wage-cap-bar {
+  display: block;
+  width: 100%;
   margin-top: 0.45rem;
   height: 0.55rem;
   border-radius: 999px;
@@ -177,8 +179,10 @@ main.stadium.club-shell-card-body .stadium-fanbase {
 .finances-wage-cap-fill {
   display: block;
   height: 100%;
+  max-height: 100%;
   border-radius: 999px;
   background: var(--rasen);
+  box-sizing: border-box;
 }
 
 .finances-wage-cap-fill.is-warn {

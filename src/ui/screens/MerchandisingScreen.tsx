@@ -42,6 +42,7 @@ import {
 } from "../../economy/merchandising.ts";
 import { merchCareerWeekIndex } from "../../economy/merchandising-market.ts";
 import { weekCommerceOccupancy } from "../../stadium/matchday-commerce.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 
 type MerchTab = "preise" | "einkauf";
 
@@ -131,20 +132,6 @@ export function MerchandisingScreen({
       }),
     [stadium, players, clubId, occupancy, isHomeMatchWeek, week, season, masterSeed],
   );
-  const fullPreview = useMemo(
-    () =>
-      weeklyMerchandisingEconomics({
-        stadium,
-        players,
-        clubId,
-        occupancy: 1,
-        isHomeMatchWeek,
-        week,
-        season,
-        masterSeed,
-      }),
-    [stadium, players, clubId, isHomeMatchWeek, week, season, masterSeed],
-  );
   const jerseyPool = Math.round(preview.net * JERSEY_REVENUE_SHARE);
   const sellers = jerseySellersWithWeekly(jerseySalesWeights(players, clubId), jerseyPool);
 
@@ -217,8 +204,7 @@ export function MerchandisingScreen({
         </p>
         <h1 className="merchandising-title">Merchandising</h1>
         <p className="merchandising-sub">
-          Netto {formatClubCash(preview.net)} · Fanshop Stufe {fanshopLevel || "—"} · voll{" "}
-          {formatClubCash(fullPreview.net)}
+          Netto {formatClubCash(preview.net)} · Fanshop Stufe {fanshopLevel || "—"}
         </p>
       </div>
     </header>
@@ -298,6 +284,7 @@ export function MerchandisingScreen({
             ? "merchandising merchandising--preise club-shell-card-body"
             : "merchandising club-shell-card-body"
       }
+      data-coach-target={COACH_TARGET.merchOrders}
     >
       <div className="fm-tab-bar" role="tablist" aria-label="Merchandising Bereiche">
         {(

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useT } from "../../i18n/react.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { Construction, Dumbbell, Hammer, Home, Shirt, Star, TriangleAlert } from "lucide-react";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
 import {
@@ -286,6 +287,7 @@ export function StadiumScreen({
       {tab === "precinct" ? (
         <div className="fm-tab-panel">
           {stadiumContext}
+          <div data-coach-target={COACH_TARGET.stadiumPrecinct}>
           <PrecinctGrid
             precinct={precinct}
             cash={finances.cash}
@@ -302,6 +304,7 @@ export function StadiumScreen({
             onRemoveStreet={onRemoveStreet}
             seasonWeek={precinctSeasonWeek}
           />
+          </div>
         </div>
       ) : null}
 

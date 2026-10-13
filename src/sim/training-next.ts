@@ -20,6 +20,7 @@ import {
 import { resolveFeatureCurtain } from "../narrative/career-presentation.ts";
 import type { StoryState } from "../narrative/story-state.ts";
 import type { GameSession } from "../persistence/game-session.ts";
+import { MANAGER_DESK_HUB_ENABLED } from "../hub/config.ts";
 import { SATURDAY } from "./day-calendar.ts";
 import { SLOT_COUNT, validateWeeklyPlan } from "../development/weekly-plan.ts";
 
@@ -39,6 +40,7 @@ export function isTrainingCalendarGatePending(
     "storyState" | "trainingUnitsCompleted" | "trainingCalendarGateDone"
   >,
 ): boolean {
+  if (MANAGER_DESK_HUB_ENABLED) return false;
   if (!usesTrainingNextNexus(session.storyState)) return false;
   if (session.trainingUnitsCompleted > 0) return false;
   return session.trainingCalendarGateDone === false;

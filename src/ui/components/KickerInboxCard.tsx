@@ -3,6 +3,7 @@ import { Newspaper } from "lucide-react";
 import type { TreterArticle, TreterEdition } from "../../media/kicker-digest.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 
 function TreterArticleBlock({
   article,
@@ -105,7 +106,10 @@ export function KickerInboxCard({
   }
 
   return (
-    <section className={compact ? "inbox-detail inbox-treter-inline" : "inbox-card inbox-card-treter"}>
+    <section
+      className={compact ? "inbox-detail inbox-treter-inline" : "inbox-card inbox-card-treter"}
+      data-coach-target={COACH_TARGET.postfachTreter}
+    >
       <div className="inbox-story treter-newspaper">
         {!compact ? (
           <p className="inbox-post-count">

@@ -3,7 +3,13 @@ import {
   emptyWeeklyTrainingPlan,
   isTrainingSlotEmpty,
 } from "./training-plan-state.ts";
-import { migrateLegacyTrainingPlan, type TrainingSlot } from "./training-units.ts";
+import {
+  defaultTrainingPlan,
+  migrateLegacyTrainingPlan,
+  planToSessions,
+  type TrainingSlot,
+} from "./training-units.ts";
+import { validateWeeklyPlan } from "./weekly-plan.ts";
 
 export const TRAINING_PLAN_PRESET_SLOTS = 3 as const;
 
@@ -22,10 +28,16 @@ const DEFAULT_LABELS: Record<TrainingPlanPresetId, string> = {
 };
 
 export function defaultTrainingPlanPresets(): TrainingPlanPresetSlot[] {
+  const starterPlan = defaultTrainingPlan();
+  assertWeeklyPlanLength(starterPlan);
+  const starterCheck = validateWeeklyPlan(planToSessions(starterPlan));
+  if (!starterCheck.valid) {
+    throw new Error("starter training preset must validate");
+  }
   return ([1, 2, 3] as const).map((id) => ({
     id,
     label: DEFAULT_LABELS[id],
-    plan: emptyWeeklyTrainingPlan(),
+    plan: id === 1 ? starterPlan : emptyWeeklyTrainingPlan(),
   }));
 }
 

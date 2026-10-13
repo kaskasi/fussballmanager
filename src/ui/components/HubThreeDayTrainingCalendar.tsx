@@ -30,6 +30,7 @@ import { SUNDAY } from "../../sim/day-calendar.ts";
 import { CalendarMonthGridCell } from "./CalendarMonthGridCell.tsx";
 import { HubTrainingDayPlaceholder } from "./HubTrainingDayPlaceholder.tsx";
 import { TrainingSlotCard } from "./TrainingSlotCard.tsx";
+import { COACH_TARGET } from "../../tutorial/index.ts";
 
 type HubColumnBody = "match" | "sunday-off" | "slots";
 
@@ -105,7 +106,6 @@ export function HubThreeDayTrainingCalendar({
   milestones = [],
   scoutBoard,
   onOpenTraining,
-  onOpenScouting,
 }: {
   session: Pick<
     GameSession,
@@ -122,7 +122,6 @@ export function HubThreeDayTrainingCalendar({
   milestones?: readonly CalendarMilestone[];
   scoutBoard?: ScoutBoard;
   onOpenTraining: () => void;
-  onOpenScouting: () => void;
 }) {
   useT();
   const { season, week, weekday, trainingUnitsCompleted, trainingUnitOutcomes, league } = session;
@@ -161,6 +160,7 @@ export function HubThreeDayTrainingCalendar({
       ]
         .filter(Boolean)
         .join(" ")}
+      data-coach-target={COACH_TARGET.hubTrainingCalendar}
     >
       <div
         className="training-timetable manager-desk__timetable"
@@ -197,7 +197,6 @@ export function HubThreeDayTrainingCalendar({
                   variant="match"
                   opponentShortName={column.opponentShortName ?? undefined}
                   opponentClubId={column.opponentClubId}
-                  onOpenScouting={onOpenScouting}
                 />
               ) : null}
               {bodyKind === "sunday-off" ? <HubTrainingDayPlaceholder variant="sunday-off" /> : null}

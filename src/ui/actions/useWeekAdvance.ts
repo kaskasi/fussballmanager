@@ -2,9 +2,10 @@ import { useCallback, useRef, type MutableRefObject } from "react";
 import { deliverMerchandisingOrders } from "../../economy/merchandising.ts";
 import { t } from "../../i18n/index.ts";
 import {
-  applyTuesdayKickerDelivery,
+  applyWeeklyKickerDelivery,
   kickerItemId,
-  shouldDeliverKickerOnTuesday,
+  KICKER_DELIVERY_WEEKDAY,
+  shouldDeliverWeeklyKicker,
 } from "../../inbox/kicker-inbox.ts";
 import { appendMatchdayClubEvents } from "../../match/post-match-events.ts";
 import { tickMedicalSessionDay, tickMedicalSessionDays } from "../../medical/medical-session.ts";
@@ -14,7 +15,7 @@ import type { SaveGame } from "../../persistence/savegame-model.ts";
 import { advanceScoutWorkingDay } from "../../scouting/scout-board.ts";
 import { buildOpponentScoutWorkingDayContext } from "../../scouting/opponent-scout-job.ts";
 import { prepareCareerMatch, type CareerMatchSetup } from "../../sim/career-match-setup.ts";
-import { MONDAY, resolveSmartSkip, TUESDAY } from "../../sim/day-calendar.ts";
+import { MONDAY, resolveSmartSkip } from "../../sim/day-calendar.ts";
 import {
   fastForwardToMonthEnd,
   sessionAfterWeekSimulation,
@@ -246,7 +247,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
             scoutBoard: advanceScoutBoardForSession(current, targetWeekday),
           };
           next = tickMedicalSessionDays(next, daysAdvanced);
-          return applyTuesdayKickerDelivery(next);
+          return applyWeeklyKickerDelivery(next);
         };
         const simulateWeekForFastForward = async (current: typeof snapshot) => {
           const result = await simulateGameWeek(current);
@@ -394,22 +395,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
         return;
       }
 
-      if (isTrainingCalendarGatePending(session)) {
-        if (MANAGER_DESK_HUB_ENABLED) {
-          if (screen === "hub") {
-            patchSession((current) => ({ ...current, trainingCalendarGateDone: true }));
-            flashNotice(t("training.next.weekStart"), "ok");
-            return;
-          }
-          if (screen === "calendar") {
-            patchSession((current) => ({ ...current, trainingCalendarGateDone: true }));
-            setScreen("hub");
-            flashNotice(t("training.next.weekStart"), "ok");
-            return;
-          }
-          setScreen("hub");
-          return;
-        }
+      if (!MANAGER_DESK_HUB_ENABLED && isTrainingCalendarGatePending(session)) {
         if (screen !== "calendar") {
           setScreen("calendar");
           return;
@@ -426,11 +412,11 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
         }
         const preview = runTrainingNextStep(session);
         const deliverKickerAfterStep =
-          preview.session.weekday === TUESDAY &&
-          shouldDeliverKickerOnTuesday({
-            session: { ...session, weekday: TUESDAY },
+          preview.session.weekday === KICKER_DELIVERY_WEEKDAY &&
+          shouldDeliverWeeklyKicker({
+            session: { ...session, weekday: KICKER_DELIVERY_WEEKDAY },
             inbox: session.youthInbox,
-            targetWeekday: TUESDAY,
+            targetWeekday: KICKER_DELIVERY_WEEKDAY,
           });
         patchSession((current) => {
           const step = runTrainingNextStep(current);
@@ -448,7 +434,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
             };
             nextSession = tickMedicalSessionDay(nextSession);
           }
-          return deliverKickerAfterStep ? applyTuesdayKickerDelivery(nextSession) : nextSession;
+          return deliverKickerAfterStep ? applyWeeklyKickerDelivery(nextSession) : nextSession;
         });
         trackEvent("training_step_completed", { automated: fromAuto });
         if (deliverKickerAfterStep) {
@@ -574,12 +560,12 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
       }
 
       if (skip.action === "advance" && skip.daysAdvanced > 0) {
-        const landOnTuesday =
-          skip.weekday === TUESDAY &&
-          shouldDeliverKickerOnTuesday({
+        const landOnKickerDay =
+          skip.weekday === KICKER_DELIVERY_WEEKDAY &&
+          shouldDeliverWeeklyKicker({
             session: { ...session, weekday: skip.weekday },
             inbox: session.youthInbox,
-            targetWeekday: TUESDAY,
+            targetWeekday: KICKER_DELIVERY_WEEKDAY,
           });
         patchSession((current) => {
           const now = { season: current.season, week: current.week, weekday: skip.weekday };
@@ -601,10 +587,10 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
             scoutBoard: advanceScoutBoardForSession(current, skip.weekday),
           };
           next = tickMedicalSessionDays(next, skip.daysAdvanced);
-          next = applyTuesdayKickerDelivery(next);
+          next = applyWeeklyKickerDelivery(next);
           return next;
         });
-        if (landOnTuesday) {
+        if (landOnKickerDay) {
           const treterId = kickerItemId(session.season, session.week);
           setPostfachItemId(treterId);
           setProfileId(null);

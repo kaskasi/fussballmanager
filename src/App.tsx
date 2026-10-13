@@ -59,13 +59,9 @@ import {
   startOpponentScoutJob,
 } from "./scouting/opponent-scout-job.ts";
 import type { WatchedPlayerMatch } from "./sim/watched-player-match.ts";
-import { MONDAY, resolveSmartSkip, TUESDAY } from "./sim/day-calendar.ts";
+import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
 import { archiveKickerEdition } from "./inbox/kicker-edition-archive.ts";
-import {
-  applyTuesdayKickerDelivery,
-  kickerItemId,
-  shouldDeliverKickerOnTuesday,
-} from "./inbox/kicker-inbox.ts";
+import { kickerItemId } from "./inbox/kicker-inbox.ts";
 import {
   hasInboxBlockerForNext,
   shouldNavigateToCalendarBeforeTimeStep,
@@ -375,6 +371,7 @@ import { useTrainingActions } from "./ui/actions/useTrainingActions.ts";
 import { useMedicalActions } from "./ui/actions/useMedicalActions.ts";
 import { useYouthCampActions } from "./ui/actions/useYouthCampActions.ts";
 import { GameSessionProvider } from "./ui/session/GameSessionContext.tsx";
+import { TutorialCoachLayer } from "./ui/tutorial/TutorialCoachLayer.tsx";
 import { useMerchActions } from "./ui/actions/useMerchActions.ts";
 import { useStadiumActions } from "./ui/actions/useStadiumActions.ts";
 import type { LocaleId } from "./i18n/locale-id.ts";
@@ -2006,6 +2003,14 @@ export default function App() {
         weeklyWageBill={weeklyWageBill(players, session.clubId)}
       />
       <GameSessionProvider value={{ session, patchSession, flashNotice }}>
+        <TutorialCoachLayer
+          screen={screen}
+          coachMarksEnabled={accessibility.coachMarksEnabled}
+          matchFlowActive={Boolean(navActions.matchFlowActive)}
+          onDisableCoachMarksGlobally={() =>
+            setAccessibility({ ...accessibility, coachMarksEnabled: false })
+          }
+        />
       <GameScreenRouter
               screen={screen}
               save={save}

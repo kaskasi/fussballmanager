@@ -4,7 +4,11 @@ import { buildTreterEdition } from "../media/kicker-digest.ts";
 import type { DecisionInboxItem, YouthInboxState } from "../youth/decision-inbox.ts";
 import { archiveKickerEdition } from "./kicker-edition-archive.ts";
 
-export const TUESDAY = 2;
+/** Der Treter / weekly kicker inbox item — delivered on Thursday (PRD 09 hub desk). */
+export const KICKER_DELIVERY_WEEKDAY = 4;
+
+/** @deprecated use KICKER_DELIVERY_WEEKDAY */
+export const TUESDAY = KICKER_DELIVERY_WEEKDAY;
 
 export function kickerItemId(season: number, week: number): string {
   return `kicker-${season}-${week}`;
@@ -32,16 +36,19 @@ export function hasOpenKickerItem(
   return inbox.items.some((item) => item.id === id && !inbox.resolvedIds.includes(item.id));
 }
 
-export function shouldDeliverKickerOnTuesday(input: {
+export function shouldDeliverWeeklyKicker(input: {
   session: Pick<GameSession, "season" | "week" | "weekday" | "kickerConsumedWeek">;
   inbox: YouthInboxState;
   targetWeekday: number;
 }): boolean {
-  if (input.targetWeekday !== TUESDAY) return false;
+  if (input.targetWeekday !== KICKER_DELIVERY_WEEKDAY) return false;
   if (kickerConsumedForWeek(input.session)) return false;
   if (hasOpenKickerItem(input.inbox, input.session.season, input.session.week)) return false;
   return true;
 }
+
+/** @deprecated use shouldDeliverWeeklyKicker */
+export const shouldDeliverKickerOnTuesday = shouldDeliverWeeklyKicker;
 
 export function createKickerInboxItem(season: number, week: number): DecisionInboxItem {
   return {
@@ -66,13 +73,13 @@ export function buildSessionKickerEdition(session: GameSession): KickerEdition {
   return buildTreterEdition(session);
 }
 
-/** Inject Kicker edition + inbox item when sitting on Tuesday (idempotent). */
-export function applyTuesdayKickerDelivery(session: GameSession): GameSession {
+/** Inject Kicker edition + inbox item on delivery weekday (idempotent). */
+export function applyWeeklyKickerDelivery(session: GameSession): GameSession {
   if (
-    !shouldDeliverKickerOnTuesday({
+    !shouldDeliverWeeklyKicker({
       session,
       inbox: session.youthInbox,
-      targetWeekday: TUESDAY,
+      targetWeekday: KICKER_DELIVERY_WEEKDAY,
     })
   ) {
     return session;
@@ -86,11 +93,17 @@ export function applyTuesdayKickerDelivery(session: GameSession): GameSession {
   };
 }
 
-export function tuesdayKickerBlocksProgress(
+/** @deprecated use applyWeeklyKickerDelivery */
+export const applyTuesdayKickerDelivery = applyWeeklyKickerDelivery;
+
+export function weeklyKickerBlocksProgress(
   session: Pick<GameSession, "weekday" | "season" | "week" | "kickerConsumedWeek">,
   inbox: YouthInboxState,
 ): boolean {
-  if (session.weekday !== TUESDAY) return false;
+  if (session.weekday !== KICKER_DELIVERY_WEEKDAY) return false;
   if (kickerConsumedForWeek(session)) return false;
   return hasOpenKickerItem(inbox, session.season, session.week);
 }
+
+/** @deprecated use weeklyKickerBlocksProgress */
+export const tuesdayKickerBlocksProgress = weeklyKickerBlocksProgress;

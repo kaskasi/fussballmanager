@@ -48,6 +48,7 @@ import { ScoutHitGridCard } from "../components/ScoutHitGridCard.tsx";
 import { ScoutHitFilterAssignmentCard } from "../components/ScoutHitFilterAssignmentCard.tsx";
 import { ScoutRegionMap } from "../components/ScoutRegionMap.tsx";
 import { ScoutRegionDetailScreen } from "../components/ScoutRegionDetailScreen.tsx";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { buildScoutDiscoveryMapModel } from "../../scouting/scout-region-map.ts";
 import type { ScoutRouteScore } from "../../scouting/scout-route-puzzle.ts";
 import { ScoutNetworkPanel } from "../components/ScoutNetworkPanel.tsx";
@@ -416,7 +417,11 @@ export function ScoutingCenter({
               {" · "}
               {formatClubCash(scoutNetworkWeeklyWage(scoutNetwork))}/Woche
             </p>
-            <section className="game-panel scouting-section" aria-label={t("scouting.network.aria")}>
+            <section
+              className="game-panel scouting-section"
+              aria-label={t("scouting.network.aria")}
+              data-coach-target={COACH_TARGET.scoutingMap}
+            >
               <ScoutRegionMap
                 clubs={worldClubs}
                 targets={targets}
@@ -682,7 +687,11 @@ function ScoutingHitsGrid({
   const t = useT();
   const shortlisted = useMemo(() => new Set(shortlistIds), [shortlistIds]);
   return (
-    <section className="scouting-hits-grid-wrap" aria-label={t("scouting.hits.gridAria")}>
+    <section
+      className="scouting-hits-grid-wrap"
+      aria-label={t("scouting.hits.gridAria")}
+      data-coach-target={COACH_TARGET.scoutingPool}
+    >
       <h2 className="scouting-section-title">
         {t("scouting.hits.header", { count: hitCount })}
       </h2>

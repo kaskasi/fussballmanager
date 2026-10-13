@@ -29,7 +29,11 @@ import type { PostfachPanelProps } from "./postfach-panel-props.ts";
 import { usesTrainingNextNexus } from "../../sim/training-next.ts";
 import { hubLatestTreterEdition, treterTickerLines } from "../../hub/hub-treter-ticker.ts";
 import { HubTreterTicker } from "../components/HubTreterTicker.tsx";
+import { HubOpponentScoutDeskPanel } from "../components/HubOpponentScoutDeskPanel.tsx";
 import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
+import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
+import type { ScoutNetworkState } from "../../scouting/scout-network.ts";
+import { COACH_TARGET } from "../../tutorial/index.ts";
 
 export function ManagerDeskHub({
   session,
@@ -45,6 +49,10 @@ export function ManagerDeskHub({
   postfach,
   calendarMilestones = [],
   scoutBoard,
+  scoutNetwork,
+  matchSetup = null,
+  onStartOpponentScout,
+  onViewOpponentScoutReport,
 }: {
   session: GameSession;
   players: Player[];
@@ -59,6 +67,10 @@ export function ManagerDeskHub({
   postfach: PostfachPanelProps;
   calendarMilestones?: readonly CalendarMilestone[];
   scoutBoard?: ScoutBoard;
+  scoutNetwork?: ScoutNetworkState;
+  matchSetup?: CareerMatchSetup | null;
+  onStartOpponentScout?: () => void;
+  onViewOpponentScoutReport?: (postfachItemId: string) => void;
 }) {
   useT();
   const [wildcard, setWildcard] = useState<"board" | "league">("board");
@@ -105,7 +117,11 @@ export function ManagerDeskHub({
   return (
     <main className="manager-desk club-shell-card-body" data-hub-blockers={blockers}>
       <div className="manager-desk__inbox">
-        <section className="game-panel postfach-decisions manager-desk__postfach" aria-label={t("postfach.open.panelAria")}>
+        <section
+          className="game-panel postfach-decisions manager-desk__postfach"
+          aria-label={t("postfach.open.panelAria")}
+          data-coach-target={COACH_TARGET.hubPostfach}
+        >
           <div className="manager-desk__postfach-scroll">
           <DecisionInboxPanel
             inbox={postfach.youthInbox}
@@ -220,12 +236,25 @@ export function ManagerDeskHub({
           milestones={calendarMilestones}
           scoutBoard={scoutBoard ?? postfach.scoutBoard}
           onOpenTraining={onOpenTraining}
-          onOpenScouting={onOpenScouting}
         />
       </div>
 
       <div className="manager-desk__bottom">
-        <div className={`manager-desk__duty${blockers > 0 ? " is-alert" : ""}`}>
+        <div
+          className={`manager-desk__duty${blockers > 0 ? " is-alert" : ""}`}
+          data-coach-target={COACH_TARGET.hubDutyBlockers}
+        >
+          {scoutBoard ? (
+            <HubOpponentScoutDeskPanel
+              season={season}
+              matchSetup={matchSetup}
+              scoutBoard={scoutBoard}
+              scoutNetwork={scoutNetwork}
+              onStartOpponentScout={onStartOpponentScout}
+              onViewOpponentScoutReport={onViewOpponentScoutReport}
+              onOpenScouting={onOpenScouting}
+            />
+          ) : null}
           <p className="manager-desk__duty-title">{t("hub.desk.dutyTitle")}</p>
           {hubBlockers.length === 0 ? (
             <p className="manager-desk__duty-clear">{t("hub.desk.dutyClear")}</p>
@@ -238,7 +267,10 @@ export function ManagerDeskHub({
           )}
         </div>
 
-        <div className="manager-desk__heatmaps training-schedule-heatmap">
+        <div
+          className="manager-desk__heatmaps training-schedule-heatmap"
+          data-coach-target={COACH_TARGET.hubHeatmaps}
+        >
           <GrowthHeatmap
             cells={growthCells}
             onSelectPlayer={onSelectPlayer}
@@ -260,7 +292,7 @@ export function ManagerDeskHub({
           />
         </div>
 
-        <div className="manager-desk__development">
+        <div className="manager-desk__development" data-coach-target={COACH_TARGET.hubTopDevelopment}>
           <div className="manager-desk__dev-pills">
             {(["week", "month", "year"] as const).map((period) => (
               <button

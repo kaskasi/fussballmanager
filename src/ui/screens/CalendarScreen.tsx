@@ -1,8 +1,6 @@
 /** WIREFRAME: docs/prd/design.md §9.5 — Kalender */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarMonthGridCell } from "../components/CalendarMonthGridCell.tsx";
-import { ClubCrest } from "../components/ClubCrest.tsx";
-import { clubLogoUrlForId } from "../assets/club-logo.ts";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { sessionMonthIndex } from "../../sim/session-civil-date.ts";
@@ -12,11 +10,7 @@ import type { CalendarMilestone } from "../calendar/calendar-milestones.ts";
 import { formatCalendarWeekDisplay, weekdayShortDisplay } from "../../i18n/calendar-display.ts";
 import { useT } from "../../i18n/react.ts";
 import { MONDAY } from "../../sim/day-calendar.ts";
-import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
-import type { ScoutNetworkState } from "../../scouting/scout-network.ts";
-import { clubShortName } from "../../sim/league-week.ts";
-import { OpponentScoutMatchAction } from "../components/OpponentScoutMatchAction.tsx";
 import { t } from "../../i18n/index.ts";
 import {
   activeTripCivilDayKeys,
@@ -25,6 +19,7 @@ import {
 } from "../../scouting/scout-calendar-day.ts";
 import { calendarGridYear } from "../../sim/session-civil-date.ts";
 import { isPlaytestShortcutsEnabled } from "../playtest-flags.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 
 const MONTH_KEYS = [
   "calendar.month.january",
@@ -47,11 +42,7 @@ export function CalendarScreen({
   weekday,
   league,
   milestones = [],
-  matchSetup = null,
   scoutBoard,
-  scoutNetwork,
-  onStartOpponentScout,
-  onViewOpponentScoutReport,
   onFastForwardToMonth,
   fastForwardBusy = false,
 }: {
@@ -60,11 +51,7 @@ export function CalendarScreen({
   weekday: number;
   league: LeagueState;
   milestones?: readonly CalendarMilestone[];
-  matchSetup?: CareerMatchSetup | null;
   scoutBoard?: ScoutBoard;
-  scoutNetwork?: ScoutNetworkState;
-  onStartOpponentScout?: () => void;
-  onViewOpponentScoutReport?: (postfachItemId: string) => void;
   onFastForwardToMonth?: (monthIndex: number) => void;
   fastForwardBusy?: boolean;
 }) {
@@ -146,37 +133,11 @@ export function CalendarScreen({
         {weekday === MONDAY ? (
           <p className="calendar-context-kicker">{t("calendar.mondayRevealKicker")}</p>
         ) : null}
-        {matchSetup && scoutBoard && scoutNetwork && onStartOpponentScout ? (
-          <section className="game-panel calendar-match-week" aria-label={t("scouting.opponent.panelAria")}>
-            <div className="calendar-match-week-fixture">
-              <ClubCrest
-                initials={matchSetup.opponentShortName.slice(0, 2)}
-                logoSrc={clubLogoUrlForId(
-                  matchSetup.isHome ? matchSetup.awayTeamId : matchSetup.homeTeamId,
-                )}
-                size={40}
-                alt={matchSetup.opponentShortName}
-              />
-              <div>
-                <p className="calendar-match-week-label">{t("scouting.opponent.fixture")}</p>
-                <strong>
-                  {matchSetup.isHome
-                    ? `${clubShortName(matchSetup.playerClubId)} – ${matchSetup.opponentShortName}`
-                    : `${matchSetup.opponentShortName} – ${clubShortName(matchSetup.playerClubId)}`}
-                </strong>
-              </div>
-            </div>
-            <OpponentScoutMatchAction
-              setup={matchSetup}
-              season={season}
-              scoutBoard={scoutBoard}
-              scoutNetwork={scoutNetwork}
-              onStart={onStartOpponentScout}
-              onViewReport={onViewOpponentScoutReport}
-            />
-          </section>
-        ) : null}
-        <section className="game-panel calendar-grid-wrap" aria-label={t("calendar.gridAria")}>
+        <section
+          className="game-panel calendar-grid-wrap"
+          aria-label={t("calendar.gridAria")}
+          data-coach-target={COACH_TARGET.calendarMilestones}
+        >
           <div className="calendar-weekdays">
             {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((label) => (
               <span key={label}>{label}</span>

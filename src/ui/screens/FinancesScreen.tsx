@@ -62,6 +62,7 @@ import { buildMerchandisingAnalytics } from "../../economy/merchandising-analyti
 import { MerchandisingAnalyticsPanel } from "./MerchandisingAnalyticsPanel.tsx";
 import { fanbaseMood, formatFanbase, type FanbaseMood } from "../../stadium/fanbase.ts";
 import { useT } from "../../i18n/react.ts";
+import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { Hint } from "../components/Hint.tsx";
 import { COMMERCE_KIOSK_PHOTO } from "../assets/hub-photos.ts";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
@@ -256,7 +257,11 @@ export function FinancesScreen({
       {panelTab === "overview" ? (
           <div className="fm-tab-panel finances-shell finances-hero" aria-label="Cashflow und Budget">
         <div className="finances-hero-grid">
-          <section className="finances-waterfall" aria-label={`Cashflow ${waterfall.title}`}>
+          <section
+            className="finances-waterfall"
+            aria-label={`Cashflow ${waterfall.title}`}
+            data-coach-target={COACH_TARGET.financesCashflow}
+          >
             <div className="finances-waterfall-head">
               <div>
                 <h2>{waterfall.title}</h2>

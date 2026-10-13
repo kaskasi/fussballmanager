@@ -16,6 +16,7 @@ import type { AccessibilityPreferences } from "../accessibility.ts";
 import { CashChip } from "../components/CashChip.tsx";
 import { ClubCrest } from "../components/ClubCrest.tsx";
 import { useT } from "../../i18n/react.ts";
+import { COACH_TARGET } from "../../tutorial/index.ts";
 import type { HubNavActions, Screen } from "./types.ts";
 
 export function AppNav({
@@ -205,6 +206,7 @@ export function AppNav({
           <button
             type="button"
             className="app-nav-match-simulate"
+            data-coach-target={COACH_TARGET.matchSkipMenu}
             title={tr("shell.match.simulate")}
             onClick={() => hubActions.matchSkipToReport?.()}
           >
@@ -315,6 +317,7 @@ export function AppNav({
           <button
             type="button"
             className="app-nav-next"
+            data-coach-target={COACH_TARGET.headerNext}
             onClick={() => {
               if (hubActions.onHeaderPrimaryClick) {
                 hubActions.onHeaderPrimaryClick();

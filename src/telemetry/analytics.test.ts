@@ -41,6 +41,7 @@ const basePrefs: ClientPreferences = {
   textScale: "default",
   colorScheme: "default",
   analyticsEnabled: true,
+  coachMarksEnabled: true,
   diagnosticLogLevel: "error",
 };
 

@@ -32,6 +32,7 @@ import { Matchday } from "../../match/Matchday.tsx";
 import { MedicalCenterScreen } from "../screens/MedicalCenterScreen.tsx";
 import { MerchandisingScreen } from "../screens/MerchandisingScreen.tsx";
 import { MANAGER_DESK_HUB_ENABLED } from "../../hub/config.ts";
+import { markStepCompleted } from "../../tutorial/index.ts";
 import { ManagerDeskHub } from "../screens/ManagerDeskHub.tsx";
 import { PipelineDashboard } from "../screens/PipelineDashboard.tsx";
 import { PostfachScreen } from "../screens/PostfachScreen.tsx";
@@ -191,6 +192,10 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
             stadium={stadium}
             calendarMilestones={calendarMilestones}
             scoutBoard={scoutBoard}
+            scoutNetwork={scoutNetwork}
+            matchSetup={prepareCareerMatch(session)}
+            onStartOpponentScout={handleStartOpponentScout}
+            onViewOpponentScoutReport={handleOpenOpponentScoutReport}
             onSelectPlayer={setProfileId}
             onOpenTraining={() => setScreen("training")}
             onOpenScouting={() => {
@@ -370,6 +375,18 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           trainingPlanPresets={trainingPlanPresets}
           onTrainingPlanPresetsChange={handleTrainingPlanPresetsChange}
           onTrainingPresetNotice={flashNotice}
+          onTrainingPresetLoaded={() => {
+            patchSession((current) => ({
+              ...current,
+              storyState: markStepCompleted(current.storyState, "training.load_preset"),
+            }));
+          }}
+          onTrainingPresetSaved={() => {
+            patchSession((current) => ({
+              ...current,
+              storyState: markStepCompleted(current.storyState, "training.save_preset"),
+            }));
+          }}
           trainingAutoNext={trainingAutoNext}
           onStopTrainingAutoNext={() => setTrainingAutoNext(false)}
         />
@@ -604,11 +621,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           weekday={weekday}
           league={league}
           milestones={calendarMilestones}
-          matchSetup={prepareCareerMatch(session)}
           scoutBoard={scoutBoard}
-          scoutNetwork={scoutNetwork}
-          onStartOpponentScout={handleStartOpponentScout}
-          onViewOpponentScoutReport={handleOpenOpponentScoutReport}
           onFastForwardToMonth={handleFastForwardToMonth}
           fastForwardBusy={simulating}
         />

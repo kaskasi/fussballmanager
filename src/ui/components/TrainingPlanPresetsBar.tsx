@@ -9,6 +9,7 @@ import {
 import type { TrainingSlot } from "../../development/training-units.ts";
 import { trainingPresetDisplayLabel } from "../../i18n/training-preset-display.ts";
 import { useT } from "../../i18n/react.ts";
+import { COACH_TARGET } from "../../tutorial/index.ts";
 
 export function TrainingPlanPresetsBar({
   presets,
@@ -17,6 +18,8 @@ export function TrainingPlanPresetsBar({
   onPresetsChange,
   onPlanChange,
   onNotice,
+  onPresetLoaded,
+  onPresetSaved,
 }: {
   presets: readonly TrainingPlanPresetSlot[];
   currentPlan: readonly TrainingSlot[];
@@ -24,14 +27,16 @@ export function TrainingPlanPresetsBar({
   onPresetsChange: (presets: TrainingPlanPresetSlot[]) => void;
   onPlanChange: (plan: TrainingSlot[]) => void;
   onNotice: (text: string, tone?: "ok" | "warn") => void;
+  onPresetLoaded?: (id: TrainingPlanPresetId) => void;
+  onPresetSaved?: (id: TrainingPlanPresetId) => void;
 }) {
   const tr = useT();
 
   function handleSave(id: TrainingPlanPresetId) {
     const next = saveTrainingPlanPreset(presets, id, currentPlan);
     onPresetsChange(next);
-    const slot = next.find((entry) => entry.id === id);
     onNotice(tr("training.presets.saved", { label: trainingPresetDisplayLabel(id) }), "ok");
+    onPresetSaved?.(id);
   }
 
   function handleLoad(id: TrainingPlanPresetId) {
@@ -46,10 +51,16 @@ export function TrainingPlanPresetsBar({
     }
     onPlanChange(loadTrainingPlanPreset(presets, id));
     onNotice(tr("training.presets.loaded", { label: trainingPresetDisplayLabel(id) }), "ok");
+    onPresetLoaded?.(id);
   }
 
   return (
-    <div className="training-plan-presets" role="group" aria-label={tr("training.presets.aria")}>
+    <div
+      className="training-plan-presets"
+      role="group"
+      aria-label={tr("training.presets.aria")}
+      data-coach-target={COACH_TARGET.trainingPlanPresets}
+    >
       {presets.map((slot) => (
         <div key={slot.id} className="training-plan-preset">
           <button

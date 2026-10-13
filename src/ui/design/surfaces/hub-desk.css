@@ -893,6 +893,127 @@
   overflow: hidden;
 }
 
+.hub-opponent-scout-desk {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.45rem;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.hub-opponent-scout-desk__cta {
+  padding: 0.55rem 0.6rem 0.65rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hub-opponent-scout-desk__fixture {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.hub-opponent-scout-desk__fixture-label {
+  margin: 0;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinte-weich);
+}
+
+.hub-opponent-scout-desk__fixture-copy strong {
+  display: block;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.hub-opponent-scout-tile {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 4.75rem;
+  padding: 0.65rem 0.5rem;
+  border: var(--outline);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow-flat);
+  font-weight: 800;
+  font-size: 0.78rem;
+  cursor: pointer;
+  color: var(--tinte);
+}
+
+.hub-opponent-scout-tile:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.hub-opponent-scout-tile__label {
+  text-align: center;
+  line-height: 1.2;
+  max-width: 100%;
+}
+
+.opponent-scout-action--hub {
+  width: 100%;
+}
+
+.hub-opponent-scout-desk__digest {
+  margin: 0;
+  padding: 0 0.15rem;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+}
+
+.hub-opponent-scout-desk__stat {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem 0.5rem;
+  align-items: start;
+}
+
+.hub-opponent-scout-desk__stat dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 800;
+  color: var(--tinte);
+  margin: 0;
+}
+
+.hub-opponent-scout-desk__stat dt svg {
+  flex-shrink: 0;
+  color: var(--tinte);
+}
+
+.hub-opponent-scout-desk__stat dd {
+  margin: 0;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--tinte-weich);
+  line-height: 1.25;
+}
+
+.hub-opponent-scout-desk__idle {
+  margin: 0;
+  font-size: 0.68rem;
+  color: var(--tinte-weich);
+  line-height: 1.35;
+}
+
+.hub-opponent-scout-desk__link {
+  margin: 0;
+  padding: 0 0.15rem;
+  font-size: 0.68rem;
+  align-self: flex-start;
+}
+
 .manager-desk__duty {
   border: var(--outline);
   border-radius: var(--radius);

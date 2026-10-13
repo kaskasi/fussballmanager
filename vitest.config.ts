@@ -15,14 +15,20 @@ export default defineConfig({
     testTimeout: 120_000,
     hookTimeout: 120_000,
     teardownTimeout: 30_000,
-    // Long league sims block a fork; single fork on CI avoids vitest-worker RPC timeouts.
-    pool: "forks",
-    poolOptions: {
-      forks: {
-        singleFork: isCi,
-        maxForks: isCi ? 1 : undefined,
-      },
-    },
+    reporters: isCi ? ["verbose"] : ["default"],
+    // One worker on CI: long league sims must not block vitest RPC (fork pool) or flood parallel workers.
+    pool: isCi ? "threads" : "forks",
+    poolOptions: isCi
+      ? {
+          threads: {
+            singleThread: true,
+          },
+        }
+      : {
+          forks: {
+            singleFork: false,
+          },
+        },
     fileParallelism: !isCi,
   },
 });

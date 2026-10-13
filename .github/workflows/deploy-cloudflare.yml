@@ -13,6 +13,7 @@ jobs:
   verify:
     name: Build & test
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -21,12 +22,26 @@ jobs:
           node-version: "22"
           cache: npm
 
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run test:client
-      - run: npm run build
-      - run: npm run check:worker-assets
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Server tests (shared + engine)
+        run: npm test
+
+      - name: Client tests (persistence, UI, narrative, telemetry)
+        run: npm run test:client:fast
+
+      - name: Client tests (sim — includes long league-week sims)
+        run: npm run test:client:sim
+
+      - name: Production build
+        run: npm run build
+
+      - name: Worker asset budget
+        run: npm run check:worker-assets
 
   deploy:
     name: Deploy worker

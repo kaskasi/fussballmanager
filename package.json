@@ -18,6 +18,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w @fussballmanager/shared && npm run typecheck -w @fussballmanager/server && npm run typecheck -w @fussballmanager/worker",
     "test": "npm test -w @fussballmanager/shared && npm test -w @fussballmanager/server",
     "test:client": "vitest run --config vitest.config.ts",
+    "test:client:fast": "vitest run --config vitest.config.ts src/persistence src/ui src/narrative src/telemetry",
+    "test:client:sim": "vitest run --config vitest.config.ts src/sim",
     "play-match": "npm run play-match -w @fussballmanager/server",
     "play-matchday": "npm run play-matchday -w @fussballmanager/server",
     "play-probe": "npm run play-probe -w @fussballmanager/server",

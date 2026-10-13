@@ -6,6 +6,7 @@ import { isStepCompleted } from "./tutorial-progress.ts";
 import { COACH_TARGET } from "./tutorial-targets.ts";
 import type { TutorialStepDefinition } from "./tutorial-types.ts";
 import { TUTORIAL_STEPS_PHASES_2_4 } from "./tutorial-steps-phases-2-4.ts";
+import { TUTORIAL_TRAINING_INDIVIDUAL_TAB } from "./tutorial-steps-tabs.ts";
 
 function planHasEmptySlot(session: GameSession): boolean {
   return session.trainingPlan.some(isTrainingSlotEmpty);
@@ -56,9 +57,19 @@ export const TUTORIAL_STEPS: readonly TutorialStepDefinition[] = [
     titleKey: "tutorial.training.setPlan.title",
     bodyKey: "tutorial.training.setPlan.body",
     target: COACH_TARGET.trainingPickSlot,
-    completeOnTargetClick: true,
     when: (session) =>
       usesTrainingNextNexus(session.storyState) && planHasEmptySlot(session),
+  },
+  {
+    id: "training.today_sessions",
+    screen: "training",
+    mode: "spotlight",
+    titleKey: "tutorial.training.todaySessions.title",
+    bodyKey: "tutorial.training.todaySessions.body",
+    target: COACH_TARGET.trainingTodayColumn,
+    when: (session) =>
+      usesTrainingNextNexus(session.storyState) &&
+      isStepCompleted(session.storyState, "training.set_plan"),
   },
   {
     id: "training.use_next",
@@ -69,7 +80,9 @@ export const TUTORIAL_STEPS: readonly TutorialStepDefinition[] = [
     target: COACH_TARGET.headerNext,
     completeOnTargetClick: true,
     when: (session) =>
-      usesTrainingNextNexus(session.storyState) && session.trainingUnitsCompleted === 0,
+      usesTrainingNextNexus(session.storyState) &&
+      isStepCompleted(session.storyState, "training.today_sessions") &&
+      session.trainingUnitsCompleted === 0,
   },
   {
     id: "training.load_preset",
@@ -97,6 +110,7 @@ export const TUTORIAL_STEPS: readonly TutorialStepDefinition[] = [
       isStepCompleted(session.storyState, "training.load_preset") &&
       planHasConfiguredSlot(session),
   },
+  TUTORIAL_TRAINING_INDIVIDUAL_TAB,
   {
     id: "hub.answer_board",
     screen: "hub",

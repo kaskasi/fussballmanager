@@ -205,14 +205,61 @@ export function trainingUnit(id: string): TrainingUnit {
   return unit;
 }
 
+/** Mo–Fr × 3 sessions — balanced tech / phys / mental rotation (preset 1). */
+const BALANCED_STARTER_UNIT_IDS: readonly string[] = [
+  "tech_pass",
+  "phys_speed",
+  "ment_tactical",
+  "tech_ball",
+  "phys_power",
+  "ment_calm",
+  "tech_pass",
+  "phys_speed",
+  "ment_leader",
+  "tech_ball",
+  "phys_power",
+  "ment_tactical",
+  "tech_pass",
+  "phys_speed",
+  "ment_calm",
+];
+
+const BALANCED_STARTER_FOCUS_SLOTS = new Set([0, 9]);
+
 export function defaultTrainingPlan(): TrainingSlot[] {
   const plan = emptyWeeklyTrainingPlan();
-  plan[0] = { unitId: "tech_pass", focus: true };
-  plan[3] = { unitId: "phys_speed", focus: false };
-  plan[6] = { unitId: "ment_tactical", focus: false };
-  plan[9] = { unitId: "tech_ball", focus: true };
-  plan[12] = { unitId: "phys_power", focus: false };
+  for (let index = 0; index < SLOT_COUNT; index += 1) {
+    plan[index] = {
+      unitId: BALANCED_STARTER_UNIT_IDS[index]!,
+      focus: BALANCED_STARTER_FOCUS_SLOTS.has(index),
+    };
+  }
   return plan;
+}
+
+/** First empty slot the manager can still assign this week (training UI + tutorial). */
+export function firstEmptySchedulableSlotIndex(
+  plan: readonly TrainingSlot[],
+  sessionWeekday: number,
+  unitsCompleted: number,
+  useUnitProgress: boolean,
+): number | null {
+  for (let index = 0; index < plan.length; index += 1) {
+    if (!isTrainingSlotEmpty(plan[index]!)) continue;
+    if (isTrainingSlotPastForSession(index, sessionWeekday, unitsCompleted, useUnitProgress)) {
+      continue;
+    }
+    return index;
+  }
+  return null;
+}
+
+/** Day column index (0 = Mo) for a session weekday, or null on weekend. */
+export function trainingDayIndexForWeekday(sessionWeekday: number): number | null {
+  if (sessionWeekday < MONDAY || sessionWeekday > MONDAY + TRAINING_DAYS.length - 1) {
+    return null;
+  }
+  return sessionWeekday - MONDAY;
 }
 
 const LEGACY_FIVE_SLOTS_PER_WEEK = 5;

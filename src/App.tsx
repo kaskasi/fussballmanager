@@ -372,6 +372,7 @@ import { useMedicalActions } from "./ui/actions/useMedicalActions.ts";
 import { useYouthCampActions } from "./ui/actions/useYouthCampActions.ts";
 import { GameSessionProvider } from "./ui/session/GameSessionContext.tsx";
 import { TutorialCoachLayer } from "./ui/tutorial/TutorialCoachLayer.tsx";
+import { TutorialUiProvider } from "./ui/tutorial/TutorialUiContext.tsx";
 import { useMerchActions } from "./ui/actions/useMerchActions.ts";
 import { useStadiumActions } from "./ui/actions/useStadiumActions.ts";
 import type { LocaleId } from "./i18n/locale-id.ts";
@@ -2003,15 +2004,19 @@ export default function App() {
         weeklyWageBill={weeklyWageBill(players, session.clubId)}
       />
       <GameSessionProvider value={{ session, patchSession, flashNotice }}>
-        <TutorialCoachLayer
-          screen={screen}
+        <TutorialUiProvider
           coachMarksEnabled={accessibility.coachMarksEnabled}
           matchFlowActive={Boolean(navActions.matchFlowActive)}
-          onDisableCoachMarksGlobally={() =>
-            setAccessibility({ ...accessibility, coachMarksEnabled: false })
-          }
-        />
-      <GameScreenRouter
+        >
+          <TutorialCoachLayer
+            screen={screen}
+            coachMarksEnabled={accessibility.coachMarksEnabled}
+            matchFlowActive={Boolean(navActions.matchFlowActive)}
+            onDisableCoachMarksGlobally={() =>
+              setAccessibility({ ...accessibility, coachMarksEnabled: false })
+            }
+          />
+          <GameScreenRouter
               screen={screen}
               save={save}
               players={players}
@@ -2142,6 +2147,7 @@ export default function App() {
               handleFastForwardToMonth={handleFastForwardToMonth}
               handleAcceptJobOffer={handleAcceptJobOffer}
             />
+        </TutorialUiProvider>
       </GameSessionProvider>
       {board.job_status === "dismissed" ? (
         <JobOffersModal offers={jobOffers} onAccept={handleAcceptJobOffer} />

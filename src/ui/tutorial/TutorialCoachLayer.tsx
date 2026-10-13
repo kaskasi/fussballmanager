@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Screen } from "../shell/types.ts";
 import { useGameSession } from "../session/GameSessionContext.tsx";
+import { isTrainingSlotEmpty, isTrainingSlotPastForSession } from "../../development/training-units.ts";
 import { hasOpenKickerItem } from "../../inbox/kicker-inbox.ts";
+import { usesTrainingNextNexus } from "../../sim/training-next.ts";
 import { pendingInboxItems } from "../../youth/decision-inbox.ts";
 import {
   dismissTutorialScreen,
@@ -47,6 +49,31 @@ export function TutorialCoachLayer({
       }));
     }
   }, [screen, session.storyState, patchSession]);
+
+  useEffect(() => {
+    if (isStepCompleted(session.storyState, "training.set_plan")) return;
+    if (!usesTrainingNextNexus(session.storyState)) return;
+    const assigned = session.trainingPlan.some((slot, index) => {
+      if (isTrainingSlotEmpty(slot)) return false;
+      return !isTrainingSlotPastForSession(
+        index,
+        session.weekday,
+        session.trainingUnitsCompleted,
+        true,
+      );
+    });
+    if (!assigned) return;
+    patchSession((current) => ({
+      ...current,
+      storyState: markStepCompleted(current.storyState, "training.set_plan"),
+    }));
+  }, [
+    session.trainingPlan,
+    session.weekday,
+    session.trainingUnitsCompleted,
+    session.storyState,
+    patchSession,
+  ]);
 
   useEffect(() => {
     if (isStepCompleted(session.storyState, "hub.answer_board")) return;

@@ -13,6 +13,15 @@ import {
 import { isStepCompleted } from "./tutorial-progress.ts";
 import { COACH_TARGET } from "./tutorial-targets.ts";
 import type { TutorialStepDefinition } from "./tutorial-types.ts";
+import {
+  TUTORIAL_CAMPUS_TABS,
+  TUTORIAL_FINANCES_TABS,
+  TUTORIAL_MEDICAL_TABS,
+  TUTORIAL_MERCH_TABS,
+  TUTORIAL_SCOUTING_TABS,
+  TUTORIAL_SQUAD_TABS,
+  TUTORIAL_STADIUM_TABS,
+} from "./tutorial-steps-tabs.ts";
 
 function hasPendingInbox(session: GameSession): boolean {
   return pendingInboxItems(session.youthInbox, session.players).length > 0;
@@ -114,6 +123,7 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
   },
 
   // —— Phase 3: scouting, squad, campus ——
+  TUTORIAL_SCOUTING_TABS,
   {
     id: "scouting.map_trip",
     screen: "scouting",
@@ -121,7 +131,9 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
     titleKey: "tutorial.scouting.mapTrip.title",
     bodyKey: "tutorial.scouting.mapTrip.body",
     target: COACH_TARGET.scoutingMap,
-    when: (session) => phase3ScoutingEligible(session),
+    when: (session) =>
+      phase3ScoutingEligible(session) &&
+      isStepCompleted(session.storyState, "scouting.tabs"),
   },
   {
     id: "scouting.pool_confidence",
@@ -145,6 +157,7 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
       phase3ScoutingEligible(session) &&
       isStepCompleted(session.storyState, "scouting.pool_confidence"),
   },
+  TUTORIAL_SQUAD_TABS,
   {
     id: "squad.open_profile",
     screen: "squad",
@@ -154,8 +167,11 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
     target: COACH_TARGET.squadFirstRow,
     completeOnTargetClick: true,
     when: (session) =>
-      phase2Eligible(session) && isStepCompleted(session.storyState, "scouting.pool_confidence"),
+      phase2Eligible(session) &&
+      isStepCompleted(session.storyState, "scouting.pool_confidence") &&
+      isStepCompleted(session.storyState, "squad.tabs"),
   },
+  TUTORIAL_CAMPUS_TABS,
   {
     id: "campus.auto_youth",
     screen: "campus",
@@ -163,7 +179,9 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
     titleKey: "tutorial.campus.autoYouth.title",
     bodyKey: "tutorial.campus.autoYouth.body",
     target: COACH_TARGET.campusOverview,
-    when: (session) => campusTutorialEligible(session),
+    when: (session) =>
+      campusTutorialEligible(session) &&
+      isStepCompleted(session.storyState, "campus.tabs"),
   },
   {
     id: "campus.inbox_promote",
@@ -181,6 +199,7 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
   },
 
   // —— Phase 4: club systems (curtain-aware) ——
+  TUTORIAL_FINANCES_TABS,
   {
     id: "finances.cashflow_split",
     screen: "finances",
@@ -188,8 +207,11 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
     titleKey: "tutorial.finances.cashflowSplit.title",
     bodyKey: "tutorial.finances.cashflowSplit.body",
     target: COACH_TARGET.financesCashflow,
-    when: (session) => phase4ScreenEligible(session, "finances"),
+    when: (session) =>
+      phase4ScreenEligible(session, "finances") &&
+      isStepCompleted(session.storyState, "finances.tabs"),
   },
+  TUTORIAL_STADIUM_TABS,
   {
     id: "stadium.precinct_not_3d",
     screen: "stadium",
@@ -197,8 +219,11 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
     titleKey: "tutorial.stadium.precinctNot3d.title",
     bodyKey: "tutorial.stadium.precinctNot3d.body",
     target: COACH_TARGET.stadiumPrecinct,
-    when: (session) => phase4ScreenEligible(session, "stadium"),
+    when: (session) =>
+      phase4ScreenEligible(session, "stadium") &&
+      isStepCompleted(session.storyState, "stadium.tabs"),
   },
+  TUTORIAL_MERCH_TABS,
   {
     id: "merch.matchday_orders",
     screen: "merchandising",
@@ -206,7 +231,9 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
     titleKey: "tutorial.merch.matchdayOrders.title",
     bodyKey: "tutorial.merch.matchdayOrders.body",
     target: COACH_TARGET.merchOrders,
-    when: (session) => phase4ScreenEligible(session, "merchandising"),
+    when: (session) =>
+      phase4ScreenEligible(session, "merchandising") &&
+      isStepCompleted(session.storyState, "merch.tabs"),
   },
   {
     id: "transfers.market_basics",
@@ -219,6 +246,7 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
       phase4ScreenEligible(session, "transfers") &&
       resolveFeatureCurtain(session.storyState).transfers_nav,
   },
+  TUTORIAL_MEDICAL_TABS,
   {
     id: "medical.fitness_risk",
     screen: "medical",
@@ -226,7 +254,9 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
     titleKey: "tutorial.medical.fitnessRisk.title",
     bodyKey: "tutorial.medical.fitnessRisk.body",
     target: COACH_TARGET.medicalFitness,
-    when: (session) => phase4ScreenEligible(session, "medical"),
+    when: (session) =>
+      phase4ScreenEligible(session, "medical") &&
+      isStepCompleted(session.storyState, "medical.tabs"),
   },
   {
     id: "leagues.table_context",

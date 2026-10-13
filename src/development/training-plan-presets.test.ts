@@ -15,6 +15,7 @@ describe("training plan presets", () => {
     const slot = presets[0]!;
     expect(slot.id).toBe(1);
     expect(trainingPresetHasContent(slot)).toBe(true);
+    expect(slot.plan.every((entry) => entry.unitId !== "")).toBe(true);
     expect(validateWeeklyPlan(planToSessions(slot.plan)).valid).toBe(true);
   });
 

@@ -358,6 +358,21 @@ function PlayPanel() {
         </ol>
       </section>
 
+      <section className="help-card" aria-labelledby="help-screen-tabs">
+        <h2 id="help-screen-tabs">{t("help.play.tabs.title")}</h2>
+        <p className="help-quote">{t("help.play.tabs.lead")}</p>
+        <ul className="help-steps">
+          <li>{t("help.play.tabs.training")}</li>
+          <li>{t("help.play.tabs.scouting")}</li>
+          <li>{t("help.play.tabs.squad")}</li>
+          <li>{t("help.play.tabs.campus")}</li>
+          <li>{t("help.play.tabs.finances")}</li>
+          <li>{t("help.play.tabs.stadium")}</li>
+          <li>{t("help.play.tabs.medical")}</li>
+          <li>{t("help.play.tabs.merch")}</li>
+        </ul>
+      </section>
+
       <section className="help-card" aria-labelledby="help-grow">
         <h2 id="help-grow">
           <HelpInlineIcon icon={TrendingUp} /> {t("help.play.grow.title")}

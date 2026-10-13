@@ -19,6 +19,7 @@ import { MedicalInjuredPanel } from "../components/MedicalInjuredPanel.tsx";
 import { MedicalDoctorExamModal } from "../components/MedicalDoctorExamModal.tsx";
 import { precinctMedicalCenterLevel } from "../../stadium/precinct-effects.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
+import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 
 type MedicalTab = "staff" | "injured" | "practice";
 
@@ -67,6 +68,7 @@ export function MedicalCenterScreen({
 }) {
   const t = useT();
   const [tab, setTab] = useState<MedicalTab>("staff");
+  useTutorialTabFocus("medical", "medical.fitness_risk", "practice", setTab);
   const [rehabPlayerId, setRehabPlayerId] = useState<string | null>(null);
   const [examPlayerId, setExamPlayerId] = useState<string | null>(null);
 
@@ -110,7 +112,12 @@ export function MedicalCenterScreen({
 
   return (
     <main className="medical-screen club-shell-card-body">
-      <div className="fm-tab-bar" role="tablist" aria-label={t("medical.tab.aria")}>
+      <div
+        className="fm-tab-bar"
+        role="tablist"
+        aria-label={t("medical.tab.aria")}
+        data-coach-target={COACH_TARGET.medicalTabs}
+      >
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}

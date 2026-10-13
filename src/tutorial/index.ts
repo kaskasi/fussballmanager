@@ -8,9 +8,13 @@ export {
   resetTutorialProgress,
   tutorialsAllowedForScreen,
 } from "./tutorial-progress.ts";
-export { resolveActiveTutorialStep } from "./tutorial-resolver.ts";
+export { activeTutorialStepId, resolveActiveTutorialStep } from "./tutorial-resolver.ts";
 export { TUTORIAL_STEPS } from "./tutorial-registry.ts";
-export { TUTORIAL_MISSIONS, isMissionComplete } from "./tutorial-missions.ts";
+export {
+  TUTORIAL_MISSIONS,
+  currentTutorialMission,
+  isMissionComplete,
+} from "./tutorial-missions.ts";
 export { phase1DeskTrackComplete } from "./tutorial-phase-gates.ts";
 export type {
   ResolvedTutorialStep,

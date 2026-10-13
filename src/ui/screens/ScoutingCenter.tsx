@@ -49,6 +49,7 @@ import { ScoutHitFilterAssignmentCard } from "../components/ScoutHitFilterAssign
 import { ScoutRegionMap } from "../components/ScoutRegionMap.tsx";
 import { ScoutRegionDetailScreen } from "../components/ScoutRegionDetailScreen.tsx";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
+import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 import { buildScoutDiscoveryMapModel } from "../../scouting/scout-region-map.ts";
 import type { ScoutRouteScore } from "../../scouting/scout-route-puzzle.ts";
 import { ScoutNetworkPanel } from "../components/ScoutNetworkPanel.tsx";
@@ -217,6 +218,9 @@ export function ScoutingCenter({
 }) {
   const t = useT();
   const [tab, setTab] = useState<ScoutingTab>(() => defaultScoutingTab(discovery, careerPhase));
+  useTutorialTabFocus("scouting", "scouting.map_trip", "map", setTab);
+  useTutorialTabFocus("scouting", "scouting.pool_confidence", "pool", setTab);
+  useTutorialTabFocus("scouting", "scouting.opponent_report", "orders", setTab);
   const [detailZoneId, setDetailZoneId] = useState<string | null>(null);
   const scoutPoolEmpty = (discovery?.scout_pool?.length ?? 0) === 0;
 
@@ -373,6 +377,7 @@ export function ScoutingCenter({
           className="fm-tab-bar scouting-primary-tab-bar"
           role="tablist"
           aria-label={t("scouting.tabs.aria")}
+          data-coach-target={COACH_TARGET.scoutingTabs}
         >
           {scoutingTabs.map(({ id, labelKey }) => (
             <button

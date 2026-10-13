@@ -1,6 +1,6 @@
 # /docs/prd/25_contextual_tutorial.md
 
-**Version:** 1.2  
+**Version:** 1.3  
 **Last Updated:** 2026-10-13  
 **Status:** Final (Phase 1 shipped; Phases 2–4 specified)
 
@@ -35,7 +35,7 @@ Per-screen **coach marks** (FM-style tutorial layers): first-visit guidance, sto
 - Analytics events.
 - Engine or sim changes.
 - Second yellow CTA in content.
-- **Training screen tips in Phases 2–4** (Phase 1 training/preset steps are frozen; Help may document presets long-term).
+- **Training screen tips in Phases 2–4** except one post–Phase-1 tab tip (`training.individual_tab` after `hub.top_development`; Phase 1 preset steps stay frozen).
 
 ---
 
@@ -75,7 +75,24 @@ Default on new game: empty completed, not disabled.
 | **3** | Find and grow talent | Scouting map/pool, opponent report, squad profile, campus auto-youth | `feature_curtain.scouting_nav` (or first map trip) for scouting; campus after first youth report |
 | **4** | Run the club | Finances, stadium, merch, transfers, medical, leagues, settings, calendar, help | Nav visible per PRD 19 curtain; first visit per screen |
 
-Phases 2–4 do **not** add steps on the **`training`** screen. Phase 1 training steps remain the only training coach marks.
+Phases 2–4 do **not** extend the Phase 1 training/preset chain. After desk onboarding, **`training.individual_tab`** may spotlight the team/individual tab bar once (Help documents tabs too).
+
+### Tab bars (multi-panel screens)
+
+Screens with `fm-tab-bar` get a **tab overview** coach step (`*.tabs`) before content spotlights on the same screen. Targets: `data-coach-target` on the tab bar (`finances-tabs`, `scouting-tabs`, …). While a content step is active, the client may auto-select the correct tab (`useTutorialTabFocus`) so the spotlight target is mounted.
+
+| Screen | Tab step ID | Content steps that switch tab |
+|--------|-------------|-------------------------------|
+| finances | `finances.tabs` | `finances.cashflow_split` → overview |
+| scouting | `scouting.tabs` | map → pool → orders |
+| squad | `squad.tabs` | `squad.open_profile` → list |
+| campus | `campus.tabs` | `campus.auto_youth` → U17 |
+| stadium | `stadium.tabs` | `stadium.precinct_not_3d` → precinct |
+| merchandising | `merch.tabs` | (content on default preise tab) |
+| medical | `medical.tabs` | `medical.fitness_risk` → practice |
+| training | `training.individual_tab` | individual (post–Phase 1 only) |
+
+Static tab copy also lives under **Help → Play → Screen tabs** (`help.play.tabs.*`).
 
 ---
 
@@ -86,7 +103,8 @@ Phases 2–4 do **not** add steps on the **`training`** screen. Phase 1 training
 | `hub.intro_origin` | hub | panel | Continue |
 | `hub.click_next` | hub | spotlight `header-next` | User clicks header NEXT |
 | `hub.open_training` | hub | spotlight `hub-training-calendar` | Open training |
-| `training.set_plan` | training | spotlight `training-pick-slot` | Tap first empty slot |
+| `training.set_plan` | training | spotlight `training-pick-slot` | Assign a unit via picker (not tap alone) |
+| `training.today_sessions` | training | spotlight `training-today-column` | Continue after reading today’s 3 slots |
 | `training.use_next` | training | spotlight `header-next` | Run a unit via header NEXT |
 | `training.load_preset` | training | spotlight `training-plan-presets` | Load preset (starter in slot 1) |
 | `training.save_preset` | training | spotlight `training-plan-presets` | Save current plan to a slot |
@@ -94,6 +112,7 @@ Phases 2–4 do **not** add steps on the **`training`** screen. Phase 1 training
 | `hub.progress_time` | hub | spotlight `header-next` | Continue after board step |
 | `hub.heatmaps` | hub | spotlight `hub-heatmaps` | Continue |
 | `hub.top_development` | hub | spotlight `hub-top-development` | Tap period pill or Continue |
+| `training.individual_tab` | training | spotlight `training-tabs` | Continue (after Phase 1 desk track) |
 
 Gate: `opening_complete`, client pref on, not per-save disabled, screen not dismissed.
 
@@ -127,11 +146,14 @@ Opponent prep: hub duty column (`hub-opponent-scout`), not calendar (PRD 09 desk
 
 | Prio | Step ID | Screen | Trigger / when | Coach target (TBD) | Complete when | Tester pain |
 |------|---------|--------|----------------|-------------------|---------------|-------------|
-| P0 | `scouting.map_trip` | scouting | First visit with map nav | region map / enqueue | Queue or start trip | Map scouting discovery (F4) |
+| P0 | `scouting.tabs` | scouting | First visit with map nav | `scouting-tabs` | Continue | Map / pool / orders / watchlist |
+| P0 | `scouting.map_trip` | scouting | After `scouting.tabs` | region map / enqueue | Queue or start trip | Map scouting discovery (F4) |
 | P0 | `scouting.pool_confidence` | scouting | Pool non-empty or first open | pool grid + confidence | Continue / open one hit | known / unclear / unknown bands |
 | P1 | `scouting.opponent_report` | scouting or postfach | Opponent report in inbox | report card / apply plan | View report or apply | Scout job → tactics link |
-| P1 | `squad.open_profile` | squad | First squad visit | first row / profile entry | Open player profile | 2-click to akte (PRD 09) |
-| P1 | `campus.auto_youth` | campus | First campus visit | campus overview | Continue | PRD 03: auto sim, no lineups |
+| P1 | `squad.tabs` | squad | After pool tip | `squad-tabs` | Continue | List / mentoring / staff |
+| P1 | `squad.open_profile` | squad | After `squad.tabs` | first row / profile entry | Open player profile | 2-click to akte (PRD 09) |
+| P1 | `campus.tabs` | campus | First campus visit | `campus-tabs` | Continue | U17 / U19 / camps |
+| P1 | `campus.auto_youth` | campus | After `campus.tabs` | campus overview | Continue | PRD 03: auto sim, no lineups |
 | P2 | `campus.inbox_promote` | campus or hub | Youth promote/pull inbox item | linked inbox action | Resolve promote/pull | Decision inbox cap (4/week) |
 
 ---
@@ -142,11 +164,15 @@ Opponent prep: hub duty column (`hub-opponent-scout`), not calendar (PRD 09 desk
 
 | Prio | Step ID | Screen | Trigger / when | Coach target (TBD) | Complete when | Notes |
 |------|---------|--------|----------------|-------------------|---------------|-------|
-| P1 | `finances.cashflow_split` | finances | `finances_deep_nav` or first open | budget / cashflow panel | Continue | PRD 11; hub commerce crisis |
-| P1 | `stadium.precinct_not_3d` | stadium | First stadium visit | precinct map | Continue | Non-3D editor (PRD 01) |
-| P1 | `merch.matchday_orders` | merchandising | First merch visit or hub desk link | orders / SKU strip | Continue | Hub merch desk → screen |
+| P1 | `finances.tabs` | finances | First open | `finances-tabs` | Continue | Overview / commerce / … |
+| P1 | `finances.cashflow_split` | finances | After `finances.tabs` | budget / cashflow panel | Continue | PRD 11; hub commerce crisis |
+| P1 | `stadium.tabs` | stadium | First stadium visit | `stadium-tabs` | Continue | Plan vs precinct |
+| P1 | `stadium.precinct_not_3d` | stadium | After `stadium.tabs` | precinct map | Continue | Non-3D editor (PRD 01) |
+| P1 | `merch.tabs` | merchandising | First merch visit | `merch-tabs` | Continue | Preise vs Einkauf |
+| P1 | `merch.matchday_orders` | merchandising | After `merch.tabs` | orders / SKU strip | Continue | Hub merch desk → screen |
 | P2 | `transfers.market_basics` | transfers | `transfers_nav` visible | market list | Continue | Curtain-gated |
-| P2 | `medical.fitness_risk` | medical | First medical visit | risk / ampel | Continue | Squad fitness tie-in |
+| P2 | `medical.tabs` | medical | First medical visit | `medical-tabs` | Continue | Staff / injured / practice |
+| P2 | `medical.fitness_risk` | medical | After `medical.tabs` | risk / ampel | Continue | Squad fitness tie-in |
 | P2 | `leagues.table_context` | leagues | First leagues visit | table snippet | Continue | vs board objectives |
 | P2 | `settings.save_export` | settings | First settings visit | save / export block | Continue | Help + PRD 18 pointer |
 | P3 | `calendar.milestones` | calendar | First calendar visit | month grid / milestones | Continue | No scout CTA on calendar |

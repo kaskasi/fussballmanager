@@ -286,7 +286,12 @@ export function MerchandisingScreen({
       }
       data-coach-target={COACH_TARGET.merchOrders}
     >
-      <div className="fm-tab-bar" role="tablist" aria-label="Merchandising Bereiche">
+      <div
+        className="fm-tab-bar"
+        role="tablist"
+        aria-label="Merchandising Bereiche"
+        data-coach-target={COACH_TARGET.merchTabs}
+      >
         {(
           [
             ["preise", "Preise"],

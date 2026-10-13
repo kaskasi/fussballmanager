@@ -11,9 +11,11 @@ import {
   TRAINING_UNITS,
   UNITS_PER_DAY,
   currentTrainingSlotIndex,
+  firstEmptySchedulableSlotIndex,
   isTrainingDayFullyPastForSession,
   isTrainingSlotEmpty,
   isTrainingSlotPastForSession,
+  trainingDayIndexForWeekday,
   trainingUnit,
   trainingUnitLockHint,
   trainingUnitPickerDetail,
@@ -87,7 +89,10 @@ import { trainingGroupDisplayLabel, trainingUnitDisplayLabel } from "../../i18n/
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
-import { COACH_TARGET } from "../../tutorial/index.ts";
+import { activeTutorialStepId, COACH_TARGET } from "../../tutorial/index.ts";
+import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
+import { useTutorialUi } from "../tutorial/TutorialUiContext.tsx";
+import { useGameSession } from "../session/GameSessionContext.tsx";
 
 type TrainingTab = "team" | "individual";
 
@@ -177,6 +182,7 @@ export function TrainingCenter({
 }) {
   const tr = useT();
   const [tab, setTab] = useState<TrainingTab>("team");
+  useTutorialTabFocus("training", "training.individual_tab", "individual", setTab);
   const [pickSlot, setPickSlot] = useState<number | null>(null);
   const check = useMemo(() => validateWeeklyPlan(planToSessions(plan)), [plan]);
   const focusCount = plan.filter((slot) => slot.focus).length;
@@ -198,7 +204,12 @@ export function TrainingCenter({
 
   return (
     <main className="training club-shell-card-body">
-      <div className="fm-tab-bar" role="tablist" aria-label={t("training.tabs.aria")}>
+      <div
+        className="fm-tab-bar"
+        role="tablist"
+        aria-label={t("training.tabs.aria")}
+        data-coach-target={COACH_TARGET.trainingTabs}
+      >
         {trainingTabs.map(({ id, labelKey }) => (
           <button
             key={id}
@@ -374,20 +385,30 @@ function TeamPlan({
   const nextSlotIndex = currentTrainingSlotIndex(trainingUnitsCompleted, useTrainingUnitProgress);
   const [outcomeModal, setOutcomeModal] = useState<TrainingSlotOutcome | null>(null);
 
-  const coachPickSlotIndex = useMemo(() => {
-    for (let index = 0; index < plan.length; index += 1) {
-      const slot = plan[index]!;
-      if (!isTrainingSlotEmpty(slot)) continue;
-      const slotPast = isTrainingSlotPastForSession(
-        index,
+  const coachPickSlotIndex = useMemo(
+    () =>
+      firstEmptySchedulableSlotIndex(
+        plan,
         weekday,
         trainingUnitsCompleted,
         useTrainingUnitProgress,
-      );
-      if (!slotPast) return index;
-    }
-    return null;
-  }, [plan, weekday, trainingUnitsCompleted, useTrainingUnitProgress]);
+      ),
+    [plan, weekday, trainingUnitsCompleted, useTrainingUnitProgress],
+  );
+  const todayDayIndex = trainingDayIndexForWeekday(weekday);
+  const { coachMarksEnabled, matchFlowActive } = useTutorialUi();
+  const { session } = useGameSession();
+  const activeCoachStepId = useMemo(
+    () => activeTutorialStepId(session, "training", coachMarksEnabled, matchFlowActive),
+    [session, coachMarksEnabled, matchFlowActive],
+  );
+
+  useEffect(() => {
+    if (activeCoachStepId !== "training.set_plan") return;
+    if (coachPickSlotIndex === null) return;
+    if (pickSlot === coachPickSlotIndex) return;
+    onPickSlot(coachPickSlotIndex);
+  }, [activeCoachStepId, coachPickSlotIndex, pickSlot, onPickSlot]);
 
   useEffect(() => {
     if (nextSlotIndex === null) return;
@@ -442,7 +463,13 @@ function TeamPlan({
             useTrainingUnitProgress,
           );
           return (
-          <div key={dayIndex} className={dayPast ? "training-day-column is-past" : "training-day-column"}>
+          <div
+            key={dayIndex}
+            className={dayPast ? "training-day-column is-past" : "training-day-column"}
+            {...(dayIndex === todayDayIndex
+              ? { "data-coach-target": COACH_TARGET.trainingTodayColumn }
+              : {})}
+          >
             <p className="training-day-header">{trainingDayShortLabel(dayIndex)}</p>
             {Array.from({ length: UNITS_PER_DAY }, (_, period) => {
               const index = dayIndex * UNITS_PER_DAY + period;
@@ -643,6 +670,7 @@ function UnitPickerModal({
         role="dialog"
         aria-modal="true"
         aria-label={t("training.slot.dialogAria", { day })}
+        data-coach-target={COACH_TARGET.trainingUnitPicker}
         onClick={(event) => event.stopPropagation()}
       >
         <header className="training-modal-head">

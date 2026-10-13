@@ -49,3 +49,12 @@ export function resolveActiveTutorialStep(
   }
   return null;
 }
+
+export function activeTutorialStepId(
+  session: GameSession,
+  screen: TutorialScreenId,
+  coachMarksEnabled: boolean,
+  matchFlowActive: boolean,
+): string | null {
+  return resolveActiveTutorialStep(session, screen, coachMarksEnabled, matchFlowActive)?.definition.id ?? null;
+}

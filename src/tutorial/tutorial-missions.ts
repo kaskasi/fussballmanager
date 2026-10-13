@@ -12,7 +12,7 @@ export const TUTORIAL_MISSIONS: readonly TutorialMissionDefinition[] = [
   {
     id: "training_day",
     labelKey: "tutorial.mission.trainingDay",
-    stepIds: ["hub.open_training", "training.set_plan", "training.use_next"],
+    stepIds: ["hub.open_training", "training.set_plan", "training.today_sessions", "training.use_next"],
   },
   {
     id: "import_plan",
@@ -43,4 +43,12 @@ export const TUTORIAL_MISSIONS: readonly TutorialMissionDefinition[] = [
 
 export function isMissionComplete(story: StoryState, mission: TutorialMissionDefinition): boolean {
   return mission.stepIds.every((stepId) => isStepCompleted(story, stepId));
+}
+
+/** First mission with any incomplete step — shown in collapsed checklist header. */
+export function currentTutorialMission(story: StoryState): TutorialMissionDefinition | null {
+  for (const mission of TUTORIAL_MISSIONS) {
+    if (!isMissionComplete(story, mission)) return mission;
+  }
+  return null;
 }

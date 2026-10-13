@@ -3,6 +3,8 @@ export const COACH_TARGET = {
   headerNext: "header-next",
   hubTrainingCalendar: "hub-training-calendar",
   trainingPickSlot: "training-pick-slot",
+  trainingUnitPicker: "training-unit-picker",
+  trainingTodayColumn: "training-today-column",
   trainingPlanPresets: "training-plan-presets",
   hubHeatmaps: "hub-heatmaps",
   hubTopDevelopment: "hub-top-development",
@@ -28,6 +30,14 @@ export const COACH_TARGET = {
   settingsSaveExport: "settings-save-export",
   calendarMilestones: "calendar-milestones",
   helpResetTips: "help-reset-tips",
+  financesTabs: "finances-tabs",
+  scoutingTabs: "scouting-tabs",
+  medicalTabs: "medical-tabs",
+  stadiumTabs: "stadium-tabs",
+  merchTabs: "merch-tabs",
+  squadTabs: "squad-tabs",
+  campusTabs: "campus-tabs",
+  trainingTabs: "training-tabs",
 } as const;
 
 export type CoachTargetId = (typeof COACH_TARGET)[keyof typeof COACH_TARGET];

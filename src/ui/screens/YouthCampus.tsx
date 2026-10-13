@@ -28,6 +28,7 @@ import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 import { FilterChip, FilterToolbar } from "../components/primitives/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
+import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 import {
   academyStage,
   coachIconLabel,
@@ -144,6 +145,7 @@ export function YouthCampus({
 }) {
   const tr = useT();
   const tab = campusTab;
+  useTutorialTabFocus("campus", "campus.auto_youth", "u17", onCampusTabChange);
 
   useEffect(() => {
     if (!initialTab) return;
@@ -175,7 +177,12 @@ export function YouthCampus({
 
   return (
     <main className="campus club-shell-card-body">
-      <div className="fm-tab-bar" role="tablist" aria-label={tr("youth.tab.aria")}>
+      <div
+        className="fm-tab-bar"
+        role="tablist"
+        aria-label={tr("youth.tab.aria")}
+        data-coach-target={COACH_TARGET.campusTabs}
+      >
         {youthTabs.map(({ id, label }) => (
           <button
             key={id}

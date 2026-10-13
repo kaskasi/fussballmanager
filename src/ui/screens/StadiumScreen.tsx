@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useT } from "../../i18n/react.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
+import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 import { Construction, Dumbbell, Hammer, Home, Shirt, Star, TriangleAlert } from "lucide-react";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
 import {
@@ -133,6 +134,7 @@ export function StadiumScreen({
 }) {
   const t = useT();
   const [tab, setTab] = useState<StadiumTab>("plan");
+  useTutorialTabFocus("stadium", "stadium.precinct_not_3d", "precinct", setTab);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openSlotId, setOpenSlotId] = useState<string | null>(null);
   const capacity = stadiumTotalCapacity(stadium);
@@ -216,7 +218,12 @@ export function StadiumScreen({
 
   return (
     <main className="stadium club-shell-card-body">
-      <div className="fm-tab-bar" role="tablist" aria-label="Stadionbereiche">
+      <div
+        className="fm-tab-bar"
+        role="tablist"
+        aria-label="Stadionbereiche"
+        data-coach-target={COACH_TARGET.stadiumTabs}
+      >
         {stadiumTabs.map(({ id, labelKey }) => (
           <button
             key={id}

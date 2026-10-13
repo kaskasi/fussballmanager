@@ -63,6 +63,7 @@ import { MerchandisingAnalyticsPanel } from "./MerchandisingAnalyticsPanel.tsx";
 import { fanbaseMood, formatFanbase, type FanbaseMood } from "../../stadium/fanbase.ts";
 import { useT } from "../../i18n/react.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
+import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 import { Hint } from "../components/Hint.tsx";
 import { COMMERCE_KIOSK_PHOTO } from "../assets/hub-photos.ts";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
@@ -116,6 +117,7 @@ export function FinancesScreen({
 }) {
   const t = useT();
   const [panelTab, setPanelTab] = useState<FinancePanelTab>("overview");
+  useTutorialTabFocus("finances", "finances.cashflow_split", "overview", setPanelTab);
   const [loanDraft, setLoanDraft] = useState(MIN_BANK_LOAN);
   const month = financeMonthForWeek(week);
   const wageBill = weeklyWageBill(players, clubId);
@@ -230,7 +232,12 @@ export function FinancesScreen({
 
   return (
     <main className="finances club-shell-card-body">
-      <div className="fm-tab-bar" role="tablist" aria-label="Finanz-Bereiche">
+      <div
+        className="fm-tab-bar"
+        role="tablist"
+        aria-label="Finanz-Bereiche"
+        data-coach-target={COACH_TARGET.financesTabs}
+      >
         {(
           [
             ["overview", "Übersicht"],

@@ -23,6 +23,7 @@ import { useT } from "../../i18n/react.ts";
 import { t } from "../../i18n/index.ts";
 import { FilterChip, FilterToolbar } from "../components/primitives/index.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
+import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 
 /**
  * WIREFRAME: docs/prd/design.md §9.11 — Kader
@@ -77,6 +78,7 @@ export function FirstTeam({
 }) {
   useT();
   const [squadTab, setSquadTab] = useState<SquadTab>("list");
+  useTutorialTabFocus("squad", "squad.open_profile", "list", setSquadTab);
   const [sortKey, setSortKey] = useState<ProSquadSortKey>(DEFAULT_SORT.key);
   const [sortDirection, setSortDirection] = useState<ProSquadSortDirection>(DEFAULT_SORT.direction);
 
@@ -106,7 +108,12 @@ export function FirstTeam({
 
   return (
     <main className="squad club-shell-card-body">
-      <div className="fm-tab-bar" role="tablist" aria-label={t("squad.tab.aria")}>
+      <div
+        className="fm-tab-bar"
+        role="tablist"
+        aria-label={t("squad.tab.aria")}
+        data-coach-target={COACH_TARGET.squadTabs}
+      >
         {squadTabs.map(({ id, label }) => (
           <button
             key={id}

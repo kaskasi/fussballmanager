@@ -22,17 +22,27 @@ export function negotiationGates(input: {
   finances: ClubFinances;
   offerFee: number;
   transferWindowOpen: boolean;
+  /** Sale to AI / inbound bid — own squad, no scout intel required. */
+  isSale?: boolean;
 }): NegotiationGate[] {
   const windowReason = transferWindowClosedReason(input.week);
-  const bounds = input.estimate
-    ? scoutMarketValueBounds(input.player, input.estimate, input.season, false)
-    : null;
-  const scoutExact = scoutIntelExactForTransfer(input.player, input.estimate, input.season);
-  const payReason = cannotPayTransferFeeReason(input.finances, input.offerFee);
+  const isSale = input.isSale === true;
+  const bounds = isSale
+    ? { low: input.player.market_value, high: input.player.market_value, exact: true }
+    : input.estimate
+      ? scoutMarketValueBounds(input.player, input.estimate, input.season, false)
+      : null;
+  const scoutExact = isSale
+    ? true
+    : scoutIntelExactForTransfer(input.player, input.estimate, input.season);
+  const payReason = isSale ? null : cannotPayTransferFeeReason(input.finances, input.offerFee);
 
   let scoutTitle: string;
   let scoutDetail: string;
-  if (!input.estimate) {
+  if (isSale) {
+    scoutTitle = t("transfer.negotiation.gate.scout.sale.title");
+    scoutDetail = t("transfer.negotiation.gate.scout.sale.detail");
+  } else if (!input.estimate) {
     scoutTitle = t("transfer.negotiation.gate.scout.missing.title");
     scoutDetail = t("transfer.negotiation.gate.scout.missing.detail");
   } else if (!bounds) {
@@ -69,10 +79,16 @@ export function negotiationGates(input: {
     {
       id: "budget",
       ok: !payReason,
-      title: payReason
-        ? t("transfer.negotiation.gate.budget.block.title")
-        : t("transfer.negotiation.gate.budget.ok.title"),
-      detail: payReason ? payReason : t("transfer.negotiation.gate.budget.ok.detail"),
+      title: isSale
+        ? t("transfer.negotiation.gate.budget.sale.title")
+        : payReason
+          ? t("transfer.negotiation.gate.budget.block.title")
+          : t("transfer.negotiation.gate.budget.ok.title"),
+      detail: isSale
+        ? t("transfer.negotiation.gate.budget.sale.detail")
+        : payReason
+          ? payReason
+          : t("transfer.negotiation.gate.budget.ok.detail"),
     },
   ];
 }

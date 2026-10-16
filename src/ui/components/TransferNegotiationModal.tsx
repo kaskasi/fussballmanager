@@ -95,6 +95,7 @@ export function TransferNegotiationModal({
     ? spendRunway(finances, weeklyWageBill, negotiation.counter_offer, boardCashFloor)
     : null;
 
+  const isSale = negotiation.side === "sell";
   const gates = negotiationGates({
     week,
     player,
@@ -103,6 +104,7 @@ export function TransferNegotiationModal({
     finances,
     offerFee: offer,
     transferWindowOpen,
+    isSale,
   });
   const canSubmit =
     uiPhase === "active" && canSubmitNegotiationOffer(gates) && !openError;

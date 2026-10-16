@@ -2090,6 +2090,7 @@ export default function App() {
       {board.job_status === "dismissed" ? (
         <JobOffersModal offers={jobOffers} onAccept={handleAcceptJobOffer} />
       ) : null}
+      {negotiationOverlay}
       {spendConfirmOverlay}
       {campDebutOverlay}
       {noticeOverlay}

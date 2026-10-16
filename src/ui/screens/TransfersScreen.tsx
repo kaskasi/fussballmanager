@@ -14,6 +14,7 @@ import {
   transferKindIcon,
   transferKindLabel,
 } from "../../transfers/transfer-history.ts";
+import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import type { WorldClub } from "../../world/world-generator.ts";
 import { Hint } from "../components/Hint.tsx";
 import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
@@ -93,6 +94,8 @@ export function TransfersScreen({
   transferState,
   onToggleListing,
   onOpenNegotiation,
+  scoutBoard,
+  onScoutPlayer,
 }: {
   players: readonly Player[];
   clubId: string;
@@ -106,6 +109,8 @@ export function TransfersScreen({
   transferState?: TransferState;
   onToggleListing?: (playerId: string) => void;
   onOpenNegotiation?: (playerId: string) => void;
+  scoutBoard?: ScoutBoard;
+  onScoutPlayer?: (playerId: string) => void;
 }) {
   useT();
   const seasons = useMemo(() => availableClubTransferSeasons(history, season), [history, season]);
@@ -142,13 +147,16 @@ export function TransfersScreen({
   return (
     <main className="transfers club-shell-card-body" data-coach-target={COACH_TARGET.transfersMarket}>
       <div className="fm-tab-panel">
-        {transferState && onOpenNegotiation ? (
+        {transferState && onOpenNegotiation && scoutBoard && onScoutPlayer ? (
           <TransferMarketPanel
             players={players}
             rivalPlayers={rivalPlayers}
             clubId={clubId}
             transferState={transferState}
+            worldClubs={worldClubs}
+            scoutBoard={scoutBoard}
             onOpenNegotiation={onOpenNegotiation}
+            onScoutPlayer={onScoutPlayer}
           />
         ) : null}
         <header className="transfers-meta" aria-label={t("transfers.windowAria")}>

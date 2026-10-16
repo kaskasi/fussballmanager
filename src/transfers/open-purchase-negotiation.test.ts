@@ -34,4 +34,20 @@ describe("openPurchaseNegotiation", () => {
       expect(result.negotiation.player_id).toBe(player.id);
     }
   });
+
+  it("opens for a listed rival without scout pool entry", () => {
+    const player = clonePlayer();
+    player.id = "pl_listed_only";
+    player.club_id = "cl_away";
+    const transferState = listPlayerForSale(emptyTransferState(), player, 1, 2);
+    const result = openPurchaseNegotiation({
+      scoutBoard: createScoutBoard(),
+      rivalPlayers: [player],
+      transferState,
+      playerId: player.id,
+      season: 1,
+      week: 2,
+    });
+    expect(result.kind).toBe("ok");
+  });
 });

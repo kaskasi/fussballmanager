@@ -9439,6 +9439,52 @@ button.treter-article {
   background: rgb(236 253 245 / 55%);
 }
 
+.transfers-market-row {
+  gap: 0.5rem;
+  cursor: default;
+}
+
+.transfers-market-row-main {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.transfers-market-scout-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+  padding: 0;
+  border: var(--outline-weich, 2px solid rgba(62, 49, 40, 0.25));
+  border-radius: var(--radius-klein, 8px);
+  background: var(--panel-muted, #efebdd);
+  color: var(--tinte, #3e3128);
+  cursor: pointer;
+}
+
+.transfers-market-scout-icon:hover:not(:disabled) {
+  background: var(--rasen-hell, #bfdec2);
+}
+
+.transfers-market-scout-icon.is-on,
+.transfers-market-scout-icon:disabled {
+  background: var(--rasen, #2e9e46);
+  color: var(--tinte, #3e3128);
+  cursor: default;
+  opacity: 1;
+}
+
 .transfers-history-icon {
   font-size: 1.25rem;
 }

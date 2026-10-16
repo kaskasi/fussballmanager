@@ -499,6 +499,8 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
             })
           }
           onOpenNegotiation={openMarketNegotiation}
+          scoutBoard={scoutBoard}
+          onScoutPlayer={handleAssignScout}
           onSelectPlayer={setProfileId}
           onRecallLoan={handleRecallLoan}
         />

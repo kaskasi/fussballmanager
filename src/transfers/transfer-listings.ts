@@ -105,7 +105,21 @@ export function searchListings(
   return rows.sort((a, b) => a.listing.asking_price - b.listing.asking_price);
 }
 
-/** A handful of AI professionals appear on the board each open window. */
+const MAX_RIVAL_LISTINGS_ON_BOARD = 32;
+
+function listingStillValid(
+  listing: TransferListing,
+  players: readonly Player[],
+  userClubId: string,
+): boolean {
+  if (listing.club_id === userClubId) return false;
+  const player = players.find((entry) => entry.id === listing.player_id);
+  return Boolean(
+    player && player.squad_status === "pro" && player.club_id === listing.club_id,
+  );
+}
+
+/** Add new AI listings; keep opening + existing rival rows until sold or invalid. */
 export function refreshAiListings(input: {
   state: TransferState;
   players: readonly Player[];
@@ -118,28 +132,51 @@ export function refreshAiListings(input: {
   if (!isTransferWindowOpen(input.week)) return input.state;
   const own = (input.state.listings ?? []).filter((row) => row.club_id === input.userClubId);
   const opening = openingMarketListings(input.state, input.players, input.userClubId);
-  const reserved = new Set(opening.map((row) => row.player_id));
+  const openingIds = new Set(opening.map((row) => row.player_id));
+  const persistedRival = (input.state.listings ?? []).filter(
+    (row) =>
+      row.club_id !== input.userClubId &&
+      !openingIds.has(row.player_id) &&
+      listingStillValid(row, input.players, input.userClubId),
+  );
+  const reservedIds = new Set([
+    ...own.map((row) => row.player_id),
+    ...opening.map((row) => row.player_id),
+    ...persistedRival.map((row) => row.player_id),
+  ]);
+  const clubsWithListing = new Set([
+    ...opening.map((row) => row.club_id),
+    ...persistedRival.map((row) => row.club_id),
+  ]);
+
   const rng = weekRng(input.masterSeed, input.season, input.week);
   const ai: TransferListing[] = [];
-  for (const clubId of input.leagueClubIds) {
-    if (clubId === input.userClubId) continue;
-    const squad = input.players.filter(
-      (player) => player.club_id === clubId && player.squad_status === "pro",
-    );
-    if (squad.length === 0) continue;
-    const ranked = [...squad].sort((a, b) => b.age - a.age || a.market_value - b.market_value);
-    const pick = ranked[Math.floor(rng() * Math.min(4, ranked.length))]!;
-    if (reserved.has(pick.id)) continue;
-    if (rng() > 0.72) continue;
-    ai.push({
-      player_id: pick.id,
-      club_id: clubId,
-      asking_price: sellerAskingPrice(pick, input.season),
-      listed_season: input.season,
-      listed_week: input.week,
-    });
+  const rivalCount = opening.length + persistedRival.length;
+  if (rivalCount < MAX_RIVAL_LISTINGS_ON_BOARD) {
+    for (const clubId of input.leagueClubIds) {
+      if (clubId === input.userClubId) continue;
+      if (clubsWithListing.has(clubId)) continue;
+      if (rivalCount + ai.length >= MAX_RIVAL_LISTINGS_ON_BOARD) break;
+      const squad = input.players.filter(
+        (player) => player.club_id === clubId && player.squad_status === "pro",
+      );
+      if (squad.length === 0) continue;
+      const ranked = [...squad].sort((a, b) => b.age - a.age || a.market_value - b.market_value);
+      const pick = ranked[Math.floor(rng() * Math.min(4, ranked.length))]!;
+      if (reservedIds.has(pick.id)) continue;
+      if (rng() > 0.72) continue;
+      ai.push({
+        player_id: pick.id,
+        club_id: clubId,
+        asking_price: sellerAskingPrice(pick, input.season),
+        listed_season: input.season,
+        listed_week: input.week,
+      });
+      reservedIds.add(pick.id);
+      clubsWithListing.add(clubId);
+    }
   }
-  return { ...input.state, listings: [...own, ...opening, ...ai] };
+  return { ...input.state, listings: [...own, ...opening, ...persistedRival, ...ai] };
 }
 
 export function openSaleNegotiation(input: {

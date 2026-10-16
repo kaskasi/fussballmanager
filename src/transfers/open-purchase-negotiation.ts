@@ -26,6 +26,7 @@ export function openPurchaseNegotiation(input: {
     input.scoutBoard,
     input.playerId,
     input.rivalPlayers,
+    input.transferState,
   );
   const reason = cannotOpenPurchaseReason(input.week, Boolean(target));
   if (reason) {

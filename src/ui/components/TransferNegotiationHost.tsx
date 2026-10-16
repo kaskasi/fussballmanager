@@ -95,7 +95,7 @@ export function useTransferNegotiation(args: {
   const [contractOffer, setContractOffer] = useState<ContractOffer | null>(null);
 
   const foreignTarget = foreignPlayerId
-    ? resolvePurchaseTarget(scoutBoard, foreignPlayerId, rivalPlayers)
+    ? resolvePurchaseTarget(scoutBoard, foreignPlayerId, rivalPlayers, transferState)
     : null;
 
   const stageFeeAgreement = useCallback(
@@ -117,6 +117,7 @@ export function useTransferNegotiation(args: {
         purchase.session.scoutBoard,
         playerId,
         purchase.session.rivalPlayers,
+        purchase.session.transferState,
       );
       if (target) {
         setContractOffer(defaultContractOffer(target.player, season));
@@ -236,6 +237,7 @@ export function useTransferNegotiation(args: {
         session.scoutBoard,
         negotiationPlayerId,
         session.rivalPlayers,
+        session.transferState,
       );
       if (!target) {
         setNegotiationMessage(t("transfer.purchase.targetUnavailable"));
@@ -300,6 +302,7 @@ export function useTransferNegotiation(args: {
       session.scoutBoard,
       negotiationPlayerId,
       session.rivalPlayers,
+      session.transferState,
     );
     if (target && !scoutIntelExactForTransfer(target.player, target.estimate, session.season)) {
       setNegotiationMessage(t("transfer.negotiation.submitDisabledScout"));
@@ -440,7 +443,12 @@ export function useTransferNegotiation(args: {
     if (ownedPlayer) {
       return { player: ownedPlayer, estimate: undefined, owned: true as const };
     }
-    const pendingTarget = resolvePurchaseTarget(scoutBoard, negotiationPlayerId, rivalPlayers);
+    const pendingTarget = resolvePurchaseTarget(
+      scoutBoard,
+      negotiationPlayerId,
+      rivalPlayers,
+      transferState,
+    );
     if (pendingTarget?.player.id === negotiationPlayerId) {
       return {
         player: pendingTarget.player,

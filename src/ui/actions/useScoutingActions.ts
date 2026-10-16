@@ -4,7 +4,9 @@ import type { GameSession } from "../../persistence/game-session.ts";
 import { createScoutAssignment } from "../../scouting/scout-assignments.ts";
 import {
   addScoutAssignment,
+  activeScoutCount,
   assignScout,
+  getBoardTarget,
   toggleScoutAssignment,
   listBoardTargets,
 } from "../../scouting/scout-board.ts";
@@ -13,10 +15,19 @@ import {
   type ScoutWorkCancelTarget,
 } from "../../scouting/scout-work-cancel.ts";
 import {
+  addPlayersToPool,
   canStartRegionScout,
+  ensureTargetsForPool,
+  isInScoutPool,
   normalizeDiscovery,
   startRegionScoutJob,
 } from "../../scouting/scout-discovery.ts";
+import {
+  scoutNetworkAccuracyModifier,
+  scoutNetworkCapacity,
+} from "../../scouting/scout-network.ts";
+import { isPlayerListed } from "../../transfers/transfer-listings.ts";
+import { applyTransferListScoutOnAssign, mergeListedEstimate } from "../../transfers/transfer-list-scout.ts";
 import { buildZoneMapNodes, layoutForZone } from "../../scouting/scout-map-layout.ts";
 import { buildScoutDiscoveryMapModel } from "../../scouting/scout-region-map.ts";
 import {
@@ -157,13 +168,65 @@ export function useScoutingActions(args: {
 
   const handleAssignScout = useCallback(
     (playerId: string) => {
-      patchSession((current) => ({
-        ...current,
-        scoutBoard: assignScout(current.scoutBoard, playerId, current.scoutNetwork),
-      }));
-      trackEvent("scout_assigned");
+      let queued = false;
+      let atCapacity = false;
+      patchSession((current) => {
+        const player = current.rivalPlayers.find((entry) => entry.id === playerId);
+        if (!player) return current;
+
+        let scoutBoard = current.scoutBoard;
+        const discovery = normalizeDiscovery(scoutBoard.discovery);
+        const nextDiscovery = isInScoutPool(discovery, playerId)
+          ? discovery
+          : addPlayersToPool(discovery, [playerId]);
+        let targets = ensureTargetsForPool(scoutBoard.targets, nextDiscovery, current.rivalPlayers);
+        if (isPlayerListed(current.transferState, playerId)) {
+          const row = targets[playerId];
+          if (row) {
+            targets = {
+              ...targets,
+              [playerId]: { ...row, estimate: mergeListedEstimate(row.estimate, player) },
+            };
+          }
+        }
+        scoutBoard = { ...scoutBoard, discovery: nextDiscovery, targets };
+
+        const existing = getBoardTarget(scoutBoard, playerId, current.rivalPlayers);
+        if (existing?.assigned) return { ...current, scoutBoard };
+
+        const capacity = scoutNetworkCapacity(current.scoutNetwork);
+        if (activeScoutCount(scoutBoard) >= capacity) {
+          atCapacity = true;
+          return { ...current, scoutBoard };
+        }
+
+        const wasAssigned = Boolean(existing?.assigned);
+        let nextBoard = assignScout(scoutBoard, playerId, current.scoutNetwork, capacity);
+        const nowAssigned = Boolean(
+          getBoardTarget(nextBoard, playerId, current.rivalPlayers)?.assigned,
+        );
+        queued = !wasAssigned && nowAssigned;
+        if (queued) {
+          nextBoard = applyTransferListScoutOnAssign(
+            nextBoard,
+            playerId,
+            player,
+            current.transferState,
+            scoutNetworkAccuracyModifier(current.scoutNetwork),
+          );
+        }
+        return { ...current, scoutBoard: nextBoard };
+      });
+      if (atCapacity) {
+        flashNotice(t("scouting.hits.scoutCapacity"), "warn");
+        return;
+      }
+      if (queued) {
+        trackEvent("scout_assigned");
+        flashNotice(t("scouting.hits.scoutQueued"), "ok");
+      }
     },
-    [patchSession],
+    [flashNotice, patchSession],
   );
 
   const handleEnqueueScoutTrip = useCallback(

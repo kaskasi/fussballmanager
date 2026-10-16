@@ -43,7 +43,12 @@ export function stagePendingPurchase(
   fee: number,
   negotiationId: string,
 ): StagePendingPurchaseResult {
-  const target = resolvePurchaseTarget(current.scoutBoard, playerId, current.rivalPlayers);
+  const target = resolvePurchaseTarget(
+    current.scoutBoard,
+    playerId,
+    current.rivalPlayers,
+    current.transferState,
+  );
   const submitReason = cannotSubmitPurchaseOfferReason(current.week, Boolean(target));
   if (submitReason) {
     return { kind: "blocked", reason: submitReason };
@@ -98,7 +103,12 @@ export function commitPendingPurchase(
   if (!pending) {
     return { kind: "blocked", reason: t("transfer.purchase.noPending") };
   }
-  const target = resolvePurchaseTarget(current.scoutBoard, playerId, current.rivalPlayers);
+  const target = resolvePurchaseTarget(
+    current.scoutBoard,
+    playerId,
+    current.rivalPlayers,
+    current.transferState,
+  );
   if (!target) {
     return { kind: "blocked", reason: t("transfer.purchase.targetUnavailable") };
   }

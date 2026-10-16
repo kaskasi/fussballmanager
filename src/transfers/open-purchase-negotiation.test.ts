@@ -3,6 +3,7 @@ import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { createScoutBoard } from "../scouting/scout-board.ts";
 import { addPlayersToPool, normalizeDiscovery } from "../scouting/scout-discovery.ts";
 import { emptyTransferState } from "./negotiations.ts";
+import { listPlayerForSale } from "./transfer-listings.ts";
 import { openPurchaseNegotiation } from "./open-purchase-negotiation.ts";
 
 describe("openPurchaseNegotiation", () => {
@@ -23,7 +24,7 @@ describe("openPurchaseNegotiation", () => {
     const result = openPurchaseNegotiation({
       scoutBoard: board,
       rivalPlayers: [player],
-      transferState: emptyTransferState(),
+      transferState: listPlayerForSale(emptyTransferState(), player, 1, 2),
       playerId: player.id,
       season: 1,
       week: 2,

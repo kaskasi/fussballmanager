@@ -45,13 +45,23 @@ describe("profile actions", () => {
     expect(ready.state.morale).toBeGreaterThan(50);
   });
 
-  it("promotes u19 directly to pro from the profile menu", () => {
+  it("opens a contract talk instead of promoting u19 straight to the pro squad", () => {
     const player = clonePlayer();
     player.squad_status = "u19";
     player.state.morale = 60;
-    const { player: next } = applyProfileAction(player, "promote_pro", 1, 12, [player]);
-    expect(next.squad_status).toBe("pro");
-    expect(next.state.pro_trial).toBeUndefined();
+    const result = applyProfileAction(player, "promote_pro", 1, 12, [player]);
+    expect(result.openContractTalk).toBe(true);
+    expect(result.player.squad_status).toBe("u19");
+  });
+
+  it("gives a two-year contract when a player moves to U19", () => {
+    const player = clonePlayer();
+    player.squad_status = "u17";
+    player.contract = null;
+    const { player: next } = applyProfileAction(player, "promote_u19", 3, 4, [player]);
+    expect(next.squad_status).toBe("u19");
+    expect(next.contract?.until_season).toBe(5);
+    expect(next.contract?.wage_weekly).toBeGreaterThan(0);
   });
 
   it("does not offer pro promotion from u17 profile menu", () => {

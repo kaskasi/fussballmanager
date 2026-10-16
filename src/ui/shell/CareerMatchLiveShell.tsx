@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { boardCashFloor } from "../../economy/spend-runway.ts";
 import { weeklyWageBill } from "../../economy/club-finances.ts";
 import { matchdayCashBreakdown } from "../../stadium/matchday-commerce.ts";
-import { stadiumTotalCapacity } from "../../stadium/club-stadium.ts";
+import { matchdayCapacity } from "../../stadium/club-stadium.ts";
 import { CareerMatch } from "../../match/CareerMatch.tsx";
 import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
 import type { BroadcastStoryContext } from "@fussballmanager/shared";
@@ -117,7 +117,7 @@ export function CareerMatchLiveShell({
         onRegisterSkipToReport={onRegisterSkipToReport}
         broadcastStory={broadcastStory}
         kasse={matchdayCashBreakdown(stadium, setup.isHome)}
-        homeStadiumCapacity={stadiumTotalCapacity(stadium)}
+        homeStadiumCapacity={matchdayCapacity(stadium, season, week)}
         fanbaseMood={fanbaseMood}
         poorForm={poorForm}
         season={season}

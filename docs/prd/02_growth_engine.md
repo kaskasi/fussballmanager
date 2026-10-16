@@ -167,7 +167,8 @@ function calculateMatchPractice(minutes: number, injured: boolean, playingTimeFa
   return (1.0 + (minutes / 90) * 0.15) * playingTimeFactor;
 }
 
-// Profis: `playingTimeFactor` skaliert 0.55→1.0 wenn season_apps / matchdays < 0.5 (ab 4 Spieltagen).
+// Profis: `playingTimeFactor` skaliert 0.55→1.0 wenn season_apps / matchdays < 0.35 (ab 4 Spieltagen).
+// Der Trainingsanteil wird zusätzlich mit `TRAINING_POWER` 1.25 multipliziert. Decay bleibt unverändert.
 // U17/U19 nutzen den Faktor nicht — wenig Einsatz → eher zurück in die Jugend.
 ```
 

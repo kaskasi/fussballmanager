@@ -12,6 +12,8 @@ const SOFT_CAP = 180;
 const GROWTH_MIN = -3;
 const GROWTH_MAX = 5;
 export const LEARNING_BASE_POINTS_PER_WEEK = 0.07;
+/** Team and individual training term. Decay is unchanged. */
+export const TRAINING_POWER = 1.25;
 
 const TECHNICAL = new Set<keyof Attributes>([
   "shooting",
@@ -105,8 +107,9 @@ export function proPlayingTimeLearningFactor(
   if (squadStatus !== "pro") return 1;
   if (leagueMatchdaysPlayed < 4) return 1;
   const rate = seasonApps / leagueMatchdaysPlayed;
-  if (rate >= 0.5) return 1;
-  return 0.55 + (rate / 0.5) * 0.45;
+  const fullRate = 0.35;
+  if (rate >= fullRate) return 1;
+  return 0.55 + (rate / fullRate) * 0.45;
 }
 
 export function calculateMatchPractice(
@@ -170,6 +173,7 @@ export function calculateWeeklyTrainingGain(input: WeeklyGrowthInput): number {
     environment(input.environmentFactor ?? 1) *
     (input.growthMultiplier ?? 1) *
     noise *
+    TRAINING_POWER *
     trainingFocus(input.focusSlots, input.injured) *
     calculateMatchPractice(input.minutes, input.injured, playingTime)
   );

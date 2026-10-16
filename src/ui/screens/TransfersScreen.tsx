@@ -24,6 +24,8 @@ import { useT } from "../../i18n/react.ts";
 import { ChevronLeft, ChevronRight, FileSignature } from "lucide-react";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
+import { TransferMarketPanel } from "../components/TransferMarketPanel.tsx";
+import type { TransferState } from "../../transfers/negotiations.ts";
 
 /**
  * WIREFRAME: PRD 14.8 — Transfers
@@ -87,6 +89,10 @@ export function TransfersScreen({
   onSelectPlayer,
   onRecallLoan,
   worldClubs,
+  rivalPlayers = [],
+  transferState,
+  onToggleListing,
+  onOpenNegotiation,
 }: {
   players: readonly Player[];
   clubId: string;
@@ -96,6 +102,10 @@ export function TransfersScreen({
   worldClubs?: readonly WorldClub[];
   onSelectPlayer: (playerId: string) => void;
   onRecallLoan: (playerId: string) => void;
+  rivalPlayers?: readonly Player[];
+  transferState?: TransferState;
+  onToggleListing?: (playerId: string) => void;
+  onOpenNegotiation?: (playerId: string) => void;
 }) {
   useT();
   const seasons = useMemo(() => availableClubTransferSeasons(history, season), [history, season]);
@@ -132,6 +142,16 @@ export function TransfersScreen({
   return (
     <main className="transfers club-shell-card-body" data-coach-target={COACH_TARGET.transfersMarket}>
       <div className="fm-tab-panel">
+        {transferState && onToggleListing && onOpenNegotiation ? (
+          <TransferMarketPanel
+            players={players}
+            rivalPlayers={rivalPlayers}
+            clubId={clubId}
+            transferState={transferState}
+            onToggleListing={onToggleListing}
+            onOpenNegotiation={onOpenNegotiation}
+          />
+        ) : null}
         <header className="transfers-meta" aria-label={t("transfers.windowAria")}>
           <p className={windowOpen ? "transfers-window-chip" : "transfers-window-chip is-closed"}>
             {transferWindowLabel(week)}

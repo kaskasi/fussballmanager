@@ -6,7 +6,7 @@ import {
   seededGrowthRandom,
 } from "./pipeline-week.ts";
 import { trainingIntensityMultiplier } from "./training-load.ts";
-import type { Player, PositionPrimary } from "../types/player.ts";
+import type { Attributes, Player, PositionPrimary } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import {
   RETRAIN_MAX_FAILURES,
@@ -26,7 +26,7 @@ import {
 import { t } from "../i18n/index.ts";
 
 /** F2.3 + F2.8 — extra programs on top of the team plan (PRD 09.2 Screen 1a). */
-export type IndividualProgramKind = "weak_foot" | "position_retrain" | "stamp";
+export type IndividualProgramKind = "weak_foot" | "position_retrain" | "stamp" | "attribute";
 
 export interface IndividualProgram {
   playerId: string;
@@ -37,6 +37,8 @@ export interface IndividualProgram {
   targetPosition?: PositionPrimary;
   /** F2.8 catalog id when kind === "stamp". */
   stampId?: string;
+  /** Single-attribute extra when kind === "attribute". */
+  attribute?: keyof Attributes;
   startedWeek: number;
   season: number;
 }
@@ -64,6 +66,9 @@ export function programLabel(program: IndividualProgram): string {
   if (program.kind === "weak_foot") {
     return t("training.program.weakFootWeeks", { weeks: program.weeksRemaining });
   }
+  if (program.kind === "attribute") {
+    return `${program.attribute ?? "Attribut"} · ${program.weeksRemaining} Wo.`;
+  }
   if (program.kind === "stamp") {
     return t("training.program.stampWeeks", {
       stamp: stampLabel(program.stampId ?? "?"),
@@ -79,6 +84,7 @@ export function programLabel(program: IndividualProgram): string {
 export function programKindLabel(kind: IndividualProgramKind): string {
   if (kind === "weak_foot") return t("training.program.kind.weakFoot");
   if (kind === "stamp") return t("training.program.kind.stamp");
+  if (kind === "attribute") return "Attribut";
   return t("training.program.kind.retrain");
 }
 
@@ -109,6 +115,7 @@ export function canAssignIndividualProgram(
   programs: readonly IndividualProgram[],
   targetPosition?: PositionPrimary,
   stampId?: string,
+  attribute?: keyof Attributes,
 ): { ok: true } | { ok: false; reason: string } {
   if (player.squad_status === "loaned_out") {
     return { ok: false, reason: "Ausgeliehene Spieler trainieren nicht beim Verein." };
@@ -123,6 +130,10 @@ export function canAssignIndividualProgram(
     if (player.attributes.weak_foot >= 85) {
       return { ok: false, reason: "Schwaches Bein ist schon stark genug (≥ 85)." };
     }
+    return { ok: true };
+  }
+  if (kind === "attribute") {
+    if (!attribute) return { ok: false, reason: "Attribut wählen." };
     return { ok: true };
   }
   if (kind === "stamp") {
@@ -162,8 +173,9 @@ export function assignIndividualProgram(
   week: number,
   targetPosition?: PositionPrimary,
   stampId?: string,
+  attribute?: keyof Attributes,
 ): IndividualProgram[] {
-  const check = canAssignIndividualProgram(player, kind, programs, targetPosition, stampId);
+  const check = canAssignIndividualProgram(player, kind, programs, targetPosition, stampId, attribute);
   if (!check.ok) throw new Error(check.reason);
 
   let duration = Math.min(MAX_PROGRAM_WEEKS, Math.max(MIN_PROGRAM_WEEKS, Math.round(weeks)));
@@ -179,6 +191,7 @@ export function assignIndividualProgram(
     plannedWeeks: duration,
     targetPosition: kind === "position_retrain" ? targetPosition : undefined,
     stampId: kind === "stamp" ? stampId : undefined,
+    attribute: kind === "attribute" ? attribute : undefined,
     startedWeek: week,
     season,
   };
@@ -247,6 +260,47 @@ function weakFootWeeklyGrowth(
     random: resolvedRandom,
   });
   return raw * scale;
+}
+
+function applyAttributeProgram(
+  player: Player,
+  attribute: keyof Attributes,
+  context?: TrainingWeekContext,
+): Player {
+  const resolvedRandom =
+    context?.masterSeed !== undefined
+      ? seededGrowthRandom(
+          context.masterSeed,
+          context.season,
+          context.week,
+          player.id,
+          attribute,
+          "individual",
+        )
+      : undefined;
+  const delta = calculateWeeklyGrowth({
+    age: player.age,
+    maturityOffset: player.hidden.maturity_offset,
+    attribute,
+    value: player.attributes[attribute],
+    anlage: player.hidden.anlage[attribute],
+    drive: player.hidden.drive,
+    minutes: developmentMinutes(player.squad_status, player.state.weekly_minutes),
+    injured: player.state.injury !== null,
+    focusSlots: 1,
+    environmentFactor: context?.environmentFactor ?? 1,
+    squadStatus: player.squad_status,
+    seasonApps: player.state.season_apps,
+    leagueMatchdaysPlayed: context?.leagueMatchdaysPlayed ?? 0,
+    growthMultiplier: 1.15,
+    noise: resolvedRandom ? undefined : 1,
+    random: resolvedRandom,
+  });
+  const nextValue = Math.min(199, Math.max(0, player.attributes[attribute] + delta));
+  return {
+    ...player,
+    attributes: { ...player.attributes, [attribute]: nextValue },
+  };
 }
 
 function applyWeakFootProgram(player: Player, context?: TrainingWeekContext, random?: () => number): Player {
@@ -390,6 +444,9 @@ export function advanceIndividualTrainingWeek(
     const program = byId.get(player.id);
     if (!program || program.weeksRemaining <= 0) return player;
 
+    if (program.kind === "attribute" && program.attribute) {
+      return applyAttributeProgram(player, program.attribute, context);
+    }
     if (program.kind === "weak_foot") {
       return applyWeakFootProgram(player, context, random);
     }

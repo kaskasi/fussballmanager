@@ -8,6 +8,7 @@ export function SaveManagerModal({
   currentSave,
   onClose,
   onLoadSlot,
+  onApplyImportedSave,
   onNewGameInSlot,
   onApplyCloudSave,
 }: {
@@ -15,6 +16,7 @@ export function SaveManagerModal({
   currentSave: SaveGame;
   onClose: () => void;
   onLoadSlot: (slot: number) => void;
+  onApplyImportedSave: (save: SaveGame, slot: number) => void;
   onNewGameInSlot: (slot: number) => void;
   onApplyCloudSave: (save: SaveGame, slot: number) => void;
 }) {
@@ -40,6 +42,10 @@ export function SaveManagerModal({
           currentSave={currentSave}
           onLoadSlot={(slot) => {
             onLoadSlot(slot);
+            onClose();
+          }}
+          onApplyImportedSave={(save, slot) => {
+            onApplyImportedSave(save, slot);
             onClose();
           }}
           onNewGameInSlot={(slot) => {

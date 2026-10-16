@@ -1,4 +1,4 @@
-import { saveFromSession, sessionFromSave, type GameSession } from "./game-session.ts";
+import { newGameSession, saveFromSession, sessionFromSave, type GameSession } from "./game-session.ts";
 import { normalizeYouthInbox, pruneYouthInbox } from "../youth/decision-inbox.ts";
 import {
   parseSaveFromRecord,
@@ -134,6 +134,18 @@ export function loadLocalSave(slot: number): SaveGame | null {
   slotCache.set(slot, save);
   void migrateLegacyToBackend(slot, save);
   return save;
+}
+
+/**
+ * Load the slot, or create exactly one career when both IndexedDB and legacy
+ * storage are empty. A parallel "fresh start" must not replace an existing record.
+ */
+export async function resolveSlotSave(slot: number): Promise<{ save: SaveGame; created: boolean }> {
+  const existing = await hydrateLocalSaveFromBackend(slot);
+  if (existing) return { save: existing, created: false };
+  const fresh = saveFromSession(newGameSession());
+  await writeLocalSaveAsync(slot, fresh);
+  return { save: fresh, created: true };
 }
 
 /** Prefer IndexedDB over legacy when hydrating the active slot. */

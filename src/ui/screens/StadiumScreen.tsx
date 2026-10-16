@@ -4,6 +4,7 @@ import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 import { Construction, Dumbbell, Hammer, Home, Shirt, Star, TriangleAlert } from "lucide-react";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
+import type { AcademyProject } from "../../sim/advance-construction.ts";
 import {
   ACADEMY_FACILITIES,
   academyStage,
@@ -21,7 +22,7 @@ import {
   stadiumBlockAttendees,
   stadiumBlockIncome,
   stadiumMatchdayIncome,
-  stadiumTotalCapacity,
+  matchdayCapacity,
   tierIcon,
   tierLabel,
   TICKET_PRICE_MAX,
@@ -33,12 +34,6 @@ import {
   type StadiumTier,
 } from "../../stadium/club-stadium.ts";
 import { formatClubCash, type ClubFinances } from "../../economy/club-finances.ts";
-import {
-  canPurchaseStadiumUpgrade,
-  stadiumUpgradeCatalog,
-  stadiumUpgradeCost,
-  stadiumUpgradeLevel,
-} from "../../stadium/stadium-upgrades.ts";
 import {
   BLOCK_EXPANSION_MAX_LEVEL,
   blockCapacityAtExpansionLevel,
@@ -93,7 +88,6 @@ export function StadiumScreen({
   opponentFanbase,
   onStadiumChange,
   onStartBlockExpansion,
-  onPurchaseUpgrade,
   onPlacePrecinct,
   onUpgradePrecinct,
   onBuyParcel,
@@ -104,6 +98,7 @@ export function StadiumScreen({
   onRemoveStreet,
   precinctSeasonWeek,
   academyFacility,
+  academyProject = null,
   onUpgradeAcademy,
 }: {
   stadium: ClubStadium;
@@ -113,10 +108,10 @@ export function StadiumScreen({
   isHomeMatchWeek: boolean;
   opponentFanbase: number;
   academyFacility?: AcademyFacility;
+  academyProject?: AcademyProject | null;
   onUpgradeAcademy?: () => void;
   onStadiumChange: (stadium: ClubStadium) => void;
   onStartBlockExpansion: (blockId: string) => void;
-  onPurchaseUpgrade: (upgradeId: string) => void;
   onPlacePrecinct: (
     building: PrecinctBuilding,
     x: number,
@@ -137,7 +132,7 @@ export function StadiumScreen({
   useTutorialTabFocus("stadium", "stadium.precinct_not_3d", "precinct", setTab);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openSlotId, setOpenSlotId] = useState<string | null>(null);
-  const capacity = stadiumTotalCapacity(stadium);
+  const capacity = matchdayCapacity(stadium, season, week);
   const moodPhoto = STADIUM_MOOD_PHOTOS[stadiumPhotoTierFromCapacity(capacity)];
   const matchdayIncome = stadiumMatchdayIncome(stadium);
   const avgTicket = stadiumAverageTicket(stadium);
@@ -281,11 +276,10 @@ export function StadiumScreen({
             </section>
           </Hint>
           <StadiumUpgradesPanel
-            stadium={stadium}
             finances={finances}
             capacity={capacity}
             academyFacility={academyFacility}
-            onPurchaseUpgrade={onPurchaseUpgrade}
+            academyProject={academyProject}
             onUpgradeAcademy={onUpgradeAcademy}
           />
         </div>
@@ -519,7 +513,7 @@ function StadiumBlockCard({
 
   return (
     <article
-      className={`stadium-block is-${block.tier}${selected ? " is-selected" : ""}`}
+      className={`stadium-block is-${block.tier}${selected ? " is-selected" : ""}${underConstruction ? " is-constructing" : ""}`}
       data-area={area}
       onClick={onSelect}
     >
@@ -530,9 +524,18 @@ function StadiumBlockCard({
         </h2>
         <p className="stadium-block-meta">
           {tierLabel(block.tier)} · Stufe {expansionLevel}/{BLOCK_EXPANSION_MAX_LEVEL} ·{" "}
-          {block.capacity.toLocaleString("de-DE")} Plätze
+          {(underConstruction
+            ? 0
+            : blockCapacityAtExpansionLevel(block.id, expansionLevel)
+          ).toLocaleString("de-DE")}{" "}
+          Plätze
         </p>
-        <FillMeter fillPct={fillPct} refPct={refPct} deltaPts={fillDeltaPts} sold={sold} />
+        <FillMeter
+          fillPct={underConstruction ? 0 : fillPct}
+          refPct={refPct}
+          deltaPts={fillDeltaPts}
+          sold={underConstruction ? 0 : sold}
+        />
         <div className="stadium-block-controls">
           <div className="stadium-price" onClick={(event) => event.stopPropagation()}>
             <button
@@ -644,18 +647,16 @@ function FillMeter({
 }
 
 function StadiumUpgradesPanel({
-  stadium,
   finances,
   capacity,
   academyFacility,
-  onPurchaseUpgrade,
+  academyProject = null,
   onUpgradeAcademy,
 }: {
-  stadium: ClubStadium;
   finances: ClubFinances;
   capacity: number;
   academyFacility?: AcademyFacility;
-  onPurchaseUpgrade: (upgradeId: string) => void;
+  academyProject?: AcademyProject | null;
   onUpgradeAcademy?: () => void;
 }) {
   return (
@@ -663,55 +664,25 @@ function StadiumUpgradesPanel({
       {academyFacility && onUpgradeAcademy ? (
         <AcademyUpgradeSection
           ownedId={academyFacility}
+          academyProject={academyProject}
           stadiumCapacity={capacity}
           cash={finances.cash}
           onUpgrade={onUpgradeAcademy}
         />
       ) : null}
-      <h3 className="stadium-upgrade-category">Stadion</h3>
-      <ul className="stadium-upgrade-list">
-        {stadiumUpgradeCatalog().map((upgrade) => {
-          const level = stadiumUpgradeLevel(stadium, upgrade.id);
-          const maxed = level >= upgrade.max_level;
-          const nextCost = maxed ? null : stadiumUpgradeCost(upgrade, level + 1);
-          const check = canPurchaseStadiumUpgrade(stadium, finances, upgrade.id);
-          return (
-            <li key={upgrade.id} className="stadium-upgrade-card">
-              <span className="stadium-upgrade-icon" aria-hidden="true">
-                <Construction size={20} strokeWidth={2.5} />
-              </span>
-              <div className="stadium-upgrade-body">
-                <strong>{upgrade.name}</strong>
-                <p>{upgrade.description}</p>
-                <p className="stadium-upgrade-meta">
-                  Stufe {level}/{upgrade.max_level}
-                  {nextCost != null ? ` · ${formatClubCash(nextCost)}` : " · Max"}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="stadium-upgrade-buy"
-                disabled={!check.allowed}
-                title={check.reason}
-                onClick={() => onPurchaseUpgrade(upgrade.id)}
-              >
-                {maxed ? "✓" : "Kaufen"}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
     </section>
   );
 }
 
 function AcademyUpgradeSection({
   ownedId,
+  academyProject = null,
   stadiumCapacity,
   cash,
   onUpgrade,
 }: {
   ownedId: AcademyFacility;
+  academyProject?: AcademyProject | null;
   stadiumCapacity: number;
   cash: number;
   onUpgrade: () => void;
@@ -730,6 +701,12 @@ function AcademyUpgradeSection({
       <p className="stadium-academy-strip">
         Campus Stufe {academyStage(ownedId)}/3 · Intake {hqIntakeCount(ownedId)} · {owned.name}
       </p>
+      {academyProject ? (
+        <p className="youth-camp-build-banner">
+          <Construction size={16} strokeWidth={2.5} aria-hidden="true" />
+          Campus im Bau — Intake bleibt bis zur Fertigstellung.
+        </p>
+      ) : null}
       <ul className="stadium-upgrade-list">
         {ACADEMY_FACILITIES.map((facility) => {
           const gate = facilityGate(ownedId, facility.id, stadiumCapacity);
@@ -756,7 +733,7 @@ function AcademyUpgradeSection({
                           : "Basis"}
                 </p>
               </div>
-              {isNext ? (
+              {isNext && !academyProject ? (
                 <button type="button" className="stadium-upgrade-buy" onClick={onUpgrade}>
                   Ausbauen
                 </button>

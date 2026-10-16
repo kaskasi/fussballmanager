@@ -328,6 +328,7 @@ import {
   applyProfileActionToSquad,
   type PlayerProfileAction,
 } from "./player/profile-actions.ts";
+import { ACHIEVEMENT, grantAchievement } from "./player/achievements.ts";
 import { withClubEvent, type ClubEventKind } from "./inbox/club-events.ts";
 import {
   actionLabel,
@@ -486,6 +487,8 @@ export default function App() {
     loadSaveSlot,
     newGameInSlot,
     applyCloudSave,
+    applyImportedSave,
+    sessionReady,
   } = usePersistedGameSession({
     flashNotice,
     onSlotChange: clearSlotUi,
@@ -1399,6 +1402,10 @@ export default function App() {
           setProfileFeedback(null);
         } else {
           setProfileFeedback(result.message);
+          if (result.openContractTalk) {
+            setProfileId(playerId);
+            setProfileOpenContractTalk(true);
+          }
         }
         return next;
       });
@@ -1424,8 +1431,25 @@ export default function App() {
           week: current.week,
           weekday: current.weekday,
         });
+        let signed = result.player;
+        if (result.accepted && player.squad_status === "u19") {
+          signed = grantAchievement(
+            {
+              ...signed,
+              squad_status: "pro",
+              state: {
+                ...signed.state,
+                pro_trial: undefined,
+                modifiers: signed.state.modifiers.filter(
+                  (mod) => !mod.source_event_id.startsWith("pro_trial_"),
+                ),
+              },
+            },
+            ACHIEVEMENT.promotedPro,
+          );
+        }
         const nextPlayers = current.players.map((entry) =>
-          entry.id === playerId ? result.player : entry,
+          entry.id === playerId ? signed : entry,
         );
         setProfileFeedback(result.message);
         return sessionWithEvent(
@@ -1978,6 +2002,14 @@ export default function App() {
     );
   }
 
+  if (!sessionReady) {
+    return (
+      <div className="app-boot" role="status">
+        <p>{t("shell.booting")}</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <AppChrome
@@ -2073,8 +2105,10 @@ export default function App() {
               accessibility={accessibility}
               activeSlot={activeSlot}
               loadSaveSlot={loadSaveSlot}
+              applyImportedSave={applyImportedSave}
               newGameInSlot={newGameInSlot}
               applyCloudSave={applyCloudSave}
+              openMarketNegotiation={handleOpenNegotiation}
               setScreen={setScreen}
               setScoutingInitialTab={setScoutingInitialTab}
               setCampusInitialTab={setCampusInitialTab}

@@ -23,6 +23,7 @@ import {
 import { initAnalytics } from "../../telemetry/analytics.ts";
 import { setDiagnosticLogLevel } from "../../telemetry/diagnostic-log.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
+import { submitPlayerFeedback } from "../../telemetry/player-feedback.ts";
 
 const DIAG_LEVEL_OPTIONS: readonly { id: DiagnosticLogLevel; labelKey: string }[] = [
   { id: "off", labelKey: "settings.diagnostics.levelOff" },
@@ -36,6 +37,7 @@ export function SettingsScreen({
   activeSlot,
   currentSave,
   onLoadSlot,
+  onApplyImportedSave,
   onNewGameInSlot,
   onApplyCloudSave,
   onOpenMatchdaySandbox,
@@ -45,6 +47,7 @@ export function SettingsScreen({
   activeSlot: number;
   currentSave: SaveGame;
   onLoadSlot: (slot: number) => void;
+  onApplyImportedSave: (save: SaveGame, slot: number) => void;
   onNewGameInSlot: (slot: number) => void;
   onApplyCloudSave: (save: SaveGame, slot: number) => void;
   onOpenMatchdaySandbox: () => void;
@@ -52,6 +55,8 @@ export function SettingsScreen({
   const t = useT();
   const [logPreview, setLogPreview] = useState(() => getDiagnosticLogPreview());
   const [copyNotice, setCopyNotice] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState<"idle" | "sending" | "ok" | "fail">("idle");
 
   useEffect(() => {
     return subscribeDiagnosticLog(() => setLogPreview(getDiagnosticLogPreview()));
@@ -77,6 +82,26 @@ export function SettingsScreen({
       setCopyNotice(t("settings.diagnostics.copyFail"));
     }
   }, [t]);
+
+  const handleSendFeedback = useCallback(async () => {
+    const text = feedback.trim();
+    if (!text) return;
+    setFeedbackStatus("sending");
+    const result = await submitPlayerFeedback({
+      text,
+      season: currentSave.state.season,
+      week: currentSave.state.week,
+      screen: "settings",
+      locale: preferences.locale,
+      saveVersion: currentSave.manifest.save_version,
+    });
+    if (result === "failed") {
+      setFeedbackStatus("fail");
+      return;
+    }
+    setFeedback("");
+    setFeedbackStatus("ok");
+  }, [currentSave, feedback, preferences.locale]);
 
   const handleDownloadLog = useCallback(() => {
     const text = formatDiagnosticLogForExport();
@@ -169,6 +194,7 @@ export function SettingsScreen({
           activeSlot={activeSlot}
           currentSave={currentSave}
           onLoadSlot={onLoadSlot}
+          onApplyImportedSave={onApplyImportedSave}
           onNewGameInSlot={onNewGameInSlot}
           onApplyCloudSave={onApplyCloudSave}
         />
@@ -182,6 +208,37 @@ export function SettingsScreen({
         <button type="button" className="save-modal-btn" onClick={onOpenMatchdaySandbox}>
           {t("shell.menu.matchdaySandbox")}
         </button>
+      </section>
+
+      <section className="game-panel settings-section" aria-labelledby="settings-feedback-title">
+        <h2 id="settings-feedback-title" className="settings-section-title">
+          {t("settings.feedback.title")}
+        </h2>
+        <p className="settings-section-lead">{t("settings.feedback.lead")}</p>
+        <textarea
+          className="settings-diag-preview"
+          value={feedback}
+          rows={5}
+          maxLength={4000}
+          placeholder={t("settings.feedback.placeholder")}
+          aria-label={t("settings.feedback.title")}
+          onChange={(event) => {
+            setFeedback(event.target.value);
+            if (feedbackStatus !== "idle") setFeedbackStatus("idle");
+          }}
+        />
+        <div className="settings-diag-actions">
+          <button
+            type="button"
+            className="save-modal-btn"
+            disabled={feedback.trim().length === 0 || feedbackStatus === "sending"}
+            onClick={() => void handleSendFeedback()}
+          >
+            {feedbackStatus === "sending" ? t("settings.feedback.sending") : t("settings.feedback.send")}
+          </button>
+        </div>
+        {feedbackStatus === "ok" ? <p className="settings-copy-notice">{t("settings.feedback.ok")}</p> : null}
+        {feedbackStatus === "fail" ? <p className="settings-copy-notice">{t("settings.feedback.fail")}</p> : null}
       </section>
 
       <section className="game-panel settings-section" aria-labelledby="settings-privacy-title">

@@ -38,6 +38,7 @@ import {
   type ContractOffer,
 } from "../../transfers/contract-talks.ts";
 import type { TransferState } from "../../transfers/negotiations.ts";
+import { applyListedSale, submitSaleRound } from "../../transfers/transfer-listings.ts";
 import { TransferNegotiationModal } from "./TransferNegotiationModal.tsx";
 import { ContractTalksPanel } from "./ContractTalksPanel.tsx";
 
@@ -151,6 +152,8 @@ export function useTransferNegotiation(args: {
       setAgreedFee(null);
       setContractOffer(null);
       setNegotiationModalEpoch((epoch) => epoch + 1);
+      const existingSale = activeNegotiation(session.transferState, playerId);
+      if (existingSale?.side === "sell") return;
       const result = openPurchaseNegotiation({
         scoutBoard: session.scoutBoard,
         rivalPlayers: session.rivalPlayers,
@@ -179,6 +182,46 @@ export function useTransferNegotiation(args: {
   const handleNegotiationOffer = useCallback(
     (fee: number) => {
       if (!negotiationPlayerId) return;
+      const active = activeNegotiation(session.transferState, negotiationPlayerId);
+      if (active?.side === "sell") {
+        let round;
+        try {
+          round = submitSaleRound(session.transferState, negotiationPlayerId, fee);
+        } catch {
+          setNegotiationMessage(t("transfer.purchase.negotiationFailed"));
+          setNegotiationUiPhase("lost");
+          return;
+        }
+        patchSession((current) => {
+          if (!round.accepted) return { ...current, transferState: round.state };
+          const sold = applyListedSale({
+            players: current.players,
+            rivalPlayers: current.rivalPlayers,
+            finances: current.finances,
+            transferState: round.state,
+            playerId: negotiationPlayerId,
+            fee: round.negotiation.current_offer,
+            buyerClubId: active.buyer_club_id ?? "cl_ai",
+            season: current.season,
+            week: current.week,
+            userClubId: current.clubId,
+          });
+          return sessionWithEvent(
+            {
+              ...current,
+              players: sold.players,
+              rivalPlayers: sold.rivalPlayers,
+              finances: sold.finances,
+              transferState: sold.transferState,
+            },
+            "transfer",
+            round.message,
+          );
+        });
+        setNegotiationMessage(round.message);
+        setNegotiationUiPhase(round.accepted || round.negotiation.status !== "active" ? (round.accepted ? "won" : "lost") : "active");
+        return;
+      }
       const windowReason = cannotSubmitPurchaseOfferReason(week, true);
       if (windowReason) {
         setNegotiationMessage(windowReason);
@@ -243,6 +286,11 @@ export function useTransferNegotiation(args: {
 
   const handleAcceptCounter = useCallback(() => {
     if (!negotiationPlayerId) return;
+    const active = activeNegotiation(session.transferState, negotiationPlayerId);
+    if (active?.side === "sell") {
+      handleNegotiationOffer(active.counter_offer ?? active.current_offer);
+      return;
+    }
     const windowReason = cannotSubmitPurchaseOfferReason(week, true);
     if (windowReason) {
       setNegotiationMessage(windowReason);
@@ -274,7 +322,7 @@ export function useTransferNegotiation(args: {
       return;
     }
     stageFeeAgreement(negotiationPlayerId, fee, afterNeg);
-  }, [negotiationPlayerId, patchSession, session, stageFeeAgreement, week]);
+  }, [handleNegotiationOffer, negotiationPlayerId, patchSession, session, stageFeeAgreement, week]);
 
   const handleContractSubmit = useCallback(() => {
     if (!negotiationPlayerId || !contractOffer) return;

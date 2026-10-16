@@ -1,5 +1,5 @@
 /** WIREFRAME: design.md §9.12 + PRD 03.6.1 / 03.6.2 — Satelliten-Camp-Karte */
-import { Lock, Mail, Star, UserCheck } from "lucide-react";
+import { HardHat, Lock, Mail, Star, UserCheck } from "lucide-react";
 import type { Player } from "../../types/player.ts";
 import { estimateCa } from "../../transfers/market-value.ts";
 import { formatClubCash } from "../../economy/club-finances.ts";
@@ -10,6 +10,7 @@ import {
 import {
   campRoster,
   canBuyYouthCamp,
+  isCampUnderConstruction,
   weeklyCampUpkeepForCamp,
   type YouthCamp,
   type YouthCampNation,
@@ -52,12 +53,13 @@ export function YouthCampCard({
   const leaderSeed = owned?.leader?.portrait_seed ?? 0;
   const rosterOverflow = Math.max(0, roster.length - rosterSlots);
   const emptyOwned = owned && roster.length === 0;
+  const building = owned ? isCampUnderConstruction(owned) : false;
   const leaderTrainingMod = owned?.leader?.training_mod ?? 0;
   const leaderMentalMod = owned?.leader?.mental_mod ?? 0;
 
   return (
     <article
-      className={`youth-camp-card${owned ? " is-owned" : buy.ok ? " is-available" : " is-locked"}${rosterSlots <= 3 ? " is-compact-roster" : ""}`}
+      className={`youth-camp-card${owned ? " is-owned" : buy.ok ? " is-available" : " is-locked"}${building ? " is-constructing" : ""}${rosterSlots <= 3 ? " is-compact-roster" : ""}`}
       aria-label={`${nationLabel} ${nation.region}`}
       style={{ ["--youth-camp-roster-slots" as string]: rosterSlots }}
     >
@@ -85,7 +87,7 @@ export function YouthCampCard({
             )}
           </div>
 
-          {owned ? (
+          {owned && !building ? (
             <div className="youth-camp-card-head-side">
               {hireState === "hired" && leaderName ? (
                 <button
@@ -141,7 +143,14 @@ export function YouthCampCard({
           </div>
         ) : null}
 
-        {owned ? (
+        {owned && building ? (
+          <p className="youth-camp-build-banner">
+            <HardHat size={16} strokeWidth={2.5} aria-hidden="true" />
+            Im Bau — Talente und Leitung erst danach.
+          </p>
+        ) : null}
+
+        {owned && !building ? (
           <>
             {emptyOwned ? (
               <p className="youth-camps-empty youth-camp-roster-empty">Nächster Jahrgang: Saisonstart</p>
@@ -206,7 +215,7 @@ export function YouthCampCard({
             ) : null}
             </div>
           </>
-        ) : !buy.ok ? (
+        ) : !owned && !buy.ok ? (
           <p className="youth-camps-empty youth-camp-card-locked-copy">{buy.reason ?? "Gesperrt"}</p>
         ) : null}
       </div>

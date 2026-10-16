@@ -48,7 +48,7 @@ import {
   type PrecinctPatch,
   type PrecinctState,
 } from "../../stadium/precinct.ts";
-import { ArrowUp, Landmark, Puzzle, Route, X } from "lucide-react";
+import { ArrowUp, HardHat, Landmark, Puzzle, Route, X } from "lucide-react";
 import { useRef, useState, type DragEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
 import { usePrecinctMobileTileSize } from "../hooks/use-precinct-mobile-tile-size.ts";
@@ -507,6 +507,7 @@ export function PrecinctGrid({
                     [
                       "stadium-precinct-tile is-filled is-patch",
                       `is-building-${patch.building}`,
+                      patch.constructing ? "is-constructing" : "",
                       level > 0 ? `is-tier-${Math.min(level, 5)}` : "",
                       movingHere ? "is-picked" : "",
                       hungry ? "is-hungry" : "",
@@ -547,6 +548,9 @@ export function PrecinctGrid({
                   }}
                 >
                   {meta ? <PrecinctBuildingIcon building={patch.building} size={18} /> : null}
+                  {patch.constructing ? (
+                    <HardHat className="stadium-constructing-icon" size={14} strokeWidth={2.5} aria-label="Im Bau" />
+                  ) : null}
                   {stageLabel ? <em className="stadium-precinct-stage">{stageLabel}</em> : null}
                   {level > 1 ? <span className="stadium-precinct-level">Lv{level}</span> : null}
                   {hungry ? (

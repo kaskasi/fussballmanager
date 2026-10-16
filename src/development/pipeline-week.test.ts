@@ -24,6 +24,7 @@ describe("pipeline week", () => {
       1.1 *
       1 *
       (1 + 0.33 * 2) *
+      1.25 *
       0.7;
     const next = applyTrainingWeek(player, HUB_PLAN);
     expect(next.attributes.passing - player.attributes.passing).toBeCloseTo(passing, 5);
@@ -36,7 +37,7 @@ describe("pipeline week", () => {
     youth.squad_status = "u19";
     const onTrial = startProTrial(youth, 1, 8);
     expect(effectiveDevelopmentScale(onTrial, { season: 1, week: 8 })).toBe(1);
-    expect(effectiveDevelopmentScale(youth, { season: 1, week: 8 })).toBe(0.94);
+    expect(effectiveDevelopmentScale(youth, { season: 1, week: 8 })).toBe(1.05);
   });
 
   it("uses reproducible weekly variance from player, week, and attribute", () => {
@@ -50,14 +51,15 @@ describe("pipeline week", () => {
     expect(nextWeek.attributes).not.toEqual(first.attributes);
   });
 
-  it("dampens U17 development versus the pro squad", () => {
+  it("lets U19 develop a little faster than the pro squad", () => {
     const pro = clonePlayer();
     const youth = clonePlayer();
-    youth.squad_status = "u17";
+    youth.squad_status = "u19";
     youth.state.weekly_minutes = 70;
     pro.state.weekly_minutes = 70;
-    expect(developmentScale("u17")).toBe(0.88);
-    expect(projectWeek(youth, HUB_PLAN)).toBeLessThan(projectWeek(pro, HUB_PLAN));
+    expect(developmentScale("u17")).toBe(1);
+    expect(developmentScale("u19")).toBe(1.05);
+    expect(projectWeek(youth, HUB_PLAN)).toBeGreaterThan(projectWeek(pro, HUB_PLAN));
   });
 
   it("lets talented U17 players gain meaningful CA over thirty weeks", () => {
@@ -122,7 +124,7 @@ describe("pipeline week", () => {
 
     const gained = estimateCa(player.attributes, player.position) - start;
     expect(gained).toBeGreaterThan(8);
-    expect(gained).toBeLessThan(70);
+    expect(gained).toBeLessThan(110);
   });
 
   it("raises fitness when a recovery unit runs", () => {

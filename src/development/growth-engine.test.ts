@@ -52,7 +52,7 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 1.4,
       minutes: 90,
     });
-    expect(delta).toBeCloseTo(0.07 * 2.4 * 1.2 * 1.4 * 1.15, 5);
+    expect(delta).toBeCloseTo(0.07 * 2.4 * 1.2 * 1.4 * 1.15 * 1.25, 5);
     expect(delta).toBeGreaterThan(0.25);
   });
 
@@ -65,7 +65,7 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 0.8,
       minutes: 0,
     });
-    expect(delta).toBeCloseTo(0.07 * 0.65 * 1 * 0.8 * 0.7, 5);
+    expect(delta).toBeCloseTo(0.07 * 0.65 * 1 * 0.8 * 0.7 * 1.25, 5);
     expect(delta).toBeLessThan(0.04);
   });
 
@@ -78,7 +78,7 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 1.2,
       minutes: 45,
     });
-    const uncapped = 0.07 * 1.45 * 1.1 * 1.2 * (1 + (45 / 90) * 0.15);
+    const uncapped = 0.07 * 1.45 * 1.1 * 1.2 * (1 + (45 / 90) * 0.15) * 1.25;
     expect(delta).toBeCloseTo(uncapped * 0.3, 5);
     expect(delta).toBeGreaterThan(0);
     expect(delta).toBeLessThanOrEqual(5);
@@ -93,7 +93,7 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 1,
       minutes: 0,
     });
-    expect(delta).toBeCloseTo(0.07 * 0.28 * 0.7 - 1.5 / 52, 5);
+    expect(delta).toBeCloseTo(0.07 * 0.28 * 0.7 * 1.25 - 1.5 / 52, 5);
     expect(delta).toBeLessThan(0);
     expect(decayPerWeek("pace", 33)).toBeCloseTo(1.5 / 52, 8);
   });

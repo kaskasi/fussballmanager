@@ -37,6 +37,9 @@ export interface PrecinctPatch {
   y: number;
   w: number;
   h: number;
+  /** Placed, but not producing until `readyWeekIndex`. */
+  constructing?: boolean;
+  readyWeekIndex?: number;
 }
 
 export interface PrecinctState {
@@ -47,6 +50,8 @@ export interface PrecinctState {
   owned: Record<string, true>;
   streets: Record<string, true>;
   levels: Partial<Record<PrecinctBuilding, number>>;
+  /** Upgrade paid, level applies when the career week index reaches the value. */
+  pendingUpgrades?: Partial<Record<PrecinctBuilding, number>>;
 }
 
 export const PRECINCT_WIDTH = 18;
@@ -436,7 +441,7 @@ export function countBuilding(state: PrecinctState, building: PrecinctBuilding):
 
 export function occupiedCells(state: PrecinctState, building: PrecinctBuilding): number {
   return state.patches
-    .filter((patch) => patch.building === building)
+    .filter((patch) => patch.building === building && !patch.constructing)
     .reduce((sum, patch) => sum + patch.w * patch.h, 0);
 }
 
@@ -453,7 +458,10 @@ export function precinctBuildingCost(building: PrecinctBuilding): number {
 }
 
 export function precinctBuildingLevel(state: PrecinctState, building: PrecinctBuilding): number {
-  if (countBuilding(state, building) <= 0) return 0;
+  const operational = state.patches.some(
+    (patch) => patch.building === building && !patch.constructing,
+  );
+  if (!operational) return 0;
   return state.levels[building] ?? 1;
 }
 
@@ -1193,6 +1201,9 @@ export function canUpgradePrecinctBuilding(
   if (def.maxLevel <= 1) return { allowed: false, cost: 0, reason: "Nicht ausbaubar." };
   const level = precinctBuildingLevel(state, building);
   if (level <= 0) return { allowed: false, cost: 0, reason: "Erst platzieren." };
+  if (state.pendingUpgrades?.[building] != null) {
+    return { allowed: false, cost: 0, reason: "Ausbau läuft bereits." };
+  }
   if (level >= def.maxLevel) return { allowed: false, cost: 0, reason: "Maximalstufe." };
   const cost = precinctUpgradeCost(state, building);
   if (cash < cost) return { allowed: false, cost, reason: "Nicht genug Cash." };
@@ -1299,10 +1310,17 @@ export function normalizePrecinct(state?: PrecinctState & { cells?: Record<strin
   }
   const levels: PrecinctState["levels"] = {};
   for (const def of PRECINCT_BUILDINGS) {
-    if (valid.some((patch) => patch.building === def.id)) {
+    if (valid.some((patch) => patch.building === def.id && !patch.constructing)) {
       const stored = state.levels?.[def.id] ?? 1;
       levels[def.id] = Math.min(def.maxLevel, Math.max(1, stored));
     }
   }
-  return { ...next, patches: valid, owned: ensureFullPrecinctOwned(owned), streets, levels };
+  return {
+    ...next,
+    patches: valid,
+    owned: ensureFullPrecinctOwned(owned),
+    streets,
+    levels,
+    pendingUpgrades: state.pendingUpgrades,
+  };
 }

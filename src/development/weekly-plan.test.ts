@@ -106,7 +106,7 @@ describe("focus multipliers", () => {
       { group: "mental", focus: false },
       { group: "mental", focus: false },
     ]);
-    const base = 0.07 * 2.4 * 1.2 * 1.4 * 1.15;
+    const base = 0.07 * 2.4 * 1.2 * 1.4 * 1.15 * 1.25;
     expect(passingGrowthForPlan(quiet)).toBeCloseTo(base, 5);
     expect(passingGrowthForPlan(one)).toBeCloseTo(base * 1.33, 5);
     expect(passingGrowthForPlan(full)).toBeCloseTo(base * 1.66, 5);

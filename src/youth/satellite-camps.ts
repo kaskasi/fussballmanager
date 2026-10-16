@@ -11,6 +11,7 @@ import {
   pickCampHeadlinePosition,
 } from "./camp-opening-debut.ts";
 import { isHqYouth, withYouthSite, YOUTH_SITE_HQ } from "./youth-site.ts";
+import { careerWeekIndex } from "../stadium/hospitality.ts";
 
 export interface YouthCampNation {
   id: string;
@@ -48,6 +49,8 @@ export interface YouthCamp {
   agency_commissioned_at?: CampDayStamp;
   leader?: CampLeaderRecord;
   candidate_set_id?: string;
+  /** Career week index when the build finishes. Absent = already open. */
+  construction_until?: number;
 }
 
 export const MAX_YOUTH_CAMPS = 3;
@@ -286,7 +289,12 @@ export function ownedCamp(camps: readonly YouthCamp[], id: string): YouthCamp | 
   return camps.find((entry) => entry.id === id);
 }
 
+export function isCampUnderConstruction(camp: YouthCamp): boolean {
+  return camp.construction_until != null;
+}
+
 export function weeklyCampUpkeepForCamp(camp: YouthCamp): number {
+  if (isCampUnderConstruction(camp)) return 0;
   const nation = campNationById(camp.id);
   if (!nation) return 0;
   return nation.upkeepWeekly + (isCampStaffed(camp) ? CAMP_BETREUER_WAGE : 0);
@@ -314,8 +322,11 @@ export function buyYouthCamp(
   nationId: string,
   season: number,
   week?: number,
+  buildWeeks = 0,
 ): YouthCamp[] {
   if (ownedCamp(camps, nationId)) return [...camps];
+  const construction_until =
+    buildWeeks > 0 ? careerWeekIndex(season, week ?? 1) + buildWeeks : undefined;
   return [
     ...camps,
     {
@@ -324,6 +335,7 @@ export function buyYouthCamp(
       purchased_season: season,
       purchased_week: week,
       leader_hire: "none" as const,
+      ...(construction_until != null ? { construction_until } : {}),
     },
   ];
 }
@@ -356,6 +368,7 @@ export function campIntakeCount(staffed: boolean): number {
 }
 
 export function campIntakeCountForCamp(camp: YouthCamp): number {
+  if (isCampUnderConstruction(camp)) return 0;
   return campIntakeCount(isCampStaffed(camp));
 }
 
@@ -364,7 +377,7 @@ export function campIntakeCountForCamp(camp: YouthCamp): number {
  * Never below HQ parity (0); staffed camps can add leader training_mod bonus.
  */
 export function campMixtureShift(camp: YouthCamp): number {
-  if (!isCampStaffed(camp)) return 0;
+  if (isCampUnderConstruction(camp) || !isCampStaffed(camp)) return 0;
   const mod = camp.leader?.training_mod ?? 0;
   return Math.max(0, Math.round(mod * 100));
 }
@@ -392,6 +405,7 @@ export function normalizeYouthCamps(camps: readonly YouthCamp[] | undefined): Yo
       agency_commissioned_at: camp.agency_commissioned_at,
       leader: camp.leader,
       candidate_set_id: camp.candidate_set_id,
+      ...(camp.construction_until != null ? { construction_until: camp.construction_until } : {}),
     });
     if (next.length >= MAX_YOUTH_CAMPS) break;
   }

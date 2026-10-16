@@ -853,13 +853,23 @@ function IndividualProgramModal({
   const [targetPosition, setTargetPosition] = useState<PositionPrimary>(
     active?.targetPosition ?? retrainTargets[0] ?? "AM",
   );
+  const [attribute, setAttribute] = useState<keyof Player["attributes"]>(
+    active?.attribute ?? "passing",
+  );
   useEffect(() => {
     if (retrainTargets.length > 0 && !retrainTargets.includes(targetPosition)) {
       setTargetPosition(retrainTargets[0]!);
     }
   }, [retrainTargets, targetPosition]);
   const tired = playerFatigueWarning(player);
-  const check = canAssignIndividualProgram(player, kind, programs, targetPosition, stampId);
+  const check = canAssignIndividualProgram(
+    player,
+    kind,
+    programs,
+    targetPosition,
+    stampId,
+    attribute,
+  );
   const stampWeeks = kind === "stamp" ? (stampDefinition(stampId)?.weeks ?? weeks) : weeks;
 
   useEffect(() => {
@@ -882,6 +892,7 @@ function IndividualProgramModal({
         week,
         targetPosition,
         kind === "stamp" ? stampId : undefined,
+        kind === "attribute" ? attribute : undefined,
       );
       onProgramsChange(next);
       onClose();
@@ -947,6 +958,7 @@ function IndividualProgramModal({
                 }
               }}
             >
+              <option value="attribute">{programKindLabel("attribute")}</option>
               <option value="weak_foot">{programKindLabel("weak_foot")}</option>
               <option value="position_retrain">{programKindLabel("position_retrain")}</option>
               <option value="stamp" disabled={trainStamps.length === 0}>
@@ -955,6 +967,40 @@ function IndividualProgramModal({
               </option>
             </select>
           </label>
+
+          {kind === "attribute" ? (
+            <label className="training-individual-field">
+              <span>Attribut</span>
+              <select
+                value={attribute}
+                onChange={(event) => setAttribute(event.target.value as keyof Player["attributes"])}
+              >
+                {(
+                  [
+                    "shooting",
+                    "passing",
+                    "dribbling",
+                    "technique",
+                    "pace",
+                    "strength",
+                    "stamina",
+                    "composure",
+                    "leadership",
+                    "positioning",
+                    "vision",
+                    "concentration",
+                    "teamwork",
+                    "weak_foot",
+                    "gk_handling",
+                  ] as const
+                ).map((key) => (
+                  <option key={key} value={key}>
+                    {attributeLabel(key)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
 
           {kind === "position_retrain" && retrainTargets.length === 0 ? (
             <ScreenEmptyState

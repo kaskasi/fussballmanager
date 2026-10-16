@@ -109,8 +109,10 @@ export interface GameScreenRouterCoreProps {
   accessibility: AccessibilityPreferences;
   activeSlot: number;
   loadSaveSlot: (slot: number) => void;
+  applyImportedSave: (save: SaveGame, slot: number) => void;
   newGameInSlot: (slot: number) => void;
   applyCloudSave: (save: SaveGame, slot: number) => void;
+  openMarketNegotiation: (playerId: string) => void;
   setScreen: (screen: Screen) => void;
   setScoutingInitialTab: (tab: ScoutingInitialTab | null) => void;
   setCampusInitialTab: (tab: "u17" | "u19" | "camps" | null) => void;

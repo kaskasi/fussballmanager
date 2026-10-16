@@ -33,6 +33,8 @@ import { advanceWeeklyLoanServicing } from "../economy/financing.ts";
 import { advanceFinancingStoryOffersWeek } from "../economy/financing-pipeline.ts";
 import { advanceFinancialCrisisWeek } from "../economy/financing-crisis.ts";
 import { revertExpiredNamingRights } from "../stadium/club-stadium.ts";
+import { advanceCareerConstruction } from "./advance-construction.ts";
+import { refreshAiListings, scanListingBids } from "../transfers/transfer-listings.ts";
 import { advanceMerchandisingWeek } from "../economy/merchandising.ts";
 import {
   merchSaleSummaryClubEventMessage,
@@ -442,7 +444,28 @@ export async function simulateGameWeek(
   if (megaEvent.message) {
     clubEvents = withClubEvent(clubEvents, session.season, nextWeek, "info", megaEvent.message);
   }
-  const stadium = normalizeClubStadium(megaEvent.stadium);
+  let stadium = normalizeClubStadium(megaEvent.stadium);
+  let youthCamps = session.youthCamps;
+  let academyFacility = session.academyFacility;
+  let academyProject = session.academyProject ?? null;
+  const construction = advanceCareerConstruction({
+    stadium,
+    youthCamps,
+    academyFacility,
+    academyProject,
+    players: session.players,
+    clubId: session.clubId,
+    season: session.season,
+    week: nextWeek,
+    masterSeed: session.masterSeed,
+    clubEvents,
+  });
+  stadium = construction.stadium;
+  youthCamps = construction.youthCamps;
+  academyFacility = construction.academyFacility;
+  academyProject = construction.academyProject;
+  const constructionNewPlayers = construction.newPlayers;
+  clubEvents = construction.clubEvents;
   const opponentId =
     isHomeMatchWeek && leagueStep.playerFixture
       ? leagueStep.playerFixture.awayTeamId
@@ -474,7 +497,7 @@ export async function simulateGameWeek(
     coachingStaff: session.coachingStaff,
     scoutWagesWeekly: scoutNetworkWeeklyWage(session.scoutNetwork),
     medicalWagesWeekly: medicalStaffWageBill(session.medicalStaff),
-    campUpkeepWeekly: weeklyCampUpkeep(session.youthCamps),
+    campUpkeepWeekly: weeklyCampUpkeep(youthCamps),
     hospitalityIncome,
     overtimeCost: overtimeDue,
     commerceOccupancy: occupancy,
@@ -573,6 +596,34 @@ export async function simulateGameWeek(
       transferState,
     });
     transferState = inbound.transferState;
+    transferState = refreshAiListings({
+      state: transferState,
+      players: [...playersWithCaStamp, ...rivalPlayers],
+      userClubId: session.clubId,
+      season: session.season,
+      week: nextWeek,
+      masterSeed: session.masterSeed,
+      leagueClubIds: leagueWithCareerStats.club_ids,
+    });
+    const listingBids = scanListingBids({
+      state: transferState,
+      players: playersWithCaStamp,
+      userClubId: session.clubId,
+      season: session.season,
+      week: nextWeek,
+      masterSeed: session.masterSeed,
+      leagueClubIds: leagueWithCareerStats.club_ids,
+    });
+    transferState = listingBids.state;
+    if (listingBids.opened) {
+      clubEvents = withClubEvent(
+        clubEvents,
+        session.season,
+        nextWeek,
+        "transfer",
+        "Angebot für einen angebotenen Spieler liegt in den Verhandlungen.",
+      );
+    }
     for (const offer of inbound.newOffers) {
       clubEvents = withClubEvent(
         clubEvents,
@@ -668,7 +719,7 @@ export async function simulateGameWeek(
   const nextSeason = seasonEnded ? session.season + 1 : session.season;
   const stadiumAfterNaming = revertExpiredNamingRights(narrativeStep.stadium, nextSeason);
   const playersForNewWeek = stampWeekStartAttributesBatch(
-    narrativeStep.players,
+    [...narrativeStep.players, ...constructionNewPlayers],
     nextSeason,
     nextWeek,
   );
@@ -692,6 +743,9 @@ export async function simulateGameWeek(
     trainingCalendarGateDone: resolveFeatureCurtain(narrativeStep.storyState).auto_training,
     rivalPlayers,
     rivalBreakoutNarratives,
+    youthCamps,
+    academyFacility,
+    academyProject,
     transferState,
     clubEvents,
     individualPrograms: individualStep.programs,

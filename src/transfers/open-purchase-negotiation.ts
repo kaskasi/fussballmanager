@@ -34,6 +34,10 @@ export function openPurchaseNegotiation(input: {
   if (!target) {
     return { kind: "blocked", reason: t("transfer.purchase.targetUnavailable") };
   }
+  const listed = (input.transferState.listings ?? []).some((row) => row.player_id === input.playerId);
+  if (!listed) {
+    return { kind: "blocked", reason: "Spieler steht nicht auf der Transferliste." };
+  }
   const deal = startNegotiation(
     input.transferState,
     target.player,

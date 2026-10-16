@@ -50,9 +50,9 @@ export const HUB_PLAN: readonly TrainingSession[] = planToSessions(defaultTraini
 export function developmentScale(status: Player["squad_status"]): number {
   switch (status) {
     case "u17":
-      return 0.88;
+      return 1;
     case "u19":
-      return 0.94;
+      return 1.05;
     default:
       return 1;
   }
@@ -68,16 +68,9 @@ export function effectiveDevelopmentScale(
   return developmentScale(player.squad_status);
 }
 
-/** Youth minutes count less toward match-practice growth than pro minutes. */
-export function developmentMinutes(status: Player["squad_status"], minutes: number): number {
-  switch (status) {
-    case "u17":
-      return Math.min(minutes, 75);
-    case "u19":
-      return Math.min(minutes, 85);
-    default:
-      return minutes;
-  }
+/** Match minutes count in full for every squad. Youth are not capped below their week. */
+export function developmentMinutes(_status: Player["squad_status"], minutes: number): number {
+  return minutes;
 }
 
 const SKILLS = [

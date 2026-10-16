@@ -8,8 +8,8 @@ import {
   type SaveSlotInfo,
 } from "../../persistence/save-slots.ts";
 import { saveLoadErrorMessage, isSaveVersionMismatch } from "../../persistence/save-load-message.ts";
-import { downloadSaveAsFile, importSaveJson } from "../../persistence/save-transfer.ts";
-import { isCloudSaveEnabled } from "../../persistence/cloud-save-config.ts";
+import { downloadSaveAsFile, parseSaveJson } from "../../persistence/save-transfer.ts";
+import { ensureCloudSaveConfig, isCloudSaveEnabled } from "../../persistence/cloud-save-config.ts";
 import {
   pullCloudSave,
   registerCloudSyncCode,
@@ -27,6 +27,7 @@ export function SaveManagerPanel({
   activeSlot,
   currentSave,
   onLoadSlot,
+  onApplyImportedSave,
   onNewGameInSlot,
   onApplyCloudSave,
   onAfterImport,
@@ -34,6 +35,7 @@ export function SaveManagerPanel({
   activeSlot: number;
   currentSave: SaveGame;
   onLoadSlot: (slot: number) => void;
+  onApplyImportedSave: (save: SaveGame, slot: number) => void;
   onNewGameInSlot: (slot: number) => void;
   onApplyCloudSave: (save: SaveGame, slot: number) => void;
   /** Called after successful import (modal closes itself; embedded stays). */
@@ -51,7 +53,13 @@ export function SaveManagerPanel({
   const [revealedCode, setRevealedCode] = useState<string | null>(null);
   const [pullInput, setPullInput] = useState("");
 
-  const cloudEnabled = isCloudSaveEnabled();
+  const [cloudEnabled, setCloudEnabled] = useState(isCloudSaveEnabled);
+  useEffect(() => {
+    if (cloudEnabled) return;
+    void ensureCloudSaveConfig().then((config) => {
+      if (config) setCloudEnabled(true);
+    });
+  }, [cloudEnabled]);
   const slotMeta = useMemo(() => readCloudSlotMeta(activeSlot), [activeSlot, revealedCode]);
 
   function refreshSlots() {
@@ -69,10 +77,10 @@ export function SaveManagerPanel({
     reader.onload = () => {
       try {
         const text = typeof reader.result === "string" ? reader.result : "";
-        importSaveJson(text, activeSlot);
+        const imported = parseSaveJson(text);
         Diag.saveAction("import", activeSlot);
+        onApplyImportedSave(imported, activeSlot);
         refreshSlots();
-        onLoadSlot(activeSlot);
         onAfterImport?.();
       } catch (error) {
         setImportError(saveLoadErrorMessage(error, t));

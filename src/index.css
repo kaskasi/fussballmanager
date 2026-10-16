@@ -6424,6 +6424,32 @@
   color: #475569;
 }
 
+.stadium-precinct-tile.is-constructing,
+.stadium-block.is-constructing,
+.stadium-block-expansion.is-building,
+.youth-camp-card.is-constructing {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--panel) 0 8px,
+    color-mix(in srgb, var(--rasen, #2f6b4f) 28%, var(--panel)) 8px 16px
+  );
+  outline: 2px dashed var(--tinte-weich);
+  outline-offset: -3px;
+}
+
+.stadium-constructing-icon,
+.youth-camp-build-banner svg {
+  color: var(--tinte);
+}
+
+.youth-camp-build-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.6rem;
+  font-weight: 700;
+}
+
 .stadium-block-expansion.is-building {
   background: #fff7ed;
   color: #9a3412;
@@ -13838,6 +13864,16 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 
 .tutorial-coach-primary {
   font-weight: 700;
+}
+
+.app-boot {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  background: var(--papier);
+  color: var(--tinte);
+  font-family: var(--font-display);
 }
 
 .tutorial-coach-disable-all {

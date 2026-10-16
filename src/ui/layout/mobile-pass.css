@@ -3,6 +3,60 @@
  */
 
 @media (max-width: 720px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior-y: none;
+  }
+
+  #root {
+    height: 100dvh;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .club-shell-card-head,
+  .club-shell-card-body {
+    width: auto;
+    max-width: none;
+    margin-left: 2.75rem;
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+
+  main.club-shell-card-body {
+    height: calc(100dvh - var(--club-header-height, 4.5rem));
+    overflow: auto;
+    overscroll-behavior-y: contain;
+  }
+
+  main.club-shell-card-body > .fm-tab-bar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    width: 2.75rem;
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+    border-right: var(--outline);
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: var(--panel-muted);
+  }
+
+  main.club-shell-card-body > .fm-tab-bar .fm-tab {
+    flex: 0 0 auto;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.45rem 0.15rem;
+    border-right: none;
+    border-bottom: var(--outline);
+  }
+
   .app-nav.club-shell-header {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:

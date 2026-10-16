@@ -1,8 +1,6 @@
-import { newGameSession, saveFromSession } from "../../persistence/game-session.ts";
 import {
   loadLocalSave,
   removeLocalSave,
-  writeLocalSave,
 } from "../../persistence/local-save.ts";
 import type { SaveGame } from "../../persistence/savegame-model.ts";
 import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
@@ -15,16 +13,18 @@ import {
 import type { NavPrimaryAction } from "../nav-primary-action.ts";
 import type { Screen } from "./types.ts";
 
-export function bootstrapSave(slot: number): SaveGame {
+/**
+ * Sync peek only. Never creates a career — IndexedDB hydrate decides that,
+ * otherwise a refresh overwrites the real slot with a brand-new game.
+ */
+export function bootstrapSave(slot: number): SaveGame | null {
   try {
     const loaded = loadLocalSave(slot);
     if (loaded) return loaded;
   } catch {
     removeLocalSave(slot);
   }
-  const fresh = saveFromSession(newGameSession());
-  writeLocalSave(slot, fresh);
-  return fresh;
+  return null;
 }
 
 /** Reset navigation overlays when switching save slots (PRD 08 session boundary). */

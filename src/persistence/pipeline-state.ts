@@ -64,6 +64,8 @@ export interface PipelineState {
   coaching_staff?: CoachingStaff;
   /** F3.7 — HQ academy stage. */
   academy_facility?: AcademyFacility;
+  /** Timed academy upgrade. Absent = nothing under construction. */
+  academy_project?: import("../sim/advance-construction.ts").AcademyProject | null;
   /** F3.9 — owned satellite camps. */
   youth_camps?: YouthCamp[];
   /** F11.2 — last completed season award gallery. */

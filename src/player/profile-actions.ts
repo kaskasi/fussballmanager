@@ -40,7 +40,6 @@ export interface ProfileMenuItem {
 }
 
 const U19_CA_READY = 55;
-const PRO_CA_READY = 68;
 
 function clampMorale(value: number): number {
   return Math.min(100, Math.max(0, value));
@@ -139,6 +138,18 @@ export interface ProfileActionResult {
   player: Player;
   message: string;
   removed?: boolean;
+  openContractTalk?: boolean;
+}
+
+function youthPromotionContract(player: Player, season: number): Player["contract"] {
+  const rating = estimateCa(player.attributes, player.position);
+  return {
+    wage_weekly: Math.max(80, Math.round(40 + rating * 3)),
+    bonus_goal: 0,
+    bonus_appearance: 0,
+    until_season: season + 2,
+    guaranteed_minutes_promise: "none",
+  };
 }
 
 export function canReleasePlayer(
@@ -218,6 +229,7 @@ export function applyProfileAction(
       let next: Player = {
         ...withMorale(player, moraleDelta),
         squad_status: "u19",
+        contract: youthPromotionContract(player, season),
       };
       next = grantAchievement(next, ACHIEVEMENT.promotedU19);
       return {
@@ -240,26 +252,10 @@ export function applyProfileAction(
       if (!gate.allowed) {
         return { player, message: "Kein Platz im Profikader zum Hochziehen." };
       }
-      const rating = ca(player);
-      const ready = rating >= PRO_CA_READY;
-      const moraleDelta = ready ? 10 : -6;
-      let next: Player = {
-        ...withMorale(player, moraleDelta),
-        squad_status: "pro",
-        state: {
-          ...player.state,
-          pro_trial: undefined,
-          modifiers: player.state.modifiers.filter(
-            (mod) => !mod.source_event_id.startsWith("pro_trial_"),
-          ),
-        },
-      };
-      next = grantAchievement(next, ACHIEVEMENT.promotedPro);
       return {
-        player: next,
-        message: ready
-          ? "Hochgezogen ins Profiteam — Spieler ist motiviert."
-          : "Ins Profiteam geholt — noch Entwicklung nötig, Moral leidet leicht.",
+        player,
+        openContractTalk: true,
+        message: "Gehaltsverhandlung für den Profikader.",
       };
     }
     case "demote_u19": {

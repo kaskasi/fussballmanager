@@ -4,10 +4,11 @@ import { boardCashFloor } from "../../economy/spend-runway.ts";
 import { prepareCareerMatch } from "../../sim/career-match-setup.ts";
 import { usesTrainingNextNexus } from "../../sim/training-next.ts";
 import { worldCareerClubId } from "../../world/world-generator.ts";
+import { isPlayerListed, listPlayerForSale, unlistPlayer } from "../../transfers/transfer-listings.ts";
 import { openingBlocked } from "../../narrative/opening.ts";
 import {
   normalizeClubStadium,
-  stadiumTotalCapacity,
+  matchdayCapacity,
 } from "../../stadium/club-stadium.ts";
 import {
   precinctHasTrainingHall,
@@ -102,8 +103,10 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
     accessibility,
     activeSlot,
     loadSaveSlot,
+    applyImportedSave,
     newGameInSlot,
     applyCloudSave,
+    openMarketNegotiation,
     setScreen,
     setScoutingInitialTab,
     setCampusInitialTab,
@@ -161,7 +164,6 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
     handleMerchSaleStart,
     handleDrawBankLoan,
     handleStartBlockExpansion,
-    handlePurchaseStadiumUpgrade,
     handlePlacePrecinct,
     handleUpgradePrecinct,
     handleBuyParcel,
@@ -402,7 +404,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
         <YouthCampus
           players={players}
           youthInbox={youthInbox}
-          stadiumCapacity={stadiumTotalCapacity(stadium)}
+          stadiumCapacity={matchdayCapacity(stadium, season, week)}
           season={season}
           week={week}
           cash={finances.cash}
@@ -481,6 +483,19 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           week={week}
           history={transferState.history}
           worldClubs={world.clubs}
+          rivalPlayers={rivalPlayers}
+          transferState={transferState}
+          onToggleListing={(playerId) =>
+            patchSession((current) => {
+              const player = current.players.find((entry) => entry.id === playerId);
+              if (!player || player.club_id !== current.clubId) return current;
+              const transferStateNext = isPlayerListed(current.transferState, playerId)
+                ? unlistPlayer(current.transferState, playerId)
+                : listPlayerForSale(current.transferState, player, current.season, current.week);
+              return { ...current, transferState: transferStateNext };
+            })
+          }
+          onOpenNegotiation={openMarketNegotiation}
           onSelectPlayer={setProfileId}
           onRecallLoan={handleRecallLoan}
         />
@@ -600,7 +615,6 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
             }))
           }
           onStartBlockExpansion={handleStartBlockExpansion}
-          onPurchaseUpgrade={handlePurchaseStadiumUpgrade}
           onPlacePrecinct={handlePlacePrecinct}
           onUpgradePrecinct={handleUpgradePrecinct}
           onBuyParcel={handleBuyParcel}
@@ -611,6 +625,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           onRemoveStreet={handleRemoveStreet}
           precinctSeasonWeek={week}
           academyFacility={academyFacility}
+          academyProject={session.academyProject ?? null}
           onUpgradeAcademy={handleUpgradeAcademy}
         />
       ) : null}
@@ -649,6 +664,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           activeSlot={activeSlot}
           currentSave={save}
           onLoadSlot={loadSaveSlot}
+          onApplyImportedSave={applyImportedSave}
           onNewGameInSlot={newGameInSlot}
           onApplyCloudSave={applyCloudSave}
           onOpenMatchdaySandbox={() => setScreen("matchday")}

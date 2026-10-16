@@ -40,13 +40,21 @@ import {
   precinctPlacementCost,
   PRECINCT_BUILDINGS,
   shrinkPrecinctPatchToMin,
-  upgradePrecinctBuilding,
   occupiedCells,
   type PrecinctBuilding,
   type PrecinctEdge,
 } from "../../stadium/precinct.ts";
 import { applyRestaurantProposalStory } from "../../stadium/precinct-campus-events.ts";
 import { canBuyAcademyUpgrade, ACADEMY_FACILITIES } from "../../youth/academy.ts";
+import { careerWeekIndex } from "../../stadium/hospitality.ts";
+import {
+  startPrecinctConstruction,
+  startPrecinctUpgrade,
+} from "../../stadium/precinct-construction.ts";
+import {
+  academyBuildWeeks,
+  constructionCapReason,
+} from "../../sim/advance-construction.ts";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
 import { withClubEvent } from "../../inbox/club-events.ts";
 import { t } from "../../i18n/index.ts";
@@ -169,6 +177,18 @@ export function useStadiumActions(args: {
             current.finances.cash,
           );
           if (!recheck.allowed || recheck.cost === undefined) return current;
+          if (
+            constructionCapReason({
+              precinct: current.stadium.precinct,
+              stadium: current.stadium,
+              camps: current.youthCamps,
+              academyProject: current.academyProject,
+              season: current.season,
+              week: current.week,
+            })
+          ) {
+            return current;
+          }
           const fee = infrastructureCostForWeek(recheck.cost, current.week);
           if (fee > current.finances.cash) return current;
           return {
@@ -200,8 +220,24 @@ export function useStadiumActions(args: {
           const actualBase = precinctPlacementCost(currentPrecinct, building, from);
           const actualCost = infrastructureCostForWeek(actualBase, current.week);
           if (actualCost > current.finances.cash) return current;
+          const buildingNew = !from;
+          if (
+            buildingNew &&
+            constructionCapReason({
+              precinct: currentPrecinct,
+              stadium: current.stadium,
+              camps: current.youthCamps,
+              academyProject: current.academyProject,
+              season: current.season,
+              week: current.week,
+            })
+          ) {
+            return current;
+          }
           const hadRestaurant = occupiedCells(currentPrecinct, "restaurant") > 0;
-          const nextPrecinct = placePrecinctBuilding(currentPrecinct, x, y, building, from);
+          const nextPrecinct = buildingNew
+            ? startPrecinctConstruction(currentPrecinct, x, y, building, current.season, current.week)
+            : placePrecinctBuilding(currentPrecinct, x, y, building, from);
           if (nextPrecinct === currentPrecinct) return current;
           let nextStadium = normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct });
           let nextPlayers = current.players;
@@ -255,10 +291,25 @@ export function useStadiumActions(args: {
         stadiumTotalCapacity(current.stadium),
         current.finances.cash,
       );
-      if (!next.ok) return current;
+      if (!next.ok || current.academyProject) return current;
+      if (
+        constructionCapReason({
+          precinct: current.stadium.precinct,
+          stadium: current.stadium,
+          camps: current.youthCamps,
+          academyProject: current.academyProject,
+          season: current.season,
+          week: current.week,
+        })
+      ) {
+        return current;
+      }
       return {
         ...current,
-        academyFacility: next.target,
+        academyProject: {
+          target: next.target,
+          ready_week_index: careerWeekIndex(current.season, current.week) + academyBuildWeeks(next.target),
+        },
         finances: spendClubCash(current.finances, next.cost, current.week),
       };
     });
@@ -279,12 +330,24 @@ export function useStadiumActions(args: {
           const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
           const nextCheck = canUpgradePrecinctBuilding(currentPrecinct, building, current.finances.cash);
           if (!nextCheck.allowed) return current;
+          if (
+            constructionCapReason({
+              precinct: currentPrecinct,
+              stadium: current.stadium,
+              camps: current.youthCamps,
+              academyProject: current.academyProject,
+              season: current.season,
+              week: current.week,
+            })
+          ) {
+            return current;
+          }
           const fee = infrastructureCostForWeek(nextCheck.cost, current.week);
           return {
             ...current,
             stadium: normalizeClubStadium({
               ...current.stadium,
-              precinct: upgradePrecinctBuilding(currentPrecinct, building),
+              precinct: startPrecinctUpgrade(currentPrecinct, building, current.season, current.week),
             }),
             finances: spendClubCash(current.finances, fee, current.week),
           };

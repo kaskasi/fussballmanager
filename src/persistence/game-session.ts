@@ -36,6 +36,7 @@ function normalizeTransferState(state?: TransferState): TransferState {
     pending_transfers: base.pending_transfers ?? [],
     pending_purchases: base.pending_purchases ?? [],
     inbound_offers: base.inbound_offers ?? [],
+    listings: base.listings ?? [],
   };
 }
 import { MONDAY } from "../sim/day-calendar.ts";
@@ -141,6 +142,7 @@ export interface GameSession {
   assistantDelegation: AssistantDelegation;
   scoutNetwork: ScoutNetworkState;
   academyFacility: AcademyFacility;
+  academyProject?: import("../sim/advance-construction.ts").AcademyProject | null;
   youthCamps: YouthCamp[];
   /** Set when training reminder Postfach item was shown/dismissed this game week. */
   trainingReminderWeek?: { season: number; week: number };
@@ -330,6 +332,7 @@ export function sessionFromSave(save: SaveGame, options?: SessionFromSaveOptions
       save.rng_state.master_seed,
     ),
     academyFacility: pipeline.academy_facility ?? "academy_basic",
+    academyProject: pipeline.academy_project ?? null,
     youthCamps: normalizeYouthCamps(pipeline.youth_camps),
     trainingReminderWeek: pipeline.training_reminder_week,
     kickerConsumedWeek: pipeline.kicker_consumed_week,
@@ -373,6 +376,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     assistant_delegation: session.assistantDelegation,
     scout_network: session.scoutNetwork,
     academy_facility: session.academyFacility,
+    academy_project: session.academyProject ?? null,
     youth_camps: session.youthCamps,
     training_reminder_week: session.trainingReminderWeek,
     kicker_consumed_week: session.kickerConsumedWeek,

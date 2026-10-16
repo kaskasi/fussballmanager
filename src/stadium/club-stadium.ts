@@ -292,6 +292,15 @@ export function stadiumTotalCapacity(stadium: ClubStadium): number {
   return stadium.blocks.reduce((sum, block) => sum + block.capacity, 0);
 }
 
+/** Spectator ceiling: finished tribunes at their expansion level. A stand under construction contributes nothing. */
+export function matchdayCapacity(stadium: ClubStadium, season: number, week: number): number {
+  const blocks = applyBlockExpansionCapacities(stadium, stadium.blocks);
+  return blocks.reduce((sum, block) => {
+    if (isBlockUnderConstruction(stadium, block.id, season, week)) return sum;
+    return sum + block.capacity;
+  }, 0);
+}
+
 /** Capacity-weighted attendance share (Heimspiel fill). */
 export function stadiumAttendanceFill(stadium: ClubStadium): number {
   const capacity = stadiumTotalCapacity(stadium);
@@ -309,7 +318,9 @@ export function stadiumBlockIncome(
   if (season != null && week != null && isBlockUnderConstruction(stadium, block.id, season, week)) {
     return 0;
   }
-  return block.capacity * block.fill_rate * block.ticket_price_eur;
+  const expanded = applyBlockExpansionCapacities(stadium, stadium.blocks).find((entry) => entry.id === block.id);
+  const capacity = expanded?.capacity ?? block.capacity;
+  return capacity * block.fill_rate * block.ticket_price_eur;
 }
 
 export function stadiumMatchdayIncome(

@@ -43,6 +43,9 @@ export interface TransferNegotiation {
   failed_lowball_count: number;
   last_reaction: OfferReaction | null;
   week: number;
+  /** buy = we pay a club. sell = a club bids for our listed player. */
+  side?: "buy" | "sell";
+  buyer_club_id?: string;
 }
 
 export interface AiClubBudget {
@@ -66,6 +69,8 @@ export interface TransferState {
   pending_purchases?: import("./pending-player-purchase.ts").PendingPlayerPurchase[];
   /** F5.6 — inbound bid on user's player. */
   inbound_offers?: import("./inbound-offers.ts").InboundTransferOffer[];
+  /** Players publicly offered by us and by other clubs. */
+  listings?: import("./transfer-listings.ts").TransferListing[];
 }
 
 export function emptyTransferState(): TransferState {
@@ -78,6 +83,7 @@ export function emptyTransferState(): TransferState {
     pending_transfers: [],
     pending_purchases: [],
     inbound_offers: [],
+    listings: [],
   };
 }
 

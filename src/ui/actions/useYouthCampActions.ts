@@ -1,17 +1,16 @@
 import { useCallback, type MutableRefObject } from "react";
-import { formatPlayerName } from "../../types/player-display.ts";
 import { withClubEvent } from "../../inbox/club-events.ts";
 import { spendClubCash } from "../../economy/club-finances.ts";
 import type { GameSession } from "../../persistence/game-session.ts";
-import { refreshAllMarketValues } from "../../transfers/refresh-market-values.ts";
 import {
   buyYouthCamp,
   campNationById,
   canBuyYouthCamp,
-  generateCampOpeningBundle,
+  isCampUnderConstruction,
   pullCampPlayerToHq,
   type YouthCamp,
 } from "../../youth/satellite-camps.ts";
+import { CAMP_BUILD_WEEKS, constructionCapReason } from "../../sim/advance-construction.ts";
 import {
   CAMP_LEADER_AGENCY_NOTICE,
   commissionCampLeaderAgency,
@@ -62,46 +61,37 @@ export function useYouthCampActions(args: {
         (current) => {
           const next = canBuyYouthCamp(current.youthCamps, nationId, current.finances.cash);
           if (!next.ok) return current;
+          if (
+            constructionCapReason({
+              precinct: current.stadium.precinct,
+              stadium: current.stadium,
+              camps: current.youthCamps,
+              academyProject: current.academyProject,
+              season: current.season,
+              week: current.week,
+            })
+          ) {
+            return current;
+          }
           const youthCampsNext = buyYouthCamp(
             current.youthCamps,
             nationId,
             current.season,
             current.week,
+            CAMP_BUILD_WEEKS,
           );
-          const opening = generateCampOpeningBundle({
-            campId: nationId,
-            clubId: current.clubId,
-            season: current.season,
-            week: current.week,
-            masterSeed: current.masterSeed,
-            players: current.players,
-            facility: current.academyFacility,
-          });
-          if (opening.headlinePlayerId) {
-            campDebutAfterSpendRef.current = {
-              campId: nationId,
-              playerId: opening.headlinePlayerId,
-            };
-          }
-          const players =
-            opening.players.length > 0
-              ? refreshAllMarketValues([...current.players, ...opening.players], current.season)
-              : current.players;
-          const headline = opening.players.find((p) => p.id === opening.headlinePlayerId);
-          const clubEvents =
-            headline && nation
-              ? withClubEvent(
-                  current.clubEvents,
-                  current.season,
-                  current.week,
-                  "info",
-                  `${nation.flag} Camp ${nation.label}: ${formatPlayerName(headline)} stellt sich vor — drei Talente im Kader.`,
-                )
-              : current.clubEvents;
+          const clubEvents = nation
+            ? withClubEvent(
+                current.clubEvents,
+                current.season,
+                current.week,
+                "info",
+                `Camp ${nation.label} wird gebaut — fertig in ${CAMP_BUILD_WEEKS} Wochen.`,
+              )
+            : current.clubEvents;
           return {
             ...current,
             youthCamps: youthCampsNext,
-            players,
             clubEvents,
             finances: spendClubCash(current.finances, next.cost, current.week),
           };
@@ -114,7 +104,7 @@ export function useYouthCampActions(args: {
   const handleCommissionCampLeader = useCallback(
     (nationId: string) => {
       const owned = youthCamps.find((camp) => camp.id === nationId);
-      if (!owned || owned.leader_hire === "hired" || owned.leader_hire === "candidates_ready") {
+      if (!owned || isCampUnderConstruction(owned) || owned.leader_hire === "hired" || owned.leader_hire === "candidates_ready") {
         return;
       }
       if (owned.leader_hire === "agency_pending") {

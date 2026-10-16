@@ -11,6 +11,7 @@ export const COACH_TARGET = {
   hubOpponentScout: "hub-opponent-scout",
   hubPostfach: "hub-postfach",
   hubDutyBlockers: "hub-duty-blockers",
+  hubScoutingTransfer: "hub-scouting-transfer",
   postfachQueue: "postfach-queue",
   postfachInboxActions: "postfach-inbox-actions",
   postfachTreter: "postfach-treter",

@@ -1,9 +1,15 @@
 import type { Player } from "../types/player.ts";
 import { careerWeekIndex } from "../stadium/hospitality.ts";
 import type { AcademyFacility } from "./intake-generator.ts";
-import { generateCampOpeningBundle, type YouthCamp } from "./satellite-camps.ts";
+import {
+  campNationById,
+  generateCampOpeningBundle,
+  type YouthCamp,
+} from "./satellite-camps.ts";
 
 export type CampWeekDebut = { campId: string; playerId: string };
+
+export type CampConstructionCompletion = { campId: string; nationLabel: string; flag: string };
 
 export function advanceYouthCampsForWeek(input: {
   camps: readonly YouthCamp[];
@@ -13,15 +19,32 @@ export function advanceYouthCampsForWeek(input: {
   masterSeed: number;
   players: readonly Player[];
   facility: AcademyFacility;
-}): { camps: YouthCamp[]; newPlayers: Player[]; debuts: CampWeekDebut[] } {
+}): {
+  camps: YouthCamp[];
+  newPlayers: Player[];
+  debuts: CampWeekDebut[];
+  constructionCompletions: CampConstructionCompletion[];
+} {
   const newPlayers: Player[] = [];
   const debuts: CampWeekDebut[] = [];
+  const constructionCompletions: CampConstructionCompletion[] = [];
   const now = careerWeekIndex(input.season, input.week);
   let playerPool = input.players;
 
   const camps = input.camps.map((camp) => {
     const until = camp.construction_until;
     const openingDone = camp.opening_players_delivered ?? until == null;
+
+    if (until != null && now > until) {
+      const nation = campNationById(camp.id);
+      if (nation) {
+        constructionCompletions.push({
+          campId: camp.id,
+          nationLabel: nation.label,
+          flag: nation.flag,
+        });
+      }
+    }
 
     if (until != null && now > until && !openingDone) {
       const opening = generateCampOpeningBundle({
@@ -52,5 +75,5 @@ export function advanceYouthCampsForWeek(input: {
     return camp;
   });
 
-  return { camps, newPlayers, debuts };
+  return { camps, newPlayers, debuts, constructionCompletions };
 }

@@ -32,6 +32,7 @@ export function buildAiClubShortlist(input: {
   week: number;
   masterSeed: number;
   topClub?: boolean;
+  buyerReputation?: number;
   limit?: number;
 }): ShortlistCandidate[] {
   const needs = squadNeedPositions(input.buyerSquad);
@@ -59,8 +60,12 @@ export function buildAiClubShortlist(input: {
     });
   }
 
+  const bargainHunter = (input.buyerReputation ?? 50) < 42;
   rows.sort((left, right) => {
     if (left.academyWatch !== right.academyWatch) return left.academyWatch ? -1 : 1;
+    if (bargainHunter) {
+      return left.ca - right.ca || left.estimatedFee - right.estimatedFee;
+    }
     return right.ca - left.ca || left.estimatedFee - right.estimatedFee;
   });
 

@@ -176,6 +176,53 @@ export function sellPressurePlayers(
   return pressure;
 }
 
+/** Weakest extras where the squad is over-stocked for a role (squad trim). */
+export function squadExcessPlayers(squad: readonly Player[]): Player[] {
+  const byPosition = new Map<PositionPrimary, Player[]>();
+  for (const player of squad) {
+    const list = byPosition.get(player.position) ?? [];
+    list.push(player);
+    byPosition.set(player.position, list);
+  }
+  const excess: Player[] = [];
+  for (const [position, target] of Object.entries(POSITION_SLOTS) as [PositionPrimary, number][]) {
+    const group = byPosition.get(position) ?? [];
+    const allowed = target + 1;
+    if (group.length <= allowed) continue;
+    const sorted = [...group].sort(
+      (left, right) =>
+        estimateCa(left.attributes, left.position) -
+        estimateCa(right.attributes, right.position),
+    );
+    excess.push(...sorted.slice(0, group.length - allowed));
+  }
+  return excess;
+}
+
+export function sellerReleaseCandidates(
+  squad: readonly Player[],
+  season: number,
+): Player[] {
+  const ids = new Set<string>();
+  const merged = [
+    ...sellPressurePlayers(squad, season),
+    ...academyOverflowPlayers(squad),
+    ...squadExcessPlayers(squad),
+  ];
+  return merged.filter((player) => {
+    if (ids.has(player.id)) return false;
+    ids.add(player.id);
+    return true;
+  });
+}
+
+function clubReputation(
+  clubId: string,
+  worldClubs: readonly WorldClub[] | undefined,
+): number {
+  return worldClubs?.find((entry) => entry.id === clubId)?.reputation ?? 50;
+}
+
 function sellerWillSell(
   player: Player,
   season: number,
@@ -248,8 +295,11 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
   const records: TransferRecord[] = [];
   const messages: string[] = [];
 
-  const maxDeals = transferWindowKind(input.week) === "summer" ? 3 : 2;
+  const maxDeals = transferWindowKind(input.week) === "summer" ? 4 : 3;
   const rng = weekRng(input.masterSeed, input.season, input.week, 0x5f6);
+  const transferredThisWeek = new Set<string>();
+  const salesByClub = new Map<string, number>();
+  const maxSalesPerClub = 1;
 
   for (let attempt = 0; attempt < maxDeals; attempt++) {
     const squads = squadByClub(players);
@@ -267,31 +317,42 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
     if (headroom < 80_000) continue;
 
     const tier = DIVISION_ECONOMY[input.divisionId].tier;
+    const buyerRep = clubReputation(buyerClubId, input.worldClubs);
     const shortlist = buildAiClubShortlist({
       buyerClubId,
       buyerSquad,
-      marketPlayers: players,
+      marketPlayers: players.filter((row) => !transferredThisWeek.has(row.id)),
       season: input.season,
       week: input.week,
       masterSeed: input.masterSeed,
       topClub: tier <= 2,
+      buyerReputation: buyerRep,
     });
 
     let deal: { player: Player; fee: number; distressed?: boolean } | null = null;
     for (const entry of shortlist.slice(0, 8)) {
       const player = players.find((row) => row.id === entry.playerId);
       if (!player?.club_id || player.club_id === buyerClubId) continue;
-      const sellerSquad = squads.get(player.club_id) ?? [];
-      const overflowIds = new Set(
-        [...academyOverflowPlayers(sellerSquad), ...sellPressurePlayers(sellerSquad, input.season)].map(
-          (p) => p.id,
-        ),
+      if (transferredThisWeek.has(player.id)) continue;
+      const sellerClubId = player.club_id;
+      const sellerSales = salesByClub.get(sellerClubId) ?? 0;
+      const sellerBudget = budgets[sellerClubId];
+      const sellerDistressed = Boolean(sellerBudget?.distressed);
+      if (sellerSales >= maxSalesPerClub && !sellerDistressed) continue;
+
+      const sellerRep = clubReputation(sellerClubId, input.worldClubs);
+      const playerCa = estimateCa(player.attributes, player.position);
+      if (playerCa < 82 && buyerRep > sellerRep + 8) continue;
+
+      const sellerSquad = squads.get(sellerClubId) ?? [];
+      const releaseIds = new Set(
+        sellerReleaseCandidates(sellerSquad, input.season).map((p) => p.id),
       );
-      const forced = overflowIds.has(player.id);
-      const sellerBudget = budgets[player.club_id];
-      const distressed = Boolean(sellerBudget?.distressed);
+      const forced = releaseIds.has(player.id);
+      const distressed = sellerDistressed;
       let asking = sellerAskingPrice(player, input.season);
       if (distressed && player.age <= 21) asking = Math.round(asking * 0.65);
+      if (playerCa < 78 && buyerRep < sellerRep) asking = Math.round(asking * 0.92);
       if (asking > headroom * 1.15) continue;
       const fee = negotiateFee(asking, headroom, rng);
       if (fee <= 0) continue;
@@ -302,6 +363,8 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
     if (!deal) continue;
 
     const sellerClubId = deal.player.club_id ?? "cl_rival_pool";
+    transferredThisWeek.add(deal.player.id);
+    salesByClub.set(sellerClubId, (salesByClub.get(sellerClubId) ?? 0) + 1);
     const bought = completePurchase(deal.player, buyerClubId, input.season);
     const shifted = processTransferBreakout(bought, {
       masterSeed: input.masterSeed,

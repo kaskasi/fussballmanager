@@ -39,6 +39,7 @@ describe("youth camp construction", () => {
       players: [],
       facility: "academy_basic",
     });
+    expect(step.constructionCompletions).toHaveLength(1);
     expect(step.newPlayers).toHaveLength(3);
     expect(step.debuts).toHaveLength(1);
     expect(step.camps[0]?.opening_players_delivered).toBe(true);

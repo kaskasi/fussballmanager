@@ -204,6 +204,9 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
               setScoutingInitialTab(null);
               setScreen("scouting");
             }}
+            onOpenTransfers={() => setScreen("transfers")}
+            transferState={session.transferState}
+            worldClubs={session.world.clubs}
             postfach={{
               players,
               youthInbox,

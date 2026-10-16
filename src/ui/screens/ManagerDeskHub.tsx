@@ -6,7 +6,6 @@ import { hubFitnessCells, hubPlayerGrowthCells } from "../../hub/hub-heatmaps.ts
 import { buildHubMerchDeskView, resolveHubCommerceFocus } from "../../hub/hub-finance-merch.ts";
 import { HubMerchDeskPanel } from "../components/HubMerchDeskPanel.tsx";
 import { hubLeagueSnippet } from "../../hub/hub-league-snippet.ts";
-import { listHubBlockers, type HubBlockerKind } from "../../hub/hub-blockers.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
 import type { Player } from "../../types/player.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
@@ -29,7 +28,10 @@ import type { PostfachPanelProps } from "./postfach-panel-props.ts";
 import { usesTrainingNextNexus } from "../../sim/training-next.ts";
 import { hubLatestTreterEdition, treterTickerLines } from "../../hub/hub-treter-ticker.ts";
 import { HubTreterTicker } from "../components/HubTreterTicker.tsx";
-import { HubOpponentScoutDeskPanel } from "../components/HubOpponentScoutDeskPanel.tsx";
+import { HubOpponentScoutCompact } from "../components/HubOpponentScoutCompact.tsx";
+import { HubScoutingTransferDeskPanel } from "../components/HubScoutingTransferDeskPanel.tsx";
+import type { TransferState } from "../../transfers/negotiations.ts";
+import type { WorldClub } from "../../world/world-generator.ts";
 import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
 import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
 import type { ScoutNetworkState } from "../../scouting/scout-network.ts";
@@ -45,7 +47,10 @@ export function ManagerDeskHub({
   stadium,
   onOpenTraining,
   onOpenScouting,
+  onOpenTransfers,
   onSelectPlayer,
+  transferState,
+  worldClubs,
   postfach,
   calendarMilestones = [],
   scoutBoard,
@@ -63,7 +68,10 @@ export function ManagerDeskHub({
   stadium: ClubStadium;
   onOpenTraining: () => void;
   onOpenScouting: () => void;
+  onOpenTransfers: () => void;
   onSelectPlayer: (playerId: string) => void;
+  transferState: TransferState;
+  worldClubs?: readonly WorldClub[];
   postfach: PostfachPanelProps;
   calendarMilestones?: readonly CalendarMilestone[];
   scoutBoard?: ScoutBoard;
@@ -80,6 +88,7 @@ export function ManagerDeskHub({
   const heatmapCompact = !mobileNarrow;
 
   const { season, week, clubId, trainingUnitsCompleted } = session;
+  const deskScoutBoard = scoutBoard ?? postfach.scoutBoard;
 
   const growthCells = useMemo(
     () => hubPlayerGrowthCells(players, clubId, season, week),
@@ -97,14 +106,6 @@ export function ManagerDeskHub({
     [players, clubId],
   );
 
-  const hubBlockers = useMemo(
-    () => listHubBlockers({ session, youthInbox: postfach.youthInbox, players }),
-    [session, postfach.youthInbox, players],
-  );
-  const blockers = hubBlockers.length;
-
-  const blockerLabel = (kind: HubBlockerKind): string => t(`hub.desk.blocker.${kind}`);
-
   const treterTickerLinesResolved = useMemo(() => {
     const edition = hubLatestTreterEdition({
       current: postfach.kickerEdition,
@@ -115,7 +116,7 @@ export function ManagerDeskHub({
   }, [postfach.kickerEdition, postfach.kickerEditionArchive, postfach.treterSession, session]);
 
   return (
-    <main className="manager-desk club-shell-card-body" data-hub-blockers={blockers}>
+    <main className="manager-desk club-shell-card-body">
       <div className="manager-desk__inbox">
         <section
           className="game-panel postfach-decisions manager-desk__postfach"
@@ -234,38 +235,26 @@ export function ManagerDeskHub({
           plan={trainingPlan}
           useTrainingUnitProgress={usesTrainingNextNexus(session.storyState)}
           milestones={calendarMilestones}
-          scoutBoard={scoutBoard ?? postfach.scoutBoard}
+          scoutBoard={deskScoutBoard}
           onOpenTraining={onOpenTraining}
         />
       </div>
 
       <div className="manager-desk__bottom">
-        <div
-          className={`manager-desk__duty${blockers > 0 ? " is-alert" : ""}`}
-          data-coach-target={COACH_TARGET.hubDutyBlockers}
-        >
-          {scoutBoard ? (
-            <HubOpponentScoutDeskPanel
-              season={season}
-              matchSetup={matchSetup}
-              scoutBoard={scoutBoard}
-              scoutNetwork={scoutNetwork}
-              onStartOpponentScout={onStartOpponentScout}
-              onViewOpponentScoutReport={onViewOpponentScoutReport}
-              onOpenScouting={onOpenScouting}
-            />
-          ) : null}
-          <p className="manager-desk__duty-title">{t("hub.desk.dutyTitle")}</p>
-          {hubBlockers.length === 0 ? (
-            <p className="manager-desk__duty-clear">{t("hub.desk.dutyClear")}</p>
-          ) : (
-            <ul className="manager-desk__duty-list">
-              {hubBlockers.map((blocker) => (
-                <li key={blocker.id}>{blockerLabel(blocker.kind)}</li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {deskScoutBoard ? (
+          <HubScoutingTransferDeskPanel
+            players={players}
+            clubId={clubId}
+            season={season}
+            scoutBoard={deskScoutBoard}
+            transferState={transferState}
+            matchSetup={matchSetup ?? null}
+            worldClubs={worldClubs}
+            onSelectPlayer={onSelectPlayer}
+            onOpenScouting={onOpenScouting}
+            onOpenTransfers={onOpenTransfers}
+          />
+        ) : null}
 
         <div
           className="manager-desk__heatmaps training-schedule-heatmap"
@@ -292,27 +281,39 @@ export function ManagerDeskHub({
           />
         </div>
 
-        <div className="manager-desk__development" data-coach-target={COACH_TARGET.hubTopDevelopment}>
-          <div className="manager-desk__dev-pills">
-            {(["week", "month", "year"] as const).map((period) => (
-              <button
-                key={period}
-                type="button"
-                className={`manager-desk__wildcard-tab${devPeriod === period ? " is-active" : ""}`}
-                onClick={() => setDevPeriod(period)}
-              >
-                {t(`hub.desk.period.${period}`)}
-              </button>
-            ))}
+        <div className="manager-desk__development-stack">
+          <div className="manager-desk__development" data-coach-target={COACH_TARGET.hubTopDevelopment}>
+            <div className="manager-desk__dev-pills">
+              {(["week", "month", "year"] as const).map((period) => (
+                <button
+                  key={period}
+                  type="button"
+                  className={`manager-desk__wildcard-tab${devPeriod === period ? " is-active" : ""}`}
+                  onClick={() => setDevPeriod(period)}
+                >
+                  {t(`hub.desk.period.${period}`)}
+                </button>
+              ))}
+            </div>
+            <DevelopmentHubPanel
+              movers={developmentMovers}
+              onSelectPlayer={onSelectPlayer}
+              variant="desk"
+              period={devPeriod}
+              players={players}
+              season={season}
+            />
           </div>
-          <DevelopmentHubPanel
-            movers={developmentMovers}
-            onSelectPlayer={onSelectPlayer}
-            variant="desk"
-            period={devPeriod}
-            players={players}
-            season={season}
-          />
+          {deskScoutBoard && scoutNetwork ? (
+            <HubOpponentScoutCompact
+              season={season}
+              matchSetup={matchSetup ?? null}
+              scoutBoard={deskScoutBoard}
+              scoutNetwork={scoutNetwork}
+              onStartOpponentScout={onStartOpponentScout}
+              onViewOpponentScoutReport={onViewOpponentScoutReport}
+            />
+          ) : null}
         </div>
       </div>
     </main>

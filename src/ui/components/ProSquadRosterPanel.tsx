@@ -18,14 +18,6 @@ import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 
-const QUICK_SORT_KEYS: readonly { key: ProSquadSortKey; labelKey: string }[] = [
-  { key: "name", labelKey: "squad.col.name" },
-  { key: "position", labelKey: "squad.col.pos" },
-  { key: "ca", labelKey: "squad.col.caShort" },
-  { key: "form", labelKey: "squad.col.form" },
-  { key: "age", labelKey: "squad.col.age" },
-];
-
 export function ProSquadRosterPanel({
   rows,
   playersById,
@@ -84,18 +76,6 @@ export function ProSquadRosterPanel({
           return (
             <FilterChip key={slot} active={active} onClick={() => setPosition(active ? "all" : slot)}>
               {slot}
-            </FilterChip>
-          );
-        })}
-      </FilterToolbar>
-
-      <FilterToolbar ariaLabel={t("squad.sort.aria")} className="squad-list-toolbar squad-list-toolbar--sort">
-        {QUICK_SORT_KEYS.map(({ key, labelKey }) => {
-          const active = sortKey === key;
-          return (
-            <FilterChip key={key} active={active} onClick={() => toggleSort(key)}>
-              {t(labelKey)}
-              {active ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}
             </FilterChip>
           );
         })}

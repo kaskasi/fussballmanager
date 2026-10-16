@@ -113,7 +113,7 @@ export function MerchandisingScreen({
   const onDemandMarketUnit = bestMarketBulkUnitCost(customSku, merch.bulk_offers);
 
   const careerWeek = merchCareerWeekIndex(season, week);
-  const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium);
+  const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium, season, week);
   const fanshopLevel = fanshopMerchLevel(stadium.precinct);
   const activeSales = activeMerchSaleSkus(merch, careerWeek);
   const pendingSaleSummaries = merch.pending_sale_summaries ?? [];

@@ -30,7 +30,10 @@ describe("stadium block expansion", () => {
     let stadium = defaultClubStadium();
     stadium = startBlockExpansion(stadium, "north", 1, 1);
     expect(stadium.block_expansion?.north?.construction_until).toBeDefined();
-    stadium = advanceBlockExpansionProjects(stadium, 1, 20);
+    const finished = advanceBlockExpansionProjects(stadium, 1, 20);
+    stadium = finished.stadium;
+    expect(finished.completions).toHaveLength(1);
+    expect(finished.completions[0]?.capacity).toBe(blockCapacityAtExpansionLevel("north", 2));
     expect(stadium.block_expansion?.north?.level).toBe(2);
     expect(stadium.block_expansion?.north?.construction_until).toBeUndefined();
   });

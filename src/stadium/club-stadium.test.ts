@@ -12,6 +12,7 @@ import {
   stadiumTotalCapacity,
 } from "./club-stadium.ts";
 import { emptyPrecinct, normalizePrecinct, placePrecinctBuilding } from "./precinct.ts";
+import { startBlockExpansion } from "./stadium-block-expansion.ts";
 
 describe("club stadium", () => {
   it("defaults to roughly 8k seats", () => {
@@ -60,6 +61,16 @@ describe("club stadium", () => {
     const cheaper = adjustBlockTicketPrice(stadium, "west", -6);
     const updated = cheaper.blocks.find((block) => block.id === "west")!;
     expect(updated.fill_rate).toBeGreaterThan(west.fill_rate);
+  });
+
+  it("excludes tribunes under construction from matchday capacity", () => {
+    let stadium = defaultClubStadium();
+    expect(stadiumTotalCapacity(stadium, 1, 1)).toBe(8_000);
+    stadium = startBlockExpansion(stadium, "north", 1, 1);
+    expect(stadiumTotalCapacity(stadium, 1, 1)).toBe(8_000 - 2_400);
+    expect(stadiumMatchdayIncome(stadium, 1, 1)).toBeLessThan(
+      stadiumMatchdayIncome(defaultClubStadium(), 1, 1),
+    );
   });
 
   it("raises fill when a rail stop is on the campus", () => {

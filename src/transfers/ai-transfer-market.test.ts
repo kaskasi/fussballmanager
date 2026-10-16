@@ -86,6 +86,28 @@ describe("ai-transfer-market", () => {
     expect(Array.isArray(pressured)).toBe(true);
   });
 
+  it("never moves the same player twice in one week", () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const result = advanceAiTransferWeek({
+        rivalPlayers: rivals,
+        transferState: {
+          ...emptyTransferState(),
+          ai_budgets: normalizeAiBudgets(
+            [...new Set(rivals.map((p) => p.club_id).filter(Boolean))] as string[],
+            "regionalliga-nord",
+          ),
+        },
+        leagueClubIds,
+        divisionId: "regionalliga-nord",
+        season: 1,
+        week: 35,
+        masterSeed: seed,
+      });
+      const ids = result.records.map((row) => row.player_id);
+      expect(new Set(ids).size).toBe(ids.length);
+    }
+  });
+
   it("skips outside transfer window", () => {
     const result = advanceAiTransferWeek({
       rivalPlayers: rivals,

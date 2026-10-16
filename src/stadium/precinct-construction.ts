@@ -55,13 +55,26 @@ export function startPrecinctUpgrade(
   };
 }
 
-export function advancePrecinctConstruction(state: PrecinctState, weekIndex: number): PrecinctState {
+export interface PrecinctConstructionCompletion {
+  building: PrecinctBuilding;
+  label: string;
+}
+
+export function advancePrecinctConstructionDetailed(
+  state: PrecinctState,
+  weekIndex: number,
+): { state: PrecinctState; completions: PrecinctConstructionCompletion[] } {
+  const completions: PrecinctConstructionCompletion[] = [];
   let changed = false;
   const patches = state.patches.map((patch) => {
     if (!patch.constructing || patch.readyWeekIndex == null || weekIndex < patch.readyWeekIndex) {
       return patch;
     }
     changed = true;
+    completions.push({
+      building: patch.building,
+      label: precinctBuildingDef(patch.building).label,
+    });
     return { ...patch, constructing: false, readyWeekIndex: undefined };
   });
   const levels = { ...state.levels };
@@ -81,7 +94,21 @@ export function advancePrecinctConstruction(state: PrecinctState, weekIndex: num
     levels[building] = Math.min(max, current + 1);
     delete pendingUpgrades[building];
     changed = true;
+    completions.push({
+      building,
+      label: `${precinctBuildingDef(building).label} (Level ${levels[building]})`,
+    });
   }
-  if (!changed) return state;
-  return { ...state, patches, levels, pendingUpgrades };
+  if (!changed) return { state, completions: [] };
+  return { state: { ...state, patches, levels, pendingUpgrades }, completions };
+}
+
+/** Weekly sim step (advance-construction.ts). */
+export function advancePrecinctConstruction(state: PrecinctState, weekIndex: number): PrecinctState {
+  return advancePrecinctConstructionDetailed(state, weekIndex).state;
+}
+
+/** No-op for legacy callers — build timers use `constructing` / `readyWeekIndex`. */
+export function reconcilePrecinctBuildTimers(state: PrecinctState, _season: number, _week: number): PrecinctState {
+  return state;
 }

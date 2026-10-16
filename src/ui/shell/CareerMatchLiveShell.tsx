@@ -116,7 +116,7 @@ export function CareerMatchLiveShell({
         onSelectMatchPlayer={onSelectMatchPlayer}
         onRegisterSkipToReport={onRegisterSkipToReport}
         broadcastStory={broadcastStory}
-        kasse={matchdayCashBreakdown(stadium, setup.isHome)}
+        kasse={matchdayCashBreakdown(stadium, setup.isHome, season, week)}
         homeStadiumCapacity={matchdayCapacity(stadium, season, week)}
         fanbaseMood={fanbaseMood}
         poorForm={poorForm}

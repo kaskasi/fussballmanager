@@ -240,7 +240,7 @@
   }
 
   .training-timetable-scroll.is-mobile-week-stack .training-slot {
-    min-height: 5.25rem;
+    min-height: 7rem;
   }
 
   /* Manager Desk: current day only (see HubThreeDayTrainingCalendar) */
@@ -266,7 +266,7 @@
   }
 
   .manager-desk__timetable {
-    grid-template-rows: auto repeat(3, minmax(4.5rem, auto));
+    grid-template-rows: auto repeat(3, minmax(6.25rem, auto));
   }
 
   .training-plan-presets {
@@ -527,5 +527,232 @@
   .scout-discovery-zone-lore {
     overflow-wrap: break-word;
     word-break: normal;
+  }
+
+  main.pipeline.club-shell-card-body,
+  main.campus.club-shell-card-body,
+  main.training.club-shell-card-body,
+  main.profile.club-shell-card-body {
+    padding-left: max(0.65rem, env(safe-area-inset-left));
+    padding-right: max(0.65rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    box-sizing: border-box;
+  }
+
+  /* §9.8 Profil — kompaktere Identitätsschiene */
+  .profile-card.profile-hub {
+    padding: 0.65rem 0.7rem 1rem;
+    gap: 0.65rem;
+  }
+
+  .profile-identity-head {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.55rem;
+  }
+
+  .profile-portrait-rail.player-portrait {
+    width: 5.25rem;
+    height: 6rem;
+    flex-shrink: 0;
+  }
+
+  .profile-identity-head .profile-name {
+    font-size: 1.08rem;
+    line-height: 1.15;
+  }
+
+  .profile-identity-stats {
+    gap: 0.2rem 0.4rem;
+    font-size: 0.78rem;
+  }
+
+  .profile-actions-rail .profile-action-btn,
+  .profile-actions-rail .ui-btn {
+    font-size: 0.68rem;
+    padding: 0.42rem 0.4rem;
+    line-height: 1.2;
+    white-space: normal;
+    text-align: center;
+    min-height: 2.65rem;
+  }
+
+  .profile-spoke-tabs.fm-tab-bar,
+  main.campus > .fm-tab-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.35rem;
+    padding-bottom: 0.15rem;
+  }
+
+  .profile-spoke-tabs.fm-tab-bar::-webkit-scrollbar,
+  main.campus > .fm-tab-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .profile-spoke-tabs .fm-tab,
+  main.campus > .fm-tab-bar .fm-tab {
+    flex: 0 0 auto;
+  }
+
+  .profile-attr-hex-wrap--hero .profile-hex {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .profile-vertrag-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .profile-vertrag-actions .ui-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Jugend — schmalere Tabelle, Fokus Name/CA/Wert/Ziel */
+  .youth-strip {
+    font-size: 0.72rem;
+    line-height: 1.35;
+    padding: 0.5rem 0.65rem;
+  }
+
+  .youth-roster-panel .squad-table-wrap {
+    margin-inline: 0;
+  }
+
+  .youth-roster-table.squad-table {
+    min-width: 0;
+    width: 100%;
+    font-size: 0.72rem;
+  }
+
+  .youth-roster-table thead th:nth-child(7),
+  .youth-roster-table thead th:nth-child(8),
+  .youth-roster-table thead th:nth-child(9),
+  .youth-roster-table thead th:nth-child(10),
+  .youth-roster-table thead th:nth-child(11),
+  .youth-roster-table thead th:nth-child(15),
+  .youth-roster-table tbody td:nth-child(7),
+  .youth-roster-table tbody td:nth-child(8),
+  .youth-roster-table tbody td:nth-child(9),
+  .youth-roster-table tbody td:nth-child(10),
+  .youth-roster-table tbody td:nth-child(11),
+  .youth-roster-table tbody td:nth-child(15) {
+    display: none;
+  }
+
+  .youth-roster-table .squad-col-name {
+    min-width: 0;
+    max-width: 9.5rem;
+  }
+
+  .youth-report-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  .youth-report-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .youth-report-drop {
+    width: 100%;
+    height: 2.75rem;
+    font-size: 1.15rem;
+  }
+
+  /* Manager Desk — heute: 3 Sessions nebeneinander statt Turm */
+  .manager-desk__timetable-scroll.is-single-day .training-day-column {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    align-content: start;
+    grid-row: auto;
+  }
+
+  .manager-desk__timetable-scroll.is-single-day .training-day-column > .calendar-cell,
+  .manager-desk__timetable-scroll.is-single-day .training-day-column > .hub-desk-day-block--match,
+  .manager-desk__timetable-scroll.is-single-day .training-day-column > .hub-desk-day-block--off {
+    grid-column: 1 / -1;
+  }
+
+  .manager-desk__timetable-scroll.is-single-day .training-slot,
+  .manager-desk__timetable-scroll.is-single-day .hub-desk-day-block {
+    min-height: 6.25rem;
+    height: auto;
+    grid-row: auto;
+  }
+
+  .manager-desk__timetable-scroll.is-single-day .training-slot-main {
+    padding: 0.55rem 0.45rem 0.5rem;
+    padding-right: 0.35rem;
+    gap: 0.15rem;
+  }
+
+  .manager-desk__timetable-scroll.is-single-day .training-unit-name {
+    font-size: 0.82rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .manager-desk__timetable-scroll.is-single-day .training-skills,
+  .manager-desk__timetable-scroll.is-single-day .training-group--muted {
+    font-size: 0.65rem;
+    min-height: 0;
+    -webkit-line-clamp: 2;
+  }
+
+  .training-roster-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "name program"
+      "meta fatigue";
+    row-gap: 0.2rem;
+  }
+
+  .training-roster-name {
+    grid-area: name;
+  }
+
+  .training-roster-program {
+    grid-area: program;
+    text-align: right;
+    align-self: center;
+  }
+
+  .training-roster-meta {
+    grid-area: meta;
+    font-size: 0.75rem;
+  }
+
+  .training-roster-spark {
+    display: none;
+  }
+
+  .training-roster-fatigue {
+    grid-area: fatigue;
+    align-self: center;
+  }
+
+  .training-modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .training-modal.training-modal-individual {
+    width: 100%;
+    max-width: 100%;
+    max-height: min(92dvh, 40rem);
+    margin: 0;
+    border-radius: 1rem 1rem 0 0;
   }
 }

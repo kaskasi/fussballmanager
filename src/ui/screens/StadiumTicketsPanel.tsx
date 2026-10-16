@@ -61,7 +61,8 @@ function BlockStatCard({
           <span> Eintritt Saison bisher</span>
         </p>
         <span>
-          {fillPct}% · € {block.ticket_price_eur} · ~{stadiumBlockAttendees(block).toLocaleString("de-DE")}
+          {fillPct}% · € {block.ticket_price_eur} · ~
+          {stadiumBlockAttendees(block, stadium, season, week).toLocaleString("de-DE")}
         </span>
         <span className="finances-ticket-zone-sub">
           Modell {formatClubCash(perMatch)}/Spiel

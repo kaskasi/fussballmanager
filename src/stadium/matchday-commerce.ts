@@ -21,22 +21,27 @@ export interface MatchdayCashBreakdown {
 export function weekCommerceOccupancy(
   isHomeMatchWeek: boolean,
   stadium: ClubStadium | undefined,
+  season?: number,
+  week?: number,
 ): number {
   if (!stadium) return isHomeMatchWeek ? 0.72 : 0.06;
   const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
-  if (isHomeMatchWeek) return stadiumAttendanceFill(stadium);
+  if (isHomeMatchWeek) return stadiumAttendanceFill(stadium, season, week);
   return precinctAwayWeekCommerceFill(fanbase, stadium.precinct);
 }
 
 export function matchdayCashBreakdown(
   stadium: ClubStadium | undefined,
   isHomeMatchWeek: boolean,
+  season?: number,
+  week?: number,
 ): MatchdayCashBreakdown {
-  const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium);
+  const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium, season, week);
   const precinct = stadium?.precinct;
   const fanbase = stadium?.fanbase ?? DEFAULT_FANBASE;
   const prices = resolveConcessionPrices(stadium);
-  const tickets = isHomeMatchWeek && stadium ? stadiumMatchdayIncome(stadium) : 0;
+  const tickets =
+    isHomeMatchWeek && stadium ? stadiumMatchdayIncome(stadium, season, week) : 0;
   const kiosk = weeklyKioskIncome(precinct, occupancy, fanbase, isHomeMatchWeek, prices);
   const beer = weeklyBeerIncome(precinct, occupancy, fanbase, isHomeMatchWeek, prices);
   return {

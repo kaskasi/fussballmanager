@@ -252,8 +252,30 @@ export function applyStadiumFillRates(stadium: ClubStadium): ClubStadium {
   };
 }
 
-export function stadiumBlockAttendees(block: StadiumBlock): number {
-  return Math.round(block.capacity * block.fill_rate);
+/** Seats counted on matchday — zero while the tribune is under expansion. */
+export function stadiumBlockMatchdayCapacity(
+  stadium: ClubStadium,
+  block: StadiumBlock,
+  season?: number,
+  week?: number,
+): number {
+  if (season != null && week != null && isBlockUnderConstruction(stadium, block.id, season, week)) {
+    return 0;
+  }
+  return block.capacity;
+}
+
+export function stadiumBlockAttendees(
+  block: StadiumBlock,
+  stadium?: ClubStadium,
+  season?: number,
+  week?: number,
+): number {
+  const capacity =
+    stadium != null && season != null && week != null
+      ? stadiumBlockMatchdayCapacity(stadium, block, season, week)
+      : block.capacity;
+  return Math.round(capacity * block.fill_rate);
 }
 
 export function fillRateDeltaFromReference(block: StadiumBlock): number {
@@ -288,8 +310,18 @@ export function stadiumFromDivisionDefaults(divisionId: DivisionEconomyId): Club
   };
 }
 
-export function stadiumTotalCapacity(stadium: ClubStadium): number {
-  return stadium.blocks.reduce((sum, block) => sum + block.capacity, 0);
+export function stadiumTotalCapacity(
+  stadium: ClubStadium,
+  season?: number,
+  week?: number,
+): number {
+  if (season == null || week == null) {
+    return stadium.blocks.reduce((sum, block) => sum + block.capacity, 0);
+  }
+  return stadium.blocks.reduce(
+    (sum, block) => sum + stadiumBlockMatchdayCapacity(stadium, block, season, week),
+    0,
+  );
 }
 
 /** Spectator ceiling: finished tribunes at their expansion level. A stand under construction contributes nothing. */
@@ -302,10 +334,20 @@ export function matchdayCapacity(stadium: ClubStadium, season: number, week: num
 }
 
 /** Capacity-weighted attendance share (Heimspiel fill). */
-export function stadiumAttendanceFill(stadium: ClubStadium): number {
-  const capacity = stadiumTotalCapacity(stadium);
+export function stadiumAttendanceFill(
+  stadium: ClubStadium,
+  season?: number,
+  week?: number,
+): number {
+  const capacity = stadiumTotalCapacity(stadium, season, week);
   if (capacity <= 0) return 0;
-  const sold = stadium.blocks.reduce((sum, block) => sum + block.capacity * block.fill_rate, 0);
+  const sold = stadium.blocks.reduce((sum, block) => {
+    const cap =
+      season != null && week != null
+        ? stadiumBlockMatchdayCapacity(stadium, block, season, week)
+        : block.capacity;
+    return sum + cap * block.fill_rate;
+  }, 0);
   return Math.min(1, Math.max(0, sold / capacity));
 }
 
@@ -333,10 +375,20 @@ export function stadiumMatchdayIncome(
   );
 }
 
-export function stadiumAverageTicket(stadium: ClubStadium): number {
-  const sold = stadium.blocks.reduce((sum, block) => sum + block.capacity * block.fill_rate, 0);
+export function stadiumAverageTicket(
+  stadium: ClubStadium,
+  season?: number,
+  week?: number,
+): number {
+  const sold = stadium.blocks.reduce((sum, block) => {
+    const cap =
+      season != null && week != null
+        ? stadiumBlockMatchdayCapacity(stadium, block, season, week)
+        : block.capacity;
+    return sum + cap * block.fill_rate;
+  }, 0);
   if (sold <= 0) return 0;
-  return stadiumMatchdayIncome(stadium) / sold;
+  return stadiumMatchdayIncome(stadium, season, week) / sold;
 }
 
 export function adjustBlockTicketPrice(

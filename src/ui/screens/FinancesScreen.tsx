@@ -175,7 +175,7 @@ export function FinancesScreen({
   const sparkMin = Math.min(...sparkline);
   const sparkMax = Math.max(...sparkline);
   const sparkSpan = Math.max(sparkMax - sparkMin, Math.abs(sparkMax) * 0.04, 1);
-  const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium);
+  const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium, season, week);
   const fanbase = stadium.fanbase;
   const concessionPrices = resolveConcessionPrices(stadium);
   const concessionsFull = weeklyPrecinctConcessionsCash(
@@ -192,7 +192,7 @@ export function FinancesScreen({
     isHomeMatchWeek,
     concessionPrices,
   );
-  const matchdayKasse = matchdayCashBreakdown(stadium, isHomeMatchWeek);
+  const matchdayKasse = matchdayCashBreakdown(stadium, isHomeMatchWeek, season, week);
   const merchAnalytics = buildMerchandisingAnalytics(
     stadium,
     players,

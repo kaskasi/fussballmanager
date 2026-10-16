@@ -2,7 +2,6 @@ import type { GameSession } from "../persistence/game-session.ts";
 import { KICKER_DELIVERY_WEEKDAY, hasOpenKickerItem } from "../inbox/kicker-inbox.ts";
 import { prepareCareerMatch } from "../sim/career-match-setup.ts";
 import { pendingInboxItems } from "../youth/decision-inbox.ts";
-import { listHubBlockers } from "../hub/hub-blockers.ts";
 import { resolveFeatureCurtain } from "../narrative/career-presentation.ts";
 import {
   campusTutorialEligible,
@@ -112,14 +111,10 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
     mode: "spotlight",
     titleKey: "tutorial.hub.dutyBlockers.title",
     bodyKey: "tutorial.hub.dutyBlockers.body",
-    target: COACH_TARGET.hubDutyBlockers,
+    target: COACH_TARGET.hubScoutingTransfer,
     when: (session) =>
       phase2Eligible(session) &&
-      listHubBlockers({
-        session,
-        youthInbox: session.youthInbox,
-        players: session.players,
-      }).length > 0,
+      (session.transferState.sale_listings?.length ?? 0) > 0,
   },
 
   // —— Phase 3: scouting, squad, campus ——

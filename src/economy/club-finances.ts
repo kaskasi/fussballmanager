@@ -198,7 +198,13 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
     lines.push({ kind: "matchday_tickets", amount: tickets, week });
   }
   const occupancy =
-    context.commerceOccupancy ?? weekCommerceOccupancy(context.isHomeMatchWeek, context.stadium);
+    context.commerceOccupancy ??
+    weekCommerceOccupancy(
+      context.isHomeMatchWeek,
+      context.stadium,
+      context.season,
+      context.week,
+    );
   const fanbase = context.stadium?.fanbase;
   const concessionPrices = resolveConcessionPrices(context.stadium);
   const concessions =

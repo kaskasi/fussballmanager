@@ -134,8 +134,8 @@ export function StadiumScreen({
   const [openSlotId, setOpenSlotId] = useState<string | null>(null);
   const capacity = matchdayCapacity(stadium, season, week);
   const moodPhoto = STADIUM_MOOD_PHOTOS[stadiumPhotoTierFromCapacity(capacity)];
-  const matchdayIncome = stadiumMatchdayIncome(stadium);
-  const avgTicket = stadiumAverageTicket(stadium);
+  const matchdayIncome = stadiumMatchdayIncome(stadium, season, week);
+  const avgTicket = stadiumAverageTicket(stadium, season, week);
   const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
   const mood = fanbaseMood(fanbase);
   const delta = stadium.fanbase_last_delta;
@@ -496,7 +496,7 @@ function StadiumBlockCard({
   cash: number;
   onStartExpansion: () => void;
 }) {
-  const sold = stadiumBlockAttendees(block);
+  const sold = stadiumBlockAttendees(block, stadium, season, week);
   const income = Math.round(stadiumBlockIncome(stadium, block, season, week));
   const fillPct = Math.round(block.fill_rate * 100);
   const refPct = Math.round(referenceFillRate(block.id) * 100);

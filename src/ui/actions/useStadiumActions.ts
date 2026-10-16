@@ -298,7 +298,7 @@ export function useStadiumActions(args: {
   const handleUpgradeAcademy = useCallback(() => {
     const check = canBuyAcademyUpgrade(
       academyFacility,
-      stadiumTotalCapacity(stadium),
+      stadiumTotalCapacity(stadium, season, week),
       finances.cash,
     );
     if (!check.ok) return;
@@ -306,7 +306,7 @@ export function useStadiumActions(args: {
     requestClubSpend(check.cost, def ? `${def.icon} ${def.name}` : "Jugend-Campus", (current) => {
       const next = canBuyAcademyUpgrade(
         current.academyFacility,
-        stadiumTotalCapacity(current.stadium),
+        stadiumTotalCapacity(current.stadium, current.season, current.week),
         current.finances.cash,
       );
       if (!next.ok || current.academyProject) return current;
@@ -332,7 +332,7 @@ export function useStadiumActions(args: {
       };
     });
     trackEvent("academy_upgraded", { facility: check.target });
-  }, [academyFacility, finances.cash, requestClubSpend, stadium]);
+  }, [academyFacility, finances.cash, requestClubSpend, season, stadium, week]);
 
   const handleUpgradePrecinct = useCallback(
     (building: PrecinctBuilding) => {

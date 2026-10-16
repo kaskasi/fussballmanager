@@ -113,13 +113,14 @@ import {
   weeklyHotelIncome,
   weeklyRestaurantIncome,
 } from "../stadium/hospitality.ts";
-import { DEFAULT_FANBASE, normalizeClubStadium } from "../stadium/club-stadium.ts";
+import {
+  DEFAULT_FANBASE,
+  normalizeClubStadium,
+  stadiumTotalCapacity,
+} from "../stadium/club-stadium.ts";
 import { maybeStadiumMegaEventWeek } from "../stadium/precinct-campus-events.ts";
 import { advanceBlockExpansionProjects } from "../stadium/stadium-block-expansion.ts";
-import {
-  advancePrecinctConstruction,
-  reconcilePrecinctBuildTimers,
-} from "../stadium/precinct-construction.ts";
+import { advancePrecinctConstructionDetailed } from "../stadium/precinct-construction.ts";
 import { clubFlavorFanbase } from "./club-profiles.ts";
 import { campNationById, weeklyCampUpkeep } from "../youth/satellite-camps.ts";
 import { advanceYouthCampsForWeek, type CampWeekDebut } from "../youth/camp-construction-week.ts";
@@ -402,7 +403,12 @@ export async function simulateGameWeek(
   }
   const isHomeMatchWeek =
     leagueStep.playerFixture?.homeTeamId === session.league.player_club_id;
-  const occupancy = weekCommerceOccupancy(isHomeMatchWeek, session.stadium);
+  const occupancy = weekCommerceOccupancy(
+    isHomeMatchWeek,
+    session.stadium,
+    session.season,
+    session.week,
+  );
   const merchAdvance = advanceMerchandisingWeek(session.stadium, {
     stadium: session.stadium,
     players: playersWithMorale,
@@ -440,16 +446,33 @@ export async function simulateGameWeek(
     precinctWeeklyFanbaseBonus(merchAdvance.stadium.precinct, occupancy) +
     (trainingPlanNeglected ? TRAINING_NEGLECT_FANBASE_PENALTY : 0);
   const stadiumAfterFanbase = (() => {
-    let stadium = advanceBlockExpansionProjects(
-      advanceClubFanbase(merchAdvance.stadium, fanbaseDelta),
-      session.season,
-      nextWeek,
-    );
+    let stadium = advanceClubFanbase(merchAdvance.stadium, fanbaseDelta);
+    const blockAdvance = advanceBlockExpansionProjects(stadium, session.season, nextWeek);
+    stadium = normalizeClubStadium(blockAdvance.stadium);
+    for (const completion of blockAdvance.completions) {
+      const total = stadiumTotalCapacity(stadium, session.season, nextWeek);
+      clubEvents = withClubEvent(
+        clubEvents,
+        session.season,
+        nextWeek,
+        "inbox",
+        `${completion.blockName}: Tribünenausbau fertig — ${completion.capacity.toLocaleString("de-DE")} Plätze (Stadion gesamt ${total.toLocaleString("de-DE")}).`,
+      );
+    }
     const precinct = stadium.precinct;
     if (precinct) {
-      let nextPrecinct = advancePrecinctConstruction(precinct, session.season, nextWeek);
-      nextPrecinct = reconcilePrecinctBuildTimers(nextPrecinct, session.season, nextWeek);
-      stadium = { ...stadium, precinct: nextPrecinct };
+      const now = careerWeekIndex(session.season, nextWeek);
+      const precinctAdvance = advancePrecinctConstructionDetailed(precinct, now);
+      for (const completion of precinctAdvance.completions) {
+        clubEvents = withClubEvent(
+          clubEvents,
+          session.season,
+          nextWeek,
+          "inbox",
+          `${completion.label}: Bau abgeschlossen — Anlage ist betriebsbereit.`,
+        );
+      }
+      stadium = { ...stadium, precinct: precinctAdvance.state };
     }
     return stadium;
   })();
@@ -751,6 +774,15 @@ export async function simulateGameWeek(
     players: playersForNewWeek,
     facility: session.academyFacility ?? "academy_basic",
   });
+  for (const completion of campAdvance.constructionCompletions) {
+    clubEvents = withClubEvent(
+      clubEvents,
+      nextSeason,
+      nextWeek,
+      "inbox",
+      `${completion.flag} Camp ${completion.nationLabel}: Bau abgeschlossen — Camp ist eröffnet.`,
+    );
+  }
   let playersAfterCampOpen = playersForNewWeek;
   if (campAdvance.newPlayers.length > 0) {
     playersAfterCampOpen = refreshAllMarketValues(

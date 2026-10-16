@@ -91,26 +91,43 @@ export function applyBlockExpansionCapacities(
   });
 }
 
+export interface BlockExpansionCompletion {
+  blockId: string;
+  blockName: string;
+  level: number;
+  capacity: number;
+}
+
 export function advanceBlockExpansionProjects(
   stadium: ClubStadium,
   season: number,
   week: number,
-): ClubStadium {
+): { stadium: ClubStadium; completions: BlockExpansionCompletion[] } {
   const expansion = stadium.block_expansion;
-  if (!expansion) return stadium;
+  if (!expansion) return { stadium, completions: [] };
   let changed = false;
   const next: Record<string, BlockExpansionState> = { ...expansion };
+  const completions: BlockExpansionCompletion[] = [];
   const now = careerWeekIndex(season, week);
   for (const [blockId, state] of Object.entries(expansion)) {
     if (state.construction_until == null) continue;
     if (now < state.construction_until) continue;
     changed = true;
-    next[blockId] = {
-      level: Math.min(BLOCK_EXPANSION_MAX_LEVEL, state.level + 1),
-    };
+    const level = Math.min(BLOCK_EXPANSION_MAX_LEVEL, state.level + 1);
+    next[blockId] = { level };
+    const blockName =
+      stadium.blocks.find((entry) => entry.id === blockId)?.name ??
+      STADIUM_BASE_BLOCKS.find((entry) => entry.id === blockId)?.name ??
+      blockId;
+    completions.push({
+      blockId,
+      blockName,
+      level,
+      capacity: blockCapacityAtExpansionLevel(blockId, level),
+    });
   }
-  if (!changed) return stadium;
-  return { ...stadium, block_expansion: next };
+  if (!changed) return { stadium, completions: [] };
+  return { stadium: { ...stadium, block_expansion: next }, completions };
 }
 
 export function canStartBlockExpansion(

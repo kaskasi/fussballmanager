@@ -4,6 +4,7 @@ import { ArrowDownLeft, MapPin, Radar, Users } from "lucide-react";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import { buildHubScoutingDigest } from "../../hub/hub-scouting-digest.ts";
 import { listPendingInboundOffers } from "../../transfers/inbound-offers.ts";
+import { loanClubName } from "../../transfers/loan-roster.ts";
 import { clubListingsForPlayers } from "../../transfers/transfer-listings.ts";
 import type { TransferState } from "../../transfers/negotiations.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
@@ -16,12 +17,17 @@ import { COACH_TARGET } from "../../tutorial/index.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 
-function clubShortLabel(clubs: readonly WorldClub[] | undefined, clubId: string): string {
-  return clubs?.find((entry) => entry.id === clubId)?.short_name ?? clubId;
+function findRosterPlayer(
+  playerId: string,
+  players: readonly Player[],
+  rivalPlayers: readonly Player[],
+): Player | undefined {
+  return players.find((row) => row.id === playerId) ?? rivalPlayers.find((row) => row.id === playerId);
 }
 
 export function HubScoutingTransferDeskPanel({
   players,
+  rivalPlayers = [],
   clubId,
   season,
   scoutBoard,
@@ -29,10 +35,12 @@ export function HubScoutingTransferDeskPanel({
   matchSetup,
   worldClubs,
   onSelectPlayer,
+  onOpenNegotiation,
   onOpenScouting,
   onOpenTransfers,
 }: {
   players: readonly Player[];
+  rivalPlayers?: readonly Player[];
   clubId: string;
   season: number;
   scoutBoard: ScoutBoard;
@@ -40,6 +48,7 @@ export function HubScoutingTransferDeskPanel({
   matchSetup: CareerMatchSetup | null;
   worldClubs?: readonly WorldClub[];
   onSelectPlayer: (playerId: string) => void;
+  onOpenNegotiation?: (playerId: string) => void;
   onOpenScouting: () => void;
   onOpenTransfers: () => void;
 }) {
@@ -100,7 +109,7 @@ export function HubScoutingTransferDeskPanel({
           ) : (
             <ul className="hub-market-desk__list">
               {inbound.map((offer) => {
-              const player = players.find((row) => row.id === offer.player_id);
+              const player = findRosterPlayer(offer.player_id, players, rivalPlayers);
               const listing = listings.find((row) => row.player_id === offer.player_id);
               return (
                 <li key={offer.id}>
@@ -125,7 +134,7 @@ export function HubScoutingTransferDeskPanel({
                       <small>
                         <ArrowDownLeft size={12} strokeWidth={2.5} aria-hidden />
                         {t("hub.market.inboundFrom", {
-                          club: clubShortLabel(worldClubs, offer.buyer_club_id),
+                          club: loanClubName(offer.buyer_club_id, worldClubs),
                           fee: formatClubCash(offer.fee),
                         })}
                       </small>
@@ -140,7 +149,7 @@ export function HubScoutingTransferDeskPanel({
               );
             })}
             {listedWaiting.map((listing) => {
-              const player = players.find((row) => row.id === listing.player_id);
+              const player = findRosterPlayer(listing.player_id, players, rivalPlayers);
               return (
                 <li key={listing.player_id}>
                   <button
@@ -171,7 +180,7 @@ export function HubScoutingTransferDeskPanel({
               );
             })}
             {activeNegotiations.map((neg) => {
-              const player = players.find((row) => row.id === neg.player_id);
+              const player = findRosterPlayer(neg.player_id, players, rivalPlayers);
               return (
                 <li key={neg.id}>
                   <button
@@ -179,7 +188,11 @@ export function HubScoutingTransferDeskPanel({
                     className="hub-market-desk__row"
                     onClick={(event) => {
                       event.stopPropagation();
-                      onSelectPlayer(neg.player_id);
+                      if (onOpenNegotiation) {
+                        onOpenNegotiation(neg.player_id);
+                      } else {
+                        onSelectPlayer(neg.player_id);
+                      }
                     }}
                   >
                     {player ? (

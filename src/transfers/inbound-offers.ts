@@ -7,7 +7,6 @@ import { estimateCa } from "./market-value.ts";
 import { sellerAskingPrice } from "./negotiations.ts";
 import { pickAiBuyerClub } from "./player-sales.ts";
 import type { TeamId } from "@fussballmanager/shared";
-import { careerTeamId } from "../sim/rival-growth.ts";
 
 export interface InboundTransferOffer {
   id: string;
@@ -34,6 +33,11 @@ export interface ScanInboundOffersResult {
   newOffers: InboundTransferOffer[];
 }
 
+/** Max new inbound rows created in one sim week (listed + unsolicited). */
+export const MAX_INBOUND_OFFERS_PER_WEEK = 3;
+/** Extra roll per player on your transfer list (in addition to listing sale talks). */
+export const INBOUND_LISTED_PLAYER_CHANCE = 0.22;
+
 function weekRng(masterSeed: number, season: number, week: number, salt: number): () => number {
   let state = (masterSeed ^ season ^ week ^ salt) | 0;
   return () => {
@@ -44,23 +48,85 @@ function weekRng(masterSeed: number, season: number, week: number, salt: number)
   };
 }
 
+function playerOfferRng(
+  masterSeed: number,
+  season: number,
+  week: number,
+  playerId: string,
+): () => number {
+  let salt = 0x1b0;
+  for (const ch of playerId) {
+    salt = Math.imul(salt ^ ch.charCodeAt(0), 0x5bd1e995);
+  }
+  return weekRng(masterSeed, season, week, salt);
+}
+
+function hasPendingOffer(state: TransferState, playerId: string): boolean {
+  return (state.inbound_offers ?? []).some(
+    (row) => row.player_id === playerId && row.status === "pending",
+  );
+}
+
+function appendOffer(
+  state: TransferState,
+  offer: InboundTransferOffer,
+): TransferState {
+  return {
+    ...state,
+    inbound_offers: [...(state.inbound_offers ?? []), offer],
+  };
+}
+
 export function scanInboundOffers(input: ScanInboundOffersInput): ScanInboundOffersResult {
   if (!isTransferWindowOpen(input.week)) {
     return { transferState: input.transferState, newOffers: [] };
   }
 
-  const existing = input.transferState.inbound_offers ?? [];
-  const pendingThisWeek = existing.filter(
-    (row) => row.season === input.season && row.week === input.week && row.status === "pending",
-  );
-  if (pendingThisWeek.length >= 1) {
-    return { transferState: input.transferState, newOffers: [] };
+  let transferState = input.transferState;
+  const newOffers: InboundTransferOffer[] = [];
+  const offersThisWeek = (transferState.inbound_offers ?? []).filter(
+    (row) => row.season === input.season && row.week === input.week,
+  ).length;
+
+  const listed = (transferState.listings ?? []).filter((row) => row.club_id === input.clubId);
+  for (const listing of listed) {
+    if (offersThisWeek + newOffers.length >= MAX_INBOUND_OFFERS_PER_WEEK) break;
+    const player = input.players.find((entry) => entry.id === listing.player_id);
+    if (!player || player.squad_status !== "pro") continue;
+    if (hasPendingOffer(transferState, player.id)) continue;
+    const rng = playerOfferRng(input.masterSeed, input.season, input.week, player.id);
+    if (rng() > INBOUND_LISTED_PLAYER_CHANCE) continue;
+
+    const buyerClubId = pickAiBuyerClub(
+      input.leagueClubIds,
+      player.id,
+      input.masterSeed,
+      input.season,
+      input.week,
+    );
+    const fee = Math.round(listing.asking_price * (0.86 + rng() * 0.18));
+    const offer: InboundTransferOffer = {
+      id: `in_${input.season}_${input.week}_${player.id}_${newOffers.length}`,
+      player_id: player.id,
+      buyer_club_id: buyerClubId,
+      fee,
+      season: input.season,
+      week: input.week,
+      status: "pending",
+    };
+    transferState = appendOffer(transferState, offer);
+    newOffers.push(offer);
+  }
+
+  if (offersThisWeek + newOffers.length >= MAX_INBOUND_OFFERS_PER_WEEK) {
+    return { transferState, newOffers };
   }
 
   const rng = weekRng(input.masterSeed, input.season, input.week, 0x1b0);
-  const candidates = input.players.filter((player) => {
+  const unsolicited = input.players.filter((player) => {
     if (player.club_id !== input.clubId) return false;
     if (player.squad_status !== "pro") return false;
+    if (hasPendingOffer(transferState, player.id)) return false;
     if (player.state.desire_to_leave) return true;
     const ca = estimateCa(player.attributes, player.position);
     if (ca >= 88 && rng() < 0.12) return true;
@@ -70,11 +136,15 @@ export function scanInboundOffers(input: ScanInboundOffersInput): ScanInboundOff
     return false;
   });
 
-  if (candidates.length === 0 || rng() > 0.55) {
-    return { transferState: input.transferState, newOffers: [] };
+  if (unsolicited.length === 0 || rng() > 0.42) {
+    return { transferState, newOffers };
   }
 
-  const player = candidates[Math.floor(rng() * candidates.length)]!;
+  const player = unsolicited[Math.floor(rng() * unsolicited.length)]!;
+  if (hasPendingOffer(transferState, player.id)) {
+    return { transferState, newOffers };
+  }
+
   const buyerClubId = pickAiBuyerClub(
     input.leagueClubIds,
     player.id,
@@ -84,7 +154,6 @@ export function scanInboundOffers(input: ScanInboundOffersInput): ScanInboundOff
   );
   const asking = sellerAskingPrice(player, input.season);
   const fee = Math.round(asking * (0.88 + rng() * 0.22));
-
   const offer: InboundTransferOffer = {
     id: `in_${input.season}_${input.week}_${player.id}`,
     player_id: player.id,
@@ -94,14 +163,9 @@ export function scanInboundOffers(input: ScanInboundOffersInput): ScanInboundOff
     week: input.week,
     status: "pending",
   };
-
-  return {
-    transferState: {
-      ...input.transferState,
-      inbound_offers: [...existing, offer],
-    },
-    newOffers: [offer],
-  };
+  transferState = appendOffer(transferState, offer);
+  newOffers.push(offer);
+  return { transferState, newOffers };
 }
 
 export function listPendingInboundOffers(

@@ -1,5 +1,6 @@
+import { applyPlayerSaleIncome, formatClubCash } from "../economy/club-finances.ts";
 import type { ClubFinances } from "../economy/club-finances.ts";
-import { applyPlayerSaleIncome } from "../economy/club-finances.ts";
+import { t } from "../i18n/index.ts";
 import { completeSale, pickAiBuyerClub } from "./player-sales.ts";
 import { createSaleRecord } from "./transfer-history.ts";
 import type { Player } from "../types/player.ts";
@@ -310,7 +311,7 @@ export function submitSaleRound(
   const negotiationsOf = (next: TransferNegotiation) =>
     (state.negotiations ?? []).map((entry) => (entry.id === current.id ? next : entry));
 
-  if (demandedFee <= Math.round(bid * 1.02)) {
+  if (demandedFee <= Math.round(bid * 1.06)) {
     const accepted: TransferNegotiation = {
       ...current,
       current_offer: bid,
@@ -321,16 +322,16 @@ export function submitSaleRound(
       state: { ...state, negotiations: negotiationsOf(accepted) },
       negotiation: accepted,
       accepted: true,
-      message: "Angebot angenommen.",
+      message: t("transfer.sale.accepted"),
     };
   }
 
   const stretch = demandedFee / Math.max(1, current.asking_price);
   let patience = current.patience_rounds_left;
-  if (stretch > 1.12) patience = Math.max(0, patience - 1);
+  if (stretch > 1.2) patience = Math.max(0, patience - 1);
   const nextRound = Math.min(MAX_NEGOTIATION_ROUNDS, current.round + 1);
-  const raisedBid = Math.round(Math.min(current.asking_price, bid * 1.06));
-  const walked = patience <= 0 || (nextRound >= MAX_NEGOTIATION_ROUNDS && stretch > 1.2);
+  const raisedBid = Math.round(Math.min(current.asking_price, bid * 1.1));
+  const walked = patience <= 0 && stretch > 1.28;
   const updated: TransferNegotiation = {
     ...current,
     current_offer: demandedFee,
@@ -345,8 +346,8 @@ export function submitSaleRound(
     negotiation: updated,
     accepted: false,
     message: walked
-      ? "Der Interessent steigt aus."
-      : `Gegenvorschlag: ${raisedBid.toLocaleString("de-DE")} €`,
+      ? t("transfer.sale.buyerWalked")
+      : t("transfer.sale.counter", { amount: formatClubCash(raisedBid) }),
   };
 }
 

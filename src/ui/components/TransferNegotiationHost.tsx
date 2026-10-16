@@ -22,6 +22,7 @@ import {
   acceptCounterOffer,
   activeNegotiation,
   draftNegotiationPreview,
+  draftSaleNegotiationPreview,
   submitNegotiationRound,
   cannotPayTransferFeeReason,
   cannotSubmitPurchaseOfferReason,
@@ -38,7 +39,8 @@ import {
   type ContractOffer,
 } from "../../transfers/contract-talks.ts";
 import type { TransferState } from "../../transfers/negotiations.ts";
-import { applyListedSale, submitSaleRound } from "../../transfers/transfer-listings.ts";
+import { listPendingInboundOffers } from "../../transfers/inbound-offers.ts";
+import { applyListedSale, openSaleNegotiation, submitSaleRound } from "../../transfers/transfer-listings.ts";
 import { TransferNegotiationModal } from "./TransferNegotiationModal.tsx";
 import { ContractTalksPanel } from "./ContractTalksPanel.tsx";
 
@@ -153,8 +155,37 @@ export function useTransferNegotiation(args: {
       setAgreedFee(null);
       setContractOffer(null);
       setNegotiationModalEpoch((epoch) => epoch + 1);
-      const existingSale = activeNegotiation(session.transferState, playerId);
-      if (existingSale?.side === "sell") return;
+      const owned = players.find(
+        (player) => player.id === playerId && player.club_id === session.clubId,
+      );
+      if (owned) {
+        const existingSale = activeNegotiation(session.transferState, playerId);
+        if (existingSale?.side === "sell") {
+          setNegotiationOpenError(null);
+          return;
+        }
+        const inbound = listPendingInboundOffers(
+          session.transferState,
+          session.clubId,
+          players,
+        ).find((offer) => offer.player_id === playerId);
+        if (inbound) {
+          const step = openSaleNegotiation({
+            state: session.transferState,
+            player: owned,
+            buyerClubId: inbound.buyer_club_id,
+            season: session.season,
+            week: session.week,
+            bid: inbound.fee,
+          });
+          setNegotiationOpenError(null);
+          patchSession((current) => ({ ...current, transferState: step.state }));
+          return;
+        }
+        setNegotiationOpenError(t("transfers.market.saleAwaitBid"));
+        return;
+      }
+
       const result = openPurchaseNegotiation({
         scoutBoard: session.scoutBoard,
         rivalPlayers: session.rivalPlayers,
@@ -177,6 +208,8 @@ export function useTransferNegotiation(args: {
       session.season,
       session.transferState,
       session.week,
+      players,
+      session.clubId,
     ],
   );
 
@@ -475,14 +508,40 @@ export function useTransferNegotiation(args: {
 
   const headroom = wageBudgetHeadroom(finances, players, session.clubId);
 
-  const negotiationOverlay = negotiationOverlayContext ? (
+  const negotiationForModal = useMemo(() => {
+    if (!negotiationPlayerId || !negotiationOverlayContext) return null;
+    const active = activeNegotiation(transferState, negotiationPlayerId);
+    if (active) return active;
+    if (negotiationOverlayContext.owned) {
+      const inbound = listPendingInboundOffers(transferState, session.clubId, players).find(
+        (offer) => offer.player_id === negotiationPlayerId,
+      );
+      if (inbound) {
+        return draftSaleNegotiationPreview(
+          negotiationOverlayContext.player,
+          season,
+          week,
+          inbound.fee,
+          inbound.buyer_club_id,
+        );
+      }
+    }
+    return draftNegotiationPreview(negotiationOverlayContext.player, season, week);
+  }, [
+    negotiationOverlayContext,
+    negotiationPlayerId,
+    players,
+    season,
+    session.clubId,
+    transferState,
+    week,
+  ]);
+
+  const negotiationOverlay = negotiationOverlayContext && negotiationForModal ? (
     <TransferNegotiationModal
       key={negotiationModalEpoch}
       player={negotiationOverlayContext.player}
-      negotiation={
-        activeNegotiation(transferState, negotiationPlayerId!) ??
-        draftNegotiationPreview(negotiationOverlayContext.player, season, week)
-      }
+      negotiation={negotiationForModal}
       transferBudget={transferBudget(finances)}
       finances={finances}
       weeklyWageBill={weeklyWageBill(players, session.clubId)}

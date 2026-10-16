@@ -1,3 +1,4 @@
+import { formatClubCash } from "../economy/club-finances.ts";
 import { t } from "../i18n/index.ts";
 import type { Player } from "../types/player.ts";
 import type { TransferRecord } from "./transfer-history.ts";
@@ -110,10 +111,10 @@ export function sellerAskingPrice(player: Player, season: number): number {
 /** PRD 05.3 reaction matrix (simplified to three outcomes). */
 export function evaluateOffer(feeOffer: number, sellerValue: number): OfferReaction {
   const ratio = feeOffer / Math.max(1, sellerValue);
-  if (ratio < 0.7) return "reject";
-  if (ratio >= 1.1) return "accept";
-  if (ratio >= 1.0) return ratio >= 1.05 ? "accept" : "counter";
-  if (ratio >= 0.85) return "counter";
+  if (ratio < 0.62) return "reject";
+  if (ratio >= 1.05) return "accept";
+  if (ratio >= 0.92) return ratio >= 0.98 ? "accept" : "counter";
+  if (ratio >= 0.78) return "counter";
   return "reject";
 }
 
@@ -134,7 +135,7 @@ export function reactionMessage(
   }
   return counter
     ? t("transfer.negotiation.reaction.counter", {
-        amount: `${Math.round(counter).toLocaleString("de-DE")} €`,
+        amount: formatClubCash(counter),
       })
     : t("transfer.negotiation.reaction.counterFallback");
 }
@@ -194,6 +195,33 @@ export function draftNegotiationPreview(
   };
 }
 
+/** UI fallback before sale state is patched (own squad / inbound bid). */
+export function draftSaleNegotiationPreview(
+  player: Player,
+  season: number,
+  week: number,
+  bid: number,
+  buyerClubId: string,
+): TransferNegotiation {
+  const asking = sellerAskingPrice(player, season);
+  return {
+    id: `sale_preview_${player.id}`,
+    player_id: player.id,
+    seller_club_id: player.club_id ?? "user",
+    asking_price: asking,
+    current_offer: bid,
+    counter_offer: bid,
+    round: 1,
+    patience_rounds_left: MAX_NEGOTIATION_ROUNDS,
+    status: "active",
+    failed_lowball_count: 0,
+    last_reaction: null,
+    week,
+    side: "sell",
+    buyer_club_id: buyerClubId,
+  };
+}
+
 export function activeNegotiation(
   state: TransferState,
   playerId: string,
@@ -226,10 +254,10 @@ export function submitNegotiationRound(
   const reaction = evaluateOffer(feeOffer, current.asking_price);
   let patience = current.patience_rounds_left;
   let failedLowballs = current.failed_lowball_count;
-  if (ratio < 0.7) {
+  if (ratio < 0.62) {
     failedLowballs += 1;
     patience = Math.max(0, patience - 1);
-  } else if (reaction === "counter" && ratio < 0.85) {
+  } else if (reaction === "counter" && ratio < 0.78) {
     patience = Math.max(0, patience - 1);
   }
 
@@ -258,11 +286,11 @@ export function submitNegotiationRound(
     };
   }
 
-  if (reaction === "reject" && (patience <= 0 || ratio < 0.7)) {
+  if (reaction === "reject" && (patience <= 0 || ratio < 0.62)) {
     const rejected: TransferNegotiation = {
       ...current,
       current_offer: feeOffer,
-      status: ratio < 0.7 ? "walked_away" : "rejected",
+      status: ratio < 0.62 ? "walked_away" : "rejected",
       patience_rounds_left: patience,
       failed_lowball_count: failedLowballs,
       last_reaction: "reject",
@@ -370,9 +398,9 @@ export function acceptCounterOffer(
 }
 
 export function counterFee(sellerValue: number, ratio: number): number {
-  if (ratio < 0.85) return Math.round(sellerValue * 1.15);
-  if (ratio < 1.0) return Math.round(sellerValue * 1.08);
-  return Math.round(sellerValue * 1.04);
+  if (ratio < 0.78) return Math.round(sellerValue * 1.1);
+  if (ratio < 1.0) return Math.round(sellerValue * 1.05);
+  return Math.round(sellerValue * 1.02);
 }
 
 export function submitPurchaseOffer(

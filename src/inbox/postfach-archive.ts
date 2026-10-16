@@ -12,6 +12,8 @@ import {
   type YouthInboxState,
 } from "../youth/decision-inbox.ts";
 import { parseKickerItemId } from "./kicker-inbox.ts";
+import { polishClubEventMessage } from "../transfers/transfer-history.ts";
+import type { WorldClub } from "../world/world-generator.ts";
 
 export type PostfachArchiveKind =
   | "club_event"
@@ -179,11 +181,16 @@ export function buildPostfachArchive(input: {
   players?: readonly Player[];
   season?: number;
   storyCast?: StoryCast;
+  worldClubs?: readonly WorldClub[];
 }): PostfachArchiveEntry[] {
   const entries: PostfachArchiveEntry[] = [];
   const clubEventMessages = new Set(input.clubEvents.map((event) => event.message.trim()));
 
   for (const event of input.clubEvents) {
+    const text =
+      input.players && input.players.length > 0
+        ? polishClubEventMessage(event.message, input.players, input.worldClubs)
+        : event.message;
     entries.push(
       oneLineEntry({
         id: event.id,
@@ -191,8 +198,8 @@ export function buildPostfachArchive(input: {
         week: event.week,
         kind: "club_event",
         reopen: { type: "club_event", eventId: event.id },
-        line: event.message,
-        detail: event.message,
+        line: text,
+        detail: text,
       }),
     );
   }

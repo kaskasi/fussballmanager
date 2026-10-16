@@ -24,6 +24,8 @@ import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { localizeStoryInbox } from "../../i18n/story-display.ts";
 import type { StoryCast } from "../../narrative/story-state.ts";
+import { polishClubEventMessage } from "../../transfers/transfer-history.ts";
+import type { WorldClub } from "../../world/world-generator.ts";
 import { InboxStanceButtons } from "./InboxStanceButtons.tsx";
 
 /**
@@ -49,6 +51,7 @@ export function HubInboxPanel({
   onStoryChoice,
   onSelectScoutTarget,
   storyCast,
+  worldClubs,
 }: {
   week: number;
   season: number;
@@ -60,6 +63,7 @@ export function HubInboxPanel({
   onOpenDecision: (itemId: string) => void;
   onStoryChoice: (itemId: string, action: DecisionAction) => void;
   onSelectScoutTarget: (playerId: string) => void;
+  worldClubs?: readonly WorldClub[];
 }) {
   useT();
   const focus = inboxWeekFocus(youthInbox, players);
@@ -249,7 +253,8 @@ export function HubInboxPanel({
           <>
             <ul className="hub-inbox-list hub-inbox-list-events">
               {pageEvents.map((event) => {
-                const { emoji: leadingEmoji } = splitInboxEmojiPrefix(event.message);
+                const eventText = polishClubEventMessage(event.message, players, worldClubs);
+                const { emoji: leadingEmoji } = splitInboxEmojiPrefix(eventText);
                 return (
                 <li key={event.id}>
                   <div className="hub-inbox-event">
@@ -259,7 +264,7 @@ export function HubInboxPanel({
                       </span>
                     ) : null}
                     <span className="hub-inbox-event-message">
-                      <PostfachMessageText text={event.message} />
+                      <PostfachMessageText text={eventText} />
                     </span>
                     <span className="hub-inbox-event-meta">{formatCalendarWeekDisplay(event.week)}</span>
                   </div>

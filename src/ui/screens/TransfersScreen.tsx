@@ -96,6 +96,7 @@ export function TransfersScreen({
   onOpenNegotiation,
   scoutBoard,
   onScoutPlayer,
+  onToggleShortlist,
 }: {
   players: readonly Player[];
   clubId: string;
@@ -111,6 +112,7 @@ export function TransfersScreen({
   onOpenNegotiation?: (playerId: string) => void;
   scoutBoard?: ScoutBoard;
   onScoutPlayer?: (playerId: string) => void;
+  onToggleShortlist?: (playerId: string) => void;
 }) {
   useT();
   const seasons = useMemo(() => availableClubTransferSeasons(history, season), [history, season]);
@@ -147,7 +149,11 @@ export function TransfersScreen({
   return (
     <main className="transfers club-shell-card-body" data-coach-target={COACH_TARGET.transfersMarket}>
       <div className="fm-tab-panel">
-        {transferState && onOpenNegotiation && scoutBoard && onScoutPlayer ? (
+        {transferState &&
+        onOpenNegotiation &&
+        scoutBoard &&
+        onScoutPlayer &&
+        onToggleShortlist ? (
           <TransferMarketPanel
             players={players}
             rivalPlayers={rivalPlayers}
@@ -157,6 +163,8 @@ export function TransfersScreen({
             scoutBoard={scoutBoard}
             onOpenNegotiation={onOpenNegotiation}
             onScoutPlayer={onScoutPlayer}
+            onOpenProfile={onSelectPlayer}
+            onToggleShortlist={onToggleShortlist}
           />
         ) : null}
         <header className="transfers-meta" aria-label={t("transfers.windowAria")}>

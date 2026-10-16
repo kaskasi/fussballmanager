@@ -1,22 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { clonePlayer } from "../types/__tests__/fixtures.ts";
-import { listLoanedPlayers, loanClubName } from "./loan-roster.ts";
+import { loanClubName } from "./loan-roster.ts";
+import type { WorldClub } from "../world/world-generator.ts";
 
-describe("loan roster", () => {
-  it("lists loaned players with club and CA", () => {
-    const player = clonePlayer();
-    player.id = "pl_loan_1";
-    player.squad_status = "loaned_out";
-    player.current_loan = {
-      from_club: "cl_fc_nordstern",
-      to_club: "cl_loan_partner",
-      until_season: 4,
-      has_option: true,
-      minute_guarantee: 900,
-    };
-    const rows = listLoanedPlayers([player]);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.toClubName).toBe(loanClubName("cl_loan_partner"));
-    expect(rows[0]?.ca).toBeGreaterThan(0);
+describe("loanClubName", () => {
+  it("resolves career club ids to world short names", () => {
+    const clubs: WorldClub[] = [
+      {
+        id: "world-d9b26db0-10",
+        name: "Test FC Nord",
+        short_name: "TFN",
+        place: "Teststadt",
+        region: "Fördeküste",
+        division_id: "oberliga-nord",
+        identity: "community",
+        reputation: 30,
+        rivalry_ids: [],
+        kit: { primary: "#000", secondary: "#fff", accent: "#ccc" },
+      },
+    ];
+    expect(loanClubName("cl_world_d9b26db0_10", clubs)).toBe("TFN");
   });
 });

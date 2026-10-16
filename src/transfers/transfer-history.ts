@@ -21,6 +21,19 @@ export function formatClubEventMessage(
   );
 }
 
+/** Archive / hub feed — resolve club slugs and player ids in stored event text. */
+export function polishClubEventMessage(
+  message: string,
+  players: readonly Player[],
+  worldClubs?: readonly WorldClub[],
+): string {
+  let text = formatClubEventMessage(message, worldClubs);
+  return text.replace(/\bpl_\d{5}\b/g, (playerId) => {
+    const player = players.find((entry) => entry.id === playerId);
+    return player ? formatPlayerName(player) : playerId;
+  });
+}
+
 export function displayTransferOtherClubs(
   label: string,
   worldClubs?: readonly WorldClub[],

@@ -148,8 +148,9 @@ export function DecisionInboxPanel({
         players,
         season,
         storyCast,
+        worldClubs,
       }),
-    [clubEvents, inbox, players, scoutBoard, season, storyCast],
+    [clubEvents, inbox, players, scoutBoard, season, storyCast, worldClubs],
   );
   const orthopedistReady = orthopedistHire
     ? orthopedistAwaitingPostfach(orthopedistHire, hasOrthopedist)

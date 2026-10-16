@@ -49,6 +49,8 @@ export function ManagerDeskHub({
   onOpenScouting,
   onOpenTransfers,
   onSelectPlayer,
+  onOpenNegotiation,
+  rivalPlayers = [],
   transferState,
   worldClubs,
   postfach,
@@ -70,6 +72,8 @@ export function ManagerDeskHub({
   onOpenScouting: () => void;
   onOpenTransfers: () => void;
   onSelectPlayer: (playerId: string) => void;
+  onOpenNegotiation?: (playerId: string) => void;
+  rivalPlayers?: readonly Player[];
   transferState: TransferState;
   worldClubs?: readonly WorldClub[];
   postfach: PostfachPanelProps;
@@ -244,6 +248,7 @@ export function ManagerDeskHub({
         {deskScoutBoard ? (
           <HubScoutingTransferDeskPanel
             players={players}
+            rivalPlayers={rivalPlayers}
             clubId={clubId}
             season={season}
             scoutBoard={deskScoutBoard}
@@ -251,6 +256,7 @@ export function ManagerDeskHub({
             matchSetup={matchSetup ?? null}
             worldClubs={worldClubs}
             onSelectPlayer={onSelectPlayer}
+            onOpenNegotiation={onOpenNegotiation}
             onOpenScouting={onOpenScouting}
             onOpenTransfers={onOpenTransfers}
           />

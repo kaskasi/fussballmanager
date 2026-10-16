@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Check, X } from "lucide-react";
-import { formatClubCash, type ClubFinances } from "../../economy/club-finances.ts";
-import { spendRunway, spendRunwayLines } from "../../economy/spend-runway.ts";
+import {
+  formatClubCash,
+  formatSignedCash,
+  type ClubFinances,
+} from "../../economy/club-finances.ts";
+import {
+  formatWeeksOfWages,
+  spendRunway,
+  spendRunwayLines,
+  weeksOfWages,
+} from "../../economy/spend-runway.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import {
@@ -90,12 +99,36 @@ export function TransferNegotiationModal({
       ? Math.round((valueBounds.low + valueBounds.high) / 2)
       : asking;
   const ratio = referencePrice > 0 ? offer / referencePrice : null;
-  const offerRunway = spendRunway(finances, weeklyWageBill, offer, boardCashFloor);
-  const counterRunway = negotiation.counter_offer
-    ? spendRunway(finances, weeklyWageBill, negotiation.counter_offer, boardCashFloor)
-    : null;
-
   const isSale = negotiation.side === "sell";
+  const offerRunway = isSale
+    ? null
+    : spendRunway(finances, weeklyWageBill, offer, boardCashFloor);
+  const counterRunway =
+    !isSale && negotiation.counter_offer
+      ? spendRunway(finances, weeklyWageBill, negotiation.counter_offer, boardCashFloor)
+      : null;
+  const saleProceedLines = (fee: number) => {
+    const cashAfter = finances.cash + fee;
+    const belowFloor = cashAfter < boardCashFloor;
+    return [
+      { label: t("transfer.negotiation.sale.proceeds"), value: formatClubCash(fee) },
+      {
+        label: t("transfer.negotiation.sale.cashAfter"),
+        value: formatSignedCash(cashAfter),
+      },
+      {
+        label: t("transfer.negotiation.sale.wages"),
+        value: formatWeeksOfWages(weeksOfWages(cashAfter, weeklyWageBill)),
+      },
+      {
+        label: t("transfer.negotiation.sale.boardCash"),
+        value: belowFloor
+          ? t("transfer.negotiation.sale.belowFloor", { floor: formatClubCash(boardCashFloor) })
+          : formatSignedCash(cashAfter - boardCashFloor),
+        warn: belowFloor,
+      },
+    ];
+  };
   const gates = negotiationGates({
     week,
     player,
@@ -112,6 +145,12 @@ export function TransferNegotiationModal({
   const contractPhase = uiPhase === "contract";
 
   const metaText = (() => {
+    if (isSale) {
+      return t("transfer.negotiation.meta.sale", {
+        value: formatClubCash(player.market_value),
+        bid: formatClubCash(negotiation.counter_offer ?? negotiation.current_offer),
+      });
+    }
     if (valueBounds && !valueBounds.exact) {
       return t("transfer.negotiation.meta.range", {
         low: formatClubCash(valueBounds.low),
@@ -130,7 +169,9 @@ export function TransferNegotiationModal({
     });
   })();
 
-  const hintText = t("transfer.negotiation.hint.offerGuide");
+  const hintText = isSale
+    ? t("transfer.negotiation.hint.sale")
+    : t("transfer.negotiation.hint.offerGuide");
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -166,7 +207,9 @@ export function TransferNegotiationModal({
         {!resolved && !contractPhase ? (
         <section className="negotiation-rules" aria-labelledby="negotiation-rules-title">
           <h3 id="negotiation-rules-title" className="negotiation-rules-title">
-            {t("transfer.negotiation.rules.title")}
+            {isSale
+              ? t("transfer.negotiation.rules.titleSale")
+              : t("transfer.negotiation.rules.title")}
           </h3>
           <ul className="negotiation-rules-list">
             {gates.map((gate) => (
@@ -184,7 +227,11 @@ export function TransferNegotiationModal({
               </li>
             ))}
           </ul>
-          <p className="negotiation-rules-footnote">{t("transfer.negotiation.rules.footnote")}</p>
+          <p className="negotiation-rules-footnote">
+            {isSale
+              ? t("transfer.negotiation.rules.footnoteSale")
+              : t("transfer.negotiation.rules.footnote")}
+          </p>
         </section>
         ) : null}
 
@@ -240,7 +287,11 @@ export function TransferNegotiationModal({
           <>
             <Hint text={hintText} block>
               <div className="negotiation-offer">
-                <span>{t("transfer.negotiation.yourOffer")}</span>
+                <span>
+                  {isSale
+                    ? t("transfer.negotiation.sale.minimumFee")
+                    : t("transfer.negotiation.yourOffer")}
+                </span>
                 <strong className="negotiation-offer-amount">{formatClubCash(offer)}</strong>
                 <input
                   type="range"
@@ -263,14 +314,16 @@ export function TransferNegotiationModal({
             </Hint>
 
             <ul className="spend-confirm-lines negotiation-runway">
-              {spendRunwayLines(offerRunway).map((line) => (
-                <li key={line.label} className={line.warn ? "is-warn" : undefined}>
-                  <span>{line.label}</span>
-                  <strong>{line.value}</strong>
-                </li>
-              ))}
+              {(isSale ? saleProceedLines(offer) : offerRunway ? spendRunwayLines(offerRunway) : []).map(
+                (line) => (
+                  <li key={line.label} className={line.warn ? "is-warn" : undefined}>
+                    <span>{line.label}</span>
+                    <strong>{line.value}</strong>
+                  </li>
+                ),
+              )}
             </ul>
-            {offerRunway.belowFloor ? (
+            {!isSale && offerRunway?.belowFloor ? (
               <p className="spend-confirm-warn" role="status">
                 {t("transfer.negotiation.floorWarn")}
               </p>
@@ -320,30 +373,47 @@ export function TransferNegotiationModal({
                   onSubmitOffer(offer);
                 }}
               >
-                {t("transfer.negotiation.submit")}
+                {isSale ? t("transfer.negotiation.sale.submit") : t("transfer.negotiation.submit")}
               </button>
-              {negotiation.counter_offer && counterRunway ? (
+              {negotiation.counter_offer && (isSale || counterRunway) ? (
                 <button
                   type="button"
                   className={[
                     "negotiation-btn",
                     "negotiation-btn-primary",
-                    canSubmit && transferWindowOpen ? "" : "is-disabled",
+                    isSale
+                      ? transferWindowOpen
+                        ? ""
+                        : "is-disabled"
+                      : canSubmit && transferWindowOpen
+                        ? ""
+                        : "is-disabled",
                   ]
-                  .filter(Boolean)
-                  .join(" ")}
-                  aria-disabled={!canSubmit || !transferWindowOpen}
+                    .filter(Boolean)
+                    .join(" ")}
+                  aria-disabled={
+                    isSale ? !transferWindowOpen : !canSubmit || !transferWindowOpen
+                  }
                   onClick={() => {
+                    if (isSale) {
+                      if (!transferWindowOpen) return;
+                      onAcceptCounter();
+                      return;
+                    }
                     if (!canSubmit || !transferWindowOpen) return;
                     onAcceptCounter();
                   }}
                 >
-                  {t("transfer.negotiation.acceptCounter", {
-                    amount: formatClubCash(negotiation.counter_offer),
-                    floorNote: counterRunway.belowFloor
-                      ? t("transfer.negotiation.acceptCounterFloor")
-                      : "",
-                  })}
+                  {isSale
+                    ? t("transfer.negotiation.sale.acceptBid", {
+                        amount: formatClubCash(negotiation.counter_offer),
+                      })
+                    : t("transfer.negotiation.acceptCounter", {
+                        amount: formatClubCash(negotiation.counter_offer),
+                        floorNote: counterRunway?.belowFloor
+                          ? t("transfer.negotiation.acceptCounterFloor")
+                          : "",
+                      })}
                 </button>
               ) : null}
               <button type="button" className="negotiation-btn negotiation-btn-muted" onClick={onWalkAway}>

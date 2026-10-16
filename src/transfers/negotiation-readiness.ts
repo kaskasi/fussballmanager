@@ -67,7 +67,9 @@ export function negotiationGates(input: {
         ? t("transfer.negotiation.gate.window.open.title")
         : t("transfer.negotiation.gate.window.closed.title"),
       detail: input.transferWindowOpen
-        ? t("transfer.negotiation.gate.window.open.detail")
+        ? isSale
+          ? t("transfer.negotiation.gate.window.open.detailSale")
+          : t("transfer.negotiation.gate.window.open.detail")
         : (windowReason ?? t("transfer.negotiation.gate.window.closed.detail", { hint: transferWindowHint() })),
     },
     {

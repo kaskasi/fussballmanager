@@ -34,6 +34,7 @@ import { advanceFinancingStoryOffersWeek } from "../economy/financing-pipeline.t
 import { advanceFinancialCrisisWeek } from "../economy/financing-crisis.ts";
 import { revertExpiredNamingRights } from "../stadium/club-stadium.ts";
 import { advanceCareerConstruction } from "./advance-construction.ts";
+import { loanClubName } from "../transfers/loan-roster.ts";
 import { refreshAiListings, scanListingBids } from "../transfers/transfer-listings.ts";
 import { advanceMerchandisingWeek } from "../economy/merchandising.ts";
 import {
@@ -656,24 +657,32 @@ export async function simulateGameWeek(
       leagueClubIds: leagueWithCareerStats.club_ids,
     });
     transferState = listingBids.state;
-    if (listingBids.opened) {
+    for (const negotiation of listingBids.opened) {
+      const player = playersWithCaStamp.find((entry) => entry.id === negotiation.player_id);
+      const buyer = loanClubName(negotiation.buyer_club_id ?? "", session.world.clubs);
       clubEvents = withClubEvent(
         clubEvents,
         session.season,
         nextWeek,
         "transfer",
-        "Angebot für einen angebotenen Spieler liegt in den Verhandlungen.",
+        t("clubEvent.listingBid", {
+          playerName: player ? formatPlayerName(player) : negotiation.player_id,
+          club: buyer,
+          fee: negotiation.counter_offer ?? negotiation.current_offer,
+        }),
       );
     }
     for (const offer of inbound.newOffers) {
+      const player = playersWithCaStamp.find((entry) => entry.id === offer.player_id);
       clubEvents = withClubEvent(
         clubEvents,
         session.season,
         nextWeek,
         "transfer",
         t("clubEvent.inboundOffer", {
+          playerName: player ? formatPlayerName(player) : offer.player_id,
+          club: loanClubName(offer.buyer_club_id, session.world.clubs),
           fee: offer.fee,
-          playerId: offer.player_id,
         }),
       );
     }

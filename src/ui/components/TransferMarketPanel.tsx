@@ -1,17 +1,16 @@
-/** WIREFRAME: design.md §9.6 — Transferliste */
-import { useMemo, useState } from "react";
-import { Eye } from "lucide-react";
-import { formatClubCash } from "../../economy/club-finances.ts";
+/** WIREFRAME: design.md §9.6 B — Transfermarkt (Karten + Filter) */
+import { useEffect, useMemo, useState } from "react";
 import { useT } from "../../i18n/react.ts";
-import { formatPlayerName } from "../../types/player-display.ts";
 import type { Player, PositionPrimary } from "../../types/player.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import { getBoardTarget } from "../../scouting/scout-board.ts";
 import type { TransferNegotiation, TransferState } from "../../transfers/negotiations.ts";
-import { loanClubName } from "../../transfers/loan-roster.ts";
-import { listedPlayerCa, searchListings } from "../../transfers/transfer-listings.ts";
+import { listPendingInboundOffers } from "../../transfers/inbound-offers.ts";
+import { searchListings } from "../../transfers/transfer-listings.ts";
 import type { WorldClub } from "../../world/world-generator.ts";
 import { FilterChip, FilterToolbar } from "./primitives/index.ts";
+import { TransferMarketGridCard } from "./TransferMarketGridCard.tsx";
+import { buildTransferMarketCards } from "./transfer-market-cards.ts";
 
 const MARKET_POSITIONS: PositionPrimary[] = [
   "GK",
@@ -28,6 +27,8 @@ const MARKET_POSITIONS: PositionPrimary[] = [
   "CF",
 ];
 
+const MARKET_PAGE_SIZE = 8;
+
 export function TransferMarketPanel({
   players,
   rivalPlayers,
@@ -37,6 +38,8 @@ export function TransferMarketPanel({
   scoutBoard,
   onOpenNegotiation,
   onScoutPlayer,
+  onOpenProfile,
+  onToggleShortlist,
 }: {
   players: readonly Player[];
   rivalPlayers: readonly Player[];
@@ -46,43 +49,116 @@ export function TransferMarketPanel({
   scoutBoard: ScoutBoard;
   onOpenNegotiation: (playerId: string) => void;
   onScoutPlayer: (playerId: string) => void;
+  onOpenProfile: (playerId: string) => void;
+  onToggleShortlist: (playerId: string) => void;
 }) {
   const t = useT();
+  const [flow, setFlow] = useState<"incoming" | "outgoing">("incoming");
   const [position, setPosition] = useState<PositionPrimary | "all">("all");
+  const [page, setPage] = useState(0);
+
   const everyone = useMemo(() => [...players, ...rivalPlayers], [players, rivalPlayers]);
-  const rows = searchListings(transferState.listings ?? [], everyone, {
-    position: position === "all" ? undefined : position,
-  });
-  const saleTalks = (transferState.negotiations ?? []).filter(
-    (entry): entry is TransferNegotiation => entry.side === "sell" && entry.status === "active",
+  const listingRows = useMemo(
+    () =>
+      searchListings(transferState.listings ?? [], everyone, {
+        position: position === "all" ? undefined : position,
+      }),
+    [transferState.listings, everyone, position],
+  );
+
+  const saleTalks = useMemo(
+    () =>
+      (transferState.negotiations ?? []).filter(
+        (entry): entry is TransferNegotiation => entry.side === "sell" && entry.status === "active",
+      ),
+    [transferState.negotiations],
+  );
+  const purchaseTalks = useMemo(
+    () =>
+      (transferState.negotiations ?? []).filter(
+        (entry): entry is TransferNegotiation =>
+          entry.status === "active" && entry.seller_club_id !== clubId,
+      ),
+    [transferState.negotiations, clubId],
+  );
+  const inboundOffers = useMemo(
+    () => listPendingInboundOffers(transferState, clubId, players),
+    [transferState, clubId, players],
+  );
+
+  const shortlistIds = transferState.shortlist ?? [];
+
+  const scoutAssignedByPlayer = useMemo(() => {
+    const map = new Map<string, boolean>();
+    for (const player of rivalPlayers) {
+      map.set(player.id, Boolean(getBoardTarget(scoutBoard, player.id, rivalPlayers)?.assigned));
+    }
+    return map;
+  }, [scoutBoard, rivalPlayers]);
+
+  const allCards = useMemo(
+    () =>
+      buildTransferMarketCards({
+        flow,
+        clubId,
+        everyone,
+        listingRows,
+        purchaseTalks,
+        saleTalks,
+        inboundOffers,
+        worldClubs,
+        scoutAssignedByPlayer,
+      }),
+    [
+      flow,
+      clubId,
+      everyone,
+      listingRows,
+      purchaseTalks,
+      saleTalks,
+      inboundOffers,
+      worldClubs,
+      scoutAssignedByPlayer,
+    ],
+  );
+
+  const filteredCards = useMemo(() => {
+    if (position === "all") return allCards;
+    return allCards.filter((card) => card.player?.position === position);
+  }, [allCards, position]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredCards.length / MARKET_PAGE_SIZE));
+
+  useEffect(() => {
+    setPage(0);
+  }, [flow, position, filteredCards.length]);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, Math.max(0, pageCount - 1)));
+  }, [pageCount]);
+
+  const pageCards = filteredCards.slice(
+    page * MARKET_PAGE_SIZE,
+    page * MARKET_PAGE_SIZE + MARKET_PAGE_SIZE,
   );
 
   return (
-    <section className="game-panel" aria-label="Transfermarkt">
-      <h2>Transfermarkt</h2>
-      <p className="settings-section-lead">
-        Nur gelistete Spieler. Eigene Kaderspieler listest du im Profil. Gebot öffnet die Verhandlung,
-        danach den Vertrag.
-      </p>
-      {saleTalks.length > 0 ? (
-        <ul className="transfers-history">
-          {saleTalks.map((talk) => {
-            const player = players.find((entry) => entry.id === talk.player_id);
-            return (
-              <li key={talk.id}>
-                <button type="button" className="transfers-history-row" onClick={() => onOpenNegotiation(talk.player_id)}>
-                  <span>
-                    Angebot für {player ? formatPlayerName(player) : talk.player_id}
-                    {" · "}
-                    {formatClubCash(talk.counter_offer ?? talk.current_offer)}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
-      <FilterToolbar ariaLabel="Transfermarkt nach Position filtern" className="transfers-position-toolbar">
+    <section className="game-panel transfers-market-panel" aria-label={t("transfers.market.title")}>
+      <header className="transfers-market-head">
+        <h2>{t("transfers.market.title")}</h2>
+        <p className="settings-section-lead">{t("transfers.market.lead")}</p>
+      </header>
+
+      <FilterToolbar ariaLabel={t("transfers.market.flowFilter")} className="transfers-market-flow-toolbar">
+        <FilterChip active={flow === "incoming"} onClick={() => setFlow("incoming")}>
+          {t("transfers.market.flowIncoming")}
+        </FilterChip>
+        <FilterChip active={flow === "outgoing"} onClick={() => setFlow("outgoing")}>
+          {t("transfers.market.flowOutgoing")}
+        </FilterChip>
+      </FilterToolbar>
+
+      <FilterToolbar ariaLabel={t("transfers.market.positionFilter")} className="transfers-position-toolbar">
         <FilterChip active={position === "all"} onClick={() => setPosition("all")}>
           {t("scouting.filter.all")}
         </FilterChip>
@@ -96,58 +172,56 @@ export function TransferMarketPanel({
           </FilterChip>
         ))}
       </FilterToolbar>
-      {rows.length === 0 ? <p>Keine passenden Angebote.</p> : null}
-      <ul className="transfers-history">
-        {rows.map(({ listing, player }) => {
-          const isOwnListing = listing.club_id === clubId;
-          const scoutTarget = isOwnListing
-            ? null
-            : getBoardTarget(scoutBoard, player.id, rivalPlayers);
-          const scoutAssigned = Boolean(scoutTarget?.assigned);
-          return (
-            <li key={listing.player_id}>
-              <div className="transfers-history-row transfers-market-row">
+
+      {filteredCards.length === 0 ? (
+        <p className="transfers-market-empty">{t("transfers.market.empty")}</p>
+      ) : (
+        <>
+          <div className="scouting-hits-grid-wrap transfers-market-grid-wrap">
+            <ul className="scouting-hits-grid transfers-market-grid">
+              {pageCards.map((card) => (
+                <li key={card.id} className="scouting-hits-grid-cell">
+                  <TransferMarketGridCard
+                    player={card.player}
+                    playerId={card.playerId}
+                    kind={card.kind}
+                    clubLabel={card.clubLabel}
+                    priceLabel={card.priceLabel}
+                    detailLine={card.detailLine}
+                    ca={card.ca}
+                    scoutAssigned={card.scoutAssigned}
+                    showScoutAction={card.showScoutAction && flow === "incoming"}
+                    shortlisted={shortlistIds.includes(card.playerId)}
+                    onOpen={() => onOpenNegotiation(card.playerId)}
+                    onScout={() => onScoutPlayer(card.playerId)}
+                    onOpenProfile={
+                      card.player ? () => onOpenProfile(card.playerId) : undefined
+                    }
+                    onToggleShortlist={() => onToggleShortlist(card.playerId)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+          {pageCount > 1 ? (
+            <nav className="transfers-market-pagination" aria-label={t("transfers.market.pagination")}>
+              {Array.from({ length: pageCount }, (_, index) => (
                 <button
+                  key={index}
                   type="button"
-                  className="transfers-market-row-main"
-                  onClick={() => onOpenNegotiation(player.id)}
+                  className={
+                    index === page ? "transfers-market-page is-active" : "transfers-market-page"
+                  }
+                  aria-current={index === page ? "page" : undefined}
+                  onClick={() => setPage(index)}
                 >
-                  {formatPlayerName(player)} · {player.position} · {player.age} · CA{" "}
-                  {listedPlayerCa(player)}
-                  {" · "}
-                  {formatClubCash(listing.asking_price)}
-                  {isOwnListing
-                    ? " · eigenes Angebot"
-                    : ` · ${loanClubName(listing.club_id, worldClubs)}`}
+                  {index + 1}
                 </button>
-                {!isOwnListing ? (
-                  <button
-                    type="button"
-                    className={
-                      scoutAssigned
-                        ? "transfers-market-scout-icon is-on"
-                        : "transfers-market-scout-icon"
-                    }
-                    disabled={scoutAssigned}
-                    aria-label={
-                      scoutAssigned ? t("scouting.hits.scoutActive") : t("scouting.hits.scoutCta")
-                    }
-                    title={
-                      scoutAssigned ? t("scouting.hits.scoutActive") : t("scouting.hits.scoutCta")
-                    }
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onScoutPlayer(player.id);
-                    }}
-                  >
-                    <Eye size={18} strokeWidth={2.25} aria-hidden />
-                  </button>
-                ) : null}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+              ))}
+            </nav>
+          ) : null}
+        </>
+      )}
     </section>
   );
 }

@@ -4,6 +4,7 @@ import { engineTeamId } from "../sim/rival-growth.ts";
 import type { Player, PositionPrimary } from "../types/player.ts";
 import { formatPlayerName, formatPlayerPositionLabel } from "../types/player-display.ts";
 import type { WorldClub } from "../world/world-generator.ts";
+import { worldCareerClubId } from "../world/world-generator.ts";
 import { estimateCa } from "./market-value.ts";
 
 const CAREER_CLUB_NAMES: Record<string, string> = {
@@ -41,6 +42,11 @@ export function loanClubName(
   if (CAREER_CLUB_NAMES[clubId]) {
     return CAREER_CLUB_NAMES[clubId];
   }
+  const worldMatch = worldClubs?.find(
+    (club) => club.id === clubId || worldCareerClubId(club.id) === clubId,
+  );
+  if (worldMatch?.short_name) return worldMatch.short_name;
+  if (worldMatch?.name) return worldMatch.name;
   const teamId = teamIdFromClubId(clubId);
   const label = clubShortLabel(teamId, worldClubs);
   if (label !== teamId && !label.startsWith("cl_")) {

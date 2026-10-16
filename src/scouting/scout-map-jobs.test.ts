@@ -38,6 +38,7 @@ describe("listMapScoutJobs", () => {
           identity: "community",
           reputation: 40,
           rivalry_ids: [],
+          kit: { primary: "#003366", secondary: "#ffffff" },
         },
       ],
     });

@@ -16,6 +16,7 @@ describe("club-display", () => {
         identity: "community" as const,
         reputation: 35,
         rivalry_ids: [],
+        kit: { primary: "#003366", secondary: "#ffffff" },
       },
     ];
     const teamId = asTeamId(NORDSTERN_TEAM_ID);

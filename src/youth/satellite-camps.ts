@@ -54,8 +54,6 @@ export interface YouthCamp {
   agency_commissioned_at?: CampDayStamp;
   leader?: CampLeaderRecord;
   candidate_set_id?: string;
-  /** Career week index when the build finishes. Absent = already open. */
-  construction_until?: number;
 }
 
 export const MAX_YOUTH_CAMPS = 3;

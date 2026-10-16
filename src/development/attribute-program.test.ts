@@ -10,7 +10,7 @@ describe("attribute individual program", () => {
     const programs = assignIndividualProgram(
       [],
       player,
-      "attribute",
+      "attribute_focus",
       4,
       1,
       2,

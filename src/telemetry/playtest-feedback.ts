@@ -4,7 +4,7 @@ import { isAnalyticsActive, trackEvent } from "./analytics.ts";
 
 export interface PlaytestFeedbackResult {
   ok: boolean;
-  messageKey: "settings.feedback.sent" | "settings.feedback.sentLocal";
+  messageKey: "settings.feedback.sent" | "settings.feedback.sentLocal" | "settings.feedback.empty";
 }
 
 /** Playtest notes — always retained locally; PostHog when analytics is on. */

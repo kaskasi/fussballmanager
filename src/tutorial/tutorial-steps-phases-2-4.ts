@@ -114,7 +114,7 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
     target: COACH_TARGET.hubScoutingTransfer,
     when: (session) =>
       phase2Eligible(session) &&
-      (session.transferState.sale_listings?.length ?? 0) > 0,
+      (session.transferState.listings?.length ?? 0) > 0,
   },
 
   // —— Phase 3: scouting, squad, campus ——

@@ -43,6 +43,17 @@ export function isPlayerListed(state: TransferState, playerId: string): boolean 
   return (state.listings ?? []).some((row) => row.player_id === playerId);
 }
 
+export function clubListingsForPlayers(
+  state: TransferState,
+  clubId: string,
+  players: readonly Player[],
+): TransferListing[] {
+  const ids = new Set(players.map((player) => player.id));
+  return (state.listings ?? []).filter(
+    (row) => row.club_id === clubId && ids.has(row.player_id),
+  );
+}
+
 export function listPlayerForSale(
   state: TransferState,
   player: Player,

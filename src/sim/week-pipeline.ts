@@ -824,7 +824,6 @@ export async function simulateGameWeek(
     trainingCalendarGateDone: resolveFeatureCurtain(narrativeStep.storyState).auto_training,
     rivalPlayers,
     rivalBreakoutNarratives,
-    youthCamps,
     academyFacility,
     academyProject,
     transferState,

@@ -4,7 +4,7 @@ import { ArrowDownLeft, MapPin, Radar, Users } from "lucide-react";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import { buildHubScoutingDigest } from "../../hub/hub-scouting-digest.ts";
 import { listPendingInboundOffers } from "../../transfers/inbound-offers.ts";
-import { listClubTransferListings } from "../../transfers/player-listings.ts";
+import { clubListingsForPlayers } from "../../transfers/transfer-listings.ts";
 import type { TransferState } from "../../transfers/negotiations.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
@@ -50,7 +50,7 @@ export function HubScoutingTransferDeskPanel({
   );
 
   const listings = useMemo(
-    () => listClubTransferListings(transferState, clubId, players),
+    () => clubListingsForPlayers(transferState, clubId, players),
     [transferState, clubId, players],
   );
   const inbound = useMemo(
@@ -131,7 +131,7 @@ export function HubScoutingTransferDeskPanel({
                       </small>
                       {listing ? (
                         <small className="hub-market-desk__ask">
-                          {t("hub.market.listAsk", { fee: formatClubCash(listing.asking_fee) })}
+                          {t("hub.market.listAsk", { fee: formatClubCash(listing.asking_price) })}
                         </small>
                       ) : null}
                     </span>
@@ -163,7 +163,7 @@ export function HubScoutingTransferDeskPanel({
                       <strong>{player ? formatPlayerName(player) : listing.player_id}</strong>
                       <small>{t("hub.market.listedWaiting")}</small>
                       <small className="hub-market-desk__ask">
-                        {t("hub.market.listAsk", { fee: formatClubCash(listing.asking_fee) })}
+                        {t("hub.market.listAsk", { fee: formatClubCash(listing.asking_price) })}
                       </small>
                     </span>
                   </button>

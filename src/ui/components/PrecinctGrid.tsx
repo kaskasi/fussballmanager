@@ -48,6 +48,7 @@ import {
   type PrecinctPatch,
   type PrecinctState,
 } from "../../stadium/precinct.ts";
+import { careerWeekIndex } from "../../stadium/hospitality.ts";
 import { ArrowUp, HardHat, Landmark, Puzzle, Route, X } from "lucide-react";
 import { useRef, useState, type DragEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
@@ -487,11 +488,14 @@ export function PrecinctGrid({
               const movingHere = selected?.id === patch.id;
               const level = precinctBuildingLevel(precinct, patch.building);
               const hungry = !patchDocksStreetNetwork(precinct, patch);
-              const operational = isPrecinctPatchOperational(patch, season, week);
-              const underConstruction = !operational;
-              const buildWeeksLeft = underConstruction
-                ? precinctPatchWeeksRemaining(patch, season, week)
-                : 0;
+              const underConstruction = Boolean(patch.constructing);
+              const buildWeeksLeft =
+                underConstruction && patch.readyWeekIndex != null
+                  ? Math.max(
+                      0,
+                      patch.readyWeekIndex - careerWeekIndex(season, week),
+                    )
+                  : 0;
               const canShrink = !patchIsMinSize(patch);
               const def = precinctBuildingDef(patch.building);
               const stageLabel = precinctBuildingStageLabel(patch.building, level);

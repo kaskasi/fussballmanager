@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { IndividualProgram } from "./development/individual-training.ts";
 import { assignIndividualProgram } from "./development/individual-training.ts";
-import { processTransferBreakout } from "./development/breakouts.ts";
 import { needsTrainingPlanForToday } from "./development/training-plan-state.ts";
 import {
   isNavScreenVisible,
@@ -88,7 +87,6 @@ import { attributeLabel } from "./ui/player-profile.ts";
 import type { Attributes } from "./types/player.ts";
 import { isTransferWindowOpen } from "./sim/transfer-windows.ts";
 import {
-  applyPlayerSaleIncome,
   applyTransferFee,
   canAffordTransfer,
   formatClubCash,
@@ -99,7 +97,6 @@ import {
   weeklyWageBill,
   leagueTablePlace,
 } from "./economy/club-finances.ts";
-import { clearPlayerFromLineup } from "./match/lineup-board.ts";
 import { formatPlayerName } from "./types/player-display.ts";
 import { sellerAskingPrice, toggleShortlist } from "./transfers/negotiations.ts";
 import { useTransferNegotiation } from "./ui/components/TransferNegotiationHost.tsx";
@@ -129,7 +126,6 @@ import { careerTeamId } from "./sim/rival-growth.ts";
 import {
   appendTransferRecord,
   createPurchaseRecord,
-  createSaleRecord,
   loanOutMessage,
   loanReturnMessage,
 } from "./transfers/transfer-history.ts";
@@ -140,13 +136,12 @@ import {
   type ContractOffer,
 } from "./transfers/contract-talks.ts";
 import { loanClubName } from "./transfers/loan-roster.ts";
+import { canSellPlayer, estimateSaleOffer } from "./transfers/player-sales.ts";
 import {
-  attemptPlayerSale,
-  canSellPlayer,
-  completeSale,
-  estimateSaleOffer,
-  pickAiBuyerClub,
-} from "./transfers/player-sales.ts";
+  isPlayerListed,
+  listPlayerForSale,
+  unlistPlayer,
+} from "./transfers/transfer-listings.ts";
 import { COACH_ROLE_LABELS, hireCoach, type Coach } from "./staff/coaching-staff.ts";
 import {
   applyAssistantDelegationWeek,
@@ -1198,94 +1193,16 @@ export default function App() {
     [patchSession],
   );
 
-  const handleSell = useCallback(
+  const handleToggleProfileListing = useCallback(
     (playerId: string) => {
       patchSession((current) => {
         const player = current.players.find((entry) => entry.id === playerId);
-        if (!player) return current;
-
-        const eligibility = canSellPlayer(
-          player,
-          current.players,
-          current.clubId,
-          current.week,
-        );
-        if (!eligibility.allowed) {
-          return sessionWithEvent(
-            current,
-            "transfer",
-            eligibility.reason ?? t("clubEvent.sellNotAllowed"),
-          );
-        }
-
-        const buyerClubId = pickAiBuyerClub(
-          current.league.club_ids,
-          playerId,
-          current.masterSeed,
-          current.season,
-          current.week,
-        );
-        const deal = attemptPlayerSale(
-          player,
-          current.season,
-          current.week,
-          current.masterSeed,
-        );
-        if (!deal.accepted) {
-          return sessionWithEvent(
-            current,
-            "transfer",
-            t("clubEvent.sellNoBuyer"),
-          );
-        }
-
-        const sold = completeSale(player, buyerClubId, current.season);
-        const shifted = processTransferBreakout(sold, {
-          masterSeed: current.masterSeed,
-          worldEventId: `sale_${current.season}_${current.week}_${playerId}_${buyerClubId}`,
-          week: current.week,
-          previousMorale: player.state.morale,
-          matchFitPoor: false,
-        });
-        const finalized = shifted.player;
-        const saleRecord = createSaleRecord(
-          finalized,
-          deal.fee,
-          current.season,
-          current.week,
-          current.clubId,
-          buyerClubId,
-        );
-        let next = sessionWithEvent(
-          {
-            ...current,
-            players: current.players.filter((entry) => entry.id !== playerId),
-            rivalPlayers: [
-              ...current.rivalPlayers.filter((entry) => entry.id !== playerId),
-              finalized,
-            ],
-            matchLineup: clearPlayerFromLineup(current.matchLineup, playerId),
-            transferState: appendTransferRecord(current.transferState, saleRecord),
-            finances: applyPlayerSaleIncome(current.finances, deal.fee, current.week),
-          },
-          "transfer",
-          t("clubEvent.sellComplete", {
-            player: formatPlayerName(player),
-            club: loanClubName(buyerClubId),
-            fee: formatClubCash(deal.fee),
-          }),
-        );
-        for (const narrative of shifted.narratives) {
-          next = sessionWithEvent(
-            next,
-            "profile",
-            t("clubEvent.profileInsight", { narrative: narrative.narrative }),
-          );
-        }
-        return next;
+        if (!player || player.club_id !== current.clubId) return current;
+        const transferStateNext = isPlayerListed(current.transferState, playerId)
+          ? unlistPlayer(current.transferState, playerId)
+          : listPlayerForSale(current.transferState, player, current.season, current.week);
+        return { ...current, transferState: transferStateNext };
       });
-      setProfileId(null);
-      setProfileFeedback(null);
     },
     [patchSession],
   );
@@ -1959,7 +1876,8 @@ export default function App() {
           onTransferNotice={(message) => {
             flashNotice(message);
           }}
-          onSell={() => handleSell(profilePlayer.id)}
+          onList={() => handleToggleProfileListing(profilePlayer.id)}
+          listedForSale={isPlayerListed(transferState, profilePlayer.id)}
           onProfileAction={(action) => handleProfileAction(profilePlayer.id, action)}
           onContractOffer={(offer) => handleContractOffer(profilePlayer.id, offer)}
           wageHeadroomWeekly={wageBudgetHeadroom(finances, players, session.clubId)}

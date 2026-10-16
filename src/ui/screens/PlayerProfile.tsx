@@ -1086,6 +1086,7 @@ function TrainingTargetAccentIcon({ accent }: { accent: DossierTrainingAccent })
     case "team":
       return <Users className={className} size={18} aria-hidden />;
     case "weak_foot":
+    case "attribute_focus":
       return <Footprints className={className} size={18} aria-hidden />;
     case "stamp":
       return <Flag className={className} size={18} aria-hidden />;

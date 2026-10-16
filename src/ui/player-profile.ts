@@ -270,7 +270,13 @@ export function staerkeAlsLanes(player: Player): StaerkeAlsBar[] {
   }));
 }
 
-export type DossierTrainingAccent = "team" | "individual" | "stamp" | "weak_foot" | "empty";
+export type DossierTrainingAccent =
+  | "team"
+  | "individual"
+  | "attribute_focus"
+  | "stamp"
+  | "weak_foot"
+  | "empty";
 
 export interface DossierTrainingTarget {
   accent: DossierTrainingAccent;
@@ -295,9 +301,11 @@ export function dossierTrainingTarget(
       accent:
         program.kind === "weak_foot"
           ? "weak_foot"
-          : program.kind === "stamp"
-            ? "stamp"
-            : "individual",
+          : program.kind === "attribute_focus"
+            ? "attribute_focus"
+            : program.kind === "stamp"
+              ? "stamp"
+              : "individual",
       title: programKindLabel(program.kind),
       detail: programLabel(program),
       progress: Math.min(1, elapsed / total),

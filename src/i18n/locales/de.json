@@ -1682,6 +1682,8 @@
   "training.program.weakFootWeeks": "Schwaches Bein · {weeks} Wo.",
   "training.program.stampWeeks": "{stamp} · {weeks} Wo.",
   "training.program.retrainWeeks": "{position} umbauen · {weeks} Wo.",
+  "training.program.kind.attributeFocus": "Attribut-Fokus",
+  "training.program.attributeWeeks": "{attribute} · noch {weeks} Wo.",
   "training.program.kind.weakFoot": "Schwaches Bein",
   "training.program.kind.stamp": "Fähigkeit / Stempel",
   "training.program.kind.retrain": "Position umbauen",

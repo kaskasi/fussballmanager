@@ -5,6 +5,7 @@ import {
   advanceIndividualTrainingWeek,
   assignIndividualProgram,
   canAssignIndividualProgram,
+  individualProgramFitnessDrain,
   MAX_INDIVIDUAL_PROGRAMS,
   programForPlayer,
 } from "./individual-training.ts";
@@ -15,6 +16,48 @@ import {
 } from "./position-retrain-roll.ts";
 
 describe("individual training", () => {
+  it("assigns attribute focus and grows the chosen attribute over a week", () => {
+    const player = clonePlayer();
+    const before = player.attributes.shooting;
+    const programs = assignIndividualProgram(
+      [],
+      player,
+      "attribute_focus",
+      6,
+      1,
+      8,
+      undefined,
+      undefined,
+      "shooting",
+    );
+    const result = advanceIndividualTrainingWeek([player], programs, { season: 1, week: 8 });
+    expect(result.players[0]!.attributes.shooting).toBeGreaterThan(before);
+  });
+
+  it("drains fitness on hard team intensity when an individual program runs", () => {
+    const player = clonePlayer();
+    player.state.fitness = 88;
+    const programs = assignIndividualProgram(
+      [],
+      player,
+      "attribute_focus",
+      4,
+      1,
+      1,
+      undefined,
+      undefined,
+      "pace",
+    );
+    expect(individualProgramFitnessDrain(100)).toBe(0);
+    expect(individualProgramFitnessDrain(115)).toBeGreaterThan(0);
+    const result = advanceIndividualTrainingWeek([player], programs, {
+      season: 1,
+      week: 1,
+      intensity: 115,
+    });
+    expect(result.players[0]!.state.fitness).toBeLessThan(88);
+  });
+
   it("assigns a weak-foot program and grows weak_foot over a week", () => {
     const player = clonePlayer();
     player.attributes.weak_foot = 40;
@@ -99,7 +142,7 @@ describe("individual training", () => {
     }
     expect(hasStamp(squad[0]!, "kopfballungeheuer")).toBe(true);
     expect(active).toHaveLength(0);
-    expect(squad[0]!.attributes.strength).toBe(113);
+    expect(squad[0]!.attributes.strength).toBeGreaterThanOrEqual(113);
   });
 
   it("records a failure counter when the retrain roll misses", () => {

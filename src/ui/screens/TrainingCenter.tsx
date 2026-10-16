@@ -36,7 +36,7 @@ import {
   validateWeeklyPlan,
   type SessionGroup,
 } from "../../development/weekly-plan.ts";
-import type { Player } from "../../types/player.ts";
+import type { Attributes, Player } from "../../types/player.ts";
 import { formatPlayerName, formatPlayerPositionLabel } from "../../types/player-display.ts";
 import { RetrainPreviewPanel } from "../components/RetrainPreviewPanel.tsx";
 import { TrainingPlanPresetsBar } from "../components/TrainingPlanPresetsBar.tsx";
@@ -46,6 +46,7 @@ import {
   assignIndividualProgram,
   cancelIndividualProgram,
   canAssignIndividualProgram,
+  eligibleIndividualAttributes,
   eligibleRetrainPositions,
   eligibleTrainStamps,
   MAX_INDIVIDUAL_PROGRAMS,
@@ -844,7 +845,12 @@ function IndividualProgramModal({
 }) {
   const active = programForPlayer(programs, player.id);
   const trainStamps = eligibleTrainStamps(player);
-  const [kind, setKind] = useState<IndividualProgramKind>(active?.kind ?? "weak_foot");
+  const attributeOptions = useMemo(() => eligibleIndividualAttributes(player), [player]);
+  const [kind, setKind] = useState<IndividualProgramKind>(active?.kind ?? "attribute_focus");
+  const [targetAttribute, setTargetAttribute] = useState<keyof Attributes>(
+    active?.targetAttribute ??
+      (active?.kind === "weak_foot" ? "weak_foot" : attributeOptions[0] ?? "shooting"),
+  );
   const [stampId, setStampId] = useState<string>(
     active?.stampId ?? trainStamps[0]?.id ?? "",
   );
@@ -853,14 +859,16 @@ function IndividualProgramModal({
   const [targetPosition, setTargetPosition] = useState<PositionPrimary>(
     active?.targetPosition ?? retrainTargets[0] ?? "AM",
   );
-  const [attribute, setAttribute] = useState<keyof Player["attributes"]>(
-    active?.attribute ?? "passing",
-  );
   useEffect(() => {
     if (retrainTargets.length > 0 && !retrainTargets.includes(targetPosition)) {
       setTargetPosition(retrainTargets[0]!);
     }
   }, [retrainTargets, targetPosition]);
+  useEffect(() => {
+    if (!attributeOptions.includes(targetAttribute)) {
+      setTargetAttribute(attributeOptions[0] ?? "shooting");
+    }
+  }, [attributeOptions, targetAttribute]);
   const tired = playerFatigueWarning(player);
   const check = canAssignIndividualProgram(
     player,
@@ -868,7 +876,7 @@ function IndividualProgramModal({
     programs,
     targetPosition,
     stampId,
-    attribute,
+    kind === "attribute_focus" ? targetAttribute : undefined,
   );
   const stampWeeks = kind === "stamp" ? (stampDefinition(stampId)?.weeks ?? weeks) : weeks;
 
@@ -892,7 +900,7 @@ function IndividualProgramModal({
         week,
         targetPosition,
         kind === "stamp" ? stampId : undefined,
-        kind === "attribute" ? attribute : undefined,
+        kind === "attribute_focus" ? targetAttribute : undefined,
       );
       onProgramsChange(next);
       onClose();
@@ -959,7 +967,7 @@ function IndividualProgramModal({
                 }
               }}
             >
-              <option value="attribute">{programKindLabel("attribute")}</option>
+              <option value="attribute_focus">{programKindLabel("attribute_focus")}</option>
               <option value="weak_foot">{programKindLabel("weak_foot")}</option>
               <option value="position_retrain">{programKindLabel("position_retrain")}</option>
               <option value="stamp" disabled={trainStamps.length === 0}>
@@ -969,34 +977,18 @@ function IndividualProgramModal({
             </select>
           </label>
 
-          {kind === "attribute" ? (
+          {kind === "attribute_focus" ? (
             <label className="training-individual-field">
               <span>Attribut</span>
               <select
-                value={attribute}
-                onChange={(event) => setAttribute(event.target.value as keyof Player["attributes"])}
+                value={targetAttribute}
+                onChange={(event) =>
+                  setTargetAttribute(event.target.value as keyof Attributes)
+                }
               >
-                {(
-                  [
-                    "shooting",
-                    "passing",
-                    "dribbling",
-                    "technique",
-                    "pace",
-                    "strength",
-                    "stamina",
-                    "composure",
-                    "leadership",
-                    "positioning",
-                    "vision",
-                    "concentration",
-                    "teamwork",
-                    "weak_foot",
-                    "gk_handling",
-                  ] as const
-                ).map((key) => (
+                {attributeOptions.map((key) => (
                   <option key={key} value={key}>
-                    {attributeLabel(key)}
+                    {attributeLabel(key)} ({Math.round(player.attributes[key])})
                   </option>
                 ))}
               </select>

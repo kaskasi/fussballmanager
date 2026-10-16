@@ -1583,6 +1583,8 @@
   "training.program.weakFootWeeks": "弱足 · 剩 {weeks} 周",
   "training.program.stampWeeks": "{stamp} · 剩 {weeks} 周",
   "training.program.retrainWeeks": "改练 {position} · 剩 {weeks} 周",
+  "training.program.kind.attributeFocus": "属性专练",
+  "training.program.attributeWeeks": "{attribute} · 还剩 {weeks} 周",
   "training.program.kind.weakFoot": "弱足",
   "training.program.kind.stamp": "技能 / 印记",
   "training.program.kind.retrain": "位置改造",

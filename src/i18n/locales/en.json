@@ -1677,6 +1677,8 @@
   "training.program.weakFootWeeks": "Weak foot · {weeks} wk",
   "training.program.stampWeeks": "{stamp} · {weeks} wk",
   "training.program.retrainWeeks": "Retrain {position} · {weeks} wk",
+  "training.program.kind.attributeFocus": "Attribute focus",
+  "training.program.attributeWeeks": "{attribute} · {weeks} wk left",
   "training.program.kind.weakFoot": "Weak foot",
   "training.program.kind.stamp": "Skill / stamp",
   "training.program.kind.retrain": "Position retrain",

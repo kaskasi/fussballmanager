@@ -6,6 +6,7 @@ const isCi = Boolean(process.env.CI);
 export default defineConfig({
   test: {
     include: [
+      "src/development/**/*.test.ts",
       "src/persistence/**/*.test.ts",
       "src/ui/**/*.test.ts",
       "src/sim/**/*.test.ts",

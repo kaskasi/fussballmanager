@@ -158,6 +158,13 @@ F2.8 Bonus-Stamps (PRD 07.5) sind **kein** Wochen-Wachstumsfaktor. Sie vergeben
 einmalig feste Attribut-Bumps und laufen über Individualprogramm-Slots (F2.3),
 nicht über Fokus-Slots. Sie ändern `training_focus()` nicht.
 
+**F2.3 Einzel-Einheit:** Neben den 15 Mannschafts-Sessions (Mo–Fr × 3) kann ein
+Spieler optional ein Individualprogramm laufen lassen (`attribute_focus` =
+wöchentliches Wachstum auf ein gewähltes Attribut mit Fokus-Slot-Äquivalent).
+Bei **harter** Mannschafts-Intensität (≥ 115) kostet die Extra-Einheit zusätzlich
+Fitness (−4/Woche). Stempel-Programme trainieren die Gate-Attribute wöchentlich bis
+zur Siegel-Vergabe.
+
 ### 02.5 Match-Practice-Bonus
 
 ```typescript

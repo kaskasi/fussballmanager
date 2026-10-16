@@ -206,6 +206,7 @@ export function useTransferNegotiation(args: {
             season: current.season,
             week: current.week,
             userClubId: current.clubId,
+            boardCashFloor: boardCashFloor(board),
           });
           return sessionWithEvent(
             {

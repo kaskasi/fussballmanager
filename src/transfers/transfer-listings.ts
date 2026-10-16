@@ -1,6 +1,6 @@
 import type { ClubFinances } from "../economy/club-finances.ts";
-import { creditClubCash } from "../economy/club-finances.ts";
-import { completeSale } from "./player-sales.ts";
+import { applyPlayerSaleIncome } from "../economy/club-finances.ts";
+import { completeSale, pickAiBuyerClub } from "./player-sales.ts";
 import { createSaleRecord } from "./transfer-history.ts";
 import type { Player } from "../types/player.ts";
 import type { TeamId } from "@fussballmanager/shared";
@@ -213,7 +213,24 @@ export function openSaleNegotiation(input: {
   return { state: { ...input.state, negotiations }, negotiation };
 }
 
-/** AI bids arrive for our listed players. One new bid per week. */
+/** Per listed player per week — tuned so a full sale list gets several bites, not ~0.2/week. */
+export const LISTING_BID_CHANCE = 0.34;
+export const MAX_LISTING_BIDS_PER_WEEK = 4;
+
+function listingBidRng(
+  masterSeed: number,
+  season: number,
+  week: number,
+  playerId: string,
+): () => number {
+  let salt = week;
+  for (const ch of playerId) {
+    salt = Math.imul(salt ^ ch.charCodeAt(0), 0x9e3779b1);
+  }
+  return weekRng(masterSeed, season, week + salt);
+}
+
+/** AI bids on our transfer-list players (PRD 05 — sale negotiations, side sell). */
 export function scanListingBids(input: {
   state: TransferState;
   players: readonly Player[];
@@ -222,31 +239,62 @@ export function scanListingBids(input: {
   week: number;
   masterSeed: number;
   leagueClubIds: readonly TeamId[];
-}): { state: TransferState; opened: TransferNegotiation | null } {
-  if (!isTransferWindowOpen(input.week)) return { state: input.state, opened: null };
-  const already = (input.state.negotiations ?? []).some(
-    (entry) => entry.side === "sell" && entry.week === input.week && entry.status === "active",
-  );
-  if (already) return { state: input.state, opened: null };
-  const rng = weekRng(input.masterSeed, input.season, input.week + 3);
-  const listed = (input.state.listings ?? []).filter((row) => row.club_id === input.userClubId);
-  if (listed.length === 0 || rng() > 0.8) return { state: input.state, opened: null };
-  const listing = listed[Math.floor(rng() * listed.length)]!;
-  const player = input.players.find((entry) => entry.id === listing.player_id);
-  if (!player) return { state: input.state, opened: null };
-  const buyers = input.leagueClubIds.filter((id) => id !== input.userClubId);
-  const buyer = buyers[Math.floor(rng() * buyers.length)] ?? buyers[0];
-  if (!buyer) return { state: input.state, opened: null };
-  const bid = Math.round(listing.asking_price * (0.82 + rng() * 0.2));
-  const opened = openSaleNegotiation({
-    state: input.state,
-    player,
-    buyerClubId: buyer,
-    season: input.season,
-    week: input.week,
-    bid,
-  });
-  return { state: opened.state, opened: opened.negotiation };
+}): { state: TransferState; opened: TransferNegotiation[] } {
+  if (!isTransferWindowOpen(input.week)) {
+    return { state: input.state, opened: [] };
+  }
+
+  let state = input.state;
+  const opened: TransferNegotiation[] = [];
+  const busyPlayers = new Set<string>();
+  for (const entry of state.negotiations ?? []) {
+    if (entry.side === "sell" && entry.status === "active") {
+      busyPlayers.add(entry.player_id);
+    }
+  }
+  for (const offer of state.inbound_offers ?? []) {
+    if (offer.status === "pending") {
+      busyPlayers.add(offer.player_id);
+    }
+  }
+
+  const listed = (state.listings ?? []).filter((row) => row.club_id === input.userClubId);
+  if (listed.length === 0) {
+    return { state, opened };
+  }
+
+  const ordered = [...listed].sort((a, b) => a.player_id.localeCompare(b.player_id));
+  for (const listing of ordered) {
+    if (opened.length >= MAX_LISTING_BIDS_PER_WEEK) break;
+    if (busyPlayers.has(listing.player_id)) continue;
+    const player = input.players.find((entry) => entry.id === listing.player_id);
+    if (!player || player.squad_status !== "pro") continue;
+
+    const rng = listingBidRng(input.masterSeed, input.season, input.week, listing.player_id);
+    if (rng() > LISTING_BID_CHANCE) continue;
+
+    const buyerClubId = pickAiBuyerClub(
+      input.leagueClubIds,
+      listing.player_id,
+      input.masterSeed,
+      input.season,
+      input.week,
+    );
+    const bid = Math.round(listing.asking_price * (0.82 + rng() * 0.22));
+    const step = openSaleNegotiation({
+      state,
+      player,
+      buyerClubId,
+      season: input.season,
+      week: input.week,
+      bid,
+    });
+    state = step.state;
+    opened.push(step.negotiation);
+    busyPlayers.add(listing.player_id);
+  }
+
+  return { state, opened };
 }
 
 export function submitSaleRound(
@@ -313,6 +361,7 @@ export function applyListedSale(input: {
   season: number;
   week: number;
   userClubId: string;
+  boardCashFloor: number;
 }): {
   players: Player[];
   rivalPlayers: Player[];
@@ -340,7 +389,12 @@ export function applyListedSale(input: {
   return {
     players: input.players.filter((entry) => entry.id !== input.playerId),
     rivalPlayers: [...input.rivalPlayers.filter((entry) => entry.id !== input.playerId), sold],
-    finances: creditClubCash(input.finances, input.fee, input.week, "player_sale"),
+    finances: applyPlayerSaleIncome(
+      input.finances,
+      input.fee,
+      input.week,
+      input.boardCashFloor,
+    ),
     transferState: {
       ...unlistPlayer(input.transferState, input.playerId),
       history: [...(input.transferState.history ?? []), record],

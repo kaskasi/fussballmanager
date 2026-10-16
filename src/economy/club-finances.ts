@@ -67,6 +67,14 @@ export const WEEKLY_SPONSORSHIP = 55_000;
 
 const TRANSFER_POOL_SHARE = 0.5;
 
+/** Share of player-sale fee credited to transfer_budget (PRD 11; board cash goal). */
+export function playerSaleTransferPoolShare(
+  cashBeforeSale: number,
+  boardCashFloor: number,
+): number {
+  return cashBeforeSale >= boardCashFloor ? 1 : TRANSFER_POOL_SHARE;
+}
+
 export function divisionEconomy(divisionId: DivisionEconomyId) {
   return DIVISION_ECONOMY[divisionId];
 }
@@ -140,8 +148,12 @@ function applyCashLine(finances: ClubFinances, line: FinanceLine): ClubFinances 
   };
 }
 
-function applyTransferPoolIncome(finances: ClubFinances, amount: number): ClubFinances {
-  const boost = Math.round(amount * TRANSFER_POOL_SHARE);
+function applyTransferPoolIncome(
+  finances: ClubFinances,
+  amount: number,
+  share: number = TRANSFER_POOL_SHARE,
+): ClubFinances {
+  const boost = Math.round(amount * share);
   return normalizeFinances({
     ...finances,
     transfer_budget: finances.transfer_budget + boost,
@@ -155,10 +167,7 @@ export function applyFinanceLines(
   let next = finances;
   for (const line of lines) {
     next = applyCashLine(next, line);
-    if (
-      line.amount > 0 &&
-      (line.kind === "league_prize" || line.kind === "tv_bonus" || line.kind === "player_sale")
-    ) {
+    if (line.amount > 0 && (line.kind === "league_prize" || line.kind === "tv_bonus")) {
       next = applyTransferPoolIncome(next, line.amount);
     }
   }
@@ -310,9 +319,17 @@ export function canAffordTransfer(finances: ClubFinances, fee: number): boolean 
   return transferBudget(finances) >= fee;
 }
 
-export function applyPlayerSaleIncome(finances: ClubFinances, fee: number, week?: number): ClubFinances {
+export function applyPlayerSaleIncome(
+  finances: ClubFinances,
+  fee: number,
+  week?: number,
+  boardCashFloor = 0,
+): ClubFinances {
   const line: FinanceLine = { kind: "player_sale", amount: fee, week: week ?? 0 };
-  let next = applyFinanceLines(finances, [line]);
+  const share = playerSaleTransferPoolShare(finances.cash, boardCashFloor);
+  let next = applyCashLine(finances, line);
+  next = applyTransferPoolIncome(next, fee, share);
+  next = normalizeFinances(next);
   if (week !== undefined) {
     next = appendPendingFinanceLines(next, [line]);
   }

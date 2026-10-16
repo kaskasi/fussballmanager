@@ -82,11 +82,22 @@ describe("club finances", () => {
     );
   });
 
-  it("credits player sales to cash and transfer pool", () => {
+  it("credits full player-sale fee to transfer budget when cash meets board goal", () => {
     const finances = defaultClubFinances();
-    const afterSale = applyPlayerSaleIncome(finances, 1_000_000, 28);
+    const boardGoal = 3_500_000;
+    const afterSale = applyPlayerSaleIncome(finances, 1_000_000, 28, boardGoal);
     expect(afterSale.cash).toBe(finances.cash + 1_000_000);
-    expect(afterSale.transfer_budget).toBe(finances.transfer_budget + 500_000);
+    expect(afterSale.transfer_budget).toBe(finances.transfer_budget + 1_000_000);
+  });
+
+  it("splits player-sale fee 50/50 when cash is below board goal", () => {
+    const finances = normalizeFinances({
+      ...defaultClubFinances(),
+      cash: 2_000_000,
+    });
+    const afterSale = applyPlayerSaleIncome(finances, 1_000_000, 28, 2_800_000);
+    expect(afterSale.cash).toBe(3_000_000);
+    expect(afterSale.transfer_budget).toBe(defaultClubFinances().transfer_budget + 500_000);
   });
 
   it("uses transfer_budget for affordability and fees", () => {

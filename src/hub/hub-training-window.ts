@@ -7,7 +7,6 @@ import {
 import { UNITS_PER_DAY } from "../development/weekly-plan.ts";
 import { isMatchSaturday, weekdayLabel, SATURDAY } from "../sim/day-calendar.ts";
 
-const FRIDAY = 5;
 import { prepareCareerMatch } from "../sim/career-match-setup.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 
@@ -77,12 +76,6 @@ export function buildHubTrainingWindow(
         focus: false,
       });
     }
-    const isFridayBeforeMatch =
-      offset === 1 &&
-      weekday === FRIDAY &&
-      matchWeek &&
-      !session.matchPlayedThisWeek &&
-      Boolean(matchSetup);
     const isSaturdayMatch =
       offset === 1 && weekday === SATURDAY && matchWeek && !session.matchPlayedThisWeek;
     const isSaturdayMatchToday =
@@ -92,20 +85,20 @@ export function buildHubTrainingWindow(
       !session.matchPlayedThisWeek &&
       Boolean(matchSetup);
 
+    const isMatchPreview = isSaturdayMatch || isSaturdayMatchToday;
+
     return {
       offset,
       weekday,
       weekdayLabel: weekdayLabel(weekday),
       slots: slots.slice(0, UNITS_PER_DAY),
-      isMatchPreview: isFridayBeforeMatch || isSaturdayMatch || isSaturdayMatchToday,
-      opponentShortName: isFridayBeforeMatch || isSaturdayMatch ? matchSetup?.opponentShortName ?? null : null,
+      isMatchPreview,
+      opponentShortName: isMatchPreview && matchSetup ? matchSetup.opponentShortName : null,
       opponentClubId:
-        isFridayBeforeMatch || isSaturdayMatch
-          ? matchSetup
-            ? matchSetup.isHome
-              ? matchSetup.awayTeamId
-              : matchSetup.homeTeamId
-            : null
+        isMatchPreview && matchSetup
+          ? matchSetup.isHome
+            ? matchSetup.awayTeamId
+            : matchSetup.homeTeamId
           : null,
     };
   });

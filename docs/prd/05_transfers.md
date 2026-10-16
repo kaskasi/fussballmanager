@@ -335,6 +335,21 @@ Liegt in `state.json`. Keine eigene Datei.
 | `desire_to_leave` und erfolgreicher Verkauf | `morale` im neuen Club = 60 |
 | Dieselben Inputs | Dieselbe `market_value` |
 
+### 05.8 Opening transfer board (Karrierestart)
+
+Beim **ersten Sommerfenster** einer neuen Karriere (`opening-transfer-market.ts`) füllt das Spiel ein kuratiertes Board, bevor der wöchentliche KI-Refresh greift:
+
+| Archetyp | Quelle | Spieler-Fit | Preis / Story |
+|----------|--------|-------------|----------------|
+| Oberliga-Aufsteiger | `oberliga-nord` | 20–26 J., hoher CA, `desire_to_leave` | ~90 % Listenpreis |
+| Veteran | `regionalliga-nord` | ≥32 J., CA ≥68 | ~82 % — „letzte große Challenge“ |
+| Gehalts-Star | Regionalliga-Top-CA | `morale`↓, `contract_underpaid_since_day` | ~108 % — Verein will Ablöse |
+| Camp-Export | jüngste Profis 17–20 | `youth_site` = Satelliten-Camp | ~78 % — Cash-out |
+
+- Spieler landen in `transfer_state.listings` und `opening_market_player_ids` (bleiben über `refreshAiListings` erhalten).
+- Scout-Pool: IDs werden eingetragen (PRD 05.6 Kauf-Gate).
+- Postfach: je Archetyp eine Inbox-Zeile (Teaser).
+
 ## References
 
 - Scouting: PRD 04.1, PRD 04.5

@@ -5,6 +5,7 @@ import { createSaleRecord } from "./transfer-history.ts";
 import type { Player } from "../types/player.ts";
 import type { TeamId } from "@fussballmanager/shared";
 import { isTransferWindowOpen } from "../sim/transfer-windows.ts";
+import { openingMarketListings } from "./opening-transfer-market.ts";
 import { estimateCa } from "./market-value.ts";
 import {
   MAX_NEGOTIATION_ROUNDS,
@@ -116,6 +117,8 @@ export function refreshAiListings(input: {
 }): TransferState {
   if (!isTransferWindowOpen(input.week)) return input.state;
   const own = (input.state.listings ?? []).filter((row) => row.club_id === input.userClubId);
+  const opening = openingMarketListings(input.state, input.players, input.userClubId);
+  const reserved = new Set(opening.map((row) => row.player_id));
   const rng = weekRng(input.masterSeed, input.season, input.week);
   const ai: TransferListing[] = [];
   for (const clubId of input.leagueClubIds) {
@@ -126,6 +129,7 @@ export function refreshAiListings(input: {
     if (squad.length === 0) continue;
     const ranked = [...squad].sort((a, b) => b.age - a.age || a.market_value - b.market_value);
     const pick = ranked[Math.floor(rng() * Math.min(4, ranked.length))]!;
+    if (reserved.has(pick.id)) continue;
     if (rng() > 0.72) continue;
     ai.push({
       player_id: pick.id,
@@ -135,7 +139,7 @@ export function refreshAiListings(input: {
       listed_week: input.week,
     });
   }
-  return { ...input.state, listings: [...own, ...ai] };
+  return { ...input.state, listings: [...own, ...opening, ...ai] };
 }
 
 export function openSaleNegotiation(input: {

@@ -41,6 +41,7 @@ function normalizeTransferState(state?: TransferState): TransferState {
 }
 import { MONDAY } from "../sim/day-calendar.ts";
 import { CAREER_START_WEEK } from "../sim/game-calendar.ts";
+import { applyOpeningTransferMarket } from "../transfers/opening-transfer-market.ts";
 import { defaultLeagueState, normalizeLeagueState, type LeagueState } from "./league-state.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
 import type { IndividualProgram } from "../development/individual-training.ts";
@@ -204,7 +205,8 @@ export function newGameSession(now = new Date()): GameSession {
       1,
     );
   }
-  return withFreshInbox(sessionFromSave(save));
+  const session = withFreshInbox(sessionFromSave(save));
+  return applyOpeningTransferMarket(session);
 }
 
 function ensureBoardObjectives(session: GameSession): BoardState {

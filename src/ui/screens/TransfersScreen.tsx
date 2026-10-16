@@ -142,13 +142,12 @@ export function TransfersScreen({
   return (
     <main className="transfers club-shell-card-body" data-coach-target={COACH_TARGET.transfersMarket}>
       <div className="fm-tab-panel">
-        {transferState && onToggleListing && onOpenNegotiation ? (
+        {transferState && onOpenNegotiation ? (
           <TransferMarketPanel
             players={players}
             rivalPlayers={rivalPlayers}
             clubId={clubId}
             transferState={transferState}
-            onToggleListing={onToggleListing}
             onOpenNegotiation={onOpenNegotiation}
           />
         ) : null}

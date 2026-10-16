@@ -71,6 +71,8 @@ export interface TransferState {
   inbound_offers?: import("./inbound-offers.ts").InboundTransferOffer[];
   /** Players publicly offered by us and by other clubs. */
   listings?: import("./transfer-listings.ts").TransferListing[];
+  /** Curated new-game board — preserved across weekly AI refresh until sold/unlisted. */
+  opening_market_player_ids?: string[];
 }
 
 export function emptyTransferState(): TransferState {

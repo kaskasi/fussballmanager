@@ -10,6 +10,7 @@ export default defineConfig({
       "src/persistence/**/*.test.ts",
       "src/ui/**/*.test.ts",
       "src/sim/**/*.test.ts",
+      "src/transfers/**/*.test.ts",
       "src/narrative/**/*.test.ts",
       "src/telemetry/**/*.test.ts",
     ],

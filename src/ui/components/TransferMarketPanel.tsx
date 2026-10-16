@@ -4,25 +4,19 @@ import { formatClubCash } from "../../economy/club-finances.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import type { Player } from "../../types/player.ts";
 import type { TransferNegotiation, TransferState } from "../../transfers/negotiations.ts";
-import {
-  isPlayerListed,
-  listedPlayerCa,
-  searchListings,
-} from "../../transfers/transfer-listings.ts";
+import { listedPlayerCa, searchListings } from "../../transfers/transfer-listings.ts";
 
 export function TransferMarketPanel({
   players,
   rivalPlayers,
   clubId,
   transferState,
-  onToggleListing,
   onOpenNegotiation,
 }: {
   players: readonly Player[];
   rivalPlayers: readonly Player[];
   clubId: string;
   transferState: TransferState;
-  onToggleListing: (playerId: string) => void;
   onOpenNegotiation: (playerId: string) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -34,9 +28,6 @@ export function TransferMarketPanel({
     position: position || undefined,
     maxAge: maxAge.trim() === "" ? undefined : Number(maxAge),
   });
-  const ownPros = players.filter(
-    (player) => player.club_id === clubId && player.squad_status === "pro",
-  );
   const saleTalks = (transferState.negotiations ?? []).filter(
     (entry): entry is TransferNegotiation => entry.side === "sell" && entry.status === "active",
   );
@@ -45,7 +36,8 @@ export function TransferMarketPanel({
     <section className="game-panel" aria-label="Transferliste">
       <h2>Transferliste</h2>
       <p className="settings-section-lead">
-        Nur angebotene Spieler. Ein Gebot öffnet die Verhandlung, danach den Vertrag.
+        Nur gelistete Spieler. Eigene Kaderspieler listest du im Profil. Gebot öffnet die Verhandlung,
+        danach den Vertrag.
       </p>
       {saleTalks.length > 0 ? (
         <ul className="transfers-history">
@@ -86,22 +78,6 @@ export function TransferMarketPanel({
           onChange={(event) => setMaxAge(event.target.value)}
         />
       </div>
-      <h3>Eigene Angebote</h3>
-      <ul className="transfers-history">
-        {ownPros.map((player) => {
-          const listed = isPlayerListed(transferState, player.id);
-          return (
-            <li key={player.id}>
-              <button type="button" className="transfers-history-row" onClick={() => onToggleListing(player.id)}>
-                <span>
-                  {formatPlayerName(player)} · {player.position} · {player.age}
-                  {listed ? " · gelistet" : " · anbieten"}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
       <h3>Markt</h3>
       {rows.length === 0 ? <p>Keine passenden Angebote.</p> : null}
       <ul className="transfers-history">

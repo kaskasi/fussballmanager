@@ -5,6 +5,7 @@ import { estimateCa, marketValue } from "../transfers/market-value.ts";
 import type { Attributes, Player, PlayerName, PositionPrimary } from "../types/player.ts";
 import { deriveClubKitColors } from "./club-kit.ts";
 import { realCityForWorldRegion } from "./real-cities.ts";
+import { applyClubCameoPlayers, unionRendsburgClub } from "./world-cameos.ts";
 
 export const WORLD_GENERATION_VERSION = 1;
 export const CLUBS_PER_DIVISION = 18;
@@ -465,11 +466,20 @@ export function generateClubs(masterSeed: number): WorldClub[] {
       continue;
     }
 
+    if (index === CLUBS_PER_DIVISION) {
+      usedShortNames.add("URD");
+      clubs.push(unionRendsburgClub(masterSeed, index));
+      continue;
+    }
+
     const random = mulberry32(deriveWorldSeed(masterSeed, "club", index));
     const region = regionOrder[(index - 1) % regionOrder.length] ?? "Fördeküste";
     const regionIndex = regionPickIndex.get(region) ?? 0;
     regionPickIndex.set(region, regionIndex + 1);
-    const city = realCityForWorldRegion(region, regionIndex);
+    let city = realCityForWorldRegion(region, regionIndex);
+    if (city?.name === "Rendsburg") {
+      city = undefined;
+    }
     const place = city?.name ?? PLACES[(index - 1) % PLACES.length] ?? `Nordort ${index}`;
     const prefix = pick(CLUB_PREFIXES, random);
     const suffix = pick(CLUB_SUFFIXES, random);
@@ -504,7 +514,7 @@ export function generateClubRoster(
     Array.from({ length: PLAYERS_PER_CLUB }, (_, index) => index),
     deriveWorldSeed(masterSeed, "roster-age-order", clubIndex),
   );
-  return ROSTER_POSITIONS.map((position, playerIndex) =>
+  const roster = ROSTER_POSITIONS.map((position, playerIndex) =>
     generateProfessional(
       masterSeed,
       club,
@@ -515,6 +525,7 @@ export function generateClubRoster(
       ageSlots[playerIndex] ?? playerIndex,
     ),
   );
+  return applyClubCameoPlayers(roster, club, masterSeed, clubIndex);
 }
 
 export function deriveWorldSeed(
@@ -566,6 +577,7 @@ function divisionPools(clubs: readonly WorldClub[]): Record<WorldDivisionId, str
 
 function startingClubStrength(masterSeed: number, club: WorldClub, clubIndex: number): number {
   if (club.id === NORDSTERN_TEAM_ID) return 68.5;
+  if (club.name === "Union Rendsburg") return 71;
   const random = mulberry32(deriveWorldSeed(masterSeed, "club-strength", clubIndex));
   if (club.division_id === "oberliga-nord") return 60 + random() * 14;
   // Three nearby survival rivals keep the underdog start difficult but playable.

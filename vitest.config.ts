@@ -8,6 +8,7 @@ export default defineConfig({
     include: [
       "src/development/**/*.test.ts",
       "src/inbox/**/*.test.ts",
+      "src/world/**/*.test.ts",
       "src/persistence/**/*.test.ts",
       "src/ui/**/*.test.ts",
       "src/sim/**/*.test.ts",

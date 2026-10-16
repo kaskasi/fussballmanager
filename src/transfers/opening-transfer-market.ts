@@ -7,7 +7,7 @@ import { withClubEvent, type ClubEvent } from "../inbox/club-events.ts";
 import { inboxEmojiLine } from "../inbox/postfach-emoji.ts";
 import { isTransferWindowOpen } from "../sim/transfer-windows.ts";
 import { addPlayersToPool, ensureTargetsForPool } from "../scouting/scout-discovery.ts";
-import type { ScoutBoard } from "../scouting/scout-board.ts";
+import { reconcileScoutBoard, type ScoutBoard } from "../scouting/scout-board.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import { normalizeDiscovery } from "../scouting/scout-discovery.ts";
 import type { Player } from "../types/player.ts";
@@ -272,7 +272,7 @@ export function applyOpeningTransferMarket(session: GameSession): GameSession {
   return {
     ...session,
     rivalPlayers: built.rivalPlayers,
-    scoutBoard: built.scoutBoard,
+    scoutBoard: reconcileScoutBoard(built.scoutBoard, built.rivalPlayers),
     clubEvents: built.clubEvents,
     transferState: {
       ...session.transferState,

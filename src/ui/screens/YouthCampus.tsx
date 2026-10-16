@@ -420,7 +420,12 @@ function YouthUnifiedRoster({
                           {row.departureRisk ? (
                             <Flag size={14} strokeWidth={2.5} className="youth-risk-icon" aria-hidden />
                           ) : null}
-                          <PlayerPortrait seed={player.portrait_seed} size="sm" className="campus-portrait" />
+                          <PlayerPortrait
+                            seed={player.portrait_seed}
+                            clubId={player.club_id}
+                            size="sm"
+                            className="campus-portrait"
+                          />
                           {formatYouthReportName(player)}
                         </span>
                       </td>

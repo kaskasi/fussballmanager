@@ -1,6 +1,7 @@
 import type { MatchStarPick } from "./match-three-stars.ts";
 import { PlayerPortrait } from "../ui/components/PlayerPortrait.tsx";
 import { resolvePortraitSeed } from "../ui/portraits/portrait-seed-fallback.ts";
+import { worldCareerClubId } from "../world/world-generator.ts";
 
 export function MatchThreeStars({
   stars,
@@ -29,6 +30,7 @@ export function MatchThreeStars({
               </span>
               <PlayerPortrait
                 seed={resolvePortraitSeed(star.playerId, portraitSeedForPlayerId)}
+                clubId={worldCareerClubId(star.teamId)}
                 size="sm"
               />
               <div className="match-report-star-body">

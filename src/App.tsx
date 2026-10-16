@@ -364,6 +364,7 @@ import {
 import { useCareerMatchFlow } from "./ui/actions/useCareerMatchFlow.ts";
 import { useWeekAdvance } from "./ui/actions/useWeekAdvance.ts";
 import { CareerMatchLiveShell } from "./ui/shell/CareerMatchLiveShell.tsx";
+import { PortraitKitProvider } from "./ui/portraits/PortraitKitContext.tsx";
 import { GameScreenRouter } from "./ui/shell/GameScreenRouter.tsx";
 import { clearTransientUi } from "./ui/shell/bootstrap.ts";
 import { usePersistedGameSession } from "./ui/session/usePersistedGameSession.ts";
@@ -2036,6 +2037,7 @@ export default function App() {
         weeklyWageBill={weeklyWageBill(players, session.clubId)}
       />
       <GameSessionProvider value={{ session, patchSession, flashNotice }}>
+        <PortraitKitProvider worldClubs={world.clubs}>
         <TutorialUiProvider
           coachMarksEnabled={accessibility.coachMarksEnabled}
           matchFlowActive={Boolean(navActions.matchFlowActive)}
@@ -2182,6 +2184,7 @@ export default function App() {
               handleAcceptJobOffer={handleAcceptJobOffer}
             />
         </TutorialUiProvider>
+        </PortraitKitProvider>
       </GameSessionProvider>
       {board.job_status === "dismissed" ? (
         <JobOffersModal offers={jobOffers} onAccept={handleAcceptJobOffer} />

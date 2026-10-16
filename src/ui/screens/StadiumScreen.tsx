@@ -304,6 +304,8 @@ export function StadiumScreen({
             onRemovePatch={onRemovePrecinctPatch}
             onRemoveStreet={onRemoveStreet}
             seasonWeek={precinctSeasonWeek}
+            season={season}
+            week={week}
           />
           </div>
         </div>

@@ -19,12 +19,11 @@ import type { Screen } from "./types.ts";
  */
 export function bootstrapSave(slot: number): SaveGame | null {
   try {
-    const loaded = loadLocalSave(slot);
-    if (loaded) return loaded;
+    return loadLocalSave(slot);
   } catch {
     removeLocalSave(slot);
+    return null;
   }
-  return null;
 }
 
 /** Reset navigation overlays when switching save slots (PRD 08 session boundary). */

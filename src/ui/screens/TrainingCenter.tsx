@@ -919,6 +919,7 @@ function IndividualProgramModal({
           <div className="training-modal-identity">
             <PlayerPortrait
               seed={player.portrait_seed}
+              clubId={player.club_id}
               size="lg"
               className="training-modal-portrait"
             />

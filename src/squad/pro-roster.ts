@@ -69,6 +69,20 @@ const POSITION_ORDER: Record<PositionPrimary, number> = {
   CF: 11,
 };
 
+export function listProSquadPlayerIds(players: readonly Player[], clubId: string): string[] {
+  return listProSquad(players, clubId).map((row) => row.playerId);
+}
+
+export function positionsInProSquad(rows: readonly ProSquadRow[]): PositionPrimary[] {
+  const present = new Set<PositionPrimary>();
+  for (const row of rows) {
+    for (const slot of row.positions) present.add(slot);
+  }
+  return (Object.keys(POSITION_ORDER) as PositionPrimary[])
+    .filter((slot) => present.has(slot))
+    .sort((left, right) => POSITION_ORDER[left] - POSITION_ORDER[right]);
+}
+
 export function listProSquad(
   players: readonly Player[],
   clubId: string,

@@ -99,11 +99,15 @@ export function PrecinctGrid({
   onRemovePatch,
   onRemoveStreet,
   seasonWeek,
+  season,
+  week,
 }: {
   precinct: PrecinctState;
   cash: number;
   stadiumName: string;
   seasonWeek: number;
+  season: number;
+  week: number;
   hospitalityPreview: HospitalityPreview;
   isHomeMatchWeek: boolean;
   onPlace: (building: PrecinctBuilding, x: number, y: number, from?: { x: number; y: number }) => void;
@@ -483,6 +487,11 @@ export function PrecinctGrid({
               const movingHere = selected?.id === patch.id;
               const level = precinctBuildingLevel(precinct, patch.building);
               const hungry = !patchDocksStreetNetwork(precinct, patch);
+              const operational = isPrecinctPatchOperational(patch, season, week);
+              const underConstruction = !operational;
+              const buildWeeksLeft = underConstruction
+                ? precinctPatchWeeksRemaining(patch, season, week)
+                : 0;
               const canShrink = !patchIsMinSize(patch);
               const def = precinctBuildingDef(patch.building);
               const stageLabel = precinctBuildingStageLabel(patch.building, level);
@@ -510,6 +519,7 @@ export function PrecinctGrid({
                       patch.constructing ? "is-constructing" : "",
                       level > 0 ? `is-tier-${Math.min(level, 5)}` : "",
                       movingHere ? "is-picked" : "",
+                      underConstruction ? "is-under-construction" : "",
                       hungry ? "is-hungry" : "",
                     ]
                       .filter(Boolean)
@@ -522,9 +532,13 @@ export function PrecinctGrid({
                   aria-label={meta ? `${meta.label} ${patch.w}×${patch.h}` : "Gebäude"}
                   data-tooltip={
                     meta
-                      ? hungry
-                        ? `${meta.label} · dockt nicht ans Straßennetz · Straßen-Klick legt die Straße`
-                        : `${meta.label} · ${stageLabel} · ${patch.w}×${patch.h}${canShrink ? " · ⊟ auf min, dann umsetzen" : " · Klick zum Umsetzen"}`
+                      ? underConstruction
+                        ? hungry
+                          ? `${meta.label} · Bau (${buildWeeksLeft} Wo.) · Straße fehlt`
+                          : `${meta.label} · Bau (${buildWeeksLeft} Wo.)`
+                        : hungry
+                          ? `${meta.label} · dockt nicht ans Straßennetz · Straßen-Klick legt die Straße`
+                          : `${meta.label} · ${stageLabel} · ${patch.w}×${patch.h}${canShrink ? " · ⊟ auf min, dann umsetzen" : " · Klick zum Umsetzen"}`
                       : "Gebäude"
                   }
                   onDragOver={(event) => event.preventDefault()}

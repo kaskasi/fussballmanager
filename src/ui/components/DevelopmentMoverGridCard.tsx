@@ -77,6 +77,7 @@ export function DevelopmentMoverGridCard({
         <div className="scout-hit-card-top">
           <PlayerPortrait
             seed={mover.portraitSeed}
+            clubId={mover.clubId}
             size="sm"
             variant="known"
             className="scout-hit-card-portrait"

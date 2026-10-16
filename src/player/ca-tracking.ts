@@ -110,6 +110,7 @@ export interface DevelopmentMover {
   playerId: string;
   displayName: string;
   portraitSeed: number;
+  clubId: string | null;
   age: number;
   position: PositionPrimary;
   squadStatus: Player["squad_status"];
@@ -153,6 +154,7 @@ export function listDevelopmentMovers(
       playerId: player.id,
       displayName: formatMoverName(player),
       portraitSeed: player.portrait_seed,
+      clubId: player.club_id,
       age: player.age,
       position: player.position,
       squadStatus: player.squad_status,

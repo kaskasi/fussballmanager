@@ -945,6 +945,18 @@ button.cash-chip:hover {
   border-radius: var(--radius);
 }
 
+.profile-identity-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.profile-identity-head .profile-name {
+  text-align: left;
+}
+
 .profile-identity-rail .profile-identity-body {
   width: 100%;
 }
@@ -996,8 +1008,8 @@ button.cash-chip:hover {
   width: 7.5rem;
   height: 8.5rem;
   border-radius: 1rem;
-  align-self: center;
-  margin: 0 auto;
+  align-self: flex-start;
+  margin: 0;
 }
 
 .profile-actions-rail {
@@ -1019,6 +1031,17 @@ button.cash-chip:hover {
 .profile-actions-rail .profile-action-btn.is-danger {
   color: var(--terra-dunkel);
   border-color: var(--terra);
+}
+
+.profile-actions-rail .profile-action-btn.is-listed {
+  color: #065f46;
+  border-color: #047857;
+  background: #ecfdf5;
+  box-shadow: inset 0 0 0 1px rgb(4 120 87 / 12%);
+}
+
+.profile-actions-rail .profile-action-btn.is-listed .profile-action-label {
+  color: #047857;
 }
 
 .profile-hub-spoke {
@@ -1467,6 +1490,17 @@ button.cash-chip:hover {
   padding-top: var(--space-3);
   max-height: min(70vh, 640px);
   overflow: auto;
+}
+
+.pro-roster-panel .squad-summary--head {
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--tinte-weich);
+}
+
+.squad-list-toolbar--sort {
+  margin-top: 0.35rem;
 }
 
 .squad-player-cards {

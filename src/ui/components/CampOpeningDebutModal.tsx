@@ -38,6 +38,7 @@ export function CampOpeningDebutModal({
         <div className="camp-debut-hero">
           <PlayerPortrait
             seed={player.portrait_seed}
+            clubId={player.club_id}
             size="lg"
             variant="known"
             className="camp-debut-portrait"

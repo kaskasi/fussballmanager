@@ -44,6 +44,7 @@ import {
   type PrecinctBuilding,
   type PrecinctEdge,
 } from "../../stadium/precinct.ts";
+import { reconcilePrecinctBuildTimers } from "../../stadium/precinct-construction.ts";
 import { applyRestaurantProposalStory } from "../../stadium/precinct-campus-events.ts";
 import { canBuyAcademyUpgrade, ACADEMY_FACILITIES } from "../../youth/academy.ts";
 import { careerWeekIndex } from "../../stadium/hospitality.ts";
@@ -68,6 +69,18 @@ type RequestClubSpend = (
   apply: (current: GameSession) => GameSession,
   options?: { infrastructure?: boolean },
 ) => void;
+
+function stadiumWithPrecinct(
+  stadium: ClubStadium,
+  precinct: ReturnType<typeof emptyPrecinct>,
+  season: number,
+  week: number,
+): ClubStadium {
+  return normalizeClubStadium({
+    ...stadium,
+    precinct: reconcilePrecinctBuildTimers(precinct, season, week),
+  });
+}
 
 export function useStadiumActions(args: {
   stadium: ClubStadium;
@@ -239,7 +252,12 @@ export function useStadiumActions(args: {
             ? startPrecinctConstruction(currentPrecinct, x, y, building, current.season, current.week)
             : placePrecinctBuilding(currentPrecinct, x, y, building, from);
           if (nextPrecinct === currentPrecinct) return current;
-          let nextStadium = normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct });
+          let nextStadium = stadiumWithPrecinct(
+            current.stadium,
+            nextPrecinct,
+            current.season,
+            current.week,
+          );
           let nextPlayers = current.players;
           let nextClubEvents = current.clubEvents;
           if (building === "restaurant" && !hadRestaurant) {
@@ -373,10 +391,12 @@ export function useStadiumActions(args: {
         const fee = infrastructureCostForWeek(nextCheck.cost, current.week);
         return {
           ...current,
-          stadium: normalizeClubStadium({
-            ...current.stadium,
-            precinct: buyPrecinctExpansion(currentPrecinct),
-          }),
+          stadium: stadiumWithPrecinct(
+            current.stadium,
+            buyPrecinctExpansion(currentPrecinct),
+            current.season,
+            current.week,
+          ),
           finances: spendClubCash(current.finances, fee, current.week),
         };
       },
@@ -400,10 +420,12 @@ export function useStadiumActions(args: {
           const fee = infrastructureCostForWeek(result.spent, current.week);
           return {
             ...current,
-            stadium: normalizeClubStadium({
-              ...current.stadium,
-              precinct: result.state,
-            }),
+            stadium: stadiumWithPrecinct(
+              current.stadium,
+              result.state,
+              current.season,
+              current.week,
+            ),
             finances: spendClubCash(current.finances, fee, current.week),
           };
         },
@@ -423,7 +445,12 @@ export function useStadiumActions(args: {
         if (nextPrecinct === precinct) return current;
         return {
           ...current,
-          stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
+          stadium: stadiumWithPrecinct(
+            current.stadium,
+            nextPrecinct,
+            current.season,
+            current.week,
+          ),
         };
       });
     },
@@ -439,7 +466,12 @@ export function useStadiumActions(args: {
         const credit = infrastructureCostForWeek(result.refund, current.week);
         return {
           ...current,
-          stadium: normalizeClubStadium({ ...current.stadium, precinct: result.state }),
+          stadium: stadiumWithPrecinct(
+            current.stadium,
+            result.state,
+            current.season,
+            current.week,
+          ),
           finances: creditClubCash(current.finances, credit, current.week),
         };
       });
@@ -456,7 +488,12 @@ export function useStadiumActions(args: {
         const credit = infrastructureCostForWeek(result.refund, current.week);
         return {
           ...current,
-          stadium: normalizeClubStadium({ ...current.stadium, precinct: result.state }),
+          stadium: stadiumWithPrecinct(
+            current.stadium,
+            result.state,
+            current.season,
+            current.week,
+          ),
           finances: creditClubCash(current.finances, credit, current.week),
         };
       });
@@ -472,7 +509,12 @@ export function useStadiumActions(args: {
         if (nextPrecinct === precinct) return current;
         return {
           ...current,
-          stadium: normalizeClubStadium({ ...current.stadium, precinct: nextPrecinct }),
+          stadium: stadiumWithPrecinct(
+            current.stadium,
+            nextPrecinct,
+            current.season,
+            current.week,
+          ),
         };
       });
     },

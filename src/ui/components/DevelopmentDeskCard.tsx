@@ -31,6 +31,7 @@ export function DevelopmentDeskCard({
       </span>
       <PlayerPortrait
         seed={mover.portraitSeed}
+        clubId={mover.clubId}
         size="sm"
         variant="known"
         className="dev-desk-card__portrait"

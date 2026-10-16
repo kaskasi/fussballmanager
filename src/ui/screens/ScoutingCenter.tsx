@@ -774,6 +774,7 @@ function ScoutingPlayerList({
               >
                 <PlayerPortrait
                   seed={row.player.portrait_seed}
+                  clubId={row.player.club_id}
                   size="sm"
                   variant={scoutReveal(row.estimate.uncertaintyRange).showExactCa ? "known" : "silhouette"}
                   className="scouting-portrait"

@@ -85,7 +85,7 @@ export function MedicalInjuredPanel({
               const ready = row.phase === "ready_doctor" || row.doctor_ready;
               return (
                 <li key={player.id} className="medical-case-row">
-                  <PlayerPortrait seed={player.portrait_seed} size="sm" />
+                  <PlayerPortrait seed={player.portrait_seed} clubId={player.club_id} size="sm" />
                   <div className="medical-case-copy">
                     <button type="button" className="medical-case-name" onClick={() => onSelectPlayer(player.id)}>
                       {formatPlayerName(player)}
@@ -115,7 +115,7 @@ export function MedicalInjuredPanel({
           <ul className="medical-case-list">
             {surgeryQueue.map(({ row, player }) => (
               <li key={player.id} className="medical-case-row">
-                <PlayerPortrait seed={player.portrait_seed} size="sm" />
+                <PlayerPortrait seed={player.portrait_seed} clubId={player.club_id} size="sm" />
                 <div className="medical-case-copy">
                   <strong>{formatPlayerName(player)}</strong>
                   <p>{diagnosisRevealLabel(row)}</p>
@@ -158,7 +158,7 @@ export function MedicalInjuredPanel({
               const region = symptomPresentation(injury.type_id, player.id, masterSeed).body_region;
               return (
                 <li key={player.id} className="medical-case-row">
-                  <PlayerPortrait seed={player.portrait_seed} size="sm" />
+                  <PlayerPortrait seed={player.portrait_seed} clubId={player.club_id} size="sm" />
                   <div className="medical-case-copy">
                     <button type="button" className="medical-case-name" onClick={() => onSelectPlayer(player.id)}>
                       {formatPlayerName(player)}

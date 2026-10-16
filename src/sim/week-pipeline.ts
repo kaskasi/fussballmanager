@@ -116,6 +116,10 @@ import {
 import { DEFAULT_FANBASE, normalizeClubStadium } from "../stadium/club-stadium.ts";
 import { maybeStadiumMegaEventWeek } from "../stadium/precinct-campus-events.ts";
 import { advanceBlockExpansionProjects } from "../stadium/stadium-block-expansion.ts";
+import {
+  advancePrecinctConstruction,
+  reconcilePrecinctBuildTimers,
+} from "../stadium/precinct-construction.ts";
 import { clubFlavorFanbase } from "./club-profiles.ts";
 import { weeklyCampUpkeep } from "../youth/satellite-camps.ts";
 import { scoutNetworkWeeklyWage } from "../scouting/scout-network.ts";
@@ -234,7 +238,10 @@ export async function simulateGameWeek(
     leagueMatchdaysPlayed,
     environmentFactor:
       environmentFromCoachingStaff(session.coachingStaff) *
-      precinctTrainingEnvironment(session.stadium.precinct),
+      precinctTrainingEnvironment(session.stadium.precinct, {
+        season: session.season,
+        week: nextWeek,
+      }),
   };
   const manualTrainingUnits = !resolveFeatureCurtain(session.storyState).auto_training;
   let players = tickInjuryRecoveryBatch(session.players, nextWeek).map((player) => {
@@ -430,11 +437,20 @@ export async function simulateGameWeek(
     ) +
     precinctWeeklyFanbaseBonus(merchAdvance.stadium.precinct, occupancy) +
     (trainingPlanNeglected ? TRAINING_NEGLECT_FANBASE_PENALTY : 0);
-  const stadiumAfterFanbase = advanceBlockExpansionProjects(
-    advanceClubFanbase(merchAdvance.stadium, fanbaseDelta),
-    session.season,
-    nextWeek,
-  );
+  const stadiumAfterFanbase = (() => {
+    let stadium = advanceBlockExpansionProjects(
+      advanceClubFanbase(merchAdvance.stadium, fanbaseDelta),
+      session.season,
+      nextWeek,
+    );
+    const precinct = stadium.precinct;
+    if (precinct) {
+      let nextPrecinct = advancePrecinctConstruction(precinct, session.season, nextWeek);
+      nextPrecinct = reconcilePrecinctBuildTimers(nextPrecinct, session.season, nextWeek);
+      stadium = { ...stadium, precinct: nextPrecinct };
+    }
+    return stadium;
+  })();
   const megaEvent = maybeStadiumMegaEventWeek(
     stadiumAfterFanbase,
     session.season,

@@ -16,6 +16,7 @@ import { normalizeMatchView } from "./normalize-match-view.ts";
 import { MatchGoalTimeline } from "./MatchGoalTimeline.tsx";
 import { PlayerPortrait } from "../ui/components/PlayerPortrait.tsx";
 import { resolvePortraitSeed } from "../ui/portraits/portrait-seed-fallback.ts";
+import { worldCareerClubId } from "../world/world-generator.ts";
 export function MatchReportScreen({
   view,
   setup,
@@ -236,6 +237,7 @@ function MatchReportRosterTable({
                   <button type="button" className="match-roster-name-btn" onClick={() => onSelectPlayer(row.id)}>
                     <PlayerPortrait
                       seed={resolvePortraitSeed(row.id, portraitSeedForPlayerId)}
+                      clubId={worldCareerClubId(teamId)}
                       size="sm"
                     />
                     {row.name}

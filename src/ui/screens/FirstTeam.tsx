@@ -3,37 +3,24 @@ import { Users } from "lucide-react";
 import { MentoringPanel } from "../components/MentoringPanel.tsx";
 import { CoachingStaffPanel } from "../components/CoachingStaffPanel.tsx";
 import { AssistantDelegationPanel } from "../components/AssistantDelegationPanel.tsx";
+import { ProSquadRosterPanel } from "../components/ProSquadRosterPanel.tsx";
 import type { Coach, CoachingStaff } from "../../staff/coaching-staff.ts";
 import type { AssistantDelegation, AssistantDelegationTask } from "../../staff/assistant-delegation.ts";
 
 type SquadTab = "list" | "mentoring" | "staff";
 import type { Player } from "../../types/player.ts";
 import {
-  formatMarketValueShort,
   listProSquad,
-  sortProSquadRows,
   type ProSquadSortDirection,
   type ProSquadSortKey,
 } from "../../squad/pro-roster.ts";
-import { caDeltaClassName, caDeltaMark, formatCaDelta } from "../../player/ca-tracking.ts";
-import { Hint } from "../components/Hint.tsx";
-import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
-import { formMark, stateMark } from "../player-profile.ts";
 import { useT } from "../../i18n/react.ts";
 import { t } from "../../i18n/index.ts";
-import { FilterChip, FilterToolbar } from "../components/primitives/index.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 
 /**
- * WIREFRAME: docs/prd/design.md §9.11 — Kader
- * ┌──────────────────────────────────────────────┐
- * │ ←  ⭐ Profikader · 14 Spieler                │
- * │ Ø CA 74 · Marktwert 18.2M                    │
- * ├──────────────────────────────────────────────┤
- * │ Neuer · GK · 28 J. · CA 81 · 2.1M · ●       │
- * │ Hummels · CB · 27 J. · CA 78 · 1.8M · ▲     │
- * └──────────────────────────────────────────────┘
+ * WIREFRAME: docs/prd/design.md §9.11 — Kader (Tabellen-Layout wie Jugendliste)
  */
 
 const DEFAULT_SORT: { key: ProSquadSortKey; direction: ProSquadSortDirection } = {
@@ -82,23 +69,16 @@ export function FirstTeam({
   const [sortKey, setSortKey] = useState<ProSquadSortKey>(DEFAULT_SORT.key);
   const [sortDirection, setSortDirection] = useState<ProSquadSortDirection>(DEFAULT_SORT.direction);
 
-  const rows = useMemo(() => {
-    const baseRows = listProSquad(players, clubId, trainingIntensity);
-    return sortProSquadRows(baseRows, sortKey, sortDirection);
-  }, [players, clubId, trainingIntensity, sortKey, sortDirection]);
+  const playersById = useMemo(() => new Map(players.map((player) => [player.id, player])), [players]);
+
+  const rows = useMemo(
+    () => listProSquad(players, clubId, trainingIntensity),
+    [players, clubId, trainingIntensity],
+  );
 
   const avgCa =
     rows.length > 0 ? Math.round(rows.reduce((sum, row) => sum + row.ca, 0) / rows.length) : 0;
   const totalValue = rows.reduce((sum, row) => sum + row.marketValue, 0);
-
-  const toggleSort = (key: ProSquadSortKey) => {
-    if (sortKey === key) {
-      setSortDirection((current) => (current === "desc" ? "asc" : "desc"));
-      return;
-    }
-    setSortKey(key);
-    setSortDirection(key === "name" || key === "position" ? "asc" : "desc");
-  };
 
   const squadTabs: { id: SquadTab; label: string }[] = [
     { id: "list", label: t("shell.nav.squad") },
@@ -139,96 +119,17 @@ export function FirstTeam({
               <p className="squad-empty-hint">{t("squad.emptyHint")}</p>
             </section>
           ) : (
-            <>
-              <div className="squad-list-head">
-                <FilterToolbar ariaLabel={t("squad.sort.aria")} className="squad-list-toolbar">
-                  {(
-                    [
-                      ["name", t("squad.col.name")],
-                      ["position", t("squad.col.pos")],
-                      ["ca", "CA"],
-                      ["form", "Form"],
-                      ["age", t("squad.col.age")],
-                    ] as const
-                  ).map(([key, label]) => {
-                    const active = sortKey === key;
-                    return (
-                      <FilterChip key={key} active={active} onClick={() => toggleSort(key)}>
-                        {label}
-                        {active ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}
-                      </FilterChip>
-                    );
-                  })}
-                </FilterToolbar>
-                <Hint text={t("squad.hint")}>
-                  <p className="squad-summary squad-summary--head">
-                    {t("squad.summaryHead", {
-                      avgCa,
-                      value: formatMarketValueShort(totalValue),
-                    })}
-                  </p>
-                </Hint>
-              </div>
-              <ul className="squad-player-cards" aria-label={t("squad.title")}>
-                {rows.map((row, rowIndex) => {
-                  const player = players.find((entry) => entry.id === row.playerId);
-                  const fit = stateMark(row.fitness, 75, 50);
-                  const form = formMark(row.form);
-                  return (
-                    <li key={row.playerId} className="squad-player-card game-panel">
-                      {player ? (
-                        <PlayerPortrait seed={player.portrait_seed} size="sm" className="squad-player-card-portrait" />
-                      ) : null}
-                      <div className="squad-player-card-body">
-                        <button
-                          type="button"
-                          className="squad-player-card-main"
-                          {...(rowIndex === 0
-                            ? { "data-coach-target": COACH_TARGET.squadFirstRow }
-                            : {})}
-                          onClick={() => onSelectPlayer(row.playerId)}
-                        >
-                          <strong>{row.displayName}</strong>
-                          <span className="squad-player-card-meta">
-                            {row.positionLabel} · {row.age} J. · CA {row.ca}
-                            <span className={caDeltaClassName(row.caDelta)} title="CA Δ">
-                              {" "}
-                              {caDeltaMark(row.caDelta)}
-                              {formatCaDelta(row.caDelta)}
-                            </span>
-                          </span>
-                          <span className="squad-player-card-status">
-                            {row.injuryWeeks !== null ? (
-                              <span className="squad-injury" title="Verletzt — kein Einsatz">
-                                Verletzt · {row.injuryWeeks} Wo.
-                              </span>
-                            ) : (
-                              <span className={`squad-fitness is-${fit.tone}`}>
-                                Fit {row.fitness}
-                                <span className="squad-shape-mark" aria-hidden="true">
-                                  {fit.mark}
-                                </span>
-                              </span>
-                            )}
-                            · {formatMarketValueShort(row.marketValue)}
-                            <span className={`squad-form is-${form.tone}`} title={`Form ${row.form}`}>
-                              <span className="squad-shape-mark" aria-hidden="true">
-                                {form.mark}
-                              </span>
-                            </span>
-                          </span>
-                        </button>
-                        <div className="squad-player-card-actions">
-                          <button type="button" className="ui-btn ui-btn--ghost ui-btn--sm" onClick={() => onSelectPlayer(row.playerId)}>
-                            Profil
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
+            <ProSquadRosterPanel
+              rows={rows}
+              playersById={playersById}
+              avgCa={avgCa}
+              totalValue={totalValue}
+              sortKey={sortKey}
+              sortDirection={sortDirection}
+              onSortKeyChange={setSortKey}
+              onSortDirectionChange={setSortDirection}
+              onSelectPlayer={onSelectPlayer}
+            />
           )}
         </div>
       ) : null}
@@ -285,4 +186,3 @@ export function FirstTeam({
     </main>
   );
 }
-

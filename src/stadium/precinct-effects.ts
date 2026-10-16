@@ -8,6 +8,7 @@ import {
   precinctBuildingStageLabel,
   precinctHasTrainingHall,
   type PrecinctBuilding,
+  type PrecinctSimWeek,
   type PrecinctState,
 } from "./precinct.ts";
 import {
@@ -129,21 +130,24 @@ export function precinctWeeklyFanbaseBonus(state: PrecinctState | undefined, occ
 }
 
 /** Training campus → growth `environment()` multiplier (PRD 02.1, F7 Gelände). */
-export function precinctTrainingEnvironment(state: PrecinctState | undefined): number {
+export function precinctTrainingEnvironment(
+  state: PrecinctState | undefined,
+  simWeek?: PrecinctSimWeek,
+): number {
   if (!state) return 1;
   let bonus = 0;
-  if (dockedOccupiedCells(state, "training_ground") > 0) {
+  if (dockedOccupiedCells(state, "training_ground", simWeek) > 0) {
     const level = precinctBuildingLevel(state, "training_ground");
     bonus += 0.018 + level * 0.024;
     if (precinctHasTrainingHall(state)) bonus += 0.04;
   }
-  if (dockedOccupiedCells(state, "training_pitch") > 0) {
+  if (dockedOccupiedCells(state, "training_pitch", simWeek) > 0) {
     bonus += precinctBuildingLevel(state, "training_pitch") * 0.014;
   }
-  if (dockedOccupiedCells(state, "youth_pitch") > 0) {
+  if (dockedOccupiedCells(state, "youth_pitch", simWeek) > 0) {
     bonus += precinctBuildingLevel(state, "youth_pitch") * 0.01;
   }
-  if (dockedOccupiedCells(state, "medical_center") > 0) {
+  if (dockedOccupiedCells(state, "medical_center", simWeek) > 0) {
     bonus += Math.min(3, precinctBuildingLevel(state, "medical_center")) * 0.008;
   }
   return 1 + bonus;

@@ -21,6 +21,7 @@ import {
   subscribeDiagnosticLog,
 } from "../../telemetry/diagnostic-log.ts";
 import { initAnalytics } from "../../telemetry/analytics.ts";
+import type { Screen } from "../shell/types.ts";
 import { setDiagnosticLogLevel } from "../../telemetry/diagnostic-log.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { submitPlayerFeedback } from "../../telemetry/player-feedback.ts";
@@ -41,6 +42,9 @@ export function SettingsScreen({
   onNewGameInSlot,
   onApplyCloudSave,
   onOpenMatchdaySandbox,
+  gameSeason,
+  gameWeek,
+  activeScreen,
 }: {
   preferences: ClientPreferences;
   onPreferencesChange: (next: ClientPreferences) => void;
@@ -51,6 +55,9 @@ export function SettingsScreen({
   onNewGameInSlot: (slot: number) => void;
   onApplyCloudSave: (save: SaveGame, slot: number) => void;
   onOpenMatchdaySandbox: () => void;
+  gameSeason?: number;
+  gameWeek?: number;
+  activeScreen?: Screen;
 }) {
   const t = useT();
   const [logPreview, setLogPreview] = useState(() => getDiagnosticLogPreview());

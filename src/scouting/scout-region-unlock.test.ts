@@ -17,6 +17,7 @@ const foerdeClub: WorldClub = {
   identity: "community",
   reputation: 50,
   rivalry_ids: [],
+  kit: { primary: "#2e9e46", secondary: "#1e7a38" },
 };
 
 describe("scout region unlock", () => {

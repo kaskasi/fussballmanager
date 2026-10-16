@@ -19,6 +19,8 @@
 import { useEffect, useMemo, useState, type ComponentPropsWithoutRef } from "react";
 import {
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Dumbbell,
   Flag,
   Footprints,
@@ -148,7 +150,10 @@ export interface PlayerProfileProps {
   preContractBonus?: number;
   preContractBlockedReason?: string | null;
   onPreContract?: () => void;
-  onSell?: () => void;
+  onList?: () => void;
+  listedForSale?: boolean;
+  squadPlayerIds?: readonly string[];
+  onSelectSquadPlayer?: (playerId: string) => void;
   onProfileAction?: (action: PlayerProfileAction) => void;
   onContractOffer?: (offer: ContractOffer) => void;
   wageHeadroomWeekly?: number;
@@ -184,7 +189,10 @@ export function PlayerProfile({
   preContractBonus,
   preContractBlockedReason = null,
   onPreContract,
-  onSell,
+  onList,
+  listedForSale = false,
+  squadPlayerIds = [],
+  onSelectSquadPlayer,
   onProfileAction,
   onContractOffer,
   wageHeadroomWeekly,
@@ -261,8 +269,9 @@ export function PlayerProfile({
     onPurchase();
   }
 
-  function handleSaleClick() {
-    if (!onSell) return;
+  function handleListClick() {
+    if (!onList) return;
+    if (listedForSale) return;
     if (saleBlockedReason) {
       notifyTransfer(saleBlockedReason);
       return;
@@ -273,6 +282,14 @@ export function PlayerProfile({
     }
     setSaleConfirmOpen(true);
   }
+
+  const squadIndex = squadPlayerIds.indexOf(player.id);
+  const prevSquadId =
+    squadIndex > 0 && onSelectSquadPlayer ? squadPlayerIds[squadIndex - 1] : undefined;
+  const nextSquadId =
+    squadIndex >= 0 && squadIndex < squadPlayerIds.length - 1 && onSelectSquadPlayer
+      ? squadPlayerIds[squadIndex + 1]
+      : undefined;
   const preContractAmountLabel =
     preContractBonus === undefined
       ? undefined
@@ -341,12 +358,41 @@ export function PlayerProfile({
         ) : null}
 
         <article className="profile-card profile-hub">
+          {owned && onSelectSquadPlayer && squadPlayerIds.length > 1 ? (
+            <nav className="profile-squad-nav" aria-label={t("profile.squadNav.aria")}>
+              <button
+                type="button"
+                className="profile-squad-nav-btn"
+                disabled={!prevSquadId}
+                aria-label={t("profile.squadNav.prev")}
+                onClick={() => prevSquadId && onSelectSquadPlayer(prevSquadId)}
+              >
+                <ChevronLeft size={20} strokeWidth={2.5} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="profile-squad-nav-btn"
+                disabled={!nextSquadId}
+                aria-label={t("profile.squadNav.next")}
+                onClick={() => nextSquadId && onSelectSquadPlayer(nextSquadId)}
+              >
+                <ChevronRight size={20} strokeWidth={2.5} aria-hidden="true" />
+              </button>
+            </nav>
+          ) : null}
           <aside className="profile-identity-rail" aria-label="Identität">
-            <PlayerPortrait seed={player.portrait_seed} size="lg" className="profile-portrait profile-portrait-rail" />
+            <div className="profile-identity-head">
+              <PlayerPortrait
+                seed={player.portrait_seed}
+                clubId={player.club_id}
+                size="lg"
+                className="profile-portrait profile-portrait-rail"
+              />
+              <Hint text="Spielername. Fremde Spieler werden erst durch Scouting besser bekannt." block>
+                <h1 className="profile-name">{formatPlayerName(player)}</h1>
+              </Hint>
+            </div>
           <div className="profile-identity-body">
-            <Hint text="Spielername. Fremde Spieler werden erst durch Scouting besser bekannt." block>
-              <h1 className="profile-name">{formatPlayerName(player)}</h1>
-            </Hint>
             <div className="profile-identity-stats">
               <Hint text="Hauptposition auf dem Platz.">
                 <span className="profile-stat">{formatPlayerPositionLabel(player)}</span>
@@ -433,31 +479,42 @@ export function PlayerProfile({
             ) : null}
           </div>
 
-          {owned && (onSell || (onProfileAction && menuItems.length > 0)) ? (
+          {owned && (onList || (onProfileAction && menuItems.length > 0)) ? (
             <footer className="profile-rail-actions" aria-label="Aktionen">
               <div className="profile-actions profile-actions-rail">
-                {onSell ? (
+                {onList ? (
                   <div className="profile-action-cell profile-action-cell--span">
                     <Hint
                       text={
-                        saleBlockedReason ??
-                        (!transferWindowOpen
-                          ? t("transfer.profile.saleWindowOnly", { hint: transferWindowHint() })
-                          : t("transfer.profile.saleHint"))
+                        listedForSale
+                          ? t("transfer.profile.listedHint")
+                          : (saleBlockedReason ??
+                            (!transferWindowOpen
+                              ? t("transfer.profile.saleWindowOnly", { hint: transferWindowHint() })
+                              : t("transfer.profile.listHint")))
                       }
                       block
                     >
                       <ProfileActionButton
-                        label={t("transfer.profile.sell")}
-                        amount={saleOffer ? `ca. ${formatMoney(saleOffer)}` : undefined}
+                        label={
+                          listedForSale ? t("transfer.profile.listed") : t("transfer.profile.list")
+                        }
+                        amount={
+                          !listedForSale && saleOffer ? formatMoney(saleOffer) : undefined
+                        }
                         className={[
-                          "ui-btn--ghost",
-                          !transferWindowOpen || saleBlockedReason ? "is-blocked" : "",
+                          listedForSale ? "ui-btn--ghost is-listed" : "ui-btn--ghost",
+                          !listedForSale && (!transferWindowOpen || saleBlockedReason)
+                            ? "is-blocked"
+                            : "",
                         ]
                           .filter(Boolean)
                           .join(" ")}
-                        onClick={handleSaleClick}
-                        aria-disabled={!transferWindowOpen || Boolean(saleBlockedReason)}
+                        onClick={handleListClick}
+                        aria-pressed={listedForSale}
+                        aria-disabled={
+                          listedForSale || !transferWindowOpen || Boolean(saleBlockedReason)
+                        }
                       />
                     </Hint>
                   </div>
@@ -734,7 +791,7 @@ export function PlayerProfile({
         ) : null}
       </div>
 
-      {saleConfirmOpen && saleOffer !== undefined && onSell ? (
+      {saleConfirmOpen && saleOffer !== undefined && onList ? (
         <SaleConfirmModal
           player={player}
           offerEstimate={saleOffer}
@@ -742,7 +799,7 @@ export function PlayerProfile({
           onCancel={() => setSaleConfirmOpen(false)}
           onConfirm={() => {
             setSaleConfirmOpen(false);
-            onSell();
+            onList();
           }}
         />
       ) : null}

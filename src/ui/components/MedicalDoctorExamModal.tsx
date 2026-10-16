@@ -32,7 +32,7 @@ export function MedicalDoctorExamModal({
       panelClassName="medical-exam-modal"
     >
       <div className="medical-exam-player">
-        <PlayerPortrait seed={player.portrait_seed} size="md" />
+        <PlayerPortrait seed={player.portrait_seed} clubId={player.club_id} size="md" />
         <strong>{formatPlayerName(player)}</strong>
       </div>
       <blockquote className="medical-exam-quote">{t(symptomKey)}</blockquote>

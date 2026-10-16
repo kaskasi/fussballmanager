@@ -3,6 +3,7 @@ import { applyVeteranBackstory, peakCaBaseAdjustment } from "../player/veteran-b
 import { seedPhaseStamps } from "../development/ability-stamps.ts";
 import { estimateCa, marketValue } from "../transfers/market-value.ts";
 import type { Attributes, Player, PlayerName, PositionPrimary } from "../types/player.ts";
+import { deriveClubKitColors } from "./club-kit.ts";
 import { realCityForWorldRegion } from "./real-cities.ts";
 
 export const WORLD_GENERATION_VERSION = 1;
@@ -32,6 +33,11 @@ export interface WorldClub {
   identity: ClubIdentity;
   reputation: number;
   rivalry_ids: string[];
+  /** PRD 26 — home shirt color on bust portraits (+ secondary for future crest/away). */
+  kit: {
+    primary: string;
+    secondary: string;
+  };
 }
 
 export interface WorldState {
@@ -454,6 +460,7 @@ export function generateClubs(masterSeed: number): WorldClub[] {
         identity: "community",
         reputation: 35,
         rivalry_ids: [],
+        kit: deriveClubKitColors(masterSeed, NORDSTERN_TEAM_ID, index),
       });
       continue;
     }
@@ -469,8 +476,9 @@ export function generateClubs(masterSeed: number): WorldClub[] {
     const idHash = deriveWorldSeed(masterSeed, "club-id", index).toString(16).padStart(8, "0");
     const reputationBase = division_id === "regionalliga-nord" ? 40 : 24;
 
+    const teamId = `world-${idHash}-${index}`;
     clubs.push({
-      id: `world-${idHash}-${index}`,
+      id: teamId,
       name: `${prefix} ${place}${suffix ? ` ${suffix}` : ""}`,
       short_name: clubShortNameFromPlace(place, usedShortNames, index),
       place,
@@ -479,6 +487,7 @@ export function generateClubs(masterSeed: number): WorldClub[] {
       identity: pick(IDENTITIES, random),
       reputation: reputationBase + Math.floor(random() * 21),
       rivalry_ids: [],
+      kit: deriveClubKitColors(masterSeed, teamId, index),
     });
   }
 

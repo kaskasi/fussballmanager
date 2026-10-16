@@ -107,7 +107,12 @@ export function YouthCampCard({
                       </span>
                     </span>
                   </span>
-                  <PlayerPortrait seed={leaderSeed} size="sm" className="youth-camp-leader-portrait" />
+                  <PlayerPortrait
+                    seed={leaderSeed}
+                    clubId={roster[0]?.club_id}
+                    size="sm"
+                    className="youth-camp-leader-portrait"
+                  />
                 </button>
               ) : hireState === "candidates_ready" ? (
                 <p className="youth-camp-agency-hint">Kandidaten im Postfach</p>
@@ -183,7 +188,7 @@ export function YouthCampCard({
                     key={player.id}
                     className={`youth-camp-roster-row${player.state.camp_opening_headline ? " is-headline" : ""}`}
                   >
-                    <PlayerPortrait seed={player.portrait_seed} size="sm" />
+                    <PlayerPortrait seed={player.portrait_seed} clubId={player.club_id} size="sm" />
                     <span className="youth-camp-roster-name">
                       {player.state.camp_opening_headline ? (
                         <Star

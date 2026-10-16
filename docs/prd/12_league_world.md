@@ -25,6 +25,7 @@ Demo-Datensatzes.
 - zwei Spielklassen mit je 18 Clubs,
 - 34 Ligaspieltage pro Club als Hin- und Rückrunde,
 - fiktionale Club- und Spieleridentitäten,
+- Vereins-Heimfarben (`WorldClub.kit`) für Bust-Portraits — PRD 26,
 - prozedural erzeugte Profikader für Spieler- und KI-Clubs,
 - persistierte Welt und reproduzierbare Seeds,
 - Aufstieg, Abstieg und Relegation,

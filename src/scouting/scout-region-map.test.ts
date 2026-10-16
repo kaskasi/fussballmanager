@@ -60,6 +60,7 @@ describe("buildScoutDiscoveryMapModel", () => {
         identity: "community",
         reputation: 50,
         rivalry_ids: [],
+        kit: { primary: "#336699", secondary: "#224466" },
       },
       {
         id: "foreign",
@@ -71,6 +72,7 @@ describe("buildScoutDiscoveryMapModel", () => {
         identity: "community",
         reputation: 40,
         rivalry_ids: [],
+        kit: { primary: "#993366", secondary: "#662244" },
       },
     ];
     const rivals = [
@@ -105,6 +107,7 @@ describe("buildScoutDiscoveryMapModel", () => {
       identity: "community",
       reputation: 55,
       rivalry_ids: [],
+      kit: { primary: "#2e9e46", secondary: "#1e7a38" },
     };
     const discovery = emptyDiscovery();
     const model = buildScoutDiscoveryMapModel({

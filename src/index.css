@@ -5736,6 +5736,28 @@
   background: #fffbeb;
 }
 
+.stadium-precinct-tile.is-filled.is-patch.is-under-construction {
+  border-style: dashed;
+  border-color: #c4a574;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgb(196 165 116 / 22%) 0 50%,
+      rgb(180 148 100 / 12%) 50% 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgb(196 165 116 / 18%) 0 20%,
+      transparent 20% 40%
+    ),
+    #f4e4c8;
+  color: #7c5a2a;
+}
+
+.stadium-precinct-tile.is-filled.is-patch.is-under-construction.is-hungry {
+  border-color: #d97706;
+}
+
 .stadium-precinct-detail {
   display: flex;
   flex-wrap: nowrap;
@@ -7286,6 +7308,78 @@
 .profile-actions-popover {
   right: 0;
   left: auto;
+}
+
+.profile-squad-nav {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  display: flex;
+  gap: 0.25rem;
+  z-index: 2;
+}
+
+.profile-card.profile-hub {
+  position: relative;
+}
+
+.profile-squad-nav-btn {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--panel-border, #cbd5e1);
+  border-radius: 0.35rem;
+  background: var(--panel-bg, #fff);
+  color: var(--text, #0f172a);
+  cursor: pointer;
+}
+
+.profile-squad-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.transfers-listing-card {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+  padding: 0;
+}
+
+.transfers-listing-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.transfers-listing-remove {
+  flex-shrink: 0;
+  align-self: center;
+  margin-right: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--panel-border, #cbd5e1);
+  border-radius: 0.35rem;
+  background: var(--panel-bg, #f8fafc);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settings-copy-notice.is-warn {
+  color: #b91c1c;
+}
+
+.settings-feedback-input {
+  min-height: 6rem;
+  resize: vertical;
 }
 
 .profile-feedback {

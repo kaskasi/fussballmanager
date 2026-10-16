@@ -35,6 +35,7 @@ export function ScoutHitGridCard({
         <div className="scout-hit-card-top">
           <PlayerPortrait
             seed={row.player.portrait_seed}
+            clubId={row.player.club_id}
             size="sm"
             variant={reveal.showExactCa ? "known" : "silhouette"}
             className="scout-hit-card-portrait"

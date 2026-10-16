@@ -12,6 +12,7 @@ import {
   hydrateLocalSaveFromBackend,
   tryWriteLocalSaveAsync,
 } from "./local-save.ts";
+import { bootstrapSave } from "../ui/shell/bootstrap.ts";
 
 const memory = new Map<string, string>();
 
@@ -72,6 +73,23 @@ describe("browser save adapter", () => {
       updatedAt: new Date().toISOString(),
     });
     expect(parsed.manifest.save_version).toBe(save.manifest.save_version);
+  });
+
+  it("hydrates IndexedDB-only saves after sync bootstrap misses them", async () => {
+    const save = createSave({
+      nowIso: new Date().toISOString(),
+      playerClubId: "club",
+      managerName: "Indexed",
+      season: 4,
+      week: 12,
+      masterSeed: 77,
+    });
+    expect(await tryWriteLocalSaveAsync(3, save)).toBe(true);
+    clearLocalSaveCacheForTests();
+    expect(bootstrapSave(3)).toBeNull();
+    const hydrated = await hydrateLocalSaveFromBackend(3);
+    expect(hydrated?.state.season).toBe(4);
+    expect(hydrated?.manifest.manager_name).toBe("Indexed");
   });
 
   it("migrates legacy localStorage into the backend on hydrate", async () => {

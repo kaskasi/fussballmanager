@@ -144,7 +144,12 @@ function DecisionTileVisual({
   if (player) {
     return (
       <>
-        <PlayerPortrait seed={player.portrait_seed} size="sm" variant="known" />
+        <PlayerPortrait
+          seed={player.portrait_seed}
+          clubId={player.club_id}
+          size="sm"
+          variant="known"
+        />
         <PlayerTileTokens player={player} />
       </>
     );

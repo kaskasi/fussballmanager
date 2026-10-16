@@ -58,7 +58,12 @@ export function TransferHubPanel({
                 onClick={() => onSelectPlayer(entry.playerId)}
               >
                 {player ? (
-                  <PlayerPortrait seed={player.portrait_seed} size="sm" variant="known" />
+                  <PlayerPortrait
+                    seed={player.portrait_seed}
+                    clubId={player.club_id}
+                    size="sm"
+                    variant="known"
+                  />
                 ) : null}
                 <span className="transfer-hub-copy">
                   <strong>{entry.displayName}</strong>

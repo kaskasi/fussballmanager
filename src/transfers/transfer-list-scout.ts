@@ -2,7 +2,7 @@
  * Transfer-board players are public — faster scout intel than cold targets (PRD 05).
  */
 import { applyObservationWithAccuracy } from "../scouting/scout-network.ts";
-import type { AbilityEstimate } from "../scouting/estimate-model.ts";
+import type { AbilityEstimate, PlayerKnowledge } from "../scouting/estimate-model.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
 import { estimateCa } from "./market-value.ts";
 import type { Player } from "../types/player.ts";
@@ -38,9 +38,10 @@ export function applyTransferListScoutOnAssign(
   if (!target) return board;
 
   let estimate = mergeListedEstimate(target.estimate, player);
-  let knowledge = { status: "scouted" as const, estimate };
+  let knowledge: PlayerKnowledge = { status: "scouted", estimate };
   knowledge = applyObservationWithAccuracy(knowledge, "scout_visit_report", accuracy);
   knowledge = applyObservationWithAccuracy(knowledge, "scout_visit_report", accuracy);
+  if (knowledge.status !== "scouted") return board;
 
   return {
     ...board,

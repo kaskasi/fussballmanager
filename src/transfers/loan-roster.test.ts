@@ -15,7 +15,7 @@ describe("loanClubName", () => {
         identity: "community",
         reputation: 30,
         rivalry_ids: [],
-        kit: { primary: "#000", secondary: "#fff", accent: "#ccc" },
+        kit: { primary: "#000", secondary: "#fff" },
       },
     ];
     expect(loanClubName("cl_world_d9b26db0_10", clubs)).toBe("TFN");

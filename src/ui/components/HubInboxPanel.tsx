@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { clubEventIcon, type ClubEvent } from "../../inbox/club-events.ts";
+import { splitInboxEmojiPrefix } from "../../inbox/postfach-emoji.ts";
+import { PostfachMessageText } from "./PostfachMessageText.tsx";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import {
@@ -246,15 +248,24 @@ export function HubInboxPanel({
         ) : (
           <>
             <ul className="hub-inbox-list hub-inbox-list-events">
-              {pageEvents.map((event) => (
+              {pageEvents.map((event) => {
+                const { emoji: leadingEmoji } = splitInboxEmojiPrefix(event.message);
+                return (
                 <li key={event.id}>
                   <div className="hub-inbox-event">
-                    <span className="hub-inbox-icon" aria-hidden="true">{clubEventIcon(event.kind)}</span>
-                    <span className="hub-inbox-event-message">{event.message}</span>
+                    {!leadingEmoji ? (
+                      <span className="hub-inbox-icon" aria-hidden="true">
+                        {clubEventIcon(event.kind)}
+                      </span>
+                    ) : null}
+                    <span className="hub-inbox-event-message">
+                      <PostfachMessageText text={event.message} />
+                    </span>
                     <span className="hub-inbox-event-meta">{formatCalendarWeekDisplay(event.week)}</span>
                   </div>
                 </li>
-              ))}
+              );
+              })}
             </ul>
             {totalEventPages > 1 ? (
               <nav className="hub-inbox-events-pagination" aria-label="Ereignisse Seiten">

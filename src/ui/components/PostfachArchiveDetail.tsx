@@ -6,6 +6,7 @@ import type { ClubEvent } from "../../inbox/club-events.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import { scoutJobNoticeByIdAny } from "../../scouting/scout-job-postfach.ts";
 import type { PostfachArchiveEntry } from "../../inbox/postfach-archive.ts";
+import { PostfachMessageText } from "./PostfachMessageText.tsx";
 import { sessionKickerEditionLookup } from "../../inbox/kicker-edition-archive.ts";
 import type { TreterEdition } from "../../media/kicker-digest.ts";
 import {
@@ -56,7 +57,9 @@ export function PostfachArchiveDetail({
         }
         return (
           <section className="inbox-detail inbox-archive-readonly">
-            <p className="inbox-archive-event-message">{event.message}</p>
+            <p className="inbox-archive-event-message">
+              <PostfachMessageText text={event.message} />
+            </p>
           </section>
         );
       }

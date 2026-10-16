@@ -150,6 +150,18 @@
   font-size: 0.65rem;
 }
 
+.postfach-inbox-emoji {
+  display: inline-block;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  line-height: 1;
+  vertical-align: -0.05em;
+}
+
+.hub-inbox-event-message .postfach-inbox-emoji,
+.inbox-archive-event-message .postfach-inbox-emoji {
+  margin-right: 0.15em;
+}
+
 .manager-desk__postfach .postfach-archive-row-week {
   font-size: 0.62rem;
 }

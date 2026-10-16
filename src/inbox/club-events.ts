@@ -26,6 +26,7 @@ export function appendClubEvent(
   return [entry, ...events].slice(0, MAX_CLUB_EVENTS);
 }
 
+/** Lucide-free pictographs for hub mail feed only (design.md §4.2). */
 export function clubEventIcon(kind: ClubEventKind): string {
   switch (kind) {
     case "transfer":

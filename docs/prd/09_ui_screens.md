@@ -128,6 +128,7 @@ Interaktion:
 - Jugend-Callbacks: Kachel mit Portrait + Token (Position, Alter, CA); Aktionen inline (Lucide), **kein** zweites Spieler-Hero-Panel.
 - Schwere Post (Gegner-Analyse, Camp-Leiter): **Modal**; Scout-Job (Region/Verein): kompakte Inline-Zeile.
 - **Archiv** (Liste unten): erledigte Posts, Club-Events und gelesene Scout-Jobs bleiben gespeichert — Zeile antippen **öffnet wieder** (nur Lesen, kein erneutes Entscheiden). **Der Treter:** Snapshot pro Woche in `kicker_edition_archive` (Save v84), Zeitung wie beim Erstlesen.
+- **Emojis:** nur im Postfach erlaubt (design.md §4.2) — Archiv-Zeilen und Club-Event-Text (Stempel, Transfer-Teaser); Entscheidungs-Karten und Scout-Abschlüsse bleiben Lucide.
 
 | Aktion | Icon (Lucide) |
 |---|---|

@@ -266,7 +266,7 @@ export async function simulateGameWeek(
       clubEvents,
       session.season,
       nextWeek,
-      "profile",
+      "inbox",
       `${award.icon} ${who} verdient ${award.label}`,
     );
   }
@@ -335,7 +335,7 @@ export async function simulateGameWeek(
       clubEvents,
       session.season,
       nextWeek,
-      "profile",
+      "inbox",
       `${notice.icon} ${who} legt ${notice.label} ab`,
     );
   }
@@ -348,7 +348,7 @@ export async function simulateGameWeek(
       clubEvents,
       session.season,
       nextWeek,
-      "profile",
+      "inbox",
       `${award.icon} ${who} verdient ${award.label}`,
     );
     if (named) {

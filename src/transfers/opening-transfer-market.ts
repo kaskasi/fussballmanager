@@ -4,6 +4,7 @@
  */
 import type { TeamId } from "@fussballmanager/shared";
 import { withClubEvent, type ClubEvent } from "../inbox/club-events.ts";
+import { inboxEmojiLine } from "../inbox/postfach-emoji.ts";
 import { isTransferWindowOpen } from "../sim/transfer-windows.ts";
 import { addPlayersToPool, ensureTargetsForPool } from "../scouting/scout-discovery.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
@@ -27,6 +28,13 @@ export interface OpeningMarketArchetype {
   /** Inbox teaser when the board is seeded. */
   teaser: string;
 }
+
+const OPENING_TEASER_EMOJI: Record<OpeningMarketArchetype["id"], string> = {
+  oberliga_step_up: "🚀",
+  veteran_challenge: "🎯",
+  wage_unrest_star: "💸",
+  camp_export_gem: "🌱",
+};
 
 export interface OpeningTransferMarketResult {
   listings: TransferListing[];
@@ -141,7 +149,11 @@ export function buildOpeningTransferMarket(input: {
     const next = mutate ? mutate(player) : player;
     rivalPlayers = rivalPlayers.map((row) => (row.id === player.id ? next : row));
     listings.push(listingFor(next, input.season, input.week, priceFactor));
-    archetypes.push({ id: archetype, playerId: player.id, teaser });
+    archetypes.push({
+      id: archetype,
+      playerId: player.id,
+      teaser: inboxEmojiLine(OPENING_TEASER_EMOJI[archetype], teaser),
+    });
   };
 
   const stepUpPool = oberliga.filter((player) => player.age >= 20 && player.age <= 26);

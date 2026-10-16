@@ -7,6 +7,7 @@ import {
 } from "../../inbox/postfach-archive.ts";
 import { formatCalendarWeekDisplay } from "../../i18n/calendar-display.ts";
 import { useT } from "../../i18n/react.ts";
+import { PostfachMessageText } from "./PostfachMessageText.tsx";
 
 export function PostfachArchiveList({
   entries,
@@ -62,7 +63,9 @@ export function PostfachArchiveList({
                   : t("postfach.archive.week", { week: entry.week })}
               </span>
               <span className="postfach-archive-row-text">
-                <span className="postfach-archive-row-line">{entry.title}</span>
+                <span className="postfach-archive-row-line">
+                  <PostfachMessageText text={entry.title} />
+                </span>
               </span>
             </button>
           </li>

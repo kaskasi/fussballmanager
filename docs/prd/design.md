@@ -2,7 +2,7 @@
 
 **Projekt:** The Club (Fußball-Manager)
 **Datei:** `docs/prd/design.md`
-**Version:** 0.4 · Status: verbindliche Design-Referenz
+**Version:** 0.5 · Status: verbindliche Design-Referenz
 **Referenzbilder:** `docs/design-refs/design.png`, `docs/design-refs/lumo/` (Layout only, not shipped)
 **Ziel:** Dieses Dokument ist die alleinige Design-Wahrheit. Cursor baut jeden Screen ausschließlich aus den hier definierten Tokens, Komponenten und Wireframes. Bei Konflikten gilt: dieses Dokument > bestehender Code > improvisierte Lösungen.
 
@@ -16,7 +16,7 @@ Gedecktes Anime/Comic-Feeling eines sonnigen Nachmittags im Stadion. Warm, flach
 
 1. **Grün ist der Star.** Rasen-Grün ist die dominante Marke; Partnerfarben sind neutral-warm oder sein Komplementär. Keine Farbe konkurriert mit Grün.
 2. **Nur 1× Gelb.** Der NEXT-Button ist das einzige gelbe Element im gesamten Spiel. Niemand sonst darf Honiggelb verwenden.
-3. **Aus einem Guss.** Gleiche Icon-Familie, gleiche Radien, gleiche Outline-Stärke überall. **Emojis sind verboten** (auch als Platzhalter).
+3. **Aus einem Guss.** Gleiche Icon-Familie, gleiche Radien, gleiche Outline-Stärke überall. **Emojis sind verboten** außer im **Postfach** (§4.2).
 4. **Dichte ist erlaubt.** Desktop-first. Tabellen dürfen 12+ Spalten haben. Mobile ist komprimierter Nachbau (Drawer), kein Redesign.
 5. **Keine KI-generierten Assets.** Alles visuelle kommt aus SVG-Komponenten, CC0-Texturen und öffentlichen Icon-Sets.
 
@@ -108,8 +108,23 @@ Kenney-Tiles und SVGs kommen in eigenen Farben. Bevor sie ins Projekt einfließe
 
 - **Set:** Lucide Icons, gefüllt/phosphor-fill bevorzugt; wenn nur Outline verfügbar: `stroke-width: 2.5`.
 - **Größen:** 16px (inline), 20px (Buttons/Tabs), 24px (Nav), 32px (Feature).
-- **Absolute Verbotsliste:** Emojis als Icons. Jedes Emoji im Code ist ein Bug. Ersatz-Mapping beim Migrieren: 🌭→utensils, 🍺→beer, 👕→shirt, 🅿️→circle-parking, 🚌→bus, 🚃→train-front, 💰→wallet, 🎫→ticket, 🤝→handshake, 📺→tv, 🏗️→construction, 👷→hard-hat.
+- **Absolute Verbotsliste (global):** Emojis als Icons oder Dekor **außerhalb** des Postfachs. Jedes Emoji in Hub, Training, Transfer-UI, Match-Kommentar usw. ist ein Bug. Ersatz-Mapping beim Migrieren: 🌭→utensils, 🍺→beer, 👕→shirt, 🅿️→circle-parking, 🚌→bus, 🚃→train-front, 💰→wallet, 🎫→ticket, 🤝→handshake, 📺→tv, 🏗️→construction, 👷→hard-hat.
 - Icons erben die Textfarbe; nie eigenständige Icon-Farben einführen.
+
+### 4.2 Postfach-Emojis (einzige Ausnahme)
+
+Das **Postfach** (Manager-Desk-Mail, Entscheidungen-Screen §9.4, Archiv, Hub-Spalte „Mail“) darf **Unicode-Emojis in Fließtext** nutzen — wie echte Benachrichtigungen, nicht als Ersatz für Lucide in Buttons oder Chips.
+
+**Erlaubt:**
+- Archiv-Zeilen und Club-Event-Nachrichten mit führendem Emoji (z. B. Stempel-News „🌱 … legt Grünschnabel ab“, Transfer-Teaser „🚀 …“).
+- `clubEventIcon()` und `PostfachMessageText` — nur in Postfach-Komponenten (`DecisionInboxPanel`, `PostfachArchive*`, `HubInboxPanel`).
+- Emoji aus Sim/Domain in `event.message` / `inboxEmojiLine()` — **nicht** in UI außerhalb Postfach rendern.
+
+**Verboten (unverändert):**
+- Emojis in Header, Menü, Training, Markt, Stadion, Match-Stream, Badges, Chips, Buttons.
+- Emojis als einzige Information ohne Text (kein reines „🔥“-Icon statt Lucide außerhalb Postfach).
+
+**Umsetzung:** `src/inbox/postfach-emoji.ts`, `PostfachMessageText.tsx`; führendes Emoji `aria-hidden`, Screenreader liest den Textkörper.
 
 ### 4.1 Filter-Chips (Pills)
 
@@ -388,6 +403,7 @@ H1 "Entscheidungen"                      [Alle erledigt ▶]
 - Offene Entscheidung: `--outline` in `--rasen`, erledigte: `--outline-weich`, Avatar ausgegraut.
 - Action-Buttons: sekundär (Panel-Optik), nur die empfohlene Standard-Aktion bekommt `--rasen`-Fill.
 - Badge im Menü ("Postfach (1)") zeigt Anzahl offener Entscheidungen.
+- **Archiv / Mail-Feed:** Kurzzeilen dürfen führende Emojis tragen (§4.2) — Stempel, Transfer-Gerüchte, Club-News; Lucide bleibt für Entscheidungs-Karten und Scout-Job-Abschlüsse.
 
 ### 9.5 Kalender
 ```
@@ -1061,7 +1077,7 @@ Speed-Control: 1x/2x/4x als kleines Dropdown neben den Tabs. "Direkt zur Zusamme
 
 Ein Screen gilt erst als fertig, wenn:
 - [ ] Nur Tokens aus diesem Dokument verwendet (keine Hex-Codes im Screen-Code)
-- [ ] Null Emojis (auch nicht "temporär")
+- [ ] Null Emojis außer Postfach (§4.2; auch nicht "temporär" anderswo)
 - [ ] Header identisch zur Header-Komponente (keine Kopie – Import der Komponente)
 - [ ] Genau 0 oder 1 gelbe Elemente (der NEXT-Button im Header)
 - [ ] Lucide-Icons mit einheitlicher Größe

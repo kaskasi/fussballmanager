@@ -1,13 +1,23 @@
 import { describe, expect, it } from "vitest";
+import { injectKickerInbox } from "../inbox/kicker-inbox.ts";
 import { newGameSession } from "../persistence/game-session.ts";
 import { MONDAY, resolveSmartSkip, SATURDAY } from "../sim/day-calendar.ts";
+import { emptyInbox } from "../youth/decision-inbox.ts";
 import {
   hasInboxBlockerForNext,
+  pendingDecisionInboxItems,
   shouldNavigateToCalendarBeforeTimeStep,
   shouldOpenLineupFromCalendar,
 } from "./nav-next-flow.ts";
 
 describe("nav-next-flow", () => {
+  it("does not treat Der Treter as a NEXT blocker", () => {
+    const session = newGameSession();
+    const inbox = injectKickerInbox(emptyInbox(session.week), session.season, session.week);
+    expect(pendingDecisionInboxItems(inbox, session.players)).toHaveLength(0);
+    expect(hasInboxBlockerForNext(session, inbox, session.players)).toBe(false);
+  });
+
   it("has no inbox blocker when youth inbox is empty", () => {
     const session = newGameSession();
     session.weekday = MONDAY;

@@ -41,7 +41,8 @@ function hubColumnBodyKind(column: {
   opponentShortName: string | null;
 }): HubColumnBody {
   if (column.isMatchPreview && column.opponentShortName) return "match";
-  if (column.weekday === SUNDAY || column.dayIndex === null) return "sunday-off";
+  if (column.weekday === SUNDAY) return "sunday-off";
+  if (column.dayIndex === null && !column.isMatchPreview) return "sunday-off";
   return "slots";
 }
 
@@ -55,6 +56,7 @@ function HubDayCalendarCell({
   todayWeekday,
   scoutBoard,
   hideMatchChip = false,
+  showRestIcon = false,
 }: {
   season: number;
   week: number;
@@ -65,6 +67,7 @@ function HubDayCalendarCell({
   todayWeekday: number;
   scoutBoard?: ScoutBoard;
   hideMatchChip?: boolean;
+  showRestIcon?: boolean;
 }) {
   const cell = useMemo(
     () =>
@@ -94,6 +97,7 @@ function HubDayCalendarCell({
         scoutBusy={scoutBusy}
         scoutTripCount={scoutTripCount}
         hideMatchChip={hideMatchChip}
+        showRestIcon={showRestIcon}
       />
     </div>
   );
@@ -137,7 +141,11 @@ export function HubThreeDayTrainingCalendar({
   );
 
   const nextSlotIndex = currentTrainingSlotIndex(trainingUnitsCompleted, useTrainingUnitProgress);
-  const dayCalendar = (columnWeekday: number, hideMatchChip: boolean) => (
+  const dayCalendar = (
+    columnWeekday: number,
+    hideMatchChip: boolean,
+    showRestIcon: boolean,
+  ) => (
     <HubDayCalendarCell
       season={season}
       week={week}
@@ -148,6 +156,7 @@ export function HubThreeDayTrainingCalendar({
       todayWeekday={weekday}
       scoutBoard={scoutBoard}
       hideMatchChip={hideMatchChip}
+      showRestIcon={showRestIcon}
     />
   );
 
@@ -191,7 +200,7 @@ export function HubThreeDayTrainingCalendar({
                 .filter(Boolean)
                 .join(" ")}
             >
-              {dayCalendar(column.weekday, bodyKind === "match")}
+              {dayCalendar(column.weekday, bodyKind === "match", bodyKind === "sunday-off")}
               {bodyKind === "match" ? (
                 <HubTrainingDayPlaceholder
                   variant="match"

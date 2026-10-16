@@ -5,13 +5,21 @@ import { isMatchSaturday, SATURDAY, type SmartSkipTarget } from "../sim/day-cale
 import { MANAGER_DESK_HUB_ENABLED } from "../hub/config.ts";
 import { isTrainingCalendarGatePending, isTrainingNextActive } from "../sim/training-next.ts";
 
+/** Open Postfach decisions that block week progress — not Der Treter (handled on NEXT). */
+export function pendingDecisionInboxItems(
+  youthInbox: YouthInboxState,
+  players?: readonly Player[],
+) {
+  return pendingInboxItems(youthInbox, players).filter((item) => item.kind !== "kicker_transfer");
+}
+
 /** Offene Jugend-Inbox blockiert NEXT (jeder Wochentag). Der Treter blockiert nicht. */
 export function hasInboxBlockerForNext(
   _session: Pick<GameSession, "weekday">,
   youthInbox: YouthInboxState,
   players: readonly Player[],
 ): boolean {
-  return pendingInboxItems(youthInbox, players).length > 0;
+  return pendingDecisionInboxItems(youthInbox, players).length > 0;
 }
 
 /** Kalender-NEXT: Spiel einleiten (Aufstellung), inkl. Fr→Sa in Spielwoche. */

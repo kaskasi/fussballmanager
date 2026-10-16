@@ -1,8 +1,9 @@
 import { KICKER_DELIVERY_WEEKDAY, shouldDeliverWeeklyKicker } from "../inbox/kicker-inbox.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import type { Player } from "../types/player.ts";
-import { pendingInboxItems, type YouthInboxState } from "../youth/decision-inbox.ts";
+import type { YouthInboxState } from "../youth/decision-inbox.ts";
 import { MANAGER_DESK_HUB_ENABLED } from "../hub/config.ts";
+import { hasOpenKickerItem } from "../inbox/kicker-inbox.ts";
 import { hasInboxBlockerForNext } from "../ui/nav-next-flow.ts";
 import { resolveSmartSkip } from "./day-calendar.ts";
 import {
@@ -27,6 +28,11 @@ export function shouldPauseTrainingAutoNext(input: {
   } else if (input.screen !== "training") {
     return true;
   }
+  if (
+    hasOpenKickerItem(input.youthInbox, input.session.season, input.session.week)
+  ) {
+    return true;
+  }
   if (hasInboxBlockerForNext(input.session, input.youthInbox, input.players)) return true;
   if (isTrainingCalendarGatePending(input.session)) return true;
 
@@ -40,8 +46,10 @@ export function shouldPauseTrainingAutoNext(input: {
     }
   }
 
-  const hasInbox = pendingInboxItems(input.youthInbox, input.players).length > 0;
-  const skip = resolveSmartSkip(input.session, hasInbox);
+  const skip = resolveSmartSkip(
+    input.session,
+    hasInboxBlockerForNext(input.session, input.youthInbox, input.players),
+  );
   if (skip.action === "inbox" || skip.action === "match" || skip.action === "simulate_week") {
     return true;
   }

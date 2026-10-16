@@ -3,6 +3,7 @@ import { deliverMerchandisingOrders } from "../../economy/merchandising.ts";
 import { t } from "../../i18n/index.ts";
 import {
   applyWeeklyKickerDelivery,
+  hasOpenKickerItem,
   kickerItemId,
   KICKER_DELIVERY_WEEKDAY,
   shouldDeliverWeeklyKicker,
@@ -40,6 +41,7 @@ import { logPostHogInfo, trackEvent } from "../../telemetry/analytics.ts";
 import { Diag } from "../../telemetry/diagnostic-log.ts";
 import {
   hasInboxBlockerForNext,
+  pendingDecisionInboxItems,
   shouldNavigateToCalendarBeforeTimeStep,
   shouldOpenLineupFromCalendar,
 } from "../nav-next-flow.ts";
@@ -382,13 +384,24 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
       }
 
       const focusHubInboxDecision = () => {
-        const pending = pendingInboxItems(youthInbox, players);
+        const pending = pendingDecisionInboxItems(youthInbox, players);
         setPostfachItemId(pending[0]?.id ?? null);
         setProfileId(null);
         setForeignPlayerId(null);
         setProfileFeedback(null);
         flashNotice(t("shell.nextToPostfach"), "warn");
       };
+
+      const openTreterPostfach = () => {
+        openPostfach(kickerItemId(session.season, session.week));
+        flashNotice(t("postfach.kicker.arrived"), "warn");
+      };
+
+      if (hasOpenKickerItem(youthInbox, session.season, session.week)) {
+        Diag.next("treter_open");
+        openTreterPostfach();
+        return;
+      }
 
       if (hasInboxBlockerForNext(session, youthInbox, players)) {
         Diag.next("blocked_inbox");
@@ -447,14 +460,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
         });
         trackEvent("training_step_completed", { automated: fromAuto });
         if (deliverKickerAfterStep) {
-          const treterId = kickerItemId(session.season, session.week);
-          setPostfachItemId(treterId);
-          setProfileId(null);
-          setForeignPlayerId(null);
-          setProfileFeedback(null);
-          if (!MANAGER_DESK_HUB_ENABLED) {
-            setScreen("postfach");
-          }
+          openTreterPostfach();
         }
         const stayOnHub = MANAGER_DESK_HUB_ENABLED && screen === "hub";
         const trainingNavScreen: Screen = MANAGER_DESK_HUB_ENABLED ? "hub" : "training";
@@ -493,7 +499,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
         return;
       }
 
-      const hasInbox = pendingInboxItems(youthInbox, players).length > 0;
+      const hasInbox = pendingDecisionInboxItems(youthInbox, players).length > 0;
       const skip = resolveSmartSkip(session, hasInbox);
 
       if (skip.action === "inbox") {
@@ -600,16 +606,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
           return next;
         });
         if (landOnKickerDay) {
-          const treterId = kickerItemId(session.season, session.week);
-          setPostfachItemId(treterId);
-          setProfileId(null);
-          setForeignPlayerId(null);
-          setProfileFeedback(null);
-          if (!MANAGER_DESK_HUB_ENABLED) {
-            setScreen("postfach");
-          } else {
-            setScreen("hub");
-          }
+          openTreterPostfach();
         }
       }
     },

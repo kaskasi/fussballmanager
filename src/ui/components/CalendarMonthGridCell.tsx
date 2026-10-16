@@ -1,5 +1,5 @@
 /** Single day cell — shared by Calendar screen and Manager Desk training strip */
-import { ArrowLeftRight, Dumbbell, Radar } from "lucide-react";
+import { ArrowLeftRight, Bed, Dumbbell, Radar } from "lucide-react";
 import { ClubCrest } from "./ClubCrest.tsx";
 import { clubLogoUrlForId } from "../assets/club-logo.ts";
 import type { CalendarMonthCell } from "../calendar/month-grid.ts";
@@ -12,6 +12,7 @@ export function CalendarMonthGridCell({
   scoutTripCount = 0,
   className = "",
   hideMatchChip = false,
+  showRestIcon = false,
 }: {
   cell: CalendarMonthCell;
   scoutBusy?: boolean;
@@ -19,6 +20,8 @@ export function CalendarMonthGridCell({
   className?: string;
   /** Manager Desk: match crest lives in training placeholder, not calendar tile. */
   hideMatchChip?: boolean;
+  /** Manager Desk: Sunday rest — bed icon in header, no match crest. */
+  showRestIcon?: boolean;
 }) {
   useT();
   const transferClass =
@@ -80,6 +83,10 @@ export function CalendarMonthGridCell({
             size={44}
           />
           {cell.match.label}
+        </p>
+      ) : showRestIcon ? (
+        <p className="calendar-day-chip calendar-day-chip--rest" aria-label={t("calendar.restDay")}>
+          <Bed size={14} strokeWidth={2.5} aria-hidden />
         </p>
       ) : cell.isToday ? (
         <p className="calendar-day-chip calendar-day-chip--today" aria-label={t("calendar.todayAria")}>

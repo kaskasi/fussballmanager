@@ -1,8 +1,11 @@
 import type { Player } from "../types/player.ts";
 import { withClubEvent, type ClubEvent } from "../inbox/club-events.ts";
 import { careerWeekIndex } from "../stadium/hospitality.ts";
-import { isBlockUnderConstruction } from "../stadium/stadium-block-expansion.ts";
 import { advancePrecinctConstruction } from "../stadium/precinct-construction.ts";
+import {
+  listActiveConstructionProjects,
+  maxConcurrentConstructionProjects,
+} from "./construction-capacity.ts";
 import type { ClubStadium } from "../stadium/club-stadium.ts";
 import type { PrecinctState } from "../stadium/precinct.ts";
 import type { AcademyFacility } from "../youth/intake-generator.ts";
@@ -13,7 +16,9 @@ import {
 } from "../youth/satellite-camps.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 
-export const MAX_CONCURRENT_PROJECTS = 2;
+export const BASE_CONCURRENT_PROJECTS = 2;
+/** @deprecated Use maxConcurrentConstructionProjects(snapshot) — HQ raises the cap. */
+export const MAX_CONCURRENT_PROJECTS = BASE_CONCURRENT_PROJECTS;
 export const CAMP_BUILD_WEEKS = 2;
 
 export interface AcademyProject {
@@ -35,25 +40,20 @@ export interface ConstructionSnapshot {
 }
 
 export function countActiveProjects(snapshot: ConstructionSnapshot): number {
-  let count = 0;
-  const precinct = snapshot.precinct;
-  if (precinct) {
-    count += precinct.patches.filter((patch) => patch.constructing).length;
-    count += Object.keys(precinct.pendingUpgrades ?? {}).length;
-  }
-  for (const blockId of Object.keys(snapshot.stadium.block_expansion ?? {})) {
-    if (isBlockUnderConstruction(snapshot.stadium, blockId, snapshot.season, snapshot.week)) {
-      count += 1;
-    }
-  }
-  count += snapshot.camps.filter((camp) => camp.construction_until != null).length;
-  if (snapshot.academyProject) count += 1;
-  return count;
+  return listActiveConstructionProjects(snapshot).length;
 }
 
+export type { ActiveConstructionProject, ConstructionProjectKind } from "./construction-capacity.ts";
+export {
+  constructionCapacitySummary,
+  constructionSnapshotFromSession,
+  listActiveConstructionProjects,
+  maxConcurrentConstructionProjects,
+} from "./construction-capacity.ts";
+
 export function constructionCapReason(snapshot: ConstructionSnapshot): string | null {
-  if (countActiveProjects(snapshot) >= MAX_CONCURRENT_PROJECTS) {
-    return "Zwei Bauvorhaben laufen bereits.";
+  if (countActiveProjects(snapshot) >= maxConcurrentConstructionProjects(snapshot)) {
+    return "Alle Bau-Slots belegt.";
   }
   return null;
 }

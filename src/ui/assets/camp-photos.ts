@@ -13,8 +13,8 @@ const CAMP_PHOTO_BY_NATION: Record<string, string> = {
   camp_hr: "/assets/photos/camps/camp-hr.jpg",
 };
 
-/** Optional illustrated/CC0 hero — off in default build for visual coherence. */
-export const CAMP_PHOTO_JPG_ENABLED = false;
+/** CC0 camp heroes (~200 KB each, lazy via card visibility). */
+export const CAMP_PHOTO_JPG_ENABLED = true;
 
 export function campPhotoUrl(nationId: string): string | undefined {
   if (!CAMP_PHOTO_JPG_ENABLED) return undefined;

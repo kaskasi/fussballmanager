@@ -4758,6 +4758,76 @@
   background: #e2e8f0;
 }
 
+.spend-confirm .construction-capacity {
+  margin-top: 0.85rem;
+}
+
+.construction-capacity {
+  margin: 0.65rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-klein, 8px);
+  background: var(--panel-muted, #efebdd);
+  font-size: 0.82rem;
+}
+
+.construction-capacity.is-at-cap {
+  outline: 1px solid color-mix(in srgb, #be123c 35%, transparent);
+}
+
+.construction-capacity-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.35rem;
+}
+
+.construction-capacity-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.construction-capacity-empty,
+.construction-capacity-hint,
+.construction-capacity-full {
+  margin: 0.35rem 0 0;
+  color: var(--tinte-weich, #6b5d4f);
+  line-height: 1.35;
+}
+
+.construction-capacity-full {
+  color: #be123c;
+  font-weight: 700;
+}
+
+.construction-capacity--compact .construction-capacity-hint {
+  display: none;
+}
+
+.construction-capacity--hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 8.5rem;
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 12px 36px rgb(15 23 42 / 12%);
+}
+
+.construction-capacity--hero .construction-capacity-head {
+  font-size: 0.95rem;
+}
+
+.construction-capacity--hero .construction-capacity-list {
+  font-size: 0.88rem;
+}
+
+.youth-camps-grid-wrap > .construction-capacity {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
 .stadium:not(.club-shell-card-body) {
   max-width: 56rem;
   margin: 0 auto;
@@ -9483,6 +9553,97 @@ button.treter-article {
   color: var(--tinte, #3e3128);
   cursor: default;
   opacity: 1;
+}
+
+.transfers-market-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.transfers-market-head h2 {
+  margin: 0;
+}
+
+.transfers-market-flow-toolbar {
+  margin-top: 0.15rem;
+}
+
+.transfers-market-grid {
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+}
+
+@media (min-width: 900px) {
+  .transfers-market-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.transfers-market-card-badge {
+  display: inline-block;
+  width: fit-content;
+  margin-top: 0.15rem;
+  padding: 0.08rem 0.35rem;
+  border-radius: var(--radius-klein, 8px);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: var(--staubblau, #9dbfd0);
+  color: var(--tinte, #3e3128);
+}
+
+.transfers-market-card-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  padding: 0.35rem 0.45rem 0.5rem;
+}
+
+.transfers-market-card-price {
+  font-size: 0.82rem;
+  color: var(--tinte, #3e3128);
+}
+
+.transfers-market-card-detail {
+  font-size: 0.68rem;
+  color: var(--tinte-weich, #6b5d4f);
+}
+
+.transfers-market-card-portrait-fallback {
+  display: block;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: var(--radius-klein, 8px);
+  background: var(--panel-muted, #efebdd);
+}
+
+.transfers-market-empty {
+  margin: 0.25rem 0 0;
+  color: var(--tinte-weich, #6b5d4f);
+}
+
+.transfers-market-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.45rem;
+}
+
+.transfers-market-page {
+  min-width: 1.65rem;
+  padding: 0.2rem 0.4rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--panel-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.transfers-market-page.is-active {
+  background: color-mix(in srgb, var(--rasen) 18%, var(--panel-muted));
+  color: var(--tinte);
 }
 
 .transfers-history-icon {

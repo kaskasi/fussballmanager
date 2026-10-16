@@ -6,6 +6,7 @@ import { LEAGUE_LAST_WEEK } from "../sim/game-calendar.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { canPromotePlayer } from "../youth/promotion-gate.ts";
+import { contractMonthsRemaining } from "../transfers/contract-remaining.ts";
 
 export type PlayerProfileAction =
   | "praise"
@@ -102,7 +103,7 @@ export function profileMenuItems(
     items.push({
       action: "promote_pro",
       label: "Profikader",
-      hint: "Direkt ins erste Team, wenn Platz im Kader.",
+      hint: "Ins erste Team — Vertrag und Gehalt klären.",
     });
     items.push({
       action: "demote_u17",
@@ -125,13 +126,37 @@ export function profileMenuItems(
     });
   }
 
-  items.push({
-    action: "release",
-    label: "Entfernen",
-    hint: "Spieler verlässt den Verein und ist vereinslos.",
-  });
-
   return items;
+}
+
+/** ⋮-Menü — destruktive Kaderaktionen (nicht in der Rail). */
+export function profileOverflowMenuItems(
+  player: Player,
+  owned: boolean,
+): ProfileMenuItem[] {
+  if (!owned || player.squad_status === "loaned_out") return [];
+  return [
+    {
+      action: "release",
+      label: "Vertrag auflösen",
+      hint: "Restvergütung als Abfindung zahlen — Spieler wird vereinslos.",
+    },
+  ];
+}
+
+/** Severance for early termination (remaining obligation, discounted). */
+export function contractTerminationPayout(
+  player: Player,
+  season: number,
+  week: number,
+): number {
+  const contract = player.contract;
+  if (!contract) {
+    return Math.max(800, Math.round(ca(player) * 45));
+  }
+  const months = contractMonthsRemaining(season, week, contract.until_season);
+  const weeksLeft = Math.max(1, Math.round(months * (LEAGUE_LAST_WEEK / 12)));
+  return Math.round(contract.wage_weekly * weeksLeft * 0.65);
 }
 
 export interface ProfileActionResult {
@@ -286,7 +311,7 @@ export function applyProfileAction(
     case "release": {
       return {
         player,
-        message: `${formatPlayerName(player)} wurde aus dem Kader entfernt.`,
+        message: `Vertrag aufgelöst — ${formatPlayerName(player)} ist vereinslos.`,
         removed: true,
       };
     }

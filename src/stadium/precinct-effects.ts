@@ -482,6 +482,12 @@ export function listPrecinctStatusEffects(
     if (placed && fans) {
       if (def.id === "beer_tent" && fans.beer > 0) bits.push(`Fans ${formatFans(fans.beer)}`);
       if (def.id === "clubhouse" && fans.clubhouse > 0) bits.push(`Fans ${formatFans(fans.clubhouse)}`);
+      if (def.id === "clubhouse" && placed) {
+        const hqLevel = precinctBuildingLevel(state, "clubhouse");
+        if (hqLevel > 0) {
+          bits.push(`${2 + Math.min(2, hqLevel)} parallele Baustellen`);
+        }
+      }
       if (def.id === "fanshop" && fans.fanshop > 0) bits.push(`Fans ${formatFans(fans.fanshop)}`);
       if (def.id === "museum" && fans.museum > 0) bits.push(`Fans ${formatFans(fans.museum)}`);
       if (def.id === "fan_services" && fans.services > 0) bits.push(`Fans ${formatFans(fans.services)}`);

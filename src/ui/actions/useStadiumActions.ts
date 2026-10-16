@@ -1,5 +1,7 @@
 import { useCallback } from "react";
 import type { GameSession } from "../../persistence/game-session.ts";
+import type { YouthCamp } from "../../youth/satellite-camps.ts";
+import type { AcademyProject } from "../../sim/advance-construction.ts";
 import type { ClubFinances } from "../../economy/club-finances.ts";
 import {
   creditClubCash,
@@ -82,14 +84,34 @@ function stadiumWithPrecinct(
   });
 }
 
+function constructionBlocked(
+  stadium: ClubStadium,
+  youthCamps: readonly YouthCamp[],
+  academyProject: AcademyProject | null | undefined,
+  season: number,
+  week: number,
+): string | null {
+  return constructionCapReason({
+    precinct: stadium.precinct,
+    stadium,
+    camps: youthCamps,
+    academyProject,
+    season,
+    week,
+  });
+}
+
 export function useStadiumActions(args: {
   stadium: ClubStadium;
   finances: ClubFinances;
   academyFacility: AcademyFacility;
   season: number;
   week: number;
+  youthCamps: readonly YouthCamp[];
+  academyProject: AcademyProject | null | undefined;
   patchSession: PatchSession;
   requestClubSpend: RequestClubSpend;
+  flashNotice: (message: string, tone?: "ok" | "warn") => void;
 }) {
   const {
     stadium,
@@ -97,8 +119,11 @@ export function useStadiumActions(args: {
     academyFacility,
     season,
     week,
+    youthCamps,
+    academyProject,
     patchSession,
     requestClubSpend,
+    flashNotice,
   } = args;
 
   const handleDrawBankLoan = useCallback(
@@ -174,10 +199,19 @@ export function useStadiumActions(args: {
 
   const handleStartBlockExpansion = useCallback(
     (blockId: string) => {
+      const cap = constructionBlocked(stadium, youthCamps, academyProject, season, week);
+      if (cap) {
+        flashNotice(t("construction.capacity.full"), "warn");
+        return;
+      }
       const block = stadium.blocks.find((entry) => entry.id === blockId);
       const check = canStartBlockExpansion(stadium, blockId, season, week, finances.cash);
       if (!check.allowed || check.cost === undefined) return;
       const quoted = infrastructureCostForWeek(check.cost, week);
+      if (finances.cash < quoted) {
+        flashNotice(check.reason ?? t("shell.spendFailed"), "warn");
+        return;
+      }
       requestClubSpend(
         quoted,
         block ? `${block.name} · Stufe ${check.nextLevel}` : "Tribünen-Ausbau",
@@ -190,20 +224,22 @@ export function useStadiumActions(args: {
             current.finances.cash,
           );
           if (!recheck.allowed || recheck.cost === undefined) return current;
-          if (
-            constructionCapReason({
-              precinct: current.stadium.precinct,
-              stadium: current.stadium,
-              camps: current.youthCamps,
-              academyProject: current.academyProject,
-              season: current.season,
-              week: current.week,
-            })
-          ) {
+          const blocked = constructionBlocked(
+            current.stadium,
+            current.youthCamps,
+            current.academyProject,
+            current.season,
+            current.week,
+          );
+          if (blocked) {
+            flashNotice(t("construction.capacity.full"), "warn");
             return current;
           }
           const fee = infrastructureCostForWeek(recheck.cost, current.week);
-          if (fee > current.finances.cash) return current;
+          if (fee > current.finances.cash) {
+            flashNotice(t("shell.spendFailed"), "warn");
+            return current;
+          }
           return {
             ...current,
             stadium: normalizeClubStadium(
@@ -215,7 +251,16 @@ export function useStadiumActions(args: {
         { infrastructure: true },
       );
     },
-    [finances.cash, requestClubSpend, season, stadium, week],
+    [
+      academyProject,
+      finances.cash,
+      flashNotice,
+      requestClubSpend,
+      season,
+      stadium,
+      week,
+      youthCamps,
+    ],
   );
 
   const handlePlacePrecinct = useCallback(

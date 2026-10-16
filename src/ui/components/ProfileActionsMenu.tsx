@@ -32,7 +32,7 @@ export function ProfileActionsMenu({
       <button
         type="button"
         className="row-menu-trigger"
-        aria-label="Spieleraktionen"
+        aria-label="Weitere Kaderaktionen"
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={onToggle}

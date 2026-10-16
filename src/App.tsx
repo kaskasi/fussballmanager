@@ -60,7 +60,7 @@ import {
 import type { WatchedPlayerMatch } from "./sim/watched-player-match.ts";
 import { MONDAY, resolveSmartSkip } from "./sim/day-calendar.ts";
 import { archiveKickerEdition } from "./inbox/kicker-edition-archive.ts";
-import { kickerItemId } from "./inbox/kicker-inbox.ts";
+import { kickerItemId, parseKickerItemId } from "./inbox/kicker-inbox.ts";
 import {
   hasInboxBlockerForNext,
   shouldNavigateToCalendarBeforeTimeStep,
@@ -101,6 +101,7 @@ import { formatPlayerName } from "./types/player-display.ts";
 import { sellerAskingPrice, toggleShortlist } from "./transfers/negotiations.ts";
 import { useTransferNegotiation } from "./ui/components/TransferNegotiationHost.tsx";
 import { SpendConfirmSheet } from "./ui/components/SpendConfirmSheet.tsx";
+import { constructionSnapshotFromSession } from "./sim/advance-construction.ts";
 import {
   infrastructureCostForWeek,
   isEarlyCapitalSeason,
@@ -314,6 +315,8 @@ import { campLeaderPostfachItemId } from "./inbox/postfach-camp-leader.ts";
 import { refreshAllMarketValues } from "./transfers/refresh-market-values.ts";
 import {
   applyProfileActionToSquad,
+  canReleasePlayer,
+  contractTerminationPayout,
   type PlayerProfileAction,
 } from "./player/profile-actions.ts";
 import { ACHIEVEMENT, grantAchievement } from "./player/achievements.ts";
@@ -720,10 +723,11 @@ export default function App() {
       );
       const scoutJobIds = unconsumedScoutJobNotices(scoutBoard).map((notice) => notice.id);
       const orthoId = orthopedistPostfachOpen ? orthopedistPostfachItemId() : null;
-      if (count === 0) return;
+      if (count === 0 && !(itemId && parseKickerItemId(itemId))) return;
       if (
         itemId &&
         !pending.some((item) => item.id === itemId) &&
+        !parseKickerItemId(itemId) &&
         !campItemIds.includes(itemId) &&
         !scoutJobIds.includes(itemId) &&
         itemId !== orthoId &&
@@ -847,8 +851,11 @@ export default function App() {
     academyFacility,
     season,
     week,
+    youthCamps,
+    academyProject: session.academyProject,
     patchSession,
     requestClubSpend,
+    flashNotice,
   });
 
   const {
@@ -1315,6 +1322,54 @@ export default function App() {
     [patchSession],
   );
 
+  const handleTerminateContract = useCallback(
+    (playerId: string) => {
+      const player = players.find((entry) => entry.id === playerId);
+      if (!player) return;
+      const blocked = canReleasePlayer(player, players, session.clubId);
+      if (blocked) {
+        setProfileFeedback(blocked);
+        return;
+      }
+      const cost = contractTerminationPayout(player, season, week);
+      requestClubSpend(
+        cost,
+        `Vertrag auflösen · ${formatPlayerName(player)}`,
+        (current) => {
+          const subject = current.players.find((entry) => entry.id === playerId);
+          if (!subject) return current;
+          const stillBlocked = canReleasePlayer(subject, current.players, current.clubId);
+          if (stillBlocked) return current;
+          const payout = contractTerminationPayout(subject, current.season, current.week);
+          if (payout > current.finances.cash) return current;
+          const { players: nextPlayers, result } = applyProfileActionToSquad(
+            current.players,
+            playerId,
+            "release",
+            current.clubId,
+            current.season,
+            current.week,
+            current.weekday,
+          );
+          if (!result?.removed) return current;
+          const next = sessionWithEvent(
+            {
+              ...current,
+              players: nextPlayers,
+              finances: spendClubCash(current.finances, payout, current.week),
+            },
+            "profile",
+            result.message,
+          );
+          setProfileId(null);
+          setProfileFeedback(null);
+          return next;
+        },
+      );
+    },
+    [players, requestClubSpend, season, session.clubId, week],
+  );
+
   const handleContractOffer = useCallback(
     (playerId: string, offer: ContractOffer) => {
       patchSession((current) => {
@@ -1615,10 +1670,23 @@ export default function App() {
     nextHeaderButtonTitle,
   };
 
+  const constructionSnapshot = useMemo(
+    () =>
+      constructionSnapshotFromSession({
+        stadium,
+        youthCamps,
+        academyProject: session.academyProject,
+        season,
+        week,
+      }),
+    [stadium, youthCamps, session.academyProject, season, week],
+  );
+
   const spendConfirmOverlay = pendingSpend ? (
     <SpendConfirmSheet
       title={pendingSpend.title}
       earlySeasonHint={pendingSpend.earlySeasonHint}
+      constructionSnapshot={constructionSnapshot}
       runway={spendRunway(
         finances,
         weeklyWageBill(players, session.clubId),
@@ -1627,8 +1695,21 @@ export default function App() {
       )}
       onConfirm={() => {
         const apply = pendingSpend.apply;
+        patchSession((current) => {
+          const beforeCash = current.finances.cash;
+          const beforeBlocks = JSON.stringify(current.stadium.block_expansion ?? {});
+          const next = apply(current);
+          const changed =
+            next.finances.cash !== beforeCash ||
+            JSON.stringify(next.stadium.block_expansion ?? {}) !== beforeBlocks ||
+            next.stadium.precinct !== current.stadium.precinct ||
+            next.academyFacility !== current.academyFacility;
+          if (!changed) {
+            flashNotice(t("shell.spendFailed"), "warn");
+          }
+          return next;
+        });
         setPendingSpend(null);
-        patchSession(apply);
       }}
       onCancel={() => setPendingSpend(null)}
     />
@@ -1879,6 +1960,7 @@ export default function App() {
           onList={() => handleToggleProfileListing(profilePlayer.id)}
           listedForSale={isPlayerListed(transferState, profilePlayer.id)}
           onProfileAction={(action) => handleProfileAction(profilePlayer.id, action)}
+          onTerminateContract={() => handleTerminateContract(profilePlayer.id)}
           onContractOffer={(offer) => handleContractOffer(profilePlayer.id, offer)}
           wageHeadroomWeekly={wageBudgetHeadroom(finances, players, session.clubId)}
           onOpenTraining={() => {

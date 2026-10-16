@@ -3,7 +3,9 @@ import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import {
   applyProfileAction,
   applyProfileActionToSquad,
+  contractTerminationPayout,
   profileMenuItems,
+  profileOverflowMenuItems,
 } from "./profile-actions.ts";
 
 describe("profile actions", () => {
@@ -82,10 +84,25 @@ describe("profile actions", () => {
     expect(next.state.morale).toBeLessThan(55);
   });
 
-  it("offers release for owned players", () => {
+  it("offers contract termination in the overflow menu", () => {
     const player = clonePlayer();
-    const items = profileMenuItems(player, true);
-    expect(items.some((item) => item.action === "release")).toBe(true);
+    expect(profileMenuItems(player, true).some((item) => item.action === "release")).toBe(false);
+    const overflow = profileOverflowMenuItems(player, true);
+    expect(overflow.some((item) => item.action === "release")).toBe(true);
+    expect(overflow[0]?.label).toBe("Vertrag auflösen");
+  });
+
+  it("computes termination payout from remaining contract weeks", () => {
+    const player = clonePlayer();
+    player.contract = {
+      wage_weekly: 1_000,
+      bonus_goal: 0,
+      bonus_appearance: 0,
+      until_season: 3,
+      guaranteed_minutes_promise: "none",
+    };
+    const payout = contractTerminationPayout(player, 1, 1);
+    expect(payout).toBeGreaterThan(1_000);
   });
 
   it("removes a player from the squad on release", () => {

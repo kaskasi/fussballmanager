@@ -21,7 +21,7 @@ import {
   campConstructionWeeksRemaining,
   isCampOperational,
 } from "../../youth/camp-construction.ts";
-import { campPhotoGradient } from "../assets/camp-photos.ts";
+import { campPhotoGradient, campPhotoUrl } from "../assets/camp-photos.ts";
 import { PlayerPortrait } from "./PlayerPortrait.tsx";
 
 export function YouthCampCard({
@@ -66,6 +66,7 @@ export function YouthCampCard({
   const emptyOwned = owned && !underConstruction && roster.length === 0;
   const leaderTrainingMod = owned?.leader?.training_mod ?? 0;
   const leaderMentalMod = owned?.leader?.mental_mod ?? 0;
+  const campPhotoSrc = campPhotoUrl(nation.id);
 
   return (
     <article
@@ -76,10 +77,18 @@ export function YouthCampCard({
       <header className="youth-camp-card-header">
         <div
           className="youth-camp-card-photo"
-          style={{
-            backgroundImage: campPhotoGradient(nation.id),
-          }}
+          style={{ backgroundImage: campPhotoGradient(nation.id) }}
         >
+          {campPhotoSrc ? (
+            <img
+              className="youth-camp-card-photo-img"
+              src={campPhotoSrc}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+          ) : null}
+          <div className="youth-camp-card-photo-scrim" aria-hidden="true" />
           {underConstruction ? (
             <span className="youth-camp-construction-badge" aria-hidden>
               <HardHat size={22} strokeWidth={2.25} />

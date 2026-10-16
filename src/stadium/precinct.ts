@@ -239,9 +239,9 @@ export const PRECINCT_BUILDINGS: readonly PrecinctBuildingDef[] = [
     cap: "unique",
     minW: 2,
     minH: 2,
-    maxLevel: 1,
-    upgradeCost: 0,
-    hint: "Nur eines · 2×2",
+    maxLevel: 2,
+    upgradeCost: 420_000,
+    hint: "Nur eines · 2×2 · Neubau +1 Bau-Slot, Ausbau +1",
   },
   {
     id: "hotel",

@@ -4,7 +4,13 @@ import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 import { Construction, Dumbbell, Hammer, Home, Shirt, Star, TriangleAlert } from "lucide-react";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
-import type { AcademyProject } from "../../sim/advance-construction.ts";
+import {
+  constructionCapacitySummary,
+  constructionSnapshotFromSession,
+  type AcademyProject,
+} from "../../sim/advance-construction.ts";
+import type { YouthCamp } from "../../youth/satellite-camps.ts";
+import { ConstructionCapacityPanel } from "../components/ConstructionCapacityPanel.tsx";
 import {
   ACADEMY_FACILITIES,
   academyStage,
@@ -99,12 +105,14 @@ export function StadiumScreen({
   precinctSeasonWeek,
   academyFacility,
   academyProject = null,
+  youthCamps = [],
   onUpgradeAcademy,
 }: {
   stadium: ClubStadium;
   finances: ClubFinances;
   season: number;
   week: number;
+  youthCamps?: readonly YouthCamp[];
   isHomeMatchWeek: boolean;
   opponentFanbase: number;
   academyFacility?: AcademyFacility;
@@ -166,6 +174,22 @@ export function StadiumScreen({
   const openSlot = SPONSOR_SLOTS.find((slot) => slot.id === openSlotId);
   const openDeal = openSlot ? dealForSlot(stadium.sponsor_deals, openSlot.id, season) : undefined;
 
+  const constructionSnapshot = useMemo(
+    () =>
+      constructionSnapshotFromSession({
+        stadium,
+        youthCamps,
+        academyProject,
+        season,
+        week,
+      }),
+    [academyProject, season, stadium, week, youthCamps],
+  );
+  const constructionSummary = useMemo(
+    () => constructionCapacitySummary(constructionSnapshot),
+    [constructionSnapshot],
+  );
+
   const blockOrder = ["north", "west", "east", "south", "vip"] as const;
 
   function signDeal(slotId: string, offer: SponsorOffer) {
@@ -190,7 +214,16 @@ export function StadiumScreen({
           {formatClubCash(matchdayIncome)}
         </p>
       </header>
-      <MoodPhotoBand src={moodPhoto} className="stadium-hero" />
+      {constructionSummary.atCap ? (
+        <ConstructionCapacityPanel snapshot={constructionSnapshot} hero />
+      ) : (
+        <>
+          {constructionSummary.active > 0 ? (
+            <ConstructionCapacityPanel snapshot={constructionSnapshot} compact />
+          ) : null}
+          <MoodPhotoBand src={moodPhoto} className="stadium-hero" />
+        </>
+      )}
       <section className="stadium-fanbase" aria-label="Fanbase">
         <div className={`stadium-fanbase-card is-${mood}`}>
           <span className="stadium-fanbase-icon" aria-hidden="true">

@@ -199,6 +199,8 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
             onStartOpponentScout={handleStartOpponentScout}
             onViewOpponentScoutReport={handleOpenOpponentScoutReport}
             onSelectPlayer={setProfileId}
+            rivalPlayers={rivalPlayers}
+            onOpenNegotiation={openMarketNegotiation}
             onOpenTraining={() => setScreen("training")}
             onOpenScouting={() => {
               setScoutingInitialTab(null);
@@ -415,6 +417,8 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           trainingPlan={trainingPlan}
           individualPrograms={individualPrograms}
           academyFacility={academyFacility}
+          academyProject={session.academyProject ?? null}
+          stadium={stadium}
           youthCamps={youthCamps}
           masterSeed={session.masterSeed}
           onSelectPlayer={setProfileId}
@@ -501,7 +505,14 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           onOpenNegotiation={openMarketNegotiation}
           scoutBoard={scoutBoard}
           onScoutPlayer={handleAssignScout}
-          onSelectPlayer={setProfileId}
+          onToggleShortlist={handleToggleShortlist}
+          onSelectPlayer={(playerId) => {
+            if (players.some((entry) => entry.id === playerId)) {
+              setProfileId(playerId);
+            } else {
+              setForeignPlayerId(playerId);
+            }
+          }}
           onRecallLoan={handleRecallLoan}
         />
       ) : null}
@@ -631,6 +642,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           precinctSeasonWeek={week}
           academyFacility={academyFacility}
           academyProject={session.academyProject ?? null}
+          youthCamps={youthCamps}
           onUpgradeAcademy={handleUpgradeAcademy}
         />
       ) : null}

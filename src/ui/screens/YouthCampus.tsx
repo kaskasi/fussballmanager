@@ -65,6 +65,14 @@ import {
 import { coachIconForPlayer, hasDepartureRisk } from "../components/DecisionInbox.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { YouthCampCard } from "../components/YouthCampCard.tsx";
+import { ConstructionCapacityPanel } from "../components/ConstructionCapacityPanel.tsx";
+import {
+  constructionCapacitySummary,
+  constructionSnapshotFromSession,
+  type AcademyProject,
+  type ConstructionSnapshot,
+} from "../../sim/advance-construction.ts";
+import type { ClubStadium } from "../../stadium/club-stadium.ts";
 
 const DRAG_PLAYER = "text/plain";
 type YouthTab = "u17" | "u19" | "camps";
@@ -100,6 +108,8 @@ export function YouthCampus({
   trainingPlan,
   individualPrograms,
   academyFacility,
+  academyProject = null,
+  stadium,
   youthCamps,
   masterSeed,
   cash,
@@ -126,6 +136,8 @@ export function YouthCampus({
   trainingPlan: readonly TrainingSlot[];
   individualPrograms: readonly IndividualProgram[];
   academyFacility: AcademyFacility;
+  academyProject?: AcademyProject | null;
+  stadium: ClubStadium;
   youthCamps: readonly YouthCamp[];
   masterSeed: number;
   cash: number;
@@ -168,6 +180,18 @@ export function YouthCampus({
         u19: formatResults(report.u19_results),
       })
     : tr("youth.campus.noMatchYet");
+
+  const constructionSnapshot = useMemo(
+    () =>
+      constructionSnapshotFromSession({
+        stadium,
+        youthCamps,
+        academyProject,
+        season,
+        week,
+      }),
+    [academyProject, season, stadium, week, youthCamps],
+  );
 
   const youthTabs: { id: YouthTab; label: string }[] = [
     { id: "u17", label: tr("youth.tab.u17Count", { count: u17Count }) },
@@ -241,6 +265,7 @@ export function YouthCampus({
             cash={cash}
             season={season}
             week={week}
+            constructionSnapshot={constructionSnapshot}
             onBuy={onBuyCamp}
             onCommissionAgency={onCommissionCampLeader}
             onRequestDismissLeader={onRequestDismissCampLeader}
@@ -505,6 +530,7 @@ function YouthCampsPanel({
   cash,
   season,
   week,
+  constructionSnapshot,
   onBuy,
   onCommissionAgency,
   onRequestDismissLeader,
@@ -515,12 +541,17 @@ function YouthCampsPanel({
   cash: number;
   season: number;
   week: number;
+  constructionSnapshot: ConstructionSnapshot;
   onBuy: (nationId: string) => void;
   onCommissionAgency: (nationId: string) => void;
   onRequestDismissLeader: (nationId: string) => void;
   onPull: (playerId: string) => void;
 }) {
   const tr = useT();
+  const constructionSummary = useMemo(
+    () => constructionCapacitySummary(constructionSnapshot),
+    [constructionSnapshot],
+  );
   const atCampLimit = camps.length >= MAX_YOUTH_CAMPS;
   const rosterSlots = atCampLimit ? CAMP_CARD_ROSTER_SLOTS : CAMP_CARD_ROSTER_SLOTS_COMPACT;
   const nations = atCampLimit
@@ -529,6 +560,11 @@ function YouthCampsPanel({
 
   return (
     <section className="game-panel youth-camps-grid-wrap" aria-label={tr("youth.camps.panelAria")}>
+      {constructionSummary.atCap ? (
+        <ConstructionCapacityPanel snapshot={constructionSnapshot} />
+      ) : constructionSummary.active > 0 ? (
+        <ConstructionCapacityPanel snapshot={constructionSnapshot} compact />
+      ) : null}
       <p className="youth-camps-meta">
         {atCampLimit
           ? tr("youth.camps.metaActive", { count: camps.length })

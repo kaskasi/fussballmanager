@@ -946,11 +946,19 @@ button.cash-chip:hover {
 }
 
 .profile-identity-head {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.35rem;
   width: 100%;
+}
+
+.profile-identity-head .profile-actions-menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
 }
 
 .profile-identity-head .profile-name {
@@ -1017,6 +1025,11 @@ button.cash-chip:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.35rem;
   width: 100%;
+  align-items: stretch;
+}
+
+.profile-rail-actions .profile-action-cell {
+  min-width: 0;
 }
 
 .profile-actions-rail .profile-action-cell--span {
@@ -1911,6 +1924,7 @@ button.cash-chip:hover {
 .youth-camp-construction-badge {
   position: absolute;
   inset: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1937,8 +1951,29 @@ button.cash-chip:hover {
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-klein);
+  overflow: hidden;
   background-size: cover;
   background-position: center;
+}
+
+.youth-camp-card-photo-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.youth-camp-card-photo-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    rgb(15 23 42 / 42%) 0%,
+    rgb(15 23 42 / 12%) 55%,
+    rgb(15 23 42 / 38%) 100%
+  );
 }
 
 .youth-camp-card-head-row {
@@ -2538,6 +2573,11 @@ button.cash-chip:hover {
   background: rgba(62, 49, 40, 0.08);
   font-size: 0.68rem;
   font-weight: 800;
+}
+
+.calendar-day-chip--rest {
+  background: color-mix(in srgb, var(--staubblau) 35%, var(--panel));
+  color: var(--tinte-weich);
 }
 
 .club-crest-img {

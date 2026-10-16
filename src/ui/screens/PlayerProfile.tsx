@@ -34,9 +34,11 @@ import { programLabel } from "../../development/individual-training.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
 import {
   profileMenuItems,
+  profileOverflowMenuItems,
   type PlayerProfileAction,
   type ProfileMenuItem,
 } from "../../player/profile-actions.ts";
+import { ProfileActionsMenu } from "../components/ProfileActionsMenu.tsx";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import {
   contractTalkLock,
@@ -121,10 +123,12 @@ const PROFILE_TABS: { id: ProfileTab; labelKey: string }[] = [
   { id: "stats", labelKey: "profile.tab.stats" },
 ];
 
-const CARD_ACTIONS: Partial<Record<PlayerProfileAction, { label: string; className: string }>> = {
-  promote_pro: { label: "Profikader", className: "ui-btn--primary" },
-  promote_u19: { label: "U19", className: "ui-btn--ghost" },
-};
+/** Shown only under Vertrag — not duplicated in the identity rail. */
+const PROFILE_CAREER_ACTIONS = new Set<PlayerProfileAction>([
+  "sign_contract",
+  "promote_u19",
+  "promote_pro",
+]);
 
 export interface PlayerProfileProps {
   player: Player;
@@ -155,6 +159,8 @@ export interface PlayerProfileProps {
   squadPlayerIds?: readonly string[];
   onSelectSquadPlayer?: (playerId: string) => void;
   onProfileAction?: (action: PlayerProfileAction) => void;
+  /** Opens Kasse — Abfindung zahlen, dann Kader entfernen. */
+  onTerminateContract?: () => void;
   onContractOffer?: (offer: ContractOffer) => void;
   wageHeadroomWeekly?: number;
   weekday?: number;
@@ -194,6 +200,7 @@ export function PlayerProfile({
   squadPlayerIds = [],
   onSelectSquadPlayer,
   onProfileAction,
+  onTerminateContract,
   onContractOffer,
   wageHeadroomWeekly,
   weekday = 1,
@@ -207,12 +214,14 @@ export function PlayerProfile({
   const [talksOpen, setTalksOpen] = useState(false);
   const [offer, setOffer] = useState<ContractOffer | null>(null);
   const [saleConfirmOpen, setSaleConfirmOpen] = useState(false);
+  const [overflowOpen, setOverflowOpen] = useState(false);
 
   useEffect(() => {
     setTalksOpen(false);
     setOffer(null);
     setTab("overview");
     setSaleConfirmOpen(false);
+    setOverflowOpen(false);
   }, [player.id]);
 
   useEffect(() => {
@@ -222,6 +231,7 @@ export function PlayerProfile({
     onContractTalkOpened?.();
   }, [openContractTalkOnMount, onContractOffer, onContractTalkOpened, player.id, season]);
   const menuItems = profileMenuItems(player, owned, season, week ?? 1);
+  const overflowMenuItems = profileOverflowMenuItems(player, owned);
   const reveal = scoutEstimate ? scoutReveal(scoutEstimate.uncertaintyRange) : null;
   const hasScoutIntel = Boolean(scoutEstimate);
   const askingBounds =
@@ -330,7 +340,9 @@ export function PlayerProfile({
   const trainingTarget = owned
     ? dossierTrainingTarget(player, individualPrograms, trainingPlan, week)
     : null;
-  const cardActions = menuItems.filter((item) => CARD_ACTIONS[item.action]);
+  const railMenuItems = menuItems.filter((item) => !PROFILE_CAREER_ACTIONS.has(item.action));
+  const careerMenuItems = menuItems.filter((item) => PROFILE_CAREER_ACTIONS.has(item.action));
+  const youthContractPending = careerMenuItems.some((item) => item.action === "sign_contract");
   const caDelta = owned ? weeklyCaDelta(player) : null;
   const talkLock = contractTalkLock(player, { season, week, weekday });
   const canTalk = owned && Boolean(onContractOffer) && player.squad_status !== "loaned_out";
@@ -382,6 +394,17 @@ export function PlayerProfile({
           ) : null}
           <aside className="profile-identity-rail" aria-label="Identität">
             <div className="profile-identity-head">
+              {owned && onTerminateContract && overflowMenuItems.length > 0 ? (
+                <ProfileActionsMenu
+                  open={overflowOpen}
+                  items={overflowMenuItems}
+                  onToggle={() => setOverflowOpen((open) => !open)}
+                  onClose={() => setOverflowOpen(false)}
+                  onSelect={(action) => {
+                    if (action === "release") onTerminateContract();
+                  }}
+                />
+              ) : null}
               <PlayerPortrait
                 seed={player.portrait_seed}
                 clubId={player.club_id}
@@ -479,9 +502,9 @@ export function PlayerProfile({
             ) : null}
           </div>
 
-          {owned && (onList || (onProfileAction && menuItems.length > 0)) ? (
+          {owned && (onList || (onProfileAction && railMenuItems.length > 0)) ? (
             <footer className="profile-rail-actions" aria-label="Aktionen">
-              <div className="profile-actions profile-actions-rail">
+              <div className="profile-actions-rail">
                 {onList ? (
                   <div className="profile-action-cell profile-action-cell--span">
                     <Hint
@@ -520,20 +543,13 @@ export function PlayerProfile({
                   </div>
                 ) : null}
                 {onProfileAction
-                  ? menuItems.map((item) => (
+                  ? railMenuItems.map((item) => (
                       <div key={item.action} className="profile-action-cell">
                         <Hint text={item.hint} block>
                           <ProfileActionButton
                             label={item.label}
                             className={railProfileActionClass(item)}
-                            onClick={() => {
-                              if (item.action === "sign_contract") {
-                                setOffer(defaultContractOffer(player, season));
-                                setTalksOpen(true);
-                                return;
-                              }
-                              onProfileAction(item.action);
-                            }}
+                            onClick={() => onProfileAction(item.action)}
                           />
                         </Hint>
                       </div>
@@ -720,9 +736,10 @@ export function PlayerProfile({
                             {player.state.contract_failed_offers}/{FRUSTRATION_THRESHOLD} Fehlangebote
                           </p>
                         ) : null}
-                        {canTalk || (onProfileAction && cardActions.length > 0) ? (
+                        {canTalk ||
+                        (onProfileAction && careerMenuItems.length > 0) ? (
                           <div className="profile-vertrag-actions">
-                            {canTalk ? (
+                            {canTalk && !youthContractPending ? (
                               <Hint text={talkLock.reason ?? "Gehalt, Laufzeit, Bonus, Minuten und Startplatz."}>
                                 <button
                                   type="button"
@@ -736,21 +753,27 @@ export function PlayerProfile({
                               </Hint>
                             ) : null}
                             {onProfileAction
-                              ? cardActions.map((item) => {
-                                  const spec = CARD_ACTIONS[item.action];
-                                  if (!spec) return null;
-                                  return (
-                                    <Hint key={item.action} text={item.hint}>
-                                      <button
-                                        type="button"
-                                        className={`ui-btn profile-action-btn ${spec.className}`}
-                                        onClick={() => onProfileAction(item.action)}
-                                      >
-                                        {spec.label}
-                                      </button>
-                                    </Hint>
-                                  );
-                                })
+                              ? careerMenuItems.map((item) => (
+                                  <Hint key={item.action} text={item.hint}>
+                                    <button
+                                      type="button"
+                                      className={`ui-btn profile-action-btn ${careerActionButtonClass(item.action)}`}
+                                      onClick={() => {
+                                        if (item.action === "sign_contract") {
+                                          setOffer(defaultContractOffer(player, season));
+                                          setTalksOpen(true);
+                                          return;
+                                        }
+                                        onProfileAction(item.action);
+                                      }}
+                                    >
+                                      {item.action === "sign_contract" ? (
+                                        <PenLine aria-hidden size={16} />
+                                      ) : null}
+                                      {item.label}
+                                    </button>
+                                  </Hint>
+                                ))
                               : null}
                           </div>
                         ) : null}
@@ -966,14 +989,15 @@ function StatItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function railProfileActionClass(item: ProfileMenuItem): string {
-  if (item.action === "release") {
-    return "ui-btn--ghost profile-action-btn is-danger";
-  }
-  if (item.action === "promote_pro" || item.action === "sign_contract") {
-    return "ui-btn--primary profile-action-btn";
-  }
+function railProfileActionClass(_item: ProfileMenuItem): string {
   return "ui-btn--ghost profile-action-btn";
+}
+
+function careerActionButtonClass(action: PlayerProfileAction): string {
+  if (action === "promote_pro" || action === "sign_contract") {
+    return "ui-btn--primary";
+  }
+  return "ui-btn--ghost";
 }
 
 function ProfileActionButton({

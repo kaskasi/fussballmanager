@@ -1,27 +1,7 @@
 import type { Player, PositionPrimary } from "../types/player.ts";
 
-/** Max registered pros before youth promotions to the first team are blocked. */
-export const MAX_PRO_SQUAD_SIZE = 28;
-
 /** Max U19 roster before U17 promotions are blocked. */
 export const MAX_U19_SQUAD_SIZE = 22;
-
-const DEFAULT_POSITION_CAP = 3;
-
-const POSITION_CAP: Partial<Record<PositionPrimary, number>> = {
-  GK: 2,
-  CB: 5,
-  LB: 2,
-  RB: 2,
-  DM: 3,
-  CM: 4,
-  AM: 3,
-  LM: 2,
-  RM: 2,
-  LW: 2,
-  RW: 2,
-  CF: 3,
-};
 
 export type PromotionTarget = "u19" | "pro";
 
@@ -54,26 +34,17 @@ export function promotionGate(
   position: PositionPrimary,
   target: PromotionTarget,
 ): PromotionGateResult {
-  if (target === "u19") {
-    const u19Count = players.filter(
-      (player) => player.club_id === clubId && player.squad_status === "u19",
-    ).length;
-    if (u19Count >= MAX_U19_SQUAD_SIZE) {
-      return { allowed: false, reason: "u19_full" };
-    }
+  void position;
+  if (target === "pro") {
     return { allowed: true };
   }
 
-  if (proSquadSize(players, clubId) >= MAX_PRO_SQUAD_SIZE) {
-    return { allowed: false, reason: "squad_full" };
+  const u19Count = players.filter(
+    (player) => player.club_id === clubId && player.squad_status === "u19",
+  ).length;
+  if (u19Count >= MAX_U19_SQUAD_SIZE) {
+    return { allowed: false, reason: "u19_full" };
   }
-
-  const atPosition = countProByPosition(players, clubId).get(position) ?? 0;
-  const cap = POSITION_CAP[position] ?? DEFAULT_POSITION_CAP;
-  if (atPosition >= cap) {
-    return { allowed: false, reason: "position_full" };
-  }
-
   return { allowed: true };
 }
 

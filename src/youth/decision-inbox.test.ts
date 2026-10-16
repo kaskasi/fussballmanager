@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ACHIEVEMENT } from "../player/achievements.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
-import { MAX_PRO_SQUAD_SIZE } from "./promotion-gate.ts";
 import {
   advanceInboxWeek,
   allowedActions,
@@ -265,8 +264,8 @@ describe("decision inbox", () => {
     expect(pendingInboxItems(pruned, [player])).toHaveLength(0);
   });
 
-  it("does not queue pro promotions when the senior squad is full", () => {
-    const pros = Array.from({ length: MAX_PRO_SQUAD_SIZE }, (_, index) => {
+  it("allows pro promotion decisions when the senior squad is already large", () => {
+    const pros = Array.from({ length: 40 }, (_, index) => {
       const player = clonePlayer();
       player.id = `pro_${index}`;
       player.club_id = "cl_fc_nordstern";
@@ -276,27 +275,19 @@ describe("decision inbox", () => {
     });
     const youth = youthPlayer("youth_rb", 18, "u19");
     youth.position = "RB";
-    const inbox = generateWeeklyInbox(
-      [...pros, youth],
-      34,
-      2026,
-      {
-        week: 34,
-        u17_results: { wins: 0, draws: 0, losses: 0 },
-        u19_results: { wins: 0, draws: 0, losses: 0 },
-        standout_players: [],
-        promotion_recommendations: [
-          { player_id: youth.id, reason: "ready_for_first_team", urgency: "now" },
-        ],
-      },
-      "cl_fc_nordstern",
-    );
-    expect(inbox.queue.some((item) => item.playerId === youth.id && item.reason === "ready_for_pro")).toBe(
-      false,
-    );
+    youth.club_id = "cl_fc_nordstern";
+    const item = {
+      id: "pro1_youth_rb_34",
+      playerId: youth.id,
+      kind: "promotion" as const,
+      week: 34,
+      urgency: "now" as const,
+      reason: "ready_for_pro",
+    };
+    expect(allowedActions(item, [...pros, youth], "cl_fc_nordstern")).toContain("promote");
   });
 
-  it("hides promote when the position is blocked on an existing inbox item", () => {
+  it("allows promote on inbox items even when many pros share the position", () => {
     const pros = [clonePlayer(), clonePlayer(), clonePlayer()].map((player, index) => {
       player.id = `rb_${index}`;
       player.club_id = "cl_fc_nordstern";
@@ -314,7 +305,7 @@ describe("decision inbox", () => {
       urgency: "now" as const,
       reason: "ready_for_pro",
     };
-    expect(allowedActions(item, [...pros, youth], "cl_fc_nordstern")).not.toContain("promote");
+    expect(allowedActions(item, [...pros, youth], "cl_fc_nordstern")).toContain("promote");
   });
 
   it("focuses the manager on open items without exposing backlog depth", () => {

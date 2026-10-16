@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ACHIEVEMENT } from "../player/achievements.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
-import { MAX_PRO_SQUAD_SIZE } from "./promotion-gate.ts";
 import {
   advanceProTrials,
   isOnProTrial,
@@ -39,8 +38,8 @@ describe("pro trial", () => {
     expect(step.players[0]?.history.achievements).toContain(ACHIEVEMENT.promotedPro);
   });
 
-  it("fails the trial when the pro squad is full at week end", () => {
-    const pros = Array.from({ length: MAX_PRO_SQUAD_SIZE }, (_, index) => {
+  it("promotes after trial even when the senior squad is already large", () => {
+    const pros = Array.from({ length: 40 }, (_, index) => {
       const player = clonePlayer();
       player.id = `pro_${index}`;
       player.club_id = CLUB;
@@ -49,17 +48,15 @@ describe("pro trial", () => {
       return player;
     });
     const youth = clonePlayer();
-    youth.id = "youth_blocked";
+    youth.id = "youth_big_squad";
     youth.club_id = CLUB;
     youth.squad_status = "u19";
     youth.position = "RB";
-    youth.state.morale = 60;
     youth.state.pro_trial = { season: 1, started_week: 10, ends_week: 11 };
 
     const step = advanceProTrials([...pros, youth], CLUB, 1, 11);
-    expect(step.failedIds).toEqual(["youth_blocked"]);
-    expect(step.players.find((player) => player.id === "youth_blocked")?.squad_status).toBe("u19");
-    expect(step.players.find((player) => player.id === "youth_blocked")?.state.morale).toBeLessThan(60);
+    expect(step.promotedIds).toEqual(["youth_big_squad"]);
+    expect(step.players.find((player) => player.id === "youth_big_squad")?.squad_status).toBe("pro");
   });
 
   it("flags trial weeks for pro-scale training", () => {

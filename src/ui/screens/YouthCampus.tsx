@@ -239,6 +239,8 @@ export function YouthCampus({
             players={players}
             camps={youthCamps}
             cash={cash}
+            season={season}
+            week={week}
             onBuy={onBuyCamp}
             onCommissionAgency={onCommissionCampLeader}
             onRequestDismissLeader={onRequestDismissCampLeader}
@@ -501,6 +503,8 @@ function YouthCampsPanel({
   players,
   camps,
   cash,
+  season,
+  week,
   onBuy,
   onCommissionAgency,
   onRequestDismissLeader,
@@ -509,6 +513,8 @@ function YouthCampsPanel({
   players: readonly Player[];
   camps: readonly YouthCamp[];
   cash: number;
+  season: number;
+  week: number;
   onBuy: (nationId: string) => void;
   onCommissionAgency: (nationId: string) => void;
   onRequestDismissLeader: (nationId: string) => void;
@@ -537,6 +543,8 @@ function YouthCampsPanel({
               camps={camps}
               cash={cash}
               players={players}
+              season={season}
+              week={week}
               rosterSlots={rosterSlots}
               onBuy={onBuy}
               onCommissionAgency={onCommissionAgency}

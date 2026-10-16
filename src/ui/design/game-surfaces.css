@@ -1892,6 +1892,39 @@ button.cash-chip:hover {
   --youth-camp-roster-slots: 3;
 }
 
+.youth-camp-card.is-under-construction {
+  border-style: dashed;
+  border-color: var(--sand, #c4a574);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgb(196 165 116 / 18%) 0 50%,
+      rgb(180 148 100 / 10%) 50% 100%
+    ),
+    var(--panel);
+}
+
+.youth-camp-card.is-under-construction .youth-camp-card-photo {
+  filter: saturate(0.55) brightness(0.92);
+}
+
+.youth-camp-construction-badge {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  background: rgb(15 23 42 / 28%);
+  color: var(--sonnengelb, #facc15);
+}
+
+.youth-camp-construction-copy {
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+}
+
 .youth-camp-card-header {
   display: flex;
   flex-direction: column;
@@ -1900,6 +1933,7 @@ button.cash-chip:hover {
 }
 
 .youth-camp-card-photo {
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-klein);

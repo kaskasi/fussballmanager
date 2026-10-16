@@ -1,4 +1,4 @@
-import { useCallback, type MutableRefObject } from "react";
+import { useCallback } from "react";
 import { withClubEvent } from "../../inbox/club-events.ts";
 import { spendClubCash } from "../../economy/club-finances.ts";
 import type { GameSession } from "../../persistence/game-session.ts";
@@ -37,7 +37,6 @@ export function useYouthCampActions(args: {
   patchSession: PatchSession;
   requestClubSpend: RequestClubSpend;
   flashNotice: (message: string, tone?: "ok" | "warn") => void;
-  campDebutAfterSpendRef: MutableRefObject<{ campId: string; playerId: string } | null>;
 }) {
   const {
     youthCamps,
@@ -47,7 +46,6 @@ export function useYouthCampActions(args: {
     patchSession,
     requestClubSpend,
     flashNotice,
-    campDebutAfterSpendRef,
   } = args;
 
   const handleBuyYouthCamp = useCallback(
@@ -86,7 +84,7 @@ export function useYouthCampActions(args: {
                 current.season,
                 current.week,
                 "info",
-                `Camp ${nation.label} wird gebaut — fertig in ${CAMP_BUILD_WEEKS} Wochen.`,
+                `${nation.flag} Camp ${nation.label}: Anlage im Bau — Eröffnung in ${CAMP_BUILD_WEEKS} Wochen.`,
               )
             : current.clubEvents;
           return {
@@ -98,7 +96,7 @@ export function useYouthCampActions(args: {
         },
       );
     },
-    [campDebutAfterSpendRef, finances.cash, requestClubSpend, youthCamps],
+    [finances.cash, requestClubSpend, youthCamps],
   );
 
   const handleCommissionCampLeader = useCallback(

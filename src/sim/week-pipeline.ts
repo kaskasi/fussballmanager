@@ -121,7 +121,8 @@ import {
   reconcilePrecinctBuildTimers,
 } from "../stadium/precinct-construction.ts";
 import { clubFlavorFanbase } from "./club-profiles.ts";
-import { weeklyCampUpkeep } from "../youth/satellite-camps.ts";
+import { campNationById, weeklyCampUpkeep } from "../youth/satellite-camps.ts";
+import { advanceYouthCampsForWeek, type CampWeekDebut } from "../youth/camp-construction-week.ts";
 import { scoutNetworkWeeklyWage } from "../scouting/scout-network.ts";
 import {
   applyAssistantDelegationWeek,
@@ -134,6 +135,7 @@ export interface WeekSimResult {
   intakeCount: number;
   playerFixture: FixtureResult | null;
   matchdayStats: CareerLeagueStat[];
+  campDebuts: CampWeekDebut[];
 }
 
 export function appendBreakoutNarrativesToEvents(
@@ -740,11 +742,42 @@ export async function simulateGameWeek(
     nextWeek,
   );
 
+  const campAdvance = advanceYouthCampsForWeek({
+    camps: session.youthCamps,
+    season: nextSeason,
+    week: nextWeek,
+    clubId: session.clubId,
+    masterSeed: session.masterSeed,
+    players: playersForNewWeek,
+    facility: session.academyFacility ?? "academy_basic",
+  });
+  let playersAfterCampOpen = playersForNewWeek;
+  if (campAdvance.newPlayers.length > 0) {
+    playersAfterCampOpen = refreshAllMarketValues(
+      [...playersForNewWeek, ...campAdvance.newPlayers],
+      nextSeason,
+    );
+    for (const debut of campAdvance.debuts) {
+      const nation = campNationById(debut.campId);
+      const headline = playersAfterCampOpen.find((entry) => entry.id === debut.playerId);
+      if (headline && nation) {
+        clubEvents = withClubEvent(
+          clubEvents,
+          session.season,
+          nextWeek,
+          "info",
+          `${nation.flag} Camp ${nation.label}: ${formatPlayerName(headline)} stellt sich vor — drei Talente im Kader.`,
+        );
+      }
+    }
+  }
+
   let nextSession: GameSession = {
     ...session,
     season: nextSeason,
     week: nextWeek,
-    players: playersForNewWeek,
+    players: playersAfterCampOpen,
+    youthCamps: campAdvance.camps,
     scoutBoard,
     youthInbox: financingOfferStep.youthInbox,
     league: leagueWithCareerStats,
@@ -768,7 +801,7 @@ export async function simulateGameWeek(
     storyState: narrativeStep.storyState,
     medicalState: startPhysioWeek(
       session.medicalState,
-      playersForNewWeek,
+      playersAfterCampOpen,
       nextSeason,
       nextWeek,
       precinctMedicalCenterLevel(stadiumAfterNaming.precinct),
@@ -814,5 +847,6 @@ export async function simulateGameWeek(
     intakeCount,
     playerFixture: leagueStep.playerFixture,
     matchdayStats: careerMatch.matchdayStats,
+    campDebuts: campAdvance.debuts,
   };
 }

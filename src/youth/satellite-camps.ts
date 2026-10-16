@@ -10,8 +10,9 @@ import {
   CAMP_OPENING_TOTAL_PLAYERS,
   pickCampHeadlinePosition,
 } from "./camp-opening-debut.ts";
-import { isHqYouth, withYouthSite, YOUTH_SITE_HQ } from "./youth-site.ts";
 import { careerWeekIndex } from "../stadium/hospitality.ts";
+import { isHqYouth, withYouthSite, YOUTH_SITE_HQ } from "./youth-site.ts";
+import { CAMP_BUILD_WEEKS } from "./camp-construction.ts";
 
 export interface YouthCampNation {
   id: string;
@@ -45,6 +46,10 @@ export interface YouthCamp {
   staffed: boolean;
   purchased_season: number;
   purchased_week?: number;
+  /** Career week index (inclusive) while camp is under construction — PRD camp build. */
+  construction_until?: number;
+  /** Opening bundle spawned after construction (purchase defer). */
+  opening_players_delivered?: boolean;
   leader_hire?: CampLeaderHireState;
   agency_commissioned_at?: CampDayStamp;
   leader?: CampLeaderRecord;
@@ -322,11 +327,14 @@ export function buyYouthCamp(
   nationId: string,
   season: number,
   week?: number,
-  buildWeeks = 0,
+  buildWeeks = CAMP_BUILD_WEEKS,
 ): YouthCamp[] {
   if (ownedCamp(camps, nationId)) return [...camps];
+  const purchaseWeek = week ?? 1;
   const construction_until =
-    buildWeeks > 0 ? careerWeekIndex(season, week ?? 1) + buildWeeks : undefined;
+    buildWeeks > 0
+      ? careerWeekIndex(season, purchaseWeek) + buildWeeks - 1
+      : undefined;
   return [
     ...camps,
     {
@@ -334,6 +342,7 @@ export function buyYouthCamp(
       staffed: false,
       purchased_season: season,
       purchased_week: week,
+      opening_players_delivered: false,
       leader_hire: "none" as const,
       ...(construction_until != null ? { construction_until } : {}),
     },
@@ -401,6 +410,8 @@ export function normalizeYouthCamps(camps: readonly YouthCamp[] | undefined): Yo
       staffed,
       purchased_season: camp.purchased_season ?? 1,
       ...(camp.purchased_week != null ? { purchased_week: camp.purchased_week } : {}),
+      ...(camp.construction_until != null ? { construction_until: camp.construction_until } : {}),
+      opening_players_delivered: camp.opening_players_delivered ?? camp.construction_until == null,
       leader_hire,
       agency_commissioned_at: camp.agency_commissioned_at,
       leader: camp.leader,

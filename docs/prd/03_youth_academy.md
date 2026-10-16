@@ -213,6 +213,11 @@ bezahlter Satellit der Zentrale.
 - Katalog: sechs Nationen (nicht DE). Kaufpreis + wöchentlicher Unterhalt
   (Betrieb: Miete, Material, Verpflegung, lokale Werbung; skaliert mit Markt).
   Höchstens **3** Camps gleichzeitig, eine Nation nur einmal.
+- **Bauzeit:** Nach Kauf **2 Kalenderwochen** (`construction_until`). In der Zeit
+  ist das Camp gesperrt (Bau-Icon, kein Roster, kein HQ-Pull). Das
+  Eröffnungs-Trio (Headline + 2 Support) kommt erst nach Bauende per
+  Wochen-Sim. **Camp-Leiter** kann während des Baus normal gesucht/eingestellt
+  werden.
 - **Camp-Leiter** wird über Agentur + Hub-Auswahl eingestellt (03.6.2), nicht per
   Sofort-Toggle. Zusätzlicher Wochenlohn (`CAMP_BETREUER_WAGE`) nur bei
   `leader_hire === hired`, oben auf den Betriebs-Unterhalt. Die drei

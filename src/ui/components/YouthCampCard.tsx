@@ -10,7 +10,6 @@ import {
 import {
   campRoster,
   canBuyYouthCamp,
-  isCampUnderConstruction,
   weeklyCampUpkeepForCamp,
   type YouthCamp,
   type YouthCampNation,
@@ -18,6 +17,10 @@ import {
 import { formatPlayerName, formatPlayerPositionLabel } from "../../types/player-display.ts";
 import { useT } from "../../i18n/react.ts";
 import { youthCampNationLabel } from "../../i18n/youth-camp-display.ts";
+import {
+  campConstructionWeeksRemaining,
+  isCampOperational,
+} from "../../youth/camp-construction.ts";
 import { campPhotoGradient } from "../assets/camp-photos.ts";
 import { PlayerPortrait } from "./PlayerPortrait.tsx";
 
@@ -27,6 +30,8 @@ export function YouthCampCard({
   camps,
   cash,
   players,
+  season,
+  week,
   onBuy,
   onCommissionAgency,
   onRequestDismissLeader,
@@ -38,6 +43,8 @@ export function YouthCampCard({
   camps: readonly YouthCamp[];
   cash: number;
   players: readonly Player[];
+  season: number;
+  week: number;
   rosterSlots: number;
   onBuy: (nationId: string) => void;
   onCommissionAgency: (nationId: string) => void;
@@ -51,15 +58,18 @@ export function YouthCampCard({
   const hireState = owned?.leader_hire ?? "none";
   const leaderName = owned ? campLeaderDisplayName(owned) : null;
   const leaderSeed = owned?.leader?.portrait_seed ?? 0;
+  const underConstruction = owned != null && !isCampOperational(owned, season, week);
+  const buildWeeksLeft = underConstruction
+    ? campConstructionWeeksRemaining(owned!, season, week)
+    : 0;
   const rosterOverflow = Math.max(0, roster.length - rosterSlots);
-  const emptyOwned = owned && roster.length === 0;
-  const building = owned ? isCampUnderConstruction(owned) : false;
+  const emptyOwned = owned && !underConstruction && roster.length === 0;
   const leaderTrainingMod = owned?.leader?.training_mod ?? 0;
   const leaderMentalMod = owned?.leader?.mental_mod ?? 0;
 
   return (
     <article
-      className={`youth-camp-card${owned ? " is-owned" : buy.ok ? " is-available" : " is-locked"}${building ? " is-constructing" : ""}${rosterSlots <= 3 ? " is-compact-roster" : ""}`}
+      className={`youth-camp-card${owned ? " is-owned" : buy.ok ? " is-available" : " is-locked"}${underConstruction ? " is-under-construction" : ""}${rosterSlots <= 3 ? " is-compact-roster" : ""}`}
       aria-label={`${nationLabel} ${nation.region}`}
       style={{ ["--youth-camp-roster-slots" as string]: rosterSlots }}
     >
@@ -69,7 +79,13 @@ export function YouthCampCard({
           style={{
             backgroundImage: campPhotoGradient(nation.id),
           }}
-        />
+        >
+          {underConstruction ? (
+            <span className="youth-camp-construction-badge" aria-hidden>
+              <HardHat size={22} strokeWidth={2.25} />
+            </span>
+          ) : null}
+        </div>
         <div className="youth-camp-card-head-row">
           <div className="youth-camp-card-head">
             <h3>
@@ -87,7 +103,7 @@ export function YouthCampCard({
             )}
           </div>
 
-          {owned && !building ? (
+          {owned && !underConstruction ? (
             <div className="youth-camp-card-head-side">
               {hireState === "hired" && leaderName ? (
                 <button
@@ -148,14 +164,15 @@ export function YouthCampCard({
           </div>
         ) : null}
 
-        {owned && building ? (
-          <p className="youth-camp-build-banner">
-            <HardHat size={16} strokeWidth={2.5} aria-hidden="true" />
-            Im Bau — Talente und Leitung erst danach.
+        {owned && underConstruction ? (
+          <p className="youth-camps-empty youth-camp-construction-copy">
+            {buildWeeksLeft <= 1
+              ? t("youth.camp.construction.nextWeek")
+              : t("youth.camp.construction.weeks", { count: buildWeeksLeft })}
           </p>
         ) : null}
 
-        {owned && !building ? (
+        {owned && !underConstruction ? (
           <>
             {emptyOwned ? (
               <p className="youth-camps-empty youth-camp-roster-empty">Nächster Jahrgang: Saisonstart</p>

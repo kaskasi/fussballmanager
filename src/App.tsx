@@ -307,13 +307,6 @@ import {
 } from "./ui/calendar/calendar-milestones.ts";
 import { canBuyAcademyUpgrade, ACADEMY_FACILITIES } from "./youth/academy.ts";
 import {
-  buyYouthCamp,
-  campNationById,
-  canBuyYouthCamp,
-  generateCampOpeningBundle,
-  pullCampPlayerToHq,
-} from "./youth/satellite-camps.ts";
-import {
   CAMP_LEADER_AGENCY_NOTICE,
   campsAwaitingLeaderChoice,
   commissionCampLeaderAgency,
@@ -435,7 +428,6 @@ export default function App() {
     earlySeasonHint: boolean;
     apply: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>;
   } | null>(null);
-  const campDebutAfterSpendRef = useRef<{ campId: string; playerId: string } | null>(null);
   const [campDebutReveal, setCampDebutReveal] = useState<{
     campId: string;
     playerId: string;
@@ -638,13 +630,6 @@ export default function App() {
     flashNotice,
   });
 
-  const finalizeCampDebutReveal = useCallback(() => {
-    const pending = campDebutAfterSpendRef.current;
-    if (!pending) return;
-    setCampDebutReveal(pending);
-    campDebutAfterSpendRef.current = null;
-  }, []);
-
   const requestClubSpend = useCallback(
     (
       cost: number,
@@ -666,9 +651,8 @@ export default function App() {
         return;
       }
       patchSession(apply);
-      finalizeCampDebutReveal();
     },
-    [finalizeCampDebutReveal, patchSession, players, session.clubId, session.week],
+    [patchSession, players, session.clubId, session.week],
   );
 
   const matchLineupFlowKey = careerMatchSetup
@@ -830,7 +814,6 @@ export default function App() {
     patchSession,
     requestClubSpend,
     flashNotice,
-    campDebutAfterSpendRef,
   });
 
   const {
@@ -905,6 +888,7 @@ export default function App() {
     setCareerMatchUiVisible,
     pendingWatchedMatch,
     setPendingWatchedMatch,
+    revealCampDebut: setCampDebutReveal,
   });
 
   const completeCareerMatch = useCallback(
@@ -1728,7 +1712,6 @@ export default function App() {
         const apply = pendingSpend.apply;
         setPendingSpend(null);
         patchSession(apply);
-        finalizeCampDebutReveal();
       }}
       onCancel={() => setPendingSpend(null)}
     />

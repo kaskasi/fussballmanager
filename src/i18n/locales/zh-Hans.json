@@ -1204,6 +1204,8 @@
   "youth.camps.metaActive": "{count} 个营地运营中 · 总维护费见财务",
   "youth.camps.metaLimit": "最多 {max} 个 · 总维护费见财务",
   "youth.camp.buy": "购买",
+  "youth.camp.construction.weeks": "建设中 — 还剩 {count} 周",
+  "youth.camp.construction.nextWeek": "建设中 — 下周开幕",
   "youth.facility.academy_basic.name": "青训基地（基础）",
   "youth.facility.academy_performance.name": "表现中心",
   "youth.facility.academy_elite.name": "精英学院",

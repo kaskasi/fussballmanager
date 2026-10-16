@@ -1261,6 +1261,8 @@
   "youth.camps.metaActive": "{count} Camps aktiv · Unterhalt gesamt siehe Finanzen",
   "youth.camps.metaLimit": "Max. {max} · Unterhalt gesamt siehe Finanzen",
   "youth.camp.buy": "Kaufen",
+  "youth.camp.construction.weeks": "Anlage im Bau — noch {count} Wochen",
+  "youth.camp.construction.nextWeek": "Anlage im Bau — Eröffnung nächste Woche",
   "youth.facility.academy_basic.name": "Jugendhaus (Basis)",
   "youth.facility.academy_performance.name": "Leistungszentrum",
   "youth.facility.academy_elite.name": "Elite-Akademie",

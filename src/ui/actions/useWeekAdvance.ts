@@ -92,6 +92,7 @@ export interface UseWeekAdvanceParams {
   setCareerMatchUiVisible: (value: boolean) => void;
   pendingWatchedMatch: WatchedPlayerMatch | null;
   setPendingWatchedMatch: (value: WatchedPlayerMatch | null) => void;
+  revealCampDebut: (payload: { campId: string; playerId: string }) => void;
 }
 
 function advanceScoutBoardForSession(current: PersistedSession, weekday: number) {
@@ -141,6 +142,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
     setCareerMatchUiVisible,
     pendingWatchedMatch,
     setPendingWatchedMatch,
+    revealCampDebut,
   } = params;
 
   const finishWeekSimulation = useCallback(
@@ -191,13 +193,20 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
         }
         return saveFromSession(nextSession, current);
       });
+      if (result.campDebuts.length > 0) {
+        const debut = result.campDebuts[0]!;
+        const hasPlayer = result.session.players.some((entry) => entry.id === debut.playerId);
+        if (hasPlayer) {
+          revealCampDebut(debut);
+        }
+      }
       trackEvent("week_simulation_completed", { watched_match: Boolean(override) });
       logPostHogInfo("Game week simulation completed", {
         event: "game_week_simulation_completed",
         watched_match: Boolean(override),
       });
     },
-    [pendingWatchedMatch, replaceSave, save, setPendingWatchedMatch],
+    [pendingWatchedMatch, replaceSave, revealCampDebut, save, setPendingWatchedMatch],
   );
 
   const simulateWeek = useCallback(async () => {

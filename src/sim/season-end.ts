@@ -30,6 +30,7 @@ import {
   generateCampPlayerName,
   type YouthCamp,
 } from "../youth/satellite-camps.ts";
+import { isCampOperational } from "../youth/camp-construction.ts";
 import { evaluateSeasonObjectives, startBoardSeason } from "../board/season-objectives.ts";
 import { weeklyWageBill } from "../economy/club-finances.ts";
 import { applySeasonEndFinances } from "../economy/club-finances.ts";
@@ -217,6 +218,7 @@ function generateCampIntakes(
   for (const camp of camps) {
     const nation = campNationById(camp.id);
     if (!nation) continue;
+    if (!isCampOperational(camp, season, SEASON_END_WEEK)) continue;
     const batch = generateYouthIntake({
       season,
       week: SEASON_END_WEEK,

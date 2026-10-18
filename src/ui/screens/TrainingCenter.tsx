@@ -94,6 +94,7 @@ import { activeTutorialStepId, COACH_TARGET } from "../../tutorial/index.ts";
 import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 import { useTutorialUi } from "../tutorial/TutorialUiContext.tsx";
 import { useGameSession } from "../session/GameSessionContext.tsx";
+import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 
 type TrainingTab = "team" | "individual";
 
@@ -205,25 +206,23 @@ export function TrainingCenter({
 
   return (
     <main className="training club-shell-card-body">
-      <div
-        className="fm-tab-bar"
+      <FmScreenTabBar
         role="tablist"
         aria-label={t("training.tabs.aria")}
         data-coach-target={COACH_TARGET.trainingTabs}
       >
         {trainingTabs.map(({ id, labelKey }) => (
-          <button
+          <FmScreenTab
             key={id}
-            type="button"
             role="tab"
             aria-selected={tab === id}
-            className={tab === id ? "fm-tab is-active" : "fm-tab"}
+            className={tab === id ? "is-active" : undefined}
             onClick={() => setTab(id)}
           >
             {t(labelKey)}
-          </button>
+          </FmScreenTab>
         ))}
-      </div>
+      </FmScreenTabBar>
 
       {trainingAutoNext ? (
         <div className="training-auto-next-banner" role="status">

@@ -12,6 +12,7 @@ import { MerchEinkaufInboundPanel } from "../components/MerchEinkaufInboundPanel
 import { MerchEinkaufStockOverview } from "../components/MerchEinkaufStockOverview.tsx";
 import { MerchMarketplaceTeaser } from "../components/MerchMarketplaceTeaser.tsx";
 import { MerchOnDemandPanel } from "../components/MerchOnDemandPanel.tsx";
+import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import {
   activeMerchSaleSkus,
   customOrderQuote,
@@ -286,8 +287,7 @@ export function MerchandisingScreen({
       }
       data-coach-target={COACH_TARGET.merchOrders}
     >
-      <div
-        className="fm-tab-bar"
+      <FmScreenTabBar
         role="tablist"
         aria-label="Merchandising Bereiche"
         data-coach-target={COACH_TARGET.merchTabs}
@@ -298,18 +298,17 @@ export function MerchandisingScreen({
             ["einkauf", "Einkauf"],
           ] as const
         ).map(([id, label]) => (
-          <button
+          <FmScreenTab
             key={id}
-            type="button"
             role="tab"
             aria-selected={tab === id}
-            className={tab === id ? "fm-tab is-active" : "fm-tab"}
+            className={tab === id ? "is-active" : undefined}
             onClick={() => setTab(id)}
           >
             {label}
-          </button>
+          </FmScreenTab>
         ))}
-      </div>
+      </FmScreenTabBar>
 
       {tab === "preise" ? (
         <div className="fm-tab-panel merch-panel" role="tabpanel" aria-label="Preise">

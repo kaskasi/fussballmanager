@@ -11,6 +11,7 @@ import {
 } from "../../sim/advance-construction.ts";
 import type { YouthCamp } from "../../youth/satellite-camps.ts";
 import { ConstructionCapacityPanel } from "../components/ConstructionCapacityPanel.tsx";
+import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import {
   ACADEMY_FACILITIES,
   academyStage,
@@ -246,25 +247,23 @@ export function StadiumScreen({
 
   return (
     <main className="stadium club-shell-card-body">
-      <div
-        className="fm-tab-bar"
+      <FmScreenTabBar
         role="tablist"
         aria-label="Stadionbereiche"
         data-coach-target={COACH_TARGET.stadiumTabs}
       >
         {stadiumTabs.map(({ id, labelKey }) => (
-          <button
+          <FmScreenTab
             key={id}
-            type="button"
             role="tab"
             aria-selected={tab === id}
-            className={tab === id ? "fm-tab is-active" : "fm-tab"}
+            className={tab === id ? "is-active" : undefined}
             onClick={() => setTab(id)}
           >
             {t(labelKey)}
-          </button>
+          </FmScreenTab>
         ))}
-      </div>
+      </FmScreenTabBar>
 
       {tab === "plan" ? (
         <div className="fm-tab-panel">

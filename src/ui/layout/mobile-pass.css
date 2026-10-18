@@ -3,6 +3,10 @@
  */
 
 @media (max-width: 720px) {
+  :root {
+    --fm-tab-rail-width: 2.75rem;
+  }
+
   html,
   body {
     height: 100%;
@@ -20,8 +24,8 @@
   .club-shell-card-body {
     width: auto;
     max-width: none;
-    margin-left: 2.75rem;
-    border-radius: 0 var(--radius) var(--radius) 0;
+    margin-left: 0;
+    border-radius: 0;
   }
 
   main.club-shell-card-body {
@@ -30,31 +34,170 @@
     overscroll-behavior-y: contain;
   }
 
-  main.club-shell-card-body > .fm-tab-bar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 40;
-    display: flex;
-    flex-direction: column;
-    width: 2.75rem;
+  /* In-flow vertical tab rail (not fixed overlay). Help keeps horizontal tabs. */
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) {
+    display: grid;
+    grid-template-columns: var(--fm-tab-rail-width, 2.75rem) minmax(0, 1fr);
+    align-content: start;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar {
+    position: static;
+    grid-column: 1;
+    grid-row: 1;
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    align-self: start;
+    justify-items: stretch;
+    width: var(--fm-tab-rail-width, 2.75rem);
+    min-width: var(--fm-tab-rail-width, 2.75rem);
+    max-width: var(--fm-tab-rail-width, 2.75rem);
+    height: auto;
     margin: 0;
     padding: 0;
     border-bottom: none;
     border-right: var(--outline);
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: visible;
+    background: transparent;
+    box-sizing: border-box;
+  }
+
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > *:not(.fm-tab-bar) {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  /* Button = full rail width; .fm-tab__vlabel rotates (FmScreenTabBar) */
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab,
+  .profile-spoke-tabs.fm-tab-bar--screen-tabs .fm-tab {
+    display: grid;
+    place-items: center;
+    flex: unset;
+    justify-self: stretch;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    /* Equal segment height — width already full rail (see devtools); length was varying height */
+    height: 3.5rem;
+    min-height: 3.5rem;
+    max-height: 3.5rem;
+    margin: 0;
+    padding: 0.25rem 0;
+    border-right: none;
+    border-bottom: var(--outline);
+    border-radius: 0;
+    box-sizing: border-box;
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    gap: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    font-size: 0.68rem;
+    letter-spacing: 0.02em;
     background: var(--panel-muted);
   }
 
-  main.club-shell-card-body > .fm-tab-bar .fm-tab {
-    flex: 0 0 auto;
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab__vlabel {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    white-space: nowrap;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-block-size: 100%;
+    max-inline-size: 100%;
+    justify-self: center;
+    align-self: center;
+  }
+
+  /* Scouting: 5 tabs, one long label — slightly taller cells, still uniform */
+  main.scouting-has-primary-tabs > .fm-tab-bar--screen-tabs .fm-tab {
+    height: 4rem;
+    min-height: 4rem;
+    max-height: 4rem;
+  }
+
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab.is-active {
+    background: var(--sonnengelb);
+    color: var(--tinte);
+  }
+
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active),
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active):hover,
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active):focus-visible {
+    background: var(--panel-muted);
+    color: var(--tinte-weich);
+  }
+
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab svg,
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab .medical-tab-badge,
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab .fm-tab-count {
+    display: none;
+  }
+
+  .profile-spoke-tabs.fm-tab-bar--screen-tabs {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+    align-self: start;
+    height: auto;
+    background: transparent;
+  }
+
+  /* Legacy: plain fm-tab-bar without FmScreenTabBar */
+  main.club-shell-card-body:has(> .fm-tab-bar:not(.fm-tab-bar--screen-tabs)):not(.help) > .fm-tab-bar .fm-tab,
+  .profile-spoke-tabs.fm-tab-bar:not(.fm-tab-bar--screen-tabs) .fm-tab {
+    display: grid;
+    place-items: center;
+    flex: unset;
+    justify-self: stretch;
     width: 100%;
+    min-width: 0;
+    max-width: none;
     min-height: 2.75rem;
-    padding: 0.45rem 0.15rem;
+    margin: 0;
+    padding: 0.45rem 0;
     border-right: none;
     border-bottom: var(--outline);
+    border-radius: 0;
+    box-sizing: border-box;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.68rem;
+  }
+
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar .fm-tab:last-child,
+  .profile-spoke-tabs.fm-tab-bar .fm-tab:last-child {
+    border-bottom: none;
+  }
+
+  main.scouting-has-primary-tabs > .scouting-primary-tab-bar {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr);
+    flex-wrap: unset;
+  }
+
+  main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab {
+    flex: unset;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    min-height: 2.75rem;
+    padding-block: 0.55rem;
+    padding-inline: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
   }
 
   .app-nav.club-shell-header {
@@ -221,8 +364,8 @@
 
   .training-timetable-scroll.is-mobile-week-stack .training-day-column {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: auto minmax(0, auto);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
     grid-row: auto;
     gap: 0.4rem;
     padding-bottom: 0.55rem;
@@ -251,22 +394,64 @@
   }
 
   .manager-desk__timetable-scroll.is-single-day .training-timetable.manager-desk__timetable {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: min-content;
     min-width: 0;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-columns: none;
   }
 
+  /* Pipeline: one scrollport. Ancestors stay overflow:hidden; desk grows with content. */
   main.manager-desk.club-shell-card-body {
-    overflow: visible;
-    max-height: none;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+    height: calc(100dvh - var(--club-header-height, 4.5rem));
+    max-height: calc(100dvh - var(--club-header-height, 4.5rem));
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  main.manager-desk.club-shell-card-body > .manager-desk__inbox {
+    order: 1;
+  }
+
+  main.manager-desk.club-shell-card-body > .manager-desk__center {
+    order: 2;
+  }
+
+  main.manager-desk.club-shell-card-body > .manager-desk__sidebar {
+    order: 3;
+  }
+
+  main.manager-desk.club-shell-card-body > .manager-desk__bottom {
+    order: 4;
   }
 
   .manager-desk__inbox,
-  .manager-desk__center {
-    min-height: 0;
-  }
-
-  .manager-desk__timetable {
-    grid-template-rows: auto repeat(3, minmax(6.25rem, auto));
+  .manager-desk__center,
+  .manager-desk__sidebar,
+  .manager-desk__bottom,
+  .manager-desk__postfach,
+  .manager-desk__postfach-scroll,
+  .manager-desk__postfach-scroll .inbox-detail,
+  .manager-desk__wildcard,
+  .manager-desk__commerce,
+  .manager-desk__development,
+  .manager-desk__development-stack,
+  .manager-desk__heatmaps,
+  .manager-desk__timetable-scroll,
+  .manager-desk__center .manager-desk__timetable-scroll {
+    height: auto;
+    max-height: none;
+    min-height: min-content;
+    overflow: visible;
+    flex: 0 0 auto;
   }
 
   .training-plan-presets {
@@ -530,10 +715,16 @@
   }
 
   main.pipeline.club-shell-card-body,
-  main.campus.club-shell-card-body,
-  main.training.club-shell-card-body,
   main.profile.club-shell-card-body {
     padding-left: max(0.65rem, env(safe-area-inset-left));
+    padding-right: max(0.65rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    box-sizing: border-box;
+  }
+
+  main.campus.club-shell-card-body:has(> .fm-tab-bar),
+  main.training.club-shell-card-body:has(> .fm-tab-bar) {
+    padding-left: 0;
     padding-right: max(0.65rem, env(safe-area-inset-right));
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
     box-sizing: border-box;
@@ -577,25 +768,30 @@
     min-height: 2.65rem;
   }
 
-  .profile-spoke-tabs.fm-tab-bar,
-  main.campus > .fm-tab-bar {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    gap: 0.35rem;
-    padding-bottom: 0.15rem;
+  .profile-hub-spoke {
+    display: grid;
+    grid-template-columns: var(--fm-tab-rail-width, 2.75rem) minmax(0, 1fr);
+    gap: 0;
+    align-items: stretch;
+    min-width: 0;
   }
 
-  .profile-spoke-tabs.fm-tab-bar::-webkit-scrollbar,
-  main.campus > .fm-tab-bar::-webkit-scrollbar {
-    display: none;
+  .profile-spoke-tabs.fm-tab-bar {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    height: auto;
+    width: var(--fm-tab-rail-width, 2.75rem);
+    min-width: var(--fm-tab-rail-width, 2.75rem);
+    max-width: var(--fm-tab-rail-width, 2.75rem);
+    padding: 0;
+    border-right: var(--outline);
+    background: transparent;
   }
 
-  .profile-spoke-tabs .fm-tab,
-  main.campus > .fm-tab-bar .fm-tab {
-    flex: 0 0 auto;
+  .profile-tab-panels {
+    grid-column: 2;
+    min-width: 0;
   }
 
   .profile-attr-hex-wrap--hero .profile-hex {
@@ -671,13 +867,15 @@
     font-size: 1.15rem;
   }
 
-  /* Manager Desk — heute: 3 Sessions nebeneinander statt Turm */
+  /* Manager Desk — heute: drop weekday subgrid so all 3 sessions stack */
   .manager-desk__timetable-scroll.is-single-day .training-day-column {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 0.35rem;
-    align-content: start;
+    grid-template-rows: none;
     grid-row: auto;
+    height: auto;
+    min-height: min-content;
   }
 
   .manager-desk__timetable-scroll.is-single-day .training-day-column > .calendar-cell,
@@ -754,5 +952,17 @@
     max-height: min(92dvh, 40rem);
     margin: 0;
     border-radius: 1rem 1rem 0 0;
+  }
+}
+
+@media (min-width: 721px) {
+  .fm-tab-bar--screen-tabs .fm-tab {
+    display: inline-flex;
+    writing-mode: horizontal-tb;
+  }
+
+  .fm-tab-bar--screen-tabs .fm-tab__vlabel {
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
   }
 }

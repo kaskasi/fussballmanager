@@ -28,6 +28,7 @@ import { SquadSortHeader } from "../components/SquadSortHeader.tsx";
 import { FilterChip, FilterToolbar } from "../components/primitives/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
+import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 import {
   academyStage,
@@ -201,25 +202,23 @@ export function YouthCampus({
 
   return (
     <main className="campus club-shell-card-body">
-      <div
-        className="fm-tab-bar"
+      <FmScreenTabBar
         role="tablist"
         aria-label={tr("youth.tab.aria")}
         data-coach-target={COACH_TARGET.campusTabs}
       >
         {youthTabs.map(({ id, label }) => (
-          <button
+          <FmScreenTab
             key={id}
-            type="button"
             role="tab"
             aria-selected={tab === id}
-            className={tab === id ? "fm-tab is-active" : "fm-tab"}
+            className={tab === id ? "is-active" : undefined}
             onClick={() => onCampusTabChange(id)}
           >
             {label}
-          </button>
+          </FmScreenTab>
         ))}
-      </div>
+      </FmScreenTabBar>
 
       {tab === "u17" || tab === "u19" ? (
         <div className="fm-tab-panel">

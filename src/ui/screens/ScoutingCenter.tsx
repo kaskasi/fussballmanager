@@ -41,6 +41,7 @@ import { scoutMarketValueBounds, scoutReveal } from "../../scouting/scout-visibi
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { Hint } from "../components/Hint.tsx";
+import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { ScoutWorkGrid } from "../components/ScoutWorkGrid.tsx";
@@ -373,28 +374,27 @@ export function ScoutingCenter({
       }
     >
       {inRegionDetail ? null : (
-        <div
-          className="fm-tab-bar scouting-primary-tab-bar"
+        <FmScreenTabBar
+          className="scouting-primary-tab-bar"
           role="tablist"
           aria-label={t("scouting.tabs.aria")}
           data-coach-target={COACH_TARGET.scoutingTabs}
         >
           {scoutingTabs.map(({ id, labelKey }) => (
-            <button
+            <FmScreenTab
               key={id}
-              type="button"
               role="tab"
               aria-selected={tab === id}
-              className={tab === id ? "fm-tab is-active" : "fm-tab"}
+              className={tab === id ? "is-active" : undefined}
               onClick={() => setTab(id)}
             >
               {t(labelKey)}
               {id === "watchlist" && shortlistIds.length > 0 ? (
                 <span className="fm-tab-count"> · {shortlistIds.length}</span>
               ) : null}
-            </button>
+            </FmScreenTab>
           ))}
-        </div>
+        </FmScreenTabBar>
       )}
 
       {tab === "map" ? (

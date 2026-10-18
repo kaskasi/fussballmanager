@@ -6,7 +6,6 @@ import { isStoryboardPocUrl, StoryboardPocScreen } from "./ui/screens/Storyboard
 import "./ui/design/design-tokens.css";
 import "./ui/design/global-base.css";
 import "./ui/layout/screen-layout.css";
-import "./ui/layout/mobile-pass.css";
 import "./ui/design/game-surfaces.css";
 import "./ui/design/surfaces/finances.css";
 import "./ui/design/surfaces/training.css";
@@ -14,6 +13,7 @@ import "./ui/design/surfaces/scouting.css";
 import "./ui/design/surfaces/hub-desk.css";
 import "./ui/design/presentation-modes.css";
 import "./index.css";
+import "./ui/layout/mobile-pass.css";
 import "./ui/design/design-repair.css";
 
 const root = document.getElementById("root");

@@ -39,6 +39,7 @@ import {
   type ProfileMenuItem,
 } from "../../player/profile-actions.ts";
 import { ProfileActionsMenu } from "../components/ProfileActionsMenu.tsx";
+import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import {
   contractTalkLock,
@@ -634,20 +635,19 @@ export function PlayerProfile({
         </aside>
 
         <div className="profile-hub-spoke">
-          <div className="profile-spoke-tabs fm-tab-bar" role="tablist" aria-label="Spielerakte">
+          <FmScreenTabBar className="profile-spoke-tabs" role="tablist" aria-label="Spielerakte">
             {PROFILE_TABS.map((entry) => (
-              <button
+              <FmScreenTab
                 key={entry.id}
-                type="button"
                 role="tab"
                 aria-selected={tab === entry.id}
-                className={tab === entry.id ? "fm-tab is-active" : "fm-tab"}
+                className={tab === entry.id ? "is-active" : undefined}
                 onClick={() => setTab(entry.id)}
               >
                 {t(entry.labelKey)}
-              </button>
+              </FmScreenTab>
             ))}
-          </div>
+          </FmScreenTabBar>
           <div className="profile-tab-panels" role="tabpanel">
           {tab === "overview" ? (
             <section

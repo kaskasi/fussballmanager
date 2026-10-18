@@ -29,6 +29,7 @@ import {
 import type { DivisionEconomyId } from "../../economy/division-economy.ts";
 import { financeLineLabel, financeMonthForWeek } from "../../economy/finance-ledger.ts";
 import { FinanceLineIcon } from "../components/FinanceLineIcon.tsx";
+import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import {
   FINANCE_FLOW_META,
   FINANCE_FLOW_ORDER,
@@ -232,8 +233,7 @@ export function FinancesScreen({
 
   return (
     <main className="finances club-shell-card-body">
-      <div
-        className="fm-tab-bar"
+      <FmScreenTabBar
         role="tablist"
         aria-label="Finanz-Bereiche"
         data-coach-target={COACH_TARGET.financesTabs}
@@ -248,18 +248,17 @@ export function FinancesScreen({
             ["season", "Saison"],
           ] as const
         ).map(([id, label]) => (
-          <button
+          <FmScreenTab
             key={id}
-            type="button"
             role="tab"
             aria-selected={panelTab === id}
-            className={panelTab === id ? "fm-tab is-active" : "fm-tab"}
+            className={panelTab === id ? "is-active" : undefined}
             onClick={() => setPanelTab(id)}
           >
             {label}
-          </button>
+          </FmScreenTab>
         ))}
-      </div>
+      </FmScreenTabBar>
 
       {panelTab === "overview" ? (
           <div className="fm-tab-panel finances-shell finances-hero" aria-label="Cashflow und Budget">

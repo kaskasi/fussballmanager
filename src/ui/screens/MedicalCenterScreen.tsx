@@ -16,6 +16,7 @@ import { OrthopedistInboxCard } from "../components/OrthopedistInboxCard.tsx";
 import { orthopedistAwaitingPostfach } from "../../medical/orthopedist-hire.ts";
 import { useT } from "../../i18n/react.ts";
 import { MedicalInjuredPanel } from "../components/MedicalInjuredPanel.tsx";
+import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import { MedicalDoctorExamModal } from "../components/MedicalDoctorExamModal.tsx";
 import { precinctMedicalCenterLevel } from "../../stadium/precinct-effects.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
@@ -112,28 +113,26 @@ export function MedicalCenterScreen({
 
   return (
     <main className="medical-screen club-shell-card-body">
-      <div
-        className="fm-tab-bar"
+      <FmScreenTabBar
         role="tablist"
         aria-label={t("medical.tab.aria")}
         data-coach-target={COACH_TARGET.medicalTabs}
       >
         {tabs.map(({ id, label, icon: Icon }) => (
-          <button
+          <FmScreenTab
             key={id}
-            type="button"
             role="tab"
             aria-selected={tab === id}
-            className={tab === id ? "fm-tab is-active" : "fm-tab"}
+            className={tab === id ? "is-active" : undefined}
             onClick={() => setTab(id)}
           >
             <Icon size={16} strokeWidth={2.2} aria-hidden /> {label}
             {id === "injured" && (injured.length + pending.length) > 0 ? (
               <span className="medical-tab-badge">{injured.length + pending.length}</span>
             ) : null}
-          </button>
+          </FmScreenTab>
         ))}
-      </div>
+      </FmScreenTabBar>
 
       {tab === "staff" ? (
         <div className="fm-tab-panel">

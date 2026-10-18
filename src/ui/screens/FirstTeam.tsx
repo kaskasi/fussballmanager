@@ -15,6 +15,7 @@ import {
   type ProSquadSortKey,
 } from "../../squad/pro-roster.ts";
 import { useT } from "../../i18n/react.ts";
+import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import { t } from "../../i18n/index.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
@@ -88,25 +89,23 @@ export function FirstTeam({
 
   return (
     <main className="squad club-shell-card-body">
-      <div
-        className="fm-tab-bar"
+      <FmScreenTabBar
         role="tablist"
         aria-label={t("squad.tab.aria")}
         data-coach-target={COACH_TARGET.squadTabs}
       >
         {squadTabs.map(({ id, label }) => (
-          <button
+          <FmScreenTab
             key={id}
-            type="button"
             role="tab"
             aria-selected={squadTab === id}
-            className={squadTab === id ? "fm-tab is-active" : "fm-tab"}
+            className={squadTab === id ? "is-active" : undefined}
             onClick={() => setSquadTab(id)}
           >
             {label}
-          </button>
+          </FmScreenTab>
         ))}
-      </div>
+      </FmScreenTabBar>
 
       {squadTab === "list" ? (
         <div className="fm-tab-panel">

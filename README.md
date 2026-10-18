@@ -6,7 +6,7 @@ You take a small, locally rooted club with a thin squad, a tight budget, and a r
 
 Play the current build: [fussi.imgarten.party](https://fussi.imgarten.party)
 
-The interface is in German and English.
+The interface is in German,Chinese and English.
 
 ## The week
 
@@ -95,3 +95,5 @@ Portraits, textures, and icons shipped with the game come from declared open or 
 ## Status
 
 Solo, in active development, pre-release. Saves load the current version only. A public issue list is not the way to request features. The PRD is.
+
+Code in this repository is licensed under the MIT License. Third-party art keeps its own licenses.

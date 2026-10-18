@@ -14,6 +14,7 @@ import {
   tryWriteLocalSaveAsync,
   writeLocalSaveAsync,
 } from "../../persistence/local-save.ts";
+import { cloudSaveErrorMessage } from "../../persistence/cloud-save-errors.ts";
 import {
   scheduleCloudUpload,
   setCloudUploadListener,
@@ -90,7 +91,7 @@ export function usePersistedGameSession(options: {
     setCloudUploadListener((result) => {
       if (!result.ok) {
         Diag.cloud("upload", false);
-        flashNotice(t("save.cloud.uploadFail"), "warn");
+        flashNotice(cloudSaveErrorMessage(new Error(result.message), t), "warn");
       }
     });
     return () => setCloudUploadListener(null);

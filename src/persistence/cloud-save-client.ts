@@ -1,5 +1,6 @@
 import {
   cloudSaveFunctionUrl,
+  ensureCloudSaveConfig,
   readCloudSaveConfig,
   type CloudSaveConfig,
 } from "./cloud-save-config.ts";
@@ -43,6 +44,12 @@ function base64ToBytes(base64: string): Uint8Array {
   return out;
 }
 
+async function requireCloudSaveConfig(): Promise<CloudSaveConfig> {
+  const config = (await ensureCloudSaveConfig()) ?? readCloudSaveConfig();
+  if (!config) throw new Error("cloud_save_not_configured");
+  return config;
+}
+
 async function invokeCloudSave(
   config: CloudSaveConfig,
   body: Record<string, unknown>,
@@ -60,8 +67,7 @@ async function invokeCloudSave(
 }
 
 export async function registerCloudSyncCode(syncCode: string): Promise<void> {
-  const config = readCloudSaveConfig();
-  if (!config) throw new Error("cloud_save_not_configured");
+  const config = await requireCloudSaveConfig();
   const code = normalizeSyncCodeInput(syncCode);
   if (!isValidSyncCode(code)) throw new Error("cloud_save_invalid_code");
 
@@ -73,8 +79,7 @@ export async function registerCloudSyncCode(syncCode: string): Promise<void> {
 }
 
 export async function pushCloudSave(syncCode: string, save: SaveGame): Promise<string> {
-  const config = readCloudSaveConfig();
-  if (!config) throw new Error("cloud_save_not_configured");
+  const config = await requireCloudSaveConfig();
   const code = normalizeSyncCodeInput(syncCode);
   if (!isValidSyncCode(code)) throw new Error("cloud_save_invalid_code");
 
@@ -102,8 +107,7 @@ export async function pushCloudSave(syncCode: string, save: SaveGame): Promise<s
 }
 
 export async function pullCloudSave(syncCode: string): Promise<CloudSavePullResult> {
-  const config = readCloudSaveConfig();
-  if (!config) throw new Error("cloud_save_not_configured");
+  const config = await requireCloudSaveConfig();
   const code = normalizeSyncCodeInput(syncCode);
   if (!isValidSyncCode(code)) throw new Error("cloud_save_invalid_code");
 

@@ -19,6 +19,7 @@ import {
   readCloudSlotMeta,
   writeCloudSlotMeta,
 } from "../../persistence/cloud-slot-meta.ts";
+import { cloudSaveErrorMessage } from "../../persistence/cloud-save-errors.ts";
 import { generateSyncCode, isValidSyncCode, normalizeSyncCodeInput } from "../../persistence/sync-code.ts";
 import { Diag } from "../../telemetry/diagnostic-log.ts";
 import { useT } from "../../i18n/react.ts";
@@ -103,8 +104,7 @@ export function SaveManagerPanel({
       Diag.cloud("activate", true);
     } catch (error) {
       Diag.cloud("activate", false);
-      const raw = error instanceof Error ? error.message : "cloud_activate_failed";
-      setCloudError(raw.includes("not_found") ? t("save.cloud.notFound") : t("save.cloud.uploadFail"));
+      setCloudError(cloudSaveErrorMessage(error, t));
     } finally {
       setCloudBusy(false);
     }
@@ -118,9 +118,9 @@ export function SaveManagerPanel({
     try {
       await pushCloudSave(meta.syncCode, currentSave);
       Diag.cloud("upload", true);
-    } catch {
+    } catch (error) {
       Diag.cloud("upload", false);
-      setCloudError(t("save.cloud.uploadFail"));
+      setCloudError(cloudSaveErrorMessage(error, t));
     } finally {
       setCloudBusy(false);
     }

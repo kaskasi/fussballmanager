@@ -383,18 +383,14 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
         return;
       }
 
+      // Blocked NEXT moves the manager to the screen that blocks it — no toast (playtest 2026-10-21).
       const focusHubInboxDecision = () => {
         const pending = pendingDecisionInboxItems(youthInbox, players);
-        setPostfachItemId(pending[0]?.id ?? null);
-        setProfileId(null);
-        setForeignPlayerId(null);
-        setProfileFeedback(null);
-        flashNotice(t("shell.nextToPostfach"), "warn");
+        openPostfach(pending[0]?.id);
       };
 
       const openTreterPostfach = () => {
         openPostfach(kickerItemId(session.season, session.week));
-        flashNotice(t("postfach.kicker.arrived"), "warn");
       };
 
       if (hasOpenKickerItem(youthInbox, session.season, session.week)) {
@@ -433,6 +429,12 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
           setTrainingAutoNext(true);
         }
         const preview = runTrainingNextStep(session);
+        if (preview.openTrainingScreen) {
+          Diag.next("blocked_training");
+          setTrainingAutoNext(false);
+          setScreen("training");
+          return;
+        }
         const deliverKickerAfterStep =
           preview.session.weekday === KICKER_DELIVERY_WEEKDAY &&
           shouldDeliverWeeklyKicker({

@@ -1,5 +1,6 @@
 import type { FixtureResult, TeamId } from "@fussballmanager/shared";
 import type { CareerLeagueStat } from "../persistence/league-state.ts";
+import { t } from "../i18n/index.ts";
 import { formatFixtureResult } from "../sim/league-week.ts";
 import type { ClubEvent } from "../inbox/club-events.ts";
 import { withClubEvent } from "../inbox/club-events.ts";
@@ -13,10 +14,20 @@ export function matchdayClubEventMessages(
 
   for (const row of matchdayStats) {
     if (row.goals > 0) {
-      messages.push(`${row.name}: ${row.goals} Tor${row.goals > 1 ? "e" : ""}`);
+      messages.push(
+        t(row.goals > 1 ? "league.result.goals.many" : "league.result.goals.one", {
+          name: row.name,
+          count: row.goals,
+        }),
+      );
     }
     if (row.assists > 0) {
-      messages.push(`${row.name}: ${row.assists} Vorlage${row.assists > 1 ? "n" : ""}`);
+      messages.push(
+        t(row.assists > 1 ? "league.result.assists.many" : "league.result.assists.one", {
+          name: row.name,
+          count: row.assists,
+        }),
+      );
     }
     if (row.yellowCards > 0) {
       messages.push(`🟨 ${row.name}`);

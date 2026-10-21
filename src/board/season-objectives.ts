@@ -2,7 +2,7 @@ import { NORDSTERN_ID, type TeamId } from "@fussballmanager/shared";
 import { leagueTablePlace, type ClubFinances } from "../economy/club-finances.ts";
 import { weeksOfWages } from "../economy/spend-runway.ts";
 import { weeklyMerchandisingEconomics } from "../economy/merchandising.ts";
-import type { LeagueState } from "../persistence/league-state.ts";
+import { totalSeasonMatchdays, type LeagueState } from "../persistence/league-state.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
@@ -388,6 +388,101 @@ export function boardPressureTone(pressure: number): "good" | "warn" | "bad" {
   if (pressure >= 60) return "bad";
   if (pressure >= 30) return "warn";
   return "good";
+}
+
+/** Pressure points per table place below the mandatory place target. */
+const PRESSURE_PER_PLACE_DEFICIT = 12;
+/** Pressure points per point behind the pace of the min-points objective. */
+const PRESSURE_PER_POINT_BEHIND = 3;
+/** Max pressure gained per matchday — results build pressure over weeks, not overnight. */
+const MAX_PRESSURE_STEP = 12;
+const PRESSURE_RELIEF_ON_TRACK = 4;
+export const BOARD_WARNING_PRESSURE = 70;
+export const BOARD_DISMISS_PRESSURE = 95;
+/** No mid-season sacking before this many matchdays. */
+export const BOARD_DISMISS_GRACE_MATCHDAYS = 8;
+
+export interface InSeasonPressureStep {
+  board: BoardState;
+  /** Board sent its warning letter this week. */
+  warning: boolean;
+  /** Manager was sacked this week. */
+  dismissed: boolean;
+  place: number;
+  placeTarget: number | null;
+  matchdaysPlayed: number;
+}
+
+/**
+ * Weekly board pressure from results (playtest 2026-10-21: pressure sat at 0 % while 16th).
+ * Pressure climbs toward a results target built from the table-place deficit and the
+ * points pace; it only eases while the club is on track, so story pressure is kept.
+ * One warning letter per season at {@link BOARD_WARNING_PRESSURE}; after that, reaching
+ * {@link BOARD_DISMISS_PRESSURE} past the grace period ends the job mid-season.
+ */
+export function updateInSeasonPressure(
+  board: BoardState,
+  league: LeagueState,
+  season: number,
+): InSeasonPressureStep {
+  const row = playerTableRow(league);
+  const matchdaysPlayed = row?.played ?? 0;
+  const place = leagueTablePlace(league);
+  const placeObjective = board.objectives.find(
+    (objective) => objective.mandatory && objective.kind === "league_place_max",
+  );
+  const placeTarget = placeObjective?.target ?? null;
+  const unchanged: InSeasonPressureStep = {
+    board,
+    warning: false,
+    dismissed: false,
+    place,
+    placeTarget,
+    matchdaysPlayed,
+  };
+  if (matchdaysPlayed === 0 || board.job_status !== "employed") return unchanged;
+
+  const placeDeficit = placeTarget == null ? 0 : Math.max(0, place - placeTarget);
+  const pointsObjective = board.objectives.find((objective) => objective.kind === "min_points");
+  const pointsBehind = pointsObjective
+    ? Math.max(
+        0,
+        (pointsObjective.target * matchdaysPlayed) / Math.max(1, totalSeasonMatchdays(league)) -
+          (row?.points ?? 0),
+      )
+    : 0;
+  const resultsPressure = Math.min(
+    100,
+    placeDeficit * PRESSURE_PER_PLACE_DEFICIT + pointsBehind * PRESSURE_PER_POINT_BEHIND,
+  );
+
+  let pressure = board.pressure;
+  if (resultsPressure > pressure) {
+    pressure = Math.min(100, pressure + Math.min(MAX_PRESSURE_STEP, Math.ceil((resultsPressure - pressure) * 0.35)));
+  } else if (placeDeficit === 0 && pointsBehind < 1) {
+    pressure = Math.max(0, pressure - PRESSURE_RELIEF_ON_TRACK);
+  }
+
+  const warnedThisSeason = board.in_season_warning_season === season;
+  const warning = !warnedThisSeason && pressure >= BOARD_WARNING_PRESSURE;
+  const dismissed =
+    warnedThisSeason &&
+    pressure >= BOARD_DISMISS_PRESSURE &&
+    matchdaysPlayed >= BOARD_DISMISS_GRACE_MATCHDAYS;
+
+  return {
+    board: {
+      ...board,
+      pressure,
+      in_season_warning_season: warning ? season : board.in_season_warning_season,
+      job_status: dismissed ? "dismissed" : board.job_status,
+    },
+    warning,
+    dismissed,
+    place,
+    placeTarget,
+    matchdaysPlayed,
+  };
 }
 
 export function evaluateSeasonObjectives(

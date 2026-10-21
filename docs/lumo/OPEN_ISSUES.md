@@ -28,7 +28,7 @@ Per PRD 15.5.1 (2026-10-06), after sponsor deals (F6.5 done):
 | Medium | **F3.6** | M2 | Youth **pro contracts** + minutes clauses — shares F5.4 dialog. |
 | Medium | **F4.7 / F4.8** | M2 | Shortlist sparklines, false positives (prodigy trap). |
 | Medium | **F5.6** | M2 | AI transfer market discipline at full spec. |
-| Lower (M3+) | **F1.9** | M3 | Live tactical intervention during match — do not pull forward. |
+| High | **F1.9** | M2 | Slice 1 pulled forward 2026-10-21: manual subs at pause/half-time/injury (PRD 27). Live tactic sliders stay M3. |
 | Lower | **F6.6** | M3 | **Shipped** v88–90: Bank (Runway), Story-Kanäle Postfach, F6.8 Krisen-Abgabe. Investoren weiter out. |
 | Blocked | **C2** | — | **Bloodline intake** beat — needs PRD 07/10 entry before any code (`F11.8` candidate). |
 | Doc | **`13_meta.md`** | M4 | **Unwritten** — do not invent meta features until authored. |

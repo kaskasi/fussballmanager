@@ -1,8 +1,8 @@
 # /docs/prd/10_feature_list.md
 
-**Version:** 1.6
+**Version:** 1.7
 
-**Last Updated:** 2026-10-04
+**Last Updated:** 2026-10-21
 **Status:** Final  
 
 ---
@@ -47,7 +47,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F1.6 | Formation-Editor | M2 | Freie Positionen statt festes Raster |
 | F1.7 | Spieler-Gespräche | M2 | Spielzeit-Zusagen beeinflussen `drive`-Wahrnehmung & Moral |
 | F1.8 | Individualtaktik | M2 | Schützen-Rollen, Kapitän, Pressing-Anweisungen pro Spieler |
-| F1.9 | Live-Eingriff Matchday | M3 | Wechsel/Taktik während 2D-Sim |
+| F1.9 | Live-Eingriff Matchday | M2 | Slice 1 (vorgezogen 2026-10-21): manuelle Wechsel bei Pause/Halbzeit/Verletzung + Preset-Wechsel zur HZ (PRD 27); Slice 2 Taktik live bleibt später |
 
 ### Modul 2 · Training & Entwicklung *(PRD 02)*
 
@@ -204,8 +204,8 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | Meilenstein | Features | Fokus |
 |---|---|---|
 | M1 | 37 | Kern-Loop: Sim, Liga, Growth, Intake, Basis-Transfers, Save, Hilfe |
-| M2 | 28 | USP-Ausbau: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps, Camps |
-| M3 | 24 | Imperium, Events, Staff, Storylines |
+| M2 | 29 | USP-Ausbau: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps, Camps |
+| M3 | 23 | Imperium, Events, Staff, Storylines |
 | M4 | 6 | Legacy & Meta |
 | **Total** | **96** | (+F12.9 career unlock profile, PRD 21) |
 

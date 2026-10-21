@@ -112,7 +112,7 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 | F4.4 | M2 | Scout-Karte | v1: 2×2 Grid, Region-Tier, Detail-Route, Pool | F4.4-P polish; 04.2 Scout-Shop auf Karte optional |
 | F1.5 | M1 | Profil Charts, Icons | Tabs + Flavor | 14.3-P Übersicht-Spoke shipped |
 | F5.1 | M1 | Markt, Fenster | Next-Action bei Fenster zu | Historie sekundär |
-| F1.9 | M3 | Live-Eingriff | Pause/Speed | nicht vorziehen |
+| F1.9 | M3 → **vorgezogen 2026-10-21** | Live-Eingriff | Pause/Speed | Wechsel + Halbzeit zuerst (Playtest 15.7.1), Spec PRD 27 |
 
 ### 15.4 Kandidaten (nicht in PRD 10 — nicht bauen)
 
@@ -173,6 +173,31 @@ Priorität aus intensivem Playtest — **kein Ersatz** für nummerierte PRDs.
 | **P2** | Mobile Layout | Done 2026-10-06 — `screen-layout.css` @480px, `docs/design-refs/mobile-p2/AUDIT.md` |
 | **Later** | Regionale Ligen / Story-Events / Director+Kommentar | PRD 12/13/16 — Meta-Fokus Playtest |
 
+#### 15.7.1 Agent-Playtest 2026-10-21 (`docs/research/playtest-logs/2026-10-21-agent-run-*.md`)
+
+| Prio | Thema | Stand / nächster Schritt |
+|---|---|---|
+| **P0** | NEXT blockiert → **zum blockierenden Screen springen** statt Toast (leerer Trainingsplan → Training-Screen, ein Klick auf Vorlage; Treter am Do → Postfach). Tooltip verweist auf nicht existierendes „Duty & blockers"-Panel | Fix 2026-10-21 — `useWeekAdvance.ts`, `hub.desk.next.blockersTitle` |
+| **P0** | Lokalisierung EN: Treter, Archiv-Zeilen, Finanzen, Kalender-Wochentage, Spielbericht, Kommentar, Transfer-/Camp-/Vertrags-Modals, Spielerakte, Stadion noch DE | offen — Inventar in `docs/i18n-audit.md` §Agent-Playtest 2026-10-21 |
+| **P0** | **Spieltag 1 wurde blind simuliert** (keine Aufstellung, kein Broadcast) und der Kalender zeigte jeden Spieltag eine Woche zu spät — Pipeline spielte den Spieltag der *nächsten* Woche | Fix 2026-10-21 — `week-pipeline.ts` spielt den Spieltag der endenden Woche (Sa) |
+| **P0** | Ergebniszeile aus Heim-Sicht („5:0 vs LÜB (A)" bei 0:5-Niederlage) | Fix 2026-10-21 — eigene Tore zuerst + voller Gegnername, `formatFixtureResult` |
+| **P1** | **Nie Kürzel/Slugs** in UI-Texten (TÖN, ITZ …) — immer voller Vereinsname | Kalender + Ergebniszeile Fix 2026-10-21; offen: Spieltag-Banner/Aufstellung („Home vs TÖN“, `opponentShortName`), KI-Transfer-Zeilen („Liga: … · WES → TÖN“), Archiv-Altzeilen, News/Ticker |
+| **P1** | Vorstands-Druck bleibt 0 % trotz Platz 16 — nur Saisonende; `press_hostile_bad_week` braucht ≥ 40 (Deadlock); Entlassung nur Saisonende | Fix 2026-10-21 — `updateInSeasonPressure`: wöchentlicher Druck, Mahnbrief ab 70 %, Entlassung ab 95 % nach Spieltag 8 (PRD 23) |
+| **P1** | Merch-Lager leer ohne Warnung. Verkauf ist **wöchentlich** (nicht täglich); Lager Fanshop Stufe 0 = 8 Wochen Referenz-Nachfrage, Start 25 % | Fix 2026-10-21 — Club-Event bei Unterschreiten von 15 Stück / ausverkauft (`merchStockAlertClubEventMessages`); Auto-Nachbestellung offen |
+| **P1** | Auswechslungen / Halbzeit-Eingriff fehlen (Stürmer verletzt 25', kein Wechsel möglich) | **F1.9 vorgezogen** — Spec PRD 27 (PRD 10 → M2) |
+| **P1** | Balance Start: Autopilot 7 Pkt nach 11 Sp. (7:34 Schüsse vs PIN), Cash wächst ohne Hebel; Überlebensroute eng | Run 2 (Überlebensroute, gleicher Seed): #13, 12 Pkt, 18:23 nach 11 Sp. vs. Autopilot #16, 7 Pkt — Route wirkt, ist aber eng + versteckt; Optionen in Run-2-Log (Jugend/Camp-Stars im KW-33-Postfach, Camp ohne Bau-Slot, Saison-1 weicher) |
+| **P1** | Transfermarkt: 5 Spieler die ganze Saison (3 TW); eigene Camp-Talente nie `pro` → nie gelistet | offen — `refreshAiListings` nur bei offenem Fenster, Opening-Market |
+| **P1** | KI-Transfer-Karussell: gleicher Spieler jede Woche neuer Verein | offen — Cooldown pro Spieler in `ai-transfer-market.ts`; Neuzugang nicht sofort Zwangsverkauf |
+| **P2** | Tests in `src/board`, `src/match` liefen nie (nicht im `test:client`-Include); `src/i18n` Paritätstest rot (176 zh-Keys fehlen) | board/match/playtest Include 2026-10-21; zh-Keys offen |
+| **P2** | Kommentar „saved by ?!" (`{keeper}` fehlt) + doppelte Parade-Zeile; Torwart stößt 2. HZ an; Einwurf-/Abstoß-Spam | offen — `server/src/commentary/*` |
+| **P2** | Spielbericht: Karten doppelt, Minute `1'` statt `1'58`, keine Noten/MotM | offen — `MatchReportScreen.tsx` |
+| **P2** | Camps belegen beide Bau-Slots → Trainings-/Stadionausbau in den ersten 2 Wochen blockiert; Camp-Unterhalt 20–23k/Wo | Balance-Notiz (Run 2) |
+| **P2** | U19-Hochziehen versteckt (Akte → Vertrag → „Profikader"); U17 erst „In U19" — kein Kader-weites Hochziehen | offen — Jugend-Screen Aktion |
+| **P2** | „Decision deferred: Spieler" (Fallback-Name) jede Woche im Archiv | offen — `App.tsx:1071` |
+| **P2** | Onboarding Schritt 3: Start-Button bei 900 px abgeschnitten; Aufstellungs-Karten überlappen; Spieler-Chips überlappen im Training | offen |
+| **P2** | Transfer „Outgoing": gleicher Spieler doppelt (BID + NEGOTIATION) | offen |
+| **P3** | 16-jähriger TW beschwert sich KW 34 über Spielzeit; „TODO: Add more photos for Der Treter" sichtbar; Stadion „Nordstern Arena" bei Kieler FC; README-URL | offen |
+
 ### 15.6 Roadmap laut PRD 10 (unverändert außer F2.8-Zählung)
 
 Zählung und DoD sind die Source of Truth. Analyse verschiebt sie nicht.
@@ -180,8 +205,8 @@ Zählung und DoD sind die Source of Truth. Analyse verschiebt sie nicht.
 | Meilenstein | Features | Fokus |
 |---|---|---|
 | **M1** | 37 | Kern-Loop: Sim, Liga, Growth, Intake, Basis-Transfers, Save, Hilfe |
-| **M2** | 28 | USP: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps, Camps |
-| **M3** | 24 | Imperium, Events, Staff, Storylines, Merch, Nebengebäude |
+| **M2** | 29 | USP: Scouting-Tiefe, Verträge, KI-Markt, Akademie-Stufen, Stamps, Camps |
+| **M3** | 23 | Imperium, Events, Staff, Storylines, Merch, Nebengebäude |
 | **M4** | 6 | Legacy & Meta |
 | **Total** | **95** | plus `F-TYP-1` (Schema, zählt nicht) |
 
@@ -209,7 +234,7 @@ Savegame. Vorstand/Entlassung aktiv.
 
 #### M2 — USPs (Wirtschaft + Tiefe)
 
-F1.6–F1.8 · F2.3–F2.5 · **F2.8** · F3.5–F3.9 · F4.3 F4.4 F4.7 F4.8 · **F5.4** F5.5 F5.6 ·
+F1.6–F1.8 · **F1.9** (Slice 1, PRD 27) · F2.3–F2.5 · **F2.8** · F3.5–F3.9 · F4.3 F4.4 F4.7 F4.8 · **F5.4** F5.5 F5.6 ·
 **F6.5** · F7.2 · F8.2 F8.3 · F9.3 F9.4 · F10.5 F10.6 · F11.3
 
 Für die 2002-Kampagne sind **F5.4** und **F6.5** die wirtschaftlichen USPs,
@@ -217,7 +242,7 @@ nicht F10.6 (Cup). **F2.8** ist der Spieler-Identitäts-USP (2003-Stamps).
 
 #### M3 — Imperium
 
-F1.9 · F2.6 · F4.5 F4.6 F4.9 · F5.8 · **F6.6** (11.12 spec; Code F6.6-A pending) ·
+F2.6 · F4.5 F4.6 F4.9 · F5.8 · **F6.6** (11.12 spec; Code F6.6-A pending) ·
 **F6.7 F6.8** · **F7.3–F7.6 F7.8** · F8.4–F8.6 · F9.5 F9.6 · F10.7 ·
 F11.4–F11.6 · F12.5
 

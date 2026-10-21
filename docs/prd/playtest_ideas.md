@@ -80,3 +80,20 @@ Low priority but easily fixable
 - what is missing, more world to experience, different leagues and countries, instead of going all premier league and la liga, what if we did offer international leagues but on a similar cozy level,  regional areas in italy for example the beautiful toscana, and in france it has to be la bretagne n'estce pas? In England we need to stay far away from London and Manchester, What is going on in the isle of man they have their own league? whaaat????, cool, and international leagues, in africa in sahara africa and west africa, i dont know my way around there  
 
 - most impact more story events,  
+
+::: Agent playtest 2026-10-21 :::
+
+- Claude played two careers in a headless browser (EN locale). Logs: `docs/research/playtest-logs/2026-10-21-agent-run-1.md` (autopilot) and `…-agent-run-2.md` (survival route). Prioritised backlog: PRD 15 §15.7.1, i18n gaps: `docs/i18n-audit.md`.
+- Survival route (Jan's tips, the narrow way to stay up):
+  - sell old and bad players from day one, replace them with youth (U19 → Akte → Vertrag → Profikader)
+  - best cheap players are in the camps — excellent strikers in Turkey and Poland (pull to HQ → In U19 → Profikader)
+  - scout regions every day, auto-route scouts as soon as a region unlocks; look for a LB and a GK
+  - upgrade stadium environment for training bonuses, use individual training
+  - hitting the first transfer window is hard but doable
+- Open question: the start is very hard by design — consider a gentler first season so the fun is not gated behind knowing the route.
+- Blocked NEXT should **move you to the screen** that blocks (training → presets one click away; Thursday Treter → inbox) instead of a toast.
+- Never show club slugs/short forms (TÖN, ITZ) — always the full name.
+- Board: pressure must move during the season; really bad runs can get you fired mid-season.
+- Merch: sales are weekly; tiny level-0 storeroom empties silently → inbox warning.
+- Substitutions → PRD 27 (F1.9 slice 1, pulled forward to M2).
+- Full playtest in vite: `npm run playtest:career` (headless season sim with anomaly checks).

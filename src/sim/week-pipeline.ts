@@ -42,6 +42,7 @@ import { advanceMerchandisingWeek } from "../economy/merchandising.ts";
 import {
   merchSaleSummaryClubEventMessage,
   merchStockAlertClubEventMessages,
+  merchBargainAlertClubEventMessages,
   merchStockDisposalClubEventMessage,
 } from "../inbox/merch-notifications.ts";
 import type { FixtureResult } from "@fussballmanager/shared";
@@ -446,6 +447,9 @@ export async function simulateGameWeek(
     );
   }
   for (const message of merchStockAlertClubEventMessages(session.stadium, merchAdvance.stadium)) {
+    clubEvents = withClubEvent(clubEvents, session.season, nextWeek, "finance", message);
+  }
+  for (const message of merchBargainAlertClubEventMessages(session.stadium, merchAdvance.stadium)) {
     clubEvents = withClubEvent(clubEvents, session.season, nextWeek, "finance", message);
   }
   const fanbaseDelta =

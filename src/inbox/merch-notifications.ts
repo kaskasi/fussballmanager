@@ -1,7 +1,10 @@
 import { formatClubCash } from "../economy/club-finances.ts";
 import {
   MERCH_SKU_LABEL,
+  merchOfferDealPct,
   normalizeClubMerchandising,
+  offerPrimaryQty,
+  primaryMerchSku,
   type MerchSaleSummary,
   type MerchStockDisposal,
 } from "../economy/merchandising.ts";
@@ -60,4 +63,25 @@ export function merchStockAlertClubEventMessages(
     }
   }
   return messages;
+}
+
+/** One mail when the Insolvenzverwalter lists a whale lot (live for one week only). */
+export function merchBargainAlertClubEventMessages(
+  before: ClubStadium | undefined,
+  after: ClubStadium | undefined,
+): string[] {
+  const known = new Set(
+    normalizeClubMerchandising(before?.merchandising).bulk_offers.map((offer) => offer.id),
+  );
+  return normalizeClubMerchandising(after?.merchandising)
+    .bulk_offers.filter((offer) => offer.vendor === "insolvenz" && !known.has(offer.id))
+    .map((offer) => {
+      const sku = primaryMerchSku(offer.units);
+      return t("merch.vendor.insolvenzAlert", {
+        sku: sku != null ? merchSkuName(sku) : "Merch",
+        qty: offerPrimaryQty(offer),
+        pct: Math.abs(merchOfferDealPct(offer)),
+        total: formatClubCash(offer.ask_price),
+      });
+    });
 }

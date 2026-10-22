@@ -19,9 +19,29 @@ Jede Saison genau **ein** optionales Projektziel (deterministisch aus Seed): Jug
 
 Baselines (`season_baselines`: Ø-CA, Merch-Netto) werden beim Saisonstart gespeichert.
 
+## Druck während der Saison (seit 2026-10-21)
+
+Vorher änderte sich `board.pressure` nur am Saisonende und durch Story-Entscheidungen — im Playtest
+blieb er bei Platz 16 auf 0 %, und `press_hostile_bad_week` (braucht ≥ 40) konnte nie feuern.
+
+Jetzt nach jedem Spieltag (`updateInSeasonPressure`, `src/board/season-objectives.ts`, aufgerufen in
+`week-pipeline.ts`):
+
+- **Ergebnis-Ziel** = 12 × Plätze unter dem Pflicht-Platzziel + 3 × Punkte hinter dem Punkte-Soll
+  (Punkteziel × gespielte / alle Spieltage), max. 100.
+- Druck steigt Richtung Ergebnis-Ziel um höchstens **12 pro Spieltag** (35 % der Lücke).
+- Nur wenn der Club **im Soll** ist (Platz und Punkte), sinkt der Druck um 4 pro Spieltag — Story-Druck bleibt sonst erhalten.
+- **Mahnbrief** (einmal pro Saison) ab **70 %** → Club-Event `board.pressure.warning`.
+- **Entlassung in der Saison**: nach dem Mahnbrief, ab **95 %** und frühestens nach **8 Spieltagen**
+  → `job_status: "dismissed"`, Club-Event `board.pressure.dismissed`; das bestehende Jobangebots-Modal öffnet sich.
+- Am letzten Spieltag (Saisonende) entscheidet weiter `evaluateSeasonObjectives`.
+
+Grob: Platz 16 bei Ziel 15 mit ~10 Punkten Rückstand aufs Soll → Druck ~50 %, kein Rauswurf.
+Letzter Platz mit 20+ Punkten Rückstand → Mahnbrief und Entlassung im Winter.
+
 ## Entlassung (F9.1)
 
-- **Entlassung nur**, wenn ein **Pflichtziel** (`mandatory: true`) am Saisonende verfehlt ist — typischerweise das sportliche Tabellenziel.
+- **Entlassung zum Saisonende**, wenn ein **Pflichtziel** (`mandatory: true`) am Saisonende verfehlt ist — typischerweise das sportliche Tabellenziel. In der Saison siehe oben.
 - Verfehlte **Nebenziele** (Cash, Runway, Projekt): Druck + ggf. kleine Cash-Strafe, **kein** automatisches Job-Ende allein deswegen.
 - Volle Zielerfüllung: Vorstands-Bonus (Cash).
 

@@ -55,6 +55,8 @@ export interface BoardState {
   promotions_this_season: number;
   last_evaluation?: SeasonObjectiveEvaluation;
   season_baselines?: BoardSeasonBaselines;
+  /** Season in which the board sent its in-season warning letter (PRD 23, mid-season sacking). */
+  in_season_warning_season?: number;
 }
 
 export function defaultBoardState(employerClubId: TeamId = NORDSTERN_ID): BoardState {

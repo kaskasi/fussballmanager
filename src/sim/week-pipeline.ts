@@ -1,4 +1,5 @@
 import { t } from "../i18n/index.ts";
+import { updateInSeasonPressure } from "../board/season-objectives.ts";
 import {
   expireBreakoutModifiers,
   processSummitBreakout,
@@ -39,6 +40,7 @@ import { refreshAiListings, scanListingBids } from "../transfers/transfer-listin
 import { advanceMerchandisingWeek } from "../economy/merchandising.ts";
 import {
   merchSaleSummaryClubEventMessage,
+  merchStockAlertClubEventMessages,
   merchStockDisposalClubEventMessage,
 } from "../inbox/merch-notifications.ts";
 import type { FixtureResult } from "@fussballmanager/shared";
@@ -168,10 +170,12 @@ export async function simulateGameWeek(
     league: normalizeLeagueState(sessionInput.league, sessionInput.masterSeed),
   };
   const { nextWeek, footballSeasonEnded } = advanceCalendarWeek(session.week);
+  // The matchday belongs to the week that is ending (its Saturday), not the next one —
+  // otherwise MD1 is simulated blind in preseason week 0 and the calendar runs a week late.
   const leagueStep = await advanceLeagueWeek(
     session.league,
     session.season,
-    nextWeek,
+    session.week,
     session.masterSeed,
     session.players,
     session.rivalPlayers,
@@ -438,6 +442,9 @@ export async function simulateGameWeek(
       merchStockDisposalClubEventMessage(disposal),
     );
   }
+  for (const message of merchStockAlertClubEventMessages(session.stadium, merchAdvance.stadium)) {
+    clubEvents = withClubEvent(clubEvents, session.season, nextWeek, "finance", message);
+  }
   const fanbaseDelta =
     weeklyFanbaseDelta(
       leagueWithCareerStats,
@@ -560,6 +567,34 @@ export async function simulateGameWeek(
   const finances = crisisStep.finances;
   let financingAfterLoans = crisisStep.financing;
   board = crisisStep.board;
+  if (leagueStep.matchdayPlayed > 0 && !footballSeasonEnded) {
+    const pressureStep = updateInSeasonPressure(board, leagueStep.league, session.season);
+    board = pressureStep.board;
+    if (pressureStep.warning) {
+      clubEvents = withClubEvent(
+        clubEvents,
+        session.season,
+        nextWeek,
+        "info",
+        t("board.pressure.warning", {
+          place: pressureStep.place,
+          target: pressureStep.placeTarget ?? "—",
+        }),
+      );
+    }
+    if (pressureStep.dismissed) {
+      clubEvents = withClubEvent(
+        clubEvents,
+        session.season,
+        nextWeek,
+        "info",
+        t("board.pressure.dismissed", {
+          matchdays: pressureStep.matchdaysPlayed,
+          place: pressureStep.place,
+        }),
+      );
+    }
+  }
   const playersWithGrowth = stampWeeklyGrowthBatch(playersAtWeekStart, playersWithMorale);
   let playersWithCaStamp = playersWithGrowth.map(stampLastWeekCa);
 

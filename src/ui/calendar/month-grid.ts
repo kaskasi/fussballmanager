@@ -10,6 +10,8 @@ import {
 } from "../../sim/session-civil-date.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { clubShortName, playerFixture } from "../../sim/league-week.ts";
+import { clubDisplayName } from "../../sim/league-divisions.ts";
+import { t } from "../../i18n/index.ts";
 import {
   civilTransferWindow,
   isCivilTransferWindowLastDay,
@@ -74,7 +76,9 @@ export function buildMonthGrid(
         const home = fixture.homeTeamId === league.player_club_id;
         const opponent = home ? fixture.awayTeamId : fixture.homeTeamId;
         match = {
-          label: home ? `Heim vs ${clubShortName(opponent)}` : `Ausw. @ ${clubShortName(opponent)}`,
+          label: t(home ? "calendar.match.home" : "calendar.match.away", {
+            club: clubDisplayName(opponent),
+          }),
           initials: clubShortName(opponent).slice(0, 2).toUpperCase(),
           clubId: opponent,
         };

@@ -30,6 +30,8 @@
     "bake:camp-photos": "node scripts/bake-camp-photos.mjs",
     "bake:storyboard-poc": "node scripts/bake-storyboard-poc.mjs",
     "bake:club-logos": "node scripts/bake-club-logos.mjs",
+    "playtest:career": "npx vite-node scripts/run-career-playtest.ts",
+    "playtest:career:youth": "npx vite-node scripts/run-career-playtest.ts --strategy=youth",
     "study:opponent-scout": "npx vite-node scripts/run-opponent-scout-nordstern-study.ts",
     "study:opponent-scout:quick": "STUDY_QUICK=1 npx vite-node scripts/run-opponent-scout-nordstern-study.ts",
     "study:opponent-scout:quick-10": "STUDY_QUICK=1 STUDY_QUICK_TEAMS=10 npx vite-node scripts/run-opponent-scout-nordstern-study.ts"

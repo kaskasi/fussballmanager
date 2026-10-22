@@ -22,7 +22,13 @@ import {
 import type { Player } from "../types/player.ts";
 import { careerEngineSquadFromPlayers } from "./career-engine-squad.ts";
 import { isLeagueMatchWeek } from "./game-calendar.ts";
-import { clubShortLabel, squadForLeagueClub, templateSquadForClub } from "./league-divisions.ts";
+import {
+  clubDisplayName,
+  clubShortLabel,
+  squadForLeagueClub,
+  templateSquadForClub,
+} from "./league-divisions.ts";
+import { t } from "../i18n/index.ts";
 import type { WorldClub } from "../world/world-generator.ts";
 import type { WatchedPlayerMatch } from "./watched-player-match.ts";
 import { assertFixtureStatsConsistent } from "./league-player-stats-integrity.ts";
@@ -95,16 +101,39 @@ export function playerTableRow(league: LeagueState): TableRow | undefined {
   return leagueTable(league).find((row) => row.teamId === league.player_club_id);
 }
 
+function resultOutcomeLabel(own: number, opponent: number): string {
+  if (own > opponent) return t("league.result.outcome.win");
+  if (own < opponent) return t("league.result.outcome.loss");
+  return t("league.result.outcome.draw");
+}
+
+/** Player club's goals first, full club names (playtest 2026-10-21: "5:0 vs LÜB (A)" read as a win). */
 export function formatFixtureResult(
   result: FixtureResult,
   playerClubId: TeamId,
+  worldClubs?: readonly WorldClub[],
 ): string {
-  const home = clubShortName(result.homeTeamId);
-  const away = clubShortName(result.awayTeamId);
-  const score = `${result.homeGoals}:${result.awayGoals}`;
-  if (result.homeTeamId === playerClubId) return `${score} vs ${away} (H)`;
-  if (result.awayTeamId === playerClubId) return `${score} vs ${home} (A)`;
-  return `${home} ${score} ${away}`;
+  const home = clubDisplayName(result.homeTeamId, worldClubs);
+  const away = clubDisplayName(result.awayTeamId, worldClubs);
+  if (result.homeTeamId === playerClubId) {
+    return t("league.result.home", {
+      outcome: resultOutcomeLabel(result.homeGoals, result.awayGoals),
+      score: `${result.homeGoals}:${result.awayGoals}`,
+      opponent: away,
+    });
+  }
+  if (result.awayTeamId === playerClubId) {
+    return t("league.result.away", {
+      outcome: resultOutcomeLabel(result.awayGoals, result.homeGoals),
+      score: `${result.awayGoals}:${result.homeGoals}`,
+      opponent: home,
+    });
+  }
+  return t("league.result.neutral", {
+    home,
+    away,
+    score: `${result.homeGoals}:${result.awayGoals}`,
+  });
 }
 
 export function lastPlayerResult(league: LeagueState): FixtureResult | undefined {

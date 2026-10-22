@@ -92,7 +92,7 @@ Trainingsziel eines Jugendspielers fertig, Trikotdeal noch peinlich.
 
 | ID | M | Spec | Stand UI/Code | Lücke |
 |---|---|---|---|---|
-| F6.7 | M3 → **Slice v79+** | Merch × Popularität + Lager | `merchandising.ts`, Merch-Screen | Ledger + Screen + SKU-Bestand/Bulk/Firesale; **Kapazitäts-Hinweise** (Overcap-Banner, Finanzen-Analytics); Matchday-Vorschau ohne Shop-Doppelzählung. Brustlogo F6.5. Saisonkollektionen deferred. |
+| F6.7 | M3 → **Slice v79+** | Merch × Popularität + Lager | `merchandising.ts`, Merch-Screen | Ledger + Screen + SKU-Bestand/Bulk/Firesale; **Händler** (Großhändler/Restposten/Insolvenz/Express) mit Beziehungsstufen; **Kapazitäts-Hinweise** (Overcap-Banner, Finanzen-Analytics); Matchday-Vorschau ohne Shop-Doppelzählung. Brustlogo F6.5. Saisonkollektionen deferred. |
 | F6.6 | M3 | Finanzierung §11.12 | — | **PRD 11.12 done;** Code **F6.6-A** Bank + Ledger pending; Story-Kanäle F6.6-B/C |
 | F6.4 | M1 | Wasserfall 11.5 | Icon-Balken + 13-Mo-Sparkline | — |
 | F7.1 | M1 | 2D-Grundriss, Preise | Grundriss + Banden auf Tribünen + Shirt | Gelände-Tab separat |

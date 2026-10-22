@@ -88,7 +88,7 @@ export function useMerchActions(args: {
       if (!preview || !canAffordMerchPurchase(finances, preview.cost)) return;
       requestClubSpend(
         preview.cost,
-        "Merchandising · Whitelabel-Paket",
+        "Merchandising · Marktplatz",
         (session) => {
           const synced = ensureMerchBulkMarket(
             session.stadium,

@@ -1270,6 +1270,7 @@
   "merch.vendor.nextTier": "Noch {count} Käufe bis {tier}",
   "merch.vendor.maxTier": "Höchste Stufe erreicht",
   "merch.vendor.perk.grosshaendler": "Listenpreis −{pct} %",
+  "merch.vendor.perk.grosshaendlerNone": "Rabatt ab Stufe Bekannt",
   "merch.vendor.perk.restposten": "{pct} % der Marktangebote",
   "merch.vendor.perk.insolvenz": "{pct} % Chance pro Woche",
   "merch.vendor.perk.express": "Aufschlag +{pct} %",

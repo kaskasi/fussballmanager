@@ -1270,6 +1270,7 @@
   "merch.vendor.nextTier": "{count} more purchases to {tier}",
   "merch.vendor.maxTier": "Top tier reached",
   "merch.vendor.perk.grosshaendler": "List price −{pct}%",
+  "merch.vendor.perk.grosshaendlerNone": "Discount from tier Known",
   "merch.vendor.perk.restposten": "{pct}% of market offers",
   "merch.vendor.perk.insolvenz": "{pct}% chance per week",
   "merch.vendor.perk.express": "Premium +{pct}%",

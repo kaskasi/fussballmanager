@@ -20,6 +20,7 @@ type InboundLine = {
 function buildInboundLines(
   brandingQueue: readonly MerchBrandingOrder[],
   careerWeek: number,
+  t: ReturnType<typeof useT>,
 ): InboundLine[] {
   const lines: InboundLine[] = [];
 
@@ -30,12 +31,13 @@ function buildInboundLines(
       sku != null
         ? (order.units[sku] ?? 0)
         : MERCH_SKU_IDS.reduce((sum, id) => sum + (order.units[id] ?? 0), 0);
-    const skuLabel = sku != null ? MERCH_SKU_LABEL[sku] : "Whitelabel-Paket";
+    const skuLabel = sku != null ? MERCH_SKU_LABEL[sku] : t("merch.market.title");
+    const vendor = t(`merch.vendor.name.${order.vendor ?? "grosshaendler"}`);
+    const arrival =
+      left <= 0 ? t("merch.vendor.arrivesNow") : t("merch.vendor.arrivesIn", { weeks: left });
     lines.push({
       id: order.id,
-      primary: `${skuLabel} · ${qty} St. · Whitelabel · ${
-        left <= 0 ? "Ankunft diese Woche" : `Ankunft in ${left} Wo.`
-      }`,
+      primary: `${t("merch.vendor.inbound", { sku: skuLabel, qty, vendor })} · ${arrival}`,
       secondary: `${formatClubCash(order.unit_cost)} Ø/Stück`,
     });
   }
@@ -53,8 +55,8 @@ export function MerchEinkaufInboundPanel({
 }) {
   const t = useT();
   const lines = useMemo(
-    () => buildInboundLines(merch.branding_queue, careerWeek),
-    [merch.branding_queue, careerWeek],
+    () => buildInboundLines(merch.branding_queue, careerWeek, t),
+    [merch.branding_queue, careerWeek, t],
   );
 
   const pageCount = Math.max(1, Math.ceil(lines.length / INBOUND_PAGE_SIZE));

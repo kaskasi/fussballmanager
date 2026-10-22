@@ -1,0 +1,248 @@
+/* Merchandising (design.md §9): vendor strip, market table, Express panel. Layout only; tokens only. */
+
+/* Vendor strip — one card per vendor, market vendors filter the table */
+.merch-vendor-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.merch-vendor-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+
+button.merch-vendor-card {
+  cursor: pointer;
+}
+
+button.merch-vendor-card:hover {
+  border-color: var(--line-strong);
+}
+
+.merch-vendor-card.is-active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  background: var(--accent-soft);
+}
+
+.merch-vendor-card--insolvenz {
+  border-style: dashed;
+}
+
+.merch-vendor-card--express {
+  background: var(--sunken);
+}
+
+.merch-vendor-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.merch-vendor-card__name {
+  display: grid;
+  min-width: 0;
+}
+
+.merch-vendor-card__name strong {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+  line-height: 1.25rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.merch-vendor-card__perk {
+  font-size: var(--font-size-sm);
+  line-height: 1.25rem;
+  font-weight: 700;
+}
+
+.merch-vendor-card__foot {
+  margin-top: var(--space-1);
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--line);
+}
+
+/* Relationship pips: ●●○ + tier name */
+.merch-vendor-pips {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.merch-vendor-pip {
+  width: var(--space-2);
+  height: var(--space-2);
+  box-sizing: border-box;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-pill);
+}
+
+.merch-vendor-pip.is-on {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.merch-vendor-tier-name {
+  margin-left: var(--space-1);
+  font-size: var(--font-size-xs);
+  line-height: 1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* Market table + side column (inbound, stock) */
+.merch-einkauf-row--vendors {
+  align-items: flex-start;
+}
+
+.merch-vendor-market {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: var(--space-3);
+}
+
+.merch-vendor-market__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.merch-vendor-market__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 auto 0 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  line-height: 1.5rem;
+  font-weight: 800;
+}
+
+.merch-vendor-market__sku {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.merch-vendor-market__sku .tc-select {
+  min-width: 9rem;
+  min-height: var(--control-sm);
+}
+
+.merch-vendor-market__scroll {
+  max-height: 30rem;
+  overflow: auto;
+}
+
+.merch-vendor-market thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel);
+}
+
+.merch-vendor-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+}
+
+.merch-vendor-row--whale td {
+  background: var(--accent-soft);
+}
+
+.merch-vendor-row--whale .merch-vendor-cell {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.merch-list-price {
+  margin-left: var(--space-1);
+}
+
+.merch-einkauf-side {
+  display: grid;
+  flex: 0 1 15.5rem;
+  gap: var(--space-3);
+  width: min(100%, 15.5rem);
+  min-width: 13.5rem;
+}
+
+.merch-einkauf-side .merch-einkauf-panel,
+.merch-einkauf-side .merch-einkauf-panel-body {
+  height: auto;
+  min-height: 0;
+}
+
+/* Express-Druckerei panel (Preise tab) */
+.merch-express-head {
+  align-items: center;
+}
+
+.merch-express-promo {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--font-size-xs);
+  line-height: 1.25rem;
+  font-weight: 800;
+}
+
+.merch-express-relation {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 900px) {
+  .merch-vendor-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .merch-einkauf-side {
+    flex: 1 1 auto;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .merch-vendor-strip {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+
+  .merch-vendor-card {
+    flex: 0 0 72%;
+    scroll-snap-align: start;
+  }
+
+  /* Phones: keep Deal + Gesamt in view — drop vendor name, €/St. (4th column), lead time */
+  .merch-vendor-cell__name,
+  .merch-vendor-market th:nth-child(4),
+  .merch-vendor-market td:nth-child(4),
+  .merch-col-lead,
+  .merch-list-price {
+    display: none;
+  }
+}

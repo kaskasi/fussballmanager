@@ -945,6 +945,7 @@
   "merch.vendor.nextTier": "再购买 {count} 次升至{tier}",
   "merch.vendor.maxTier": "已达最高等级",
   "merch.vendor.perk.grosshaendler": "标价 −{pct}%",
+  "merch.vendor.perk.grosshaendlerNone": "熟客起享折扣",
   "merch.vendor.perk.restposten": "占市场报价 {pct}%",
   "merch.vendor.perk.insolvenz": "每周 {pct}% 概率",
   "merch.vendor.perk.express": "加价 +{pct}%",

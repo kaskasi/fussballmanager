@@ -17,6 +17,7 @@ import "./ui/design/surfaces/scouting.css";
 import "./ui/design/surfaces/hub-desk.css";
 import "./ui/design/surfaces/profile.css";
 import "./ui/design/surfaces/transfers.css";
+import "./ui/design/surfaces/merch.css";
 import "./ui/design/presentation-modes.css";
 import "./index.css";
 import "./ui/layout/mobile-pass.css";

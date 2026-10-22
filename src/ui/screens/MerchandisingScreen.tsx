@@ -1,27 +1,27 @@
 import { useMemo, useState } from "react";
 import { useT } from "../../i18n/react.ts";
-import { Flame, Package, Tag } from "lucide-react";
+import { Flame, Package } from "lucide-react";
 import { MERCH_SKU_ICON } from "../merch/merch-sku-icons.ts";
 import type { Player } from "../../types/player.ts";
 import { formatClubCash, type ClubFinances } from "../../economy/club-finances.ts";
 import type { ClubStadium } from "../../stadium/club-stadium.ts";
 import { MerchFiresaleModal } from "../components/MerchFiresaleModal.tsx";
 import { MerchSaleSummaryModal } from "../components/MerchSaleSummaryModal.tsx";
-import { MerchMarketplaceModal } from "../components/MerchMarketplaceModal.tsx";
 import { MerchEinkaufInboundPanel } from "../components/MerchEinkaufInboundPanel.tsx";
 import { MerchEinkaufStockOverview } from "../components/MerchEinkaufStockOverview.tsx";
-import { MerchMarketplaceTeaser } from "../components/MerchMarketplaceTeaser.tsx";
+import { MerchVendorMarketTable } from "../components/MerchVendorMarketTable.tsx";
+import { MerchVendorStrip, type MerchVendorFilter } from "../components/MerchVendorStrip.tsx";
 import { MerchOnDemandPanel } from "../components/MerchOnDemandPanel.tsx";
 import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import {
   activeMerchSaleSkus,
   customOrderQuote,
   customOrderUnitCost,
-  effectiveMerchCustomerRetail,
   bestMarketBulkUnitCost,
   dismissMerchSaleSummaries,
   isExpressPromoWeek,
   EXPRESS_PROMO_DISCOUNT,
+  vendorRelationTier,
   JERSEY_REVENUE_SHARE,
   isMerchOverCapacity,
   isMerchSkuOnSale,
@@ -94,15 +94,17 @@ export function MerchandisingScreen({
   const [customQty, setCustomQty] = useState(120);
   const [firesaleSku, setFiresaleSku] = useState<MerchSkuId | null>(null);
   const [modalSalePrice, setModalSalePrice] = useState(1);
-  const [marketBrowseOpen, setMarketBrowseOpen] = useState(false);
+  const [vendorFilter, setVendorFilter] = useState<MerchVendorFilter>("all");
 
   const merch = normalizeClubMerchandising(stadium.merchandising);
-  const phillipSaleActive = isExpressPromoWeek(week);
+  const expressPromoActive = isExpressPromoWeek(week);
+  const expressTier = vendorRelationTier(merch.vendor_relations, "express");
   const onDemandUnit = customOrderUnitCost(
     customSku,
     merch.skus[customSku]?.avg_cost ?? 0,
     week,
     merch.bulk_offers,
+    expressTier,
   );
   const onDemandQuote = customOrderQuote(
     customSku,
@@ -110,8 +112,9 @@ export function MerchandisingScreen({
     merch.skus[customSku]?.avg_cost ?? 0,
     week,
     merch.bulk_offers,
+    expressTier,
   );
-  const onDemandMarketUnit = bestMarketBulkUnitCost(customSku, merch.bulk_offers);
+  const onDemandMarketUnit = bestMarketBulkUnitCost(customSku, merch.bulk_offers, "grosshaendler");
 
   const careerWeek = merchCareerWeekIndex(season, week);
   const occupancy = weekCommerceOccupancy(isHomeMatchWeek, stadium, season, week);
@@ -188,8 +191,9 @@ export function MerchandisingScreen({
       onDemandUnit={onDemandUnit}
       onDemandQuote={onDemandQuote}
       onDemandMarketUnit={onDemandMarketUnit}
-      phillipSaleActive={phillipSaleActive}
-      phillipDiscountPct={Math.round(EXPRESS_PROMO_DISCOUNT * 100)}
+      relations={merch.vendor_relations}
+      promoActive={expressPromoActive}
+      promoPct={Math.round(EXPRESS_PROMO_DISCOUNT * 100)}
       onSkuChange={setCustomSku}
       onQtyDecrement={() => setCustomQty((qty) => Math.max(10, qty - 10))}
       onQtyIncrement={() => setCustomQty((qty) => qty + 10)}
@@ -226,20 +230,6 @@ export function MerchandisingScreen({
         </div>
       </section>
     ) : null;
-
-  const phillipSaleBanner = phillipSaleActive ? (
-    <section className="merch-phillip-sale-banner" aria-label={t("merch.phillipSale.bannerAria")}>
-      <Tag size={20} strokeWidth={2.4} aria-hidden className="merch-phillip-sale-icon" />
-      <div className="merch-sale-flame-copy">
-        <strong>{t("merch.phillipSale.bannerTitle")}</strong>
-        <span>
-          {t("merch.phillipSale.bannerBody", {
-            pct: Math.round(EXPRESS_PROMO_DISCOUNT * 100),
-          })}
-        </span>
-      </div>
-    </section>
-  ) : null;
 
   const saleFlameBanner =
     activeSales.length > 0 ? (
@@ -313,7 +303,6 @@ export function MerchandisingScreen({
       {tab === "preise" ? (
         <div className="fm-tab-panel merch-panel" role="tabpanel" aria-label="Preise">
           {screenHeader}
-          {phillipSaleBanner}
           {overCapacityBanner}
           {saleFlameBanner}
           <div className="merch-preise-row">
@@ -324,7 +313,6 @@ export function MerchandisingScreen({
                 row={merch.skus.trikots!}
                 fanshopLevel={fanshopLevel}
                 careerWeek={careerWeek}
-                seasonWeek={week}
                 onPriceChange={setRetail}
                 topSellers={sellers}
                 {...tileProps("trikots")}
@@ -337,7 +325,6 @@ export function MerchandisingScreen({
                     row={merch.skus[sku]!}
                     fanshopLevel={fanshopLevel}
                     careerWeek={careerWeek}
-                    seasonWeek={week}
                     onPriceChange={setRetail}
                     {...tileProps(sku)}
                   />
@@ -352,21 +339,26 @@ export function MerchandisingScreen({
       {tab === "einkauf" ? (
         <div className="fm-tab-panel merch-panel" role="tabpanel" aria-label="Einkauf">
           {screenHeader}
-          {phillipSaleBanner}
           {overCapacityBanner}
           {saleFlameBanner}
-          <div className="merch-einkauf-row">
-            <div className="merch-einkauf-cluster">
-              <div className="merch-einkauf-market">
-                <MerchMarketplaceTeaser
-                  offers={merch.bulk_offers}
-                  onBuyOffer={(offerId) => onRequestBulkPurchase(offerId)}
-                  onBrowse={() => setMarketBrowseOpen(true)}
-                />
-              </div>
+          <MerchVendorStrip
+            offers={merch.bulk_offers}
+            relations={merch.vendor_relations}
+            active={vendorFilter}
+            onSelect={setVendorFilter}
+          />
+          <div className="merch-einkauf-row merch-einkauf-row--vendors">
+            <MerchVendorMarketTable
+              offers={merch.bulk_offers}
+              careerWeek={careerWeek}
+              vendorFilter={vendorFilter}
+              onVendorFilterChange={setVendorFilter}
+              onBuyOffer={onRequestBulkPurchase}
+            />
+            <div className="merch-einkauf-side">
               <MerchEinkaufInboundPanel merch={merch} careerWeek={careerWeek} />
+              <MerchEinkaufStockOverview merch={merch} fanshopLevel={fanshopLevel} />
             </div>
-            <MerchEinkaufStockOverview merch={merch} fanshopLevel={fanshopLevel} />
           </div>
         </div>
       ) : null}
@@ -380,15 +372,6 @@ export function MerchandisingScreen({
         />
       ) : null}
       {firesaleModal}
-      {marketBrowseOpen ? (
-        <MerchMarketplaceModal
-          offers={merch.bulk_offers}
-          onBuyOffer={(offerId) => {
-            onRequestBulkPurchase(offerId);
-          }}
-          onClose={() => setMarketBrowseOpen(false)}
-        />
-      ) : null}
     </main>
   );
 }
@@ -423,14 +406,12 @@ function MerchGridInventory({
 function MerchRetailStepper({
   value,
   onSale,
-  phillipSale,
   onDecrement,
   onIncrement,
   hero = false,
 }: {
   value: number;
   onSale?: boolean;
-  phillipSale?: boolean;
   onDecrement: () => void;
   onIncrement: () => void;
   hero?: boolean;
@@ -450,11 +431,6 @@ function MerchRetailStepper({
         {onSale ? (
           <>
             <span className="merch-step-sale-tag">Sale</span> {formatClubCash(value)}
-          </>
-        ) : phillipSale ? (
-          <>
-            <span className="merch-step-sale-tag merch-step-sale-tag--phillip">Phillip</span>{" "}
-            {formatClubCash(value)}
           </>
         ) : (
           <>VK {formatClubCash(value)}</>
@@ -498,7 +474,6 @@ function MerchPriceTile({
   sku,
   row,
   fanshopLevel,
-  seasonWeek,
   careerWeek,
   onPriceChange,
   hero = false,
@@ -512,7 +487,6 @@ function MerchPriceTile({
   sku: MerchSkuId;
   row: { stock: number; avg_cost: number; retail_price: number; retail_price_normal?: number };
   fanshopLevel: number;
-  seasonWeek: number;
   careerWeek: number;
   onPriceChange: (sku: MerchSkuId, value: number) => void;
   hero?: boolean;
@@ -530,9 +504,6 @@ function MerchPriceTile({
   const totalFill = stockFill + onDemandFill;
   const listPrice = row.retail_price;
   const normal = row.retail_price_normal ?? listPrice;
-  const customerPrice = effectiveMerchCustomerRetail(row, careerWeek);
-  const phillipSale = !onSale && customerPrice < listPrice;
-  const stepperValue = onSale ? listPrice : phillipSale ? customerPrice : listPrice;
   const clickable = Boolean(onOverCapacityClick);
 
   return (
@@ -581,17 +552,13 @@ function MerchPriceTile({
       {hero && topSellers ? <MerchHeroSellers rows={topSellers} /> : null}
       <MerchRetailStepper
         hero={hero}
-        value={stepperValue}
+        value={listPrice}
         onSale={onSale}
-        phillipSale={phillipSale}
         onDecrement={() => onPriceChange(sku, listPrice - MERCH_PRICE_STEP)}
         onIncrement={() => onPriceChange(sku, listPrice + MERCH_PRICE_STEP)}
       />
       {onSale && normal !== listPrice ? (
         <p className="merch-grid-meta merch-muted">Normal {formatClubCash(normal)}</p>
-      ) : null}
-      {phillipSale ? (
-        <p className="merch-grid-meta merch-muted">Listenpreis {formatClubCash(listPrice)}</p>
       ) : null}
     </article>
   );

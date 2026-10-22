@@ -8,6 +8,14 @@ import { clubDisplayName, clubPlaceName } from "../../sim/league-divisions.ts";
 import type { WorldClub } from "../../world/world-generator.ts";
 import { useT } from "../../i18n/react.ts";
 
+const ZONE_CLASS = {
+  promoted: "tc-place--up",
+  playoff: "tc-place--playoff",
+  relegated: "tc-place--down",
+  safe: "",
+} as const;
+
+/** WIREFRAME: docs/prd/design.md §9.7 — league table on tc-table (design.md §4.3). */
 export function LeagueTable({
   table,
   leagueSlice,
@@ -15,6 +23,7 @@ export function LeagueTable({
   worldClubs,
   onSelectClub,
   highlightTeamIds,
+  caption,
   compact = false,
 }: {
   table: TableRow[];
@@ -24,37 +33,66 @@ export function LeagueTable({
   onSelectClub?: (teamId: TeamId) => void;
   /** e.g. both sides before kickoff */
   highlightTeamIds?: readonly TeamId[];
+  /** Screen-reader caption, e.g. the division and matchday. */
+  caption?: string;
   compact?: boolean;
 }) {
   const t = useT();
   const highlight = new Set(highlightTeamIds ?? []);
   return (
-    <div className="league-table-wrap">
-      <table className={`league-table${compact ? " league-table--compact" : ""}`}>
+    <div className="tc-table-wrap">
+      <table className="tc-table tc-table--compact">
+        {caption ? <caption className="tc-sr">{caption}</caption> : null}
         <thead>
           <tr>
-            <th>#</th>
-            {compact ? null : <th>{t("leagues.table.place")}</th>}
-            <th>{t("leagues.table.club")}</th>
-            <th>{t("leagues.table.played")}</th>
+            <th scope="col" className="tc-num">
+              #
+            </th>
+            {compact ? null : (
+              <th scope="col" className="tc-hide-narrow">
+                {t("leagues.table.place")}
+              </th>
+            )}
+            <th scope="col">{t("leagues.table.club")}</th>
+            <th scope="col" className="tc-num">
+              {t("leagues.table.played")}
+            </th>
             {compact ? (
               <>
-                <th>{t("leagues.table.goals")}</th>
-                <th>{t("leagues.table.points")}</th>
+                <th scope="col" className="tc-num">
+                  {t("leagues.table.goals")}
+                </th>
+                <th scope="col" className="tc-num">
+                  {t("leagues.table.points")}
+                </th>
               </>
             ) : (
               <>
-                <th>{t("leagues.table.wins")}</th>
-                <th>{t("leagues.table.draws")}</th>
-                <th>{t("leagues.table.losses")}</th>
-                <th>{t("leagues.table.goals")}</th>
-                <th>{t("leagues.table.diff")}</th>
-                <th title={t("leagues.table.formTitle")}>{t("leagues.table.form")}</th>
-                <th className="league-th-trend" title={t("leagues.table.trendTitle")}>
-                  <TrendingUp size={14} strokeWidth={2.5} aria-hidden="true" />
-                  <span className="sr-only">{t("leagues.table.trend")}</span>
+                <th scope="col" className="tc-num">
+                  {t("leagues.table.wins")}
                 </th>
-                <th>{t("leagues.table.points")}</th>
+                <th scope="col" className="tc-num">
+                  {t("leagues.table.draws")}
+                </th>
+                <th scope="col" className="tc-num">
+                  {t("leagues.table.losses")}
+                </th>
+                <th scope="col" className="tc-num">
+                  {t("leagues.table.goals")}
+                </th>
+                <th scope="col" className="tc-num">
+                  {t("leagues.table.diff")}
+                </th>
+                <th scope="col" title={t("leagues.table.formTitle")}>
+                  {t("leagues.table.form")}
+                </th>
+                <th scope="col" title={t("leagues.table.trendTitle")}>
+                  <TrendingUp className="tc-icon" aria-hidden="true" />
+                  <span className="tc-sr">{t("leagues.table.trend")}</span>
+                </th>
+                <th scope="col" className="tc-num">
+                  {t("leagues.table.points")}
+                </th>
               </>
             )}
           </tr>
@@ -62,62 +100,48 @@ export function LeagueTable({
         <tbody>
           {table.map((row, index) => {
             const zone = promotionZoneRank(index, table.length);
-            const formSlots = teamFormSlots(leagueSlice, row.teamId);
-            const formPoints = teamFormPoints(leagueSlice, row.teamId);
-            const rowClass = [
-              row.teamId === playerClubId ? "is-player-club" : "",
-              highlight.has(row.teamId) ? "is-matchday-club" : "",
-              zone ? `league-zone-${zone}` : "",
-            ]
-              .filter(Boolean)
-              .join(" ");
+            const isOwn = row.teamId === playerClubId;
+            const rowClass = isOwn ? "tc-row--own" : highlight.has(row.teamId) ? "tc-row--mark" : undefined;
+            const name = clubDisplayName(row.teamId, worldClubs);
             return (
-              <tr key={row.teamId} className={rowClass || undefined}>
-                <td>{index + 1}</td>
-                {compact ? null : (
-                  <td className="league-place-cell">{clubPlaceName(row.teamId, worldClubs) || "—"}</td>
-                )}
+              <tr key={row.teamId} className={rowClass}>
+                <td className="tc-num">
+                  <span className={`tc-place ${zone ? ZONE_CLASS[zone] : ""}`.trim()}>{index + 1}</span>
+                </td>
+                {compact ? null : <td className="tc-hide-narrow">{clubPlaceName(row.teamId, worldClubs) || "—"}</td>}
                 <td>
                   {onSelectClub ? (
-                    <button
-                      type="button"
-                      className="league-club-link"
-                      onClick={() => onSelectClub(row.teamId)}
-                    >
-                      {clubDisplayName(row.teamId, worldClubs)}
+                    <button type="button" className="tc-linkbtn" onClick={() => onSelectClub(row.teamId)}>
+                      {name}
                     </button>
                   ) : (
-                    clubDisplayName(row.teamId, worldClubs)
+                    <span className="tc-strong">{name}</span>
                   )}
                 </td>
-                <td>{row.played}</td>
+                <td className="tc-num">{row.played}</td>
                 {compact ? (
                   <>
-                    <td>
+                    <td className="tc-num">
                       {row.goalsFor}:{row.goalsAgainst}
                     </td>
-                    <td>
-                      <strong>{row.points}</strong>
-                    </td>
+                    <td className="tc-num tc-strong">{row.points}</td>
                   </>
                 ) : (
                   <>
-                    <td>{row.won}</td>
-                    <td>{row.drawn}</td>
-                    <td>{row.lost}</td>
-                    <td>
+                    <td className="tc-num">{row.won}</td>
+                    <td className="tc-num">{row.drawn}</td>
+                    <td className="tc-num">{row.lost}</td>
+                    <td className="tc-num">
                       {row.goalsFor}:{row.goalsAgainst}
                     </td>
-                    <td>{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td>
-                    <td className="league-form-cell">
-                      <LeagueFormStrip slots={formSlots} />
-                    </td>
-                    <td className="league-trend-cell">
-                      <LeaguePointsSparkline points={formPoints} />
+                    <td className="tc-num">{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td>
+                    <td>
+                      <LeagueFormStrip slots={teamFormSlots(leagueSlice, row.teamId)} />
                     </td>
                     <td>
-                      <strong>{row.points}</strong>
+                      <LeaguePointsSparkline points={teamFormPoints(leagueSlice, row.teamId)} />
                     </td>
+                    <td className="tc-num tc-strong">{row.points}</td>
                   </>
                 )}
               </tr>
@@ -126,5 +150,25 @@ export function LeagueTable({
         </tbody>
       </table>
     </div>
+  );
+}
+
+/** Zone key under the table: the same place badges as the rank column. */
+export function LeagueZoneLegend() {
+  const t = useT();
+  const items = [
+    { className: "tc-place--up", label: t("leagues.legend.promotion") },
+    { className: "tc-place--playoff", label: t("leagues.legend.playoff") },
+    { className: "tc-place--down", label: t("leagues.legend.relegation") },
+  ];
+  return (
+    <ul className="tc-legend" aria-label={t("leagues.legendAria")}>
+      {items.map((item) => (
+        <li key={item.className} className="tc-legend__item">
+          <span className={`tc-place tc-place--key ${item.className}`} aria-hidden="true" />
+          {item.label}
+        </li>
+      ))}
+    </ul>
   );
 }

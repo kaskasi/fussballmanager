@@ -5,7 +5,9 @@
  */
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { titleBarColors, type KitColors, type TitleBarTheme } from "../shell/title-bar-colors.ts";
-import { SAMPLE_KITS } from "./ui-gallery-fixtures.ts";
+import { ratingBand } from "../design/rating-band.ts";
+import { LeagueTable, LeagueZoneLegend } from "../components/LeagueTable.tsx";
+import { galleryLeague, SAMPLE_KITS } from "./ui-gallery-fixtures.ts";
 import "./ui-gallery.css";
 
 const COLOR_ROLES: { group: string; tokens: string[] }[] = [
@@ -46,38 +48,6 @@ const POSITIONS = ["All", "GK", "CB", "RB", "CM", "CF"] as const;
 
 type SortKey = "name" | "age" | "ca" | "delta";
 
-const LEAGUE: {
-  place: number;
-  club: string;
-  played: number;
-  won: number;
-  drawn: number;
-  lost: number;
-  goals: string;
-  diff: number;
-  points: number;
-  form: ("w" | "d" | "l")[];
-  own?: boolean;
-  cut?: boolean;
-}[] = [
-  { place: 11, club: "SC Elmshorn", played: 11, won: 4, drawn: 2, lost: 5, goals: "15:18", diff: -3, points: 14, form: ["w", "l", "d", "w", "l"] },
-  { place: 12, club: "Heider SV", played: 11, won: 3, drawn: 4, lost: 4, goals: "14:17", diff: -3, points: 13, form: ["d", "d", "l", "w", "d"] },
-  { place: 13, club: "Kieler FC", played: 11, won: 3, drawn: 3, lost: 5, goals: "18:22", diff: -4, points: 12, form: ["l", "w", "d", "l", "l"], own: true },
-  { place: 14, club: "Eckernförder SV", played: 11, won: 2, drawn: 3, lost: 6, goals: "11:20", diff: -9, points: 9, form: ["l", "l", "w", "d", "l"], cut: true },
-  { place: 15, club: "TuS Hartenholm", played: 11, won: 2, drawn: 2, lost: 7, goals: "10:24", diff: -14, points: 8, form: ["l", "d", "l", "l", "w"] },
-];
-
-const FORM_LABEL = { w: "W", d: "D", l: "L" } as const;
-const FORM_NAME = { w: "win", d: "draw", l: "loss" } as const;
-
-/** CA bands from design.md §2: <70, 70–84, 85–99, 100–114, 115+. */
-function ratingBand(ca: number): 1 | 2 | 3 | 4 | 5 {
-  if (ca >= 115) return 5;
-  if (ca >= 100) return 4;
-  if (ca >= 85) return 3;
-  if (ca >= 70) return 2;
-  return 1;
-}
 
 function NextArrow() {
   return (
@@ -147,6 +117,7 @@ export function UiGallery() {
   const [sort, setSort] = useState<{ key: SortKey; dir: "ascending" | "descending" }>({ key: "ca", dir: "descending" });
   const [tab, setTab] = useState("Squad");
   const [modalOpen, setModalOpen] = useState(false);
+  const league = useMemo(() => galleryLeague(), []);
 
   useEffect(() => {
     document.title = "UI gallery · The Club";
@@ -360,53 +331,101 @@ export function UiGallery() {
           </div>
         </Section>
 
-        <Section id="league" title="League table" note="Own club highlighted; a dashed line marks the relegation cut.">
-          <div className="tc-table-wrap">
-            <table className="tc-table tc-table--compact">
-              <caption className="tc-sr">Oberliga Nord after matchday 11, places 11 to 15</caption>
-              <thead>
-                <tr>
-                  <th scope="col" className="tc-num">#</th>
-                  <th scope="col">Club</th>
-                  <th scope="col" className="tc-num">P</th>
-                  <th scope="col" className="tc-num">W</th>
-                  <th scope="col" className="tc-num">D</th>
-                  <th scope="col" className="tc-num">L</th>
-                  <th scope="col" className="tc-num">Goals</th>
-                  <th scope="col" className="tc-num">GD</th>
-                  <th scope="col" className="tc-num">Pts</th>
-                  <th scope="col">Form</th>
-                </tr>
-              </thead>
-              <tbody>
-                {LEAGUE.map((row) => (
-                  <tr key={row.club} className={[row.own ? "tc-row--own" : "", row.cut ? "tc-row--cut" : ""].join(" ").trim() || undefined}>
-                    <td className="tc-num">{row.place}</td>
-                    <td className="tc-strong">{row.club}</td>
-                    <td className="tc-num">{row.played}</td>
-                    <td className="tc-num">{row.won}</td>
-                    <td className="tc-num">{row.drawn}</td>
-                    <td className="tc-num">{row.lost}</td>
-                    <td className="tc-num">{row.goals}</td>
-                    <td className="tc-num">{row.diff}</td>
-                    <td className="tc-num tc-strong">{row.points}</td>
-                    <td>
-                      <span className="tc-form" aria-label={`Last five: ${row.form.map((r) => FORM_NAME[r]).join(", ")}`}>
-                        {row.form.map((result, index) => (
-                          <span key={index} className={`tc-form__r tc-form__r--${result}`} aria-hidden="true">
-                            {FORM_LABEL[result]}
-                          </span>
-                        ))}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <Section
+          id="page-head"
+          title="Page head"
+          note="One per screen: label, display title, one line of context. Leagues is the first screen built from these components."
+        >
+          <div className="tc-panel">
+            <header className="tc-page-head">
+              <span className="tc-label">Competition</span>
+              <h3 className="tc-page-title">Leagues</h3>
+              <p className="tc-page-sub">Click a club for a short profile · Your league live</p>
+            </header>
+            <div className="tc-tabs tc-tabs--page" role="tablist" aria-label="Divisions">
+              <button className="tc-tab" type="button" role="tab" aria-selected="true">
+                Regionalliga Nord <span className="tc-tab__meta">your club</span>
+              </button>
+              <button className="tc-tab" type="button" role="tab" aria-selected="false">
+                Oberliga Nord
+              </button>
+            </div>
           </div>
-          <p className="tc-legend">
-            <span className="tc-legend__cut" aria-hidden="true" /> Relegation
-          </p>
+        </Section>
+
+        <Section
+          id="league"
+          title="League table"
+          note="The real LeagueTable with a seeded mini league. Place badges mark promotion, playoff and relegation; the own club is tinted; club names are link buttons. Form shows the letter and the colour."
+        >
+          <div className="tc-panel">
+            <LeagueTable
+              table={league.table}
+              leagueSlice={{ club_ids: league.clubIds, results: league.results }}
+              playerClubId={league.playerClubId}
+              worldClubs={league.worldClubs}
+              onSelectClub={() => setModalOpen(true)}
+              caption="Gallery league after six rounds"
+            />
+            <LeagueZoneLegend />
+          </div>
+          <p className="tc-label">Compact (matchday side panel), both sides of the next match marked</p>
+          <div className="tc-panel ui-gallery__narrow">
+            <LeagueTable
+              table={league.table}
+              leagueSlice={{ club_ids: league.clubIds, results: league.results }}
+              playerClubId={league.playerClubId}
+              worldClubs={league.worldClubs}
+              highlightTeamIds={[league.playerClubId, league.table[4]?.teamId ?? league.playerClubId]}
+              compact
+            />
+          </div>
+        </Section>
+
+        <Section id="lists" title="Ranked lists and stat tiles" note="Scorers, assists and key players use tc-list; the own club is tinted.">
+          <div className="ui-gallery__two">
+            <div className="tc-panel">
+              <section className="tc-section">
+                <h3 className="tc-label tc-section__title">Scorers</h3>
+                <ol className="tc-list">
+                  {[
+                    { name: "Kerem Yılmaz", club: "Kiel", value: 9, own: true },
+                    { name: "Deniz Voss", club: "Kaltenkirchen", value: 7 },
+                    { name: "Mateusz Wójcik", club: "Kiel", value: 6, own: true },
+                  ].map((row, index) => (
+                    <li key={row.name} className={`tc-list__item${row.own ? " tc-list__item--own" : ""}`}>
+                      <span className="tc-list__rank">{index + 1}</span>
+                      <span className="tc-list__main">
+                        <span className="tc-list__name">{row.name}</span>
+                        <span className="tc-list__meta">{row.club}</span>
+                      </span>
+                      <span className="tc-list__value">{row.value}</span>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+              <section className="tc-section">
+                <h3 className="tc-label tc-section__title">Cards</h3>
+                <p className="tc-empty">No matchday yet — cards follow after kick-off.</p>
+              </section>
+            </div>
+            <dl className="tc-stats">
+              {[
+                { label: "Fanbase", value: "52", hint: "Attendance index" },
+                { label: "Squad strength", value: "98", hint: "Avg. starting XI" },
+                { label: "Stadium", value: "KAL-Arena", hint: "8,000 seats" },
+                { label: "Coach", value: "Markus Lehmann", hint: "Head coach" },
+              ].map((stat) => (
+                <div key={stat.label} className="tc-stats__item">
+                  <dt className="tc-label tc-stats__label">{stat.label}</dt>
+                  <dd>
+                    <span className="tc-stat__value">{stat.value}</span>
+                    <span className="tc-caption">{stat.hint}</span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </Section>
 
         <Section id="ratings" title="Rating badges" note="CA bands: under 70, 70–84, 85–99, 100–114, 115 and up.">

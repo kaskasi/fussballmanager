@@ -72,6 +72,7 @@
   --on-negative: #ffffff;
   --warning: #8f5a0e;
   --info: #2e6a93;
+  --on-info: #ffffff;
   --draw: #d0d7cc;
   --on-draw: #16211a;
   /* CA bands: <70, 70–84, 85–99, 100–114, 115+ */
@@ -199,6 +200,7 @@
   --on-negative: #1a0a05;
   --warning: #e3b341;
   --info: #72b4de;
+  --on-info: #07120b;
   --draw: #3a4842;
   --on-draw: #e6ece8;
   --rating-1: #24302b;

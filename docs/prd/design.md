@@ -151,6 +151,8 @@ Position-, Sortier- und Scout-Filter sind **ein** Baustein (`FilterChip`):
 
 `src/ui/design/components.css` enthält die Komponenten des Design Systems als `tc-`-Klassen: Titelleiste, NEXT, Buttons, Filter-Chips, Tabs, Panel, sortierbare Tabelle, Liga-Tabelle (eigene Zeile, Abstiegslinie, Formkurve), Bewertungs-Badge, Spielerkarte (groß und Grid), Modal, Key-Value-Liste, Der Treter. Nur Tokens, keine rohen Werte. Die Klassen berühren bestehende Screens nicht, bis ein Screen umzieht.
 
+Mit dem Ligen-Screen (F1) dazugekommen: `tc-page-head` / `tc-page-title` / `tc-page-sub` (ein Kopf pro Screen), `tc-tabs--page` + `tc-tab__meta`, `tc-split` (Haupt- + Seitenspalte), `tc-linkbtn` (Namen in Tabellen), `tc-place` (Platz mit Zone), `tc-row--mark`, `tc-form__r--empty`, `tc-spark`, `tc-list` (Ranglisten), `tc-section`, `tc-empty`, `tc-stats` (Kennzahl-Kacheln), `tc-hide-narrow`. React: `ModalShell variant="tc"` (Escape schließt, Fokus auf Schließen), `ratingBand()` in `src/ui/design/rating-band.ts`.
+
 **UI-Galerie:** Einstellungen → Entwickler → „UI gallery“ oder `?ui=gallery`. Zeigt Farbrollen, Typo, Abstände, alle Komponenten mit Beispieldaten, Titelleisten für sieben Trikots (jeder Zweig von §2.4) und einen Hell/Dunkel-Schalter. Lädt als eigener Chunk; Spieler sehen sie nicht. Beim Bau oder Umzug eines Screens zuerst hier prüfen.
 
 **Migration Screen für Screen:** Screen auf `tc-`-Klassen und Rollen-Tokens umstellen, Legacy-Regeln aus `index.css` löschen, `npm run check:design-tokens -- --update` committen, Vorher/Nachher-Screenshot in den PR.
@@ -531,10 +533,15 @@ H1 "2. Liga · Spieltag 2"
 ```
 
 Klassische Dichtetabelle ohne Schnörkel – das ist der FM2001-Herzstück-Screen, hier ist Reinheit das Design.
-Farb-Zonen statt Legende: dünne --rasen / --terra Linien nach Zeile 3 bzw. vor 16.
-Eigene Zeile: sticky unter dem Header fixiert (auch beim Scrollen sichtbar) + 2px --rasen-Outline.
-Form-Chips: kleine Kreise, Sieg --rasen, Unentschieden --staubblau, Niederlage --terra.
-Torschützen-Liste als Tab darunter: [Tabelle ●][Torschützen][Zuschauerschnitte].
+
+**Umsetzung (F1, erster migrierter Screen — gilt vor der Skizze oben):**
+- Aufbau: `tc-page-head` → `tc-tabs--page` (Ligen; eigene Liga mit „dein Verein“) → `tc-split` mit Tabelle (`tc-panel`) links und Torschützen / Assists / Karten (`tc-section` + `tc-list`) rechts; unter 1024px gestapelt.
+- Zonen: Platz-Badge `tc-place` in der #-Spalte — Aufstieg `--positive`, Relegation `--info`, Abstieg `--negative` — plus Legende mit denselben Badges. Keine Trennlinien, kein Gelb.
+- Eigene Zeile: `tc-row--own` (`--accent-soft` + 3px `--accent` links). Im Matchday-Seitenpanel (kompakte Variante) markiert `tc-row--mark` den Gegner.
+- Form: `tc-form` mit Buchstabe **und** Farbe (S/U/N bzw. W/D/L aus den Tabellen-Spaltenköpfen), leere Spiele als `·`; Trend als Sparkline (`tc-spark`). Beides mit lokalisiertem `aria-label`.
+- Vereinsname ist ein `tc-linkbtn` und öffnet das Kurzprofil (`ModalShell variant="tc"`, `tc-stats` + `tc-list` mit Bewertungs-Badges), vollständig lokalisiert, Zahlen im Format der Sprache.
+- Phone: Spalte „Ort“ entfällt (`tc-hide-narrow`), die Tabelle scrollt in ihrem Rahmen, nie die Seite.
+- Offen aus der Skizze: Eigener-Club-Kasten mit nächstem Spiel, sticky eigene Zeile, Spieltags-Pfeile, Zuschauerschnitte.
 
 ### 9.8 Spielerprofil
 

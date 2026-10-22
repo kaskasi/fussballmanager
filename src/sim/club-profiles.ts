@@ -231,7 +231,7 @@ export function buildClubProfile(
   const divisionId = divisionForClub(pools, teamId);
   const division = DIVISION_ECONOMY[divisionId];
   const flavor = CLUB_FLAVOR[teamId] ?? {
-    coach: "Cheftrainer",
+    coach: "",
     founded: 1960,
     members: 600,
     stadium: `${team.shortName}-Arena`,

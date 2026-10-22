@@ -3,6 +3,7 @@ import { t } from "../i18n/index.ts";
 import type { Player } from "../types/player.ts";
 import type { TransferRecord } from "./transfer-history.ts";
 import { estimateCa, marketValue, marketValueInputFromPlayer } from "./market-value.ts";
+import { unsolicitedAskingPrice } from "./unsolicited-approach.ts";
 
 /** F5.7 — pre-contract signed before contract expiry (PRD 05.6). */
 export interface PendingTransfer {
@@ -47,6 +48,8 @@ export interface TransferNegotiation {
   /** buy = we pay a club. sell = a club bids for our listed player. */
   side?: "buy" | "sell";
   buyer_club_id?: string;
+  /** Player was not listed: the club asks a premium (unsolicited-approach.ts). */
+  unsolicited?: boolean;
 }
 
 export interface AiClubBudget {
@@ -150,8 +153,10 @@ export function startNegotiation(
   season: number,
   week: number,
   openingOffer?: number,
+  options: { unsolicited?: boolean } = {},
 ): { state: TransferState; negotiation: TransferNegotiation } {
-  const asking = sellerAskingPrice(player, season);
+  const base = sellerAskingPrice(player, season);
+  const asking = options.unsolicited ? unsolicitedAskingPrice(base) : base;
   const offer = openingOffer ?? Math.round(asking * 0.92);
   const negotiation: TransferNegotiation = {
     id: `neg_${player.id}_${week}`,
@@ -165,6 +170,7 @@ export function startNegotiation(
     failed_lowball_count: 0,
     last_reaction: null,
     week,
+    ...(options.unsolicited ? { unsolicited: true } : {}),
   };
   const negotiations = [
     ...(state.negotiations ?? []).filter((entry) => entry.player_id !== player.id),
@@ -181,8 +187,10 @@ export function draftNegotiationPreview(
   player: Player,
   season: number,
   week: number,
+  unsolicited = false,
 ): TransferNegotiation {
-  const asking = sellerAskingPrice(player, season);
+  const base = sellerAskingPrice(player, season);
+  const asking = unsolicited ? unsolicitedAskingPrice(base) : base;
   return {
     id: `neg_preview_${player.id}`,
     player_id: player.id,

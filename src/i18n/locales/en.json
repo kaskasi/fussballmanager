@@ -2684,6 +2684,8 @@
   "transfer.purchase.targetUnavailable": "Cannot buy: player is no longer available (check market or scout target).",
   "transfer.purchase.windowClosed": "Cannot buy: transfer window closed. {hint}",
   "transfer.purchase.notListed": "Player is not on the transfer list.",
+  "transfer.purchase.keyPlayer": "Not for sale: he is one of his club's key players. Wait until he is listed.",
+  "transfer.profile.unlistedPremium": "Not listed: his club asks about {pct}% above value.",
   "transfer.purchase.alreadyAgreed": "This transfer is already agreed.",
   "transfer.purchase.summary": "Signed {player} for {fee}.",
   "transfer.window.closed": "Window closed",

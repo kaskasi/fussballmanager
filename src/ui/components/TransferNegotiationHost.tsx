@@ -39,7 +39,12 @@ import {
 } from "../../transfers/contract-talks.ts";
 import type { TransferState } from "../../transfers/negotiations.ts";
 import { listPendingInboundOffers } from "../../transfers/inbound-offers.ts";
-import { applyListedSale, openSaleNegotiation, submitSaleRound } from "../../transfers/transfer-listings.ts";
+import {
+  applyListedSale,
+  isPlayerListed,
+  openSaleNegotiation,
+  submitSaleRound,
+} from "../../transfers/transfer-listings.ts";
 import { committedTransferFees, scheduledMoveLabel } from "../../transfers/scheduled-transfers.ts";
 import { nextTransferWindowStart } from "../../sim/game-calendar.ts";
 import { TransferNegotiationModal } from "./TransferNegotiationModal.tsx";
@@ -546,7 +551,12 @@ export function useTransferNegotiation(args: {
         );
       }
     }
-    return draftNegotiationPreview(negotiationOverlayContext.player, season, week);
+    return draftNegotiationPreview(
+      negotiationOverlayContext.player,
+      season,
+      week,
+      !isPlayerListed(transferState, negotiationOverlayContext.player.id),
+    );
   }, [
     negotiationOverlayContext,
     negotiationPlayerId,

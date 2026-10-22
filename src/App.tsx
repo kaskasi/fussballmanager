@@ -99,6 +99,7 @@ import {
 } from "./economy/club-finances.ts";
 import { formatPlayerName } from "./types/player-display.ts";
 import { sellerAskingPrice, toggleShortlist } from "./transfers/negotiations.ts";
+import { unsolicitedAskingPrice, unsolicitedRefusalReason } from "./transfers/unsolicited-approach.ts";
 import { useTransferNegotiation } from "./ui/components/TransferNegotiationHost.tsx";
 import { SpendConfirmSheet } from "./ui/components/SpendConfirmSheet.tsx";
 import { constructionSnapshotFromSession } from "./sim/advance-construction.ts";
@@ -1884,7 +1885,12 @@ export default function App() {
           season={season}
           transferWindowOpen={isTransferWindowOpen(week)}
           transferBudget={Math.max(0, transferBudget(finances) - committedTransferFees(transferState))}
-          purchasePrice={sellerAskingPrice(foreignView.player, season)}
+          purchasePrice={
+            isPlayerListed(transferState, foreignView.player.id)
+              ? sellerAskingPrice(foreignView.player, season)
+              : unsolicitedAskingPrice(sellerAskingPrice(foreignView.player, season))
+          }
+          purchaseUnsolicited={!isPlayerListed(transferState, foreignView.player.id)}
           shortlisted={transferState.shortlist.includes(foreignView.player.id)}
           onAssignScout={() => handleAssignScout(foreignView.player.id)}
           onToggleShortlist={() => handleToggleShortlist(foreignView.player.id)}
@@ -1893,7 +1899,9 @@ export default function App() {
           }
           purchaseBlockedReason={
             scheduledTransferReason(transferState, foreignView.player.id, season) ??
-            (isPlayerListed(transferState, foreignView.player.id) ? null : t("transfer.purchase.notListed"))
+            (isPlayerListed(transferState, foreignView.player.id)
+              ? null
+              : unsolicitedRefusalReason(foreignView.player, rivalPlayers))
           }
           actionFeedback={profileFeedback}
           onTransferNotice={(message) => {

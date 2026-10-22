@@ -4,6 +4,7 @@
  * Design-system components (`tc-`), layout in `design/surfaces/profile.css`. Stamps: Player.stamps (PRD 07.5 / F2.8).
  */
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
+import { UNSOLICITED_PREMIUM } from "../../transfers/unsolicited-approach.ts";
 import {
   Award,
   ChevronDown,
@@ -140,6 +141,8 @@ export interface PlayerProfileProps {
   onPurchase?: () => void;
   /** Shown under a disabled Buy button (e.g. the player is not on the transfer list). */
   purchaseBlockedReason?: string | null;
+  /** Not on the transfer list: buying is an approach at a premium. */
+  purchaseUnsolicited?: boolean;
   preContractBonus?: number;
   preContractBlockedReason?: string | null;
   onPreContract?: () => void;
@@ -186,6 +189,7 @@ export function PlayerProfile({
   onToggleShortlist,
   onPurchase,
   purchaseBlockedReason = null,
+  purchaseUnsolicited = false,
   preContractBonus,
   preContractBlockedReason = null,
   onPreContract,
@@ -259,7 +263,16 @@ export function PlayerProfile({
       ? t("transfer.profile.listOverPot", {
           pot: formatClubCash(transferBudget ?? 0),
         })
-      : (windowClosedHint ?? t("transfer.profile.offerMarket"));
+      : [
+          purchaseUnsolicited
+            ? t("transfer.profile.unlistedPremium", {
+                pct: Math.round((UNSOLICITED_PREMIUM - 1) * 100),
+              })
+            : null,
+          windowClosedHint ?? (purchaseUnsolicited ? null : t("transfer.profile.offerMarket")),
+        ]
+          .filter(Boolean)
+          .join(" ");
   const feedbackIsWarning = Boolean(actionFeedback && TRANSFER_WARNING.test(actionFeedback));
 
   function notifyTransfer(message: string) {

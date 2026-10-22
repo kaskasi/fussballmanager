@@ -3,6 +3,7 @@ import type { ScoutBoard } from "../scouting/scout-board.ts";
 import type { Player } from "../types/player.ts";
 import { cannotOpenPurchaseReason } from "./purchase-block.ts";
 import { resolvePurchaseTarget } from "./resolve-purchase-target.ts";
+import { unsolicitedRefusalReason } from "./unsolicited-approach.ts";
 import {
   startNegotiation,
   type TransferNegotiation,
@@ -37,7 +38,8 @@ export function openPurchaseNegotiation(input: {
   }
   const listed = (input.transferState.listings ?? []).some((row) => row.player_id === input.playerId);
   if (!listed) {
-    return { kind: "blocked", reason: t("transfer.purchase.notListed") };
+    const refusal = unsolicitedRefusalReason(target.player, input.rivalPlayers);
+    if (refusal) return { kind: "blocked", reason: refusal };
   }
   const deal = startNegotiation(
     input.transferState,
@@ -45,6 +47,8 @@ export function openPurchaseNegotiation(input: {
     target.player.club_id ?? "cl_rival_pool",
     input.season,
     input.week,
+    undefined,
+    { unsolicited: !listed },
   );
   return { kind: "ok", transferState: deal.state, negotiation: deal.negotiation };
 }

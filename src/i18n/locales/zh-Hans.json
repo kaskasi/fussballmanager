@@ -2528,6 +2528,8 @@
   "transfer.purchase.targetUnavailable": "无法购买：球员已不在市场上（请检查球探目标）。",
   "transfer.purchase.windowClosed": "无法购买：转会窗关闭。{hint}",
   "transfer.purchase.notListed": "该球员不在转会名单上。",
+  "transfer.purchase.keyPlayer": "非卖品：他是所在俱乐部的核心球员。请等他被挂牌。",
+  "transfer.profile.unlistedPremium": "未挂牌：其俱乐部要价约高出身价 {pct}%。",
   "transfer.purchase.alreadyAgreed": "该转会已谈妥。",
   "transfer.purchase.summary": "以 {fee} 签下 {player}。",
   "transfer.purchase.contractRequiredHint": "转会费已谈妥。现在商定薪资、合同年限与出场时间。",

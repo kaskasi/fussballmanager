@@ -11,6 +11,8 @@ import {
   weeklySponsorInventoryIncome,
 } from "../stadium/sponsor-deals.ts";
 import { DIVISION_ECONOMY, type DivisionEconomyId } from "./division-economy.ts";
+import { getLocale, t } from "../i18n/index.ts";
+import { formatWholeNumber } from "../i18n/number-display.ts";
 import {
   appendPendingFinanceLines,
   closeFinanceMonth,
@@ -377,23 +379,33 @@ export function creditClubCash(
   return next;
 }
 
+/**
+ * Cash in the active language, rounded the same way everywhere:
+ * "€ 5.50 Mio." / "€ 35k" (de) · "€5.50M" / "€35k" (en) · "€550万" / "€8,500" (zh-Hans, 万 from 10,000).
+ */
 export function formatClubCash(amount: number): string {
-  if (!Number.isFinite(amount)) return "€ 0";
+  if (!Number.isFinite(amount)) return formatCashMagnitude(0);
   if (amount < 0) return formatSignedCash(amount);
-  if (amount >= 1_000_000) return `€ ${(amount / 1_000_000).toFixed(2)} Mio.`;
-  if (amount >= 1_000) return `€ ${Math.round(amount / 1_000)}k`;
-  return `€ ${amount}`;
+  return formatCashMagnitude(amount);
 }
 
 /** Weekly wage / upkeep — same magnitude rules as formatClubCash. */
 export function formatClubCashWeekly(amount: number): string {
-  return `${formatClubCash(amount)}/Wo`;
+  return t("cash.perWeek", { amount: formatClubCash(amount) });
 }
 
 export function formatSignedCash(amount: number): string {
   const sign = amount < 0 ? "−" : "";
-  const value = Math.abs(amount);
-  if (value >= 1_000_000) return `${sign}€ ${(value / 1_000_000).toFixed(2)} Mio.`;
-  if (value >= 1_000) return `${sign}€ ${Math.round(value / 1_000)}k`;
-  return `${sign}€ ${value}`;
+  return `${sign}${formatCashMagnitude(Math.abs(amount))}`;
+}
+
+function formatCashMagnitude(value: number): string {
+  if (getLocale() === "zh-Hans") {
+    if (value < 10_000) return t("cash.units", { value: formatWholeNumber(value) });
+    const wan = value / 10_000;
+    return t("cash.wan", { value: wan >= 100 ? formatWholeNumber(Math.round(wan)) : String(Number(wan.toFixed(1))) });
+  }
+  if (value >= 1_000_000) return t("cash.millions", { value: (value / 1_000_000).toFixed(2) });
+  if (value >= 1_000) return t("cash.thousands", { value: Math.round(value / 1_000) });
+  return t("cash.units", { value });
 }

@@ -17,7 +17,7 @@ import {
   type ConcessionUnitPrices,
 } from "./concession-prices.ts";
 import { DEFAULT_FANBASE } from "./club-stadium.ts";
-import { formatClubCash } from "../economy/club-finances.ts";
+import { formatClubCash, formatClubCashWeekly } from "../economy/club-finances.ts";
 import { weeklyMuseumIncome, type HospitalityPreview } from "./hospitality.ts";
 
 /** Reference fanbase — commerce scale 1.0 at this value. */
@@ -532,7 +532,7 @@ export function listPrecinctStatusEffects(
       const h = hospitalityPreview.hotel;
       bits.push(`${h.occupancyPct}% Auslastung`);
       if (h.docked && h.weeklyIncome > 0) {
-        bits.push(`${formatClubCash(h.weeklyIncome)}/Wo`);
+        bits.push(formatClubCashWeekly(h.weeklyIncome));
       }
     }
     if (placed && def.id === "museum") {
@@ -544,7 +544,7 @@ export function listPrecinctStatusEffects(
       const r = hospitalityPreview.restaurant;
       bits.push(r.viral ? "100% · Story-Hype" : `${r.occupancyPct}% Auslastung`);
       if (r.docked && r.weeklyIncome > 0) {
-        bits.push(`${formatClubCash(r.weeklyIncome)}/Wo`);
+        bits.push(formatClubCashWeekly(r.weeklyIncome));
       }
       if (r.overtimeDueThisWeek) bits.push("Überstunden diese Woche");
     }

@@ -143,28 +143,32 @@ export function TransferMarketPanel({
   );
 
   return (
-    <section className="game-panel transfers-market-panel" aria-label={t("transfers.market.title")}>
-      <header className="transfers-market-head">
-        <h2>{t("transfers.market.title")}</h2>
-        <p className="settings-section-lead">{t("transfers.market.lead")}</p>
-      </header>
+    <section className="tc-panel" aria-labelledby="transfers-market-title">
+      <div className="tc-panel__head">
+        <div>
+          <h2 className="tc-panel__title" id="transfers-market-title">
+            {t("transfers.market.title")}
+          </h2>
+          <p className="tc-caption tc-transfers__lead">{t("transfers.market.lead")}</p>
+        </div>
+        <FilterToolbar ariaLabel={t("transfers.market.flowFilter")}>
+          <FilterChip active={flow === "incoming"} onClick={() => setFlow("incoming")}>
+            {t("transfers.market.flowIncoming")}
+          </FilterChip>
+          <FilterChip active={flow === "outgoing"} onClick={() => setFlow("outgoing")}>
+            {t("transfers.market.flowOutgoing")}
+          </FilterChip>
+        </FilterToolbar>
+      </div>
 
-      <FilterToolbar ariaLabel={t("transfers.market.flowFilter")} className="transfers-market-flow-toolbar">
-        <FilterChip active={flow === "incoming"} onClick={() => setFlow("incoming")}>
-          {t("transfers.market.flowIncoming")}
-        </FilterChip>
-        <FilterChip active={flow === "outgoing"} onClick={() => setFlow("outgoing")}>
-          {t("transfers.market.flowOutgoing")}
-        </FilterChip>
-      </FilterToolbar>
-
-      <FilterToolbar ariaLabel={t("transfers.market.positionFilter")} className="transfers-position-toolbar">
-        <FilterChip active={position === "all"} onClick={() => setPosition("all")}>
+      <FilterToolbar ariaLabel={t("transfers.market.positionFilter")}>
+        <FilterChip size="dense" active={position === "all"} onClick={() => setPosition("all")}>
           {t("scouting.filter.all")}
         </FilterChip>
         {MARKET_POSITIONS.map((slot) => (
           <FilterChip
             key={slot}
+            size="dense"
             active={position === slot}
             onClick={() => setPosition(position === slot ? "all" : slot)}
           >
@@ -174,44 +178,39 @@ export function TransferMarketPanel({
       </FilterToolbar>
 
       {filteredCards.length === 0 ? (
-        <p className="transfers-market-empty">{t("transfers.market.empty")}</p>
+        <p className="tc-empty">{t("transfers.market.empty")}</p>
       ) : (
         <>
-          <div className="scouting-hits-grid-wrap transfers-market-grid-wrap">
-            <ul className="scouting-hits-grid transfers-market-grid">
-              {pageCards.map((card) => (
-                <li key={card.id} className="scouting-hits-grid-cell">
-                  <TransferMarketGridCard
-                    player={card.player}
-                    playerId={card.playerId}
-                    kind={card.kind}
-                    clubLabel={card.clubLabel}
-                    priceLabel={card.priceLabel}
-                    detailLine={card.detailLine}
-                    ca={card.ca}
-                    scoutAssigned={card.scoutAssigned}
-                    showScoutAction={card.showScoutAction && flow === "incoming"}
-                    shortlisted={shortlistIds.includes(card.playerId)}
-                    onOpen={() => onOpenNegotiation(card.playerId)}
-                    onScout={() => onScoutPlayer(card.playerId)}
-                    onOpenProfile={
-                      card.player ? () => onOpenProfile(card.playerId) : undefined
-                    }
-                    onToggleShortlist={() => onToggleShortlist(card.playerId)}
-                  />
-                </li>
-              ))}
-            </ul>
-          </div>
+          <ul className="tc-deals">
+            {pageCards.map((card) => (
+              <li key={card.id}>
+                <TransferMarketGridCard
+                  player={card.player}
+                  playerId={card.playerId}
+                  kind={card.kind}
+                  clubLabel={card.clubLabel}
+                  priceLabel={card.priceLabel}
+                  detailLine={card.detailLine}
+                  ca={card.ca}
+                  scoutAssigned={card.scoutAssigned}
+                  showScoutAction={card.showScoutAction && flow === "incoming"}
+                  shortlisted={shortlistIds.includes(card.playerId)}
+                  onOpen={() => onOpenNegotiation(card.playerId)}
+                  onScout={() => onScoutPlayer(card.playerId)}
+                  onOpenProfile={card.player ? () => onOpenProfile(card.playerId) : undefined}
+                  onToggleShortlist={() => onToggleShortlist(card.playerId)}
+                />
+              </li>
+            ))}
+          </ul>
           {pageCount > 1 ? (
-            <nav className="transfers-market-pagination" aria-label={t("transfers.market.pagination")}>
+            <nav className="tc-chips tc-transfers__pages" aria-label={t("transfers.market.pagination")}>
               {Array.from({ length: pageCount }, (_, index) => (
                 <button
                   key={index}
                   type="button"
-                  className={
-                    index === page ? "transfers-market-page is-active" : "transfers-market-page"
-                  }
+                  className="tc-chip tc-chip--dense"
+                  aria-pressed={index === page}
                   aria-current={index === page ? "page" : undefined}
                   onClick={() => setPage(index)}
                 >

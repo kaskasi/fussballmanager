@@ -6758,38 +6758,6 @@
   pointer-events: none;
 }
 
-.transfers-listing-card {
-  display: flex;
-  align-items: stretch;
-  gap: 0.35rem;
-  padding: 0;
-}
-
-.transfers-listing-main {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 0.55rem;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-
-.transfers-listing-remove {
-  flex-shrink: 0;
-  align-self: center;
-  margin-right: 0.35rem;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--panel-border, #cbd5e1);
-  border-radius: 0.35rem;
-  background: var(--panel-bg, #f8fafc);
-  font-size: 0.72rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
 .settings-copy-notice.is-warn {
   color: #b91c1c;
 }
@@ -6963,8 +6931,7 @@
 }
 
 .squad:not(.club-shell-card-body),
-.loans,
-.transfers:not(.club-shell-card-body) {
+.loans {
   max-width: 52rem;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 2.5rem;
@@ -7330,219 +7297,6 @@
   grid-template-columns: 2.5rem 1.4fr 3rem 3.5rem 3rem 1.4fr 3.5rem;
 }
 
-.transfers-head {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-}
-
-.transfers-head button {
-  border: 0;
-  background: #fff;
-  border-radius: 999px;
-  padding: 0.35rem 0.85rem;
-  font-size: 1.1rem;
-  cursor: pointer;
-}
-
-.transfers-head h1 {
-  margin: 0;
-}
-
-.transfers-summary {
-  margin: 0.35rem 0 0;
-  color: #64748b;
-  font-weight: 600;
-}
-
-.transfers-window-chip {
-  display: inline-flex;
-  margin: 0.35rem 0 0;
-  padding: 0.18rem 0.55rem;
-  border-radius: 999px;
-  background: #ecfdf5;
-  color: #047857;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.transfers-window-chip.is-closed {
-  background: #fff7ed;
-  color: #c2410c;
-}
-
-.transfers-next {
-  margin-bottom: 1.35rem;
-  padding: 1rem;
-  border-radius: 1rem;
-  background: #fff;
-  box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
-}
-
-.transfers-next h2 {
-  margin: 0 0 0.7rem;
-  font-size: 1rem;
-}
-
-.transfers-next-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
-  gap: 0.45rem;
-}
-
-.transfers-next-card {
-  display: grid;
-  justify-items: start;
-  gap: 0.12rem;
-  width: 100%;
-  min-height: 5.4rem;
-  padding: 0.55rem 0.6rem;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 0.75rem;
-  background: #f8fafc;
-  text-align: left;
-  cursor: pointer;
-}
-
-.transfers-next-card span {
-  font-size: 1.25rem;
-}
-
-.transfers-next-card strong {
-  font-size: 0.82rem;
-  line-height: 1.25;
-}
-
-.transfers-next-card small {
-  color: #64748b;
-  font-size: 0.7rem;
-  font-weight: 700;
-}
-
-.transfers-section {
-  margin-bottom: 1.5rem;
-}
-
-.transfers-section h2 {
-  margin: 0 0 0.75rem;
-  font-size: 1rem;
-}
-
-.transfers-season-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-.transfers-season-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex-shrink: 0;
-}
-
-.transfers-season-chevron {
-  border: 1px solid var(--panel-border, #cbd5e1);
-  border-radius: 0.45rem;
-  background: var(--panel-bg, #f8fafc);
-  padding: 0.25rem;
-  cursor: pointer;
-  color: inherit;
-  display: inline-flex;
-}
-
-.transfers-season-chevron:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.transfers-season-picker {
-  flex-shrink: 0;
-}
-
-.transfers-history-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-@media (max-width: 720px) {
-  .transfers-history-columns {
-    grid-template-columns: 1fr;
-  }
-}
-
-.transfers-history-column h3 {
-  margin: 0 0 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: var(--text-muted, #64748b);
-}
-
-.transfers-contract-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-
-.transfers-contract-card {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--panel-border, #e2e8f0);
-  border-radius: 0.65rem;
-  background: var(--panel-bg, #fff);
-  cursor: pointer;
-  text-align: left;
-}
-
-.transfers-contract-card:hover {
-  border-color: var(--accent-muted, #94a3b8);
-}
-
-.transfers-contract-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
-}
-
-.transfers-contract-copy strong {
-  font-size: 0.92rem;
-}
-
-.transfers-contract-copy small {
-  color: var(--text-muted, #64748b);
-  font-weight: 600;
-  font-size: 0.78rem;
-}
-
-.transfers-contract-urgency {
-  color: var(--warning-text, #b45309) !important;
-}
-
-.transfers-contract-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.45rem;
-  background: var(--panel-bg-muted, #f1f5f9);
-}
-
 .treter-masthead {
   display: flex;
   align-items: flex-start;
@@ -7777,213 +7531,6 @@ button.treter-article {
 
 .inbox-kicker-line-btn small {
   color: var(--text-muted, #64748b);
-  font-weight: 600;
-}
-
-.transfers-empty-inline {
-  margin: 0;
-  color: #64748b;
-  font-weight: 600;
-}
-
-.transfers-window-hint {
-  margin: 0 0 0.65rem;
-  color: #64748b;
-  font-size: 0.82rem;
-}
-
-.transfers-recall-btn {
-  border: 1px solid #cbd5e1;
-  border-radius: 0.5rem;
-  padding: 0.25rem 0.45rem;
-  background: #f8fafc;
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-.transfers-recall-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.transfers-history {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.5rem;
-}
-
-.transfers-history-row {
-  width: 100%;
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  border: 0;
-  background: #fff;
-  border-radius: 0.9rem;
-  padding: 0.75rem 0.9rem;
-  text-align: left;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
-}
-
-.transfers-history-row:hover {
-  background: rgb(236 253 245 / 55%);
-}
-
-.transfers-market-row {
-  gap: 0.5rem;
-  cursor: default;
-}
-
-.transfers-market-row-main {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.transfers-market-scout-icon {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  margin: 0;
-  padding: 0;
-  border: var(--outline-weich, 2px solid rgba(62, 49, 40, 0.25));
-  border-radius: var(--radius-klein, 8px);
-  background: var(--panel-muted, #efebdd);
-  color: var(--tinte, #3e3128);
-  cursor: pointer;
-}
-
-.transfers-market-scout-icon:hover:not(:disabled) {
-  background: var(--rasen-hell, #bfdec2);
-}
-
-.transfers-market-scout-icon.is-on,
-.transfers-market-scout-icon:disabled {
-  background: var(--rasen, #2e9e46);
-  color: var(--tinte, #3e3128);
-  cursor: default;
-  opacity: 1;
-}
-
-.transfers-market-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.transfers-market-head h2 {
-  margin: 0;
-}
-
-.transfers-market-flow-toolbar {
-  margin-top: 0.15rem;
-}
-
-.transfers-market-grid {
-  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
-}
-
-@media (min-width: 900px) {
-  .transfers-market-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-.transfers-market-card-badge {
-  display: inline-block;
-  width: fit-content;
-  margin-top: 0.15rem;
-  padding: 0.08rem 0.35rem;
-  border-radius: var(--radius-klein, 8px);
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  background: var(--staubblau, #9dbfd0);
-  color: var(--tinte, #3e3128);
-}
-
-.transfers-market-card-bottom {
-  display: flex;
-  flex-direction: column;
-  gap: 0.12rem;
-  padding: 0.35rem 0.45rem 0.5rem;
-}
-
-.transfers-market-card-price {
-  font-size: 0.82rem;
-  color: var(--tinte, #3e3128);
-}
-
-.transfers-market-card-detail {
-  font-size: 0.68rem;
-  color: var(--tinte-weich, #6b5d4f);
-}
-
-.transfers-market-card-portrait-fallback {
-  display: block;
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: var(--radius-klein, 8px);
-  background: var(--panel-muted, #efebdd);
-}
-
-.transfers-market-empty {
-  margin: 0.25rem 0 0;
-  color: var(--tinte-weich, #6b5d4f);
-}
-
-.transfers-market-pagination {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  margin-top: 0.45rem;
-}
-
-.transfers-market-page {
-  min-width: 1.65rem;
-  padding: 0.2rem 0.4rem;
-  border: 0;
-  border-radius: 999px;
-  background: var(--panel-muted);
-  font-size: 0.72rem;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.transfers-market-page.is-active {
-  background: color-mix(in srgb, var(--rasen) 18%, var(--panel-muted));
-  color: var(--tinte);
-}
-
-.transfers-history-icon {
-  font-size: 1.25rem;
-}
-
-.transfers-history-main {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.transfers-history-main strong {
-  font-size: 0.95rem;
-}
-
-.transfers-history-main small {
-  color: #64748b;
   font-weight: 600;
 }
 
@@ -9128,39 +8675,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   box-shadow: 0 20px 50px rgb(15 23 42 / 25%);
 }
 
-.negotiation-modal--purchase-contract {
-  width: min(56rem, calc(100vw - 1.5rem));
-  max-height: min(90vh, 720px);
-  overflow: auto;
-}
-
-.negotiation-modal-split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-  align-items: start;
-}
-
-@media (max-width: 720px) {
-  .negotiation-modal-split {
-    grid-template-columns: 1fr;
-  }
-}
-
-.negotiation-modal-contract {
-  border-left: 1px solid var(--panel-border, #e2e8f0);
-  padding-left: 1rem;
-}
-
-@media (max-width: 720px) {
-  .negotiation-modal-contract {
-    border-left: none;
-    padding-left: 0;
-    border-top: 1px solid var(--panel-border, #e2e8f0);
-    padding-top: 1rem;
-  }
-}
-
 .transfer-hub-card {
   display: flex;
   gap: 0.65rem;
@@ -9191,59 +8705,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   margin: 0;
   color: #64748b;
   font-size: 0.9rem;
-}
-
-.negotiation-patience {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 1rem 0;
-  font-size: 0.85rem;
-}
-
-.negotiation-patience-bar {
-  display: flex;
-  gap: 0.25rem;
-  flex: 1;
-}
-
-.negotiation-patience-dot {
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 999px;
-  background: #e2e8f0;
-}
-
-.negotiation-patience-dot.is-full {
-  background: #059669;
-}
-
-.negotiation-counter,
-.negotiation-message {
-  margin: 0.5rem 0;
-}
-
-.negotiation-offer {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.negotiation-offer-amount {
-  font-size: 1.05rem;
-}
-
-.negotiation-offer-slider {
-  width: 100%;
-  accent-color: var(--waldgruen, #059669);
-}
-
-.negotiation-ratio {
-  color: #64748b;
-  font-size: 0.85rem;
-}
-
-.negotiation-runway {
-  margin: 0.75rem 0 0;
 }
 
 .negotiation-actions {
@@ -9280,44 +8741,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   color: #64748b;
 }
 
-.negotiation-open-error {
-  margin: 0.75rem 0 0;
-  padding: 0.65rem 0.75rem;
-  border-radius: 0.5rem;
-  background: #fef2f2;
-  color: #991b1b;
-  font-size: 0.9rem;
-}
-
-.negotiation-resolution {
-  margin: 0.75rem 0 0;
-  padding: 0.75rem 0.85rem;
-  border-radius: 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.negotiation-resolution.is-success {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #6ee7b7;
-}
-
-.negotiation-resolution.is-failure {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
-}
-
-.negotiation-rules {
-  margin: 1rem 0 0;
-  padding: 0.75rem;
-  border-radius: 0.65rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-
 .negotiation-rules-title {
   margin: 0 0 0.5rem;
   font-size: 0.8rem;
@@ -9325,60 +8748,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #475569;
-}
-
-.negotiation-rules-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.55rem;
-}
-
-.negotiation-rule {
-  display: flex;
-  gap: 0.5rem;
-  align-items: flex-start;
-  font-size: 0.85rem;
-}
-
-.negotiation-rule-body {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.negotiation-rule-body strong {
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.negotiation-rule-body span {
-  color: #64748b;
-  line-height: 1.35;
-}
-
-.negotiation-rule-icon {
-  flex-shrink: 0;
-  margin-top: 0.1rem;
-}
-
-.negotiation-rule.is-ok .negotiation-rule-icon {
-  color: #059669;
-}
-
-.negotiation-rule.is-blocked .negotiation-rule-icon {
-  color: #b91c1c;
-}
-
-.negotiation-rules-footnote {
-  margin: 0.65rem 0 0;
-  font-size: 0.8rem;
-  color: #64748b;
-  line-height: 1.4;
-}
-
-.negotiation-btn-muted {
-  color: #64748b;
 }
 
 /* modal-backdrop — game-surfaces.css */
@@ -9486,24 +8855,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   pointer-events: none;
 }
 
-.transfer-ambience--summer {
-  background: linear-gradient(
-    90deg,
-    rgb(254 243 199 / 42%),
-    rgb(253 230 138 / 28%),
-    rgb(254 243 199 / 42%)
-  );
-}
-
-.transfer-ambience--winter {
-  background: linear-gradient(
-    90deg,
-    rgb(219 234 254 / 42%),
-    rgb(191 219 254 / 28%),
-    rgb(219 234 254 / 42%)
-  );
-}
-
 .transfer-ambience-label {
   position: relative;
   z-index: 1;
@@ -9515,18 +8866,10 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   color: #92400e;
 }
 
-.transfer-ambience--winter .transfer-ambience-label {
-  color: #1e40af;
-}
-
 .transfer-ambience-dot {
   color: #d97706;
   margin-right: 0.35rem;
   animation: transfer-pulse 2.4s ease-in-out infinite;
-}
-
-.transfer-ambience--winter .transfer-ambience-dot {
-  color: #2563eb;
 }
 
 .transfer-ambience-hint {
@@ -10993,7 +10336,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 .scouting,
 .squad,
 .loans,
-.transfers,
 .stadium {
     padding-left: 0.75rem;
     padding-right: 0.75rem;

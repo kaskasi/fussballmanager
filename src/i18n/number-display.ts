@@ -10,3 +10,11 @@ export function formatWholeNumber(value: number): string {
 export function formatEuroWhole(value: number): string {
   return `€ ${formatWholeNumber(value)}`;
 }
+
+/** Fixed decimals in the active language: 4,5 (de) · 4.5 (en, zh-Hans). */
+export function formatDecimal(value: number, digits: number): string {
+  return new Intl.NumberFormat(localeBcp47(getLocale()), {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(value);
+}

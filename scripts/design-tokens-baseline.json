@@ -1,8 +1,8 @@
 {
   "files": {
     "src/index.css": {
-      "colors": 1271,
-      "fontSizes": 491
+      "colors": 1199,
+      "fontSizes": 465
     },
     "src/match/pitch-markings.tsx": {
       "colors": 3,

@@ -1,5 +1,7 @@
 import type { BoardState } from "../board/board-state.ts";
 import { formatClubCash, formatSignedCash, type ClubFinances } from "./club-finances.ts";
+import { t } from "../i18n/index.ts";
+import { formatDecimal } from "../i18n/number-display.ts";
 
 export const BIG_SPEND_THRESHOLD = 100_000;
 
@@ -43,24 +45,24 @@ export function spendRunway(
 
 export function formatWeeksOfWages(weeks: number | null): string {
   if (weeks === null) return "—";
-  if (weeks < 0) return "0 Wo";
-  if (weeks >= 100) return "99+ Wo";
-  return `${weeks.toFixed(weeks >= 10 ? 0 : 1).replace(".", ",")} Wo`;
+  if (weeks < 0) return t("spend.weeks", { weeks: 0 });
+  if (weeks >= 100) return t("spend.weeks", { weeks: "99+" });
+  return t("spend.weeks", { weeks: formatDecimal(weeks, weeks >= 10 ? 0 : 1) });
 }
 
 export function spendRunwayLines(runway: SpendRunway): Array<{ label: string; value: string; warn?: boolean }> {
   return [
-    { label: "Kosten", value: formatClubCash(runway.cost) },
+    { label: t("spend.cost"), value: formatClubCash(runway.cost) },
     {
-      label: "Kasse danach",
+      label: t("spend.cashAfter"),
       value: formatSignedCash(runway.cashAfter),
       warn: runway.cashAfter < 0,
     },
-    { label: "Gehälter", value: formatWeeksOfWages(runway.weeksAfter) },
+    { label: t("spend.wages"), value: formatWeeksOfWages(runway.weeksAfter) },
     {
-      label: "Vorstand-Kasse",
+      label: t("spend.boardCash"),
       value: runway.belowFloor
-        ? `unter ${formatClubCash(runway.boardFloor)}`
+        ? t("spend.belowFloor", { amount: formatClubCash(runway.boardFloor) })
         : formatSignedCash(runway.cashAfter - runway.boardFloor),
       warn: runway.belowFloor,
     },

@@ -4,6 +4,7 @@
  * this page is for building screens, players never see it.
  */
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { Check, X } from "lucide-react";
 import { titleBarColors, type KitColors, type TitleBarTheme } from "../shell/title-bar-colors.ts";
 import { ratingBand } from "../design/rating-band.ts";
 import { LeagueTable, LeagueZoneLegend } from "../components/LeagueTable.tsx";
@@ -481,6 +482,24 @@ export function UiGallery() {
                   Disabled
                 </button>
               </div>
+              <p className="tc-callout tc-callout--ok">Fee agreed — €1.20M. Now the contract.</p>
+              <p className="tc-callout tc-callout--no">Cannot buy: transfer window closed.</p>
+              <ul className="tc-gates">
+                <li className="tc-gate tc-gate--ok">
+                  <Check className="tc-icon" aria-hidden />
+                  <span className="tc-gate__copy">
+                    <strong>Transfer window open</strong>
+                    <span className="tc-caption">You may bid in this phase.</span>
+                  </span>
+                </li>
+                <li className="tc-gate tc-gate--no">
+                  <X className="tc-icon" aria-hidden />
+                  <span className="tc-gate__copy">
+                    <strong>Scout report too thin</strong>
+                    <span className="tc-caption">More scout weeks needed.</span>
+                  </span>
+                </li>
+              </ul>
               <div className="tc-menu">
                 <div className="tc-menu__list" role="menu" style={{ position: "static" }}>
                   <button type="button" role="menuitem" className="tc-menu__item tc-menu__item--danger">

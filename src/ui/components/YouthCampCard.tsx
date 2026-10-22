@@ -2,7 +2,7 @@
 import { HardHat, Lock, Mail, Star, UserCheck } from "lucide-react";
 import type { Player } from "../../types/player.ts";
 import { estimateCa } from "../../transfers/market-value.ts";
-import { formatClubCash } from "../../economy/club-finances.ts";
+import { formatClubCash, formatClubCashWeekly } from "../../economy/club-finances.ts";
 import {
   campLeaderDisplayName,
   formatCampLeaderModLabel,
@@ -107,7 +107,7 @@ export function YouthCampCard({
               </p>
             ) : (
               <p className="youth-camp-card-meta">
-                {formatClubCash(weeklyCampUpkeepForCamp(owned))}/Wo
+                {formatClubCashWeekly(weeklyCampUpkeepForCamp(owned))}
               </p>
             )}
           </div>

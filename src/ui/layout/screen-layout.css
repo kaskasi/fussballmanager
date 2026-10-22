@@ -88,14 +88,6 @@ main.settings.club-shell-card-body {
   margin: 0 auto;
 }
 
-main.transfers.club-shell-card-body .transfers-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.65rem 1rem;
-  margin: 0 0 1rem;
-}
-
 main.scouting.club-shell-card-body .scouting-summary,
 main.scouting.club-shell-card-body .scouting-scouts {
   margin: 0 0 0.65rem;

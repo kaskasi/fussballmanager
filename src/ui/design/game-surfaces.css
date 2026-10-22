@@ -222,10 +222,6 @@ main.pipeline.club-shell-card-body {
   text-overflow: ellipsis;
 }
 
-.transfer-ambience-header--winter {
-  color: var(--info);
-}
-
 .club-shell-card-head .transfer-ambience-header {
   color: var(--on-club);
 }

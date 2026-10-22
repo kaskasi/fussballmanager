@@ -1,6 +1,5 @@
-/** WIREFRAME: design.md §9.6 B — Transfermarkt-Karte (Scout-Hit-Layout) */
+/** WIREFRAME: design.md §9.6 B — Transfermarkt-Karte (tc-deal: portrait, name, club, price and state; quick actions below) */
 import { Eye, Star, User } from "lucide-react";
-import { formatClubCash } from "../../economy/club-finances.ts";
 import { useT } from "../../i18n/react.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
@@ -53,63 +52,56 @@ export function TransferMarketGridCard({
         : kind === "own_listing"
           ? "transfers.market.badgeOwnListing"
           : "transfers.market.badgeListed";
+  const badgeTone =
+    kind === "purchase_talk" || kind === "sale_talk" ? "talk" : kind === "inbound_offer" ? "offer" : "listed";
 
   return (
-    <article className="scout-hit-card transfers-market-card">
-      <button type="button" className="scout-hit-card-main" onClick={onOpen}>
-        <div className="scout-hit-card-top">
+    <article className="tc-deal">
+      <button type="button" className="tc-deal__main" onClick={onOpen}>
+        <PlayerPortrait
+          seed={player?.portrait_seed ?? 0}
+          nationality={player?.nationality}
+          clubId={player?.club_id}
+          size="sm"
+          variant={player ? "known" : "silhouette"}
+        />
+        <span className="tc-deal__id">
+          <span className="tc-deal__name">{player ? formatPlayerName(player) : playerId}</span>
           {player ? (
-            <PlayerPortrait
-              seed={player.portrait_seed} nationality={player.nationality}
-              clubId={player.club_id}
-              size="sm"
-              variant="known"
-              className="scout-hit-card-portrait"
-            />
-          ) : (
-            <span className="scout-hit-card-portrait transfers-market-card-portrait-fallback" aria-hidden />
-          )}
-          <div className="scout-hit-card-head">
-            <span className="scout-hit-card-name">
-              {player ? formatPlayerName(player) : playerId}
+            <span className="tc-deal__meta">
+              {player.position} · {t("profile.age", { age: player.age })}
+              {ca != null ? ` · CA ${ca}` : ""}
             </span>
-            {player ? (
-              <span className="scout-hit-card-meta">
-                {player.age} · {player.position}
-                {ca != null ? ` · CA ${ca}` : ""}
-              </span>
-            ) : null}
-            <span className="scout-hit-card-club">{clubLabel}</span>
-            <span className="transfers-market-card-badge">{t(badgeKey)}</span>
-          </div>
-        </div>
-        <div className="scout-hit-card-bottom transfers-market-card-bottom">
-          <strong className="transfers-market-card-price">{priceLabel}</strong>
-          {detailLine ? <span className="transfers-market-card-detail">{detailLine}</span> : null}
-        </div>
+          ) : null}
+          <span className="tc-deal__meta">{clubLabel}</span>
+        </span>
+        <span className="tc-deal__price">
+          <strong>{priceLabel}</strong>
+          <span className={`tc-deal__badge tc-deal__badge--${badgeTone}`}>{t(badgeKey)}</span>
+        </span>
+        {detailLine ? <span className="tc-deal__detail tc-caption">{detailLine}</span> : null}
       </button>
       {onToggleShortlist || onOpenProfile || showScoutAction ? (
-        <div className="scout-hit-card-ctas transfers-market-card-ctas">
+        <div className="tc-deal__actions">
           {onToggleShortlist ? (
             <button
               type="button"
-              className={shortlisted ? "scout-hit-cta is-on" : "scout-hit-cta"}
+              className="tc-iconbtn"
               aria-pressed={shortlisted}
-              aria-label={
-                shortlisted ? t("scouting.watchlist.remove") : t("scouting.watchlist.add")
-              }
+              aria-label={shortlisted ? t("scouting.watchlist.remove") : t("scouting.watchlist.add")}
               onClick={(event) => {
                 event.stopPropagation();
                 onToggleShortlist();
               }}
             >
-              <Star size={15} strokeWidth={2.25} fill={shortlisted ? "currentColor" : "none"} />
+              <Star className="tc-icon" aria-hidden fill={shortlisted ? "currentColor" : "none"} />
             </button>
           ) : null}
           {showScoutAction ? (
             <button
               type="button"
-              className={scoutAssigned ? "scout-hit-cta is-on" : "scout-hit-cta"}
+              className="tc-iconbtn"
+              aria-pressed={scoutAssigned}
               disabled={scoutAssigned}
               aria-label={scoutAssigned ? t("scouting.hits.scoutActive") : t("scouting.hits.scoutCta")}
               onClick={(event) => {
@@ -117,20 +109,20 @@ export function TransferMarketGridCard({
                 onScout?.();
               }}
             >
-              <Eye size={15} strokeWidth={2.25} />
+              <Eye className="tc-icon" aria-hidden />
             </button>
           ) : null}
           {onOpenProfile ? (
             <button
               type="button"
-              className="scout-hit-cta"
+              className="tc-iconbtn"
               aria-label={t("scouting.hits.profileCta")}
               onClick={(event) => {
                 event.stopPropagation();
                 onOpenProfile();
               }}
             >
-              <User size={15} strokeWidth={2.25} />
+              <User className="tc-icon" aria-hidden />
             </button>
           ) : null}
         </div>

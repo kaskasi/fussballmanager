@@ -153,6 +153,8 @@ Position-, Sortier- und Scout-Filter sind **ein** Baustein (`FilterChip`):
 
 Portraits (F1): `tc-face` / `tc-face--sm|md|lg` (32 · 56 · 88 px, Tokens `--portrait-xs` / `--portrait-md` / `--portrait-lg`) — `PlayerPortrait` zeichnet faces.js im Kreis; `variant="silhouette"` zeigt die Platzhalter-Figur.
 
+Mit den Transfers (F1) dazugekommen: `tc-deal(s)` (Marktkarte), `tc-callout` (Statuszeile ok/warn/no), `tc-gates` (Bedingungen), `tc-patience`, `tc-modal--wide`; Layout in `design/surfaces/transfers.css`.
+
 Mit dem Spielerprofil (F1) dazugekommen: `tc-menu` (⋮-Menü mit Hinweis je Eintrag), `tc-range` (Schieberegler mit Wert), `tc-chip--icon`, `tc-talk` (Vertragsgespräch, auch in der Transfer-Verhandlung); Bildschirm-Layout in `design/surfaces/profile.css`.
 
 Mit dem Kader (F1) dazugekommen: `tc-select`, `tc-check(s)`, `tc-cards` / `tc-card`, `tc-stack`, `tc-empty-state`, `tc-state--good/mid/low`, `tc-namecell`, `tc-row--link`, `tc-list__item--wide` / `--stack-narrow`, `tc-btn--sm`, `tc-chip--dense`, `tc-chips--toolbar`. **Gemeinsame Bausteine, die jetzt überall gelten:** Screen-Tabs (`FmScreenTabBar`, `.fm-tab` im tc-Look ohne Gelb), Filter-Chips, Sortierköpfe (`SquadSortHeader`).
@@ -518,6 +520,13 @@ Der Transferbereich besteht aus zwei Ansichten: **Überblick** (Standard) und **
 
 Das erklärt den Unterschied: Der Screenshot ist der Informations-Hub, dein Wireframe ist das Arbeitswerkzeug. Beide gehören zusammen.
 
+
+**Umsetzung (F1, vierter migrierter Screen — gilt vor der Skizze oben):**
+- Aufbau: `tc-page-head` mit Fensterstatus (Zustandszeichen + „Sommerfenster“ in der Sprache des Spiels) → Transfermarkt als `tc-panel` (Zugänge/Abgänge und Positionen als `tc-chip`, Karten `tc-deal`: Portrait, Name, Position/Alter/CA, Verein, Preis + Status, Merken/Scouten/Profil als `tc-iconbtn`, Seiten als dichte Chips) → darunter Vertragsgespräche, Leihen und Historie als drei `tc-panel` mit `tc-list` (Historie mit Saison-Chips, Zugänge/Abgänge als `tc-section`, Lucide-Pfeile statt Emoji).
+- Verhandlung: `ModalShell variant="tc"`; Bedingungen als `tc-gates` (Haken/Kreuz + Wort für Screenreader), Geduld als `tc-patience`, Angebot als `tc-range` mit Anteil am Richtwert, Folgen als `tc-kv`, Hinweise als `tc-callout`. In der Vertragsphase zweispaltig (`tc-modal--wide`) mit dem `tc-talk`-Formular.
+- Geld: `formatClubCash` / `formatSignedCash` / `formatClubCashWeekly` schreiben in der Sprache des Spiels — „€ 5.50 Mio.“ (DE, unverändert), „€5.50M“ (EN), „€550万“ (ZH). Gilt überall, auch in der Titelleiste.
+- Texte: Leih- und Vorvertragsgründe, Transferarten und die Ausgaben-Zeilen (Kosten, Kasse danach, Gehälter, Vorstand-Kasse) in EN/DE/ZH.
+- Offen aus der Skizze: Filter nach Alter/CA/Preis, Sortierung, Vereinsname statt Kürzel auf der Karte.
 
 ### 9.7 Tabellen (Liga)
 

@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
+import { MoreVertical } from "lucide-react";
 import type { ProfileMenuItem } from "../../player/profile-actions.ts";
+import { t } from "../../i18n/index.ts";
 
+/** ⋮ menu for destructive squad actions on the profile (tc-menu, design.md §4.3). */
 export function ProfileActionsMenu({
   open,
   items,
@@ -21,39 +24,46 @@ export function ProfileActionsMenu({
     function handlePointer(event: MouseEvent) {
       if (!rootRef.current?.contains(event.target as Node)) onClose();
     }
+    function handleKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
     document.addEventListener("mousedown", handlePointer);
-    return () => document.removeEventListener("mousedown", handlePointer);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("keydown", handleKey);
+    };
   }, [open, onClose]);
 
   if (items.length === 0) return null;
 
   return (
-    <div className="row-menu profile-actions-menu" ref={rootRef}>
+    <div className="tc-menu" ref={rootRef}>
       <button
         type="button"
-        className="row-menu-trigger"
-        aria-label="Weitere Kaderaktionen"
+        className="tc-iconbtn"
+        aria-label={t("profile.moreActions")}
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={onToggle}
       >
-        ⋮
+        <MoreVertical className="tc-icon" aria-hidden />
       </button>
       {open ? (
-        <div className="row-menu-popover profile-actions-popover" role="menu">
+        <div className="tc-menu__list" role="menu">
           {items.map((item) => (
             <button
               key={item.action}
               type="button"
               role="menuitem"
-              className={`row-menu-item${item.action === "release" ? " row-menu-item-danger" : ""}`}
-              title={item.hint}
+              className={item.action === "release" ? "tc-menu__item tc-menu__item--danger" : "tc-menu__item"}
               onClick={() => {
                 onSelect(item.action);
                 onClose();
               }}
             >
-              {item.label}
+              <span className="tc-menu__label">{item.label}</span>
+              <span className="tc-menu__hint">{item.hint}</span>
             </button>
           ))}
         </div>

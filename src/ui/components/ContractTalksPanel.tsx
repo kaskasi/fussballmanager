@@ -12,12 +12,18 @@ import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
 import { contractUntilSeasonAfterTerm } from "../../transfers/contract-until-season.ts";
+import { formatEuroWhole } from "../../i18n/number-display.ts";
+import { useT } from "../../i18n/react.ts";
 
-const ROLE_OPTIONS: { id: MinutesPromise; Icon: typeof Star; label: string }[] = [
-  { id: "rotation", Icon: RefreshCw, label: "Rotation" },
-  { id: "starter", Icon: Star, label: "Stammplatz" },
+const ROLE_OPTIONS: { id: MinutesPromise; Icon: typeof Star; labelKey: string }[] = [
+  { id: "rotation", Icon: RefreshCw, labelKey: "contract.talk.role.rotation" },
+  { id: "starter", Icon: Star, labelKey: "contract.talk.role.starter" },
 ];
 
+/**
+ * Contract offer form (PRD 05.4): wage, term, appearance bonus, minutes guarantee and starting place.
+ * Profile: inside the tc modal (`inModal`). Transfers: inline in the negotiation (`compactTitle`).
+ */
 export function ContractTalksPanel({
   player,
   season,
@@ -27,6 +33,7 @@ export function ContractTalksPanel({
   onSubmit,
   onCancel,
   compactTitle,
+  inModal,
 }: {
   player: Player;
   season: number;
@@ -36,7 +43,10 @@ export function ContractTalksPanel({
   onSubmit: () => void;
   onCancel: () => void;
   compactTitle?: boolean;
+  /** The surrounding modal already shows the player's name. */
+  inModal?: boolean;
 }) {
+  const t = useT();
   const ask = playerContractAsk(player, season, offer.minutesPromise);
   const bounds = contractTalkBounds(player, season, offer.minutesPromise);
   const verdict = describeContractOffer(player, season, offer);
@@ -59,22 +69,21 @@ export function ContractTalksPanel({
   }
 
   return (
-    <section className="contract-talk-panel" aria-labelledby="contract-talk-title">
-      {!compactTitle ? (
-        <header className="negotiation-head">
-          <p className="eyebrow">Vertragsgespräch</p>
-          <h2 id="contract-talk-title">{formatPlayerName(player)}</h2>
-        </header>
+    <section className="tc-talk" aria-label={t("contract.talk.aria", { name: formatPlayerName(player) })}>
+      {inModal ? null : compactTitle ? (
+        <h3 className="tc-talk__title">{t("contract.talk.compactTitle", { name: formatPlayerName(player) })}</h3>
       ) : (
-        <h3 id="contract-talk-title" className="contract-talk-panel-title">
-          Vertrag · {formatPlayerName(player)}
-        </h3>
+        <header>
+          <span className="tc-label">{t("contract.talk.eyebrow")}</span>
+          <h2 className="tc-talk__title">{formatPlayerName(player)}</h2>
+        </header>
       )}
-      {revealed ? <p className="profile-talk-hint">{ask.advisorHint}</p> : null}
+      {revealed ? <p className="tc-caption">{ask.advisorHint}</p> : null}
 
-      <label className="profile-talk-row">
-        <span>
-          Gehalt <strong>€ {offer.wageWeekly.toLocaleString("de-DE")}/Wo</strong>
+      <label className="tc-range">
+        <span className="tc-range__head">
+          <span>{t("contract.talk.wage")}</span>
+          <strong>{t("contract.talk.perWeek", { amount: formatEuroWhole(offer.wageWeekly) })}</strong>
         </span>
         <input
           type="range"
@@ -85,10 +94,12 @@ export function ContractTalksPanel({
           onChange={(event) => onChange({ ...offer, wageWeekly: Number(event.target.value) })}
         />
       </label>
-      <label className="profile-talk-row">
-        <span>
-          Laufzeit <strong>{offer.termYears}</strong> · Sommer{" "}
-          <strong>{formatSeasonLabel(expirySeason)}</strong>
+      <label className="tc-range">
+        <span className="tc-range__head">
+          <span>{t("contract.talk.term")}</span>
+          <strong>
+            {t("contract.talk.termValue", { years: offer.termYears, season: formatSeasonLabel(expirySeason) })}
+          </strong>
         </span>
         <input
           type="range"
@@ -99,9 +110,10 @@ export function ContractTalksPanel({
           onChange={(event) => onChange({ ...offer, termYears: Number(event.target.value) })}
         />
       </label>
-      <label className="profile-talk-row">
-        <span>
-          Einsatzbonus <strong>€ {offer.bonusAppearance.toLocaleString("de-DE")}</strong>
+      <label className="tc-range">
+        <span className="tc-range__head">
+          <span>{t("contract.talk.bonus")}</span>
+          <strong>{formatEuroWhole(offer.bonusAppearance)}</strong>
         </span>
         <input
           type="range"
@@ -109,72 +121,74 @@ export function ContractTalksPanel({
           max={bounds.bonusMax}
           step={bounds.bonusMax > 80 ? 5 : 1}
           value={Math.min(bounds.bonusMax, Math.max(bounds.bonusMin, offer.bonusAppearance))}
-          onChange={(event) =>
-            onChange({ ...offer, bonusAppearance: Number(event.target.value) })
-          }
+          onChange={(event) => onChange({ ...offer, bonusAppearance: Number(event.target.value) })}
         />
       </label>
 
-      <div className="contract-talk-clause">
-        <p className="profile-section-label">Minuten-Garantie</p>
-        <div className="contract-talk-toggle" role="group" aria-label="Minuten-Garantie">
-          <button
-            type="button"
-            className={minutesOn ? "is-active" : undefined}
-            aria-pressed={minutesOn}
-            onClick={() => setPromise(minutesOn ? "none" : "rotation")}
-          >
-            <Timer size={16} aria-hidden="true" /> {minutesOn ? "An" : "Aus"}
-          </button>
-        </div>
-      </div>
-      <div className="contract-talk-clause">
-        <p className="profile-section-label">Startplatz</p>
-        <div className="contract-talk-roles" role="group" aria-label="Startplatz">
-          {ROLE_OPTIONS.map((option) => (
+      <div className="tc-talk__clauses">
+        <div className="tc-talk__clause">
+          <span className="tc-label" id="contract-talk-minutes">
+            {t("contract.talk.minutes")}
+          </span>
+          <div className="tc-chips" role="group" aria-labelledby="contract-talk-minutes">
             <button
-              key={option.id}
               type="button"
-              className={offer.minutesPromise === option.id ? "is-active" : undefined}
-              aria-pressed={offer.minutesPromise === option.id}
-              disabled={!minutesOn}
-              onClick={() => setPromise(option.id)}
+              className="tc-chip tc-chip--icon"
+              aria-pressed={minutesOn}
+              onClick={() => setPromise(minutesOn ? "none" : "rotation")}
             >
-              <option.Icon size={16} aria-hidden="true" /> {option.label}
+              <Timer className="tc-icon" aria-hidden="true" />
+              {minutesOn ? t("contract.talk.on") : t("contract.talk.off")}
             </button>
-          ))}
+          </div>
+        </div>
+        <div className="tc-talk__clause">
+          <span className="tc-label" id="contract-talk-role">
+            {t("contract.talk.role")}
+          </span>
+          <div className="tc-chips" role="group" aria-labelledby="contract-talk-role">
+            {ROLE_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className="tc-chip tc-chip--icon"
+                aria-pressed={offer.minutesPromise === option.id}
+                disabled={!minutesOn}
+                onClick={() => setPromise(option.id)}
+              >
+                <option.Icon className="tc-icon" aria-hidden="true" />
+                {t(option.labelKey)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {revealed ? (
-        <p className={verdict.accepted ? "sponsor-deal-verdict is-ok" : "sponsor-deal-verdict is-no"}>
+        <p className={verdict.accepted ? "tc-talk__verdict tc-talk__verdict--ok" : "tc-talk__verdict tc-talk__verdict--no"}>
           {verdict.accepted ? (
-            <Handshake size={16} aria-hidden="true" strokeWidth={2.5} className="negotiation-verdict-icon" />
+            <Handshake className="tc-icon" aria-hidden="true" />
           ) : (
-            <Angry size={16} aria-hidden="true" strokeWidth={2.5} className="negotiation-verdict-icon" />
-          )}{" "}
+            <Angry className="tc-icon" aria-hidden="true" />
+          )}
           {verdict.reason}
         </p>
       ) : null}
 
       {wageHeadroomWeekly !== undefined ? (
-        <p className={fitsBudget ? "profile-talk-hint" : "profile-talk-warn"}>
-          Cap {formatClubCash(Math.max(0, wageHeadroomWeekly))}/Wo frei
-          {fitsBudget ? "" : " — Angebot zu hoch"}
+        <p className={fitsBudget ? "tc-caption" : "tc-talk__verdict tc-talk__verdict--no"}>
+          {fitsBudget
+            ? t("contract.talk.cap", { amount: formatClubCash(Math.max(0, wageHeadroomWeekly)) })
+            : t("contract.talk.capExceeded", { amount: formatClubCash(Math.max(0, wageHeadroomWeekly)) })}
         </p>
       ) : null}
 
-      <div className="negotiation-actions">
-        <button
-          type="button"
-          className="negotiation-btn negotiation-btn-primary"
-          onClick={onSubmit}
-          disabled={!fitsBudget}
-        >
-          Anbieten
+      <div className="tc-talk__actions">
+        <button type="button" className="tc-btn tc-btn--ghost" onClick={onCancel}>
+          {t("contract.talk.cancel")}
         </button>
-        <button type="button" className="negotiation-btn negotiation-btn-muted" onClick={onCancel}>
-          Abbrechen
+        <button type="button" className="tc-btn tc-btn--primary" onClick={onSubmit} disabled={!fitsBudget}>
+          {t("contract.talk.submit")}
         </button>
       </div>
     </section>

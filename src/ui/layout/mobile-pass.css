@@ -72,8 +72,7 @@
   }
 
   /* Button = full rail width; .fm-tab__vlabel rotates (FmScreenTabBar) */
-  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab,
-  .profile-spoke-tabs.fm-tab-bar--screen-tabs .fm-tab {
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab {
     display: grid;
     place-items: center;
     flex: unset;
@@ -143,19 +142,8 @@
     display: none;
   }
 
-  .profile-spoke-tabs.fm-tab-bar--screen-tabs {
-    display: grid;
-    grid-auto-flow: row;
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: stretch;
-    align-self: start;
-    height: auto;
-    background: transparent;
-  }
-
   /* Legacy: plain fm-tab-bar without FmScreenTabBar */
-  main.club-shell-card-body:has(> .fm-tab-bar:not(.fm-tab-bar--screen-tabs)):not(.help) > .fm-tab-bar .fm-tab,
-  .profile-spoke-tabs.fm-tab-bar:not(.fm-tab-bar--screen-tabs) .fm-tab {
+  main.club-shell-card-body:has(> .fm-tab-bar:not(.fm-tab-bar--screen-tabs)):not(.help) > .fm-tab-bar .fm-tab {
     display: grid;
     place-items: center;
     flex: unset;
@@ -178,8 +166,7 @@
     font-size: 0.68rem;
   }
 
-  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar .fm-tab:last-child,
-  .profile-spoke-tabs.fm-tab-bar .fm-tab:last-child {
+  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar .fm-tab:last-child {
     border-bottom: none;
   }
 
@@ -718,8 +705,7 @@
     word-break: normal;
   }
 
-  main.pipeline.club-shell-card-body,
-  main.profile.club-shell-card-body {
+  main.pipeline.club-shell-card-body {
     padding-left: max(0.65rem, env(safe-area-inset-left));
     padding-right: max(0.65rem, env(safe-area-inset-right));
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
@@ -735,79 +721,6 @@
   }
 
   /* §9.8 Profil — kompaktere Identitätsschiene */
-  .profile-card.profile-hub {
-    padding: 0.65rem 0.7rem 1rem;
-    gap: 0.65rem;
-  }
-
-  .profile-identity-head {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 0.55rem;
-  }
-
-  .profile-identity-head .profile-name {
-    font-size: 1.08rem;
-    line-height: 1.15;
-  }
-
-  .profile-identity-stats {
-    gap: 0.2rem 0.4rem;
-    font-size: 0.78rem;
-  }
-
-  .profile-actions-rail .profile-action-btn,
-  .profile-actions-rail .ui-btn {
-    font-size: 0.68rem;
-    padding: 0.42rem 0.4rem;
-    line-height: 1.2;
-    white-space: normal;
-    text-align: center;
-    min-height: 2.65rem;
-  }
-
-  .profile-hub-spoke {
-    display: grid;
-    grid-template-columns: var(--fm-tab-rail-width, 2.75rem) minmax(0, 1fr);
-    gap: 0;
-    align-items: stretch;
-    min-width: 0;
-  }
-
-  .profile-spoke-tabs.fm-tab-bar {
-    grid-column: 1;
-    grid-row: 1;
-    align-self: start;
-    height: auto;
-    width: var(--fm-tab-rail-width, 2.75rem);
-    min-width: var(--fm-tab-rail-width, 2.75rem);
-    max-width: var(--fm-tab-rail-width, 2.75rem);
-    padding: 0;
-    border-right: var(--outline);
-    background: transparent;
-  }
-
-  .profile-tab-panels {
-    grid-column: 2;
-    min-width: 0;
-  }
-
-  .profile-attr-hex-wrap--hero .profile-hex {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-
-  .profile-vertrag-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-
-  .profile-vertrag-actions .ui-btn {
-    width: 100%;
-    justify-content: center;
-  }
 
   /* Jugend — schmalere Tabelle, Fokus Name/CA/Wert/Ziel */
   .youth-strip {

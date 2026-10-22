@@ -19,6 +19,7 @@ export function seasonCaDelta(player: Player, season: number): number | null {
     .at(-1);
   if (!baseline) return null;
   const startCa = Math.round(estimateCa(baseline.attributes_snapshot, player.position));
+  if (!Number.isFinite(startCa)) return null;
   return playerCa(player) - startCa;
 }
 

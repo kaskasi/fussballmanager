@@ -4,6 +4,7 @@ import type { Injury, Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import type { PendingDiagnosis } from "../medical/diagnosis-queue.ts";
 import { buildPendingFromRoll } from "../medical/diagnosis-queue.ts";
+import { t } from "../i18n/index.ts";
 
 export const INJURY_MIN_SCORE = 40;
 export const INJURY_SCORE_CAP = 92;
@@ -141,7 +142,9 @@ export function createInjuryForPlayer(
 }
 
 export function injuryTypeLabel(typeId: string): string {
-  return INJURY_TYPES.find((entry) => entry.id === typeId)?.label ?? typeId;
+  const key = `injury.type.${typeId}`;
+  const label = t(key);
+  return label !== key ? label : (INJURY_TYPES.find((entry) => entry.id === typeId)?.label ?? typeId);
 }
 
 export function rollWeeklyInjuries(

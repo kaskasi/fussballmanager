@@ -256,6 +256,38 @@
 .tc-kv .tc-ok { color: var(--positive); }
 .tc-kv .tc-attention { color: var(--warning); }
 
+/* Overflow menu (⋮): destructive or rare actions, each with a one-line hint */
+.tc-menu { position: relative; }
+.tc-menu__list { position: absolute; top: calc(100% + var(--space-1)); right: 0; z-index: 20; display: grid; min-width: 16rem; padding: var(--space-1); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-overlay); }
+.tc-menu__item { display: grid; gap: 2px; padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--radius-sm); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.tc-menu__item:hover { background: var(--sunken); }
+.tc-menu__item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tc-menu__label { font-weight: 700; font-size: var(--font-size-sm); line-height: 1.25rem; }
+.tc-menu__hint { color: var(--text-muted); font-size: var(--font-size-xs); line-height: 1rem; }
+.tc-menu__item--danger .tc-menu__label { color: var(--negative); }
+
+/* Range field: label and current value above a slider */
+.tc-range { display: grid; gap: var(--space-1); font-size: var(--font-size-sm); line-height: 1.25rem; }
+.tc-range__head { display: flex; justify-content: space-between; gap: var(--space-3); }
+.tc-range__head strong { font-variant-numeric: tabular-nums; }
+.tc-range input { width: 100%; margin: 0; accent-color: var(--accent); }
+.tc-chip--icon { display: inline-flex; align-items: center; gap: var(--space-1); }
+.tc-chip--icon .tc-icon { width: 16px; height: 16px; }
+.tc-chip:disabled { color: var(--text-muted); background: var(--sunken); border-color: var(--line); cursor: not-allowed; }
+
+/* Contract talk form (profile modal, transfer negotiation) */
+.tc-talk { display: grid; gap: var(--space-4); min-width: 0; }
+.tc-talk header { display: grid; gap: var(--space-1); }
+.tc-talk__title { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: var(--font-size-lg); line-height: 1.5rem; }
+.tc-talk .tc-caption, .tc-talk__verdict { margin: 0; }
+.tc-talk__clauses { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-6); }
+.tc-talk__clause { display: grid; gap: var(--space-2); }
+.tc-talk__verdict { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-sm); line-height: 1.25rem; font-weight: 700; }
+.tc-talk__verdict .tc-icon { width: 16px; height: 16px; }
+.tc-talk__verdict--ok { color: var(--positive); }
+.tc-talk__verdict--no { color: var(--negative); }
+.tc-talk__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+
 /* Der Treter */
 .tc-news { padding: var(--space-6); background: var(--newsprint); color: var(--newsprint-ink); border: 1px solid var(--newsprint-rule); font-family: var(--font-news); }
 .tc-news__masthead { margin: 0; padding-bottom: var(--space-2); text-align: center; border-bottom: 3px double var(--newsprint-ink); font-family: var(--font-masthead); font-weight: 400; font-size: var(--font-size-masthead); line-height: 3.5rem; }

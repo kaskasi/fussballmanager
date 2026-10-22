@@ -14,8 +14,6 @@ export const CAREER_STAMP_POOL: readonly { label: string; minAge: number }[] = [
   { label: "🎭 Kaltblütig", minAge: 29 },
 ];
 
-const ATTRIBUTE_KEYS = Object.keys({} as Attributes) as (keyof Attributes)[];
-
 function mulberry32(seed: number): () => number {
   let state = seed >>> 0;
   return () => {
@@ -95,7 +93,7 @@ function snapshotAttributes(current: Attributes, yearsAgo: number): Attributes {
   if (yearsAgo <= 0) return { ...current };
   const factor = Math.max(0.82, 1 - yearsAgo * 0.018);
   return Object.fromEntries(
-    ATTRIBUTE_KEYS.map((key) => [key, Math.round(current[key] * factor)]),
+    (Object.keys(current) as (keyof Attributes)[]).map((key) => [key, Math.round(current[key] * factor)]),
   ) as unknown as Attributes;
 }
 

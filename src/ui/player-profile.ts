@@ -1,4 +1,4 @@
-import { careerApps, stampGateMarkers } from "../development/ability-stamps.ts";
+import { careerApps, hasStamp, stampGateMarkers } from "../development/ability-stamps.ts";
 import {
   derivedExperienceFactor,
   EXPERIENCE_APPS_SOFT_CAP,
@@ -10,6 +10,7 @@ import {
   type IndividualProgram,
 } from "../development/individual-training.ts";
 import { isTrainingSlotEmpty, trainingUnit, type TrainingSlot } from "../development/training-units.ts";
+import { trainingUnitDisplayLabel } from "../i18n/training-unit-display.ts";
 import type { Attributes, GrowthSnapshot, Player, PositionPrimary } from "../types/player.ts";
 import { roundStat } from "../types/player-display.ts";
 import { caGroup, estimateCa } from "../transfers/market-value.ts";
@@ -119,14 +120,11 @@ export function attributeLabel(key: keyof Attributes): string {
 export function profileFacts(player: Player, owned: boolean): ProfileFact[] {
   const apps = careerApps(player);
   return [
-    { label: "Nationalität", value: nationalityLabel(player.nationality) },
-    { label: "Region", value: player.birth.region },
-    { label: "Geburtsort", value: player.birth.place },
-    { label: "Vertrag", value: contractLabel(player, owned) },
-    {
-      label: profileExperienceLabel(player),
-      value: owned ? `${apps} Einsätze` : "?",
-    },
+    { label: t("profile.fact.nationality"), value: nationalityLabel(player.nationality) },
+    { label: t("profile.fact.region"), value: player.birth.region },
+    { label: t("profile.fact.birthplace"), value: player.birth.place },
+    { label: t("profile.fact.contract"), value: contractLabel(player, owned) },
+    { label: t("profile.fact.apps"), value: owned ? String(apps) : "?" },
   ];
 }
 
@@ -145,40 +143,36 @@ export function profileExperienceBar(player: Player): ExperienceBar {
     apps,
     fill: Math.min(1, apps / EXPERIENCE_APPS_SOFT_CAP),
     factor: derivedExperienceFactor(player),
-    raw: profileExperienceLabel(player).includes("Roh"),
+    raw: hasStamp(player, "gruenschnabel"),
   };
 }
 
-function nationalityLabel(code: string): string {
-  const labels: Record<string, string> = {
-    DE: "Deutschland",
-    BR: "Brasilien",
-    NG: "Nigeria",
-    PL: "Polen",
-    FR: "Frankreich",
-    TR: "Türkei",
-    HR: "Kroatien",
-  };
-  return labels[code] ?? code;
+export function nationalityLabel(code: string): string {
+  const key = `player.nationality.${code}`;
+  const label = t(key);
+  return label === key ? code : label;
 }
 
 function contractLabel(player: Player, owned: boolean): string {
   if (player.contract) {
-    return `bis ${formatSeasonLabel(player.contract.until_season)}`;
+    return t("profile.contract.until", { season: formatSeasonLabel(player.contract.until_season) });
   }
   if (player.squad_status === "u17" || player.squad_status === "u19") {
-    return "Kein Vertrag";
+    return t("profile.contract.none");
   }
-  if (!owned) return "Unbekannt";
-  return "Verhandlung offen";
+  if (!owned) return t("profile.contract.unknown");
+  return t("profile.contract.open");
 }
 
 export function growthSeries(player: Player, currentSeason = 1): GrowthPoint[] {
   const currentCa = roundStat(estimateCa(player.attributes, player.position));
-  const points = player.history.growth.map((snapshot) => ({
-    season: snapshot.season,
-    ca: roundStat(estimateCa(snapshot.attributes_snapshot, player.position)),
-  }));
+  // Saves from before the veteran-backstory fix hold empty archive snapshots; their CA is NaN and is left out.
+  const points = player.history.growth
+    .map((snapshot) => ({
+      season: snapshot.season,
+      ca: roundStat(estimateCa(snapshot.attributes_snapshot, player.position)),
+    }))
+    .filter((point) => Number.isFinite(point.ca));
   if (points.length === 0) {
     return [{ season: currentSeason, ca: currentCa }];
   }
@@ -247,7 +241,7 @@ export {
 } from "../development/position-lanes.ts";
 
 import type { StaerkeLane } from "../development/position-lanes.ts";
-import { positionLane, STAERKE_LANE_LABELS } from "../development/position-lanes.ts";
+import { positionLane, staerkeLaneLabel } from "../development/position-lanes.ts";
 
 export interface StaerkeAlsBar {
   lane: StaerkeLane;
@@ -265,7 +259,7 @@ export function staerkeAlsLanes(player: Player): StaerkeAlsBar[] {
   }
   return (["TW", "IV", "MF", "ST"] as const).map((lane) => ({
     lane,
-    label: STAERKE_LANE_LABELS[lane],
+    label: staerkeLaneLabel(lane),
     value: Math.min(1, Math.max(0, scores[lane])),
   }));
 }
@@ -317,17 +311,19 @@ export function dossierTrainingTarget(
   if (!slot || isTrainingSlotEmpty(slot)) {
     return {
       accent: "empty",
-      title: "Kein Plan",
-      detail: "Mannschaftstraining noch offen",
+      title: t("training.program.noPlan"),
+      detail: t("profile.target.teamOpen"),
       progress: null,
     };
   }
   const unit = trainingUnit(slot.unitId);
-  const extra = focusSlots.length > 1 ? ` · ${focusSlots.length} Fokus-Slots` : "";
   return {
     accent: "team",
-    title: unit.label,
-    detail: `Mannschaftsfokus${extra}`,
+    title: trainingUnitDisplayLabel(unit),
+    detail:
+      focusSlots.length > 1
+        ? t("profile.target.teamFocusSlots", { count: focusSlots.length })
+        : t("profile.target.teamFocus"),
     progress: null,
   };
 }
@@ -389,12 +385,12 @@ export function fullSkillSheet(
 ): SkillSheetGroup[] {
   const groups = ATTRIBUTE_GROUPS.map((group) => ({
     id: group.id,
-    label: group.label,
+    label: t(`player.attributeGroup.${group.id}`),
     bars: group.keys.map((key) => skillBarForKey(player, key, owned, estimate)),
   }));
   groups.push({
     id: "extra",
-    label: player.position === "GK" ? "Torwart" : "Extras",
+    label: player.position === "GK" ? t("player.attributeGroup.goalkeeper") : t("player.attributeGroup.extras"),
     bars: EXTRA_SKILL_KEYS.map((key) => skillBarForKey(player, key, owned, estimate)),
   });
   return groups;
@@ -443,7 +439,7 @@ export function stampGateTitle(
 ): string | undefined {
   const labels = markers[key];
   if (!labels || labels.length === 0) return undefined;
-  return `Gate: ${labels.join(", ")}`;
+  return t("profile.stampGate", { stamps: labels.join(", ") });
 }
 
 export function playerStampGateMarkers(player: Player): Partial<Record<keyof Attributes, string[]>> {

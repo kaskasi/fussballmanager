@@ -7,6 +7,7 @@ import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { canPromotePlayer } from "../youth/promotion-gate.ts";
 import { contractMonthsRemaining } from "../transfers/contract-remaining.ts";
+import { t } from "../i18n/index.ts";
 
 export type PlayerProfileAction =
   | "praise"
@@ -75,54 +76,54 @@ export function profileMenuItems(
     if (praiseLocked === 0) {
       items.push({
         action: "praise",
-        label: "Loben",
-        hint: "Gute Form bestätigen — Moral steigt. Max. einmal alle 4 Wochen.",
+        label: t("profile.action.praise"),
+        hint: t("profile.action.praise.hint", { weeks: PRAISE_COOLDOWN_WEEKS }),
       });
     }
   } else if (player.state.form <= -1) {
     items.push({
       action: "criticize",
-      label: "Kritisieren",
-      hint: "Schwache Form ansprechen — Moral sinkt.",
+      label: t("profile.action.criticize"),
+      hint: t("profile.action.criticize.hint"),
     });
   } else if (praiseLocked === 0) {
     items.push({
       action: "praise",
-      label: "Ermutigen",
-      hint: "Kleiner Moral-Schub bei stabiler Form. Max. einmal alle 4 Wochen.",
+      label: t("profile.action.encourage"),
+      hint: t("profile.action.encourage.hint", { weeks: PRAISE_COOLDOWN_WEEKS }),
     });
   }
 
   if (player.squad_status === "u17") {
     items.push({
       action: "promote_u19",
-      label: "In U19",
-      hint: "Aufstieg in die U19 — nächster Schritt vor dem Profikader.",
+      label: t("profile.action.promoteU19"),
+      hint: t("profile.action.promoteU19.hint"),
     });
   } else if (player.squad_status === "u19") {
     items.push({
       action: "promote_pro",
-      label: "Profikader",
-      hint: "Ins erste Team — Vertrag und Gehalt klären.",
+      label: t("profile.action.promotePro"),
+      hint: t("profile.action.promotePro.hint"),
     });
     items.push({
       action: "demote_u17",
-      label: "Zurück U17",
-      hint: "Zu früh für U19 — Moral leidet.",
+      label: t("profile.action.demoteU17"),
+      hint: t("profile.action.demoteU17.hint"),
     });
   } else if (player.squad_status === "pro" && player.age <= 22) {
     items.push({
       action: "demote_u19",
-      label: "Zurück U19",
-      hint: "Kein Durchbruch — zurück in die Jugend.",
+      label: t("profile.action.demoteU19"),
+      hint: t("profile.action.demoteU19.hint"),
     });
   }
 
   if (needsYouthContract(player, season)) {
     items.push({
       action: "sign_contract",
-      label: "Verhandeln",
-      hint: "Jugendvertrag — Gehalt und Laufzeit im Vertragsdialog.",
+      label: t("profile.action.negotiate"),
+      hint: t("profile.action.signYouth.hint"),
     });
   }
 
@@ -138,8 +139,8 @@ export function profileOverflowMenuItems(
   return [
     {
       action: "release",
-      label: "Vertrag auflösen",
-      hint: "Restvergütung als Abfindung zahlen — Spieler wird vereinslos.",
+      label: t("profile.action.release"),
+      hint: t("profile.action.release.hint"),
     },
   ];
 }
@@ -182,23 +183,23 @@ export function canReleasePlayer(
   squad: readonly Player[],
   clubId: string = DEFAULT_CLUB_ID,
 ): string | null {
-  if (player.club_id !== clubId) return "Spieler gehört nicht zum Verein.";
+  if (player.club_id !== clubId) return t("profile.release.notOurs");
   if (player.squad_status === "loaned_out") {
-    return "Ausgeliehene Spieler können nicht entlassen werden.";
+    return t("profile.release.loanedOut");
   }
 
   const clubPlayers = squad.filter((entry) => entry.club_id === clubId);
   if (player.squad_status === "pro") {
     const pros = clubPlayers.filter((entry) => entry.squad_status === "pro");
     if (pros.length <= MIN_PRO_SQUAD) {
-      return `Mindestens ${MIN_PRO_SQUAD} Profis müssen im Kader bleiben.`;
+      return t("profile.release.minPros", { count: MIN_PRO_SQUAD });
     }
     if (player.position === "GK") {
       const otherGoalkeepers = pros.filter(
         (entry) => entry.position === "GK" && entry.id !== player.id,
       );
       if (otherGoalkeepers.length === 0) {
-        return "Mindestens ein Torwart muss im Profikader bleiben.";
+        return t("profile.release.lastKeeper");
       }
     }
   }
@@ -223,8 +224,8 @@ export function applyProfileAction(
           player,
           message:
             locked === 1
-              ? "Ermutigen/Loben erst wieder nächste Woche möglich."
-              : `Ermutigen/Loben erst wieder in ${locked} Wochen möglich.`,
+              ? t("profile.praise.lockedNextWeek")
+              : t("profile.praise.lockedWeeks", { weeks: locked }),
         };
       }
       const boost = player.state.form >= 2 ? 10 : 5;
@@ -234,20 +235,23 @@ export function applyProfileAction(
         last_praise_season: season,
         last_praise_week: week,
       };
-      return { player: next, message: `Moral ${boost > 8 ? "deutlich" : ""} gestiegen (+${boost}).` };
+      return {
+        player: next,
+        message: t(boost > 8 ? "profile.praise.doneBig" : "profile.praise.done", { boost }),
+      };
     }
     case "criticize": {
       const penalty = player.state.morale < 35 ? 12 : 7;
       const next = withMorale(player, -penalty);
-      return { player: next, message: `Kritik gesetzt — Moral −${penalty}.` };
+      return { player: next, message: t("profile.criticize.done", { penalty }) };
     }
     case "promote_u19": {
       if (player.squad_status !== "u17") {
-        return { player, message: "Nur U17-Spieler können in die U19." };
+        return { player, message: t("profile.promoteU19.onlyU17") };
       }
       const roster = squad.length > 0 ? squad : [player];
       if (!canPromotePlayer(roster, clubId, player).allowed) {
-        return { player, message: "U19-Kader voll — kein Platz zum Hochziehen." };
+        return { player, message: t("profile.promoteU19.full") };
       }
       const rating = ca(player);
       const moraleDelta = rating >= U19_CA_READY ? 6 : -8;
@@ -260,58 +264,56 @@ export function applyProfileAction(
       return {
         player: next,
         message:
-          moraleDelta > 0
-            ? "Aufstieg U19 — Spieler ist motiviert."
-            : "Aufstieg U19 trotz schwacher CA — Frust spürbar.",
+          moraleDelta > 0 ? t("profile.promoteU19.motivated") : t("profile.promoteU19.frustrated"),
       };
     }
     case "promote_pro": {
       if (player.squad_status !== "u19") {
         return {
           player,
-          message: "Nur U19-Spieler können ins Profiteam — zuerst U17 → U19.",
+          message: t("profile.promotePro.onlyU19"),
         };
       }
       const roster = squad.length > 0 ? squad : [player];
       const gate = canPromotePlayer(roster, clubId, player);
       if (!gate.allowed) {
-        return { player, message: "Kein Platz im Profikader zum Hochziehen." };
+        return { player, message: t("profile.promotePro.full") };
       }
       return {
         player,
         openContractTalk: true,
-        message: "Gehaltsverhandlung für den Profikader.",
+        message: t("profile.promotePro.talk"),
       };
     }
     case "demote_u19": {
       if (player.squad_status !== "pro") {
-        return { player, message: "Nur Profis können zurück in die U19." };
+        return { player, message: t("profile.demoteU19.onlyPros") };
       }
       const next: Player = {
         ...withMorale(player, -14),
         squad_status: "u19",
       };
-      return { player: next, message: "Abstieg in U19 — Moral leidet." };
+      return { player: next, message: t("profile.demoteU19.done") };
     }
     case "demote_u17": {
       if (player.squad_status !== "u19") {
-        return { player, message: "Nur U19-Spieler können zurück in die U17." };
+        return { player, message: t("profile.demoteU17.onlyU19") };
       }
       const next: Player = {
         ...withMorale(player, -9),
         squad_status: "u17",
       };
-      return { player: next, message: "Abstieg in U17 — Spieler ist enttäuscht." };
+      return { player: next, message: t("profile.demoteU17.done") };
     }
     case "sign_contract":
       return {
         player,
-        message: "Jugendvertrag über Verhandeln im Vertrags-Tab abschließen.",
+        message: t("profile.signYouth.viaTalk"),
       };
     case "release": {
       return {
         player,
-        message: `Vertrag aufgelöst — ${formatPlayerName(player)} ist vereinslos.`,
+        message: t("profile.release.done", { name: formatPlayerName(player) }),
         removed: true,
       };
     }

@@ -4,6 +4,7 @@ import {
   ACTIVE_STAMP_BADGE_SLOTS,
   type StampDefinition,
 } from "./ability-stamps-catalog.ts";
+import { t } from "../i18n/index.ts";
 
 const ATTR_HARD_CAP = 199;
 const ATTR_HARD_CAP_WEAK_FOOT = 100;
@@ -17,7 +18,9 @@ export function stampDefinition(id: string): StampDefinition | undefined {
 }
 
 export function stampLabel(id: string): string {
-  return stampDefinition(id)?.label ?? id;
+  const key = `stamp.${id}.label`;
+  const label = t(key);
+  return label !== key ? label : (stampDefinition(id)?.label ?? id);
 }
 
 export function stampIcon(id: string): string {
@@ -29,10 +32,10 @@ export function isPhaseStamp(def: StampDefinition): boolean {
 }
 
 export function stampPathLabel(path: StampPath, def?: StampDefinition): string {
-  if (def && isPhaseStamp(def)) return "Start-Makel";
-  if (path === "train") return "Training";
-  if (path === "hybrid") return "Hybrid";
-  return "Ereignis";
+  if (def && isPhaseStamp(def)) return t("stamp.path.spawn");
+  if (path === "train") return t("stamp.path.train");
+  if (path === "hybrid") return t("stamp.path.hybrid");
+  return t("stamp.path.event");
 }
 
 export function isTrainSealPath(path: StampPath): boolean {
@@ -206,7 +209,7 @@ export function stampGateMarkers(player: Player): Partial<Record<keyof Attribute
   for (const def of ABILITY_STAMPS) {
     if (hasStamp(player, def.id) || !def.gates.attributes) continue;
     for (const key of Object.keys(def.gates.attributes) as (keyof Attributes)[]) {
-      marks[key] = [...(marks[key] ?? []), def.label];
+      marks[key] = [...(marks[key] ?? []), stampLabel(def.id)];
     }
   }
   return marks;

@@ -9,7 +9,7 @@ import {
 } from "../../development/position-retrain-roll.ts";
 import {
   positionLane,
-  STAERKE_LANE_LABELS,
+  staerkeLaneLabel,
   type StaerkeLane,
 } from "../../development/position-lanes.ts";
 
@@ -120,7 +120,7 @@ function LaneChip({ lane }: { lane: StaerkeLane }) {
   return (
     <span className="training-retrain-lane-chip">
       <span className="training-retrain-lane-code">{lane}</span>
-      <span className="training-retrain-lane-name">{STAERKE_LANE_LABELS[lane]}</span>
+      <span className="training-retrain-lane-name">{staerkeLaneLabel(lane)}</span>
     </span>
   );
 }

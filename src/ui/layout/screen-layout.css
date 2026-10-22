@@ -96,14 +96,6 @@ main.transfers.club-shell-card-body .transfers-meta {
   margin: 0 0 1rem;
 }
 
-main.profile.club-shell-card-body .profile-card.profile-hub {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  box-shadow: none;
-  background: transparent;
-}
-
 main.scouting.club-shell-card-body .scouting-summary,
 main.scouting.club-shell-card-body .scouting-scouts {
   margin: 0 0 0.65rem;

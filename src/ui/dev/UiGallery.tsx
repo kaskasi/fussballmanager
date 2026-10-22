@@ -430,7 +430,7 @@ export function UiGallery() {
         <Section
           id="forms"
           title="Controls, states and cards"
-          note="From the Squad screen: select, checkbox rows, state glyphs (shape + colour + word), dense chips and cards inside a panel."
+          note="From Squad and Player profile: select, checkbox rows, range field, icon chips, the ⋮ menu (shown open), state glyphs (shape + colour + word), dense chips and cards inside a panel."
         >
           <div className="ui-gallery__two">
             <div className="tc-panel tc-stack">
@@ -463,6 +463,32 @@ export function UiGallery() {
                   </label>
                 </li>
               </ul>
+              <label className="tc-range">
+                <span className="tc-range__head">
+                  <span>Wage</span>
+                  <strong>€ 2,400/wk</strong>
+                </span>
+                <input type="range" min={1000} max={4000} defaultValue={2400} />
+              </label>
+              <div className="tc-chips">
+                <button type="button" className="tc-chip tc-chip--icon" aria-pressed="true">
+                  Rotation
+                </button>
+                <button type="button" className="tc-chip tc-chip--icon" aria-pressed="false">
+                  Regular starter
+                </button>
+                <button type="button" className="tc-chip tc-chip--icon" disabled>
+                  Disabled
+                </button>
+              </div>
+              <div className="tc-menu">
+                <div className="tc-menu__list" role="menu" style={{ position: "static" }}>
+                  <button type="button" role="menuitem" className="tc-menu__item tc-menu__item--danger">
+                    <span className="tc-menu__label">Terminate contract</span>
+                    <span className="tc-menu__hint">Pay the rest as severance — the player becomes a free agent.</span>
+                  </button>
+                </div>
+              </div>
               <p className="tc-row">
                 <span className="tc-state tc-state--good">● good</span>
                 <span className="tc-state tc-state--mid">▲ fair</span>

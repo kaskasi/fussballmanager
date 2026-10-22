@@ -153,6 +153,8 @@ Position-, Sortier- und Scout-Filter sind **ein** Baustein (`FilterChip`):
 
 Portraits (F1): `tc-face` / `tc-face--sm|md|lg` (32 · 56 · 88 px, Tokens `--portrait-xs` / `--portrait-md` / `--portrait-lg`) — `PlayerPortrait` zeichnet faces.js im Kreis; `variant="silhouette"` zeigt die Platzhalter-Figur.
 
+Mit dem Spielerprofil (F1) dazugekommen: `tc-menu` (⋮-Menü mit Hinweis je Eintrag), `tc-range` (Schieberegler mit Wert), `tc-chip--icon`, `tc-talk` (Vertragsgespräch, auch in der Transfer-Verhandlung); Bildschirm-Layout in `design/surfaces/profile.css`.
+
 Mit dem Kader (F1) dazugekommen: `tc-select`, `tc-check(s)`, `tc-cards` / `tc-card`, `tc-stack`, `tc-empty-state`, `tc-state--good/mid/low`, `tc-namecell`, `tc-row--link`, `tc-list__item--wide` / `--stack-narrow`, `tc-btn--sm`, `tc-chip--dense`, `tc-chips--toolbar`. **Gemeinsame Bausteine, die jetzt überall gelten:** Screen-Tabs (`FmScreenTabBar`, `.fm-tab` im tc-Look ohne Gelb), Filter-Chips, Sortierköpfe (`SquadSortHeader`).
 
 Mit dem Ligen-Screen (F1) dazugekommen: `tc-page-head` / `tc-page-title` / `tc-page-sub` (ein Kopf pro Screen), `tc-tabs--page` + `tc-tab__meta`, `tc-split` (Haupt- + Seitenspalte), `tc-linkbtn` (Namen in Tabellen), `tc-place` (Platz mit Zone), `tc-row--mark`, `tc-form__r--empty`, `tc-spark`, `tc-list` (Ranglisten), `tc-section`, `tc-empty`, `tc-stats` (Kennzahl-Kacheln), `tc-hide-narrow`. React: `ModalShell variant="tc"` (Escape schließt, Fokus auf Schließen), `ratingBand()` in `src/ui/design/rating-band.ts`.
@@ -608,6 +610,16 @@ Verlauf-Tab: CA-Kurve als Liniendiagramm (monotone), Saisongrenzen als vertikale
 Saisonwerte-Tab: Standard-StatTable-Komponente (gleiche wie Jugend/Kader-Tabellen) – gleiche Spaltendefinitionen.
 Aktionen: Verkauf + Mehr-Menü (Ermutigen, Zurück U19, Entfernen) in der linken Schiene unten. "Entfernen" mit terra und Bestätigungs-Inline.
 Mobile: Identitäts-Schiene wird zum kompakten Top-Kopf (Avatar klein, Chips inline), Tabs scrollbar, Tab-Inhalt darunter.
+
+**Umsetzung (F1, dritter migrierter Screen — gilt vor der Skizze oben):**
+- Aufbau: Identitäts-Schiene (`tc-panel`, 20rem, sticky) links, rechts `tc-tabs` Übersicht | Verlauf | Saisonwerte. Training und Vertrag stehen in der Übersicht (rechte Spalte), nicht als eigene Tabs.
+- Schiene: Portrait (faces.js) + Name + Position/Alter, ⋮-Menü (`tc-menu`) für „Vertrag auflösen“, CA als `tc-rating--lg`, Fit/Form/Moral als `tc-stats`-Kacheln mit Zustandszeichen (bei „?“ ohne Zeichen, sonst verrät die Farbe den Wert), Erfahrung als `tc-bar`, Stammdaten als `tc-kv`, Story als Zitat, Erfolge ohne Emoji (`achievementDisplayLabel`), Verkaufen/Ermutigen als `tc-btn`. Ein gesperrter Button nennt den Grund sichtbar darunter.
+- Phone (≤720px): Schiene kompakt, Steckbrief (Erfahrung, Stammdaten, Story) eingeklappt; Tabs horizontal statt vertikaler Leiste.
+- Übersicht: Kernattribute-Hexagon in Token-Farben mit Werten an den Ecken (Scouts: Bandbreite als Ring; unter drei bekannten Werten eine Liste), „Stärke als…“ mit lokalisierten Kürzeln, alle Attribute eingeklappt als `tc-table--compact`; rechts Aktuelles Ziel, Fähigkeiten/Bonus (Stempel mit Flaggen-Icon statt Emoji), Marktwert (`tc-kv`), Vertrag (`tc-kv` + Verhandeln).
+- Verlauf: CA-Kurve über die volle Breite mit Start- und Endwert, „Letzte 26 Wochen“ als Kennzahl, Durchbrüche als `tc-list`. Saisonwerte: Jahre als `tc-chip--dense`, fünf `tc-stats`-Kacheln.
+- Vertragsgespräch und Verkaufsbestätigung: `ModalShell variant="tc"`; Formular `tc-talk` mit `tc-range` und Chips.
+- Texte: alles in EN/DE/ZH, auch aus den Helfern (Flavor, Aktionen, Vertragsgespräch, Stempel-, Verletzungs-, Durchbruch-, Positions- und Nationen-Namen); Geldbeträge im Zahlenformat der Sprache (`formatEuroWhole`).
+- Offen aus der Skizze: PA-Balken, Saisongrenzen-Marker und Soll-Verlauf in der Kurve, Saisonwerte als Tabelle.
 
 Damit ist das Profil von einer 3-Box-Skizze zu einem echten Screen geworden, der die Datenmenge in Schichten organisiert: Identität (immer sichtbar) → Status (immer sichtbar) → Analyse (gewählt) → Aktionen (immer erreichbar). Das ist dieselbe Cockpit-Logik wie beim Hub.
 

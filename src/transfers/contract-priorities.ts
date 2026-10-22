@@ -1,4 +1,5 @@
 import type { Player } from "../types/player.ts";
+import { t } from "../i18n/index.ts";
 
 export interface ContractWeights {
   money: number;
@@ -71,12 +72,12 @@ export function loyaltyYearsAtClub(player: Player, clubId: string | null): numbe
   return Math.max(0, (entry.to_season ?? 99) - entry.from_season);
 }
 
-const HINT_BY_KEY: Record<keyof ContractWeights, string> = {
-  money: "Gehalt steht an erster Stelle.",
-  playing_time: "Will garantierte Minuten.",
-  ambition: "Will bei einem ambitionierten Projekt spielen.",
-  loyalty: "Schätzt Vertrauen und Kontinuität.",
-  location: "Heimat und Umgebung sind wichtig.",
+const HINT_KEY_BY_WEIGHT: Record<keyof ContractWeights, string> = {
+  money: "contract.advisor.priority.money",
+  playing_time: "contract.advisor.priority.playingTime",
+  ambition: "contract.advisor.priority.ambition",
+  loyalty: "contract.advisor.priority.loyalty",
+  location: "contract.advisor.priority.location",
 };
 
 export function advisorHintFromWeights(weights: ContractWeights, fallback: string): string {
@@ -87,9 +88,9 @@ export function advisorHintFromWeights(weights: ContractWeights, fallback: strin
   const second = ranked[1]?.key;
   if (!top) return fallback;
   if (second && ranked[0]!.value - ranked[1]!.value < 0.08) {
-    return `${HINT_BY_KEY[top]} ${HINT_BY_KEY[second]}`;
+    return `${t(HINT_KEY_BY_WEIGHT[top])} ${t(HINT_KEY_BY_WEIGHT[second])}`;
   }
-  return HINT_BY_KEY[top] ?? fallback;
+  return t(HINT_KEY_BY_WEIGHT[top]);
 }
 
 export function loyaltyWageModifier(years: number): number {

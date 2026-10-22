@@ -37,7 +37,7 @@ export function openPurchaseNegotiation(input: {
   }
   const listed = (input.transferState.listings ?? []).some((row) => row.player_id === input.playerId);
   if (!listed) {
-    return { kind: "blocked", reason: "Spieler steht nicht auf der Transferliste." };
+    return { kind: "blocked", reason: t("transfer.purchase.notListed") };
   }
   const deal = startNegotiation(
     input.transferState,

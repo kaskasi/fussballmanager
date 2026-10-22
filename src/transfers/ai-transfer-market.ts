@@ -28,6 +28,7 @@ import { refreshPlayerMarketValue } from "./refresh-market-values.ts";
 import { loanClubName } from "./loan-roster.ts";
 import type { WorldClub } from "../world/world-generator.ts";
 import { buildAiClubShortlist } from "./ai-scout-shortlist.ts";
+import { scheduledPlayerIds } from "./scheduled-transfers.ts";
 
 export interface AiClubBudget {
   transfer_budget: number;
@@ -297,7 +298,8 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
 
   const maxDeals = transferWindowKind(input.week) === "summer" ? 4 : 3;
   const rng = weekRng(input.masterSeed, input.season, input.week, 0x5f6);
-  const transferredThisWeek = new Set<string>();
+  // Players with an agreed (waiting) move are off the AI market.
+  const transferredThisWeek = scheduledPlayerIds(input.transferState);
   const salesByClub = new Map<string, number>();
   const maxSalesPerClub = 1;
 

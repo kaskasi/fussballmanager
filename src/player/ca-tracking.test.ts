@@ -3,6 +3,8 @@ import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { appendSeasonSnapshot } from "../ui/player-profile.ts";
 import {
   caDeltaMark,
+  developmentMoverPeriodDelta,
+  formatDevelopmentPeriodDelta,
   formatSquadCaDeltaSummary,
   listDevelopmentMovers,
   playerCa,
@@ -58,6 +60,42 @@ describe("ca tracking", () => {
     const player = clonePlayer();
     const stamped = stampLastWeekCa(player);
     expect(stamped.state.last_week_ca).toBe(playerCa(player));
+  });
+
+  it("stamps the CA from the start of the week, so growth shows as a weekly delta", () => {
+    const weekStart = clonePlayer();
+    const grown = { ...weekStart, attributes: { ...weekStart.attributes, passing: 99, vision: 99 } };
+    const stamped = stampLastWeekCa(grown, weekStart);
+    expect(stamped.state.last_week_ca).toBe(playerCa(weekStart));
+    expect(weeklyCaDelta(stamped)).toBeGreaterThan(0);
+    expect(stamped.state.ca_history).toHaveLength(1);
+  });
+
+  it("measures week, month and year deltas from the CA history", () => {
+    const player = clonePlayer();
+    expect(developmentMoverPeriodDelta(player, "week")).toBeNull();
+    const now = playerCa(player);
+    player.state.ca_history = [now - 6, now - 3, now - 2, now - 1.5, now - 0.5];
+    expect(developmentMoverPeriodDelta(player, "week")).toBeCloseTo(0.5, 0);
+    expect(developmentMoverPeriodDelta(player, "month")).toBeCloseTo(3, 0);
+    expect(developmentMoverPeriodDelta(player, "year")).toBeCloseTo(6, 0);
+    expect(formatDevelopmentPeriodDelta(0.01)).toBe("0");
+    expect(formatDevelopmentPeriodDelta(null)).toBe("—");
+  });
+
+  it("ranks desk movers by the selected period", () => {
+    const steady = clonePlayer();
+    steady.id = "pl_steady";
+    steady.club_id = "cl_fc_nordstern";
+    steady.state.recent_growth_26w = 9;
+    steady.state.ca_history = [playerCa(steady)];
+    const riser = clonePlayer();
+    riser.id = "pl_riser";
+    riser.club_id = "cl_fc_nordstern";
+    riser.state.recent_growth_26w = 0;
+    riser.state.ca_history = [playerCa(riser) - 2];
+    const movers = listDevelopmentMovers([steady, riser], "cl_fc_nordstern", 3, "week");
+    expect(movers[0]?.playerId).toBe("pl_riser");
   });
 
   it("computes season CA delta from the prior season snapshot", () => {

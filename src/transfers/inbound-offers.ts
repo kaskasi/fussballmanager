@@ -1,7 +1,7 @@
 /** F5.6 — AI bids on the user's squad (weekly, transfer window). */
 import type { Player } from "../types/player.ts";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
-import { isTransferWindowOpen } from "../sim/transfer-windows.ts";
+import { hasScheduledTransfer } from "./scheduled-transfers.ts";
 import type { TransferState } from "./negotiations.ts";
 import { estimateCa } from "./market-value.ts";
 import { sellerAskingPrice } from "./negotiations.ts";
@@ -77,11 +77,8 @@ function appendOffer(
   };
 }
 
+/** Runs all year — a bid accepted outside a window waits for the next one (scheduled-transfers.ts). */
 export function scanInboundOffers(input: ScanInboundOffersInput): ScanInboundOffersResult {
-  if (!isTransferWindowOpen(input.week)) {
-    return { transferState: input.transferState, newOffers: [] };
-  }
-
   let transferState = input.transferState;
   const newOffers: InboundTransferOffer[] = [];
   const offersThisWeek = (transferState.inbound_offers ?? []).filter(
@@ -127,6 +124,7 @@ export function scanInboundOffers(input: ScanInboundOffersInput): ScanInboundOff
     if (player.club_id !== input.clubId) return false;
     if (player.squad_status !== "pro") return false;
     if (hasPendingOffer(transferState, player.id)) return false;
+    if (hasScheduledTransfer(transferState, player.id)) return false;
     if (player.state.desire_to_leave) return true;
     const ca = estimateCa(player.attributes, player.position);
     if (ca >= 88 && rng() < 0.12) return true;

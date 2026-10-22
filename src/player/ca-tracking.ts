@@ -1,9 +1,18 @@
 import type { Player, PositionPrimary } from "../types/player.ts";
 import { estimateCa } from "../transfers/market-value.ts";
+import { formatDecimal } from "../i18n/number-display.ts";
 
 export function playerCa(player: Player): number {
   return Math.round(estimateCa(player.attributes, player.position));
 }
+
+/** Unrounded CA — monthly growth is often below one point, so period deltas need the fraction. */
+function rawCa(player: Player): number {
+  return estimateCa(player.attributes, player.position);
+}
+
+/** Weeks of CA history kept for the Hub "year" view. */
+export const CA_HISTORY_WEEKS = 52;
 
 /** CA change since the previous simulated week (null before first week). */
 export function weeklyCaDelta(player: Player): number | null {
@@ -97,12 +106,19 @@ export function squadStatusLabel(status: Player["squad_status"]): string {
   return status;
 }
 
-export function stampLastWeekCa(player: Player): Player {
+/**
+ * Record the CA the player had when the week started (`weekStart`, before training and matches),
+ * so the next weekly Δ compares against it. Without a week-start copy the player's own CA is used.
+ */
+export function stampLastWeekCa(player: Player, weekStart: Player = player): Player {
+  const startRaw = rawCa(weekStart);
+  const history = [...(player.state.ca_history ?? []), Math.round(startRaw * 100) / 100].slice(-CA_HISTORY_WEEKS);
   return {
     ...player,
     state: {
       ...player.state,
-      last_week_ca: playerCa(player),
+      last_week_ca: Math.round(startRaw),
+      ca_history: history,
     },
   };
 }
@@ -123,46 +139,46 @@ export interface DevelopmentMover {
 export type DevelopmentMoverPeriod = "week" | "month" | "year";
 
 /** Display delta for hub dev pills (week = CA, month ≈ 4-week pace, year = season CA). */
+const PERIOD_WEEKS: Record<DevelopmentMoverPeriod, number> = { week: 1, month: 4, year: CA_HISTORY_WEEKS };
+
+/**
+ * CA change over the last week / 4 weeks / 52 weeks, from the week-start history (unrounded).
+ * With less history than the period, it measures from the oldest recorded week; null before the first week.
+ */
 export function developmentMoverPeriodDelta(
   player: Player,
   period: DevelopmentMoverPeriod,
-  season: number,
+  _season?: number,
 ): number | null {
-  if (period === "week") return weeklyCaDelta(player);
-  if (period === "year") return seasonCaDelta(player, season);
-  const weekly = weeklyCaDelta(player);
-  const growth26 = player.state.recent_growth_26w;
-  if (weekly !== null) return weekly * 4;
-  if (growth26 !== undefined) return growth26 / 6;
-  return null;
+  const history = player.state.ca_history ?? [];
+  if (history.length === 0) return null;
+  const from = history[Math.max(0, history.length - PERIOD_WEEKS[period])]!;
+  return Math.round((rawCa(player) - from) * 10) / 10;
 }
 
 export function formatDevelopmentPeriodDelta(delta: number | null): string {
   if (delta === null) return "—";
-  if (delta > 0) return `+${delta.toFixed(1)}`;
-  if (delta < 0) return delta.toFixed(1);
-  return "0";
+  if (Math.abs(delta) < 0.05) return "0";
+  const body = formatDecimal(Math.abs(delta), 1);
+  return delta > 0 ? `+${body}` : `−${body}`;
 }
 
+/** Squad players ranked by CA gain over `period` (Hub desk); without a period by 26-week growth (pipeline). */
 export function listDevelopmentMovers(
   players: readonly Player[],
   clubId: string,
   limit = 3,
+  period?: DevelopmentMoverPeriod,
 ): DevelopmentMover[] {
-  return players
-    .filter((player) => player.club_id === clubId && player.squad_status !== "loaned_out")
-    .map((player) => ({
-      playerId: player.id,
-      displayName: formatMoverName(player),
-      portraitSeed: player.portrait_seed,
-      clubId: player.club_id,
-      age: player.age,
-      position: player.position,
-      squadStatus: player.squad_status,
-      ca: playerCa(player),
-      caDelta: weeklyCaDelta(player),
-      recentGrowth: player.state.recent_growth_26w ?? 0,
-    }))
+  const squad = players.filter((player) => player.club_id === clubId && player.squad_status !== "loaned_out");
+  if (period) {
+    const ranked = squad
+      .map((player) => ({ player, delta: developmentMoverPeriodDelta(player, period) }))
+      .sort((left, right) => (right.delta ?? -Infinity) - (left.delta ?? -Infinity) || playerCa(right.player) - playerCa(left.player));
+    return ranked.slice(0, limit).map(({ player }) => toMover(player));
+  }
+  return squad
+    .map(toMover)
     .sort((left, right) => {
       const byGrowth = right.recentGrowth - left.recentGrowth;
       if (byGrowth !== 0) return byGrowth;
@@ -171,6 +187,21 @@ export function listDevelopmentMovers(
       return right.ca - left.ca;
     })
     .slice(0, limit);
+}
+
+function toMover(player: Player): DevelopmentMover {
+  return {
+    playerId: player.id,
+    displayName: formatMoverName(player),
+    portraitSeed: player.portrait_seed,
+    clubId: player.club_id,
+    age: player.age,
+    position: player.position,
+    squadStatus: player.squad_status,
+    ca: playerCa(player),
+    caDelta: weeklyCaDelta(player),
+    recentGrowth: player.state.recent_growth_26w ?? 0,
+  };
 }
 
 function formatMoverName(player: Player): string {

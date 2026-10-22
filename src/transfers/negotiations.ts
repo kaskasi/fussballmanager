@@ -74,6 +74,8 @@ export interface TransferState {
   listings?: import("./transfer-listings.ts").TransferListing[];
   /** Curated new-game board — preserved across weekly AI refresh until sold/unlisted. */
   opening_market_player_ids?: string[];
+  /** Deals agreed outside a window, executed on the first day of the next window (PRD 05). */
+  scheduled_transfers?: import("./scheduled-transfers.ts").ScheduledTransfer[];
 }
 
 export function emptyTransferState(): TransferState {
@@ -87,6 +89,7 @@ export function emptyTransferState(): TransferState {
     pending_purchases: [],
     inbound_offers: [],
     listings: [],
+    scheduled_transfers: [],
   };
 }
 

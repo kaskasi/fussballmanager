@@ -36,9 +36,10 @@ import {
 import type { Player } from "../../types/player.ts";
 import { careerSeasonStatsForSeason, listCareerStatSeasons } from "../../player/season-stats.ts";
 import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
-import { t as translate, transferWindowHint } from "../../i18n/index.ts";
+import { t as translate } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
-import { transferWindowClosedReason } from "../../transfers/purchase-block.ts";
+import { scheduledMoveLabel } from "../../transfers/scheduled-transfers.ts";
+import { nextTransferWindowStart } from "../../sim/game-calendar.ts";
 import { ContractTalksModal } from "../components/ContractTalksModal.tsx";
 import { SaleConfirmModal } from "../components/SaleConfirmModal.tsx";
 import { MarketValueBreakdownStrip } from "../components/MarketValueBreakdownStrip.tsx";
@@ -126,6 +127,8 @@ export interface PlayerProfileProps {
   purchasePrice?: number;
   saleOffer?: number;
   saleBlockedReason?: string | null;
+  /** Own player with an agreed move waiting for the next window: no new contract, listing, loan or release. */
+  transferLockReason?: string | null;
   shortlisted?: boolean;
   individualPrograms?: readonly IndividualProgram[];
   trainingPlan?: readonly TrainingSlot[];
@@ -135,6 +138,8 @@ export interface PlayerProfileProps {
   onAssignScout?: () => void;
   onToggleShortlist?: () => void;
   onPurchase?: () => void;
+  /** Shown under a disabled Buy button (e.g. the player is not on the transfer list). */
+  purchaseBlockedReason?: string | null;
   preContractBonus?: number;
   preContractBlockedReason?: string | null;
   onPreContract?: () => void;
@@ -169,6 +174,7 @@ export function PlayerProfile({
   purchasePrice,
   saleOffer,
   saleBlockedReason = null,
+  transferLockReason = null,
   onOpenYouth,
   onOpenTraining,
   onStartStampProgram,
@@ -179,6 +185,7 @@ export function PlayerProfile({
   trainingPlan = [],
   onToggleShortlist,
   onPurchase,
+  purchaseBlockedReason = null,
   preContractBonus,
   preContractBlockedReason = null,
   onPreContract,
@@ -243,16 +250,16 @@ export function PlayerProfile({
     listPrice !== undefined &&
     transferBudget !== undefined &&
     transferBudget < listPrice;
-  const windowClosedHint = !transferWindowOpen ? transferWindowClosedReason(week) : null;
-  const purchaseHintText =
-    windowClosedHint ??
-    (!hasScoutIntel
-      ? t("transfer.profile.noScoutBuy")
-      : listPriceExceedsBudget
-        ? t("transfer.profile.listOverPot", {
-            pot: formatClubCash(transferBudget ?? 0),
-          })
-        : t("transfer.profile.offerMarket"));
+  const windowClosedHint = !transferWindowOpen
+    ? t("transfer.profile.buyLater", { when: scheduledMoveLabel(nextTransferWindowStart(season, week), season) })
+    : null;
+  const purchaseHintText = !hasScoutIntel
+    ? t("transfer.profile.noScoutBuy")
+    : listPriceExceedsBudget
+      ? t("transfer.profile.listOverPot", {
+          pot: formatClubCash(transferBudget ?? 0),
+        })
+      : (windowClosedHint ?? t("transfer.profile.offerMarket"));
   const feedbackIsWarning = Boolean(actionFeedback && TRANSFER_WARNING.test(actionFeedback));
 
   function notifyTransfer(message: string) {
@@ -262,12 +269,9 @@ export function PlayerProfile({
   function handleListClick() {
     if (!onList) return;
     if (listedForSale) return;
-    if (saleBlockedReason) {
-      notifyTransfer(saleBlockedReason);
-      return;
-    }
-    if (!transferWindowOpen) {
-      notifyTransfer(t("transfer.profile.saleWindowOnly", { hint: transferWindowHint() }));
+    const blocked = transferLockReason ?? saleBlockedReason;
+    if (blocked) {
+      notifyTransfer(blocked);
       return;
     }
     setSaleConfirmOpen(true);
@@ -325,14 +329,10 @@ export function PlayerProfile({
   const caDelta = owned ? weeklyCaDelta(player) : null;
   const talkLock = contractTalkLock(player, { season, week, weekday });
   const canTalk = owned && Boolean(onContractOffer) && player.squad_status !== "loaned_out";
-  const saleBlockedText =
-    !listedForSale && onList
-      ? (saleBlockedReason ??
-        (!transferWindowOpen ? t("transfer.profile.saleWindowOnly", { hint: transferWindowHint() }) : null))
-      : null;
+  const saleBlockedText = !listedForSale && onList ? (transferLockReason ?? saleBlockedReason) : null;
 
   function openContractTalk() {
-    if (!talkLock.allowed) return;
+    if (!talkLock.allowed || transferLockReason) return;
     setOffer(defaultContractOffer(player, season));
     setTalksOpen(true);
   }
@@ -504,6 +504,12 @@ export function PlayerProfile({
             ) : null}
           </ProfileBio>
 
+          {owned && transferLockReason ? (
+            <p className="tc-callout tc-callout--warn" role="status">
+              {transferLockReason}
+            </p>
+          ) : null}
+
           {owned && (onList || (onProfileAction && railMenuItems.length > 0)) ? (
             <div className="tc-profile__actions" role="group" aria-label={t("profile.actions.aria")}>
               {onList ? (
@@ -530,7 +536,8 @@ export function PlayerProfile({
                       key={item.action}
                       type="button"
                       className="tc-btn tc-btn--sm"
-                      title={item.hint}
+                      title={transferLockReason ?? item.hint}
+                      disabled={Boolean(transferLockReason)}
                       onClick={() => onProfileAction(item.action)}
                     >
                       {item.label}
@@ -574,13 +581,18 @@ export function PlayerProfile({
                 <div className="tc-profile__action">
                   <button
                     type="button"
-                    className={hasScoutIntel || scouting ? "tc-btn tc-btn--primary tc-profile__btn-wide" : "tc-btn tc-profile__btn-wide"}
+                    className={
+                      (hasScoutIntel || scouting) && !purchaseBlockedReason
+                        ? "tc-btn tc-btn--primary tc-profile__btn-wide"
+                        : "tc-btn tc-profile__btn-wide"
+                    }
+                    disabled={Boolean(purchaseBlockedReason)}
                     onClick={onPurchase}
                   >
                     {t("transfer.profile.buy")}
                     {purchaseAmountLabel ? <span className="tc-profile__amount">{purchaseAmountLabel}</span> : null}
                   </button>
-                  <p className="tc-caption">{purchaseHintText}</p>
+                  <p className="tc-caption">{purchaseBlockedReason ?? purchaseHintText}</p>
                 </div>
               ) : null}
               {onPreContract ? (
@@ -754,9 +766,9 @@ export function PlayerProfile({
                             <button
                               type="button"
                               className="tc-btn tc-btn--primary"
-                              disabled={!talkLock.allowed}
+                              disabled={!talkLock.allowed || Boolean(transferLockReason)}
                               onClick={openContractTalk}
-                              title={talkLock.reason ?? t("profile.contract.talkHint")}
+                              title={transferLockReason ?? talkLock.reason ?? t("profile.contract.talkHint")}
                             >
                               <PenLine className="tc-icon" aria-hidden />
                               {t("profile.action.negotiate")}

@@ -4,6 +4,7 @@ import { appendPendingFinanceLines, type FinanceLine } from "./finance-ledger.ts
 import { applyFinanceLines, type ClubFinances } from "./club-finances.ts";
 import { careerWeekIndex } from "../stadium/hospitality.ts";
 import { RELEGATION_ZONE_PLACE } from "../narrative/season-objectives.ts";
+import { t } from "../i18n/index.ts";
 
 export interface BankLoan {
   principal: number;
@@ -115,14 +116,14 @@ export function evaluateBankLoan(input: BankEligibilityInput): BankEligibility {
   const term_weeks = DEFAULT_BANK_TERM_WEEKS;
   const apr_weekly = BANK_APR_WEEKLY;
   if (input.financing.active_bank_loan) {
-    return { allowed: false, max_principal: 0, apr_weekly, term_weeks, reason: "Aktives Darlehen" };
+    return { allowed: false, max_principal: 0, apr_weekly, term_weeks, reason: t("finance.bank.activeLoan") };
   }
   const careerWeek = careerWeekIndex(input.season, input.week);
   if (
     input.financing.bank_cooldown_until_week !== undefined &&
     careerWeek < input.financing.bank_cooldown_until_week
   ) {
-    return { allowed: false, max_principal: 0, apr_weekly, term_weeks, reason: "Bank-Karenz" };
+    return { allowed: false, max_principal: 0, apr_weekly, term_weeks, reason: t("finance.bank.cooldown") };
   }
   const cap = loanCapForDivision(input.divisionId);
   const serviceable = Math.max(
@@ -137,10 +138,10 @@ export function evaluateBankLoan(input: BankEligibilityInput): BankEligibility {
   const relegationZone = input.leaguePlace >= RELEGATION_ZONE_PLACE;
   const runway = input.runwayWeeks ?? 0;
   if (runway < 2 && relegationZone && input.boardPressure > 70) {
-    return { allowed: false, max_principal, apr_weekly, term_weeks, reason: "Profil zu riskant" };
+    return { allowed: false, max_principal, apr_weekly, term_weeks, reason: t("finance.bank.tooRisky") };
   }
   if (max_principal < MIN_BANK_LOAN) {
-    return { allowed: false, max_principal, apr_weekly, term_weeks, reason: "Zu wenig Servicefähigkeit" };
+    return { allowed: false, max_principal, apr_weekly, term_weeks, reason: t("finance.bank.cannotService") };
   }
   return { allowed: true, max_principal, apr_weekly, term_weeks };
 }

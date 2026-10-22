@@ -1,9 +1,4 @@
-/** PRD 20 B4 — Finanzen / fm-tab surfaces (imported from game-surfaces.css). */
-/* — Finanzen tab panel (fm2001) — */
-.finances-shell {
-  padding: 0;
-  overflow: hidden;
-}
+/** PRD 20 B4 — shared screen tabs (FmScreenTabBar) and the Finances screen. */
 
 /* Screen tabs (FmScreenTabBar): the design system's tc-tab look — underline, no yellow (design.md §4.3).
    Phones turn the band into a vertical rail (mobile-pass.css). */
@@ -82,199 +77,341 @@ main.stadium.club-shell-card-body .stadium-fanbase {
   margin-bottom: 0.85rem;
 }
 
-.finances-shell .finances-hero {
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
-
-.finances-detail--solo {
-  max-width: 28rem;
-}
-
-.finances-hero.game-panel {
-  margin-bottom: 1rem;
-}
-
-.finances-hero .finances-waterfall {
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  border: none;
-  box-shadow: none !important;
-  border-radius: 0;
-}
-
-.finances-waterfall,
-.finances-sparkline {
-  background: var(--panel);
-  border: var(--outline);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-flat) !important;
-}
-
-.finances-sparkline {
-  color: var(--rasen);
-}
-
-.finances-sparkline svg polyline,
-.finances-sparkline svg circle {
-  stroke: var(--rasen);
-  fill: var(--rasen);
-}
-
-.finances-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin: 0;
-}
-
-.finances-hero .finances-summary {
-  gap: 0.45rem;
-}
-
-.finances-card {
-  background: var(--panel-muted);
-  border: 2px solid rgba(62, 49, 40, 0.2);
-  border-radius: var(--radius-klein);
-  padding: 0.55rem 0.65rem;
-}
-
-.finances-card-label {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--tinte-weich);
-}
-
-.finances-card-value {
+/* Finances (design.md §9.2 "Umsetzung"): tc panels; layout and the two charts only. Tokens only. */
+.tc-finances__net {
   font-family: var(--font-display);
-  color: var(--tinte);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  line-height: 1.5rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.finances-card.is-good .finances-card-value {
-  color: var(--rasen-dunkel);
+.tc-finances__flows {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.finances-card.is-warn .finances-card-value {
-  color: var(--terra-dunkel);
+.tc-finances__flow {
+  display: grid;
+  grid-template-columns: 20px minmax(7rem, 10rem) minmax(0, 1fr) minmax(5rem, auto);
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+  line-height: 1.25rem;
 }
 
-.finances-card.is-bad .finances-card-value {
-  color: var(--terra-dunkel);
+.tc-finances__flow-icon {
+  display: inline-grid;
+  place-items: center;
+  color: var(--text-muted);
 }
 
-.finances-wage-cap-bar {
+.tc-finances__flow-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.tc-finances__flow-label {
+  font-weight: 700;
+}
+
+.tc-finances__track {
   display: block;
-  width: 100%;
-  margin-top: 0.45rem;
-  height: 0.55rem;
-  border-radius: 999px;
-  background: var(--panel);
-  border: 1px solid rgba(62, 49, 40, 0.2);
+  height: var(--space-3);
   overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--sunken);
 }
 
-.finances-wage-cap-fill {
+.tc-finances__fill {
   display: block;
   height: 100%;
-  max-height: 100%;
-  border-radius: 999px;
-  background: var(--rasen);
-  box-sizing: border-box;
+  border-radius: var(--radius-pill);
 }
 
-.finances-wage-cap-fill.is-warn {
-  background: var(--terra);
+.tc-finances__fill--in {
+  background: var(--positive);
 }
 
-.finances-wage-cap-fill.is-over {
-  background: var(--terra-dunkel);
+.tc-finances__fill--out {
+  background: var(--negative);
 }
 
-.finances-sub,
-.finances-caption,
-.finances-range,
-.finances-empty {
-  color: var(--tinte-weich);
-}
-
-.finances-net {
+.tc-finances__amount {
   font-family: var(--font-display);
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
-.finances-net.is-up {
-  color: var(--rasen-dunkel);
+.tc-finances__kpis {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.finances-net.is-down {
-  color: var(--terra-dunkel);
+.tc-finances__kpis .tc-stats__item dd {
+  gap: var(--space-1);
 }
 
-.finances-bar-track {
-  background: var(--panel-muted);
+.tc-finances__kpi--good {
+  color: var(--positive);
 }
 
-.finances-bar.is-income .finances-bar-fill {
-  background: var(--rasen);
+.tc-finances__kpi--warn {
+  color: var(--warning);
 }
 
-.finances-bar.is-expense .finances-bar-fill {
-  background: var(--terra);
+.tc-finances__kpi--bad {
+  color: var(--negative);
 }
 
-.finances-bar-value {
-  font-family: var(--font-display);
-  padding: 0.12rem 0.45rem;
-  border-radius: 999px;
-  border: 1px solid rgba(62, 49, 40, 0.15);
+.tc-finances__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--space-4);
+  align-items: start;
 }
 
-.finances-bar.is-income .finances-bar-value {
-  background: var(--rasen-hell);
-  color: var(--tinte);
-}
-
-.finances-bar.is-expense .finances-bar-value {
-  background: rgba(224, 122, 63, 0.25);
-  color: var(--tinte);
-}
-
-.finances-detail,
-.finances-detail.is-button {
-  background: var(--panel);
-  border: var(--outline);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-flat) !important;
-}
-
-.finances-detail h2 {
+.tc-finances__title {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-2);
+  font-size: var(--font-size-lg);
+  line-height: 1.5rem;
 }
 
-.finances-month-nav {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
+.tc-finances__thumb {
+  width: var(--control-md);
+  height: var(--control-md);
+  border-radius: var(--radius-sm);
+  object-fit: cover;
 }
 
-.finances-month-nav button {
-  width: 2rem;
-  height: 2rem;
-  border: var(--outline);
-  border-radius: var(--radius-klein);
-  background: #fff;
-  color: var(--tinte);
-  font-weight: 800;
+.tc-finances__headline {
+  display: block;
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+}
+
+.tc-finances__headline strong {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  line-height: 1.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stadium card is a button: keep panel looks, show it is clickable */
+.tc-finances__link {
+  display: block;
+  width: 100%;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
-.finances-month-nav button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.tc-finances__link:hover {
+  border-color: var(--control-border);
+}
+
+.tc-finances__link:focus-visible,
+.tc-finances__stand:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tc-finances__kv-dt {
+  color: var(--text-muted);
+}
+
+.tc-finances__kv-dd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tc-finances__mood {
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+}
+
+.tc-finances__stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.tc-finances__stepper .tc-iconbtn {
+  border: 1px solid var(--control-border);
+}
+
+.tc-finances__price {
+  min-width: 5rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--font-size-xl);
+  line-height: 1.75rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.tc-finances__cta {
+  justify-self: start;
+}
+
+.tc-finances__muted td {
+  color: var(--text-muted);
+}
+
+/* Charts */
+.tc-finances__chart {
+  margin: 0;
+}
+
+.tc-finances__chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.tc-finances__spark-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.tc-finances__spark-dot {
+  fill: var(--panel);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.tc-finances__chart-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.tc-finances__axis {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.tc-finances__swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.tc-finances__table {
+  margin-top: var(--space-3);
+}
+
+.tc-finances__table summary {
+  display: inline-block;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+/* Tickets: stands around the pitch */
+.tc-finances__ticket-stats {
+  max-width: 36rem;
+}
+
+.tc-finances__arena {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
+  grid-template-areas:
+    "north north north"
+    "west pitch east"
+    "south south vip";
+  gap: var(--space-2);
+  max-width: 48rem;
+}
+
+.tc-finances__pitch {
+  grid-area: pitch;
+  min-height: 6rem;
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.tc-finances__stand {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tc-finances__stand:hover {
+  border-color: var(--control-border);
+}
+
+.tc-finances__stand[data-area="north"] { grid-area: north; }
+.tc-finances__stand[data-area="west"] { grid-area: west; }
+.tc-finances__stand[data-area="east"] { grid-area: east; }
+.tc-finances__stand[data-area="south"] { grid-area: south; }
+.tc-finances__stand[data-area="vip"] { grid-area: vip; }
+
+.tc-finances__stand-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.tc-finances__stand-head .tc-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+
+.tc-finances__stand .tc-finances__headline {
+  margin: 0;
+}
+
+.tc-finances__stand .tc-finances__headline strong {
+  font-size: var(--font-size-lg);
+  line-height: 1.5rem;
+}
+
+.tc-finances__stand-fill {
+  display: grid;
+  gap: var(--space-1);
+}
+
+@media (max-width: 719px) {
+  .tc-finances__flow {
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+  }
+
+  .tc-finances__track {
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+
+  .tc-finances__arena {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "north" "west" "east" "south" "vip";
+  }
+
+  .tc-finances__pitch {
+    display: none;
+  }
 }

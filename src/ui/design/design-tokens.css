@@ -87,6 +87,13 @@
   --rating-5: #0f4421;
   --on-rating-5: #ffffff;
   --scrim: rgba(12, 18, 16, 0.5);
+  /* Chart series: categorical identity, fixed order (validated: CVD-separated, labelled + table view in light mode) */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #6250d6;
   /* Der Treter: a newspaper object, same in both themes */
   --newsprint: #f1eee5;
   --newsprint-ink: #1b1a17;
@@ -216,6 +223,12 @@
   --rating-5: #a8f0c4;
   --on-rating-5: #07120b;
   --scrim: rgba(0, 0, 0, 0.6);
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #9085e9;
   --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 16px -8px rgba(0, 0, 0, 0.6);
   --shadow-overlay: 0 24px 48px -16px rgba(0, 0, 0, 0.7);
 }

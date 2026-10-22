@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { setLocale } from "../i18n/index.ts";
+import { financeLineLabel } from "./finance-ledger.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import {
   advanceWeeklyClubFinances,
   defaultClubFinances,
 } from "./club-finances.ts";
 import {
+  financeFlowLabel,
   resolveFinanceWaterfall,
   seasonCashSparkline13,
   seasonCategorizedFlows,
@@ -72,4 +75,19 @@ describe("finance waterfall", () => {
     const rows = seasonCategorizedFlows(spent, 1, 1);
     expect(rows[0]?.infrastructure).toBe(-320_000);
   });
+
+  it("labels lines, categories and the waterfall in the active language", () => {
+    try {
+      setLocale("de");
+      expect(financeLineLabel("player_wages")).toBe("Gehälter");
+      expect(financeFlowLabel("matchday")).toBe("Spieltag");
+      setLocale("en");
+      expect(financeLineLabel("player_wages")).toBe("Player wages");
+      expect(financeFlowLabel("matchday")).toBe("Matchday");
+      expect(resolveFinanceWaterfall(defaultClubFinances(), 1, 1, []).title).toBe("This week");
+    } finally {
+      setLocale("de");
+    }
+  });
 });
+

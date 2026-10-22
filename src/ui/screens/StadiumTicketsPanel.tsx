@@ -1,15 +1,16 @@
-/** WIREFRAME: Finanzen · Tab Eintritt — read-only Tribünen-Auswertung */
+/** WIREFRAME: Finanzen · Tab Eintritt — read-only Tribünen-Auswertung (tc panels; prices and building live in Stadium) */
 import { useMemo, useState } from "react";
+import { Armchair, Crown, Users, type LucideIcon } from "lucide-react";
 import {
+  blockDisplayName,
   fillRateDeltaFromReference,
-  fillRateHeatColor,
   stadiumBlockAttendees,
   stadiumBlockIncome,
   stadiumMatchdayIncome,
-  tierIcon,
   tierLabel,
   type ClubStadium,
   type StadiumBlock,
+  type StadiumTier,
 } from "../../stadium/club-stadium.ts";
 import {
   blockSeasonTicketTotal,
@@ -20,14 +21,23 @@ import {
 import { formatClubCash, type ClubFinances } from "../../economy/club-finances.ts";
 import { ModalShell } from "../components/primitives/ModalShell.tsx";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
+import { formatWholeNumber } from "../../i18n/number-display.ts";
+import { useT } from "../../i18n/react.ts";
 
-const BLOCK_LAYOUT: Array<{ id: string; area: string }> = [
-  { id: "north", area: "north" },
-  { id: "west", area: "west" },
-  { id: "east", area: "east" },
-  { id: "south", area: "south" },
-  { id: "vip", area: "vip" },
-];
+const BLOCK_ORDER = ["north", "west", "east", "south", "vip"] as const;
+
+const TIER_ICON: Record<StadiumTier, LucideIcon> = {
+  standing: Users,
+  seating: Armchair,
+  vip: Crown,
+};
+
+/** Fill-rate band for the bar: below 60 % weak, 60–80 % fair, from 80 % good. */
+function fillTone(fillRate: number): "good" | "mid" | "low" {
+  if (fillRate >= 0.8) return "good";
+  if (fillRate >= 0.6) return "mid";
+  return "low";
+}
 
 function BlockStatCard({
   block,
@@ -44,36 +54,47 @@ function BlockStatCard({
   week: number;
   onOpen: () => void;
 }) {
+  const t = useT();
   const fillPct = Math.round(block.fill_rate * 100);
   const deltaPts = Math.round(fillRateDeltaFromReference(block) * 100);
   const perMatch = Math.round(stadiumBlockIncome(stadium, block, season, week));
   const seasonBlock = blockSeasonTicketTotal(stadium, block, finances, season);
+  const tone = fillTone(block.fill_rate);
+  const Icon = TIER_ICON[block.tier] ?? Users;
 
   return (
-    <button type="button" className="finances-ticket-zone" data-area={block.id} onClick={onOpen}>
-      <span className="finances-ticket-zone-fill" style={{ background: fillRateHeatColor(block.fill_rate) }} />
-      <span className="finances-ticket-zone-body">
-        <strong>
-          {tierIcon(block.tier)} {block.name}
-        </strong>
-        <p className="finances-ticket-zone-season">
-          <strong>{formatClubCash(seasonBlock)}</strong>
-          <span> Eintritt Saison bisher</span>
-        </p>
-        <span>
-          {fillPct}% · € {block.ticket_price_eur} · ~
-          {stadiumBlockAttendees(block, stadium, season, week).toLocaleString("de-DE")}
+    <button type="button" className="tc-panel tc-finances__stand" data-area={block.id} onClick={onOpen}>
+      <span className="tc-finances__stand-head">
+        <Icon className="tc-icon" aria-hidden />
+        <strong>{blockDisplayName(block)}</strong>
+        <span className="tc-caption">{tierLabel(block.tier)}</span>
+      </span>
+      <span className="tc-finances__headline">
+        <strong>{formatClubCash(seasonBlock)}</strong> {t("finances.tickets.seasonSoFar")}
+      </span>
+      <span className="tc-finances__stand-fill">
+        <span className="tc-bar" aria-hidden="true">
+          <span
+            className={tone === "good" ? "tc-bar__fill" : tone === "mid" ? "tc-bar__fill tc-bar__fill--warning" : "tc-bar__fill tc-finances__fill--out"}
+            style={{ width: `${fillPct}%` }}
+          />
         </span>
-        <span className="finances-ticket-zone-sub">
-          Modell {formatClubCash(perMatch)}/Spiel
+        <span className="tc-caption">
+          {t("finances.tickets.fill", { percent: fillPct })}
           {deltaPts !== 0 ? (
-            <em className={deltaPts > 0 ? "is-up" : "is-down"}>
+            <span className={deltaPts > 0 ? "tc-delta--up" : "tc-delta--down"}>
               {" "}
-              ({deltaPts > 0 ? "+" : ""}
-              {deltaPts} PP)
-            </em>
+              {t("finances.tickets.delta", { points: deltaPts > 0 ? `+${deltaPts}` : String(deltaPts) })}
+            </span>
           ) : null}
         </span>
+      </span>
+      <span className="tc-caption">
+        {t("finances.tickets.standMeta", {
+          price: block.ticket_price_eur,
+          fans: formatWholeNumber(stadiumBlockAttendees(block, stadium, season, week)),
+          perMatch: formatClubCash(perMatch),
+        })}
       </span>
     </button>
   );
@@ -92,31 +113,42 @@ function BlockMatchesModal({
   season: number;
   onClose: () => void;
 }) {
+  const t = useT();
   const rows = useMemo(
     () => blockTicketRowsForSeason(stadium, block, finances, season),
     [block, stadium, finances, season],
   );
   const total = rows.reduce((sum, row) => sum + row.blockAmount, 0);
+  const name = blockDisplayName(block);
 
   return (
-    <ModalShell ariaLabel={`${block.name} · Heimspiele`} title={block.name} onClose={onClose}>
-      <p className="finances-ticket-modal-lead">
-        {tierLabel(block.tier)} · Anteil aus gespeicherten Eintritts-Zeilen ({formatSeasonLabel(season)}).
-        Block-Aufteilung modelliert aus aktueller Auslastung.
-      </p>
+    <ModalShell
+      variant="tc"
+      ariaLabel={t("finances.tickets.modalAria", { stand: name })}
+      onClose={onClose}
+      title={
+        <>
+          <span className="tc-label">{tierLabel(block.tier)}</span>
+          <h2 className="tc-modal__title">{name}</h2>
+          <p className="tc-modal__sub">{t("finances.tickets.modalLead", { season: formatSeasonLabel(season) })}</p>
+        </>
+      }
+    >
       {rows.length === 0 ? (
-        <p className="finances-ticket-modal-empty">Noch keine abgeschlossenen Heimspiel-Eintritte in dieser Saison.</p>
+        <p className="tc-empty">{t("finances.tickets.modalEmpty")}</p>
       ) : (
         <>
-          <p className="finances-ticket-modal-sum">
-            Summe ~{formatClubCash(total)} · {rows.length} Spiel{rows.length === 1 ? "" : "e"}
+          <p className="tc-callout">
+            {t("finances.tickets.modalSum", { amount: formatClubCash(total), count: rows.length })}
           </p>
-          <ul className="finances-ticket-modal-list">
+          <ul className="tc-list">
             {rows.map((row) => (
-              <li key={row.week}>
-                <span>Woche {row.week}</span>
-                <span>Gesamt {formatClubCash(row.total)}</span>
-                <strong>~{formatClubCash(row.blockAmount)}</strong>
+              <li key={row.week} className="tc-list__item tc-list__item--wide">
+                <span className="tc-list__main">
+                  <span className="tc-list__name">{t("finances.tickets.week", { week: row.week })}</span>
+                  <span className="tc-list__meta">{t("finances.tickets.gateTotal", { amount: formatClubCash(row.total) })}</span>
+                </span>
+                <span className="tc-list__value">~{formatClubCash(row.blockAmount)}</span>
               </li>
             ))}
           </ul>
@@ -137,6 +169,7 @@ export function StadiumTicketsPanel({
   season: number;
   week: number;
 }) {
+  const t = useT();
   const [modalBlockId, setModalBlockId] = useState<string | null>(null);
   const matches = seasonHomeTicketMatches(finances, season);
   const seasonTotal = seasonTicketTotal(finances, season);
@@ -144,22 +177,26 @@ export function StadiumTicketsPanel({
   const modalBlock = stadium.blocks.find((entry) => entry.id === modalBlockId);
 
   return (
-    <div className="finances-tickets" aria-label="Eintritt Auswertung">
-      <p className="finances-tickets-lead">
-        Nur Auswertung — Preise und Ausbau im Stadion. Klick auf eine Tribüne: Heimspiel-Liste dieser Saison.
-      </p>
-      <div className="finances-ticket-summary">
-        <span>
-          Saison {formatSeasonLabel(season)}: <strong>{formatClubCash(seasonTotal)}</strong> Eintritt (
-          {matches.length} Heimspiel{matches.length === 1 ? "" : "e"})
-        </span>
-        <span>
-          Modell nächstes Heimspiel: <strong>{formatClubCash(modelPerMatch)}</strong>
-        </span>
-      </div>
-      <div className="finances-ticket-arena" aria-label="Tribünen-Karten">
-        <div className="finances-ticket-pitch" aria-hidden="true" />
-        {BLOCK_LAYOUT.map(({ id }) => {
+    <div className="tc-stack" aria-label={t("finances.tickets.aria")}>
+      <p className="tc-caption">{t("finances.tickets.lead")}</p>
+      <dl className="tc-stats tc-finances__ticket-stats">
+        <div className="tc-stats__item">
+          <dt className="tc-label">{t("finances.tickets.seasonTotal", { season: formatSeasonLabel(season) })}</dt>
+          <dd>
+            <span className="tc-stat__value">{formatClubCash(seasonTotal)}</span>
+            <span className="tc-caption">{t("finances.tickets.homeGames", { count: matches.length })}</span>
+          </dd>
+        </div>
+        <div className="tc-stats__item">
+          <dt className="tc-label">{t("finances.tickets.nextModel")}</dt>
+          <dd>
+            <span className="tc-stat__value">{formatClubCash(modelPerMatch)}</span>
+          </dd>
+        </div>
+      </dl>
+      <div className="tc-finances__arena" aria-label={t("finances.tickets.standsAria")}>
+        <div className="tc-finances__pitch" aria-hidden="true" />
+        {BLOCK_ORDER.map((id) => {
           const block = stadium.blocks.find((entry) => entry.id === id);
           if (!block) return null;
           return (

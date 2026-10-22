@@ -15,6 +15,7 @@ import {
   isBlockUnderConstruction,
 } from "./stadium-block-expansion.ts";
 import type { BlockExpansionState } from "./stadium-block-expansion.ts";
+import { t } from "../i18n/index.ts";
 
 export type StadiumTier = "standing" | "seating" | "vip";
 
@@ -134,7 +135,16 @@ const TIER_ICON: Record<StadiumTier, string> = {
 };
 
 export function tierLabel(tier: StadiumTier): string {
-  return TIER_LABEL[tier];
+  const key = `stadium.tier.${tier}`;
+  const label = t(key);
+  return label !== key ? label : TIER_LABEL[tier];
+}
+
+/** Stand name in the active language; saves keep the German name, which stays the fallback. */
+export function blockDisplayName(block: Pick<StadiumBlock, "id" | "name">): string {
+  const key = `stadium.block.${block.id}`;
+  const label = t(key);
+  return label !== key ? label : block.name;
 }
 
 export function tierIcon(tier: StadiumTier): string {

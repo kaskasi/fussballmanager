@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import {
@@ -72,19 +73,19 @@ export function canSignPreContract(
   pending: readonly PendingTransfer[],
 ): PreContractEligibility {
   if (!player.contract) {
-    return { allowed: false, reason: "Spieler hat keinen Vertrag." };
+    return { allowed: false, reason: t("transfers.preContract.noContract") };
   }
   if (player.club_id === buyerClubId) {
-    return { allowed: false, reason: "Eigener Spieler." };
+    return { allowed: false, reason: t("transfers.preContract.own") };
   }
   if (player.squad_status === "loaned_out") {
-    return { allowed: false, reason: "Ausgeliehen — kein Vorvertrag möglich." };
+    return { allowed: false, reason: t("transfers.preContract.loaned") };
   }
   if (pending.some((entry) => entry.player_id === player.id)) {
-    return { allowed: false, reason: "Bereits ein Vorvertrag hängt." };
+    return { allowed: false, reason: t("transfers.preContract.pending") };
   }
   if (!isPreContractWindow(season, week, player.contract.until_season)) {
-    return { allowed: false, reason: "Vorvertrag erst ab 6 Monate vor Vertragsende." };
+    return { allowed: false, reason: t("transfers.preContract.tooEarly") };
   }
   return { allowed: true };
 }

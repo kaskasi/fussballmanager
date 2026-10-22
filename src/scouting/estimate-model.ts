@@ -7,6 +7,7 @@
  * A quiet week widens the range by 0.25, never past 40.
  * Own players have no interval.
  */
+import { t } from "../i18n/index.ts";
 
 export interface AbilityEstimate {
   estimatedAbilityMean: number;
@@ -101,9 +102,9 @@ export function applyQuietWeek(knowledge: PlayerKnowledge): PlayerKnowledge {
 export function confidenceLabel(knowledge: PlayerKnowledge): string | null {
   if (knowledge.status === "owned") return null;
   const range = knowledge.estimate.uncertaintyRange;
-  if (range >= 40) return "Unbekannt";
-  if (range >= 20) return "Unklar";
-  if (range >= 10) return "Grobes Bild";
-  if (range >= 5) return "Gut bekannt";
-  return "Präzise Einschätzung";
+  if (range >= 40) return t("scouting.knowledge.unknown");
+  if (range >= 20) return t("scouting.knowledge.unclear");
+  if (range >= 10) return t("scouting.knowledge.rough");
+  if (range >= 5) return t("scouting.knowledge.good");
+  return t("scouting.knowledge.precise");
 }

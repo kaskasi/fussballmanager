@@ -1015,15 +1015,14 @@
     0 12px 32px rgb(15 23 42 / 14%);
 }
 
+/* Current slot: accent ring (yellow is reserved for Next and the tutorial target) */
 .training-slot.is-current {
-  border-color: var(--sonnengelb, #f5c518);
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--sonnengelb, #f5c518) 35%, transparent),
-    0 10px 28px rgb(15 23 42 / 12%);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .training-slot.is-current.is-past {
-  border-color: color-mix(in srgb, var(--sonnengelb, #f5c518) 40%, transparent);
+  border-color: var(--line-strong);
 }
 
 .training-slot-focus-toggle {

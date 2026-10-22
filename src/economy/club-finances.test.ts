@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { setLocale } from "../i18n/index.ts";
 import { defaultLeagueState } from "../persistence/league-state.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import {
@@ -9,6 +10,8 @@ import {
   canAffordTransfer,
   defaultClubFinances,
   formatClubCash,
+  formatClubCashWeekly,
+  formatSignedCash,
   matchdayTicketIncome,
   normalizeFinances,
   spendClubCash,
@@ -195,6 +198,26 @@ describe("club finances", () => {
     expect(formatClubCash(6_000_000)).toContain("Mio.");
     expect(formatClubCash(12_500)).toContain("k");
     expect(formatClubCash(-40_000)).toContain("−");
+  });
+
+  it("formats cash in the active language", () => {
+    try {
+      setLocale("de");
+      expect(formatClubCash(5_500_000)).toBe("€ 5.50 Mio.");
+      expect(formatClubCash(35_000)).toBe("€ 35k");
+      expect(formatSignedCash(-1_250_000)).toBe("−€ 1.25 Mio.");
+      expect(formatClubCashWeekly(3_000)).toBe("€ 3k/Wo");
+      setLocale("en");
+      expect(formatClubCash(5_500_000)).toBe("€5.50M");
+      expect(formatClubCash(560_000)).toBe("€560k");
+      expect(formatClubCashWeekly(3_000)).toBe("€3k/wk");
+      setLocale("zh-Hans");
+      expect(formatClubCash(5_500_000)).toBe("€550万");
+      expect(formatClubCash(35_000)).toBe("€3.5万");
+      expect(formatClubCash(8_500)).toBe("€8,500");
+    } finally {
+      setLocale("de");
+    }
   });
 
   it("starts new clubs with a tight cash stack", () => {

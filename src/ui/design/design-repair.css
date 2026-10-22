@@ -18,14 +18,12 @@ body,
 .squad:not(.club-shell-card-body),
 .finances:not(.club-shell-card-body),
 .campus:not(.club-shell-card-body),
-.transfers:not(.club-shell-card-body),
 .leagues:not(.club-shell-card-body),
 .help:not(.club-shell-card-body),
 .settings:not(.club-shell-card-body),
 .matchday,
 .scouting:not(.club-shell-card-body),
 .stadium:not(.club-shell-card-body),
-.profile:not(.club-shell-card-body),
 .screen-shell:not(.club-shell-card-body),
 .hub-cockpit-grid,
 .career-lineup,
@@ -95,8 +93,7 @@ body,
 
 /* Mobile vertical rail — full-bleed tabs (loads after mobile-pass.css) */
 @media (max-width: 720px) {
-  main.club-shell-card-body:has(> .fm-tab-bar--screen-tabs) > .fm-tab-bar--screen-tabs .fm-tab,
-  .profile-spoke-tabs.fm-tab-bar--screen-tabs .fm-tab {
+  main.club-shell-card-body:has(> .fm-tab-bar--screen-tabs) > .fm-tab-bar--screen-tabs .fm-tab {
     width: 100% !important;
     min-width: 0 !important;
     max-width: none !important;
@@ -107,9 +104,8 @@ body,
   }
 
   main.club-shell-card-body:has(> .fm-tab-bar--screen-tabs) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active),
-  main.club-shell-card-body:has(> .fm-tab-bar--screen-tabs) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active):hover,
-  main.club-shell-card-body:has(> .fm-tab-bar--screen-tabs) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active):focus-visible,
-  .profile-spoke-tabs.fm-tab-bar--screen-tabs .fm-tab:not(.is-active) {
+main.club-shell-card-body:has(> .fm-tab-bar--screen-tabs) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active):hover,
+main.club-shell-card-body:has(> .fm-tab-bar--screen-tabs) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active):focus-visible {
     background: transparent !important;
     color: var(--text-muted) !important;
     box-shadow: none !important;

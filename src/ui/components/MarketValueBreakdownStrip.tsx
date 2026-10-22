@@ -1,4 +1,4 @@
-/** WIREFRAME: PRD 05.1 — Marktwert-Faktoren (Icon-first, kompakt) */
+/** WIREFRAME: PRD 05.1 — Marktwert-Faktoren (tc-panel + tc-kv; profile and the sale confirmation) */
 import { TrendingUp } from "lucide-react";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import type { Player } from "../../types/player.ts";
@@ -25,33 +25,25 @@ export function MarketValueBreakdownStrip({
   const total = player.market_value;
 
   return (
-    <section className="market-value-breakdown" aria-label={t("transfer.marketValue.breakdownAria")}>
-      <header className="market-value-breakdown-head">
-        <TrendingUp size={16} aria-hidden />
-        <span className="market-value-breakdown-total">{formatClubCash(total)}</span>
-        <span className="market-value-breakdown-label">{t("transfer.marketValue.title")}</span>
-      </header>
-      <ul className="market-value-breakdown-factors">
-        <li>
-          <span>{t("transfer.marketValue.base")}</span>
-          <strong>{formatClubCash(breakdown.base)}</strong>
-        </li>
-        <li>
-          <span>{t("transfer.marketValue.present")}</span>
-          <strong>{pct(breakdown.presentFactor)}</strong>
-        </li>
-        <li>
-          <span>{t("transfer.marketValue.development")}</span>
-          <strong>{pct(breakdown.developmentFactor)}</strong>
-        </li>
-        <li>
-          <span>{t("transfer.marketValue.contract")}</span>
-          <strong>{pct(breakdown.contractFactor)}</strong>
-        </li>
-      </ul>
-      {breakdown.capped ? (
-        <p className="market-value-breakdown-cap">{t("transfer.marketValue.youthCap")}</p>
-      ) : null}
+    <section className="tc-panel" aria-label={t("transfer.marketValue.breakdownAria")}>
+      <div className="tc-panel__head">
+        <span className="tc-label">{t("transfer.marketValue.title")}</span>
+        <span className="tc-namecell">
+          <TrendingUp className="tc-icon" aria-hidden />
+          {formatClubCash(total)}
+        </span>
+      </div>
+      <dl className="tc-kv">
+        <dt>{t("transfer.marketValue.base")}</dt>
+        <dd>{formatClubCash(breakdown.base)}</dd>
+        <dt>{t("transfer.marketValue.present")}</dt>
+        <dd>{pct(breakdown.presentFactor)}</dd>
+        <dt>{t("transfer.marketValue.development")}</dt>
+        <dd>{pct(breakdown.developmentFactor)}</dd>
+        <dt>{t("transfer.marketValue.contract")}</dt>
+        <dd>{pct(breakdown.contractFactor)}</dd>
+      </dl>
+      {breakdown.capped ? <p className="tc-caption tc-cards__note">{t("transfer.marketValue.youthCap")}</p> : null}
     </section>
   );
 }

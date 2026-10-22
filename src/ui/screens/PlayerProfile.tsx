@@ -1,23 +1,11 @@
-/** WIREFRAME: docs/prd/design.md §9.8 — Spielerprofil (hub-and-spoke target) */
 /**
- * WIREFRAME: PRD 14.3 — Spielerakte
- *
- * ┌──────────────────────────────────────────────────────────────┐
- * │ Felix Schröder · CB · 17 · 🇩🇪                               │
- * │ CA 87  ● Fit  ◆ Form  ● Moral  📚 Erfahrung · Roh            │
- * ├──────────────────┬───────────────────────────────────────────┤
- * │ Kernattribute hex │ Aktuelles Ziel                            │
- * │ footnote bars     │ 🏃 Schnelligkeit                          │
- * │ Technik/Physis/…  │ Fähigkeiten / Bonus (F2.8 Badges)         │
- * │ ⚑ Gate-Keys       │ [Kopfball] [· dashed hybrid ·]            │
- * │ Stärke als…       │ Vertrag  [✍️ Verhandeln] [⬆️ Profikader]  │
- * └──────────────────┴───────────────────────────────────────────┘
- *
- * Eine Karte = Identität. Nur Verlauf und Saisonwerte als optionale Vertiefung.
- * Stamps: Player.stamps (PRD 07.5 / F2.8).
+ * WIREFRAME: docs/prd/design.md §9.8 — Spielerprofil (hub and spoke).
+ * Identity rail on the left stays put; Overview / History / Season stats switch on the right.
+ * Design-system components (`tc-`), layout in `design/surfaces/profile.css`. Stamps: Player.stamps (PRD 07.5 / F2.8).
  */
-import { useEffect, useMemo, useState, type ComponentPropsWithoutRef } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
+  Award,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -36,10 +24,8 @@ import {
   profileMenuItems,
   profileOverflowMenuItems,
   type PlayerProfileAction,
-  type ProfileMenuItem,
 } from "../../player/profile-actions.ts";
 import { ProfileActionsMenu } from "../components/ProfileActionsMenu.tsx";
-import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import {
   contractTalkLock,
@@ -48,12 +34,9 @@ import {
   type ContractOffer,
 } from "../../transfers/contract-talks.ts";
 import type { Player } from "../../types/player.ts";
-import {
-  careerSeasonStatsForSeason,
-  listCareerStatSeasons,
-} from "../../player/season-stats.ts";
+import { careerSeasonStatsForSeason, listCareerStatSeasons } from "../../player/season-stats.ts";
 import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
-import { transferWindowHint } from "../../i18n/index.ts";
+import { t as translate, transferWindowHint } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { transferWindowClosedReason } from "../../transfers/purchase-block.ts";
 import { ContractTalksModal } from "../components/ContractTalksModal.tsx";
@@ -70,18 +53,12 @@ import {
 } from "../../scouting/scout-visibility.ts";
 import { EXPERIENCE_APPS_SOFT_CAP } from "../../development/experience.ts";
 import { injuryTypeLabel } from "../../development/injury-roll.ts";
+import { staerkeLaneShort } from "../../development/position-lanes.ts";
 import { Hint } from "../components/Hint.tsx";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
-import {
-  achievementBadges,
-  contractView,
-  flavorForScout,
-} from "../player-flavor.ts";
-import {
-  formatCaDelta,
-  formatRecentGrowth,
-  weeklyCaDelta,
-} from "../../player/ca-tracking.ts";
+import { achievementBadges, contractView, flavorForScout } from "../player-flavor.ts";
+import { achievementDisplayLabel } from "../../player/achievements.ts";
+import { formatCaDelta, formatRecentGrowth, weeklyCaDelta } from "../../player/ca-tracking.ts";
 import {
   attributeBars,
   attributeEncyclopediaCount,
@@ -108,14 +85,20 @@ import {
   type AttributeBar,
   type DossierTrainingAccent,
   type ExperienceBar,
+  type StateMark,
+  type StateTone,
 } from "../player-profile.ts";
 import {
   activeStampBadges,
   eligibleTrainStamps,
-  stampIcon,
   stampLabel,
+  stampPathLabel,
+  stampDefinition,
 } from "../../development/ability-stamps.ts";
 import { formatGrowthDelta } from "../../player/growth-history.ts";
+import { ratingBand } from "../design/rating-band.ts";
+import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
+
 type ProfileTab = "overview" | "development" | "stats";
 
 const PROFILE_TABS: { id: ProfileTab; labelKey: string }[] = [
@@ -124,7 +107,7 @@ const PROFILE_TABS: { id: ProfileTab; labelKey: string }[] = [
   { id: "stats", labelKey: "profile.tab.stats" },
 ];
 
-/** Shown only under Vertrag — not duplicated in the identity rail. */
+/** Shown only under Contract — not duplicated in the identity rail. */
 const PROFILE_CAREER_ACTIONS = new Set<PlayerProfileAction>([
   "sign_contract",
   "promote_u19",
@@ -172,6 +155,9 @@ export interface PlayerProfileProps {
   onContractTalkOpened?: () => void;
 }
 
+/** German transfer refusals from App's flash notice (see PR notes: a tone flag from the caller would be cleaner). */
+const TRANSFER_WARNING = /nicht möglich|zu niedrig|Fenster zu|nur im|Scout-Ziel|Transfer-Topf/;
+
 export function PlayerProfile({
   player,
   owned,
@@ -211,6 +197,7 @@ export function PlayerProfile({
   onContractTalkOpened,
 }: PlayerProfileProps) {
   const t = useT();
+  const narrow = useMobileNarrow();
   const [tab, setTab] = useState<ProfileTab>("overview");
   const [talksOpen, setTalksOpen] = useState(false);
   const [offer, setOffer] = useState<ContractOffer | null>(null);
@@ -231,6 +218,7 @@ export function PlayerProfile({
     setTalksOpen(true);
     onContractTalkOpened?.();
   }, [openContractTalkOnMount, onContractOffer, onContractTalkOpened, player.id, season]);
+
   const menuItems = profileMenuItems(player, owned, season, week ?? 1);
   const overflowMenuItems = profileOverflowMenuItems(player, owned);
   const reveal = scoutEstimate ? scoutReveal(scoutEstimate.uncertaintyRange) : null;
@@ -242,7 +230,7 @@ export function PlayerProfile({
     listPrice === undefined
       ? undefined
       : owned
-        ? `ca. ${formatMoney(listPrice)}`
+        ? t("profile.approx", { amount: formatMoney(listPrice) })
         : !hasScoutIntel
           ? undefined
           : askingBounds === null
@@ -265,19 +253,10 @@ export function PlayerProfile({
             pot: formatClubCash(transferBudget ?? 0),
           })
         : t("transfer.profile.offerMarket"));
-  const transferNotice =
-    (actionFeedback &&
-    /nicht möglich|zu niedrig|Fenster zu|nur im|Scout-Ziel|Transfer-Topf/.test(actionFeedback)
-      ? actionFeedback
-      : null);
+  const feedbackIsWarning = Boolean(actionFeedback && TRANSFER_WARNING.test(actionFeedback));
 
   function notifyTransfer(message: string) {
     onTransferNotice?.(message);
-  }
-
-  function handlePurchaseClick() {
-    if (!onPurchase) return;
-    onPurchase();
   }
 
   function handleListClick() {
@@ -304,13 +283,13 @@ export function PlayerProfile({
   const preContractAmountLabel =
     preContractBonus === undefined
       ? undefined
-      : owned
-        ? `ca. ${formatMoney(preContractBonus)}`
-        : askingBounds?.exact
-          ? `ca. ${formatMoney(preContractBonus)}`
-          : askingBounds
-            ? `ca. ${formatMoney(Math.round(preContractBonus * 0.7))}–${formatMoney(Math.round(preContractBonus * 1.3))}`
-            : undefined;
+      : owned || askingBounds?.exact
+        ? t("profile.approx", { amount: formatMoney(preContractBonus) })
+        : askingBounds
+          ? t("profile.approx", {
+              amount: `${formatMoney(Math.round(preContractBonus * 0.7))}–${formatMoney(Math.round(preContractBonus * 1.3))}`,
+            })
+          : undefined;
   const fitness = stateMark(player.state.fitness);
   const morale = stateMark(player.state.morale);
   const form = formMark(player.state.form);
@@ -323,14 +302,13 @@ export function PlayerProfile({
       : [];
   const timeline = visibleBreakoutFlags(player.hidden.breakout_flags);
   const scoutLabel =
-    owned || !scoutEstimate
-      ? null
-      : confidenceLabel({ status: "scouted", estimate: scoutEstimate });
+    owned || !scoutEstimate ? null : confidenceLabel({ status: "scouted", estimate: scoutEstimate });
   const ca = owned
     ? formatScoutCa(player, scoutEstimate ?? { estimatedAbilityMean: 65, uncertaintyRange: 0, sampleSize: 0 }, true)
     : scoutEstimate
       ? formatScoutCa(player, scoutEstimate, false)
       : "?";
+  const exactCa = /^\d+$/.test(ca) ? Number(ca) : null;
   const facts = profileFacts(player, owned);
   const encyclopediaCount = attributeEncyclopediaCount(player);
   const primaryLane = positionLane(player.position);
@@ -347,6 +325,11 @@ export function PlayerProfile({
   const caDelta = owned ? weeklyCaDelta(player) : null;
   const talkLock = contractTalkLock(player, { season, week, weekday });
   const canTalk = owned && Boolean(onContractOffer) && player.squad_status !== "loaned_out";
+  const saleBlockedText =
+    !listedForSale && onList
+      ? (saleBlockedReason ??
+        (!transferWindowOpen ? t("transfer.profile.saleWindowOnly", { hint: transferWindowHint() }) : null))
+      : null;
 
   function openContractTalk() {
     if (!talkLock.allowed) return;
@@ -355,46 +338,51 @@ export function PlayerProfile({
   }
 
   return (
-    <main className="profile club-shell-card-body">
-      <div className="fm-tab-panel">
-        {actionFeedback ? (
-          <p
-            className={
-              /nicht möglich|zu niedrig|Fenster zu|nur im|Scout-Ziel|Transfer-Topf/.test(actionFeedback)
-                ? "profile-feedback is-warn"
-                : "profile-feedback"
-            }
-            role="status"
-          >
-            {actionFeedback}
-          </p>
-        ) : null}
+    <main className="club-shell-card-body tc-profile-screen">
+      {actionFeedback ? (
+        <p className={feedbackIsWarning ? "tc-profile__notice tc-profile__notice--warn" : "tc-profile__notice"} role="status">
+          {actionFeedback}
+        </p>
+      ) : null}
 
-        <article className="profile-card profile-hub">
-          {owned && onSelectSquadPlayer && squadPlayerIds.length > 1 ? (
-            <nav className="profile-squad-nav" aria-label={t("profile.squadNav.aria")}>
-              <button
-                type="button"
-                className="profile-squad-nav-btn"
-                disabled={!prevSquadId}
-                aria-label={t("profile.squadNav.prev")}
-                onClick={() => prevSquadId && onSelectSquadPlayer(prevSquadId)}
-              >
-                <ChevronLeft size={20} strokeWidth={2.5} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                className="profile-squad-nav-btn"
-                disabled={!nextSquadId}
-                aria-label={t("profile.squadNav.next")}
-                onClick={() => nextSquadId && onSelectSquadPlayer(nextSquadId)}
-              >
-                <ChevronRight size={20} strokeWidth={2.5} aria-hidden="true" />
-              </button>
-            </nav>
-          ) : null}
-          <aside className="profile-identity-rail" aria-label="Identität">
-            <div className="profile-identity-head">
+      <div className="tc-profile">
+        <aside className="tc-panel tc-profile__rail" aria-label={t("profile.identity.aria")}>
+          <div className="tc-profile__head">
+            <PlayerPortrait
+              seed={player.portrait_seed}
+              nationality={player.nationality}
+              clubId={player.club_id}
+              size="lg"
+            />
+            <div className="tc-profile__id">
+              <h1 className="tc-profile__name">{formatPlayerName(player)}</h1>
+              <p className="tc-profile__meta">
+                {formatPlayerPositionLabel(player)} · {t("profile.age", { age: player.age })}
+              </p>
+            </div>
+            <div className="tc-profile__tools">
+              {owned && onSelectSquadPlayer && squadPlayerIds.length > 1 ? (
+                <nav className="tc-profile__squadnav" aria-label={t("profile.squadNav.aria")}>
+                  <button
+                    type="button"
+                    className="tc-iconbtn"
+                    disabled={!prevSquadId}
+                    aria-label={t("profile.squadNav.prev")}
+                    onClick={() => prevSquadId && onSelectSquadPlayer(prevSquadId)}
+                  >
+                    <ChevronLeft className="tc-icon" aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className="tc-iconbtn"
+                    disabled={!nextSquadId}
+                    aria-label={t("profile.squadNav.next")}
+                    onClick={() => nextSquadId && onSelectSquadPlayer(nextSquadId)}
+                  >
+                    <ChevronRight className="tc-icon" aria-hidden />
+                  </button>
+                </nav>
+              ) : null}
               {owned && onTerminateContract && overflowMenuItems.length > 0 ? (
                 <ProfileActionsMenu
                   open={overflowOpen}
@@ -406,272 +394,278 @@ export function PlayerProfile({
                   }}
                 />
               ) : null}
-              <PlayerPortrait
-                seed={player.portrait_seed} nationality={player.nationality}
-                clubId={player.club_id}
-                size="lg"
-                className="profile-portrait profile-portrait-rail"
-              />
-              <Hint text="Spielername. Fremde Spieler werden erst durch Scouting besser bekannt." block>
-                <h1 className="profile-name">{formatPlayerName(player)}</h1>
-              </Hint>
             </div>
-          <div className="profile-identity-body">
-            <div className="profile-identity-stats">
-              <Hint text="Hauptposition auf dem Platz.">
-                <span className="profile-stat">{formatPlayerPositionLabel(player)}</span>
-              </Hint>
-              <Hint text="Alter in Jahren.">
-                <span className="profile-stat">{player.age} J.</span>
-              </Hint>
-              <Hint text="Current Ability — geschätzte Gesamtstärke.">
-                <span className="profile-stat profile-stat-ca">CA {ca}</span>
-              </Hint>
+          </div>
+
+          <div className="tc-profile__ca">
+            <Hint text={t("profile.ca.hint")}>
+              <span
+                className={`tc-rating tc-rating--lg tc-rating--${exactCa === null ? 1 : ratingBand(exactCa)}`}
+                aria-label={t("profile.ca.aria", { value: ca })}
+              >
+                {ca}
+              </span>
+            </Hint>
+            <div className="tc-profile__ca-copy">
+              <span className="tc-label">{t("profile.ca.label")}</span>
               {owned && caDelta !== null && caDelta !== 0 ? (
-                <Hint text="CA-Änderung seit der letzten simulierten Woche.">
-                  <span className={`profile-stat ${caDelta > 0 ? "is-up" : "is-down"}`}>
-                    {formatCaDelta(caDelta)}
-                  </span>
-                </Hint>
+                <span
+                  className={caDelta > 0 ? "tc-delta--up" : "tc-delta--down"}
+                  title={t("profile.ca.deltaHint")}
+                >
+                  {formatCaDelta(caDelta)}
+                </span>
               ) : null}
               {scoutLabel ? (
-                <Hint text="Wie gut dein Verein diesen Spieler kennt.">
-                  <span className="profile-scout-badge">{scoutLabel}</span>
-                </Hint>
+                <span className="tc-caption" title={t("profile.scoutKnowledge.hint")}>
+                  {scoutLabel}
+                </span>
               ) : null}
             </div>
-            <div className="profile-state profile-state-inline" aria-label="Zustand">
-              {player.state.injury ? (
-                <StateChip
-                  label="Verletzt"
-                  mark="◆"
-                  tone="low"
-                  value={`${injuryTypeLabel(player.state.injury.type_id)} · ${player.state.injury.weeks_remaining} Wo.`}
-                />
-              ) : (
-                <StateChip label="Fit" mark={fitness.mark} tone={fitness.tone} value={formatState(player.state.fitness, owned, scoutEstimate)} />
-              )}
-              <StateChip label="Form" mark={form.mark} tone={form.tone} value={formatState(player.state.form, owned, scoutEstimate, true)} />
-              <StateChip label="Moral" mark={morale.mark} tone={morale.tone} value={formatState(player.state.morale, owned, scoutEstimate)} />
-            </div>
-            {xpBar ? (
-              <Hint
-                text={`Karriere-Einsätze (${xpBar.apps}). Der Balken skaliert bis ${EXPERIENCE_APPS_SOFT_CAP} Spiele — beeinflusst Match-Reife, kein Potential.`}
-                block
-              >
-                <div className="profile-rail-xp" aria-label={xpBar.label}>
-                  <span className="profile-rail-xp-label">Erfahrung</span>
-                  <div
-                    className="profile-xp-track profile-rail-xp-track"
-                    role="meter"
-                    aria-valuemin={0}
-                    aria-valuemax={EXPERIENCE_APPS_SOFT_CAP}
-                    aria-valuenow={xpBar.apps}
-                    aria-label={`${experienceTierLabel(xpBar)} · ${xpBar.apps} Einsätze`}
-                  >
-                    <span className="profile-xp-fill" style={{ width: `${xpBar.fill * 100}%` }} />
-                  </div>
-                  <span className="profile-rail-xp-caption">{experienceCaption(xpBar)}</span>
-                </div>
-              </Hint>
-            ) : null}
-            <Hint text="Stammdaten auf einen Blick." block>
-              <p className="profile-meta-line">
-                {facts.map((fact, index) => (
-                  <span key={fact.label}>
-                    {index > 0 ? " · " : null}
-                    <abbr className="profile-meta-abbr" title={fact.label}>
-                      {fact.value}
-                    </abbr>
-                  </span>
-                ))}
-              </p>
-            </Hint>
-            {flavor ? (
-              <Hint text={flavor.body ?? flavor.headline} block>
-                <p className="profile-flavor-one">{flavor.headline}</p>
-              </Hint>
+          </div>
+
+          <dl className="tc-stats tc-profile__state" aria-label={t("profile.state.aria")}>
+            {player.state.injury ? (
+              <StateTile
+                label={t("squad.injuredHint")}
+                mark="◆"
+                tone="low"
+                value={`${injuryTypeLabel(player.state.injury.type_id)} · ${t("squad.injuredWeeks", { count: player.state.injury.weeks_remaining })}`}
+              />
             ) : (
-              <p className="profile-flavor-one is-muted">Noch kaum Gerüchte.</p>
+              <StateTile
+                label={t("profile.state.fitness")}
+                mark={fitness.mark}
+                tone={fitness.tone}
+                value={formatState(player.state.fitness, owned, scoutEstimate)}
+              />
             )}
+            <StateTile
+              label={t("profile.state.form")}
+              mark={form.mark}
+              tone={form.tone}
+              value={formatState(player.state.form, owned, scoutEstimate, true)}
+            />
+            <StateTile
+              label={t("profile.state.morale")}
+              mark={morale.mark}
+              tone={morale.tone}
+              value={formatState(player.state.morale, owned, scoutEstimate)}
+            />
+          </dl>
+
+          <ProfileBio narrow={narrow}>
+            {xpBar ? (
+              <div className="tc-profile__xp" title={t("profile.experience.hint", { apps: xpBar.apps, cap: EXPERIENCE_APPS_SOFT_CAP })}>
+                <div className="tc-profile__xp-head">
+                  <span className="tc-label">{xpBar.label}</span>
+                  <span className="tc-caption">{experienceCaption(xpBar)}</span>
+                </div>
+                <span
+                  className="tc-bar"
+                  role="meter"
+                  aria-valuemin={0}
+                  aria-valuemax={EXPERIENCE_APPS_SOFT_CAP}
+                  aria-valuenow={xpBar.apps}
+                  aria-label={experienceCaption(xpBar)}
+                >
+                  <span className="tc-bar__fill" style={{ width: `${xpBar.fill * 100}%` }} />
+                </span>
+              </div>
+            ) : null}
+
+            <dl className="tc-kv tc-profile__facts">
+              {facts.map((fact) => (
+                <Fragment key={fact.label}>
+                  <dt>{fact.label}</dt>
+                  <dd>{fact.value}</dd>
+                </Fragment>
+              ))}
+            </dl>
+
+            {flavor ? (
+              <figure className="tc-profile__quote">
+                <blockquote>{flavor.headline}</blockquote>
+                <figcaption className="tc-caption">{flavor.body}</figcaption>
+              </figure>
+            ) : (
+              <p className="tc-empty">{t("profile.flavor.none")}</p>
+            )}
+
             {achievements.length > 0 ? (
-              <ul className="profile-achievements" aria-label="Erfolge">
+              <ul className="tc-profile__badges" aria-label={t("profile.achievements.aria")}>
                 {achievements.map((badge) => (
-                  <li key={badge}>{badge}</li>
+                  <li key={badge}>
+                    <Award className="tc-icon" aria-hidden />
+                    {achievementDisplayLabel(badge)}
+                  </li>
                 ))}
               </ul>
             ) : null}
-          </div>
+          </ProfileBio>
 
           {owned && (onList || (onProfileAction && railMenuItems.length > 0)) ? (
-            <footer className="profile-rail-actions" aria-label="Aktionen">
-              <div className="profile-actions-rail">
-                {onList ? (
-                  <div className="profile-action-cell profile-action-cell--span">
-                    <Hint
-                      text={
-                        listedForSale
-                          ? t("transfer.profile.listedHint")
-                          : (saleBlockedReason ??
-                            (!transferWindowOpen
-                              ? t("transfer.profile.saleWindowOnly", { hint: transferWindowHint() })
-                              : t("transfer.profile.listHint")))
-                      }
-                      block
+            <div className="tc-profile__actions" role="group" aria-label={t("profile.actions.aria")}>
+              {onList ? (
+                <div className="tc-profile__action">
+                  <button
+                    type="button"
+                    className="tc-btn tc-profile__btn-wide"
+                    onClick={handleListClick}
+                    aria-pressed={listedForSale}
+                    aria-disabled={listedForSale || Boolean(saleBlockedText)}
+                    title={listedForSale ? t("transfer.profile.listedHint") : t("transfer.profile.listHint")}
+                  >
+                    {listedForSale ? t("transfer.profile.listed") : t("transfer.profile.list")}
+                    {!listedForSale && saleOffer ? (
+                      <span className="tc-profile__amount">{formatMoney(saleOffer)}</span>
+                    ) : null}
+                  </button>
+                  {saleBlockedText ? <p className="tc-caption">{saleBlockedText}</p> : null}
+                </div>
+              ) : null}
+              {onProfileAction
+                ? railMenuItems.map((item) => (
+                    <button
+                      key={item.action}
+                      type="button"
+                      className="tc-btn tc-btn--sm"
+                      title={item.hint}
+                      onClick={() => onProfileAction(item.action)}
                     >
-                      <ProfileActionButton
-                        label={
-                          listedForSale ? t("transfer.profile.listed") : t("transfer.profile.list")
-                        }
-                        amount={
-                          !listedForSale && saleOffer ? formatMoney(saleOffer) : undefined
-                        }
-                        className={[
-                          listedForSale ? "ui-btn--ghost is-listed" : "ui-btn--ghost",
-                          !listedForSale && (!transferWindowOpen || saleBlockedReason)
-                            ? "is-blocked"
-                            : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        onClick={handleListClick}
-                        aria-pressed={listedForSale}
-                        aria-disabled={
-                          listedForSale || !transferWindowOpen || Boolean(saleBlockedReason)
-                        }
-                      />
-                    </Hint>
-                  </div>
-                ) : null}
-                {onProfileAction
-                  ? railMenuItems.map((item) => (
-                      <div key={item.action} className="profile-action-cell">
-                        <Hint text={item.hint} block>
-                          <ProfileActionButton
-                            label={item.label}
-                            className={railProfileActionClass(item)}
-                            onClick={() => onProfileAction(item.action)}
-                          />
-                        </Hint>
-                      </div>
-                    ))
-                  : null}
-              </div>
-            </footer>
+                      {item.label}
+                    </button>
+                  ))
+                : null}
+            </div>
           ) : null}
 
           {!owned && onAssignScout ? (
-            <footer className="profile-rail-actions" aria-label="Scouting und Transfer">
-              {transferNotice ? (
-                <p className="profile-purchase-block" role="status">
-                  {transferNotice}
-                </p>
-              ) : null}
+            <div className="tc-profile__actions" role="group" aria-label={t("profile.scoutActions.aria")}>
               {scouting ? (
-                <p className="profile-status" role="status">
-                  Scout aktiv · Bericht nach Wochensim
+                <p className="tc-caption" role="status">
+                  {t("profile.scouting.active")}
                 </p>
               ) : null}
-              <div className="profile-actions">
+              <div className="tc-profile__action-row">
                 {!scouting ? (
-                  <div className="profile-action-cell">
-                    <Hint text="Scout beobachtet den Spieler jede Woche. Pipeline → Woche simulieren." block>
-                      <ProfileActionButton label="Scouten" className="ui-btn--primary" onClick={onAssignScout} />
-                    </Hint>
-                  </div>
+                  <button
+                    type="button"
+                    className="tc-btn tc-btn--primary"
+                    onClick={onAssignScout}
+                    title={t("profile.scouting.assignHint")}
+                  >
+                    {t("profile.scouting.assign")}
+                  </button>
                 ) : null}
                 {onToggleShortlist ? (
-                  <div className="profile-action-cell is-compact">
-                    <button
-                      type="button"
-                      className="ui-btn ui-btn--ghost profile-action-btn is-icon"
-                      aria-label={shortlisted ? "Von Merkliste entfernen" : "Auf Merkliste setzen"}
-                      aria-pressed={shortlisted}
-                      onClick={onToggleShortlist}
-                    >
-                      <Star
-                        className={shortlisted ? "profile-action-icon is-filled" : "profile-action-icon"}
-                        aria-hidden="true"
-                        size={18}
-                        fill={shortlisted ? "currentColor" : "none"}
-                      />
-                    </button>
-                  </div>
-                ) : null}
-                {onPurchase ? (
-                  <div className="profile-action-cell">
-                    <Hint text={purchaseHintText} block>
-                      <ProfileActionButton
-                        label={t("transfer.profile.buy")}
-                        amount={purchaseAmountLabel}
-                        className={hasScoutIntel || scouting ? "ui-btn--primary" : "ui-btn--ghost"}
-                        onClick={handlePurchaseClick}
-                      />
-                    </Hint>
-                  </div>
-                ) : null}
-                {onPreContract ? (
-                  <div className="profile-action-cell">
-                    <Hint
-                      text={
-                        preContractBlockedReason ??
-                        "Vorvertrag ab 6 Monate vor Vertragsende. Signaturbonus 10–15 % der gesparten Ablöse — 1–3 Liga-Mitbieter."
-                      }
-                      block
-                    >
-                      <ProfileActionButton
-                        label="Vorvertrag"
-                        amount={preContractAmountLabel}
-                        className="ui-btn--ghost"
-                        onClick={onPreContract}
-                        disabled={Boolean(preContractBlockedReason) || askingBounds === null}
-                      />
-                    </Hint>
-                  </div>
+                  <button
+                    type="button"
+                    className="tc-iconbtn tc-profile__star"
+                    aria-label={shortlisted ? t("profile.shortlist.remove") : t("profile.shortlist.add")}
+                    aria-pressed={shortlisted}
+                    onClick={onToggleShortlist}
+                  >
+                    <Star className="tc-icon" aria-hidden fill={shortlisted ? "currentColor" : "none"} />
+                  </button>
                 ) : null}
               </div>
-            </footer>
+              {onPurchase ? (
+                <div className="tc-profile__action">
+                  <button
+                    type="button"
+                    className={hasScoutIntel || scouting ? "tc-btn tc-btn--primary tc-profile__btn-wide" : "tc-btn tc-profile__btn-wide"}
+                    onClick={onPurchase}
+                  >
+                    {t("transfer.profile.buy")}
+                    {purchaseAmountLabel ? <span className="tc-profile__amount">{purchaseAmountLabel}</span> : null}
+                  </button>
+                  <p className="tc-caption">{purchaseHintText}</p>
+                </div>
+              ) : null}
+              {onPreContract ? (
+                <div className="tc-profile__action">
+                  <button
+                    type="button"
+                    className="tc-btn tc-profile__btn-wide"
+                    onClick={onPreContract}
+                    disabled={Boolean(preContractBlockedReason) || askingBounds === null}
+                    title={t("profile.preContract.hint")}
+                  >
+                    {t("profile.preContract")}
+                    {preContractAmountLabel ? (
+                      <span className="tc-profile__amount">{preContractAmountLabel}</span>
+                    ) : null}
+                  </button>
+                  {preContractBlockedReason ? <p className="tc-caption">{preContractBlockedReason}</p> : null}
+                </div>
+              ) : null}
+            </div>
           ) : null}
         </aside>
 
-        <div className="profile-hub-spoke">
-          <FmScreenTabBar className="profile-spoke-tabs" role="tablist" aria-label="Spielerakte">
+        <div className="tc-profile__main">
+          <div className="tc-tabs tc-tabs--page" role="tablist" aria-label={t("profile.tabs.aria")}>
             {PROFILE_TABS.map((entry) => (
-              <FmScreenTab
+              <button
                 key={entry.id}
+                type="button"
                 role="tab"
+                id={`profile-tab-${entry.id}`}
+                aria-controls="profile-tabpanel"
+                className="tc-tab"
                 aria-selected={tab === entry.id}
-                className={tab === entry.id ? "is-active" : undefined}
                 onClick={() => setTab(entry.id)}
               >
                 {t(entry.labelKey)}
-              </FmScreenTab>
+              </button>
             ))}
-          </FmScreenTabBar>
-          <div className="profile-tab-panels" role="tabpanel">
-          {tab === "overview" ? (
-            <section
-              className={`profile-panel profile-overview${owned ? "" : " profile-overview--scout"}`}
-              aria-label={t("profile.tab.overview")}
-            >
-              <div className="profile-overview-grid">
-                <div className="profile-overview-primary">
-                  <Hint text="Sechs Kernattribute als Hex. Eigene Spieler: Fläche. Scouts: CI-Ring." block>
-                    <div className="profile-attr-hex-wrap profile-attr-hex-wrap--hero">
-                      <p className="profile-section-label">Kernattribute</p>
-                      <AttributeHex bars={bars} owned={owned} />
+          </div>
+
+          <div id="profile-tabpanel" role="tabpanel" aria-labelledby={`profile-tab-${tab}`}>
+            {tab === "overview" ? (
+              <div className="tc-profile__overview">
+                <div className="tc-stack">
+                  <section className="tc-panel" aria-labelledby="profile-core-title">
+                    <div className="tc-panel__head">
+                      <span className="tc-label" id="profile-core-title">
+                        {t("profile.core.title")}
+                      </span>
+                      <span className="tc-caption">
+                        {owned ? t("profile.core.ownedNote") : t("profile.core.scoutNote")}
+                      </span>
                     </div>
-                  </Hint>
+                    {bars.length >= 3 ? (
+                      <AttributeHex bars={bars} owned={owned} />
+                    ) : (
+                      <>
+                        <dl className="tc-kv">
+                          {bars.map((bar) => (
+                            <Fragment key={bar.key}>
+                              <dt>{attributeLabel(bar.key)}</dt>
+                              <dd>{formatSkillDisplayValue(bar)}</dd>
+                            </Fragment>
+                          ))}
+                        </dl>
+                        <p className="tc-empty tc-cards__note">{t("profile.core.tooFew")}</p>
+                      </>
+                    )}
+                  </section>
 
-                  {lanes.length > 0 ? (
-                    <Hint text="Grobe Eignung aus Hauptposition und Umschulung — keine zweite Attributliste." block>
-                      <StaerkeAlsCompact lanes={lanes} primaryLane={primaryLane} />
-                    </Hint>
-                  ) : (
-                    <p className="profile-empty">Stärke als… unbekannt — mehr scouting.</p>
-                  )}
+                  <section className="tc-panel" aria-labelledby="profile-lanes-title">
+                    <div className="tc-panel__head">
+                      <span className="tc-label" id="profile-lanes-title">
+                        {t("profile.lanes.title")}
+                      </span>
+                    </div>
+                    {lanes.length > 0 ? (
+                      <StaerkeAlsRow lanes={lanes} primaryLane={primaryLane} />
+                    ) : (
+                      <p className="tc-empty">{t("profile.lanes.unknown")}</p>
+                    )}
+                  </section>
 
-                  <SkillEncyclopediaDetails
+                  <SkillEncyclopedia
                     player={player}
                     owned={owned}
                     estimate={scoutEstimate}
@@ -680,139 +674,144 @@ export function PlayerProfile({
                 </div>
 
                 {owned ? (
-                  <div className="profile-overview-secondary">
-                    {trainingTarget ? (
-                      <Hint text="Individuelles Extra-Programm, sonst der Mannschaftsfokus. Kein Stempel-Effekt." block>
-                        <div className="profile-ziel">
-                          <p className="profile-section-label">Aktuelles Ziel</p>
-                          <p className="profile-ziel-title">
-                            <TrainingTargetAccentIcon accent={trainingTarget.accent} />
+                  <div className="tc-stack">
+                    <section className="tc-panel" aria-labelledby="profile-target-title">
+                      <div className="tc-panel__head">
+                        <span className="tc-label" id="profile-target-title">
+                          {t("profile.target.title")}
+                        </span>
+                      </div>
+                      {trainingTarget ? (
+                        <div className="tc-profile__target">
+                          <p className="tc-profile__target-title">
+                            <TrainingTargetIcon accent={trainingTarget.accent} />
                             {trainingTarget.title}
                           </p>
-                          <p className="profile-ziel-detail">{trainingTarget.detail}</p>
+                          <p className="tc-caption">{trainingTarget.detail}</p>
                           {trainingTarget.progress !== null ? (
-                            <div
-                              className="profile-ziel-track"
-                              aria-label={`Fortschritt ${Math.round(trainingTarget.progress * 100)} Prozent`}
+                            <span
+                              className="tc-bar"
+                              role="meter"
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-valuenow={Math.round(trainingTarget.progress * 100)}
+                              aria-label={t("profile.progress", { percent: Math.round(trainingTarget.progress * 100) })}
                             >
-                              <span className="profile-ziel-fill" style={{ width: `${trainingTarget.progress * 100}%` }} />
-                            </div>
+                              <span className="tc-bar__fill" style={{ width: `${trainingTarget.progress * 100}%` }} />
+                            </span>
                           ) : (
-                            <p className="profile-ziel-hint">Kein persönlicher Fortschritt — Teamplan.</p>
+                            <p className="tc-caption">{t("profile.target.teamOnly")}</p>
                           )}
                           {onOpenTraining ? (
-                            <button type="button" className="ui-btn ui-btn--ghost profile-ziel-btn" onClick={onOpenTraining}>
-                              <Dumbbell aria-hidden size={16} />
-                              Einzeltraining
+                            <button type="button" className="tc-btn tc-btn--sm" onClick={onOpenTraining}>
+                              <Dumbbell className="tc-icon" aria-hidden />
+                              {t("profile.target.individual")}
                             </button>
                           ) : null}
                         </div>
-                      </Hint>
-                    ) : (
-                      <p className="profile-empty">Kein Trainingsfokus gesetzt.</p>
-                    )}
+                      ) : (
+                        <p className="tc-empty">{t("profile.target.none")}</p>
+                      )}
+                    </section>
 
-                    <StampHungerSlots
+                    <StampSlots
                       player={player}
                       programs={individualPrograms ?? []}
                       week={week ?? 1}
                       onStartStamp={onStartStampProgram}
                     />
 
-                    {owned ? (
-                      <MarketValueBreakdownStrip player={player} season={season} />
-                    ) : null}
+                    <MarketValueBreakdownStrip player={player} season={season} />
 
-                    <Hint text="Vertragsstatus. Verhandeln öffnet Gehalt, Jahre, Bonus, Minuten und Startplatz." block>
-                      <div className="profile-vertrag">
-                        <p className="profile-section-label">Vertrag</p>
-                        <p className="profile-vertrag-status">{contract.status}</p>
-                        <p className="profile-vertrag-line">{contract.wageWeekly} · bis {contract.untilSeason}</p>
-                        <p className="profile-vertrag-line">{contract.minutesPromise}</p>
-                        {talkLock.reason ? (
-                          <p className="profile-talk-warn">{talkLock.reason}</p>
-                        ) : (player.state.contract_failed_offers ?? 0) > 0 ? (
-                          <p className="profile-talk-warn">
-                            {player.state.contract_failed_offers}/{FRUSTRATION_THRESHOLD} Fehlangebote
-                          </p>
-                        ) : null}
-                        {canTalk ||
-                        (onProfileAction && careerMenuItems.length > 0) ? (
-                          <div className="profile-vertrag-actions">
-                            {canTalk && !youthContractPending ? (
-                              <Hint text={talkLock.reason ?? "Gehalt, Laufzeit, Bonus, Minuten und Startplatz."}>
-                                <button
-                                  type="button"
-                                  className="ui-btn profile-action-btn ui-btn--primary"
-                                  disabled={!talkLock.allowed}
-                                  onClick={openContractTalk}
-                                >
-                                  <PenLine aria-hidden size={16} />
-                                  Verhandeln
-                                </button>
-                              </Hint>
-                            ) : null}
-                            {onProfileAction
-                              ? careerMenuItems.map((item) => (
-                                  <Hint key={item.action} text={item.hint}>
-                                    <button
-                                      type="button"
-                                      className={`ui-btn profile-action-btn ${careerActionButtonClass(item.action)}`}
-                                      onClick={() => {
-                                        if (item.action === "sign_contract") {
-                                          setOffer(defaultContractOffer(player, season));
-                                          setTalksOpen(true);
-                                          return;
-                                        }
-                                        onProfileAction(item.action);
-                                      }}
-                                    >
-                                      {item.action === "sign_contract" ? (
-                                        <PenLine aria-hidden size={16} />
-                                      ) : null}
-                                      {item.label}
-                                    </button>
-                                  </Hint>
-                                ))
-                              : null}
-                          </div>
-                        ) : null}
+                    <section className="tc-panel" aria-labelledby="profile-contract-title">
+                      <div className="tc-panel__head">
+                        <span className="tc-label" id="profile-contract-title">
+                          {t("profile.contract.title")}
+                        </span>
+                        <span className="tc-strong">{contract.status}</span>
                       </div>
-                    </Hint>
+                      <dl className="tc-kv">
+                        <dt>{t("profile.contract.wage")}</dt>
+                        <dd>{contract.wageWeekly}</dd>
+                        <dt>{t("profile.contract.runsUntil")}</dt>
+                        <dd>{contract.untilSeason}</dd>
+                        <dt>{t("profile.contract.minutes")}</dt>
+                        <dd>{contract.minutesPromise}</dd>
+                      </dl>
+                      {talkLock.reason ? (
+                        <p className="tc-profile__warn">{talkLock.reason}</p>
+                      ) : (player.state.contract_failed_offers ?? 0) > 0 ? (
+                        <p className="tc-profile__warn">
+                          {t("profile.contract.failedOffers", {
+                            failed: player.state.contract_failed_offers ?? 0,
+                            max: FRUSTRATION_THRESHOLD,
+                          })}
+                        </p>
+                      ) : null}
+                      {canTalk || (onProfileAction && careerMenuItems.length > 0) ? (
+                        <div className="tc-profile__action-row tc-profile__contract-actions">
+                          {canTalk && !youthContractPending ? (
+                            <button
+                              type="button"
+                              className="tc-btn tc-btn--primary"
+                              disabled={!talkLock.allowed}
+                              onClick={openContractTalk}
+                              title={talkLock.reason ?? t("profile.contract.talkHint")}
+                            >
+                              <PenLine className="tc-icon" aria-hidden />
+                              {t("profile.action.negotiate")}
+                            </button>
+                          ) : null}
+                          {onProfileAction
+                            ? careerMenuItems.map((item) => (
+                                <button
+                                  key={item.action}
+                                  type="button"
+                                  className={
+                                    item.action === "promote_pro" || item.action === "sign_contract"
+                                      ? "tc-btn tc-btn--primary"
+                                      : "tc-btn"
+                                  }
+                                  title={item.hint}
+                                  onClick={() => {
+                                    if (item.action === "sign_contract") {
+                                      setOffer(defaultContractOffer(player, season));
+                                      setTalksOpen(true);
+                                      return;
+                                    }
+                                    onProfileAction(item.action);
+                                  }}
+                                >
+                                  {item.action === "sign_contract" ? <PenLine className="tc-icon" aria-hidden /> : null}
+                                  {item.label}
+                                </button>
+                              ))
+                            : null}
+                        </div>
+                      ) : null}
+                    </section>
                   </div>
                 ) : null}
               </div>
-            </section>
-          ) : null}
+            ) : null}
 
-          {tab === "development" ? (
-            <DevelopmentTab
-              player={player}
-              owned={owned}
-              growth={growth}
-              timeline={timeline}
-              reveal={reveal}
-            />
-          ) : null}
+            {tab === "development" ? (
+              <DevelopmentTab player={player} owned={owned} growth={growth} timeline={timeline} reveal={reveal} />
+            ) : null}
 
-          {tab === "stats" ? (
-            <StatsTab
-              player={player}
-              season={season}
-              owned={owned}
-              scoutEstimate={scoutEstimate}
-            />
-          ) : null}
+            {tab === "stats" ? (
+              <StatsTab player={player} season={season} owned={owned} scoutEstimate={scoutEstimate} />
+            ) : null}
           </div>
         </div>
-        </article>
-
-        {onOpenYouth ? (
-          <button type="button" className="profile-next" onClick={onOpenYouth}>
-            → Zur Jahrgangsliste
-          </button>
-        ) : null}
       </div>
+
+      {onOpenYouth ? (
+        <button type="button" className="tc-btn tc-btn--ghost tc-profile__back" onClick={onOpenYouth}>
+          <ChevronLeft className="tc-icon" aria-hidden />
+          {t("profile.openYouth")}
+        </button>
+      ) : null}
 
       {saleConfirmOpen && saleOffer !== undefined && onList ? (
         <SaleConfirmModal
@@ -849,6 +848,54 @@ export function PlayerProfile({
   );
 }
 
+/** Experience, facts, story and badges: part of the rail on wide screens, folded away on phones (design.md §9.8). */
+function ProfileBio({ narrow, children }: { narrow: boolean; children: ReactNode }) {
+  const t = useT();
+  if (!narrow) return <div className="tc-profile__bio">{children}</div>;
+  return (
+    <details className="tc-profile__bio tc-profile__bio--folded">
+      <summary className="tc-profile__summary tc-profile__summary--inline">
+        <span className="tc-label">{t("profile.bio.summary")}</span>
+        <ChevronDown className="tc-icon tc-profile__chevron" aria-hidden />
+      </summary>
+      <div className="tc-profile__bio">{children}</div>
+    </details>
+  );
+}
+
+/** A "?" value hides its glyph too: the tone would give the true value away. */
+function StateTile({
+  label,
+  mark,
+  tone,
+  value,
+}: {
+  label: string;
+  mark: StateMark;
+  tone: StateTone;
+  value: string;
+}) {
+  const t = useT();
+  return (
+    <div className="tc-stats__item">
+      <dt className="tc-label">{label}</dt>
+      <dd>
+        <span className="tc-stat__value">
+          {value === "?" ? null : (
+            <>
+              <span className={`tc-state tc-state--${tone}`} aria-hidden="true">
+                {mark}
+              </span>{" "}
+            </>
+          )}
+          {value}
+        </span>
+        {value === "?" ? null : <span className="tc-sr">{t(`squad.state.${tone}`)}</span>}
+      </dd>
+    </div>
+  );
+}
+
 function DevelopmentTab({
   player,
   owned,
@@ -862,54 +909,83 @@ function DevelopmentTab({
   timeline: string[];
   reveal: ReturnType<typeof scoutReveal> | null;
 }) {
+  const t = useT();
   const recentGrowth = player.state.recent_growth_26w ?? 0;
-  const chartPoints = layoutGrowthChart(growth, 320, 56);
+  const width = 720;
+  const height = 160;
+  const chartPoints = layoutGrowthChart(growth, width, height);
   const singleSeason = growth.length < 2;
+  const first = growth[0];
+  const last = growth.at(-1);
 
   return (
-    <section className="profile-panel" aria-label="Verlauf">
-      {owned ? (
-        <p className="profile-growth-note">
-          26 Wochen {formatRecentGrowth(recentGrowth)}
-          {singleSeason ? ` · ${formatSeasonLabel(growth[0]?.season ?? 1)} · erster Stand` : ""}
-        </p>
-      ) : null}
-
-      {growth.length > 0 && !singleSeason ? (
-        <Hint text="CA-Verlauf über die Saisons." block>
-          <div className="profile-growth">
-            <svg viewBox="0 0 320 56" role="img" aria-label="CA-Verlauf">
-              <polyline
-                points={growthPolyline(growth, 320, 56)}
-                fill="none"
-                stroke="#059669"
-                strokeWidth="3"
-              />
+    <div className="tc-stack">
+      <section className="tc-panel" aria-labelledby="profile-growth-title">
+        <div className="tc-panel__head">
+          <span className="tc-label" id="profile-growth-title">
+            {t("profile.growth.title")}
+          </span>
+          {owned ? (
+            <span className={recentGrowth > 0 ? "tc-growth" : "tc-caption"}>
+              {t("profile.growth.momentum", { value: formatRecentGrowth(recentGrowth) })}
+            </span>
+          ) : null}
+        </div>
+        {growth.length > 0 && !singleSeason ? (
+          <figure className="tc-profile__chart">
+            <svg viewBox={`-8 -8 ${width + 16} ${height + 16}`} role="img" aria-label={t("profile.growth.aria", {
+              from: formatSeasonLabel(first?.season ?? 1),
+              to: formatSeasonLabel(last?.season ?? 1),
+              start: first?.ca ?? 0,
+              end: last?.ca ?? 0,
+            })}>
+              <polyline className="tc-profile__chart-line" points={growthPolyline(growth, width, height)} />
               {chartPoints.map((point) => (
-                <circle key={`${point.season}-${point.ca}`} cx={point.x} cy={point.y} r="4" fill="#047857" />
+                <circle key={`${point.season}-${point.ca}`} className="tc-profile__chart-dot" cx={point.x} cy={point.y} r="4">
+                  <title>{`${formatSeasonLabel(point.season)} · ${point.ca}`}</title>
+                </circle>
               ))}
             </svg>
-            <p className="profile-growth-note">
-              {formatSeasonLabel(growth[0]?.season ?? 1)} → {formatSeasonLabel(growth.at(-1)?.season ?? growth[0]?.season ?? 1)}
-            </p>
-          </div>
-        </Hint>
-      ) : owned ? null : growth.length > 0 ? (
-        <p className="profile-growth-note">{reveal?.showExactCa ? "Scout-Schätzung" : "Noch kein belastbarer Verlauf"}</p>
-      ) : (
-        <p className="profile-growth-note profile-growth-empty">Entwicklung noch unbekannt</p>
-      )}
+            <figcaption className="tc-profile__chart-axis tc-caption">
+              <span>
+                {formatSeasonLabel(first?.season ?? 1)} · {first?.ca}
+              </span>
+              <span>
+                {formatSeasonLabel(last?.season ?? 1)} · {last?.ca}
+              </span>
+            </figcaption>
+          </figure>
+        ) : owned ? (
+          <p className="tc-empty">
+            {t("profile.growth.firstSeason", { season: formatSeasonLabel(first?.season ?? 1) })}
+          </p>
+        ) : growth.length > 0 ? (
+          <p className="tc-empty">{reveal?.showExactCa ? t("profile.growth.scoutEstimate") : t("profile.growth.noTrend")}</p>
+        ) : (
+          <p className="tc-empty">{t("profile.growth.unknown")}</p>
+        )}
+      </section>
 
       {owned && timeline.length > 0 ? (
-        <div className="profile-timeline" aria-label="Breakouts">
-          {timeline.map((flag) => (
-            <span key={flag} title={visibleBreakoutLabel(flag)}>
-              <Lightbulb className="profile-timeline-icon" size={16} aria-label={visibleBreakoutLabel(flag)} />
+        <section className="tc-panel" aria-labelledby="profile-breakouts-title">
+          <div className="tc-panel__head">
+            <span className="tc-label" id="profile-breakouts-title">
+              {t("profile.breakouts.title")}
             </span>
-          ))}
-        </div>
+          </div>
+          <ul className="tc-list">
+            {timeline.map((flag) => (
+              <li key={flag} className="tc-list__item tc-list__item--wide">
+                <span className="tc-namecell">
+                  <Lightbulb className="tc-icon" aria-hidden />
+                  {visibleBreakoutLabel(flag)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
-    </section>
+    </div>
   );
 }
 
@@ -924,6 +1000,7 @@ function StatsTab({
   owned: boolean;
   scoutEstimate?: AbilityEstimate;
 }) {
+  const t = useT();
   const seasons = useMemo(() => listCareerStatSeasons(player, season), [player, season]);
   const [selectedSeason, setSelectedSeason] = useState(season);
 
@@ -938,100 +1015,63 @@ function StatsTab({
   const archived = selectedSeason !== season;
 
   return (
-    <section className="profile-panel" aria-label="Statistik">
-      <nav className="profile-year-tabs" aria-label="Kalenderjahr">
+    <section className="tc-panel" aria-labelledby="profile-stats-title">
+      <div className="tc-panel__head">
+        <span className="tc-label" id="profile-stats-title">
+          {t("profile.stats.title", { year: seasonCalendarYear(selectedSeason) })}
+        </span>
+        <span className="tc-caption">{archived ? t("profile.stats.archived") : t("profile.stats.current")}</span>
+      </div>
+      <div className="tc-chips tc-chips--toolbar" role="group" aria-label={t("profile.stats.yearAria")}>
         {seasons.map((entry) => (
           <button
             key={entry}
             type="button"
-            className={selectedSeason === entry ? "profile-year-tab is-active" : "profile-year-tab"}
+            className="tc-chip tc-chip--dense"
             aria-pressed={selectedSeason === entry}
             onClick={() => setSelectedSeason(entry)}
           >
             {seasonCalendarYear(entry)}
           </button>
         ))}
-      </nav>
-      <Hint
-        text={
-          archived
-            ? "Abgeschlossene Saison — synthetische Karriere-Archive (Welt-Start)."
-            : "Saisonwerte aus Ligaspielen in der laufenden Saison."
-        }
-        block
-      >
-        {stats ? (
-          <dl className="profile-stat-grid">
-            <StatItem label="Einsätze" value={String(stats.apps)} />
-            <StatItem label="Tore" value={String(stats.goals)} />
-            <StatItem label="Vorlagen" value={String(stats.assists)} />
-            <StatItem label="Minuten" value={String(stats.minutes)} />
-            <StatItem label="Ø Note" value={stats.rating} />
-          </dl>
-        ) : (
-          <p className="profile-empty">
-            {owned ? "Noch keine Saison-Spiele." : "Statistik unbekannt — mehr Scouting nötig."}
-          </p>
-        )}
-      </Hint>
+      </div>
+      {stats ? (
+        <dl className="tc-stats tc-profile__season">
+          <StatTile label={t("profile.stats.apps")} value={String(stats.apps)} />
+          <StatTile label={t("profile.stats.goals")} value={String(stats.goals)} />
+          <StatTile label={t("profile.stats.assists")} value={String(stats.assists)} />
+          <StatTile label={t("profile.stats.minutes")} value={String(stats.minutes)} />
+          <StatTile label={t("profile.stats.rating")} value={stats.rating} />
+        </dl>
+      ) : (
+        <p className="tc-empty">{owned ? t("profile.stats.none") : t("profile.stats.unknown")}</p>
+      )}
     </section>
   );
 }
 
-function StatItem({ label, value }: { label: string; value: string }) {
+function StatTile({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="profile-stat-item">
-      <div className="profile-stat-item-head">
-        <span className="profile-stat-item-label">{label}</span>
-      </div>
-      <strong className="profile-stat-item-value">{value}</strong>
+    <div className="tc-stats__item">
+      <dt className="tc-label">{label}</dt>
+      <dd className="tc-stat__value">{value}</dd>
     </div>
   );
 }
 
-function railProfileActionClass(_item: ProfileMenuItem): string {
-  return "ui-btn--ghost profile-action-btn";
-}
-
-function careerActionButtonClass(action: PlayerProfileAction): string {
-  if (action === "promote_pro" || action === "sign_contract") {
-    return "ui-btn--primary";
-  }
-  return "ui-btn--ghost";
-}
-
-function ProfileActionButton({
-  label,
-  amount,
-  className = "",
-  ...props
-}: {
-  label: string;
-  amount?: string;
-  className?: string;
-} & ComponentPropsWithoutRef<"button">) {
-  const blocked = className.includes("is-blocked");
-  const { disabled, ...rest } = props;
-  return (
-    <button
-      type="button"
-      className={`ui-btn profile-action-btn ${className}`.trim()}
-      disabled={blocked ? false : disabled}
-      {...rest}
-    >
-      <span className="profile-action-label">{label}</span>
-      {amount ? <span className="profile-action-amount">{amount}</span> : null}
-    </button>
-  );
-}
-
 function AttributeHex({ bars, owned }: { bars: AttributeBar[]; owned: boolean }) {
-  const cx = 100;
-  const cy = 100;
-  const maxR = 72;
+  const t = useT();
+  // Wide canvas so the corner labels fit at the text tokens' size.
+  const cx = 170;
+  const cy = 150;
+  const maxR = 100;
   const grid = [0.33, 0.66, 1].map((scale) => hexRegularPoints(cx, cy, maxR * scale, bars.length || 6));
-  const values = bars.map((bar) => bar.value);
-  const fill = hexValuePoints(values, cx, cy, maxR);
+  const fill = hexValuePoints(
+    bars.map((bar) => bar.value),
+    cx,
+    cy,
+    maxR,
+  );
   const ciLow = bars.every((bar) => bar.low !== undefined)
     ? hexValuePoints(bars.map((bar) => bar.low ?? 0), cx, cy, maxR)
     : null;
@@ -1039,44 +1079,28 @@ function AttributeHex({ bars, owned }: { bars: AttributeBar[]; owned: boolean })
     ? hexValuePoints(bars.map((bar) => bar.high ?? 0), cx, cy, maxR)
     : null;
   const showRing = !owned && Boolean(ciLow && ciHigh);
+  const summary = bars.map((bar) => `${attributeLabel(bar.key)} ${formatSkillDisplayValue(bar)}`).join(", ");
   return (
-    <svg className="profile-hex" viewBox="0 0 200 200" role="img" aria-label="Kernattribute Hexagon">
+    <svg className="tc-profile__hex" viewBox="0 0 340 300" role="img" aria-label={t("profile.core.aria", { values: summary })}>
       {grid.map((points) => (
-        <polygon key={points} className="profile-hex-grid" points={points} />
+        <polygon key={points} className="tc-profile__hex-grid" points={points} />
       ))}
-      {owned ? <polygon className="profile-hex-fill" points={fill} /> : null}
+      {owned ? <polygon className="tc-profile__hex-fill" points={fill} /> : null}
       {showRing && ciLow && ciHigh ? (
         <g>
-          <polygon className="profile-hex-ci-outer" points={ciHigh} />
-          <polygon className="profile-hex-ci-inner" points={ciLow} />
+          <polygon className="tc-profile__hex-ci" points={ciHigh} />
+          <polygon className="tc-profile__hex-ci-inner" points={ciLow} />
         </g>
       ) : null}
       {bars.map((bar, index) => {
-        const labelAt = hexVertex(cx, cy, maxR + 16, index, bars.length);
-        const valueLabel = bar.showValue
-          ? String(bar.value)
-          : bar.showCi && bar.low !== undefined && bar.high !== undefined
-            ? `${bar.low}–${bar.high}`
-            : "?";
+        const labelAt = hexVertex(cx, cy, maxR + 24, index, bars.length);
         return (
-          <g key={bar.key}>
-            <text
-              className="profile-hex-label"
-              x={labelAt.x}
-              y={labelAt.y - 5}
-              textAnchor="middle"
-              dominantBaseline="middle"
-            >
+          <g key={bar.key} aria-hidden="true">
+            <text className="tc-profile__hex-label" x={labelAt.x} y={labelAt.y - 8} textAnchor="middle" dominantBaseline="middle">
               {attributeLabel(bar.key)}
             </text>
-            <text
-              className="profile-hex-value"
-              x={labelAt.x}
-              y={labelAt.y + 7}
-              textAnchor="middle"
-              dominantBaseline="middle"
-            >
-              {valueLabel}
+            <text className="tc-profile__hex-value" x={labelAt.x} y={labelAt.y + 9} textAnchor="middle" dominantBaseline="middle">
+              {formatSkillDisplayValue(bar)}
             </text>
           </g>
         );
@@ -1085,15 +1109,13 @@ function AttributeHex({ bars, owned }: { bars: AttributeBar[]; owned: boolean })
   );
 }
 
-function experienceTierLabel(bar: ExperienceBar): string {
-  if (bar.raw) return "Roh";
-  if (bar.fill >= 0.85) return "Erfahren";
-  if (bar.fill >= 0.35) return "Etabliert";
-  return "Jung";
-}
-
 function experienceCaption(bar: ExperienceBar): string {
   return `${experienceTierLabel(bar)} · ${bar.apps}`;
+}
+
+function experienceTierLabel(bar: ExperienceBar): string {
+  const tier = bar.raw ? "raw" : bar.fill >= 0.85 ? "veteran" : bar.fill >= 0.35 ? "established" : "young";
+  return translate(`profile.experience.tier.${tier}`);
 }
 
 function formatSkillDisplayValue(bar: AttributeBar): string {
@@ -1104,55 +1126,50 @@ function formatSkillDisplayValue(bar: AttributeBar): string {
   return "?";
 }
 
-function TrainingTargetAccentIcon({ accent }: { accent: DossierTrainingAccent }) {
-  const className = "profile-ziel-accent-icon";
+function TrainingTargetIcon({ accent }: { accent: DossierTrainingAccent }) {
   switch (accent) {
     case "team":
-      return <Users className={className} size={18} aria-hidden />;
+      return <Users className="tc-icon" aria-hidden />;
     case "weak_foot":
     case "attribute_focus":
-      return <Footprints className={className} size={18} aria-hidden />;
+      return <Footprints className="tc-icon" aria-hidden />;
     case "stamp":
-      return <Flag className={className} size={18} aria-hidden />;
-    case "individual":
-      return <Dumbbell className={className} size={18} aria-hidden />;
+      return <Flag className="tc-icon" aria-hidden />;
     default:
-      return <Dumbbell className={className} size={18} aria-hidden />;
+      return <Dumbbell className="tc-icon" aria-hidden />;
   }
 }
 
-function StaerkeAlsCompact({
+function StaerkeAlsRow({
   lanes,
   primaryLane,
 }: {
   lanes: ReturnType<typeof staerkeAlsLanes>;
   primaryLane: ReturnType<typeof positionLane>;
 }) {
+  const t = useT();
   return (
-    <div className="profile-staerke profile-staerke--row" aria-label="Stärke als">
-      <p className="profile-section-label">Stärke als…</p>
-      <div className="profile-staerke-chips" role="list">
-        {lanes.map((lane) => {
-          const isPrimary = lane.lane === primaryLane;
-          const score = lane.value > 0 ? `${Math.round(lane.value * 100)}` : "—";
-          return (
-            <span
-              key={lane.lane}
-              role="listitem"
-              className={isPrimary ? "profile-staerke-chip is-primary" : "profile-staerke-chip"}
-              title={lane.label}
-            >
-              <span className="profile-staerke-chip-lane">{lane.lane}</span>
-              <span className="profile-staerke-chip-value">{score}</span>
-            </span>
-          );
-        })}
-      </div>
-    </div>
+    <ul className="tc-profile__lanes">
+      {lanes.map((lane) => {
+        const isPrimary = lane.lane === primaryLane;
+        const score = lane.value > 0 ? `${Math.round(lane.value * 100)}` : "—";
+        return (
+          <li
+            key={lane.lane}
+            className={isPrimary ? "tc-profile__lane tc-profile__lane--primary" : "tc-profile__lane"}
+            title={isPrimary ? t("profile.lanes.primary", { lane: lane.label }) : lane.label}
+          >
+            <span className="tc-profile__lane-tag">{staerkeLaneShort(lane.lane)}</span>
+            <span className="tc-profile__lane-value">{score}</span>
+            <span className="tc-sr">{lane.label}</span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
-function SkillEncyclopediaDetails({
+function SkillEncyclopedia({
   player,
   owned,
   estimate,
@@ -1163,64 +1180,45 @@ function SkillEncyclopediaDetails({
   estimate?: AbilityEstimate;
   count: number;
 }) {
-  return (
-    <details className="profile-attr-encyclopedia">
-      <summary className="profile-attr-encyclopedia-summary">
-        <span>Alle Attribute ({count})</span>
-        <ChevronDown className="profile-attr-encyclopedia-chevron" size={16} aria-hidden />
-      </summary>
-      <SkillEncyclopediaTable player={player} owned={owned} estimate={estimate} />
-    </details>
-  );
-}
-
-function SkillEncyclopediaTable({
-  player,
-  owned,
-  estimate,
-}: {
-  player: Player;
-  owned: boolean;
-  estimate?: AbilityEstimate;
-}) {
+  const t = useT();
   const groups = fullSkillSheet(player, owned, estimate);
   const markers = playerStampGateMarkers(player);
   return (
-    <div className="profile-encyclopedia-grid" aria-label="Attribut-Enzyklopädie">
-      {groups.map((group) => (
-        <div key={group.id} className="profile-encyclopedia-col">
-          <p className="profile-section-label">{group.label}</p>
-          <table className="profile-encyclopedia-table">
+    <details className="tc-panel tc-profile__details">
+      <summary className="tc-profile__summary">
+        <span className="tc-label">{t("profile.encyclopedia.summary", { count })}</span>
+        <ChevronDown className="tc-icon tc-profile__chevron" aria-hidden />
+      </summary>
+      <div className="tc-profile__sheet">
+        {groups.map((group) => (
+          <table key={group.id} className="tc-table tc-table--compact">
+            <caption className="tc-label">{group.label}</caption>
             <tbody>
               {group.bars.map((bar) => {
                 const gate = stampGateTitle(bar.key, markers);
                 return (
-                  <tr
-                    key={bar.key}
-                    className={bar.dimmed ? "is-dimmed" : undefined}
-                    title={gate}
-                  >
-                    <th scope="row" className="profile-encyclopedia-attr">
+                  <tr key={bar.key} className={bar.dimmed ? "tc-profile__dimmed" : undefined}>
+                    <th scope="row">
                       {attributeLabel(bar.key)}
                       {gate ? (
                         <span title={gate}>
-                          <Flag className="profile-encyclopedia-gate" size={12} aria-label={gate} />
+                          <Flag className="tc-icon tc-profile__gate" aria-label={gate} />
                         </span>
                       ) : null}
                     </th>
-                    <td className="profile-encyclopedia-value">{formatSkillDisplayValue(bar)}</td>
+                    <td className="tc-num">{formatSkillDisplayValue(bar)}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </details>
   );
 }
 
-function StampHungerSlots({
+function StampSlots({
   player,
   programs,
   week,
@@ -1231,6 +1229,7 @@ function StampHungerSlots({
   week: number;
   onStartStamp?: (stampId: string) => void;
 }) {
+  const t = useT();
   const badges = activeStampBadges(player, FAEHIGKEIT_HUNGER_SLOTS);
   const stampProgram = programs.find((entry) => entry.playerId === player.id && entry.kind === "stamp");
   const eligible = [...eligibleTrainStamps(player)];
@@ -1240,122 +1239,105 @@ function StampHungerSlots({
   let usedProgress = false;
 
   return (
-    <div className="profile-hunger" aria-label="Fähigkeiten">
-      <p className="profile-section-label">Fähigkeiten / Bonus</p>
-      {Array.from({ length: FAEHIGKEIT_HUNGER_SLOTS }, (_, index) => {
-        const stamp = badges[index];
-        const slotLabel = index === FAEHIGKEIT_HUNGER_SLOTS - 1 ? "Bonus" : "Fähigkeit";
-        if (stamp) {
-          const appliedHint = Object.entries(stamp.applied)
-            .map(([key, delta]) => {
-              const attr = key as Parameters<typeof attributeLabel>[0];
-              return `${attributeLabel(attr)} ${formatGrowthDelta(delta ?? null)}`;
-            })
-            .join(" · ");
-          return (
-            <div key={index} className="profile-hunger-slot">
-              <span>{slotLabel}</span>
+    <section className="tc-panel" aria-labelledby="profile-stamps-title">
+      <div className="tc-panel__head">
+        <span className="tc-label" id="profile-stamps-title">
+          {t("profile.stamps.title")}
+        </span>
+      </div>
+      <ul className="tc-list">
+        {Array.from({ length: FAEHIGKEIT_HUNGER_SLOTS }, (_, index) => {
+          const stamp = badges[index];
+          const slotLabel = index === FAEHIGKEIT_HUNGER_SLOTS - 1 ? t("profile.stamps.bonusSlot") : t("profile.stamps.slot");
+          let content: ReactNode;
+          if (stamp) {
+            const appliedHint = Object.entries(stamp.applied)
+              .map(([key, delta]) => {
+                const attr = key as Parameters<typeof attributeLabel>[0];
+                return `${attributeLabel(attr)} ${formatGrowthDelta(delta ?? null)}`;
+              })
+              .join(" · ");
+            content = (
               <span
-                className="profile-hunger-stamp"
-                title={`${stampLabel(stamp.id)} · ${stamp.path} · ${appliedHint}`}
+                className="tc-namecell"
+                title={`${stampLabel(stamp.id)} · ${stampPathLabel(stamp.path, stampDefinition(stamp.id))}${appliedHint ? ` · ${appliedHint}` : ""}`}
               >
-                {stampIcon(stamp.id)} {stampLabel(stamp.id)}
+                <Flag className="tc-icon" aria-hidden />
+                {stampLabel(stamp.id)}
               </span>
-            </div>
-          );
-        }
-        if (stampProgram && !usedProgress) {
-          usedProgress = true;
-          return (
-            <div key={index} className="profile-hunger-slot">
-              <span>{slotLabel}</span>
-              <div className="profile-hunger-train" title={programLabel(stampProgram)}>
-                <span>
-                  {stampIcon(stampProgram.stampId ?? "")} {programLabel(stampProgram)}
+            );
+          } else if (stampProgram && !usedProgress) {
+            usedProgress = true;
+            content = (
+              <span className="tc-profile__stamp-train">
+                <span className="tc-namecell">
+                  <Flag className="tc-icon" aria-hidden />
+                  {programLabel(stampProgram)}
                 </span>
-                <div
-                  className="profile-ziel-track"
-                  aria-label={`Fortschritt ${Math.round(progress * 100)} Prozent`}
+                <span
+                  className="tc-bar"
+                  role="meter"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(progress * 100)}
+                  aria-label={t("profile.progress", { percent: Math.round(progress * 100) })}
                 >
-                  <span className="profile-ziel-fill" style={{ width: `${progress * 100}%` }} />
-                </div>
-              </div>
-            </div>
-          );
-        }
-        const nextStamp = eligible.shift();
-        if (nextStamp && onStartStamp) {
-          const hybrid = nextStamp.path === "hybrid";
+                  <span className="tc-bar__fill" style={{ width: `${progress * 100}%` }} />
+                </span>
+              </span>
+            );
+          } else {
+            const nextStamp = eligible.shift();
+            if (nextStamp && onStartStamp) {
+              const hybrid = nextStamp.path === "hybrid";
+              const label = stampLabel(nextStamp.id);
+              content = (
+                <button
+                  type="button"
+                  className="tc-btn tc-btn--sm"
+                  onClick={() => onStartStamp(nextStamp.id)}
+                  title={t(hybrid ? "profile.stamps.sealHint" : "profile.stamps.trainHint", {
+                    stamp: label,
+                    weeks: nextStamp.weeks ?? "?",
+                  })}
+                >
+                  {t(hybrid ? "profile.stamps.seal" : "profile.stamps.train", { stamp: label })}
+                </button>
+              );
+            } else {
+              content = (
+                <span className="tc-caption" title={t("profile.stamps.emptySlot")}>
+                  —
+                </span>
+              );
+            }
+          }
           return (
-            <div key={index} className="profile-hunger-slot">
-              <span>{slotLabel}</span>
-              <button
-                type="button"
-                className={hybrid ? "profile-hunger-start is-hybrid" : "profile-hunger-start"}
-                onClick={() => onStartStamp(nextStamp.id)}
-                title={
-                  hybrid
-                    ? `${nextStamp.label} siegeln · ${nextStamp.weeks ?? "?"} Wochen`
-                    : `${nextStamp.label} trainieren · ${nextStamp.weeks ?? "?"} Wochen`
-                }
-              >
-                {nextStamp.icon} {nextStamp.label} {hybrid ? "siegeln" : "starten"}
-              </button>
-            </div>
+            <li key={index} className="tc-list__item tc-list__item--wide">
+              <span className="tc-list__meta">{slotLabel}</span>
+              {content}
+            </li>
           );
-        }
-        return (
-          <div key={index} className="profile-hunger-slot">
-            <span>{slotLabel}</span>
-            <span className="profile-hunger-empty" title="Leerer Slot">
-              —
-            </span>
-          </div>
-        );
-      })}
-      <p className="profile-hunger-note">
+        })}
+      </ul>
+      <p className="tc-caption tc-cards__note">
         {(player.stamps?.length ?? 0) > 0
-          ? `${player.stamps.length} Stempel — Training, Meilenstein oder Start-Makel.`
+          ? t("profile.stamps.count", { count: player.stamps.length })
           : eligible.length > 0
-            ? "Slot klicken startet ein Stempel-Programm (Training oder Hybrid-Siegel)."
-            : "Noch leer — trainiere freigeschaltete Stempel oder erreiche Meilensteine."}
+            ? t("profile.stamps.startHint")
+            : t("profile.stamps.empty")}
       </p>
-    </div>
+    </section>
   );
 }
 
-function formatState(
-  value: number,
-  owned: boolean,
-  scoutEstimate?: AbilityEstimate,
-  signed = false,
-): string {
+function formatState(value: number, owned: boolean, scoutEstimate?: AbilityEstimate, signed = false): string {
   if (owned || !scoutEstimate) {
     return signed && value > 0 ? `+${value}` : String(value);
   }
   const masked = formatScoutStateValue(value, scoutEstimate, false);
   if (masked === "?") return "?";
   return signed && value > 0 ? `+${value}` : masked;
-}
-
-function StateChip({
-  label,
-  mark,
-  tone,
-  value,
-}: {
-  label: string;
-  mark: string;
-  tone: "good" | "mid" | "low";
-  value: string;
-}) {
-  return (
-    <div className={`profile-chip tone-${tone}`}>
-      <span aria-hidden="true">{mark}</span>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
 }
 
 function formatMoney(amount: number): string {

@@ -6,6 +6,8 @@ import { defaultYouthContract } from "../player/youth-contract.ts";
 import type { AbilityEstimate } from "../scouting/estimate-model.ts";
 import { scoutReveal } from "../scouting/scout-visibility.ts";
 import { formatSeasonLabel } from "../sim/season-label.ts";
+import { t } from "../i18n/index.ts";
+import { formatEuroWhole } from "../i18n/number-display.ts";
 
 export type FlavorTraitTone = "positive" | "negative" | "neutral";
 
@@ -36,73 +38,75 @@ export interface ContractView {
   minutesPromise: string;
 }
 
+/** i18n keys; the pick stays deterministic per portrait seed because only the index is drawn. */
 const HEADLINES = [
-  "Ruhiges Auftreten, laute Wirkung",
-  "Rohdiamant mit Tempo im Gepäck",
-  "Kopf oben, Ball sicher",
-  "Arbeitstier mit Spielintelligenz",
-  "Unbekannt, aber interessant",
-  "Talent mit Fragezeichen",
+  "profile.flavor.headline.calm",
+  "profile.flavor.headline.roughDiamond",
+  "profile.flavor.headline.headUp",
+  "profile.flavor.headline.workhorse",
+  "profile.flavor.headline.unknown",
+  "profile.flavor.headline.question",
 ] as const;
 
 const BODIES = [
-  "Scouts beschreiben {name} als Spieler, der in {region} aufgewachsen ist und dort schon früh auffiel.",
-  "In der {position}-Rolle wirkt {name} wachgerümt — vor allem wenn der Ball schnell läuft.",
-  "{name} gilt in {region} als einer, der Training ernst nimmt und im Teamgefüge mitwächst.",
-  "Der erste Eindruck: viel Potenzial, wenig Show — genau der Typ, den man später bereut, nicht früher gesehen zu haben.",
-  "Berichte aus {region} sind gemischt: mal brillant, mal unaufmerksam — {name} bleibt schwer einzuordnen.",
+  "profile.flavor.body.grewUp",
+  "profile.flavor.body.role",
+  "profile.flavor.body.trains",
+  "profile.flavor.body.firstImpression",
+  "profile.flavor.body.mixed",
 ] as const;
 
 const POSITIVE_TRAITS = [
-  "Starker erster Kontakt",
-  "Liest Räume früh",
-  "Zweikampffreudig",
-  "Bleibt nach Fehlern ruhig",
-  "Überzeugt im Training",
+  "profile.trait.firstTouch",
+  "profile.trait.readsSpace",
+  "profile.trait.duels",
+  "profile.trait.calmAfterErrors",
+  "profile.trait.training",
 ] as const;
 
 const AMBIVALENT_TRAITS = [
-  "Noch unberechenbar",
-  "Braucht klare Rollenvorgabe",
+  "profile.trait.unpredictable",
+  "profile.trait.needsRole",
 ] as const;
 
 interface NegativeTraitRule {
+  /** i18n key */
   label: string;
   matches: (player: Player, options: FlavorOptions) => boolean;
 }
 
 const NEGATIVE_TRAIT_RULES: NegativeTraitRule[] = [
   {
-    label: "Launisch unter Druck",
+    label: "profile.trait.moody",
     matches: (player) => player.state.morale < 42,
   },
   {
-    label: "Unzufrieden mit Spielzeit",
+    label: "profile.trait.unhappyMinutes",
     matches: (player) =>
       (player.squad_status === "u17" || player.squad_status === "u19") && player.state.weekly_minutes < 45,
   },
   {
-    label: "Formtief",
+    label: "profile.trait.formSlump",
     matches: (player) => player.state.form < -1,
   },
   {
-    label: "Trainingsmotivation schwankt",
+    label: "profile.trait.driveWavers",
     matches: (player, options) => options.includeHiddenSignals && player.hidden.drive < 0.75,
   },
   {
-    label: "Einzelgänger-Tendenzen",
+    label: "profile.trait.loner",
     matches: (player) => player.attributes.teamwork < 45,
   },
   {
-    label: "Nervös in entscheidenden Momenten",
+    label: "profile.trait.nervous",
     matches: (player) => player.attributes.composure < 40,
   },
   {
-    label: "Aktuell verletzt",
+    label: "profile.trait.injured",
     matches: (player) => player.state.injury !== null,
   },
   {
-    label: "Körperlich noch hinterher",
+    label: "profile.trait.physicallyBehind",
     matches: (player) => player.attributes.stamina < 38 && player.age <= 17,
   },
 ];
@@ -113,7 +117,7 @@ interface FlavorOptions {
 
 function negativeTraitsFor(player: Player, options: FlavorOptions): FlavorTrait[] {
   return NEGATIVE_TRAIT_RULES.filter((rule) => rule.matches(player, options)).map((rule) => ({
-    label: rule.label,
+    label: t(rule.label),
     tone: "negative",
   }));
 }
@@ -122,8 +126,8 @@ export function generatePlayerTraits(player: Player, options: FlavorOptions = { 
   const random = mulberry32(player.portrait_seed);
   const topKey = profileAttributeKeys(player.position)[0] ?? "passing";
   const traits: FlavorTrait[] = [
-    { label: `${attributeLabel(topKey)} im Fokus`, tone: "positive" },
-    { label: pick(POSITIVE_TRAITS, random), tone: "positive" },
+    { label: t("profile.trait.focus", { attribute: attributeLabel(topKey) }), tone: "positive" },
+    { label: t(pick(POSITIVE_TRAITS, random)), tone: "positive" },
   ];
 
   const negatives = negativeTraitsFor(player, options);
@@ -131,17 +135,19 @@ export function generatePlayerTraits(player: Player, options: FlavorOptions = { 
   if (primaryNegative) {
     traits.push(primaryNegative);
   } else {
-    traits.push({ label: pick(AMBIVALENT_TRAITS, random), tone: "neutral" });
+    traits.push({ label: t(pick(AMBIVALENT_TRAITS, random)), tone: "neutral" });
   }
 
   traits.push({
     label:
-      player.squad_status === "u17" || player.squad_status === "u19" ? "Akademie-Background" : "Profil-Erfahrung",
+      player.squad_status === "u17" || player.squad_status === "u19"
+        ? t("profile.trait.academy")
+        : t("profile.trait.proExperience"),
     tone: "neutral",
   });
 
   if (player.hidden.breakout_flags.includes("prodigy_foundation")) {
-    traits.push({ label: "Frühes Talent-Signal", tone: "positive" });
+    traits.push({ label: t("profile.trait.earlySignal"), tone: "positive" });
   }
 
   return traits.slice(0, 4);
@@ -149,12 +155,12 @@ export function generatePlayerTraits(player: Player, options: FlavorOptions = { 
 
 export function generatePlayerFlavor(player: Player, options: FlavorOptions = { includeHiddenSignals: true }): PlayerFlavor {
   const random = mulberry32(player.portrait_seed);
-  const headline = pick(HEADLINES, random);
-  const bodyTemplate = pick(BODIES, random);
-  const body = bodyTemplate
-    .replaceAll("{name}", formatPlayerName(player))
-    .replaceAll("{region}", player.birth.region)
-    .replaceAll("{position}", player.position);
+  const headline = t(pick(HEADLINES, random));
+  const body = t(pick(BODIES, random), {
+    name: formatPlayerName(player),
+    region: player.birth.region,
+    position: player.position,
+  });
   return { headline, body, traits: generatePlayerTraits(player, options) };
 }
 
@@ -166,9 +172,13 @@ export function flavorForScout(player: Player, owned: boolean, estimate?: Abilit
   if (estimate.uncertaintyRange >= 40) return null;
   if (estimate.uncertaintyRange >= 20) {
     return {
-      headline: "Gerüchte aus dem Markt",
-      body: `Über ${formatPlayerName(player)} kursieren nur vage Hinweise aus ${player.birth.region}. Position: ${formatPlayerPositionLabel(player)}.`,
-      traits: [{ label: "Noch wenig belastbare Details", tone: "neutral" }],
+      headline: t("profile.flavor.rumour.headline"),
+      body: t("profile.flavor.rumour.body", {
+        name: formatPlayerName(player),
+        region: player.birth.region,
+        position: formatPlayerPositionLabel(player),
+      }),
+      traits: [{ label: t("profile.trait.fewDetails"), tone: "neutral" }],
     };
   }
   const full = generatePlayerFlavor(player, { includeHiddenSignals: reveal.showExactSkills });
@@ -192,59 +202,63 @@ export function seasonStatsStub(player: Player, owned: boolean, estimate?: Abili
 export function contractView(player: Player, owned: boolean, estimate?: AbilityEstimate): ContractView {
   if (!owned && estimate && estimate.uncertaintyRange >= 20) {
     return {
-      status: "Unbekannt",
+      status: t("profile.contract.unknown"),
       wageWeekly: "?",
       untilSeason: "?",
-      clauses: ["Scouts haben noch keine Vertragsdetails"],
+      clauses: [t("profile.contract.clause.noScoutDetails")],
       minutesPromise: "?",
     };
   }
   if (player.squad_status === "u17" || player.squad_status === "u19") {
     const youth = player.contract ?? defaultYouthContract(player.age, 1);
     return {
-      status: player.contract ? "Jugendvertrag" : "Kein Vertrag",
+      status: player.contract ? t("profile.contract.youth") : t("profile.contract.none"),
       wageWeekly: player.contract
-        ? `€ ${youth.wage_weekly.toLocaleString("de-DE")} / Woche`
-        : "Noch nicht unterzeichnet",
+        ? t("profile.contract.wagePerWeek", { amount: formatEuroWhole(youth.wage_weekly) })
+        : t("profile.contract.notSigned"),
       untilSeason: player.contract ? formatSeasonLabel(youth.until_season) : "—",
       clauses: player.contract
         ? [
             youth.bonus_appearance > 0
-              ? `Einsatzbonus € ${youth.bonus_appearance}`
-              : "Kein Einsatzbonus",
+              ? t("profile.contract.clause.appearanceBonus", { amount: formatEuroWhole(youth.bonus_appearance) })
+              : t("profile.contract.clause.noAppearanceBonus"),
             youth.guaranteed_minutes_promise === "rotation"
-              ? "Rotation in der Akademie versprochen"
-              : "Akademie-Einsätze nach Sim",
+              ? t("profile.contract.clause.academyRotation")
+              : t("profile.contract.clause.academyBySim"),
           ]
-        : ["Ohne Vertrag droht Abgang ab 17", "Inbox oder ⋮-Menü: Jugendvertrag"],
+        : [t("profile.contract.clause.leavesAt17"), t("profile.contract.clause.signYouth")],
       minutesPromise: minutesLabel(youth.guaranteed_minutes_promise ?? "none"),
     };
   }
   if (player.contract) {
     return {
-      status: "Profivertrag",
-      wageWeekly: `€ ${player.contract.wage_weekly.toLocaleString("de-DE")} / Woche`,
+      status: t("profile.contract.pro"),
+      wageWeekly: t("profile.contract.wagePerWeek", { amount: formatEuroWhole(player.contract.wage_weekly) }),
       untilSeason: formatSeasonLabel(player.contract.until_season),
       clauses: [
-        player.contract.buyout_clause ? `Ausstiegsklausel € ${player.contract.buyout_clause.toLocaleString("de-DE")}` : "Keine Ausstiegsklausel",
-        player.contract.sell_on_percentage ? `Weiterverkaufsbeteiligung ${player.contract.sell_on_percentage}%` : "Keine Sell-on-Klausel",
+        player.contract.buyout_clause
+          ? t("profile.contract.clause.buyout", { amount: formatEuroWhole(player.contract.buyout_clause) })
+          : t("profile.contract.clause.noBuyout"),
+        player.contract.sell_on_percentage
+          ? t("profile.contract.clause.sellOn", { percent: player.contract.sell_on_percentage })
+          : t("profile.contract.clause.noSellOn"),
       ],
       minutesPromise: minutesLabel(player.contract.guaranteed_minutes_promise ?? "none"),
     };
   }
   return {
-    status: owned ? "Verhandlung offen" : "Fremdclub · unbekannt",
-    wageWeekly: owned ? "€ — (noch nicht vereinbart)" : "?",
+    status: owned ? t("profile.contract.open") : t("profile.contract.otherClub"),
+    wageWeekly: owned ? t("profile.contract.wageNotAgreed") : "?",
     untilSeason: owned ? "—" : "?",
-    clauses: owned ? ["Vertragsgespräch über Inbox oder Profil"] : ["Keine belastbaren Infos"],
-    minutesPromise: owned ? "Offen" : "?",
+    clauses: owned ? [t("profile.contract.clause.talkVia")] : [t("profile.contract.clause.noInfo")],
+    minutesPromise: owned ? t("profile.contract.minutes.open") : "?",
   };
 }
 
 function minutesLabel(promise: "none" | "rotation" | "starter"): string {
-  if (promise === "starter") return "Starter-Garantie";
-  if (promise === "rotation") return "Rotation versprochen";
-  return "Keine Minuten-Garantie";
+  if (promise === "starter") return t("profile.contract.minutes.starter");
+  if (promise === "rotation") return t("profile.contract.minutes.rotation");
+  return t("profile.contract.minutes.none");
 }
 
 function pick<T>(items: readonly T[], random: () => number): T {

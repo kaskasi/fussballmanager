@@ -3,7 +3,8 @@ import type { Player } from "../../types/player.ts";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import { listLoanedPlayers } from "../../transfers/loan-roster.ts";
 import { canRecallLoan } from "../../transfers/loans.ts";
-import { isTransferWindowOpen, transferWindowLabel } from "../../sim/transfer-windows.ts";
+import { isTransferWindowOpen } from "../../sim/transfer-windows.ts";
+import { transferWindowDisplay } from "../../i18n/calendar-display.ts";
 import type { TransferRecord } from "../../transfers/transfer-history.ts";
 import {
   availableClubTransferSeasons,
@@ -11,30 +12,35 @@ import {
   clubDepartureRecords,
   clubRecordsForSeason,
   displayTransferOtherClubs,
-  transferKindIcon,
   transferKindLabel,
+  type TransferKind,
 } from "../../transfers/transfer-history.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import type { WorldClub } from "../../world/world-generator.ts";
-import { Hint } from "../components/Hint.tsx";
 import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
 import { formatCalendarWeek } from "../../sim/game-calendar.ts";
 import { listExpiringClubContracts } from "../../transfers/expiring-contracts.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
-import { ChevronLeft, ChevronRight, FileSignature } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronLeft, ChevronRight, Repeat, Undo2 } from "lucide-react";
+import { ratingBand } from "../design/rating-band.ts";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { TransferMarketPanel } from "../components/TransferMarketPanel.tsx";
 import type { TransferState } from "../../transfers/negotiations.ts";
 
 /**
- * WIREFRAME: PRD 14.8 — Transfers
- * ┌──────────────────────────────────────────────┐
- * │ Vertragsgespräche · Leihen · Historie (club) │
- * │ Zugänge | Abgänge · Saison-Pills             │
- * └──────────────────────────────────────────────┘
+ * WIREFRAME: PRD 14.8 — Transfers (design.md §9.6 "Umsetzung")
+ * Page head with the window state → market (tc-panel, deal cards) → contract talks · loans · history.
  */
+
+const KIND_ICON: Record<TransferKind, typeof ArrowDownLeft> = {
+  in: ArrowDownLeft,
+  out: ArrowUpRight,
+  loan_out: Repeat,
+  loan_return: Undo2,
+  ai: ArrowLeftRight,
+};
 
 function TransferHistoryList({
   records,
@@ -48,34 +54,28 @@ function TransferHistoryList({
   emptyKey: string;
 }) {
   if (records.length === 0) {
-    return <p className="transfers-empty-inline">{t(emptyKey)}</p>;
+    return <p className="tc-empty">{t(emptyKey)}</p>;
   }
   return (
-    <ul className="transfers-history">
-      {records.map((record) => (
-        <li key={record.id}>
-          <button
-            type="button"
-            className="transfers-history-row"
-            onClick={() => onSelectPlayer(record.player_id)}
-          >
-            <span className="transfers-history-icon" aria-hidden="true">
-              {transferKindIcon(record.kind)}
-            </span>
-            <span className="transfers-history-main">
-              <strong>
-                {transferKindLabel(record.kind)} · {record.player_name}
-              </strong>
-              <small>
-                {displayTransferOtherClubs(record.other_club_name, worldClubs)}
-                {record.fee != null ? ` · ${formatClubCash(record.fee)}` : ""}
-                {" · "}
-                {formatCalendarWeek(record.week)}
-              </small>
-            </span>
-          </button>
-        </li>
-      ))}
+    <ul className="tc-list">
+      {records.map((record) => {
+        const Icon = KIND_ICON[record.kind] ?? ArrowLeftRight;
+        return (
+          <li key={record.id} className="tc-list__item tc-list__item--wide">
+            <button type="button" className="tc-transfers__row" onClick={() => onSelectPlayer(record.player_id)}>
+              <Icon className="tc-icon" aria-hidden />
+              <span className="tc-list__main">
+                <span className="tc-list__name">{record.player_name}</span>
+                <span className="tc-list__meta">
+                  {transferKindLabel(record.kind)} · {displayTransferOtherClubs(record.other_club_name, worldClubs)} ·{" "}
+                  {formatCalendarWeek(record.week)}
+                </span>
+              </span>
+            </button>
+            <span className="tc-list__value">{record.fee != null ? formatClubCash(record.fee) : "—"}</span>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -147,13 +147,21 @@ export function TransfersScreen({
   const showSeasonArrows = seasons.length > 6;
 
   return (
-    <main className="transfers club-shell-card-body" data-coach-target={COACH_TARGET.transfersMarket}>
-      <div className="fm-tab-panel">
-        {transferState &&
-        onOpenNegotiation &&
-        scoutBoard &&
-        onScoutPlayer &&
-        onToggleShortlist ? (
+    <main className="club-shell-card-body" data-coach-target={COACH_TARGET.transfersMarket}>
+      <header className="tc-page-head">
+        <span className="tc-label">{t("transfers.eyebrow")}</span>
+        <h1 className="tc-page-title">{t("transfers.title")}</h1>
+        <p className="tc-page-sub" aria-label={t("transfers.windowAria")} title={t("transfers.windowHint")}>
+          <span className={windowOpen ? "tc-state tc-state--good" : "tc-state tc-state--low"} aria-hidden="true">
+            {windowOpen ? "●" : "◆"}
+          </span>{" "}
+          {transferWindowDisplay(week)}
+          {activeLoans.length > 0 ? ` · ${t("transfers.loanedCount", { count: activeLoans.length })}` : ""}
+        </p>
+      </header>
+
+      <div className="tc-stack">
+        {transferState && onOpenNegotiation && scoutBoard && onScoutPlayer && onToggleShortlist ? (
           <TransferMarketPanel
             players={players}
             rivalPlayers={rivalPlayers}
@@ -167,199 +175,170 @@ export function TransfersScreen({
             onToggleShortlist={onToggleShortlist}
           />
         ) : null}
-        <header className="transfers-meta" aria-label={t("transfers.windowAria")}>
-          <p className={windowOpen ? "transfers-window-chip" : "transfers-window-chip is-closed"}>
-            {transferWindowLabel(week)}
-          </p>
-          <Hint text={t("transfers.windowHint")} block>
-            <p className="transfers-summary">
-              {activeLoans.length > 0 ? t("transfers.loanedCount", { count: activeLoans.length }) : null}
-            </p>
-          </Hint>
-        </header>
 
-        <section className="transfers-section transfers-contracts" aria-label={t("transfers.contractTalksTitle")}>
-          <h2>{t("transfers.contractTalksTitle")}</h2>
-          <Hint text={t("transfers.contractTalksHint")} block>
-            <p className="transfers-window-hint">{t("transfers.contractTalksLead")}</p>
-          </Hint>
-          {expiringContracts.length === 0 ? (
-            <p className="transfers-empty-inline">{t("transfers.contractTalksEmpty")}</p>
-          ) : (
-            <ul className="transfers-contract-list">
-              {expiringContracts.map((entry) => {
-                const player = players.find((row) => row.id === entry.playerId);
-                return (
-                  <li key={entry.playerId}>
-                    <button
-                      type="button"
-                      className="transfers-contract-card"
-                      onClick={() => onSelectPlayer(entry.playerId)}
-                    >
-                      {player ? (
-                        <PlayerPortrait seed={player.portrait_seed} nationality={player.nationality} size="sm" variant="known" />
-                      ) : (
-                        <span className="transfers-contract-icon" aria-hidden>
-                          <FileSignature size={22} strokeWidth={2.25} />
+        <div className="tc-transfers__grid">
+          <section className="tc-panel" aria-labelledby="transfers-contracts-title">
+            <div className="tc-panel__head">
+              <h2 className="tc-panel__title" id="transfers-contracts-title">
+                {t("transfers.contractTalksTitle")}
+              </h2>
+            </div>
+            <p className="tc-caption tc-transfers__lead" title={t("transfers.contractTalksHint")}>
+              {t("transfers.contractTalksLead")}
+            </p>
+            {expiringContracts.length === 0 ? (
+              <p className="tc-empty">{t("transfers.contractTalksEmpty")}</p>
+            ) : (
+              <ul className="tc-list">
+                {expiringContracts.map((entry) => {
+                  const player = players.find((row) => row.id === entry.playerId);
+                  return (
+                    <li key={entry.playerId} className="tc-list__item tc-list__item--wide">
+                      <button type="button" className="tc-transfers__row" onClick={() => onSelectPlayer(entry.playerId)}>
+                        <PlayerPortrait
+                          seed={player?.portrait_seed ?? 0}
+                          nationality={player?.nationality}
+                          clubId={player?.club_id}
+                          size="sm"
+                          variant={player ? "known" : "silhouette"}
+                        />
+                        <span className="tc-list__main">
+                          <span className="tc-list__name">{entry.displayName}</span>
+                          <span className="tc-list__meta">
+                            {entry.position} ·{" "}
+                            {t("transfers.contractUntilSummer", { season: formatSeasonLabel(entry.untilSeason) })}
+                          </span>
                         </span>
-                      )}
-                      <span className="transfers-contract-copy">
-                        <strong>{entry.displayName}</strong>
-                        <small>
-                          {entry.position} · CA {entry.ca} ·{" "}
-                          {t("transfers.contractUntilSummer", {
-                            season: formatSeasonLabel(entry.untilSeason),
-                          })}
-                        </small>
-                        <small className="transfers-contract-urgency">
+                      </button>
+                      <span className="tc-transfers__end">
+                        <span className={`tc-rating tc-rating--${ratingBand(entry.ca)}`}>{entry.ca}</span>
+                        <span className={entry.monthsRemaining <= 3 ? "tc-caption tc-transfers__urgent" : "tc-caption"}>
                           {entry.monthsRemaining === 1
                             ? t("transfers.monthsRemainingOne")
                             : t("transfers.monthsRemaining", { count: entry.monthsRemaining })}
-                        </small>
+                        </span>
                       </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
 
-        <section className="transfers-section" aria-label={t("transfers.loansTitle")}>
-          <h2>{t("transfers.loansTitle")}</h2>
-          {activeLoans.length === 0 ? (
-            <p className="transfers-empty-inline">{t("transfers.loansEmpty")}</p>
-          ) : (
-            <div className="squad-table-wrap">
-              <table className="squad-table transfers-loan-table" aria-label={t("transfers.loansTitle")}>
-                <thead>
-                  <tr>
-                    <th scope="col" className="squad-col-name">
-                      {t("squad.col.name")}
-                    </th>
-                    <th scope="col">{t("squad.col.pos")}</th>
-                    <th scope="col">{t("squad.col.age")}</th>
-                    <th scope="col">CA</th>
-                    <th scope="col">{t("transfers.loanClub")}</th>
-                    <th scope="col">{t("transfers.loanUntil")}</th>
-                    <th scope="col">{t("transfers.recall")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeLoans.map((row) => {
-                    const player = players.find((entry) => entry.id === row.playerId);
-                    const recall = player ? canRecallLoan(week, player) : { allowed: false };
-                    return (
-                      <tr key={row.playerId} className="squad-table-row">
-                        <td className="squad-col-name" onClick={() => onSelectPlayer(row.playerId)}>
-                          {row.displayName}
-                        </td>
-                        <td onClick={() => onSelectPlayer(row.playerId)}>{row.positionLabel}</td>
-                        <td onClick={() => onSelectPlayer(row.playerId)}>{row.age}</td>
-                        <td className="squad-col-ca" onClick={() => onSelectPlayer(row.playerId)}>
-                          {row.ca}
-                        </td>
-                        <td onClick={() => onSelectPlayer(row.playerId)}>
-                          {row.toClubName}
-                          {row.hasOption ? ` · ${t("transfers.loanOption")}` : ""}
-                        </td>
-                        <td onClick={() => onSelectPlayer(row.playerId)}>S{row.untilSeason}</td>
-                        <td>
-                          <button
-                            type="button"
-                            className="transfers-recall-btn"
-                            disabled={!recall.allowed}
-                            title={recall.allowed ? t("transfers.recallTitle") : recall.reason}
-                            onClick={() => onRecallLoan(row.playerId)}
-                          >
-                            {t("transfers.recall")}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          <section className="tc-panel" aria-labelledby="transfers-loans-title">
+            <div className="tc-panel__head">
+              <h2 className="tc-panel__title" id="transfers-loans-title">
+                {t("transfers.loansTitle")}
+              </h2>
             </div>
-          )}
-        </section>
+            {activeLoans.length === 0 ? (
+              <p className="tc-empty">{t("transfers.loansEmpty")}</p>
+            ) : (
+              <ul className="tc-list">
+                {activeLoans.map((row) => {
+                  const player = players.find((entry) => entry.id === row.playerId);
+                  const recall = player ? canRecallLoan(week, player) : { allowed: false, reason: undefined };
+                  return (
+                    <li key={row.playerId} className="tc-list__item tc-list__item--wide">
+                      <button type="button" className="tc-transfers__row" onClick={() => onSelectPlayer(row.playerId)}>
+                        <span className={`tc-rating tc-rating--${ratingBand(row.ca)}`}>{row.ca}</span>
+                        <span className="tc-list__main">
+                          <span className="tc-list__name">{row.displayName}</span>
+                          <span className="tc-list__meta">
+                            {row.positionLabel} · {t("profile.age", { age: row.age })} · {row.toClubName}
+                            {row.hasOption ? ` · ${t("transfers.loanOption")}` : ""} ·{" "}
+                            {t("transfers.loanUntilSeason", { season: formatSeasonLabel(row.untilSeason) })}
+                          </span>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="tc-btn tc-btn--sm"
+                        disabled={!recall.allowed}
+                        title={recall.allowed ? t("transfers.recallTitle") : recall.reason}
+                        onClick={() => onRecallLoan(row.playerId)}
+                      >
+                        {t("transfers.recall")}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
 
-        <section className="transfers-section" aria-label={t("transfers.historyTitle")}>
-          <div className="transfers-season-head">
-            <h2>{t("transfers.historyTitle")}</h2>
-            <div className="transfers-season-nav">
-              {showSeasonArrows ? (
-                <button
-                  type="button"
-                  className="transfers-season-chevron"
-                  disabled={seasonIndex >= seasons.length - 1}
-                  aria-label={t("transfers.seasonOlder")}
-                  onClick={() => shiftSeason(1)}
-                >
-                  <ChevronLeft size={18} aria-hidden />
-                </button>
-              ) : null}
-              <div
-                className="segmented-control transfers-season-picker"
-                role="tablist"
-                aria-label={t("transfers.seasonPickerAria")}
-              >
+          <section className="tc-panel tc-transfers__history" aria-labelledby="transfers-history-title">
+            <div className="tc-panel__head">
+              <h2 className="tc-panel__title" id="transfers-history-title">
+                {t("transfers.historyTitle")}
+              </h2>
+              <div className="tc-transfers__seasons" role="group" aria-label={t("transfers.seasonPickerAria")}>
+                {showSeasonArrows ? (
+                  <button
+                    type="button"
+                    className="tc-iconbtn"
+                    disabled={seasonIndex >= seasons.length - 1}
+                    aria-label={t("transfers.seasonOlder")}
+                    onClick={() => shiftSeason(1)}
+                  >
+                    <ChevronLeft className="tc-icon" aria-hidden />
+                  </button>
+                ) : null}
                 {(showSeasonArrows ? seasons.slice(Math.max(0, seasonIndex - 2), seasonIndex + 3) : seasons).map(
                   (entry) => (
                     <button
                       key={entry}
                       type="button"
-                      role="tab"
-                      className={selectedSeason === entry ? "is-active" : undefined}
-                      aria-selected={selectedSeason === entry}
+                      className="tc-chip tc-chip--dense"
+                      aria-pressed={selectedSeason === entry}
                       onClick={() => setSelectedSeason(entry)}
                     >
                       {seasonCalendarYear(entry)}
                     </button>
                   ),
                 )}
+                {showSeasonArrows ? (
+                  <button
+                    type="button"
+                    className="tc-iconbtn"
+                    disabled={seasonIndex <= 0}
+                    aria-label={t("transfers.seasonNewer")}
+                    onClick={() => shiftSeason(-1)}
+                  >
+                    <ChevronRight className="tc-icon" aria-hidden />
+                  </button>
+                ) : null}
               </div>
-              {showSeasonArrows ? (
-                <button
-                  type="button"
-                  className="transfers-season-chevron"
-                  disabled={seasonIndex <= 0}
-                  aria-label={t("transfers.seasonNewer")}
-                  onClick={() => shiftSeason(-1)}
-                >
-                  <ChevronRight size={18} aria-hidden />
-                </button>
-              ) : null}
             </div>
-          </div>
 
-          {clubSeasonRecords.length === 0 ? (
-            <p className="transfers-empty-inline">
-              {t("transfers.historyEmptySeason", { season: formatSeasonLabel(selectedSeason) })}
-            </p>
-          ) : (
-            <div className="transfers-history-columns">
-              <div className="transfers-history-column">
-                <h3>{t("transfers.arrivalsTitle")}</h3>
-                <TransferHistoryList
-                  records={arrivals}
-                  worldClubs={worldClubs}
-                  onSelectPlayer={onSelectPlayer}
-                  emptyKey="transfers.arrivalsEmpty"
-                />
-              </div>
-              <div className="transfers-history-column">
-                <h3>{t("transfers.departuresTitle")}</h3>
-                <TransferHistoryList
-                  records={departures}
-                  worldClubs={worldClubs}
-                  onSelectPlayer={onSelectPlayer}
-                  emptyKey="transfers.departuresEmpty"
-                />
-              </div>
-            </div>
-          )}
-        </section>
+            {clubSeasonRecords.length === 0 ? (
+              <p className="tc-empty">
+                {t("transfers.historyEmptySeason", { season: formatSeasonLabel(selectedSeason) })}
+              </p>
+            ) : (
+              <>
+                <section className="tc-section">
+                  <h3 className="tc-label tc-section__title">{t("transfers.arrivalsTitle")}</h3>
+                  <TransferHistoryList
+                    records={arrivals}
+                    worldClubs={worldClubs}
+                    onSelectPlayer={onSelectPlayer}
+                    emptyKey="transfers.arrivalsEmpty"
+                  />
+                </section>
+                <section className="tc-section">
+                  <h3 className="tc-label tc-section__title">{t("transfers.departuresTitle")}</h3>
+                  <TransferHistoryList
+                    records={departures}
+                    worldClubs={worldClubs}
+                    onSelectPlayer={onSelectPlayer}
+                    emptyKey="transfers.departuresEmpty"
+                  />
+                </section>
+              </>
+            )}
+          </section>
+        </div>
       </div>
     </main>
   );

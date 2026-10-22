@@ -12,6 +12,7 @@ import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { clubShortName } from "../../sim/league-week.ts";
 import { BoardObjectiveIcon } from "./BoardObjectiveIcon.tsx";
+import { Building2 } from "lucide-react";
 
 /**
  * WIREFRAME: PRD 09 — Vorstand-Saisonziele auf dem Pipeline-Hub
@@ -50,7 +51,7 @@ export function BoardObjectivesPanel({
   return (
     <section className={`board-panel is-${tone}`} aria-label={t("hub.board.aria")}>
       <header className="board-panel-head">
-        <span aria-hidden="true">🤵</span>
+        <Building2 className="tc-icon board-panel-icon" aria-hidden />
         <div>
           <strong>{t("hub.board.title", { employer })}</strong>
           <p>

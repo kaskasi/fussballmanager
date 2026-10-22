@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import { isWinterTransferWindow } from "../sim/game-calendar.ts";
 import { isTransferWindowOpen } from "../sim/transfer-windows.ts";
 import type { Player } from "../types/player.ts";
@@ -40,16 +41,16 @@ export function canLoanPlayerOut(
   player: Player,
 ): LoanEligibility {
   if (!isTransferWindowOpen(week)) {
-    return { allowed: false, reason: "Leihen nur in Sommer- oder Winterfenster möglich." };
+    return { allowed: false, reason: t("transfers.loan.windowOnly") };
   }
   if (player.squad_status === "loaned_out") {
-    return { allowed: false, reason: "Spieler ist bereits verliehen." };
+    return { allowed: false, reason: t("transfers.loan.alreadyOut") };
   }
   if (player.club_id && player.club_id !== clubId) {
-    return { allowed: false, reason: "Nur eigene Spieler können verliehen werden." };
+    return { allowed: false, reason: t("transfers.loan.ownOnly") };
   }
   if (countActiveLoansOut(players, clubId) >= MAX_LOANS_OUT_PER_CLUB) {
-    return { allowed: false, reason: `Maximal ${MAX_LOANS_OUT_PER_CLUB} Ausleihen gleichzeitig.` };
+    return { allowed: false, reason: t("transfers.loan.max", { count: MAX_LOANS_OUT_PER_CLUB }) };
   }
   return { allowed: true };
 }
@@ -57,10 +58,10 @@ export function canLoanPlayerOut(
 /** PRD 05.7 — recall clause available in the winter transfer window. */
 export function canRecallLoan(week: number, player: Player): LoanEligibility {
   if (player.squad_status !== "loaned_out" || !player.current_loan) {
-    return { allowed: false, reason: "Spieler ist nicht verliehen." };
+    return { allowed: false, reason: t("transfers.loan.notOut") };
   }
   if (!isWinterTransferWindow(week)) {
-    return { allowed: false, reason: "Recall nur im Winterfenster (KW 2–4)." };
+    return { allowed: false, reason: t("transfers.loan.recallWinter") };
   }
   return { allowed: true };
 }

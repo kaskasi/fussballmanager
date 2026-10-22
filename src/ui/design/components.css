@@ -256,6 +256,81 @@
 .tc-kv .tc-ok { color: var(--positive); }
 .tc-kv .tc-attention { color: var(--warning); }
 
+/* Overflow menu (⋮): destructive or rare actions, each with a one-line hint */
+.tc-menu { position: relative; }
+.tc-menu__list { position: absolute; top: calc(100% + var(--space-1)); right: 0; z-index: 20; display: grid; min-width: 16rem; padding: var(--space-1); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-overlay); }
+.tc-menu__item { display: grid; gap: 2px; padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--radius-sm); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.tc-menu__item:hover { background: var(--sunken); }
+.tc-menu__item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tc-menu__label { font-weight: 700; font-size: var(--font-size-sm); line-height: 1.25rem; }
+.tc-menu__hint { color: var(--text-muted); font-size: var(--font-size-xs); line-height: 1rem; }
+.tc-menu__item--danger .tc-menu__label { color: var(--negative); }
+
+/* Range field: label and current value above a slider */
+.tc-range { display: grid; gap: var(--space-1); font-size: var(--font-size-sm); line-height: 1.25rem; }
+.tc-range__head { display: flex; justify-content: space-between; gap: var(--space-3); }
+.tc-range__head strong { font-variant-numeric: tabular-nums; }
+.tc-range input { width: 100%; margin: 0; accent-color: var(--accent); }
+.tc-chip--icon { display: inline-flex; align-items: center; gap: var(--space-1); }
+.tc-chip--icon .tc-icon { width: 16px; height: 16px; }
+.tc-chip:disabled { color: var(--text-muted); background: var(--sunken); border-color: var(--line); cursor: not-allowed; }
+
+/* Contract talk form (profile modal, transfer negotiation) */
+.tc-talk { display: grid; gap: var(--space-4); min-width: 0; }
+.tc-talk header { display: grid; gap: var(--space-1); }
+.tc-talk__title { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: var(--font-size-lg); line-height: 1.5rem; }
+.tc-talk .tc-caption, .tc-talk__verdict { margin: 0; }
+.tc-talk__clauses { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-6); }
+.tc-talk__clause { display: grid; gap: var(--space-2); }
+.tc-talk__verdict { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-sm); line-height: 1.25rem; font-weight: 700; }
+.tc-talk__verdict .tc-icon { width: 16px; height: 16px; }
+.tc-talk__verdict--ok { color: var(--positive); }
+.tc-talk__verdict--no { color: var(--negative); }
+.tc-talk__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+
+/* Callout: one status line inside a panel or modal (info · ok · warn · no) */
+.tc-callout { margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--sunken); box-shadow: inset 3px 0 0 var(--info); font-size: var(--font-size-sm); line-height: 1.25rem; }
+.tc-callout--ok { box-shadow: inset 3px 0 0 var(--positive); }
+.tc-callout--warn { box-shadow: inset 3px 0 0 var(--warning); }
+.tc-callout--no { box-shadow: inset 3px 0 0 var(--negative); }
+
+/* Gate list: conditions with a check or a cross */
+.tc-gates { display: grid; gap: var(--space-2); margin: var(--space-2) 0; padding: 0; list-style: none; }
+.tc-gate { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2); align-items: start; font-size: var(--font-size-sm); line-height: 1.25rem; }
+.tc-gate .tc-icon { width: 18px; height: 18px; margin-top: 1px; }
+.tc-gate--ok .tc-icon { color: var(--positive); }
+.tc-gate--no .tc-icon { color: var(--negative); }
+.tc-gate__copy { display: grid; gap: 2px; min-width: 0; }
+
+/* Patience: filled dots for rounds left */
+.tc-patience { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.tc-patience__dots { display: inline-flex; gap: var(--space-1); }
+.tc-patience__dot { width: 12px; height: 12px; border-radius: var(--radius-pill); border: 2px solid var(--accent); box-sizing: border-box; }
+.tc-patience__dot--full { background: var(--accent); }
+.tc-patience .tc-caption { margin-left: auto; }
+
+/* Wide modal for two columns (fee + contract) */
+.tc-modal--wide { width: min(880px, 100%); }
+
+/* Deal card (transfer market): portrait, name, club, price and state; quick actions below */
+.tc-deals { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.tc-deal { display: grid; height: 100%; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md); overflow: hidden; }
+.tc-deal:hover { border-color: var(--control-border); }
+.tc-deal__main { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: var(--space-1) var(--space-3); padding: var(--space-3); border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.tc-deal__main:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tc-deal__id { display: grid; gap: 2px; min-width: 0; }
+.tc-deal__name { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.tc-deal__meta { overflow: hidden; color: var(--text-muted); font-size: var(--font-size-xs); line-height: 1rem; text-overflow: ellipsis; white-space: nowrap; }
+.tc-deal__price { display: grid; justify-items: end; gap: var(--space-1); }
+.tc-deal__price strong { font-family: var(--font-display); font-size: var(--font-size-md); line-height: 1.25rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tc-deal__badge { padding: 0 var(--space-2); border-radius: var(--radius-pill); background: var(--sunken); color: var(--text-muted); font-size: var(--font-size-xs); line-height: 1.25rem; font-weight: 700; white-space: nowrap; }
+.tc-deal__badge--talk { background: var(--accent-soft); color: var(--text); }
+.tc-deal__badge--offer { background: var(--info); color: var(--on-info); }
+.tc-deal__detail { grid-column: 2 / -1; }
+.tc-deal__actions { display: flex; justify-content: flex-end; gap: var(--space-1); padding: 0 var(--space-2) var(--space-1); border-top: 1px solid var(--line); }
+.tc-deal__actions .tc-iconbtn[aria-pressed="true"] { color: var(--accent); }
+.tc-deal__actions .tc-iconbtn:disabled { cursor: default; }
+
 /* Der Treter */
 .tc-news { padding: var(--space-6); background: var(--newsprint); color: var(--newsprint-ink); border: 1px solid var(--newsprint-rule); font-family: var(--font-news); }
 .tc-news__masthead { margin: 0; padding-bottom: var(--space-2); text-align: center; border-bottom: 3px double var(--newsprint-ink); font-family: var(--font-masthead); font-weight: 400; font-size: var(--font-size-masthead); line-height: 3.5rem; }

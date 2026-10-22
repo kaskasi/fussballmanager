@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { grantAchievement, ACHIEVEMENT } from "../player/achievements.ts";
@@ -68,38 +69,8 @@ export interface TransferRecord {
 
 export const DEFAULT_LOAN_PARTNER_ID = "cl_loan_partner";
 
-export function transferKindIcon(kind: TransferKind): string {
-  switch (kind) {
-    case "in":
-      return "🟢";
-    case "out":
-      return "🔴";
-    case "loan_out":
-      return "🔄";
-    case "loan_return":
-      return "↩️";
-    case "ai":
-      return "💱";
-    default:
-      return "💰";
-  }
-}
-
 export function transferKindLabel(kind: TransferKind): string {
-  switch (kind) {
-    case "in":
-      return "Zugang";
-    case "out":
-      return "Abgang";
-    case "loan_out":
-      return "Verliehen";
-    case "loan_return":
-      return "Rückkehr";
-    case "ai":
-      return "Liga-Transfer";
-    default:
-      return "Transfer";
-  }
+  return t(`transfers.kind.${kind}`);
 }
 
 export function appendTransferRecord(

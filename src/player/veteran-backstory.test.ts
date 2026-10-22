@@ -30,6 +30,18 @@ describe("veteran backstory", () => {
     expect(seasonCalendarYear(pills.at(-1)!)).toBe(2026);
   });
 
+  it("archives scaled-down attributes, so every past season has a CA", () => {
+    const player = clonePlayer();
+    player.age = 30;
+    player.squad_status = "pro";
+    const next = applyVeteranBackstory(player, seedFromPlayerId(player.id));
+    const first = next.history.growth[0]!;
+    expect(Object.keys(first.attributes_snapshot).sort()).toEqual(Object.keys(player.attributes).sort());
+    const archivedCa = estimateCa(first.attributes_snapshot, player.position);
+    expect(Number.isFinite(archivedCa)).toBe(true);
+    expect(archivedCa).toBeLessThan(estimateCa(player.attributes, player.position));
+  });
+
   it("skips youth and players below pro debut age", () => {
     const young = clonePlayer();
     young.age = 18;

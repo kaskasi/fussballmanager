@@ -1,5 +1,6 @@
 import type { Player } from "../types/player.ts";
 import { careerApps, hasStamp } from "./ability-stamps.ts";
+import { t } from "../i18n/index.ts";
 
 /** Alter Recke gate — soft cap for the derived match factor, not a potential ceiling. */
 export const EXPERIENCE_APPS_SOFT_CAP = 300;
@@ -25,5 +26,5 @@ export function derivedExperienceFactor(player: Player): number {
 }
 
 export function profileExperienceLabel(player: Player): string {
-  return hasStamp(player, "gruenschnabel") ? "Erfahrung · Roh" : "Erfahrung";
+  return hasStamp(player, "gruenschnabel") ? t("profile.experience.raw") : t("profile.experience.label");
 }

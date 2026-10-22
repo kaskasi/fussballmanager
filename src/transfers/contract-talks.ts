@@ -6,6 +6,8 @@ import {
   type CalendarPoint,
 } from "../sim/calendar-days.ts";
 import { formatSeasonLabel } from "../sim/season-label.ts";
+import { t } from "../i18n/index.ts";
+import { formatEuroWhole } from "../i18n/number-display.ts";
 import type { Contract, Player } from "../types/player.ts";
 import { estimateCa } from "./market-value.ts";
 import { contractUntilSeasonAfterTerm } from "./contract-until-season.ts";
@@ -59,10 +61,17 @@ export interface ContractTalkResult {
 
 export type TalkBlockKind = "signed" | "angry" | "bigger_club";
 
+/** Read at use time, so the reason follows the active language. */
 export const TALK_BLOCK_REASON: Record<TalkBlockKind, string> = {
-  signed: "Hat gerade einen neuen Vertrag unterzeichnet.",
-  angry: "Ist sauer und will erst mal nicht reden.",
-  bigger_club: "Will zu einem größeren Verein — unterzeichnet hier nicht mehr.",
+  get signed() {
+    return t("contract.block.signed");
+  },
+  get angry() {
+    return t("contract.block.angry");
+  },
+  get bigger_club() {
+    return t("contract.block.biggerClub");
+  },
 };
 
 export interface ContractTalkLock {
@@ -121,15 +130,15 @@ export function playerContractAsk(
   const termYearsMin = slump ? 4 : youth ? (player.age <= 16 ? 3 : 2) : 2;
   const bonusAppearance = slump ? Math.round(wage * 0.05) : Math.round(wage * 0.15);
 
-  let advisorHint = "Will vor allem ein faires Gehalt.";
+  let advisorHint = t("contract.advisor.fairWage");
   if (slump) {
-    advisorHint = "Will Sicherheit — lange Laufzeit, kleiner Bonus.";
+    advisorHint = t("contract.advisor.security");
   } else if (currentMinutesPromise(player) === "starter") {
-    advisorHint = "Will seinen Stammplatz behalten.";
+    advisorHint = t("contract.advisor.keepPlace");
   } else if (player.age <= 18) {
-    advisorHint = "Will Perspektive: Laufzeit zählt fast so viel wie Geld.";
+    advisorHint = t("contract.advisor.perspective");
   } else if (roleWageModifier(player, promise) >= 1.3) {
-    advisorHint = "Sieht sich als Stammkraft — Gehalt zuerst.";
+    advisorHint = t("contract.advisor.regular");
   }
   advisorHint = advisorHintFromWeights(contractWeightsFor(player), advisorHint);
 
@@ -151,10 +160,10 @@ export function describeContractOffer(
 ): { accepted: boolean; reason: string } {
   const ask = playerContractAsk(player, season, offer.minutesPromise);
   if (PROMISE_RANK[offer.minutesPromise] < PROMISE_RANK[currentMinutesPromise(player)]) {
-    return { accepted: false, reason: "Will seinen Startplatz nicht aufgeben." };
+    return { accepted: false, reason: t("contract.verdict.keepStart") };
   }
   if (offer.termYears < ask.termYearsMin) {
-    return { accepted: false, reason: `Laufzeit zu kurz — will mindestens ${ask.termYearsMin} Jahre.` };
+    return { accepted: false, reason: t("contract.verdict.termShort", { years: ask.termYearsMin }) };
   }
   const currentWage = player.contract?.wage_weekly ?? 0;
   if (
@@ -162,15 +171,15 @@ export function describeContractOffer(
     offer.wageWeekly < currentWage &&
     !player.state.contract_wage_cut_allowed
   ) {
-    return { accepted: false, reason: "Geht nicht unter das aktuelle Gehalt runter." };
+    return { accepted: false, reason: t("contract.verdict.noWageCut") };
   }
   if (offer.wageWeekly < ask.wageWeekly * ACCEPT_WAGE_RATIO) {
-    return { accepted: false, reason: "Zu wenig Gehalt." };
+    return { accepted: false, reason: t("contract.verdict.wageLow") };
   }
   if (offer.bonusAppearance < ask.bonusAppearance * ACCEPT_BONUS_RATIO) {
-    return { accepted: false, reason: "Einsatzbonus zu klein." };
+    return { accepted: false, reason: t("contract.verdict.bonusLow") };
   }
-  return { accepted: true, reason: "Handschlag." };
+  return { accepted: true, reason: t("contract.verdict.accept") };
 }
 
 export function wageDeltaFitsBudget(
@@ -308,12 +317,12 @@ export function submitContractOffer(
   calendar: CalendarPoint,
 ): ContractTalkResult {
   if (player.squad_status === "loaned_out") {
-    return { player, accepted: false, message: "Ausgeliehene Spieler verhandeln nicht hier." };
+    return { player, accepted: false, message: t("contract.result.loanedOut") };
   }
 
   const lock = contractTalkLock(player, calendar);
   if (!lock.allowed) {
-    return { player, accepted: false, message: lock.reason ?? "Gesprächssperre." };
+    return { player, accepted: false, message: lock.reason ?? t("contract.result.locked") };
   }
 
   if (evaluateContractOffer(player, season, offer) === "accept") {
@@ -325,7 +334,10 @@ export function submitContractOffer(
     return {
       player: next,
       accepted: true,
-      message: `Vertrag bis ${formatSeasonLabel(next.contract?.until_season ?? season)} · € ${next.contract?.wage_weekly}/Woche.`,
+      message: t("contract.result.signed", {
+        season: formatSeasonLabel(next.contract?.until_season ?? season),
+        wage: formatEuroWhole(next.contract?.wage_weekly ?? 0),
+      }),
     };
   }
 
@@ -359,6 +371,6 @@ export function submitContractOffer(
   return {
     player: next,
     accepted: false,
-    message: `Angebot abgelehnt (${failed}/${FRUSTRATION_THRESHOLD}) — will mehr Gehalt, Laufzeit oder Einsatz.`,
+    message: t("contract.result.rejected", { failed, max: FRUSTRATION_THRESHOLD }),
   };
 }

@@ -1,5 +1,6 @@
 /** WIREFRAME: design.md §9.9 — Manager Desk hub (PRD 14.15) */
 import { useMemo, useState } from "react";
+import { CheckCircle2 } from "lucide-react";
 import type { CalendarMilestone } from "../calendar/calendar-milestones.ts";
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import { hubFitnessCells, hubPlayerGrowthCells } from "../../hub/hub-heatmaps.ts";
@@ -227,7 +228,11 @@ export function ManagerDeskHub({
           ) : merchDesk ? (
             <HubMerchDeskPanel view={merchDesk} />
           ) : (
-            <p className="hub-merch-desk__fallback">{t("hub.desk.merchOk")}</p>
+            <div className="tc-empty-state hub-merch-desk__fallback">
+              <CheckCircle2 className="tc-icon" aria-hidden />
+              <p className="tc-empty-state__title">{t("hub.desk.merchOkTitle")}</p>
+              <p>{t("hub.desk.merchOk")}</p>
+            </div>
           )}
         </div>
       </aside>

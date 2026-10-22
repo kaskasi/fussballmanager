@@ -1,5 +1,6 @@
 import type { Attributes, Player, TemporaryModifier } from "../types/player.ts";
 import { estimateCa } from "../transfers/market-value.ts";
+import { t } from "../i18n/index.ts";
 
 const DRIVE_MIN = 0.4;
 const DRIVE_MAX = 1.6;
@@ -135,7 +136,9 @@ const PARTIAL_VISIBILITY = new Set<string>([
 ]);
 
 export function breakoutDisplayLabel(eventId: string): string {
-  return BREAKOUT_LABELS[eventId] ?? eventId;
+  const key = `breakout.${eventId}`;
+  const label = t(key);
+  return label !== key ? label : (BREAKOUT_LABELS[eventId] ?? eventId);
 }
 
 export function isTimelineVisibleBreakout(eventId: string): boolean {

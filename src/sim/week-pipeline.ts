@@ -499,26 +499,20 @@ export async function simulateGameWeek(
     clubEvents = withClubEvent(clubEvents, session.season, nextWeek, "info", megaEvent.message);
   }
   let stadium = normalizeClubStadium(megaEvent.stadium);
-  let youthCamps = session.youthCamps;
+  const youthCamps = session.youthCamps;
   let academyFacility = session.academyFacility;
   let academyProject = session.academyProject ?? null;
   const construction = advanceCareerConstruction({
     stadium,
-    youthCamps,
     academyFacility,
     academyProject,
-    players: session.players,
-    clubId: session.clubId,
     season: session.season,
     week: nextWeek,
-    masterSeed: session.masterSeed,
     clubEvents,
   });
   stadium = construction.stadium;
-  youthCamps = construction.youthCamps;
   academyFacility = construction.academyFacility;
   academyProject = construction.academyProject;
-  const constructionNewPlayers = construction.newPlayers;
   clubEvents = construction.clubEvents;
   const opponentId =
     isHomeMatchWeek && leagueStep.playerFixture
@@ -812,7 +806,7 @@ export async function simulateGameWeek(
   const nextSeason = seasonEnded ? session.season + 1 : session.season;
   const stadiumAfterNaming = revertExpiredNamingRights(narrativeStep.stadium, nextSeason);
   const playersForNewWeek = stampWeekStartAttributesBatch(
-    [...narrativeStep.players, ...constructionNewPlayers],
+    narrativeStep.players,
     nextSeason,
     nextWeek,
   );
@@ -832,7 +826,7 @@ export async function simulateGameWeek(
       nextSeason,
       nextWeek,
       "inbox",
-      `${completion.flag} Camp ${completion.nationLabel}: Bau abgeschlossen — Camp ist eröffnet.`,
+      t("clubEvent.campOpened", { flag: completion.flag, nation: completion.nationLabel }),
     );
   }
   let playersAfterCampOpen = playersForNewWeek;
@@ -850,7 +844,7 @@ export async function simulateGameWeek(
           session.season,
           nextWeek,
           "info",
-          `${nation.flag} Camp ${nation.label}: ${formatPlayerName(headline)} stellt sich vor — drei Talente im Kader.`,
+          t("clubEvent.campDebut", { flag: nation.flag, nation: nation.label, player: formatPlayerName(headline) }),
         );
       }
     }

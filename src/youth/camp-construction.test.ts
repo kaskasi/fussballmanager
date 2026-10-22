@@ -6,7 +6,10 @@ import {
   isCampOperational,
 } from "./camp-construction.ts";
 import { advanceYouthCampsForWeek } from "./camp-construction-week.ts";
-import { buyYouthCamp } from "./satellite-camps.ts";
+import { buyYouthCamp, campRoster } from "./satellite-camps.ts";
+import { newGameSession } from "../persistence/game-session.ts";
+import { simulateGameWeek } from "../sim/week-pipeline.ts";
+import { formatPlayerName } from "../types/player-display.ts";
 
 describe("youth camp construction", () => {
   it("blocks operation for two calendar weeks after purchase", () => {
@@ -56,4 +59,18 @@ describe("youth camp construction", () => {
     });
     expect(again.newPlayers).toHaveLength(0);
   });
+
+  it("delivers the opening talents once when weeks run through the pipeline", async () => {
+    let session = newGameSession();
+    session = {
+      ...session,
+      youthCamps: buyYouthCamp(session.youthCamps, "camp_ng", session.season, session.week),
+    };
+    for (let step = 0; step < 4; step += 1) {
+      session = (await simulateGameWeek(session)).session;
+    }
+    const roster = campRoster(session.players, "camp_ng");
+    expect(roster).toHaveLength(3);
+    expect(new Set(roster.map((player) => formatPlayerName(player))).size).toBe(3);
+  }, 120_000);
 });

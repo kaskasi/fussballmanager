@@ -1,5 +1,6 @@
 import { newGameSession, saveFromSession, sessionFromSave, type GameSession } from "./game-session.ts";
 import { normalizeYouthInbox, pruneYouthInbox } from "../youth/decision-inbox.ts";
+import { dedupeCampOpeningCopies } from "../youth/camp-duplicates.ts";
 import {
   parseSaveFromRecord,
   resolveBrowserSaveBackend,
@@ -99,7 +100,7 @@ export function normalizeSave(save: SaveGame): SaveGame {
       };
     }
   }
-  return next;
+  return dedupeCampOpeningCopies(next);
 }
 
 export function hasLocalSave(slot: number): boolean {

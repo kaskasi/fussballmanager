@@ -1,5 +1,4 @@
 import { t } from "../i18n/index.ts";
-import type { Player } from "../types/player.ts";
 import { withClubEvent, type ClubEvent } from "../inbox/club-events.ts";
 import { careerWeekIndex } from "../stadium/hospitality.ts";
 import { advancePrecinctConstruction } from "../stadium/precinct-construction.ts";
@@ -10,12 +9,7 @@ import {
 import type { ClubStadium } from "../stadium/club-stadium.ts";
 import type { PrecinctState } from "../stadium/precinct.ts";
 import type { AcademyFacility } from "../youth/intake-generator.ts";
-import {
-  campNationById,
-  generateCampOpeningBundle,
-  type YouthCamp,
-} from "../youth/satellite-camps.ts";
-import { formatPlayerName } from "../types/player-display.ts";
+import type { YouthCamp } from "../youth/satellite-camps.ts";
 
 export const BASE_CONCURRENT_PROJECTS = 2;
 /** @deprecated Use maxConcurrentConstructionProjects(snapshot) — HQ raises the cap. */
@@ -59,23 +53,22 @@ export function constructionCapReason(snapshot: ConstructionSnapshot): string | 
   return null;
 }
 
+/**
+ * Weekly construction step for the precinct and the youth campus.
+ * Satellite camps open in `advanceYouthCampsForWeek` (youth/camp-construction-week.ts) — the only place
+ * that delivers their opening talents, so they are generated exactly once.
+ */
 export function advanceCareerConstruction(input: {
   stadium: ClubStadium;
-  youthCamps: readonly YouthCamp[];
   academyFacility: AcademyFacility;
   academyProject: AcademyProject | null;
-  players: readonly Player[];
-  clubId: string;
   season: number;
   week: number;
-  masterSeed: number;
   clubEvents: ClubEvent[];
 }): {
   stadium: ClubStadium;
-  youthCamps: YouthCamp[];
   academyFacility: AcademyFacility;
   academyProject: AcademyProject | null;
-  newPlayers: Player[];
   clubEvents: ClubEvent[];
 } {
   const now = careerWeekIndex(input.season, input.week);
@@ -83,37 +76,7 @@ export function advanceCareerConstruction(input: {
     ? advancePrecinctConstruction(input.stadium.precinct, now)
     : input.stadium.precinct;
   const stadium = precinct ? { ...input.stadium, precinct } : input.stadium;
-  let knownPlayers = [...input.players];
-  const newPlayers: Player[] = [];
   let clubEvents = input.clubEvents;
-  const youthCamps = input.youthCamps.map((camp) => {
-    if (camp.construction_until == null || now < camp.construction_until) return camp;
-    const opening = generateCampOpeningBundle({
-      campId: camp.id,
-      clubId: input.clubId,
-      season: input.season,
-      week: input.week,
-      masterSeed: input.masterSeed,
-      players: knownPlayers,
-      facility: input.academyFacility,
-    });
-    if (opening.players.length > 0) {
-      newPlayers.push(...opening.players);
-      knownPlayers = [...knownPlayers, ...opening.players];
-      const nation = campNationById(camp.id);
-      const headline = opening.players.find((player) => player.id === opening.headlinePlayerId);
-      if (nation && headline) {
-        clubEvents = withClubEvent(
-          clubEvents,
-          input.season,
-          input.week,
-          "info",
-          t("clubEvent.campBuilt", { nation: nation.label, player: formatPlayerName(headline) }),
-        );
-      }
-    }
-    return { ...camp, construction_until: undefined };
-  });
   let academyFacility = input.academyFacility;
   let academyProject = input.academyProject;
   if (academyProject && now >= academyProject.ready_week_index) {
@@ -129,10 +92,8 @@ export function advanceCareerConstruction(input: {
   }
   return {
     stadium,
-    youthCamps,
     academyFacility,
     academyProject,
-    newPlayers,
     clubEvents,
   };
 }

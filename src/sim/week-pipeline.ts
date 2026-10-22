@@ -1,4 +1,5 @@
 import { t } from "../i18n/index.ts";
+import { formatWholeNumber } from "../i18n/number-display.ts";
 import { updateInSeasonPressure } from "../board/season-objectives.ts";
 import {
   expireBreakoutModifiers,
@@ -464,7 +465,11 @@ export async function simulateGameWeek(
         session.season,
         nextWeek,
         "inbox",
-        `${completion.blockName}: Tribünenausbau fertig — ${completion.capacity.toLocaleString("de-DE")} Plätze (Stadion gesamt ${total.toLocaleString("de-DE")}).`,
+        t("clubEvent.standExpanded", {
+          stand: completion.blockName,
+          seats: formatWholeNumber(completion.capacity),
+          total: formatWholeNumber(total),
+        }),
       );
     }
     const precinct = stadium.precinct;
@@ -477,7 +482,7 @@ export async function simulateGameWeek(
           session.season,
           nextWeek,
           "inbox",
-          `${completion.label}: Bau abgeschlossen — Anlage ist betriebsbereit.`,
+          t("clubEvent.precinctBuilt", { building: completion.label }),
         );
       }
       stadium = { ...stadium, precinct: precinctAdvance.state };

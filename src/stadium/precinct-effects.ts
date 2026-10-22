@@ -4,12 +4,15 @@ import {
   buildingDocksStreetNetwork,
   dockedOccupiedCells,
   occupiedCells,
+  precinctBuildingLabel,
   precinctBuildingLevel,
   precinctBuildingStageLabel,
   precinctHasTrainingHall,
   type PrecinctBuilding,
   type PrecinctState,
 } from "./precinct.ts";
+import { t } from "../i18n/index.ts";
+import { formatDecimal } from "../i18n/number-display.ts";
 import {
   applyConcessionPriceToIncome,
   DEFAULT_BEER_UNIT_PRICE_EUR,
@@ -385,24 +388,18 @@ export type PrecinctStatusGroup = "crowd" | "city" | "training" | "fans" | "cash
 export interface PrecinctStatusEffect {
   id: PrecinctBuilding | "arena";
   group: PrecinctStatusGroup;
-  icon: string;
   label: string;
   magnitude: string | null;
   detail: string;
   tone: PrecinctStatusTone;
 }
 
-export const PRECINCT_STATUS_GROUPS: readonly {
-  id: PrecinctStatusGroup;
-  icon: string;
-  label: string;
-}[] = [
-  { id: "crowd", icon: "👁", label: "Zuschauer" },
-  { id: "city", icon: "🛣️", label: "Stadt" },
-  { id: "fans", icon: "📣", label: "Fans" },
-  { id: "training", icon: "🏃", label: "Training" },
-  { id: "cash", icon: "💰", label: "Kasse" },
-];
+/** Effect groups in rail order; names via `precinctStatusGroupLabel`. */
+export const PRECINCT_STATUS_GROUPS: readonly PrecinctStatusGroup[] = ["crowd", "city", "fans", "training", "cash"];
+
+export function precinctStatusGroupLabel(group: PrecinctStatusGroup): string {
+  return t(`precinct.group.${group}`);
+}
 
 const BUILDING_GROUP: Record<PrecinctBuilding, PrecinctStatusGroup> = {
   kiosk: "cash",
@@ -427,12 +424,12 @@ function formatPct(rate: number): string {
   const body =
     Math.abs(pct - Math.round(pct)) < 0.05
       ? String(Math.round(pct))
-      : pct.toFixed(1).replace(".", ",");
+      : formatDecimal(pct, 1);
   return `+${body}%`;
 }
 
 function formatFans(delta: number): string {
-  return `+${delta.toFixed(2).replace(".", ",")}`;
+  return `+${formatDecimal(delta, 2)}`;
 }
 
 function joinBits(bits: string[]): string | null {
@@ -455,10 +452,9 @@ export function listPrecinctStatusEffects(
   const arena: PrecinctStatusEffect = {
     id: "arena",
     group: "city",
-    icon: "🏟️",
-    label: "Arena",
-    magnitude: arenaDocked ? "Netz" : null,
-    detail: arenaDocked ? "Arena am Straßennetz" : "Arena dockt nicht ans Straßennetz",
+    label: t("precinct.effect.arena"),
+    magnitude: arenaDocked ? t("precinct.effect.network") : null,
+    detail: arenaDocked ? t("precinct.effect.arenaDocked") : t("precinct.effect.arenaUndocked"),
     tone: arenaDocked ? "buff" : "warn",
   };
 
@@ -467,96 +463,99 @@ export function listPrecinctStatusEffects(
     ...PRECINCT_BUILDINGS.map((def) => {
     const placed = !empty && occupiedCells(state, def.id) > 0;
     const group = BUILDING_GROUP[def.id];
+    const label = precinctBuildingLabel(def.id);
     const bits: string[] = [];
     let tone: PrecinctStatusTone = placed ? "buff" : "hunger";
-    let hunger = `Fehlt: ${def.label}`;
+    let hunger = t("precinct.effect.missing", { building: label });
+    const crowd = (rate: number) => t("precinct.effect.crowd", { value: formatPct(rate) });
+    const fansBit = (delta: number) => t("precinct.effect.fans", { value: formatFans(delta) });
 
     if (placed && fill) {
-      if (def.id === "parking" && fill.parking > 0) bits.push(`Zuschauer ${formatPct(fill.parking)}`);
-      if (def.id === "kiosk" && fill.kiosk > 0) bits.push(`Zuschauer ${formatPct(fill.kiosk)}`);
-      if (def.id === "beer_tent" && fill.beer > 0) bits.push(`Zuschauer ${formatPct(fill.beer)}`);
-      if (def.id === "fan_services" && fill.services > 0) bits.push(`Zuschauer ${formatPct(fill.services)}`);
-      if (def.id === "clubhouse" && fill.clubhouse > 0) bits.push(`Zuschauer ${formatPct(fill.clubhouse)}`);
-      if (def.id === "fanshop" && fill.fanshop > 0) bits.push(`Zuschauer ${formatPct(fill.fanshop)}`);
+      if (def.id === "parking" && fill.parking > 0) bits.push(crowd(fill.parking));
+      if (def.id === "kiosk" && fill.kiosk > 0) bits.push(crowd(fill.kiosk));
+      if (def.id === "beer_tent" && fill.beer > 0) bits.push(crowd(fill.beer));
+      if (def.id === "fan_services" && fill.services > 0) bits.push(crowd(fill.services));
+      if (def.id === "clubhouse" && fill.clubhouse > 0) bits.push(crowd(fill.clubhouse));
+      if (def.id === "fanshop" && fill.fanshop > 0) bits.push(crowd(fill.fanshop));
     }
     if (placed && fans) {
-      if (def.id === "beer_tent" && fans.beer > 0) bits.push(`Fans ${formatFans(fans.beer)}`);
-      if (def.id === "clubhouse" && fans.clubhouse > 0) bits.push(`Fans ${formatFans(fans.clubhouse)}`);
+      if (def.id === "beer_tent" && fans.beer > 0) bits.push(fansBit(fans.beer));
+      if (def.id === "clubhouse" && fans.clubhouse > 0) bits.push(fansBit(fans.clubhouse));
       if (def.id === "clubhouse" && placed) {
         const hqLevel = precinctBuildingLevel(state, "clubhouse");
         if (hqLevel > 0) {
-          bits.push(`${2 + Math.min(2, hqLevel)} parallele Baustellen`);
+          bits.push(t("precinct.effect.buildSlots", { count: 2 + Math.min(2, hqLevel) }));
         }
       }
-      if (def.id === "fanshop" && fans.fanshop > 0) bits.push(`Fans ${formatFans(fans.fanshop)}`);
-      if (def.id === "museum" && fans.museum > 0) bits.push(`Fans ${formatFans(fans.museum)}`);
-      if (def.id === "fan_services" && fans.services > 0) bits.push(`Fans ${formatFans(fans.services)}`);
+      if (def.id === "fanshop" && fans.fanshop > 0) bits.push(fansBit(fans.fanshop));
+      if (def.id === "museum" && fans.museum > 0) bits.push(fansBit(fans.museum));
+      if (def.id === "fan_services" && fans.services > 0) bits.push(fansBit(fans.services));
     }
     if (placed && training) {
       if (def.id === "training_ground") {
         const tzLevel = precinctBuildingLevel(state, "training_ground");
-        if (precinctHasTrainingHall(state)) bits.push("Halle · Technikeinheiten+");
-        if (tzLevel >= 4) bits.push("Pool · Erholung");
-        if (tzLevel >= 5) bits.push("Physio · Verletzung↓");
+        if (precinctHasTrainingHall(state)) bits.push(t("precinct.effect.hall"));
+        if (tzLevel >= 4) bits.push(t("precinct.effect.pool"));
+        if (tzLevel >= 5) bits.push(t("precinct.effect.physio"));
         const regen = precinctFitnessRegen(state);
-        if (regen > 1) bits.push(`Erholung ×${regen.toFixed(2).replace(".", ",")}`);
-        else if (dockedOccupiedCells(state, "training_ground") > 0) bits.push("Basis");
+        if (regen > 1) bits.push(t("precinct.effect.recovery", { value: formatDecimal(regen, 2) }));
+        else if (dockedOccupiedCells(state, "training_ground") > 0) bits.push(t("precinct.stage.base"));
       }
       if (def.id === "training_pitch" && training.extraPitches > 0) {
         bits.push(precinctBuildingStageLabel("training_pitch", training.extraPitches));
-        if (training.extraPitches >= 1) bits.push("weniger Verletzungen");
-        if (training.extraPitches >= 2) bits.push("Outdoor-Einheiten");
-        if (training.extraPitches >= 3) bits.push("Sprint-Platz");
+        if (training.extraPitches >= 1) bits.push(t("precinct.effect.fewerInjuries"));
+        if (training.extraPitches >= 2) bits.push(t("precinct.effect.outdoor"));
+        if (training.extraPitches >= 3) bits.push(t("precinct.effect.sprint"));
       }
       if (def.id === "youth_pitch" && training.youth > 0) {
         bits.push(precinctBuildingStageLabel("youth_pitch", training.youth));
-        if (training.youth >= 2) bits.push("Jugend-Campus");
+        if (training.youth >= 2) bits.push(t("precinct.effect.youthCampus"));
       }
     }
     if (placed && def.id === "bus" && precinctAwayFanOrganizerBonus(state) > 0) {
-      bits.push("Auswärtsfahrten");
+      bits.push(t("precinct.effect.awayTrips"));
     }
     if (placed && def.id === "fan_services" && precinctAwayFanOrganizerBonus(state) >= 0.08) {
-      bits.push("Auswärts-Organisation");
+      bits.push(t("precinct.effect.awayOrganisation"));
     }
     if (placed && def.id === "kiosk" && kioskCash > 0) {
-      bits.push(`Kasse ${formatClubCash(kioskCash)} bei voller Auslastung`);
+      bits.push(t("precinct.effect.cashFull", { amount: formatClubCash(kioskCash) }));
     }
     if (placed && def.id === "beer_tent" && beerCash > 0) {
-      bits.push(`Kasse ${formatClubCash(beerCash)} bei voller Auslastung`);
+      bits.push(t("precinct.effect.cashFull", { amount: formatClubCash(beerCash) }));
     }
     if (placed && def.id === "fanshop" && merch > 0) {
-      bits.push(`Merch ${formatClubCash(merch)} bei voller Auslastung`);
+      bits.push(t("precinct.effect.merchFull", { amount: formatClubCash(merch) }));
     }
     if (placed && def.id === "hotel" && hospitalityPreview?.hotel) {
       const h = hospitalityPreview.hotel;
-      bits.push(`${h.occupancyPct}% Auslastung`);
+      bits.push(t("precinct.hospitality.occupancy", { pct: h.occupancyPct }));
       if (h.docked && h.weeklyIncome > 0) {
         bits.push(formatClubCashWeekly(h.weeklyIncome));
       }
     }
     if (placed && def.id === "museum") {
       const museumCash = weeklyMuseumIncome(state, DEFAULT_FANBASE);
-      if (museumCash > 0) bits.push(`Kasse ${formatClubCash(museumCash)}/Wo`);
-      if (fans?.museum) bits.push(`Fans ${formatFans(fans.museum)}`);
+      if (museumCash > 0) bits.push(t("precinct.effect.cashWeekly", { amount: formatClubCash(museumCash) }));
+      if (fans?.museum) bits.push(fansBit(fans.museum));
     }
     if (placed && def.id === "restaurant" && hospitalityPreview?.restaurant) {
       const r = hospitalityPreview.restaurant;
-      bits.push(r.viral ? "100% · Story-Hype" : `${r.occupancyPct}% Auslastung`);
+      bits.push(r.viral ? t("precinct.effect.viral") : t("precinct.hospitality.occupancy", { pct: r.occupancyPct }));
       if (r.docked && r.weeklyIncome > 0) {
         bits.push(formatClubCashWeekly(r.weeklyIncome));
       }
-      if (r.overtimeDueThisWeek) bits.push("Überstunden diese Woche");
+      if (r.overtimeDueThisWeek) bits.push(t("precinct.effect.overtime"));
     }
     if (placed && (def.id === "hotel" || def.id === "restaurant") && !hospitalityPreview) {
-      bits.push("Auslastung");
+      bits.push(t("precinct.effect.occupancy"));
     }
     if (placed && !buildingDocksStreetNetwork(state, def.id)) {
       tone = "warn";
-      hunger = `${def.label} dockt nicht ans Straßennetz`;
+      hunger = t("precinct.effect.undocked", { building: label });
     } else if (placed && (def.id === "bus" || def.id === "transit") && fill) {
-      if (def.id === "bus" && fill.bus > 0) bits.push(`Zuschauer ${formatPct(fill.bus)}`);
-      if (def.id === "transit" && fill.transit > 0) bits.push(`Zuschauer ${formatPct(fill.transit)}`);
+      if (def.id === "bus" && fill.bus > 0) bits.push(crowd(fill.bus));
+      if (def.id === "transit" && fill.transit > 0) bits.push(crowd(fill.transit));
     }
 
     const detail =
@@ -564,13 +563,12 @@ export function listPrecinctStatusEffects(
         ? hunger
         : tone === "warn"
           ? hunger
-          : `${def.label} · ${joinBits(bits) ?? "aktiv"}`;
+          : `${label} · ${joinBits(bits) ?? t("precinct.effect.active")}`;
 
     return {
       id: def.id,
       group,
-      icon: def.icon,
-      label: def.label,
+      label,
       magnitude:
         tone === "buff"
           ? compactMagnitude(
@@ -627,7 +625,7 @@ function compactMagnitude(
   }
   if (id === "bus") return fill.bus > 0 ? formatPct(fill.bus) : null;
   if (id === "transit") return fill.transit > 0 ? formatPct(fill.transit) : null;
-  if (id === "training_ground") return training.hall > 0 ? "Halle" : "Basis";
+  if (id === "training_ground") return precinctBuildingStageLabel("training_ground", training.hall > 0 ? 2 : 1);
   if (id === "training_pitch") {
     return training.extraPitches > 0
       ? precinctBuildingStageLabel("training_pitch", training.extraPitches)

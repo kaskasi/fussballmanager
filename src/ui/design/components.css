@@ -288,6 +288,12 @@
 .tc-talk__verdict--no { color: var(--negative); }
 .tc-talk__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
 
+/* Stepper: −/+ around a value (prices, terms) */
+.tc-stepper { display: inline-flex; align-items: center; gap: var(--space-3); }
+.tc-stepper .tc-iconbtn { border: 1px solid var(--control-border); }
+.tc-stepper .tc-iconbtn:disabled { color: var(--line-strong); border-color: var(--line); cursor: not-allowed; background: transparent; }
+.tc-stepper__value { min-width: 4.5rem; font-family: var(--font-display); font-weight: 700; font-size: var(--font-size-xl); line-height: 1.75rem; text-align: center; font-variant-numeric: tabular-nums; }
+
 /* Callout: one status line inside a panel or modal (info · ok · warn · no) */
 .tc-callout { margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--sunken); box-shadow: inset 3px 0 0 var(--info); font-size: var(--font-size-sm); line-height: 1.25rem; }
 .tc-callout--ok { box-shadow: inset 3px 0 0 var(--positive); }

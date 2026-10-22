@@ -1,4 +1,6 @@
 import type { AcademyFacility } from "./intake-generator.ts";
+import { t } from "../i18n/index.ts";
+import { formatWholeNumber } from "../i18n/number-display.ts";
 
 /**
  * Youth campus levels and badge order (PRD 03.2, PRD 09.2 Screen 2).
@@ -112,20 +114,33 @@ export function facilityGate(
   return { status: "open" };
 }
 
+/** Facility name and effect in the active language; the German catalogue text stays the fallback. */
+export function academyFacilityName(id: AcademyFacility): string {
+  const key = `youth.facility.${id}.name`;
+  const label = t(key);
+  return label !== key ? label : facilityById(id).name;
+}
+
+export function academyFacilityEffect(id: AcademyFacility): string {
+  const key = `youth.facility.${id}.effect`;
+  const label = t(key);
+  return label !== key ? label : facilityById(id).effect;
+}
+
 export function canBuyAcademyUpgrade(
   owned: AcademyFacility,
   stadiumCapacity: number,
   cash: number,
 ): { ok: true; target: AcademyFacility; cost: number } | { ok: false; reason: string } {
   const target = nextFacility(owned);
-  if (!target) return { ok: false, reason: "Akademie ist ausgebaut." };
+  if (!target) return { ok: false, reason: t("stadium.academy.reason.complete") };
   const gate = facilityGate(owned, target, stadiumCapacity);
   if (gate.status === "needs_stadium") {
-    return { ok: false, reason: `Stadion ${gate.capacity.toLocaleString("de-DE")} Plätze.` };
+    return { ok: false, reason: t("stadium.academy.reason.stadium", { seats: formatWholeNumber(gate.capacity) }) };
   }
-  if (gate.status !== "open") return { ok: false, reason: "Vorstufe fehlt." };
+  if (gate.status !== "open") return { ok: false, reason: t("stadium.academy.reason.previous") };
   const cost = facilityById(target).cost;
-  if (cash < cost) return { ok: false, reason: "Zu wenig Kasse." };
+  if (cash < cost) return { ok: false, reason: t("stadium.academy.reason.cash") };
   return { ok: true, target, cost };
 }
 

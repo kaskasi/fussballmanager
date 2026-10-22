@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import type { Player } from "../types/player.ts";
 import { withClubEvent, type ClubEvent } from "../inbox/club-events.ts";
 import { careerWeekIndex } from "../stadium/hospitality.ts";
@@ -53,7 +54,7 @@ export {
 
 export function constructionCapReason(snapshot: ConstructionSnapshot): string | null {
   if (countActiveProjects(snapshot) >= maxConcurrentConstructionProjects(snapshot)) {
-    return "Alle Bau-Slots belegt.";
+    return t("construction.reason.capFull");
   }
   return null;
 }
@@ -107,7 +108,7 @@ export function advanceCareerConstruction(input: {
           input.season,
           input.week,
           "info",
-          `${nation.label}: Camp fertig — ${formatPlayerName(headline)} ist im Kader.`,
+          t("clubEvent.campBuilt", { nation: nation.label, player: formatPlayerName(headline) }),
         );
       }
     }
@@ -122,7 +123,7 @@ export function advanceCareerConstruction(input: {
       input.season,
       input.week,
       "info",
-      "Jugend-Campus ist fertig.",
+      t("clubEvent.academyBuilt"),
     );
     academyProject = null;
   }

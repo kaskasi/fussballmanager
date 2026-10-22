@@ -35,7 +35,8 @@ function dockToCity(state: PrecinctState, building: PrecinctBuilding): PrecinctS
 describe("precinct campus effects", () => {
   it("raises fill from transit more than from the cheaper bus stop", () => {
     const bus = placePrecinctBuilding(emptyPrecinct(), 7, 0, "bus");
-    const rail = placePrecinctBuilding(emptyPrecinct(), 7, 0, "transit");
+    // Beside the starter road (x = 8), so the 2×3 stop fits and docks.
+    const rail = placePrecinctBuilding(emptyPrecinct(), 9, 0, "transit");
     expect(precinctFillRateBonus(rail)).toBeGreaterThan(precinctFillRateBonus(bus));
     expect(precinctFillRateBonus(bus)).toBeGreaterThan(0);
     expect(precinctFillRateBonus(placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "bus"))).toBe(0);
@@ -65,7 +66,8 @@ describe("precinct campus effects", () => {
   });
 
   it("lets a grown parking lot keep adding fill without a cap", () => {
-    const lot = placePrecinctBuilding(emptyPrecinct(), FARM_X, 6, "parking");
+    // Row 7 keeps the 8×4 lot clear of the arena (rows 5–6).
+    const lot = placePrecinctBuilding(emptyPrecinct(), FARM_X, 7, "parking");
     const grown = dockToCity(expandPrecinctPatch(lot, lot.patches[0]!.id, 8, 4), "parking");
     expect(precinctFillRateBonus(grown)).toBeGreaterThan(0.04);
   });

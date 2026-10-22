@@ -4,7 +4,7 @@ import {
   adjustBlockTicketPrice,
   defaultClubStadium,
   fillRateForTicketPrice,
-  fillRateHeatColor,
+  fillRateStrength,
   FILL_RATE_MIN,
   FILL_RATE_MAX,
   normalizeClubStadium,
@@ -49,10 +49,10 @@ describe("club stadium", () => {
     );
   });
 
-  it("maps fill rate to a green-to-red heat color", () => {
-    expect(fillRateHeatColor(FILL_RATE_MAX)).toContain("128");
-    expect(fillRateHeatColor(FILL_RATE_MIN)).toContain("0");
-    expect(fillRateHeatColor(0.6)).not.toBe(fillRateHeatColor(FILL_RATE_MIN));
+  it("maps fill rate to a 0–1 tint strength", () => {
+    expect(fillRateStrength(FILL_RATE_MAX)).toBe(1);
+    expect(fillRateStrength(FILL_RATE_MIN)).toBe(0);
+    expect(fillRateStrength(0.6)).toBeGreaterThan(fillRateStrength(FILL_RATE_MIN));
   });
 
   it("raises fill rate when ticket prices fall", () => {
@@ -78,7 +78,8 @@ describe("club stadium", () => {
     const north = stadium.blocks.find((block) => block.id === "north")!;
     const withRail = normalizeClubStadium({
       ...stadium,
-      precinct: normalizePrecinct(placePrecinctBuilding(emptyPrecinct(), 7, 0, "transit")),
+      // Beside the starter road (x = 8), so the 2×3 stop fits and docks.
+      precinct: normalizePrecinct(placePrecinctBuilding(emptyPrecinct(), 9, 0, "transit")),
     });
     const updated = withRail.blocks.find((block) => block.id === "north")!;
     expect(updated.fill_rate).toBeGreaterThan(north.fill_rate);

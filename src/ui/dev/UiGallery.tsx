@@ -4,7 +4,7 @@
  * this page is for building screens, players never see it.
  */
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { Check, X } from "lucide-react";
+import { Check, Minus, Plus, X } from "lucide-react";
 import { titleBarColors, type KitColors, type TitleBarTheme } from "../shell/title-bar-colors.ts";
 import { ratingBand } from "../design/rating-band.ts";
 import { LeagueTable, LeagueZoneLegend } from "../components/LeagueTable.tsx";
@@ -471,6 +471,15 @@ export function UiGallery() {
                 </span>
                 <input type="range" min={1000} max={4000} defaultValue={2400} />
               </label>
+              <div className="tc-stepper">
+                <button type="button" className="tc-iconbtn" aria-label="Lower price">
+                  <Minus className="tc-icon" aria-hidden />
+                </button>
+                <output className="tc-stepper__value">€ 12</output>
+                <button type="button" className="tc-iconbtn" aria-label="Raise price" disabled>
+                  <Plus className="tc-icon" aria-hidden />
+                </button>
+              </div>
               <div className="tc-chips">
                 <button type="button" className="tc-chip tc-chip--icon" aria-pressed="true">
                   Rotation

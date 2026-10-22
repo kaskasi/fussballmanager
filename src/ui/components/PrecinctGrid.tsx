@@ -1,10 +1,10 @@
 /**
  * WIREFRAME: PRD 14.7 — Gelände-v2
  *
- * Palette 🌭🍺👕🅿️🚌🚇🏃🟩🌱♿🏠 + 🛣️
+ * Palette (Gebäude-Icons) + Straße
  * 18×12 · 2×6-Plättchen L/R
- * 🛣️ Straße ziehen · autoverbinden · Klick auf ⚠️ legt Weg zum Netz
- * Start: Straße Stadt → Arena. Gebäude ohne Netz: ⚠️
+ * Straße ziehen · autoverbinden · Klick auf Warnung legt Weg zum Netz
+ * Start: Straße Stadt → Arena. Gebäude ohne Netz: Warnsymbol
  */
 import { formatClubCash } from "../../economy/club-finances.ts";
 import { infrastructureCostForWeek } from "../../economy/early-pacing.ts";
@@ -35,8 +35,11 @@ import {
   pathArenaToCity,
   pathFootprintToCity,
   precinctBuildingDef,
+  precinctBuildingHint,
+  precinctBuildingLabel,
   precinctBuildingLevel,
   precinctBuildingStageLabel,
+  precinctExpansionLabel,
   precinctPatchRefund,
   precinctExpansionAt,
   precinctExpansionOwned,
@@ -49,7 +52,19 @@ import {
   type PrecinctState,
 } from "../../stadium/precinct.ts";
 import { careerWeekIndex } from "../../stadium/hospitality.ts";
-import { ArrowUp, HardHat, Landmark, Puzzle, Route, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  HardHat,
+  Landmark,
+  Puzzle,
+  Route,
+  SquareMinus,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { useRef, useState, type DragEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
 import { usePrecinctMobileTileSize } from "../hooks/use-precinct-mobile-tile-size.ts";
@@ -256,9 +271,9 @@ export function PrecinctGrid({
   }
 
   return (
-    <section className="stadium-precinct" aria-label="Gelände">
+    <section className="stadium-precinct" aria-label={t("precinct.aria")}>
       <div className="stadium-precinct-cluster">
-      <aside className="stadium-precinct-palette" aria-label="Gebäude">
+      <aside className="stadium-precinct-palette" aria-label={t("precinct.palette.aria")}>
         {PRECINCT_BUILDINGS.map((building) => {
           const count = countBuilding(precinct, building.id);
           const owned = count > 0;
@@ -267,13 +282,16 @@ export function PrecinctGrid({
           const locked = extraCost > 0 && cash < extraCost;
           const level = precinctBuildingLevel(precinct, building.id);
           const upgrade = canUpgradePrecinctBuilding(precinct, building.id, cash);
+          const label = precinctBuildingLabel(building.id);
+          const hint = precinctBuildingHint(building.id);
+          const price = formatClubCash(building.cost);
           const tooltip = locked
-            ? `${building.label} · ${formatClubCash(building.cost)} · zu wenig Cash`
+            ? t("precinct.palette.locked", { building: label, price })
             : uniqueOwned
-              ? `${building.label}${level > 1 ? ` Lv${level}` : ""} · ${building.hint}`
+              ? `${level > 1 ? t("precinct.palette.withLevel", { building: label, level }) : label} · ${hint}`
               : owned
-                ? `${building.label} · weitere ${formatClubCash(building.cost)}`
-                : `${building.label} · ${formatClubCash(building.cost)} · ${building.hint}`;
+                ? t("precinct.palette.another", { building: label, price })
+                : `${label} · ${price} · ${hint}`;
           return (
             <div key={building.id} className="stadium-precinct-palette-item">
               <button
@@ -316,7 +334,7 @@ export function PrecinctGrid({
                 <PrecinctBuildingIcon building={building.id} size={20} />
                 {count > 1 ? <span className="stadium-precinct-count">{count}</span> : null}
                 {uniqueOwned && level > 1 ? (
-                  <span className="stadium-precinct-level">Lv{level}</span>
+                  <span className="stadium-precinct-level">{t("precinct.levelShort", { level })}</span>
                 ) : null}
               </button>
               {upgrade.allowed || (owned && building.maxLevel > 1 && level < building.maxLevel) ? (
@@ -324,7 +342,7 @@ export function PrecinctGrid({
                   type="button"
                   className="stadium-precinct-upgrade"
                   disabled={!upgrade.allowed}
-                  title={upgrade.reason ?? `${building.label} ausbauen`}
+                  title={upgrade.reason ?? t("precinct.palette.upgrade", { building: label })}
                   onClick={() => onUpgrade(building.id)}
                 >
                   {precinctNextUpgradeLabel(building.id, level)}
@@ -345,10 +363,10 @@ export function PrecinctGrid({
             }
             data-tooltip={
               canPaintStreet
-                ? `Straße · ${formatClubCash(PRECINCT_STREET_COST)}/Zelle · ziehen legt · Klick entfernt`
-                : `Straße · Klick auf Feld entfernt · Neubau: ${formatClubCash(PRECINCT_STREET_COST)}`
+                ? t("precinct.street.tooltip", { price: formatClubCash(PRECINCT_STREET_COST) })
+                : t("precinct.street.tooltipNoCash", { price: formatClubCash(PRECINCT_STREET_COST) })
             }
-            aria-label="Straße legen oder entfernen"
+            aria-label={t("precinct.street.aria")}
             onClick={() => {
               setSelectedPatchId(null);
               setSelectedStreet(null);
@@ -360,13 +378,11 @@ export function PrecinctGrid({
         </div>
         <div className="stadium-precinct-hint">
           {roadPlan && roadPlan.cost > 0 ? (
-            <p>Straße {formatClubCash(roadPlan.cost)}</p>
+            <p>{t("precinct.street.cost", { price: formatClubCash(roadPlan.cost) })}</p>
           ) : picked === "street" ? (
             <p>
-              {canPaintStreet
-                ? "Ziehen legt · Klick auf Straße entfernt"
-                : "Nur entfernen (zu wenig Cash für Neubau)"}{" "}
-              · ⚠️ legt Weg zum Netz.
+              {canPaintStreet ? t("precinct.street.hint") : t("precinct.street.hintNoCash")} ·{" "}
+              {t("precinct.street.hintWarn")}
             </p>
           ) : null}
         </div>
@@ -420,10 +436,10 @@ export function PrecinctGrid({
                   key="city-link"
                   className="stadium-precinct-city-link"
                   style={{ gridColumn: `span ${PRECINCT_CITY_LINK.w}` }}
-                  title="Stadtanschluss · Autobahn"
+                  title={t("precinct.city.title")}
                 >
                   <Route size={16} strokeWidth={2.5} aria-hidden="true" />
-                  <strong>Stadt</strong>
+                  <strong>{t("precinct.city.label")}</strong>
                 </div>
               );
             }
@@ -441,7 +457,7 @@ export function PrecinctGrid({
             gridTemplateRows: `repeat(${precinct.height}, ${tileCss})`,
           }}
           role="grid"
-          aria-label="Stadiongelände"
+          aria-label={t("precinct.grid.aria")}
           onDragLeave={(event) => {
             if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
             setDragAnchor(null);
@@ -458,13 +474,13 @@ export function PrecinctGrid({
                   role="gridcell"
                   aria-label={
                     arenaDocked
-                      ? `${stadiumName}, festes Stadion`
-                      : `${stadiumName} · dockt nicht ans Straßennetz`
+                      ? t("precinct.arena.aria", { stadium: stadiumName })
+                      : t("precinct.undocked", { building: stadiumName })
                   }
                   data-tooltip={
                     arenaDocked
-                      ? `${stadiumName} · am Straßennetz`
-                      : `${stadiumName} · dockt nicht · Straßen-Klick legt die Straße`
+                      ? t("precinct.arena.docked", { stadium: stadiumName })
+                      : t("precinct.arena.undockedTip", { stadium: stadiumName })
                   }
                   style={{
                     gridColumn: `${PRECINCT_STADIUM.x + 1} / span ${PRECINCT_STADIUM.w}`,
@@ -474,7 +490,7 @@ export function PrecinctGrid({
                   <Landmark size={22} strokeWidth={2.5} aria-hidden="true" />
                   <strong>{stadiumName}</strong>
                   {arenaDocked ? null : (
-                    <span className="stadium-precinct-dock" aria-label="Braucht Straßennetz">
+                    <span className="stadium-precinct-dock" aria-label={t("precinct.needsNetwork")}>
                       <PrecinctWarnIcon size={12} aria-hidden="true" strokeWidth={2.5} />
                     </span>
                   )}
@@ -485,6 +501,7 @@ export function PrecinctGrid({
             if (patch && (patch.x !== x || patch.y !== y)) return null;
             if (patch) {
               const meta = PRECINCT_BUILDINGS.find((entry) => entry.id === patch.building);
+              const name = precinctBuildingLabel(patch.building);
               const movingHere = selected?.id === patch.id;
               const level = precinctBuildingLevel(precinct, patch.building);
               const hungry = !patchDocksStreetNetwork(precinct, patch);
@@ -499,17 +516,17 @@ export function PrecinctGrid({
               const canShrink = !patchIsMinSize(patch);
               const def = precinctBuildingDef(patch.building);
               const stageLabel = precinctBuildingStageLabel(patch.building, level);
-              const growHandles: Array<{ edge: PrecinctEdge; icon: string; label: string }> = [
-                { edge: "n", icon: "↑", label: "Nach oben" },
-                { edge: "e", icon: "→", label: "Nach rechts" },
-                { edge: "s", icon: "↓", label: "Nach unten" },
-                { edge: "w", icon: "←", label: "Nach links" },
+              const growHandles: Array<{ edge: PrecinctEdge; Icon: LucideIcon; label: string }> = [
+                { edge: "n", Icon: ArrowUp, label: t("precinct.handle.growN") },
+                { edge: "e", Icon: ArrowRight, label: t("precinct.handle.growE") },
+                { edge: "s", Icon: ArrowDown, label: t("precinct.handle.growS") },
+                { edge: "w", Icon: ArrowLeft, label: t("precinct.handle.growW") },
               ];
-              const shrinkHandles: Array<{ edge: PrecinctEdge; icon: string; label: string }> = [
-                { edge: "n", icon: "↓", label: "Oben einziehen" },
-                { edge: "e", icon: "←", label: "Rechts einziehen" },
-                { edge: "s", icon: "↑", label: "Unten einziehen" },
-                { edge: "w", icon: "→", label: "Links einziehen" },
+              const shrinkHandles: Array<{ edge: PrecinctEdge; Icon: LucideIcon; label: string }> = [
+                { edge: "n", Icon: ArrowDown, label: t("precinct.handle.shrinkN") },
+                { edge: "e", Icon: ArrowLeft, label: t("precinct.handle.shrinkE") },
+                { edge: "s", Icon: ArrowUp, label: t("precinct.handle.shrinkS") },
+                { edge: "w", Icon: ArrowRight, label: t("precinct.handle.shrinkW") },
               ];
               return (
                 <div
@@ -533,17 +550,17 @@ export function PrecinctGrid({
                     gridColumn: `${patch.x + 1} / span ${patch.w}`,
                     gridRow: `${patch.y + 1} / span ${patch.h}`,
                   }}
-                  aria-label={meta ? `${meta.label} ${patch.w}×${patch.h}` : "Gebäude"}
+                  aria-label={meta ? `${name} ${patch.w}×${patch.h}` : t("precinct.building.fallback")}
                   data-tooltip={
                     meta
                       ? underConstruction
                         ? hungry
-                          ? `${meta.label} · Bau (${buildWeeksLeft} Wo.) · Straße fehlt`
-                          : `${meta.label} · Bau (${buildWeeksLeft} Wo.)`
+                          ? t("precinct.patch.buildingNoStreet", { building: name, weeks: buildWeeksLeft })
+                          : t("precinct.patch.building", { building: name, weeks: buildWeeksLeft })
                         : hungry
-                          ? `${meta.label} · dockt nicht ans Straßennetz · Straßen-Klick legt die Straße`
-                          : `${meta.label} · ${stageLabel} · ${patch.w}×${patch.h}${canShrink ? " · ⊟ auf min, dann umsetzen" : " · Klick zum Umsetzen"}`
-                      : "Gebäude"
+                          ? t("precinct.patch.undocked", { building: name })
+                          : `${name} · ${stageLabel} · ${patch.w}×${patch.h} · ${canShrink ? t("precinct.patch.shrinkThenMove") : t("precinct.patch.clickToMove")}`
+                      : t("precinct.building.fallback")
                   }
                   onDragOver={(event) => event.preventDefault()}
                   onClick={() => {
@@ -567,12 +584,12 @@ export function PrecinctGrid({
                 >
                   {meta ? <PrecinctBuildingIcon building={patch.building} size={18} /> : null}
                   {patch.constructing ? (
-                    <HardHat className="stadium-constructing-icon" size={14} strokeWidth={2.5} aria-label="Im Bau" />
+                    <HardHat className="stadium-constructing-icon" size={14} strokeWidth={2.5} aria-label={t("precinct.patch.constructing")} />
                   ) : null}
                   {stageLabel ? <em className="stadium-precinct-stage">{stageLabel}</em> : null}
-                  {level > 1 ? <span className="stadium-precinct-level">Lv{level}</span> : null}
+                  {level > 1 ? <span className="stadium-precinct-level">{t("precinct.levelShort", { level })}</span> : null}
                   {hungry ? (
-                    <span className="stadium-precinct-dock" aria-label="Braucht Straßennetz">
+                    <span className="stadium-precinct-dock" aria-label={t("precinct.needsNetwork")}>
                       <PrecinctWarnIcon size={12} aria-hidden="true" strokeWidth={2.5} />
                     </span>
                   ) : null}
@@ -587,12 +604,13 @@ export function PrecinctGrid({
                             className={`stadium-precinct-handle is-${handle.edge}${check.allowed ? "" : " is-blocked"}`}
                             disabled={!check.allowed}
                             title={check.allowed ? handle.label : (check.reason ?? handle.label)}
+                            aria-label={handle.label}
                             onClick={(event) => {
                               event.stopPropagation();
                               nudge(patch, handle.edge, 1);
                             }}
                           >
-                            {handle.icon}
+                            <handle.Icon size={12} strokeWidth={2.5} aria-hidden="true" />
                           </button>
                         );
                       })}
@@ -604,13 +622,14 @@ export function PrecinctGrid({
                             key={`shrink-${handle.edge}`}
                             type="button"
                             className={`stadium-precinct-handle is-shrink is-${handle.edge}`}
-                            title={`${handle.label} · frei`}
+                            title={t("precinct.handle.free", { label: handle.label })}
+                            aria-label={handle.label}
                             onClick={(event) => {
                               event.stopPropagation();
                               nudge(patch, handle.edge, -1);
                             }}
                           >
-                            {handle.icon}
+                            <handle.Icon size={12} strokeWidth={2.5} aria-hidden="true" />
                           </button>
                         );
                       })}
@@ -618,13 +637,14 @@ export function PrecinctGrid({
                         <button
                           type="button"
                           className="stadium-precinct-min"
-                          title={`Auf Mindestgröße ${def.minW}×${def.minH}`}
+                          title={t("precinct.handle.min", { size: `${def.minW}×${def.minH}` })}
+                          aria-label={t("precinct.handle.min", { size: `${def.minW}×${def.minH}` })}
                           onClick={(event) => {
                             event.stopPropagation();
                             onShrinkToMin(patch.id);
                           }}
                         >
-                          ⊟
+                          <SquareMinus size={12} strokeWidth={2.5} aria-hidden="true" />
                         </button>
                       ) : null}
                     </>
@@ -654,13 +674,21 @@ export function PrecinctGrid({
                   disabled={!isNext || !expansion.allowed}
                   aria-label={
                     isNext
-                      ? `Plättchen ${expansionTile.label} · ${formatClubCash(PRECINCT_EXPANSION_COST)}`
-                      : `Plättchen ${expansionTile.label} · später`
+                      ? t("precinct.plate.aria", {
+                          side: precinctExpansionLabel(expansionTile),
+                          price: formatClubCash(PRECINCT_EXPANSION_COST),
+                        })
+                      : t("precinct.plate.ariaLater", { side: precinctExpansionLabel(expansionTile) })
                   }
                   data-tooltip={
                     isNext
-                      ? `Erweiterung · ${expansionTile.label} · 2×6 · ${formatClubCash(PRECINCT_EXPANSION_COST)}`
-                      : `Erst ${expansion.tile?.label ?? "die nächste Seite"} kaufen`
+                      ? t("precinct.plate.tooltip", {
+                          side: precinctExpansionLabel(expansionTile),
+                          price: formatClubCash(PRECINCT_EXPANSION_COST),
+                        })
+                      : expansion.tile
+                        ? t("precinct.plate.buyFirst", { side: precinctExpansionLabel(expansion.tile) })
+                        : t("precinct.plate.buyNextFirst")
                   }
                   onClick={() => {
                     if (picked === "street") return;
@@ -669,7 +697,7 @@ export function PrecinctGrid({
                 >
                   <Puzzle size={18} strokeWidth={2.5} aria-hidden="true" />
                   <strong>2×6</strong>
-                  <em>{isNext ? formatClubCash(PRECINCT_EXPANSION_COST) : expansionTile.label}</em>
+                  <em>{isNext ? formatClubCash(PRECINCT_EXPANSION_COST) : precinctExpansionLabel(expansionTile)}</em>
                 </button>
               );
             }
@@ -683,11 +711,11 @@ export function PrecinctGrid({
               street && selectedStreet?.x === x && selectedStreet?.y === y;
             const label = street
               ? ramp
-                ? "Straße · Stadtanschluss"
-                : "Straße · antippen zum Entfernen"
+                ? t("precinct.cell.streetRamp")
+                : t("precinct.cell.street")
               : ramp
-                ? "Anschluss zur Autobahn"
-                : "Frei";
+                ? t("precinct.cell.ramp")
+                : t("precinct.cell.free");
             return (
               <button
                 key={`${x},${y}`}
@@ -708,7 +736,7 @@ export function PrecinctGrid({
                     .join(" ")
                 }
                 style={{ gridColumn: x + 1, gridRow: y + 1 }}
-                aria-label={`Zelle ${x + 1},${y + 1} · ${label}`}
+                aria-label={t("precinct.cell.aria", { x: x + 1, y: y + 1, label })}
                 data-tooltip={label}
                 onDragOver={(event) => {
                   event.preventDefault();
@@ -805,7 +833,7 @@ export function PrecinctGrid({
                 <PrecinctBuildingIcon building={selected.building} size={18} />
               </span>
               <p className="stadium-precinct-detail-line">
-                <strong>{selectedDef.label}</strong>
+                <strong>{precinctBuildingLabel(selected.building)}</strong>
                 <span className="stadium-precinct-detail-meta">
                   {" · "}
                   {precinctBuildingStageLabel(selected.building, selectedLevel)} · {selected.w}×{selected.h}
@@ -828,7 +856,7 @@ export function PrecinctGrid({
                 title={
                   selectedUpgrade.allowed
                     ? `${formatClubCash(selectedUpgrade.cost)} · ${precinctNextUpgradeLabel(selected.building, selectedLevel)}`
-                    : (selectedUpgrade.reason ?? "Ausbau nicht möglich")
+                    : (selectedUpgrade.reason ?? t("precinct.detail.upgradeBlocked"))
                 }
                 onClick={() => onUpgrade(selected.building)}
               >
@@ -841,7 +869,7 @@ export function PrecinctGrid({
             <button
               type="button"
               className="stadium-precinct-detail-remove"
-              title={`Abreißen · ${formatClubCash(selectedRefund)} zurück`}
+              title={t("precinct.detail.demolish", { amount: formatClubCash(selectedRefund) })}
               onClick={() => {
                 onRemovePatch(selected.id);
                 setSelectedPatchId(null);

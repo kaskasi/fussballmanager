@@ -159,6 +159,8 @@ Mit den Transfers (F1) dazugekommen: `tc-deal(s)` (Marktkarte), `tc-callout` (St
 
 Mit dem Spielerprofil (F1) dazugekommen: `tc-menu` (⋮-Menü mit Hinweis je Eintrag), `tc-range` (Schieberegler mit Wert), `tc-chip--icon`, `tc-talk` (Vertragsgespräch, auch in der Transfer-Verhandlung); Bildschirm-Layout in `design/surfaces/profile.css`.
 
+Mit dem Stadion (F1) dazugekommen: `tc-stepper` / `tc-stepper__value` (−/+ um einen Wert; Ticketpreis, Imbisspreise, Sponsor-Laufzeit auf dem Handy); Bildschirm-Layout in `design/surfaces/stadium.css`.
+
 Mit dem Kader (F1) dazugekommen: `tc-select`, `tc-check(s)`, `tc-cards` / `tc-card`, `tc-stack`, `tc-empty-state`, `tc-state--good/mid/low`, `tc-namecell`, `tc-row--link`, `tc-list__item--wide` / `--stack-narrow`, `tc-btn--sm`, `tc-chip--dense`, `tc-chips--toolbar`. **Gemeinsame Bausteine, die jetzt überall gelten:** Screen-Tabs (`FmScreenTabBar`, `.fm-tab` im tc-Look ohne Gelb), Filter-Chips, Sortierköpfe (`SquadSortHeader`).
 
 Mit dem Ligen-Screen (F1) dazugekommen: `tc-page-head` / `tc-page-title` / `tc-page-sub` (ein Kopf pro Screen), `tc-tabs--page` + `tc-tab__meta`, `tc-split` (Haupt- + Seitenspalte), `tc-linkbtn` (Namen in Tabellen), `tc-place` (Platz mit Zone), `tc-row--mark`, `tc-form__r--empty`, `tc-spark`, `tc-list` (Ranglisten), `tc-section`, `tc-empty`, `tc-stats` (Kennzahl-Kacheln), `tc-hide-narrow`. React: `ModalShell variant="tc"` (Escape schließt, Fokus auf Schließen), `ratingBand()` in `src/ui/design/rating-band.ts`.
@@ -420,6 +422,16 @@ Zusätzlich eine übergreifende Regel, die die drei Tabs verbindet:
 ```
 
 Damit hat der Stadion-Screen jetzt dieselbe Lesehilarchie wie Hub und Profil: oberer Strip = Scoreboard, links/oben = Interaktion, rechts = Effekte/Erlös.
+
+**Umsetzung (F1, siebter migrierter Screen — gilt vor der Skizze oben):**
+- Kopf über allen Tabs: `tc-page-head` mit Stadionname und Stat-Strip (Plätze · Ø Ticket · Heimspiel · Fanbase mit Lucide-Stimmungs-Icon und Wochen-Trend als `tc-delta`); auf dem Handy zweispaltig ohne Trennpunkte. Das Foto bleibt als schmales dekoratives Band; laufende Bauvorhaben zeigt weiter `ConstructionCapacityPanel`.
+- Tabs: `FmScreenTabBar` Grundriss · Gelände · Ausbau, in EN/DE/ZH.
+- Grundriss: `tc-split` — links der SVG-Plan (Rasen `--accent-soft`, Tribünen in `--accent`, Deckkraft nach Auslastung über `fillRateStrength`; gewählte Tribüne mit `--text`-Rand; Kürzel N/S/W/O/VIP übersetzt; Trikot-Slot als `tc-chip--dense` mitten im Plan). Rechts das Sektor-Detail als `tc-panel`: Stufen-Icon, Name, Stufe · Plätze, Auslastung als `tc-bar` mit Basis-Marke und Abweichung, Ticketpreis als `tc-stepper` (an den Grenzen gesperrt), Banden als `tc-chip--dense`, Eintritt pro Heimspiel als Display-Zahl; Bauzeit als `tc-callout--warn`. Die isometrischen Tribünen-Zeichnungen und Stufen-Emoji sind entfallen.
+- Ausbau: Tribünen und Nachwuchs als `tc-card`-Raster (`tc-panel` je Kategorie); Stufenpunkte, nächste Kapazität, Wochen offline, Ausbau-Button mit Preis (`tc-btn`, gesperrt mit sichtbarem Grund); ausgebaute Karten mit ✓ auf `--sunken`. Nachwuchs-Karten mit Name und Wirkung in der Sprache des Spiels.
+- Sponsor-Modal: `ModalShell variant="tc"`; Marken als `tc-chip`, Laufzeit und Wochenbetrag als `tc-range` (Handy: `tc-stepper`), Erfolgsprämien als `tc-check`, Urteil als `tc-callout--ok/no`. Slot-Namen und Marken-Hinweise übersetzt.
+- Gelände: Struktur unverändert (Palette, Raster, Effekte-Leiste). Farben auf Rollen-Tokens (Straßen und dunkle Chips `--text` auf `--panel`, Auswahl `--accent`, Warnung `--warning`, Abriss `--negative`, Gebäude-Stufen über `--series-*`); Griffe als Lucide-Pfeile statt Unicode; Gebäude-, Stufen- und Seitennamen, Hinweise, Gründe und Effekt-Zeilen in EN/DE/ZH, Zahlen im Format der Sprache. Kleinst-Beschriftungen in den 30-px-Kacheln behalten ihre festen Größen.
+- Bau-Bestätigung (`SpendConfirmSheet`, auch von Jugend genutzt) und Bau-Meldungen im Postfach übersetzt; Gebäude ohne Emoji im Titel.
+- Offen aus der Skizze: Badges für VIP-Hinweise an den Segmenten, Feier-Animation bei 14/14.
 
 ---
 

@@ -1,19 +1,19 @@
 /**
- * WIREFRAME: PRD 14.7 / 11.10 — F6.5 Sponsor-Modal
+ * WIREFRAME: PRD 14.7 / 11.10 — F6.5 Sponsor-Modal (tc modal, design.md §9.3)
  *
  * ┌─────────────────────────────────────┐
- * │ Megaphone · Nordkurve A             │
- * │ [brand initials] …                  │
+ * │ Werbefläche · Megaphone Nordkurve A │
+ * │ (brand chips) · brand hint          │
  * │ Laufzeit ──●── 2 Saisons            │
- * │ Wochenbetrag ──●── € 7k             │
- * │ Goal Top scorer · Trophy Meister    │
- * │ Angry/Handshake verdict             │
- * │ [Handschlag] [Abbrechen]            │
+ * │ Wochenbetrag ──●── € 7k · Maximum   │
+ * │ [x] Torschützenkönig  [ ] Meister   │
+ * │ Handshake/Angry verdict (callout)   │
+ * │            [Abbrechen] [Handschlag] │
  * └─────────────────────────────────────┘
  */
 import { useState } from "react";
 import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
-import { Angry, Goal, Handshake, Megaphone, Shirt, Trophy } from "lucide-react";
+import { Angry, Goal, Handshake, Megaphone, Minus, Plus, Shirt, Trophy } from "lucide-react";
 import { formatClubCash } from "../../economy/club-finances.ts";
 import { useT } from "../../i18n/react.ts";
 import { ModalShell } from "./primitives/ModalShell.tsx";
@@ -27,15 +27,16 @@ import {
   SPONSOR_SEASON_MIN,
   sponsorAskMax,
   sponsorBrandById,
+  sponsorBrandHint,
+  sponsorSlotLabel,
   sponsorWeeklyCap,
   type SponsorDeal,
   type SponsorOffer,
   type SponsorSlot,
 } from "../../stadium/sponsor-deals.ts";
 
-function brandInitial(name: string): string {
-  return name.trim().slice(0, 1).toUpperCase() || "?";
-}
+const WEEKLY_MIN = 1_000;
+const WEEKLY_STEP = 500;
 
 export function SponsorDealModal({
   slot,
@@ -76,7 +77,8 @@ export function SponsorDealModal({
   const verdict = evaluateSponsorOffer(slot.id, offer);
   const occupied = deal != null;
   const SlotIcon = slot.kind === "shirt" ? Shirt : Megaphone;
-  const bonusDisplay = formatClubCash(SPONSOR_BONUS_PAYOUT);
+  const bonusDisplay = `+${formatClubCash(SPONSOR_BONUS_PAYOUT)}`;
+  const slotLabel = sponsorSlotLabel(slot);
 
   function patch(partial: Partial<SponsorOffer>) {
     setOffer((previous) => {
@@ -84,161 +86,152 @@ export function SponsorDealModal({
       const ceiling = sponsorAskMax(slot.id, next.seasons);
       return {
         ...next,
-        weeklyAmount: Math.min(Math.max(1_000, next.weeklyAmount), ceiling),
+        weeklyAmount: Math.min(Math.max(WEEKLY_MIN, next.weeklyAmount), ceiling),
       };
     });
   }
 
-  const panelClass = occupied
-    ? "negotiation-modal sponsor-deal-modal"
-    : "negotiation-modal sponsor-deal-modal sponsor-deal-modal--hunger";
+  const footer = occupied ? (
+    <button type="button" className="tc-btn" onClick={onClose}>
+      {t("sponsor.modal.close")}
+    </button>
+  ) : (
+    <>
+      <button type="button" className="tc-btn tc-btn--ghost" onClick={onClose}>
+        {t("sponsor.modal.cancel")}
+      </button>
+      <button
+        type="button"
+        className="tc-btn tc-btn--primary"
+        disabled={!verdict.accepted}
+        onClick={() => onSign(offer)}
+      >
+        <Handshake className="tc-icon" aria-hidden />
+        {t("sponsor.modal.handshake")}
+      </button>
+    </>
+  );
 
   return (
     <ModalShell
-      ariaLabel={slot.label}
+      variant="tc"
+      ariaLabel={slotLabel}
       onClose={onClose}
-      showCloseButton={false}
-      panelClassName={panelClass}
-      bodyClassName=""
-    >
-        <header className="negotiation-head">
-          <p className="eyebrow">
+      footer={footer}
+      title={
+        <>
+          <span className="tc-label">
             {occupied ? t("sponsor.modal.eyebrowActive") : t("sponsor.modal.eyebrowEmpty")}
-          </p>
-          <h2 id="sponsor-deal-title" className="sponsor-deal-title">
-            <SlotIcon size={20} strokeWidth={2.5} aria-hidden className="sponsor-deal-title-icon" />
-            {slot.label}
+          </span>
+          <h2 className="tc-modal__title tc-sponsor__title">
+            <SlotIcon className="tc-icon" aria-hidden />
+            {slotLabel}
           </h2>
-          {brand ? <p className="stadium-sub">{brand.name}</p> : null}
-        </header>
-
-        {occupied && deal ? (
-          <>
-            <ul className="sponsor-deal-facts">
-              <li>
-                <span>{t("sponsor.modal.term")}</span>
-                <strong>
-                  {t("sponsor.modal.termRemaining", {
-                    seasons: deal.seasons,
-                    left: dealSeasonsLeft(deal, season),
-                  })}
-                </strong>
-              </li>
-              <li>
-                <span>{t("sponsor.modal.weekly")}</span>
-                <strong>{formatClubCash(deal.weeklyAmount)}</strong>
-              </li>
-              <li>
-                <span className="sponsor-deal-fact-label">
-                  <Goal size={14} strokeWidth={2.5} aria-hidden />
-                  {t("sponsor.modal.bonusTopScorer")}
-                </span>
-                <strong>{deal.bonusTopScorer ? `+${bonusDisplay}` : "—"}</strong>
-              </li>
-              <li>
-                <span className="sponsor-deal-fact-label">
-                  <Trophy size={14} strokeWidth={2.5} aria-hidden />
-                  {t("sponsor.modal.bonusTitle")}
-                </span>
-                <strong>{deal.bonusLeagueTitle ? `+${bonusDisplay}` : "—"}</strong>
-              </li>
-            </ul>
-            <footer className="negotiation-actions">
-              <button type="button" className="negotiation-btn" onClick={onClose}>
-                {t("sponsor.modal.close")}
-              </button>
-            </footer>
-          </>
-        ) : (
-          <>
-            <div className="sponsor-brand-grid" role="group" aria-label={t("sponsor.modal.brandsAria")}>
+          {brand ? <p className="tc-modal__sub">{brand.name}</p> : null}
+        </>
+      }
+    >
+      {occupied && deal ? (
+        <dl className="tc-kv">
+          <dt>{t("sponsor.modal.term")}</dt>
+          <dd>
+            {t("sponsor.modal.termRemaining", {
+              seasons: deal.seasons,
+              left: dealSeasonsLeft(deal, season),
+            })}
+          </dd>
+          <dt>{t("sponsor.modal.weekly")}</dt>
+          <dd>{formatClubCash(deal.weeklyAmount)}</dd>
+          <dt className="tc-sponsor__fact">
+            <Goal className="tc-icon" aria-hidden />
+            {t("sponsor.modal.bonusTopScorer")}
+          </dt>
+          <dd>{deal.bonusTopScorer ? bonusDisplay : "—"}</dd>
+          <dt className="tc-sponsor__fact">
+            <Trophy className="tc-icon" aria-hidden />
+            {t("sponsor.modal.bonusTitle")}
+          </dt>
+          <dd>{deal.bonusLeagueTitle ? bonusDisplay : "—"}</dd>
+        </dl>
+      ) : (
+        <>
+          <div className="tc-stack tc-sponsor__brands">
+            <div className="tc-chips" role="group" aria-label={t("sponsor.modal.brandsAria")}>
               {SPONSOR_BRANDS.map((entry) => {
                 const taken = takenBrandKeys.has(entry.id) || takenBrandKeys.has(entry.name);
                 return (
                   <button
                     key={entry.id}
                     type="button"
-                    className={
-                      offer.brandId === entry.id
-                        ? "sponsor-brand is-on"
-                        : taken
-                          ? "sponsor-brand is-taken"
-                          : "sponsor-brand"
-                    }
+                    className="tc-chip"
+                    aria-pressed={offer.brandId === entry.id}
                     disabled={taken}
-                    title={
-                      taken
-                        ? t("sponsor.modal.brandTaken", { name: entry.name })
-                        : entry.hint
-                    }
+                    title={taken ? t("sponsor.modal.brandTaken", { name: entry.name }) : sponsorBrandHint(entry)}
                     onClick={() => patch({ brandId: entry.id })}
                   >
-                    <span className="sponsor-brand-mark" aria-hidden="true">
-                      {brandInitial(entry.name)}
-                    </span>
                     {entry.name}
                   </button>
                 );
               })}
             </div>
-            {brand ? <p className="sponsor-brand-hint">{brand.hint}</p> : null}
+            {brand ? <p className="tc-caption">{sponsorBrandHint(brand)}</p> : null}
+          </div>
 
-            <SponsorTermControl
-              mobileNarrow={mobileNarrow}
-              seasons={offer.seasons}
-              onChange={(seasons) => patch({ seasons })}
-            />
-            <SponsorWeeklyControl
-              mobileNarrow={mobileNarrow}
-              weeklyAmount={offer.weeklyAmount}
-              cap={cap}
-              askMax={askMax}
-              onChange={(weeklyAmount) => patch({ weeklyAmount })}
-              onSetCap={() => patch({ weeklyAmount: cap })}
-            />
-            <div className="sponsor-bonus-row" role="group" aria-label={t("sponsor.modal.bonusAria")}>
-              <button
-                type="button"
-                className={offer.bonusTopScorer ? "sponsor-bonus is-on" : "sponsor-bonus"}
-                onClick={() => patch({ bonusTopScorer: !offer.bonusTopScorer })}
-              >
-                <Goal size={16} aria-hidden strokeWidth={2.5} />
-                {t("sponsor.modal.bonusTopScorer")}
-                <strong>+{bonusDisplay}</strong>
-              </button>
-              <button
-                type="button"
-                className={offer.bonusLeagueTitle ? "sponsor-bonus is-on" : "sponsor-bonus"}
-                onClick={() => patch({ bonusLeagueTitle: !offer.bonusLeagueTitle })}
-              >
-                <Trophy size={16} aria-hidden strokeWidth={2.5} />
-                {t("sponsor.modal.bonusTitle")}
-                <strong>+{bonusDisplay}</strong>
-              </button>
-            </div>
-            <p className={verdict.accepted ? "sponsor-deal-verdict is-ok" : "sponsor-deal-verdict is-no"}>
-              {verdict.accepted ? (
-                <Handshake size={16} aria-hidden strokeWidth={2.5} className="negotiation-verdict-icon" />
-              ) : (
-                <Angry size={16} aria-hidden strokeWidth={2.5} className="negotiation-verdict-icon" />
-              )}{" "}
-              {verdict.reason}
-            </p>
-            <footer className="negotiation-actions">
-              <button
-                type="button"
-                className="negotiation-btn negotiation-btn-primary"
-                disabled={!verdict.accepted}
-                onClick={() => onSign(offer)}
-              >
-                {t("sponsor.modal.handshake")}
-              </button>
-              <button type="button" className="negotiation-btn" onClick={onClose}>
-                {t("sponsor.modal.cancel")}
-              </button>
-            </footer>
-          </>
-        )}
+          <SponsorTermControl
+            mobileNarrow={mobileNarrow}
+            seasons={offer.seasons}
+            onChange={(seasons) => patch({ seasons })}
+          />
+          <SponsorWeeklyControl
+            mobileNarrow={mobileNarrow}
+            weeklyAmount={offer.weeklyAmount}
+            cap={cap}
+            askMax={askMax}
+            onChange={(weeklyAmount) => patch({ weeklyAmount })}
+            onSetCap={() => patch({ weeklyAmount: cap })}
+          />
+
+          <ul className="tc-checks tc-sponsor__bonuses" aria-label={t("sponsor.modal.bonusAria")}>
+            <li>
+              <label className="tc-check">
+                <input
+                  type="checkbox"
+                  checked={offer.bonusTopScorer}
+                  onChange={(event) => patch({ bonusTopScorer: event.target.checked })}
+                />
+                <Goal className="tc-icon" aria-hidden />
+                <span className="tc-check__copy">
+                  <span className="tc-check__title">{t("sponsor.modal.bonusTopScorer")}</span>
+                  <span className="tc-check__hint">{bonusDisplay}</span>
+                </span>
+              </label>
+            </li>
+            <li>
+              <label className="tc-check">
+                <input
+                  type="checkbox"
+                  checked={offer.bonusLeagueTitle}
+                  onChange={(event) => patch({ bonusLeagueTitle: event.target.checked })}
+                />
+                <Trophy className="tc-icon" aria-hidden />
+                <span className="tc-check__copy">
+                  <span className="tc-check__title">{t("sponsor.modal.bonusTitle")}</span>
+                  <span className="tc-check__hint">{bonusDisplay}</span>
+                </span>
+              </label>
+            </li>
+          </ul>
+
+          <p className={verdict.accepted ? "tc-callout tc-callout--ok" : "tc-callout tc-callout--no"} role="status">
+            {verdict.accepted ? (
+              <Handshake className="tc-icon" aria-hidden />
+            ) : (
+              <Angry className="tc-icon" aria-hidden />
+            )}{" "}
+            {verdict.reason}
+          </p>
+        </>
+      )}
     </ModalShell>
   );
 }
@@ -253,42 +246,49 @@ function SponsorTermControl({
   onChange: (seasons: number) => void;
 }) {
   const t = useT();
-  return (
-    <label className="profile-talk-row sponsor-negotiation-row">
-      <span>
-        {t("sponsor.modal.term")}{" "}
-        <strong>{t("sponsor.modal.termValue", { seasons })}</strong>
-      </span>
-      {mobileNarrow ? (
-        <div className="sponsor-negotiation-stepper">
+  const valueLabel = t("sponsor.modal.termValue", { seasons });
+  if (mobileNarrow) {
+    return (
+      <div className="tc-sponsor__row">
+        <span className="tc-label">{t("sponsor.modal.term")}</span>
+        <div className="tc-stepper">
           <button
             type="button"
+            className="tc-iconbtn"
             aria-label={t("sponsor.modal.termDecrease")}
             disabled={seasons <= SPONSOR_SEASON_MIN}
             onClick={() => onChange(seasons - 1)}
           >
-            −
+            <Minus className="tc-icon" aria-hidden />
           </button>
-          <span className="sponsor-negotiation-stepper-value">{seasons}</span>
+          <output className="tc-stepper__value tc-sponsor__value">{valueLabel}</output>
           <button
             type="button"
+            className="tc-iconbtn"
             aria-label={t("sponsor.modal.termIncrease")}
             disabled={seasons >= SPONSOR_SEASON_MAX}
             onClick={() => onChange(seasons + 1)}
           >
-            +
+            <Plus className="tc-icon" aria-hidden />
           </button>
         </div>
-      ) : (
-        <input
-          type="range"
-          min={SPONSOR_SEASON_MIN}
-          max={SPONSOR_SEASON_MAX}
-          step={1}
-          value={seasons}
-          onChange={(event) => onChange(Number(event.target.value))}
-        />
-      )}
+      </div>
+    );
+  }
+  return (
+    <label className="tc-range">
+      <span className="tc-range__head">
+        <span>{t("sponsor.modal.term")}</span>
+        <strong>{valueLabel}</strong>
+      </span>
+      <input
+        type="range"
+        min={SPONSOR_SEASON_MIN}
+        max={SPONSOR_SEASON_MAX}
+        step={1}
+        value={seasons}
+        onChange={(event) => onChange(Number(event.target.value))}
+      />
     </label>
   );
 }
@@ -310,45 +310,61 @@ function SponsorWeeklyControl({
 }) {
   const t = useT();
   const value = Math.min(askMax, weeklyAmount);
-  return (
-    <label className="profile-talk-row sponsor-negotiation-row">
-      <span>
-        {t("sponsor.modal.weekly")} <strong>{formatClubCash(value)}</strong>
-        <em>{t("sponsor.modal.weeklyCap", { cap: formatClubCash(cap) })}</em>
-      </span>
-      {mobileNarrow ? (
-        <div className="sponsor-negotiation-stepper sponsor-negotiation-stepper--wide">
+  const capLabel = t("sponsor.modal.weeklyCap", { cap: formatClubCash(cap) });
+  const capButton = (
+    <button type="button" className="tc-btn tc-btn--sm tc-btn--ghost" onClick={onSetCap}>
+      {t("sponsor.modal.useCap", { cap: formatClubCash(cap) })}
+    </button>
+  );
+  if (mobileNarrow) {
+    return (
+      <div className="tc-sponsor__row">
+        <span className="tc-label">{t("sponsor.modal.weekly")}</span>
+        <div className="tc-stepper">
           <button
             type="button"
+            className="tc-iconbtn"
             aria-label={t("sponsor.modal.weeklyDecrease")}
-            disabled={value <= 1_000}
-            onClick={() => onChange(value - 500)}
+            disabled={value <= WEEKLY_MIN}
+            onClick={() => onChange(value - WEEKLY_STEP)}
           >
-            −
+            <Minus className="tc-icon" aria-hidden />
           </button>
-          <span className="sponsor-negotiation-stepper-value">{formatClubCash(value)}</span>
+          <output className="tc-stepper__value tc-sponsor__value">{formatClubCash(value)}</output>
           <button
             type="button"
+            className="tc-iconbtn"
             aria-label={t("sponsor.modal.weeklyIncrease")}
             disabled={value >= askMax}
-            onClick={() => onChange(value + 500)}
+            onClick={() => onChange(value + WEEKLY_STEP)}
           >
-            +
+            <Plus className="tc-icon" aria-hidden />
           </button>
         </div>
-      ) : (
+        <span className="tc-caption">{capLabel}</span>
+        {capButton}
+      </div>
+    );
+  }
+  return (
+    <div className="tc-sponsor__weekly">
+      <label className="tc-range">
+        <span className="tc-range__head">
+          <span>
+            {t("sponsor.modal.weekly")} <span className="tc-caption">{capLabel}</span>
+          </span>
+          <strong>{formatClubCash(value)}</strong>
+        </span>
         <input
           type="range"
-          min={1_000}
+          min={WEEKLY_MIN}
           max={askMax}
-          step={500}
+          step={WEEKLY_STEP}
           value={value}
           onChange={(event) => onChange(Number(event.target.value))}
         />
-      )}
-      <button type="button" className="sponsor-negotiation-cap-btn" onClick={onSetCap}>
-        {t("sponsor.modal.useCap", { cap: formatClubCash(cap) })}
-      </button>
-    </label>
+      </label>
+      {capButton}
+    </div>
   );
 }

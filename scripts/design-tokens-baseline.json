@@ -1,8 +1,8 @@
 {
   "files": {
     "src/index.css": {
-      "colors": 1151,
-      "fontSizes": 437
+      "colors": 920,
+      "fontSizes": 381
     },
     "src/match/pitch-markings.tsx": {
       "colors": 3,
@@ -24,10 +24,6 @@
       "colors": 6,
       "fontSizes": 0
     },
-    "src/ui/design/surfaces/finances.css": {
-      "colors": 0,
-      "fontSizes": 1
-    },
     "src/ui/design/surfaces/hub-desk.css": {
       "colors": 2,
       "fontSizes": 0
@@ -41,16 +37,12 @@
       "fontSizes": 53
     },
     "src/ui/layout/mobile-pass.css": {
-      "colors": 11,
-      "fontSizes": 11
+      "colors": 3,
+      "fontSizes": 8
     },
     "src/ui/layout/screen-layout.css": {
       "colors": 2,
       "fontSizes": 7
-    },
-    "src/ui/screens/StadiumScreen.tsx": {
-      "colors": 12,
-      "fontSizes": 0
     },
     "src/ui/screens/TrainingCenter.tsx": {
       "colors": 3,

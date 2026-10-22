@@ -1,0 +1,343 @@
+/* Stadium (design.md §9.3 "Umsetzung"): stat strip, pitch plan + sector detail, upgrade cards, sponsor modal. Tokens only. */
+
+/* Stat strip: one line of facts separated by middots */
+.tc-stadium__strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.tc-stadium__strip > span + span::before {
+  content: "·";
+  margin-right: var(--space-2);
+  color: var(--line-strong);
+}
+
+/* Phones: two columns of facts, no separators */
+@media (max-width: 719px) {
+  .tc-stadium__strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tc-stadium__strip > span + span::before {
+    content: none;
+  }
+
+  .tc-stadium__fanbase {
+    grid-column: 1 / -1;
+  }
+}
+
+.tc-stadium__fanbase {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.tc-stadium__fanbase .tc-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+}
+
+/* Decorative photo strip under the head */
+.tc-stadium__photo {
+  min-height: 6rem;
+  margin: 0 0 var(--space-4);
+  border-radius: var(--radius-md);
+}
+
+/* Grundriss: plan left, sector detail right (stacks below 1024px) */
+@media (min-width: 1024px) {
+  .tc-stadium__plan {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+  }
+}
+
+.tc-stadium__map {
+  position: relative;
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.tc-stadium__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.tc-stadium__pitch {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.tc-stadium__marking {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-opacity: 0.6;
+}
+
+/* Stand segments: one hue, light-to-dark by fill rate (fill-opacity set inline) */
+.tc-stadium__zone {
+  fill: var(--accent);
+  stroke: var(--panel);
+  stroke-width: 2;
+  cursor: pointer;
+}
+
+.tc-stadium__zone:hover {
+  stroke: var(--control-border);
+}
+
+.tc-stadium__zone:focus-visible {
+  outline: none;
+  stroke: var(--accent-strong);
+  stroke-width: 3;
+}
+
+.tc-stadium__zone--selected,
+.tc-stadium__zone--selected:hover {
+  stroke: var(--text);
+  stroke-width: 2.5;
+}
+
+.tc-stadium__zone-label {
+  fill: var(--text);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--font-size-sm);
+}
+
+.tc-stadium__shirt {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.tc-stadium__warn {
+  color: var(--warning);
+}
+
+/* Sector detail */
+.tc-stadium__detail {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.tc-stadium__detail-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.tc-stadium__detail-head > .tc-icon {
+  margin-top: var(--space-2);
+  color: var(--text-muted);
+}
+
+.tc-stadium__detail-head .tc-panel__title {
+  margin: 0;
+}
+
+.tc-stadium__detail-head .tc-caption {
+  margin: 0;
+}
+
+.tc-stadium__fill {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.tc-stadium__fill .tc-caption {
+  margin: 0;
+}
+
+.tc-stadium__fill-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+
+.tc-stadium__bar {
+  position: relative;
+  height: var(--space-3);
+  overflow: visible;
+}
+
+.tc-stadium__bar .tc-bar__fill {
+  border-radius: var(--radius-pill);
+}
+
+.tc-stadium__fill--low {
+  background: var(--negative);
+}
+
+/* Reference mark: the stand's base fill rate */
+.tc-stadium__ref {
+  position: absolute;
+  top: calc(-1 * var(--space-1));
+  bottom: calc(-1 * var(--space-1));
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
+}
+
+.tc-stadium__row {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.tc-stadium__gate {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.tc-stadium__gate strong {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  line-height: 1.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ausbau: upgrade cards */
+.tc-stadium__upgrades {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tc-stadium__upgrade {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.tc-stadium__upgrade > .tc-btn {
+  justify-self: start;
+}
+
+.tc-stadium__upgrade--done {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  background: var(--sunken);
+}
+
+.tc-stadium__upgrade-main {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.tc-stadium__upgrade-main p {
+  margin: 0;
+}
+
+.tc-stadium__reason {
+  color: var(--warning);
+}
+
+.tc-stadium__done {
+  color: var(--positive);
+}
+
+.tc-stadium__dots {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.tc-stadium__dot {
+  width: var(--space-3);
+  height: var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+}
+
+.tc-stadium__dot--on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.tc-stadium__academy-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+/* Sponsor modal */
+.tc-sponsor__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tc-sponsor__title .tc-icon {
+  color: var(--text-muted);
+}
+
+.tc-sponsor__fact {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.tc-sponsor__fact .tc-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.tc-sponsor__brands {
+  gap: var(--space-2);
+}
+
+.tc-sponsor__brands .tc-caption {
+  margin: 0;
+}
+
+.tc-sponsor__weekly {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.tc-sponsor__weekly > .tc-btn,
+.tc-sponsor__row > .tc-btn {
+  justify-self: start;
+}
+
+.tc-sponsor__row {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.tc-sponsor__value {
+  min-width: 7rem;
+  font-size: var(--font-size-lg);
+  line-height: 1.5rem;
+}
+
+.tc-sponsor__bonuses {
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.tc-sponsor__bonuses + .tc-callout {
+  margin-top: var(--space-4);
+}
+
+.tc-modal .tc-callout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}

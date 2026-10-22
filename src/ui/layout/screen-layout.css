@@ -80,7 +80,6 @@ main.help.club-shell-card-body .fm-tab-bar + .help-panel {
   padding-top: 1rem;
 }
 
-main.finances.club-shell-card-body,
 main.merchandising.club-shell-card-body,
 main.settings.club-shell-card-body {
   max-width: 80rem;
@@ -278,18 +277,6 @@ main.scouting.club-shell-card-body .scouting-scouts {
   color: var(--tinte-weich);
   cursor: pointer;
   margin-bottom: 0.25rem;
-}
-
-.finances-hero-grid {
-  display: grid;
-  gap: 1rem;
-}
-
-@media (min-width: 768px) {
-  .finances-hero-grid {
-    grid-template-columns: minmax(0, 1fr) min(320px, 32%);
-    align-items: start;
-  }
 }
 
 /** P2 mobile pass (~390px): no page scroll, touch-friendly CTAs (playtest_ideas.md). */

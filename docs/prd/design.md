@@ -57,6 +57,8 @@ Komponenten-Verträge, CSS-Kaskade, Migrations-Phasen und Screen-Audits leben in
 
 `src/ui/design/design-repair.css` is imported **after** `design-tokens.css` and `game-surfaces.css` in `main.tsx`. It is **not** a third design system: it applies legacy “repair P0” rules that still sit outside token-only screens (page background on non-shell routes, `--outline-tinte` hairline on legacy `.panel` / `.card` selectors, circular nav tab pills, NEXT colours). New UI must use **tokens + `components.css`** only; extend repair only when unblocking a legacy route — prefer migrating rules into tokens/game-surfaces and deleting repair over time.
 
+**Diagramm-Reihen (F1, Finanzen):** `--series-1…6` sind die kategorialen Farben für Diagramme — feste Reihenfolge, nie zyklisch, je Theme eigene Stufen (Hell/Dunkel) und mit dem dataviz-Validator geprüft (CVD-Abstand, Normalsicht-Abstand). Im hellen Theme liegen drei Stufen unter 3:1 Kontrast zum Panel: deshalb immer Legende mit Text und eine Tabellen-Ansicht. Grün (Status „positiv“) ist bewusst keine Reihe. Statusfarben (`--positive` …) sind nie Reihenfarben.
+
 ### 2.2 Abstände, Radien, Größen
 
 - Abstand: `--space-1/2/3/4/6/8/12` = N × 4px. (`--space-5` ist ein Legacy-Schritt, nicht verwenden.)
@@ -319,6 +321,16 @@ H1 "Finanzen · Monat 1"                     [Monat ◀ ▶]
 - KPI-Karten: gestapelt in Context-Spalte.
 
 **Runway / Bank (F6.6-A, PRD 11.12):** Tab **Runway** (oder Unterpanel) zeigt neben Runway-Wochen eine **Bank**-Karte: Restschuld, Rate/Woche, Ampel „Bank sagt ja/nein“, Slider Darlehensbetrag. Story-Kanäle (Fan-Anteil, Knochenbrecher, …) **nur** Postfach — keine zweite Bank-Karte im Content. Kein gelber Fortschritts-CTA (§10).
+
+**Umsetzung (F1, sechster migrierter Screen — gilt vor der Skizze oben):**
+- Tabs: gemeinsame `FmScreenTabBar` (Übersicht · Commerce · Merch · Eintritt · Runway · Saison), alle Bezeichnungen in EN/DE/ZH.
+- Übersicht: `tc-split` — links `tc-panel` mit Saldo und je Posten Lucide-Icon, Name, Balken (Einnahmen `--positive`, Ausgaben `--negative`, gemeinsame Skala) und Betrag mit Vorzeichen; rechts KPI-Kacheln (`tc-stats`, gestapelt): Kasse, Transfer-Topf, Gehalts-Cap mit `tc-bar`, Merchandising.
+- Commerce: Imbiss und Stadion als `tc-panel` + `tc-kv`; Würstchen- und Bierpreis als Stepper (`tc-iconbtn` −/+), Preise im Zahlenformat der Sprache.
+- Merch: Übersicht `tc-kv`, Trikot-Topverkäufer `tc-list`, Artikel der letzten Woche `tc-table--compact`; Lager-Warnung als `tc-callout`.
+- Eintritt: Saison-Kennzahlen `tc-stats`; Tribünen um das Spielfeld als Karten mit Lucide-Stufen-Icon (statt Emoji) und Auslastung als `tc-bar` in drei Stufen; Heimspiel-Liste je Tribüne in `ModalShell variant="tc"`. Tribünen-Namen über `blockDisplayName` (Spielstand behält den deutschen Namen als Fallback).
+- Runway / Bank: Runway mit `tc-kv` und `tc-callout`; Bank mit Ampel als `tc-callout--ok/no`, Betrag als `tc-range`, „Darlehen aufnehmen“ als `tc-btn--primary` (kein Gelb).
+- Saison: Kassenverlauf (13 Monate) mit Start- und Endwert; „Ein / Aus nach Art“ mit `--series-1…6`, Legende mit Text und „Als Tabelle zeigen“; leerer Zustand, solange kein Monat gebucht ist.
+- Offen aus der Skizze: Monats-Navigation (◀ ▶) im Kopf.
 
 ### 9.3 Stadion (Tabs: Grundriss | Gelände | Ausbau)
 

@@ -1,4 +1,5 @@
 import type { ClubFinances } from "./club-finances.ts";
+import { t } from "../i18n/index.ts";
 
 export type FinanceLineKind =
   | "sponsorship"
@@ -53,6 +54,12 @@ export function isFinanceMonthStart(week: number): boolean {
 }
 
 export function financeLineLabel(kind: FinanceLineKind): string {
+  const key = `finance.line.${kind}`;
+  const label = t(key);
+  return label !== key ? label : financeLineGermanLabel(kind);
+}
+
+function financeLineGermanLabel(kind: FinanceLineKind): string {
   switch (kind) {
     case "sponsorship":
       return "Sponsoring";

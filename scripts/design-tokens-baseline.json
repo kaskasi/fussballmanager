@@ -1,8 +1,8 @@
 {
   "files": {
     "src/index.css": {
-      "colors": 1199,
-      "fontSizes": 465
+      "colors": 1151,
+      "fontSizes": 437
     },
     "src/match/pitch-markings.tsx": {
       "colors": 3,
@@ -25,7 +25,7 @@
       "fontSizes": 0
     },
     "src/ui/design/surfaces/finances.css": {
-      "colors": 5,
+      "colors": 0,
       "fontSizes": 1
     },
     "src/ui/design/surfaces/hub-desk.css": {
@@ -47,10 +47,6 @@
     "src/ui/layout/screen-layout.css": {
       "colors": 2,
       "fontSizes": 7
-    },
-    "src/ui/screens/FinancesScreen.tsx": {
-      "colors": 7,
-      "fontSizes": 0
     },
     "src/ui/screens/StadiumScreen.tsx": {
       "colors": 12,

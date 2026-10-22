@@ -12,6 +12,7 @@ import {
   type FinanceLineKind,
   type FinanceMonthSnapshot,
 } from "./finance-ledger.ts";
+import { t } from "../i18n/index.ts";
 
 export type FinanceWaterfallSource = "pending" | "closed" | "last_closed" | "week_preview";
 
@@ -46,7 +47,7 @@ function viewFromSnapshot(
 ): FinanceWaterfallView {
   return {
     month: snapshot.month,
-    title: source === "week_preview" ? "Diese Woche" : `Monat ${snapshot.month}`,
+    title: source === "week_preview" ? t("finance.waterfall.week") : t("finance.waterfall.month", { month: snapshot.month }),
     caption,
     source,
     snapshot,
@@ -88,17 +89,17 @@ export function resolveFinanceWaterfall(
     return viewFromSnapshot(
       live,
       closedThisMonth ? "closed" : "pending",
-      closedThisMonth ? null : "laufender Monat",
+      closedThisMonth ? null : t("finance.waterfall.runningMonth"),
     );
   }
   const last = lastClosedFinanceSnapshot(finances, season);
   if (last) {
-    return viewFromSnapshot(last, "last_closed", "letzter Monatsabschluss");
+    return viewFromSnapshot(last, "last_closed", t("finance.waterfall.lastClosed"));
   }
   return viewFromSnapshot(
     previewSnapshot(finances, season, week, weekPreview),
     "week_preview",
-    "Buchung mit Wochenabschluss",
+    t("finance.waterfall.bookedAtWeekEnd"),
   );
 }
 
@@ -141,14 +142,10 @@ export type FinanceFlowCategory =
   | "infrastructure"
   | "other";
 
-export const FINANCE_FLOW_META: Record<FinanceFlowCategory, { icon: string; label: string }> = {
-  matchday: { icon: "🎟️", label: "Spieltag" },
-  operations: { icon: "📺", label: "Betrieb" },
-  wages: { icon: "👕", label: "Gehälter" },
-  transfers: { icon: "↔️", label: "Transfers" },
-  infrastructure: { icon: "🏗️", label: "Ausbau" },
-  other: { icon: "•", label: "Sonstiges" },
-};
+/** Category name in the active language (key `finance.flow.<category>`). */
+export function financeFlowLabel(category: FinanceFlowCategory): string {
+  return t(`finance.flow.${category}`);
+}
 
 export const FINANCE_FLOW_ORDER: readonly FinanceFlowCategory[] = [
   "matchday",

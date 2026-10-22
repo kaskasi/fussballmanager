@@ -233,13 +233,6 @@ main.pipeline.club-shell-card-body {
   opacity: 0.85;
 }
 
-.club-shell-card-body .finances-shell.game-panel {
-  border: none;
-  box-shadow: none;
-  border-radius: 0;
-  background: transparent;
-}
-
 .app-nav-trailing-cluster {
   display: inline-flex;
   align-items: center;

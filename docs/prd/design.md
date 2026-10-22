@@ -151,6 +151,8 @@ Position-, Sortier- und Scout-Filter sind **ein** Baustein (`FilterChip`):
 
 `src/ui/design/components.css` enthält die Komponenten des Design Systems als `tc-`-Klassen: Titelleiste, NEXT, Buttons, Filter-Chips, Tabs, Panel, sortierbare Tabelle, Liga-Tabelle (eigene Zeile, Abstiegslinie, Formkurve), Bewertungs-Badge, Spielerkarte (groß und Grid), Modal, Key-Value-Liste, Der Treter. Nur Tokens, keine rohen Werte. Die Klassen berühren bestehende Screens nicht, bis ein Screen umzieht.
 
+Portraits (F1): `tc-face` / `tc-face--sm|md|lg` (32 · 56 · 88 px, Tokens `--portrait-xs` / `--portrait-md` / `--portrait-lg`) — `PlayerPortrait` zeichnet faces.js im Kreis; `variant="silhouette"` zeigt die Platzhalter-Figur.
+
 Mit dem Kader (F1) dazugekommen: `tc-select`, `tc-check(s)`, `tc-cards` / `tc-card`, `tc-stack`, `tc-empty-state`, `tc-state--good/mid/low`, `tc-namecell`, `tc-row--link`, `tc-list__item--wide` / `--stack-narrow`, `tc-btn--sm`, `tc-chip--dense`, `tc-chips--toolbar`. **Gemeinsame Bausteine, die jetzt überall gelten:** Screen-Tabs (`FmScreenTabBar`, `.fm-tab` im tc-Look ohne Gelb), Filter-Chips, Sortierköpfe (`SquadSortHeader`).
 
 Mit dem Ligen-Screen (F1) dazugekommen: `tc-page-head` / `tc-page-title` / `tc-page-sub` (ein Kopf pro Screen), `tc-tabs--page` + `tc-tab__meta`, `tc-split` (Haupt- + Seitenspalte), `tc-linkbtn` (Namen in Tabellen), `tc-place` (Platz mit Zone), `tc-row--mark`, `tc-form__r--empty`, `tc-spark`, `tc-list` (Ranglisten), `tc-section`, `tc-empty`, `tc-stats` (Kennzahl-Kacheln), `tc-hide-narrow`. React: `ModalShell variant="tc"` (Escape schließt, Fokus auf Schließen), `ratingBand()` in `src/ui/design/rating-band.ts`.
@@ -288,8 +290,8 @@ H1 "Aufstellung"                    [Best XI ●][Rotation][Talente]
 │ Pos | Name | Alter | CA | Form | Einsatz     │
 └─────────────────────────────────────────────-┘
 ```
-- Pitch: Vollflächiges `--rasen` mit weißen Feldlinien (CSS/SVG), Player-Chips = `--panel`-Karten mit Mini-Avatar (Open Peeps) + Name + Rating (Display-Font).
-- **Portraits:** Open Peeps Busts (CC0), gebacken mit design-Tokens (tinte, warme Haut, rasen-hell auf Kit-Bodies). `portrait_seed` → Bust-ID über **Pool**: `mens_squad` (Spieler auf dem Platz — **Allowlist** sportlicher Bodies + ohne klar weiblich codierte Heads im Katalog-Script), `mixed` (Trainer/Staff), `womens_squad` (reserviert). Katalog: `src/ui/portraits/portrait-bust-catalog.json` via `npm run bake:portraits`. Kein Gender-Feld am Player in v1 — nur visuelle Pools.
+- Pitch: Vollflächiges `--rasen` mit weißen Feldlinien (CSS/SVG), Player-Chips = `--panel`-Karten mit Mini-Portrait (faces.js) + Name + Rating (Display-Font).
+- **Portraits:** faces.js (ZenGM, Apache-2.0) über `PlayerPortrait` (§5): Kreis `tc-face` (sm 32 · md 56 · lg 88 px), Trikot in den Heimfarben des Vereins (PRD 26), Haut/Haar-Palette nach Nationalität, Staff (`pool="mixed"`) gemischt und mit neutralem Shirt, unbekannte Scouting-Spieler als Silhouette. `portrait_seed` → immer dasselbe Gesicht (`face-from-seed.ts`, faces.js auf 5.0.3 fixiert).
 - Talent-Marker: kleines `--terra`-Dreieck oben rechts am Chip.
 - Context-Spalte hier: Pflicht (Gegner + Taktik).
 
@@ -1161,7 +1163,7 @@ Alle folgenden Packs sind **CC0** (Public Domain). Kein Credit zwingend, aber er
 | **City kit** | city-kit-roads + city-kit-commercial | Straßen-/Commercial-Tiles für Gelände-Grid (§9.3) | `kenney_city-kit-*.zip` |
 | **Texturen/Patterns** | [Pattern Pack](https://www.kenney.nl/assets/pattern-pack) + [Extra](https://www.kenney.nl/assets/pattern-pack-extra) | Halftone/Papier-Texturen für Hintergründe (§8). SVG-Format für skalierbare Nutzung. | `pattern_pack.zip`, `pattern_pack_extra.zip` |
 | **UI-Icons** | [Game Icons](https://www.kenney.nl/assets/game-icons) + [Input Icons](https://www.kenney.nl/assets/input-icons) | Ergänzende Icons für UI, wo Lucide Lücken hat (z.B. spezifische Sport-Icons). SVG/PNG. | `game_icons.zip`, `input_icons.zip` |
-| **Charaktere** | [Blocky Characters](https://www.kenney.nl/assets/blocky-characters) | Optional: Alternative zu Open Peeps für Avatare, falls gewünscht. | `blocky_characters.zip` |
+| **Charaktere** | [Blocky Characters](https://www.kenney.nl/assets/blocky-characters) | Optional: Alternative zu den faces.js-Portraits, falls gewünscht. | `blocky_characters.zip` |
 
 **Installationspfad im Repo:**
 - `public/assets/kenney/sports/` (Rasen-Tiles)
@@ -1183,7 +1185,7 @@ Alle folgenden Packs sind **CC0** (Public Domain). Kein Credit zwingend, aber er
 
 ### 12.4 Credits
 
-Player-facing: [docs/ATTRIBUTION.md](../ATTRIBUTION.md). Maintainer inventory: [assets/ATTRIBUTION.MD](../../assets/ATTRIBUTION.MD) — Kenney (CC0), Lucide (MIT), Open Peeps (CC0), ambientCG (CC0).
+Player-facing: [docs/ATTRIBUTION.md](../ATTRIBUTION.md). Maintainer inventory: [assets/ATTRIBUTION.MD](../../assets/ATTRIBUTION.MD) — Kenney (CC0), Lucide (MIT), faces.js (Apache-2.0), ambientCG (CC0).
 
 **Quell-Zips:** `assets/kenney.nl/` (siehe README dort). Shipped tiles only after remap → `public/assets/kenney/`.
 

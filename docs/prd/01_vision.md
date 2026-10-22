@@ -212,7 +212,7 @@ Verboten ohne Produktentscheidung: Cloud-TTS, generative Musik, generative UI-Bi
 `image_refs.md`), Laufzeit-Kopien unter `public/assets/photos/`. Manifest:
 `src/ui/assets/mood-photos.ts`. CC0-Texturen: Quellen-ZIPs in
 `assets/textures/ambientcg/`, Ship-Extract nach `public/assets/textures/`.
-Avatare: Open Peeps in `assets/open-peeps/`. Spieler-Credits:
+Avatare: faces.js (Apache-2.0), zur Laufzeit aus `portrait_seed` gezeichnet. Spieler-Credits:
 `docs/ATTRIBUTION.md`.
 
 LLM (Ollama) nur für **Text** nach den Regeln unter „Lokale KI“ — kein Ersatz

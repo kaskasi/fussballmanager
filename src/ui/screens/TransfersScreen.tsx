@@ -197,7 +197,7 @@ export function TransfersScreen({
                       onClick={() => onSelectPlayer(entry.playerId)}
                     >
                       {player ? (
-                        <PlayerPortrait seed={player.portrait_seed} size="sm" variant="known" />
+                        <PlayerPortrait seed={player.portrait_seed} nationality={player.nationality} size="sm" variant="known" />
                       ) : (
                         <span className="transfers-contract-icon" aria-hidden>
                           <FileSignature size={22} strokeWidth={2.25} />

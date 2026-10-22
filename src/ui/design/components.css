@@ -205,6 +205,17 @@
 .tc-stats dd { display: grid; gap: 2px; min-width: 0; margin: 0; }
 .tc-stats .tc-stat__value { overflow-wrap: anywhere; }
 
+/* Portrait: faces.js face in a circle (PlayerPortrait). faces.js draws on 400×600 with the shirt in the
+   bottom fifth, so the art is scaled and lifted to show hair, face and collar. */
+.tc-face { position: relative; display: inline-block; flex: none; overflow: hidden; vertical-align: middle; border-radius: var(--radius-pill); background: var(--sunken); }
+.tc-face--sm { width: var(--portrait-xs); height: var(--portrait-xs); }
+.tc-face--md { width: var(--portrait-md); height: var(--portrait-md); }
+.tc-face--lg { width: var(--portrait-lg); height: var(--portrait-lg); }
+.tc-face__art { position: absolute; left: 14%; top: -3%; width: 72%; height: 108%; }
+.tc-face__art svg { display: block; width: 100%; height: 100%; }
+.tc-face__unknown { display: block; width: 100%; height: 100%; }
+.tc-face__unknown .tc-portrait__fg { fill: var(--line-strong); }
+
 /* Player card */
 .tc-portrait { width: var(--portrait-md); height: var(--portrait-md); flex: none; }
 .tc-portrait__bg { fill: var(--sunken); }

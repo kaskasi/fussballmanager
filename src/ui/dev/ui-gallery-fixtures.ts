@@ -56,14 +56,7 @@ export function galleryLeague(): {
   };
 }
 
-/** Kieler FC kit as faces.js team colours: [primary, secondary, accent]. */
-export const KIELER_FC_TEAM_COLORS: [string, string, string] = [
-  PLAYER_CLUB_KIT_PRIMARY,
-  PLAYER_CLUB_KIT_SECONDARY,
-  "#ffffff",
-];
-
-/** Twelve portrait seeds for the Open Peeps vs faces.js comparison. */
-export const PORTRAIT_COMPARE_SEEDS: readonly number[] = [
+/** Twelve portrait seeds for the gallery samples. */
+export const PORTRAIT_SAMPLE_SEEDS: readonly number[] = [
   11, 23, 37, 41, 58, 63, 79, 84, 97, 105, 112, 128,
 ];

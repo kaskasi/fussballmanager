@@ -70,7 +70,7 @@ export function CampLeaderInboxCard({
                 className={`camp-leader-candidate${candidate.disqualified ? " is-disqualified" : ""}`}
               >
                 <PlayerPortrait
-                  seed={candidate.portrait_seed}
+                  seed={candidate.portrait_seed} pool="mixed"
                   size={embedded ? "sm" : "md"}
                   className="camp-leader-candidate-portrait"
                 />

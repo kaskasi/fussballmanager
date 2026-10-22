@@ -925,7 +925,7 @@ function IndividualProgramModal({
         <header className="training-modal-head">
           <div className="training-modal-identity">
             <PlayerPortrait
-              seed={player.portrait_seed}
+              seed={player.portrait_seed} nationality={player.nationality}
               clubId={player.club_id}
               size="lg"
               className="training-modal-portrait"

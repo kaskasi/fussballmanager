@@ -447,7 +447,7 @@ function YouthUnifiedRoster({
                             <Flag size={14} strokeWidth={2.5} className="youth-risk-icon" aria-hidden />
                           ) : null}
                           <PlayerPortrait
-                            seed={player.portrait_seed}
+                            seed={player.portrait_seed} nationality={player.nationality}
                             clubId={player.club_id}
                             size="sm"
                             className="campus-portrait"

@@ -6941,39 +6941,6 @@
   flex-shrink: 0;
 }
 
-.player-portrait {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-radius: 0.35rem;
-  background: rgb(241 245 249 / 90%);
-  border: 1px solid rgb(148 163 184 / 35%);
-}
-
-.player-portrait.is-sm {
-  width: 2rem;
-  height: 2.25rem;
-}
-
-.player-portrait.is-md {
-  width: 3.25rem;
-  height: 3.75rem;
-}
-
-.player-portrait.is-lg {
-  width: 4.5rem;
-  height: 5.25rem;
-}
-
-.player-portrait-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center bottom;
-  display: block;
-}
-
 .profile-identity-body {
   min-width: 0;
   flex: 1;

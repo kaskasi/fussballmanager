@@ -8,7 +8,7 @@ export interface Coach {
   id: string;
   name: string;
   role: CoachRole;
-  /** Stable seed for Open Peeps portrait (mixed pool in UI). */
+  /** Stable seed for the faces.js portrait (mixed pool in UI). */
   portrait_seed: number;
   /** 35–92 — maps to environment bonus via coachEnvironmentFactor. */
   quality: number;

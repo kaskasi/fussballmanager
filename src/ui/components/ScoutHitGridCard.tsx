@@ -34,7 +34,7 @@ export function ScoutHitGridCard({
       <button type="button" className="scout-hit-card-main" onClick={onOpenProfile}>
         <div className="scout-hit-card-top">
           <PlayerPortrait
-            seed={row.player.portrait_seed}
+            seed={row.player.portrait_seed} nationality={row.player.nationality}
             clubId={row.player.club_id}
             size="sm"
             variant={reveal.showExactCa ? "known" : "silhouette"}

@@ -123,7 +123,7 @@ export function HubScoutingTransferDeskPanel({
                   >
                     {player ? (
                       <PlayerPortrait
-                        seed={player.portrait_seed}
+                        seed={player.portrait_seed} nationality={player.nationality}
                         clubId={player.club_id}
                         size="sm"
                         variant="known"
@@ -162,7 +162,7 @@ export function HubScoutingTransferDeskPanel({
                   >
                     {player ? (
                       <PlayerPortrait
-                        seed={player.portrait_seed}
+                        seed={player.portrait_seed} nationality={player.nationality}
                         clubId={player.club_id}
                         size="sm"
                         variant="known"
@@ -197,7 +197,7 @@ export function HubScoutingTransferDeskPanel({
                   >
                     {player ? (
                       <PlayerPortrait
-                        seed={player.portrait_seed}
+                        seed={player.portrait_seed} nationality={player.nationality}
                         clubId={player.club_id}
                         size="sm"
                         variant="known"

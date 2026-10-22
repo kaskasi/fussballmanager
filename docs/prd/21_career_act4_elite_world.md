@@ -136,7 +136,7 @@ Extends PRD 12 — **not** M1 default; ships with Act 4 / F10.8 subset.
 | Club names | Real **city** names (factual geography) + **fictional** club suffixes — never trademarked club strings |
 | Players | High-CA pools; UI archetypes (“world-class striker”); **no** real names or likenesses in shipped UI |
 | Crests | Generic procedural crests only (`public/assets/club-logos/` pipeline) |
-| Portraits | Open Peeps / silhouettes only |
+| Portraits | faces.js / silhouettes only |
 
 **Setup UI:** `EliteWorldSetup` — pick nation tier, league band, employer club from generated list (exact UX TBD).
 

@@ -2,13 +2,13 @@
 
 **Version:** 1.0  
 **Last Updated:** 2026-10-16  
-**Status:** Final (v1 — Heimtrikot auf Bust-Portraits)
+**Status:** Final (v2 — Heimtrikot auf faces.js-Portraits)
 
 ---
 
 ## Purpose
 
-Spieler-Busts sollen den **Verein visuell erkennbar** machen: Alle Profis eines Clubs tragen dieselbe **Heim-Shirtfarbe** auf dem Open-Peeps-Portrait. Kein separates Trikot-Asset, keine Sponsoren — nur Recolor der bestehenden Shirt-Layer.
+Spieler-Portraits sollen den **Verein visuell erkennbar** machen: Alle Profis eines Clubs tragen dasselbe **Heimtrikot** auf dem faces.js-Portrait (v2, Oktober 2026; v1 färbte Open-Peeps-Busts um). Kein separates Trikot-Asset, keine Sponsoren — faces.js zeichnet das Trikot aus drei Teamfarben.
 
 ---
 
@@ -18,8 +18,7 @@ Spieler-Busts sollen den **Verein visuell erkennbar** machen: Alle Profis eines 
 
 - `WorldClub.kit`: `{ primary, secondary }` (Hex), deterministisch aus `world_seed` + Club-Index
 - Spieler-Club (Kieler FC / Nordstern): `primary = #2e9e46` (`design.md` / `--rasen`)
-- Laufzeit-Recolor beim Rendern von `PlayerPortrait`, wenn `clubId` (Career-`club_id`) gesetzt ist
-- Shirt-Layer-Regeln analog `scripts/portrait-bake-lib.mjs`, erweitert um `mens_allowed_bodies` aus `portrait-bust-catalog.json`
+- `PlayerPortrait` gibt faces.js `teamColors = [kit.primary, kit.secondary, weiß]`, wenn `clubId` (Career-`club_id`) gesetzt ist
 - Migration für bestehende Saves (`save_version` bump)
 
 **Out (v1):**
@@ -27,7 +26,7 @@ Spieler-Busts sollen den **Verein visuell erkennbar** machen: Alle Profis eines 
 - Auswärts-/Dritt-Trikot, Streifen, Kragen, Nummern, Badges
 - Trikot-Editor für den Manager
 - Match-Pitch-Spieler-Dots (separates Feature)
-- Staff-Portraits (`pool: mixed`) ohne Vereinsbindung — neutrales Bake-Grün bleibt
+- Staff-Portraits (`pool: mixed`) ohne Vereinsbindung — neutrales graues Shirt
 
 ---
 
@@ -49,11 +48,9 @@ Spieler: `player.club_id` (Career-ID, z. B. `cl_fc_nordstern`) → Lookup über 
 
 ## Rendering
 
-1. Basis-URL wie bisher: `portraitUrlFromSeed(seed, pool)`.
-2. Wenn Kit bekannt: SVG fetchen (Cache pro Bust-URL), `PORTRAIT_ACCENT` (#bfdec2) und erste Shirt-`fill` (#e8c4a8) in `body/*`-Gruppen durch `kit.primary` ersetzen.
-3. Silhouette-Variante: **kein** Kit-Recolor.
-
-`PortraitKitProvider` hält Map `careerClubId → primary` aus `session.world.clubs`.
+1. `faceFromSeed({ seed, nationality, pool, teamColors })` in `src/ui/portraits/face-from-seed.ts` erzeugt die faces.js-Konfiguration (geseedeter Zufall, Cache).
+2. Wenn Kit bekannt: `teamColors` aus `PortraitKitProvider` (Map `careerClubId → [primary, secondary, weiß]` aus `session.world.clubs`); sonst neutrales Grau.
+3. Silhouette-Variante (unbekannte Scouting-Spieler): kein Gesicht, kein Trikot.
 
 ---
 

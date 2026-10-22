@@ -145,7 +145,7 @@ function DecisionTileVisual({
     return (
       <>
         <PlayerPortrait
-          seed={player.portrait_seed}
+          seed={player.portrait_seed} nationality={player.nationality}
           clubId={player.club_id}
           size="sm"
           variant="known"

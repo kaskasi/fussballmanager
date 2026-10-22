@@ -145,7 +145,7 @@ function MemberRow({ member }: { member: MedicalMember }) {
   const t = useT();
   return (
     <div className="medical-member-row">
-      <PlayerPortrait seed={member.portrait_seed} size="sm" />
+      <PlayerPortrait seed={member.portrait_seed} pool="mixed" size="sm" />
       <div>
         <strong>
           {member.name}

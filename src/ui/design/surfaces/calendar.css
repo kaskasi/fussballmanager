@@ -1,0 +1,595 @@
+/* Calendar (design.md §9.5): season strip, month grid where lived days are crossed off, chronicle column. Tokens only. */
+
+.tc-cal__titlerow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.tc-cal__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.tc-cal__nav .tc-iconbtn:disabled {
+  color: var(--line-strong);
+  background: transparent;
+  cursor: not-allowed;
+}
+
+/* Month summary: one line of facts separated by middots */
+.tc-cal__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+
+.tc-cal__summary > span + span::before {
+  content: "·";
+  margin-right: var(--space-2);
+  color: var(--line-strong);
+}
+
+.tc-cal__playtest {
+  margin: 0 0 var(--space-4);
+}
+
+/* Season strip: one segment per month, filled as far as the season has come */
+.tc-cal-strip {
+  margin-bottom: var(--space-4);
+}
+
+.tc-cal-strip__list {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tc-cal-strip__month {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  inline-size: 100%;
+  min-block-size: var(--touch-min);
+  padding: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tc-cal-strip__month:hover {
+  background: var(--sunken);
+}
+
+.tc-cal-strip__month:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tc-cal-strip__month[aria-current="true"] {
+  border-color: var(--line-strong);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.tc-cal-strip__name {
+  font-size: var(--font-size-xs);
+  line-height: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tc-cal-strip__month.is-past,
+.tc-cal-strip__month.is-current {
+  color: var(--text);
+}
+
+.tc-cal-strip__bar {
+  display: block;
+  block-size: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--sunken);
+}
+
+.tc-cal-strip__month.is-future .tc-cal-strip__bar {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.tc-cal-strip__fill {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--text-muted);
+  transition: inline-size 600ms ease-out;
+}
+
+.tc-cal-strip__month.is-current .tc-cal-strip__fill {
+  background: var(--accent);
+}
+
+.tc-cal-strip__ticks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  min-block-size: 8px;
+}
+
+.tc-cal-strip__tick {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+/* Result colours: strip ticks, legend swatches, day stripe, score and journal badge */
+.tc-cal-strip__tick.is-win,
+.tc-cal__swatch.is-win {
+  background: var(--positive);
+  box-shadow: none;
+}
+
+.tc-cal-strip__tick.is-draw,
+.tc-cal__swatch.is-draw {
+  background: var(--draw);
+  box-shadow: none;
+}
+
+.tc-cal-strip__tick.is-loss,
+.tc-cal__swatch.is-loss {
+  background: var(--negative);
+  box-shadow: none;
+}
+
+/* Month grid: week number column + seven days */
+.tc-cal__grid {
+  display: grid;
+  grid-template-columns: 2.25rem repeat(7, minmax(0, 1fr));
+  gap: var(--space-1);
+}
+
+.tc-cal__row {
+  display: contents;
+}
+
+.tc-cal__colhead {
+  padding-bottom: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.tc-cal__kw {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: var(--space-1);
+  padding-top: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tc-cal__kw.is-lived {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.tc-cal__kw .tc-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+}
+
+/* Day: future is unwritten (dashed), past is spent paper, today is lifted */
+.tc-cal__day {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  min-inline-size: 0;
+  min-block-size: 6.5rem;
+  padding: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  font-size: var(--font-size-xs);
+  line-height: 1rem;
+}
+
+.tc-cal__day--pad {
+  border: 0;
+  background: transparent;
+}
+
+.tc-cal__day.is-future {
+  border-style: dashed;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.tc-cal__day.is-future.has-match {
+  border-style: solid;
+  border-color: var(--line-strong);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.tc-cal__day.is-past {
+  border-color: transparent;
+  background: var(--sunken);
+}
+
+.tc-cal__day.is-off {
+  border-color: transparent;
+  background: repeating-linear-gradient(135deg, transparent 0 6px, var(--sunken) 6px 8px);
+  color: var(--text-muted);
+}
+
+.tc-cal__day.is-window {
+  border-top: 3px solid var(--info);
+}
+
+.tc-cal__day.is-today {
+  border: 2px solid var(--accent);
+  background: var(--panel);
+  box-shadow: var(--shadow-raised);
+  color: var(--text);
+}
+
+/* Played matchdays keep their result as a stripe on the left edge */
+.tc-cal__day.has-result::before {
+  content: "";
+  position: absolute;
+  inset-block: var(--space-2);
+  inset-inline-start: -1px;
+  inline-size: 3px;
+  border-radius: var(--radius-pill);
+}
+
+.tc-cal__day.is-win::before {
+  background: var(--positive);
+}
+
+.tc-cal__day.is-draw::before {
+  background: var(--draw);
+}
+
+.tc-cal__day.is-loss::before {
+  background: var(--negative);
+}
+
+.tc-cal__dayhead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.tc-cal__date {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+  line-height: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Lived days are crossed off: the pen stroke draws in when a day passes while the screen is open */
+.tc-cal__date::after {
+  content: "";
+  position: absolute;
+  inset: -2px -4px;
+  background: linear-gradient(
+      to top right,
+      transparent calc(50% - 1px),
+      var(--line-strong) calc(50% - 1px),
+      var(--line-strong) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    )
+    no-repeat;
+  background-size: 0% 100%;
+  pointer-events: none;
+  transition: background-size 500ms ease-out;
+}
+
+.tc-cal__day.is-past .tc-cal__date {
+  color: var(--text-muted);
+}
+
+.tc-cal__day.is-past .tc-cal__date::after {
+  background-size: 100% 100%;
+}
+
+.tc-cal__today {
+  margin-left: auto;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tc-cal__scout {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  color: var(--info);
+  font-weight: 700;
+}
+
+.tc-cal__today + .tc-cal__scout {
+  margin-left: 0;
+}
+
+.tc-cal__scout .tc-icon,
+.tc-cal__note .tc-icon,
+.tc-cal__window-close .tc-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.tc-cal__match {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-inline-size: 0;
+  margin: 0;
+  font-weight: 700;
+}
+
+.tc-cal__match .club-crest,
+.tc-cal__match .club-crest-img {
+  flex: none;
+}
+
+.tc-cal__opp {
+  overflow: hidden;
+  min-inline-size: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tc-cal__score {
+  margin-left: auto;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.tc-cal__day.is-win .tc-cal__score {
+  background: var(--positive);
+  color: var(--on-positive);
+}
+
+.tc-cal__day.is-draw .tc-cal__score {
+  background: var(--draw);
+  color: var(--on-draw);
+}
+
+.tc-cal__day.is-loss .tc-cal__score {
+  background: var(--negative);
+  color: var(--on-negative);
+}
+
+.tc-cal__notes {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tc-cal__note {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow: hidden;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--text);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tc-cal__note.is-done {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.tc-cal__note--more {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.tc-cal__window-close {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  color: var(--info);
+  font-weight: 700;
+}
+
+/* Legend */
+.tc-cal__swatch {
+  display: inline-block;
+  inline-size: 12px;
+  block-size: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.tc-cal__swatch.is-window {
+  border-top: 3px solid var(--info);
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.tc-cal__swatch.is-off {
+  background: repeating-linear-gradient(135deg, transparent 0 3px, var(--line-strong) 3px 4px);
+}
+
+/* Chronicle column */
+.tc-cal__journal .tc-list__item > .tc-icon {
+  justify-self: center;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+
+.tc-cal__upcoming .tc-list__name {
+  font-weight: 600;
+}
+
+.tc-cal__reveal {
+  margin: var(--space-2) 0 0;
+}
+
+.tc-cal__jweek + .tc-cal__jweek {
+  margin-top: var(--space-3);
+}
+
+.tc-cal__jweek-title {
+  margin: 0;
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tc-cal__result,
+.tc-cal__fee {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tc-cal__badge {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 1.25rem;
+  block-size: 1.25rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+}
+
+.tc-cal__result.is-win .tc-cal__badge {
+  background: var(--positive);
+  color: var(--on-positive);
+}
+
+.tc-cal__result.is-draw .tc-cal__badge {
+  background: var(--draw);
+  color: var(--on-draw);
+}
+
+.tc-cal__result.is-loss .tc-cal__badge {
+  background: var(--negative);
+  color: var(--on-negative);
+}
+
+/* Phones: the grid shrinks to dates, crests and scores; the chronicle below is the agenda */
+@media (max-width: 719px) {
+  .tc-cal-strip__list {
+    gap: 2px;
+  }
+
+  .tc-cal-strip__month {
+    padding: var(--space-1);
+  }
+
+  .tc-cal-strip__tick {
+    inline-size: 5px;
+    block-size: 5px;
+  }
+
+  .tc-cal-strip__ticks {
+    gap: 2px;
+  }
+
+  .tc-cal__panel {
+    padding: var(--space-2);
+  }
+
+  .tc-cal__grid {
+    grid-template-columns: 1.5rem repeat(7, minmax(0, 1fr));
+    gap: 2px;
+  }
+
+  .tc-cal__colhead {
+    letter-spacing: 0;
+  }
+
+  .tc-cal__day {
+    min-block-size: 3.5rem;
+    padding: var(--space-1);
+  }
+
+  .tc-cal__date {
+    font-size: var(--font-size-sm);
+  }
+
+  .tc-cal__match {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tc-cal__score {
+    margin-left: 0;
+  }
+
+  .tc-cal__opp,
+  .tc-cal__notes,
+  .tc-cal__today,
+  .tc-cal__scout,
+  .tc-cal__window-close span {
+    display: none;
+  }
+
+  /* Milestones collapse to a dot next to the date */
+  .tc-cal__day.has-notes .tc-cal__dayhead::after {
+    content: "";
+    inline-size: 6px;
+    block-size: 6px;
+    margin-left: auto;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-cal-strip__fill,
+  .tc-cal__date::after {
+    transition: none;
+  }
+}

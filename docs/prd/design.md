@@ -703,6 +703,12 @@ Rechts = Kontext. Board-Pressure (eine Kompaktkarte mit Icon-Checkliste), Top-De
 Was verschwindet: Die Icon-Leiste im oberen Header (die gehört ins Menü), die Scout-Report-Leerzeile (Scouting-Modulkarte sagt "0 aktiv" schon), und die Pagination auf Seite 1 – das "Alle 38"-Muster ersetzt zehn Seitenzahlen.
 
 
+**Umsetzung (F1, fünfter Screen — Token-Pass, gilt vor der Skizze oben):**
+- `surfaces/hub-desk.css` nur noch mit Rollen-Tokens und der Typo-Skala (keine Legacy-Aliase, keine festen Schriftgrößen). Kein Gelb außer NEXT: Ticker-Label auf `--sunken`, knappe Merch-Bestände mit `--warning`-Rand, der aktuelle Trainings-Slot (Hub und Training) mit `--accent`-Ring.
+- Vorstand-Panel mit Lucide-Icon statt Emoji. Merch ohne Handlungsbedarf als `tc-empty-state` („Alles im Lot“) statt eines leeren Kastens mit „OK“.
+- Geteilte Panels (Postfach-Entscheidungen, Vorstand, Heatmaps, Trainings-Kalender) behalten ihr Markup; Emojis im Postfach-Archiv sind erlaubt (§4.2).
+- Offen: Hub-Panels auf `tc-panel`-Markup, Ticker als `tc-news`-Leiste.
+
 ### 9.10 Training
 
 - **Tabs (zwei):** `[Team · Stundenplan]` (Default) und `[Individuell · Extra]`. Kein separater „Übersicht/Heatmap“-Tab — Heatmap sitzt als schmales Band unter dem Stundenplan.

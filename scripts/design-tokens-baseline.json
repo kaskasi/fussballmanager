@@ -29,15 +29,15 @@
       "fontSizes": 1
     },
     "src/ui/design/surfaces/hub-desk.css": {
-      "colors": 3,
-      "fontSizes": 49
+      "colors": 2,
+      "fontSizes": 0
     },
     "src/ui/design/surfaces/scouting.css": {
       "colors": 116,
       "fontSizes": 41
     },
     "src/ui/design/surfaces/training.css": {
-      "colors": 151,
+      "colors": 147,
       "fontSizes": 53
     },
     "src/ui/layout/mobile-pass.css": {

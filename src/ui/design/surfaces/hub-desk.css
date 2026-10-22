@@ -33,8 +33,8 @@
   flex-direction: column;
   padding: 0.5rem 0.55rem 0.65rem;
   margin: 0;
-  border: var(--outline);
-  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
   background: var(--panel);
   box-shadow: var(--shadow-flat);
   min-height: 0;
@@ -81,7 +81,7 @@
 .manager-desk__postfach .inbox-treter-headline-list {
   margin: 0.35rem 0 0.25rem;
   padding-left: 1rem;
-  font-size: 0.68rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   line-height: 1.3;
   flex: 1;
@@ -114,7 +114,7 @@
   box-shadow: none;
   background: transparent;
   border-radius: 0;
-  border-top: 1px solid color-mix(in srgb, var(--tinte-weich) 22%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--text-muted) 22%, transparent);
   padding-top: 0.35rem;
   min-height: 0;
   overflow: hidden;
@@ -124,11 +124,11 @@
 
 .manager-desk__postfach .postfach-archive-title {
   margin: 0 0 0.2rem;
-  font-size: 0.62rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
   font-family: inherit;
 }
 
@@ -147,7 +147,7 @@
 
 .manager-desk__postfach .postfach-archive-row-text,
 .manager-desk__postfach .postfach-archive-row-line {
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
 }
 
 .postfach-inbox-emoji {
@@ -163,7 +163,7 @@
 }
 
 .manager-desk__postfach .postfach-archive-row-week {
-  font-size: 0.62rem;
+  font-size: var(--font-size-xs);
 }
 
 .manager-desk__postfach .postfach-archive-pagination {
@@ -174,7 +174,7 @@
 .manager-desk__postfach .postfach-archive-page {
   min-width: 1.35rem;
   padding: 0.1rem 0.3rem;
-  font-size: 0.62rem;
+  font-size: var(--font-size-xs);
 }
 
 .manager-desk__postfach .treter-masthead--compact {
@@ -183,9 +183,9 @@
 
 .manager-desk__postfach .treter-masthead--compact p {
   margin: 0.1rem 0 0;
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
 }
 
 /* XXXX — calendar + 3-day training (fixed band height) */
@@ -228,8 +228,8 @@
   grid-template-columns: auto minmax(0, 1fr);
   align-items: stretch;
   gap: 0;
-  border: var(--outline);
-  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
   background: var(--panel);
   box-shadow: var(--shadow-flat);
   overflow: hidden;
@@ -239,13 +239,13 @@
 .hub-desk-ticker__label {
   flex-shrink: 0;
   padding: 0.35rem 0.55rem;
-  font-size: 0.62rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--tinte);
-  background: color-mix(in srgb, var(--sonnengelb) 35%, var(--panel));
-  border-right: 1px solid color-mix(in srgb, var(--tinte-weich) 22%, transparent);
+  color: var(--text);
+  background: var(--sunken);
+  border-right: 1px solid color-mix(in srgb, var(--text-muted) 22%, transparent);
   display: flex;
   align-items: center;
   white-space: nowrap;
@@ -268,9 +268,9 @@
 .hub-desk-ticker__text {
   flex-shrink: 0;
   padding: 0.38rem 2rem 0.38rem 0.75rem;
-  font-size: 0.72rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -310,12 +310,12 @@
   width: 100%;
   min-height: 4.1rem;
   padding: 0.3rem 0.35rem;
-  font-size: 0.68rem;
+  font-size: var(--font-size-xs);
 }
 
 .manager-desk__day-calendar .calendar-match-chip {
   gap: 0.25rem;
-  font-size: 0.58rem;
+  font-size: var(--font-size-xs);
   line-height: 1.15;
   margin-top: 0.1rem;
 }
@@ -325,7 +325,7 @@
 }
 
 .manager-desk__day-calendar .calendar-milestone-chip {
-  font-size: 0.52rem;
+  font-size: var(--font-size-xs);
   padding: 0.05rem 0.2rem;
 }
 
@@ -397,7 +397,7 @@
 
 .hub-desk-day-block__link {
   margin-top: 0.35rem;
-  font-size: 0.72rem;
+  font-size: var(--font-size-xs);
 }
 
 .hub-desk-day-block__crest {
@@ -413,11 +413,11 @@
 }
 
 .manager-desk__match-column .hub-desk-day-block--match .training-unit-name {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
 }
 
 .manager-desk__timetable .training-day-column.is-today {
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
 }
 
 /* EE + FF — context on top, merch flush under context, band bottom = inbox */
@@ -449,11 +449,11 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  border: var(--outline);
-  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
   background: var(--panel);
   padding: 0.55rem 0.65rem;
-  font-size: 0.72rem;
+  font-size: var(--font-size-xs);
   min-width: 0;
 }
 
@@ -462,7 +462,7 @@
 }
 
 .manager-desk__commerce.is-crisis {
-  border-color: var(--terra);
+  border-color: var(--negative);
 }
 
 .hub-merch-desk {
@@ -481,16 +481,16 @@
 }
 
 .hub-merch-desk__title {
-  font-size: 0.68rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .hub-merch-desk__total {
-  font-size: 0.62rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -509,9 +509,9 @@
   justify-content: center;
   gap: 0.22rem;
   padding: 0.12rem 0.2rem;
-  border: var(--outline);
-  border-radius: var(--radius-klein);
-  background: var(--panel-muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--sunken);
   min-width: 0;
   min-height: 1.55rem;
 }
@@ -524,28 +524,28 @@
 }
 
 .hub-merch-desk__cell.is-empty {
-  background: color-mix(in srgb, var(--terra) 14%, var(--panel-muted));
-  border-color: color-mix(in srgb, var(--terra) 55%, var(--tinte));
+  background: color-mix(in srgb, var(--negative) 14%, var(--sunken));
+  border-color: color-mix(in srgb, var(--negative) 55%, var(--text));
 }
 
 .hub-merch-desk__cell.is-low {
-  background: color-mix(in srgb, var(--sonnengelb) 22%, var(--panel-muted));
-  border-color: color-mix(in srgb, var(--sonnengelb) 40%, var(--tinte));
+  background: var(--sunken);
+  border-color: var(--warning);
 }
 
 .hub-merch-desk__cell.is-ordered:not(.is-empty) {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rasen) 25%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .hub-merch-desk__icon {
   display: inline-flex;
   flex-shrink: 0;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
   line-height: 0;
 }
 
 .hub-merch-desk__cell.is-empty .hub-merch-desk__icon {
-  color: color-mix(in srgb, var(--terra) 70%, var(--tinte));
+  color: color-mix(in srgb, var(--negative) 70%, var(--text));
 }
 
 .hub-merch-desk__figures {
@@ -556,21 +556,21 @@
 }
 
 .hub-merch-desk__stock {
-  font-size: 0.72rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   line-height: 1;
-  color: var(--tinte);
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
 .hub-merch-desk__cell--hero .hub-merch-desk__stock {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
 }
 
 .hub-merch-desk__sold {
-  font-size: 0.48rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
-  color: var(--rasen);
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -582,14 +582,19 @@
   width: 0.35rem;
   height: 0.35rem;
   border-radius: 999px;
-  background: var(--rasen);
+  background: var(--accent);
   box-shadow: 0 0 0 1px var(--panel);
 }
 
 .hub-merch-desk__fallback {
-  margin: 0;
-  font-size: 0.72rem;
-  color: var(--tinte-weich);
+  height: 100%;
+  align-content: center;
+  padding: var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+.hub-merch-desk__fallback .tc-icon {
+  color: var(--positive);
 }
 
 /* Row 3 — duty, heatmaps, top dev (bottom-aligned) */
@@ -624,8 +629,8 @@
 
 .manager-desk__heatmaps.training-schedule-heatmap > * {
   min-width: 0;
-  border: var(--outline);
-  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
   background: var(--panel);
 }
 
@@ -691,13 +696,13 @@
   padding-left: 0;
   margin-top: 0.2rem;
   padding-top: 0.2rem;
-  border-top: 1px solid var(--panel-muted);
+  border-top: 1px solid var(--sunken);
 }
 
 .manager-desk__heatmaps.training-schedule-heatmap .training-pixel-stage-label {
   width: 100%;
   text-align: center;
-  font-size: 0.58rem;
+  font-size: var(--font-size-xs);
   margin: 0 0 0.15rem;
 }
 
@@ -726,7 +731,7 @@
 }
 
 .manager-desk__heatmaps.training-schedule-heatmap .heat-pixel-face {
-  font-size: 0.48rem;
+  font-size: var(--font-size-xs);
 }
 
 .manager-desk__heatmaps.training-schedule-heatmap .heat-pixel-face small {
@@ -806,7 +811,7 @@
 
 .manager-desk__development .dev-hub--desk .dev-hub-head h3 {
   margin: 0;
-  font-size: 0.68rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -830,9 +835,9 @@
   width: 100%;
   min-width: 0;
   padding: 0.35rem 0.25rem 0.4rem;
-  border: var(--outline);
-  border-radius: var(--radius);
-  background: var(--panel-muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--sunken);
   cursor: pointer;
   text-align: center;
   font: inherit;
@@ -848,9 +853,9 @@
   position: absolute;
   top: 0.2rem;
   left: 0.25rem;
-  font-size: 0.55rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
   line-height: 1;
 }
 
@@ -867,7 +872,7 @@
 }
 
 .dev-desk-card__name {
-  font-size: 0.62rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   line-height: 1.15;
   overflow: hidden;
@@ -877,9 +882,9 @@
 }
 
 .dev-desk-card__meta {
-  font-size: 0.52rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -888,18 +893,18 @@
 }
 
 .dev-desk-card__delta {
-  font-size: 0.72rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   line-height: 1;
   margin-top: 0.1rem;
 }
 
 .dev-desk-card__delta.is-up {
-  color: var(--rasen);
+  color: var(--accent);
 }
 
 .dev-desk-card__delta.is-down {
-  color: var(--terra);
+  color: var(--negative);
 }
 
 /* DD — scouting + transfer market (left bottom) */
@@ -911,8 +916,8 @@
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
-  border: var(--outline);
-  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
   background: var(--panel);
   padding: 0;
   box-sizing: border-box;
@@ -934,14 +939,14 @@
   cursor: pointer;
   border: 0;
   background: transparent;
-  border-radius: var(--radius) var(--radius) 0 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .hub-market-desk__zone--transfer:hover,
 .hub-market-desk__zone--transfer:focus-visible {
-  background: color-mix(in srgb, var(--panel-muted) 65%, var(--panel));
+  background: color-mix(in srgb, var(--sunken) 65%, var(--panel));
   outline: none;
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--tinte) 12%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text) 12%, transparent);
 }
 
 .hub-market-desk__zone--scout {
@@ -951,25 +956,25 @@
   padding: 0.4rem 0.5rem 0.45rem;
   cursor: pointer;
   border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--tinte-weich) 28%, transparent);
-  background: var(--panel-muted);
-  border-radius: 0 0 var(--radius) var(--radius);
+  border-top: 1px solid color-mix(in srgb, var(--text-muted) 28%, transparent);
+  background: var(--sunken);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
 .hub-market-desk__zone--scout:hover,
 .hub-market-desk__zone--scout:focus-visible {
-  background: color-mix(in srgb, var(--rasen) 10%, var(--panel-muted));
+  background: color-mix(in srgb, var(--accent) 10%, var(--sunken));
   outline: none;
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--rasen) 25%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .hub-market-desk__zone-label {
   display: block;
-  font-size: 0.58rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
   margin-bottom: 0.2rem;
 }
 
@@ -981,7 +986,7 @@
 
 .hub-market-desk__title {
   margin: 0;
-  font-size: 0.68rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -989,8 +994,8 @@
 
 .hub-market-desk__sub {
   margin: 0.12rem 0 0;
-  font-size: 0.62rem;
-  color: var(--tinte-weich);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
   line-height: 1.25;
 }
 
@@ -1004,8 +1009,8 @@
 
 .hub-market-desk__empty {
   margin: 0.25rem 0;
-  font-size: 0.65rem;
-  color: var(--tinte-weich);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
   line-height: 1.35;
 }
 
@@ -1024,9 +1029,9 @@
   gap: 0.4rem;
   width: 100%;
   padding: 0.35rem 0.4rem;
-  border: var(--outline);
-  border-radius: var(--radius-klein);
-  background: var(--panel-muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--sunken);
   text-align: left;
   font: inherit;
   color: inherit;
@@ -1039,8 +1044,8 @@
 }
 
 .hub-market-desk__row--offer {
-  border-color: color-mix(in srgb, var(--rasen) 45%, var(--tinte));
-  background: color-mix(in srgb, var(--rasen) 8%, var(--panel-muted));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--text));
+  background: color-mix(in srgb, var(--accent) 8%, var(--sunken));
 }
 
 .hub-market-desk__copy {
@@ -1052,7 +1057,7 @@
 }
 
 .hub-market-desk__copy strong {
-  font-size: 0.68rem;
+  font-size: var(--font-size-xs);
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1063,9 +1068,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  font-size: 0.6rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
   line-height: 1.25;
 }
 
@@ -1077,7 +1082,7 @@
   margin: 0;
   display: grid;
   gap: 0.22rem;
-  font-size: 0.58rem;
+  font-size: var(--font-size-xs);
 }
 
 .hub-market-desk__stat {
@@ -1100,7 +1105,7 @@
   margin: 0;
   font-weight: 800;
   text-align: right;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
   line-height: 1.2;
 }
 
@@ -1122,29 +1127,29 @@
 
 .hub-opponent-scout-compact__label {
   margin: 0;
-  font-size: 0.58rem;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
 }
 
 .hub-opponent-scout-compact__copy strong {
   display: block;
-  font-size: 0.72rem;
+  font-size: var(--font-size-xs);
   line-height: 1.2;
 }
 
 .hub-opponent-scout-compact__idle {
   margin: 0;
-  font-size: 0.62rem;
-  color: var(--tinte-weich);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
   line-height: 1.3;
 }
 
 .hub-opponent-scout-compact .hub-opponent-scout-tile {
   min-height: 3.25rem;
   padding: 0.4rem 0.35rem;
-  font-size: 0.68rem;
+  font-size: var(--font-size-xs);
 }
 
 .hub-opponent-scout-compact .hub-opponent-scout-tile svg {
@@ -1177,15 +1182,15 @@
 
 .hub-opponent-scout-desk__fixture-label {
   margin: 0;
-  font-size: 0.62rem;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
 }
 
 .hub-opponent-scout-desk__fixture-copy strong {
   display: block;
-  font-size: 0.82rem;
+  font-size: var(--font-size-sm);
   line-height: 1.2;
 }
 
@@ -1196,14 +1201,14 @@
   width: 100%;
   min-height: 4.75rem;
   padding: 0.65rem 0.5rem;
-  border: var(--outline);
-  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
   background: var(--panel);
   box-shadow: var(--shadow-flat);
   font-weight: 800;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   cursor: pointer;
-  color: var(--tinte);
+  color: var(--text);
 }
 
 .hub-opponent-scout-tile:disabled {
@@ -1226,7 +1231,7 @@
   padding: 0 0.15rem;
   display: grid;
   gap: 0.35rem;
-  font-size: 0.68rem;
+  font-size: var(--font-size-xs);
 }
 
 .hub-opponent-scout-desk__stat {
@@ -1241,13 +1246,13 @@
   align-items: center;
   gap: 0.35rem;
   font-weight: 800;
-  color: var(--tinte);
+  color: var(--text);
   margin: 0;
 }
 
 .hub-opponent-scout-desk__stat dt svg {
   flex-shrink: 0;
-  color: var(--tinte);
+  color: var(--text);
 }
 
 .hub-opponent-scout-desk__stat dd {
@@ -1255,46 +1260,46 @@
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   text-align: right;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
   line-height: 1.25;
 }
 
 .hub-opponent-scout-desk__idle {
   margin: 0;
-  font-size: 0.68rem;
-  color: var(--tinte-weich);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
   line-height: 1.35;
 }
 
 .hub-opponent-scout-desk__link {
   margin: 0;
   padding: 0 0.15rem;
-  font-size: 0.68rem;
+  font-size: var(--font-size-xs);
   align-self: flex-start;
 }
 
 .manager-desk__duty {
-  border: var(--outline);
-  border-radius: var(--radius);
-  background: var(--panel-muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--sunken);
   padding: 0.45rem 0.55rem;
-  font-size: 0.68rem;
+  font-size: var(--font-size-xs);
   min-width: 0;
   box-sizing: border-box;
 }
 
 .manager-desk__duty.is-alert {
-  border-color: var(--terra);
+  border-color: var(--negative);
   background: var(--panel);
 }
 
 .manager-desk__duty-title {
   font-weight: 800;
   margin: 0 0 0.25rem;
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
 }
 
 .manager-desk__duty-list {
@@ -1314,12 +1319,12 @@
 }
 
 .manager-desk__wildcard-tab {
-  border: var(--outline);
-  background: var(--panel-muted);
-  font-size: 0.68rem;
+  border: 1px solid var(--line);
+  background: var(--sunken);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 0.2rem 0.45rem;
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   cursor: pointer;
 }
 
@@ -1328,8 +1333,8 @@
 }
 
 .manager-desk__league-panel {
-  border: var(--outline);
-  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
   background: var(--panel);
   padding: 0.35rem 0.4rem 0.45rem;
   overflow: auto;
@@ -1338,19 +1343,19 @@
 .manager-desk__league-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.68rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
 }
 
 .manager-desk__league-table th {
   text-align: left;
-  font-size: 0.58rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--tinte-weich);
+  color: var(--text-muted);
   padding: 0 0.2rem 0.25rem;
-  border-bottom: 1px solid var(--panel-muted);
+  border-bottom: 1px solid var(--sunken);
 }
 
 .manager-desk__league-table th:last-child,
@@ -1366,11 +1371,11 @@
 
 .manager-desk__league-table tbody tr.is-you td {
   font-weight: 900;
-  color: var(--rasen-dunkel);
+  color: var(--accent);
 }
 
 .manager-desk__league-table tbody tr.is-you {
-  background: color-mix(in srgb, var(--rasen) 12%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 @media (max-width: 960px) {
@@ -1493,7 +1498,7 @@
   }
 
   .manager-desk__heatmaps.training-schedule-heatmap > .training-pixel-pack.is-full {
-    box-shadow: 0 4px 18px rgb(15 23 42 / 7%);
+    box-shadow: var(--shadow-raised);
   }
 
   /* Desktop-only compact strip sizing — do not shrink is-full mobile widgets */

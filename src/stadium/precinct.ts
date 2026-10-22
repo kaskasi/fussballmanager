@@ -1,3 +1,5 @@
+import { t } from "../i18n/index.ts";
+
 export type PrecinctBuilding =
   | "kiosk"
   | "fanshop"
@@ -287,6 +289,26 @@ export function precinctBuildingDef(id: PrecinctBuilding): PrecinctBuildingDef {
   return BUILDING_BY_ID.get(id) ?? PRECINCT_BUILDINGS[0]!;
 }
 
+function translated(key: string, fallback: string): string {
+  const text = t(key);
+  return text !== key ? text : fallback;
+}
+
+/** Building name in the active language (`precinct.building.<id>.label`), German catalogue label as fallback. */
+export function precinctBuildingLabel(id: PrecinctBuilding): string {
+  return translated(`precinct.building.${id}.label`, precinctBuildingDef(id).label);
+}
+
+/** Palette hint in the active language (`precinct.building.<id>.hint`), German catalogue hint as fallback. */
+export function precinctBuildingHint(id: PrecinctBuilding): string {
+  return translated(`precinct.building.${id}.hint`, precinctBuildingDef(id).hint);
+}
+
+/** Side plate name ("links oben" …) in the active language. */
+export function precinctExpansionLabel(tile: Pick<PrecinctExpansion, "id" | "label">): string {
+  return translated(`precinct.expansion.${tile.id}`, tile.label);
+}
+
 export function precinctCellKey(x: number, y: number): string {
   return `${x},${y}`;
 }
@@ -390,14 +412,14 @@ export function canBuyPrecinctExpansion(
 ): { allowed: boolean; cost: number; tile: PrecinctExpansion | null; reason?: string } {
   const tile = nextPrecinctExpansion(state);
   if (!tile) {
-    return { allowed: false, cost: 0, tile: null, reason: "Gelände ist voll." };
+    return { allowed: false, cost: 0, tile: null, reason: t("precinct.reason.full") };
   }
   if (PRECINCT_EXPANSION_COST > 0 && cash < PRECINCT_EXPANSION_COST) {
     return {
       allowed: false,
       cost: PRECINCT_EXPANSION_COST,
       tile,
-      reason: "Nicht genug Cash.",
+      reason: t("precinct.reason.cash"),
     };
   }
   return { allowed: true, cost: PRECINCT_EXPANSION_COST, tile };
@@ -480,36 +502,30 @@ export function precinctYouthPitchLevel(state: PrecinctState | undefined): numbe
   return precinctBuildingLevel(state, "youth_pitch");
 }
 
-/** Current upgrade stage name (Lv1 = placed baseline). */
+/** Named upgrade stages per building (`precinct.stage.<building>.<level>`); others use "Basis" / "Stufe N". */
+const NAMED_STAGES: Partial<Record<PrecinctBuilding, { levels: number; fallback: readonly string[] }>> = {
+  training_ground: { levels: 5, fallback: ["", "Basis", "Halle", "Fitness", "Pool", "Physio"] },
+  fanshop: { levels: 5, fallback: ["", "Shop", "Erweiterung", "Flagship", "Online", "Erlebnis"] },
+  training_pitch: { levels: 3, fallback: ["", "Rasen", "Kunstrasen", "Hybrid"] },
+  youth_pitch: { levels: 2, fallback: ["", "Kleinfeld", "Akademie-Rasen"] },
+  medical_center: { levels: 3, fallback: ["", "Praxis", "Große Praxis · Imaging", "Arztzentrum · OP"] },
+  kiosk: { levels: 2, fallback: ["", "Bude", "Doppelstand"] },
+  beer_tent: { levels: 2, fallback: ["", "Zelt", "Festzelt"] },
+};
+
+/** Current upgrade stage name (Lv1 = placed baseline), in the active language. */
 export function precinctBuildingStageLabel(building: PrecinctBuilding, level: number): string {
   if (level <= 0) return "";
-  switch (building) {
-    case "training_ground":
-      if (level === 1) return "Basis";
-      if (level === 2) return "Halle";
-      if (level === 3) return "Fitness";
-      if (level === 4) return "Pool";
-      if (level === 5) return "Physio";
-      break;
-    case "fanshop":
-      return ["", "Shop", "Erweiterung", "Flagship", "Online", "Erlebnis"][level] ?? `Stufe ${level}`;
-    case "training_pitch":
-      return ["", "Rasen", "Kunstrasen", "Hybrid"][level] ?? `Stufe ${level}`;
-    case "youth_pitch":
-      return ["", "Kleinfeld", "Akademie-Rasen"][level] ?? `Stufe ${level}`;
-    case "medical_center":
-      if (level === 1) return "Praxis";
-      if (level === 2) return "Große Praxis · Imaging";
-      if (level >= 3) return "Arztzentrum · OP";
-      break;
-    case "kiosk":
-      return level >= 2 ? "Doppelstand" : "Bude";
-    case "beer_tent":
-      return level >= 2 ? "Festzelt" : "Zelt";
-    default:
-      break;
+  const named = NAMED_STAGES[building];
+  if (named) {
+    // Medical center, kiosk and beer tent keep their top name beyond the last named stage.
+    const capped = building === "medical_center" || building === "kiosk" || building === "beer_tent";
+    const stage = capped ? Math.min(level, named.levels) : level;
+    if (stage <= named.levels) {
+      return translated(`precinct.stage.${building}.${stage}`, named.fallback[stage] ?? "");
+    }
   }
-  return level > 1 ? `Stufe ${level}` : "Basis";
+  return level > 1 ? t("precinct.stage.level", { level }) : t("precinct.stage.base");
 }
 
 export function precinctNextUpgradeLabel(building: PrecinctBuilding, currentLevel: number): string {
@@ -518,7 +534,7 @@ export function precinctNextUpgradeLabel(building: PrecinctBuilding, currentLeve
     return precinctBuildingStageLabel(building, next);
   }
   const stage = precinctBuildingStageLabel(building, next);
-  return stage || `Lv${next}`;
+  return stage || t("precinct.levelShort", { level: next });
 }
 
 export function precinctPlacementCost(
@@ -764,11 +780,11 @@ export function canNudgePrecinctPatch(
   delta: 1 | -1 = 1,
 ): { allowed: boolean; cost: number; reason?: string } {
   const patch = state.patches.find((entry) => entry.id === patchId);
-  if (!patch) return { allowed: false, cost: 0, reason: "Kein Gebäude." };
+  if (!patch) return { allowed: false, cost: 0, reason: t("precinct.reason.noBuilding") };
   const next = patchRectOnEdge(patch, edge, delta);
-  if (!next) return { allowed: false, cost: 0, reason: "Mindestgröße." };
+  if (!next) return { allowed: false, cost: 0, reason: t("precinct.reason.minSize") };
   if (delta === 1 && !rectangleIsFree(state, next.x, next.y, next.w, next.h, patch.id)) {
-    return { allowed: false, cost: 0, reason: "Kein Platz." };
+    return { allowed: false, cost: 0, reason: t("precinct.reason.noRoom") };
   }
   const cost = precinctNudgeCost(patch, edge, delta);
   return { allowed: true, cost };
@@ -874,10 +890,10 @@ export function canBuyPrecinctParcel(
   cash: number,
 ): { allowed: boolean; cost: number; reason?: string } {
   const tile = precinctExpansionAt(x, y);
-  if (!tile) return { allowed: false, cost: 0, reason: "Kein Plättchen." };
+  if (!tile) return { allowed: false, cost: 0, reason: t("precinct.reason.noPlate") };
   const next = nextPrecinctExpansion(state);
   if (!next || next.id !== tile.id) {
-    return { allowed: false, cost: PRECINCT_EXPANSION_COST, reason: "Erst die nächste Erweiterung." };
+    return { allowed: false, cost: PRECINCT_EXPANSION_COST, reason: t("precinct.reason.nextPlateFirst") };
   }
   return canBuyPrecinctExpansion(state, cash);
 }
@@ -894,13 +910,13 @@ export function canPlaceStreet(
   x: number,
   y: number,
   cash: number,
-): { allowed: boolean; cost: number; reason?: string } {
-  if (!isOwnedCell(state, x, y)) return { allowed: false, cost: 0, reason: "Erst Parzelle kaufen." };
-  if (isPrecinctStadiumCell(x, y)) return { allowed: false, cost: 0, reason: "Stadion." };
-  if (patchAt(state, x, y)) return { allowed: false, cost: 0, reason: "Belegt." };
-  if (isStreetCell(state, x, y)) return { allowed: false, cost: 0, reason: "Schon Straße." };
+): { allowed: boolean; cost: number; reason?: string; code?: "no_cash" } {
+  if (!isOwnedCell(state, x, y)) return { allowed: false, cost: 0, reason: t("precinct.reason.buyParcel") };
+  if (isPrecinctStadiumCell(x, y)) return { allowed: false, cost: 0, reason: t("precinct.reason.stadium") };
+  if (patchAt(state, x, y)) return { allowed: false, cost: 0, reason: t("precinct.reason.occupied") };
+  if (isStreetCell(state, x, y)) return { allowed: false, cost: 0, reason: t("precinct.reason.alreadyStreet") };
   if (cash < PRECINCT_STREET_COST) {
-    return { allowed: false, cost: PRECINCT_STREET_COST, reason: "Nicht genug Cash." };
+    return { allowed: false, cost: PRECINCT_STREET_COST, reason: t("precinct.reason.cash"), code: "no_cash" };
   }
   return { allowed: true, cost: PRECINCT_STREET_COST };
 }
@@ -1053,7 +1069,7 @@ export function placeStreetRun(
   for (const cell of cells) {
     if (isStreetCell(next, cell.x, cell.y)) continue;
     const check = canPlaceStreet(next, cell.x, cell.y, remaining);
-    if (check.reason === "Nicht genug Cash.") break;
+    if (check.code === "no_cash") break;
     if (!check.allowed) continue;
     next = placeStreet(next, cell.x, cell.y);
     remaining -= check.cost;
@@ -1198,15 +1214,15 @@ export function canUpgradePrecinctBuilding(
   cash: number,
 ): { allowed: boolean; cost: number; reason?: string } {
   const def = precinctBuildingDef(building);
-  if (def.maxLevel <= 1) return { allowed: false, cost: 0, reason: "Nicht ausbaubar." };
+  if (def.maxLevel <= 1) return { allowed: false, cost: 0, reason: t("precinct.reason.notUpgradable") };
   const level = precinctBuildingLevel(state, building);
-  if (level <= 0) return { allowed: false, cost: 0, reason: "Erst platzieren." };
+  if (level <= 0) return { allowed: false, cost: 0, reason: t("precinct.reason.placeFirst") };
   if (state.pendingUpgrades?.[building] != null) {
-    return { allowed: false, cost: 0, reason: "Ausbau läuft bereits." };
+    return { allowed: false, cost: 0, reason: t("precinct.reason.upgrading") };
   }
-  if (level >= def.maxLevel) return { allowed: false, cost: 0, reason: "Maximalstufe." };
+  if (level >= def.maxLevel) return { allowed: false, cost: 0, reason: t("precinct.reason.max") };
   const cost = precinctUpgradeCost(state, building);
-  if (cash < cost) return { allowed: false, cost, reason: "Nicht genug Cash." };
+  if (cash < cost) return { allowed: false, cost, reason: t("precinct.reason.cash") };
   return { allowed: true, cost };
 }
 

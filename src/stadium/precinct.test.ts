@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { setLocale } from "../i18n/index.ts";
 import {
   PRECINCT_CITY_LINK,
   PRECINCT_CORE,
@@ -10,6 +11,7 @@ import {
   arenaDocksStreetNetwork,
   buyPrecinctExpansion,
   canBuyPrecinctExpansion,
+  canPlaceStreet,
   canNudgePrecinctPatch,
   canPlacePrecinctBuilding,
   countBuilding,
@@ -182,6 +184,21 @@ describe("precinct grid", () => {
     const bus = normalizePrecinct(placePrecinctBuilding(emptyPrecinct(), FARM_X, FARM_Y, "bus"));
     expect(patchTouchesStreet(bus, "bus")).toBe(false);
     expect(patchDocksCityLink(bus, "bus")).toBe(false);
+  });
+
+  it("stops a street run when the cash runs out, in any language", () => {
+    try {
+      setLocale("en");
+      const cells = manhattanStreetCells({ x: 3, y: 7 }, { x: 3, y: 9 });
+      const run = placeStreetRun(emptyPrecinct(), cells, PRECINCT_STREET_COST * 2);
+      expect(run.spent).toBe(PRECINCT_STREET_COST * 2);
+      expect(isStreetCell(run.state, 3, 9)).toBe(false);
+      const blocked = canPlaceStreet(run.state, 3, 9, 0);
+      expect(blocked.code).toBe("no_cash");
+      expect(blocked.reason).toBe("Not enough cash.");
+    } finally {
+      setLocale("de");
+    }
   });
 
   it("paints a Sim City street run and auto-connects the bus to the city highway", () => {

@@ -1,7 +1,9 @@
+import { t } from "../i18n/index.ts";
 import { careerWeekIndex } from "./hospitality.ts";
 import {
   placePrecinctBuilding,
   precinctBuildingDef,
+  precinctBuildingLabel,
   type PrecinctBuilding,
   type PrecinctBuildingDef,
   type PrecinctState,
@@ -73,7 +75,7 @@ export function advancePrecinctConstructionDetailed(
     changed = true;
     completions.push({
       building: patch.building,
-      label: precinctBuildingDef(patch.building).label,
+      label: precinctBuildingLabel(patch.building),
     });
     return { ...patch, constructing: false, readyWeekIndex: undefined };
   });
@@ -96,7 +98,10 @@ export function advancePrecinctConstructionDetailed(
     changed = true;
     completions.push({
       building,
-      label: `${precinctBuildingDef(building).label} (Level ${levels[building]})`,
+      label: t("precinct.construction.levelDone", {
+        building: precinctBuildingLabel(building),
+        level: levels[building] ?? 1,
+      }),
     });
   }
   if (!changed) return { state, completions: [] };

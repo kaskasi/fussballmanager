@@ -1,5 +1,5 @@
 import { careerWeekIndex } from "./hospitality.ts";
-import { STADIUM_BASE_BLOCKS, type ClubStadium, type StadiumBlock } from "./club-stadium.ts";
+import { blockDisplayName, STADIUM_BASE_BLOCKS, type ClubStadium, type StadiumBlock } from "./club-stadium.ts";
 import { t } from "../i18n/index.ts";
 
 export const BLOCK_EXPANSION_MAX_LEVEL = 10;
@@ -116,10 +116,13 @@ export function advanceBlockExpansionProjects(
     changed = true;
     const level = Math.min(BLOCK_EXPANSION_MAX_LEVEL, state.level + 1);
     next[blockId] = { level };
-    const blockName =
-      stadium.blocks.find((entry) => entry.id === blockId)?.name ??
-      STADIUM_BASE_BLOCKS.find((entry) => entry.id === blockId)?.name ??
-      blockId;
+    const blockName = blockDisplayName({
+      id: blockId,
+      name:
+        stadium.blocks.find((entry) => entry.id === blockId)?.name ??
+        STADIUM_BASE_BLOCKS.find((entry) => entry.id === blockId)?.name ??
+        blockId,
+    });
     completions.push({
       blockId,
       blockName,

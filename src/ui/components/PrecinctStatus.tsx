@@ -1,12 +1,13 @@
 /**
  * WIREFRAME: PRD 14.7 — Gelände-Status
  *
- * [palette] [grid] [👁 🛣️ 📣 🏃 💰]
- * Buff-Kacheln · Hunger gestrichelt · ⚠️ ohne Straßennetz (inkl. Arena)
+ * [palette] [grid] [Zuschauer · Stadt · Fans · Training · Kasse]
+ * Buff-Kacheln · Hunger gestrichelt · Warnung ohne Straßennetz (inkl. Arena)
  */
 import {
   listPrecinctStatusEffects,
   PRECINCT_STATUS_GROUPS,
+  precinctStatusGroupLabel,
   precinctStatusTotals,
   type PrecinctStatusEffect,
 } from "../../stadium/precinct-effects.ts";
@@ -23,13 +24,15 @@ import {
   PrecinctWarnIcon,
 } from "../icons/precinct-status-icons.tsx";
 import { useT } from "../../i18n/react.ts";
+import { formatDecimal } from "../../i18n/number-display.ts";
+import { formatClubCash } from "../../economy/club-finances.ts";
 
 function formatPct(rate: number): string {
   const pct = rate * 100;
   const body =
     Math.abs(pct - Math.round(pct)) < 0.05
       ? String(Math.round(pct))
-      : pct.toFixed(1).replace(".", ",");
+      : formatDecimal(pct, 1);
   return `+${body}%`;
 }
 
@@ -66,7 +69,7 @@ export function PrecinctStatus({
           {t("precinct.status.effects")} ·{" "}
           {t("precinct.status.effectsCount", { active, total: effects.length })}
         </p>
-        <div className="stadium-precinct-status-sheet" aria-label="Summe">
+        <div className="stadium-precinct-status-sheet" aria-label={t("precinct.status.totalAria")}>
           <span title={t("precinct.status.total.fill")}>
             <PrecinctFillIcon size={12} aria-hidden="true" strokeWidth={2.5} /> {formatPct(totals.fill)}
           </span>
@@ -75,7 +78,7 @@ export function PrecinctStatus({
           </span>
           <span title={t("precinct.status.total.training")}>
             <PrecinctTrainingIcon size={12} aria-hidden="true" strokeWidth={2.5} /> ×
-            {totals.training.toFixed(2).replace(".", ",")}
+            {formatDecimal(totals.training, 2)}
           </span>
           <span title={t("precinct.status.total.merch")}>
             <PrecinctCashIcon size={12} aria-hidden="true" strokeWidth={2.5} /> {formatMerch(totals.merch)}
@@ -84,13 +87,14 @@ export function PrecinctStatus({
       </div>
       <div className={rail ? "stadium-precinct-status-columns" : "stadium-precinct-status-stack"}>
         {PRECINCT_STATUS_GROUPS.map((group) => {
-          const slots = effects.filter((entry) => entry.group === group.id);
+          const slots = effects.filter((entry) => entry.group === group);
           if (slots.length === 0) return null;
+          const groupLabel = precinctStatusGroupLabel(group);
           return (
-            <section key={group.id} className="stadium-precinct-status-group" aria-label={group.label}>
-              <h3 title={group.label} aria-label={group.label}>
-                <PrecinctGroupIcon group={group.id} size={rail ? 15 : 13} />
-                {rail ? null : group.label}
+            <section key={group} className="stadium-precinct-status-group" aria-label={groupLabel}>
+              <h3 title={groupLabel} aria-label={groupLabel}>
+                <PrecinctGroupIcon group={group} size={rail ? 15 : 13} />
+                {rail ? null : groupLabel}
               </h3>
               <ul>
                 {slots.map((effect) => (
@@ -158,11 +162,9 @@ function StatusChip({
 
 function formatFans(delta: number): string {
   if (delta <= 0) return "+0";
-  return `+${delta.toFixed(2).replace(".", ",")}`;
+  return `+${formatDecimal(delta, 2)}`;
 }
 
 function formatMerch(amount: number): string {
-  if (amount <= 0) return "€0";
-  if (amount >= 1000) return `€${Math.round(amount / 1000)}k`;
-  return `€${amount}`;
+  return formatClubCash(Math.max(0, amount));
 }

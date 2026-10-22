@@ -2,11 +2,11 @@ import type { ClubStadium } from "../stadium/club-stadium.ts";
 import { isBlockUnderConstruction } from "../stadium/stadium-block-expansion.ts";
 import {
   occupiedCells,
-  PRECINCT_BUILDINGS,
+  precinctBuildingLabel,
   precinctBuildingLevel,
   type PrecinctBuilding,
 } from "../stadium/precinct.ts";
-import { facilityById } from "../youth/academy.ts";
+import { academyFacilityName } from "../youth/academy.ts";
 import { campNationById, type YouthCamp } from "../youth/satellite-camps.ts";
 import {
   BASE_CONCURRENT_PROJECTS,
@@ -40,7 +40,7 @@ export interface ActiveConstructionProject {
 }
 
 function precinctLabel(building: PrecinctBuilding): string {
-  return PRECINCT_BUILDINGS.find((entry) => entry.id === building)?.label ?? building;
+  return precinctBuildingLabel(building);
 }
 
 export function listActiveConstructionProjects(
@@ -88,7 +88,7 @@ export function listActiveConstructionProjects(
     projects.push({
       id: `academy_${target}`,
       kind: "academy",
-      name: facilityById(target)?.name ?? target,
+      name: academyFacilityName(target),
     });
   }
   return projects;

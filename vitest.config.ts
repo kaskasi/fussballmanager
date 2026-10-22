@@ -10,6 +10,7 @@ export default defineConfig({
       "src/hub/**/*.test.ts",
       "src/player/**/*.test.ts",
       "src/youth/**/*.test.ts",
+      "src/stadium/**/*.test.ts",
       "src/economy/**/*.test.ts",
       "src/inbox/**/*.test.ts",
       "src/world/**/*.test.ts",

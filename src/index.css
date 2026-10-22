@@ -3648,12 +3648,12 @@
   margin: 0.65rem 0 0;
   padding: 0.65rem 0.75rem;
   border-radius: var(--radius-klein, 8px);
-  background: var(--panel-muted, #efebdd);
-  font-size: 0.82rem;
+  background: var(--panel-muted);
+  font-size: var(--font-size-sm);
 }
 
 .construction-capacity.is-at-cap {
-  outline: 1px solid color-mix(in srgb, #be123c 35%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--negative) 35%, transparent);
 }
 
 .construction-capacity-head {
@@ -3674,12 +3674,12 @@
 .construction-capacity-hint,
 .construction-capacity-full {
   margin: 0.35rem 0 0;
-  color: var(--tinte-weich, #6b5d4f);
+  color: var(--text-muted);
   line-height: 1.35;
 }
 
 .construction-capacity-full {
-  color: #be123c;
+  color: var(--negative);
   font-weight: 700;
 }
 
@@ -3694,15 +3694,15 @@
   min-height: 8.5rem;
   margin: 0 0 1rem;
   padding: 1rem 1.1rem;
-  box-shadow: 0 12px 36px rgb(15 23 42 / 12%);
+  box-shadow: var(--shadow-raised);
 }
 
 .construction-capacity--hero .construction-capacity-head {
-  font-size: 0.95rem;
+  font-size: var(--font-size-sm);
 }
 
 .construction-capacity--hero .construction-capacity-list {
-  font-size: 0.88rem;
+  font-size: var(--font-size-sm);
 }
 
 .youth-camps-grid-wrap > .construction-capacity {
@@ -3869,8 +3869,8 @@
   margin-bottom: 1.25rem;
   padding: 0.85rem 0.95rem;
   border-radius: 1rem;
-  background: #fff;
-  box-shadow: 0 8px 24px rgb(15 23 42 / 8%);
+  background: var(--panel);
+  box-shadow: var(--shadow-raised);
   overflow: visible;
 }
 
@@ -3917,10 +3917,10 @@
 .stadium-precinct-detail-hint {
   margin: 0;
   padding: 0.22rem 0.4rem;
-  border: 1px dashed #cbd5e1;
+  border: 1px dashed var(--line-strong);
   border-radius: 0.4rem;
-  color: #94a3b8;
-  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
   font-weight: 600;
   line-height: 1.3;
   text-align: center;
@@ -3953,7 +3953,7 @@
 .stadium-precinct-palette .stadium-precinct-tile {
   width: 2.55rem;
   height: 2.55rem;
-  font-size: 1.15rem;
+  font-size: var(--font-size-lg);
 }
 
 .stadium-precinct-count,
@@ -3964,8 +3964,8 @@
   min-width: 0.9rem;
   padding: 0 0.12rem;
   border-radius: 0.25rem;
-  background: #0f172a;
-  color: #fff;
+  background: var(--text);
+  color: var(--panel);
   font-size: 0.55rem;
   font-weight: 800;
   line-height: 1.15;
@@ -3976,15 +3976,15 @@
   padding: 0.08rem 0;
   border: 0;
   border-radius: 0.28rem;
-  background: #047857;
-  color: #ecfdf5;
+  background: var(--accent);
+  color: var(--on-accent);
   font-size: 0.55rem;
   font-weight: 800;
   cursor: pointer;
 }
 
 .stadium-precinct-upgrade:disabled {
-  background: #94a3b8;
+  background: var(--line-strong);
   cursor: not-allowed;
 }
 
@@ -3992,8 +3992,8 @@
   flex-basis: 100%;
   margin: 0.2rem 0 0;
   max-width: none;
-  color: #64748b;
-  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
   font-weight: 600;
   line-height: 1.35;
   text-align: left;
@@ -4036,7 +4036,7 @@
   min-width: 0;
   padding-left: 0.38rem;
   margin-left: 0.12rem;
-  border-left: 1px solid #e2e8f0;
+  border-left: 1px solid var(--line);
   overflow: visible;
   align-self: flex-start;
 }
@@ -4066,10 +4066,10 @@
   width: 2.35rem;
   height: 2.35rem;
   margin: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--line);
   border-radius: 0.35rem;
-  background: #f8fafc;
-  color: #475569;
+  background: var(--sunken);
+  color: var(--text-muted);
   cursor: default;
 }
 
@@ -4107,7 +4107,7 @@
 
 .stadium-precinct-status-kicker {
   margin: 0;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.58rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -4123,8 +4123,8 @@
   gap: 0.18rem 0.35rem;
   padding: 0.28rem 0.38rem;
   border-radius: 0.4rem;
-  background: #0f172a;
-  color: #ecfdf5;
+  background: var(--text);
+  color: var(--panel);
   font-size: 0.58rem;
   font-weight: 800;
 }
@@ -4138,7 +4138,7 @@
 
 .stadium-precinct-status-group h3 {
   margin: 0 0 0.15rem;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.54rem;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -4165,15 +4165,15 @@
   display: grid;
   place-items: center;
   gap: 0;
-  border: 1px solid #047857;
+  border: 1px solid var(--accent);
   border-radius: 0.35rem;
-  background: #ecfdf5;
-  color: #0f172a;
+  background: var(--accent-soft);
+  color: var(--text);
   cursor: pointer;
 }
 
 .stadium-precinct-buff span {
-  font-size: 0.92rem;
+  font-size: var(--font-size-sm);
   line-height: 1;
 }
 
@@ -4185,19 +4185,19 @@
 
 .stadium-precinct-buff.is-hunger {
   border-style: dashed;
-  border-color: #cbd5e1;
-  background: #f8fafc;
-  color: #94a3b8;
+  border-color: var(--line-strong);
+  background: var(--sunken);
+  color: var(--text-muted);
   filter: grayscale(0.7);
 }
 
 .stadium-precinct-buff.is-warn {
-  border-color: #d97706;
-  background: #fffbeb;
+  border-color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 10%, var(--panel));
 }
 
 .stadium-precinct-buff.is-active {
-  box-shadow: 0 0 0 2px rgb(4 120 87 / 28%);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .stadium-precinct-buff[data-tooltip]:hover::after,
@@ -4210,9 +4210,9 @@
   z-index: 5;
   padding: 0.28rem 0.5rem;
   border-radius: 0.4rem;
-  background: #0f172a;
-  color: #fff;
-  font-size: 0.68rem;
+  background: var(--text);
+  color: var(--panel);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   white-space: nowrap;
   pointer-events: none;
@@ -4235,10 +4235,10 @@
   height: calc(var(--drag-h, 1) * 1.85rem);
   display: grid;
   place-items: center;
-  border: 2px dashed #047857;
+  border: 2px dashed var(--accent);
   border-radius: 0.35rem;
-  background: rgb(236 253 245 / 88%);
-  color: #0f172a;
+  background: color-mix(in srgb, var(--accent-soft) 88%, transparent);
+  color: var(--text);
   pointer-events: none;
 }
 
@@ -4248,8 +4248,8 @@
 }
 
 .stadium-precinct-tile.is-cell.is-drag-footprint {
-  background: rgb(236 253 245 / 92%);
-  box-shadow: inset 0 0 0 2px #047857;
+  background: color-mix(in srgb, var(--accent-soft) 92%, transparent);
+  box-shadow: inset 0 0 0 2px var(--accent);
   z-index: 2;
 }
 
@@ -4266,15 +4266,15 @@
   justify-content: center;
   gap: 0.2rem;
   border-radius: 0.4rem 0.4rem 0.15rem 0.15rem;
-  background: #1e293b;
-  color: #f8fafc;
+  background: var(--text);
+  color: var(--panel);
   font-size: 0.58rem;
   font-weight: 800;
   letter-spacing: 0.02em;
 }
 
 .stadium-precinct-city-link span {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
 }
 
 .stadium-precinct-city-spacer {
@@ -4302,14 +4302,14 @@
 }
 
 .stadium-precinct-palette .stadium-precinct-tile.is-expansion {
-  background: #fef3c7;
+  background: color-mix(in srgb, var(--warning) 16%, var(--panel));
   border-style: solid;
-  border-color: #d97706;
+  border-color: var(--warning);
 }
 
 .stadium-precinct-palette .stadium-precinct-tile.is-street-erase {
   border-style: dashed;
-  border-color: #64748b;
+  border-color: var(--text-muted);
   opacity: 0.92;
 }
 
@@ -4319,28 +4319,17 @@
   place-items: center;
   gap: 0.1rem;
   padding: 0.3rem;
-  border: 2px dashed #c4a574;
+  border: 2px dashed var(--warning);
   border-radius: 0.55rem;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      rgb(196 165 116 / 18%) 0 50%,
-      rgb(180 148 100 / 10%) 50% 100%
-    ),
-    repeating-linear-gradient(
-      0deg,
-      rgb(196 165 116 / 16%) 0 20%,
-      transparent 20% 40%
-    ),
-    #f4e4c8;
-  color: #7c5a2a;
+  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--warning) 18%, transparent) 0 50%, color-mix(in srgb, var(--warning) 9%, transparent) 50% 100%), repeating-linear-gradient(0deg, color-mix(in srgb, var(--warning) 14%, transparent) 0 20%, transparent 20% 40%), var(--sunken);
+  color: var(--text);
   text-align: center;
   cursor: pointer;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 35%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel) 35%, transparent);
 }
 
 .stadium-precinct-plate strong {
-  font-size: 0.72rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   letter-spacing: 0.04em;
 }
@@ -4353,8 +4342,8 @@
 
 .stadium-precinct-plate.is-next {
   border-style: solid;
-  border-color: #d97706;
-  box-shadow: 0 0 0 2px rgb(217 119 6 / 28%);
+  border-color: var(--warning);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--warning) 28%, transparent);
 }
 
 .stadium-precinct-plate:disabled {
@@ -4365,30 +4354,19 @@
 
 .stadium-precinct-tile.is-hungry {
   border-style: dashed;
-  border-color: #d97706;
-  background: #fffbeb;
+  border-color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 10%, var(--panel));
 }
 
 .stadium-precinct-tile.is-filled.is-patch.is-under-construction {
   border-style: dashed;
-  border-color: #c4a574;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      rgb(196 165 116 / 22%) 0 50%,
-      rgb(180 148 100 / 12%) 50% 100%
-    ),
-    repeating-linear-gradient(
-      0deg,
-      rgb(196 165 116 / 18%) 0 20%,
-      transparent 20% 40%
-    ),
-    #f4e4c8;
-  color: #7c5a2a;
+  border-color: var(--warning);
+  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--warning) 22%, transparent) 0 50%, color-mix(in srgb, var(--warning) 11%, transparent) 50% 100%), repeating-linear-gradient(0deg, color-mix(in srgb, var(--warning) 18%, transparent) 0 20%, transparent 20% 40%), var(--sunken);
+  color: var(--text);
 }
 
 .stadium-precinct-tile.is-filled.is-patch.is-under-construction.is-hungry {
-  border-color: #d97706;
+  border-color: var(--warning);
 }
 
 .stadium-precinct-detail {
@@ -4398,9 +4376,9 @@
   gap: 0.32rem 0.45rem;
   margin: 0;
   padding: 0.26rem 0.42rem;
-  border: 1px solid var(--panel-border, #cbd5e1);
+  border: 1px solid var(--line-strong);
   border-radius: 0.4rem;
-  background: var(--panel-bg, #f8fafc);
+  background: var(--sunken);
 }
 
 .stadium-precinct-detail-main {
@@ -4414,16 +4392,16 @@
 .stadium-precinct-detail-line {
   margin: 0;
   min-width: 0;
-  font-size: 0.68rem;
+  font-size: var(--font-size-xs);
   line-height: 1.25;
-  color: var(--text-muted, #64748b);
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .stadium-precinct-detail-line strong {
-  color: var(--text, #0f172a);
+  color: var(--text);
   font-weight: 800;
 }
 
@@ -4432,29 +4410,29 @@
 }
 
 .stadium-precinct-detail-live {
-  color: #0369a1;
+  color: var(--info);
   font-weight: 700;
 }
 
 .stadium-precinct-detail-live::before {
   content: " · ";
-  color: var(--text-muted, #64748b);
+  color: var(--text-muted);
   font-weight: 600;
 }
 
 .stadium-precinct-detail-icon {
-  font-size: 1.1rem;
+  font-size: var(--font-size-md);
   line-height: 1;
   flex-shrink: 0;
 }
 
 .stadium-precinct-detail-upgrade {
   padding: 0.18rem 0.42rem;
-  border: 1px solid #047857;
+  border: 1px solid var(--accent);
   border-radius: 0.35rem;
-  background: #ecfdf5;
-  color: #065f46;
-  font-size: 0.64rem;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -4468,11 +4446,11 @@
 
 .stadium-precinct-detail-remove {
   padding: 0.18rem 0.42rem;
-  border: 1px solid #b91c1c;
+  border: 1px solid var(--negative);
   border-radius: 0.35rem;
-  background: #fef2f2;
-  color: #991b1b;
-  font-size: 0.64rem;
+  background: color-mix(in srgb, var(--negative) 8%, var(--panel));
+  color: var(--negative);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -4480,9 +4458,9 @@
 }
 
 .stadium-precinct-detail-maxed {
-  font-size: 0.72rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
-  color: var(--text-muted, #64748b);
+  color: var(--text-muted);
 }
 
 .stadium-precinct-detail-close {
@@ -4491,8 +4469,8 @@
   border: 0;
   border-radius: 0.3rem;
   background: transparent;
-  color: var(--text-muted, #64748b);
-  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
   cursor: pointer;
 }
 
@@ -4503,8 +4481,8 @@
   max-width: calc(100% - 0.3rem);
   padding: 0.02rem 0.22rem;
   border-radius: 0.2rem;
-  background: rgb(15 23 42 / 72%);
-  color: #f8fafc;
+  background: color-mix(in srgb, var(--text) 72%, transparent);
+  color: var(--panel);
   font-size: 0.52rem;
   font-style: normal;
   font-weight: 700;
@@ -4516,42 +4494,42 @@
 }
 
 .stadium-precinct-tile.is-patch.is-building-training_pitch.is-tier-2 {
-  border-color: #15803d;
-  background: linear-gradient(145deg, #dcfce7 0%, #bbf7d0 100%);
+  border-color: var(--series-3);
+  background: color-mix(in srgb, var(--series-3) 16%, var(--panel));
 }
 
 .stadium-precinct-tile.is-patch.is-building-training_pitch.is-tier-3 {
-  border-color: #047857;
-  background: linear-gradient(145deg, #bbf7d0 0%, #86efac 55%, #4ade80 100%);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--series-3) 30%, var(--panel));
 }
 
 .stadium-precinct-tile.is-patch.is-building-youth_pitch.is-tier-2 {
-  border-color: #65a30d;
-  background: linear-gradient(145deg, #ecfccb 0%, #d9f99d 100%);
+  border-color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 14%, var(--panel));
 }
 
 .stadium-precinct-tile.is-patch.is-building-fanshop.is-tier-3,
 .stadium-precinct-tile.is-patch.is-building-fanshop.is-tier-4,
 .stadium-precinct-tile.is-patch.is-building-fanshop.is-tier-5 {
-  border-color: #0369a1;
-  background: linear-gradient(145deg, #e0f2fe 0%, #bae6fd 100%);
+  border-color: var(--series-1);
+  background: color-mix(in srgb, var(--series-1) 16%, var(--panel));
 }
 
 .stadium-precinct-tile.is-patch.is-building-fanshop.is-tier-5 {
-  box-shadow: inset 0 0 0 1px rgb(2 132 199 / 35%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--series-1) 35%, transparent);
 }
 
 .stadium-precinct-tile.is-patch.is-building-kiosk.is-tier-2,
 .stadium-precinct-tile.is-patch.is-building-beer_tent.is-tier-2 {
-  border-color: #b45309;
-  background: linear-gradient(145deg, #fff7ed 0%, #ffedd5 100%);
+  border-color: var(--series-2);
+  background: color-mix(in srgb, var(--series-2) 14%, var(--panel));
 }
 
 .stadium-precinct-tile.is-patch.is-building-training_ground.is-tier-3,
 .stadium-precinct-tile.is-patch.is-building-training_ground.is-tier-4,
 .stadium-precinct-tile.is-patch.is-building-training_ground.is-tier-5 {
-  border-color: #4338ca;
-  background: linear-gradient(145deg, #eef2ff 0%, #e0e7ff 100%);
+  border-color: var(--series-6);
+  background: color-mix(in srgb, var(--series-6) 14%, var(--panel));
 }
 
 .stadium-precinct-dock {
@@ -4570,9 +4548,9 @@
   padding: 0;
   border: 0;
   border-radius: 0.22rem;
-  background: #0f172a;
-  color: #fff;
-  font-size: 0.72rem;
+  background: var(--text);
+  color: var(--panel);
+  font-size: var(--font-size-xs);
   font-weight: 800;
   line-height: 1;
   cursor: pointer;
@@ -4605,7 +4583,7 @@
 .stadium-precinct-handle.is-shrink {
   width: 0.95rem;
   height: 0.95rem;
-  background: #475569;
+  background: var(--text-muted);
   font-size: 0.62rem;
 }
 
@@ -4635,22 +4613,22 @@
   padding: 0;
   border: 0;
   border-radius: 0.22rem;
-  background: #0f172a;
-  color: #fff;
-  font-size: 0.78rem;
+  background: var(--text);
+  color: var(--panel);
+  font-size: var(--font-size-xs);
   font-weight: 800;
   line-height: 1;
   cursor: pointer;
 }
 
 .stadium-precinct-tile.is-ramp:not(.is-street) {
-  box-shadow: inset 0 3px 0 #1e293b;
-  color: #334155;
+  box-shadow: inset 0 3px 0 var(--text);
+  color: var(--text);
 }
 
 .stadium-precinct-handle.is-blocked,
 .stadium-precinct-handle:disabled {
-  background: #94a3b8;
+  background: var(--line-strong);
   cursor: not-allowed;
 }
 
@@ -4664,22 +4642,22 @@
   padding: 0;
   display: grid;
   place-items: center;
-  border: 1.5px dashed #cbd5e1;
+  border: 1.5px dashed var(--line-strong);
   border-radius: 0.28rem;
-  background: #f8fafc;
-  font-size: 1.05rem;
+  background: var(--sunken);
+  font-size: var(--font-size-md);
   cursor: grab;
 }
 
 .stadium-precinct-tile.is-cell {
-  background: #f1f5f9;
+  background: var(--sunken);
   cursor: pointer;
 }
 
 .stadium-precinct-tile.is-parcel {
-  background: #e2e8f0;
-  color: #64748b;
-  font-size: 0.72rem;
+  background: var(--sunken);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
 }
 
 .stadium-precinct-map.is-paving {
@@ -4687,10 +4665,10 @@
 }
 
 .stadium-precinct-tile.is-street {
-  background: #1e293b;
+  background: var(--text);
   border-style: solid;
-  border-color: #0f172a;
-  color: #f8fafc;
+  border-color: var(--text);
+  color: var(--panel);
   overflow: hidden;
 }
 
@@ -4708,8 +4686,8 @@
   height: 22%;
   transform: translate(-50%, -50%);
   border-radius: 0.2rem;
-  background: #64748b;
-  box-shadow: inset 0 0 0 1px #94a3b8;
+  background: var(--text-muted);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
 .stadium-precinct-road.is-straight .hub {
@@ -4733,8 +4711,8 @@
 
 .stadium-precinct-road .arm {
   position: absolute;
-  background: #64748b;
-  box-shadow: inset 0 0 0 1px #94a3b8;
+  background: var(--text-muted);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
 .stadium-precinct-road .arm.n,
@@ -4772,16 +4750,16 @@
 }
 
 .stadium-precinct-tile.is-road-preview {
-  background: #facc15;
-  box-shadow: inset 0 0 0 2px #ca8a04;
+  background: color-mix(in srgb, var(--warning) 30%, var(--panel));
+  box-shadow: inset 0 0 0 2px var(--warning);
 }
 
 .stadium-precinct-tile.is-road-blocked {
-  background: #fecaca;
+  background: color-mix(in srgb, var(--negative) 22%, var(--panel));
 }
 
 .stadium-precinct-tile.is-road-exist {
-  box-shadow: inset 0 0 0 2px #facc15;
+  box-shadow: inset 0 0 0 2px var(--warning);
 }
 
 .stadium-precinct-tile.is-patch {
@@ -4792,12 +4770,12 @@
 .stadium-precinct-tile.is-owned,
 .stadium-precinct-tile.is-picked {
   border-style: solid;
-  border-color: #047857;
-  background: #ecfdf5;
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .stadium-precinct-tile.is-picked {
-  box-shadow: 0 0 0 2px rgb(4 120 87 / 28%);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .stadium-precinct-tile.is-locked {
@@ -4817,9 +4795,9 @@
   z-index: 4;
   padding: 0.28rem 0.5rem;
   border-radius: 0.4rem;
-  background: #0f172a;
-  color: #fff;
-  font-size: 0.68rem;
+  background: var(--text);
+  color: var(--panel);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   white-space: nowrap;
   pointer-events: none;
@@ -4832,21 +4810,21 @@
   gap: 0.15rem;
   padding: 0.35rem;
   border-radius: 0.55rem;
-  background: #15803d;
-  color: #ecfdf5;
+  background: var(--accent);
+  color: var(--on-accent);
   text-align: center;
   pointer-events: auto;
   overflow: visible;
 }
 
 .stadium-precinct-arena.is-hungry {
-  outline: 2px dashed #d97706;
+  outline: 2px dashed var(--warning);
   outline-offset: -2px;
-  box-shadow: inset 0 0 0 3px rgb(251 191 36 / 55%);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--warning) 55%, transparent);
 }
 
 .stadium-precinct-arena span {
-  font-size: 1.15rem;
+  font-size: var(--font-size-lg);
 }
 
 .stadium-precinct-arena strong {
@@ -4867,7 +4845,7 @@
   background-image: repeating-linear-gradient(
     -45deg,
     var(--panel) 0 8px,
-    color-mix(in srgb, var(--rasen, #2f6b4f) 28%, var(--panel)) 8px 16px
+    color-mix(in srgb, var(--accent) 28%, var(--panel)) 8px 16px
   );
   outline: 2px dashed var(--tinte-weich);
   outline-offset: -3px;

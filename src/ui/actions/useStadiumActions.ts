@@ -15,6 +15,7 @@ import { infrastructureCostForWeek } from "../../economy/early-pacing.ts";
 import { weeksOfWages } from "../../economy/spend-runway.ts";
 import {
   normalizeClubStadium,
+  blockDisplayName,
   stadiumTotalCapacity,
   STADIUM_BASE_BLOCKS,
   type ClubStadium,
@@ -40,7 +41,7 @@ import {
   removePrecinctPatch,
   removeStreetCell,
   precinctPlacementCost,
-  PRECINCT_BUILDINGS,
+  precinctBuildingLabel,
   shrinkPrecinctPatchToMin,
   occupiedCells,
   type PrecinctBuilding,
@@ -48,7 +49,7 @@ import {
 } from "../../stadium/precinct.ts";
 import { reconcilePrecinctBuildTimers } from "../../stadium/precinct-construction.ts";
 import { applyRestaurantProposalStory } from "../../stadium/precinct-campus-events.ts";
-import { canBuyAcademyUpgrade, ACADEMY_FACILITIES } from "../../youth/academy.ts";
+import { academyFacilityName, canBuyAcademyUpgrade } from "../../youth/academy.ts";
 import { careerWeekIndex } from "../../stadium/hospitality.ts";
 import {
   startPrecinctConstruction,
@@ -170,7 +171,7 @@ export function useStadiumActions(args: {
       const quoted = infrastructureCostForWeek(check.cost, week);
       requestClubSpend(
         quoted,
-        def ? `${def.icon} ${def.name}` : "Tribünen-Ausbau",
+        def ? def.name : t("stadium.spend.stand"),
         (current) => {
           const recheck = canPurchaseStadiumUpgrade(current.stadium, current.finances, upgradeId);
           if (!recheck.allowed || recheck.cost === undefined) return current;
@@ -214,7 +215,9 @@ export function useStadiumActions(args: {
       }
       requestClubSpend(
         quoted,
-        block ? `${block.name} · Stufe ${check.nextLevel}` : "Tribünen-Ausbau",
+        block
+          ? t("stadium.spend.standLevel", { stand: blockDisplayName(block), level: check.nextLevel ?? "?" })
+          : t("stadium.spend.stand"),
         (current) => {
           const recheck = canStartBlockExpansion(
             current.stadium,
@@ -269,10 +272,9 @@ export function useStadiumActions(args: {
       const baseCost = precinctPlacementCost(precinct, building, from);
       const cost = infrastructureCostForWeek(baseCost, week);
       if (cost > finances.cash) return;
-      const def = PRECINCT_BUILDINGS.find((entry) => entry.id === building);
       requestClubSpend(
         cost,
-        def ? `${def.icon} ${def.label}` : "Gelände",
+        precinctBuildingLabel(building),
         (current) => {
           const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
           const actualBase = precinctPlacementCost(currentPrecinct, building, from);
@@ -347,8 +349,7 @@ export function useStadiumActions(args: {
       finances.cash,
     );
     if (!check.ok) return;
-    const def = ACADEMY_FACILITIES.find((entry) => entry.id === check.target);
-    requestClubSpend(check.cost, def ? `${def.icon} ${def.name}` : "Jugend-Campus", (current) => {
+    requestClubSpend(check.cost, academyFacilityName(check.target), (current) => {
       const next = canBuyAcademyUpgrade(
         current.academyFacility,
         stadiumTotalCapacity(current.stadium, current.season, current.week),
@@ -384,11 +385,10 @@ export function useStadiumActions(args: {
       const precinct = stadium.precinct ?? emptyPrecinct();
       const check = canUpgradePrecinctBuilding(precinct, building, finances.cash);
       if (!check.allowed) return;
-      const def = PRECINCT_BUILDINGS.find((entry) => entry.id === building);
       const quoted = infrastructureCostForWeek(check.cost, week);
       requestClubSpend(
         quoted,
-        def ? `${def.icon} ${def.label} Ausbau` : "Gelände-Ausbau",
+        t("stadium.spend.precinctUpgrade", { building: precinctBuildingLabel(building) }),
         (current) => {
           const currentPrecinct = current.stadium.precinct ?? emptyPrecinct();
           const nextCheck = canUpgradePrecinctBuilding(currentPrecinct, building, current.finances.cash);

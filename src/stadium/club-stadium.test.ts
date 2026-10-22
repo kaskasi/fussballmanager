@@ -78,7 +78,8 @@ describe("club stadium", () => {
     const north = stadium.blocks.find((block) => block.id === "north")!;
     const withRail = normalizeClubStadium({
       ...stadium,
-      precinct: normalizePrecinct(placePrecinctBuilding(emptyPrecinct(), 7, 0, "transit")),
+      // Beside the starter road (x = 8), so the 2×3 stop fits and docks.
+      precinct: normalizePrecinct(placePrecinctBuilding(emptyPrecinct(), 9, 0, "transit")),
     });
     const updated = withRail.blocks.find((block) => block.id === "north")!;
     expect(updated.fill_rate).toBeGreaterThan(north.fill_rate);

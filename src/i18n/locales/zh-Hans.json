@@ -1502,6 +1502,8 @@
   "transfers.preContract.loaned": "租借中——无法预签。",
   "transfers.preContract.pending": "已有一份待生效的预签合同。",
   "transfers.preContract.tooEarly": "合同到期前 6 个月起才能预签。",
+  "transfers.arrivalsPages": "转入分页",
+  "transfers.departuresPages": "转出分页",
   "shell.nav.transfers": "转会",
   "shell.next": "NEXT ▶",
   "shell.nextToPostfach": "NEXT — 收件箱（待办决策）",

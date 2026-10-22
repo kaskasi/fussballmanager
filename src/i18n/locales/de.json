@@ -1626,6 +1626,8 @@
   "transfers.preContract.loaned": "Ausgeliehen — kein Vorvertrag möglich.",
   "transfers.preContract.pending": "Bereits ein Vorvertrag hängt.",
   "transfers.preContract.tooEarly": "Vorvertrag erst ab 6 Monate vor Vertragsende.",
+  "transfers.arrivalsPages": "Zugänge – Seiten",
+  "transfers.departuresPages": "Abgänge – Seiten",
   "shell.nav.transfers": "Transfers",
   "shell.next": "NEXT ▶",
   "shell.nextToPostfach": "NEXT — Postfach (offene Entscheidungen)",

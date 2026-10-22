@@ -42,41 +42,71 @@ const KIND_ICON: Record<TransferKind, typeof ArrowDownLeft> = {
   ai: ArrowLeftRight,
 };
 
+const HISTORY_PAGE_SIZE = 5;
+
 function TransferHistoryList({
   records,
   worldClubs,
   onSelectPlayer,
   emptyKey,
+  pagerLabelKey,
 }: {
   records: readonly TransferRecord[];
   worldClubs?: readonly WorldClub[];
   onSelectPlayer: (playerId: string) => void;
   emptyKey: string;
+  pagerLabelKey: string;
 }) {
+  const [page, setPage] = useState(0);
+  const pageCount = Math.max(1, Math.ceil(records.length / HISTORY_PAGE_SIZE));
+
+  useEffect(() => {
+    setPage(0);
+  }, [records]);
+
   if (records.length === 0) {
     return <p className="tc-empty">{t(emptyKey)}</p>;
   }
+  const pageRecords = records.slice(page * HISTORY_PAGE_SIZE, page * HISTORY_PAGE_SIZE + HISTORY_PAGE_SIZE);
   return (
-    <ul className="tc-list">
-      {records.map((record) => {
-        const Icon = KIND_ICON[record.kind] ?? ArrowLeftRight;
-        return (
-          <li key={record.id} className="tc-list__item tc-list__item--wide">
-            <button type="button" className="tc-transfers__row" onClick={() => onSelectPlayer(record.player_id)}>
-              <Icon className="tc-icon" aria-hidden />
-              <span className="tc-list__main">
-                <span className="tc-list__name">{record.player_name}</span>
-                <span className="tc-list__meta">
-                  {transferKindLabel(record.kind)} · {displayTransferOtherClubs(record.other_club_name, worldClubs)} ·{" "}
-                  {formatCalendarWeek(record.week)}
+    <>
+      <ul className="tc-list">
+        {pageRecords.map((record) => {
+          const Icon = KIND_ICON[record.kind] ?? ArrowLeftRight;
+          return (
+            <li key={record.id} className="tc-list__item tc-list__item--wide">
+              <button type="button" className="tc-transfers__row" onClick={() => onSelectPlayer(record.player_id)}>
+                <Icon className="tc-icon" aria-hidden />
+                <span className="tc-list__main">
+                  <span className="tc-list__name">{record.player_name}</span>
+                  <span className="tc-list__meta">
+                    {transferKindLabel(record.kind)} · {displayTransferOtherClubs(record.other_club_name, worldClubs)} ·{" "}
+                    {formatCalendarWeek(record.week)}
+                  </span>
                 </span>
-              </span>
+              </button>
+              <span className="tc-list__value">{record.fee != null ? formatClubCash(record.fee) : "—"}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {pageCount > 1 ? (
+        <nav className="tc-chips tc-transfers__pages" aria-label={t(pagerLabelKey)}>
+          {Array.from({ length: pageCount }, (_, index) => (
+            <button
+              key={index}
+              type="button"
+              className="tc-chip tc-chip--dense"
+              aria-pressed={index === page}
+              aria-current={index === page ? "page" : undefined}
+              onClick={() => setPage(index)}
+            >
+              {index + 1}
             </button>
-            <span className="tc-list__value">{record.fee != null ? formatClubCash(record.fee) : "—"}</span>
-          </li>
-        );
-      })}
-    </ul>
+          ))}
+        </nav>
+      ) : null}
+    </>
   );
 }
 
@@ -324,6 +354,7 @@ export function TransfersScreen({
                     worldClubs={worldClubs}
                     onSelectPlayer={onSelectPlayer}
                     emptyKey="transfers.arrivalsEmpty"
+                    pagerLabelKey="transfers.arrivalsPages"
                   />
                 </section>
                 <section className="tc-section">
@@ -333,6 +364,7 @@ export function TransfersScreen({
                     worldClubs={worldClubs}
                     onSelectPlayer={onSelectPlayer}
                     emptyKey="transfers.departuresEmpty"
+                    pagerLabelKey="transfers.departuresPages"
                   />
                 </section>
               </>

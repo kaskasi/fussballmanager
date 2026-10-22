@@ -1626,6 +1626,8 @@
   "transfers.preContract.loaned": "On loan — no pre-contract possible.",
   "transfers.preContract.pending": "A pre-contract is already pending.",
   "transfers.preContract.tooEarly": "Pre-contracts only from 6 months before the contract ends.",
+  "transfers.arrivalsPages": "Arrivals pages",
+  "transfers.departuresPages": "Departures pages",
   "shell.nav.transfers": "Transfers",
   "shell.next": "NEXT ▶",
   "shell.nextToPostfach": "NEXT — inbox (open decisions)",

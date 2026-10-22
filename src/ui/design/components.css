@@ -55,6 +55,7 @@
 .tc-btn--primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
 .tc-btn--ghost { background: transparent; border-color: transparent; }
 .tc-btn--ghost:hover { background: var(--sunken); }
+.tc-btn--sm { min-height: var(--control-sm); padding: 0 var(--space-3); font-size: var(--font-size-xs); line-height: 1rem; }
 .tc-btn:disabled, .tc-btn[aria-disabled="true"] { background: var(--sunken); border-color: var(--line); color: var(--text-muted); cursor: not-allowed; }
 
 /* Filter chips */
@@ -63,6 +64,8 @@
 .tc-chip:hover { background: var(--sunken); }
 .tc-chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .tc-chip[aria-pressed="true"]:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+.tc-chip--dense { min-height: var(--control-sm); min-width: var(--control-sm); padding: 0 var(--space-2); font-size: var(--font-size-xs); line-height: 1rem; }
+.tc-chips--toolbar { margin-bottom: var(--space-3); }
 .tc-chip__count { margin-left: var(--space-1); font-weight: 400; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .tc-chip[aria-pressed="true"] .tc-chip__count { color: var(--on-accent); }
 
@@ -129,6 +132,15 @@
 .tc-legend { flex-wrap: wrap; column-gap: var(--space-4); padding: 0; list-style: none; }
 .tc-legend__item { display: inline-flex; align-items: center; gap: var(--space-2); }
 .tc-row--mark td { background: var(--sunken); font-weight: 700; }
+.tc-row--link { cursor: pointer; }
+.tc-row--link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tc-namecell { display: inline-flex; align-items: center; gap: var(--space-2); font-weight: 700; }
+
+/* State glyph: shape + colour (● good · ▲ mid · ◆ low), always with a word for screen readers */
+.tc-state { font-weight: 700; }
+.tc-state--good { color: var(--positive); }
+.tc-state--mid { color: var(--warning); }
+.tc-state--low { color: var(--negative); }
 
 /* Table place with zone (promotion / playoff / relegation) */
 .tc-place { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 var(--space-1); box-sizing: border-box; border-radius: var(--radius-sm); font-family: var(--font-display); font-weight: 700; font-size: var(--font-size-sm); line-height: 1; font-variant-numeric: tabular-nums; }
@@ -146,12 +158,44 @@
 .tc-list__name { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .tc-list__meta { overflow: hidden; color: var(--text-muted); font-size: var(--font-size-xs); line-height: 1rem; text-overflow: ellipsis; white-space: nowrap; }
 .tc-list__value { font-family: var(--font-display); font-weight: 700; font-size: var(--font-size-md); font-variant-numeric: tabular-nums; }
+.tc-list__item--wide { grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); padding-block: var(--space-3); }
 .tc-list__item--own { margin: 0 calc(-1 * var(--space-2)); padding-inline: var(--space-2); background: var(--accent-soft); border-radius: var(--radius-sm); }
 
 /* Panel sections (several short lists in one panel) */
 .tc-section + .tc-section { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line); }
 .tc-section__title { margin: 0 0 var(--space-2); }
 .tc-empty { margin: 0; color: var(--text-muted); font-size: var(--font-size-xs); line-height: 1rem; }
+
+/* Vertical stack of panels inside a screen or tab */
+.tc-stack { display: grid; gap: var(--space-4); min-width: 0; }
+
+/* Empty state for a whole screen or tab */
+.tc-empty-state { display: grid; justify-items: center; gap: var(--space-2); padding: var(--space-8) var(--space-4); color: var(--text-muted); text-align: center; }
+.tc-empty-state .tc-icon { width: 28px; height: 28px; }
+.tc-empty-state p { margin: 0; }
+.tc-empty-state__title { color: var(--text); font-weight: 700; }
+
+/* Form controls */
+.tc-select { box-sizing: border-box; max-width: 100%; min-width: 12rem; min-height: var(--control-md); padding: 0 var(--space-3); border: 1px solid var(--control-border); border-radius: var(--radius-md); background: var(--panel); color: var(--text); font: inherit; font-size: var(--font-size-sm); }
+.tc-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tc-checks { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.tc-check { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: start; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-md); cursor: pointer; }
+.tc-check:hover { border-color: var(--control-border); }
+.tc-check:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.tc-check input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+.tc-check .tc-icon { color: var(--text-muted); }
+.tc-check__copy { display: grid; gap: 2px; min-width: 0; }
+.tc-check__title { font-weight: 700; }
+.tc-check__hint { color: var(--text-muted); font-size: var(--font-size-xs); line-height: 1rem; }
+
+/* Cards inside a panel (one per coach role, …) */
+.tc-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--space-3); }
+.tc-cards__note { margin: var(--space-3) 0 0; }
+.tc-card { display: grid; align-content: start; gap: var(--space-2); min-width: 0; padding: var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-md); }
+.tc-card__title { display: flex; align-items: center; gap: var(--space-2); margin: 0; }
+.tc-card__title .tc-icon { width: 16px; height: 16px; }
+.tc-card__current { display: grid; gap: 2px; padding-bottom: var(--space-2); border-bottom: 1px solid var(--line); }
+.tc-card__subtitle { margin: var(--space-1) 0 0; }
 
 /* Stat tiles (club profile, summaries) */
 .tc-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); margin: 0; }
@@ -225,6 +269,8 @@
 }
 @media (max-width: 719px) {
   .tc-hide-narrow { display: none; }
+  .tc-list__item--stack-narrow { grid-template-columns: minmax(0, 1fr); }
+  .tc-list__item--stack-narrow .tc-select { width: 100%; }
   .tc-news__grid { grid-template-columns: minmax(0, 1fr); }
   .tc-news__side { padding-left: 0; padding-top: var(--space-4); border-left: 0; border-top: 1px solid var(--newsprint-rule); }
 }

@@ -391,84 +391,6 @@
   color: #fff;
 }
 
-.assistant-delegation {
-  background: #fff;
-  border-radius: 1rem;
-  padding: 1rem 1.1rem;
-  box-shadow: 0 10px 28px rgb(15 23 42 / 8%);
-  display: grid;
-  gap: 0.85rem;
-}
-
-.assistant-delegation-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-start;
-}
-
-.assistant-delegation-head h2 {
-  margin: 0;
-  font-size: 1.05rem;
-}
-
-.assistant-delegation-meta {
-  margin: 0.25rem 0 0;
-  color: #64748b;
-  font-size: 0.9rem;
-}
-
-.assistant-delegation-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2.5rem;
-  padding: 0.2rem 0.45rem;
-  border-radius: 999px;
-  background: #eef2ff;
-  color: #4338ca;
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.assistant-delegation-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.55rem;
-}
-
-.assistant-delegation-row {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  gap: 0.65rem;
-  align-items: center;
-  padding: 0.55rem 0.65rem;
-  border-radius: 0.75rem;
-  background: #f8fafc;
-  cursor: pointer;
-}
-
-.assistant-delegation-icon {
-  font-size: 1.1rem;
-}
-
-.assistant-delegation-copy {
-  display: grid;
-  gap: 0.1rem;
-}
-
-.assistant-delegation-copy strong {
-  font-size: 0.95rem;
-}
-
-.assistant-delegation-copy small {
-  color: #64748b;
-  font-size: 0.82rem;
-}
-
-.mentoring-panel,
 .scout-network {
   background: #fff;
   border-radius: 1rem;
@@ -478,20 +400,17 @@
   gap: 0.85rem;
 }
 
-.mentoring-head h2,
 .scout-network-head h2 {
   margin: 0;
   font-size: 1.05rem;
 }
 
-.mentoring-meta,
 .scout-network-meta {
   margin: 0.25rem 0 0;
   color: #64748b;
   font-size: 0.9rem;
 }
 
-.mentoring-list,
 .scout-network-list {
   list-style: none;
   margin: 0;
@@ -500,7 +419,6 @@
   gap: 0.55rem;
 }
 
-.mentoring-row,
 .scout-network-row {
   display: grid;
   gap: 0.5rem;
@@ -515,24 +433,13 @@
   gap: 0.65rem;
 }
 
-.mentoring-player strong,
 .scout-network-copy strong {
   display: block;
 }
 
-.mentoring-player small,
 .scout-network-copy small {
   color: #64748b;
   font-size: 0.82rem;
-}
-
-.mentoring-progress {
-  display: block;
-  margin-top: 0.15rem;
-}
-
-.mentoring-select select {
-  width: 100%;
 }
 
 .scout-network-market {
@@ -628,76 +535,6 @@
 .training-staff-env-label {
   color: #64748b;
   font-weight: 600;
-}
-
-.training-staff-grid {
-  display: grid;
-  gap: 0.85rem;
-}
-
-.training-staff-card {
-  background: #fff;
-  border-radius: 1rem;
-  padding: 0.9rem 1rem;
-  box-shadow: 0 10px 28px rgb(15 23 42 / 8%);
-}
-
-.training-staff-card-head h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1rem;
-}
-
-.training-staff-identity {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin-bottom: 0.15rem;
-}
-
-.training-staff-portrait.player-portrait.is-sm {
-  flex-shrink: 0;
-}
-
-.training-staff-name {
-  margin: 0;
-  font-weight: 800;
-}
-
-.training-staff-meta,
-.training-staff-empty,
-.training-staff-market-label {
-  margin: 0.2rem 0 0;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-}
-
-.training-staff-role-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.training-staff-candidates {
-  list-style: none;
-  margin: 0.5rem 0 0;
-  padding: 0;
-  display: grid;
-  gap: 0.45rem;
-}
-
-.training-staff-candidate {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  align-items: center;
-  padding: 0.55rem 0.65rem;
-  border-radius: 0.75rem;
-  background: #f8fafc;
-}
-
-.training-staff-candidate small {
-  display: block;
-  color: #64748b;
 }
 
 .training-rules {

@@ -8013,12 +8013,6 @@
   margin: 0;
 }
 
-.squad-summary {
-  margin: 0.35rem 0 0;
-  color: #64748b;
-  font-weight: 600;
-}
-
 .squad-empty {
   text-align: center;
   padding: 2.5rem 1rem;
@@ -8031,11 +8025,6 @@
   font-size: 2.5rem;
   display: block;
   margin-bottom: 0.75rem;
-}
-
-.squad-empty-hint {
-  color: #64748b;
-  font-size: 0.92rem;
 }
 
 .squad-table-wrap {
@@ -8128,45 +8117,6 @@
   color: #0f766e;
 }
 
-.squad-sort-header {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.15rem;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-transform: inherit;
-  letter-spacing: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.squad-sort-header.is-left {
-  justify-content: flex-start;
-}
-
-.squad-sort-header:hover,
-.squad-sort-header.is-active {
-  color: #0f172a;
-}
-
-.squad-sort-icons {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 0;
-  line-height: 0.55;
-  font-size: 0.45rem;
-  color: #cbd5e1;
-}
-
-.squad-sort-icons span.is-active {
-  color: #0f172a;
-}
-
 .squad-form {
   font-weight: 800;
   text-align: center;
@@ -8184,29 +8134,20 @@
   color: #dc2626;
 }
 
-.squad-shape-mark {
-  margin-right: 0.2rem;
-  font-weight: 800;
-}
-
-.squad-fitness,
 .squad-risk {
   font-weight: 700;
   text-align: center;
   white-space: nowrap;
 }
 
-.squad-fitness.is-good,
 .squad-risk.is-good {
   color: #059669;
 }
 
-.squad-fitness.is-mid,
 .squad-risk.is-watch {
   color: #d97706;
 }
 
-.squad-fitness.is-low,
 .squad-risk.is-risk {
   color: #dc2626;
 }
@@ -9155,25 +9096,6 @@ button.treter-article {
   text-align: center;
 }
 
-.scouting-chip {
-  border: 0;
-  background: #fff;
-  border-radius: 999px;
-  padding: 0.35rem 0.7rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.scouting-filter-toolbar .scouting-chip {
-  padding: 0.22rem 0.5rem;
-  font-size: 0.72rem;
-  line-height: 1.2;
-}
-
-.scouting-chip.is-active {
-  outline: 2px solid #059669;
-}
-
 /* Scouting: five equal-width tabs; same band metrics as other fm-tab-bar screens */
 main.scouting-has-primary-tabs > .scouting-primary-tab-bar {
   flex-wrap: nowrap;
@@ -9209,11 +9131,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 
 .scouting-hits-grid-head .scouting-section-title {
   margin: 0;
-}
-
-.scouting-hits-grid-head .scouting-chip {
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 
 .scouting-watchlist-only {

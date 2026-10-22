@@ -39,30 +39,11 @@ export interface AssistantDelegation {
   scouting: boolean;
 }
 
-export const ASSISTANT_DELEGATION_TASKS: readonly {
-  key: AssistantDelegationTask;
-  label: string;
-  icon: string;
-  hint: string;
-}[] = [
-  {
-    key: "lineup",
-    label: "Aufstellung",
-    icon: "lineup",
-    hint: "Vor dem Spieltag Startelf und Formation wählen",
-  },
-  {
-    key: "training",
-    label: "Wochenplan",
-    icon: "training",
-    hint: "Erinnerung, bevor du den Wochenplan vergisst",
-  },
-  {
-    key: "scouting",
-    label: "Scouting",
-    icon: "scouting",
-    hint: "Aufträge pflegen und Ziele zuweisen",
-  },
+/** Delegable tasks in display order; labels live in i18n (`staff.delegation.<key>.*`). */
+export const ASSISTANT_DELEGATION_TASKS: readonly { key: AssistantDelegationTask }[] = [
+  { key: "lineup" },
+  { key: "training" },
+  { key: "scouting" },
 ];
 
 export const DEFAULT_ASSISTANT_DELEGATION: AssistantDelegation = {
@@ -90,11 +71,14 @@ export function assistantQuality(staff: CoachingStaff): number {
   return Math.round((attack + defense) / 2);
 }
 
-export function assistantQualityLabel(quality: number): string {
-  if (quality >= 75) return "Scharf";
-  if (quality >= 60) return "Solide";
-  if (quality >= 48) return "Durchwachsen";
-  return "Unsicher";
+export type AssistantQualityTier = "sharp" | "solid" | "patchy" | "unsure";
+
+/** Quality band for the Staff tab; labels live in i18n (`staff.assistant.tier.<tier>`). */
+export function assistantQualityTier(quality: number): AssistantQualityTier {
+  if (quality >= 75) return "sharp";
+  if (quality >= 60) return "solid";
+  if (quality >= 48) return "patchy";
+  return "unsure";
 }
 
 export function assistantLineupMode(quality: number): AutoLineupMode {

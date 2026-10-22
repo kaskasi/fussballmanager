@@ -110,8 +110,9 @@ body,
   main.club-shell-card-body:has(> .fm-tab-bar--screen-tabs) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active):hover,
   main.club-shell-card-body:has(> .fm-tab-bar--screen-tabs) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active):focus-visible,
   .profile-spoke-tabs.fm-tab-bar--screen-tabs .fm-tab:not(.is-active) {
-    background: var(--panel-muted) !important;
-    color: var(--tinte-weich) !important;
+    background: transparent !important;
+    color: var(--text-muted) !important;
+    box-shadow: none !important;
   }
 
   main.scouting-has-primary-tabs > .scouting-primary-tab-bar.fm-tab-bar--screen-tabs .fm-tab {

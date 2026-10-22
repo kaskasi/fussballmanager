@@ -5,16 +5,17 @@
   overflow: hidden;
 }
 
-/* fm2001 tab band — square segments, not bookmark ears (see fmscreens/fm2001/squad.png) */
+/* Screen tabs (FmScreenTabBar): the design system's tc-tab look — underline, no yellow (design.md §4.3).
+   Phones turn the band into a vertical rail (mobile-pass.css). */
 .fm-tab-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
-  gap: 0;
-  padding: 0;
+  gap: 0 var(--space-6);
+  padding: 0 var(--club-shell-inset);
   margin: 0;
-  background: var(--panel-muted);
-  border-bottom: var(--outline);
+  background: transparent;
+  border-bottom: 1px solid var(--line);
 }
 
 .fm-tab {
@@ -22,34 +23,35 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   flex: 0 1 auto;
   margin: 0;
-  padding: 0.5rem 1.15rem;
+  padding: var(--space-3) 0;
   border: 0;
-  border-right: var(--outline);
   border-radius: 0;
-  background: var(--panel-muted);
-  font-family: var(--font-display);
+  background: none;
+  font-family: var(--font-text);
   font-weight: 700;
-  font-size: 0.82rem;
-  line-height: 1.2;
-  color: var(--tinte-weich);
+  font-size: var(--font-size-sm);
+  line-height: 1.25rem;
+  color: var(--text-muted);
+  white-space: nowrap;
   cursor: pointer;
   box-shadow: none;
 }
 
-.fm-tab:last-child {
-  border-right: none;
+.fm-tab:hover {
+  color: var(--text);
 }
 
 .fm-tab.is-active {
-  background: var(--sonnengelb);
-  color: var(--tinte);
+  color: var(--text);
+  box-shadow: inset 0 -3px 0 var(--accent);
 }
 
-.fm-tab:not(.is-active):hover {
-  background: var(--panel);
+.fm-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .fm-tab-panel {

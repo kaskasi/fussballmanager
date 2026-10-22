@@ -24,21 +24,18 @@ html[data-color-scheme="contrast"] .fitness-panel {
 
 html[data-color-scheme="contrast"] .pipeline-light.is-set,
 html[data-color-scheme="contrast"] .squad-form.is-good,
-html[data-color-scheme="contrast"] .squad-fitness.is-good,
 html[data-color-scheme="contrast"] .fitness-col-mark.is-good {
   color: #065f46;
 }
 
 html[data-color-scheme="contrast"] .pipeline-light.is-watch,
 html[data-color-scheme="contrast"] .squad-form.is-mid,
-html[data-color-scheme="contrast"] .squad-fitness.is-mid,
 html[data-color-scheme="contrast"] .fitness-col-mark.is-mid {
   color: #92400e;
 }
 
 html[data-color-scheme="contrast"] .pipeline-light.is-risk,
 html[data-color-scheme="contrast"] .squad-form.is-low,
-html[data-color-scheme="contrast"] .squad-fitness.is-low,
 html[data-color-scheme="contrast"] .fitness-col-mark.is-low,
 html[data-color-scheme="contrast"] .squad-risk.is-risk {
   color: #991b1b;

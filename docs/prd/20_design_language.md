@@ -214,7 +214,7 @@ UI system work does not add rows to PRD 10; tracked here and in PRD 15 gap notes
 | P3 | Camp gradient default |
 | P4 | `index.css` deletion campaign (ongoing) |
 | F0 | **Foundations (2026-10):** role tokens + legacy aliases, Sofia Sans self-hosted, club-colour title bar (`titleBarColors`), `components.css` (`tc-`), UI gallery (`?ui=gallery`), `check:design-tokens` ratchet in CI |
-| F1 | Page-by-page migration to `tc-` components (suggested order: Leagues → Squad → Player profile → Transfers → Hub); each PR lowers the baseline. **Leagues done** (table, leaders, club profile modal; `ModalShell variant="tc"`) |
+| F1 | Page-by-page migration to `tc-` components (suggested order: Leagues → Squad → Player profile → Transfers → Hub); each PR lowers the baseline. **Leagues done** (table, leaders, club profile modal; `ModalShell variant="tc"`). **Squad done** (roster, mentoring, staff; shared screen tabs, `FilterChip` and `SquadSortHeader` moved to tc for every screen) |
 | F2 | Der Treter on `tc-news` with self-hosted Newsreader + UnifrakturMaguntia |
 | F3 | Dark theme switch in Settings (needs legacy aliases gone from migrated screens) |
 

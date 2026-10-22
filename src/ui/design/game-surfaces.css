@@ -1471,54 +1471,11 @@ button.cash-chip:hover {
   min-width: 0;
 }
 
-.squad-injury {
-  font-weight: 800;
-  color: var(--terra-dunkel);
-}
-
-.squad-summary--head {
-  margin: 0;
-  flex: 0 0 auto;
-  text-align: right;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.82rem;
-  color: var(--tinte-weich);
-  white-space: nowrap;
-}
-
-.squad-list-toolbar,
-.filter-toolbar {
+.squad-list-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-bottom: 0.65rem;
-}
-
-.filter-chip,
-.squad-sort-chip,
-.scouting-chip {
-  border: var(--outline);
-  border-radius: var(--radius-chip);
-  padding: var(--space-2) var(--space-3);
-  background: var(--panel);
-  font-weight: 700;
-  font-size: 0.78rem;
-  cursor: pointer;
-  color: var(--tinte);
-  font-family: var(--font-body);
-}
-
-.filter-chip--dense {
-  padding: 0.35rem 0.55rem;
-  border-radius: var(--radius-klein);
-}
-
-.filter-chip.is-active,
-.squad-sort-chip.is-active,
-.scouting-chip.is-active {
-  background: var(--rasen);
-  color: var(--tinte);
 }
 
 .modal-shell-head {
@@ -1550,17 +1507,6 @@ button.cash-chip:hover {
   padding-top: var(--space-3);
   max-height: min(70vh, 640px);
   overflow: auto;
-}
-
-.pro-roster-panel .squad-summary--head {
-  margin: 0 0 0.55rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--tinte-weich);
-}
-
-.squad-list-toolbar--sort {
-  margin-top: 0.35rem;
 }
 
 .squad-player-cards {
@@ -3701,8 +3647,6 @@ button.cash-chip:hover {
 }
 
 /* Style consolidation — tokens only (formerly design-consolidation.css) */
-
-/* scouting-chip: see .filter-chip block above (PRD 20) */
 
 .screen-empty-state {
   display: flex;

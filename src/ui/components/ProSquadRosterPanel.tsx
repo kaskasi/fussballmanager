@@ -1,4 +1,4 @@
-/** WIREFRAME: design.md §9.11 — Profikader-Tabelle (Layout wie Jugendliste) */
+/** WIREFRAME: design.md §9.11 — Profikader-Tabelle on tc-table (design.md §4.3) */
 import { useMemo, useState } from "react";
 import type { Player, PositionPrimary } from "../../types/player.ts";
 import {
@@ -9,14 +9,28 @@ import {
   type ProSquadSortDirection,
   type ProSquadSortKey,
 } from "../../squad/pro-roster.ts";
-import { caDeltaClassName, caDeltaMark, formatCaDelta } from "../../player/ca-tracking.ts";
+import { formatCaDelta } from "../../player/ca-tracking.ts";
 import { FilterChip, FilterToolbar } from "./primitives/index.ts";
 import { SquadSortHeader } from "./SquadSortHeader.tsx";
 import { PlayerPortrait } from "./PlayerPortrait.tsx";
 import { formMark, stateMark } from "../player-profile.ts";
-import { t } from "../../i18n/index.ts";
+import { ratingBand } from "../design/rating-band.ts";
 import { useT } from "../../i18n/react.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
+
+const COLUMN_COUNT = 12;
+
+/** Shape + colour + screen-reader word, never colour alone (design.md §2). */
+function StateCell({ mark, tone, label }: { mark: string; tone: string; label: string }) {
+  return (
+    <>
+      <span className={`tc-state tc-state--${tone}`} aria-hidden="true">
+        {mark}
+      </span>
+      <span className="tc-sr">{label}</span>
+    </>
+  );
+}
 
 export function ProSquadRosterPanel({
   rows,
@@ -39,7 +53,7 @@ export function ProSquadRosterPanel({
   onSortDirectionChange: (direction: ProSquadSortDirection) => void;
   onSelectPlayer: (playerId: string) => void;
 }) {
-  useT();
+  const t = useT();
   const [position, setPosition] = useState<PositionPrimary | "all">("all");
 
   const positions = useMemo(() => positionsInProSquad(rows), [rows]);
@@ -58,16 +72,30 @@ export function ProSquadRosterPanel({
     onSortDirectionChange(key === "name" || key === "position" ? "asc" : "desc");
   };
 
-  return (
-    <section className="game-panel youth-roster-panel pro-roster-panel" aria-label={t("squad.title")}>
-      <p className="squad-summary squad-summary--head">
-        {t("squad.summaryHead", {
-          avgCa,
-          value: formatMarketValueShort(totalValue),
-        })}
-      </p>
+  const header = (key: ProSquadSortKey, label: string, title?: string, align?: "left") => (
+    <SquadSortHeader
+      label={label}
+      title={title}
+      sortKey={key}
+      activeKey={sortKey}
+      direction={sortDirection}
+      onSort={toggleSort}
+      align={align}
+    />
+  );
 
-      <FilterToolbar ariaLabel={t("youth.filter.aria")} className="squad-list-toolbar">
+  return (
+    <section className="tc-panel" aria-labelledby="squad-roster-title">
+      <div className="tc-panel__head">
+        <h2 className="tc-panel__title" id="squad-roster-title">
+          {t("squad.title")}
+        </h2>
+        <span className="tc-panel__meta">
+          {t("squad.summaryHead", { avgCa, value: formatMarketValueShort(totalValue) })}
+        </span>
+      </div>
+
+      <FilterToolbar ariaLabel={t("youth.filter.aria")}>
         <FilterChip active={position === "all"} onClick={() => setPosition("all")}>
           {t("scouting.filter.all")}
         </FilterChip>
@@ -81,83 +109,29 @@ export function ProSquadRosterPanel({
         })}
       </FilterToolbar>
 
-      <div className="squad-table-wrap">
-        <table className="squad-table youth-roster-table pro-roster-table">
+      <div className="tc-table-wrap">
+        <table className="tc-table tc-table--compact">
+          <caption className="tc-sr">{t("squad.title")}</caption>
           <thead>
             <tr>
-              <SquadSortHeader
-                label={t("squad.col.name")}
-                sortKey="name"
-                activeKey={sortKey}
-                direction={sortDirection}
-                onSort={toggleSort}
-                align="left"
-              />
-              <SquadSortHeader
-                label={t("squad.col.pos")}
-                sortKey="position"
-                activeKey={sortKey}
-                direction={sortDirection}
-                onSort={toggleSort}
-              />
-              <SquadSortHeader
-                label={t("squad.col.age")}
-                sortKey="age"
-                activeKey={sortKey}
-                direction={sortDirection}
-                onSort={toggleSort}
-              />
-              <SquadSortHeader label="CA" sortKey="ca" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-              <SquadSortHeader
-                label="Δ"
-                sortKey="caDelta"
-                activeKey={sortKey}
-                direction={sortDirection}
-                onSort={toggleSort}
-              />
-              <SquadSortHeader
-                label={t("squad.col.value")}
-                sortKey="marketValue"
-                activeKey={sortKey}
-                direction={sortDirection}
-                onSort={toggleSort}
-              />
-              <SquadSortHeader
-                label="Min"
-                sortKey="seasonMinutes"
-                activeKey={sortKey}
-                direction={sortDirection}
-                onSort={toggleSort}
-              />
-              <SquadSortHeader label="T" sortKey="goals" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-              <SquadSortHeader label="A" sortKey="assists" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} />
-              <SquadSortHeader
-                label="Ø"
-                sortKey="avgRating"
-                activeKey={sortKey}
-                direction={sortDirection}
-                onSort={toggleSort}
-              />
-              <SquadSortHeader
-                label={t("squad.col.form")}
-                sortKey="form"
-                activeKey={sortKey}
-                direction={sortDirection}
-                onSort={toggleSort}
-              />
-              <SquadSortHeader
-                label={t("squad.col.fit")}
-                sortKey="fitness"
-                activeKey={sortKey}
-                direction={sortDirection}
-                onSort={toggleSort}
-              />
+              {header("name", t("squad.col.name"), undefined, "left")}
+              {header("position", t("squad.col.pos"))}
+              {header("age", t("squad.col.age"))}
+              {header("ca", t("squad.col.caShort"))}
+              {header("caDelta", "Δ", t("squad.col.caDeltaTitle"))}
+              {header("marketValue", t("squad.col.value"))}
+              {header("seasonMinutes", t("squad.col.minutes"), t("squad.col.minutesTitle"))}
+              {header("goals", t("squad.col.goals"), t("squad.col.goalsTitle"))}
+              {header("assists", t("squad.col.assists"), t("squad.col.assistsTitle"))}
+              {header("avgRating", t("squad.col.avgRating"), t("squad.col.avgRatingTitle"))}
+              {header("form", t("squad.col.form"))}
+              {header("fitness", t("squad.col.fit"), t("squad.col.fitTitle"))}
             </tr>
           </thead>
           <tbody>
             {visible.length === 0 ? (
               <tr>
-                <td colSpan={12} className="youth-report-empty">
+                <td colSpan={COLUMN_COUNT} className="tc-empty">
                   {t("squad.emptyFiltered")}
                 </td>
               </tr>
@@ -169,9 +143,10 @@ export function ProSquadRosterPanel({
                 return (
                   <tr
                     key={row.playerId}
-                    className="squad-table-row"
+                    className="tc-row--link"
                     tabIndex={0}
                     role="button"
+                    aria-label={t("squad.openProfile", { name: row.displayName })}
                     {...(rowIndex === 0 ? { "data-coach-target": COACH_TARGET.squadFirstRow } : {})}
                     onClick={() => onSelectPlayer(row.playerId)}
                     onKeyDown={(event) => {
@@ -181,47 +156,42 @@ export function ProSquadRosterPanel({
                       }
                     }}
                   >
-                    <td className="squad-col-name">
-                      <span className="youth-report-badge">
+                    <td>
+                      <span className="tc-namecell">
                         {player ? (
-                          <PlayerPortrait
-                            seed={player.portrait_seed}
-                            clubId={player.club_id}
-                            size="sm"
-                            className="campus-portrait"
-                          />
+                          <PlayerPortrait seed={player.portrait_seed} clubId={player.club_id} size="sm" />
                         ) : null}
                         {row.displayName}
                       </span>
                     </td>
-                    <td>{row.positionLabel}</td>
-                    <td>{row.age}</td>
-                    <td className="squad-col-ca">{row.ca}</td>
-                    <td className={caDeltaClassName(row.caDelta)}>
-                      <span className="squad-delta-mark" aria-hidden="true">
-                        {caDeltaMark(row.caDelta)}
-                      </span>
+                    <td className="tc-num">{row.positionLabel}</td>
+                    <td className="tc-num">{row.age}</td>
+                    <td className="tc-num">
+                      <span className={`tc-rating tc-rating--${ratingBand(row.ca)}`}>{row.ca}</span>
+                    </td>
+                    <td
+                      className={`tc-num${row.caDelta && row.caDelta > 0 ? " tc-delta--up" : row.caDelta && row.caDelta < 0 ? " tc-delta--down" : ""}`}
+                    >
                       {formatCaDelta(row.caDelta)}
                     </td>
-                    <td className="squad-col-value">{formatMarketValueShort(row.marketValue)}</td>
-                    <td>{row.seasonMinutes}</td>
-                    <td>{row.goals}</td>
-                    <td>{row.assists}</td>
-                    <td>{row.avgRating?.toFixed(1) ?? "—"}</td>
-                    <td className={`squad-form is-${form.tone}`}>
-                      <span className="squad-shape-mark" aria-hidden="true">
-                        {form.mark}
-                      </span>
+                    <td className="tc-num">{formatMarketValueShort(row.marketValue)}</td>
+                    <td className="tc-num">{row.seasonMinutes}</td>
+                    <td className="tc-num">{row.goals}</td>
+                    <td className="tc-num">{row.assists}</td>
+                    <td className="tc-num">{row.avgRating?.toFixed(1) ?? "—"}</td>
+                    <td className="tc-num">
+                      <StateCell mark={form.mark} tone={form.tone} label={t(`squad.state.${form.tone}`)} />
                     </td>
-                    <td>
+                    <td className="tc-num">
                       {row.injuryWeeks !== null ? (
-                        <span className="squad-injury" title={t("squad.injuredHint")}>
-                          {row.injuryWeeks} Wo.
+                        <span className="tc-state tc-state--low" title={t("squad.injuredHint")}>
+                          {t("squad.injuredWeeks", { count: row.injuryWeeks })}
                         </span>
                       ) : (
-                        <span className={`squad-fitness is-${fit.tone}`}>
-                          {fit.mark} {row.fitness}
-                        </span>
+                        <>
+                          <StateCell mark={fit.mark} tone={fit.tone} label={t(`squad.state.${fit.tone}`)} />{" "}
+                          {row.fitness}
+                        </>
                       )}
                     </td>
                   </tr>

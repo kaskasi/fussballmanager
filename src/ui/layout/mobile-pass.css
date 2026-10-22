@@ -96,9 +96,10 @@
     gap: 0;
     -webkit-appearance: none;
     appearance: none;
+    font-family: var(--font-display);
     font-size: 0.68rem;
     letter-spacing: 0.02em;
-    background: var(--panel-muted);
+    background: transparent;
   }
 
   main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab__vlabel {
@@ -121,16 +122,19 @@
     max-height: 4rem;
   }
 
+  /* Rail: active tab = accent-soft with an accent bar on the content side (no yellow). */
   main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab.is-active {
-    background: var(--sonnengelb);
-    color: var(--tinte);
+    background: var(--accent-soft);
+    color: var(--text);
+    box-shadow: inset -3px 0 0 var(--accent);
   }
 
   main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active),
   main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active):hover,
   main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab:not(.is-active):focus-visible {
-    background: var(--panel-muted);
-    color: var(--tinte-weich);
+    background: transparent;
+    color: var(--text-muted);
+    box-shadow: none;
   }
 
   main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab svg,

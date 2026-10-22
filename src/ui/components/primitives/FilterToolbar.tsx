@@ -1,4 +1,4 @@
-/** PRD 20 — toolbar wrapper for FilterChip rows */
+/** PRD 20 — toolbar wrapper for FilterChip rows (tc-chips, design.md §4.3) */
 import type { ReactNode } from "react";
 
 export function FilterToolbar({
@@ -12,7 +12,7 @@ export function FilterToolbar({
 }) {
   return (
     <div
-      className={`filter-toolbar${className ? ` ${className}` : ""}`}
+      className={`tc-chips tc-chips--toolbar${className ? ` ${className}` : ""}`}
       role="toolbar"
       aria-label={ariaLabel}
     >

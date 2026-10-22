@@ -186,10 +186,13 @@ export function hireCoach(staff: CoachingStaff, candidate: Coach): CoachingStaff
   };
 }
 
-export function staffEnvironmentLabel(factor: number): string {
+export type StaffEnvironmentTier = "strong" | "good" | "solid" | "basic";
+
+/** Environment band for the Staff tab; labels live in i18n (`staff.environment.tier.<tier>`). */
+export function staffEnvironmentTier(factor: number): StaffEnvironmentTier {
   const pct = Math.round((factor - 1) * 100);
-  if (pct >= 8) return "Stark";
-  if (pct >= 4) return "Gut";
-  if (pct >= 1) return "Solide";
-  return "Basis";
+  if (pct >= 8) return "strong";
+  if (pct >= 4) return "good";
+  if (pct >= 1) return "solid";
+  return "basic";
 }

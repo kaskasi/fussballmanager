@@ -434,7 +434,7 @@ export default function App() {
 
   useEffect(() => {
     setProfileFeedback(null);
-  }, [profileId]);
+  }, [profileId, foreignPlayerId]);
 
   useEffect(() => {
     if (screen !== "training") {
@@ -446,7 +446,6 @@ export default function App() {
   const flashNotice = useCallback((text: string, tone: "ok" | "warn" = "warn") => {
     if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
     setNotice({ text, tone });
-    setProfileFeedback(text);
     noticeTimerRef.current = setTimeout(() => setNotice(null), 4500);
   }, []);
 
@@ -1898,6 +1897,7 @@ export default function App() {
           }
           actionFeedback={profileFeedback}
           onTransferNotice={(message) => {
+            setProfileFeedback(message);
             flashNotice(message);
           }}
           preContractBonus={preContractOffer(foreignView.player, season, week)?.signingBonus}
@@ -1977,6 +1977,7 @@ export default function App() {
           trainingPlan={trainingPlan}
           actionFeedback={profileFeedback}
           onTransferNotice={(message) => {
+            setProfileFeedback(message);
             flashNotice(message);
           }}
           onList={() => handleToggleProfileListing(profilePlayer.id)}

@@ -107,8 +107,8 @@ export function ManagerDeskHub({
   const merchDesk = useMemo(() => buildHubMerchDeskView(stadium), [stadium]);
   const leagueSnippet = useMemo(() => hubLeagueSnippet(league), [league]);
   const developmentMovers = useMemo(
-    () => listDevelopmentMovers(players, clubId),
-    [players, clubId],
+    () => listDevelopmentMovers(players, clubId, 3, devPeriod),
+    [players, clubId, devPeriod],
   );
 
   const treterTickerLinesResolved = useMemo(() => {

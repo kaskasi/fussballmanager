@@ -135,6 +135,8 @@ export interface PlayerProfileProps {
   onAssignScout?: () => void;
   onToggleShortlist?: () => void;
   onPurchase?: () => void;
+  /** Shown under a disabled Buy button (e.g. the player is not on the transfer list). */
+  purchaseBlockedReason?: string | null;
   preContractBonus?: number;
   preContractBlockedReason?: string | null;
   onPreContract?: () => void;
@@ -179,6 +181,7 @@ export function PlayerProfile({
   trainingPlan = [],
   onToggleShortlist,
   onPurchase,
+  purchaseBlockedReason = null,
   preContractBonus,
   preContractBlockedReason = null,
   onPreContract,
@@ -574,13 +577,18 @@ export function PlayerProfile({
                 <div className="tc-profile__action">
                   <button
                     type="button"
-                    className={hasScoutIntel || scouting ? "tc-btn tc-btn--primary tc-profile__btn-wide" : "tc-btn tc-profile__btn-wide"}
+                    className={
+                      (hasScoutIntel || scouting) && !purchaseBlockedReason
+                        ? "tc-btn tc-btn--primary tc-profile__btn-wide"
+                        : "tc-btn tc-profile__btn-wide"
+                    }
+                    disabled={Boolean(purchaseBlockedReason)}
                     onClick={onPurchase}
                   >
                     {t("transfer.profile.buy")}
                     {purchaseAmountLabel ? <span className="tc-profile__amount">{purchaseAmountLabel}</span> : null}
                   </button>
-                  <p className="tc-caption">{purchaseHintText}</p>
+                  <p className="tc-caption">{purchaseBlockedReason ?? purchaseHintText}</p>
                 </div>
               ) : null}
               {onPreContract ? (

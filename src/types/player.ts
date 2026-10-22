@@ -41,8 +41,10 @@ export interface Player {
     season_headers: number;
     /** Rolling sum of attribute growth over the last 26 weeks (PRD 06.3). */
     recent_growth_26w: number;
-    /** CA at end of previous simulated week — for weekly Δ display. */
+    /** CA at the start of the last simulated week — for weekly Δ display. */
     last_week_ca?: number;
+    /** Unrounded CA at the start of each of the last simulated weeks (oldest first, max 52) — Hub week/month/year Δ. */
+    ca_history?: number[];
     /** Net attribute growth from the last simulated week (PRD 02.1 / F2.7). */
     last_week_growth?: number;
     /** Skill snapshot at calendar week start — training heatmap “this week so far”. */

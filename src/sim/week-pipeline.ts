@@ -601,7 +601,10 @@ export async function simulateGameWeek(
     }
   }
   const playersWithGrowth = stampWeeklyGrowthBatch(playersAtWeekStart, playersWithMorale);
-  let playersWithCaStamp = playersWithGrowth.map(stampLastWeekCa);
+  const weekStartById = new Map(playersAtWeekStart.map((player) => [player.id, player]));
+  let playersWithCaStamp = playersWithGrowth.map((player) =>
+    stampLastWeekCa(player, weekStartById.get(player.id)),
+  );
 
   const seasonEnded = footballSeasonEnded;
   let rivalPlayers = advanceRivalGrowthWeek(

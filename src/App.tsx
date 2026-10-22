@@ -1880,6 +1880,9 @@ export default function App() {
           onPurchase={
             purchaseCelebration ? undefined : () => handleOpenNegotiation(foreignView.player.id)
           }
+          purchaseBlockedReason={
+            isPlayerListed(transferState, foreignView.player.id) ? null : t("transfer.purchase.notListed")
+          }
           actionFeedback={profileFeedback}
           onTransferNotice={(message) => {
             flashNotice(message);
@@ -1895,9 +1898,9 @@ export default function App() {
             );
             if (!eligibility.allowed) return eligibility.reason ?? null;
             const offer = preContractOffer(foreignView.player, season, week);
-            if (!offer) return "Kein Vertrag.";
+            if (!offer) return t("profile.preContract.noContract");
             if (!canAffordTransfer(finances, offer.signingBonus)) {
-              return `Signaturbonus ca. ${formatClubCash(offer.signingBonus)} — Budget zu niedrig.`;
+              return t("profile.preContract.bonusOverBudget", { amount: formatClubCash(offer.signingBonus) });
             }
             return null;
           })()}

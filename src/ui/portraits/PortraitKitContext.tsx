@@ -1,8 +1,10 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { WorldClub } from "../../world/world-generator.ts";
 import { worldCareerClubId } from "../../world/world-generator.ts";
+import { teamColorsForKit, type TeamColors } from "./face-from-seed.ts";
 
-const PortraitKitContext = createContext<ReadonlyMap<string, string>>(new Map());
+/** Career club id → faces.js team colours from the club's home kit (PRD 26). */
+const PortraitKitContext = createContext<ReadonlyMap<string, TeamColors>>(new Map());
 
 export function PortraitKitProvider({
   worldClubs,
@@ -11,25 +13,20 @@ export function PortraitKitProvider({
   worldClubs: readonly WorldClub[];
   children: ReactNode;
 }) {
-  const kitPrimaryByCareerClubId = useMemo(() => {
-    const map = new Map<string, string>();
+  const colorsByCareerClubId = useMemo(() => {
+    const map = new Map<string, TeamColors>();
     for (const club of worldClubs) {
-      const primary = club.kit?.primary;
-      if (primary) {
-        map.set(worldCareerClubId(club.id), primary);
+      if (club.kit?.primary) {
+        map.set(worldCareerClubId(club.id), teamColorsForKit(club.kit));
       }
     }
     return map;
   }, [worldClubs]);
 
-  return (
-    <PortraitKitContext.Provider value={kitPrimaryByCareerClubId}>
-      {children}
-    </PortraitKitContext.Provider>
-  );
+  return <PortraitKitContext.Provider value={colorsByCareerClubId}>{children}</PortraitKitContext.Provider>;
 }
 
-export function usePortraitKitPrimary(careerClubId: string | null | undefined): string | undefined {
+export function usePortraitTeamColors(careerClubId: string | null | undefined): TeamColors | undefined {
   const map = useContext(PortraitKitContext);
   if (!careerClubId) return undefined;
   return map.get(careerClubId);

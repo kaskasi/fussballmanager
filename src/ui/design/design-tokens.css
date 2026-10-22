@@ -129,8 +129,10 @@
   --control-md: 40px;
   --touch-min: 44px;
   --title-bar: 56px;
+  --portrait-xs: 32px;
   --portrait-sm: 40px;
   --portrait-md: 56px;
+  --portrait-lg: 88px;
 
   /* Shell layout */
   --club-header-height: var(--title-bar);

@@ -407,7 +407,7 @@ export function PlayerProfile({
                 />
               ) : null}
               <PlayerPortrait
-                seed={player.portrait_seed}
+                seed={player.portrait_seed} nationality={player.nationality}
                 clubId={player.club_id}
                 size="lg"
                 className="profile-portrait profile-portrait-rail"

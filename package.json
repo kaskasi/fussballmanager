@@ -25,8 +25,6 @@
     "play-matchday": "npm run play-matchday -w @fussballmanager/server",
     "play-probe": "npm run play-probe -w @fussballmanager/server",
     "persist-match": "npm run persist-match -w @fussballmanager/server",
-    "bake:portraits": "node scripts/bake-open-peeps-bust-charge2.mjs && node scripts/generate-portrait-catalog.mjs",
-    "bake:portraits:full": "node scripts/bake-open-peeps-busts.mjs && node scripts/generate-portrait-catalog.mjs",
     "bake:hub-photos": "node scripts/bake-hub-photos.mjs",
     "bake:camp-photos": "node scripts/bake-camp-photos.mjs",
     "bake:storyboard-poc": "node scripts/bake-storyboard-poc.mjs",
@@ -40,6 +38,7 @@
   "dependencies": {
     "@fussballmanager/shared": "*",
     "@sentry/react": "^11.6.0",
+    "facesjs": "5.0.3",
     "lucide-react": "^1.52.0",
     "posthog-js": "^1.438.7",
     "react": "^19.1.0",

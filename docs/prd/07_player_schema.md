@@ -104,7 +104,7 @@ interface Player {
   stamps: AbilityStamp[];
 
   // ── Visualisierung ─────────────────────────
-  /** Seed für Open-Peeps-Bust (Abbildung über Pool `mens_squad` in der UI — kein Gender-Feld in v1). */
+  /** Seed für das faces.js-Portrait (`face-from-seed.ts`; Spieler männlich, Staff-Pool `mixed` gemischt — kein Gender-Feld in v1). */
   portrait_seed: number;
 }
 

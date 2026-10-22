@@ -159,7 +159,7 @@ export function ProSquadRosterPanel({
                     <td>
                       <span className="tc-namecell">
                         {player ? (
-                          <PlayerPortrait seed={player.portrait_seed} clubId={player.club_id} size="sm" />
+                          <PlayerPortrait seed={player.portrait_seed} nationality={player.nationality} clubId={player.club_id} size="sm" />
                         ) : null}
                         {row.displayName}
                       </span>

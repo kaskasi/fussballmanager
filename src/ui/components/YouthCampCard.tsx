@@ -214,7 +214,7 @@ export function YouthCampCard({
                     key={player.id}
                     className={`youth-camp-roster-row${player.state.camp_opening_headline ? " is-headline" : ""}`}
                   >
-                    <PlayerPortrait seed={player.portrait_seed} clubId={player.club_id} size="sm" />
+                    <PlayerPortrait seed={player.portrait_seed} nationality={player.nationality} clubId={player.club_id} size="sm" />
                     <span className="youth-camp-roster-name">
                       {player.state.camp_opening_headline ? (
                         <Star

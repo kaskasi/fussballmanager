@@ -37,7 +37,7 @@ export function CampOpeningDebutModal({
         <h2 className="camp-debut-title">{t("youth.camp.debut.title", { region })}</h2>
         <div className="camp-debut-hero">
           <PlayerPortrait
-            seed={player.portrait_seed}
+            seed={player.portrait_seed} nationality={player.nationality}
             clubId={player.club_id}
             size="lg"
             variant="known"

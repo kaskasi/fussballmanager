@@ -1059,14 +1059,6 @@ button.cash-chip:hover {
   width: 100%;
 }
 
-.profile-portrait-rail.player-portrait {
-  width: 7.5rem;
-  height: 8.5rem;
-  border-radius: 1rem;
-  align-self: flex-start;
-  margin: 0;
-}
-
 .profile-actions-rail {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

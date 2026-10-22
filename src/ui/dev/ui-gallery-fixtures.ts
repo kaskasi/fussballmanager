@@ -55,3 +55,8 @@ export function galleryLeague(): {
     worldClubs: DEFAULT_GENERATED_WORLD.clubs,
   };
 }
+
+/** Twelve portrait seeds for the gallery samples. */
+export const PORTRAIT_SAMPLE_SEEDS: readonly number[] = [
+  11, 23, 37, 41, 58, 63, 79, 84, 97, 105, 112, 128,
+];

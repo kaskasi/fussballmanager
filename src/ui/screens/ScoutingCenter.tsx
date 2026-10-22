@@ -773,7 +773,7 @@ function ScoutingPlayerList({
                 onClick={() => onSelectTarget(row.playerId)}
               >
                 <PlayerPortrait
-                  seed={row.player.portrait_seed}
+                  seed={row.player.portrait_seed} nationality={row.player.nationality}
                   clubId={row.player.club_id}
                   size="sm"
                   variant={scoutReveal(row.estimate.uncertaintyRange).showExactCa ? "known" : "silhouette"}

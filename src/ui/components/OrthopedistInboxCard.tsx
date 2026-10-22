@@ -30,7 +30,7 @@ export function OrthopedistInboxCard({
       <ul className="medical-ortho-candidate-list">
         {candidates.map((candidate) => (
           <li key={candidate.id} className="medical-ortho-candidate">
-            <PlayerPortrait seed={candidate.portrait_seed} size="md" />
+            <PlayerPortrait seed={candidate.portrait_seed} pool="mixed" size="md" />
             <div>
               <strong>
                 <Stethoscope size={14} aria-hidden /> {candidate.name}

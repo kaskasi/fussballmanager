@@ -10,13 +10,12 @@
 - **Shipped in game:** None until remapped and baked to `public/assets/kenney/` per `docs/prd/design.md` §2 and `assets/kenney-color-map.json`
 - **Optional credit:** Kenney.nl
 
-## Open Peeps
+## faces.js (player and staff portraits)
 
-- **License:** CC0 1.0 Universal
-- **Author:** Pablo Stanley
-- **Source:** https://www.openpeeps.com/
-- **Location:** `assets/open-peeps/` (full vendor pack; read-only)
-- **Shipped in game:** Bust subset `public/assets/portraits/bust/peep-1.svg` … `peep-105.svg` baked from `Flat Assets/Templates/Bust/` via `npm run bake:portraits` (Flat source, token-aligned recolor: tinte ink, warm skin, rasen-hell on kit bodies); catalog `src/ui/portraits/portrait-bust-catalog.json` (`mens_squad` / `mixed` / `womens_squad` pools); unknown-scout placeholder `public/assets/portraits/silhouette.svg` (game-authored)
+- **License:** Apache License 2.0
+- **Author:** ZenGM (Jeremy Scheff and contributors)
+- **Source:** https://github.com/zengm-games/facesjs (npm `facesjs`, pinned 5.0.3 so faces stay stable)
+- **Shipped in game:** generated SVG at runtime (`src/ui/portraits/face-from-seed.ts`, `PlayerPortrait`); no baked files. Replaced the Open Peeps bust pipeline (CC0, Pablo Stanley) in October 2026; the old vendor pack and bake scripts are in git history.
 
 ## ambientCG textures
 

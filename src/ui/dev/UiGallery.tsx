@@ -7,6 +7,11 @@ import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from
 import { titleBarColors, type KitColors, type TitleBarTheme } from "../shell/title-bar-colors.ts";
 import { ratingBand } from "../design/rating-band.ts";
 import { LeagueTable, LeagueZoneLegend } from "../components/LeagueTable.tsx";
+import { PortraitSamples } from "./PortraitSamples.tsx";
+import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
+import { PortraitKitProvider } from "../portraits/PortraitKitContext.tsx";
+import { DEFAULT_GENERATED_WORLD } from "../../sim/league-divisions.ts";
+import { NORDSTERN_TEAM_ID, worldCareerClubId } from "../../world/world-generator.ts";
 import { galleryLeague, SAMPLE_KITS } from "./ui-gallery-fixtures.ts";
 import "./ui-gallery.css";
 
@@ -49,6 +54,8 @@ const POSITIONS = ["All", "GK", "CB", "RB", "CM", "CF"] as const;
 type SortKey = "name" | "age" | "ca" | "delta";
 
 
+const KIELER_FC = worldCareerClubId(NORDSTERN_TEAM_ID);
+
 function NextArrow() {
   return (
     <svg className="tc-next__arrow" viewBox="0 0 12 12" aria-hidden="true">
@@ -65,15 +72,6 @@ function MenuIcon() {
   );
 }
 
-function Portrait() {
-  return (
-    <svg className="tc-portrait" viewBox="0 0 56 56" aria-hidden="true">
-      <rect className="tc-portrait__bg" width="56" height="56" rx="28" />
-      <circle className="tc-portrait__fg" cx="28" cy="22" r="10" />
-      <path className="tc-portrait__fg" d="M9 56c1.5-12 9-19 19-19s17.5 7 19 19z" />
-    </svg>
-  );
-}
 
 function Section({ id, title, note, children }: { id: string; title: string; note?: string; children: ReactNode }) {
   return (
@@ -163,6 +161,7 @@ export function UiGallery() {
   );
 
   return (
+    <PortraitKitProvider worldClubs={DEFAULT_GENERATED_WORLD.clubs}>
     <div className="ui-gallery" data-theme={theme}>
       <header className="ui-gallery__head">
         <p className="ui-gallery__brand">The Club · UI gallery</p>
@@ -501,6 +500,14 @@ export function UiGallery() {
           </div>
         </Section>
 
+        <Section
+          id="portraits"
+          title="Portraits"
+          note="PlayerPortrait draws a faces.js face from the seed (always the same face), in the club's home kit. Nationality picks the skin and hair mix; staff are mixed men and women in a neutral shirt; unknown scouting targets show a silhouette."
+        >
+          <PortraitSamples />
+        </Section>
+
         <Section id="ratings" title="Rating badges" note="CA bands: under 70, 70–84, 85–99, 100–114, 115 and up.">
           <div className="tc-row">
             {[62, 78, 92, 104, 116].map((ca) => (
@@ -514,7 +521,7 @@ export function UiGallery() {
 
         <Section id="players" title="Player cards">
           <a className="tc-player tc-player--link" href="#kerem">
-            <Portrait />
+            <PlayerPortrait seed={11} size="md" clubId={KIELER_FC} nationality="TR" />
             <span className="tc-player__id">
               <span className="tc-player__name">Kerem Yılmaz</span>
               <span className="tc-player__meta">CF · 15 · Istanbul camp</span>
@@ -550,7 +557,7 @@ export function UiGallery() {
               { id: "noah", name: "Noah Richter", meta: "CM · 16 · U19", growth: "+0.7" },
             ].map((player) => (
               <a key={player.id} className="tc-player tc-player--sm tc-player--link" href={`#${player.id}`}>
-                <Portrait />
+                <PlayerPortrait seed={player.id.length * 13} size="md" clubId={KIELER_FC} />
                 <span className="tc-player__name">{player.name}</span>
                 <span className="tc-player__meta">{player.meta}</span>
                 <span className="tc-growth">{player.growth} this week</span>
@@ -667,6 +674,7 @@ export function UiGallery() {
         </div>
       ) : null}
     </div>
+    </PortraitKitProvider>
   );
 }
 

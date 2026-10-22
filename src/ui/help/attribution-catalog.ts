@@ -1,6 +1,6 @@
 /** Player-facing asset credits — mirrors assets/ATTRIBUTION.MD (maintainer source of truth). */
 
-export type AttributionLicense = "CC0" | "CC-BY" | "Canva" | "Magnific";
+export type AttributionLicense = "CC0" | "CC-BY" | "Apache-2.0" | "Canva" | "Magnific";
 
 export interface AttributionCredit {
   id: string;
@@ -12,14 +12,6 @@ export interface AttributionCredit {
 }
 
 export const ATTRIBUTION_CC0_CREDITS: readonly AttributionCredit[] = [
-  {
-    id: "open-peeps",
-    name: "Open Peeps · Pablo Stanley",
-    roleKey: "help.attribution.role.openPeeps",
-    href: "https://www.openpeeps.com/",
-    license: "CC0",
-    highlight: true,
-  },
   {
     id: "kenney",
     name: "Kenney.nl",
@@ -39,6 +31,14 @@ export const ATTRIBUTION_CC0_CREDITS: readonly AttributionCredit[] = [
 ];
 
 export const ATTRIBUTION_OTHER_CREDITS: readonly AttributionCredit[] = [
+  {
+    id: "facesjs",
+    name: "faces.js · ZenGM",
+    roleKey: "help.attribution.role.facesjs",
+    href: "https://github.com/zengm-games/facesjs",
+    license: "Apache-2.0",
+    highlight: true,
+  },
   {
     id: "commons",
     name: "Wikimedia Commons / Geograph",

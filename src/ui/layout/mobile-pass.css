@@ -233,9 +233,9 @@
     width: 2.15rem;
     height: 2.15rem;
     padding: 0;
-    border-radius: 0.45rem;
-    background: color-mix(in srgb, var(--warn, #c2410c) 10%, var(--panel, #fff));
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--warn, #c2410c) 28%, transparent);
+    border-radius: var(--radius-pill);
+    background: var(--panel);
+    box-shadow: none;
   }
 
   .sponsor-deal-modal .sponsor-negotiation-stepper {

@@ -28,6 +28,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Design token guardrail
+        run: npm run check:design-tokens
+
       - name: Server tests (shared + engine)
         run: npm test
 

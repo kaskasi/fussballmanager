@@ -2,67 +2,50 @@
 
 **Projekt:** The Club (Fußball-Manager)
 **Datei:** `docs/prd/design.md`
-**Version:** 0.5 · Status: verbindliche Design-Referenz
+**Version:** 0.6 · Status: verbindliche Design-Referenz
 **Referenzbilder:** `docs/design-refs/design.png`, `docs/design-refs/lumo/` (Layout only, not shipped)
 **Ziel:** Dieses Dokument ist die alleinige Design-Wahrheit. Cursor baut jeden Screen ausschließlich aus den hier definierten Tokens, Komponenten und Wireframes. Bei Konflikten gilt: dieses Dokument > bestehender Code > improvisierte Lösungen.
 
 ---
 
-## 1. Design-Philosophie: "Fernsehnachmittag"
+## 1. Design-Philosophie: "Rasen"
 
-Gedecktes Anime/Comic-Feeling eines sonnigen Nachmittags im Stadion. Warm, flach, kohärent.
+Ruhiges, helles Grün-Grau mit klaren Haarlinien; Farbe trägt Bedeutung, nicht Dekoration. Löst "Fernsehnachmittag" (Sand, Braun, 2px-Comic-Outline) ab. Quelle: das Design System **"The Club"** (Richtung A "Rasen", Titelleiste aus Richtung C, Dark Theme "Flutlicht" aus B) — https://claude.ai/artifact/UUrc7FBwLgtiPA7gF8Y7yd (privat; die Werte selbst leben im Repo, siehe §2).
 
-**Fünf Grundregeln:**
+**Sechs Grundregeln:**
 
-1. **Grün ist der Star.** Rasen-Grün ist die dominante Marke; Partnerfarben sind neutral-warm oder sein Komplementär. Keine Farbe konkurriert mit Grün.
-2. **Nur 1× Gelb.** Der NEXT-Button ist das einzige gelbe Element im gesamten Spiel. Niemand sonst darf Honiggelb verwenden.
-3. **Aus einem Guss.** Gleiche Icon-Familie, gleiche Radien, gleiche Outline-Stärke überall. **Emojis sind verboten** außer im **Postfach** (§4.2).
-4. **Dichte ist erlaubt.** Desktop-first. Tabellen dürfen 12+ Spalten haben. Mobile ist komprimierter Nachbau (Drawer), kein Redesign.
-5. **Keine KI-generierten Assets.** Alles visuelle kommt aus SVG-Komponenten, CC0-Texturen und öffentlichen Icon-Sets.
+1. **Grün ist der Star.** Rasen-Grün (`--accent`) ist die Aktionsfarbe; keine andere Farbe konkurriert damit.
+2. **Nur 1× Gelb.** Der NEXT-Button (`--next`) ist das einzige gelbe Element im Spiel.
+3. **Titelleiste in Vereinsfarbe.** Die Leiste oben trägt die Trikotfarbe des eigenen Vereins (§2.4) — das ist die einzige Stelle, an der Vereinsfarbe Fläche wird.
+4. **Aus einem Guss.** Gleiche Icon-Familie, gleiche Radien, 1px-Haarlinien (`--line`) statt Comic-Outline. **Emojis sind verboten** außer im **Postfach** (§4.2).
+5. **Dichte ist erlaubt.** Desktop-first. Tabellen dürfen 12+ Spalten haben, Zahlen immer mit Tabellenziffern. Mobile ist komprimierter Nachbau, kein Redesign.
+6. **Keine KI-generierten Assets.** Alles Visuelle kommt aus SVG-Komponenten, CC0-Texturen und öffentlichen Icon-Sets.
+
+**Ausnahme: Der Treter.** Die Zeitung ist ein Objekt in der Welt, kein UI: Zeitungspapier (`--newsprint`), Serifenschrift, Fraktur-Kopf — in beiden Themes gleich.
 
 ---
 
 ## 2. Farbtokens
 
-```css
-:root {
-  /* Flächen */
-  --bg-sand:        #F5EFE0;   /* Screen-Hintergrund */
-  --panel:          #FDFBF4;   /* Content-Karten */
-  --panel-muted:    #EFEBDD;   /* Sekundäre Flächen, Tab-Leisten */
+**Quelle der Wahrheit:** `src/ui/design/design-tokens.css`. Nur diese Datei darf rohe Farbwerte enthalten; alles andere nutzt `var(--…)` nach **Rolle**, nie nach Farbton.
 
-  /* Marke */
-  --rasen:          #2E9E46;   /* Primär: aktive States, Kaufen-Buttons */
-  --rasen-dunkel:   #1D6B31;   /* Hover, gedrückte States */
-  --rasen-hell:     #BFDEC2;   /* Deaktivierte Tags, Inaktiv-Markierung */
-
-  /* Akzente (sparsam!) */
-  --sonnengelb:     #FFC933;   /* NUR der NEXT-Button. Streng exklusiv. */
-  --terra:          #E07A3F;   /* Warnungen, negative Balken, Talent-Marker */
-  --terra-dunkel:   #B85A28;
-
-  /* Neutral */
-  --tinte:          #3E3128;   /* Text, Outlines (warmes Braun statt Schwarz) */
-  --tinte-weich:    #6B5D4F;   /* Sekundärtext */
-  --staubblau:      #9DBFD0;   /* Info-Chips, neutrale Tag-Hintergründe */
-
-  /* Feedback */
-  --erfolg:         var(--rasen);
-  --fehler:         var(--terra);
-
-  /* Outlines & Radien */
-  --outline:        2px solid var(--tinte);
-  --outline-weich:  2px solid rgba(62, 49, 40, 0.25);
-  --radius:         12px;
-  --radius-klein:   8px;
-  --shadow:         0 2px 0 rgba(62, 49, 40, 0.15);   /* flacher Versatz, kein Blur */
-}
-```
+| Gruppe | Tokens | Hell |
+|---|---|---|
+| Grund | `--page` · `--panel` · `--sunken` | #F3F5F1 · #FFFFFF · #E8ECE6 |
+| Linien | `--line` · `--line-strong` · `--control-border` | #D6DDD3 · #AEB8AB · #7E8A81 |
+| Text | `--text` · `--text-muted` | #16211A · #56635A |
+| Aktion | `--accent` · `--accent-strong` · `--accent-soft` · `--on-accent` | #1E7A3C · #145A2B · #E0F0E4 · #FFFFFF |
+| NEXT | `--next` · `--on-next` | #FFC933 · #16211A |
+| Verein | `--club` · `--on-club` | aus dem Trikot (§2.4), Default #2E9E46 · #16211A |
+| Status | `--positive` · `--negative` · `--warning` · `--info` · `--draw` (+ `--on-…`) | #1E7A3C · #B5452A · #8F5A0E · #2E6A93 · #D0D7CC |
+| Bewertung | `--rating-1` … `--rating-5` (+ `--on-rating-N`) | CA-Bänder <70 · 70–84 · 85–99 · 100–114 · 115+ |
+| Treter | `--newsprint` · `--newsprint-ink` · `--newsprint-rule` · `--newsprint-kicker` | #F1EEE5 · #1B1A17 · #CBC4B3 · #8A2D1F |
+| Overlay | `--scrim` · `--shadow-raised` · `--shadow-overlay` | |
 
 **Regeln:**
-- Text auf `--rasen` und `--sonnengelb`: immer `--tinte` (nicht weiß – warmes Braun gehört zur Marke).
-- Statusfarben: grün = positiv, terrakotta = negativ/hervorgehoben, staubblau = informativ/neutral. Nie rot-blau mischen.
-- Keine Verläufe auf Panels. Subtile Schatten nur als flacher 2px-Versatz (Comic-Stil).
+- Jede Text/Flächen-Paarung erfüllt WCAG AA (4.5:1). Text auf einer Fläche immer mit dem passenden `--on-…`-Token.
+- Status nie nur über Farbe: Icon, Vorzeichen oder Wort dazu (W/D/L, +/−, ✓).
+- Keine Verläufe auf Panels. Schatten nur für schwebende Ebenen (`--shadow-overlay` für Modals).
 
 ### 2.1 Implementation (PRD 20)
 
@@ -72,35 +55,64 @@ Komponenten-Verträge, CSS-Kaskade, Migrations-Phasen und Screen-Audits leben in
 
 ### Global shell override (`design-repair.css`)
 
-`src/ui/design/design-repair.css` is imported **after** `design-tokens.css` and `game-surfaces.css` in `main.tsx`. It is **not** a third design system: it applies legacy “repair P0” rules that still sit outside token-only screens (sand page background on non-shell routes, comic `--outline-tinte` on legacy `.panel` / `.card` selectors, circular nav tab pills). New UI must use **tokens + `game-surfaces.css`** only; extend repair only when unblocking a legacy route — prefer migrating rules into tokens/game-surfaces and deleting repair over time.
+`src/ui/design/design-repair.css` is imported **after** `design-tokens.css` and `game-surfaces.css` in `main.tsx`. It is **not** a third design system: it applies legacy “repair P0” rules that still sit outside token-only screens (page background on non-shell routes, `--outline-tinte` hairline on legacy `.panel` / `.card` selectors, circular nav tab pills, NEXT colours). New UI must use **tokens + `components.css`** only; extend repair only when unblocking a legacy route — prefer migrating rules into tokens/game-surfaces and deleting repair over time.
+
+### 2.2 Abstände, Radien, Größen
+
+- Abstand: `--space-1/2/3/4/6/8/12` = N × 4px. (`--space-5` ist ein Legacy-Schritt, nicht verwenden.)
+- Radius: `--radius-sm` 4px (Badges) · `--radius-md` 10px (Panels, Karten) · `--radius-pill` (Buttons, Chips).
+- Größen: `--control-sm` 32 · `--control-md` 40 · `--touch-min` 44 · `--title-bar` 56 · `--portrait-sm` 40 · `--portrait-md` 56 (px).
+
+### 2.3 Legacy-Namen, Dark Theme, Guardrail
+
+- **Legacy-Namen** (`--bg-sand`, `--rasen`, `--tinte`, `--sonnengelb`, `--terra`, `--outline` …) zeigen auf die neuen Rollen, damit alle bestehenden Screens sofort die neue Palette tragen. In neuem Code **nicht** verwenden; jeder Screen wirft sie beim Umzug auf die `tc-`-Komponenten ab. Sie sind `var()`-Aliase auf `:root` und folgen deshalb einem lokal gesetzten `data-theme="dark"` nicht.
+- **Dark Theme "Flutlicht":** `[data-theme="dark"]` in `design-tokens.css` setzt dieselben Rollen dunkel. Im Spiel noch nicht schaltbar; die UI-Galerie (§4.3) zeigt es.
+- **Guardrail:** `npm run check:design-tokens` (läuft in CI) zählt rohe Farben (#hex, rgb(), hsl()) und feste `font-size`-Werte in allen `.css`- und `.tsx`-Dateien unter `src/` außerhalb von `design-tokens.css` und vergleicht mit `scripts/design-tokens-baseline.json`. Mehr als die Baseline → CI rot. Weniger → `npm run check:design-tokens -- --update` und die Baseline mit committen. Die Zahl kann nur sinken. Daten in `.ts`-Dateien (Trikotfarben, Portrait-Recolor) zählen nicht.
+
+### 2.4 Titelleiste in Vereinsfarbe
+
+`titleBarColors(kit, theme)` in `src/ui/shell/title-bar-colors.ts` wählt `--club` / `--on-club` aus dem Trikot des eigenen Vereins (`WorldClub.kit`); `AppNav` setzt beide als Inline-Variablen auf die Leiste und färbt `<meta name="theme-color">` mit.
+
+1. Hell: erst `kit.primary`, dann `kit.secondary`. Dunkel: umgekehrt.
+2. Textfarbe: Tinte (#16211A) oder Weiß, je nachdem, was mehr Kontrast hat.
+3. Eine Kandidatin gilt, wenn der Text ≥ 4.5:1 erreicht **und** NEXT-Gelb sich mit ≥ 1.5:1 von der Leiste abhebt (gelbe Trikots fallen raus).
+4. Sonst Tinte als Leiste, Weiß als Text.
+
+Auf der Leiste: Wappen auf einer `--panel`-Scheibe, Vereinsname in `--font-display` 700 20px, Menü/Zurück in `--on-club`, Warn-Icons auf `--panel`-Scheiben, NEXT mit 1px-Ring in `--on-club` (Gelb auf hellem Grün hat nur ~2.2:1), Fokusringe in `--on-club`.
 
 ### Asset-Farbanpassung (Remapping)
 Kenney-Tiles und SVGs kommen in eigenen Farben. Bevor sie ins Projekt einfließen, müssen ihre Fill-Farben auf unsere Tokens gemapped werden.
 - **Regel:** Nie originale Kenney-Farben übernehmen.
 - **Mapping-Beispiel:**
-  - Kenney-Rasen-Grün → `var(--rasen)` (#2E9E46)
-  - Kenney-Linien-Weiß → `var(--rasen-hell)` (#BFDEC2)
+  - Kenney-Rasen-Grün → `var(--rasen)` (#2E9E46, Legacy-Literal)
+  - Kenney-Linien-Weiß → `var(--accent-soft)`
   - Kenney-Tribünen-Blau → `var(--staubblau)` (#9DBFD0)
-  - Kenney-Akzente → `var(--terra)`, `var(--rasen)` oder `var(--staubblau)` — **nie** `--sonnengelb` (reserviert für NEXT)
+  - Kenney-Akzente → `var(--negative)`, `var(--accent)` oder `var(--info)` — **nie** `--next` (reserviert für NEXT)
 - **Umsetzung:** Erstelle eine `assets/kenney-color-map.json` oder führe das Remapping direkt in den SVG-Dateien durch, bevor sie in `public/assets` landen.
 
 ---
 
 ## 3. Typografie
 
-| Rolle | Font | Gewichte |
+| Rolle | Font | Einsatz |
 |---|---|---|
-| Display / Überschriften / Buttons / Zahlen im Fokus | **Baloo 2** (Fallback: Fredoka) | 600, 700 |
-| Fließtext / Tabellen / Labels | **Nunito** | 400, 600, 700 |
+| `--font-display` | **Sofia Sans Condensed** | Überschriften, Namen, Zahlen im Fokus, NEXT |
+| `--font-text` | **Sofia Sans** | Fließtext, Tabellen, Labels, Buttons |
+| `--font-news` / `--font-masthead` | Newsreader / UnifrakturMaguntia | **nur** Der Treter |
 
-```css
---font-display: 'Baloo 2', 'Fredoka', system-ui, sans-serif;
---font-body: 'Nunito', system-ui, sans-serif;
-```
+- Sofia Sans und Sofia Sans Condensed (Lettersoup, OFL 1.1) sind self-hosted in `public/fonts/` (woff2, latin + latin-ext, variable 100–900), kein Google-Fonts-Request. Newsreader und UnifrakturMaguntia werden mit der Treter-Migration self-hosted; bis dahin greifen die Serifen-Fallbacks.
+- CJK fällt auf PingFang SC / Microsoft YaHei / Noto Sans CJK SC zurück.
+- Zahlen immer mit Tabellenziffern (`font-variant-numeric: tabular-nums`, global gesetzt).
 
-- Beide via Google Fonts (OFL-Lizenz) oder self-hosted.
-- Scale: H1 24px / H2 20px / Body 15px / Table 14px / Meta 12px.
-- Zahlen in Stat-Kontexten immer `font-family: var(--font-display)` – das ist ein Wiedererkennungsmerkmal.
+| Stil | Größe / Zeile | Gewicht | Token |
+|---|---|---|---|
+| display | 32 / 36 | 800 | `--font-size-2xl` |
+| title | 24 / 28 | 800 | `--font-size-xl` |
+| heading | 20 / 24 | 700 | `--font-size-lg` |
+| body | 16 / 24 | 400 | `--font-size-md` |
+| body-sm, Tabellen | 14 / 20 | 400 | `--font-size-sm` |
+| label (uppercase, +0.08em) · caption | 12 / 16 | 700 · 400 | `--font-size-xs` |
+| Treter-Masthead | 56 / 56 | 400 | `--font-size-masthead` |
 
 ---
 
@@ -130,9 +142,18 @@ Das **Postfach** (Manager-Desk-Mail, Entscheidungen-Screen §9.4, Archiv, Hub-Sp
 
 Position-, Sortier- und Scout-Filter sind **ein** Baustein (`FilterChip`):
 
-- Inaktiv: `--panel` Füllung, `--outline`, `--radius-chip`
-- Aktiv: `--rasen` Füllung, Text `--tinte`
-- **Niemals** `--sonnengelb` / `--accent-primary` für aktive Filter (nur Header-NEXT)
+- Inaktiv: `--panel` Füllung, 1px `--control-border`, `--radius-pill`
+- Aktiv: `--accent` Füllung, Text `--on-accent`, `aria-pressed="true"`
+- **Niemals** `--next` für aktive Filter (nur NEXT)
+- Neue Screens nutzen `.tc-chips` / `.tc-chip` (§4.3); die bestehende `FilterChip`-Primitive zieht beim ersten Screen-Umzug nach.
+
+### 4.3 Komponenten (`tc-`) und UI-Galerie
+
+`src/ui/design/components.css` enthält die Komponenten des Design Systems als `tc-`-Klassen: Titelleiste, NEXT, Buttons, Filter-Chips, Tabs, Panel, sortierbare Tabelle, Liga-Tabelle (eigene Zeile, Abstiegslinie, Formkurve), Bewertungs-Badge, Spielerkarte (groß und Grid), Modal, Key-Value-Liste, Der Treter. Nur Tokens, keine rohen Werte. Die Klassen berühren bestehende Screens nicht, bis ein Screen umzieht.
+
+**UI-Galerie:** Einstellungen → Entwickler → „UI gallery“ oder `?ui=gallery`. Zeigt Farbrollen, Typo, Abstände, alle Komponenten mit Beispieldaten, Titelleisten für sieben Trikots (jeder Zweig von §2.4) und einen Hell/Dunkel-Schalter. Lädt als eigener Chunk; Spieler sehen sie nicht. Beim Bau oder Umzug eines Screens zuerst hier prüfen.
+
+**Migration Screen für Screen:** Screen auf `tc-`-Klassen und Rollen-Tokens umstellen, Legacy-Regeln aus `index.css` löschen, `npm run check:design-tokens -- --update` committen, Vorher/Nachher-Screenshot in den PR.
 
 ---
 
@@ -153,20 +174,18 @@ Parametrische React-Komponente statt Bilddateien:
 
 ## 6. Header (fixe Komponente, auf JEDEM Screen identisch)
 
-**Flach, nahtlos, ohne Border und Outline – der Sand-Hintergrund läuft durch.**
+**Titelleiste in Vereinsfarbe (§2.4), ohne Border.** Darunter beginnt die Content-Karte.
 
 ```
-┌─────────────────────────────────────────────────────────────--┐
-│ [Wappen] NORDSTERN 03  · 3.  · € 7.69 Mio      Menu   [NEXT ▶]│
-│  (display-font)  (meta, grau, 12px)           (Link) (gelb)   │
-└──────────────────────────────────────────────────────────────-┘
+┌──────────────────────────────────────────────────────────────┐
+│ (Wappen) Kieler FC          [!]        € 5.50 Mio  Menu  [NEXT ▶ 2] │   ← Fläche: --club, Text: --on-club
+└──────────────────────────────────────────────────────────────┘
 ```
 
-- **Links = Identität:** `<Crest>` + Klubname (Display-Font). Danach zwei Meta-Labels: Tabellenposition und Kasse (`--tinte-weich`, 12px, durch ` · ` getrennt).
-- **Rechts = Fortschritt:** 
-  - `Menu`: Desktop = schlichter Textlink (`--tinte`, Nunito 600). Mobile (<768px) = Burger-Icon.
-  - `NEXT ▶`: chunky pill-button, `--sonnengelb`, `--radius`, Display-Font, Text `--tinte`, flat shadow. **Einzige Gelbstelle im Spiel.**
-- Höhe: 56px Desktop / 52px Mobile. Sticky top, `z-index: 50`.
+- **Links = Identität:** Wappen auf `--panel`-Scheibe + voller Vereinsname (`--font-display` 700, 20px). Nie Kürzel.
+- **Mitte = Status:** Warn-Icons (Trainingsplan, Lager, Medizin, Kasse) auf `--panel`-Scheiben in `--warning`.
+- **Rechts = Fortschritt:** Kassen-Chip (`--panel`), `Menu` (transparent, `--on-club`, Rand 45 % `--on-club`), `NEXT ▶` (`--next` / `--on-next`, Pill, Display-Font 800, 1px-Ring `--on-club`, rotes Zähler-Badge `--negative`). **Einzige Gelbstelle im Spiel.**
+- Höhe: `--title-bar` (56px). Sticky top, `z-index: 100`.
 - **Kein Wochenzyklus im Header.** (bewusst entfernt)
 
 ### Dropdown-Menü (öffnet aus dem Menu-Button)
@@ -195,9 +214,9 @@ Bei Klick öffnet ein Panel **unterhalb** des Headers (nicht fullscreen), FM2001
 └───────────────────────────────┘
 ```
 
-- Panel: `--panel`, `--outline`, `--radius-klein`, flat shadow. Breite 240px, am rechten Rand rechtsbündig.
+- Panel: `--panel`, 1px `--line`, `--radius-md`, `--shadow-overlay`. Breite 240px, am rechten Rand rechtsbündig.
 - Kategorie-Header: 11px uppercase, `--tinte-weich`, letter-spacing.
-- Menüpunkte: Icon (20px) + Label, 12px Padding, Hover `--panel-muted`, aktiv `--rasen` gefüllt, Label `--tinte` (Display optional fetter).
+- Menüpunkte: Icon (20px) + Label, 12px Padding, Hover `--sunken`, aktiv `--accent-soft` gefüllt, Label `--text` (Display optional fetter).
 - Verhalten: Click-outside und ESC schließen. Mobile (<768px): dieselbe Struktur als Drawer von rechts, Header bleibt sichtbar.
 
 ---

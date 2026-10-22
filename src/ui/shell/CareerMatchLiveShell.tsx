@@ -15,6 +15,7 @@ import type { AccessibilityPreferences } from "../accessibility.ts";
 import type { NavPrimaryAction } from "../nav-primary-action.ts";
 import type { HubNavActions } from "./types.ts";
 import { AppChrome } from "./AppChrome.tsx";
+import type { KitColors } from "./title-bar-colors.ts";
 
 export function CareerMatchLiveShell({
   setup,
@@ -50,6 +51,7 @@ export function CareerMatchLiveShell({
     name: string;
     initials: string;
     logoSrc?: string;
+    kit?: KitColors;
     leaguePlace: number | null;
   };
   navActions: HubNavActions;
@@ -87,6 +89,7 @@ export function CareerMatchLiveShell({
         clubName={shellClub.name}
         clubInitials={shellClub.initials}
         clubLogoSrc={shellClub.logoSrc}
+        clubKit={shellClub.kit}
         leaguePlace={shellClub.leaguePlace}
         onNavigate={onNavigate}
         onCampusNavigate={() => undefined}

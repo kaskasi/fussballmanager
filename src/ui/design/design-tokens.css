@@ -1,55 +1,219 @@
 /**
- * WIREFRAME: docs/prd/design.md §2 — Fernsehnachmittag tokens
+ * The Club design system — tokens (PRD 20, design.md §2).
+ * Source of truth: the "The Club" design system (direction A "Rasen", dark theme from "Flutlicht").
+ * Only this file may hold raw colour values; components use var(--…) by role.
+ * `npm run check:design-tokens` enforces it.
  */
+
+@font-face {
+  font-family: "Sofia Sans";
+  src: url("/fonts/sofia-sans-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Sofia Sans";
+  src: url("/fonts/sofia-sans-latin-ext.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Sofia Sans Condensed";
+  src: url("/fonts/sofia-sans-condensed-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Sofia Sans Condensed";
+  src: url("/fonts/sofia-sans-condensed-latin-ext.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
-  --bg-sand: #f5efe0 !important;
-  --panel: #fdfbf4;
-  --panel-muted: #efebe0;
-  --rasen: #2e9e46;
-  --rasen-dunkel: #1d6b31;
-  --rasen-hell: #bfdec2;
-  --sonnengelb: #ffc933;
-  --terra: #e07a3f;
-  --terra-dunkel: #b85a28;
-  --tinte: #3e3128;
-  --tinte-weich: #6b5d4f;
-  --staubblau: #9dbfd0;
-  --erfolg: var(--rasen);
-  --fehler: var(--terra);
-  --radius: 12px;
-  --radius-klein: 8px;
-  --shadow-flat: 0 2px 0 rgba(62, 49, 40, 0.15);
-  --font-display: "Baloo 2", "Fredoka", system-ui, sans-serif;
-  --font-body: "Nunito", system-ui, sans-serif;
-  --club-header-height: 56px;
-  --club-shell-inset: 1.5rem;
-  --club-shell-outer-gap: 1rem;
+  /* Ground */
+  --page: #f3f5f1;
+  --panel: #ffffff;
+  --sunken: #e8ece6;
+  /* Lines */
+  --line: #d6ddd3;
+  --line-strong: #aeb8ab;
+  --control-border: #7e8a81;
+  /* Text */
+  --text: #16211a;
+  --text-muted: #56635a;
+  /* Action */
+  --accent: #1e7a3c;
+  --accent-strong: #145a2b;
+  --accent-soft: #e0f0e4;
+  --on-accent: #ffffff;
+  /* The one yellow: the Next button only */
+  --next: #ffc933;
+  --on-next: #16211a;
+  /* Title bar: overridden at runtime from the managed club's kit (titleBarColors) */
+  --club: #2e9e46;
+  --on-club: #16211a;
+  /* Status */
+  --positive: #1e7a3c;
+  --on-positive: #ffffff;
+  --negative: #b5452a;
+  --on-negative: #ffffff;
+  --warning: #8f5a0e;
+  --info: #2e6a93;
+  --draw: #d0d7cc;
+  --on-draw: #16211a;
+  /* CA bands: <70, 70–84, 85–99, 100–114, 115+ */
+  --rating-1: #dce2d9;
+  --on-rating-1: #16211a;
+  --rating-2: #b4d6bd;
+  --on-rating-2: #16211a;
+  --rating-3: #6fb386;
+  --on-rating-3: #0e1a12;
+  --rating-4: #1e7a3c;
+  --on-rating-4: #ffffff;
+  --rating-5: #0f4421;
+  --on-rating-5: #ffffff;
+  --scrim: rgba(12, 18, 16, 0.5);
+  /* Der Treter: a newspaper object, same in both themes */
+  --newsprint: #f1eee5;
+  --newsprint-ink: #1b1a17;
+  --newsprint-rule: #cbc4b3;
+  --newsprint-kicker: #8a2d1f;
 
-  /* Semantic aliases (cleaning pass — map to Fernsehnachmittag, not ad-hoc hex elsewhere) */
-  --bg-page: var(--bg-sand);
-  --bg-card: var(--panel);
-  --bg-inactive: var(--panel-muted);
-  --accent-primary: var(--sonnengelb);
-  --accent-positive: var(--rasen);
-  --accent-negative: var(--terra);
-  --accent-warning: var(--terra);
-  --text-primary: var(--tinte);
-  --text-secondary: var(--tinte-weich);
-  --text-muted: var(--tinte-weich);
-  --radius-card: var(--radius);
-  --radius-button: 999px;
-  --radius-chip: 999px;
-  --outline: 2px solid var(--tinte);
-  --outline-weich: 1px solid rgba(107, 93, 79, 0.35);
+  --shadow-raised: 0 1px 2px rgba(22, 33, 26, 0.08), 0 8px 16px -8px rgba(22, 33, 26, 0.18);
+  --shadow-overlay: 0 24px 48px -16px rgba(22, 33, 26, 0.35);
 
-  /* Spacing rhythm (4px scale) */
+  /* Type */
+  --font-display: "Sofia Sans Condensed", "Arial Narrow", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-text: "Sofia Sans", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  --font-news: Newsreader, Georgia, "Times New Roman", "Songti SC", serif;
+  --font-masthead: UnifrakturMaguntia, "Old English Text MT", serif;
+  /* Type sizes (design.md §3): label/caption 12 · body-sm 14 · body 16 · heading 20 · title 24 · display 32 */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-size-masthead: 3.5rem;
+
+  /* Space: the number is the multiple of 4px */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
-  --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* Shape */
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+
+  /* Sizes */
+  --control-sm: 32px;
+  --control-md: 40px;
+  --touch-min: 44px;
+  --title-bar: 56px;
+  --portrait-sm: 40px;
+  --portrait-md: 56px;
+
+  /* Shell layout */
+  --club-header-height: var(--title-bar);
+  --club-shell-inset: 1.5rem;
+  --club-shell-outer-gap: 1rem;
+
+  /*
+   * Legacy names (Fernsehnachmittag). They point at the new roles so existing screens
+   * switch palette now; each screen drops them when it moves to the tc- components.
+   * Do not use them in new code.
+   */
+  --bg-sand: var(--page);
+  --panel-muted: var(--sunken);
+  --rasen: #2e9e46; /* kept: legacy fills put ink text on it (4.8:1); new fills use --accent */
+  --rasen-dunkel: var(--accent);
+  --rasen-hell: var(--accent-soft);
+  --sonnengelb: var(--next);
+  --terra: var(--negative);
+  --terra-dunkel: var(--negative);
+  --tinte: var(--text);
+  --tinte-weich: var(--text-muted);
+  --staubblau: #9dbfd0; /* kept: info chip backgrounds until those screens migrate */
+  --erfolg: var(--positive);
+  --fehler: var(--negative);
+  --radius: var(--radius-md);
+  --radius-klein: 8px;
+  --shadow-flat: 0 1px 0 rgba(22, 33, 26, 0.06);
+  --font-body: var(--font-text);
+  --bg-page: var(--page);
+  --bg-card: var(--panel);
+  --bg-inactive: var(--sunken);
+  --accent-primary: var(--next);
+  --accent-positive: var(--positive);
+  --accent-negative: var(--negative);
+  --accent-warning: var(--warning);
+  --text-primary: var(--text);
+  --text-secondary: var(--text-muted);
+  --radius-card: var(--radius-md);
+  --radius-button: var(--radius-pill);
+  --radius-chip: var(--radius-pill);
+  --outline: 1px solid var(--line);
+  --outline-weich: 1px solid var(--line);
+  --space-5: 1.25rem; /* legacy step, not in the new scale */
+}
+
+/* Dark theme (Flutlicht). Not switched on in the game yet; the UI gallery previews it. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0c1210;
+  --panel: #131b18;
+  --sunken: #0f1613;
+  --line: #25312c;
+  --line-strong: #3a4842;
+  --control-border: #66766d;
+  --text: #e6ece8;
+  --text-muted: #9caba3;
+  --accent: #46c274;
+  --accent-strong: #6bd991;
+  --accent-soft: #163323;
+  --on-accent: #07120b;
+  --on-next: #151208;
+  --club: #1e7a38;
+  --on-club: #ffffff;
+  --positive: #46c274;
+  --on-positive: #07120b;
+  --negative: #f07a5c;
+  --on-negative: #1a0a05;
+  --warning: #e3b341;
+  --info: #72b4de;
+  --draw: #3a4842;
+  --on-draw: #e6ece8;
+  --rating-1: #24302b;
+  --on-rating-1: #c9d3ce;
+  --rating-2: #1f4a31;
+  --on-rating-2: #d9f2e2;
+  --rating-3: #2c7449;
+  --on-rating-3: #eaf8ef;
+  --rating-4: #46c274;
+  --on-rating-4: #07120b;
+  --rating-5: #a8f0c4;
+  --on-rating-5: #07120b;
+  --scrim: rgba(0, 0, 0, 0.6);
+  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 16px -8px rgba(0, 0, 0, 0.6);
+  --shadow-overlay: 0 24px 48px -16px rgba(0, 0, 0, 0.7);
 }
 
 @media (min-width: 768px) {

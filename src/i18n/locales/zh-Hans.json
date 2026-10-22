@@ -1043,6 +1043,7 @@
   "shell.nav.settings": "设置",
   "settings.developer.title": "开发者",
   "settings.developer.lead": "技术沙盒 — 不属于生涯模拟。",
+  "settings.developer.uiGallery": "界面组件库",
   "settings.display.title": "显示",
   "settings.privacy.title": "隐私",
   "settings.privacy.lead": "匿名使用与崩溃报告有助于改进游戏。不会发送存档内容或姓名。",

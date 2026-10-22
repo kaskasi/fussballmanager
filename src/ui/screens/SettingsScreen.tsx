@@ -25,6 +25,7 @@ import type { Screen } from "../shell/types.ts";
 import { setDiagnosticLogLevel } from "../../telemetry/diagnostic-log.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { submitPlayerFeedback } from "../../telemetry/player-feedback.ts";
+import { UI_GALLERY_HREF } from "../dev/ui-gallery-route.ts";
 
 const DIAG_LEVEL_OPTIONS: readonly { id: DiagnosticLogLevel; labelKey: string }[] = [
   { id: "off", labelKey: "settings.diagnostics.levelOff" },
@@ -212,9 +213,14 @@ export function SettingsScreen({
           {t("settings.developer.title")}
         </h2>
         <p className="settings-section-lead">{t("settings.developer.lead")}</p>
-        <button type="button" className="save-modal-btn" onClick={onOpenMatchdaySandbox}>
-          {t("shell.menu.matchdaySandbox")}
-        </button>
+        <div className="settings-dev-actions">
+          <button type="button" className="save-modal-btn" onClick={onOpenMatchdaySandbox}>
+            {t("shell.menu.matchdaySandbox")}
+          </button>
+          <a className="save-modal-btn" href={UI_GALLERY_HREF}>
+            {t("settings.developer.uiGallery")}
+          </a>
+        </div>
       </section>
 
       <section className="game-panel settings-section" aria-labelledby="settings-feedback-title">

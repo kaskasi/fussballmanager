@@ -1,7 +1,7 @@
 # /docs/prd/20_design_language.md
 
-**Version:** 1.1  
-**Last Updated:** 2026-10-08  
+**Version:** 1.2  
+**Last Updated:** 2026-10-22  
 **Status:** Draft (implementation in progress)
 
 ---
@@ -22,7 +22,7 @@ Establish **one visual and implementation language** for The Club UI: shared tok
 
 | Document | Role |
 |----------|------|
-| **design.md** | Fernsehnachmittag: tokens table, header/menu law, wireframes §9, yellow rule, typography |
+| **design.md** | "Rasen" (The Club design system): token roles, club-colour title bar, header/menu law, wireframes §9, yellow rule, typography |
 | **PRD 20 (this file)** | How to **build and migrate**: cascade order, primitives, audits, DoD, phased deletion of legacy CSS |
 
 On conflict for **tokens/header/yellow**: design.md wins. On conflict for **which component to use**: PRD 20 wins.
@@ -35,13 +35,14 @@ On conflict for **tokens/header/yellow**: design.md wins. On conflict for **whic
 
 Only [`src/ui/design/design-tokens.css`](../../src/ui/design/design-tokens.css) may define:
 
-- Color primitives and semantic aliases (`--bg-page`, `--text-primary`, …)
-- Typography (`--font-display`, `--font-body`)
-- Radii, outlines, flat shadow
-- Spacing scale (`--space-1` … `--space-8`)
+- Colour roles (`--page`, `--panel`, `--text`, `--accent`, `--next`, `--club`, status, ratings, newsprint) and the legacy aliases that point at them
+- Typography (`--font-display`, `--font-text`, `--font-news`, `--font-masthead`, `--font-size-xs` … `--font-size-masthead`) and the self-hosted `@font-face` rules
+- Radii, shadows, sizes
+- Spacing scale (`--space-1` … `--space-12`, N × 4px)
 - Shell layout (`--club-header-height`, `--club-shell-inset`, …)
+- The dark theme (`[data-theme="dark"]`, Flutlicht)
 
-**Rule:** No new hex/rgb in component CSS or TSX except this file (and documented asset bake outputs).
+**Rule:** No new hex/rgb/hsl or literal `font-size` in CSS or TSX except this file. Enforced by `npm run check:design-tokens` against `scripts/design-tokens-baseline.json` (CI, ratchet: counts may only go down). Colour data in `.ts` files (kits, portrait recolor) is out of scope.
 
 ### Target cascade (end state)
 
@@ -54,7 +55,7 @@ design-tokens.css
 
 **Retire:** duplicate rules in `index.css`; shrink `design-repair.css` to zero by migrating into tokens/game-surfaces.
 
-**Current import order** (`main.tsx`): tokens → screen-layout → **index.css** → design-repair → game-surfaces. Migration goal: remove reliance on `index.css` for club UI.
+**Current import order** (`main.tsx`): design-tokens → global-base → **components** (`tc-`) → screen-layout → game-surfaces → surfaces/* → presentation-modes → **index.css** → mobile-pass → design-repair. Migration goal: screens move to `tc-` components and lose their `index.css` rules.
 
 ### Breakpoints (single table)
 
@@ -212,6 +213,10 @@ UI system work does not add rows to PRD 10; tracked here and in PRD 15 gap notes
 | P2 | i18n P0 sweep + CI grep doc |
 | P3 | Camp gradient default |
 | P4 | `index.css` deletion campaign (ongoing) |
+| F0 | **Foundations (2026-10):** role tokens + legacy aliases, Sofia Sans self-hosted, club-colour title bar (`titleBarColors`), `components.css` (`tc-`), UI gallery (`?ui=gallery`), `check:design-tokens` ratchet in CI |
+| F1 | Page-by-page migration to `tc-` components (suggested order: Leagues → Squad → Player profile → Transfers → Hub); each PR lowers the baseline |
+| F2 | Der Treter on `tc-news` with self-hosted Newsreader + UnifrakturMaguntia |
+| F3 | Dark theme switch in Settings (needs legacy aliases gone from migrated screens) |
 
 ---
 

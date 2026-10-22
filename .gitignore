@@ -23,3 +23,5 @@ fmscreens/**/*.png
 assets/club_logos/
 pd_images/
 .env.local
+.idea/
+.cursor/

@@ -1,8 +1,8 @@
 {
   "files": {
     "src/index.css": {
-      "colors": 1395,
-      "fontSizes": 535
+      "colors": 1388,
+      "fontSizes": 532
     },
     "src/match/pitch-markings.tsx": {
       "colors": 3,
@@ -18,7 +18,7 @@
     },
     "src/ui/design/game-surfaces.css": {
       "colors": 64,
-      "fontSizes": 124
+      "fontSizes": 121
     },
     "src/ui/design/global-base.css": {
       "colors": 6,
@@ -26,7 +26,7 @@
     },
     "src/ui/design/surfaces/finances.css": {
       "colors": 5,
-      "fontSizes": 2
+      "fontSizes": 1
     },
     "src/ui/design/surfaces/hub-desk.css": {
       "colors": 3,
@@ -37,8 +37,8 @@
       "fontSizes": 41
     },
     "src/ui/design/surfaces/training.css": {
-      "colors": 162,
-      "fontSizes": 61
+      "colors": 151,
+      "fontSizes": 53
     },
     "src/ui/layout/mobile-pass.css": {
       "colors": 11,

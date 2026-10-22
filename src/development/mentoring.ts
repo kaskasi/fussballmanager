@@ -173,19 +173,26 @@ export function advanceMentorshipWeek(
   });
 }
 
-export function mentorshipProgressLabel(
+export type MentorshipProgress =
+  | { kind: "none" }
+  | { kind: "unavailable" }
+  | { kind: "active" }
+  | { kind: "building"; weeks: number; target: number; drive: number };
+
+/** Mentorship state for the UI; the Squad → Mentoring tab formats it per locale. */
+export function mentorshipProgress(
   mentee: Player,
   mentor: Player | undefined,
   season: number,
   week: number,
-): string {
+): MentorshipProgress {
   const link = mentee.state.mentorship;
-  if (!link) return "Kein Mentor";
-  if (!mentor) return "Mentor nicht verfügbar";
+  if (!link) return { kind: "none" };
+  if (!mentor) return { kind: "unavailable" };
   const weeks = mentorshipWeeks(link, season, week);
   const target = MENTORSHIP_WEEKS_FOR_SIGNAL;
   if (weeks >= target && mentor.hidden.drive >= MENTOR_MIN_DRIVE) {
-    return "✨ Mentor-Effekt aktiv";
+    return { kind: "active" };
   }
-  return `${weeks}/${target} Wochen · Drive ${mentor.hidden.drive.toFixed(2)}`;
+  return { kind: "building", weeks, target, drive: mentor.hidden.drive };
 }

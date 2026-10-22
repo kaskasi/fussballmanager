@@ -1,14 +1,14 @@
-/** WIREFRAME: PRD 09 — F8.5 Assistenten-Delegation */
-import { ClipboardList, Dumbbell, HardHat, Telescope, type LucideIcon } from "lucide-react";
+/** WIREFRAME: PRD 09 — F8.5 Assistenten-Delegation, on tc components (design.md §4.3, §9.11) */
+import { ClipboardList, Dumbbell, Telescope, type LucideIcon } from "lucide-react";
 import {
   ASSISTANT_DELEGATION_TASKS,
   assistantQuality,
-  assistantQualityLabel,
+  assistantQualityTier,
   type AssistantDelegation,
   type AssistantDelegationTask,
 } from "../../staff/assistant-delegation.ts";
 import type { CoachingStaff } from "../../staff/coaching-staff.ts";
-import { Hint } from "./Hint.tsx";
+import { useT } from "../../i18n/react.ts";
 
 const TASK_ICONS: Record<AssistantDelegationTask, LucideIcon> = {
   lineup: ClipboardList,
@@ -27,50 +27,47 @@ export function AssistantDelegationPanel({
   delegation: AssistantDelegation;
   onChange: (task: AssistantDelegationTask, enabled: boolean) => void;
 }) {
+  const t = useT();
   const quality = assistantQuality(staff);
 
   return (
-    <section className="assistant-delegation" aria-label="Assistenten-Delegation">
-      <header className="assistant-delegation-head">
+    <section className="tc-panel" aria-labelledby="squad-assistant-title">
+      <div className="tc-panel__head">
         <div>
-          <h2>
-            <HardHat size={20} strokeWidth={2.5} aria-hidden className="assistant-delegation-title-icon" />{" "}
+          <span className="tc-label">{t("staff.assistant.label")}</span>
+          <h2 className="tc-panel__title" id="squad-assistant-title">
             {assistantName}
           </h2>
-          <p className="assistant-delegation-meta">
-            Taktik-Qualität {quality} · {assistantQualityLabel(quality)}
-          </p>
         </div>
-        <Hint
-          text="Aufstellung und Scouting kann er übernehmen. Wochenplan nur als Erinnerung — du setzt den Plan selbst."
-          block
-        >
-          <span className="assistant-delegation-badge">F8.5</span>
-        </Hint>
-      </header>
+        <span className="tc-panel__meta">
+          {t("staff.assistant.quality", {
+            quality,
+            tier: t(`staff.assistant.tier.${assistantQualityTier(quality)}`),
+          })}
+        </span>
+      </div>
+      <p className="tc-page-sub tc-section__title">{t("staff.assistant.lead")}</p>
 
-      <ul className="assistant-delegation-list">
-        {ASSISTANT_DELEGATION_TASKS.map((task) => (
-          <li key={task.key}>
-            <label className="assistant-delegation-row">
-              <input
-                type="checkbox"
-                checked={delegation[task.key]}
-                onChange={(event) => onChange(task.key, event.target.checked)}
-              />
-              <span className="assistant-delegation-icon" aria-hidden="true">
-                {(() => {
-                  const Icon = TASK_ICONS[task.key];
-                  return <Icon size={18} strokeWidth={2.5} />;
-                })()}
-              </span>
-              <span className="assistant-delegation-copy">
-                <strong>{task.label}</strong>
-                <small>{task.hint}</small>
-              </span>
-            </label>
-          </li>
-        ))}
+      <ul className="tc-checks">
+        {ASSISTANT_DELEGATION_TASKS.map((task) => {
+          const Icon = TASK_ICONS[task.key];
+          return (
+            <li key={task.key}>
+              <label className="tc-check">
+                <input
+                  type="checkbox"
+                  checked={delegation[task.key]}
+                  onChange={(event) => onChange(task.key, event.target.checked)}
+                />
+                <Icon className="tc-icon" aria-hidden="true" />
+                <span className="tc-check__copy">
+                  <span className="tc-check__title">{t(`staff.delegation.${task.key}.label`)}</span>
+                  <span className="tc-check__hint">{t(`staff.delegation.${task.key}.hint`)}</span>
+                </span>
+              </label>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

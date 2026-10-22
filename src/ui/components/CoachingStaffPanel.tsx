@@ -1,33 +1,26 @@
 import { useMemo } from "react";
 import { Dumbbell, Shield, Swords, type LucideIcon } from "lucide-react";
-import { formatClubCash, formatClubCashWeekly } from "../../economy/club-finances.ts";
+import { formatClubCash } from "../../economy/club-finances.ts";
 import {
-  COACH_ROLE_LABELS,
   COACH_ROLES,
   coachCandidates,
   coachEnvironmentFactor,
   environmentFromCoachingStaff,
-  staffEnvironmentLabel,
+  staffEnvironmentTier,
   type Coach,
   type CoachRole,
   type CoachingStaff,
 } from "../../staff/coaching-staff.ts";
-import { Hint } from "./Hint.tsx";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
+import { useT } from "../../i18n/react.ts";
 import { PlayerPortrait } from "./PlayerPortrait.tsx";
 
 /**
- * WIREFRAME: PRD 09 — F8.1 Trainerstab
- * ┌──────────────────────────────────────────────┐
- * │ 🧢 Trainer · Environment ×1.04             │
- * │ ⚔️ Angriff   Markus L. · Q68 · €7.3k       │
- * │ 🛡️ Verteid.  …                              │
- * │ 💪 Fitness   …                              │
- * │ Kandidaten · Einstellen                     │
- * └──────────────────────────────────────────────┘
+ * WIREFRAME: PRD 09 — F8.1 Trainerstab, on tc components (design.md §4.3, §9.11):
+ * environment summary, then one card per role with the current coach and three candidates.
  */
 
-const COACH_ROLE_TAB_ICONS: Record<CoachRole, LucideIcon> = {
+const COACH_ROLE_ICONS: Record<CoachRole, LucideIcon> = {
   attack: Swords,
   defense: Shield,
   fitness: Dumbbell,
@@ -48,23 +41,25 @@ export function CoachingStaffPanel({
   cash: number;
   onHire: (coach: Coach) => void;
 }) {
+  const t = useT();
   const environment = environmentFromCoachingStaff(staff);
 
   return (
-    <section className="training-staff" aria-label="Trainerstab">
-      <header className="training-staff-head">
-        <Hint
-          text="Trainer verbessern das Entwicklungs-Umfeld (environment) in der Growth Engine — nicht Minuten oder Fokus-Slots."
-          block
-        >
-          <p className="training-staff-env">
-            Entwicklungs-Umfeld <strong>×{environment.toFixed(2)}</strong>
-            <span className="training-staff-env-label"> · {staffEnvironmentLabel(environment)}</span>
-          </p>
-        </Hint>
-      </header>
+    <section className="tc-panel" aria-labelledby="squad-coaches-title">
+      <div className="tc-panel__head">
+        <h2 className="tc-panel__title" id="squad-coaches-title">
+          {t("staff.coaches.title")}
+        </h2>
+        <span className="tc-panel__meta">
+          {t("staff.environment.summary", {
+            factor: environment.toFixed(2),
+            tier: t(`staff.environment.tier.${staffEnvironmentTier(environment)}`),
+          })}
+        </span>
+      </div>
+      <p className="tc-page-sub tc-section__title">{t("staff.coaches.lead")}</p>
 
-      <div className="training-staff-grid">
+      <div className="tc-cards">
         {COACH_ROLES.map((role) => (
           <CoachRoleCard
             key={role}
@@ -78,6 +73,7 @@ export function CoachingStaffPanel({
           />
         ))}
       </div>
+      <p className="tc-caption tc-cards__note">{t("staff.coaches.hireRule")}</p>
     </section>
   );
 }
@@ -99,78 +95,83 @@ function CoachRoleCard({
   cash: number;
   onHire: (coach: Coach) => void;
 }) {
+  const t = useT();
   const candidates = useMemo(
     () => coachCandidates(role, season, week, masterSeed),
     [role, season, week, masterSeed],
   );
+  const Icon = COACH_ROLE_ICONS[role];
+  const titleId = `coach-role-${role}`;
 
   return (
-    <article className="training-staff-card">
-      <header className="training-staff-card-head">
-        <h2 className="training-staff-role-title">
-          {(() => {
-            const Icon = COACH_ROLE_TAB_ICONS[role];
-            return <Icon size={18} strokeWidth={2.5} aria-hidden="true" />;
-          })()}{" "}
-          {COACH_ROLE_LABELS[role]}
-        </h2>
-      </header>
+    <article className="tc-card" aria-labelledby={titleId}>
+      <h3 className="tc-label tc-card__title" id={titleId}>
+        <Icon className="tc-icon" aria-hidden="true" />
+        {t(`staff.role.${role}`)}
+      </h3>
 
       {coach ? (
-        <div className="training-staff-current">
-          <div className="training-staff-identity">
-            <PlayerPortrait seed={coach.portrait_seed} size="sm" pool="mixed" className="training-staff-portrait" />
-            <p className="training-staff-name">{coach.name}</p>
-          </div>
-          <p className="training-staff-meta">
-            Qualität {coach.quality} · Umfeld ×{coachEnvironmentFactor(coach.quality).toFixed(2)}
-          </p>
-          <p className="training-staff-meta">
-            {formatClubCashWeekly(coach.wage_weekly)} · bis {formatSeasonLabel(coach.contract_until_season)}
-          </p>
+        <div className="tc-card__current">
+          <span className="tc-namecell">
+            <PlayerPortrait seed={coach.portrait_seed} size="sm" pool="mixed" />
+            {coach.name}
+          </span>
+          <span className="tc-list__meta">
+            {t("staff.coach.quality", {
+              quality: coach.quality,
+              factor: coachEnvironmentFactor(coach.quality).toFixed(2),
+            })}
+          </span>
+          <span className="tc-list__meta">
+            {t("staff.coach.contract", {
+              wage: t("staff.perWeek", { amount: formatClubCash(coach.wage_weekly) }),
+              season: formatSeasonLabel(coach.contract_until_season),
+            })}
+          </span>
         </div>
       ) : (
-        <p className="training-staff-empty">Kein Trainer — Umfeld ×1.00</p>
+        <p className="tc-empty">{t("staff.coach.none")}</p>
       )}
 
-      <div className="training-staff-market">
-        <p className="training-staff-market-label">Kandidaten</p>
-        <ul className="training-staff-candidates">
-          {candidates.map((candidate) => {
-            const affordable = cash >= candidate.wage_weekly * 2;
-            const upgrade = !coach || candidate.quality > coach.quality;
-            return (
-              <li key={candidate.id}>
-                <div className="training-staff-candidate">
-                  <PlayerPortrait seed={candidate.portrait_seed} size="sm" pool="mixed" className="training-staff-portrait" />
-                  <span>
-                    <strong>{candidate.name}</strong>
-                    <small>
-                      Q{candidate.quality} · ×{coachEnvironmentFactor(candidate.quality).toFixed(2)} ·{" "}
-                      {formatClubCashWeekly(candidate.wage_weekly)}
-                    </small>
-                  </span>
-                  <button
-                    type="button"
-                    className="ui-btn ui-btn--primary"
-                    disabled={!affordable || !upgrade}
-                    title={
-                      !upgrade
-                        ? "Kandidat ist nicht besser als der aktuelle Trainer."
-                        : !affordable
-                          ? "Mindestens zwei Wochengehälter Cash nötig."
-                          : "Trainer einstellen"
-                    }
-                    onClick={() => onHire(candidate)}
-                  >
-                    Einstellen
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      <p className="tc-label tc-card__subtitle">{t("staff.coach.candidates")}</p>
+      <ul className="tc-list">
+        {candidates.map((candidate) => {
+          const affordable = cash >= candidate.wage_weekly * 2;
+          const upgrade = !coach || candidate.quality > coach.quality;
+          const reason = !upgrade
+            ? t("staff.coach.notBetter")
+            : !affordable
+              ? t("staff.coach.needsCash")
+              : undefined;
+          return (
+            <li key={candidate.id} className="tc-list__item tc-list__item--wide">
+              <span className="tc-list__main">
+                <span className="tc-namecell">
+                  <PlayerPortrait seed={candidate.portrait_seed} size="sm" pool="mixed" />
+                  {candidate.name}
+                </span>
+                <span className="tc-list__meta">
+                  {t("staff.coach.candidateMeta", {
+                    quality: candidate.quality,
+                    factor: coachEnvironmentFactor(candidate.quality).toFixed(2),
+                    wage: t("staff.perWeek", { amount: formatClubCash(candidate.wage_weekly) }),
+                  })}
+                </span>
+                {reason ? <span className="tc-list__meta">{reason}</span> : null}
+              </span>
+              <button
+                type="button"
+                className="tc-btn tc-btn--primary tc-btn--sm"
+                disabled={Boolean(reason)}
+                aria-label={t("staff.coach.hireAria", { name: candidate.name })}
+                onClick={() => onHire(candidate)}
+              >
+                {t("staff.coach.hire")}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
     </article>
   );
 }

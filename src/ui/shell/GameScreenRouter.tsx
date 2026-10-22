@@ -525,6 +525,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           trainingIntensity={trainingIntensity}
           coachingStaff={coachingStaff}
           masterSeed={masterSeed}
+          cash={finances.cash}
           onHireCoach={handleHireCoach}
           assistantName={storyState.cast.assistant_name}
           assistantDelegation={assistantDelegation}

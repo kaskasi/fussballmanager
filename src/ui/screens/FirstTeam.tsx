@@ -16,12 +16,11 @@ import {
 } from "../../squad/pro-roster.ts";
 import { useT } from "../../i18n/react.ts";
 import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
-import { t } from "../../i18n/index.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 
 /**
- * WIREFRAME: docs/prd/design.md §9.11 — Kader (Tabellen-Layout wie Jugendliste)
+ * WIREFRAME: docs/prd/design.md §9.11 — Kader. Built from tc- components (design.md §4.3); tabs are the shared FmScreenTabBar.
  */
 
 const DEFAULT_SORT: { key: ProSquadSortKey; direction: ProSquadSortDirection } = {
@@ -64,7 +63,7 @@ export function FirstTeam({
   onClearMentor?: (menteeId: string) => void;
   onOpenMedical?: () => void;
 }) {
-  useT();
+  const t = useT();
   const [squadTab, setSquadTab] = useState<SquadTab>("list");
   useTutorialTabFocus("squad", "squad.open_profile", "list", setSquadTab);
   const [sortKey, setSortKey] = useState<ProSquadSortKey>(DEFAULT_SORT.key);
@@ -83,8 +82,8 @@ export function FirstTeam({
 
   const squadTabs: { id: SquadTab; label: string }[] = [
     { id: "list", label: t("shell.nav.squad") },
-    { id: "mentoring", label: "Mentoring" },
-    { id: "staff", label: "Staff" },
+    { id: "mentoring", label: t("squad.tab.mentoring") },
+    { id: "staff", label: t("squad.tab.staff") },
   ];
 
   return (
@@ -110,12 +109,10 @@ export function FirstTeam({
       {squadTab === "list" ? (
         <div className="fm-tab-panel">
           {rows.length === 0 ? (
-            <section className="squad-empty" aria-label={t("squad.empty.aria")}>
-              <span className="squad-empty-icon" aria-hidden="true">
-                <Users size={28} strokeWidth={2.5} />
-              </span>
-              <p>{t("squad.empty")}</p>
-              <p className="squad-empty-hint">{t("squad.emptyHint")}</p>
+            <section className="tc-panel tc-empty-state" aria-label={t("squad.empty.aria")}>
+              <Users className="tc-icon" aria-hidden="true" />
+              <p className="tc-empty-state__title">{t("squad.empty")}</p>
+              <p>{t("squad.emptyHint")}</p>
             </section>
           ) : (
             <ProSquadRosterPanel
@@ -145,7 +142,7 @@ export function FirstTeam({
               onClearMentor={onClearMentor}
             />
           ) : (
-            <p className="hub-inbox-empty">Mentoring nicht verfügbar.</p>
+            <p className="tc-empty">{t("squad.mentoring.unavailable")}</p>
           )}
         </div>
       ) : null}
@@ -153,7 +150,7 @@ export function FirstTeam({
       {squadTab === "staff" ? (
         <div className="fm-tab-panel">
           {coachingStaff && onHireCoach && assistantDelegation && onAssistantDelegationChange ? (
-            <>
+            <div className="tc-stack">
               <AssistantDelegationPanel
                 assistantName={assistantName}
                 staff={coachingStaff}
@@ -169,16 +166,16 @@ export function FirstTeam({
                 onHire={onHireCoach}
               />
               {onOpenMedical ? (
-                <p className="medical-muted">
-                  {t("medical.squadHint")}{" "}
-                  <button type="button" className="ui-btn ui-btn--ghost ui-btn--sm" onClick={onOpenMedical}>
+                <p className="tc-row">
+                  <span className="tc-caption">{t("medical.squadHint")}</span>
+                  <button type="button" className="tc-btn tc-btn--sm" onClick={onOpenMedical}>
                     {t("shell.nav.medical")}
                   </button>
                 </p>
               ) : null}
-            </>
+            </div>
           ) : (
-            <p className="hub-inbox-empty">Staff-Bereich im Kader — Daten aus Training migriert.</p>
+            <p className="tc-empty">{t("squad.staff.unavailable")}</p>
           )}
         </div>
       ) : null}

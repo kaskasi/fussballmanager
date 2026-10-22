@@ -1,5 +1,6 @@
 import type { ProSquadSortDirection } from "../../squad/pro-roster.ts";
 
+/** Sortable column header on tc-sort (design.md §4.3): one arrow on the sorted column, aria-sort for screen readers. */
 export function SquadSortHeader<K extends string>({
   label,
   sortKey,
@@ -21,12 +22,12 @@ export function SquadSortHeader<K extends string>({
   return (
     <th
       scope="col"
-      className={align === "left" ? "squad-col-name" : undefined}
-      aria-sort={active ? (direction === "asc" ? "ascending" : "descending") : "none"}
+      className={align === "left" ? "squad-col-name" : "tc-num"}
+      aria-sort={active ? (direction === "asc" ? "ascending" : "descending") : undefined}
     >
       <button
         type="button"
-        className={`squad-sort-header${active ? " is-active" : ""}${align === "left" ? " is-left" : ""}`}
+        className="tc-sort"
         title={title}
         onClick={(event) => {
           event.preventDefault();
@@ -34,11 +35,12 @@ export function SquadSortHeader<K extends string>({
           onSort(sortKey);
         }}
       >
-        <span>{label}</span>
-        <span className="squad-sort-icons" aria-hidden="true">
-          <span className={active && direction === "asc" ? "is-active" : ""}>▲</span>
-          <span className={active && direction === "desc" ? "is-active" : ""}>▼</span>
-        </span>
+        {label}
+        {active ? (
+          <svg className="tc-sort__arrow" viewBox="0 0 10 10" aria-hidden="true">
+            <path d={direction === "desc" ? "M1 3h8L5 8z" : "M1 7h8L5 2z"} />
+          </svg>
+        ) : null}
       </button>
     </th>
   );

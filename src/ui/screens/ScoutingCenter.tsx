@@ -511,9 +511,9 @@ export function ScoutingCenter({
 
       <div className="scouting-filter-toolbar">
         <FilterToolbar ariaLabel={t("scouting.filter.aria")} className="scouting-chips">
-          <FilterChip active={filters.position === "all"} onClick={() => onFiltersChange({ ...filters, position: "all" })}>{t("scouting.filter.all")}</FilterChip>
+          <FilterChip size="dense" active={filters.position === "all"} onClick={() => onFiltersChange({ ...filters, position: "all" })}>{t("scouting.filter.all")}</FilterChip>
           {POSITIONS.map((slot) => (
-            <FilterChip
+            <FilterChip size="dense"
               key={slot}
               active={filters.position === slot}
               onClick={() =>
@@ -527,7 +527,7 @@ export function ScoutingCenter({
             </FilterChip>
           ))}
           {AGE_FILTERS.map((filter) => (
-            <FilterChip
+            <FilterChip size="dense"
               key={filter.value}
               active={filters.age === filter.value}
               onClick={() =>
@@ -541,7 +541,7 @@ export function ScoutingCenter({
             </FilterChip>
           ))}
           {CONFIDENCE_FILTERS.map((filter) => (
-            <FilterChip
+            <FilterChip size="dense"
               key={filter.bucket}
               active={filters.confidence === filter.bucket}
               title={t(filter.titleKey)}
@@ -557,7 +557,7 @@ export function ScoutingCenter({
             </FilterChip>
           ))}
           {REGIONS.map((region) => (
-            <FilterChip
+            <FilterChip size="dense"
               key={region}
               active={filters.query.toLowerCase() === region.toLowerCase()}
               onClick={() =>
@@ -577,7 +577,7 @@ export function ScoutingCenter({
               key === "name" ? t("squad.col.name") : key === "ca" ? "CA" : t("squad.col.value");
             const active = sort.key === key;
             return (
-              <FilterChip key={key} active={active} onClick={() => toggleSort(key)}>
+              <FilterChip size="dense" key={key} active={active} onClick={() => toggleSort(key)}>
                 {label}
                 {active ? (sort.direction === "asc" ? " ▲" : " ▼") : ""}
               </FilterChip>
@@ -593,7 +593,7 @@ export function ScoutingCenter({
           </span>
           <p>{market.length === 0 ? t("scouting.pool.empty") : t("scouting.empty")}</p>
           {marketFiltersActive(filters) ? (
-            <FilterChip active={false} onClick={() => onFiltersChange(DEFAULT_MARKET_FILTERS)}>
+            <FilterChip size="dense" active={false} onClick={() => onFiltersChange(DEFAULT_MARKET_FILTERS)}>
               {t("scouting.empty.reset")}
             </FilterChip>
           ) : null}
@@ -636,7 +636,7 @@ export function ScoutingCenter({
                     key === "name" ? t("squad.col.name") : key === "ca" ? "CA" : t("squad.col.value");
                   const active = sort.key === key;
                   return (
-                    <FilterChip key={key} active={active} onClick={() => toggleSort(key)}>
+                    <FilterChip size="dense" key={key} active={active} onClick={() => toggleSort(key)}>
                       {label}
                       {active ? (sort.direction === "asc" ? " ▲" : " ▼") : ""}
                     </FilterChip>

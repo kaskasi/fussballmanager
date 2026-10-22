@@ -145,11 +145,13 @@ Position-, Sortier- und Scout-Filter sind **ein** Baustein (`FilterChip`):
 - Inaktiv: `--panel` Füllung, 1px `--control-border`, `--radius-pill`
 - Aktiv: `--accent` Füllung, Text `--on-accent`, `aria-pressed="true"`
 - **Niemals** `--next` für aktive Filter (nur NEXT)
-- Neue Screens nutzen `.tc-chips` / `.tc-chip` (§4.3); die bestehende `FilterChip`-Primitive zieht beim ersten Screen-Umzug nach.
+- `FilterChip` / `FilterToolbar` rendern seit dem Kader-Umzug `tc-chip` / `tc-chips` (überall, auch Jugend, Transfers, Scouting). `size="dense"` (32px) für lange Chip-Reihen wie im Scouting.
 
 ### 4.3 Komponenten (`tc-`) und UI-Galerie
 
 `src/ui/design/components.css` enthält die Komponenten des Design Systems als `tc-`-Klassen: Titelleiste, NEXT, Buttons, Filter-Chips, Tabs, Panel, sortierbare Tabelle, Liga-Tabelle (eigene Zeile, Abstiegslinie, Formkurve), Bewertungs-Badge, Spielerkarte (groß und Grid), Modal, Key-Value-Liste, Der Treter. Nur Tokens, keine rohen Werte. Die Klassen berühren bestehende Screens nicht, bis ein Screen umzieht.
+
+Mit dem Kader (F1) dazugekommen: `tc-select`, `tc-check(s)`, `tc-cards` / `tc-card`, `tc-stack`, `tc-empty-state`, `tc-state--good/mid/low`, `tc-namecell`, `tc-row--link`, `tc-list__item--wide` / `--stack-narrow`, `tc-btn--sm`, `tc-chip--dense`, `tc-chips--toolbar`. **Gemeinsame Bausteine, die jetzt überall gelten:** Screen-Tabs (`FmScreenTabBar`, `.fm-tab` im tc-Look ohne Gelb), Filter-Chips, Sortierköpfe (`SquadSortHeader`).
 
 Mit dem Ligen-Screen (F1) dazugekommen: `tc-page-head` / `tc-page-title` / `tc-page-sub` (ein Kopf pro Screen), `tc-tabs--page` + `tc-tab__meta`, `tc-split` (Haupt- + Seitenspalte), `tc-linkbtn` (Namen in Tabellen), `tc-place` (Platz mit Zone), `tc-row--mark`, `tc-form__r--empty`, `tc-spark`, `tc-list` (Ranglisten), `tc-section`, `tc-empty`, `tc-stats` (Kennzahl-Kacheln), `tc-hide-narrow`. React: `ModalShell variant="tc"` (Escape schließt, Fokus auf Schließen), `ratingBand()` in `src/ui/design/rating-band.ts`.
 
@@ -781,6 +783,14 @@ Dropdown-Menü "Mentor wählen", das eine Liste der verfügbaren, erfahrenen Spi
 Visuelles Feedback, wenn ein Mentor zugewiesen wurde (z.B. grüner Haken oder Icon).
 Tab "Staff":
 Übersicht Trainer (Angriff/Verteidigung/Fitness) und Assistenten-Delegation. **Fitness/Verletzungen/Ermüdung → Screen Medizin (§9.16).**
+
+**Umsetzung (F1, zweiter migrierter Screen — gilt vor der Skizze oben):**
+- Tabs: die gemeinsame `FmScreenTabBar` (siehe §4.3 — Unterstrich statt Gelb, auf dem Phone die vertikale Schiene mit Akzent-Balken).
+- Liste: `tc-panel` mit Titel + Kurzbilanz (Ø CA, Kaderwert), Positions-Chips (`FilterChip` → `tc-chip`), `tc-table` mit `SquadSortHeader` (`tc-sort`, ein Pfeil an der sortierten Spalte). CA als Bewertungs-Badge, Δ mit Vorzeichen und Farbe, Form und Fitness als Zustandszeichen (● gut · ▲ mittel · ◆ schwach) **mit** Wort für Screenreader, Verletzung als „{n} Wo.“. Ganze Zeile öffnet das Profil (Enter/Leertaste).
+- Mentoring: `tc-list` mit Name, Position/Alter/Moral, Fortschritt (`mentorshipProgress()` liefert Daten, der Text kommt aus i18n) und `tc-select` je Talent; auf dem Phone untereinander.
+- Staff: Co-Trainer mit `tc-check`-Zeilen für die Delegation; Trainerstab als `tc-cards` je Rolle mit aktuellem Trainer und Kandidaten. Ein deaktivierter „Einstellen“-Knopf nennt seinen Grund sichtbar (nicht besser / zu wenig Cash).
+- Alle Texte in EN/DE/ZH; keine Emojis, keine Feature-IDs (früher „F8.5“) in der Oberfläche.
+- Offen aus der Skizze: Vertrag, Mentor-Info und Aktionen ([Verkaufen]) in der Liste; Filter nach Alter/CA/Vertrag.
 
 ### 9.16 Medizin
 

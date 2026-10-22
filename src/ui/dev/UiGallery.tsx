@@ -428,6 +428,79 @@ export function UiGallery() {
           </div>
         </Section>
 
+        <Section
+          id="forms"
+          title="Controls, states and cards"
+          note="From the Squad screen: select, checkbox rows, state glyphs (shape + colour + word), dense chips and cards inside a panel."
+        >
+          <div className="ui-gallery__two">
+            <div className="tc-panel tc-stack">
+              <label className="tc-label" htmlFor="ui-gallery-select">
+                Mentor
+              </label>
+              <select id="ui-gallery-select" className="tc-select" defaultValue="">
+                <option value="">— Choose a mentor —</option>
+                <option value="a">Karim Koch · leadership 16</option>
+              </select>
+              <ul className="tc-checks">
+                <li>
+                  <label className="tc-check">
+                    <input type="checkbox" defaultChecked />
+                    <span />
+                    <span className="tc-check__copy">
+                      <span className="tc-check__title">Line-up</span>
+                      <span className="tc-check__hint">Picks the starting XI and formation before each matchday</span>
+                    </span>
+                  </label>
+                </li>
+                <li>
+                  <label className="tc-check">
+                    <input type="checkbox" />
+                    <span />
+                    <span className="tc-check__copy">
+                      <span className="tc-check__title">Scouting</span>
+                      <span className="tc-check__hint">Keeps assignments going and sets targets</span>
+                    </span>
+                  </label>
+                </li>
+              </ul>
+              <p className="tc-row">
+                <span className="tc-state tc-state--good">● good</span>
+                <span className="tc-state tc-state--mid">▲ fair</span>
+                <span className="tc-state tc-state--low">◆ poor</span>
+              </p>
+              <div className="tc-chips">
+                {["All", "GK", "CB", "U21", "28+"].map((label, index) => (
+                  <button key={label} type="button" className="tc-chip tc-chip--dense" aria-pressed={index === 0}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="tc-cards">
+              <article className="tc-card">
+                <h3 className="tc-label tc-card__title">Attack</h3>
+                <div className="tc-card__current">
+                  <span className="tc-strong">Thomas Dose</span>
+                  <span className="tc-list__meta">Quality 58 · environment ×1.02</span>
+                </div>
+                <p className="tc-label tc-card__subtitle">Candidates</p>
+                <ul className="tc-list">
+                  <li className="tc-list__item tc-list__item--wide">
+                    <span className="tc-list__main">
+                      <span className="tc-list__name">Stefan Evers</span>
+                      <span className="tc-list__meta">Q84 · ×1.07 · € 10k/wk</span>
+                    </span>
+                    <button type="button" className="tc-btn tc-btn--primary tc-btn--sm">
+                      Hire
+                    </button>
+                  </li>
+                </ul>
+              </article>
+            </div>
+          </div>
+        </Section>
+
         <Section id="ratings" title="Rating badges" note="CA bands: under 70, 70–84, 85–99, 100–114, 115 and up.">
           <div className="tc-row">
             {[62, 78, 92, 104, 116].map((ca) => (

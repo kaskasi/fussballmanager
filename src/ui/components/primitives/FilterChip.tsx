@@ -1,4 +1,4 @@
-/** PRD 20 — unified filter pill (design.md §4.1) */
+/** PRD 20 — unified filter pill on tc-chip (design.md §4.1, §4.3) */
 import type { ReactNode } from "react";
 import { Hint } from "../Hint.tsx";
 
@@ -19,11 +19,11 @@ export function FilterChip({
   size?: "default" | "dense";
   className?: string;
 }) {
-  const sizeClass = size === "dense" ? " filter-chip--dense" : "";
+  const sizeClass = size === "dense" ? " tc-chip--dense" : "";
   const chip = (
     <button
       type="button"
-      className={`filter-chip${active ? " is-active" : ""}${sizeClass}${className ? ` ${className}` : ""}`}
+      className={`tc-chip${sizeClass}${className ? ` ${className}` : ""}`}
       aria-pressed={active}
       title={title}
       onClick={onClick}

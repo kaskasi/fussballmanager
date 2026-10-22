@@ -9719,30 +9719,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   }
 }
 
-.calendar-match-week {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1rem;
-  margin-bottom: 0.75rem;
-  padding: 0.75rem 1rem;
-}
-
-.calendar-match-week-fixture {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.calendar-match-week-label {
-  margin: 0;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted, #64748b);
-}
-
 .camp-debut-modal {
   max-width: 34rem;
 }

@@ -328,15 +328,6 @@ main.scouting.club-shell-card-body .scouting-scouts {
     min-width: 2.75rem;
   }
 
-  .calendar-grid-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .calendar-grid {
-    min-width: 18rem;
-  }
-
   .squad-table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

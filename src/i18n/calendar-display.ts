@@ -55,3 +55,26 @@ export function weekdayStripAriaLabel(seasonWeek: number, weekday: number): stri
     day: weekdayShortDisplay(weekday),
   });
 }
+
+const MONTH_KEYS = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+] as const;
+
+export function monthDisplay(monthIndex: number): string {
+  return t(`calendar.month.${MONTH_KEYS[monthIndex] ?? "january"}`);
+}
+
+export function monthShortDisplay(monthIndex: number): string {
+  return t(`calendar.monthShort.${MONTH_KEYS[monthIndex] ?? "january"}`);
+}

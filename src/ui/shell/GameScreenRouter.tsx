@@ -655,6 +655,9 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           league={league}
           milestones={calendarMilestones}
           scoutBoard={scoutBoard}
+          transfers={transferState.history ?? []}
+          editions={session.kickerEditionArchive}
+          chronicle={storyState.chronicle_entries}
           onFastForwardToMonth={handleFastForwardToMonth}
           fastForwardBusy={simulating}
         />

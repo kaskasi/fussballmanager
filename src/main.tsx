@@ -11,6 +11,7 @@ import "./ui/layout/screen-layout.css";
 import "./ui/design/game-surfaces.css";
 import "./ui/design/surfaces/finances.css";
 import "./ui/design/surfaces/stadium.css";
+import "./ui/design/surfaces/calendar.css";
 import "./ui/design/surfaces/training.css";
 import "./ui/design/surfaces/scouting.css";
 import "./ui/design/surfaces/hub-desk.css";

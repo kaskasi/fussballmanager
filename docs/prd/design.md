@@ -159,6 +159,8 @@ Mit den Transfers (F1) dazugekommen: `tc-deal(s)` (Marktkarte), `tc-callout` (St
 
 Mit dem Spielerprofil (F1) dazugekommen: `tc-menu` (⋮-Menü mit Hinweis je Eintrag), `tc-range` (Schieberegler mit Wert), `tc-chip--icon`, `tc-talk` (Vertragsgespräch, auch in der Transfer-Verhandlung); Bildschirm-Layout in `design/surfaces/profile.css`.
 
+Mit dem Kalender (F1) dazugekommen: keine neuen gemeinsamen Bausteine; Saison-Leiste, Tageszellen und Chronik-Spalte als `tc-cal…` in `design/surfaces/calendar.css`.
+
 Mit dem Stadion (F1) dazugekommen: `tc-stepper` / `tc-stepper__value` (−/+ um einen Wert; Ticketpreis, Imbisspreise, Sponsor-Laufzeit auf dem Handy); Bildschirm-Layout in `design/surfaces/stadium.css`.
 
 Mit dem Kader (F1) dazugekommen: `tc-select`, `tc-check(s)`, `tc-cards` / `tc-card`, `tc-stack`, `tc-empty-state`, `tc-state--good/mid/low`, `tc-namecell`, `tc-row--link`, `tc-list__item--wide` / `--stack-narrow`, `tc-btn--sm`, `tc-chip--dense`, `tc-chips--toolbar`. **Gemeinsame Bausteine, die jetzt überall gelten:** Screen-Tabs (`FmScreenTabBar`, `.fm-tab` im tc-Look ohne Gelb), Filter-Chips, Sortierköpfe (`SquadSortHeader`).
@@ -469,6 +471,14 @@ H1 "Saison 2026"                        [◀ August ▶]
 ```
 - Zellen: `--panel-muted`, Spieltage als kleine Chips mit Vereinswappen-Miniaturen (`<Crest>` wiederverwenden!).
 - Mo/Sa/So (die drei aktiven Spieltage) deutlich markiert: fette Outline, inaktive Tage reduziert.
+
+**Umsetzung (F1, achter migrierter Screen — gilt vor der Skizze oben):** Der Kalender erzeugt das Gefühl vergehender Zeit und ist zugleich die Chronik der Saison.
+- Kopf: `tc-page-head` mit Monat + Jahr, ‹ Heute › und einer Bilanz-Zeile des Monats (gespielt · S/U/N · Tore · offen · Transfers).
+- Saison-Leiste (`CalendarSeasonStrip`): ein Segment pro Saisonmonat in Saison-Reihenfolge (Aug → Apr, nicht Jan → Dez), Füllstand = gelebte Tage, ein Punkt pro Spieltag in Sieg `--positive` / Remis `--draw` / Niederlage `--negative`, hohl = noch offen. Klick springt zum Monat.
+- Raster (`CalendarDay`): KW-Spalte (fett, wenn gelebt; ⇄ / Lesezeichen für Wochen mit Transfer bzw. Chronik-Eintrag). Zukunft gestrichelt und leer wie ein unbeschriebenes Blatt (Spieltage mit fester Kante); Vergangenheit auf `--sunken`, die Zahl durchgestrichen — der Strich zieht sich, wenn ein Tag vergeht; heute mit `--accent`-Rand, „Heute“-Marke und `--shadow-raised`. Gespielte Spieltage behalten Ergebnis-Streifen und Score. Tage außerhalb der Saison (Sommerpause, ISO-KW 53) schraffiert. Transferfenster als `--info`-Kante oben, aus den Spielwochen abgeleitet (KW 33–36, KW 2–4) statt aus festen Kalenderdaten.
+- Chronik-Spalte (`CalendarJournal`, `tc-split`): „Demnächst“ (Spiele und Meilensteine, nächste zuerst), darunter „Rückblick“ Woche für Woche, neueste zuerst — Ergebnisse, eigene Transfers, Aufmacher von Der Treter, Chronik-Einträge, erledigte Meilensteine. Lucide-Icons statt Story-Emoji.
+- Handy: Zellen nur mit Datum, Wappen und Score, Meilensteine als Punkt; die Chronik darunter ist die Agenda.
+- Daten: `calendar/season-timeline.ts` (Saisontage, Phase vergangen/heute/zukünftig, Ergebnis aus Spielersicht, Saison-Leiste) und `calendar/month-journal.ts`; das Hub-Band nutzt weiter `CalendarMonthGridCell`.
 
 ---
 

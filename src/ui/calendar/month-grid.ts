@@ -3,34 +3,51 @@ import {
   LEAGUE_FIRST_WEEK,
   LEAGUE_LAST_WEEK,
 } from "../../sim/game-calendar.ts";
-import { SATURDAY } from "../../sim/day-calendar.ts";
+import { SATURDAY, SUNDAY } from "../../sim/day-calendar.ts";
 import {
   calendarGridYear,
   civilDateFromSession,
 } from "../../sim/session-civil-date.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
-import { clubShortName, playerFixture } from "../../sim/league-week.ts";
+import { clubShortName } from "../../sim/league-week.ts";
 import { clubDisplayName } from "../../sim/league-divisions.ts";
 import { t } from "../../i18n/index.ts";
-import {
-  civilTransferWindow,
-  isCivilTransferWindowLastDay,
-  type CivilTransferWindow,
-} from "./transfer-window-dates.ts";
+import { transferWindowKind, type TransferWindowKind } from "../../sim/transfer-windows.ts";
 import type { CalendarMilestone } from "./calendar-milestones.ts";
 import {
   attachMilestonesToGrid,
   milestoneOverflowCount,
   type CalendarMilestoneView,
 } from "./calendar-milestones.ts";
+import {
+  civilKey,
+  dayPhase,
+  playerMatch,
+  seasonDays,
+  type DayPhase,
+  type PlayerMatch,
+  type SessionDay,
+} from "./season-timeline.ts";
 
 export interface CalendarMonthCell {
   key: string;
   day: number | null;
   isToday: boolean;
-  transferWindow?: CivilTransferWindow;
+  /** Season week + weekday of this civil day; absent outside the season. */
+  session?: SessionDay;
+  /** Only set when `today` is passed to `buildMonthGrid`. */
+  phase?: DayPhase;
+  transferWindow?: TransferWindowKind;
   transferLastDay?: boolean;
-  match?: { label: string; initials: string; clubId: string };
+  match?: {
+    label: string;
+    initials: string;
+    clubId: string;
+    short: string;
+    home: boolean;
+    matchday: number;
+    result?: PlayerMatch["result"];
+  };
   milestones?: CalendarMilestoneView[];
   milestoneOverflow?: number;
 }
@@ -61,6 +78,7 @@ export function buildMonthGrid(
   const first = new Date(year, monthIndex, 1);
   const startPad = (first.getDay() + 6) % 7;
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  const sessionDays = seasonDays(season);
   const cells: CalendarMonthCell[] = [];
 
   for (let index = 0; index < startPad; index += 1) {
@@ -70,19 +88,19 @@ export function buildMonthGrid(
   for (let day = 1; day <= daysInMonth; day += 1) {
     const seasonWeek = matchSaturdays.get(civilDateKey(year, monthIndex, day));
     let match: CalendarMonthCell["match"];
-    if (seasonWeek && isLeagueMatchWeek(seasonWeek)) {
-      const fixture = playerFixture(league, seasonWeek);
-      if (fixture) {
-        const home = fixture.homeTeamId === league.player_club_id;
-        const opponent = home ? fixture.awayTeamId : fixture.homeTeamId;
-        match = {
-          label: t(home ? "calendar.match.home" : "calendar.match.away", {
-            club: clubDisplayName(opponent),
-          }),
-          initials: clubShortName(opponent).slice(0, 2).toUpperCase(),
-          clubId: opponent,
-        };
-      }
+    const fixture = seasonWeek ? playerMatch(league, seasonWeek) : undefined;
+    if (fixture) {
+      match = {
+        label: t(fixture.home ? "calendar.match.home" : "calendar.match.away", {
+          club: clubDisplayName(fixture.opponentId),
+        }),
+        initials: clubShortName(fixture.opponentId).slice(0, 2).toUpperCase(),
+        clubId: fixture.opponentId,
+        short: clubShortName(fixture.opponentId),
+        home: fixture.home,
+        matchday: fixture.matchday,
+        result: fixture.result,
+      };
     }
 
     const isToday =
@@ -92,13 +110,18 @@ export function buildMonthGrid(
         return civil.monthIndex === monthIndex && civil.day === day && civil.year === year;
       })();
 
-    const transferWindow = civilTransferWindow(monthIndex, day);
-    const transferLastDay = isCivilTransferWindowLastDay(monthIndex, day);
+    const session = sessionDays.get(civilKey({ year, monthIndex, day }));
+    // Windows follow the game's season weeks (KW 33–36, KW 2–4), not fixed civil dates.
+    const transferWindow = session ? transferWindowKind(session.week) : null;
+    const transferLastDay =
+      transferWindow != null && session?.weekday === SUNDAY && transferWindowKind(session.week + 1) == null;
 
     cells.push({
       key: `d-${day}`,
       day,
       isToday,
+      session,
+      phase: today ? dayPhase(session, today) : undefined,
       transferWindow: transferWindow ?? undefined,
       transferLastDay: transferLastDay || undefined,
       match,

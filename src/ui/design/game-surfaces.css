@@ -1107,28 +1107,6 @@ button.cash-chip:hover {
 }
 
 /* §9.5 Kalender */
-.calendar-grid-wrap {
-  padding: 0.65rem;
-}
-
-.calendar-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.25rem;
-  margin-bottom: 0.35rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--tinte-weich);
-  text-align: center;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.35rem;
-}
-
 .calendar-cell {
   position: relative;
   min-height: 4.5rem;
@@ -1248,19 +1226,6 @@ button.cash-chip:hover {
   background: var(--rasen);
 }
 
-.calendar-context-kicker {
-  margin: 0 0 0.5rem;
-  padding: 0 0.15rem;
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: var(--tinte-weich);
-  font-variant-numeric: tabular-nums;
-}
-
-.calendar .weekday-strip {
-  margin-bottom: 0.65rem;
-}
-
 .calendar-cell.has-match {
   background: #fff;
   min-height: 5.75rem;
@@ -1282,55 +1247,6 @@ button.cash-chip:hover {
 .calendar-match-chip .club-crest,
 .calendar-match-chip .club-crest-img {
   flex-shrink: 0;
-}
-
-.calendar-month-nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.65rem;
-  margin: 0 0 0.85rem;
-}
-
-.calendar-month-nav button {
-  border: var(--outline);
-  border-radius: var(--radius-klein);
-  background: var(--panel);
-  padding: 0.35rem 0.55rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.calendar-month-nav button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.calendar-month-label {
-  font-family: var(--font-display);
-  font-weight: 700;
-  min-width: 10rem;
-  text-align: center;
-}
-
-.calendar-playtest-row {
-  margin: -0.35rem 0 0.75rem;
-  text-align: center;
-}
-
-.calendar-playtest-ff {
-  border: 1px dashed var(--tinte-weich);
-  border-radius: var(--radius-klein);
-  background: var(--panel-muted);
-  padding: 0.35rem 0.75rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.calendar-playtest-ff:disabled {
-  opacity: 0.55;
-  cursor: wait;
 }
 
 /* §9.12 Jugend */

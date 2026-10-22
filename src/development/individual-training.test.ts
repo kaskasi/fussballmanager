@@ -3,10 +3,12 @@ import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { hasStamp } from "./ability-stamps.ts";
 import {
   advanceIndividualTrainingWeek,
+  appendIndividualHistory,
   assignIndividualProgram,
+  INDIVIDUAL_HISTORY_LIMIT,
+  type IndividualProgramResult,
   canAssignIndividualProgram,
   individualProgramFitnessDrain,
-  MAX_INDIVIDUAL_PROGRAMS,
   programForPlayer,
 } from "./individual-training.ts";
 import {
@@ -101,16 +103,25 @@ describe("individual training", () => {
   });
 
   it("enforces the concurrent program cap", () => {
-    const players = Array.from({ length: MAX_INDIVIDUAL_PROGRAMS + 1 }, (_, index) => {
+    const slots = 3;
+    const players = Array.from({ length: slots + 1 }, (_, index) => {
       const player = clonePlayer();
       player.id = `pl_${index}`;
       return player;
     });
     let programs: ReturnType<typeof assignIndividualProgram> = [];
-    for (const player of players.slice(0, MAX_INDIVIDUAL_PROGRAMS)) {
-      programs = assignIndividualProgram(programs, player, "weak_foot", 4, 1, 1);
+    for (const player of players.slice(0, slots)) {
+      programs = assignIndividualProgram(programs, player, "weak_foot", 4, 1, 1, undefined, undefined, undefined, slots);
     }
-    const blocked = canAssignIndividualProgram(players[MAX_INDIVIDUAL_PROGRAMS]!, "weak_foot", programs);
+    const blocked = canAssignIndividualProgram(
+      players[slots]!,
+      "weak_foot",
+      programs,
+      undefined,
+      undefined,
+      undefined,
+      slots,
+    );
     expect(blocked.ok).toBe(false);
   });
 
@@ -189,5 +200,72 @@ describe("individual training", () => {
     }
     expect(squad[0]!.state.retrain_failures?.RW).toBe(1);
     expect(squad[0]!.flexibility[0]?.proficiency).toBeLessThan(1);
+  });
+
+  describe("progress and results", () => {
+    it("given an attribute focus, when a week runs, then the program records what it added", () => {
+      const player = clonePlayer();
+      const before = player.attributes.shooting;
+      const programs = assignIndividualProgram([], player, "attribute_focus", 6, 1, 8, undefined, undefined, "shooting");
+      const step = advanceIndividualTrainingWeek([player], programs, { season: 1, week: 8 });
+      const gained = programForPlayer(step.programs, player.id)?.gained ?? 0;
+      expect(gained).toBeGreaterThan(0);
+      expect(gained).toBeCloseTo(step.players[0]!.attributes.shooting - before, 6);
+      expect(step.results).toHaveLength(0);
+    });
+
+    it("given the last week of a weak-foot program, when it runs, then a gain result is emitted", () => {
+      const player = clonePlayer();
+      player.attributes.weak_foot = 40;
+      let squad = [player];
+      let active = assignIndividualProgram([], player, "weak_foot", 4, 1, 1);
+      let results: IndividualProgramResult[] = [];
+      for (let week = 1; week <= 4; week++) {
+        const step = advanceIndividualTrainingWeek(squad, active, { season: 1, week });
+        squad = step.players;
+        active = step.programs;
+        results = [...results, ...step.results];
+      }
+      expect(active).toHaveLength(0);
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({ playerId: player.id, kind: "weak_foot", outcome: "gain", weeks: 4, endedWeek: 4 });
+      expect(results[0]!.gained).toBeCloseTo(squad[0]!.attributes.weak_foot - 40, 6);
+    });
+
+    it("reports a retrain as retrained or failed", () => {
+      const player = clonePlayer();
+      player.position = "CM";
+      player.flexibility = [];
+      let squad = [player];
+      let active = assignIndividualProgram([], player, "position_retrain", 4, 1, 1, "AM");
+      let results: IndividualProgramResult[] = [];
+      for (let week = 1; week <= 4; week++) {
+        const step = advanceIndividualTrainingWeek(squad, active, { season: 1, week, masterSeed: 99 });
+        squad = step.players;
+        active = step.programs;
+        results = [...results, ...step.results];
+      }
+      expect(results).toHaveLength(1);
+      expect(["retrained", "failed"]).toContain(results[0]!.outcome);
+      expect(results[0]!.targetPosition).toBe("AM");
+    });
+
+    it("keeps history newest first and capped", () => {
+      const entry = (n: number): IndividualProgramResult => ({
+        playerId: `pl_${n}`,
+        kind: "weak_foot",
+        weeks: 4,
+        outcome: "gain",
+        gained: 1,
+        season: 1,
+        endedWeek: n,
+      });
+      let history: IndividualProgramResult[] = [];
+      for (let n = 1; n <= INDIVIDUAL_HISTORY_LIMIT + 5; n++) {
+        history = appendIndividualHistory(history, [entry(n)]);
+      }
+      expect(history).toHaveLength(INDIVIDUAL_HISTORY_LIMIT);
+      expect(history[0]!.endedWeek).toBe(INDIVIDUAL_HISTORY_LIMIT + 5);
+    });
   });
 });

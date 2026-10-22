@@ -1505,3 +1505,46 @@ html[data-tutorial-coach-step="training.set_plan"] .training-modal-backdrop {
   background: #f1f5f9;
   color: #334155;
 }
+
+/* Individual training — slot grid (ADR 0002) */
+.training-solo { display: grid; gap: var(--space-4); }
+.training-solo__head { display: grid; gap: var(--space-3); }
+.training-solo__count { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.training-solo__used { font-family: var(--font-display); font-weight: 700; font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
+.training-solo__sources { display: grid; gap: var(--space-2); }
+.training-solo__sources .tc-chips { margin: 0; padding: 0; list-style: none; }
+.training-solo__source { display: inline-flex; align-items: center; gap: var(--space-1); cursor: default; }
+.training-solo__grid { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-3); }
+.training-solo__slot { box-sizing: border-box; display: grid; gap: var(--space-2); align-content: start; width: 100%; min-height: 9.5rem; padding: var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--panel); color: var(--text); text-align: left; font: inherit; }
+.training-solo__slot--taken { cursor: pointer; }
+.training-solo__slot--taken:hover { border-color: var(--line-strong); }
+.training-solo__slot--free { cursor: pointer; place-content: center; justify-items: center; text-align: center; border-style: dashed; border-color: var(--line-strong); background: transparent; color: var(--accent); }
+.training-solo__slot--free:hover { background: var(--accent-soft); }
+.training-solo__slot--locked { place-content: center; justify-items: center; text-align: center; border-style: dashed; background: var(--sunken); color: var(--text-muted); }
+.training-solo__free-title { font-weight: 700; }
+.training-solo__who { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); }
+.training-solo__id { display: grid; min-width: 0; }
+.training-solo__name { font-weight: 700; overflow-wrap: anywhere; }
+.training-solo__tired { color: var(--warning); }
+.training-solo__program { font-size: var(--font-size-sm); font-weight: 700; }
+.training-solo__progress { display: grid; gap: var(--space-1); }
+.training-solo__effect { font-size: var(--font-size-sm); color: var(--positive); font-weight: 700; font-variant-numeric: tabular-nums; }
+.training-solo__results { display: grid; gap: var(--space-2); }
+.training-solo__result-list { margin: 0; padding: 0; list-style: none; display: grid; }
+.training-solo__result { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--line); }
+.training-solo__result-main { display: grid; font-size: var(--font-size-sm); }
+.training-solo__mark { font-weight: 800; }
+.training-solo__mark.is-good { color: var(--positive); }
+.training-solo__mark.is-bad { color: var(--text-muted); }
+.training-solo__pick-list { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-1); }
+.training-solo__pick { box-sizing: border-box; display: grid; grid-template-columns: minmax(6rem, 1fr) 64px auto auto 1rem; align-items: center; gap: var(--space-2); width: 100%; padding: var(--space-2) var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--panel); color: var(--text); text-align: left; font: inherit; cursor: pointer; }
+.training-solo__pick:hover { background: var(--sunken); }
+.training-solo__spark { width: 64px; height: 24px; }
+.training-solo__modal-id { display: flex; align-items: center; gap: var(--space-3); }
+.training-solo__form { display: grid; gap: var(--space-3); }
+.training-solo__field { display: grid; gap: var(--space-1); }
+.training-solo__error { flex-basis: 100%; margin: 0; color: var(--negative); font-size: var(--font-size-sm); }
+@media (max-width: 480px) {
+  .training-solo__pick { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .training-solo__spark { display: none; }
+}

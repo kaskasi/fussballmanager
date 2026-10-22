@@ -29,6 +29,7 @@ import {
 } from "./ability-stamps.ts";
 import type { StampDefinition } from "./ability-stamps-catalog.ts";
 import { t } from "../i18n/index.ts";
+import { INDIVIDUAL_SLOTS_BASE, isIndividualSlotFree } from "./individual-training-capacity.ts";
 
 /** F2.3 + F2.8 — extra programs on top of the team plan (PRD 09.2 Screen 1a). */
 export type IndividualProgramKind =
@@ -50,9 +51,36 @@ export interface IndividualProgram {
   stampId?: string;
   startedWeek: number;
   season: number;
+  /** Attribute points gained by this program so far (target attribute, or the stamp's attributes). */
+  gained?: number;
 }
 
-export const MAX_INDIVIDUAL_PROGRAMS = 3;
+export type IndividualProgramOutcome = "gain" | "no_gain" | "retrained" | "failed" | "stamp";
+
+/** A finished program, kept for the Results list on the Individual tab. */
+export interface IndividualProgramResult {
+  playerId: string;
+  kind: IndividualProgramKind;
+  targetAttribute?: keyof Attributes;
+  targetPosition?: PositionPrimary;
+  stampId?: string;
+  weeks: number;
+  outcome: IndividualProgramOutcome;
+  gained: number;
+  season: number;
+  endedWeek: number;
+}
+
+export const INDIVIDUAL_HISTORY_LIMIT = 20;
+
+/** Newest first, capped. */
+export function appendIndividualHistory(
+  history: readonly IndividualProgramResult[],
+  results: readonly IndividualProgramResult[],
+): IndividualProgramResult[] {
+  return [...[...results].reverse(), ...history].slice(0, INDIVIDUAL_HISTORY_LIMIT);
+}
+
 export const MIN_PROGRAM_WEEKS = 4;
 export const MAX_PROGRAM_WEEKS = 12;
 export const WEAK_FOOT_PROGRAM_BONUS = 1.35;
@@ -170,6 +198,8 @@ export function canAssignIndividualProgram(
   targetPosition?: PositionPrimary,
   stampId?: string,
   targetAttribute?: keyof Attributes,
+  /** From individualTrainingSlots(); running programs keep their slot. */
+  maxSlots: number = INDIVIDUAL_SLOTS_BASE,
 ): { ok: true } | { ok: false; reason: string } {
   if (player.squad_status === "loaned_out") {
     return { ok: false, reason: "Ausgeliehene Spieler trainieren nicht beim Verein." };
@@ -177,8 +207,8 @@ export function canAssignIndividualProgram(
   if (player.state.injury !== null) {
     return { ok: false, reason: "Verletzte Spieler können kein Extra-Programm starten." };
   }
-  if (programs.length >= MAX_INDIVIDUAL_PROGRAMS && !programs.some((entry) => entry.playerId === player.id)) {
-    return { ok: false, reason: `Maximal ${MAX_INDIVIDUAL_PROGRAMS} Programme gleichzeitig.` };
+  if (!isIndividualSlotFree(programs, player.id, maxSlots)) {
+    return { ok: false, reason: t("training.individual.slotsFull", { max: maxSlots }) };
   }
   if (kind === "attribute_focus") {
     if (!targetAttribute) return { ok: false, reason: "Attribut wählen." };
@@ -234,6 +264,7 @@ export function assignIndividualProgram(
   targetPosition?: PositionPrimary,
   stampId?: string,
   targetAttribute?: keyof Attributes,
+  maxSlots: number = INDIVIDUAL_SLOTS_BASE,
 ): IndividualProgram[] {
   const check = canAssignIndividualProgram(
     player,
@@ -242,6 +273,7 @@ export function assignIndividualProgram(
     targetPosition,
     stampId,
     targetAttribute,
+    maxSlots,
   );
   if (!check.ok) throw new Error(check.reason);
 
@@ -522,6 +554,17 @@ function resolvePositionRetrainFinal(
   };
 }
 
+/** Attributes whose growth counts as this program's effect. */
+export function programAttributes(program: IndividualProgram): (keyof Attributes)[] {
+  if (program.kind === "attribute_focus" && program.targetAttribute) return [program.targetAttribute];
+  if (program.kind === "weak_foot") return ["weak_foot"];
+  if (program.kind === "stamp" && program.stampId) {
+    const def = stampDefinition(program.stampId);
+    return def ? stampWeeklyAttributeKeys(def) : [];
+  }
+  return [];
+}
+
 /** Apply one week of individual programs, then tick durations. Stamp awards on completion. */
 export function advanceIndividualTrainingWeek(
   players: readonly Player[],
@@ -533,10 +576,13 @@ export function advanceIndividualTrainingWeek(
   programs: IndividualProgram[];
   awards: StampAwardNotice[];
   retrainNotices: RetrainNotice[];
+  results: IndividualProgramResult[];
 } {
   const byId = new Map(programs.map((program) => [program.playerId, program]));
   const awards: StampAwardNotice[] = [];
   const retrainNotices: RetrainNotice[] = [];
+  const gainedThisWeek = new Map<string, number>();
+  const outcomes = new Map<string, IndividualProgramOutcome>();
   const season = context?.season ?? 1;
   const week = context?.week ?? 1;
 
@@ -545,6 +591,7 @@ export function advanceIndividualTrainingWeek(
     if (!program || program.weeksRemaining <= 0) return player;
 
     let next = player;
+    const tracked = programAttributes(program);
 
     if (program.kind === "attribute_focus" && program.targetAttribute) {
       next = applyIndividualAttributeGrowth(
@@ -560,13 +607,16 @@ export function advanceIndividualTrainingWeek(
       if (program.weeksRemaining === 1) {
         const resolved = resolvePositionRetrainFinal(next, program, context);
         retrainNotices.push(resolved.notice);
+        outcomes.set(player.id, resolved.notice.success ? "retrained" : "failed");
         next = resolved.player;
       }
     } else if (program.kind === "stamp" && program.stampId) {
       if (program.weeksRemaining === 1) {
         const before = next;
         next = awardStamp(next, program.stampId, season, week);
-        if (next.stamps.length > (before.stamps?.length ?? 0)) {
+        const earned = next.stamps.length > (before.stamps?.length ?? 0);
+        outcomes.set(player.id, earned ? "stamp" : "failed");
+        if (earned) {
           const def = stampDefinition(program.stampId);
           awards.push({
             playerId: player.id,
@@ -580,14 +630,38 @@ export function advanceIndividualTrainingWeek(
       }
     }
 
+    gainedThisWeek.set(
+      player.id,
+      tracked.reduce((sum, key) => sum + (next.attributes[key] - player.attributes[key]), 0),
+    );
     return applyExtraTrainingFatigue(next, context);
   });
 
-  const nextPrograms = programs
-    .map((program) => ({ ...program, weeksRemaining: program.weeksRemaining - 1 }))
-    .filter((program) => program.weeksRemaining > 0);
+  const ticked = programs.map((program) => ({
+    ...program,
+    weeksRemaining: program.weeksRemaining - 1,
+    gained: (program.gained ?? 0) + (gainedThisWeek.get(program.playerId) ?? 0),
+  }));
+  const results: IndividualProgramResult[] = ticked
+    .filter((program) => program.weeksRemaining <= 0)
+    .map((program) => {
+      const gained = program.gained ?? 0;
+      return {
+        playerId: program.playerId,
+        kind: program.kind,
+        targetAttribute: program.targetAttribute,
+        targetPosition: program.targetPosition,
+        stampId: program.stampId,
+        weeks: program.plannedWeeks ?? Math.max(1, week - program.startedWeek),
+        outcome: outcomes.get(program.playerId) ?? (gained > 0 ? "gain" : "no_gain"),
+        gained,
+        season,
+        endedWeek: week,
+      };
+    });
+  const nextPrograms = ticked.filter((program) => program.weeksRemaining > 0);
 
-  return { players: nextPlayers, programs: nextPrograms, awards, retrainNotices };
+  return { players: nextPlayers, programs: nextPrograms, awards, retrainNotices, results };
 }
 
 export { eligibleTrainStamps };

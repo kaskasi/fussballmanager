@@ -164,6 +164,7 @@ export function resetClubPipelineForTeam(session: GameSession, teamId: TeamId): 
     youthCamps: normalizeYouthCamps([]),
     academyFacility: "academy_basic",
     individualPrograms: [],
+    individualHistory: [],
     matchLineup: undefined,
     youthInbox: emptyInbox(session.week),
     coachingStaff: defaultCoachingStaff(session.season),

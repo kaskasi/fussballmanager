@@ -45,7 +45,10 @@ import { CAREER_START_WEEK } from "../sim/game-calendar.ts";
 import { applyOpeningTransferMarket } from "../transfers/opening-transfer-market.ts";
 import { defaultLeagueState, normalizeLeagueState, type LeagueState } from "./league-state.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
-import type { IndividualProgram } from "../development/individual-training.ts";
+import type {
+  IndividualProgram,
+  IndividualProgramResult,
+} from "../development/individual-training.ts";
 import { normalizeTrainingIntensity } from "../development/training-load.ts";
 import {
   normalizeTrainingPlanPresets,
@@ -121,6 +124,7 @@ export interface GameSession {
   trainingPlanPresets: TrainingPlanPresetSlot[];
   trainingIntensity: number;
   individualPrograms: IndividualProgram[];
+  individualHistory: IndividualProgramResult[];
   scoutBoard: ScoutBoard;
   youthInbox: YouthInboxState;
   league: LeagueState;
@@ -303,6 +307,7 @@ export function sessionFromSave(save: SaveGame, options?: SessionFromSaveOptions
     trainingPlanPresets: normalizeTrainingPlanPresets(pipeline.training_plan_presets),
     trainingIntensity: normalizeTrainingIntensity(pipeline.training_intensity),
     individualPrograms: pipeline.individual_programs ?? [],
+    individualHistory: pipeline.individual_history ?? [],
     scoutBoard: reconcileScoutBoard(pipeline.scout_board, rivalPlayers),
     youthInbox: pruneYouthInbox(
       normalizeYouthInbox(pipeline.youth_inbox ?? emptyInbox(save.state.week)),
@@ -362,6 +367,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     training_plan_presets: session.trainingPlanPresets,
     training_intensity: session.trainingIntensity,
     individual_programs: session.individualPrograms,
+    individual_history: session.individualHistory,
     scout_board: session.scoutBoard,
     youth_inbox: session.youthInbox,
     transfer_state: session.transferState,

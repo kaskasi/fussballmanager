@@ -2,7 +2,10 @@ import { defaultBoardState, type BoardState } from "../board/board-state.ts";
 import { startBoardSeason } from "../board/season-objectives.ts";
 import { defaultLeagueState } from "./league-state.ts";
 import { defaultEmployerClubId } from "../board/job-offers.ts";
-import type { IndividualProgram } from "../development/individual-training.ts";
+import type {
+  IndividualProgram,
+  IndividualProgramResult,
+} from "../development/individual-training.ts";
 import type { TrainingSlotOutcome } from "../development/training-unit-result.ts";
 import {
   defaultTrainingPlanPresets,
@@ -46,6 +49,8 @@ export interface PipelineState {
   training_intensity?: number;
   /** F2.3 — individual extra programs per player. */
   individual_programs?: IndividualProgram[];
+  /** Finished individual programs, newest first (Results on the Individual tab). */
+  individual_history?: IndividualProgramResult[];
   scout_board: ScoutBoard;
   youth_inbox: YouthInboxState;
   transfer_state?: TransferState;

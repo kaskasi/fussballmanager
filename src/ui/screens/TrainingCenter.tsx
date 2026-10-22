@@ -2,7 +2,6 @@
  * WIREFRAME: PRD 09.3b — Training timetable; header NEXT runs units (toast), not calendar days.
  */
 import { useEffect, useMemo, useState } from "react";
-import { MapPinOff } from "lucide-react";
 import {
   planToSessions,
   slotLabel,
@@ -23,43 +22,17 @@ import {
   type TrainingSlot,
   type TrainingUnlocks,
 } from "../../development/training-units.ts";
-import { attributeLabel, growthPolyline, growthSeries } from "../player-profile.ts";
-import {
-  caDeltaClassName,
-  formatCaDelta,
-  playerCa,
-  seasonCaDelta,
-} from "../../player/ca-tracking.ts";
+import { attributeLabel } from "../player-profile.ts";
 import {
   MAX_FOCUS_SLOTS,
   SLOT_COUNT,
   validateWeeklyPlan,
   type SessionGroup,
 } from "../../development/weekly-plan.ts";
-import type { Attributes, Player } from "../../types/player.ts";
-import { formatPlayerName, formatPlayerPositionLabel } from "../../types/player-display.ts";
-import { RetrainPreviewPanel } from "../components/RetrainPreviewPanel.tsx";
+import type { Player } from "../../types/player.ts";
 import { TrainingPlanPresetsBar } from "../components/TrainingPlanPresetsBar.tsx";
 import type { TrainingPlanPresetSlot } from "../../development/training-plan-presets.ts";
-import { ScreenEmptyState } from "../components/ScreenEmptyState.tsx";
-import {
-  assignIndividualProgram,
-  cancelIndividualProgram,
-  canAssignIndividualProgram,
-  eligibleIndividualAttributes,
-  eligibleRetrainPositions,
-  eligibleTrainStamps,
-  MAX_INDIVIDUAL_PROGRAMS,
-  MAX_PROGRAM_WEEKS,
-  MIN_PROGRAM_WEEKS,
-  programForPlayer,
-  programKindLabel,
-  programLabel,
-  playerFatigueWarning,
-  type IndividualProgram,
-  type IndividualProgramKind,
-} from "../../development/individual-training.ts";
-import { stampDefinition } from "../../development/ability-stamps.ts";
+import type { IndividualProgram } from "../../development/individual-training.ts";
 import {
   fatigueAmpelClassName,
   squadTrainingLoad,
@@ -67,9 +40,7 @@ import {
   TRAINING_INTENSITY_PRESETS,
   type TrainingLoadSummary,
 } from "../../development/training-load.ts";
-import type { PositionPrimary } from "../../types/player.ts";
 import { Hint } from "../components/Hint.tsx";
-import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { AttributeTrainingHeatmap } from "../components/AttributeTrainingHeatmap.tsx";
 import { GrowthHeatmap } from "../components/GrowthHeatmap.tsx";
 import { TrainingSlotCard } from "../components/TrainingSlotCard.tsx";
@@ -95,6 +66,7 @@ import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
 import { useTutorialUi } from "../tutorial/TutorialUiContext.tsx";
 import { useGameSession } from "../session/GameSessionContext.tsx";
 import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
+import { IndividualTrainingTab } from "./training/IndividualTrainingTab.tsx";
 
 type TrainingTab = "team" | "individual";
 
@@ -267,7 +239,7 @@ export function TrainingCenter({
       ) : null}
       {tab === "individual" ? (
         <div className="fm-tab-panel">
-          <IndividualPlan
+          <IndividualTrainingTab
             players={players}
             programs={individualPrograms}
             season={season}
@@ -720,352 +692,3 @@ function UnitPickerModal({
     </div>
   );
 }
-
-function IndividualPlan({
-  players,
-  programs,
-  season,
-  week,
-  onProgramsChange,
-  openPlayerId = null,
-  onDismissOpenPlayer,
-}: {
-  players: Player[];
-  programs: IndividualProgram[];
-  season: number;
-  week: number;
-  onProgramsChange: (programs: IndividualProgram[]) => void;
-  openPlayerId?: string | null;
-  onDismissOpenPlayer?: () => void;
-}) {
-  const tr = useT();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const roster = players.filter((player) => player.squad_status !== "loaned_out");
-  const selected = roster.find((player) => player.id === selectedId) ?? null;
-
-  useEffect(() => {
-    if (!openPlayerId) return;
-    setSelectedId(openPlayerId);
-  }, [openPlayerId]);
-
-  function closeModal() {
-    setSelectedId(null);
-    onDismissOpenPlayer?.();
-  }
-
-  return (
-    <section className="training-individual">
-      <Hint text={tr("training.individual.rulesHint")} block>
-        <p className="training-rules">
-          {tr("training.individual.programsActive", {
-            active: programs.length,
-            max: MAX_INDIVIDUAL_PROGRAMS,
-          })}
-        </p>
-      </Hint>
-      <ul className="training-roster">
-        {roster.map((player) => {
-          const program = programForPlayer(programs, player.id);
-          const growth = growthSeries(player, season);
-          const ca = playerCa(player);
-          const seasonDelta = seasonCaDelta(player, season);
-          const sparkStroke =
-            seasonDelta === null || seasonDelta === 0
-              ? "#94a3b8"
-              : seasonDelta > 0
-                ? "#059669"
-                : "#dc2626";
-          return (
-            <li key={player.id}>
-              <button type="button" className="training-roster-row" onClick={() => setSelectedId(player.id)}>
-                <span className="training-roster-name">{formatPlayerName(player)}</span>
-                <span className="training-roster-spark" aria-hidden="true">
-                  <svg viewBox="0 0 64 24" role="presentation">
-                    <polyline
-                      points={growthPolyline(growth, 64, 24)}
-                      fill="none"
-                      stroke={sparkStroke}
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-                <span className="training-roster-meta">
-                  <span>{formatPlayerPositionLabel(player)} · {ca}</span>
-                  <span
-                    className={caDeltaClassName(seasonDelta)}
-                    title="CA Δ diese Saison"
-                  >
-                    {formatCaDelta(seasonDelta)}
-                  </span>
-                </span>
-                <span className={program ? "training-roster-program is-active" : "training-roster-program"}>
-                  {program ? programLabel(program) : tr("training.individual.noProgram")}
-                </span>
-                {playerFatigueWarning(player) ? (
-                  <span className="training-roster-fatigue" title="Erhöhte Ermüdung — Extra-Training riskant">
-                    ⚡
-                  </span>
-                ) : null}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-      {selected ? (
-        <IndividualProgramModal
-          player={selected}
-          programs={programs}
-          season={season}
-          week={week}
-          onClose={closeModal}
-          onProgramsChange={onProgramsChange}
-        />
-      ) : null}
-    </section>
-  );
-}
-
-function IndividualProgramModal({
-  player,
-  programs,
-  season,
-  week,
-  onClose,
-  onProgramsChange,
-}: {
-  player: Player;
-  programs: IndividualProgram[];
-  season: number;
-  week: number;
-  onClose: () => void;
-  onProgramsChange: (programs: IndividualProgram[]) => void;
-}) {
-  const active = programForPlayer(programs, player.id);
-  const trainStamps = eligibleTrainStamps(player);
-  const attributeOptions = useMemo(() => eligibleIndividualAttributes(player), [player]);
-  const [kind, setKind] = useState<IndividualProgramKind>(active?.kind ?? "attribute_focus");
-  const [targetAttribute, setTargetAttribute] = useState<keyof Attributes>(
-    active?.targetAttribute ??
-      (active?.kind === "weak_foot" ? "weak_foot" : attributeOptions[0] ?? "shooting"),
-  );
-  const [stampId, setStampId] = useState<string>(
-    active?.stampId ?? trainStamps[0]?.id ?? "",
-  );
-  const [weeks, setWeeks] = useState(active?.weeksRemaining ?? 8);
-  const retrainTargets = useMemo(() => eligibleRetrainPositions(player), [player]);
-  const [targetPosition, setTargetPosition] = useState<PositionPrimary>(
-    active?.targetPosition ?? retrainTargets[0] ?? "AM",
-  );
-  useEffect(() => {
-    if (retrainTargets.length > 0 && !retrainTargets.includes(targetPosition)) {
-      setTargetPosition(retrainTargets[0]!);
-    }
-  }, [retrainTargets, targetPosition]);
-  useEffect(() => {
-    if (!attributeOptions.includes(targetAttribute)) {
-      setTargetAttribute(attributeOptions[0] ?? "shooting");
-    }
-  }, [attributeOptions, targetAttribute]);
-  const tired = playerFatigueWarning(player);
-  const check = canAssignIndividualProgram(
-    player,
-    kind,
-    programs,
-    targetPosition,
-    stampId,
-    kind === "attribute_focus" ? targetAttribute : undefined,
-  );
-  const stampWeeks = kind === "stamp" ? (stampDefinition(stampId)?.weeks ?? weeks) : weeks;
-
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  function handleAssign() {
-    if (!check.ok) return;
-    try {
-      const next = assignIndividualProgram(
-        programs,
-        player,
-        kind,
-        stampWeeks,
-        season,
-        week,
-        targetPosition,
-        kind === "stamp" ? stampId : undefined,
-        kind === "attribute_focus" ? targetAttribute : undefined,
-      );
-      onProgramsChange(next);
-      onClose();
-    } catch {
-      // validation surfaced in UI
-    }
-  }
-
-  function handleCancel() {
-    onProgramsChange(cancelIndividualProgram(programs, player.id));
-    onClose();
-  }
-
-  return (
-    <div className="training-modal-backdrop" onClick={onClose} role="presentation">
-      <div
-        className="training-modal training-modal-individual"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("training.individual.dialogAria", { name: formatPlayerName(player) })}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <header className="training-modal-head">
-          <div className="training-modal-identity">
-            <PlayerPortrait
-              seed={player.portrait_seed} nationality={player.nationality}
-              clubId={player.club_id}
-              size="lg"
-              className="training-modal-portrait"
-            />
-            <div>
-              <p className="eyebrow">{formatPlayerPositionLabel(player)} · {player.age} J.</p>
-              <h2>{formatPlayerName(player)}</h2>
-            </div>
-          </div>
-          <button type="button" className="training-modal-close" onClick={onClose} aria-label={t("shell.modal.close")}>
-            ✕
-          </button>
-        </header>
-
-        <div className="training-individual-body">
-          <p className="training-individual-stats">
-            Schwaches Bein {Math.round(player.attributes.weak_foot)}/100
-            {kind !== "position_retrain" && player.flexibility.length > 0
-              ? ` · Flex ${player.flexibility.map((slot) => `${slot.trained_as} ${Math.round(slot.proficiency * 100)}%`).join(", ")}`
-              : ""}
-          </p>
-
-          {tired ? (
-            <p className="training-individual-warn" role="status">
-              ⚡ Erhöhte Ermüdung — Extra-Einheit erhöht Belastung
-            </p>
-          ) : null}
-
-          <label className="training-individual-field">
-            <span>Programm</span>
-            <select
-              value={kind}
-              onChange={(event) => {
-                const nextKind = event.target.value as IndividualProgramKind;
-                setKind(nextKind);
-                if (nextKind === "stamp" && !stampId && trainStamps[0]) {
-                  setStampId(trainStamps[0].id);
-                }
-              }}
-            >
-              <option value="attribute_focus">{programKindLabel("attribute_focus")}</option>
-              <option value="weak_foot">{programKindLabel("weak_foot")}</option>
-              <option value="position_retrain">{programKindLabel("position_retrain")}</option>
-              <option value="stamp" disabled={trainStamps.length === 0}>
-                {programKindLabel("stamp")}
-                {trainStamps.length === 0 ? " (keine freigeschaltet)" : ""}
-              </option>
-            </select>
-          </label>
-
-          {kind === "attribute_focus" ? (
-            <label className="training-individual-field">
-              <span>Attribut</span>
-              <select
-                value={targetAttribute}
-                onChange={(event) =>
-                  setTargetAttribute(event.target.value as keyof Attributes)
-                }
-              >
-                {attributeOptions.map((key) => (
-                  <option key={key} value={key}>
-                    {attributeLabel(key)} ({Math.round(player.attributes[key])})
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-
-          {kind === "position_retrain" && retrainTargets.length === 0 ? (
-            <ScreenEmptyState
-              icon={MapPinOff}
-              title="Keine Umbau-Ziele mehr"
-              hint="Das hatten wir doch schon versucht — für manche Positionen passt es offenbar nicht."
-            />
-          ) : null}
-
-          {kind === "position_retrain" && retrainTargets.length > 0 ? (
-            <>
-              <label className="training-individual-field">
-                <span>Zielposition</span>
-                <select
-                  value={targetPosition}
-                  onChange={(event) => setTargetPosition(event.target.value as PositionPrimary)}
-                >
-                  {retrainTargets.map((position) => (
-                    <option key={position} value={position}>
-                      {position}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <RetrainPreviewPanel player={player} targetPosition={targetPosition} weeks={weeks} />
-            </>
-          ) : null}
-
-          {kind === "stamp" ? (
-            <label className="training-individual-field">
-              <span>Stempel</span>
-              <select value={stampId} onChange={(event) => setStampId(event.target.value)}>
-                {trainStamps.map((stamp) => (
-                  <option key={stamp.id} value={stamp.id}>
-                    {stamp.icon} {stamp.label}
-                    {stamp.path === "hybrid" ? " · Hybrid" : ""} · {stamp.weeks ?? "?"} Wo.
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-
-          {kind === "stamp" ? (
-            <p className="training-individual-stats">Dauer fix {stampWeeks} Wochen (Katalog)</p>
-          ) : (
-            <label className="training-individual-field">
-              <span>Dauer {weeks} Wochen</span>
-              <input
-                type="range"
-                min={MIN_PROGRAM_WEEKS}
-                max={MAX_PROGRAM_WEEKS}
-                step={1}
-                value={weeks}
-                onChange={(event) => setWeeks(Number(event.target.value))}
-              />
-            </label>
-          )}
-
-          {!check.ok ? <p className="training-individual-error">{check.reason}</p> : null}
-
-          <div className="training-individual-actions">
-            {active ? (
-              <button type="button" className="training-individual-cancel" onClick={handleCancel}>
-                Programm beenden
-              </button>
-            ) : null}
-            <button type="button" className="training-individual-confirm" onClick={handleAssign} disabled={!check.ok}>
-              {active ? "Programm aktualisieren" : "Ab nächster Woche starten"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-

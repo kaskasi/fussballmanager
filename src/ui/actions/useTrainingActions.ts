@@ -1,3 +1,4 @@
+import { individualTrainingSlots } from "../../development/individual-training-capacity.ts";
 import { useCallback } from "react";
 import { assignMentor, clearMentor } from "../../development/mentoring.ts";
 import type { TrainingPlanPresetSlot } from "../../development/training-plan-presets.ts";
@@ -160,6 +161,8 @@ export function useTrainingActions(args: {
               current.week,
               undefined,
               stampId,
+              undefined,
+              individualTrainingSlots(current.stadium.precinct, current.coachingStaff).total,
             ),
           };
         } catch {

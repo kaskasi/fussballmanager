@@ -9,7 +9,10 @@ import {
   type BreakoutNarrative,
 } from "../development/breakouts.ts";
 import { evaluateClearStamps, evaluateEventStamps } from "../development/ability-stamps.ts";
-import { advanceIndividualTrainingWeek } from "../development/individual-training.ts";
+import {
+  advanceIndividualTrainingWeek,
+  appendIndividualHistory,
+} from "../development/individual-training.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import {
   applyPlanFitnessRecovery,
@@ -914,6 +917,7 @@ export async function simulateGameWeek(
     transferState,
     clubEvents,
     individualPrograms: individualStep.programs,
+    individualHistory: appendIndividualHistory(session.individualHistory ?? [], individualStep.results),
     storyState: narrativeStep.storyState,
     medicalState: startPhysioWeek(
       session.medicalState,

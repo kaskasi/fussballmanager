@@ -4,7 +4,7 @@ import { formatClubCash } from "../../economy/club-finances.ts";
 import { listLoanedPlayers } from "../../transfers/loan-roster.ts";
 import { canRecallLoan } from "../../transfers/loans.ts";
 import { isTransferWindowOpen } from "../../sim/transfer-windows.ts";
-import { transferWindowDisplay } from "../../i18n/calendar-display.ts";
+import { formatCalendarWeekDisplay, transferWindowDisplay } from "../../i18n/calendar-display.ts";
 import type { TransferRecord } from "../../transfers/transfer-history.ts";
 import {
   availableClubTransferSeasons,
@@ -18,11 +18,12 @@ import {
 import type { ScoutBoard } from "../../scouting/scout-board.ts";
 import type { WorldClub } from "../../world/world-generator.ts";
 import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
-import { formatCalendarWeek } from "../../sim/game-calendar.ts";
+import { nextTransferWindowStart } from "../../sim/game-calendar.ts";
 import { listExpiringClubContracts } from "../../transfers/expiring-contracts.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronLeft, ChevronRight, Repeat, Undo2 } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronLeft, ChevronRight, Clock, Repeat, Undo2 } from "lucide-react";
+import { scheduledMoveLabel } from "../../transfers/scheduled-transfers.ts";
 import { ratingBand } from "../design/rating-band.ts";
 import { PlayerPortrait } from "../components/PlayerPortrait.tsx";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
@@ -50,7 +51,9 @@ function TransferHistoryList({
   onSelectPlayer,
   emptyKey,
   pagerLabelKey,
+  season,
 }: {
+  season: number;
   records: readonly TransferRecord[];
   worldClubs?: readonly WorldClub[];
   onSelectPlayer: (playerId: string) => void;
@@ -67,12 +70,14 @@ function TransferHistoryList({
   if (records.length === 0) {
     return <p className="tc-empty">{t(emptyKey)}</p>;
   }
-  const pageRecords = records.slice(page * HISTORY_PAGE_SIZE, page * HISTORY_PAGE_SIZE + HISTORY_PAGE_SIZE);
+  // Waiting moves first — they are what the manager still has to watch.
+  const ordered = [...records].sort((left, right) => Number(Boolean(right.pending)) - Number(Boolean(left.pending)));
+  const pageRecords = ordered.slice(page * HISTORY_PAGE_SIZE, page * HISTORY_PAGE_SIZE + HISTORY_PAGE_SIZE);
   return (
     <>
       <ul className="tc-list">
         {pageRecords.map((record) => {
-          const Icon = KIND_ICON[record.kind] ?? ArrowLeftRight;
+          const Icon = record.pending ? Clock : (KIND_ICON[record.kind] ?? ArrowLeftRight);
           return (
             <li key={record.id} className="tc-list__item tc-list__item--wide">
               <button type="button" className="tc-transfers__row" onClick={() => onSelectPlayer(record.player_id)}>
@@ -81,7 +86,15 @@ function TransferHistoryList({
                   <span className="tc-list__name">{record.player_name}</span>
                   <span className="tc-list__meta">
                     {transferKindLabel(record.kind)} · {displayTransferOtherClubs(record.other_club_name, worldClubs)} ·{" "}
-                    {formatCalendarWeek(record.week)}
+                    {formatCalendarWeekDisplay(record.week)}
+                    {record.pending && record.effective_season != null && record.effective_week != null
+                      ? ` · ${t("transfer.scheduled.historyMeta", {
+                          when: scheduledMoveLabel(
+                            { season: record.effective_season, week: record.effective_week },
+                            season,
+                          ),
+                        })}`
+                      : null}
                   </span>
                 </span>
               </button>
@@ -186,6 +199,9 @@ export function TransfersScreen({
             {windowOpen ? "●" : "◆"}
           </span>{" "}
           {transferWindowDisplay(week)}
+          {!windowOpen
+            ? ` · ${t("transfers.nextWindow", { when: scheduledMoveLabel(nextTransferWindowStart(season, week), season) })}`
+            : ""}
           {activeLoans.length > 0 ? ` · ${t("transfers.loanedCount", { count: activeLoans.length })}` : ""}
         </p>
       </header>
@@ -355,6 +371,7 @@ export function TransfersScreen({
                     onSelectPlayer={onSelectPlayer}
                     emptyKey="transfers.arrivalsEmpty"
                     pagerLabelKey="transfers.arrivalsPages"
+                    season={season}
                   />
                 </section>
                 <section className="tc-section">
@@ -365,6 +382,7 @@ export function TransfersScreen({
                     onSelectPlayer={onSelectPlayer}
                     emptyKey="transfers.departuresEmpty"
                     pagerLabelKey="transfers.departuresPages"
+                    season={season}
                   />
                 </section>
               </>

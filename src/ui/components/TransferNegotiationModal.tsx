@@ -37,6 +37,7 @@ export function TransferNegotiationModal({
   message,
   openError,
   transferWindowOpen,
+  committedFees = 0,
   week,
   season,
   scoutEstimate,
@@ -58,11 +59,13 @@ export function TransferNegotiationModal({
   message: string | null;
   openError?: string | null;
   transferWindowOpen: boolean;
+  /** Fees reserved for waiting purchases. */
+  committedFees?: number;
   week: number;
   season: number;
   scoutEstimate?: AbilityEstimate;
   valueBounds?: ScoutValueBounds | null;
-  uiPhase?: "active" | "contract" | "won" | "lost";
+  uiPhase?: "active" | "contract" | "won" | "scheduled" | "lost";
   agreedFee?: number;
   contractPanel?: ReactNode;
   onSubmitOffer: (fee: number) => void;
@@ -138,6 +141,7 @@ export function TransferNegotiationModal({
     offerFee: offer,
     transferWindowOpen,
     isSale,
+    committedFees,
   });
   const canSubmit =
     uiPhase === "active" && canSubmitNegotiationOffer(gates) && !openError;
@@ -174,9 +178,10 @@ export function TransferNegotiationModal({
     : t("transfer.negotiation.hint.offerGuide");
 
   const runwayLines = isSale ? saleProceedLines(offer) : offerRunway ? spendRunwayLines(offerRunway) : [];
-  const counterBlocked = isSale ? !transferWindowOpen : !canSubmit || !transferWindowOpen;
+  const counterBlocked = isSale ? false : !canSubmit;
+  const agreed = uiPhase === "won" || uiPhase === "scheduled";
 
-  const footer = contractPhase ? null : uiPhase === "won" ? (
+  const footer = contractPhase ? null : agreed ? (
     <button type="button" className="tc-btn tc-btn--primary" onClick={onWalkAway}>
       {t("transfer.negotiation.closeDone")}
     </button>
@@ -316,7 +321,7 @@ export function TransferNegotiationModal({
           {message ? (
             <p
               className={
-                uiPhase === "won" ? "tc-callout tc-callout--ok" : uiPhase === "lost" ? "tc-callout tc-callout--no" : "tc-callout"
+                agreed ? "tc-callout tc-callout--ok" : uiPhase === "lost" ? "tc-callout tc-callout--no" : "tc-callout"
               }
               role="status"
             >

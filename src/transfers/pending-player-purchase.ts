@@ -11,6 +11,13 @@ import { cannotPayTransferFeeReason, cannotSubmitPurchaseOfferReason } from "./p
 import { resolvePurchaseTarget } from "./resolve-purchase-target.ts";
 import { appendTransferRecord, createPurchaseRecord } from "./transfer-history.ts";
 import { completePurchase, type TransferState } from "./negotiations.ts";
+import { isTransferWindowOpen } from "../sim/transfer-windows.ts";
+import {
+  committedTransferFees,
+  hasScheduledTransfer,
+  scheduleTransfer,
+  type ScheduledTransfer,
+} from "./scheduled-transfers.ts";
 
 export interface PendingPlayerPurchase {
   id: string;
@@ -28,6 +35,8 @@ export type StagePendingPurchaseResult =
 
 export type CommitPendingPurchaseResult =
   | { kind: "ok"; session: GameSession; summary: string }
+  /** Window closed: terms agreed, the player joins on the first day of the next window. */
+  | { kind: "scheduled"; session: GameSession; summary: string; scheduled: ScheduledTransfer }
   | { kind: "blocked"; reason: string }
   | { kind: "contract_rejected"; session: GameSession; message: string; abort: boolean };
 
@@ -53,7 +62,11 @@ export function stagePendingPurchase(
   if (submitReason) {
     return { kind: "blocked", reason: submitReason };
   }
-  const payReason = cannotPayTransferFeeReason(current.finances, fee);
+  const payReason = cannotPayTransferFeeReason(
+    current.finances,
+    fee,
+    committedTransferFees(current.transferState),
+  );
   if (payReason) {
     return { kind: "blocked", reason: payReason };
   }
@@ -65,6 +78,9 @@ export function stagePendingPurchase(
   }
   if (pendingForPlayer(current.transferState, playerId)) {
     return { kind: "blocked", reason: t("transfer.purchase.pendingContract") };
+  }
+  if (hasScheduledTransfer(current.transferState, playerId)) {
+    return { kind: "blocked", reason: t("transfer.purchase.alreadyAgreed") };
   }
 
   const pending: PendingPlayerPurchase = {
@@ -150,6 +166,31 @@ export function commitPendingPurchase(
     };
   }
 
+  const withoutPendingPurchase = (current.transferState.pending_purchases ?? []).filter(
+    (row) => row.player_id !== playerId,
+  );
+  if (!isTransferWindowOpen(current.week)) {
+    const scheduled = scheduleTransfer({
+      state: { ...session.transferState, pending_purchases: withoutPendingPurchase },
+      player: talk.player,
+      direction: "in",
+      otherClubId: pending.seller_club_id,
+      fee: pending.fee,
+      contract: offer,
+      season: current.season,
+      week: current.week,
+    });
+    return {
+      kind: "scheduled",
+      session: { ...session, transferState: scheduled.state },
+      summary: t("transfer.scheduled.agreedIn", {
+        player: formatPlayerName(talk.player),
+        fee: formatClubCash(pending.fee),
+      }),
+      scheduled: scheduled.entry,
+    };
+  }
+
   const signedPlayer = applyContractOffer(talk.player, current.season, offer);
   const bought = completePurchase(signedPlayer, current.clubId, current.season);
   const shifted = processTransferBreakout(bought, {
@@ -171,10 +212,6 @@ export function commitPendingPurchase(
     current.clubId,
   );
 
-  const withoutPending = (current.transferState.pending_purchases ?? []).filter(
-    (row) => row.player_id !== playerId,
-  );
-
   session = {
     ...session,
     players: [...session.players, finalized],
@@ -182,7 +219,7 @@ export function commitPendingPurchase(
     transferState: appendTransferRecord(
       {
         ...session.transferState,
-        pending_purchases: withoutPending,
+        pending_purchases: withoutPendingPurchase,
       },
       purchaseRecord,
     ),
@@ -190,7 +227,10 @@ export function commitPendingPurchase(
     finances: applyTransferFee(session.finances, pending.fee, current.week),
   };
 
-  const summary = `Zugang ${formatPlayerName(finalized)} für ${formatClubCash(pending.fee)}.`;
+  const summary = t("transfer.purchase.summary", {
+    player: formatPlayerName(finalized),
+    fee: formatClubCash(pending.fee),
+  });
   return { kind: "ok", session, summary };
 }
 

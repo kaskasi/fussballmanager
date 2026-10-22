@@ -1,9 +1,11 @@
 import { formatClubCash, type ClubFinances } from "../economy/club-finances.ts";
-import { t, transferWindowHint } from "../i18n/index.ts";
+import { t } from "../i18n/index.ts";
+import { nextTransferWindowStart } from "../sim/game-calendar.ts";
 import type { AbilityEstimate } from "../scouting/estimate-model.ts";
 import { scoutIntelExactForTransfer, scoutMarketValueBounds } from "../scouting/scout-visibility.ts";
 import type { Player } from "../types/player.ts";
-import { cannotPayTransferFeeReason, transferWindowClosedReason } from "./purchase-block.ts";
+import { cannotPayTransferFeeReason } from "./purchase-block.ts";
+import { scheduledMoveLabel } from "./scheduled-transfers.ts";
 
 export type NegotiationGateId = "window" | "scout" | "budget";
 
@@ -24,8 +26,9 @@ export function negotiationGates(input: {
   transferWindowOpen: boolean;
   /** Sale to AI / inbound bid — own squad, no scout intel required. */
   isSale?: boolean;
+  /** Fees reserved for waiting purchases (not available for this offer). */
+  committedFees?: number;
 }): NegotiationGate[] {
-  const windowReason = transferWindowClosedReason(input.week);
   const isSale = input.isSale === true;
   const bounds = isSale
     ? { low: input.player.market_value, high: input.player.market_value, exact: true }
@@ -35,7 +38,9 @@ export function negotiationGates(input: {
   const scoutExact = isSale
     ? true
     : scoutIntelExactForTransfer(input.player, input.estimate, input.season);
-  const payReason = isSale ? null : cannotPayTransferFeeReason(input.finances, input.offerFee);
+  const payReason = isSale
+    ? null
+    : cannotPayTransferFeeReason(input.finances, input.offerFee, input.committedFees ?? 0);
 
   let scoutTitle: string;
   let scoutDetail: string;
@@ -60,17 +65,20 @@ export function negotiationGates(input: {
   }
 
   return [
+    // Information only: deals work all year; outside a window the move waits for the next one.
     {
       id: "window",
-      ok: input.transferWindowOpen,
+      ok: true,
       title: input.transferWindowOpen
         ? t("transfer.negotiation.gate.window.open.title")
-        : t("transfer.negotiation.gate.window.closed.title"),
+        : t("transfer.negotiation.gate.window.later.title"),
       detail: input.transferWindowOpen
         ? isSale
           ? t("transfer.negotiation.gate.window.open.detailSale")
           : t("transfer.negotiation.gate.window.open.detail")
-        : (windowReason ?? t("transfer.negotiation.gate.window.closed.detail", { hint: transferWindowHint() })),
+        : t(isSale ? "transfer.negotiation.gate.window.later.detailSale" : "transfer.negotiation.gate.window.later.detail", {
+            when: scheduledMoveLabel(nextTransferWindowStart(input.season, input.week), input.season),
+          }),
     },
     {
       id: "scout",

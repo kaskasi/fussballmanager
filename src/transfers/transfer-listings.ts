@@ -6,6 +6,7 @@ import { createSaleRecord } from "./transfer-history.ts";
 import type { Player } from "../types/player.ts";
 import type { TeamId } from "@fussballmanager/shared";
 import { isTransferWindowOpen } from "../sim/transfer-windows.ts";
+import { scheduledPlayerIds, scheduleTransfer, type ScheduledTransfer } from "./scheduled-transfers.ts";
 import { openingMarketListings } from "./opening-transfer-market.ts";
 import { estimateCa } from "./market-value.ts";
 import {
@@ -130,7 +131,8 @@ export function refreshAiListings(input: {
   masterSeed: number;
   leagueClubIds: readonly TeamId[];
 }): TransferState {
-  if (!isTransferWindowOpen(input.week)) return input.state;
+  // Runs all year: deals outside a window wait for the next one (scheduled-transfers.ts).
+  const scheduled = scheduledPlayerIds(input.state);
   const own = (input.state.listings ?? []).filter((row) => row.club_id === input.userClubId);
   const opening = openingMarketListings(input.state, input.players, input.userClubId);
   const openingIds = new Set(opening.map((row) => row.player_id));
@@ -138,9 +140,11 @@ export function refreshAiListings(input: {
     (row) =>
       row.club_id !== input.userClubId &&
       !openingIds.has(row.player_id) &&
+      !scheduled.has(row.player_id) &&
       listingStillValid(row, input.players, input.userClubId),
   );
   const reservedIds = new Set([
+    ...scheduled,
     ...own.map((row) => row.player_id),
     ...opening.map((row) => row.player_id),
     ...persistedRival.map((row) => row.player_id),
@@ -241,10 +245,6 @@ export function scanListingBids(input: {
   masterSeed: number;
   leagueClubIds: readonly TeamId[];
 }): { state: TransferState; opened: TransferNegotiation[] } {
-  if (!isTransferWindowOpen(input.week)) {
-    return { state: input.state, opened: [] };
-  }
-
   let state = input.state;
   const opened: TransferNegotiation[] = [];
   const busyPlayers = new Set<string>();
@@ -368,6 +368,8 @@ export function applyListedSale(input: {
   rivalPlayers: Player[];
   finances: ClubFinances;
   transferState: TransferState;
+  /** Set when the window is closed: the player stays until the next window opens. */
+  scheduled?: ScheduledTransfer;
 } {
   const player = input.players.find((entry) => entry.id === input.playerId);
   if (!player) {
@@ -376,6 +378,24 @@ export function applyListedSale(input: {
       rivalPlayers: [...input.rivalPlayers],
       finances: input.finances,
       transferState: input.transferState,
+    };
+  }
+  if (!isTransferWindowOpen(input.week)) {
+    const scheduled = scheduleTransfer({
+      state: unlistPlayer(input.transferState, input.playerId),
+      player,
+      direction: "out",
+      otherClubId: input.buyerClubId,
+      fee: input.fee,
+      season: input.season,
+      week: input.week,
+    });
+    return {
+      players: [...input.players],
+      rivalPlayers: [...input.rivalPlayers],
+      finances: input.finances,
+      transferState: scheduled.state,
+      scheduled: scheduled.entry,
     };
   }
   const sold = completeSale(player, input.buyerClubId, input.season);

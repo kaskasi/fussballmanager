@@ -28,9 +28,13 @@ Transfersystem, Vertragsverhandlungen und den KI-Transfermarkt spezifizieren. Ze
 1. **Market Value ist deterministisch:** Eine Funktion aus Attributen, Alter, Vertrag und Reputation. Kein Random Walk. Verhandlungen bewegen sich um diesen Wert.
 2. **Der Eigentümer kennt seinen Spieler zu 100 %.** Käufer schätzen. Preisverhandlungen mit unbekannten Talenten sind Risk-Analytics.
 3. **Fenster-Disziplin:** Deutsches Ligajahr. Spieltag 1 = KW 35 (Ende August).
-   Sommerfenster KW 35–36 (noch offen am Saisonstart), Winter KW 2–4 (Januar).
-   Intern bleibt `week` 1–34 der Spieltag. Außerhalb: keine Transfers, nur
-   Vertragsverhandlungen mit vereinslosen Spielern.
+   Sommerfenster KW 33–36 (Vorbereitung einer neuen Karriere + Spieltag 1–2), Winter KW 2–4 (Januar, Saisonwoche 20–22).
+   Intern bleibt `week` 1–34 der Spieltag. Kaufen und Verkaufen geht das ganze Jahr:
+   - Im Fenster: Wechsel sofort nach Vertragsunterschrift bzw. Zusage.
+   - Außerhalb: Einigung wird als wartender Wechsel gespeichert (`transfer_state.scheduled_transfers`, `src/transfers/scheduled-transfers.ts`). Der Spieler bleibt bis zum ersten Tag des nächsten Fensters bei seinem Verein und spielt weiter; dann wechselt er, die Ablöse fließt. Die Ablöse eines wartenden Kaufs ist bis dahin im Transfer-Topf reserviert.
+   - Der wartende Wechsel steht sofort in der Transfer-Historie („Wechsel am KW …“).
+   - Spieler mit wartendem Wechsel: kein neuer Vertrag, kein Listen/Verkauf, keine Leihe, keine Profil-Aktionen, kein weiteres Angebot.
+   - KI-zu-KI-Wechsel, Leihen und der Eröffnungsmarkt bleiben an das Fenster gebunden; Listen, Anfragen und Gebote laufen ganzjährig.
 4. **Verträge binden:** Gehalt, Bonus und Klauseln sind Wirtschaftsgrößen. Budget-Limits (Transfer-Topf, Gehalts-Cap) stehen in PRD 11.1; Ablösen und Gehälter buchen gegen `transfer_budget` bzw. `wage_budget_weekly`.
 5. **Verkauf ist erlaubt und normal:** Sell-On-Klauseln an Jugendspielern machen die Pipeline ökonomisch lohnend.
 6. **Kauf-Gate (Discovery):** Ablöse-Verhandlung und Kaufabschluss nur für Spieler in `scout_board.discovery.scout_pool` (PRD 04.5). Kein Fallback über die volle Rivalen-Liste.

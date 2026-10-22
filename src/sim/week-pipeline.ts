@@ -62,6 +62,8 @@ import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
 import { withClubEvent, type ClubEvent } from "../inbox/club-events.ts";
 import { advanceAiTransferWeek } from "../transfers/ai-transfer-market.ts";
 import { scanInboundOffers } from "../transfers/inbound-offers.ts";
+import { executeScheduledTransfers } from "../transfers/scheduled-transfers.ts";
+import { boardCashFloor } from "../economy/spend-runway.ts";
 import { advanceUnderpaidContractWeek } from "../transfers/underpaid-contract.ts";
 import {
   enqueueUnderpaidRenegotiateItems,
@@ -563,7 +565,7 @@ export async function simulateGameWeek(
     board,
     nextWeek,
   );
-  const finances = crisisStep.finances;
+  let finances = crisisStep.finances;
   let financingAfterLoans = crisisStep.financing;
   board = crisisStep.board;
   if (leagueStep.matchdayPlayed > 0 && !footballSeasonEnded) {
@@ -643,7 +645,28 @@ export async function simulateGameWeek(
       `Formexplosion: ${who} — ${narrative.narrative}`,
     );
   }
+  const scheduledArrivals: string[] = [];
   if (isTransferWindowOpen(nextWeek)) {
+    // PRD 05 — deals agreed outside a window move on its first day (before season-end contract expiry).
+    const scheduledStep = executeScheduledTransfers({
+      players: playersWithCaStamp,
+      rivalPlayers,
+      finances,
+      transferState,
+      clubId: session.clubId,
+      season: footballSeasonEnded ? session.season + 1 : session.season,
+      week: nextWeek,
+      masterSeed: session.masterSeed,
+      boardCashFloor: boardCashFloor(board),
+    });
+    playersWithCaStamp = scheduledStep.players;
+    rivalPlayers = scheduledStep.rivalPlayers;
+    finances = scheduledStep.finances;
+    transferState = scheduledStep.transferState;
+    scheduledArrivals.push(...scheduledStep.arrivedPlayerIds);
+    for (const message of scheduledStep.messages) {
+      clubEvents = withClubEvent(clubEvents, session.season, nextWeek, "transfer", message);
+    }
     const aiTransfers = advanceAiTransferWeek({
       rivalPlayers,
       transferState,
@@ -665,6 +688,9 @@ export async function simulateGameWeek(
         t("clubEvent.transferAi", { message }),
       );
     }
+  }
+  {
+    // Bids and listings run all year; a deal agreed outside a window waits for the next one.
     const inbound = scanInboundOffers({
       players: playersWithCaStamp,
       clubId: session.clubId,
@@ -747,7 +773,7 @@ export async function simulateGameWeek(
     session.clubId,
   );
 
-  const scoutBoard = reconcileScoutBoard(
+  const reconciledScoutBoard = reconcileScoutBoard(
     advanceScoutWeek(
       session.scoutBoard,
       nextWeek,
@@ -759,6 +785,15 @@ export async function simulateGameWeek(
     ),
     rivalPlayers,
   );
+  const scoutBoard =
+    scheduledArrivals.length === 0
+      ? reconciledScoutBoard
+      : {
+          ...reconciledScoutBoard,
+          targets: Object.fromEntries(
+            Object.entries(reconciledScoutBoard.targets).filter(([playerId]) => !scheduledArrivals.includes(playerId)),
+          ),
+        };
   for (const alert of discoveryAlertsForWeek(scoutBoard, nextWeek)) {
     clubEvents = withClubEvent(
       clubEvents,

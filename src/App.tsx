@@ -373,6 +373,7 @@ import { MANAGER_DESK_HUB_ENABLED } from "./hub/config.ts";
 import { hubBlockerCount } from "./hub/hub-blockers.ts";
 import { initAnalytics, trackScreen } from "./telemetry/analytics.ts";
 import { weekContextLabel } from "./telemetry/context.ts";
+import { committedTransferFees, scheduledTransferReason } from "./transfers/scheduled-transfers.ts";
 
 export default function App() {
   const locale = useLocale();
@@ -1206,6 +1207,7 @@ export default function App() {
       patchSession((current) => {
         const player = current.players.find((entry) => entry.id === playerId);
         if (!player || player.club_id !== current.clubId) return current;
+        if (scheduledTransferReason(current.transferState, playerId, current.season)) return current;
         const transferStateNext = isPlayerListed(current.transferState, playerId)
           ? unlistPlayer(current.transferState, playerId)
           : listPlayerForSale(current.transferState, player, current.season, current.week);
@@ -1292,6 +1294,11 @@ export default function App() {
   const handleProfileAction = useCallback(
     (playerId: string, action: PlayerProfileAction) => {
       patchSession((current) => {
+        const lock = scheduledTransferReason(current.transferState, playerId, current.season);
+        if (lock) {
+          setProfileFeedback(lock);
+          return current;
+        }
         const { players: nextPlayers, result } = applyProfileActionToSquad(
           current.players,
           playerId,
@@ -1376,6 +1383,11 @@ export default function App() {
       patchSession((current) => {
         const player = current.players.find((entry) => entry.id === playerId);
         if (!player) return current;
+        const lock = scheduledTransferReason(current.transferState, playerId, current.season);
+        if (lock) {
+          setProfileFeedback(lock);
+          return current;
+        }
         const headroom = wageBudgetHeadroom(current.finances, current.players, current.clubId);
         const currentWage = player.contract?.wage_weekly ?? 0;
         if (!wageDeltaFitsBudget(headroom, currentWage, offer.wageWeekly)) {
@@ -1872,7 +1884,7 @@ export default function App() {
           week={week}
           season={season}
           transferWindowOpen={isTransferWindowOpen(week)}
-          transferBudget={transferBudget(finances)}
+          transferBudget={Math.max(0, transferBudget(finances) - committedTransferFees(transferState))}
           purchasePrice={sellerAskingPrice(foreignView.player, season)}
           shortlisted={transferState.shortlist.includes(foreignView.player.id)}
           onAssignScout={() => handleAssignScout(foreignView.player.id)}
@@ -1881,7 +1893,8 @@ export default function App() {
             purchaseCelebration ? undefined : () => handleOpenNegotiation(foreignView.player.id)
           }
           purchaseBlockedReason={
-            isPlayerListed(transferState, foreignView.player.id) ? null : t("transfer.purchase.notListed")
+            scheduledTransferReason(transferState, foreignView.player.id, season) ??
+            (isPlayerListed(transferState, foreignView.player.id) ? null : t("transfer.purchase.notListed"))
           }
           actionFeedback={profileFeedback}
           onTransferNotice={(message) => {
@@ -1889,6 +1902,8 @@ export default function App() {
           }}
           preContractBonus={preContractOffer(foreignView.player, season, week)?.signingBonus}
           preContractBlockedReason={(() => {
+            const lock = scheduledTransferReason(transferState, foreignView.player.id, season);
+            if (lock) return lock;
             const eligibility = canSignPreContract(
               foreignView.player,
               session.clubId,
@@ -1957,6 +1972,7 @@ export default function App() {
             const eligibility = canSellPlayer(profilePlayer, players, session.clubId, week);
             return eligibility.allowed ? null : eligibility.reason ?? null;
           })()}
+          transferLockReason={scheduledTransferReason(transferState, profilePlayer.id, season)}
           individualPrograms={individualPrograms}
           trainingPlan={trainingPlan}
           actionFeedback={profileFeedback}

@@ -25,7 +25,6 @@ import {
   draftSaleNegotiationPreview,
   submitNegotiationRound,
   cannotPayTransferFeeReason,
-  cannotSubmitPurchaseOfferReason,
   finalizePlayerPurchase,
   openPurchaseNegotiation,
   resolvePurchaseTarget,
@@ -41,12 +40,15 @@ import {
 import type { TransferState } from "../../transfers/negotiations.ts";
 import { listPendingInboundOffers } from "../../transfers/inbound-offers.ts";
 import { applyListedSale, openSaleNegotiation, submitSaleRound } from "../../transfers/transfer-listings.ts";
+import { committedTransferFees, scheduledMoveLabel } from "../../transfers/scheduled-transfers.ts";
+import { nextTransferWindowStart } from "../../sim/game-calendar.ts";
 import { TransferNegotiationModal } from "./TransferNegotiationModal.tsx";
 import { ContractTalksPanel } from "./ContractTalksPanel.tsx";
 
 type PatchSession = (updater: (current: GameSession) => GameSession) => void;
 
-export type NegotiationUiPhase = "active" | "contract" | "won" | "lost";
+/** "scheduled" = agreed outside a window — the move happens when the next window opens. */
+export type NegotiationUiPhase = "active" | "contract" | "won" | "scheduled" | "lost";
 
 export function useTransferNegotiation(args: {
   session: GameSession;
@@ -253,16 +255,25 @@ export function useTransferNegotiation(args: {
             round.message,
           );
         });
-        setNegotiationMessage(round.message);
-        setNegotiationUiPhase(round.accepted || round.negotiation.status !== "active" ? (round.accepted ? "won" : "lost") : "active");
+        const saleWaits = round.accepted && !isTransferWindowOpen(week);
+        setNegotiationMessage(
+          saleWaits
+            ? t("transfer.scheduled.resolutionOut", {
+                message: round.message,
+                when: scheduledMoveLabel(nextTransferWindowStart(season, week), season),
+              })
+            : round.message,
+        );
+        setNegotiationUiPhase(
+          round.accepted ? (saleWaits ? "scheduled" : "won") : round.negotiation.status !== "active" ? "lost" : "active",
+        );
         return;
       }
-      const windowReason = cannotSubmitPurchaseOfferReason(week, true);
-      if (windowReason) {
-        setNegotiationMessage(windowReason);
-        return;
-      }
-      const payReason = cannotPayTransferFeeReason(finances, fee);
+      const payReason = cannotPayTransferFeeReason(
+        finances,
+        fee,
+        committedTransferFees(session.transferState),
+      );
       if (payReason) {
         setNegotiationMessage(payReason);
         return;
@@ -313,6 +324,7 @@ export function useTransferNegotiation(args: {
       finances,
       negotiationPlayerId,
       patchSession,
+      season,
       session,
       sessionWithEvent,
       stageFeeAgreement,
@@ -325,11 +337,6 @@ export function useTransferNegotiation(args: {
     const active = activeNegotiation(session.transferState, negotiationPlayerId);
     if (active?.side === "sell") {
       handleNegotiationOffer(active.counter_offer ?? active.current_offer);
-      return;
-    }
-    const windowReason = cannotSubmitPurchaseOfferReason(week, true);
-    if (windowReason) {
-      setNegotiationMessage(windowReason);
       return;
     }
     const target = resolvePurchaseTarget(
@@ -375,6 +382,19 @@ export function useTransferNegotiation(args: {
           queueMicrotask(() => abortPendingDeal(negotiationPlayerId));
         }
         return result.session;
+      }
+      if (result.kind === "scheduled") {
+        setNegotiationUiPhase("scheduled");
+        setNegotiationMessage(
+          t("transfer.scheduled.resolutionIn", {
+            summary: result.summary,
+            when: scheduledMoveLabel(
+              { season: result.scheduled.effective_season, week: result.scheduled.effective_week },
+              current.season,
+            ),
+          }),
+        );
+        return sessionWithEvent(result.session, "transfer", result.summary);
       }
       setNegotiationUiPhase("won");
       setNegotiationMessage(
@@ -547,6 +567,7 @@ export function useTransferNegotiation(args: {
       weeklyWageBill={weeklyWageBill(players, session.clubId)}
       boardCashFloor={boardCashFloor(board)}
       transferWindowOpen={isTransferWindowOpen(week)}
+      committedFees={committedTransferFees(transferState)}
       week={week}
       season={season}
       scoutEstimate={negotiationOverlayContext.estimate}

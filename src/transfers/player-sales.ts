@@ -1,7 +1,6 @@
 import type { TeamId } from "@fussballmanager/shared";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { careerTeamId } from "../sim/rival-growth.ts";
-import { isTransferWindowOpen } from "../sim/transfer-windows.ts";
 import { canReleasePlayer } from "../player/profile-actions.ts";
 import type { Player } from "../types/player.ts";
 import { buyerEstimatedValue } from "./ai-transfer-market.ts";
@@ -34,9 +33,7 @@ export function canSellPlayer(
   clubId: string,
   week: number,
 ): SaleEligibility {
-  if (!isTransferWindowOpen(week)) {
-    return { allowed: false, reason: "Verkauf nur in Sommer- oder Winterfenster." };
-  }
+  // Sales work all year; outside a window the player leaves when the next window opens.
   if (player.club_id !== clubId) {
     return { allowed: false, reason: "Nur eigene Spieler können verkauft werden." };
   }

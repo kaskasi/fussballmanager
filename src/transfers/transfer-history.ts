@@ -65,6 +65,10 @@ export interface TransferRecord {
   other_club_id: string;
   other_club_name: string;
   fee?: number;
+  /** Agreed outside a transfer window — the move happens on `effective_season` / `effective_week`. */
+  pending?: boolean;
+  effective_season?: number;
+  effective_week?: number;
 }
 
 export const DEFAULT_LOAN_PARTNER_ID = "cl_loan_partner";

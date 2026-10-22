@@ -6,6 +6,7 @@ import {
   isSummerTransferWindow,
   isWinterTransferWindow,
   LEAGUE_LAST_WEEK,
+  nextTransferWindowStart,
   SEASON_END_WEEK,
 } from "./game-calendar.ts";
 
@@ -32,14 +33,24 @@ describe("game calendar", () => {
     expect(calendarWeek(34)).toBe(16);
   });
 
-  it("opens four calendar weeks at season start and four in January", () => {
+  it("opens summer KW 33–36 and winter KW 2–4 (PRD 05)", () => {
+    expect(isSummerTransferWindow(-1)).toBe(true);
+    expect(isSummerTransferWindow(0)).toBe(true);
     expect(isSummerTransferWindow(1)).toBe(true);
-    expect(isSummerTransferWindow(4)).toBe(true);
-    expect(isSummerTransferWindow(5)).toBe(false);
+    expect(isSummerTransferWindow(2)).toBe(true);
+    expect(isSummerTransferWindow(3)).toBe(false);
+    expect(isWinterTransferWindow(19)).toBe(false);
     expect(isWinterTransferWindow(20)).toBe(true);
-    expect(isWinterTransferWindow(23)).toBe(true);
-    expect(isWinterTransferWindow(24)).toBe(false);
+    expect(isWinterTransferWindow(22)).toBe(true);
+    expect(isWinterTransferWindow(23)).toBe(false);
     expect(isWinterTransferWindow(3)).toBe(false);
+  });
+
+  it("finds the first week of the next window", () => {
+    expect(nextTransferWindowStart(1, 3)).toEqual({ season: 1, week: 20 });
+    expect(nextTransferWindowStart(1, 19)).toEqual({ season: 1, week: 20 });
+    expect(nextTransferWindowStart(1, 23)).toEqual({ season: 2, week: 1 });
+    expect(nextTransferWindowStart(1, 34)).toEqual({ season: 2, week: 1 });
   });
 
   it("ends the football season after week 34", () => {

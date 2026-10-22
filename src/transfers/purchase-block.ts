@@ -22,17 +22,23 @@ export function transferWindowClosedReason(week: number): string | null {
   return null;
 }
 
-/** Block submitting offers or finalizing a purchase (window + target). */
+/**
+ * Block submitting offers or finalizing a purchase. The transfer window no longer blocks deals:
+ * outside a window the agreed transfer waits for the next one (scheduled-transfers.ts).
+ */
 export function cannotSubmitPurchaseOfferReason(week: number, hasTarget: boolean): string | null {
-  const targetReason = cannotOpenPurchaseReason(week, hasTarget);
-  if (targetReason) return targetReason;
-  return transferWindowClosedReason(week);
+  return cannotOpenPurchaseReason(week, hasTarget);
 }
 
-export function cannotPayTransferFeeReason(finances: ClubFinances, fee: number): string | null {
+/** `committed` = fees already promised for waiting purchases (reserved in the transfer pot). */
+export function cannotPayTransferFeeReason(
+  finances: ClubFinances,
+  fee: number,
+  committed = 0,
+): string | null {
   if (!(fee > 0)) return t("transfer.purchase.noOffer");
-  if (canAffordTransfer(finances, fee)) return null;
-  const pot = transferBudget(finances);
+  if (canAffordTransfer(finances, fee + committed)) return null;
+  const pot = Math.max(0, transferBudget(finances) - committed);
   if (finances.cash >= fee && pot < fee) {
     return t("transfer.purchase.potSplit", {
       pot: formatClubCash(pot),

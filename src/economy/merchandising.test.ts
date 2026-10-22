@@ -3,7 +3,10 @@ import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { defaultClubStadium, type ClubStadium } from "../stadium/club-stadium.ts";
 import {
   advanceMerchandisingWeek,
+  buyBulkOffer,
   deliverMerchandisingOrders,
+  effectiveMerchCustomerRetail,
+  normalizeClubMerchandising,
   orderMerchOnDemand,
   defaultClubMerchandising,
   isMerchSkuOnSale,
@@ -16,7 +19,12 @@ import {
   weeklyMerchandisingEconomics,
 } from "./merchandising.ts";
 import { MERCH_SKU_IDS } from "./merchandising-skus.ts";
-import { refreshMerchBulkMarket } from "./merchandising-market.ts";
+import {
+  brandingLeadWeeks,
+  merchCareerWeekIndex,
+  refreshMerchBulkMarket,
+  type MerchBulkOffer,
+} from "./merchandising-market.ts";
 import { fanshopMerchLevel, merchMarketPoolSize } from "./merchandising-capacity.ts";
 
 describe("merchandising inventory", () => {
@@ -276,5 +284,64 @@ describe("merchandising inventory", () => {
     }
     expect(disposals).toBeGreaterThan(0);
     expect(stadium.merchandising!.skus.caps.stock).toBeLessThanOrEqual(max);
+  });
+});
+
+describe("merch vendors", () => {
+  function stadiumWithMarket(): ClubStadium {
+    const merch = defaultClubMerchandising();
+    merch.bulk_offers = refreshMerchBulkMarket([], 1, 5, 99, undefined, 48).offers;
+    return { ...defaultClubStadium(), merchandising: merch };
+  }
+
+  it("Express promo weeks never lower the fan-shop price", () => {
+    const row = defaultClubMerchandising().skus.trikots;
+    expect(effectiveMerchCustomerRetail(row, merchCareerWeekIndex(1, 2))).toBe(row.retail_price);
+  });
+
+  it("buying a bulk offer builds the vendor relationship and keeps its lead time", () => {
+    const stadium = stadiumWithMarket();
+    const offer = stadium.merchandising!.bulk_offers.find((o) => o.vendor === "restposten")!;
+    const result = buyBulkOffer(stadium, offer.id, 1, 5)!;
+    const merch = normalizeClubMerchandising(result.stadium.merchandising);
+    expect(merch.vendor_relations).toEqual({ restposten: { purchases: 1 } });
+    const order = merch.branding_queue[0]!;
+    expect(order.vendor).toBe("restposten");
+    expect(order.arrives_career_week - order.ordered_career_week).toBe(
+      brandingLeadWeeks(offer.units, "restposten"),
+    );
+  });
+
+  it("on-demand orders count for the Express-Druckerei and get cheaper as partner", () => {
+    const stadium = stadiumWithMarket();
+    const fresh = orderMerchOnDemand(stadium, "caps", 100, 1, 5, 1)!;
+    expect(normalizeClubMerchandising(fresh.stadium.merchandising).vendor_relations).toEqual({
+      express: { purchases: 1 },
+    });
+    const partner = {
+      ...stadium,
+      merchandising: { ...stadium.merchandising!, vendor_relations: { express: { purchases: 15 } } },
+    };
+    expect(orderMerchOnDemand(partner, "caps", 100, 1, 5, 1)!.cost).toBeLessThan(fresh.cost);
+  });
+
+  it("normalizes legacy offers and keeps relationships", () => {
+    const merch = normalizeClubMerchandising({
+      ...defaultClubMerchandising(),
+      bulk_offers: [
+        {
+          id: "old",
+          label: "Caps · Whitelabel",
+          listed_career_week: 1,
+          expires_career_week: 9,
+          list_price: 500,
+          ask_price: 500,
+          units: { caps: 50 },
+        } as unknown as MerchBulkOffer,
+      ],
+      vendor_relations: { grosshaendler: { purchases: 4 } },
+    });
+    expect(merch.bulk_offers[0]!.vendor).toBe("grosshaendler");
+    expect(merch.vendor_relations).toEqual({ grosshaendler: { purchases: 4 } });
   });
 });

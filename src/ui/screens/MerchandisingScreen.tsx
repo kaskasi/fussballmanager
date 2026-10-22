@@ -20,8 +20,8 @@ import {
   effectiveMerchCustomerRetail,
   bestMarketBulkUnitCost,
   dismissMerchSaleSummaries,
-  isPhillipMerchSaleWeek,
-  PHILLIP_MERCH_SALE_DISCOUNT,
+  isExpressPromoWeek,
+  EXPRESS_PROMO_DISCOUNT,
   JERSEY_REVENUE_SHARE,
   isMerchOverCapacity,
   isMerchSkuOnSale,
@@ -97,7 +97,7 @@ export function MerchandisingScreen({
   const [marketBrowseOpen, setMarketBrowseOpen] = useState(false);
 
   const merch = normalizeClubMerchandising(stadium.merchandising);
-  const phillipSaleActive = isPhillipMerchSaleWeek(week);
+  const phillipSaleActive = isExpressPromoWeek(week);
   const onDemandUnit = customOrderUnitCost(
     customSku,
     merch.skus[customSku]?.avg_cost ?? 0,
@@ -189,7 +189,7 @@ export function MerchandisingScreen({
       onDemandQuote={onDemandQuote}
       onDemandMarketUnit={onDemandMarketUnit}
       phillipSaleActive={phillipSaleActive}
-      phillipDiscountPct={Math.round(PHILLIP_MERCH_SALE_DISCOUNT * 100)}
+      phillipDiscountPct={Math.round(EXPRESS_PROMO_DISCOUNT * 100)}
       onSkuChange={setCustomSku}
       onQtyDecrement={() => setCustomQty((qty) => Math.max(10, qty - 10))}
       onQtyIncrement={() => setCustomQty((qty) => qty + 10)}
@@ -234,7 +234,7 @@ export function MerchandisingScreen({
         <strong>{t("merch.phillipSale.bannerTitle")}</strong>
         <span>
           {t("merch.phillipSale.bannerBody", {
-            pct: Math.round(PHILLIP_MERCH_SALE_DISCOUNT * 100),
+            pct: Math.round(EXPRESS_PROMO_DISCOUNT * 100),
           })}
         </span>
       </div>
@@ -530,7 +530,7 @@ function MerchPriceTile({
   const totalFill = stockFill + onDemandFill;
   const listPrice = row.retail_price;
   const normal = row.retail_price_normal ?? listPrice;
-  const customerPrice = effectiveMerchCustomerRetail(row, seasonWeek, careerWeek);
+  const customerPrice = effectiveMerchCustomerRetail(row, careerWeek);
   const phillipSale = !onSale && customerPrice < listPrice;
   const stepperValue = onSale ? listPrice : phillipSale ? customerPrice : listPrice;
   const clickable = Boolean(onOverCapacityClick);

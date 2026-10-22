@@ -45,7 +45,13 @@ import {
   type MerchSkuId,
   type MerchSkuState,
 } from "./merchandising-skus.ts";
-import { phillipMerchSaleMultiplier } from "./phillip-merch-sale.ts";
+import {
+  normalizeMarketVendorId,
+  normalizeMerchVendorRelations,
+  recordMerchVendorPurchase,
+  vendorRelationTier,
+  type MerchVendorRelations,
+} from "./merchandising-vendors.ts";
 
 export {
   fanshopMerchLevel,
@@ -111,15 +117,28 @@ export {
   brandingLeadWeeks,
   bulkOfferUnitCost,
   filterBulkOffersBySku,
+  merchOfferDealPct,
+  merchReferenceWholesale,
   offerPrimaryQty,
   sortBulkOffersByUnitCost,
   topBulkOfferDeals,
 } from "./merchandising-market.ts";
 export {
-  isPhillipMerchSaleWeek,
-  PHILLIP_MERCH_SALE_DISCOUNT,
-  phillipMerchSaleMultiplier,
-} from "./phillip-merch-sale.ts";
+  EXPRESS_PROMO_DISCOUNT,
+  isExpressPromoWeek,
+  MERCH_MARKET_VENDOR_IDS,
+  MERCH_VENDOR_IDS,
+  MERCH_VENDOR_TIER_THRESHOLDS,
+  merchVendorPerkPct,
+  merchVendorPurchasesToNextTier,
+  vendorRelationTier,
+} from "./merchandising-vendors.ts";
+export type {
+  MerchMarketVendorId,
+  MerchVendorId,
+  MerchVendorRelations,
+  MerchVendorTier,
+} from "./merchandising-vendors.ts";
 
 /** Share of trikot revenue explained by star names (UI). */
 export const JERSEY_REVENUE_SHARE = 0.7;
@@ -140,6 +159,8 @@ export interface ClubMerchandising {
   /** F6.6-C — limited digi drop demand boost until career week index. */
   limited_drop_until_career_week?: number;
   limited_drop_demand_multiplier?: number;
+  /** Käufe je Händler → Beziehungsstufe (Neu … Partner). */
+  vendor_relations?: MerchVendorRelations;
 }
 
 export interface MerchandisingEconomics {
@@ -227,7 +248,10 @@ export function migrateLegacyMerchandising(raw: unknown): ClubMerchandising {
     const typed = raw as ClubMerchandising;
     return {
       skus: normalizeSkus(typed.skus),
-      bulk_offers: typed.bulk_offers ?? [],
+      bulk_offers: (typed.bulk_offers ?? []).map((offer) => ({
+        ...offer,
+        vendor: normalizeMarketVendorId(offer.vendor),
+      })),
       branding_queue: typed.branding_queue ?? [],
       last_market_refresh_career_week: typed.last_market_refresh_career_week,
       firesale_prompts: typed.firesale_prompts,
@@ -235,6 +259,7 @@ export function migrateLegacyMerchandising(raw: unknown): ClubMerchandising {
       on_demand_queue: typed.on_demand_queue ?? [],
       over_capacity_weeks: typed.over_capacity_weeks,
       pending_sale_summaries: typed.pending_sale_summaries,
+      vendor_relations: normalizeMerchVendorRelations(typed.vendor_relations),
     };
   }
   return defaultClubMerchandising();
@@ -326,7 +351,7 @@ function simulateWeeklySales(
     if (row.stock <= 0 || unitPool <= 0) continue;
     const unitRetail =
       ctx.week != null
-        ? effectiveMerchCustomerRetail(row, seasonWeek, careerWeekNow)
+        ? effectiveMerchCustomerRetail(row, careerWeekNow)
         : row.retail_price;
     let weight = MERCH_SKU_DEMAND_WEIGHT[id];
     if (id === "trikots") weight *= starBoost;
@@ -454,17 +479,15 @@ export function merchInboundQtyBySku(
   return totals;
 }
 
-/** Fan-facing VK this week (Phillip seasonal sale or active Fire Sale). */
+/** Fan-facing VK this week (Fire Sale price while active, else normal). */
 export function effectiveMerchCustomerRetail(
   row: MerchSkuState,
-  seasonWeek: number,
   careerWeek: number,
 ): number {
   if (isMerchSkuOnSale(row, careerWeek)) {
     return row.retail_price;
   }
-  const base = merchSkuNormalRetail(row);
-  return Math.max(1, Math.round(base * phillipMerchSaleMultiplier(seasonWeek)));
+  return merchSkuNormalRetail(row);
 }
 
 export function suggestedMerchSalePrice(normalRetail: number): number {
@@ -677,6 +700,7 @@ export function advanceMerchandisingWeek(
     ctx.masterSeed,
     merch.last_market_refresh_career_week,
     merchMarketPoolSize(fanshopLevel),
+    merch.vendor_relations,
   );
   merch.bulk_offers = market.offers;
   merch.last_market_refresh_career_week = market.refreshWeek;
@@ -727,6 +751,7 @@ export function ensureMerchBulkMarket(
     masterSeed,
     merch.last_market_refresh_career_week,
     merchMarketPoolSize(fanshopLevel),
+    merch.vendor_relations,
   );
   if (
     market.refreshWeek === merch.last_market_refresh_career_week &&
@@ -768,6 +793,7 @@ export function weeklyMerchandisingEconomics(
       ctx.masterSeed,
       merch.last_market_refresh_career_week,
       merchMarketPoolSize(fanshopLevel),
+      merch.vendor_relations,
     );
     const aged = {
       ...merch,
@@ -860,8 +886,9 @@ export function buyBulkOffer(
   const careerWeek = merchCareerWeekIndex(season, week);
   const order: MerchBrandingOrder = {
     id: `brand_${offer.id}`,
+    vendor: offer.vendor,
     ordered_career_week: careerWeek,
-    arrives_career_week: careerWeek + brandingLeadWeeks(offer.units),
+    arrives_career_week: careerWeek + brandingLeadWeeks(offer.units, offer.vendor),
     units: { ...offer.units },
     unit_cost: bulkOfferUnitCost(offer),
   };
@@ -873,6 +900,7 @@ export function buyBulkOffer(
         ...merch,
         bulk_offers: merch.bulk_offers.filter((entry) => entry.id !== offerId),
         branding_queue: [...merch.branding_queue, order],
+        vendor_relations: recordMerchVendorPurchase(merch.vendor_relations, offer.vendor),
       },
     },
   };
@@ -890,8 +918,9 @@ export function orderMerchOnDemand(
   if (qty <= 0) return null;
   const merch = normalizeClubMerchandising(stadium.merchandising);
   const row = merch.skus[sku] ?? emptySkuState(sku);
-  const cost = customOrderQuote(sku, qty, row.avg_cost, week, merch.bulk_offers);
-  const unitCost = customOrderUnitCost(sku, row.avg_cost, week, merch.bulk_offers);
+  const tier = vendorRelationTier(merch.vendor_relations, "express");
+  const cost = customOrderQuote(sku, qty, row.avg_cost, week, merch.bulk_offers, tier);
+  const unitCost = customOrderUnitCost(sku, row.avg_cost, week, merch.bulk_offers, tier);
   const orderedDay = merchCareerDayIndex(season, week, weekday);
   const order: MerchOnDemandOrder = {
     id: `od_${sku}_${orderedDay}_${merch.on_demand_queue?.length ?? 0}`,
@@ -908,6 +937,7 @@ export function orderMerchOnDemand(
       merchandising: {
         ...merch,
         on_demand_queue: [...(merch.on_demand_queue ?? []), order],
+        vendor_relations: recordMerchVendorPurchase(merch.vendor_relations, "express"),
       },
     },
   };

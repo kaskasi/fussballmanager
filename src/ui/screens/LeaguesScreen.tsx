@@ -8,7 +8,7 @@ import { divisionLabel, REGIONALLIGA_ID, OBERLIGA_ID } from "../../sim/league-di
 import { divisionLeaderLists, divisionStandings, leagueSliceForForm } from "../../sim/league-standings.ts";
 import { ClubProfileModal } from "../components/ClubProfileModal.tsx";
 import { LeagueLeaderLists } from "../components/LeagueLeaderLists.tsx";
-import { LeagueTable } from "../components/LeagueTable.tsx";
+import { LeagueTable, LeagueZoneLegend } from "../components/LeagueTable.tsx";
 import type { WorldClub } from "../../world/world-generator.ts";
 import { useT } from "../../i18n/react.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
@@ -16,7 +16,7 @@ import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 const DIVISIONS: DivisionEconomyId[] = [REGIONALLIGA_ID, OBERLIGA_ID];
 
 /**
- * WIREFRAME: docs/prd/design.md §9.7 — Tabellen
+ * WIREFRAME: docs/prd/design.md §9.7 — Tabellen. Built from tc- components (design.md §4.3).
  */
 export function LeaguesScreen({
   league,
@@ -56,75 +56,64 @@ export function LeaguesScreen({
   );
 
   return (
-    <main className="leagues-screen club-shell-card-body">
-      <header className="leagues-screen-head">
-        <div>
-          <p className="eyebrow">{t("leagues.eyebrow")}</p>
-          <h1>{t("leagues.title")}</h1>
-          <p className="leagues-screen-sub">
-            {t("leagues.subtitle")} ·{" "}
-            {standings.simulated ? t("leagues.mode.simulated") : t("leagues.mode.live")}
-          </p>
-        </div>
+    <main className="club-shell-card-body">
+      <header className="tc-page-head">
+        <span className="tc-label">{t("leagues.eyebrow")}</span>
+        <h1 className="tc-page-title">{t("leagues.title")}</h1>
+        <p className="tc-page-sub">
+          {t("leagues.subtitle")} · {standings.simulated ? t("leagues.mode.simulated") : t("leagues.mode.live")}
+        </p>
       </header>
 
-      <div className="leagues-screen-tabs" role="tablist" aria-label={t("leagues.tabsAria")}>
+      <div className="tc-tabs tc-tabs--page" role="tablist" aria-label={t("leagues.tabsAria")}>
         {DIVISIONS.map((id) => (
           <button
             key={id}
             type="button"
             role="tab"
+            className="tc-tab"
             aria-selected={divisionId === id}
-            className={divisionId === id ? "is-active" : undefined}
             onClick={() => setDivisionId(id)}
           >
             {divisionLabel(id)}
-            {id === league.division_id ? (
-              <span className="leagues-screen-own"> · {t("leagues.yourClub")}</span>
-            ) : null}
+            {id === league.division_id ? <span className="tc-tab__meta">{t("leagues.yourClub")}</span> : null}
           </button>
         ))}
       </div>
 
-      <div className="leagues-screen-split">
+      <div className="tc-split">
         <section
-          className="leagues-screen-table"
+          className="tc-panel"
           aria-label={divisionLabel(divisionId)}
           data-coach-target={COACH_TARGET.leaguesTable}
         >
-          <p className="leagues-screen-meta">
-            {t("leagues.matchdayProgress", {
-              played: standings.matchdaysPlayed,
-              total: matchdays,
-            })}
-            {standings.simulated ? ` · ${t("leagues.autoSim")}` : ""}
-          </p>
+          <div className="tc-panel__head">
+            <span className="tc-label">
+              {t("leagues.matchdayProgress", {
+                played: standings.matchdaysPlayed,
+                total: matchdays,
+              })}
+              {standings.simulated ? ` · ${t("leagues.autoSim")}` : ""}
+            </span>
+          </div>
           <LeagueTable
             table={standings.table}
             leagueSlice={leagueSlice}
             playerClubId={league.player_club_id}
             worldClubs={worldClubs}
             onSelectClub={setSelectedClubId}
+            caption={`${divisionLabel(divisionId)} · ${t("leagues.matchdayProgress", {
+              played: standings.matchdaysPlayed,
+              total: matchdays,
+            })}`}
           />
-          <div className="leagues-screen-legend" aria-label={t("leagues.legendAria")}>
-            <span>
-              <i className="zone-promoted" /> {t("leagues.legend.promotion")}
-            </span>
-            <span>
-              <i className="zone-playoff" /> {t("leagues.legend.playoff")}
-            </span>
-            <span>
-              <i className="zone-relegated" /> {t("leagues.legend.relegation")}
-            </span>
-          </div>
+          <LeagueZoneLegend />
         </section>
-        <aside className="leagues-screen-scorers" aria-label={t("leagues.tab.scorers")}>
+        <aside className="tc-panel" aria-label={t("leagues.sidebar.statsAria")}>
           <LeagueLeaderLists
-            layout="sidebar"
             scorers={leaders.scorers}
             assists={leaders.assists}
             discipline={leaders.discipline}
-            yellows={leaders.yellows}
             matchdaysPlayed={standings.matchdaysPlayed}
             playerClubId={league.player_club_id}
             worldClubs={worldClubs}

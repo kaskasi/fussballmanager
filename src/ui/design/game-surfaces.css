@@ -2653,40 +2653,6 @@ button.cash-chip:hover {
   }
 }
 
-/* §9.7 Tabellen */
-.leagues-screen-view-tabs {
-  display: flex;
-  gap: 0.35rem;
-  margin-bottom: 0.65rem;
-}
-
-.leagues-screen-view-tabs button {
-  border: var(--outline);
-  border-radius: var(--radius-klein);
-  padding: 0.4rem 0.65rem;
-  background: #fff;
-  font-weight: 700;
-  cursor: pointer;
-  color: var(--tinte);
-}
-
-.leagues-screen-view-tabs button.is-active {
-  background: var(--rasen);
-}
-
-.league-table-wrap {
-  max-height: min(70vh, 520px);
-  overflow: auto;
-}
-
-.league-table tr.is-player-club td {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: var(--sonnengelb);
-  box-shadow: 0 1px 0 rgba(62, 49, 40, 0.2);
-}
-
 /* §9.14 — Spiel-Zusammenfassung */
 .career-match--report .match-report {
   margin-top: 0;
@@ -3499,19 +3465,6 @@ button.cash-chip:hover {
   color: var(--tinte-weich);
 }
 
-.league-table tbody tr.is-matchday-club {
-  background: color-mix(in srgb, var(--sonnengelb) 28%, #fff);
-}
-
-.league-table--compact {
-  font-size: 0.72rem;
-}
-
-.league-table--compact th,
-.league-table--compact td {
-  padding: 0.28rem 0.35rem;
-}
-
 .matchday-preview-hint {
   margin: 0;
   font-size: 0.72rem;
@@ -3748,57 +3701,6 @@ button.cash-chip:hover {
 }
 
 /* Style consolidation — tokens only (formerly design-consolidation.css) */
-
-.leagues-screen-tabs,
-.leagues-screen-view-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: 0;
-  margin: var(--space-4) 0 var(--space-3);
-  padding: 0;
-  background: var(--bg-inactive);
-  border-bottom: var(--outline);
-}
-
-.leagues-screen-tabs button,
-.leagues-screen-view-tabs button {
-  flex: 0 1 auto;
-  margin: 0;
-  padding: 0.5rem 1.15rem;
-  border: 0;
-  border-right: var(--outline);
-  border-radius: 0;
-  background: var(--bg-inactive);
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  cursor: pointer;
-  box-shadow: none;
-}
-
-.leagues-screen-tabs button:last-child,
-.leagues-screen-view-tabs button:last-child {
-  border-right: none;
-}
-
-.leagues-screen-tabs button.is-active,
-.leagues-screen-view-tabs button.is-active {
-  background: var(--accent-primary);
-  color: var(--text-primary);
-}
-
-.leagues-screen-tabs button:not(.is-active):hover,
-.leagues-screen-view-tabs button:not(.is-active):hover {
-  background: var(--bg-card);
-}
-
-.leagues-screen-sub,
-.leagues-screen-own,
-.leagues-screen-meta {
-  color: var(--text-secondary);
-}
 
 /* scouting-chip: see .filter-chip block above (PRD 20) */
 

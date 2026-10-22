@@ -10,8 +10,23 @@
 .tc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .tc-label { font-family: var(--font-text); font-size: var(--font-size-xs); line-height: 1rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
 .tc-caption { font-size: var(--font-size-xs); line-height: 1rem; color: var(--text-muted); }
-:where(.tc-btn, .tc-next, .tc-chip, .tc-tab, .tc-sort, .tc-iconbtn, .tc-player--link):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:where(.tc-btn, .tc-next, .tc-chip, .tc-tab, .tc-sort, .tc-iconbtn, .tc-player--link, .tc-linkbtn):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .tc-icon { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Page head: one per screen (design.md §3 display) */
+.tc-page-head { display: grid; gap: var(--space-1); margin-bottom: var(--space-4); }
+.tc-page-title { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: var(--font-size-2xl); line-height: 2.25rem; letter-spacing: 0.005em; }
+.tc-page-sub { margin: 0; color: var(--text-muted); }
+
+/* Main column + side column; stacks below 1024px */
+.tc-split { display: grid; gap: var(--space-4); align-items: start; }
+@media (min-width: 1024px) {
+  .tc-split { grid-template-columns: minmax(0, 1fr) 18rem; }
+}
+
+/* Inline text button (club and player names in tables) */
+.tc-linkbtn { padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: inherit; font: inherit; font-weight: 700; text-align: left; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; cursor: pointer; }
+.tc-linkbtn:hover { color: var(--accent-strong); text-decoration-color: currentColor; }
 
 /* Title bar */
 .tc-titlebar { display: flex; align-items: center; gap: var(--space-3); min-height: var(--title-bar); padding: 0 var(--space-4); background: var(--club); color: var(--on-club); }
@@ -56,6 +71,8 @@
 .tc-tab { padding: var(--space-3) 0; border: 0; background: none; color: var(--text-muted); font-family: var(--font-text); font-weight: 700; font-size: var(--font-size-sm); line-height: 1.25rem; white-space: nowrap; cursor: pointer; }
 .tc-tab:hover { color: var(--text); }
 .tc-tab[aria-selected="true"] { color: var(--text); box-shadow: inset 0 -3px 0 var(--accent); }
+.tc-tab__meta { margin-left: var(--space-1); font-weight: 400; color: var(--text-muted); }
+.tc-tabs--page { margin-bottom: var(--space-4); }
 
 /* Panel */
 .tc-panel { min-width: 0; padding: var(--space-4); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md); }
@@ -100,12 +117,49 @@
 .tc-form__r--d { background: var(--draw); color: var(--on-draw); }
 .tc-form__r--l { background: var(--negative); color: var(--on-negative); }
 
+.tc-form__r--empty { background: var(--sunken); color: var(--text-muted); }
+.tc-spark { display: block; width: 52px; height: 22px; color: var(--text-muted); }
+
 /* League table rows */
 .tc-row--own td { background: var(--accent-soft); font-weight: 700; }
 .tc-row--own td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 .tc-row--cut td { border-bottom: 2px dashed var(--negative); }
 .tc-legend { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3); font-size: var(--font-size-xs); line-height: 1rem; color: var(--text-muted); }
 .tc-legend__cut { width: 20px; border-top: 2px dashed var(--negative); }
+.tc-legend { flex-wrap: wrap; column-gap: var(--space-4); padding: 0; list-style: none; }
+.tc-legend__item { display: inline-flex; align-items: center; gap: var(--space-2); }
+.tc-row--mark td { background: var(--sunken); font-weight: 700; }
+
+/* Table place with zone (promotion / playoff / relegation) */
+.tc-place { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 var(--space-1); box-sizing: border-box; border-radius: var(--radius-sm); font-family: var(--font-display); font-weight: 700; font-size: var(--font-size-sm); line-height: 1; font-variant-numeric: tabular-nums; }
+.tc-place--up { background: var(--positive); color: var(--on-positive); }
+.tc-place--playoff { background: var(--info); color: var(--on-info); }
+.tc-place--down { background: var(--negative); color: var(--on-negative); }
+.tc-place--key { min-width: 12px; height: 12px; padding: 0; }
+
+/* Ranked list (scorers, key players) */
+.tc-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.tc-list__item { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); padding: var(--space-2) 0; border-bottom: 1px solid var(--line); }
+.tc-list__item:last-child { border-bottom: 0; }
+.tc-list__rank { color: var(--text-muted); font-variant-numeric: tabular-nums; text-align: right; }
+.tc-list__main { display: grid; min-width: 0; }
+.tc-list__name { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.tc-list__meta { overflow: hidden; color: var(--text-muted); font-size: var(--font-size-xs); line-height: 1rem; text-overflow: ellipsis; white-space: nowrap; }
+.tc-list__value { font-family: var(--font-display); font-weight: 700; font-size: var(--font-size-md); font-variant-numeric: tabular-nums; }
+.tc-list__item--own { margin: 0 calc(-1 * var(--space-2)); padding-inline: var(--space-2); background: var(--accent-soft); border-radius: var(--radius-sm); }
+
+/* Panel sections (several short lists in one panel) */
+.tc-section + .tc-section { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+.tc-section__title { margin: 0 0 var(--space-2); }
+.tc-empty { margin: 0; color: var(--text-muted); font-size: var(--font-size-xs); line-height: 1rem; }
+
+/* Stat tiles (club profile, summaries) */
+.tc-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); margin: 0; }
+.tc-stats__item { display: grid; align-content: start; gap: 2px; min-width: 0; padding: var(--space-3); background: var(--sunken); border-radius: var(--radius-md); }
+.tc-stats__label { display: flex; align-items: center; gap: var(--space-1); }
+.tc-stats__label .tc-icon { width: 16px; height: 16px; }
+.tc-stats dd { display: grid; gap: 2px; min-width: 0; margin: 0; }
+.tc-stats .tc-stat__value { overflow-wrap: anywhere; }
 
 /* Player card */
 .tc-portrait { width: var(--portrait-md); height: var(--portrait-md); flex: none; }
@@ -138,6 +192,9 @@
 .tc-modal__title { margin: var(--space-1) 0 0; font-family: var(--font-display); font-weight: 800; font-size: var(--font-size-xl); line-height: 1.75rem; }
 .tc-modal__body { padding: var(--space-3) var(--space-4) var(--space-4); font-size: var(--font-size-md); line-height: 1.5rem; }
 .tc-modal__foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); padding: 0 var(--space-4) var(--space-4); }
+.tc-modal__sub { margin: var(--space-1) 0 0; color: var(--text-muted); font-size: var(--font-size-sm); line-height: 1.25rem; }
+.tc-modal__body > * + * { margin-top: var(--space-4); }
+.tc-scrim { z-index: 110; }
 .tc-kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2) var(--space-4); margin: 0; font-size: var(--font-size-sm); line-height: 1.25rem; }
 .tc-kv dt { color: var(--text-muted); }
 .tc-kv dd { margin: 0; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -167,6 +224,7 @@
   .tc-iconbtn { width: var(--touch-min); height: var(--touch-min); }
 }
 @media (max-width: 719px) {
+  .tc-hide-narrow { display: none; }
   .tc-news__grid { grid-template-columns: minmax(0, 1fr); }
   .tc-news__side { padding-left: 0; padding-top: var(--space-4); border-left: 0; border-top: 1px solid var(--newsprint-rule); }
 }

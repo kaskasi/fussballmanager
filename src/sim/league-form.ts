@@ -68,10 +68,3 @@ export function formSparkline(form: readonly FormResult[]): string {
     .map((entry) => (entry === "W" ? "▲" : entry === "D" ? "■" : "▼"))
     .join("");
 }
-
-export function formSlotsAriaLabel(slots: readonly FormSlot[]): string {
-  const played = slots.filter((entry): entry is FormResult => entry !== null);
-  if (played.length === 0) return "Noch keine Form";
-  const words = played.map((entry) => (entry === "W" ? "Sieg" : entry === "D" ? "Remis" : "Niederlage"));
-  return `Form letzte ${played.length} Spiele: ${words.join(", ")}`;
-}

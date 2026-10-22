@@ -184,6 +184,17 @@
   font-size: var(--font-size-xs);
 }
 
+.ui-gallery__narrow {
+  max-width: 22rem;
+}
+
+.ui-gallery__two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
 .ui-gallery__kv {
   max-width: 24rem;
 }

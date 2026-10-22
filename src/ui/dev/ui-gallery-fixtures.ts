@@ -1,5 +1,8 @@
-/** Kit fixtures for the UI gallery title bar samples: one per branch of titleBarColors. */
+/** UI gallery fixtures: kits for the title bar samples (one per branch of titleBarColors) and a mini league. */
+import { standings, type FixtureResult, type TableRow, type TeamId } from "@fussballmanager/shared";
+import { DEFAULT_GENERATED_WORLD, defaultLeaguePools, REGIONALLIGA_ID } from "../../sim/league-divisions.ts";
 import { PLAYER_CLUB_KIT_PRIMARY, PLAYER_CLUB_KIT_SECONDARY } from "../../world/club-kit.ts";
+import { NORDSTERN_TEAM_ID, type WorldClub } from "../../world/world-generator.ts";
 import type { KitColors } from "../shell/title-bar-colors.ts";
 
 export const SAMPLE_KITS: readonly { name: string; initials: string; kit: KitColors }[] = [
@@ -11,3 +14,44 @@ export const SAMPLE_KITS: readonly { name: string; initials: string; kit: KitCol
   { name: "Holstein Rendsburg", initials: "HR", kit: { primary: "#e0503a", secondary: "#7a1d12" } },
   { name: "SV Goldgelb", initials: "SVG", kit: { primary: "#ffd000", secondary: "#f5c400" } },
 ];
+
+/** A seeded mini league (first ten Regionalliga clubs, six rounds) for the real LeagueTable in the gallery. */
+export function galleryLeague(): {
+  clubIds: TeamId[];
+  results: FixtureResult[];
+  table: TableRow[];
+  playerClubId: TeamId;
+  worldClubs: readonly WorldClub[];
+} {
+  const pools = defaultLeaguePools();
+  const pool = pools[REGIONALLIGA_ID] ?? [];
+  const clubIds = [NORDSTERN_TEAM_ID, ...pool.filter((id) => id !== NORDSTERN_TEAM_ID)].slice(0, 10);
+  let seed = 20261022;
+  const goals = () => {
+    // xorshift32: the low bits of a plain LCG cycle too fast for small ranges
+    seed ^= seed << 13;
+    seed ^= seed >>> 17;
+    seed ^= seed << 5;
+    return [0, 0, 1, 1, 1, 2, 2, 3][(seed >>> 0) % 8]!;
+  };
+  const results: FixtureResult[] = [];
+  const rotation = [...clubIds];
+  for (let round = 0; round < 6; round += 1) {
+    for (let index = 0; index < rotation.length / 2; index += 1) {
+      results.push({
+        homeTeamId: rotation[index]!,
+        awayTeamId: rotation[rotation.length - 1 - index]!,
+        homeGoals: goals(),
+        awayGoals: goals(),
+      });
+    }
+    rotation.splice(1, 0, rotation.pop()!);
+  }
+  return {
+    clubIds,
+    results,
+    table: standings(clubIds, results),
+    playerClubId: NORDSTERN_TEAM_ID,
+    worldClubs: DEFAULT_GENERATED_WORLD.clubs,
+  };
+}

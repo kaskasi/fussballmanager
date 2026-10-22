@@ -742,11 +742,11 @@ function PriceStepper({
           {title}
         </h2>
       </div>
-      <div className="tc-finances__stepper">
+      <div className="tc-stepper">
         <button type="button" className="tc-iconbtn" aria-label={lowerLabel} onClick={onLower}>
           <Minus className="tc-icon" aria-hidden />
         </button>
-        <output className="tc-finances__price">{t("finances.price.value", { amount: formatDecimal(price, 2) })}</output>
+        <output className="tc-stepper__value">{t("finances.price.value", { amount: formatDecimal(price, 2) })}</output>
         <button type="button" className="tc-iconbtn" aria-label={raiseLabel} onClick={onRaise}>
           <Plus className="tc-icon" aria-hidden />
         </button>

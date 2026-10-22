@@ -128,12 +128,6 @@ const TIER_LABEL: Record<StadiumTier, string> = {
   vip: "VIP",
 };
 
-const TIER_ICON: Record<StadiumTier, string> = {
-  standing: "🧍",
-  seating: "💺",
-  vip: "🥂",
-};
-
 export function tierLabel(tier: StadiumTier): string {
   const key = `stadium.tier.${tier}`;
   const label = t(key);
@@ -145,10 +139,6 @@ export function blockDisplayName(block: Pick<StadiumBlock, "id" | "name">): stri
   const key = `stadium.block.${block.id}`;
   const label = t(key);
   return label !== key ? label : block.name;
-}
-
-export function tierIcon(tier: StadiumTier): string {
-  return TIER_ICON[tier];
 }
 
 function defaultClubStadiumSeed(): ClubStadium {
@@ -292,13 +282,11 @@ export function fillRateDeltaFromReference(block: StadiumBlock): number {
   return block.fill_rate - referenceFillRate(block.id);
 }
 
-/** Heat color for pitch-plan zones: low fill = red, mid = amber, high = green. */
-export function fillRateHeatColor(fillRate: number): string {
+/** 0–1 strength for the pitch plan's light-to-dark tint: FILL_RATE_MIN = 0, FILL_RATE_MAX = 1. */
+export function fillRateStrength(fillRate: number): number {
   const span = FILL_RATE_MAX - FILL_RATE_MIN;
   const normalized = span <= 0 ? 1 : (fillRate - FILL_RATE_MIN) / span;
-  const clamped = Math.min(1, Math.max(0, normalized));
-  const hue = clamped * 128;
-  return `hsl(${hue.toFixed(1)} 58% 38%)`;
+  return Math.min(1, Math.max(0, normalized));
 }
 
 export function stadiumFromDivisionDefaults(divisionId: DivisionEconomyId): ClubStadium {

@@ -2,7 +2,26 @@ import { useMemo, useState } from "react";
 import { useT } from "../../i18n/react.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 import { useTutorialTabFocus } from "../tutorial/use-tutorial-tab-focus.ts";
-import { Construction, Dumbbell, Hammer, Home, Shirt, Star, TriangleAlert } from "lucide-react";
+import {
+  Armchair,
+  Check,
+  Construction,
+  Crown,
+  Dumbbell,
+  Flame,
+  Hammer,
+  Home,
+  Megaphone,
+  Minus,
+  Plus,
+  Shirt,
+  Star,
+  TrendingDown,
+  TrendingUp,
+  TriangleAlert,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import type { AcademyFacility } from "../../youth/intake-generator.ts";
 import {
   constructionCapacitySummary,
@@ -14,28 +33,30 @@ import { ConstructionCapacityPanel } from "../components/ConstructionCapacityPan
 import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import {
   ACADEMY_FACILITIES,
+  academyFacilityEffect,
+  academyFacilityName,
   academyStage,
   canBuyAcademyUpgrade,
-  facilityById,
   facilityGate,
 } from "../../youth/academy.ts";
 import { hqIntakeCount } from "../../youth/intake-generator.ts";
 import {
   adjustBlockTicketPrice,
+  blockDisplayName,
   fillRateDeltaFromReference,
-  fillRateHeatColor,
+  fillRateStrength,
   referenceFillRate,
   stadiumAverageTicket,
   stadiumBlockAttendees,
   stadiumBlockIncome,
   stadiumMatchdayIncome,
   matchdayCapacity,
-  tierIcon,
   tierLabel,
   TICKET_PRICE_MAX,
   TICKET_PRICE_MIN,
   TICKET_PRICE_STEP,
   FILL_RATE_MIN,
+  DEFAULT_FANBASE,
   type ClubStadium,
   type StadiumBlock,
   type StadiumTier,
@@ -50,41 +71,45 @@ import {
   isBlockUnderConstruction,
 } from "../../stadium/stadium-block-expansion.ts";
 import { infrastructureCostForWeek } from "../../economy/early-pacing.ts";
-import {
-  fanbaseMood,
-  fanbaseMoodIcon,
-  fanbaseMoodLabel,
-  formatFanbase,
-} from "../../stadium/fanbase.ts";
-import { DEFAULT_FANBASE } from "../../stadium/club-stadium.ts";
-import { Hint } from "../components/Hint.tsx";
+import { fanbaseMood, fanbaseMoodLabel, formatFanbase, type FanbaseMood } from "../../stadium/fanbase.ts";
 import { PrecinctGrid } from "../components/PrecinctGrid.tsx";
 import { SponsorDealModal } from "../components/SponsorDealModal.tsx";
-import {
-  STADIUM_MOOD_PHOTOS,
-  stadiumPhotoTierFromCapacity,
-} from "../assets/mood-photos.ts";
+import { STADIUM_MOOD_PHOTOS, stadiumPhotoTierFromCapacity } from "../assets/mood-photos.ts";
 import { MoodPhotoBand } from "../components/MoodPhotoBand.tsx";
 import { computeHospitalityPreview } from "../../stadium/hospitality.ts";
 import { emptyPrecinct, type PrecinctBuilding, type PrecinctEdge } from "../../stadium/precinct.ts";
 import {
   dealForSlot,
   signSponsorDeal,
+  sponsorSlotLabel,
   sponsorSlotsForStand,
   takenSponsorBrandKeys,
   SPONSOR_SLOTS,
-  type SponsorDeal,
   type SponsorOffer,
   type SponsorStand,
 } from "../../stadium/sponsor-deals.ts";
+import { formatDecimal, formatWholeNumber } from "../../i18n/number-display.ts";
 
-type StadiumTab = "plan" | "precinct";
+type StadiumTab = "plan" | "precinct" | "upgrades";
+
+const BLOCK_ORDER = ["north", "west", "east", "south", "vip"] as const;
+
+const TIER_ICON: Record<StadiumTier, LucideIcon> = {
+  standing: Users,
+  seating: Armchair,
+  vip: Crown,
+};
+
+const MOOD_ICON: Record<FanbaseMood, LucideIcon> = {
+  strong: Flame,
+  growing: TrendingUp,
+  steady: Users,
+  weak: TrendingDown,
+};
 
 /**
- * WIREFRAME: docs/prd/design.md §9.3 — Stadion
- * [Grundriss] [Gelände] — Ausbau im Grundriss
- * Banden sitzen auf den Tribünen-Karten um den Grundriss.
- * Klick = F6.5-Modal. Gelände: 🏟️ Mitte, 2×5-Plättchen, Startstraße Stadt→Arena.
+ * WIREFRAME: docs/prd/design.md §9.3 — Stadion ("Umsetzung")
+ * Stat strip over all tabs → Grundriss (plan + sector detail) · Gelände (building grid) · Ausbau (upgrade cards).
  */
 export function StadiumScreen({
   stadium,
@@ -139,7 +164,7 @@ export function StadiumScreen({
   const t = useT();
   const [tab, setTab] = useState<StadiumTab>("plan");
   useTutorialTabFocus("stadium", "stadium.precinct_not_3d", "precinct", setTab);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string>("north");
   const [openSlotId, setOpenSlotId] = useState<string | null>(null);
   const capacity = matchdayCapacity(stadium, season, week);
   const moodPhoto = STADIUM_MOOD_PHOTOS[stadiumPhotoTierFromCapacity(capacity)];
@@ -147,6 +172,7 @@ export function StadiumScreen({
   const avgTicket = stadiumAverageTicket(stadium, season, week);
   const fanbase = stadium.fanbase ?? DEFAULT_FANBASE;
   const mood = fanbaseMood(fanbase);
+  const MoodIcon = MOOD_ICON[mood];
   const delta = stadium.fanbase_last_delta;
   const precinct = stadium.precinct ?? emptyPrecinct();
   const hospitalityPreview = useMemo(
@@ -176,22 +202,14 @@ export function StadiumScreen({
   const openDeal = openSlot ? dealForSlot(stadium.sponsor_deals, openSlot.id, season) : undefined;
 
   const constructionSnapshot = useMemo(
-    () =>
-      constructionSnapshotFromSession({
-        stadium,
-        youthCamps,
-        academyProject,
-        season,
-        week,
-      }),
+    () => constructionSnapshotFromSession({ stadium, youthCamps, academyProject, season, week }),
     [academyProject, season, stadium, week, youthCamps],
   );
   const constructionSummary = useMemo(
     () => constructionCapacitySummary(constructionSnapshot),
     [constructionSnapshot],
   );
-
-  const blockOrder = ["north", "west", "east", "south", "vip"] as const;
+  const selectedBlock = stadium.blocks.find((block) => block.id === selectedId) ?? stadium.blocks[0];
 
   function signDeal(slotId: string, offer: SponsorOffer) {
     onStadiumChange({
@@ -204,54 +222,12 @@ export function StadiumScreen({
   const stadiumTabs: { id: StadiumTab; labelKey: string }[] = [
     { id: "plan", labelKey: "stadium.tab.plan" },
     { id: "precinct", labelKey: "stadium.tab.precinct" },
+    { id: "upgrades", labelKey: "stadium.tab.upgrades" },
   ];
-
-  const stadiumContext = (
-    <>
-      <header className="stadium-scoreboard">
-        <h2 className="stadium-scoreboard-name">{stadium.name}</h2>
-        <p className="stadium-sub">
-          {capacity.toLocaleString("de-DE")} Plätze · Ø Ticket € {avgTicket.toFixed(0)} · Heimspiel{" "}
-          {formatClubCash(matchdayIncome)}
-        </p>
-      </header>
-      {constructionSummary.atCap ? (
-        <ConstructionCapacityPanel snapshot={constructionSnapshot} hero />
-      ) : (
-        <>
-          {constructionSummary.active > 0 ? (
-            <ConstructionCapacityPanel snapshot={constructionSnapshot} compact />
-          ) : null}
-          <MoodPhotoBand src={moodPhoto} className="stadium-hero" />
-        </>
-      )}
-      <section className="stadium-fanbase" aria-label="Fanbase">
-        <div className={`stadium-fanbase-card is-${mood}`}>
-          <span className="stadium-fanbase-icon" aria-hidden="true">
-            {fanbaseMoodIcon(mood)}
-          </span>
-          <div>
-            <strong>Fanbase {formatFanbase(fanbase)}</strong>
-            <p>Erfolg &amp; Tabellenplatz steuern die Zuschauerzahl</p>
-          </div>
-          {delta != null && delta !== 0 ? (
-            <span className={delta > 0 ? "stadium-fanbase-delta is-up" : "stadium-fanbase-delta is-down"}>
-              {delta > 0 ? "+" : ""}
-              {delta.toFixed(1)} diese Woche
-            </span>
-          ) : null}
-        </div>
-      </section>
-    </>
-  );
 
   return (
     <main className="stadium club-shell-card-body">
-      <FmScreenTabBar
-        role="tablist"
-        aria-label="Stadionbereiche"
-        data-coach-target={COACH_TARGET.stadiumTabs}
-      >
+      <FmScreenTabBar role="tablist" aria-label={t("stadium.tabsAria")} data-coach-target={COACH_TARGET.stadiumTabs}>
         {stadiumTabs.map(({ id, labelKey }) => (
           <FmScreenTab
             key={id}
@@ -265,83 +241,126 @@ export function StadiumScreen({
         ))}
       </FmScreenTabBar>
 
-      {tab === "plan" ? (
-        <div className="fm-tab-panel">
-          {stadiumContext}
-          <Hint
-            text="Ticketpreis und Tribünen-Ausbau auf den Karten · leere Banden klicken für Sponsoring."
-            block
-          >
-            <section className="stadium-layout" aria-label="Stadion-Grundriss">
-            <StadiumPitchPlan
-              blocks={stadium.blocks}
-              deals={stadium.sponsor_deals}
-              season={season}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              onOpenSlot={setOpenSlotId}
-            />
-            {blockOrder.map((blockId) => {
-              const block = stadium.blocks.find((entry) => entry.id === blockId);
-              if (!block) return null;
-              return (
-                <StadiumBlockCard
-                  key={block.id}
-                  stadium={stadium}
-                  block={block}
-                  area={block.id}
-                  selected={selectedId === block.id}
-                  deals={stadium.sponsor_deals}
-                  season={season}
-                  week={week}
-                  upgradeLevels={stadium.upgrade_levels}
-                  onSelect={() => setSelectedId(block.id)}
-                  onOpenSlot={setOpenSlotId}
-                  onPriceChange={(delta) =>
-                    onStadiumChange(adjustBlockTicketPrice(stadium, block.id, delta))
-                  }
-                  cash={finances.cash}
-                  onStartExpansion={() => onStartBlockExpansion(block.id)}
-                />
-              );
-            })}
-            </section>
-          </Hint>
-          <StadiumUpgradesPanel
-            finances={finances}
-            capacity={capacity}
-            academyFacility={academyFacility}
-            academyProject={academyProject}
-            onUpgradeAcademy={onUpgradeAcademy}
-          />
-        </div>
-      ) : null}
+      <div className="fm-tab-panel">
+        <header className="tc-page-head tc-stadium__head">
+          <span className="tc-label">{t("stadium.eyebrow")}</span>
+          <h1 className="tc-page-title">{stadium.name}</h1>
+          <p className="tc-page-sub tc-stadium__strip">
+            <span>{t("stadium.strip.seats", { seats: formatWholeNumber(capacity) })}</span>
+            <span>{t("stadium.strip.avgTicket", { price: formatWholeNumber(Math.round(avgTicket)) })}</span>
+            <span>{t("stadium.strip.homeGate", { amount: formatClubCash(matchdayIncome) })}</span>
+            <span className="tc-stadium__fanbase" title={t("stadium.fanbase.hint")}>
+              <MoodIcon className="tc-icon" aria-hidden />
+              {t("stadium.strip.fanbase", { value: formatFanbase(fanbase), mood: fanbaseMoodLabel(mood) })}
+              {delta != null && delta !== 0 ? (
+                <span className={delta > 0 ? "tc-delta--up" : "tc-delta--down"}>
+                  {t("stadium.strip.fanbaseDelta", { delta: `${delta > 0 ? "+" : ""}${formatDecimal(delta, 1)}` })}
+                </span>
+              ) : null}
+            </span>
+          </p>
+        </header>
 
-      {tab === "precinct" ? (
-        <div className="fm-tab-panel">
-          {stadiumContext}
-          <div data-coach-target={COACH_TARGET.stadiumPrecinct}>
-          <PrecinctGrid
-            precinct={precinct}
-            cash={finances.cash}
-            stadiumName={stadium.name}
-            hospitalityPreview={hospitalityPreview}
-            isHomeMatchWeek={isHomeMatchWeek}
-            onPlace={onPlacePrecinct}
-            onUpgrade={onUpgradePrecinct}
-            onBuyParcel={onBuyParcel}
-            onPlaceStreet={onPlaceStreet}
-            onExpand={onExpandPrecinct}
-            onShrinkToMin={onShrinkPrecinctToMin}
-            onRemovePatch={onRemovePrecinctPatch}
-            onRemoveStreet={onRemoveStreet}
-            seasonWeek={precinctSeasonWeek}
-            season={season}
-            week={week}
-          />
+        {constructionSummary.atCap ? (
+          <ConstructionCapacityPanel snapshot={constructionSnapshot} hero />
+        ) : (
+          <>
+            {constructionSummary.active > 0 ? <ConstructionCapacityPanel snapshot={constructionSnapshot} compact /> : null}
+            <MoodPhotoBand src={moodPhoto} className="tc-stadium__photo" />
+          </>
+        )}
+
+        {tab === "plan" && selectedBlock ? (
+          <div className="tc-split tc-stadium__plan">
+            <section className="tc-panel" aria-labelledby="stadium-plan-title">
+              <div className="tc-panel__head">
+                <h2 className="tc-label" id="stadium-plan-title">
+                  {t("stadium.plan.title")}
+                </h2>
+                <span className="tc-caption">{t("stadium.plan.hint")}</span>
+              </div>
+              <StadiumPitchPlan
+                blocks={stadium.blocks}
+                deals={stadium.sponsor_deals}
+                season={season}
+                selectedId={selectedBlock.id}
+                onSelect={setSelectedId}
+                onOpenSlot={setOpenSlotId}
+              />
+            </section>
+            <SectorDetail
+              stadium={stadium}
+              block={selectedBlock}
+              season={season}
+              week={week}
+              onOpenSlot={setOpenSlotId}
+              onPriceChange={(change) => onStadiumChange(adjustBlockTicketPrice(stadium, selectedBlock.id, change))}
+            />
           </div>
-        </div>
-      ) : null}
+        ) : null}
+
+        {tab === "precinct" ? (
+          <div data-coach-target={COACH_TARGET.stadiumPrecinct}>
+            <PrecinctGrid
+              precinct={precinct}
+              cash={finances.cash}
+              stadiumName={stadium.name}
+              hospitalityPreview={hospitalityPreview}
+              isHomeMatchWeek={isHomeMatchWeek}
+              onPlace={onPlacePrecinct}
+              onUpgrade={onUpgradePrecinct}
+              onBuyParcel={onBuyParcel}
+              onPlaceStreet={onPlaceStreet}
+              onExpand={onExpandPrecinct}
+              onShrinkToMin={onShrinkPrecinctToMin}
+              onRemovePatch={onRemovePrecinctPatch}
+              onRemoveStreet={onRemoveStreet}
+              seasonWeek={precinctSeasonWeek}
+              season={season}
+              week={week}
+            />
+          </div>
+        ) : null}
+
+        {tab === "upgrades" ? (
+          <div className="tc-stack">
+            <section className="tc-panel" aria-labelledby="stadium-stands-title">
+              <div className="tc-panel__head">
+                <h2 className="tc-panel__title" id="stadium-stands-title">
+                  {t("stadium.upgrades.standsTitle")}
+                </h2>
+                <span className="tc-caption">{t("stadium.upgrades.standsHint")}</span>
+              </div>
+              <ul className="tc-stadium__upgrades">
+                {BLOCK_ORDER.map((id) => {
+                  const block = stadium.blocks.find((entry) => entry.id === id);
+                  if (!block) return null;
+                  return (
+                    <StandExpansionCard
+                      key={id}
+                      stadium={stadium}
+                      block={block}
+                      season={season}
+                      week={week}
+                      cash={finances.cash}
+                      onStart={() => onStartBlockExpansion(block.id)}
+                    />
+                  );
+                })}
+              </ul>
+            </section>
+            {academyFacility && onUpgradeAcademy ? (
+              <AcademyUpgradeSection
+                ownedId={academyFacility}
+                academyProject={academyProject}
+                stadiumCapacity={capacity}
+                cash={finances.cash}
+                onUpgrade={onUpgradeAcademy}
+              />
+            ) : null}
+          </div>
+        ) : null}
+      </div>
 
       {openSlot ? (
         <SponsorDealModal
@@ -357,6 +376,14 @@ export function StadiumScreen({
   );
 }
 
+const PLAN_ZONES: Array<{ id: string; x: number; y: number; w: number; h: number }> = [
+  { id: "north", x: 24, y: 8, w: 272, h: 44 },
+  { id: "south", x: 24, y: 228, w: 200, h: 44 },
+  { id: "west", x: 8, y: 58, w: 44, h: 164 },
+  { id: "east", x: 268, y: 58, w: 44, h: 164 },
+  { id: "vip", x: 232, y: 228, w: 64, h: 44 },
+];
+
 function StadiumPitchPlan({
   blocks,
   deals,
@@ -368,7 +395,7 @@ function StadiumPitchPlan({
   blocks: readonly StadiumBlock[];
   deals: ClubStadium["sponsor_deals"];
   season: number;
-  selectedId: string | null;
+  selectedId: string;
   onSelect: (blockId: string) => void;
   onOpenSlot: (slotId: string) => void;
 }) {
@@ -377,25 +404,18 @@ function StadiumPitchPlan({
   const shirt = SPONSOR_SLOTS.find((slot) => slot.kind === "shirt");
   const shirtDeal = shirt ? dealForSlot(deals, shirt.id, season) : undefined;
 
-  const zones: Array<{ id: string; x: number; y: number; w: number; h: number; label: string }> = [
-    { id: "north", x: 24, y: 8, w: 272, h: 44, label: "N" },
-    { id: "south", x: 24, y: 228, w: 200, h: 44, label: "S" },
-    { id: "west", x: 8, y: 58, w: 44, h: 164, label: "W" },
-    { id: "east", x: 268, y: 58, w: 44, h: 164, label: "O" },
-    { id: "vip", x: 232, y: 228, w: 64, h: 44, label: "VIP" },
-  ];
-
   return (
-    <div className="stadium-pitch-map">
-      <svg className="stadium-plan" viewBox="0 0 320 280" role="img" aria-label="Stadion-Grundriss">
-        <rect x="58" y="58" width="204" height="164" rx="8" fill="#15803d" stroke="#ecfdf5" strokeWidth="2" />
-        <circle cx="160" cy="140" r="28" fill="none" stroke="rgb(255 255 255 / 35%)" strokeWidth="2" />
-        <line x1="160" y1="58" x2="160" y2="222" stroke="rgb(255 255 255 / 25%)" strokeWidth="2" />
-        {zones.map((zone) => {
+    <div className="tc-stadium__map">
+      <svg className="tc-stadium__svg" viewBox="0 0 320 280" role="group" aria-label={t("stadium.plan.aria")}>
+        <rect className="tc-stadium__pitch" x="58" y="58" width="204" height="164" rx="8" />
+        <circle className="tc-stadium__marking" cx="160" cy="140" r="28" />
+        <line className="tc-stadium__marking" x1="160" y1="58" x2="160" y2="222" />
+        {PLAN_ZONES.map((zone) => {
           const block = byId[zone.id];
-          const fillPct = block ? Math.round(block.fill_rate * 100) : 0;
+          if (!block) return null;
+          const fillPct = Math.round(block.fill_rate * 100);
           const selected = selectedId === zone.id;
-          const zoneFill = block?.fill_rate ?? FILL_RATE_MIN;
+          const name = blockDisplayName(block);
           return (
             <g key={zone.id}>
               <rect
@@ -404,8 +424,8 @@ function StadiumPitchPlan({
                 width={zone.w}
                 height={zone.h}
                 rx={6}
-                fill={fillRateHeatColor(zoneFill)}
-                className={selected ? "stadium-plan-zone is-selected" : "stadium-plan-zone"}
+                className={selected ? "tc-stadium__zone tc-stadium__zone--selected" : "tc-stadium__zone"}
+                style={{ fillOpacity: 0.2 + 0.65 * fillRateStrength(block.fill_rate ?? FILL_RATE_MIN) }}
                 onClick={() => onSelect(zone.id)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
@@ -415,296 +435,252 @@ function StadiumPitchPlan({
                 }}
                 role="button"
                 tabIndex={0}
-                aria-label={block ? `${block.name}, ${fillPct}% Auslastung` : zone.label}
+                aria-pressed={selected}
+                aria-label={t("stadium.plan.zoneAria", { stand: name, percent: fillPct })}
               >
-                <title>{block ? `${block.name} · ${fillPct}%` : zone.label}</title>
+                <title>{t("stadium.plan.zoneAria", { stand: name, percent: fillPct })}</title>
               </rect>
               <text
                 x={zone.x + zone.w / 2}
                 y={zone.y + zone.h / 2 + 4}
                 textAnchor="middle"
-                className="stadium-plan-label"
+                className="tc-stadium__zone-label"
                 pointerEvents="none"
               >
-                {zone.label}
+                {t(`stadium.plan.short.${zone.id}`)}
               </text>
             </g>
           );
         })}
       </svg>
       {shirt ? (
-        <aside className="stadium-commerce" aria-label="Trikotfläche">
-          <button
-            type="button"
-            className={shirtDeal ? "stadium-commerce-slot" : "stadium-commerce-slot is-empty"}
-            title={
-              shirtDeal
-                ? t("stadium.sponsor.shirtTitleOccupied", { brand: shirtDeal.brand })
-                : t("stadium.sponsor.shirtTitleEmpty")
-            }
-            onClick={() => onOpenSlot(shirt.id)}
-          >
-            <Shirt size={18} aria-hidden="true" strokeWidth={2.5} />
-            {!shirtDeal ? (
-              <TriangleAlert size={14} strokeWidth={2.35} aria-hidden className="stadium-sponsor-warn-icon" />
-            ) : null}
-            <span>{shirtDeal?.brand ?? t("stadium.sponsor.shirtEmpty")}</span>
-          </button>
-        </aside>
+        <button
+          type="button"
+          className="tc-chip tc-chip--dense tc-chip--icon tc-stadium__shirt"
+          aria-pressed={Boolean(shirtDeal)}
+          title={
+            shirtDeal
+              ? t("stadium.sponsor.shirtTitleOccupied", { brand: shirtDeal.brand })
+              : t("stadium.sponsor.shirtTitleEmpty")
+          }
+          onClick={() => onOpenSlot(shirt.id)}
+        >
+          <Shirt className="tc-icon" aria-hidden />
+          {!shirtDeal ? <TriangleAlert className="tc-icon tc-stadium__warn" aria-hidden /> : null}
+          {shirtDeal?.brand ?? t("stadium.sponsor.shirtEmpty")}
+        </button>
       ) : null}
     </div>
   );
 }
 
-function StandBoardSlots({
-  stand,
-  deals,
-  season,
-  upgradeLevels,
-  onOpenSlot,
-}: {
-  stand: SponsorStand;
-  deals: readonly SponsorDeal[] | undefined;
-  season: number;
-  upgradeLevels?: Record<string, number>;
-  onOpenSlot: (slotId: string) => void;
-}) {
-  const t = useT();
-  const slots = sponsorSlotsForStand(stand, upgradeLevels);
-  if (slots.length === 0) return null;
-  return (
-    <div className="stadium-card-boards" onClick={(event) => event.stopPropagation()}>
-      {slots.map((slot) => {
-        const deal = dealForSlot(deals, slot.id, season);
-        return (
-          <button
-            key={slot.id}
-            type="button"
-            className={deal ? "stadium-card-board" : "stadium-card-board is-empty"}
-            aria-label={
-              deal
-                ? `${slot.label}, ${deal.brand}`
-                : `${slot.label}, ${t("stadium.sponsor.boardEmpty")}`
-            }
-            onClick={() => onOpenSlot(slot.id)}
-          >
-            {!deal ? (
-              <TriangleAlert size={14} strokeWidth={2.35} aria-hidden className="stadium-sponsor-warn-icon" />
-            ) : null}
-            {deal ? deal.brand : t("stadium.sponsor.boardEmpty")}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function StadiumBlockCard({
+function SectorDetail({
   stadium,
   block,
-  area,
-  selected,
-  deals,
   season,
   week,
-  upgradeLevels,
-  onSelect,
   onOpenSlot,
   onPriceChange,
-  cash,
-  onStartExpansion,
 }: {
   stadium: ClubStadium;
   block: StadiumBlock;
-  area: string;
-  selected: boolean;
-  deals: ClubStadium["sponsor_deals"];
   season: number;
   week: number;
-  upgradeLevels?: Record<string, number>;
-  onSelect: () => void;
   onOpenSlot: (slotId: string) => void;
   onPriceChange: (delta: number) => void;
-  cash: number;
-  onStartExpansion: () => void;
 }) {
-  const sold = stadiumBlockAttendees(block, stadium, season, week);
-  const income = Math.round(stadiumBlockIncome(stadium, block, season, week));
-  const fillPct = Math.round(block.fill_rate * 100);
-  const refPct = Math.round(referenceFillRate(block.id) * 100);
-  const fillDeltaPts = Math.round(fillRateDeltaFromReference(block) * 100);
-  const stand = block.id as SponsorStand;
-  const expansionLevel = blockExpansionLevel(stadium, block.id);
+  const t = useT();
   const underConstruction = isBlockUnderConstruction(stadium, block.id, season, week);
   const buildWeeksLeft = blockExpansionWeeksRemaining(stadium, block.id, season, week);
-  const expansionCheck = canStartBlockExpansion(stadium, block.id, season, week, cash);
-  const nextLevel = expansionCheck.nextLevel;
-  const nextCapacity =
-    nextLevel != null ? blockCapacityAtExpansionLevel(block.id, nextLevel) : null;
-  const expansionCost =
-    expansionCheck.cost != null ? infrastructureCostForWeek(expansionCheck.cost, week) : null;
-  const expansionMaxed = expansionLevel >= BLOCK_EXPANSION_MAX_LEVEL && !underConstruction;
+  const level = blockExpansionLevel(stadium, block.id);
+  const seats = underConstruction ? 0 : blockCapacityAtExpansionLevel(block.id, level);
+  const sold = underConstruction ? 0 : stadiumBlockAttendees(block, stadium, season, week);
+  const income = underConstruction ? 0 : Math.round(stadiumBlockIncome(stadium, block, season, week));
+  const fillPct = underConstruction ? 0 : Math.round(block.fill_rate * 100);
+  const refPct = Math.round(referenceFillRate(block.id) * 100);
+  const deltaPts = Math.round(fillRateDeltaFromReference(block) * 100);
+  const tone = fillPct >= refPct - 2 ? "good" : fillPct >= refPct - 12 ? "mid" : "low";
+  const Icon = TIER_ICON[block.tier] ?? Users;
+  const name = blockDisplayName(block);
+  const slots = sponsorSlotsForStand(block.id as SponsorStand, stadium.upgrade_levels);
 
   return (
-    <article
-      className={`stadium-block is-${block.tier}${selected ? " is-selected" : ""}${underConstruction ? " is-constructing" : ""}`}
-      data-area={area}
-      onClick={onSelect}
-    >
-      <IsoStand tier={block.tier} />
-      <div className="stadium-block-body">
-        <h2>
-          <span aria-hidden="true">{tierIcon(block.tier)}</span> {block.name}
-        </h2>
-        <p className="stadium-block-meta">
-          {tierLabel(block.tier)} · Stufe {expansionLevel}/{BLOCK_EXPANSION_MAX_LEVEL} ·{" "}
-          {(underConstruction
-            ? 0
-            : blockCapacityAtExpansionLevel(block.id, expansionLevel)
-          ).toLocaleString("de-DE")}{" "}
-          Plätze
-        </p>
-        <FillMeter
-          fillPct={underConstruction ? 0 : fillPct}
-          refPct={refPct}
-          deltaPts={fillDeltaPts}
-          sold={underConstruction ? 0 : sold}
-        />
-        <div className="stadium-block-controls">
-          <div className="stadium-price" onClick={(event) => event.stopPropagation()}>
-            <button
-              type="button"
-              aria-label={`${block.name} Ticketpreis senken`}
-              disabled={block.ticket_price_eur <= TICKET_PRICE_MIN}
-              onClick={() => onPriceChange(-TICKET_PRICE_STEP)}
-            >
-              −
-            </button>
-            <span>€ {block.ticket_price_eur}</span>
-            <button
-              type="button"
-              aria-label={`${block.name} Ticketpreis erhöhen`}
-              disabled={block.ticket_price_eur >= TICKET_PRICE_MAX}
-              onClick={() => onPriceChange(TICKET_PRICE_STEP)}
-            >
-              +
-            </button>
-          </div>
-          <StandBoardSlots
-            stand={stand}
-            deals={deals}
-            season={season}
-            upgradeLevels={upgradeLevels}
-            onOpenSlot={onOpenSlot}
-          />
+    <section className="tc-panel tc-stadium__detail" aria-labelledby="stadium-sector-title" aria-live="polite">
+      <div className="tc-stadium__detail-head">
+        <Icon className="tc-icon" aria-hidden />
+        <div>
+          <h2 className="tc-panel__title" id="stadium-sector-title">
+            {name}
+          </h2>
+          <p className="tc-caption">
+            {t("stadium.sector.meta", { tier: tierLabel(block.tier), seats: formatWholeNumber(seats) })}
+          </p>
         </div>
-        <div
-          className={`stadium-block-expansion${underConstruction ? " is-building" : ""}${expansionMaxed ? " is-maxed" : ""}`}
-          onClick={(event) => event.stopPropagation()}
-        >
-          {underConstruction ? (
-            <span className="stadium-block-expansion-status">
-              <Construction size={14} strokeWidth={2.5} aria-hidden />
-              Im Bau · noch {buildWeeksLeft} Woche{buildWeeksLeft === 1 ? "" : "n"} · kein Eintritt
-            </span>
-          ) : expansionMaxed ? (
-            <span className="stadium-block-expansion-status">Ausbau voll ausgebaut</span>
-          ) : (
-            <>
-              <span className="stadium-block-expansion-hint">
-                {nextCapacity != null
-                  ? `→ ${nextCapacity.toLocaleString("de-DE")} Plätze · ${expansionCheck.weeks ?? "?"} Wo. offline`
-                  : null}
-              </span>
-              <button
-                type="button"
-                className="stadium-block-expansion-btn"
-                disabled={!expansionCheck.allowed}
-                title={
-                  expansionCheck.reason ??
-                  (expansionCost != null
-                    ? `${formatClubCash(expansionCost)} · Stufe ${nextLevel}`
-                    : undefined)
-                }
-                onClick={onStartExpansion}
-              >
-                <Hammer size={15} strokeWidth={2.5} aria-hidden />
-                Ausbau
-                {expansionCost != null ? ` ${formatClubCash(expansionCost)}` : ""}
-              </button>
-            </>
-          )}
-        </div>
-        <p className="stadium-block-income">
-          Heimspiel {underConstruction ? "— (Bau)" : formatClubCash(income)}
-        </p>
       </div>
-    </article>
-  );
-}
 
-function FillMeter({
-  fillPct,
-  refPct,
-  deltaPts,
-  sold,
-}: {
-  fillPct: number;
-  refPct: number;
-  deltaPts: number;
-  sold: number;
-}) {
-  const tone = fillPct >= refPct - 2 ? "good" : fillPct >= refPct - 12 ? "warn" : "bad";
-  return (
-    <div className="stadium-fill">
-      <div className="stadium-fill-head">
-        <span>Auslastung</span>
-        <span className="stadium-fill-value">
-          {fillPct}%
-          {deltaPts !== 0 ? (
-            <span className={deltaPts > 0 ? "stadium-fill-delta is-up" : "stadium-fill-delta is-down"}>
-              {deltaPts > 0 ? "+" : ""}
-              {deltaPts}%
-            </span>
-          ) : (
-            <span className="stadium-fill-ref">Basis {refPct}%</span>
-          )}
-        </span>
-      </div>
-      <div className="stadium-fill-track" aria-hidden="true">
-        <span className="stadium-fill-ref-mark" style={{ left: `${refPct}%` }} />
-        <span className={`stadium-fill-bar is-${tone}`} style={{ width: `${fillPct}%` }} />
-      </div>
-      <p className="stadium-fill-sold">~{sold.toLocaleString("de-DE")} Zuschauer</p>
-    </div>
-  );
-}
-
-function StadiumUpgradesPanel({
-  finances,
-  capacity,
-  academyFacility,
-  academyProject = null,
-  onUpgradeAcademy,
-}: {
-  finances: ClubFinances;
-  capacity: number;
-  academyFacility?: AcademyFacility;
-  academyProject?: AcademyProject | null;
-  onUpgradeAcademy?: () => void;
-}) {
-  return (
-    <section className="stadium-upgrades" aria-label="Stadionausbau">
-      {academyFacility && onUpgradeAcademy ? (
-        <AcademyUpgradeSection
-          ownedId={academyFacility}
-          academyProject={academyProject}
-          stadiumCapacity={capacity}
-          cash={finances.cash}
-          onUpgrade={onUpgradeAcademy}
-        />
+      {underConstruction ? (
+        <p className="tc-callout tc-callout--warn">{buildingLabel(t, buildWeeksLeft)}</p>
       ) : null}
+
+      <div className="tc-stadium__fill">
+        <div className="tc-stadium__fill-head">
+          <span className="tc-label">{t("stadium.sector.fill")}</span>
+          <span className="tc-strong">
+            {t("finances.percent", { value: fillPct })}{" "}
+            {deltaPts !== 0 ? (
+              <span className={deltaPts > 0 ? "tc-delta--up" : "tc-delta--down"}>
+                {t("stadium.sector.fillDelta", { points: `${deltaPts > 0 ? "+" : ""}${deltaPts}` })}
+              </span>
+            ) : (
+              <span className="tc-caption">{t("stadium.sector.fillBase", { percent: refPct })}</span>
+            )}
+          </span>
+        </div>
+        <span className="tc-bar tc-stadium__bar" aria-hidden="true">
+          <span
+            className={tone === "good" ? "tc-bar__fill" : tone === "mid" ? "tc-bar__fill tc-bar__fill--warning" : "tc-bar__fill tc-stadium__fill--low"}
+            style={{ width: `${fillPct}%` }}
+          />
+          <span className="tc-stadium__ref" style={{ left: `${refPct}%` }} />
+        </span>
+        <p className="tc-caption">{t("stadium.sector.spectators", { count: formatWholeNumber(sold) })}</p>
+      </div>
+
+      <div className="tc-stadium__row">
+        <span className="tc-label">{t("stadium.sector.price")}</span>
+        <div className="tc-stepper">
+          <button
+            type="button"
+            className="tc-iconbtn"
+            aria-label={t("stadium.sector.priceLower", { stand: name })}
+            disabled={block.ticket_price_eur <= TICKET_PRICE_MIN}
+            onClick={() => onPriceChange(-TICKET_PRICE_STEP)}
+          >
+            <Minus className="tc-icon" aria-hidden />
+          </button>
+          <output className="tc-stepper__value">{t("finances.price.value", { amount: formatWholeNumber(block.ticket_price_eur) })}</output>
+          <button
+            type="button"
+            className="tc-iconbtn"
+            aria-label={t("stadium.sector.priceRaise", { stand: name })}
+            disabled={block.ticket_price_eur >= TICKET_PRICE_MAX}
+            onClick={() => onPriceChange(TICKET_PRICE_STEP)}
+          >
+            <Plus className="tc-icon" aria-hidden />
+          </button>
+        </div>
+      </div>
+
+      {slots.length > 0 ? (
+        <div className="tc-stadium__row">
+          <span className="tc-label">{t("stadium.sector.boards")}</span>
+          <div className="tc-chips">
+            {slots.map((slot) => {
+              const deal = dealForSlot(stadium.sponsor_deals, slot.id, season);
+              const label = sponsorSlotLabel(slot);
+              return (
+                <button
+                  key={slot.id}
+                  type="button"
+                  className="tc-chip tc-chip--dense tc-chip--icon"
+                  aria-pressed={Boolean(deal)}
+                  aria-label={deal ? `${label}, ${deal.brand}` : `${label}, ${t("stadium.sponsor.boardEmpty")}`}
+                  onClick={() => onOpenSlot(slot.id)}
+                >
+                  {deal ? <Megaphone className="tc-icon" aria-hidden /> : <TriangleAlert className="tc-icon tc-stadium__warn" aria-hidden />}
+                  {deal ? deal.brand : t("stadium.sponsor.boardEmpty")}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="tc-stadium__gate">
+        <span className="tc-label">{t("stadium.sector.gate")}</span>
+        <strong>{underConstruction ? "—" : formatClubCash(income)}</strong>
+      </div>
     </section>
+  );
+}
+
+function buildingLabel(t: ReturnType<typeof useT>, weeks: number): string {
+  return weeks === 1 ? t("stadium.sector.buildingOne") : t("stadium.sector.building", { weeks });
+}
+
+function LevelDots({ level, max }: { level: number; max: number }) {
+  const t = useT();
+  return (
+    <span className="tc-stadium__dots" role="img" aria-label={t("stadium.upgrades.level", { level, max })}>
+      {Array.from({ length: max }, (_, index) => (
+        <span key={index} className={index < level ? "tc-stadium__dot tc-stadium__dot--on" : "tc-stadium__dot"} />
+      ))}
+    </span>
+  );
+}
+
+function StandExpansionCard({
+  stadium,
+  block,
+  season,
+  week,
+  cash,
+  onStart,
+}: {
+  stadium: ClubStadium;
+  block: StadiumBlock;
+  season: number;
+  week: number;
+  cash: number;
+  onStart: () => void;
+}) {
+  const t = useT();
+  const level = blockExpansionLevel(stadium, block.id);
+  const underConstruction = isBlockUnderConstruction(stadium, block.id, season, week);
+  const buildWeeksLeft = blockExpansionWeeksRemaining(stadium, block.id, season, week);
+  const check = canStartBlockExpansion(stadium, block.id, season, week, cash);
+  const nextCapacity = check.nextLevel != null ? blockCapacityAtExpansionLevel(block.id, check.nextLevel) : null;
+  const cost = check.cost != null ? infrastructureCostForWeek(check.cost, week) : null;
+  const maxed = level >= BLOCK_EXPANSION_MAX_LEVEL && !underConstruction;
+  const Icon = TIER_ICON[block.tier] ?? Users;
+  const name = blockDisplayName(block);
+
+  return (
+    <li className={maxed ? "tc-card tc-stadium__upgrade tc-stadium__upgrade--done" : "tc-card tc-stadium__upgrade"}>
+      <div className="tc-stadium__upgrade-main">
+        <p className="tc-card__title">
+          <Icon className="tc-icon" aria-hidden />
+          <span className="tc-strong">{name}</span>
+          <span className="tc-caption">{tierLabel(block.tier)}</span>
+        </p>
+        <LevelDots level={level} max={BLOCK_EXPANSION_MAX_LEVEL} />
+        {underConstruction ? (
+          <p className="tc-callout tc-callout--warn">{buildingLabel(t, buildWeeksLeft)}</p>
+        ) : maxed ? (
+          <p className="tc-caption">{t("stadium.upgrades.maxed")}</p>
+        ) : (
+          <p className="tc-caption">
+            {nextCapacity != null
+              ? t("stadium.upgrades.next", {
+                  seats: formatWholeNumber(nextCapacity),
+                  weeks: check.weeks ?? "?",
+                })
+              : null}
+          </p>
+        )}
+        {!maxed && !underConstruction && !check.allowed && check.reason ? (
+          <p className="tc-caption tc-stadium__reason">{check.reason}</p>
+        ) : null}
+      </div>
+      {maxed ? (
+        <Check className="tc-icon tc-stadium__done" aria-label={t("stadium.upgrades.maxed")} />
+      ) : underConstruction ? null : (
+        <button type="button" className="tc-btn" disabled={!check.allowed} onClick={onStart}>
+          <Hammer className="tc-icon" aria-hidden />
+          {cost != null ? t("stadium.upgrades.expandFor", { amount: formatClubCash(cost) }) : t("stadium.upgrades.expand")}
+        </button>
+      )}
+    </li>
   );
 }
 
@@ -721,94 +697,80 @@ function AcademyUpgradeSection({
   cash: number;
   onUpgrade: () => void;
 }) {
-  const owned = facilityById(ownedId);
+  const t = useT();
   const buy = canBuyAcademyUpgrade(ownedId, stadiumCapacity, cash);
-  const icons: Record<AcademyFacility, typeof Home> = {
+  const icons: Record<AcademyFacility, LucideIcon> = {
     academy_basic: Home,
     academy_performance: Dumbbell,
     academy_elite: Star,
   };
 
   return (
-    <>
-      <h3 className="stadium-upgrade-category">Nachwuchs</h3>
-      <p className="stadium-academy-strip">
-        Campus Stufe {academyStage(ownedId)}/3 · Intake {hqIntakeCount(ownedId)} · {owned.name}
-      </p>
+    <section className="tc-panel" aria-labelledby="stadium-academy-title">
+      <div className="tc-panel__head">
+        <h2 className="tc-panel__title" id="stadium-academy-title">
+          {t("stadium.academy.title")}
+        </h2>
+        <span className="tc-caption">
+          {t("stadium.academy.strip", {
+            stage: academyStage(ownedId),
+            intake: hqIntakeCount(ownedId),
+            name: academyFacilityName(ownedId),
+          })}
+        </span>
+      </div>
       {academyProject ? (
-        <p className="youth-camp-build-banner">
-          <Construction size={16} strokeWidth={2.5} aria-hidden="true" />
-          Campus im Bau — Intake bleibt bis zur Fertigstellung.
+        <p className="tc-callout tc-callout--warn tc-stadium__academy-note">
+          <Construction className="tc-icon" aria-hidden /> {t("stadium.academy.building")}
         </p>
       ) : null}
-      <ul className="stadium-upgrade-list">
+      <ul className="tc-stadium__upgrades">
         {ACADEMY_FACILITIES.map((facility) => {
           const gate = facilityGate(ownedId, facility.id, stadiumCapacity);
           const Icon = icons[facility.id];
           const isOwned = facility.id === ownedId;
           const isNext = buy.ok && buy.target === facility.id;
+          const status = isOwned
+            ? t("stadium.academy.current")
+            : gate.status === "needs_stadium"
+              ? t("stadium.academy.needsStadium", { seats: formatWholeNumber(gate.capacity) })
+              : gate.status === "needs_performance"
+                ? t("stadium.academy.needsPrevious")
+                : facility.cost > 0
+                  ? formatClubCash(facility.cost)
+                  : t("stadium.academy.base");
           return (
-            <li key={facility.id} className="stadium-upgrade-card">
-              <span className="stadium-upgrade-icon" aria-hidden="true">
-                <Icon size={20} strokeWidth={2.5} />
-              </span>
-              <div className="stadium-upgrade-body">
-                <strong>{facility.name}</strong>
-                <p>{facility.effect}</p>
-                <p className="stadium-upgrade-meta">
-                  {isOwned
-                    ? "Aktuell"
-                    : gate.status === "needs_stadium"
-                      ? `Stadion ${gate.capacity.toLocaleString("de-DE")} Plätze nötig`
-                      : gate.status === "needs_performance"
-                        ? "Leistungszentrum zuerst"
-                        : facility.cost > 0
-                          ? formatClubCash(facility.cost)
-                          : "Basis"}
+            <li
+              key={facility.id}
+              className={isOwned ? "tc-card tc-stadium__upgrade tc-stadium__upgrade--done" : "tc-card tc-stadium__upgrade"}
+            >
+              <div className="tc-stadium__upgrade-main">
+                <p className="tc-card__title">
+                  <Icon className="tc-icon" aria-hidden />
+                  <span className="tc-strong">{academyFacilityName(facility.id)}</span>
                 </p>
+                <p className="tc-caption">{academyFacilityEffect(facility.id)}</p>
+                <p className="tc-caption tc-strong">{status}</p>
+                {!buy.ok && buy.reason && gate.status === "open" && facility.id === nextAcademyTarget(ownedId) ? (
+                  <p className="tc-caption tc-stadium__reason">{buy.reason}</p>
+                ) : null}
               </div>
               {isNext && !academyProject ? (
-                <button type="button" className="stadium-upgrade-buy" onClick={onUpgrade}>
-                  Ausbauen
+                <button type="button" className="tc-btn tc-btn--primary" onClick={onUpgrade}>
+                  {t("stadium.academy.upgrade")}
                 </button>
               ) : isOwned ? (
-                <span className="stadium-upgrade-owned">●</span>
-              ) : (
-                <span className="stadium-upgrade-owned">—</span>
-              )}
+                <Check className="tc-icon tc-stadium__done" aria-label={t("stadium.academy.current")} />
+              ) : null}
             </li>
           );
         })}
       </ul>
-    </>
+    </section>
   );
 }
 
-function IsoStand({ tier }: { tier: StadiumTier }) {
-  const height = tier === "vip" ? 44 : tier === "seating" ? 34 : 24;
-  const width = tier === "vip" ? 48 : 56;
-  const roof = tier === "vip" ? "#f5c16c" : tier === "seating" ? "#94a3b8" : "#64748b";
-  const wall = tier === "vip" ? "#78350f" : tier === "seating" ? "#334155" : "#1e293b";
-  const cx = 60;
-  const foot = 78;
-  const top = foot - height;
-  const halfW = width / 2;
-  const halfD = 12;
-
-  return (
-    <svg className="stadium-iso" viewBox="0 0 120 96" aria-hidden="true">
-      <polygon
-        points={`${cx},${top} ${cx + halfW},${top + halfD} ${cx},${top + halfD * 2} ${cx - halfW},${top + halfD}`}
-        fill={roof}
-      />
-      <polygon
-        points={`${cx - halfW},${top + halfD} ${cx},${top + halfD * 2} ${cx},${foot + halfD} ${cx - halfW},${foot}`}
-        fill={wall}
-      />
-      <polygon
-        points={`${cx + halfW},${top + halfD} ${cx},${top + halfD * 2} ${cx},${foot + halfD} ${cx + halfW},${foot}`}
-        fill={tier === "standing" ? "#0f172a" : "#475569"}
-      />
-    </svg>
-  );
+function nextAcademyTarget(owned: AcademyFacility): AcademyFacility | null {
+  const index = ACADEMY_FACILITIES.findIndex((facility) => facility.id === owned);
+  return ACADEMY_FACILITIES[index + 1]?.id ?? null;
 }

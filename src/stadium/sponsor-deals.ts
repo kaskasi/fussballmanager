@@ -77,6 +77,21 @@ export const SPONSOR_SLOTS: readonly SponsorSlot[] = [
   ...EXPANSION_BOARD_SLOTS.map((entry) => entry.slot),
 ];
 
+/** Slot name in the active language (`sponsor.slot.<id>`), German catalogue label as fallback. */
+export function sponsorSlotLabel(slot: Pick<SponsorSlot, "id" | "label">): string {
+  const key = `sponsor.slot.${slot.id}`;
+  const label = t(key);
+  return label !== key ? label : slot.label;
+}
+
+/** Brand character line in the active language (`sponsor.brand.<id>.hint`). */
+export function sponsorBrandHint(brand: Pick<SponsorBrand, "id" | "hint">): string {
+  if (!brand.hint) return "";
+  const key = `sponsor.brand.${brand.id}.hint`;
+  const label = t(key);
+  return label !== key ? label : brand.hint;
+}
+
 export function unlockedSponsorSlots(
   upgradeLevels?: Record<string, number>,
 ): SponsorSlot[] {

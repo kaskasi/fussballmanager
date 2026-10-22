@@ -2,6 +2,7 @@ import type { FixtureResult } from "@fussballmanager/shared";
 import type { LeagueState } from "../persistence/league-state.ts";
 import { lastPlayerResult, leagueTable } from "../sim/league-week.ts";
 import { applyStadiumFillRates, DEFAULT_FANBASE, type ClubStadium } from "./club-stadium.ts";
+import { t } from "../i18n/index.ts";
 
 export const FANBASE_MIN = 25;
 export const FANBASE_MAX = 95;
@@ -34,29 +35,7 @@ export function fanbaseMood(fanbase: number): FanbaseMood {
 }
 
 export function fanbaseMoodLabel(mood: FanbaseMood): string {
-  switch (mood) {
-    case "strong":
-      return "Starke Fanbase";
-    case "growing":
-      return "Wachsend";
-    case "steady":
-      return "Stabil";
-    case "weak":
-      return "Schwach";
-  }
-}
-
-export function fanbaseMoodIcon(mood: FanbaseMood): string {
-  switch (mood) {
-    case "strong":
-      return "🔥";
-    case "growing":
-      return "📈";
-    case "steady":
-      return "👥";
-    case "weak":
-      return "📉";
-  }
+  return t(`stadium.fanbase.mood.${mood}`);
 }
 
 export function matchResultFanbaseDelta(result: FixtureResult, clubId: string): number {

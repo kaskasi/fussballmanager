@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from
 import { titleBarColors, type KitColors, type TitleBarTheme } from "../shell/title-bar-colors.ts";
 import { ratingBand } from "../design/rating-band.ts";
 import { LeagueTable, LeagueZoneLegend } from "../components/LeagueTable.tsx";
+import { PortraitComparison } from "./PortraitComparison.tsx";
 import { galleryLeague, SAMPLE_KITS } from "./ui-gallery-fixtures.ts";
 import "./ui-gallery.css";
 
@@ -499,6 +500,14 @@ export function UiGallery() {
               </article>
             </div>
           </div>
+        </Section>
+
+        <Section
+          id="portraits"
+          title="Portraits: Open Peeps vs faces.js"
+          note="Decision spike, gallery only. Same twelve seeds, Kieler FC colours, same circular frame at 56, 40 and 28px; switch the faces.js jersey style above the bands. The tables show how each option (or no face at all) reads in a squad list."
+        >
+          <PortraitComparison />
         </Section>
 
         <Section id="ratings" title="Rating badges" note="CA bands: under 70, 70–84, 85–99, 100–114, 115 and up.">

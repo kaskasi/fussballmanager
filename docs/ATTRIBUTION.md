@@ -20,6 +20,7 @@ We **prefer CC0 and open licenses wherever possible** (Open Peeps, Kenney, ambie
 | Browser favicon & PWA icons | Project-authored SVG/PNG (`public/favicon.svg`, `public/apple-touch-icon.png`) — Nordstern mark, design tokens §2 |
 | Fictional club crests (when shipped) | Designs exported from [Canva](https://www.canva.com/) (2026-10-06 batch), [Content License Agreement](https://www.canva.com/policies/content-license-agreement/) — fictional clubs only; sources in `assets/club_logos/` |
 | UI fonts | [Sofia Sans and Sofia Sans Condensed](https://github.com/lettersoup/Sofia-Sans) by Lettersoup (SIL Open Font License 1.1) — self-hosted latin and latin-ext subsets in `public/fonts/`, licence in `public/fonts/OFL.txt` |
+| Portrait candidate (UI gallery only) | [faces.js](https://github.com/zengm-games/facesjs) by ZenGM (Apache License 2.0) — `?ui=gallery` → "Portraits: Open Peeps vs faces.js"; not used in the game. Licence text ships in `node_modules/facesjs/LICENSE` |
 | Storyboard opening POC (dev only) | Project-authored SVG via `npm run bake:storyboard-poc` — see `docs/design-refs/storyboard-opening-poc/ATTRIBUTION.md` |
 
 Full maintainer inventory: [assets/ATTRIBUTION.MD](../assets/ATTRIBUTION.MD).

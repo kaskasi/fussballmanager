@@ -1,0 +1,68 @@
+{
+  "files": {
+    "src/index.css": {
+      "colors": 1446,
+      "fontSizes": 566
+    },
+    "src/match/pitch-markings.tsx": {
+      "colors": 3,
+      "fontSizes": 0
+    },
+    "src/match/Pitch.tsx": {
+      "colors": 18,
+      "fontSizes": 0
+    },
+    "src/ui/design/design-repair.css": {
+      "colors": 0,
+      "fontSizes": 1
+    },
+    "src/ui/design/game-surfaces.css": {
+      "colors": 67,
+      "fontSizes": 126
+    },
+    "src/ui/design/global-base.css": {
+      "colors": 6,
+      "fontSizes": 0
+    },
+    "src/ui/design/surfaces/finances.css": {
+      "colors": 5,
+      "fontSizes": 2
+    },
+    "src/ui/design/surfaces/hub-desk.css": {
+      "colors": 3,
+      "fontSizes": 49
+    },
+    "src/ui/design/surfaces/scouting.css": {
+      "colors": 116,
+      "fontSizes": 41
+    },
+    "src/ui/design/surfaces/training.css": {
+      "colors": 162,
+      "fontSizes": 61
+    },
+    "src/ui/layout/mobile-pass.css": {
+      "colors": 11,
+      "fontSizes": 14
+    },
+    "src/ui/layout/screen-layout.css": {
+      "colors": 2,
+      "fontSizes": 7
+    },
+    "src/ui/screens/FinancesScreen.tsx": {
+      "colors": 7,
+      "fontSizes": 0
+    },
+    "src/ui/screens/PlayerProfile.tsx": {
+      "colors": 2,
+      "fontSizes": 0
+    },
+    "src/ui/screens/StadiumScreen.tsx": {
+      "colors": 12,
+      "fontSizes": 0
+    },
+    "src/ui/screens/TrainingCenter.tsx": {
+      "colors": 3,
+      "fontSizes": 0
+    }
+  }
+}

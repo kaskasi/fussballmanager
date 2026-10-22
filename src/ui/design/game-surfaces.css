@@ -3,10 +3,6 @@
  * WIREFRAME: docs/prd/design.md §2, §9.1, §9.2
  */
 
-:root {
-  --outline: 2px solid var(--tinte);
-}
-
 /* Above .club-shell-header (z-index 100) — dims shell + NEXT on modal open */
 .modal-backdrop {
   position: fixed;
@@ -16,7 +12,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgb(15 23 42 / 45%);
+  background: var(--scrim);
 }
 
 .surface-scrollbar {
@@ -73,24 +69,26 @@ main.pipeline.club-shell-card-body {
   padding: 0.7rem var(--club-shell-inset);
 }
 
+/* Title bar in the managed club's colour: AppNav sets --club / --on-club from the kit (design.md §2.4). */
 .app-nav.club-shell-header.club-shell-card-head {
-  background: var(--panel) !important;
-  border: var(--outline);
-  border-bottom: none;
+  background: var(--club) !important;
+  color: var(--on-club);
+  border: 0;
   border-radius: var(--radius) var(--radius) 0 0;
-  box-shadow: 0 0 0 1px var(--panel);
+  box-shadow: none;
 }
 
-.app-nav.club-shell-header.club-shell-card-head::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: 3px;
-  background: var(--panel);
-  pointer-events: none;
+.club-shell-card-head :focus-visible {
+  outline-color: var(--on-club) !important;
+}
+
+/* The Menu popover sits inside the bar but on --panel: give it back panel text and focus colours. */
+.club-shell-card-head .row-menu-popover {
+  color: var(--text);
+}
+
+.club-shell-card-head .row-menu-popover :focus-visible {
+  outline-color: var(--accent) !important;
 }
 
 .app-nav.club-shell-header.club-shell-grid {
@@ -126,13 +124,22 @@ main.pipeline.club-shell-card-body {
   padding: 0;
   border: 0;
   border-radius: var(--radius-md, 8px);
-  background: var(--surface-elevated, rgba(255, 255, 255, 0.06));
-  color: var(--tinte, inherit);
+  background: transparent;
+  color: var(--text);
   cursor: pointer;
 }
 
 .club-shell-header-back:hover {
-  background: var(--panel-muted, rgba(255, 255, 255, 0.1));
+  background: var(--sunken);
+}
+
+.club-shell-card-head .club-shell-header-back {
+  color: var(--on-club);
+}
+
+.club-shell-card-head .club-shell-header-back:hover {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--on-club);
 }
 
 .club-shell-subscreen-title {
@@ -152,6 +159,10 @@ main.pipeline.club-shell-card-body {
 }
 
 .app-nav.club-shell-header .club-shell-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
   line-height: 1.2;
 }
 
@@ -161,13 +172,14 @@ main.pipeline.club-shell-card-body {
   flex-shrink: 0;
 }
 
+/* Crest on a panel disc so any logo reads on any club colour. */
 .app-nav.club-shell-header .club-crest-img {
   mix-blend-mode: normal;
-  border-radius: var(--radius-klein);
-  background: color-mix(in srgb, var(--panel) 88%, var(--surface-raised));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tinte) 8%, transparent);
-  padding: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  padding: var(--space-1);
   box-sizing: border-box;
+  object-fit: contain;
 }
 
 .app-nav.club-shell-header .app-nav-center:not(:empty) {
@@ -204,14 +216,18 @@ main.pipeline.club-shell-card-body {
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #92400e;
+  color: var(--warning);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .transfer-ambience-header--winter {
-  color: #1e40af;
+  color: var(--info);
+}
+
+.club-shell-card-head .transfer-ambience-header {
+  color: var(--on-club);
 }
 
 .transfer-ambience-header .transfer-ambience-hint {
@@ -249,12 +265,12 @@ main.pipeline.club-shell-card-body {
   padding: 0.22rem 0.55rem;
   border-radius: 999px;
   border: 0;
-  background: var(--panel, #fff);
-  color: var(--tinte, #0f172a);
+  background: var(--panel);
+  color: var(--text);
   font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.2;
-  box-shadow: 0 0 0 1px rgb(62 49 40 / 12%);
+  box-shadow: 0 0 0 1px var(--line);
   transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
   cursor: default;
 }
@@ -264,7 +280,7 @@ button.cash-chip {
 }
 
 button.cash-chip:hover {
-  background: color-mix(in srgb, var(--panel) 92%, var(--tinte-weich));
+  background: var(--sunken);
 }
 
 .cash-chip strong {
@@ -273,8 +289,8 @@ button.cash-chip:hover {
 }
 
 .cash-chip.is-warn {
-  color: var(--warn, #c2410c);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--warn, #c2410c) 35%, transparent);
+  color: var(--warning);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--warning) 35%, transparent);
 }
 
 .cash-chip.is-pulse-down,
@@ -288,15 +304,15 @@ button.cash-chip:hover {
 }
 
 .cash-chip.is-pulse-down {
-  background: #fff7ed;
-  color: #9a3412;
-  box-shadow: 0 0 0 2px rgb(234 88 12 / 35%);
+  background: color-mix(in srgb, var(--negative) 10%, var(--panel));
+  color: var(--negative);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--negative) 35%, transparent);
 }
 
 .cash-chip.is-pulse-up {
-  background: #ecfdf5;
-  color: #047857;
-  box-shadow: 0 0 0 2px rgb(4 120 87 / 35%);
+  background: var(--accent-soft);
+  color: var(--positive);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--positive) 35%, transparent);
 }
 
 .app-nav-training-warn {
@@ -306,19 +322,32 @@ button.cash-chip:hover {
   padding: 0.15rem;
   border: 0;
   background: transparent;
-  color: var(--warn, #c2410c);
+  color: var(--warning);
   cursor: pointer;
   border-radius: var(--radius-klein, 0.55rem);
 }
 
 .app-nav-training-warn:hover {
-  color: color-mix(in srgb, var(--warn, #c2410c) 85%, var(--tinte));
-  background: color-mix(in srgb, var(--warn, #c2410c) 12%, transparent);
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
 }
 
 .app-nav-training-warn:focus-visible {
-  outline: 2px solid var(--tinte);
+  outline: 2px solid var(--text);
   outline-offset: 2px;
+}
+
+/* Status warnings sit on a panel disc so the warning colour reads on any club colour. */
+.club-shell-card-head .app-nav-training-warn {
+  width: 2.15rem;
+  height: 2.15rem;
+  padding: 0;
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+}
+
+.club-shell-card-head .app-nav-training-warn:hover {
+  background: var(--panel);
+  box-shadow: 0 0 0 2px var(--on-club);
 }
 
 .app-nav-menu .row-menu-trigger.app-nav-menu-trigger {
@@ -329,10 +358,10 @@ button.cash-chip:hover {
   min-width: 2.75rem;
   height: 2.5rem;
   padding: 0 0.9rem;
-  border: var(--outline);
+  border: 1px solid var(--control-border);
   border-radius: 999px;
-  background: #fff !important;
-  color: var(--tinte);
+  background: var(--panel) !important;
+  color: var(--text);
   line-height: 1;
 }
 
@@ -349,8 +378,21 @@ button.cash-chip:hover {
 
 .app-nav-menu-trigger:hover,
 .app-nav-menu-trigger[aria-expanded="true"] {
-  background: var(--panel-muted) !important;
-  color: var(--tinte);
+  background: var(--sunken) !important;
+  color: var(--text);
+}
+
+.club-shell-card-head .app-nav-menu .row-menu-trigger.app-nav-menu-trigger {
+  border-color: color-mix(in srgb, var(--on-club) 45%, transparent);
+  background: transparent !important;
+  color: var(--on-club);
+}
+
+.club-shell-card-head .app-nav-menu-trigger:hover,
+.club-shell-card-head .app-nav-menu-trigger[aria-expanded="true"] {
+  border-color: var(--on-club);
+  background: transparent !important;
+  color: var(--on-club);
 }
 
 .app-nav-menu .row-menu-popover.pipeline-menu-popover {
@@ -437,7 +479,7 @@ button.cash-chip:hover {
   }
 
   .app-nav.club-shell-header.club-shell-card-head {
-    background: var(--panel) !important;
+    background: var(--club) !important;
     box-shadow: none;
     backdrop-filter: none;
   }
@@ -476,11 +518,12 @@ button.cash-chip:hover {
   font-weight: 700;
 }
 
+/* The one yellow. On the club bar it gets a 1px on-club ring (yellow on light kits is ~2.2:1). */
 .app-nav-next {
-  border: var(--outline-width, 2px) solid var(--tinte);
-  background: var(--sonnengelb);
-  color: var(--tinte);
-  box-shadow: var(--shadow-flat);
+  border: 0;
+  background: var(--next);
+  color: var(--on-next);
+  box-shadow: none;
   font-family: var(--font-display);
   border-radius: 999px;
   padding: 0.4rem 0.9rem;
@@ -488,6 +531,10 @@ button.cash-chip:hover {
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.club-shell-card-head .app-nav-next {
+  box-shadow: 0 0 0 1px var(--on-club);
 }
 
 .app-nav-next:disabled {

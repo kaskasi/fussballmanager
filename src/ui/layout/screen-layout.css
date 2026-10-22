@@ -31,8 +31,7 @@
   max-width: 80rem;
   margin: 0 auto;
   /* Padding lives on .app-nav.club-shell-header (align with card body inset). */
-  background: var(--panel);
-  border: 2px solid var(--tinte);
+  background: var(--club);
   border-bottom: none;
   border-radius: var(--radius) var(--radius) 0 0;
 }
@@ -44,7 +43,7 @@
   margin: 0 auto;
   padding: var(--club-shell-inset);
   background: var(--panel);
-  border: 2px solid var(--tinte);
+  border: 1px solid var(--line);
   border-top: none;
   border-radius: 0 0 var(--radius) var(--radius);
   box-shadow: var(--shadow-flat);
@@ -204,7 +203,7 @@ main.scouting.club-shell-card-body .scouting-scouts {
 }
 .design-panel {
   background: var(--panel);
-  border: 2px solid #3e3128;
+  border: var(--outline);
   border-radius: var(--radius);
   padding: 0.75rem;
   box-shadow: none;
@@ -218,8 +217,8 @@ main.scouting.club-shell-card-body .scouting-scouts {
   margin-left: 0.35rem;
   padding: 0 0.35rem;
   border-radius: 999px;
-  background: var(--terra);
-  color: var(--tinte);
+  background: var(--negative);
+  color: var(--on-negative);
   font-size: 0.72rem;
   font-weight: 800;
 }

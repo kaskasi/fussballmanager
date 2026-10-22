@@ -1,10 +1,12 @@
-import { StrictMode } from "react";
+import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { AppErrorBoundary } from "./ui/components/AppErrorBoundary.tsx";
 import { isStoryboardPocUrl, StoryboardPocScreen } from "./ui/screens/StoryboardPocScreen.tsx";
+import { isUiGalleryUrl } from "./ui/dev/ui-gallery-route.ts";
 import "./ui/design/design-tokens.css";
 import "./ui/design/global-base.css";
+import "./ui/design/components.css";
 import "./ui/layout/screen-layout.css";
 import "./ui/design/game-surfaces.css";
 import "./ui/design/surfaces/finances.css";
@@ -22,11 +24,17 @@ if (!root) {
 }
 
 const poc = isStoryboardPocUrl();
+const uiGallery = isUiGalleryUrl();
+const UiGallery = lazy(() => import("./ui/dev/UiGallery.tsx"));
 
 createRoot(root).render(
   <StrictMode>
     {poc ? (
       <StoryboardPocScreen />
+    ) : uiGallery ? (
+      <Suspense fallback={null}>
+        <UiGallery />
+      </Suspense>
     ) : (
       <AppErrorBoundary>
         <App />

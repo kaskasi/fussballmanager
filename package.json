@@ -14,6 +14,7 @@
     "build": "vite build",
     "check:worker-assets": "node scripts/check-worker-asset-sizes.mjs",
     "check:ui-aria-i18n": "node scripts/check-ui-aria-i18n.mjs",
+    "check:design-tokens": "node scripts/check-design-tokens.mjs",
     "deploy:cloudflare": "npm run build && npm run deploy -w @fussballmanager/worker",
     "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w @fussballmanager/shared && npm run typecheck -w @fussballmanager/server && npm run typecheck -w @fussballmanager/worker",
     "test": "npm test -w @fussballmanager/shared && npm test -w @fussballmanager/server",

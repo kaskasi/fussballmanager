@@ -1,6 +1,6 @@
 /** WIREFRAME: design.md — club shell header nav + TEAM menu + NEXT. */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ArrowLeft, HeartPulse, Package, TriangleAlert } from "lucide-react";
 import { needsTrainingPlanForToday } from "../../development/training-plan-state.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
@@ -17,6 +17,7 @@ import { CashChip } from "../components/CashChip.tsx";
 import { ClubCrest } from "../components/ClubCrest.tsx";
 import { useT } from "../../i18n/react.ts";
 import { COACH_TARGET } from "../../tutorial/index.ts";
+import { titleBarColors, type KitColors } from "./title-bar-colors.ts";
 import type { HubNavActions, Screen } from "./types.ts";
 
 export function AppNav({
@@ -29,6 +30,7 @@ export function AppNav({
   clubName,
   clubInitials,
   clubLogoSrc,
+  clubKit,
   leaguePlace: _leaguePlace,
   onNavigate,
   headerBack,
@@ -56,6 +58,7 @@ export function AppNav({
   clubName: string;
   clubInitials: string;
   clubLogoSrc?: string;
+  clubKit?: KitColors;
   leaguePlace: number | null;
   onNavigate: (screen: Screen) => void;
   headerBack?: { title: string; onBack: () => void; iconOnly?: boolean } | null;
@@ -85,6 +88,16 @@ export function AppNav({
       : weeklyWageBill > 0 && runwayWeeks != null && runwayWeeks < 4;
   const hasStatusAlerts =
     showTrainingPlanWarn || showMerchStockoutWarn || showMedicalWarn || showCashWarn;
+  const titleBar = useMemo(() => titleBarColors(clubKit), [clubKit]);
+  const titleBarStyle = useMemo(
+    () => ({ "--club": titleBar.club, "--on-club": titleBar.onClub }) as CSSProperties,
+    [titleBar],
+  );
+
+  useEffect(() => {
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    meta?.setAttribute("content", titleBar.club);
+  }, [titleBar.club]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -121,6 +134,7 @@ export function AppNav({
   return (
     <nav
       className={`app-nav club-shell-header ${shellChrome === "card" ? "club-shell-card-head" : "club-shell-grid"}`}
+      style={titleBarStyle}
       aria-label={tr("shell.nav.areas")}
     >
       <div

@@ -199,7 +199,7 @@ import {
   stadiumTotalCapacity,
   type ClubStadium,
 } from "./stadium/club-stadium.ts";
-import { clubDisplayName, clubShortLabel } from "./sim/league-divisions.ts";
+import { clubDisplayName, clubShortLabel, worldClubForTeam } from "./sim/league-divisions.ts";
 import { clubFlavorFanbase } from "./sim/club-profiles.ts";
 import { playerFixture } from "./sim/league-week.ts";
 import { fanbaseMood } from "./stadium/fanbase.ts";
@@ -586,6 +586,7 @@ export default function App() {
       name: clubDisplayName(teamId, world.clubs),
       initials: clubShortLabel(teamId, world.clubs),
       logoSrc: clubLogoUrlForPlayerClub(teamId),
+      kit: worldClubForTeam(teamId, world.clubs)?.kit,
       leaguePlace: placeIndex >= 0 ? placeIndex + 1 : null,
     };
   }, [world.clubs, league.player_club_id, league.club_ids, league.results]);
@@ -1849,6 +1850,7 @@ export default function App() {
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
           clubLogoSrc={shellClub.logoSrc}
+          clubKit={shellClub.kit}
           leaguePlace={shellClub.leaguePlace}
           onNavigate={handleAppNavigate}
           headerBack={shellHeaderBack}
@@ -1921,6 +1923,7 @@ export default function App() {
           clubName={shellClub.name}
           clubInitials={shellClub.initials}
           clubLogoSrc={shellClub.logoSrc}
+          clubKit={shellClub.kit}
           leaguePlace={shellClub.leaguePlace}
           onNavigate={handleAppNavigate}
           headerBack={shellHeaderBack}
@@ -2006,6 +2009,7 @@ export default function App() {
         clubName={shellClub.name}
         clubInitials={shellClub.initials}
         clubLogoSrc={shellClub.logoSrc}
+        clubKit={shellClub.kit}
         leaguePlace={shellClub.leaguePlace}
         onNavigate={handleAppNavigate}
         headerBack={shellHeaderBack}

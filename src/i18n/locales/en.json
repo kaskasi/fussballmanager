@@ -1116,6 +1116,7 @@
   "shell.nav.settings": "Settings",
   "settings.developer.title": "Developer",
   "settings.developer.lead": "Technical playground — not part of the career simulation.",
+  "settings.developer.uiGallery": "UI gallery",
   "settings.display.title": "Display",
   "settings.privacy.title": "Privacy",
   "settings.privacy.lead": "Anonymous usage and crash reports help improve the game. No save contents or personal names are sent.",

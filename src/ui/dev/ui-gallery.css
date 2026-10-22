@@ -1,0 +1,218 @@
+/* Developer UI gallery layout. Tokens only; the components themselves live in design/components.css. */
+
+.ui-gallery {
+  min-height: 100vh;
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--font-text);
+  font-size: var(--font-size-sm);
+  line-height: 1.25rem;
+}
+
+.ui-gallery__head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.ui-gallery__brand {
+  margin: 0 auto 0 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--font-size-lg);
+  line-height: 1.5rem;
+}
+
+.ui-gallery__main {
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--space-12);
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4) var(--space-12);
+}
+
+.ui-gallery__section {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.ui-gallery__section-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--font-size-xl);
+  line-height: 1.75rem;
+}
+
+.ui-gallery__note {
+  margin: calc(-1 * var(--space-2)) 0 0;
+  max-width: 48rem;
+  color: var(--text-muted);
+}
+
+.ui-gallery__stack {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.ui-gallery__swatch-groups {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.ui-gallery__swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.ui-gallery__swatch {
+  display: grid;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.ui-gallery__swatch-fill {
+  display: block;
+  height: var(--space-12);
+  border-bottom: 1px solid var(--line);
+}
+
+.ui-gallery__swatch code {
+  padding: var(--space-2);
+  font-size: var(--font-size-xs);
+  line-height: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.ui-gallery__type-row {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--line);
+}
+
+.ui-gallery__type--display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--font-size-2xl);
+  line-height: 2.25rem;
+}
+
+.ui-gallery__type--title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--font-size-xl);
+  line-height: 1.75rem;
+}
+
+.ui-gallery__type--heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  line-height: 1.5rem;
+}
+
+.ui-gallery__type--body {
+  font-size: var(--font-size-md);
+  line-height: 1.5rem;
+}
+
+.ui-gallery__type--body-sm {
+  font-size: var(--font-size-sm);
+  line-height: 1.25rem;
+}
+
+.ui-gallery__space-row {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ui-gallery__space-bar {
+  display: block;
+  height: var(--space-3);
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+.ui-gallery__radius {
+  display: inline-grid;
+  place-items: center;
+  min-width: 7rem;
+  height: var(--space-12);
+  padding: 0 var(--space-3);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  font-size: var(--font-size-xs);
+}
+
+.ui-gallery__titlebar-sample {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: 0;
+}
+
+.ui-gallery__titlebar-sample .tc-titlebar {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.ui-gallery__crest {
+  display: inline-grid;
+  place-items: center;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--font-size-xs);
+}
+
+.ui-gallery__kv {
+  max-width: 24rem;
+}
+
+@media (max-width: 479px) {
+  .ui-gallery__type-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .ui-gallery__titlebar-sample .tc-titlebar__cash {
+    display: none;
+  }
+
+  .ui-gallery__titlebar-sample .tc-next {
+    margin-left: auto;
+  }
+}
+
+/* The game shell pins html, body and #root to the viewport on phones; the gallery is a normal scrolling page. */
+html:has(.ui-gallery),
+html:has(.ui-gallery) body,
+#root:has(> .ui-gallery) {
+  height: auto;
+  max-width: none;
+  overflow: visible;
+  padding: 0;
+}
+
+.ui-gallery__section > .tc-btn {
+  justify-self: start;
+}

@@ -2,9 +2,10 @@
 
 :root {
   --text-scale: 1;
-  color: var(--tinte, #3e3128);
-  background: var(--bg-sand, #f5efe0);
-  font-family: var(--font-body, "Nunito", system-ui, sans-serif);
+  color: var(--text);
+  background: var(--page);
+  font-family: var(--font-text);
+  font-variant-numeric: tabular-nums;
   line-height: 1.45;
   font-size: calc(16px * var(--text-scale));
 }

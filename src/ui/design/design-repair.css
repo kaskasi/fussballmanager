@@ -3,8 +3,8 @@
  */
 
 :root {
-  --bg-sand: #f5efe0 !important;
-  --outline-tinte: 2px solid #3e3128;
+  /* Legacy panel outline: now the design system's hairline (was a 2px comic outline). */
+  --outline-tinte: 1px solid var(--line);
 }
 
 html,
@@ -54,7 +54,7 @@ body,
 .training-overview,
 .squad-table-wrap,
 .hub-modules-grid .pipeline-tile {
-  background: var(--panel, #fdfbf4);
+  background: var(--panel);
   border: var(--outline-tinte);
   border-radius: var(--radius, 12px);
   box-shadow: none !important;
@@ -74,8 +74,8 @@ body,
   justify-content: center;
   border: var(--outline-tinte) !important;
   border-radius: 50% !important;
-  background: #fff !important;
-  color: var(--tinte, #3e3128) !important;
+  background: var(--panel) !important;
+  color: var(--text) !important;
   font-family: var(--font-display);
   font-size: 0.72rem;
   font-weight: 800;
@@ -83,15 +83,15 @@ body,
 }
 
 .app-nav-tabs button[aria-pressed="true"] {
-  background: var(--rasen, #2e9e46) !important;
-  color: var(--tinte, #3e3128) !important;
+  background: var(--accent) !important;
+  color: var(--on-accent) !important;
   outline: none !important;
 }
 
 .app-nav-next {
-  background: var(--sonnengelb, #ffc933) !important;
-  color: var(--tinte, #3e3128) !important;
-  border: var(--outline-tinte) !important;
+  background: var(--next) !important;
+  color: var(--on-next) !important;
+  border: 0 !important;
 }
 
 /* Mobile vertical rail — full-bleed tabs (loads after mobile-pass.css) */

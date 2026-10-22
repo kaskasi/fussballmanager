@@ -5,6 +5,7 @@ import type { StoryState } from "../../narrative/story-state.ts";
 import type { ClubStadium } from "../../stadium/club-stadium.ts";
 import type { AccessibilityPreferences } from "../accessibility.ts";
 import { AppNav } from "./AppNav.tsx";
+import type { KitColors } from "./title-bar-colors.ts";
 import type { HubNavActions, Screen } from "./types.ts";
 
 export function AppChrome({
@@ -16,6 +17,7 @@ export function AppChrome({
   clubName,
   clubInitials,
   clubLogoSrc,
+  clubKit,
   leaguePlace,
   screen,
   onNavigate,
@@ -43,6 +45,8 @@ export function AppChrome({
   clubName: string;
   clubInitials: string;
   clubLogoSrc?: string;
+  /** Managed club's kit; paints the title bar (design.md §2.4). */
+  clubKit?: KitColors;
   leaguePlace: number | null;
   screen: Screen;
   onNavigate: (screen: Screen) => void;
@@ -64,6 +68,7 @@ export function AppChrome({
       clubName={clubName}
       clubInitials={clubInitials}
       clubLogoSrc={clubLogoSrc}
+      clubKit={clubKit}
       leaguePlace={leaguePlace}
       onNavigate={onNavigate}
       headerBack={headerBack}

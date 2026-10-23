@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
-/** Screen-level fm2001 tab band; `.fm-tab__vlabel` enables mobile vertical rail via CSS. */
+/** Screen-level fm2001 tab band; `.fm-tab__vlabel` wraps the label; mobile shows a horizontal segmented band via CSS. */
 export function FmScreenTabBar({
   className,
   ...props

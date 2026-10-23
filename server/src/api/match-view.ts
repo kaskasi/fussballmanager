@@ -183,6 +183,7 @@ export function buildMatchView(input: {
         text: line.text,
         voice: line.voice,
         beatId: line.beatId,
+        level: line.level,
         storySlot: line.storySlot,
         i18nKey: line.i18nKey,
         i18nParams: line.i18nParams,

@@ -55,6 +55,8 @@ export type MatchViewLine = {
   voice?: "pbp" | "color" | "moment";
   /** PRD 16 beat id for styling / HUD. */
   beatId?: string;
+  /** ADR 0004 highlight level; missing means "extended". */
+  level?: "key" | "extended" | "full";
   /** PRD 16 B4 — fact-checked story slot when voice is color. */
   storySlot?: string;
   /** F12.8 — client locale pack key when presentation text is translatable. */

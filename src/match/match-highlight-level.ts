@@ -34,14 +34,12 @@ const EXTENDED_BEATS: ReadonlySet<string> = new Set([
   "shot_blocked",
 ]);
 
-/** Phase 4 adds `level` to `MatchViewLine`; until then it is derived from voice and beat. */
-type LeveledLine = MatchViewLine & { level?: MatchHighlightLevel };
-
 function isHighlightLevel(value: unknown): value is MatchHighlightLevel {
   return value === "key" || value === "extended" || value === "full";
 }
 
-export function matchLineLevel(line: LeveledLine): MatchHighlightLevel {
+/** The director tags every line; older saved views without `level` fall back to the beat. */
+export function matchLineLevel(line: MatchViewLine): MatchHighlightLevel {
   if (isHighlightLevel(line.level)) return line.level;
   if (line.voice === "color") return "extended";
   const beat = line.beatId ?? "";

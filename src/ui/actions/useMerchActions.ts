@@ -21,7 +21,7 @@ type RequestClubSpend = (
   cost: number,
   title: string,
   apply: (current: GameSession) => GameSession,
-  options?: { infrastructure?: boolean },
+  options?: { infrastructure?: boolean; construction?: boolean },
 ) => void;
 
 export function useMerchActions(args: {

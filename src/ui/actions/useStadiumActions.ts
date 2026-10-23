@@ -70,7 +70,7 @@ type RequestClubSpend = (
   cost: number,
   title: string,
   apply: (current: GameSession) => GameSession,
-  options?: { infrastructure?: boolean },
+  options?: { infrastructure?: boolean; construction?: boolean },
 ) => void;
 
 function stadiumWithPrecinct(
@@ -191,7 +191,7 @@ export function useStadiumActions(args: {
             finances: result.finances,
           };
         },
-        { infrastructure: true },
+        { infrastructure: true, construction: true },
       );
       trackEvent("stadium_upgrade_purchased", { upgrade_id: upgradeId });
     },
@@ -251,7 +251,7 @@ export function useStadiumActions(args: {
             finances: spendClubCash(current.finances, fee, current.week),
           };
         },
-        { infrastructure: true },
+        { infrastructure: true, construction: true },
       );
     },
     [
@@ -336,7 +336,7 @@ export function useStadiumActions(args: {
                 : spendClubCash(current.finances, actualCost, current.week),
           };
         },
-        { infrastructure: true },
+        { infrastructure: true, construction: true },
       );
     },
     [finances.cash, requestClubSpend, stadium.precinct, week],
@@ -376,7 +376,7 @@ export function useStadiumActions(args: {
         },
         finances: spendClubCash(current.finances, next.cost, current.week),
       };
-    });
+    }, { construction: true });
     trackEvent("academy_upgraded", { facility: check.target });
   }, [academyFacility, finances.cash, requestClubSpend, season, stadium, week]);
 
@@ -415,7 +415,7 @@ export function useStadiumActions(args: {
             finances: spendClubCash(current.finances, fee, current.week),
           };
         },
-        { infrastructure: true },
+        { infrastructure: true, construction: true },
       );
     },
     [finances.cash, requestClubSpend, stadium.precinct, week],
@@ -445,7 +445,7 @@ export function useStadiumActions(args: {
           finances: spendClubCash(current.finances, fee, current.week),
         };
       },
-      { infrastructure: true },
+      { infrastructure: true, construction: true },
     );
   }, [finances.cash, requestClubSpend, stadium.precinct, week]);
 
@@ -474,7 +474,7 @@ export function useStadiumActions(args: {
             finances: spendClubCash(current.finances, fee, current.week),
           };
         },
-        { infrastructure: true },
+        { infrastructure: true, construction: true },
       );
     },
     [finances.cash, requestClubSpend, stadium.precinct, week],

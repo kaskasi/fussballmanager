@@ -22,11 +22,11 @@ import { depthFromOwnGoal } from "./shape.ts";
 const ROLE_LINK: Record<PlayerRole, Partial<Record<PlayerRole, number>>> = {
   GK: { CB: 3.2, FB: 2.4, DM: 1.3, CM: 0.45, W: 0.55, ST: 0.2, AM: 0.25 },
   CB: { CB: 2.1, FB: 1.9, DM: 2.3, CM: 1.4, GK: 0.6, W: 0.55, ST: 0.22, AM: 0.4 },
-  FB: { W: 2.3, CM: 1.35, DM: 1.25, CB: 1.35, ST: 0.85, GK: 0.7, FB: 0.4, AM: 0.7 },
+  FB: { W: 2.3, CM: 1.35, DM: 1.25, CB: 1.35, ST: 0.6, GK: 0.7, FB: 0.4, AM: 0.7 },
   DM: { CB: 1.7, FB: 1.35, CM: 2.1, W: 1.25, ST: 0.7, GK: 1.15, AM: 0.9, DM: 0.8 },
-  CM: { DM: 1.55, CM: 1.45, W: 1.7, ST: 1.25, FB: 1.05, CB: 0.75, AM: 1.2, GK: 0.28 },
-  AM: { ST: 1.9, W: 1.5, CM: 1.3, FB: 0.7, DM: 0.9, CB: 0.25, GK: 0.1 },
-  W: { ST: 2.5, AM: 1.3, CM: 1.15, W: 1.65, FB: 1.05, DM: 0.55, CB: 0.18, GK: 0.08 },
+  CM: { DM: 1.55, CM: 1.45, W: 1.7, ST: 0.9, FB: 1.05, CB: 0.75, AM: 1.2, GK: 0.28 },
+  AM: { ST: 1.3, W: 1.5, CM: 1.3, FB: 0.7, DM: 0.9, CB: 0.25, GK: 0.1 },
+  W: { ST: 1.5, AM: 1.3, CM: 1.15, W: 1.65, FB: 1.05, DM: 0.55, CB: 0.18, GK: 0.08 },
   ST: { W: 1.55, AM: 1.45, CM: 1.4, ST: 1.15, FB: 0.7, DM: 0.55, CB: 0.12, GK: 0.1 },
 };
 
@@ -456,9 +456,10 @@ export function passTargetWeight(input: {
     passer.role === "W" ||
     passer.role === "AM" ||
     passer.role === "CM";
+  // Near goal a short layoff to a runner arriving at the edge is fine; long drops are not.
   const retreat =
-    attacker && passerToGoal < 28 && drop > 10
-      ? clamp(1 - (drop - 10) / 22, 0.1, 1)
+    attacker && passerToGoal < 28 && drop > 16
+      ? clamp(1 - (drop - 16) / 22, 0.1, 1)
       : 1;
   return (
     graph *
@@ -483,7 +484,7 @@ type PassChoice = {
  * An ordinary pass may still find a runner in behind, but rarely: real teams
  * play ~10 through balls a match, not one every other pass (ADR 0003).
  */
-export const INCIDENTAL_THROUGH_WEIGHT = 0.06;
+export const INCIDENTAL_THROUGH_WEIGHT = 0.02;
 
 export function pickPassTarget(
   state: MatchState,

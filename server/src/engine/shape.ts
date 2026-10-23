@@ -33,6 +33,14 @@ function isPyramid(tactics: TeamTactics): boolean {
 const OPP_BOX_DEPTH = 83;
 const HALF_WAY = 50;
 
+/** A defender this close to the ball's depth (or past it) is recovering, not holding shape. */
+const RECOVERY_MARGIN = 6;
+/** Recovery runs cover ground at sprint pace: a carrier must not outrun the back line every time. */
+const RECOVERY_SPRINT = 2.4;
+
+/** Late runs into the box are sprints too. */
+const ARRIVAL_SPRINT = 2.2;
+
 /** Pace is a nudge, not a 2× first-to-the-ball cheat. */
 export function offBallMaxStep(pace: number): number {
   return 3.45 + (clamp(pace, 0, 100) / 100) * 1.1;
@@ -473,7 +481,41 @@ export function restAttackTarget(
   }
   const depth =
     depthFromOwnGoal(target, ownGoal, attackSign) + lineDepthBias(tactics);
+  const pushed = secondWaveDepth(player, ball, ownGoal, attackSign, tactics);
+  if (pushed !== null) {
+    // Arrive at the edge of the box, leaning toward the ball's channel.
+    const inside = player.role === "W" ? 0.5 : 0.15;
+    const y = clamp(target.y * (0.75 - inside) + ball.y * 0.25 + 50 * inside, 20, 80);
+    return atDepth(ownGoal, attackSign, Math.max(depth, pushed), y);
+  }
   return atDepth(ownGoal, attackSign, depth, target.y);
+}
+
+/**
+ * Ball in the final third: box-to-box mids, mezzalas, tens and inverted
+ * wingers step up behind the striker, so shots do not all come from the 9
+ * (real teams: strikers take roughly a third of the shots).
+ */
+export function secondWaveDepth(
+  player: PlayerMatchStatus,
+  ball: PitchPosition,
+  ownGoal: PitchPosition,
+  attackSign: 1 | -1,
+  tactics: TeamTactics,
+): number | null {
+  const ballDepth = depthFromOwnGoal(ball, ownGoal, attackSign);
+  if (ballDepth < 60) {
+    return null;
+  }
+  const arrives =
+    player.role === "AM" ||
+    (player.role === "CM" && cmDutyFor(player, tactics) !== "playmaker") ||
+    (player.role === "W" && wideDutyFor(player, tactics) === "invert");
+  if (!arrives) {
+    return null;
+  }
+  const lag = 5;
+  return clamp(ballDepth - lag, 50, player.role === "CM" ? 80 : 82);
 }
 
 function restAttackTargetAtBase(
@@ -853,8 +895,12 @@ export function applyShape(
     if (!defending) {
       target = stayOnside(player, target, ownGoal, teamSign, defenders);
     }
+    const secondWave =
+      !defending &&
+      secondWaveDepth(player, state.ball, ownGoal, teamSign, attackTactics) !== null;
     if (
       !occupiedBox &&
+      !secondWave &&
       (player.role === "CB" ||
         player.role === "W" ||
         player.role === "FB")
@@ -889,9 +935,23 @@ export function applyShape(
       player.role !== "GK" &&
       depthFromOwnGoal(player.position, ownGoal, teamSign) >
         offsideLineDepth(defenders, ownGoal, teamSign) - 1.2;
+    // Back line and midfield caught upfield sprint goal-side; forwards may jog.
+    const recovering =
+      defending &&
+      lineDuty(player.role) !== "attack" &&
+      player.role !== "GK" &&
+      depthFromOwnGoal(state.ball, ownGoal, teamSign) <
+        depthFromOwnGoal(player.position, ownGoal, teamSign) + RECOVERY_MARGIN;
+    // Second-wave runners sprint to arrive while the attack is still on.
+    const arriving =
+      !defending &&
+      secondWaveDepth(player, state.ball, ownGoal, teamSign, attackTactics) !== null &&
+      depthFromOwnGoal(target, ownGoal, teamSign) >
+        depthFromOwnGoal(player.position, ownGoal, teamSign) + 2;
     const maxStep =
       offBallMaxStep(player.attributes.pace) *
-      (lost && defending ? 0.35 : 1) *
+      (recovering ? RECOVERY_SPRINT : lost && defending ? 0.35 : 1) *
+      (arriving ? ARRIVAL_SPRINT : 1) *
       (beaten ? 0.4 : 1) *
       (offside ? 2.4 : 1);
     const dist = distance(player.position, target);

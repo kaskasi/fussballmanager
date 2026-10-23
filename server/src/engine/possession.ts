@@ -9,6 +9,7 @@ import { nextRange, nextUnit } from "@fussballmanager/shared";
 import { withTime } from "./clock.ts";
 import {
   asInvolved,
+  clamp,
   clampPitch,
   distance,
   lerp,
@@ -25,6 +26,9 @@ import { passCompleteChance } from "./weights.ts";
 import { isOffsideReceiver, outOfPlayRestart } from "./laws.ts";
 
 export { widePassFeedWeight } from "./pass-graph.ts";
+
+/** Scales the passing side's share of loose balls after a misplaced pass. */
+export const LOOSE_BALL_KEEP_SHARE = 0.8;
 
 export function stepPass(
   state: MatchState,
@@ -60,11 +64,16 @@ export function stepPass(
   const opponentReading =
     outfieldDefenders.reduce((sum, player) => sum + player.attributes.positioning, 0) /
     Math.max(1, outfieldDefenders.length);
+  const passerDepth =
+    passer.teamId === state.homeTeamId ? passer.position.x : 100 - passer.position.x;
+  /** Build-up lanes behind the press are rarely cut out; most interceptions happen higher up. */
+  const interceptZone = passerDepth < 33 ? 0.4 : 1;
   const quality = nextUnit(rng);
   const intercept = nextUnit(quality.rng);
   const intercepted =
     !!coverer &&
     intercept.n <
+      interceptZone *
       interceptChance(
         coverer,
         pressure.pressing,
@@ -83,8 +92,7 @@ export function stepPass(
         passerRole: passer.role,
         distance: distance(passer.position, dest),
         opponentReading,
-        passerDepth:
-          passer.teamId === state.homeTeamId ? passer.position.x : 100 - passer.position.x,
+        passerDepth,
       });
   const duration = nextRange(intercept.rng, 2, 6);
   const slice = nextRange(duration.rng, -34, 34);
@@ -240,8 +248,22 @@ export function stepPass(
     passKind === "through" ||
     (passKind === "restart" && distance(passer.position, dest) > 28);
   if (!complete) {
-    const loose = nearest(defenders, ball);
-    if (loose) {
+    const opponent = nearest(defenders, ball);
+    if (opponent) {
+      // A misplaced pass is a loose ball: whoever is closer usually gets there first,
+      // with an edge for the side that was not expecting it.
+      const mates = onPitchFor(timed.players, passer.teamId).filter(
+        (player) => player.playerId !== passer.playerId,
+      );
+      const mate = nearest(mates, ball);
+      const recover = nextUnit(timed.rng);
+      const dOpponent = distance(opponent.position, ball);
+      const dMate = mate ? distance(mate.position, ball) : Number.POSITIVE_INFINITY;
+      const keepChance = mate
+        ? clamp((dOpponent / Math.max(0.5, dOpponent + dMate)) * LOOSE_BALL_KEEP_SHARE, 0, 0.6)
+        : 0;
+      const loose = mate && recover.n < keepChance ? mate : opponent;
+      const kept = loose.teamId === passer.teamId;
       const event: MatchEvent = {
         type: "pass",
         seq: timed.nextSeq,
@@ -255,26 +277,25 @@ export function stepPass(
         complete: false,
         kind: passKind,
       };
+      const after = {
+        ...timed,
+        rng: recover.rng,
+        phase: "open_play" as const,
+        ball,
+        ballCarrierId: loose.playerId,
+        possessionTeamId: loose.teamId,
+        lastPasserId: null,
+        ballInAir: air,
+        players: patchPlayers(timed.players, [
+          { playerId: passer.playerId, position: passerPos },
+          { playerId: target.playerId, position: receiverPos },
+          { playerId: loose.playerId, position: ball },
+        ]),
+        nextSeq: timed.nextSeq + 1,
+      };
       return {
         event,
-        state: beginTransition(
-          {
-            ...timed,
-            phase: "open_play",
-            ball,
-            ballCarrierId: loose.playerId,
-            possessionTeamId: loose.teamId,
-            lastPasserId: null,
-            ballInAir: air,
-            players: patchPlayers(timed.players, [
-              { playerId: passer.playerId, position: passerPos },
-              { playerId: target.playerId, position: receiverPos },
-              { playerId: loose.playerId, position: ball },
-            ]),
-            nextSeq: timed.nextSeq + 1,
-          },
-          loose.teamId,
-        ),
+        state: kept ? after : beginTransition(after, loose.teamId),
       };
     }
   }

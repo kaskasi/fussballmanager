@@ -40,6 +40,15 @@ export type OpenPlayWeights = {
   shot: number;
 };
 
+/**
+ * Scales the urge to shoot near goal. Calibrated so shots land near 25 a match
+ * once carries and loose balls are contested (ADR 0003).
+ */
+export const SHOT_APPETITE = 1.1;
+
+/** How much a player near goal stops looking for a teammate (1 = never passes). */
+const LAYOFF_DAMP = 0.45;
+
 /** Explicit open-play weights: tactics + attributes + form + fatigue. */
 export function openPlayWeights(input: {
   distanceToDefender: number;
@@ -93,13 +102,14 @@ export function openPlayWeights(input: {
       0.15 * (input.tempo / 100) +
       freshness) *
     (1 - proximity * 0.15) *
-    (1 - 0.82 * goalThreat) *
+    (1 - LAYOFF_DAMP * goalThreat) *
     (stuck ? 0.28 : 1) *
-    (goalThreat > 0.35 && !input.openKeeperLook ? 0.55 : 1) *
+    (goalThreat > 0.35 && !input.openKeeperLook ? 0.8 : 1) *
     (input.openKeeperLook ? 0.42 : 1);
   const isolated = isolationFactor(input.restCovers ?? 4);
   const look = input.openKeeperLook === true;
   const shot =
+    SHOT_APPETITE *
     goalThreat *
     (0.16 +
       0.55 * (input.shooting / 100) +
@@ -158,7 +168,9 @@ export function passCompleteChance(input: {
   const press = 0.1 * (input.pressing / 100);
   const dist = input.distance ?? 14;
   const depth = input.passerDepth ?? 50;
-  const zone = depth < 33 ? 0.04 : depth > 66 ? -0.07 : 0;
+  // Real teams: ~95 % in their own third, ~83 % in midfield, ~70 % in the final third.
+  const zone = depth < 33 ? 0.07 : depth > 66 ? -0.07 : 0;
+  const pressWeight = depth < 33 ? 0.4 : 1;
   if ((input.kind === "restart" || input.passerRole === "GK") && dist <= 28) {
     // Keeper or restart played short: nobody presses a set ball.
     return clamp(0.97 + 0.1 * edge - press * 0.5, 0.85, 0.99);
@@ -175,7 +187,7 @@ export function passCompleteChance(input: {
   } else {
     base = 0.93 - 0.006 * Math.max(0, dist - 12) + zone;
   }
-  return clamp(base + 0.3 * edge + freshness - press, 0.12, 0.97);
+  return clamp(base + 0.3 * edge + freshness - press * pressWeight, 0.12, 0.97);
 }
 
 export function contestStrength(input: {

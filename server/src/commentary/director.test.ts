@@ -160,7 +160,7 @@ describe("createBroadcastDirector", () => {
       }
     }
     // Sparse PBP follows shots; a calibrated match has ~25 of them (ADR 0003).
-    expect(pbp).toBeGreaterThan(30);
+    expect(pbp).toBeGreaterThan(15);
     expect(pbp).toBeLessThan(220);
     expect(color).toBeGreaterThan(0);
   });

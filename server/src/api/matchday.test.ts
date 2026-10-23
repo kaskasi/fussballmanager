@@ -46,14 +46,17 @@ describe("matchday api", () => {
   });
 
   it("uses a career squad override for the player club", () => {
-    const played = runMatchday({
-      matchday: 1,
-      baseSeed: 2026,
-      clubIds: SEED_DIVISION.map((squad) => squad.team.id),
-      squads: [...SEED_DIVISION],
-      playerClubSquad: careerSquad,
-    });
-    const clubStats = played.playerStats.filter((row) => row.teamId === careerSquad.team.id);
-    expect(clubStats.some((row) => String(row.playerId).startsWith("pl_api_"))).toBe(true);
+    // Stats rows only exist for goals, assists and cards, so look across a few matchdays.
+    const clubStats = [1, 2, 3, 4, 5, 6].flatMap((matchday) =>
+      runMatchday({
+        matchday,
+        baseSeed: 2026,
+        clubIds: SEED_DIVISION.map((squad) => squad.team.id),
+        squads: [...SEED_DIVISION],
+        playerClubSquad: careerSquad,
+      }).playerStats.filter((row) => row.teamId === careerSquad.team.id),
+    );
+    expect(clubStats.length).toBeGreaterThan(0);
+    expect(clubStats.every((row) => String(row.playerId).startsWith("pl_api_"))).toBe(true);
   });
 });

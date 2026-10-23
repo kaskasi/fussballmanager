@@ -32,6 +32,22 @@ Mögliche Ersatz-Engines (Stand Oktober 2026):
 
 Alles hinter der Engine liest unseren typisierten `MatchEvent`-Strom: Director, Statistik, Bericht, Noten, Ligawoche, Scouting-Sims und Live-Wechsel. Ein Adapter für eine fremde Engine wäre selbst fast eine Engine.
 
+### Baseline (Harness, 2026-10-23, vor jeder Änderung)
+
+`npm run play-calibration -- --seeds=8` und `npm run calibrate:career`:
+
+| pro Spiel | Sandbox | Division | Oberliga | Elite ×1,3 | Karriere |
+|---|---|---|---|---|---|
+| Tore | 12,8 | 11,0 | 9,8 | 12,3 | 4,4 |
+| Schüsse | 95 | 86 | 95 | 85 | 53 |
+| aufs Tor | 43 | 35 | 32 | 41 | 15 |
+| Top-Schützen-Anteil | 80 % | 74 % | 75 % | 73 % | 73 % |
+| Hattrick-Quote | 100 % | 87 % | 84 % | 88 % | 45 % |
+| Passquote | 65 % | 63 % | 59 % | 71 % | 51 % |
+| Fouls / Gelb | 6,9 / 0,9 | 7,3 / 0,6 | 7,8 / 0,6 | 6,1 / 0,6 | 8,7 / 0,7 |
+| Ecken | 22 | 18 | 20 | 18 | 11 |
+| Remis | 0 % | 6 % | 10 % | 7 % | 21 % |
+
 ## Entscheidung
 
 1. **Die Engine bleibt.** Ihre Architektur (reines `step()`, Seed-RNG, fortsetzbar, Invarianten-Tests) ist solide. Das Problem ist die Kalibrierung.

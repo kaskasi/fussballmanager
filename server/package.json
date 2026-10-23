@@ -10,6 +10,7 @@
     "play-match": "tsx src/cli/play-match.ts",
     "play-matchday": "tsx src/cli/play-matchday.ts",
     "play-probe": "tsx src/cli/play-probe.ts",
+    "play-calibration": "tsx src/cli/play-calibration.ts",
     "persist-match": "tsx src/cli/persist-match.ts"
   },
   "dependencies": {

@@ -43,9 +43,18 @@ export interface WorldClub {
 
 export interface WorldState {
   generation_version: 0 | typeof WORLD_GENERATION_VERSION;
+  /** Roster seed — squads, talents, ids. Equals the save's master seed. */
   world_seed: number;
+  /** Club layer seed (names, ids, divisions); absent = same as world_seed. */
+  club_seed?: number;
   clubs: WorldClub[];
 }
+
+/**
+ * Production club layer: every career plays the same 36 clubs (names, ids, divisions), so
+ * module-level club lookups stay valid; the save's master seed only varies the rosters.
+ */
+export const WORLD_CLUB_SEED = 2026;
 
 export interface GeneratedWorld extends WorldState {
   generation_version: typeof WORLD_GENERATION_VERSION;
@@ -388,12 +397,13 @@ const POSITION_BONUSES: Record<PositionPrimary, Partial<Record<keyof Attributes,
  * Generate the complete M1 starting world. This function is pure: callers
  * persist its output and never regenerate an existing save on load.
  */
-export function generateWorld(masterSeed: number): GeneratedWorld {
-  if (!Number.isSafeInteger(masterSeed)) {
+/** `clubSeed` defaults to `masterSeed` (fully seeded world); careers pass {@link WORLD_CLUB_SEED}. */
+export function generateWorld(masterSeed: number, clubSeed = masterSeed): GeneratedWorld {
+  if (!Number.isSafeInteger(masterSeed) || !Number.isSafeInteger(clubSeed)) {
     throw new Error("World seed must be a safe integer");
   }
 
-  const clubs = generateClubs(masterSeed);
+  const clubs = generateClubs(clubSeed);
   const league_pools = divisionPools(clubs);
   const players = clubs.flatMap((club, clubIndex) =>
     generateClubRoster(masterSeed, club, clubIndex),
@@ -402,6 +412,7 @@ export function generateWorld(masterSeed: number): GeneratedWorld {
   return {
     generation_version: WORLD_GENERATION_VERSION,
     world_seed: masterSeed,
+    ...(clubSeed !== masterSeed ? { club_seed: clubSeed } : {}),
     clubs,
     league_pools,
     players,
@@ -412,6 +423,7 @@ export function persistedWorldState(world: GeneratedWorld): WorldState {
   return {
     generation_version: world.generation_version,
     world_seed: world.world_seed,
+    ...(world.club_seed !== undefined ? { club_seed: world.club_seed } : {}),
     clubs: world.clubs,
   };
 }

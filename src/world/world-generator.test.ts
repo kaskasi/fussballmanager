@@ -11,6 +11,7 @@ import {
   deriveWorldSeed,
   generateClubRoster,
   generateWorld,
+  WORLD_CLUB_SEED,
   worldCareerClubId,
 } from "./world-generator.ts";
 
@@ -165,9 +166,23 @@ describe("deterministic world generator", () => {
     );
   });
 
-  it("places Nordstern in the playable underdog corridor", () => {
+  it("keeps the club layer fixed while the roster seed changes the players", () => {
+    const first = generateWorld(11, WORLD_CLUB_SEED);
+    const second = generateWorld(12, WORLD_CLUB_SEED);
+    expect(second.clubs).toEqual(first.clubs);
+    expect(second.league_pools).toEqual(first.league_pools);
+    expect(second.club_seed).toBe(WORLD_CLUB_SEED);
+    const firstNames = new Set(first.players.map((p) => `${p.name.first} ${p.name.last}`));
+    const shared = second.players.filter((p) => firstNames.has(`${p.name.first} ${p.name.last}`));
+    expect(shared.length / second.players.length).toBeLessThan(0.1);
+  });
+
+  it.each([
+    ["a fully seeded world", (seed: number) => generateWorld(seed)],
+    ["the fixed career club layer", (seed: number) => generateWorld(seed, WORLD_CLUB_SEED)],
+  ])("places Nordstern in the playable underdog corridor (%s)", (_label, build) => {
     for (let seed = 1; seed <= 100; seed++) {
-      const world = generateWorld(seed);
+      const world = build(seed);
       const upperClubs = world.clubs.filter(
         (club) => club.division_id === "regionalliga-nord",
       );

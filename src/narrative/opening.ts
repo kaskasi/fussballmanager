@@ -115,14 +115,18 @@ export function completeOpening(
     });
   }
 
-  const board = boardWithSurvivalArc(session.board, session.season);
-  story = markBeatFired(story, "board_survival_intro");
-  const youthInbox = enqueueStoryInboxItem(
-    session.youthInbox,
-    session.week,
-    storyInboxPayload("board_survival_intro", story.cast),
-    "board_survival_intro",
-  );
+  // Survival framing only for the relegation story; picked stronger clubs keep their tier goals.
+  const survivalArc = story.active_arc === "relegation_battle";
+  const board = survivalArc ? boardWithSurvivalArc(session.board, session.season) : session.board;
+  if (survivalArc) story = markBeatFired(story, "board_survival_intro");
+  const youthInbox = survivalArc
+    ? enqueueStoryInboxItem(
+        session.youthInbox,
+        session.week,
+        storyInboxPayload("board_survival_intro", story.cast),
+        "board_survival_intro",
+      )
+    : session.youthInbox;
 
   const players = session.players.map((player) => {
     if (player.id !== captainPlayerId) return player;
@@ -178,5 +182,5 @@ export function chooseNewCareerMode(session: GameSession, mode: ProductGameMode)
 }
 
 export function openingBlocked(session: GameSession): boolean {
-  return session.storyState.active_arc === "relegation_battle" && !session.storyState.opening_complete;
+  return !session.storyState.opening_complete;
 }

@@ -7,7 +7,13 @@ import { addPlayersToPool, ensureTargetsForPool, normalizeDiscovery } from "../s
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { loadDemoRoster } from "../ui/demo-roster.ts";
 import { refreshPlayerMarketValue } from "../transfers/refresh-market-values.ts";
-import { newGameSession, saveFromSession, sessionFromSave } from "./game-session.ts";
+import {
+  newGameSession,
+  randomCareerSeed,
+  saveFromSession,
+  sessionFromSave,
+} from "./game-session.ts";
+import { simulateGameWeek } from "../sim/week-pipeline.ts";
 import {
   clearLocalSaveCacheForTests,
   loadLocalSave,
@@ -144,6 +150,29 @@ describe("game session", () => {
     const loaded = sessionFromSave(saveFromSession(session));
     expect(loaded.storyState.career_phase).toBe("act1_nordstern");
     expect(loaded.trainingPlan).toEqual(act1AssistantTrainingPlan());
+  });
+
+  it("varies squads and youth with the roster seed but keeps the clubs (random careers)", async () => {
+    const fixed = newGameSession(new Date("2026-09-22T14:00:00Z"));
+    const random = newGameSession(new Date("2026-09-22T14:00:00Z"), { seed: 4242 });
+    expect(random.masterSeed).toBe(4242);
+    expect(random.league.league_pools).toEqual(fixed.league.league_pools);
+    expect(random.world.clubs).toEqual(fixed.world.clubs);
+    const names = (players: typeof fixed.players) =>
+      new Set(players.filter((p) => p.club_id === fixed.clubId).map((p) => `${p.name.first} ${p.name.last}`));
+    const fixedNames = names(fixed.players);
+    const overlap = [...names(random.players)].filter((name) => fixedNames.has(name));
+    expect(overlap.length).toBeLessThan(5);
+    expect(random.players.some((p) => p.club_id === random.clubId && p.squad_status !== "pro")).toBe(true);
+    const week = await simulateGameWeek(random);
+    expect(week.session.week).toBe(random.week + 1);
+  });
+
+  it("randomCareerSeed yields safe positive integers", () => {
+    expect(randomCareerSeed(() => 0)).toBe(1);
+    const seed = randomCareerSeed(() => 0.999999);
+    expect(Number.isSafeInteger(seed)).toBe(true);
+    expect(seed).toBeGreaterThan(0);
   });
 
   it("keeps the default new game on Regionalliga Manager", () => {

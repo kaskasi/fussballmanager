@@ -28,6 +28,7 @@ import { ClubProfileModal } from "../components/ClubProfileModal.tsx";
 import { JobOffersModal } from "../components/JobOffersModal.tsx";
 import { OpeningStoryModal } from "../components/OpeningStoryModal.tsx";
 import { NewCareerModeCard } from "../components/NewCareerModeCard.tsx";
+import { careerClubChoices, startCareerAtClub } from "../../narrative/career-club-pick.ts";
 import { CalendarScreen } from "../screens/CalendarScreen.tsx";
 import { ClubEventsScreen } from "../screens/ClubEventsScreen.tsx";
 import { FinancesScreen } from "../screens/FinancesScreen.tsx";
@@ -329,7 +330,14 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
       ) : null}
       {modePickPending(session) && accessibility.localeChosen ? (
         <NewCareerModeCard
-          onPick={(mode) => patchSession((current) => chooseNewCareerMode(current, mode))}
+          clubChoices={careerClubChoices(session)}
+          defaultClubId={session.league.player_club_id}
+          onPick={(mode, clubId) =>
+            patchSession((current) => {
+              const picked = chooseNewCareerMode(current, mode);
+              return clubId ? startCareerAtClub(picked, clubId) : picked;
+            })
+          }
         />
       ) : openingBlocked(session) ? (
         <OpeningStoryModal

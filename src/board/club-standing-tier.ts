@@ -22,7 +22,11 @@ export function tablePlaceForClub(league: LeagueState, teamId: TeamId): number {
 }
 
 export function clubStandingTier(league: LeagueState, teamId: TeamId): ClubStandingTier {
-  const place = tablePlaceForClub(league, teamId);
+  return tierForPlace(tablePlaceForClub(league, teamId));
+}
+
+/** Tier for a table place — or for a squad-strength rank before a ball is kicked. */
+export function tierForPlace(place: number): ClubStandingTier {
   if (place <= 4) return "ambition";
   if (place <= 11) return "upper_half";
   if (place <= SURVIVAL_TARGET_PLACE) return "survival_mid";

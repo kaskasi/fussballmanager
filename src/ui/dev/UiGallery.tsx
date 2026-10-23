@@ -57,14 +57,6 @@ type SortKey = "name" | "age" | "ca" | "delta";
 
 const KIELER_FC = worldCareerClubId(NORDSTERN_TEAM_ID);
 
-function NextArrow() {
-  return (
-    <svg className="tc-next__arrow" viewBox="0 0 12 12" aria-hidden="true">
-      <path d="M3 1.5 10 6l-7 4.5z" />
-    </svg>
-  );
-}
-
 function MenuIcon() {
   return (
     <svg className="tc-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -100,7 +92,7 @@ function TitleBarSample({ name, initials, kit, theme }: { name: string; initials
           <MenuIcon />
         </button>
         <button className="tc-next" type="button">
-          Next <NextArrow />
+          Next
         </button>
       </header>
       <figcaption className="tc-caption">
@@ -241,13 +233,10 @@ export function UiGallery() {
         <Section id="buttons" title="Next and buttons" note="Yellow belongs to Next only. One primary button per view.">
           <div className="tc-row">
             <button className="tc-next" type="button">
-              Next <NextArrow />{" "}
+              Next{" "}
               <span className="tc-next__count" aria-label="2 blockers">
                 2
               </span>
-            </button>
-            <button className="tc-next" type="button">
-              Run week <NextArrow />
             </button>
           </div>
           <div className="tc-row">

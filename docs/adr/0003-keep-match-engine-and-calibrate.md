@@ -72,6 +72,7 @@ Wirkung auf die Spielstruktur: ca. 180 statt 600 Ballbesitzphasen pro Spiel, ca.
 ### Bekannte Lücken
 
 - **Schuss-Konzentration:** Stürmer und Flügel nehmen ca. 90 % der Schüsse, zentrale Mittelfeldspieler kaum welche. Folge: ca. jedes 8. Spiel hat einen Hattrick (real ca. jedes 30.), und Torjäger-Listen bestehen aus Flügelspielern. Für die Lösung braucht es ein Modell für nachrückende Mittelfeldspieler, die im Strafraumvorfeld den Ball fordern (Layoffs, zweite Bälle). Getestet wurden Pass-Links, Fernschüsse und Rückpässe ins Zentrum, alle mit wenig Wirkung. Der Band-Test bewacht die Werte (< 65 % / < 20 %), statt sie als erfüllt auszugeben.
+- **Formationen unausgewogen (schon vorher):** Gegen dieselben Gegner holt 4-3-3 ca. +1,7 Tore Differenz pro Spiel, 4-4-2 ca. −1,0 (vor der Kalibrierung: +5,0 und −4,3). Die invertierten Flügel im 4-3-3 ziehen nach innen und schießen (ca. 15 Schüsse pro Spiel), die breiten Außen im 4-4-2 bleiben auf Tiefe 57 und kommen kaum zum Abschluss. Das ist die nächste Kalibrierungsaufgabe, zusammen mit der Schuss-Konzentration.
 - **Kein Heimvorteil:** Heim und Auswärts gewinnen gleich oft (40/19/41). Real wären es ca. 45/25/30. Bisher nicht modelliert.
 
 ## Entscheidung

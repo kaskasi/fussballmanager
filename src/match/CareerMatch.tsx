@@ -1,6 +1,6 @@
 /** WIREFRAME: docs/prd/design.md §9.15 — Matchday live */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { BroadcastStoryContext, SandboxPlan, Squad } from "@fussballmanager/shared";
+import type { BroadcastStoryContext, MatchViewLine, SandboxPlan, Squad } from "@fussballmanager/shared";
 import type { TacticsPresetId, TacticsPresetSlot } from "./tactics-presets.ts";
 import type { Player } from "../types/player.ts";
 import type { NavPrimaryAction } from "../ui/nav-primary-action.ts";
@@ -13,13 +13,17 @@ import {
 import { CareerLineupScreen } from "./CareerLineupScreen.tsx";
 import { squadForLeagueClub } from "../sim/league-divisions.ts";
 import type { MatchLineupState } from "./lineup-board.ts";
-import { MatchStage } from "./MatchStage.tsx";
 import { matchClockLabel } from "./Scoreboard.tsx";
 import { MatchScoreHead } from "./MatchScoreHead.tsx";
 import { formatLeagueMatchKickoffLabel } from "./match-kickoff-format.ts";
 import { buildPreMatchBrief } from "./pre-match-brief.ts";
 import { clampCareerMatchSpeed } from "./match-playback-speed.ts";
 import { frameAt, useMatchPlayback } from "./useMatchPlayback.ts";
+import { frameIndexForSeq, lineMinuteLabel } from "./text-playback.ts";
+import { useMatchHighlightLevel } from "./match-highlight-level.ts";
+import { MatchCommentaryStream } from "./MatchCommentaryStream.tsx";
+import { MatchMomentum } from "./MatchMomentum.tsx";
+import { MatchZoneStrip } from "./MatchZoneStrip.tsx";
 import { MatchReportScreen } from "./MatchReportScreen.tsx";
 import { MatchdayLivePanel } from "./MatchdayLivePanel.tsx";
 import { MatchdayPreviewPanel } from "./MatchdayPreviewPanel.tsx";
@@ -29,7 +33,6 @@ import type { WorldClub } from "../world/world-generator.ts";
 import type { MatchdayCashBreakdown } from "../stadium/matchday-commerce.ts";
 import { useT } from "../i18n/react.ts";
 import type { FanbaseMood } from "../stadium/fanbase.ts";
-import { matchAmbiencePhotoUrl } from "../ui/assets/mood-photos.ts";
 import { t } from "../i18n/index.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
 
@@ -94,12 +97,6 @@ export function CareerMatch({
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
   const capacity = homeStadiumCapacity ?? 8_000;
   const mood = fanbaseMood ?? "steady";
-  const backdropPhotoUrl = matchAmbiencePhotoUrl({
-    isHome: setup.isHome,
-    homeCapacity: capacity,
-    fanbaseMood: mood,
-    poorForm: poorForm ?? false,
-  });
 
   useEffect(() => {
     setPlayerClubSquad(null);
@@ -160,7 +157,6 @@ export function CareerMatch({
       onRegisterSkipToReport={onRegisterSkipToReport}
       broadcastStory={broadcastStory}
       kasse={kasse}
-      backdropPhotoUrl={backdropPhotoUrl}
       league={league}
       worldClubs={worldClubs}
       season={season}
@@ -184,7 +180,6 @@ function CareerMatchPlayback({
   onRegisterSkipToReport,
   broadcastStory,
   kasse,
-  backdropPhotoUrl,
   league,
   worldClubs,
   season,
@@ -206,7 +201,6 @@ function CareerMatchPlayback({
   onRegisterSkipToReport?: (fn: (() => void) | null) => void;
   broadcastStory?: BroadcastStoryContext;
   kasse?: MatchdayCashBreakdown;
-  backdropPhotoUrl?: string;
   league: LeagueState;
   worldClubs?: readonly WorldClub[];
 }) {
@@ -226,7 +220,13 @@ function CareerMatchPlayback({
     }
     return (id: string) => map.get(id);
   }, [players, rivalPlayers]);
-  const playback = useMatchPlayback(view);
+  const [highlightLevel, setHighlightLevel] = useMatchHighlightLevel();
+  const playback = useMatchPlayback(view, highlightLevel);
+  const minuteOf = useCallback(
+    (line: MatchViewLine) =>
+      view ? lineMinuteLabel(frameAt(view, frameIndexForSeq(view.frames, line.seq)).clock) : "",
+    [view],
+  );
   /** Set only on explicit user transport (play / step / skip) — never from index side-effects. */
   const userStartedPlaybackRef = useRef(false);
   const [userStartedPlayback, setUserStartedPlayback] = useState(false);
@@ -486,21 +486,13 @@ function CareerMatchPlayback({
             ) : null}
 
             {live && view && frame ? (
-              <section className="tc-panel tc-match__stage" aria-label={t("match.presentation.pitch")}>
-                <MatchStage
-                  mode="pitch"
-                  view={view}
-                  frame={frame}
-                  previous={playback.previous}
-                  playing={playback.playing}
-                  frameDurationMs={playback.frameDurationMs}
-                  visibleLines={playback.visibleLines}
-                  preMatch={null}
-                  className="career-match-stage"
-                  backdropPhotoUrl={backdropPhotoUrl}
-                  ownTeamId={ownTeamId}
-                />
-              </section>
+              <>
+                <section className="tc-panel tc-match__pulse" aria-label={t("match.live.pulseAria")}>
+                  <MatchMomentum view={view} frameIndex={playback.frameIndex} ownTeamId={ownTeamId} />
+                  <MatchZoneStrip frame={frame} homeTeamId={view.home.id} ownTeamId={ownTeamId} />
+                </section>
+                <MatchCommentaryStream lines={playback.visibleLines} minuteOf={minuteOf} />
+              </>
             ) : null}
 
             {!view && !error ? (
@@ -521,10 +513,12 @@ function CareerMatchPlayback({
               playing={playback.playing}
               speed={playback.speed}
               onSpeedChange={(next) => playback.setSpeed(clampCareerMatchSpeed(next))}
+              level={highlightLevel}
+              onLevelChange={setHighlightLevel}
               onPlayPause={playback.toggle}
               onStepBack={playback.stepBack}
               onStepForward={playback.stepForward}
-              stepBackDisabled={playback.index <= 0}
+              stepBackDisabled={!playback.canStepBack}
               stepForwardDisabled={playback.atEnd}
             />
           ) : !view && !error ? (

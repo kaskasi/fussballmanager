@@ -8,6 +8,7 @@ import { MatchStats } from "./MatchStats.tsx";
 import { liveMatchLog } from "./live-match-log.ts";
 import { CAREER_MATCH_SPEED_OPTIONS } from "./match-playback-speed.ts";
 import { normalizeMatchView } from "./normalize-match-view.ts";
+import { MATCH_HIGHLIGHT_LEVELS, type MatchHighlightLevel } from "./match-highlight-level.ts";
 
 type SideTab = "events" | "stats" | "lineups";
 
@@ -24,6 +25,8 @@ export function MatchdayLivePanel({
   playing,
   speed,
   onSpeedChange,
+  level,
+  onLevelChange,
   onPlayPause,
   onStepBack,
   onStepForward,
@@ -36,6 +39,8 @@ export function MatchdayLivePanel({
   playing: boolean;
   speed: number;
   onSpeedChange: (speed: number) => void;
+  level: MatchHighlightLevel;
+  onLevelChange: (level: MatchHighlightLevel) => void;
   onPlayPause: () => void;
   onStepBack: () => void;
   onStepForward: () => void;
@@ -92,21 +97,38 @@ export function MatchdayLivePanel({
         >
           <ChevronRight className="tc-icon" strokeWidth={2.5} aria-hidden />
         </button>
-        <label className="tc-match__speed">
-          <span className="tc-label">{t("match.hero.speedLabel")}</span>
-          <select
-            className="tc-select"
-            value={speed}
-            onChange={(event) => onSpeedChange(Number(event.target.value))}
-            aria-label={t("match.hero.speedAria")}
-          >
-            {CAREER_MATCH_SPEED_OPTIONS.map((rate) => (
-              <option key={rate} value={rate}>
-                {rate}×
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="tc-match__rate">
+          <label className="tc-match__speed">
+            <span className="tc-label">{t("match.highlight.label")}</span>
+            <select
+              className="tc-select tc-match__level"
+              value={level}
+              onChange={(event) => onLevelChange(event.target.value as MatchHighlightLevel)}
+              aria-label={t("match.highlight.aria")}
+            >
+              {MATCH_HIGHLIGHT_LEVELS.map((option) => (
+                <option key={option} value={option}>
+                  {t(`match.highlight.${option}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="tc-match__speed">
+            <span className="tc-label">{t("match.hero.speedLabel")}</span>
+            <select
+              className="tc-select"
+              value={speed}
+              onChange={(event) => onSpeedChange(Number(event.target.value))}
+              aria-label={t("match.hero.speedAria")}
+            >
+              {CAREER_MATCH_SPEED_OPTIONS.map((rate) => (
+                <option key={rate} value={rate}>
+                  {rate}×
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       <div className="tc-tabs" role="tablist" aria-label={t("match.live.sideTabsAria")}>

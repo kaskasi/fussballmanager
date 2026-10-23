@@ -200,3 +200,73 @@ button.tc-stars__card:hover { background: var(--sunken); }
 .tc-pitch__card-close { width: var(--control-sm); height: var(--control-sm); }
 .tc-pitch__card-close .tc-icon { width: 16px; height: 16px; }
 .tc-pitch__card-meta { margin: 0; }
+
+/* §9.15 Live, text-first: pulse panel (momentum + zones) above the commentary stream */
+.tc-match__transport { flex-wrap: wrap; }
+.tc-match__rate { display: flex; flex-basis: 100%; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
+.tc-match__rate .tc-match__speed { margin-left: 0; }
+.tc-match__rate .tc-match__level { min-width: 7.5rem; }
+.tc-match__pulse { display: grid; gap: var(--space-3); padding: var(--space-3); }
+
+/* Momentum: per-minute diverging bars, own club above (accent), opponent below (info), as in tc-matchstats */
+.tc-momentum { display: grid; gap: var(--space-1); }
+.tc-momentum__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.tc-momentum__head .tc-label { margin: 0; }
+.tc-momentum__legend { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: 0; padding: 0; list-style: none; color: var(--text-muted); font-size: var(--font-size-xs); font-weight: 700; line-height: 1rem; }
+.tc-momentum__legend li { display: inline-flex; align-items: center; gap: var(--space-1); }
+.tc-momentum__swatch { width: 10px; height: 10px; border-radius: 2px; }
+.tc-momentum__swatch.is-own { background: var(--accent); }
+.tc-momentum__swatch.is-other { background: var(--info); }
+.tc-momentum__chart { display: block; width: 100%; height: 3.5rem; }
+.tc-momentum__axis { stroke: var(--line-strong); stroke-width: 1; }
+.tc-momentum__half { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 2 3; }
+.tc-momentum__hit { fill: transparent; }
+.tc-momentum__chart g:hover .tc-momentum__hit { fill: var(--sunken); }
+.tc-momentum__bar.is-own { fill: var(--accent); }
+.tc-momentum__bar.is-other { fill: var(--info); }
+
+/* Zones: Drittel / Seite as thin segmented bars; the lit segment wears the side in possession */
+.tc-zones { display: grid; gap: var(--space-1); }
+.tc-zones__row { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); align-items: center; gap: var(--space-2); }
+.tc-zones__title { margin: 0; }
+.tc-zones__bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; margin: 0; padding: 0; list-style: none; }
+.tc-zones__seg { overflow: hidden; padding: 2px var(--space-1); background: var(--sunken); color: var(--text-muted); font-size: var(--font-size-xs); font-weight: 700; line-height: 1rem; letter-spacing: 0.08em; text-align: center; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; transition: background-color 200ms ease-out, color 200ms ease-out; }
+.tc-zones__seg:first-child { border-radius: var(--radius-pill) 0 0 var(--radius-pill); }
+.tc-zones__seg:last-child { border-radius: 0 var(--radius-pill) var(--radius-pill) 0; }
+.tc-zones__seg.is-active { background: var(--line-strong); color: var(--text); }
+.tc-zones.is-own .tc-zones__seg.is-active { background: var(--accent); color: var(--on-accent); }
+.tc-zones.is-other .tc-zones__seg.is-active { background: var(--info); color: var(--on-info); }
+
+/* Commentary stream: minute · marker · text; newest line at the bottom and emphasised */
+.tc-stream { position: relative; padding: 0; overflow: hidden; }
+.tc-stream__list { display: grid; align-content: start; min-height: 16rem; max-height: min(60vh, 32rem); margin: 0; padding: var(--space-1) 0; overflow-y: auto; overscroll-behavior: contain; list-style: none; }
+.tc-stream__line { display: grid; grid-template-columns: 3rem 1.25rem minmax(0, 1fr); align-items: start; gap: var(--space-2); padding: var(--space-2) var(--space-3) var(--space-2) calc(var(--space-3) - 3px); border-left: 3px solid transparent; color: var(--text-muted); font-size: var(--font-size-sm); line-height: 1.25rem; }
+.tc-stream__line + .tc-stream__line { border-top: 1px solid var(--line); }
+.tc-stream__minute { font-variant-numeric: tabular-nums; text-align: right; }
+.tc-stream__marker { display: inline-flex; align-items: center; justify-content: center; min-height: 1.25rem; }
+.tc-stream__marker .tc-icon { width: 16px; height: 16px; }
+.tc-stream__line.is-moment .tc-stream__marker { color: var(--text-muted); }
+.tc-stream__text { min-width: 0; overflow-wrap: anywhere; }
+.tc-stream__line.is-color .tc-stream__text { font-style: italic; }
+.tc-stream__line.is-color .tc-match__badge { font-style: normal; }
+.tc-stream__line.is-shot,
+.tc-stream__line.is-danger { color: var(--text); }
+.tc-stream__line.is-danger { border-left-color: var(--warning); }
+.tc-stream__line.is-goal { border-left-color: var(--accent); background: var(--accent-soft); color: var(--text); font-weight: 700; }
+.tc-stream__line.is-goal .tc-stream__marker { color: var(--accent); }
+.tc-stream__line.is-latest { color: var(--text); font-weight: 700; animation: tc-stream-in 240ms ease-out; }
+/* Goal hold (GOAL_HIGHLIGHT_MS): the new goal line flashes in the accent before it settles */
+.tc-stream__line.is-latest.is-goal { animation: tc-stream-goal 800ms ease-out; }
+.tc-stream__jump { position: absolute; right: var(--space-3); bottom: var(--space-3); box-shadow: var(--shadow-raised); }
+.tc-stream__jump .tc-icon { width: 14px; height: 14px; }
+@keyframes tc-stream-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+@keyframes tc-stream-goal {
+  0%, 40% { background: var(--accent); color: var(--on-accent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tc-stream__line.is-latest,
+  .tc-stream__line.is-latest.is-goal { animation: none; }
+  .tc-zones__seg { transition: none; }
+}

@@ -498,23 +498,6 @@
     display: inline-flex !important;
   }
 
-  .treter-figure,
-  .treter-figure-hero {
-    max-height: none;
-    width: 100%;
-  }
-
-  .treter-figure img {
-    width: 100%;
-    height: auto;
-    max-height: min(42vw, 12rem);
-    object-fit: cover;
-  }
-
-  .treter-figure-hero img {
-    max-height: min(52vw, 16rem);
-  }
-
   /* Preise tab: row 1 = Trikots hero, row 2 = other SKUs in 2 cols (index.css loads after this file) */
   .merchandising--preise .merch-preise-row {
     min-width: 0;

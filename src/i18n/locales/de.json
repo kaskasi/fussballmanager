@@ -648,7 +648,6 @@
   "postfach.treter.empty": "Diese Ausgabe ist dünn — nächste Woche mehr Tabloid.",
   "postfach.treter.dismiss": "Gelesen",
   "postfach.treter.gridAria": "Zeitungsspalten",
-  "postfach.treter.photoTodo": "TODO: Weitere Fotos für Der Treter nachreichen.",
   "postfach.treter.leaguePanelAria": "Liga-Tabelle und Torjäger",
   "postfach.treter.tableTitle": "Tabelle",
   "postfach.treter.scorersTitle": "Torjäger",
@@ -2895,5 +2894,12 @@
   "medical.rehab.sectionTitle": "Reha-Übung",
   "medical.rehab.sectionHint": "Einmal pro Spieler und Woche: Triff die grünen Zonen, um Diagnose oder Reha zu beschleunigen.",
   "medical.rehab.noneInjured": "Gerade ist niemand verletzt.",
-  "fitness.title": "Fitness und Belastung"
+  "fitness.title": "Fitness und Belastung",
+  "postfach.page.eyebrow": "Postfach",
+  "postfach.page.openTitle": "Offene Post",
+  "postfach.page.openCount": "{count} offen",
+  "postfach.page.emptyTitle": "Alles erledigt",
+  "postfach.page.emptyHint": "Neue Post kommt mit der nächsten Woche. Ältere Nachrichten stehen im Archiv.",
+  "postfach.treter.dateline": "Donnerstag · {week} · {season}",
+  "postfach.treter.price": "1,20 €"
 }

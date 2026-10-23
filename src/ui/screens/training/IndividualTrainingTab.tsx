@@ -307,7 +307,15 @@ function TakenSlot({
             : tr("training.individual.weekProgress", { done, total: planned })}
         </span>
       </span>
-      <span className="training-solo__effect">{programEffect(player, program)}</span>
+      <span
+        className={
+          program.kind !== "position_retrain" && (program.gained ?? 0) <= 0.05
+            ? "training-solo__effect is-empty"
+            : "training-solo__effect"
+        }
+      >
+        {programEffect(player, program)}
+      </span>
     </button>
   );
 }

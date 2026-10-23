@@ -648,7 +648,6 @@
   "postfach.treter.empty": "Thin issue — more tabloid next week.",
   "postfach.treter.dismiss": "Done reading",
   "postfach.treter.gridAria": "Newspaper columns",
-  "postfach.treter.photoTodo": "TODO: Add more photos for Der Treter.",
   "postfach.treter.leaguePanelAria": "League table and top scorers",
   "postfach.treter.tableTitle": "Table",
   "postfach.treter.scorersTitle": "Top scorers",
@@ -2895,5 +2894,12 @@
   "medical.rehab.sectionTitle": "Rehab exercise",
   "medical.rehab.sectionHint": "Once per player and week: hit the green zones to speed up a diagnosis or rehab.",
   "medical.rehab.noneInjured": "No injured players right now.",
-  "fitness.title": "Fitness and load"
+  "fitness.title": "Fitness and load",
+  "postfach.page.eyebrow": "Inbox",
+  "postfach.page.openTitle": "Open mail",
+  "postfach.page.openCount": "{count} open",
+  "postfach.page.emptyTitle": "All done",
+  "postfach.page.emptyHint": "New mail arrives with the next week. Older mail is in the archive.",
+  "postfach.treter.dateline": "Thursday · {week} · {season}",
+  "postfach.treter.price": "€1.20"
 }

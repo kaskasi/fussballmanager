@@ -1,8 +1,8 @@
 {
   "files": {
     "src/index.css": {
-      "colors": 889,
-      "fontSizes": 365
+      "colors": 872,
+      "fontSizes": 356
     },
     "src/match/pitch-markings.tsx": {
       "colors": 3,
@@ -18,7 +18,7 @@
     },
     "src/ui/design/game-surfaces.css": {
       "colors": 58,
-      "fontSizes": 103
+      "fontSizes": 102
     },
     "src/ui/design/global-base.css": {
       "colors": 6,

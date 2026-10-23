@@ -12,7 +12,6 @@ import type { KickerEdition, TreterEdition } from "../../media/kicker-digest.ts"
 import type { TransferRecord } from "../../transfers/transfer-history.ts";
 import type { WorldClub } from "../../world/world-generator.ts";
 import type { GameSession } from "../../persistence/game-session.ts";
-import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { DecisionInboxPanel } from "../components/DecisionInboxPanel.tsx";
 
@@ -77,40 +76,35 @@ export function PostfachScreen({
 
   return (
     <main className="club-shell-card-body postfach-screen">
-      <section
-        className="game-panel postfach-decisions"
-        aria-label={t("postfach.open.panelAria")}
-      >
-        <DecisionInboxPanel
-          inbox={youthInbox}
-          players={players}
-          clubId={clubId}
-          season={season}
-          week={week}
-          onDecision={onDecision}
-          storyCast={storyCast}
-          initialItemId={initialItemId}
-          onSelectPlayer={onSelectPlayer}
-          youthCamps={youthCamps}
-          masterSeed={masterSeed}
-          onHireCampLeader={onHireCampLeader}
-          orthopedistHire={orthopedistHire}
-          hasOrthopedist={hasOrthopedist}
-          onHireOrthopedist={onHireOrthopedist}
-          scoutBoard={scoutBoard}
-          onDismissScoutJob={onDismissScoutJob}
-          onOpenScoutingNetwork={onOpenScoutingNetwork}
-          onOpenScoutingHits={onOpenScoutingHits}
-          onApplyOpponentScoutPlan={onApplyOpponentScoutPlan}
-          clubEvents={clubEvents}
-          kickerEdition={kickerEdition}
-          kickerEditionArchive={kickerEditionArchive}
-          transferHistory={transferHistory}
-          rivalPlayers={rivalPlayers}
-          worldClubs={worldClubs}
-          treterSession={treterSession}
-        />
-      </section>
+      <DecisionInboxPanel
+        inbox={youthInbox}
+        players={players}
+        clubId={clubId}
+        season={season}
+        week={week}
+        onDecision={onDecision}
+        storyCast={storyCast}
+        initialItemId={initialItemId}
+        onSelectPlayer={onSelectPlayer}
+        youthCamps={youthCamps}
+        masterSeed={masterSeed}
+        onHireCampLeader={onHireCampLeader}
+        orthopedistHire={orthopedistHire}
+        hasOrthopedist={hasOrthopedist}
+        onHireOrthopedist={onHireOrthopedist}
+        scoutBoard={scoutBoard}
+        onDismissScoutJob={onDismissScoutJob}
+        onOpenScoutingNetwork={onOpenScoutingNetwork}
+        onOpenScoutingHits={onOpenScoutingHits}
+        onApplyOpponentScoutPlan={onApplyOpponentScoutPlan}
+        clubEvents={clubEvents}
+        kickerEdition={kickerEdition}
+        kickerEditionArchive={kickerEditionArchive}
+        transferHistory={transferHistory}
+        rivalPlayers={rivalPlayers}
+        worldClubs={worldClubs}
+        treterSession={treterSession}
+      />
     </main>
   );
 }

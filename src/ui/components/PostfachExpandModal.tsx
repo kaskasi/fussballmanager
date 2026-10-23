@@ -13,10 +13,11 @@ export function PostfachExpandModal({
 }) {
   return (
     <ModalShell
+      variant="tc"
       ariaLabel={title}
-      title={<h3 className="postfach-expand-modal-title">{title}</h3>}
+      title={<h2 className="tc-modal__title">{title}</h2>}
       onClose={onClose}
-      panelClassName="postfach-expand-modal"
+      panelClassName="tc-modal--wide postfach-expand-modal"
     >
       {children}
     </ModalShell>

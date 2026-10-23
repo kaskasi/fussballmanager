@@ -609,7 +609,6 @@
   "postfach.treter.empty": "本期内容较少 — 下周更热闹。",
   "postfach.treter.dismiss": "已读",
   "postfach.treter.gridAria": "报纸栏目",
-  "postfach.treter.photoTodo": "TODO：补充 Der Treter 配图。",
   "postfach.treter.leaguePanelAria": "积分榜与射手榜",
   "postfach.treter.tableTitle": "积分榜",
   "postfach.treter.scorersTitle": "射手榜",
@@ -2766,5 +2765,12 @@
   "medical.injured.externalOp": "外部手术 · {weeks} 周",
   "medical.physio.resultFail": "协助 · 失败",
   "medical.injured.surgery": "手术",
-  "medical.physio.auto": "自动"
+  "medical.physio.auto": "自动",
+  "postfach.page.eyebrow": "邮箱",
+  "postfach.page.openTitle": "待处理邮件",
+  "postfach.page.openCount": "{count} 封待处理",
+  "postfach.page.emptyTitle": "全部处理完毕",
+  "postfach.page.emptyHint": "新邮件将在下周到达。旧邮件在归档中。",
+  "postfach.treter.dateline": "星期四 · {week} · {season}",
+  "postfach.treter.price": "1.20 欧元"
 }

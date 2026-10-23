@@ -1070,6 +1070,8 @@ export default function App() {
             },
           };
         }
+        // Mail without a player (Der Treter, training reminder): reading it is not a deferred decision.
+        if (action === "dismiss" && !player) return next;
         const playerName = player ? formatPlayerName(player) : "Spieler";
         const message =
           action === "loan" && result.transferRecord

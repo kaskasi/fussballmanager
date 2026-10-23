@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SandboxPlan } from "@fussballmanager/shared";
-import { X } from "lucide-react";
+import { MailCheck, X } from "lucide-react";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import { defaultYouthContract } from "../../player/youth-contract.ts";
@@ -224,7 +224,7 @@ export function DecisionInboxPanel({
     };
   }, [kickerEdition, season, week, treterSession]);
 
-  return (
+  const headPiece = (
     <>
       <header className="inbox-head">
         <div>
@@ -246,7 +246,10 @@ export function DecisionInboxPanel({
 
       <p className="inbox-focus-line">{inboxHeadline(focus)}</p>
       {pipelineHint ? <p className="inbox-queue-note">{pipelineHint}</p> : null}
-
+    </>
+  );
+  const bodyPiece = (
+    <>
       {postfachOpenTotal > 0 ? (
         <>
           <PostfachDecisionGrid
@@ -458,7 +461,10 @@ export function DecisionInboxPanel({
           ) : null}
         </>
       ) : null}
-
+    </>
+  );
+  const archiveDetailPiece = (
+    <>
       {archiveEntry ? (
         <PostfachArchiveDetail
           entry={archiveEntry}
@@ -473,12 +479,59 @@ export function DecisionInboxPanel({
           onSelectPlayer={onSelectPlayer}
         />
       ) : null}
-
+    </>
+  );
+  const archiveListPiece = (
       <PostfachArchiveList
         entries={archiveEntries}
         activeEntryId={archiveEntry?.id ?? null}
         onSelectEntry={setArchiveEntry}
       />
+  );
+
+  if (layout === "hub") {
+    return (
+      <>
+        {headPiece}
+        {bodyPiece}
+        {archiveDetailPiece}
+        {archiveListPiece}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <header className="tc-page-head">
+        <span className="tc-label">
+          {t("postfach.page.eyebrow")} · {formatCalendarWeekDisplay(inbox.week)}
+        </span>
+        <h1 className="tc-page-title">{t("inbox.modal.decisions")}</h1>
+        <p className="tc-page-sub">
+          {inboxHeadline(focus)}
+          {pipelineHint ? ` · ${pipelineHint}` : ""}
+        </p>
+      </header>
+      <div className="tc-split tc-postfach">
+        <div className="tc-stack">
+          {archiveDetailPiece}
+          <section className="tc-panel tc-postfach__open" aria-label={t("postfach.open.panelAria")}>
+            <div className="tc-panel__head">
+              <h2 className="tc-panel__title">{t("postfach.page.openTitle")}</h2>
+              <span className="tc-panel__meta">{t("postfach.page.openCount", { count: postfachOpenTotal })}</span>
+            </div>
+            {postfachOpenTotal === 0 ? (
+              <div className="tc-empty-state">
+                <MailCheck className="tc-icon" aria-hidden />
+                <p className="tc-empty-state__title">{t("postfach.page.emptyTitle")}</p>
+                <p>{t("postfach.page.emptyHint")}</p>
+              </div>
+            ) : null}
+            {bodyPiece}
+          </section>
+        </div>
+        <aside className="tc-panel tc-postfach__archive">{archiveListPiece}</aside>
+      </div>
     </>
   );
 }

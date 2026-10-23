@@ -1,49 +1,15 @@
 /** WIREFRAME: PRD 09 — «Der Treter» (Dienstags-Zeitung) im Postfach */
 import { Newspaper } from "lucide-react";
-import type { TreterArticle, TreterEdition } from "../../media/kicker-digest.ts";
+import type {
+  TreterArticle,
+  TreterEdition,
+  TreterTableRow as TreterTableRowData,
+} from "../../media/kicker-digest.ts";
+import { formatCalendarWeekDisplay } from "../../i18n/calendar-display.ts";
+import { formatSeasonLabel } from "../../sim/season-label.ts";
 import { t } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
-
-function TreterArticleBlock({
-  article,
-  onSelectPlayer,
-}: {
-  article: TreterArticle;
-  onSelectPlayer?: (playerId: string) => void;
-}) {
-  const isHero = article.layout === "hero";
-  const content = (
-    <>
-      {article.imageSrc ? (
-        <figure className={isHero ? "treter-figure treter-figure-hero" : "treter-figure"}>
-          <img src={article.imageSrc} alt={article.imageAlt ?? ""} loading="lazy" />
-        </figure>
-      ) : null}
-      <div className="treter-article-copy">
-        {article.kicker ? <p className="treter-kicker">{article.kicker}</p> : null}
-        <h3 className="treter-headline">{article.headline}</h3>
-        <p className="treter-body">{article.body}</p>
-      </div>
-    </>
-  );
-
-  if (article.playerId && onSelectPlayer) {
-    return (
-      <button
-        type="button"
-        className={isHero ? "treter-article treter-article-hero" : "treter-article"}
-        onClick={() => onSelectPlayer(article.playerId!)}
-      >
-        {content}
-      </button>
-    );
-  }
-
-  return (
-    <article className={isHero ? "treter-article treter-article-hero" : "treter-article"}>{content}</article>
-  );
-}
 
 export function KickerInboxCard({
   edition,
@@ -105,104 +71,150 @@ export function KickerInboxCard({
     );
   }
 
+  const [lead, ...more] = leadFirst(edition.articles);
+  const ownRow = league.table.find((row) => row.isPlayerClub);
+  const tableRows = league.table.slice(0, TABLE_ROWS);
+
   return (
     <section
-      className={compact ? "inbox-detail inbox-treter-inline" : "inbox-card inbox-card-treter"}
+      className={compact ? "tc-treter tc-treter--inline" : "tc-treter"}
       data-coach-target={COACH_TARGET.postfachTreter}
     >
-      <div className="inbox-story treter-newspaper">
-        {!compact ? (
-          <p className="inbox-post-count">
-            {t("postfach.scoutJob.postCount", { index: postIndex, total: postTotal })}
-          </p>
-        ) : null}
-        <header className="treter-masthead">
-          <Newspaper size={20} aria-hidden />
-          <div>
-            <strong>{t("postfach.treter.title")}</strong>
-            <p>{edition.masthead}</p>
-          </div>
-        </header>
-        <div className="treter-sheet">
-          <div className="treter-main">
-            {edition.articles.length === 0 ? (
-              <p className="inbox-treter-empty">{t("postfach.treter.empty")}</p>
+      {!compact ? (
+        <p className="tc-label">{t("postfach.scoutJob.postCount", { index: postIndex, total: postTotal })}</p>
+      ) : null}
+      <article className="tc-news" aria-label={t("postfach.treter.title")}>
+        <h2 className="tc-news__masthead">{t("postfach.treter.title")}</h2>
+        <div className="tc-news__dateline">
+          <span>
+            {t("postfach.treter.dateline", {
+              week: formatCalendarWeekDisplay(edition.week),
+              season: formatSeasonLabel(edition.season),
+            })}
+          </span>
+          {league.matchdaysPlayed ? (
+            <span>{t("postfach.treter.matchdaysPlayed", { count: league.matchdaysPlayed })}</span>
+          ) : null}
+          <span>{t("postfach.treter.price")}</span>
+        </div>
+        <div className="tc-news__grid">
+          <div className="tc-treter__main" aria-label={t("postfach.treter.gridAria")}>
+            {lead ? (
+              <TreterStory article={lead} lead onSelectPlayer={onSelectPlayer} />
             ) : (
-              <div className="treter-grid" aria-label={t("postfach.treter.gridAria")}>
-                {edition.articles.map((article) => (
-                  <TreterArticleBlock
-                    key={article.id}
-                    article={article}
-                    onSelectPlayer={onSelectPlayer}
-                  />
+              <p className="tc-news__deck">{t("postfach.treter.empty")}</p>
+            )}
+            {more.length > 0 ? (
+              <div className="tc-treter__more">
+                {more.map((article) => (
+                  <TreterStory key={article.id} article={article} onSelectPlayer={onSelectPlayer} />
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
-          <aside className="treter-league-panel" aria-label={t("postfach.treter.leaguePanelAria")}>
-            <section className="treter-league-block">
-              <h3 className="treter-league-title">{t("postfach.treter.tableTitle")}</h3>
-              {league.table.length ? (
-                <table className="treter-league-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">#</th>
-                      <th scope="col">{t("postfach.treter.colClub")}</th>
-                      <th scope="col">{t("postfach.treter.colPlayed")}</th>
-                      <th scope="col">{t("postfach.treter.colPoints")}</th>
-                    </tr>
-                  </thead>
+          <aside className="tc-news__side" aria-label={t("postfach.treter.leaguePanelAria")}>
+            <div>
+              <h3 className="tc-news__side-title">{t("postfach.treter.tableTitle")}</h3>
+              {tableRows.length ? (
+                <table className="tc-news__table">
                   <tbody>
-                    {league.table.map((row) => (
-                      <tr
-                        key={`${row.rank}-${row.name}`}
-                        className={row.isPlayerClub ? "is-own-club" : undefined}
-                      >
-                        <td>{row.rank}</td>
-                        <td>{row.name}</td>
-                        <td>{row.played}</td>
-                        <td>{row.points}</td>
+                    {tableRows.map((row) => (
+                      <TreterTableRow key={`${row.rank}-${row.name}`} row={row} />
+                    ))}
+                    {ownRow && !tableRows.includes(ownRow) ? <TreterTableRow row={ownRow} /> : null}
+                  </tbody>
+                </table>
+              ) : (
+                <p>{t("postfach.treter.noTableYet")}</p>
+              )}
+            </div>
+            <div>
+              <h3 className="tc-news__side-title">{t("postfach.treter.scorersTitle")}</h3>
+              {league.scorers.length ? (
+                <table className="tc-news__table">
+                  <tbody>
+                    {league.scorers.slice(0, SCORER_ROWS).map((row) => (
+                      <tr key={`${row.rank}-${row.name}`}>
+                        <td>
+                          {row.rank} {row.name}
+                        </td>
+                        <td>{row.goals}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               ) : (
-                <p className="treter-league-empty">{t("postfach.treter.noTableYet")}</p>
+                <p>{t("postfach.treter.noScorersYet")}</p>
               )}
-            </section>
-            <section className="treter-league-block">
-              <h3 className="treter-league-title">{t("postfach.treter.scorersTitle")}</h3>
-              {league.scorers.length ? (
-                <ol className="treter-scorer-list">
-                  {league.scorers.map((row) => (
-                    <li key={`${row.rank}-${row.name}`}>
-                      <span className="treter-scorer-name">{row.name}</span>
-                      <span className="treter-scorer-goals">{row.goals}</span>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p className="treter-league-empty">{t("postfach.treter.noScorersYet")}</p>
-              )}
-            </section>
-            {league.matchdaysPlayed ? (
-              <p className="treter-league-meta">
-                {t("postfach.treter.matchdaysPlayed", {
-                  count: league.matchdaysPlayed,
-                })}
-              </p>
-            ) : null}
+            </div>
           </aside>
         </div>
-        <p className="treter-photo-note">{t("postfach.treter.photoTodo")}</p>
-      </div>
+      </article>
       {!readOnly && onDismiss ? (
-        <div className="inbox-actions">
-          <button type="button" className="inbox-action" onClick={onDismiss}>
+        <div className="tc-treter__actions">
+          <button type="button" className="tc-btn tc-btn--primary" onClick={onDismiss}>
             {t("postfach.treter.dismiss")}
           </button>
         </div>
       ) : null}
+    </section>
+  );
+}
+
+const TABLE_ROWS = 6;
+const SCORER_ROWS = 5;
+
+/** Hero article first, then the rest in edition order. */
+function leadFirst(articles: readonly TreterArticle[]): TreterArticle[] {
+  const hero = articles.find((article) => article.layout === "hero") ?? articles[0];
+  if (!hero) return [];
+  return [hero, ...articles.filter((article) => article !== hero)];
+}
+
+function TreterTableRow({ row }: { row: TreterTableRowData }) {
+  return (
+    <tr className={row.isPlayerClub ? "is-us" : undefined}>
+      <td>
+        {row.rank} {row.name}
+      </td>
+      <td>{row.points}</td>
+    </tr>
+  );
+}
+
+function TreterStory({
+  article,
+  lead = false,
+  onSelectPlayer,
+}: {
+  article: TreterArticle;
+  lead?: boolean;
+  onSelectPlayer?: (playerId: string) => void;
+}) {
+  const headline =
+    article.playerId && onSelectPlayer ? (
+      <button type="button" className="tc-treter__headline-link" onClick={() => onSelectPlayer(article.playerId!)}>
+        {article.headline}
+      </button>
+    ) : (
+      article.headline
+    );
+  return (
+    <section className={lead ? "tc-treter__story tc-treter__story--lead" : "tc-treter__story"}>
+      {article.kicker ? <p className="tc-news__kicker">{article.kicker}</p> : null}
+      {lead ? <h3 className="tc-news__headline">{headline}</h3> : <h4 className="tc-treter__headline">{headline}</h4>}
+      {lead && article.imageSrc ? (
+        <figure className="tc-treter__figure">
+          <img src={article.imageSrc} alt={article.imageAlt ?? ""} loading="lazy" />
+        </figure>
+      ) : null}
+      {lead ? (
+        <div className="tc-news__cols">
+          <p>{article.body}</p>
+        </div>
+      ) : (
+        <p className="tc-treter__body">{article.body}</p>
+      )}
     </section>
   );
 }

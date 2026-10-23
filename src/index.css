@@ -7489,6 +7489,18 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   max-width: 40rem;
 }
 
+/* PRD 24 club pick — 36 rows stay scrollable inside the modal. */
+.new-career-clubs {
+  max-height: min(52vh, 28rem);
+  overflow-y: auto;
+}
+
+.new-career-clubs .tc-sort {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+}
+
 .opening-step {
   margin: 0;
   color: #94a3b8;

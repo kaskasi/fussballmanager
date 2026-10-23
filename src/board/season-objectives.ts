@@ -223,8 +223,9 @@ export function generateSeasonObjectives(
   league: LeagueState,
   baselines: BoardSeasonBaselines,
   masterSeed = 1,
+  tierOverride?: ClubStandingTier,
 ): BoardObjective[] {
-  const tier = clubStandingTier(league, employerClubId);
+  const tier = tierOverride ?? clubStandingTier(league, employerClubId);
   const projectId = pickProjectId(hashString(`${masterSeed}:${employerClubId}:${season}:project`));
   return objectivesForTier(tier, employerClubId, season, baselines, projectId);
 }
@@ -238,6 +239,8 @@ export function startBoardSeason(
     GameSession,
     "players" | "clubId" | "stadium" | "youthCamps" | "masterSeed" | "season" | "week"
   >,
+  /** Tier from squad strength when the table can't tell yet (new career at a picked club). */
+  tierOverride?: ClubStandingTier,
 ): BoardState {
   const clubId = session?.clubId ?? `cl_${employerClubId.replace(/-/g, "_")}`;
   const avg_ca = session ? squadAvgCa(session.players, clubId) : 70;
@@ -263,6 +266,7 @@ export function startBoardSeason(
       league,
       baselines,
       session?.masterSeed ?? 1,
+      tierOverride,
     ),
     season_baselines: baselines,
     pressure: 0,

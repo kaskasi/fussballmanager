@@ -64,7 +64,7 @@ export function normalizeLeagueState(
   const oberCount = storedPools?.["oberliga-nord"]?.length ?? 0;
   const poolsIncomplete = regCount < CLUBS_PER_DIVISION || oberCount < CLUBS_PER_DIVISION;
   const pools = poolsIncomplete || !storedPools
-    ? defaultLeaguePools(masterSeed)
+    ? defaultLeaguePools()
     : storedPools;
   const clubIdsIncomplete = (base.club_ids?.length ?? 0) < CLUBS_PER_DIVISION;
   return {

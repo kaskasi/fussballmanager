@@ -1,4 +1,4 @@
-import { newGameSession, saveFromSession, sessionFromSave, type GameSession } from "./game-session.ts";
+import { newCareerSession, saveFromSession, sessionFromSave, type GameSession } from "./game-session.ts";
 import { normalizeYouthInbox, pruneYouthInbox } from "../youth/decision-inbox.ts";
 import { dedupeCampOpeningCopies } from "../youth/camp-duplicates.ts";
 import {
@@ -144,7 +144,7 @@ export function loadLocalSave(slot: number): SaveGame | null {
 export async function resolveSlotSave(slot: number): Promise<{ save: SaveGame; created: boolean }> {
   const existing = await hydrateLocalSaveFromBackend(slot);
   if (existing) return { save: existing, created: false };
-  const fresh = saveFromSession(newGameSession());
+  const fresh = saveFromSession(newCareerSession());
   await writeLocalSaveAsync(slot, fresh);
   return { save: fresh, created: true };
 }

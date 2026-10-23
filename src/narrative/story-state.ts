@@ -16,7 +16,11 @@ export type { ProductGameMode } from "./game-mode.ts";
 
 export type CareerOrigin = "raffle" | "passionate_letter" | "community_takeover";
 
-export type ActiveArc = "relegation_battle" | "promotion_push" | null;
+/**
+ * relegation_battle: survival story (Kieler FC, bottom clubs) · promotion_push: Oberliga clubs,
+ * Story Mode Act 2 · club_ambition: picked mid/top Regionalliga clubs — generic beats only.
+ */
+export type ActiveArc = "relegation_battle" | "promotion_push" | "club_ambition" | null;
 
 /** Act 1 season-end outcome — read from promotion/relegation movements, never forced. */
 export type Act1Outcome = "relegated" | "survived";

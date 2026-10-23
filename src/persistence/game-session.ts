@@ -82,9 +82,12 @@ import {
   generateWorld,
   legacyWorldState,
   NORDSTERN_CLUB_ID,
+  NORDSTERN_TEAM_ID,
   persistedWorldState,
+  WORLD_CLUB_SEED,
   type WorldState,
 } from "../world/world-generator.ts";
+import { seedYouthSquad } from "../board/club-pipeline-reset.ts";
 import {
   act1AssistantTrainingPlan,
   resolveFeatureCurtain,
@@ -174,23 +177,38 @@ export interface NewGameOptions {
   mode?: ProductGameMode;
   /** False shows the new-game mode card before the opening (UI default). */
   modeConfirmed?: boolean;
+  /** Roster seed — squads, talents, youth, story cast. Default {@link DEFAULT_MASTER_SEED}. */
+  seed?: number;
+}
+
+/** A fresh roster seed for a new UI career (the club layer stays fixed). */
+export function randomCareerSeed(random: () => number = Math.random): number {
+  return 1 + Math.floor(random() * 2_000_000_000);
+}
+
+/** A new player career from the UI — every one gets its own roster seed. */
+export function newCareerSession(now = new Date()): GameSession {
+  return newGameSession(now, { seed: randomCareerSeed() });
 }
 
 export function newGameSession(now = new Date(), options: NewGameOptions = {}): GameSession {
   const mode = options.mode ?? "regionalliga_manager";
-  const world = generateWorld(DEFAULT_MASTER_SEED);
-  const academy = loadDemoRoster().filter((player) => player.squad_status !== "pro");
+  const seed = options.seed ?? DEFAULT_MASTER_SEED;
+  const world = generateWorld(seed, WORLD_CLUB_SEED);
+  const pros = world.players.filter((player) => player.club_id === NORDSTERN_CLUB_ID);
+  // The default seed keeps the curated demo academy (tests, calibration, scripts).
+  const academy =
+    seed === DEFAULT_MASTER_SEED
+      ? loadDemoRoster().filter((player) => player.squad_status !== "pro")
+      : seedYouthSquad(NORDSTERN_TEAM_ID, { season: 1, masterSeed: seed, players: pros });
   const save = createSave({
     nowIso: now.toISOString(),
     playerClubId: DEFAULT_CLUB_ID,
     managerName: DEFAULT_MANAGER,
     season: 1,
     week: CAREER_START_WEEK,
-    masterSeed: DEFAULT_MASTER_SEED,
-    players: [
-      ...world.players.filter((player) => player.club_id === NORDSTERN_CLUB_ID),
-      ...academy,
-    ],
+    masterSeed: seed,
+    players: [...pros, ...academy],
   });
   save.state.world = persistedWorldState(world);
   const rivalPlayers = world.players.filter(
@@ -204,7 +222,7 @@ export function newGameSession(now = new Date(), options: NewGameOptions = {}): 
       null;
     save.state.pipeline.scout_board = createScoutBoard(rivalPlayers, playerClub);
     save.state.pipeline.story_state = {
-      ...initializeStoryForNewGame(DEFAULT_MASTER_SEED, DEFAULT_MANAGER, 1, mode),
+      ...initializeStoryForNewGame(seed, DEFAULT_MANAGER, 1, mode),
       game_mode_confirmed: options.modeConfirmed ?? options.mode !== undefined,
     };
     save.state.pipeline.board = boardWithSurvivalArc(

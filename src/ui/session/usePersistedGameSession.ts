@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { withClubEvent, type ClubEventKind } from "../../inbox/club-events.ts";
 import { t } from "../../i18n/index.ts";
 import {
+  newCareerSession,
   newGameSession,
   saveFromSession,
   sessionFromSave,
@@ -127,7 +128,7 @@ export function usePersistedGameSession(options: {
       try {
         if (createNew) {
           removeLocalSave(activeSlot);
-          const fresh = saveFromSession(newGameSession());
+          const fresh = saveFromSession(newCareerSession());
           if (hydrateGenerationRef.current !== generation) return;
           await writeLocalSaveAsync(activeSlot, fresh);
           if (hydrateGenerationRef.current !== generation) return;
@@ -219,7 +220,7 @@ export function usePersistedGameSession(options: {
     forceNewSlotRef.current = activeSlot;
     hydrateGenerationRef.current += 1;
     removeLocalSave(activeSlot);
-    const fresh = saveFromSession(newGameSession());
+    const fresh = saveFromSession(newCareerSession());
     setSave(fresh);
     readyRef.current = true;
     setSessionReady(true);
@@ -262,7 +263,7 @@ export function usePersistedGameSession(options: {
       if (slot === activeSlot) {
         const generation = hydrateGenerationRef.current + 1;
         hydrateGenerationRef.current = generation;
-        const fresh = saveFromSession(newGameSession());
+        const fresh = saveFromSession(newCareerSession());
         setSave(fresh);
         readyRef.current = true;
         setSessionReady(true);

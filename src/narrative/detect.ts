@@ -139,7 +139,7 @@ export function detectWeeklyBeats(context: DetectContext): DetectedBeat[] {
 
   const hospitality = detectHospitalityBeats(context);
   const arc = context.story.active_arc;
-  if (arc !== "relegation_battle" && arc !== "promotion_push") return hospitality;
+  if (arc == null) return hospitality;
   const survivalArc = arc === "relegation_battle";
 
   const beats: DetectedBeat[] = [...hospitality];

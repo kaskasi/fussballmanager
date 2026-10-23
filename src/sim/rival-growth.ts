@@ -10,6 +10,7 @@ import { defaultTrainingPlan, planToSessions } from "../development/training-uni
 import type { Attributes, Player, PositionPrimary } from "../types/player.ts";
 import {
   generateWorld,
+  WORLD_CLUB_SEED,
   NORDSTERN_CLUB_ID,
 } from "../world/world-generator.ts";
 import { isLeagueMatchWeek } from "./game-calendar.ts";
@@ -194,7 +195,7 @@ export function enginePlayerToCareer(
 }
 
 export function initializeRivalPlayers(masterSeed: number): Player[] {
-  return generateWorld(masterSeed).players.filter(
+  return generateWorld(masterSeed, WORLD_CLUB_SEED).players.filter(
     (player) => player.club_id !== NORDSTERN_CLUB_ID,
   );
 }

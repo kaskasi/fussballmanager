@@ -20,9 +20,9 @@ import {
   resolveWorldClub,
 } from "../world/club-display.ts";
 import {
-  generateClubs,
   generateWorld,
   NORDSTERN_TEAM_ID,
+  WORLD_CLUB_SEED,
   type ClubIdentity,
   type WorldClub,
 } from "../world/world-generator.ts";
@@ -30,7 +30,7 @@ import { squadWithRivalRoster } from "./rival-engine-squad.ts";
 
 export const REGIONALLIGA_ID: DivisionEconomyId = "regionalliga-nord";
 export const OBERLIGA_ID: DivisionEconomyId = "oberliga-nord";
-export const DEFAULT_WORLD_SEED = 2026;
+export const DEFAULT_WORLD_SEED = WORLD_CLUB_SEED;
 
 export const DEFAULT_GENERATED_WORLD = generateWorld(DEFAULT_WORLD_SEED);
 const WORLD_CLUBS = new Map(
@@ -45,13 +45,9 @@ export const LEGACY_LEAGUE_SQUADS: readonly Squad[] = [
   ...SEED_OBERLIGA,
 ];
 
-export function defaultLeaguePools(
-  masterSeed = DEFAULT_WORLD_SEED,
-): Record<DivisionEconomyId, TeamId[]> {
-  const clubs =
-    masterSeed === DEFAULT_WORLD_SEED
-      ? DEFAULT_GENERATED_WORLD.clubs
-      : generateClubs(masterSeed);
+/** Pools of the fixed career club layer — independent of the save's roster seed. */
+export function defaultLeaguePools(): Record<DivisionEconomyId, TeamId[]> {
+  const clubs = DEFAULT_GENERATED_WORLD.clubs;
   return {
     "regionalliga-nord": clubs
       .filter((club) => club.division_id === REGIONALLIGA_ID)

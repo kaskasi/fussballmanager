@@ -36,6 +36,7 @@ describe("career presentation (PRD 19)", () => {
         finances_deep_nav: false,
         opponent_scout_module: false,
         tactics_sliders: false,
+        youth_camps: false,
       },
     };
     expect(isNavScreenVisible("scouting", state)).toBe(true);
@@ -58,6 +59,11 @@ describe("career presentation (PRD 19)", () => {
     expect(curtain.manual_training).toBe(false);
     expect(curtain.tactics_sliders).toBe(false);
     expect(curtain.opponent_scout_module).toBe(false);
+  });
+
+  it("act1 hides youth camps; regionalliga manager keeps them", () => {
+    expect(resolveFeatureCurtain(storyModeAct1StoryState()).youth_camps).toBe(false);
+    expect(deriveFeatureCurtain("regionalliga_manager", "act1_nordstern", []).youth_camps).toBe(true);
   });
 
   it("regionalliga manager stays full even with an act phase or stray unlocks", () => {

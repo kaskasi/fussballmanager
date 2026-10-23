@@ -123,6 +123,7 @@ export function YouthCampus({
   onPullCampPlayer,
   campusTab,
   onCampusTabChange,
+  showCamps = true,
   youthSort,
   onYouthSortChange,
   initialTab,
@@ -151,13 +152,15 @@ export function YouthCampus({
   onPullCampPlayer: (playerId: string) => void;
   campusTab: YouthTab;
   onCampusTabChange: (tab: YouthTab) => void;
+  /** Story Mode curtain — camps stay hidden until the Act 2 unlock beat. */
+  showCamps?: boolean;
   youthSort: YouthCampusSortState;
   onYouthSortChange: (sort: YouthCampusSortState) => void;
   initialTab?: YouthTab | null;
   onInitialTabApplied?: () => void;
 }) {
   const tr = useT();
-  const tab = campusTab;
+  const tab = !showCamps && campusTab === "camps" ? "u17" : campusTab;
   useTutorialTabFocus("campus", "campus.auto_youth", "u17", onCampusTabChange);
 
   useEffect(() => {
@@ -197,7 +200,7 @@ export function YouthCampus({
   const youthTabs: { id: YouthTab; label: string }[] = [
     { id: "u17", label: tr("youth.tab.u17Count", { count: u17Count }) },
     { id: "u19", label: tr("youth.tab.u19Count", { count: u19Count }) },
-    { id: "camps", label: tr("youth.tab.camps") },
+    ...(showCamps ? [{ id: "camps" as const, label: tr("youth.tab.camps") }] : []),
   ];
 
   return (

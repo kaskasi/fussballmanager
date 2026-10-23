@@ -60,6 +60,13 @@ describe("Act 2 unlock schedule (PRD 19)", () => {
     expect(resolveFeatureCurtain(story)).toEqual(fullFeatureCurtain());
   });
 
+  it("keeps youth camps hidden until the season-2 chairman beat", () => {
+    expect(playAct2(22).story.curtain_unlocks).not.toContain("youth_camps");
+    const { story, fired } = playAct2(34);
+    expect(fired.find((entry) => entry.beatId === "act2_youth_camps")?.actWeek).toBe(23);
+    expect(resolveFeatureCurtain(story).youth_camps).toBe(true);
+  });
+
   it("raises at most one beat per week even when several are overdue", () => {
     expect(detectCareerActBeats(act2, START.season, START.week + 20)).toHaveLength(1);
   });

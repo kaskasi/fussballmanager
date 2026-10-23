@@ -437,6 +437,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           onSelectPlayer={setProfileId}
           campusTab={campusTab}
           onCampusTabChange={setCampusTab}
+          showCamps={curtain.youth_camps || youthCamps.length > 0}
           youthSort={campusYouthSort}
           onYouthSortChange={setCampusYouthSort}
           onOpenInbox={openPostfach}

@@ -1,0 +1,42 @@
+/* Matchday (F1) — design.md §9.1 Aufstellung, §9.15 Matchday, §9.14 Spielbericht. Layout only; components come from components.css. */
+
+/* §9.1 Aufstellung */
+.tc-lineup__head { grid-template-columns: minmax(0, 1fr); align-items: end; gap: var(--space-3); margin-top: var(--space-4); }
+.tc-lineup__tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.tc-lineup__formation { display: inline-flex; align-items: center; gap: var(--space-2); }
+.tc-lineup__select { min-width: 6.5rem; font-weight: 700; }
+.tc-lineup__warning { margin-bottom: var(--space-3); }
+@media (min-width: 1024px) {
+  .tc-lineup__head { grid-template-columns: minmax(0, 1fr) auto; }
+  .tc-lineup__split { grid-template-columns: minmax(0, 1fr) 20rem; }
+}
+
+.tc-lineup__board { display: grid; gap: var(--space-3); min-width: 0; }
+.tc-lineup__pitch { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2); }
+.tc-lineup__pitch .lineup-pitch-wrap { max-height: none; }
+.tc-lineup__pitch .opponent-scout-action .inbox-action { width: 100%; justify-content: center; }
+.tc-lineup__bench { --lineup-bench-slot-h: 2.75rem; display: grid; gap: var(--space-2); padding: var(--space-3); }
+.tc-lineup__bench-head { align-items: center; margin-bottom: 0; }
+.tc-lineup__bench-head .tc-label { margin: 0; }
+/* Bench below the pitch: 3 × 3 on wide screens, one column on phones (page size stays 9). */
+.tc-lineup .lineup-bench-list--fixed { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-rows: var(--lineup-bench-slot-h); height: auto; gap: var(--space-2); }
+@media (min-width: 640px) {
+  .tc-lineup .lineup-bench-list--fixed { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.tc-lineup__pager { display: inline-flex; align-items: center; gap: var(--space-1); }
+.tc-lineup__pager .tc-iconbtn { width: var(--control-sm); height: var(--control-sm); }
+.tc-lineup__pager .tc-iconbtn:disabled { opacity: 0.4; cursor: default; }
+.tc-lineup .tc-icon { width: 16px; height: 16px; }
+
+.tc-lineup__score { font-variant-numeric: tabular-nums; font-weight: 700; }
+.tc-lineup__presets { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.tc-lineup__presets li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-1); }
+.tc-lineup__presets .tc-chip { width: 100%; text-align: left; }
+.tc-lineup__tuning { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--line); }
+.tc-lineup__tuning summary { cursor: pointer; }
+.tc-lineup__ranges { display: grid; gap: var(--space-3); margin-top: var(--space-3); }
+
+.tc-lineup__squad { margin-top: var(--space-4); }
+.tc-lineup__fit { display: inline-flex; align-items: center; justify-content: flex-end; gap: var(--space-1); }
+.tc-lineup__role { color: var(--text-muted); font-size: var(--font-size-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.tc-lineup__role.is-start { color: var(--positive); }

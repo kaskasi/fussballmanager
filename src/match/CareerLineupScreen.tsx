@@ -10,17 +10,12 @@ import {
   type Squad,
 } from "@fussballmanager/shared";
 import {
-  Calendar,
-  CalendarDays,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  CloudSun,
   RefreshCw,
   Rocket,
   Save,
   Star,
-  Users,
 } from "lucide-react";
 import type { MatchdayCashBreakdown } from "../stadium/matchday-commerce.ts";
 import type { NavPrimaryAction } from "../ui/nav-primary-action.ts";
@@ -298,228 +293,214 @@ export function CareerLineupScreen({
     : Math.round(12_000 + (setup.seed % 9_000));
 
   return (
-    <main className="matchday career-lineup">
+    <main className="matchday career-lineup tc-lineup">
       <MatchdayLineupAmbience
         setup={setup}
         homeStadiumCapacity={homeStadiumCapacity}
         fanbaseMood={fanbaseMood}
         poorForm={poorForm}
       />
-      <section className="career-lineup-panel" aria-label={t("match.lineup.title")}>
-        <header className="career-lineup-header">
-          <div className="career-lineup-header-main">
-            <h1>{t("match.lineup.title")}</h1>
+      <header className="tc-page-head tc-lineup__head">
+        <div className="tc-lineup__title">
+          <h1 className="tc-page-title">{t("match.lineup.title")}</h1>
+          <p className="tc-page-sub">
+            {t("match.lineup.matchday", { matchday: setup.matchday })} · {matchdayLabel}{" "}
+            {t("match.lineup.vs", { opponent: setup.opponentShortName })} · {kickoffLabel}
+          </p>
+        </div>
+        <div className="tc-lineup__tools">
+          <div className="tc-chips" role="group" aria-label={t("match.lineup.autoPickAria")}>
+            {AUTO_LINEUP_OPTIONS.map((option) => (
+              <button
+                key={option.mode}
+                type="button"
+                className="tc-chip tc-chip--icon"
+                aria-pressed={activeAutoMode === option.mode}
+                title={t(option.titleKey)}
+                onClick={() => applyAuto(option.mode)}
+              >
+                <AutoLineupIcon kind={option.icon} />
+                {t(option.labelKey)}
+              </button>
+            ))}
           </div>
-        </header>
-
-        <div className="career-lineup-hero">
-          <div
-            className="career-lineup-toolbar-row"
-            aria-label={t("match.lineup.autoPickAria")}
-          >
-            <div className="career-lineup-pills">
-              {AUTO_LINEUP_OPTIONS.map((option) => (
-                <button
-                  key={option.mode}
-                  type="button"
-                  className={
-                    activeAutoMode === option.mode ? "career-lineup-pill is-active" : "career-lineup-pill"
-                  }
-                  title={t(option.titleKey)}
-                  onClick={() => applyAuto(option.mode)}
-                >
-                  <AutoLineupIcon kind={option.icon} />
-                  {t(option.labelKey)}
-                </button>
+          <label className="tc-lineup__formation">
+            <span className="tc-label">{t("match.lineup.formation")}</span>
+            <select
+              className="tc-select tc-lineup__select"
+              value={plan.formation}
+              onChange={(event) => changeFormation(event.target.value as FormationId)}
+            >
+              {FORMATION_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {id}
+                </option>
               ))}
-            </div>
-            <label className="career-lineup-pill career-lineup-formation-pill">
-              <span className="career-lineup-formation-pill-label">{t("match.lineup.formation")}</span>
-              <span className="career-lineup-formation-pill-value">
-                <select
-                  value={plan.formation}
-                  aria-label={t("match.lineup.formation")}
-                  onChange={(event) => changeFormation(event.target.value as FormationId)}
-                >
-                  {FORMATION_IDS.map((id) => (
-                    <option key={id} value={id}>
-                      {id}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={14} strokeWidth={2.5} aria-hidden />
-              </span>
-            </label>
-          </div>
+            </select>
+          </label>
+        </div>
+      </header>
 
-          <div className="career-lineup-board">
-            <div className="lineup-pitch-panel game-panel-inner">
-              <LineupPitch
-                formation={plan.formation}
-                assignments={assignments}
-                playersById={playersById}
-                dragPlayerId={dragPlayerId}
-                playerTeamLabel={playerTeamLabel}
-                opponent={opponentPreview}
-                onAssign={setSlot}
-                onDragPlayer={setDragPlayerId}
-                onOpenPlayer={onOpenPlayer}
+      {filledCount < 11 ? (
+        <p className="tc-callout tc-callout--warn tc-lineup__warning" role="status">
+          {t("match.lineup.slotsOpen", { count: 11 - filledCount })}
+        </p>
+      ) : null}
+
+      <div className="tc-split tc-lineup__split">
+        <div className="tc-lineup__board">
+          <section className="tc-panel tc-lineup__pitch lineup-pitch-panel" aria-label={t("match.lineup.pitchViewAria")}>
+            <LineupPitch
+              formation={plan.formation}
+              assignments={assignments}
+              playersById={playersById}
+              dragPlayerId={dragPlayerId}
+              playerTeamLabel={playerTeamLabel}
+              opponent={opponentPreview}
+              onAssign={setSlot}
+              onDragPlayer={setDragPlayerId}
+              onOpenPlayer={onOpenPlayer}
+            />
+            {scoutBoard && onOpenOpponentScoutReport ? (
+              <OpponentScoutMatchAction
+                mode="lineup"
+                setup={setup}
+                season={season}
+                scoutBoard={scoutBoard}
+                onViewReport={onOpenOpponentScoutReport}
               />
-              {scoutBoard && onOpenOpponentScoutReport ? (
-                <OpponentScoutMatchAction
-                  mode="lineup"
-                  setup={setup}
-                  season={season}
-                  scoutBoard={scoutBoard}
-                  onViewReport={onOpenOpponentScoutReport}
-                />
+            ) : null}
+          </section>
+          <aside className="tc-panel tc-lineup__bench lineup-bench" aria-label={t("match.lineup.benchAria")}>
+            <div className="tc-panel__head tc-lineup__bench-head">
+              <h2 className="tc-label">{t("match.lineup.benchTitle", { count: bench.length })}</h2>
+              {benchPageCount > 1 ? (
+                <div className="tc-lineup__pager" role="group" aria-label={t("match.lineup.benchPagerAria")}>
+                  <button
+                    type="button"
+                    className="tc-iconbtn"
+                    disabled={benchPage <= 0}
+                    title={t("match.lineup.benchPrev")}
+                    onClick={() => setBenchPage((page) => Math.max(0, page - 1))}
+                  >
+                    <ChevronLeft className="tc-icon" strokeWidth={2.5} aria-hidden />
+                    <span className="tc-sr">{t("match.lineup.benchPrev")}</span>
+                  </button>
+                  <span className="tc-caption">
+                    {t("match.lineup.benchPage", { page: benchPage + 1, pages: benchPageCount })}
+                  </span>
+                  <button
+                    type="button"
+                    className="tc-iconbtn"
+                    disabled={benchPage >= benchPageCount - 1}
+                    title={t("match.lineup.benchNext")}
+                    onClick={() => setBenchPage((page) => Math.min(benchPageCount - 1, page + 1))}
+                  >
+                    <ChevronRight className="tc-icon" strokeWidth={2.5} aria-hidden />
+                    <span className="tc-sr">{t("match.lineup.benchNext")}</span>
+                  </button>
+                </div>
               ) : null}
             </div>
-            <aside className="lineup-bench" aria-label={t("match.lineup.benchAria")}>
-              <div className="lineup-bench-head">
-                <h2 className="lineup-bench-title">{t("match.lineup.benchTitle", { count: bench.length })}</h2>
-                {benchPageCount > 1 ? (
-                  <div className="lineup-bench-pager" aria-label={t("match.lineup.benchPagerAria")}>
-                    <button
-                      type="button"
-                      className="lineup-bench-pager-btn"
-                      disabled={benchPage <= 0}
-                      title={t("match.lineup.benchPrev")}
-                      onClick={() => setBenchPage((page) => Math.max(0, page - 1))}
-                    >
-                      <ChevronLeft size={16} strokeWidth={2.5} aria-hidden />
-                      <span className="sr-only">{t("match.lineup.benchPrev")}</span>
-                    </button>
-                    <span className="lineup-bench-pager-label">
-                      {t("match.lineup.benchPage", { page: benchPage + 1, pages: benchPageCount })}
-                    </span>
-                    <button
-                      type="button"
-                      className="lineup-bench-pager-btn"
-                      disabled={benchPage >= benchPageCount - 1}
-                      title={t("match.lineup.benchNext")}
-                      onClick={() =>
-                        setBenchPage((page) => Math.min(benchPageCount - 1, page + 1))
-                      }
-                    >
-                      <ChevronRight size={16} strokeWidth={2.5} aria-hidden />
-                      <span className="sr-only">{t("match.lineup.benchNext")}</span>
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-              <LineupIndicatorLegend />
-              <div
-                className="lineup-bench-list lineup-bench-list--fixed"
-                onDragOver={(event) => {
-                  if (dragPlayerId) event.preventDefault();
-                }}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  const playerId = event.dataTransfer.getData("text/player-id");
-                  if (!playerId) return;
-                  if (Object.values(assignments).includes(playerId)) {
-                    unassignPlayer(playerId);
-                  }
-                  setDragPlayerId(null);
-                }}
-              >
-                {benchPageSlots.map((player, index) =>
-                  player ? (
-                    <LineupPlayerCard
-                      key={player.id}
-                      player={player}
-                      onDragStart={setDragPlayerId}
-                      onDragEnd={() => setDragPlayerId(null)}
-                      onOpenPlayer={onOpenPlayer}
-                    />
-                  ) : (
-                    <div
-                      key={`bench-empty-${benchPage}-${index}`}
-                      className="lineup-bench-slot lineup-bench-slot--empty"
-                      aria-hidden
-                    />
-                  ),
-                )}
-              </div>
-            </aside>
-          </div>
+            <LineupIndicatorLegend />
+            <div
+              className="lineup-bench-list lineup-bench-list--fixed"
+              onDragOver={(event) => {
+                if (dragPlayerId) event.preventDefault();
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                const playerId = event.dataTransfer.getData("text/player-id");
+                if (!playerId) return;
+                if (Object.values(assignments).includes(playerId)) {
+                  unassignPlayer(playerId);
+                }
+                setDragPlayerId(null);
+              }}
+            >
+              {benchPageSlots.map((player, index) =>
+                player ? (
+                  <LineupPlayerCard
+                    key={player.id}
+                    player={player}
+                    onDragStart={setDragPlayerId}
+                    onDragEnd={() => setDragPlayerId(null)}
+                    onOpenPlayer={onOpenPlayer}
+                  />
+                ) : (
+                  <div
+                    key={`bench-empty-${benchPage}-${index}`}
+                    className="lineup-bench-slot lineup-bench-slot--empty"
+                    aria-hidden
+                  />
+                ),
+              )}
+            </div>
+          </aside>
+        </div>
 
-          <aside className="career-lineup-context" aria-label={t("match.lineup.contextAria")}>
-            <article className="lineup-opponent-card">
-              <h2>{opponentPreview?.teamShortName ?? setup.opponentShortName}</h2>
-              <p className="lineup-opponent-meta">
-                {opponentPreview?.formation ?? "—"} · {matchdayLabel}
-              </p>
-              <p className="lineup-opponent-meta">{t("match.lineup.vs", { opponent: setup.opponentShortName })}</p>
-              <ul className="lineup-match-facts">
-                <li>
-                  <CalendarDays size={15} strokeWidth={2.25} aria-hidden />
-                  <span>{t("match.lineup.matchday", { matchday: setup.matchday })}</span>
-                </li>
-                <li>
-                  <Calendar size={15} strokeWidth={2.25} aria-hidden />
-                  <span>{kickoffLabel}</span>
-                </li>
-                <li>
-                  <CloudSun size={15} strokeWidth={2.25} aria-hidden />
-                  <span>{weatherLabel}</span>
-                </li>
-                <li>
-                  <Users size={15} strokeWidth={2.25} aria-hidden />
-                  <span>
-                    {t("match.lineup.spectators", {
-                      count: expectedSpectators.toLocaleString(numberFormat),
-                    })}
-                  </span>
-                </li>
-              </ul>
-            </article>
-
-            <article className="lineup-tactics-card lineup-tactics-card--stretch">
-              <h2>{t("match.lineup.tactics")}</h2>
-              <div className="lineup-tactics-pills" role="group" aria-label={t("match.lineup.playStyleAria")}>
-                {TACTICS_STYLE_IDS.map((presetId) => {
-                  const label = t(`match.tactics.preset.${presetId}`);
-                  return (
-                    <div key={presetId} className="lineup-tactics-pill-row">
-                      <button
-                        type="button"
-                        className={
-                          activePreset === presetId
-                            ? "lineup-tactics-pill is-active"
-                            : "lineup-tactics-pill"
-                        }
-                        onClick={() => applyStylePreset(presetId)}
-                      >
-                        {label}
-                      </button>
-                      <button
-                        type="button"
-                        className="lineup-tactics-save"
-                        title={t("match.lineup.savePresetTitle", { label })}
-                        onClick={() => {
-                          onSaveTacticsPreset(presetId, plan);
-                          setActivePreset(presetId);
-                        }}
-                      >
-                        <Save size={16} strokeWidth={2.5} aria-hidden />
-                        <span className="sr-only">{t("match.lineup.savePresetSr")}</span>
-                      </button>
-                    </div>
-                  );
-                })}
+        <aside className="tc-stack" aria-label={t("match.lineup.contextAria")}>
+          <section className="tc-panel">
+            <div className="tc-panel__head">
+              <div>
+                <p className="tc-label">{t("match.lineup.opponent")}</p>
+                <h2 className="tc-panel__title">{opponentPreview?.teamShortName ?? setup.opponentShortName}</h2>
               </div>
-              <p className="lineup-tactics-score">
+              <span className="tc-panel__meta">{opponentPreview?.formation ?? "—"}</span>
+            </div>
+            <dl className="tc-kv">
+              <dt>{t("match.lineup.fact.venue")}</dt>
+              <dd>{matchdayLabel}</dd>
+              <dt>{t("match.lineup.fact.kickoff")}</dt>
+              <dd>{kickoffLabel}</dd>
+              <dt>{t("match.lineup.fact.weather")}</dt>
+              <dd>{weatherLabel}</dd>
+              <dt>{t("match.lineup.fact.spectators")}</dt>
+              <dd>~{expectedSpectators.toLocaleString(numberFormat)}</dd>
+            </dl>
+          </section>
+
+          <section className="tc-panel">
+            <div className="tc-panel__head">
+              <h2 className="tc-panel__title">{t("match.lineup.tactics")}</h2>
+              <span className="tc-panel__meta tc-lineup__score">
                 {plan.mentality} / {plan.pressing} / {plan.lineHeight}
-              </p>
-            </article>
-
-            <details className="career-lineup-disclosure">
-              <summary>{t("match.lineup.fineTuning")}</summary>
-              <div className="career-lineup-toolbar">
+              </span>
+            </div>
+            <ul className="tc-lineup__presets" aria-label={t("match.lineup.playStyleAria")}>
+              {TACTICS_STYLE_IDS.map((presetId) => {
+                const label = t(`match.tactics.preset.${presetId}`);
+                return (
+                  <li key={presetId}>
+                    <button
+                      type="button"
+                      className="tc-chip"
+                      aria-pressed={activePreset === presetId}
+                      onClick={() => applyStylePreset(presetId)}
+                    >
+                      {label}
+                    </button>
+                    <button
+                      type="button"
+                      className="tc-iconbtn"
+                      title={t("match.lineup.savePresetTitle", { label })}
+                      onClick={() => {
+                        onSaveTacticsPreset(presetId, plan);
+                        setActivePreset(presetId);
+                      }}
+                    >
+                      <Save className="tc-icon" strokeWidth={2.25} aria-hidden />
+                      <span className="tc-sr">{t("match.lineup.savePresetSr")}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <details className="tc-lineup__tuning">
+              <summary className="tc-label">{t("match.lineup.fineTuning")}</summary>
+              <div className="tc-lineup__ranges">
                 <TacticSlider
-                  label={t("match.lineup.slider.mentalityShort")}
+                  label={t("match.lineup.slider.mentality")}
                   value={plan.mentality}
                   onChange={(mentality) => {
                     setActivePreset(null);
@@ -529,7 +510,7 @@ export function CareerLineupScreen({
                   }}
                 />
                 <TacticSlider
-                  label={t("match.lineup.slider.pressingShort")}
+                  label={t("match.lineup.slider.pressing")}
                   value={plan.pressing}
                   onChange={(pressing) => {
                     setActivePreset(null);
@@ -539,7 +520,7 @@ export function CareerLineupScreen({
                   }}
                 />
                 <TacticSlider
-                  label={t("match.lineup.slider.lineShort")}
+                  label={t("match.lineup.slider.line")}
                   value={plan.lineHeight}
                   min={25}
                   max={90}
@@ -552,89 +533,80 @@ export function CareerLineupScreen({
                 />
               </div>
             </details>
-          </aside>
+          </section>
+        </aside>
+      </div>
+
+      <section className="tc-panel tc-lineup__squad" aria-label={t("match.lineup.squadAria")}>
+        <div className="tc-panel__head">
+          <h2 className="tc-panel__title">{t("match.lineup.squadSummary", { count: squadTableRows.length })}</h2>
+          <span className="tc-panel__meta">{t("match.lineup.startersMeta", { count: filledCount })}</span>
         </div>
-
-        {filledCount < 11 ? (
-          <p className="career-lineup-warning" role="status">
-            {t("match.lineup.slotsOpen", { count: 11 - filledCount })}
-          </p>
-        ) : null}
-
-        <details className="career-lineup-disclosure career-lineup-squad">
-          <summary>{t("match.lineup.squadSummary", { count: squadTableRows.length })}</summary>
-          <div className="career-lineup-squad-body">
-            <table className="lineup-squad-table">
-              <thead>
-                <tr>
-                  <th scope="col">{t("squad.col.pos")}</th>
-                  <th scope="col">{t("squad.col.name")}</th>
-                  <th scope="col" className="col-num">
-                    {t("squad.col.age")}
-                  </th>
-                  <th scope="col" className="col-num">
-                    CA
-                  </th>
-                  <th scope="col" className="col-num">
-                    {t("match.lineup.col.form")}
-                  </th>
-                  <th scope="col" className="col-num">
-                    {t("match.lineup.col.fitness")}
-                  </th>
-                  <th scope="col" className="col-role">
-                    {t("match.lineup.col.usage")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {squadTableRows.map((row) => {
-                  const form = lineupFormFromCareer(row.form);
-                  const fit = stateMark(row.fitness, 75, 50);
-                  return (
-                    <tr key={row.playerId} className={row.role === "start" ? "is-starter" : undefined}>
-                      <td className="col-pos">{row.positionLabel}</td>
-                      <td className="col-name">
-                        {onOpenPlayer ? (
-                          <button
-                            type="button"
-                            className="lineup-squad-name-btn"
-                            onClick={() => onOpenPlayer(row.playerId)}
-                          >
-                            {row.displayName}
-                          </button>
-                        ) : (
-                          row.displayName
-                        )}
-                      </td>
-                      <td className="col-num">{row.age}</td>
-                      <td className="col-num">{row.ca}</td>
-                      <td className={`lineup-squad-form col-num is-${form.tone}`}>{form.label}</td>
-                      <td className={`lineup-squad-fitness col-num is-${fit.tone}`}>
+        <div className="tc-table-wrap">
+          <table className="tc-table tc-table--compact">
+            <thead>
+              <tr>
+                <th scope="col">{t("squad.col.pos")}</th>
+                <th scope="col">{t("squad.col.name")}</th>
+                <th scope="col" className="tc-num">
+                  {t("squad.col.age")}
+                </th>
+                <th scope="col" className="tc-num">
+                  CA
+                </th>
+                <th scope="col" className="tc-num">
+                  {t("match.lineup.col.form")}
+                </th>
+                <th scope="col" className="tc-num">
+                  {t("match.lineup.col.fitness")}
+                </th>
+                <th scope="col">{t("match.lineup.col.usage")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {squadTableRows.map((row) => {
+                const form = lineupFormFromCareer(row.form);
+                const fit = stateMark(row.fitness, 75, 50);
+                return (
+                  <tr key={row.playerId} className={row.role === "start" ? "tc-row--mark" : undefined}>
+                    <td>{row.positionLabel}</td>
+                    <td>
+                      {onOpenPlayer ? (
+                        <button type="button" className="tc-linkbtn" onClick={() => onOpenPlayer(row.playerId)}>
+                          {row.displayName}
+                        </button>
+                      ) : (
+                        row.displayName
+                      )}
+                    </td>
+                    <td className="tc-num">{row.age}</td>
+                    <td className="tc-num">{row.ca}</td>
+                    <td className={`tc-num tc-state--${form.tone}`}>{form.label}</td>
+                    <td className={`tc-num tc-state--${fit.tone}`}>
+                      <span className="tc-lineup__fit">
                         <LineupFatigueBars fitness={row.fitness} compact />
-                        <span className="lineup-shape-mark" aria-hidden>
-                          {fit.mark}
-                        </span>
+                        <span aria-hidden>{fit.mark}</span>
                         {row.fitness}
-                      </td>
-                      <td className="col-role">
-                        <span className={`lineup-squad-role is-${row.role}`}>
-                          {row.role === "start" ? t("match.lineup.role.start") : t("match.lineup.role.bench")}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </details>
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`tc-lineup__role${row.role === "start" ? " is-start" : ""}`}>
+                        {row.role === "start" ? t("match.lineup.role.start") : t("match.lineup.role.bench")}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
   );
 }
 
 function AutoLineupIcon({ kind }: { kind: AutoLineupIcon }) {
-  const props = { size: 16, strokeWidth: 2.5, "aria-hidden": true as const };
+  const props = { className: "tc-icon", strokeWidth: 2.5, "aria-hidden": true as const };
   switch (kind) {
     case "star":
       return <Star {...props} />;
@@ -659,8 +631,11 @@ function TacticSlider({
   onChange: (value: number) => void;
 }) {
   return (
-    <label className="career-lineup-slider">
-      {label} {value}
+    <label className="tc-range">
+      <span className="tc-range__head">
+        <span>{label}</span>
+        <strong>{value}</strong>
+      </span>
       <input
         type="range"
         min={min}

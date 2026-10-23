@@ -20,6 +20,7 @@ We **prefer CC0 and open licenses wherever possible** (Kenney, ambientCG, Common
 | Browser favicon & PWA icons | Project-authored SVG/PNG (`public/favicon.svg`, `public/apple-touch-icon.png`) — Nordstern mark, design tokens §2 |
 | Fictional club crests (when shipped) | Designs exported from [Canva](https://www.canva.com/) (2026-10-06 batch), [Content License Agreement](https://www.canva.com/policies/content-license-agreement/) — fictional clubs only; sources in `assets/club_logos/` |
 | UI fonts | [Sofia Sans and Sofia Sans Condensed](https://github.com/lettersoup/Sofia-Sans) by Lettersoup (SIL Open Font License 1.1) — self-hosted latin and latin-ext subsets in `public/fonts/`, licence in `public/fonts/OFL.txt` |
+| Newspaper fonts (Der Treter) | [Newsreader](https://github.com/productiontype/Newsreader) by Production Type and [UnifrakturMaguntia](https://github.com/google/fonts/tree/main/ofl/unifrakturmaguntia) by j. 'mach' wust and Peter Wiegel (SIL Open Font License 1.1) — self-hosted woff2 in `public/fonts/` (Newsreader roman and italic, latin and latin-ext; UnifrakturMaguntia latin), licences in `public/fonts/OFL-newsreader.txt` and `public/fonts/OFL-unifrakturmaguntia.txt` |
 | Storyboard opening POC (dev only) | Project-authored SVG via `npm run bake:storyboard-poc` — see `docs/design-refs/storyboard-opening-poc/ATTRIBUTION.md` |
 
 Full maintainer inventory: [assets/ATTRIBUTION.MD](../assets/ATTRIBUTION.MD).

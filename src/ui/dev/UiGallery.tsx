@@ -634,7 +634,7 @@ export function UiGallery() {
           </dl>
         </Section>
 
-        <Section id="treter" title="Der Treter" note="A newspaper object, the same in both themes. Newsreader and UnifrakturMaguntia get self-hosted when Der Treter moves to these components; until then the serif fallbacks show.">
+        <Section id="treter" title="Der Treter" note="A newspaper object, the same in both themes. Newsreader and UnifrakturMaguntia are self-hosted in public/fonts.">
           <article className="tc-news" aria-label="Der Treter">
             <h3 className="tc-news__masthead">Der Treter</h3>
             <div className="tc-news__dateline">

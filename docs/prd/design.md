@@ -102,7 +102,7 @@ Kenney-Tiles und SVGs kommen in eigenen Farben. Bevor sie ins Projekt einfließe
 | `--font-text` | **Sofia Sans** | Fließtext, Tabellen, Labels, Buttons |
 | `--font-news` / `--font-masthead` | Newsreader / UnifrakturMaguntia | **nur** Der Treter |
 
-- Sofia Sans und Sofia Sans Condensed (Lettersoup, OFL 1.1) sind self-hosted in `public/fonts/` (woff2, latin + latin-ext, variable 100–900), kein Google-Fonts-Request. Newsreader und UnifrakturMaguntia werden mit der Treter-Migration self-hosted; bis dahin greifen die Serifen-Fallbacks.
+- Sofia Sans und Sofia Sans Condensed (Lettersoup, OFL 1.1) sind self-hosted in `public/fonts/` (woff2, latin + latin-ext, variable 100–900), kein Google-Fonts-Request. Newsreader (variabel, wght 200–800 und opsz, normal und kursiv, latin + latin-ext) und UnifrakturMaguntia (latin) sind ebenfalls self-hosted (OFL 1.1); Chinesisch fällt im Treter auf Songti zurück.
 - CJK fällt auf PingFang SC / Microsoft YaHei / Noto Sans CJK SC zurück.
 - Zahlen immer mit Tabellenziffern (`font-variant-numeric: tabular-nums`, global gesetzt).
 
@@ -167,7 +167,7 @@ Mit dem Kader (F1) dazugekommen: `tc-select`, `tc-check(s)`, `tc-cards` / `tc-ca
 
 Mit dem Ligen-Screen (F1) dazugekommen: `tc-page-head` / `tc-page-title` / `tc-page-sub` (ein Kopf pro Screen), `tc-tabs--page` + `tc-tab__meta`, `tc-split` (Haupt- + Seitenspalte), `tc-linkbtn` (Namen in Tabellen), `tc-place` (Platz mit Zone), `tc-row--mark`, `tc-form__r--empty`, `tc-spark`, `tc-list` (Ranglisten), `tc-section`, `tc-empty`, `tc-stats` (Kennzahl-Kacheln), `tc-hide-narrow`. React: `ModalShell variant="tc"` (Escape schließt, Fokus auf Schließen), `ratingBand()` in `src/ui/design/rating-band.ts`.
 
-Mit Medizin und Postfach (F1) dazugekommen: keine neuen gemeinsamen Bausteine. Medizin nutzt `tc-page-head`, `tc-stats`, `tc-tabs--page`, `tc-cards` und `tc-table` (Layout in `design/surfaces/medical.css`). Das Postfach nutzt `tc-split` (offene Post + Archiv) und **Der Treter** jetzt `tc-news`; die alten Postfach-Karten sind auf dem Screen per `.postfach-screen` auf Tokens gezogen, die Hub-Spalte behält ihren Look (`design/surfaces/postfach.css`). Newsreader und UnifrakturMaguntia sind noch nicht selbst gehostet — bis dahin greifen die Serif-Fallbacks.
+Mit Medizin und Postfach (F1) dazugekommen: keine neuen gemeinsamen Bausteine. Medizin nutzt `tc-page-head`, `tc-stats`, `tc-tabs--page`, `tc-cards` und `tc-table` (Layout in `design/surfaces/medical.css`). Das Postfach nutzt `tc-split` (offene Post + Archiv) und **Der Treter** jetzt `tc-news`; die alten Postfach-Karten sind auf dem Screen per `.postfach-screen` auf Tokens gezogen, die Hub-Spalte behält ihren Look (`design/surfaces/postfach.css`).
 
 **UI-Galerie:** Einstellungen → Entwickler → „UI gallery“ oder `?ui=gallery`. Zeigt Farbrollen, Typo, Abstände, alle Komponenten mit Beispieldaten, Titelleisten für sieben Trikots (jeder Zweig von §2.4) und einen Hell/Dunkel-Schalter. Lädt als eigener Chunk; Spieler sehen sie nicht. Beim Bau oder Umzug eines Screens zuerst hier prüfen.
 

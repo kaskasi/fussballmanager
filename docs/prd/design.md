@@ -1107,73 +1107,64 @@ Interaktion: Klick auf eine Region → sofortige Trefferliste. Kein Scrollen.
 
 ### 9.15 Matchday
 
-Er ist der emotionale Höhepunkt des Wochenzyklus — eigenes Cockpit mit zwei Zuständen: **Vorschau** (vor Anpfiff) und **Live** (Simulation läuft).
+Er ist der emotionale Höhepunkt des Wochenzyklus — eigenes Cockpit mit zwei Zuständen: **Vorschau** (vor Anpfiff) und **Live** (Simulation läuft). Seit ADR 0004 ist Live **Text-first**: kein Pitch, der Kommentar-Stream ist der Hero.
 
-┌─[Header: "Spiel simulieren" ersetzt NEXT (gelb, gleiche Stelle)]─┐
-├──────────────────────-┬───────────---────────────────────────────┤
-│ HERO (links, ~55%)    │ LIVE-REGELN (rechts, 320px)              │
-│                       │                                          │
-│  NOR  0 : 0  HEI      │   [Play ▶][Ereignisse][Spielfeld]        │
-│  ─────────────────    │  SPEED 1x [▾]                            │
-│  0'01 · 4-3-3 vs      │                                          │
-│  4-4-2                │  ── Tab: EREIGNISSE ──                   │
-│                       │  18' ● Peters (A: Aydin)                 │
-│ ┌PITCH-VIZ (SVG)─────┐│  40' ○ Çelik                             │
-│ │ Ball (weißer Punkt)││  61' ● Peters                            │
-│ │ NOR-Chips: Tinte-  ││                                          │
-│ │ gelb, HEI: Weiß    ││  ── Tab: STATISTIK ──                    │
-│ │ auf --rasen-Pitch  ││  (Zusammenfassungs-Doppelbalken)         │
-│ │                    ││                                          │
-│ │ Tooltip-Klick:     ││  ── Tab: AUFSTELLUNGEN ──                │
-│ │ Chip → Mini-Profil ││  Nr | Name | Pos | Bewertung             │
-│ └────────────────────┘│  (Standard-StatTable-Komponente)         │
-│                       │                                          │
-│ EXPERTEN-/FANSTIMME:  │  DRITTEL/SEITE-ZONEN:                    │
-│ "Das Duell 4-3-3..."  │  DEF | MITTE ● | ANGRIFF                 │
-│ (Meta-Text, nicht     │  LINKS | ZENTRUM ● | RECHTS              │
-│  Box-In-Box)          │                                          │
-└──────────────────────-┴────────────────────────────────────────--┘
+```text
+/** WIREFRAME: design.md §9.15 — Matchday Live (Text-first, ADR 0004) */
+┌─[Header: "Spiel simulieren" → PAUSE/FORTSETZEN (gelb, gleiche Stelle)]─┐
+├──────────────────────────────────────┬─────────────────────────────────┤
+│ HERO (links, ~60%)                   │ LIVE-REGELN (rechts, 320px)     │
+│  NOR  2 : 1  HEI   · 67' · 4-3-3     │  [◀][▶ Play][▶|]  1× ▾  Key ▾   │
+│  MOMENTUM  ▂▃▅▇▅▃ (NOR oben)         │  Tabs: Ereignisse | Statistik | │
+│            ▁▂▁   (HEI unten)         │        Aufstellungen            │
+│  ZONE  DEF | MITTE | ANGRIFF ●       │  18' ● Peters (A: Aydin)        │
+│        LINKS | ZENTRUM ● | RECHTS    │  40' ○ Çelik                    │
+│ ─────────────────────────────────    │                                 │
+│ 66'  Aydin treibt den Ball durchs    │                                 │
+│      Mittelfeld.                     │                                 │
+│ 67'  Peters zieht ab … gehalten!     │                                 │
+│      [EXPERTE] Die Gäste wanken.     │                                 │
+│ 67'  ▸ Ecke für NOR   (neueste fett) │                                 │
+└──────────────────────────────────────┴─────────────────────────────────┘
+```
 
 Regeln:
 
 - **"Spiel simulieren" als NEXT-Variante:** Der Header-Button wird
-  am Spieltag zu "Spiel simulieren" (gelb, gleiche Komponente).
-  KEIN zusätzlicher Simulations-Button im Content. Nach dem
-  Anpfiff ändert er sich in PAUSE/FORTSETZEN (gleiche Stelle).
-- **Zwei Zustände:** VORSCHAU (vor dem Anpfiff: Aufstellungen +
-  Experte) und LIVE (Simulation läuft: Play/Events/Spielfeld +
-  Speed). Vorschau ist read-only, alle Interaktion in LIVE.
-- **Pitch-Viz als Hero:** Der Platz als SVG auf --rasen. Eigene
-  Spieler: --tinte-gefüllte Chips mit Nummer, Gegner: --panel
-  mit --outline. Ball als weißer Punkt mit sanfter Bewegungs-
-  interpolation. Klick auf Chip → Mini-Popup (Name, Rating,
-  Ballkontakte) – kein Screen-Wechsel.
-- **Zonen-Indikatoren (DRITTEL/SEITE):** Zwei dünne Segmente-
-  Balken unterm Pitch, aktive Zone hellt auf. Sie zeigen, wo
-  das Spiel gerade "lebt" – billige Atmosphäre, großer Effekt.
-  Kombiniert mit dem Kommentar-Text darüber.
-- **Kommentar & Analyst als Textfluss:** Der Textmodus ist KEIN
-  separater Screen, sondern der Stream unter/über dem Pitch, je
-  nach Tab-Zustand. Experte & Ultras-Stimme als einzeilige Meta-
-  Einträge im Stream, markiert durch [EXPERTE]/[ULTRAS]-Badge.
-  Emojis verboten – Badges übernehmen die Markierung.
-- **Ereignisse als Log:** Chronologisch, Tor-Zeitstrahl-Notation
-  wie in der Zusammenfassung (18' ● Peters (A: Aydin)). Wechsel
-  und Karten ebenfalls als Log-Einträge mit Icon-Badge.
-- **Aufstellungen:** Standard-StatTable, Wechsel-Highlight und
-  Rating-Entwicklung live aktualisiert.
-- **Gegner-Scouting gilt:** Klick auf Gegenspieler → Mini-Profil
-  mit Fog-of-War-Werten (PRD 04) – wenn gescoutet, sonst "?".
+  am Spieltag zu "Spiel simulieren" (gelb, gleiche Komponente). Kein
+  zusätzlicher Simulations-Button im Content. Nach dem Anpfiff wird
+  er zu PAUSE/FORTSETZEN (gleiche Stelle).
+- **Zwei Zustände:** VORSCHAU (Aufstellungen beider Teams + Experte,
+  read-only) und LIVE (Stream + Transport).
+- **Kommentar-Stream als Hero:** Minutenspalte links, eine Zeile pro
+  Beat. Die neueste Zeile ist hervorgehoben. Experten- und Fan-Stimme
+  sind einzeilige Meta-Einträge mit [EXPERTE]-Badge. Ton (Tor, Gefahr,
+  Schuss) kommt aus der `beatId`, nicht aus dem Text. Emojis verboten.
+  Auto-Scroll, außer der Nutzer hat hochgescrollt.
+- **Highlight-Stufe** (Key / Extended / Full) als Select neben dem
+  Tempo, pro Zuschauer gemerkt. Key = Tore, Karten, große Chancen,
+  Wechsel. Extended = dazu alle Schüsse, Standards, Experte. Full =
+  dazu Spielaufbau.
+- **Momentum:** Balken pro Minute bis zur aktuellen Minute, eigener
+  Verein oben in Akzentfarbe, Gegner unten in Info-Blau (wie die
+  Statistik-Balken). Gerechnet aus Events: Ballbesitz im
+  Angriffsdrittel, Schüsse, Ecken, Tore.
+- **Zonen-Leiste (DRITTEL/SEITE):** zwei dünne Segment-Balken, die
+  aktive Zone hellt auf. Kein Ball-Punkt, keine Spielerpositionen.
+- **Tor-Moment:** Der Stream hält ca. 800 ms. Die Tor-Zeile wird in
+  --terra hervorgehoben, Score-Kopf pulsiert. Bei reduced motion
+  entfällt der Puls.
+- **Pacing:** Tempo 1×/2×/4×. Die Uhr läuft zwischen den Zeilen
+  sichtbar weiter. ◀/▶| springen zeilenweise. "Direkt zur
+  Zusammenfassung" liegt im Match-Menü.
+- **Ereignisse-Tab:** Tor-/Karten-Log in Zeitstrahl-Notation
+  (18' ● Peters (A: Aydin)), Wechsel mit Icon-Badge.
+- **Aufstellungen:** Standard-StatTable. Gegner-Scouting gilt
+  (Fog-of-War, PRD 04).
+- **Mobile:** Score-Kopf, Momentum und Zone oben; Stream darunter;
+  Live-Regeln als Leiste über dem Stream.
 
-
-Der wichtige Unterschied zum Status quo in euren Screenshots: Der Textmodus ist kein dritter Screen neben Pitch und Simulation, sondern derselbe Stream in zwei Darstellungen. Wer will, liest; wer will, schaut. Die Pitch-Viz kann sogar parallel den Stream als kompaktes Ticker-Band unten anzeigen lassen.
-
-Zwei Punkte zum Nachdenken:
-
-Video-Rückmeldung beim Tor: Der Moment, in dem Peters trifft, ist euer Lohn-Moment. Option: Beim Tor springt der Pitch kurz in Zeitlupe/Highlight-Modus (Ball-Puls + --terra-Ring beim Torschützen-Chip), bevor der Stream weiterläuft. Nichts Kompliziertes – nur 800ms Aufmerksamkeit für den verdienten Moment.
-Speed-Control: 1x/2x/4x als kleines Dropdown neben den Tabs. "Direkt zur Zusammenfassung" (Skip) gehört ins ⋮-Menü, nicht als Button – sonst schwächt es das Ritual, jedes Spiel anzuschauen... oder ist eure Zielgruppe eher der Skip-Typ? Das ist eine echte Design-Entscheidung: Level of Engagement. FM-Puristen wollen 90 Minuten Textmodus, Casuals wollen Skip.
-
-
+Der Pitch lebt nur noch auf dem Aufstellungs-Screen (§9.14, Drag & Drop).
 
 
 ### 9.17 Merchandising (Tabs: Preise | Einkauf)

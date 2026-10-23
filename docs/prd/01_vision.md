@@ -113,7 +113,9 @@ Savegame existieren.
 
 ### Story–Sim Input Boundary
 
-Die Match-Engine unter `server/src/engine/` bleibt unangetastet (Gesetz 4).
+Die Match-Engine unter `server/src/engine/` ist die einzige Quelle für Spielfakten (Gesetz 4,
+neu gefasst in ADR 0003): Änderungen nur gemessen über den Kalibrier-Harness, Präsentation
+schreibt nie Events um.
 **Quelle der Wahrheit** sind der Savegame-Zustand und die **Eingaben** an den
 Engine-Wrapper (Aufstellung, Taktik-Mapping, Attribute, Verfügbarkeit) — nicht
 nachträglich erfundene Ergebnisse.

@@ -3,7 +3,7 @@
 Project: **The Club** (football management sim). Full PRD: `docs/PRD.md` — check it before major architecture decisions.
 
 ## What this is
-A text- and event-driven football management sim (no 3D). An event-driven match engine is the single source of truth, consumed by both a live text commentary feed and a 2D top-down pitch visualization (SVG, icons/dots + ball).
+A text- and event-driven football management sim (no 3D). An event-driven match engine is the single source of truth. The live matchday is text-first: a commentary stream plus visuals derived from events (momentum, zones, stats) — no live 2D pitch (ADR 0004). The 2D pitch exists only on the lineup screen. Engine changes follow the calibration rule in ADR 0003.
 
 ## Non-negotiables
 - No 3D anywhere (match rendering, stadium editor). If a request implies 3D, flag it instead of implementing it.

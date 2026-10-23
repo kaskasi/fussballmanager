@@ -355,8 +355,10 @@ Shop, keine Karte.
   16 Becker   ← aktiv    5  Gärtner ← aktiv
 ```
 
-- Dieselbe Event-Quelle für Log und 2D-Pitch.
-- Später: Broadcast Director (PRD 16) — Beats, PBP/Color; heute 1:1-Templates.
+- Text-first (ADR 0004): Kommentar-Stream als Hero, dazu nur event-abgeleitete
+  Visuals (Momentum, Zonen-Leiste, Statistik). Kein Live-Pitch.
+- Highlight-Stufen Key / Extended / Full (PRD 16, `MatchViewLine.level`).
+- Broadcast Director (PRD 16) — Beats, PBP/Color.
 - Deutsch. Kein englisches Terminal als Default.
 - Live-Eingriff (F1.9) bleibt M3; Speed/Pause sind Pacing, kein Mitspielen.
 - Matchday-Text-Editor-DNA des parallelen Projekts nicht den Club-Chrome
@@ -447,7 +449,7 @@ heavy club/league picker; no Nordstern cast in fan feed.
 | Gesetz 3 | Keine Text-first Inbox, kein Grid-first Jugend |
 | Gesetz 6 | Keine Jugend-XI |
 | Gesetz 1 | Keine Talent-Sterne, keine Potential-Leiste |
-| Gesetz 4 | Keine Engine-Änderung fürs Log |
+| Gesetz 4 | Log/Präsentation schreibt keine Events um; Engine-Änderungen nur via ADR 0003 |
 | PRD 01 | Keine Manager-Wohnung als Screen |
 | Leere Slots | Hunger sichtbar, nicht weggelassen |
 | Deutsch | Club + Kommentarzeilen |

@@ -35,7 +35,7 @@ Experienced football-management genre players (Football Manager, FIFA Manager ve
 | Youth development | Youth academy, player progression/regression | In |
 | Staff management | Coaching staff, scouts, medical staff with their own attributes | In |
 | Press & morale | Press conferences and dressing-room dynamics, LLM-generated, can subtly affect morale/relationships | In |
-| Matchday visualization | 2D top-down pitch view (icons/dots + ball) synced to match events, alongside live text commentary | In |
+| Matchday visualization | 2D top-down pitch view (icons/dots + ball) synced to match events, alongside live text commentary | Superseded by ADR 0004: text-first, event-derived visuals only |
 | AI-generated imagery | Icons, backgrounds, placeholder graphics generated rather than hand-drawn, used throughout the UI | In |
 | Tactics-board visualization | Using the pitch view for set-piece/tactics planning (not just live matchday) | Out — backlog |
 | Extended economy | Deeper financial modeling (loans, debt, investors, market inflation, dynamic pricing curves) | Out — backlog |

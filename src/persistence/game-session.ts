@@ -54,7 +54,7 @@ import {
   normalizeTrainingPlanPresets,
   type TrainingPlanPresetSlot,
 } from "../development/training-plan-presets.ts";
-import { createInitialTrainingPlan, migrateLegacyTrainingPlan } from "../development/training-units.ts";
+import { migrateLegacyTrainingPlan } from "../development/training-units.ts";
 import { createSave, type SaveGame } from "./savegame-model.ts";
 import {
   defaultCoachingStaff,
@@ -91,6 +91,7 @@ import {
 } from "../narrative/career-presentation.ts";
 import { isTrainingPlanNeglected } from "../development/training-neglect.ts";
 import { normalizeStoryState, type StoryState } from "../narrative/story-state.ts";
+import type { ProductGameMode } from "../narrative/game-mode.ts";
 import { boardWithSurvivalArc, initializeStoryForNewGame } from "../narrative/opening.ts";
 import {
   normalizeAssistantDelegation,
@@ -168,7 +169,15 @@ export interface GameSession {
   orthopedistHire: OrthopedistHireState;
 }
 
-export function newGameSession(now = new Date()): GameSession {
+export interface NewGameOptions {
+  /** PRD 24 — default Regionalliga Manager. */
+  mode?: ProductGameMode;
+  /** False shows the new-game mode card before the opening (UI default). */
+  modeConfirmed?: boolean;
+}
+
+export function newGameSession(now = new Date(), options: NewGameOptions = {}): GameSession {
+  const mode = options.mode ?? "regionalliga_manager";
   const world = generateWorld(DEFAULT_MASTER_SEED);
   const academy = loadDemoRoster().filter((player) => player.squad_status !== "pro");
   const save = createSave({
@@ -194,11 +203,10 @@ export function newGameSession(now = new Date()): GameSession {
       world.clubs.find((club) => club.id === NORDSTERN_CLUB_ID) ??
       null;
     save.state.pipeline.scout_board = createScoutBoard(rivalPlayers, playerClub);
-    save.state.pipeline.story_state = initializeStoryForNewGame(
-      DEFAULT_MASTER_SEED,
-      DEFAULT_MANAGER,
-      1,
-    );
+    save.state.pipeline.story_state = {
+      ...initializeStoryForNewGame(DEFAULT_MASTER_SEED, DEFAULT_MANAGER, 1, mode),
+      game_mode_confirmed: options.modeConfirmed ?? options.mode !== undefined,
+    };
     save.state.pipeline.board = boardWithSurvivalArc(
       save.state.pipeline.board ??
         startBoardSeason(
@@ -250,15 +258,6 @@ function syncManagerClubWithBoard(session: GameSession): GameSession {
   return session;
 }
 
-function isAssistantDefaultTrainingPlan(plan: readonly TrainingSlot[]): boolean {
-  const assistant = act1AssistantTrainingPlan();
-  if (plan.length !== assistant.length) return false;
-  return plan.every(
-    (slot, index) =>
-      slot.unitId === assistant[index]?.unitId && slot.focus === false,
-  );
-}
-
 function resolveTrainingCalendarGateDone(
   pipeline: PipelineState,
   storyState: StoryState,
@@ -293,15 +292,10 @@ export function sessionFromSave(save: SaveGame, options?: SessionFromSaveOptions
     trainingPlan: (() => {
       const storyState = normalizeStoryState(pipeline.story_state, save.state.week);
       const manual = !resolveFeatureCurtain(storyState).auto_training;
-      let plan = migrateLegacyTrainingPlan(pipeline.training_plan);
-      if (manual && isAssistantDefaultTrainingPlan(plan)) {
-        plan = createInitialTrainingPlan();
-      } else if (
-        !manual &&
-        isTrainingPlanNeglected(plan)
-      ) {
-        return act1AssistantTrainingPlan();
-      }
+      const plan = migrateLegacyTrainingPlan(pipeline.training_plan);
+      // Assistant-run weeks (Story Mode Act 1/2) never start from an empty plan. After the
+      // manual-training unlock the assistant's plan stays as an editable starting point.
+      if (!manual && isTrainingPlanNeglected(plan)) return act1AssistantTrainingPlan();
       return plan;
     })(),
     trainingPlanPresets: normalizeTrainingPlanPresets(pipeline.training_plan_presets),

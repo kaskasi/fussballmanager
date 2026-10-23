@@ -39,7 +39,10 @@ function localizedStoryTitle(beatId: string, cast: StoryCast, fallback: string):
       return cast.fan_rep_label;
     default: {
       const key = `story.beat.${beatId}.title`;
-      let value = t(key);
+      let value = t(key, {
+        assistant: cast.assistant_name,
+        chairman: cast.chairman_name ?? cast.assistant_name,
+      });
       if (value === key) value = t("story.beat._default.title");
       return value === "story.beat._default.title" ? fallback : value;
     }
@@ -67,7 +70,10 @@ function localizedStoryBody(
         ? t("story.beat.derby_week.bodyNamed", { opponent: String(context.opponent) })
         : t("story.beat.derby_week.body");
     default: {
-      let value = t(key);
+      let value = t(key, {
+        assistant: cast.assistant_name,
+        chairman: cast.chairman_name ?? cast.assistant_name,
+      });
       if (value === key) value = t("story.beat._default.body");
       return value === "story.beat._default.body" ? fallback : value;
     }

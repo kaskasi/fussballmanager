@@ -176,15 +176,15 @@ import {
 import { ClubEventsScreen } from "./ui/screens/ClubEventsScreen.tsx";
 import { StadiumScreen } from "./ui/screens/StadiumScreen.tsx";
 import { standings, type SandboxPlan, type TeamId } from "@fussballmanager/shared";
-import { listJobOffers } from "./board/job-offers.ts";
-import { switchManagerClub } from "./board/manager-club-switch.ts";
+import { jobOfferForTeam, listJobOffers } from "./board/job-offers.ts";
+import { isCareerTransitionPending } from "./narrative/career-acts.ts";
 import {
-  applyCompanionPick,
-  enqueueCompanionPickInbox,
-  isCompanionPickBeat,
-  pickCompanionCandidates,
-} from "./board/companion-pick.ts";
-import { startBoardSeason } from "./board/season-objectives.ts";
+  acceptStoryEmployerOffer,
+  storyFollowerNames,
+} from "./narrative/career-transition.ts";
+import { StoryActTransitionModal } from "./ui/components/StoryActTransitionModal.tsx";
+import { acceptJobOffer } from "./board/accept-job-offer.ts";
+import { applyCompanionPick, isCompanionPickBeat } from "./board/companion-pick.ts";
 import {
   applyScoutPlanToMatchLineup,
   fillMissingAssignments,
@@ -1106,50 +1106,14 @@ export default function App() {
 
   const handleAcceptJobOffer = useCallback(
     (clubId: TeamId) => {
-      patchSession((current) => {
-        const offer = listJobOffers(current.board.employer_club_id, current.season, current.league).find(
-          (entry) => entry.clubId === clubId,
-        );
-        const bonus = offer?.signingBonus ?? 0;
-        const oldTeamId = current.league.player_club_id;
-        const oldCareerId = current.clubId;
-        const oldPros = current.players.filter(
-          (player) => player.squad_status === "pro" && player.club_id === oldCareerId,
-        );
-        const companions = pickCompanionCandidates(
-          oldPros,
-          current.masterSeed,
-          oldTeamId,
-          current.season,
-        );
-        const nextBoard = startBoardSeason(
-          { ...current.board, job_status: "employed", pressure: 0 },
-          clubId,
-          current.season,
-          current.league,
-          current,
-        );
-        let switched = switchManagerClub(
-          {
-            ...current,
-            board: nextBoard,
-          },
-          clubId,
-        );
-        switched = {
-          ...switched,
-          finances: {
-            ...switched.finances,
-            cash: switched.finances.cash + bonus,
-          },
-          youthInbox: enqueueCompanionPickInbox(switched.youthInbox, switched.week, companions, oldTeamId),
-        };
-        return sessionWithEvent(
-          switched,
-          "info",
-          t("clubEvent.newJob", { club: offer?.clubName ?? clubId }),
-        );
-      });
+      patchSession((current) => acceptJobOffer(current, clubId));
+    },
+    [patchSession],
+  );
+
+  const handleAcceptStoryOffer = useCallback(
+    (teamId: TeamId) => {
+      patchSession((current) => acceptStoryEmployerOffer(current, teamId));
     },
     [patchSession],
   );
@@ -1435,6 +1399,10 @@ export default function App() {
   );
 
   const jobOffers = listJobOffers(board.employer_club_id, season, league);
+  const storyTransition = isCareerTransitionPending(storyState) ? storyState.act_transition : null;
+  const storyOffers = storyTransition
+    ? storyTransition.offer_team_ids.map((teamId) => jobOfferForTeam(teamId, season, league))
+    : [];
   const profilePlayer = players.find((player) => player.id === profileId) ?? null;
   const openDecisionCount = postfachOpenCount(
     youthInbox,
@@ -2205,6 +2173,14 @@ export default function App() {
       </GameSessionProvider>
       {board.job_status === "dismissed" ? (
         <JobOffersModal offers={jobOffers} onAccept={handleAcceptJobOffer} />
+      ) : storyTransition ? (
+        <StoryActTransitionModal
+          transition={storyTransition}
+          clubName={clubDisplayName(storyTransition.from_team_id, world.clubs)}
+          offers={storyOffers}
+          followerNames={storyFollowerNames(session)}
+          onAccept={handleAcceptStoryOffer}
+        />
       ) : null}
       {negotiationOverlay}
       {spendConfirmOverlay}

@@ -8,6 +8,7 @@ import { hasMerchStockout } from "../../economy/merchandising.ts";
 import { weeksOfWages } from "../../economy/spend-runway.ts";
 import {
   filterTeamNavScreens,
+  isNavScreenVisible,
   suppressTrainingPlanWarning,
 } from "../../narrative/career-presentation.ts";
 import type { StoryState } from "../../narrative/story-state.ts";
@@ -76,12 +77,15 @@ export function AppNav({
   const showTrainingPlanWarn =
     !suppressTrainingPlanWarning(storyState) &&
     needsTrainingPlanForToday(trainingPlan, weekday);
-  const showMerchStockoutWarn = hasMerchStockout(stadium);
+  const financesVisible = isNavScreenVisible("finances", storyState);
+  const showMerchStockoutWarn =
+    isNavScreenVisible("merchandising", storyState) && hasMerchStockout(stadium);
   const showMedicalWarn = medicalAttentionCount > 0;
   const runwayWeeks = weeksOfWages(cash, weeklyWageBill);
   const showCashWarn =
-    (boardCashFloor > 0 && cash < boardCashFloor) ||
-    (weeklyWageBill > 0 && runwayWeeks != null && runwayWeeks < 4);
+    financesVisible &&
+    ((boardCashFloor > 0 && cash < boardCashFloor) ||
+    (weeklyWageBill > 0 && runwayWeeks != null && runwayWeeks < 4));
   const cashChipWarn =
     boardCashFloor > 0 && cash < boardCashFloor
       ? true
@@ -221,7 +225,7 @@ export function AppNav({
             cash={cash}
             compact
             warn={cashChipWarn}
-            onClick={() => onNavigate("finances")}
+            onClick={financesVisible ? () => onNavigate("finances") : undefined}
           />
           <div className="row-menu app-nav-menu" ref={menuRef}>
             <button

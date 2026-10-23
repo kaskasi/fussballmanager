@@ -1,7 +1,7 @@
 # /docs/prd/19_career_acts.md
 
-**Version:** 1.1  
-**Last Updated:** 2026-10-08  
+**Version:** 1.2  
+**Last Updated:** 2026-10-23  
 **Status:** Draft (product law for career acts — supersedes informal discussion only)
 
 ---
@@ -233,11 +233,15 @@ scheduled_payoffs: ScheduledPayoff[];
 
 | Slice | Status | Deliverable |
 |-------|--------|-------------|
-| A | **v1 shipped** | `career_phase`, `feature_curtain`, migration 072, menu filter, auto training after week sim |
+| A | **v2 shipped 2026-10-23** | Curtain derived from `game_mode` + `career_phase` + `curtain_unlocks` (ADR 0005), save v97; hidden screens get no links (hub, Postfach, chips) |
 | B | Planned | Opening “NEXT” coach panel — **blocked until PRD 20 P0–P2 DoD** and [playtest_protocol.md](./playtest_protocol.md) session 2 readout |
-| C | Planned | Act 1 relegation → phase `act2_regional` (chronicle only until employer spec) |
-| D | Planned | Choice/payoff resolver + first 3 canon beats from seeds doc |
-| E | Planned | Tactics formation-only UI |
+| C | **Shipped 2026-10-23** | Act 1 always ends at season 1 end (relegated / survived / playoff from sim movements) → 3 Oberliga offers, 1–2 followers, `act2_regional`; promotion → `act3_empire` |
+| D | **Minimal, shipped** | Act 2 unlock beats with `choices` + `unlock:*` payoffs (`career-act2.ts`); other seed rows still open |
+| E | **Shipped** | Formation-only lineup in Act 1 (`tacticsModeForCurtain`) |
+
+**Act 2 unlock schedule (act weeks):** 1 tactics (on arrival) · 3 stadium + finances (`act2_chair_infra_vote`) · 7 scouting (`act2_scout_region_expand`) · 11 manual training, or +2 wk (`act2_asst_training_keys`) · 15 opponent analysis, or +8 wk (`act2_salesman_analysis`) · 19 transfers (`act2_transfers_window`).
+
+**Dismissal:** Act 1 never; Act 2 only at season end (patient chairman: upper half mandatory, promotion optional); Act 3+ standard.
 
 ---
 
@@ -253,8 +257,8 @@ scheduled_payoffs: ScheduledPayoff[];
 
 ## 12. Open product questions
 
-1. Act 2 club: fixed narrative club vs procedural employer?
-2. Save continuity: same chronicle vs import “legends” only?
+1. ~~Act 2 club~~ → **Resolved 2026-10-23:** procedural — player picks one of the 3 weakest Oberliga clubs.
+2. ~~Save continuity~~ → **Resolved 2026-10-23:** same save and chronicle; `legend_players` name snapshots, 1–2 followers move with the manager.
 3. Nordstern replayable as sandbox after Act 1?
 4. Act 3 gate: PRD 12 regions only vs F10.6 cup?
 5. ~~End transform~~ → **Resolved:** PRD 21 Act 4 completion + Elite World unlock (not credits-only).

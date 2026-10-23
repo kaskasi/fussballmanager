@@ -1549,3 +1549,11 @@ html[data-tutorial-coach-step="training.set_plan"] .training-modal-backdrop {
   .training-solo__pick { grid-template-columns: minmax(0, 1fr) auto auto; }
   .training-solo__spark { display: none; }
 }
+
+/* PRD 19 Act 1 — assistant-run plan: native disabled scope, no fieldset chrome. */
+.training-readonly-scope {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}

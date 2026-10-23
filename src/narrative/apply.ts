@@ -4,6 +4,8 @@ import { applyRestaurantWeddingRepeat } from "../stadium/precinct-campus-events.
 import { careerWeekIndex, RESTAURANT_VIRAL_WEEKS } from "../stadium/hospitality.ts";
 import { advanceClubFanbase } from "../stadium/fanbase.ts";
 import type { Player } from "../types/player.ts";
+import type { ClubFinances } from "../economy/club-finances.ts";
+import { applyCareerActChoice, isCareerActBeat } from "./career-act2.ts";
 import { captainMoraleNeighbors } from "./captain.ts";
 import {
   appendChronicle,
@@ -20,6 +22,7 @@ export interface StoryEffectResult {
   board?: BoardState;
   stadium?: ClubStadium;
   players?: Player[];
+  finances?: ClubFinances;
 }
 
 export function applyStoryChoice(
@@ -30,11 +33,13 @@ export function applyStoryChoice(
     board: BoardState;
     stadium: ClubStadium;
     players: Player[];
+    finances?: ClubFinances;
     clubId: string;
     season: number;
     week: number;
   },
 ): StoryEffectResult {
+  if (isCareerActBeat(beatId)) return applyCareerActChoice(story, beatId, choiceId, context);
   let nextStory = markBeatFired(story, beatId);
   let board = { ...context.board };
   let stadium = context.stadium;

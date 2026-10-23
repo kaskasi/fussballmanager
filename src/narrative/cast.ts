@@ -8,6 +8,8 @@ const ALLY_LAST = ["Kruse", "Wolff", "Brandt", "Haas", "Lorenz"];
 const HOSTILE_OUTLETS = ["Nordreport", "Stadion-Echo", "Tabloid Sport Nord", "Abendblatt Sport"];
 const FAN_REPS = ["Kurvenstand Nord", "Fanblock Ost", "Ultras Grün-Weiß", "Stehplatz Union"];
 const GROUNDSKEEPERS = ["Heinz", "Günter", "Werner", "Dieter", "Horst"];
+const CHAIRMAN_FIRST = ["Gerd", "Hans-Peter", "Ulrich", "Bernd", "Wolfgang", "Reinhard"];
+const CHAIRMAN_LAST = ["Petersen", "Hansen", "Jessen", "Thomsen", "Carstens", "Nissen"];
 
 function mulberry32(seed: number): () => number {
   let state = seed | 0;
@@ -36,4 +38,18 @@ export function generateStoryCast(masterSeed: number): StoryCast {
     journalist_ally_name: `${pick(ALLY_FIRST, random)} ${pick(ALLY_LAST, random)}`,
     groundskeeper_name: `${pick(GROUNDSKEEPERS, random)}, Platzwart`,
   };
+}
+
+function hashString(value: string): number {
+  let hash = 0;
+  for (let index = 0; index < value.length; index++) {
+    hash = Math.imul(hash ^ value.charCodeAt(index), 0x9e3779b1);
+  }
+  return hash >>> 0;
+}
+
+/** Story Mode Act 2 chairman — deterministic per save and employer. */
+export function generateChairmanName(masterSeed: number, teamId: string): string {
+  const random = mulberry32(masterSeed ^ hashString(`chairman:${teamId}`));
+  return `${pick(CHAIRMAN_FIRST, random)} ${pick(CHAIRMAN_LAST, random)}`;
 }

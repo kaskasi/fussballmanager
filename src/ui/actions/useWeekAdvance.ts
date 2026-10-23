@@ -1,3 +1,4 @@
+import { isCareerTransitionPending } from "../../narrative/career-acts.ts";
 import { useCallback, useRef, type MutableRefObject } from "react";
 import { deliverMerchandisingOrders } from "../../economy/merchandising.ts";
 import { t } from "../../i18n/index.ts";
@@ -213,6 +214,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
 
   const simulateWeek = useCallback(async () => {
     if (simulating) return;
+    if (isCareerTransitionPending(session.storyState)) return;
     setSimulating(true);
     try {
       await finishWeekSimulation();
@@ -222,7 +224,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
     } finally {
       setSimulating(false);
     }
-  }, [finishWeekSimulation, flashNotice, setSimulating, simulating]);
+  }, [finishWeekSimulation, flashNotice, session.storyState, setSimulating, simulating]);
 
   const handleFastForwardToMonth = useCallback(
     async (targetMonthIndex: number) => {
@@ -350,6 +352,11 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
     (trigger?: { fromAuto?: boolean }) => {
       const fromAuto = trigger?.fromAuto === true;
       if (simulating) return;
+      // Story Mode Act 1 → 2: the transition modal is the blocker; time waits for the pick.
+      if (isCareerTransitionPending(session.storyState)) {
+        setTrainingAutoNext(false);
+        return;
+      }
 
       const careerMatchActive = Boolean(careerMatchSetup && careerMatchUiVisible);
       const pauseAuto = shouldPauseTrainingAutoNext({

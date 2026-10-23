@@ -61,8 +61,8 @@ export function PostfachScreen({
   onHireOrthopedist?: (candidate: OrthopedistCandidate) => void;
   scoutBoard: ScoutBoard;
   onDismissScoutJob: (itemId: string) => void;
-  onOpenScoutingNetwork: () => void;
-  onOpenScoutingHits: () => void;
+  onOpenScoutingNetwork?: () => void;
+  onOpenScoutingHits?: () => void;
   onApplyOpponentScoutPlan?: (plan: SandboxPlan) => void;
   clubEvents: readonly ClubEvent[];
   kickerEdition?: KickerEdition | null;

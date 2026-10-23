@@ -84,29 +84,39 @@ export function enqueueCompanionPickInbox(
   return enqueueStoryInboxItem(inbox, week, payload, "manager_companion_pick");
 }
 
-export function applyCompanionPick(
-  session: GameSession,
-  playerId: string,
-): GameSession {
+/**
+ * Move one player into the manager's club. Pros get a fair new contract; youths keep
+ * their squad status (Story Mode followers).
+ */
+export function movePlayerToClub(session: GameSession, picked: Player): GameSession {
   const newCareerId = session.clubId;
-  const picked =
-    session.rivalPlayers.find((entry) => entry.id === playerId) ??
-    session.players.find((entry) => entry.id === playerId);
-  if (!picked) return session;
-  const without = session.players.filter((entry) => entry.id !== playerId);
-  const withoutRival = session.rivalPlayers.filter((entry) => entry.id !== playerId);
-  const contract = fairInitialProContract({ ...picked, club_id: newCareerId }, session.season);
-  const joined: Player = {
-    ...picked,
-    club_id: newCareerId,
-    squad_status: "pro",
-    contract,
-  };
+  const without = session.players.filter((entry) => entry.id !== picked.id);
+  const withoutRival = session.rivalPlayers.filter((entry) => entry.id !== picked.id);
+  const youth = picked.squad_status === "u17" || picked.squad_status === "u19";
+  const joined: Player = youth
+    ? { ...picked, club_id: newCareerId }
+    : {
+        ...picked,
+        club_id: newCareerId,
+        squad_status: "pro",
+        contract: fairInitialProContract({ ...picked, club_id: newCareerId }, session.season),
+      };
   return {
     ...session,
     players: [...without, joined],
     rivalPlayers: withoutRival,
   };
+}
+
+export function applyCompanionPick(
+  session: GameSession,
+  playerId: string,
+): GameSession {
+  const picked =
+    session.rivalPlayers.find((entry) => entry.id === playerId) ??
+    session.players.find((entry) => entry.id === playerId);
+  if (!picked) return session;
+  return movePlayerToClub(session, { ...picked, squad_status: "pro" });
 }
 
 export function isCompanionPickBeat(beatId: string): boolean {

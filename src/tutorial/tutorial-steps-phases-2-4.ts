@@ -114,6 +114,7 @@ export const TUTORIAL_STEPS_PHASES_2_4: readonly TutorialStepDefinition[] = [
     target: COACH_TARGET.hubScoutingTransfer,
     when: (session) =>
       phase2Eligible(session) &&
+      resolveFeatureCurtain(session.storyState).transfers_nav &&
       (session.transferState.listings?.length ?? 0) > 0,
   },
 

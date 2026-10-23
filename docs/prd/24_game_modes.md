@@ -1,14 +1,14 @@
 # /docs/prd/24_game_modes.md
 
-**Version:** 1.0  
-**Last Updated:** 2026-10-11  
-**Status:** Draft (product law for three modes on one sim)
+**Version:** 1.1  
+**Last Updated:** 2026-10-23  
+**Status:** Draft (product law for three modes on one sim) · Story Mode Acts 1–2 shipped
 
 ---
 
 ## Purpose
 
-One simulation, three **product modes**. Only **Regionalliga Manager** is the active shipping target in code; **Story Mode** and **New Game+** are specified here for later UI/switcher work.
+One simulation, three **product modes**. **Regionalliga Manager** stays the default; **Story Mode** is playable from Act 1 through the Act 2 promotion (Act 3 content pending); **New Game+** is specified here only.
 
 **Dependencies:** PRD 01, 12 (world), 13 (story slice), 19 (career acts / curtain), 20 (presentation), 21 (Act 4 / elite world)
 
@@ -31,10 +31,12 @@ One simulation, three **product modes**. Only **Regionalliga Manager** is the ac
 - **Not** a “no narrative” mode: opening, survival board, fan feed, and PRD 13 beats remain; only the **act-based feature curtain** and **forced act progression** are off.
 - Story Mode and NG+ reuse the same sim and save shape; differentiation is `game_mode` + world seed/template + presentation/curtain rules.
 
-### Story Mode (PRD only for now)
+### Story Mode (Acts 1–2 shipped 2026-10-23)
 
 - Same Regionalliga world as v1 story slice; `career_phase` drives curtain and `storybook` presentation in acts 1–2.
-- Built **on top of** Regionalliga Manager once the shell and full feature set are stable.
+- Built **on top of** Regionalliga Manager: same sim, same save shape. Rules live in `career-acts.ts`, `career-act2.ts`, `career-transition.ts`; decisions in [ADR 0005](../adr/0005-story-mode-acts-curtain.md).
+- Act 1 (Nordstern, heavy curtain, assistant training, no dismissal) always ends at season 1 end; the outcome comes from the sim's promotion/relegation movements.
+- Act 2: the player picks one of 3 Oberliga offers (procedural employer), 1–2 bonded players follow; five scheduled inbox beats unlock the remaining screens; promotion to the Regionalliga opens Act 3.
 
 ### New Game+ (PRD only for now)
 
@@ -42,11 +44,11 @@ One simulation, three **product modes**. Only **Regionalliga Manager** is the ac
 
 ---
 
-## Switcher (deferred)
+## Switcher
 
-- No main-menu mode picker in v1 of this PRD.
-- Persist `game_mode` on `story_state` so saves are forward-compatible.
-- Future: slot metadata or new-game wizard sets mode before `initializeStoryForNewGame`.
+- Mode card (`NewCareerModeCard`) after the opening's language step, before name/origin — one gate for first launch, slot card and menu "New game" (`modePickPending`, flag `STORY_MODE_PICKER_ENABLED`).
+- `story_state.game_mode_confirmed === false` marks a fresh save waiting for the card; saves without the field count as confirmed.
+- `game_mode` is persisted on `story_state`; NG+ still has no picker entry.
 
 ---
 
@@ -62,7 +64,7 @@ When a save **does** load (`save_version === SAVE_VERSION`), [`normalizeStorySta
 |--------|----------|
 | Missing `game_mode` | Resolved via [`resolveProductGameMode`](../../src/narrative/game-mode.ts) → defaults to **`regionalliga_manager`**. |
 | `regionalliga_manager` or `new_game_plus` | **`career_phase` forced to `full`** and curtain from [`featureCurtainForPhase`](../../src/narrative/career-presentation.ts) — act1/storybook curtain is **not** preserved on these modes. |
-| `story_mode` (future) | Keeps stored `career_phase`; curtain follows phase. |
+| `story_mode` | Keeps stored `career_phase`, `curtain_unlocks`, `act_transition`, `act_started`, `legend_players`; curtain derived from mode + phase + unlocks (ADR 0005). |
 
 Pre-release: ambiguous legacy act1 slots are rejected (08.10), not silently upgraded. When Story Mode ships, new saves must set `game_mode: story_mode` at creation; do not rely on act1 `career_phase` alone.
 

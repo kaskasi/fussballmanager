@@ -13,6 +13,13 @@ import { hasMerchStockout } from "../economy/merchandising.ts";
 import { setLocale } from "../i18n/index.ts";
 import type { ClubEvent } from "../inbox/club-events.ts";
 import { appendMatchdayClubEvents } from "../match/post-match-events.ts";
+import { resolveFeatureCurtain } from "../narrative/career-presentation.ts";
+import { resolveProductGameMode, type ProductGameMode } from "../narrative/game-mode.ts";
+import type { CareerActTransition } from "../narrative/story-state.ts";
+import type { CareerPhase, CurtainUnlockId } from "../narrative/career-presentation.ts";
+import { isCareerTransitionPending } from "../narrative/career-acts.ts";
+import { acceptStoryEmployerOffer } from "../narrative/career-transition.ts";
+import { autoResolveCareerActBeats, detectStoryAnomalies } from "./story-playtest.ts";
 import { newGameSession, type GameSession } from "../persistence/game-session.ts";
 import { formatFixtureResult, playerTableRow } from "../sim/league-week.ts";
 import { sessionAfterWeekSimulation } from "../sim/fast-forward-to-month.ts";
@@ -36,6 +43,9 @@ export interface CareerPlaytestWeek {
   merchStockout: boolean;
   jobStatus: string;
   result?: string;
+  /** Story Mode only (PRD 19). */
+  phase?: CareerPhase;
+  unlocks?: CurtainUnlockId[];
 }
 
 export interface CareerPlaytestAnomaly {
@@ -46,18 +56,33 @@ export interface CareerPlaytestAnomaly {
 
 export interface CareerPlaytestReport {
   strategy: CareerPlaytestStrategy;
+  mode: ProductGameMode;
   club: TeamId;
   weeks: CareerPlaytestWeek[];
   /** Last in-season week (before the season-end rollover). */
   final: CareerPlaytestWeek;
   /** Board verdict after the last matchday, when the season ended inside the run. */
-  seasonEnd?: { lastResult?: string; jobStatus: string; pressure: number; summary?: string };
+  /** Every season end inside the run, in order (multi-season story runs). */
+  seasonEnds: NonNullable<CareerPlaytestReport["seasonEnd"]>[];
+  /** Last season end inside the run. */
+  seasonEnd?: {
+    lastResult?: string;
+    jobStatus: string;
+    pressure: number;
+    summary?: string;
+    /** Story Mode — frozen Act 1 → 2 transition (PRD 19). */
+    actTransition?: CareerActTransition | null;
+  };
   promoted: string[];
   anomalies: CareerPlaytestAnomaly[];
 }
 
 export interface CareerPlaytestOptions {
   strategy: CareerPlaytestStrategy;
+  /** PRD 24 — default Regionalliga Manager. */
+  mode?: ProductGameMode;
+  /** Seasons to play (default 1). Story Mode accepts the first Act 1 → 2 offer in between. */
+  seasons?: number;
   /** Stop early (smoke runs). Default: until the football season ends. */
   maxWeeks?: number;
   now?: Date;
@@ -127,6 +152,9 @@ function weekRow(session: GameSession, result?: string): CareerPlaytestWeek {
     merchStockout: hasMerchStockout(session.stadium),
     jobStatus: session.board.job_status,
     result,
+    ...(resolveProductGameMode(session.storyState) === "story_mode"
+      ? { phase: session.storyState.career_phase, unlocks: [...session.storyState.curtain_unlocks] }
+      : {}),
   };
 }
 
@@ -225,7 +253,8 @@ export function detectAnomalies(input: {
 
 export async function runCareerPlaytest(options: CareerPlaytestOptions): Promise<CareerPlaytestReport> {
   setLocale("en");
-  let session = newGameSession(options.now ?? new Date("2026-08-01T12:00:00Z"));
+  const mode = options.mode ?? "regionalliga_manager";
+  let session = newGameSession(options.now ?? new Date("2026-08-01T12:00:00Z"), { mode });
   let promoted: string[] = [];
   if (options.strategy === "youth") {
     const step = promoteStrongYouth(session);
@@ -236,11 +265,15 @@ export async function runCareerPlaytest(options: CareerPlaytestOptions): Promise
   const placeTarget = mandatoryPlaceTarget(session);
   const weeks: CareerPlaytestWeek[] = [];
   const events: ClubEvent[] = [];
-  let seasonEnd: CareerPlaytestReport["seasonEnd"];
-  const limit = Math.min(options.maxWeeks ?? MAX_SEASON_WEEKS, MAX_SEASON_WEEKS);
+  const seasonEnds: CareerPlaytestReport["seasonEnds"] = [];
+  const seasons = Math.max(1, options.seasons ?? 1);
+  const limit = Math.min(options.maxWeeks ?? MAX_SEASON_WEEKS * seasons, MAX_SEASON_WEEKS * seasons);
 
   for (let index = 0; index < limit; index++) {
-    session = { ...session, trainingPlan: loadTrainingPlanPreset(session.trainingPlanPresets, 1) };
+    if (mode === "story_mode") session = autoResolveCareerActBeats(session);
+    if (!resolveFeatureCurtain(session.storyState).auto_training) {
+      session = { ...session, trainingPlan: loadTrainingPlanPreset(session.trainingPlanPresets, 1) };
+    }
     const before = session.clubEvents;
     const result = await simulateGameWeek(session);
     let next = sessionAfterWeekSimulation(result.session);
@@ -262,13 +295,19 @@ export async function runCareerPlaytest(options: CareerPlaytestOptions): Promise
     events.push(...newEvents(before, next.clubEvents));
     session = next;
     if (result.seasonEnded) {
-      seasonEnd = {
+      seasonEnds.push({
         lastResult: resultLine,
         jobStatus: session.board.job_status,
         pressure: Math.round(session.board.pressure),
         summary: session.board.last_evaluation?.summary,
-      };
-      break;
+        actTransition: session.storyState.act_transition,
+      });
+      if (seasonEnds.length >= seasons) break;
+      const transition = session.storyState.act_transition;
+      if (isCareerTransitionPending(session.storyState) && transition?.offer_team_ids[0]) {
+        session = acceptStoryEmployerOffer(session, transition.offer_team_ids[0]);
+      }
+      continue;
     }
     const row = weekRow(session, resultLine);
     weeks.push(row);
@@ -279,23 +318,30 @@ export async function runCareerPlaytest(options: CareerPlaytestOptions): Promise
   const final = weeks[weeks.length - 1] ?? weekRow(session);
   return {
     strategy: options.strategy,
+    mode,
     club: session.league.player_club_id,
     weeks,
     final,
-    seasonEnd,
+    seasonEnds,
+    seasonEnd: seasonEnds[seasonEnds.length - 1],
     promoted,
-    anomalies: detectAnomalies({
-      weeks,
-      events,
-      placeTarget,
-      clubCount: session.league.club_ids.length,
-    }),
+    anomalies: [
+      ...detectAnomalies({
+        weeks,
+        events,
+        placeTarget,
+        clubCount: session.league.club_ids.length,
+      }),
+      ...(mode === "story_mode"
+        ? detectStoryAnomalies({ weeks, story: session.storyState, seasons })
+        : []),
+    ],
   };
 }
 
 export function renderCareerPlaytestMarkdown(report: CareerPlaytestReport): string {
   const lines = [
-    `# Career playtest — ${report.strategy}`,
+    `# Career playtest — ${report.mode === "story_mode" ? "story · " : ""}${report.strategy}`,
     "",
     "Generated by `scripts/run-career-playtest.ts` (headless, real week pipeline, EN locale).",
     "",
@@ -315,6 +361,29 @@ export function renderCareerPlaytestMarkdown(report: CareerPlaytestReport): stri
   if (report.promoted.length > 0) {
     lines.push("Promoted on day one:", "", ...report.promoted.map((name) => `- ${name}`), "");
   }
+  if (report.mode === "story_mode") {
+    lines.push("## Story Mode", "");
+    for (const end of report.seasonEnds) {
+      const transition = end.actTransition;
+      if (!transition) continue;
+      lines.push(
+        `- Act 1 end (season ${transition.ending_season}): **${transition.outcome}**` +
+          `${transition.via_playoff ? " via playoff" : ""}, place ${transition.final_place}; ` +
+          `offers ${transition.offer_team_ids.join(", ")}; followers ${transition.companion_ids.join(", ") || "none"}.`,
+      );
+    }
+    const unlockWeeks = new Map<string, string>();
+    for (const row of report.weeks) {
+      for (const unlock of row.unlocks ?? []) {
+        if (!unlockWeeks.has(unlock)) unlockWeeks.set(unlock, `S${row.season} W${row.week}`);
+      }
+    }
+    lines.push(
+      `- Final phase: **${report.final.phase ?? "—"}**.`,
+      `- Unlocks: ${[...unlockWeeks].map(([id, when]) => `${id} (${when})`).join(", ") || "none"}.`,
+      "",
+    );
+  }
   lines.push("## Anomalies", "");
   if (report.anomalies.length === 0) lines.push("None.");
   for (const anomaly of report.anomalies) {
@@ -324,11 +393,11 @@ export function renderCareerPlaytestMarkdown(report: CareerPlaytestReport): stri
     "",
     "## Weeks",
     "",
-    "| Week | MD | Place | Pts | Pressure | Cash | Squad CA (rank) | Merch out | Result |",
-    "|---|---|---|---|---|---|---|---|---|",
+    "| Season | Week | MD | Place | Pts | Pressure | Cash | Squad CA (rank) | Merch out | Result |",
+    "|---|---|---|---|---|---|---|---|---|---|",
     ...report.weeks.map(
       (row) =>
-        `| ${row.week} | ${row.matchday} | ${row.place} | ${row.points} | ${row.pressure}% | ${(row.cash / 1e6).toFixed(2)}M | ${row.squadAvgCa} (${row.squadCaRank}) | ${row.merchStockout ? "yes" : ""} | ${row.result ?? ""} |`,
+        `| ${row.season} | ${row.week} | ${row.matchday} | ${row.place} | ${row.points} | ${row.pressure}% | ${(row.cash / 1e6).toFixed(2)}M | ${row.squadAvgCa} (${row.squadCaRank}) | ${row.merchStockout ? "yes" : ""} | ${row.result ?? ""} |`,
     ),
     "",
   );

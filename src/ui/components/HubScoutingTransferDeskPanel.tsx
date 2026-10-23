@@ -49,8 +49,10 @@ export function HubScoutingTransferDeskPanel({
   worldClubs?: readonly WorldClub[];
   onSelectPlayer: (playerId: string) => void;
   onOpenNegotiation?: (playerId: string) => void;
-  onOpenScouting: () => void;
-  onOpenTransfers: () => void;
+  /** Omitted while the Story Mode curtain hides scouting (zone not rendered). */
+  onOpenScouting?: () => void;
+  /** Omitted while the Story Mode curtain hides transfers (zone not rendered). */
+  onOpenTransfers?: () => void;
 }) {
   useT();
   const digest = useMemo(
@@ -92,6 +94,7 @@ export function HubScoutingTransferDeskPanel({
       aria-label={t("hub.market.aria")}
       data-coach-target={COACH_TARGET.hubScoutingTransfer}
     >
+      {onOpenTransfers ? (
       <div
         className="hub-market-desk__zone hub-market-desk__zone--transfer"
         role="region"
@@ -220,7 +223,9 @@ export function HubScoutingTransferDeskPanel({
           )}
         </div>
       </div>
+      ) : null}
 
+      {onOpenScouting ? (
       <button
         type="button"
         className="hub-market-desk__zone hub-market-desk__zone--scout"
@@ -265,6 +270,7 @@ export function HubScoutingTransferDeskPanel({
           </div>
         </dl>
       </button>
+      ) : null}
     </section>
   );
 }

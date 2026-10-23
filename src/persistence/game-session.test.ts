@@ -134,14 +134,33 @@ describe("game session", () => {
     expect(loaded.trainingCalendarGateDone).toBe(true);
   });
 
-  it("drops legacy assistant default plan when manual training is active", () => {
+  it("starts a story-mode new game in Act 1 with the assistant plan (PRD 24)", () => {
+    const session = newGameSession(new Date("2026-09-22T14:00:00Z"), { mode: "story_mode" });
+    expect(session.storyState.game_mode).toBe("story_mode");
+    expect(session.storyState.game_mode_confirmed).toBe(true);
+    expect(session.storyState.career_phase).toBe("act1_nordstern");
+    expect(session.storyState.feature_curtain.scouting_nav).toBe(false);
+    expect(session.trainingPlan).toEqual(act1AssistantTrainingPlan());
+    const loaded = sessionFromSave(saveFromSession(session));
+    expect(loaded.storyState.career_phase).toBe("act1_nordstern");
+    expect(loaded.trainingPlan).toEqual(act1AssistantTrainingPlan());
+  });
+
+  it("keeps the default new game on Regionalliga Manager", () => {
+    const session = newGameSession(new Date("2026-09-22T14:00:00Z"));
+    expect(session.storyState.game_mode).toBe("regionalliga_manager");
+    expect(session.storyState.career_phase).toBe("full");
+    expect(session.storyState.feature_curtain.scouting_nav).toBe(true);
+  });
+
+  it("keeps the assistant plan as a starting point once training is manual (ADR 0005)", () => {
     const session = newGameSession(new Date("2026-09-22T14:00:00Z"));
     const withAssistant = {
       ...session,
       trainingPlan: act1AssistantTrainingPlan(),
     };
     const loaded = sessionFromSave(saveFromSession(withAssistant));
-    expect(loaded.trainingPlan.every((slot) => slot.unitId === "")).toBe(true);
+    expect(loaded.trainingPlan).toEqual(act1AssistantTrainingPlan());
   });
 
   it("recomputes stale market_value when hydrating from save", () => {

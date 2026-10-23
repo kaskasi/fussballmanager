@@ -461,6 +461,10 @@ export function passTargetWeight(input: {
     attacker && passerToGoal < 28 && drop > 16
       ? clamp(1 - (drop - 16) / 22, 0.1, 1)
       : 1;
+  // Teams look forward: ~40 % of real passes gain ground. Without this the
+  // ball circulates in the build-up and attacks never reach the box.
+  const gain = targetDepth - passerDepth;
+  const forward = 1 + FORWARD_PASS_PULL * clamp(gain / 20, -0.4, 1);
   return (
     graph *
     feed *
@@ -468,7 +472,8 @@ export function passTargetWeight(input: {
     offside *
     retreat *
     space *
-    lane
+    lane *
+    forward
   );
 }
 
@@ -485,6 +490,9 @@ type PassChoice = {
  * play ~10 through balls a match, not one every other pass (ADR 0003).
  */
 export const INCIDENTAL_THROUGH_WEIGHT = 0.02;
+
+/** Preference for a pass that gains ground (0 = indifferent). */
+export const FORWARD_PASS_PULL = 2;
 
 export function pickPassTarget(
   state: MatchState,

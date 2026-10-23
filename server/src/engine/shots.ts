@@ -77,19 +77,20 @@ function resolveOutcome(
     restCovers: pressure.restCovers,
     penalty: state.phase === "penalty",
   });
-  const onTargetRoll = nextUnit(state.rng);
-  if (onTargetRoll.n >= chances.onTarget) {
-    const wood = nextUnit(onTargetRoll.rng);
-    return {
-      outcome: wood.n < 0.12 ? "woodwork" : "wide",
-      rng: wood.rng,
-    };
-  }
-  const blockRoll = nextUnit(onTargetRoll.rng);
+  // A body in the way comes first; only unblocked shots can miss or hit the target.
+  const blockRoll = nextUnit(state.rng);
   if (chances.block > 0 && blockRoll.n < chances.block) {
     return { outcome: "block", rng: blockRoll.rng };
   }
-  const finish = nextUnit(blockRoll.rng);
+  const onTargetRoll = nextUnit(blockRoll.rng);
+  if (onTargetRoll.n >= chances.onTarget) {
+    const wood = nextUnit(onTargetRoll.rng);
+    return {
+      outcome: wood.n < 0.08 ? "woodwork" : "wide",
+      rng: wood.rng,
+    };
+  }
+  const finish = nextUnit(onTargetRoll.rng);
   if (!keeper) {
     return {
       outcome: finish.n < 0.94 ? "goal" : "wide",

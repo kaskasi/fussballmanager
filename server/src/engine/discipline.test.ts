@@ -19,13 +19,13 @@ function afterKickoff() {
 }
 
 describe("discipline", () => {
-  it("keeps a typical tackle from being a yellow-card lottery", () => {
-    expect(
-      duelFoulChance({ pressing: 50, fatigue: 20, kindTackle: true }),
-    ).toBeLessThan(0.08);
-    expect(
-      duelFoulChance({ pressing: 80, fatigue: 40, kindTackle: true }),
-    ).toBeLessThan(0.09);
+  it("fouls about one tackle in eight, more under heavy pressing, never a lottery", () => {
+    const typical = duelFoulChance({ pressing: 50, fatigue: 20, kindTackle: true });
+    const intense = duelFoulChance({ pressing: 80, fatigue: 40, kindTackle: true });
+    expect(typical).toBeGreaterThan(0.08);
+    expect(typical).toBeLessThan(0.2);
+    expect(intense).toBeGreaterThan(typical);
+    expect(intense).toBeLessThan(0.3);
   });
 
   it("emits a foul and follows up with a card and/or free kick", () => {

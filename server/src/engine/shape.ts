@@ -481,6 +481,11 @@ export function restAttackTarget(
   }
   const depth =
     depthFromOwnGoal(target, ownGoal, attackSign) + lineDepthBias(tactics);
+  const flank = flankRunDepth(player, ball, ownGoal, attackSign, tactics);
+  if (flank !== null && flank > depth) {
+    // Wide players hold the touchline and get up it to cross.
+    return atDepth(ownGoal, attackSign, flank, target.y);
+  }
   const pushed = secondWaveDepth(player, ball, ownGoal, attackSign, tactics);
   if (pushed !== null) {
     // Arrive at the edge of the box, leaning toward the ball's channel.
@@ -489,6 +494,32 @@ export function restAttackTarget(
     return atDepth(ownGoal, attackSign, Math.max(depth, pushed), y);
   }
   return atDepth(ownGoal, attackSign, depth, target.y);
+}
+
+/**
+ * Ball in the attacking half: wide wingers, wide midfielders and overlapping
+ * full-backs push up the flank, so attacks reach the byline and get crossed.
+ */
+export function flankRunDepth(
+  player: PlayerMatchStatus,
+  ball: PitchPosition,
+  ownGoal: PitchPosition,
+  attackSign: 1 | -1,
+  tactics: TeamTactics,
+): number | null {
+  const ballDepth = depthFromOwnGoal(ball, ownGoal, attackSign);
+  if (ballDepth < 55) {
+    return null;
+  }
+  const wideWinger = player.role === "W" && wideDutyFor(player, tactics) === "wide";
+  const overlap =
+    player.role === "FB" &&
+    !isPyramid(tactics) &&
+    fullbackDutyFor(player, tactics) === "overlap";
+  if (!wideWinger && !overlap) {
+    return null;
+  }
+  return clamp(ballDepth + (wideWinger ? 6 : -2), 50, wideWinger ? 86 : 80);
 }
 
 /**

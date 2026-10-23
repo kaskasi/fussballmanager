@@ -53,11 +53,12 @@ export function duelFoulChance(input: {
   fatigue: number;
   kindTackle: boolean;
 }): number {
-  const base = input.kindTackle ? 0.045 : 0.016;
+  // ~1 duel in 8 ends in a foul: ~22 fouls a match (ADR 0003).
+  const base = input.kindTackle ? 0.12 : 0.05;
   return clamp(
     base * (0.55 + 0.7 * (input.pressing / 100)) * (0.85 + input.fatigue / 250),
-    0.008,
-    0.09,
+    0.03,
+    0.3,
   );
 }
 
@@ -93,10 +94,12 @@ function cardForFoul(
   rng: MatchState["rng"],
 ): { card?: CardColor; rng: MatchState["rng"] } {
   const roll = nextUnit(rng);
-  if (roll.n < 0.006) {
+  // ~4 yellows from ~22 fouls; a straight red every few matches.
+  if (roll.n < 0.003) {
     return { card: "red", rng: roll.rng };
   }
-  if (roll.n < 0.1) {
+  // A booked player picks his challenges: second yellows stay rare (~0.1 reds a match).
+  if (roll.n < (fouler.yellowCards >= 1 ? 0.035 : 0.17)) {
     const color: CardColor = fouler.yellowCards >= 1 ? "second_yellow" : "yellow";
     return { card: color, rng: roll.rng };
   }

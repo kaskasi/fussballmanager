@@ -1,5 +1,6 @@
 import type { PlayerMatchStatus, TeamTactics } from "@fussballmanager/shared";
 import { clamp } from "./helpers.ts";
+import { MATCH_REFERENCE_SKILL } from "./normalize-attributes.ts";
 import { isolationFactor } from "./pressure.ts";
 import { cmDutyFor, fullbackDutyFor } from "./shape.ts";
 
@@ -45,6 +46,9 @@ export type OpenPlayWeights = {
  * once carries and loose balls are contested (ADR 0003).
  */
 export const SHOT_APPETITE = 1.1;
+
+/** Weight of a speculative strike from 16–32 out with a yard of space. */
+export const LONG_SHOT_APPETITE = 0.2;
 
 /** How much a player near goal stops looking for a teammate (1 = never passes). */
 const LAYOFF_DAMP = 0.45;
@@ -122,6 +126,17 @@ export function openPlayWeights(input: {
     (stuck ? 2.35 : 1) *
     (stuck || look ? 1 : 1 - 0.38 * fringe) *
     (look ? 2.15 : 1);
+  // Shots from distance: real teams take ~40 % of their shots from outside the box.
+  const range =
+    input.distanceToGoal >= 16 && input.distanceToGoal <= 32
+      ? 1 - Math.abs(input.distanceToGoal - 22) / 10
+      : 0;
+  const space = clamp((input.distanceToDefender - 3) / 6, 0, 1);
+  const longShot =
+    LONG_SHOT_APPETITE *
+    Math.max(0, range) *
+    space *
+    clamp(0.4 + (input.shooting - MATCH_REFERENCE_SKILL) / 50, 0.1, 1.4);
   const swarm = Math.min(input.localPress ?? 1, 6) / 4;
   const carryBoost = input.transitionAttack ? 1.12 : 1;
   const passDamp = input.transitionAttack ? 0.92 : 1;
@@ -129,7 +144,7 @@ export function openPlayWeights(input: {
     pass: Math.max(pass * passDamp, goalThreat > 0.35 ? 0.02 : 0.05),
     carry: Math.max(carry * carryBoost, 0.04),
     duel: duel * (0.55 + 0.7 * swarm),
-    shot,
+    shot: shot + longShot,
   };
 }
 
@@ -240,48 +255,50 @@ export function shotOutcomeChances(input: {
   /** Penalty: no wall, keeper 1v1 from 12 yards. */
   penalty?: boolean;
 }): { onTarget: number; block: number; goalGivenOnTarget: number } {
-  const quality = (input.shooting + input.form - input.fatigue) / 100;
-  const onTarget = input.penalty
-    ? clamp(0.72 + 0.2 * quality, 0.62, 0.94)
-    : clamp(
-        0.26 +
-          0.42 * quality -
-          0.016 * input.distanceToGoal +
-          0.08 * (input.mentality / 100),
-        0.1,
-        0.76,
-      );
   const isolated = isolationFactor(input.restCovers ?? 4);
-  const block =
-    input.penalty || !input.defenderClose
-      ? 0
-      : clamp(
-          (0.18 + 0.38 * (input.defenderTackling / 100)) *
-            (input.transitionAttack ? 0.7 : 1) /
-            isolated,
-          0.06,
-          0.58,
-        );
-  const shotStr = contestStrength({
-    attribute: input.shooting,
-    form: input.form,
-    fatigue: input.fatigue,
-    tacticBonus: input.mentality * 0.12,
-  });
-  const gkStr = contestStrength({
-    attribute: input.keeperGoalkeeping,
-    form: input.keeperForm,
-    fatigue: input.keeperFatigue,
-    tacticBonus: input.keeperPositioning * 0.22,
-  });
-  const finish =
-    (shotStr / (shotStr + gkStr * (input.penalty ? 1.15 : 1.95))) *
-    (input.transitionAttack ? 1.08 : 1) *
-    (input.penalty ? 1.12 : 0.78 + 0.16 * Math.min(isolated - 1, 0.55));
+  const freshness = ((input.form - 50 - input.fatigue) / 100) * 0.1;
+  const edge = (input.shooting - MATCH_REFERENCE_SKILL) / 100 + freshness;
+  if (input.penalty) {
+    return {
+      onTarget: clamp(0.84 + 0.2 * edge, 0.7, 0.95),
+      block: 0,
+      goalGivenOnTarget: clamp(
+        0.88 - 0.25 * ((input.keeperGoalkeeping - input.shooting) / 100),
+        0.7,
+        0.95,
+      ),
+    };
+  }
+  const d = input.distanceToGoal;
+  // xG shape: distance sets the base, shooter vs keeper bends it (ADR 0003).
+  // Typical open-play shot ~16 out: ~43 % on target, ~25 % blocked, ~9 % scored.
+  const onTarget = clamp(
+    0.62 - 0.012 * d + 0.3 * edge + 0.05 * ((input.mentality - 50) / 100),
+    0.18,
+    0.85,
+  );
+  const block = input.defenderClose
+    ? clamp(
+        ((0.3 + 0.2 * ((input.defenderTackling - MATCH_REFERENCE_SKILL) / 100)) *
+          (input.transitionAttack ? 0.7 : 1)) /
+          isolated,
+        0.08,
+        0.5,
+      )
+    : 0.06;
+  const keeper =
+    input.keeperGoalkeeping +
+    0.2 * (input.keeperPositioning - MATCH_REFERENCE_SKILL) +
+    (input.keeperForm - 50 - input.keeperFatigue) * 0.1;
+  const duel = clamp(1 + 0.6 * ((input.shooting - keeper) / 100), 0.6, 1.4);
   const goalGivenOnTarget = clamp(
-    finish,
-    input.penalty ? 0.22 : 0.05,
-    input.penalty ? 0.58 : 0.36,
+    0.8 *
+      Math.exp(-d / 13) *
+      duel *
+      (1 + 0.15 * (isolated - 1)) *
+      (input.transitionAttack ? 1.06 : 1),
+    0.04,
+    0.8,
   );
   return { onTarget, block, goalGivenOnTarget };
 }

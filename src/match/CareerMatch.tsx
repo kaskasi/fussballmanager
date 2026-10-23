@@ -498,6 +498,7 @@ function CareerMatchPlayback({
                   preMatch={null}
                   className="career-match-stage"
                   backdropPhotoUrl={backdropPhotoUrl}
+                  ownTeamId={ownTeamId}
                 />
               </section>
             ) : null}

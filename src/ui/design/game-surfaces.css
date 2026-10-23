@@ -1671,78 +1671,7 @@ button.cash-chip:hover {
   white-space: nowrap;
 }
 
-.career-match .career-match-stage {
-  min-height: 0;
-}
-
 /* §9.15 — Live: gleiche Stage-Höhe (Spielfeld vs Kommentar), Side panel bündig unten */
-.career-match--live {
-  --career-match-hero-stage-h: min(46dvh, 26rem);
-}
-
-.career-match--live .career-match-stage {
-  flex: 0 0 auto;
-  height: var(--career-match-hero-stage-h);
-  min-height: var(--career-match-hero-stage-h);
-  max-height: var(--career-match-hero-stage-h);
-  margin-top: auto;
-  margin-bottom: 0;
-}
-
-.career-match--live .career-match-stage .match-stage__foreground {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-}
-
-.career-match--live .career-match-stage.match-stage--pitch .pitch-wrap {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  border-radius: 1rem 1rem 0 0;
-}
-
-.career-match--live .career-match-stage.match-stage--pitch svg.pitch {
-  flex: 1;
-  width: 100%;
-  min-height: 0;
-}
-
-.career-match--live .career-match-stage.match-stage--pitch .commentary-ticker {
-  flex-shrink: 0;
-}
-
-/* §9.15 — goal moment (~800ms): ball pulse + terra scorer ring */
-.pitch-wrap--goal-highlight [data-ball] {
-  animation: pitch-goal-ball-pulse 800ms ease-out;
-}
-
-.pitch-player--goal-scorer > circle:first-of-type {
-  stroke: var(--terra) !important;
-  animation: pitch-goal-scorer-ring 800ms ease-out;
-}
-
-@keyframes pitch-goal-ball-pulse {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 0 transparent);
-  }
-  45% {
-    filter: drop-shadow(0 0 0.35rem var(--terra));
-  }
-}
-
-@keyframes pitch-goal-scorer-ring {
-  0%,
-  100% {
-    stroke-width: 0.35;
-  }
-  50% {
-    stroke-width: 0.85;
-  }
-}
 
 /* Style consolidation — tokens only (formerly design-consolidation.css) */
 

@@ -1,16 +1,8 @@
 {
   "files": {
     "src/index.css": {
-      "colors": 796,
+      "colors": 795,
       "fontSizes": 318
-    },
-    "src/match/pitch-markings.tsx": {
-      "colors": 3,
-      "fontSizes": 0
-    },
-    "src/match/Pitch.tsx": {
-      "colors": 18,
-      "fontSizes": 0
     },
     "src/ui/design/design-repair.css": {
       "colors": 0,

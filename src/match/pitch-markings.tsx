@@ -2,10 +2,6 @@
 export const PITCH_W = 105;
 export const PITCH_H = 68;
 
-const LINE = "#ecfdf5";
-const GRASS = "#15803d";
-const GRASS_EDGE = "#166534";
-
 export function mapBallToPitch(ball: { x: number; y: number }): { cx: number; cy: number } {
   return {
     cx: (ball.x / 100) * PITCH_W,
@@ -17,42 +13,13 @@ export function mapBallToPitch(ball: { x: number; y: number }): { cx: number; cy
 export function SimplePitchMarkings() {
   return (
     <>
-      <rect x={0} y={0} width={PITCH_W} height={PITCH_H} fill={GRASS_EDGE} />
-      <rect
-        x={0}
-        y={0}
-        width={PITCH_W}
-        height={PITCH_H}
-        fill={GRASS}
-        stroke={LINE}
-        strokeWidth={0.45}
-      />
-      <line
-        x1={PITCH_W / 2}
-        y1={0}
-        x2={PITCH_W / 2}
-        y2={PITCH_H}
-        stroke={LINE}
-        strokeWidth={0.35}
-      />
-      <rect
-        x={0}
-        y={13.84}
-        width={16.5}
-        height={40.32}
-        fill="none"
-        stroke={LINE}
-        strokeWidth={0.3}
-      />
-      <rect
-        x={PITCH_W - 16.5}
-        y={13.84}
-        width={16.5}
-        height={40.32}
-        fill="none"
-        stroke={LINE}
-        strokeWidth={0.3}
-      />
+      <rect className="tc-pitch__surround" x={0} y={0} width={PITCH_W} height={PITCH_H} />
+      <rect className="tc-pitch__grass" x={0} y={0} width={PITCH_W} height={PITCH_H} strokeWidth={0.45} />
+      <g className="tc-pitch__lines" fill="none" strokeWidth={0.3}>
+        <line x1={PITCH_W / 2} y1={0} x2={PITCH_W / 2} y2={PITCH_H} strokeWidth={0.35} />
+        <rect x={0} y={13.84} width={16.5} height={40.32} />
+        <rect x={PITCH_W - 16.5} y={13.84} width={16.5} height={40.32} />
+      </g>
     </>
   );
 }

@@ -19,7 +19,21 @@ type MatchStageProps = {
   className?: string;
   /** Low-opacity stadium mood behind pitch + log (PRD 14.10). */
   backdropPhotoUrl?: string;
+  /** Own club for chip colours on the pitch; defaults to home. */
+  ownTeamId?: string;
 };
+
+/** Possessions started by the player up to `seq` (a run of frames with one carrier counts once). */
+export function ballContactsUntil(view: MatchView, seq: number, playerId: string): number {
+  let contacts = 0;
+  let previous: string | null = null;
+  for (const frame of view.frames) {
+    if (frame.seq > seq) break;
+    if (frame.ballCarrierId === playerId && previous !== playerId) contacts += 1;
+    previous = frame.ballCarrierId;
+  }
+  return contacts;
+}
 
 export function MatchStage({
   mode,
@@ -32,6 +46,7 @@ export function MatchStage({
   preMatch,
   className,
   backdropPhotoUrl,
+  ownTeamId,
 }: MatchStageProps) {
   const stageClass = ["match-stage", className, `match-stage--${mode}`]
     .filter(Boolean)
@@ -79,6 +94,8 @@ export function MatchStage({
         roster={view.roster}
         cue={frame.cue}
         cueDetail={frame.cueDetail}
+        ownTeamId={ownTeamId}
+        ballContacts={(playerId) => ballContactsUntil(view, frame.seq, playerId)}
       />
       {preMatch ? <PreMatchBlock brief={preMatch} /> : null}
       <CommentaryFeed lines={visibleLines} />

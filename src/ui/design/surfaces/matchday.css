@@ -153,3 +153,50 @@ button.tc-stars__card:hover { background: var(--sunken); }
   .tc-stars { grid-auto-flow: column; grid-auto-columns: minmax(14rem, 85%); overflow-x: auto; scroll-snap-type: x mandatory; }
   .tc-stars__item { scroll-snap-align: start; }
 }
+
+/* §9.15 Pitch viz: own players ink chips, opponent panel chips with ink outline, white ball */
+.tc-pitch { position: relative; margin: 0; padding: var(--space-3); overflow: hidden; background: var(--pitch-surround); border-radius: var(--radius-md) var(--radius-md) 0 0; }
+.tc-pitch__surround { fill: var(--pitch-surround); }
+.tc-pitch__grass { fill: var(--pitch-grass); stroke: var(--pitch-line); }
+.tc-pitch__lines { stroke: var(--pitch-line); }
+.tc-pitch__spot { fill: var(--pitch-line); }
+.tc-pitch__shadow { fill: var(--pitch-shadow); }
+.tc-pitch__ball { fill: var(--pitch-ball); stroke: var(--pitch-own); }
+
+.tc-pitch__player { cursor: pointer; outline: none; }
+.tc-pitch__chip { stroke-width: 0.22; transition: stroke-width 120ms ease-out; }
+.tc-pitch__player text { pointer-events: none; }
+.tc-pitch__player.is-own .tc-pitch__chip { fill: var(--pitch-own); stroke: var(--pitch-line); }
+.tc-pitch__player.is-own text { fill: var(--on-pitch-own); }
+.tc-pitch__player.is-other .tc-pitch__chip { fill: var(--pitch-other); stroke: var(--pitch-own); }
+.tc-pitch__player.is-other text { fill: var(--on-pitch-other); }
+/* Ball carrier: yellow stroke. Selected (card open): a white halo, so the two never look alike. */
+.tc-pitch__player.is-carrier .tc-pitch__chip { stroke: var(--next); stroke-width: 0.45; }
+.tc-pitch__player:hover .tc-pitch__chip { stroke-width: 0.45; }
+.tc-pitch__halo { fill: none; stroke: var(--pitch-line); stroke-width: 0.4; pointer-events: none; }
+.tc-pitch__player:focus-visible .tc-pitch__chip { stroke: var(--pitch-line); stroke-width: 0.7; }
+
+/* Goal moment (~800ms): ball pulse + reward ring on the scorer */
+.pitch-wrap--goal-highlight .tc-pitch__ball { animation: tc-pitch-ball-pulse 800ms ease-out; }
+.tc-pitch__player.pitch-player--goal-scorer .tc-pitch__chip { stroke: var(--next); animation: tc-pitch-scorer-ring 800ms ease-out; }
+@keyframes tc-pitch-ball-pulse {
+  0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+  45% { filter: drop-shadow(0 0 0.35rem var(--next)); }
+}
+@keyframes tc-pitch-scorer-ring {
+  0%, 100% { stroke-width: 0.35; }
+  50% { stroke-width: 0.9; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pitch-wrap--goal-highlight .tc-pitch__ball,
+  .tc-pitch__player.pitch-player--goal-scorer .tc-pitch__chip { animation: none; }
+}
+
+/* Mini profile: tap a chip, the card sits in the pitch corner (no screen change) */
+.tc-pitch__card { position: absolute; top: var(--space-3); left: var(--space-3); z-index: 2; display: grid; gap: var(--space-1); width: min(15rem, calc(100% - 2 * var(--space-3))); padding: var(--space-2) var(--space-3); background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-raised); }
+.tc-pitch__card-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); }
+.tc-pitch__card-shirt { display: inline-grid; place-items: center; min-width: 1.75rem; height: 1.75rem; border-radius: var(--radius-pill); background: var(--sunken); font-family: var(--font-display); font-weight: 800; font-variant-numeric: tabular-nums; }
+.tc-pitch__card-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc-pitch__card-close { width: var(--control-sm); height: var(--control-sm); }
+.tc-pitch__card-close .tc-icon { width: 16px; height: 16px; }
+.tc-pitch__card-meta { margin: 0; }

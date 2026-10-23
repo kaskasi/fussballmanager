@@ -623,15 +623,6 @@
   vertical-align: baseline;
 }
 
-.pitch-wrap {
-  margin: 0;
-  background: #14532d;
-  border-radius: 1rem 1rem 0 0;
-  padding: 0.7rem;
-  position: relative;
-  overflow: hidden;
-}
-
 .commentary-ticker {
   display: flex;
   align-items: flex-start;
@@ -829,18 +820,6 @@
 .career-match {
   padding-top: 0.65rem;
   padding-bottom: 1.25rem;
-}
-
-.career-match-stage {
-  margin-bottom: 0.5rem;
-}
-
-.career-match-stage .pitch-wrap {
-  min-height: min(48vh, 20rem);
-}
-
-.career-match--live .career-match-stage .pitch-wrap {
-  min-height: 0;
 }
 
 .scoreboard--compact {

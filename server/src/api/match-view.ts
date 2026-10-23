@@ -25,11 +25,6 @@ import {
   type CommentaryContext,
 } from "../commentary/index.ts";
 import { createInitialState, step } from "../engine/index.ts";
-import {
-  applyFramePresentation,
-  applyKickoffHalfDiscipline,
-  expandPresentationFrames,
-} from "./match-presentation.ts";
 
 function rosterOf(squad: Squad): MatchViewRosterPlayer[] {
   return [
@@ -171,12 +166,7 @@ export function buildMatchView(input: {
     current = result.state;
     events.push(result.event);
     running = applyMatchStatEvent(running, result.event, home.team.id);
-    frames.push(
-      applyFramePresentation(
-        frameFrom(current, result.event.seq, result.event, running, ctx),
-        result.event,
-      ),
-    );
+    frames.push(frameFrom(current, result.event.seq, result.event, running, ctx));
     for (const line of director.emit(result.event, previousEvent, ctx)) {
       lines.push({
         seq: line.seq,
@@ -200,15 +190,6 @@ export function buildMatchView(input: {
   }
 
   const roster = [...rosterOf(home), ...rosterOf(away)];
-  const presentationFrames = expandPresentationFrames(
-    frames,
-    events,
-    home.team.id,
-    away.team.id,
-    roster,
-    initial.rng.seed,
-  );
-  const presentationKickoff = applyKickoffHalfDiscipline(kickoff, home.team.id);
 
   return {
     seed: initial.rng.seed,
@@ -227,11 +208,11 @@ export function buildMatchView(input: {
     homePlan: sandboxPlanFromTactics(home.tactics),
     awayPlan: sandboxPlanFromTactics(away.tactics),
     roster,
-    kickoff: presentationKickoff,
-    frames: presentationFrames,
+    kickoff,
+    frames,
     lines,
     finalScore: current.score,
-    eventCount: presentationFrames.length,
+    eventCount: frames.length,
     report: buildMatchReport(events, home, away, seed, ctx),
   };
 }

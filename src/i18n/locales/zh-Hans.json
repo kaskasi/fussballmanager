@@ -2946,5 +2946,18 @@
   "story.act1End.survived.title": "成功保级",
   "story.act1End.survived.body": "{club} 以第 {place} 名保级成功。没人料到——除了 {names}。",
   "story.act1End.playoffWon.title": "通过附加赛保级",
-  "story.act1End.playoffWon.body": "第 {place} 名，附加赛，紧张到最后一刻——{club} 留在了联赛。这里的人不会忘记 {names}。"
+  "story.act1End.playoffWon.body": "第 {place} 名，附加赛，紧张到最后一刻——{club} 留在了联赛。这里的人不会忘记 {names}。",
+  "story.transition.dialogLabel": "新俱乐部",
+  "story.transition.eyebrow": "第一幕结束",
+  "story.transition.lead.relegated": "{club} 以第 {place} 名降级。但你的名字已经传开——三家高级联赛俱乐部想要你。",
+  "story.transition.lead.survived": "{club} 以第 {place} 名保级。现在有俱乐部来电，想和你一起打造未来——三家有耐心的高级联赛球队。",
+  "story.transition.followers": "随你同行：{names}",
+  "story.transition.chairmanGoal": "耐心的主席 · 目标：上半区，升级是梦想",
+  "story.transition.bonus": "签约奖金 {amount}",
+  "story.act2Start.title": "在 {club} 重新开始",
+  "story.act2Start.body": "主席 {chairman} 在 {club} 迎接你。他有耐心——也期待你善用时间。",
+  "story.act2Start.bodyWithFollowers": "主席 {chairman} 在 {club} 迎接你。你并不孤单：{names} 也随你而来。",
+  "story.unlock.tactics_sliders.title": "战术微调已解锁",
+  "story.unlock.tactics_sliders.body": "{assistant} 把打法预设和调节杆交给你：心态、逼抢和防线高度从现在起由你掌控。",
+  "story.unlock.tactics_sliders.feed": "新联赛，新思路——战术调节杆现在归你了，教练。"
 }

@@ -1,3 +1,4 @@
+import { isCareerTransitionPending } from "../narrative/career-acts.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import {
   civilDateFromSession,
@@ -19,7 +20,9 @@ export type FastForwardStopReason =
   | "limit"
   | "training_plan"
   | "season_complete"
-  | "stall";
+  | "stall"
+  /** Story Mode Act 1 ended — the employer pick blocks time (PRD 19). */
+  | "story_transition";
 
 export interface FastForwardResult {
   session: GameSession;
@@ -162,6 +165,9 @@ export async function fastForwardToMonthEnd(
   while (steps < maxSteps) {
     if (hasReachedFastForwardTarget(session.season, session.week, session.weekday, target)) {
       return { session, steps, reason: "reached" };
+    }
+    if (isCareerTransitionPending(session.storyState)) {
+      return { session, steps, reason: "story_transition" };
     }
 
     const trainingStep = applyTrainingGateAndUnits(session);

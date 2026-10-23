@@ -3075,5 +3075,18 @@
   "story.act1End.survived.title": "Klassenerhalt geschafft",
   "story.act1End.survived.body": "{club} hält auf Platz {place} die Klasse. Niemand hatte damit gerechnet – {names} schon.",
   "story.act1End.playoffWon.title": "Über die Relegation gerettet",
-  "story.act1End.playoffWon.body": "Platz {place}, Relegation, Zittern bis zum Schluss – und {club} bleibt drin. {names} werden sie hier nicht vergessen."
+  "story.act1End.playoffWon.body": "Platz {place}, Relegation, Zittern bis zum Schluss – und {club} bleibt drin. {names} werden sie hier nicht vergessen.",
+  "story.transition.dialogLabel": "Neuer Verein",
+  "story.transition.eyebrow": "Ende von Akt 1",
+  "story.transition.lead.relegated": "{club} steigt als {place}. ab. Dein Name hat sich trotzdem herumgesprochen – drei Oberligisten wollen dich.",
+  "story.transition.lead.survived": "{club} bleibt auf Platz {place} drin. Jetzt rufen Vereine an, die mit dir etwas aufbauen wollen – drei Oberligisten mit Geduld.",
+  "story.transition.followers": "Mit dir kommen: {names}",
+  "story.transition.chairmanGoal": "Geduldiger Vorsitzender · Ziel: obere Hälfte, Aufstieg als Traum",
+  "story.transition.bonus": "Startbonus {amount}",
+  "story.act2Start.title": "Neuer Anfang bei {club}",
+  "story.act2Start.body": "Vorsitzender {chairman} empfängt dich bei {club}. Er hat Zeit – und erwartet, dass du sie nutzt.",
+  "story.act2Start.bodyWithFollowers": "Vorsitzender {chairman} empfängt dich bei {club}. Nicht allein: {names} sind mitgekommen.",
+  "story.unlock.tactics_sliders.title": "Taktik-Feinschliff freigeschaltet",
+  "story.unlock.tactics_sliders.body": "{assistant} legt dir die Spielstil-Vorlagen und Regler hin: Mentalität, Pressing, Abwehrlinie gehören ab jetzt dir.",
+  "story.unlock.tactics_sliders.feed": "Neue Liga, neue Ideen – die Taktik-Regler gehören jetzt dir, Trainer."
 }

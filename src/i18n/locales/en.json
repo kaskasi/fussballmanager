@@ -3075,5 +3075,18 @@
   "story.act1End.survived.title": "Survival secured",
   "story.act1End.survived.body": "{club} stay up in place {place}. Nobody expected it – {names} did.",
   "story.act1End.playoffWon.title": "Saved through the playoff",
-  "story.act1End.playoffWon.body": "Place {place}, the playoff, nerves to the last minute – and {club} stay up. They won't forget {names} here."
+  "story.act1End.playoffWon.body": "Place {place}, the playoff, nerves to the last minute – and {club} stay up. They won't forget {names} here.",
+  "story.transition.dialogLabel": "New club",
+  "story.transition.eyebrow": "End of Act 1",
+  "story.transition.lead.relegated": "{club} go down in place {place}. Word about you got around anyway – three Oberliga clubs want you.",
+  "story.transition.lead.survived": "{club} stay up in place {place}. Now clubs call who want to build something with you – three patient Oberliga sides.",
+  "story.transition.followers": "Coming with you: {names}",
+  "story.transition.chairmanGoal": "Patient chairman · goal: upper half, promotion as the dream",
+  "story.transition.bonus": "Signing bonus {amount}",
+  "story.act2Start.title": "A new start at {club}",
+  "story.act2Start.body": "Chairman {chairman} welcomes you at {club}. He has time – and expects you to use it.",
+  "story.act2Start.bodyWithFollowers": "Chairman {chairman} welcomes you at {club}. You're not alone: {names} came with you.",
+  "story.unlock.tactics_sliders.title": "Tactical fine-tuning unlocked",
+  "story.unlock.tactics_sliders.body": "{assistant} hands you the play-style presets and sliders: mentality, pressing and defensive line are yours now.",
+  "story.unlock.tactics_sliders.feed": "New league, new ideas – the tactics sliders are yours now, coach."
 }

@@ -486,7 +486,7 @@ export function createBroadcastDirector(input: {
     };
 
     if (worthy && CHAIN_BUFFER_BEATS.has(beat) && !isShotBeat(beat)) {
-      emitBuildupLine();
+      if (BUILDUP_BEATS.has(beat)) emitBuildupLine();
       applyDirectorStateAfterBeat(state, beat, event);
       return lines;
     }

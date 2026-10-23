@@ -48,6 +48,32 @@ Alles hinter der Engine liest unseren typisierten `MatchEvent`-Strom: Director, 
 | Ecken | 22 | 18 | 20 | 18 | 11 |
 | Remis | 0 % | 6 % | 10 % | 7 % | 21 % |
 
+## Ergebnis der Kalibrierung (Stand 2026-10-23)
+
+`npm run play-calibration -- --seeds=8` und `npm run calibrate:career -- --matchdays=12 --seeds=3`:
+
+| pro Spiel | Division | Oberliga | Elite ×1,3 | Karriere | Band |
+|---|---|---|---|---|---|
+| Tore | 2,6 | 2,5 | 3,1 | 2,6 | 2,4–3,6 |
+| Schüsse | 23 | 24 | 26 | 26 | 20–30 |
+| aufs Tor | 8,5 | 8,6 | 10,0 | 8,8 | 7–11,5 |
+| Chancenverwertung | 11 % | 10,5 % | 11,8 % | 10,2 % | 8–14 % |
+| Passquote | 71,5 % | 71,6 % | 71,4 % | 71,8 % | 65–82 % |
+| Fouls / Gelb / Rot | 21,5 / 3,2 / 0,16 | 21,9 / 3,1 / 0,10 | 21,7 / 3,0 / 0,09 | 22,2 / 3,3 / 0,21 | 16–26 / 2,5–5 / ≤ 0,3 |
+| Ecken | 11,1 | 11,3 | 12,4 | 10,7 | 8–12 |
+| Remis | 18 % | 22 % | 18 % | 25 % | 15–35 % |
+| Top-Schützen-Anteil | 59 % | 60 % | 59 % | 55 % | ≤ 45 % ✗ |
+| Hattrick-Quote | 13 % | 13 % | 20 % | 13 % | ≤ 6 % ✗ |
+
+Die Sandbox (`SEED_MATCHUP`) bleibt bewusst ein Ungleichgewicht. Sie wird nicht auf die Bänder kalibriert.
+
+Wirkung auf die Spielstruktur: ca. 180 statt 600 Ballbesitzphasen pro Spiel, ca. 13 statt 500 Steilpässe, Ecken und Einwürfe entstehen wieder (Abfälschungen, geklärte Flanken). Innenverteidiger gehen bei eigenen Ecken mit nach vorn. Ein Kader ×0,7 spielt dieselben Zahlen wie ×1,0 (±20 %). Eine Elf mit +10 gewinnt 62 % und verliert 21 %.
+
+### Bekannte Lücken
+
+- **Schuss-Konzentration:** Stürmer und Flügel nehmen ca. 90 % der Schüsse, zentrale Mittelfeldspieler kaum welche. Folge: ca. jedes 8. Spiel hat einen Hattrick (real ca. jedes 30.), und Torjäger-Listen bestehen aus Flügelspielern. Für die Lösung braucht es ein Modell für nachrückende Mittelfeldspieler, die im Strafraumvorfeld den Ball fordern (Layoffs, zweite Bälle). Getestet wurden Pass-Links, Fernschüsse und Rückpässe ins Zentrum, alle mit wenig Wirkung. Der Band-Test bewacht die Werte (< 65 % / < 20 %), statt sie als erfüllt auszugeben.
+- **Kein Heimvorteil:** Heim und Auswärts gewinnen gleich oft (40/19/41). Real wären es ca. 45/25/30. Bisher nicht modelliert.
+
 ## Entscheidung
 
 1. **Die Engine bleibt.** Ihre Architektur (reines `step()`, Seed-RNG, fortsetzbar, Invarianten-Tests) ist solide. Das Problem ist die Kalibrierung.

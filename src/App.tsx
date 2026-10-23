@@ -1421,30 +1421,26 @@ export default function App() {
   const managerDeskHubScreen =
     MANAGER_DESK_HUB_ENABLED && screen === "hub" && !(careerMatchSetup && careerMatchUiVisible);
 
-  const hubHeaderNextCopy = useMemo((): { label: string; title: string } | null => {
+  const hubHeaderNextCopy = useMemo((): { title: string } | null => {
     if (!managerDeskHubScreen) return null;
     if (hasInboxBlockerForNext(session, youthInbox, players)) {
-      return { label: t("shell.next"), title: t("shell.nextToPostfach") };
+      return { title: t("shell.nextToPostfach") };
     }
     if (trainingAutoNext) {
-      return { label: t("hub.desk.next.pause"), title: t("hub.desk.next.pauseTitle") };
+      return { title: t("hub.desk.next.pauseTitle") };
     }
     if (isTrainingCalendarGatePending(session)) {
-      return {
-        label: t("hub.desk.next.weekStart"),
-        title: t("training.next.mondayCalendar"),
-      };
+      return { title: t("training.next.mondayCalendar") };
     }
     if (isTrainingNextActive(session)) {
       return {
-        label: t("hub.desk.next.runWeek"),
         title:
           hubNextBlockerCount > 0
             ? t("hub.desk.next.blockersTitle", { count: String(hubNextBlockerCount) })
             : t("hub.desk.next.runWeekTitle"),
       };
     }
-    return { label: t("hub.desk.next.advance"), title: t("shell.smartSkip") };
+    return { title: t("shell.smartSkip") };
   }, [
     careerMatchSetup,
     careerMatchUiVisible,
@@ -1602,19 +1598,7 @@ export default function App() {
       ? t("match.lineup.backToSelection")
       : careerMatchSetup && careerMatchUiVisible && matchNavAction?.label
         ? matchNavAction.label
-        : offHubDeskNext
-          ? t("shell.next")
-          : hubHeaderNextCopy
-            ? hubHeaderNextCopy.label
-            : trainingAutoNext && screen === "training"
-              ? t("training.autoNext.buttonLabel")
-              : isTrainingNextActive(session) &&
-                  !careerMatchSetup &&
-                  !hasInboxBlockerForNext(session, youthInbox, players)
-                ? t("training.next.header", {
-                    remaining: String(trainingWeekSlotsRemaining(session)),
-                  })
-                : t("shell.next");
+        : t("shell.next");
 
   const nextHeaderButtonTitle =
     hubHeaderNextCopy && trainingAutoNext

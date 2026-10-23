@@ -73,38 +73,41 @@ type MatchStatsProps = {
   view: MatchView;
   stats: MatchPairStats;
   compact?: boolean;
+  /** Own club's bar in the accent colour, the opponent in info blue (design.md §9.14). Defaults to home. */
+  ownTeamId?: string;
 };
 
-export function MatchStats({ view, stats, compact = false }: MatchStatsProps) {
+export function MatchStats({ view, stats, compact = false, ownTeamId }: MatchStatsProps) {
   const t = useT();
+  const homeIsOwn = (ownTeamId ?? view.home.id) === view.home.id;
 
   return (
     <section
-      className={compact ? "match-stats match-stats--compact" : "match-stats"}
+      className={compact ? "tc-matchstats tc-matchstats--compact" : "tc-matchstats"}
       aria-label={t("match.stats.aria")}
     >
-      <div className="stat-teams">
+      <div className="tc-matchstats__teams">
         <span>{view.home.shortName}</span>
         <span>{view.away.shortName}</span>
       </div>
-      <ul>
+      <ul className="tc-matchstats__rows">
         {rows(stats).map((row) => (
-          <li key={row.id}>
-            <span className="stat-home">{row.home}</span>
-            <div className="stat-mid">
-              <span className="stat-label">{t(row.labelKey)}</span>
-              <div className="stat-track" aria-hidden="true">
+          <li key={row.id} className="tc-matchstats__row">
+            <span className="tc-matchstats__num">{row.home}</span>
+            <div className="tc-matchstats__mid">
+              <span className="tc-matchstats__label">{t(row.labelKey)}</span>
+              <div className="tc-matchstats__track" aria-hidden="true">
                 <span
-                  className="stat-fill home"
+                  className={`tc-matchstats__fill ${homeIsOwn ? "is-own" : "is-other"}`}
                   style={{ width: barWidth(row.homeBar, row.awayBar) }}
                 />
                 <span
-                  className="stat-fill away"
+                  className={`tc-matchstats__fill ${homeIsOwn ? "is-other" : "is-own"}`}
                   style={{ width: barWidth(row.awayBar, row.homeBar) }}
                 />
               </div>
             </div>
-            <span className="stat-away">{row.away}</span>
+            <span className="tc-matchstats__num tc-matchstats__num--away">{row.away}</span>
           </li>
         ))}
       </ul>

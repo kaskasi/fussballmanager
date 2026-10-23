@@ -44,13 +44,14 @@ export function MatchdayLeagueSidePanel({
   );
 
   return (
-    <aside
-      className="matchday-cockpit-side matchday-cockpit-side--league game-panel"
-      aria-label={t("match.leagueSide.aria")}
-    >
-      <p className="matchday-preview-kicker">{t("match.lineup.matchday", { matchday: setup.matchday })}</p>
-      <h2 className="match-report-section-title">{t("match.leagueSide.tableTitle")}</h2>
-      <div className="matchday-side-panel matchday-league-table-panel">
+    <aside className="tc-stack" aria-label={t("match.leagueSide.aria")}>
+      <section className="tc-panel tc-match__league">
+        <div className="tc-panel__head">
+          <div>
+            <p className="tc-label">{t("match.lineup.matchday", { matchday: setup.matchday })}</p>
+            <h2 className="tc-panel__title">{t("match.leagueSide.tableTitle")}</h2>
+          </div>
+        </div>
         <LeagueTable
           table={standings.table}
           leagueSlice={leagueSlice}
@@ -59,14 +60,13 @@ export function MatchdayLeagueSidePanel({
           highlightTeamIds={highlightTeamIds}
           compact
         />
-      </div>
+      </section>
       {fixtures.length > 0 ? (
-        <details className="matchday-fixtures-block">
-          <summary className="matchday-fixtures-title">
-            {t("match.leagueSide.moreFixtures")}
-            <span className="matchday-fixtures-count">{fixtures.length}</span>
+        <details className="tc-panel tc-match__fixtures">
+          <summary className="tc-label">
+            {t("match.leagueSide.moreFixtures")} · {fixtures.length}
           </summary>
-          <ul className="matchday-fixtures-compact">
+          <ul className="tc-list">
             {fixtures.map((fixture) => {
               const isCurrent =
                 fixture.homeTeamId === setup.homeTeamId &&
@@ -76,14 +76,12 @@ export function MatchdayLeagueSidePanel({
               return (
                 <li
                   key={`${fixture.homeTeamId}-${fixture.awayTeamId}`}
-                  className={isCurrent ? "is-current" : undefined}
+                  className={`tc-list__item tc-list__item--wide${isCurrent ? " tc-list__item--own" : ""}`}
                 >
-                  <span className="matchday-fixture-teams">
+                  <span className="tc-list__name">
                     {home} – {away}
                   </span>
-                  {isCurrent ? (
-                    <span className="matchday-fixture-you">{t("match.leagueSide.yourMatch")}</span>
-                  ) : null}
+                  {isCurrent ? <span className="tc-list__meta">{t("match.leagueSide.yourMatch")}</span> : null}
                 </li>
               );
             })}

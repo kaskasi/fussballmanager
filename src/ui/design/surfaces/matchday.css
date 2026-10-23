@@ -40,3 +40,82 @@
 .tc-lineup__fit { display: inline-flex; align-items: center; justify-content: flex-end; gap: var(--space-1); }
 .tc-lineup__role { color: var(--text-muted); font-size: var(--font-size-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .tc-lineup__role.is-start { color: var(--positive); }
+
+/* §9.15 Matchday: Vorschau + Live */
+.tc-match__status { margin-bottom: var(--space-3); }
+@media (min-width: 1024px) {
+  .tc-match__split { grid-template-columns: minmax(0, 1fr) 20rem; }
+}
+.tc-match__main { min-width: 0; }
+
+.tc-score { display: grid; gap: var(--space-1); padding: var(--space-4); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md); text-align: center; }
+.tc-score__kicker { margin: 0; }
+.tc-score__row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--space-4); }
+.tc-score__team { overflow-wrap: anywhere; font-family: var(--font-display); font-weight: 800; font-size: var(--font-size-lg); line-height: 1.5rem; text-align: right; }
+.tc-score__team--away { text-align: left; }
+.tc-score__value { font-family: var(--font-display); font-weight: 800; font-size: var(--font-size-2xl); line-height: 2.25rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tc-score__meta { margin: 0; color: var(--text-muted); font-size: var(--font-size-sm); line-height: 1.25rem; font-variant-numeric: tabular-nums; }
+.tc-score--lg .tc-score__value { font-size: calc(var(--font-size-2xl) * 1.75); line-height: 1; }
+.tc-score--lg .tc-score__team { font-size: var(--font-size-xl); line-height: 1.75rem; }
+@media (max-width: 639px) {
+  .tc-score__row { gap: var(--space-2); }
+  .tc-score__team { font-size: var(--font-size-md); line-height: 1.25rem; }
+  .tc-score__value { font-size: var(--font-size-xl); line-height: 1.75rem; }
+  .tc-score--lg .tc-score__value { font-size: var(--font-size-2xl); }
+}
+
+.tc-match__expert { margin: 0 0 var(--space-3); color: var(--text-muted); font-style: italic; font-size: var(--font-size-sm); line-height: 1.25rem; }
+.tc-match__badge { display: inline-block; margin-right: var(--space-2); padding: 0 var(--space-1); border-radius: var(--radius-sm); background: var(--sunken); color: var(--text); font-style: normal; font-size: var(--font-size-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.tc-match__lineups { display: grid; gap: var(--space-4); }
+@media (min-width: 768px) {
+  .tc-match__lineups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.tc-match__caption { padding-bottom: var(--space-2); color: var(--text); font-weight: 700; text-align: left; }
+.tc-match__caption.is-own { color: var(--accent); }
+
+.tc-match__league { padding-inline: var(--space-3); }
+.tc-match__league .tc-table th,
+.tc-match__league .tc-table td { padding-inline: var(--space-1); }
+.tc-match__fixtures summary { cursor: pointer; }
+.tc-match__fixtures[open] summary { margin-bottom: var(--space-2); }
+
+.tc-match__stage { padding: var(--space-2); overflow: hidden; }
+
+.tc-match__side { display: grid; gap: var(--space-3); align-content: start; }
+.tc-match__transport { display: flex; align-items: center; gap: var(--space-1); }
+.tc-match__transport .tc-iconbtn:disabled { opacity: 0.4; cursor: default; }
+.tc-match__transport .tc-icon { width: 18px; height: 18px; }
+.tc-match__play { background: var(--accent); color: var(--on-accent); }
+.tc-match__play:hover { background: var(--accent-strong); }
+.tc-match__speed { display: inline-flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+.tc-match__speed .tc-select { min-width: 4.5rem; }
+.tc-match__side .tc-tabs { gap: var(--space-4); }
+.tc-match__tabpanel { display: grid; gap: var(--space-3); min-height: 12rem; align-content: start; }
+
+/* Event log (live tab and report): minute · ●/○ · name (A: …) · card */
+.tc-eventlog { display: grid; margin: 0; padding: 0; list-style: none; font-size: var(--font-size-sm); line-height: 1.25rem; }
+.tc-eventlog__row { display: grid; grid-template-columns: 3rem 1rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); padding: var(--space-2) 0; border-bottom: 1px solid var(--line); }
+.tc-eventlog__row:last-child { border-bottom: 0; }
+.tc-eventlog__minute { color: var(--text-muted); font-variant-numeric: tabular-nums; text-align: right; }
+.tc-eventlog__side { color: var(--text); text-align: center; }
+.tc-eventlog__text { min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+.tc-eventlog__assist { color: var(--text-muted); font-weight: 400; }
+.tc-eventlog__card { width: 10px; height: 14px; border-radius: 2px; }
+.tc-eventlog__card--yellow { background: var(--warning); }
+.tc-eventlog__card--red { background: var(--negative); }
+
+/* Stats: twin bars per row — own club accent, opponent info blue */
+.tc-matchstats { display: grid; gap: var(--space-2); }
+.tc-matchstats__teams { display: flex; justify-content: space-between; color: var(--text-muted); font-size: var(--font-size-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.tc-matchstats__rows { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.tc-matchstats__row { display: grid; grid-template-columns: 3rem minmax(0, 1fr) 3rem; align-items: center; gap: var(--space-3); }
+.tc-matchstats__num { font-family: var(--font-display); font-weight: 700; font-size: var(--font-size-md); font-variant-numeric: tabular-nums; }
+.tc-matchstats__num--away { text-align: right; }
+.tc-matchstats__mid { display: grid; gap: 2px; }
+.tc-matchstats__label { color: var(--text-muted); font-size: var(--font-size-xs); line-height: 1rem; text-align: center; }
+.tc-matchstats__track { display: flex; gap: 2px; height: 8px; overflow: hidden; border-radius: var(--radius-pill); background: var(--sunken); }
+.tc-matchstats__fill { display: block; height: 100%; }
+.tc-matchstats__fill:last-child { margin-left: auto; }
+.tc-matchstats__fill.is-own { background: var(--accent); }
+.tc-matchstats__fill.is-other { background: var(--info); }
+.tc-matchstats--compact .tc-matchstats__row { grid-template-columns: 2.25rem minmax(0, 1fr) 2.25rem; gap: var(--space-2); }

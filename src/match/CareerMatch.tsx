@@ -14,15 +14,14 @@ import { CareerLineupScreen } from "./CareerLineupScreen.tsx";
 import { squadForLeagueClub } from "../sim/league-divisions.ts";
 import type { MatchLineupState } from "./lineup-board.ts";
 import { MatchStage } from "./MatchStage.tsx";
-import { useMatchPresentationMode } from "./match-presentation-mode.ts";
-import { Scoreboard } from "./Scoreboard.tsx";
+import { matchClockLabel } from "./Scoreboard.tsx";
+import { MatchScoreHead } from "./MatchScoreHead.tsx";
+import { formatLeagueMatchKickoffLabel } from "./match-kickoff-format.ts";
 import { buildPreMatchBrief } from "./pre-match-brief.ts";
-import { PreMatchBlock } from "./PreMatchBlock.tsx";
 import { clampCareerMatchSpeed } from "./match-playback-speed.ts";
 import { frameAt, useMatchPlayback } from "./useMatchPlayback.ts";
 import { MatchReportScreen } from "./MatchReportScreen.tsx";
 import { MatchdayLivePanel } from "./MatchdayLivePanel.tsx";
-import { MatchdayHeroControls } from "./MatchdayHeroControls.tsx";
 import { MatchdayPreviewPanel } from "./MatchdayPreviewPanel.tsx";
 import { MatchdayLeagueSidePanel } from "./MatchdayLeagueSidePanel.tsx";
 import type { LeagueState } from "../persistence/league-state.ts";
@@ -231,7 +230,6 @@ function CareerMatchPlayback({
   /** Set only on explicit user transport (play / step / skip) — never from index side-effects. */
   const userStartedPlaybackRef = useRef(false);
   const [userStartedPlayback, setUserStartedPlayback] = useState(false);
-  const [presentationMode, setPresentationMode] = useMatchPresentationMode();
   const rivalPlayersRef = useRef(rivalPlayers);
   rivalPlayersRef.current = rivalPlayers;
   const broadcastStoryRef = useRef(broadcastStory);
@@ -280,7 +278,7 @@ function CareerMatchPlayback({
       } catch (caught) {
         if (cancelled) return;
         setView(null);
-        setError(caught instanceof Error ? caught.message : "Spiel konnte nicht geladen werden");
+        setError(caught instanceof Error ? caught.message : t("match.career.loadFailed"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -423,20 +421,25 @@ function CareerMatchPlayback({
     view,
   ]);
 
+  const ownTeamId = view ? (setup.isHome ? view.home.id : view.away.id) : setup.playerClubId;
+  const live = Boolean(view && frame && !reportOpen && userStartedPlayback);
+  const formations = view ? `${view.home.formation} vs ${view.away.formation}` : null;
+
   return (
     <main
       className={[
         "matchday",
         "career-match",
+        "tc-match",
         reportOpen ? "career-match--report" : "",
         inPreview ? "career-match--preview" : "",
-        view && userStartedPlayback && !reportOpen && !inPreview ? "career-match--live" : "",
+        live && !inPreview ? "career-match--live" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      {loading ? <p className="status">Spiel wird vorbereitet…</p> : null}
-      {error ? <p className="status error">{error}</p> : null}
+      {loading ? <p className="tc-callout tc-match__status">{t("match.career.preparing")}</p> : null}
+      {error ? <p className="tc-callout tc-callout--no tc-match__status">{error}</p> : null}
 
       {view && reportOpen ? (
         <MatchReportScreen
@@ -450,73 +453,84 @@ function CareerMatchPlayback({
           onSelectPlayer={onSelectMatchPlayer}
         />
       ) : (
-        <div className="matchday-cockpit">
-          <div className="matchday-cockpit-hero">
+        <div className="tc-split tc-match__split">
+          <div className="tc-stack tc-match__main">
             {view && heroFrame ? (
-              <Scoreboard
-                view={view}
-                frame={heroFrame}
-                compact
-                fullClubNames
-                previewKickoff={
-                  inPreview ? { season, week, weekday } : undefined
+              <MatchScoreHead
+                kicker={t("match.lineup.matchday", { matchday: setup.matchday })}
+                home={view.home.name}
+                away={view.away.name}
+                center={
+                  inPreview
+                    ? formatLeagueMatchKickoffLabel(season, week, weekday)
+                    : `${heroFrame.score.home} : ${heroFrame.score.away}`
                 }
+                meta={
+                  inPreview
+                    ? formations
+                    : `${matchClockLabel(heroFrame.clock, t("match.scoreboard.fullTimeShort"))} · ${formations}`
+                }
+                live={live}
               />
             ) : (
-              <header className="scoreboard scoreboard--compact matchday-preview-score">
-                <p className="eyebrow">Spieltag {setup.matchday}</p>
-                <h1 className="career-match-placeholder-title">
-                  {setup.isHome ? t("match.career.side.home") : t("match.career.side.away")} vs{" "}
-                  {setup.opponentShortName}
-                </h1>
-              </header>
+              <MatchScoreHead
+                kicker={t("match.lineup.matchday", { matchday: setup.matchday })}
+                home={setup.isHome ? preMatch.playerClubShortName : preMatch.opponentShortName}
+                away={setup.isHome ? preMatch.opponentShortName : preMatch.playerClubShortName}
+                center="–"
+                meta={formatLeagueMatchKickoffLabel(season, week, weekday)}
+              />
             )}
 
-            {view && inPreview ? <MatchdayPreviewPanel view={view} /> : null}
-
-            {view && !reportOpen && userStartedPlayback && !inPreview ? (
-              <MatchdayHeroControls
-                presentationMode={presentationMode}
-                onPresentationModeChange={setPresentationMode}
-                speed={playback.speed}
-                onSpeedChange={(next) => playback.setSpeed(clampCareerMatchSpeed(next))}
-                playing={playback.playing}
-                onStepBack={playback.stepBack}
-                onStepForward={playback.stepForward}
-                onPlayPause={playback.toggle}
-                stepBackDisabled={playback.index <= 0}
-                stepForwardDisabled={playback.atEnd}
-                disabled={loading}
-              />
+            {view && inPreview ? (
+              <MatchdayPreviewPanel view={view} brief={preMatch} ownTeamId={ownTeamId} />
             ) : null}
 
-            {view && frame && !reportOpen && userStartedPlayback ? (
-              <MatchStage
-                mode={presentationMode}
-                view={view}
-                frame={frame}
-                previous={playback.previous}
-                playing={playback.playing}
-                frameDurationMs={playback.frameDurationMs}
-                visibleLines={playback.visibleLines}
-                preMatch={null}
-                className="career-match-stage"
-                backdropPhotoUrl={backdropPhotoUrl}
-              />
+            {live && view && frame ? (
+              <section className="tc-panel tc-match__stage" aria-label={t("match.presentation.pitch")}>
+                <MatchStage
+                  mode="pitch"
+                  view={view}
+                  frame={frame}
+                  previous={playback.previous}
+                  playing={playback.playing}
+                  frameDurationMs={playback.frameDurationMs}
+                  visibleLines={playback.visibleLines}
+                  preMatch={null}
+                  className="career-match-stage"
+                  backdropPhotoUrl={backdropPhotoUrl}
+                />
+              </section>
             ) : null}
 
-            {!view && !error ? <PreMatchBlock brief={preMatch} /> : null}
+            {!view && !error ? (
+              <section className="tc-panel">
+                <p className="tc-match__expert">
+                  <span className="tc-match__badge">{t("match.commentary.expert")}</span>
+                  {preMatch.colorLine}
+                </p>
+              </section>
+            ) : null}
           </div>
 
-          {view && frame && !reportOpen && userStartedPlayback ? (
-            <MatchdayLivePanel view={view} frame={frame} />
+          {live && view && frame ? (
+            <MatchdayLivePanel
+              view={view}
+              frame={frame}
+              ownTeamId={ownTeamId}
+              playing={playback.playing}
+              speed={playback.speed}
+              onSpeedChange={(next) => playback.setSpeed(clampCareerMatchSpeed(next))}
+              onPlayPause={playback.toggle}
+              onStepBack={playback.stepBack}
+              onStepForward={playback.stepForward}
+              stepBackDisabled={playback.index <= 0}
+              stepForwardDisabled={playback.atEnd}
+            />
           ) : !view && !error ? (
-            <aside
-              className="matchday-cockpit-side matchday-cockpit-side--preview game-panel"
-              aria-label={t("match.preview.kicker")}
-            >
-              <h2 className="match-report-section-title">{t("match.preview.kicker")}</h2>
-              <p className="matchday-preview-copy">{t("match.preview.confirmedHint")}</p>
+            <aside className="tc-panel" aria-label={t("match.preview.kicker")}>
+              <p className="tc-label">{t("match.preview.kicker")}</p>
+              <p className="tc-caption">{t("match.preview.confirmedHint")}</p>
             </aside>
           ) : view && inPreview ? (
             <MatchdayLeagueSidePanel

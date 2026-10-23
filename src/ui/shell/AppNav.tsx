@@ -216,17 +216,6 @@ export function AppNav({
         ) : null}
       </div>
       <div className="app-nav-actions">
-        {hubActions.matchSkipToReport ? (
-          <button
-            type="button"
-            className="app-nav-match-simulate"
-            data-coach-target={COACH_TARGET.matchSkipMenu}
-            title={tr("shell.match.simulate")}
-            onClick={() => hubActions.matchSkipToReport?.()}
-          >
-            {tr("shell.match.simulate")}
-          </button>
-        ) : null}
         <div className="app-nav-trailing-cluster">
           <CashChip
             cash={cash}
@@ -238,6 +227,7 @@ export function AppNav({
             <button
               type="button"
               className="row-menu-trigger app-nav-menu-trigger"
+              data-coach-target={hubActions.matchSkipToReport ? COACH_TARGET.matchSkipMenu : undefined}
               aria-label={tr("shell.menu.moreActions")}
               aria-expanded={menuOpen}
               aria-haspopup="menu"
@@ -278,6 +268,23 @@ export function AppNav({
                   </>
                 ) : (
                   <>
+                    {hubActions.matchSkipToReport ? (
+                      <>
+                        <p className="pipeline-menu-section-title">{tr("shell.menu.match")}</p>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className="row-menu-item"
+                          title={tr("shell.match.skipToReportHint")}
+                          onClick={() => {
+                            hubActions.matchSkipToReport?.();
+                            setMenuOpen(false);
+                          }}
+                        >
+                          {tr("shell.match.skipToReport")}
+                        </button>
+                      </>
+                    ) : null}
                     <p className="pipeline-menu-section-title">TEAM</p>
                     {teamMenu.map((item) => (
                       <button

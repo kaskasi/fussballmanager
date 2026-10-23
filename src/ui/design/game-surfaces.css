@@ -405,29 +405,6 @@ button.cash-chip:hover {
   margin: 0;
 }
 
-.app-nav-match-simulate {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  height: 2.5rem;
-  min-height: 2.5rem;
-  margin: 0;
-  padding: 0 0.85rem;
-  border: 1px solid var(--outline-weich, rgba(255, 255, 255, 0.2));
-  border-radius: var(--radius-md, 8px);
-  background: var(--panel-muted, rgba(255, 255, 255, 0.06));
-  color: var(--tinte, inherit);
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.app-nav-match-simulate:hover {
-  background: var(--surface-elevated, rgba(255, 255, 255, 0.1));
-}
-
 .app-nav-actions .app-nav-next {
   display: inline-flex;
   align-items: center;
@@ -2007,14 +1984,6 @@ button.cash-chip:hover {
   color: var(--tinte-weich);
 }
 
-.match-stats .stat-fill.home {
-  background: var(--rasen);
-}
-
-.match-stats .stat-fill.away {
-  background: var(--staubblau);
-}
-
 @media (max-width: 860px) {
   .match-report-body-grid {
     grid-template-columns: 1fr;
@@ -2049,180 +2018,6 @@ button.cash-chip:hover {
 }
 
 /* §9.15 — Matchday-Cockpit */
-.matchday-cockpit {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
-  gap: 0.75rem;
-  align-items: start;
-}
-
-.matchday-cockpit-hero {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.matchday-hero-controls {
-  align-self: flex-start;
-  max-width: 100%;
-  margin: 0;
-  flex-wrap: wrap;
-  gap: 0.15rem 0.2rem;
-}
-
-.matchday-hero-controls .match-presentation-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-  margin: 0;
-}
-
-.matchday-hero-controls-sep {
-  width: 1px;
-  align-self: stretch;
-  min-height: 1.75rem;
-  margin: 0.12rem 0.25rem;
-  background: rgb(100 116 139 / 35%);
-}
-
-.matchday-hero-playback {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  margin: 0;
-  padding: 0.08rem 0.1rem;
-}
-
-.matchday-hero-playback-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.15rem;
-  height: 2.15rem;
-  border: 0;
-  margin: 0;
-  padding: 0;
-  border-radius: 999px;
-  color: #0f172a;
-  background: #fff;
-  box-shadow: 0 1px 3px rgb(15 23 42 / 12%);
-  cursor: pointer;
-}
-
-.matchday-hero-playback-btn:hover:not(:disabled) {
-  background: #f8fafc;
-}
-
-.matchday-hero-playback-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.matchday-hero-playback-btn:focus-visible {
-  outline: 2px solid var(--rasen);
-  outline-offset: 2px;
-}
-
-.matchday-hero-playback-btn svg {
-  display: block;
-  color: #0f172a;
-  stroke: currentColor;
-  fill: none;
-  pointer-events: none;
-}
-
-.matchday-hero-speed {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0.08rem 0.15rem 0.08rem 0.35rem;
-  cursor: pointer;
-}
-
-.matchday-hero-speed-label {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #64748b;
-}
-
-.matchday-hero-speed select {
-  border: 0;
-  margin: 0;
-  padding: 0.42rem 1.65rem 0.42rem 0.85rem;
-  border-radius: 999px;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: #0f172a;
-  background: #fff;
-  box-shadow: 0 1px 3px rgb(15 23 42 / 12%);
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2364748b' d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.65rem center;
-}
-
-.matchday-hero-speed select:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.matchday-hero-speed select:focus-visible {
-  outline: 2px solid var(--rasen);
-  outline-offset: 2px;
-}
-
-.matchday-cockpit-side {
-  position: sticky;
-  top: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  padding: 0.65rem 0.75rem;
-  max-height: calc(100dvh - 5rem);
-  overflow: auto;
-}
-
-.matchday-side-toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.matchday-side-transport {
-  justify-content: center;
-}
-
-.matchday-side-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-.matchday-side-tab {
-  border: var(--outline);
-  border-radius: var(--radius-klein);
-  padding: 0.3rem 0.5rem;
-  background: #fff;
-  font-weight: 700;
-  font-size: 0.78rem;
-  cursor: pointer;
-}
-
-.matchday-side-tab.is-active {
-  background: var(--rasen);
-}
-
-.matchday-side-panel {
-  min-height: 8rem;
-  max-height: min(24rem, 48dvh);
-  overflow: auto;
-}
 
 .match-timeline-log {
   list-style: none;
@@ -2253,19 +2048,6 @@ button.cash-chip:hover {
   color: var(--tinte);
 }
 
-.matchday-cockpit--events-focus {
-  grid-template-columns: minmax(0, 0.95fr) minmax(300px, 360px);
-}
-
-.matchday-cockpit--events-focus .matchday-side-panel {
-  max-height: min(28rem, 52dvh);
-}
-
-.matchday-cockpit-side--stream-events .matchday-side-panel {
-  flex: 1;
-  min-height: 12rem;
-}
-
 .match-voice-badge {
   display: inline-block;
   margin-right: 0.35rem;
@@ -2276,111 +2058,6 @@ button.cash-chip:hover {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-}
-
-.matchday-fan-voice {
-  margin: 0;
-  font-size: 0.78rem;
-  color: var(--tinte-weich);
-  font-weight: 600;
-}
-
-.matchday-preview-copy {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--tinte-weich);
-  font-weight: 600;
-}
-
-.matchday-preview-kicker {
-  margin: 0;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--tinte-weich);
-}
-
-.matchday-preview-lineups {
-  max-height: min(22rem, 45dvh);
-}
-
-.career-match--preview .matchday-cockpit {
-  align-items: stretch;
-}
-
-.career-match--preview .matchday-cockpit-hero {
-  min-height: 0;
-  height: 100%;
-}
-
-.career-match--preview .matchday-cockpit-side--league {
-  position: static;
-  max-height: none;
-  height: auto;
-  align-self: stretch;
-}
-
-.career-match--preview .matchday-preview-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  margin-top: auto;
-  padding: 0.65rem 0.75rem;
-}
-
-.career-match--preview .matchday-preview-lineups {
-  flex: 1;
-  max-height: none;
-  min-height: 10rem;
-  overflow: auto;
-}
-
-.career-match--preview .matchday-preview-lineups .lineups {
-  min-height: 100%;
-}
-
-.matchday-cockpit-side--league .matchday-league-table-panel {
-  max-height: none;
-  flex: 0 1 auto;
-}
-
-.matchday-fixtures-block {
-  margin-top: 0.35rem;
-  padding-top: 0.5rem;
-  border-top: var(--outline);
-}
-
-.matchday-fixtures-block > summary.matchday-fixtures-title {
-  margin: 0 0 0.35rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--tinte-weich);
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.35rem;
-}
-
-.matchday-fixtures-block > summary.matchday-fixtures-title::-webkit-details-marker {
-  display: none;
-}
-
-.matchday-fixtures-block[open] > summary.matchday-fixtures-title {
-  margin-bottom: 0.4rem;
-}
-
-.matchday-fixtures-count {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--tinte);
-  text-transform: none;
-  letter-spacing: 0;
 }
 
 .scoreboard--compact .scoreboard-compact-main {
@@ -2402,98 +2079,6 @@ button.cash-chip:hover {
   white-space: nowrap;
 }
 
-.matchday-fixtures-compact {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.22rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-}
-
-.matchday-fixtures-compact li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.35rem;
-}
-
-.matchday-fixture-teams {
-  min-width: 0;
-  line-height: 1.25;
-}
-
-.matchday-fixtures-compact li.is-current {
-  font-weight: 800;
-  color: var(--tinte);
-}
-
-.matchday-fixture-you {
-  flex-shrink: 0;
-  font-size: 0.62rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--tinte-weich);
-}
-
-.matchday-preview-hint {
-  margin: 0;
-  font-size: 0.72rem;
-  color: var(--tinte-weich);
-  font-weight: 600;
-}
-
-.matchday-preview-hint-em {
-  font-weight: 800;
-  color: var(--tinte);
-}
-
-.matchday-hero-voice {
-  margin: 0;
-  padding: 0.35rem 0.15rem 0;
-  font-size: 0.82rem;
-  color: var(--tinte-weich);
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-.career-match .career-match-stage.match-stage--events {
-  flex: 0 1 auto;
-  max-height: min(46dvh, 26rem);
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.career-match .career-match-stage.match-stage--events .events-feed {
-  flex: 1;
-  min-height: 0;
-  max-height: min(46dvh, 26rem);
-  height: auto;
-}
-
-.career-match .match-events-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgb(148 163 184 / 45%) transparent;
-}
-
-.career-match .match-events-scroll::-webkit-scrollbar {
-  width: 3px;
-}
-
-.career-match .match-events-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.career-match .match-events-scroll::-webkit-scrollbar-thumb {
-  background: rgb(148 163 184 / 50%);
-  border-radius: 999px;
-}
-
 .career-match .career-match-stage {
   min-height: 0;
 }
@@ -2501,25 +2086,6 @@ button.cash-chip:hover {
 /* §9.15 — Live: gleiche Stage-Höhe (Spielfeld vs Kommentar), Side panel bündig unten */
 .career-match--live {
   --career-match-hero-stage-h: min(46dvh, 26rem);
-}
-
-.career-match--live .matchday-cockpit {
-  align-items: stretch;
-}
-
-.career-match--live .matchday-cockpit-hero {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  height: 100%;
-}
-
-.career-match--live .matchday-cockpit-side--live {
-  position: static;
-  max-height: none;
-  min-height: 0;
-  height: 100%;
-  overflow: hidden;
 }
 
 .career-match--live .career-match-stage {
@@ -2556,84 +2122,6 @@ button.cash-chip:hover {
   flex-shrink: 0;
 }
 
-.career-match--live .career-match-stage.match-stage--events {
-  display: flex;
-  flex-direction: column;
-  max-height: none;
-}
-
-.career-match--live .career-match-stage.match-stage--events .events-feed {
-  flex: 1;
-  min-height: 0;
-  max-height: none;
-  height: 100%;
-}
-
-.career-match--live .matchday-cockpit-side--live {
-  display: flex;
-  flex-direction: column;
-}
-
-.career-match--live .matchday-side-tabs {
-  flex-shrink: 0;
-}
-
-.career-match--live .matchday-side-panel--live {
-  flex: 0 0 auto;
-  height: var(--career-match-hero-stage-h);
-  min-height: var(--career-match-hero-stage-h);
-  max-height: var(--career-match-hero-stage-h);
-  margin-top: auto;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.career-match--live .matchday-side-lineups {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.career-match--live .matchday-side-lineup-meta {
-  margin: 0;
-  flex-shrink: 0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--tinte-weich);
-  text-align: center;
-  line-height: 1.25;
-}
-
-.career-match--live .matchday-side-lineup-pitch {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.career-match--live .matchday-side-lineup-pitch .pitch-wrap {
-  flex: 1;
-  min-height: 0;
-  margin: 0;
-  padding: 0.35rem;
-  border-radius: var(--radius-klein);
-}
-
-.career-match--live .matchday-side-lineup-pitch svg.pitch {
-  width: 100%;
-  height: 100%;
-}
-
-.career-match--live .matchday-side-lineup-pitch [data-ball],
-.career-match--live .matchday-side-lineup-pitch [data-ball-shadow],
-.career-match--live .matchday-side-lineup-pitch .pitch-moment-icon,
-.career-match--live .matchday-side-lineup-pitch .match-sub-ticker {
-  visibility: hidden;
-}
-
 /* §9.15 — goal moment (~800ms): ball pulse + terra scorer ring */
 .pitch-wrap--goal-highlight [data-ball] {
   animation: pitch-goal-ball-pulse 800ms ease-out;
@@ -2661,17 +2149,6 @@ button.cash-chip:hover {
   }
   50% {
     stroke-width: 0.85;
-  }
-}
-
-@media (max-width: 960px) {
-  .matchday-cockpit {
-    grid-template-columns: 1fr;
-  }
-
-  .matchday-cockpit-side {
-    position: static;
-    max-height: none;
   }
 }
 

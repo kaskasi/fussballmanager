@@ -3,7 +3,7 @@ import { useT } from "../i18n/react.ts";
 import { formatLeagueMatchKickoffLabel } from "./match-kickoff-format.ts";
 import { MatchStats } from "./MatchStats";
 
-function clockLabel(clock: MatchClock, fullTimeLabel: string): string {
+export function matchClockLabel(clock: MatchClock, fullTimeLabel: string): string {
   const sec = String(clock.second).padStart(2, "0");
   const firstStoppage =
     clock.period === "first_half" &&
@@ -63,7 +63,7 @@ export function Scoreboard({
             <span className="clock">
               {kickoffScheduleLabel
                 ? `${view.home.formation} vs ${view.away.formation}`
-                : `${clockLabel(frame.clock, ftLabel)} · ${view.home.formation} vs ${view.away.formation}`}
+                : `${matchClockLabel(frame.clock, ftLabel)} · ${view.home.formation} vs ${view.away.formation}`}
             </span>
           </div>
           <span className="side away">{awayLabel}</span>
@@ -94,7 +94,7 @@ export function Scoreboard({
         <span className="side away">{view.away.name}</span>
       </div>
       <p className="clock">
-        {clockLabel(frame.clock, ftLabel)}
+        {matchClockLabel(frame.clock, ftLabel)}
         <span className="formations">
           {view.home.formation} vs {view.away.formation}
         </span>

@@ -110,17 +110,7 @@ export function buildMatchReport(
       });
       continue;
     }
-    if (event.type === "foul" && event.card) {
-      const color =
-        event.card === "red" || event.card === "second_yellow" ? "red" : "yellow";
-      cards.push({
-        minuteLabel: formatMatchMinuteLabel(event.clock),
-        playerName: ctx.playerName(event.fouler.playerId),
-        color,
-        teamId: event.fouler.teamId,
-      });
-      continue;
-    }
+    // A carded foul is always followed by its own `card` event; list the card once, there.
     if (event.type === "card") {
       const color =
         event.color === "red" || event.color === "second_yellow" ? "red" : "yellow";

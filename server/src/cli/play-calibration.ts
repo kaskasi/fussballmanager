@@ -1,6 +1,7 @@
 import { SEED_DIVISION, SEED_MATCHUP, SEED_OBERLIGA } from "@fussballmanager/shared";
 import {
   formatCalibration,
+  formatCalibrationCompact,
   roundRobin,
   runCalibration,
   scaleSquad,
@@ -11,6 +12,8 @@ import {
 const seedsArg = process.argv.find((arg) => arg.startsWith("--seeds="));
 const seedCount = seedsArg ? Number.parseInt(seedsArg.slice("--seeds=".length), 10) : 12;
 const seeds = seedRange(Number.isFinite(seedCount) && seedCount > 0 ? seedCount : 12);
+
+const compact = process.argv.includes("--compact");
 
 const sets: Array<[string, CalibrationFixture[]]> = [
   [
@@ -27,7 +30,12 @@ const sets: Array<[string, CalibrationFixture[]]> = [
 
 const started = Date.now();
 for (const [label, fixtures] of sets) {
-  console.log(formatCalibration(label, runCalibration({ fixtures, seeds })));
-  console.log("");
+  const metrics = runCalibration({ fixtures, seeds });
+  if (compact) {
+    console.log(formatCalibrationCompact(label.split(" ")[0] ?? label, metrics));
+  } else {
+    console.log(formatCalibration(label, metrics));
+    console.log("");
+  }
 }
 console.log(`${seeds.length} seeds per fixture, ${((Date.now() - started) / 1000).toFixed(1)}s`);

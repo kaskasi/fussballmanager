@@ -8,6 +8,7 @@ import { newGameSession } from "../src/persistence/game-session.ts";
 import { squadForLeagueClub } from "../src/sim/league-divisions.ts";
 import {
   formatCalibration,
+  formatCalibrationCompact,
   runCalibration,
   seedRange,
   type CalibrationFixture,
@@ -34,10 +35,10 @@ for (let matchday = 1; matchday <= matchdays; matchday += 1) {
 }
 
 const started = Date.now();
+const metrics = runCalibration({ fixtures, seeds });
 console.log(
-  formatCalibration(
-    `career (${matchdays} matchdays of AI fixtures × ${seeds.length} seeds)`,
-    runCalibration({ fixtures, seeds }),
-  ),
+  process.argv.includes("--compact")
+    ? formatCalibrationCompact("career", metrics)
+    : formatCalibration(`career (${matchdays} matchdays of AI fixtures × ${seeds.length} seeds)`, metrics),
 );
 console.log(`${((Date.now() - started) / 1000).toFixed(1)}s`);

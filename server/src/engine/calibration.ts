@@ -68,6 +68,10 @@ export function matchTotals(
         passes += 1;
         if (event.complete) passesComplete += 1;
         break;
+      case "turnover":
+        // Intercepted passes are emitted as turnovers carrying passer, target and interceptor.
+        if (event.reason === "interception" && event.involved.length >= 3) passes += 1;
+        break;
       case "foul":
         fouls += 1;
         break;
@@ -182,6 +186,16 @@ export function formatCalibration(label: string, metrics: CalibrationMetrics): s
   });
   const hda = `${(metrics.homeWinRate * 100).toFixed(0)}/${(metrics.drawRate * 100).toFixed(0)}/${(metrics.awayWinRate * 100).toFixed(0)}`;
   return [`${label} — ${metrics.matches} matches, max goals ${metrics.maxGoals}, H/D/A ${hda}%`, ...rows].join("\n");
+}
+
+/** One line per set: every metric, misses upper-cased. */
+export function formatCalibrationCompact(label: string, metrics: CalibrationMetrics): string {
+  const cells = bandRows(metrics).map((row) => {
+    const name = row.ok ? row.metric : row.metric.toUpperCase();
+    return `${name} ${formatValue(row.metric, row.value)}`;
+  });
+  const misses = bandRows(metrics).filter((row) => !row.ok).length;
+  return `${label.padEnd(10)} ${misses} miss | ${cells.join("  ")}`;
 }
 
 /** Every skill attribute × k (clamped 1–99); keeps height and non-GK keeping. */

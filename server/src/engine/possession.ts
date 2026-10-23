@@ -56,6 +56,10 @@ export function stepPass(
   const coverer =
     defendTactics.marking === "zonal" ? laneCover : (manShadow ?? laneCover);
   const pressure = defendingPressure(state, defendId);
+  const outfieldDefenders = defenders.filter((player) => player.role !== "GK");
+  const opponentReading =
+    outfieldDefenders.reduce((sum, player) => sum + player.attributes.positioning, 0) /
+    Math.max(1, outfieldDefenders.length);
   const quality = nextUnit(rng);
   const intercept = nextUnit(quality.rng);
   const intercepted =
@@ -65,6 +69,7 @@ export function stepPass(
         coverer,
         pressure.pressing,
         inLostBall(state, defendId),
+        passer.attributes.passing,
       );
   const complete =
     !intercepted &&
@@ -76,6 +81,10 @@ export function stepPass(
         pressing: pressure.pressing,
         kind: passKind,
         passerRole: passer.role,
+        distance: distance(passer.position, dest),
+        opponentReading,
+        passerDepth:
+          passer.teamId === state.homeTeamId ? passer.position.x : 100 - passer.position.x,
       });
   const duration = nextRange(intercept.rng, 2, 6);
   const slice = nextRange(duration.rng, -34, 34);
@@ -239,7 +248,7 @@ export function stepPass(
         matchId: timed.matchId,
         clock: timed.clock,
         ball,
-        involved: [from, to, asInvolved(loose)],
+        involved: [from, to, { ...asInvolved(loose), position: ball }],
         possessionTeamId: loose.teamId,
         from,
         to,

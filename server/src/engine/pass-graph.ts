@@ -21,7 +21,7 @@ import { depthFromOwnGoal } from "./shape.ts";
 
 const ROLE_LINK: Record<PlayerRole, Partial<Record<PlayerRole, number>>> = {
   GK: { CB: 3.2, FB: 2.4, DM: 1.3, CM: 0.45, W: 0.55, ST: 0.2, AM: 0.25 },
-  CB: { CB: 2.1, FB: 1.9, DM: 2.3, CM: 1.4, GK: 1.7, W: 0.55, ST: 0.22, AM: 0.4 },
+  CB: { CB: 2.1, FB: 1.9, DM: 2.3, CM: 1.4, GK: 0.6, W: 0.55, ST: 0.22, AM: 0.4 },
   FB: { W: 2.3, CM: 1.35, DM: 1.25, CB: 1.35, ST: 0.85, GK: 0.7, FB: 0.4, AM: 0.7 },
   DM: { CB: 1.7, FB: 1.35, CM: 2.1, W: 1.25, ST: 0.7, GK: 1.15, AM: 0.9, DM: 0.8 },
   CM: { DM: 1.55, CM: 1.45, W: 1.7, ST: 1.25, FB: 1.05, CB: 0.75, AM: 1.2, GK: 0.28 },
@@ -475,7 +475,15 @@ type PassChoice = {
   target: PlayerMatchStatus;
   kind: PassKind | undefined;
   spot: PitchPosition;
+  /** A through lead offered inside an ordinary pass, not a chosen through ball. */
+  incidental?: boolean;
 };
+
+/**
+ * An ordinary pass may still find a runner in behind, but rarely: real teams
+ * play ~10 through balls a match, not one every other pass (ADR 0003).
+ */
+export const INCIDENTAL_THROUGH_WEIGHT = 0.06;
 
 export function pickPassTarget(
   state: MatchState,
@@ -535,6 +543,7 @@ export function pickPassTarget(
           target: player,
           kind: "through",
           spot: lead.spot,
+          incidental: kind === undefined,
         });
       }
     }
@@ -548,7 +557,7 @@ export function pickPassTarget(
   }
   const scored = options.map((option) => ({
     item: option,
-    weight: passTargetWeight({
+    weight: (option.incidental ? INCIDENTAL_THROUGH_WEIGHT : 1) * passTargetWeight({
       passer,
       target: option.target,
       ownGoal,

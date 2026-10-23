@@ -123,6 +123,18 @@ export function openPlayWeights(input: {
   };
 }
 
+/** Long goal kicks and keeper punts are won about half the time. */
+const LONG_KICK_BASE = 0.5;
+
+/** League-neutral opponent skill when a caller has no defender to compare against. */
+const NEUTRAL_SKILL = 50;
+
+/**
+ * Pass success as a contest: passer skill against the defending side's reading
+ * of the game, so amateur and elite leagues complete similar shares (ADR 0003).
+ * Base rates by pass kind follow real football: short ~88 %, switch ~75 %,
+ * through ~50 %, cross ~30 %, long goal kick ~55 %.
+ */
 export function passCompleteChance(input: {
   passing: number;
   form: number;
@@ -130,22 +142,40 @@ export function passCompleteChance(input: {
   pressing: number;
   kind?: "short" | "switch" | "cross" | "through" | "restart";
   passerRole?: string;
+  /** Pass length in pitch units. */
+  distance?: number;
+  /** Mean positioning of the defending outfield. */
+  opponentReading?: number;
+  /** Passer depth from own goal (0–100): build-up is safer than the final third. */
+  passerDepth?: number;
 }): number {
-  const quality = (input.passing + input.form - input.fatigue) / 100;
-  const base = clamp(0.5 + 0.4 * quality - 0.25 * (input.pressing / 100), 0.2, 0.92);
+  const edge = clamp(
+    (input.passing - (input.opponentReading ?? NEUTRAL_SKILL)) / 100,
+    -0.5,
+    0.5,
+  );
+  const freshness = ((input.form - 50) / 100) * 0.12 - (input.fatigue / 100) * 0.12;
+  const press = 0.1 * (input.pressing / 100);
+  const dist = input.distance ?? 14;
+  const depth = input.passerDepth ?? 50;
+  const zone = depth < 33 ? 0.04 : depth > 66 ? -0.07 : 0;
+  if ((input.kind === "restart" || input.passerRole === "GK") && dist <= 28) {
+    // Keeper or restart played short: nobody presses a set ball.
+    return clamp(0.97 + 0.1 * edge - press * 0.5, 0.85, 0.99);
+  }
+  let base: number;
   if (input.kind === "restart" || input.passerRole === "GK") {
-    return clamp(base + 0.28, 0.74, 0.96);
+    base = LONG_KICK_BASE;
+  } else if (input.kind === "cross") {
+    base = 0.34;
+  } else if (input.kind === "through") {
+    base = 0.52;
+  } else if (input.kind === "switch") {
+    base = 0.76;
+  } else {
+    base = 0.93 - 0.006 * Math.max(0, dist - 12) + zone;
   }
-  if (input.kind === "cross") {
-    return clamp(base * 0.72, 0.18, 0.6);
-  }
-  if (input.kind === "through") {
-    return clamp(base * 0.8, 0.18, 0.7);
-  }
-  if (input.kind === "switch") {
-    return clamp(base * 0.9, 0.24, 0.84);
-  }
-  return base;
+  return clamp(base + 0.3 * edge + freshness - press, 0.12, 0.97);
 }
 
 export function contestStrength(input: {

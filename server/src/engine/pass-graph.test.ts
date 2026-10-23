@@ -268,8 +268,10 @@ describe("pass graph", () => {
       }
     }
     expect(counts.ten).toBeGreaterThan(counts.eight);
-    expect(counts.through).toBeGreaterThan(counts.eight);
     expect(counts.ten).toBeGreaterThan(counts.eleven);
+    // Ordinary passes only rarely turn into balls in behind (ADR 0003); the
+    // explicit through action is where runners get found.
+    expect(counts.through).toBeLessThan(counts.ten);
   });
 
   it("refuses a ball into space when the passer is already past the defence", () => {

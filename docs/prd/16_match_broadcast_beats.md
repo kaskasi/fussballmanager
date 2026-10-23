@@ -9,8 +9,9 @@
 ## Purpose
 
 Match-**Beats** sind die narrative Einheit *über* einzelnen Engine-Ticks. Sie steuern
-Pacing, Doppelstimme (Play-by-Play + Farbkommentar) und spätere Story-Slots — ohne die
-Engine (`server/src/engine/`) zu verändern (Gesetz 4, PRD 14.10).
+Pacing, Doppelstimme (Play-by-Play + Farbkommentar) und spätere Story-Slots. Der Director
+liest nur den Engine-Strom und schreibt keine Events um (Gesetz 4 neu, ADR 0003). Seit
+ADR 0004 ist der Stream der Hero des Spieltags (kein Live-Pitch).
 
 **Heute:** **Broadcast Director** (`server/src/commentary/director.ts`) sitzt zwischen
 Engine-Stream und UI: sparse PBP (~80–200 Zeilen/Spiel), **Moment**-Zeilen für
@@ -225,6 +226,8 @@ type BroadcastLine = {
   voice: "pbp" | "color";
   text: string;          // DE, Template oder LLM-Slot-Fill
   macroId?: string;
+  /** ADR 0004 — Highlight-Stufe; fehlt = "extended". */
+  level?: "key" | "extended" | "full";
 };
 
 type DirectorInput = {
@@ -279,7 +282,8 @@ Wenn zwei Beats im selben Tick: **ein** PBP + höchstens **ein** Color.
 | **B3** | P3-Unterdrückung (kein PBP für pass/carry/duel) | `server/src/commentary/suppression.ts` ✓ |
 | **B3b** | Doppelzeile PBP+Color + UI-Ticker (`voice`, Stagger) | `shared/match-view.ts`, `src/match/` ✓ |
 | **B3c** | Sparse PBP, chain buffer, `voice: moment`, Pitch-Moment-Icon | `director.ts`, `moment-copy.ts`, `chain-copy.ts`, UI ✓ |
-| **B3d** | Pitch-Viz (Präsentation): synthetische Flug-Frames (Schuss/Parade/Aus), Kickoff-Hälften, Eck-Cluster; Client easing + variable Tick-Dauer | `server/src/api/match-presentation.ts`, `src/match/lerp.ts`, `useMatchPlayback.ts` ✓ |
+| **B3d** | ~~Pitch-Viz (Präsentation): synthetische Flug-Frames, Client easing~~ — **zurückgezogen** (ADR 0004) | entfällt |
+| **B3e** | Highlight-Stufen: jede Zeile trägt `level` (`key`/`extended`/`full`); Full liefert Aufbau-Zeilen für P3-Beats, zeitlich gedrosselt; Varianten pro Beat in den Locale-Packs | `director.ts`, `suppression.ts`, `shared/match-view.ts` |
 | **B4** | Story-Slots + Chronik (fact-checked color) | `story-slots.ts`, `broadcast-story.ts` ✓ |
 | **B5** | Lokales LLM nur für `color` Slots mit Fallback | PRD 01 |
 
@@ -297,7 +301,7 @@ Wenn zwei Beats im selben Tick: **ein** PBP + höchstens **ein** Color.
 
 | Regel | Prüfung |
 |-------|---------|
-| Gesetz 4 | Kein Import aus `server/src/engine/` in Director außer Typen |
+| Gesetz 4 | Kein Import aus `server/src/engine/` in Director außer Typen; Director erfindet oder verändert keine Events |
 | PRD 01 | LLM optional; Template-Fallback immer |
 | PRD 14.10 | Deutsch, Namen in Zeile, eine Event-Quelle |
 | Weizenbaum | Color-Zeilen unit-test: keine Score/Spieler die nicht in `event`/`state` |

@@ -91,6 +91,44 @@ describe("match player stats", () => {
     expect(stats.find((row) => row.playerId === away.starters[0]!.player.id)?.yellowCards).toBe(1);
   });
 
+  it("counts a carded foul once (the foul carries the card, the card event follows)", () => {
+    const home = miniSquad("fc-home", "pl-home-9", "Striker Home");
+    const away = miniSquad("fc-away", "pl-away-4", "Defender Away");
+    const clock = { period: "first_half" as const, minute: 30, second: 0, stoppageMinute: 0 };
+    const fouler = { playerId: away.starters[0]!.player.id, teamId: away.team.id, position: { x: 0, y: 0 } };
+    const fouled = { playerId: home.starters[0]!.player.id, teamId: home.team.id, position: { x: 0, y: 0 } };
+    const stats = aggregatePlayerMatchStats(
+      [
+        {
+          type: "foul",
+          seq: 1,
+          matchId: "m1" as never,
+          clock,
+          ball: { x: 0, y: 0 },
+          involved: [fouler, fouled],
+          possessionTeamId: home.team.id,
+          fouler,
+          fouled,
+          card: "yellow",
+        },
+        {
+          type: "card",
+          seq: 2,
+          matchId: "m1" as never,
+          clock,
+          ball: { x: 0, y: 0 },
+          involved: [fouler],
+          possessionTeamId: home.team.id,
+          player: fouler,
+          color: "yellow",
+        },
+      ],
+      home,
+      away,
+    );
+    expect(stats.find((row) => row.playerId === fouler.playerId)?.yellowCards).toBe(1);
+  });
+
   it("merges matchday stats into a season total", () => {
     const merged = mergePlayerSeasonStats(
       [{ playerId: asPlayerId("pl_1"), teamId: asTeamId("fc-a"), name: "A", goals: 2, assists: 0, yellowCards: 0 }],

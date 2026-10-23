@@ -70,17 +70,7 @@ export function aggregatePlayerMatchStats(
       }
       continue;
     }
-    if (event.type === "foul" && event.card) {
-      if (event.card === "yellow") {
-        bump(event.fouler.playerId, event.fouler.teamId, "yellowCards");
-      } else if (event.card === "second_yellow") {
-        bump(event.fouler.playerId, event.fouler.teamId, "yellowCards");
-        bump(event.fouler.playerId, event.fouler.teamId, "redCards");
-      } else if (event.card === "red") {
-        bump(event.fouler.playerId, event.fouler.teamId, "redCards");
-      }
-      continue;
-    }
+    // A carded foul is always followed by its own `card` event; count the card once, there.
     if (event.type === "card") {
       if (event.color === "yellow") {
         bump(event.player.playerId, event.player.teamId, "yellowCards");

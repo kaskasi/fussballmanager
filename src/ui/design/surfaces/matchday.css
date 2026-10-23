@@ -154,49 +154,72 @@ button.tc-stars__card:hover { background: var(--sunken); }
   .tc-stars__item { scroll-snap-align: start; }
 }
 
-/* §9.15 Pitch viz: own players ink chips, opponent panel chips with ink outline, white ball */
-.tc-pitch { position: relative; margin: 0; padding: var(--space-3); overflow: hidden; background: var(--pitch-surround); border-radius: var(--radius-md) var(--radius-md) 0 0; }
-.tc-pitch__surround { fill: var(--pitch-surround); }
-.tc-pitch__grass { fill: var(--pitch-grass); stroke: var(--pitch-line); }
-.tc-pitch__lines { stroke: var(--pitch-line); }
-.tc-pitch__spot { fill: var(--pitch-line); }
-.tc-pitch__shadow { fill: var(--pitch-shadow); }
-.tc-pitch__ball { fill: var(--pitch-ball); stroke: var(--pitch-own); }
+/* §9.15 Live, text-first: pulse panel (momentum + zones) above the commentary stream */
+.tc-match__transport { flex-wrap: wrap; }
+.tc-match__rate { display: flex; flex-basis: 100%; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
+.tc-match__rate .tc-match__speed { margin-left: 0; }
+.tc-match__rate .tc-match__level { min-width: 7.5rem; }
+.tc-match__pulse { display: grid; gap: var(--space-3); padding: var(--space-3); }
 
-.tc-pitch__player { cursor: pointer; outline: none; }
-.tc-pitch__chip { stroke-width: 0.22; transition: stroke-width 120ms ease-out; }
-.tc-pitch__player text { pointer-events: none; }
-.tc-pitch__player.is-own .tc-pitch__chip { fill: var(--pitch-own); stroke: var(--pitch-line); }
-.tc-pitch__player.is-own text { fill: var(--on-pitch-own); }
-.tc-pitch__player.is-other .tc-pitch__chip { fill: var(--pitch-other); stroke: var(--pitch-own); }
-.tc-pitch__player.is-other text { fill: var(--on-pitch-other); }
-/* Ball carrier: yellow stroke. Selected (card open): a white halo, so the two never look alike. */
-.tc-pitch__player.is-carrier .tc-pitch__chip { stroke: var(--next); stroke-width: 0.45; }
-.tc-pitch__player:hover .tc-pitch__chip { stroke-width: 0.45; }
-.tc-pitch__halo { fill: none; stroke: var(--pitch-line); stroke-width: 0.4; pointer-events: none; }
-.tc-pitch__player:focus-visible .tc-pitch__chip { stroke: var(--pitch-line); stroke-width: 0.7; }
+/* Momentum: per-minute diverging bars, own club above (accent), opponent below (info), as in tc-matchstats */
+.tc-momentum { display: grid; gap: var(--space-1); }
+.tc-momentum__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.tc-momentum__head .tc-label { margin: 0; }
+.tc-momentum__legend { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: 0; padding: 0; list-style: none; color: var(--text-muted); font-size: var(--font-size-xs); font-weight: 700; line-height: 1rem; }
+.tc-momentum__legend li { display: inline-flex; align-items: center; gap: var(--space-1); }
+.tc-momentum__swatch { width: 10px; height: 10px; border-radius: 2px; }
+.tc-momentum__swatch.is-own { background: var(--accent); }
+.tc-momentum__swatch.is-other { background: var(--info); }
+.tc-momentum__chart { display: block; width: 100%; height: 3.5rem; }
+.tc-momentum__axis { stroke: var(--line-strong); stroke-width: 1; }
+.tc-momentum__half { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 2 3; }
+.tc-momentum__hit { fill: transparent; }
+.tc-momentum__chart g:hover .tc-momentum__hit { fill: var(--sunken); }
+.tc-momentum__bar.is-own { fill: var(--accent); }
+.tc-momentum__bar.is-other { fill: var(--info); }
 
-/* Goal moment (~800ms): ball pulse + reward ring on the scorer */
-.pitch-wrap--goal-highlight .tc-pitch__ball { animation: tc-pitch-ball-pulse 800ms ease-out; }
-.tc-pitch__player.pitch-player--goal-scorer .tc-pitch__chip { stroke: var(--next); animation: tc-pitch-scorer-ring 800ms ease-out; }
-@keyframes tc-pitch-ball-pulse {
-  0%, 100% { filter: drop-shadow(0 0 0 transparent); }
-  45% { filter: drop-shadow(0 0 0.35rem var(--next)); }
+/* Zones: Drittel / Seite as thin segmented bars; the lit segment wears the side in possession */
+.tc-zones { display: grid; gap: var(--space-1); }
+.tc-zones__row { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); align-items: center; gap: var(--space-2); }
+.tc-zones__title { margin: 0; }
+.tc-zones__bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; margin: 0; padding: 0; list-style: none; }
+.tc-zones__seg { overflow: hidden; padding: 2px var(--space-1); background: var(--sunken); color: var(--text-muted); font-size: var(--font-size-xs); font-weight: 700; line-height: 1rem; letter-spacing: 0.08em; text-align: center; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; transition: background-color 200ms ease-out, color 200ms ease-out; }
+.tc-zones__seg:first-child { border-radius: var(--radius-pill) 0 0 var(--radius-pill); }
+.tc-zones__seg:last-child { border-radius: 0 var(--radius-pill) var(--radius-pill) 0; }
+.tc-zones__seg.is-active { background: var(--line-strong); color: var(--text); }
+.tc-zones.is-own .tc-zones__seg.is-active { background: var(--accent); color: var(--on-accent); }
+.tc-zones.is-other .tc-zones__seg.is-active { background: var(--info); color: var(--on-info); }
+
+/* Commentary stream: minute · marker · text; newest line at the bottom and emphasised */
+.tc-stream { position: relative; padding: 0; overflow: hidden; }
+.tc-stream__list { display: grid; align-content: start; min-height: 16rem; max-height: min(60vh, 32rem); margin: 0; padding: var(--space-1) 0; overflow-y: auto; overscroll-behavior: contain; list-style: none; }
+.tc-stream__line { display: grid; grid-template-columns: 3rem 1.25rem minmax(0, 1fr); align-items: start; gap: var(--space-2); padding: var(--space-2) var(--space-3) var(--space-2) calc(var(--space-3) - 3px); border-left: 3px solid transparent; color: var(--text-muted); font-size: var(--font-size-sm); line-height: 1.25rem; }
+.tc-stream__line + .tc-stream__line { border-top: 1px solid var(--line); }
+.tc-stream__minute { font-variant-numeric: tabular-nums; text-align: right; }
+.tc-stream__marker { display: inline-flex; align-items: center; justify-content: center; min-height: 1.25rem; }
+.tc-stream__marker .tc-icon { width: 16px; height: 16px; }
+.tc-stream__line.is-moment .tc-stream__marker { color: var(--text-muted); }
+.tc-stream__text { min-width: 0; overflow-wrap: anywhere; }
+.tc-stream__line.is-color .tc-stream__text { font-style: italic; }
+.tc-stream__line.is-color .tc-match__badge { font-style: normal; }
+.tc-stream__line.is-shot,
+.tc-stream__line.is-danger { color: var(--text); }
+.tc-stream__line.is-danger { border-left-color: var(--warning); }
+.tc-stream__line.is-goal { border-left-color: var(--accent); background: var(--accent-soft); color: var(--text); font-weight: 700; }
+.tc-stream__line.is-goal .tc-stream__marker { color: var(--accent); }
+.tc-stream__line.is-latest { color: var(--text); font-weight: 700; animation: tc-stream-in 240ms ease-out; }
+/* Goal hold (GOAL_HIGHLIGHT_MS): the new goal line flashes in the accent before it settles */
+.tc-stream__line.is-latest.is-goal { animation: tc-stream-goal 800ms ease-out; }
+.tc-stream__jump { position: absolute; right: var(--space-3); bottom: var(--space-3); box-shadow: var(--shadow-raised); }
+.tc-stream__jump .tc-icon { width: 14px; height: 14px; }
+@keyframes tc-stream-in {
+  from { opacity: 0; transform: translateY(4px); }
 }
-@keyframes tc-pitch-scorer-ring {
-  0%, 100% { stroke-width: 0.35; }
-  50% { stroke-width: 0.9; }
+@keyframes tc-stream-goal {
+  0%, 40% { background: var(--accent); color: var(--on-accent); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pitch-wrap--goal-highlight .tc-pitch__ball,
-  .tc-pitch__player.pitch-player--goal-scorer .tc-pitch__chip { animation: none; }
+  .tc-stream__line.is-latest,
+  .tc-stream__line.is-latest.is-goal { animation: none; }
+  .tc-zones__seg { transition: none; }
 }
-
-/* Mini profile: tap a chip, the card sits in the pitch corner (no screen change) */
-.tc-pitch__card { position: absolute; top: var(--space-3); left: var(--space-3); z-index: 2; display: grid; gap: var(--space-1); width: min(15rem, calc(100% - 2 * var(--space-3))); padding: var(--space-2) var(--space-3); background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-raised); }
-.tc-pitch__card-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); }
-.tc-pitch__card-shirt { display: inline-grid; place-items: center; min-width: 1.75rem; height: 1.75rem; border-radius: var(--radius-pill); background: var(--sunken); font-family: var(--font-display); font-weight: 800; font-variant-numeric: tabular-nums; }
-.tc-pitch__card-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tc-pitch__card-close { width: var(--control-sm); height: var(--control-sm); }
-.tc-pitch__card-close .tc-icon { width: 16px; height: 16px; }
-.tc-pitch__card-meta { margin: 0; }

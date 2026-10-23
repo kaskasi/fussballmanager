@@ -1,213 +1,149 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GOAL_HIGHLIGHT_MS } from "./goal-highlight.ts";
-import type { MatchView, MatchViewFrame } from "@fussballmanager/shared";
-import { frameDurationMs, transitionDurationMs } from "./lerp";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { MatchView, MatchViewFrame, MatchViewLine } from "@fussballmanager/shared";
+import type { MatchHighlightLevel } from "./match-highlight-level.ts";
 import {
-  COLOR_LINE_DELAY_MS,
-  filterVisibleCommentaryLines,
-} from "./match-commentary-lines.ts";
-import { compressGkCbRecycleFrames } from "./match-presentation.ts";
+  buildLineTimeline,
+  clockGameMinutes,
+  frameIndexForSeq,
+  lineDwellMs,
+  timelinePosition,
+} from "./text-playback.ts";
 
-export function frameAt(view: MatchView, index: number): MatchViewFrame {
-  return view.frames[Math.min(Math.max(index, 0), view.frames.length - 1)] ??
-    view.kickoff;
-}
+export { frameAt } from "./text-playback.ts";
 
-export function useMatchPlayback(view: MatchView | null) {
-  const presented = useMemo(
-    () => (view ? compressGkCbRecycleFrames(view) : null),
-    [view],
-  );
-  const [index, setIndex] = useState(0);
+const FIRST_LINE_DELAY_MS = 300;
+
+/**
+ * Career matchday playback, driven by commentary lines (design.md §9.15, text-first).
+ * `cursor` is an index into `view.lines` and sets the match moment (clock, score, frame); the stream
+ * shows the lines at or before it that play at `level`. Switching levels never moves the clock.
+ * Step back / forward and the timer move between lines of the chosen level.
+ */
+export function useMatchPlayback(view: MatchView | null, level: MatchHighlightLevel) {
+  const [cursor, setCursor] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
-  const [colorRevealSeq, setColorRevealSeq] = useState(-1);
-  const playingRef = useRef(playing);
-  playingRef.current = playing;
-  const lastGoalHoldSeq = useRef(-1);
 
   useEffect(() => {
-    setIndex(0);
+    setCursor(0);
     setPlaying(false);
-    setColorRevealSeq(-1);
-    lastGoalHoldSeq.current = -1;
-  }, [presented?.seed, presented?.eventCount]);
+  }, [view?.seed, view?.eventCount]);
 
-  useEffect(() => {
-    if (!presented) {
-      return;
-    }
-    const tick = frameAt(presented, index);
-    if (tick.cue !== "goal" || tick.seq === lastGoalHoldSeq.current) {
-      return;
-    }
-    lastGoalHoldSeq.current = tick.seq;
-    if (!playingRef.current) {
-      return;
-    }
-    setPlaying(false);
-    const resume = window.setTimeout(() => {
-      setPlaying(true);
-    }, GOAL_HIGHLIGHT_MS);
-    return () => window.clearTimeout(resume);
-  }, [presented, index]);
+  const lines = view?.lines;
+  const timeline = useMemo(() => (lines ? buildLineTimeline(lines, level) : []), [lines, level]);
+  const position = timelinePosition(timeline, cursor);
+  const last = timeline.length - 1;
+  const lastLineIndex = timeline[last];
+  const atEnd = lastLineIndex !== undefined && cursor >= lastLineIndex;
+  /** The cursor sits on a line this level hides (the level changed): back lands on the visible one. */
+  const betweenLines = position >= 0 && cursor > (timeline[position] ?? cursor);
 
-  const frame = useMemo(
-    () => (presented ? frameAt(presented, index) : null),
-    [presented, index],
+  const frameIndexFor = useCallback(
+    (lineIndex: number | undefined): number => {
+      if (!view || lineIndex === undefined) return -1;
+      if (lastLineIndex !== undefined && lineIndex >= lastLineIndex) return view.frames.length - 1;
+      const line = view.lines[lineIndex];
+      return line ? frameIndexForSeq(view.frames, line.seq) : -1;
+    },
+    [view, lastLineIndex],
   );
 
-  const previous = useMemo(() => {
-    if (!presented) {
-      return null;
-    }
-    if (index <= 0) {
-      return presented.kickoff;
-    }
-    return frameAt(presented, index - 1);
-  }, [presented, index]);
+  const frameIndex = frameIndexFor(cursor);
+  const frame: MatchViewFrame | null = view ? (view.frames[frameIndex] ?? view.kickoff) : null;
+  const previousFrameIndex = frameIndexFor(betweenLines ? timeline[position] : timeline[position - 1]);
+  const previous: MatchViewFrame | null = view
+    ? (view.frames[previousFrameIndex] ?? view.kickoff)
+    : null;
 
-  const roleOf = useMemo(() => {
-    if (!presented) {
-      return () => undefined;
-    }
-    const roles = new Map(presented.roster.map((player) => [player.id, player.role]));
-    return (playerId: string) => roles.get(playerId);
-  }, [presented]);
-
-  const stepDurationMs = useMemo(() => {
-    if (!presented || !frame || !previous) {
-      return frameDurationMs(speed);
-    }
-    return transitionDurationMs(previous, frame, presented.home.id, roleOf, speed);
-  }, [presented, frame, previous, roleOf, speed]);
-
-  const durationMs = stepDurationMs;
+  const currentLine: MatchViewLine | null = lines?.[cursor] ?? null;
+  const nextLineIndex = timeline[position + 1];
+  const nextLine: MatchViewLine | null = nextLineIndex === undefined ? null : (lines?.[nextLineIndex] ?? null);
+  const dwellMs = useMemo(() => {
+    if (!view || !currentLine) return FIRST_LINE_DELAY_MS;
+    const nextFrame = nextLine ? view.frames[frameIndexForSeq(view.frames, nextLine.seq)] : null;
+    const gap =
+      frame && nextFrame ? clockGameMinutes(nextFrame.clock) - clockGameMinutes(frame.clock) : 0;
+    return lineDwellMs(currentLine, gap, speed);
+  }, [view, currentLine, nextLine, frame, speed]);
 
   useEffect(() => {
-    if (!presented || !playing) {
-      return;
-    }
-    const last = presented.frames.length - 1;
-    if (index >= last) {
+    if (!view || !playing) return;
+    if (atEnd || nextLineIndex === undefined) {
       setPlaying(false);
       return;
     }
-    const timer = window.setTimeout(() => {
-      setIndex((current) => Math.min(current + 1, last));
-    }, stepDurationMs);
+    const timer = window.setTimeout(() => setCursor(nextLineIndex), dwellMs);
     return () => window.clearTimeout(timer);
-  }, [presented, playing, index, stepDurationMs]);
+  }, [view, playing, atEnd, nextLineIndex, dwellMs]);
 
-  useEffect(() => {
-    if (!presented || !frame) {
-      return;
-    }
-    const seq = frame.seq;
-    setColorRevealSeq((current) => Math.min(current, seq));
-
-    const hasColor = presented.lines.some(
-      (line) => line.seq === seq && line.voice === "color",
-    );
-    if (!hasColor) {
-      return;
-    }
-
-    if (playing) {
-      const delay = Math.max(80, COLOR_LINE_DELAY_MS / speed);
-      const timer = window.setTimeout(() => {
-        setColorRevealSeq((current) => Math.max(current, seq));
-      }, delay);
-      return () => window.clearTimeout(timer);
-    }
-
-    setColorRevealSeq((current) => Math.max(current, seq));
-  }, [presented, frame, frame?.seq, playing, speed]);
-
-  const visibleLines = useMemo(() => {
-    if (!presented || !frame) {
-      return [];
-    }
-    return filterVisibleCommentaryLines(
-      presented.lines,
-      frame.seq,
-      colorRevealSeq,
-    );
-  }, [presented, frame, colorRevealSeq]);
+  const visibleLines = useMemo(
+    () =>
+      lines ? timeline.slice(0, position + 1).map((index) => lines[index]!) : [],
+    [lines, timeline, position],
+  );
 
   const play = useCallback(() => {
-    if (!presented) {
-      return;
-    }
-    if (index >= presented.frames.length - 1) {
-      setIndex(0);
-    }
+    if (!view) return;
+    if (atEnd) setCursor(0);
     setPlaying(true);
-  }, [presented, index]);
+  }, [view, atEnd]);
 
   const pause = useCallback(() => setPlaying(false), []);
 
   const restart = useCallback(() => {
     setPlaying(false);
-    setIndex(0);
+    setCursor(0);
   }, []);
 
   const toggle = useCallback(() => {
-    if (!presented) {
-      return;
-    }
+    if (!view) return;
     if (playing) {
       setPlaying(false);
       return;
     }
-    if (index >= presented.frames.length - 1) {
-      setIndex(0);
-    }
+    if (atEnd) setCursor(0);
     setPlaying(true);
-  }, [presented, playing, index]);
+  }, [view, playing, atEnd]);
 
   const stepBy = useCallback(
     (delta: number) => {
-      if (!presented) {
-        return;
-      }
+      if (last < 0) return;
       setPlaying(false);
-      setIndex((current) =>
-        Math.min(Math.max(current + delta, 0), presented.frames.length - 1),
-      );
+      const from = delta < 0 && betweenLines ? position + 1 : position;
+      const target = timeline[Math.min(Math.max(from + delta, 0), last)];
+      if (target !== undefined) setCursor(target);
     },
-    [presented],
+    [timeline, position, last, betweenLines],
   );
+  const stepBack = useCallback(() => stepBy(-1), [stepBy]);
+  const stepForward = useCallback(() => stepBy(1), [stepBy]);
 
   const goToEnd = useCallback(() => {
-    if (!presented || presented.frames.length === 0) {
-      return;
-    }
+    if (!lines || lines.length === 0) return;
     setPlaying(false);
-    setIndex(presented.frames.length - 1);
-  }, [presented]);
-
-  const presentedFrameCount = presented?.frames.length ?? 0;
-  const atEnd =
-    presentedFrameCount > 0 ? index >= presentedFrameCount - 1 : false;
+    setCursor(lines.length - 1);
+  }, [lines]);
 
   return {
-    index,
+    /** Position in the line timeline (-1 before the first visible line). */
+    index: position,
+    canStepBack: position > 0 || betweenLines,
+    frameIndex,
     frame,
     previous,
-    frameDurationMs: durationMs,
+    frameDurationMs: dwellMs,
     playing,
     speed,
     setSpeed,
     visibleLines,
-    presentedFrameCount,
+    presentedFrameCount: timeline.length,
     atEnd,
     play,
     pause,
     restart,
     toggle,
-    stepBack: () => stepBy(-1),
-    stepForward: () => stepBy(1),
+    stepBack,
+    stepForward,
     goToEnd,
   };
 }

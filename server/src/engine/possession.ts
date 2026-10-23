@@ -2,13 +2,16 @@ import type {
   MatchEvent,
   MatchState,
   PassKind,
+  PitchPosition,
   PlayerMatchStatus,
   StepResult,
+  TeamId,
 } from "@fussballmanager/shared";
 import { nextRange, nextUnit } from "@fussballmanager/shared";
 import { withTime } from "./clock.ts";
 import {
   asInvolved,
+  clamp,
   clampPitch,
   distance,
   lerp,
@@ -25,6 +28,54 @@ import { passCompleteChance } from "./weights.ts";
 import { isOffsideReceiver, outOfPlayRestart } from "./laws.ts";
 
 export { widePassFeedWeight } from "./pass-graph.ts";
+
+/** Scales the passing side's share of loose balls after a misplaced pass. */
+export const LOOSE_BALL_KEEP_SHARE = 0.8;
+export const CROSS_CLEARED_BEHIND = 0.25;
+export const MISPLACED_OUT_BASE = 0.12;
+export const MISPLACED_OUT_WIDE = 0.45;
+
+/**
+ * Many misplaced passes leave the pitch: real matches have ~40 throw-ins, and
+ * about a third of corners come from crosses cleared behind (ADR 0003).
+ */
+export function deflectedOut(input: {
+  ball: PitchPosition;
+  kind: PassKind;
+  roll: number;
+  passerTeamId: TeamId;
+  defendId: TeamId;
+  homeTeamId: TeamId;
+  awayTeamId: TeamId;
+}): ReturnType<typeof outOfPlayRestart> {
+  const { ball, roll } = input;
+  if (input.kind === "cross") {
+    if (roll >= CROSS_CLEARED_BEHIND) {
+      return null;
+    }
+    const byline = input.defendId === input.homeTeamId ? -1 : 101;
+    return outOfPlayRestart(
+      { x: byline, y: ball.y },
+      input.defendId,
+      input.homeTeamId,
+      input.awayTeamId,
+    );
+  }
+  const wide = clamp((Math.abs(ball.y - 50) - 20) / 30, 0, 1);
+  if (roll >= MISPLACED_OUT_BASE + MISPLACED_OUT_WIDE * wide) {
+    return null;
+  }
+  // Half the time the defender gets the last touch before it goes out.
+  const lastTouch = roll < (MISPLACED_OUT_BASE + MISPLACED_OUT_WIDE * wide) / 2
+    ? input.defendId
+    : input.passerTeamId;
+  return outOfPlayRestart(
+    { x: ball.x, y: ball.y < 50 ? -1 : 101 },
+    lastTouch,
+    input.homeTeamId,
+    input.awayTeamId,
+  );
+}
 
 export function stepPass(
   state: MatchState,
@@ -56,15 +107,25 @@ export function stepPass(
   const coverer =
     defendTactics.marking === "zonal" ? laneCover : (manShadow ?? laneCover);
   const pressure = defendingPressure(state, defendId);
+  const outfieldDefenders = defenders.filter((player) => player.role !== "GK");
+  const opponentReading =
+    outfieldDefenders.reduce((sum, player) => sum + player.attributes.positioning, 0) /
+    Math.max(1, outfieldDefenders.length);
+  const passerDepth =
+    passer.teamId === state.homeTeamId ? passer.position.x : 100 - passer.position.x;
+  /** Build-up lanes behind the press are rarely cut out; most interceptions happen higher up. */
+  const interceptZone = passerDepth < 33 ? 0.4 : 1;
   const quality = nextUnit(rng);
   const intercept = nextUnit(quality.rng);
   const intercepted =
     !!coverer &&
     intercept.n <
+      interceptZone *
       interceptChance(
         coverer,
         pressure.pressing,
         inLostBall(state, defendId),
+        passer.attributes.passing,
       );
   const complete =
     !intercepted &&
@@ -76,6 +137,9 @@ export function stepPass(
         pressing: pressure.pressing,
         kind: passKind,
         passerRole: passer.role,
+        distance: distance(passer.position, dest),
+        opponentReading,
+        passerDepth,
       });
   const duration = nextRange(intercept.rng, 2, 6);
   const slice = nextRange(duration.rng, -34, 34);
@@ -231,16 +295,25 @@ export function stepPass(
     passKind === "through" ||
     (passKind === "restart" && distance(passer.position, dest) > 28);
   if (!complete) {
-    const loose = nearest(defenders, ball);
-    if (loose) {
+    const deflect = nextUnit(timed.rng);
+    const deflected = deflectedOut({
+      ball,
+      kind: passKind,
+      roll: deflect.n,
+      passerTeamId: passer.teamId,
+      defendId,
+      homeTeamId: state.homeTeamId,
+      awayTeamId: state.awayTeamId,
+    });
+    if (deflected) {
       const event: MatchEvent = {
         type: "pass",
         seq: timed.nextSeq,
         matchId: timed.matchId,
         clock: timed.clock,
-        ball,
-        involved: [from, to, asInvolved(loose)],
-        possessionTeamId: loose.teamId,
+        ball: deflected.spot,
+        involved: [from, to],
+        possessionTeamId: deflected.takingTeamId,
         from,
         to,
         complete: false,
@@ -248,24 +321,75 @@ export function stepPass(
       };
       return {
         event,
-        state: beginTransition(
-          {
-            ...timed,
-            phase: "open_play",
-            ball,
-            ballCarrierId: loose.playerId,
-            possessionTeamId: loose.teamId,
-            lastPasserId: null,
-            ballInAir: air,
-            players: patchPlayers(timed.players, [
-              { playerId: passer.playerId, position: passerPos },
-              { playerId: target.playerId, position: receiverPos },
-              { playerId: loose.playerId, position: ball },
-            ]),
-            nextSeq: timed.nextSeq + 1,
+        state: {
+          ...timed,
+          rng: deflect.rng,
+          phase: deflected.phase,
+          ball: deflected.spot,
+          ballCarrierId: null,
+          possessionTeamId: deflected.takingTeamId,
+          lastPasserId: null,
+          ballInAir: false,
+          players: patchPlayers(timed.players, [
+            { playerId: passer.playerId, position: passerPos },
+          ]),
+          pending: {
+            type: "restart",
+            phase: deflected.phase,
+            takingTeamId: deflected.takingTeamId,
           },
-          loose.teamId,
-        ),
+          nextSeq: timed.nextSeq + 1,
+        },
+      };
+    }
+    const opponent = nearest(defenders, ball);
+    if (opponent) {
+      // A misplaced pass is a loose ball: whoever is closer usually gets there first,
+      // with an edge for the side that was not expecting it.
+      const mates = onPitchFor(timed.players, passer.teamId).filter(
+        (player) => player.playerId !== passer.playerId,
+      );
+      const mate = nearest(mates, ball);
+      const recover = nextUnit(deflect.rng);
+      const dOpponent = distance(opponent.position, ball);
+      const dMate = mate ? distance(mate.position, ball) : Number.POSITIVE_INFINITY;
+      const keepChance = mate
+        ? clamp((dOpponent / Math.max(0.5, dOpponent + dMate)) * LOOSE_BALL_KEEP_SHARE, 0, 0.6)
+        : 0;
+      const loose = mate && recover.n < keepChance ? mate : opponent;
+      const kept = loose.teamId === passer.teamId;
+      const event: MatchEvent = {
+        type: "pass",
+        seq: timed.nextSeq,
+        matchId: timed.matchId,
+        clock: timed.clock,
+        ball,
+        involved: [from, to, { ...asInvolved(loose), position: ball }],
+        possessionTeamId: loose.teamId,
+        from,
+        to,
+        complete: false,
+        kind: passKind,
+      };
+      const after = {
+        ...timed,
+        rng: recover.rng,
+        phase: "open_play" as const,
+        ball,
+        ballCarrierId: loose.playerId,
+        possessionTeamId: loose.teamId,
+        lastPasserId: null,
+        ballInAir: air,
+        players: patchPlayers(timed.players, [
+          { playerId: passer.playerId, position: passerPos },
+          { playerId: target.playerId, position: receiverPos },
+          { playerId: loose.playerId, position: ball },
+        ]),
+        nextSeq: timed.nextSeq + 1,
+      };
+      return {
+        event,
+        state: kept ? after : beginTransition(after, loose.teamId),
       };
     }
   }

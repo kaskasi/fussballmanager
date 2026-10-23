@@ -24,6 +24,9 @@ import { defendingPressure } from "./pressure.ts";
 import { depthFromOwnGoal } from "./shape.ts";
 import { carryPermission, openPlayWeights } from "./weights.ts";
 
+/** Real teams try ~10–20 through balls a match, not one every few touches (ADR 0003). */
+export const THROUGH_APPETITE = 0.35;
+
 export type OpenPlayChoice = {
   action: "pass" | "carry" | "duel" | "shot" | "cross" | "through";
   defender: PlayerMatchStatus | undefined;
@@ -251,9 +254,10 @@ export function chooseOpenPlay(state: MatchState): OpenPlayChoice {
         teammates.length === 0 || goalKick || corner || pocket
           ? 0
           : throughOn
-            ? 0.28 * throughLead.bypassed +
-              attackTactics.tempo / 240 +
-              attackTactics.mentality / 280
+            ? THROUGH_APPETITE *
+              (0.28 * throughLead.bypassed +
+                attackTactics.tempo / 240 +
+                attackTactics.mentality / 280)
             : 0,
     },
   ]);

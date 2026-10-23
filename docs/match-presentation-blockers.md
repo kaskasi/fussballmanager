@@ -1,5 +1,7 @@
 # Match presentation vs engine (Design Law 4)
 
+> **Superseded (2026-10-23):** ADR 0003 reopens the engine for measured calibration, ADR 0004 removes the live pitch. Kept for history only.
+
 **Status:** Active  
 **Last updated:** 2026-09-28
 

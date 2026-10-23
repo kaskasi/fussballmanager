@@ -1,17 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
-import type { MatchView, SandboxPlan } from "@fussballmanager/shared";
+import type { MatchView, MatchViewLine, SandboxPlan } from "@fussballmanager/shared";
 import {
   sandboxPlanFromTactics,
   SEED_MATCHUP,
 } from "@fussballmanager/shared";
 import { Lineup } from "./Lineup";
-import { MatchPresentationToggle } from "./MatchPresentationToggle";
-import { MatchStage } from "./MatchStage";
-import { useMatchPresentationMode } from "./match-presentation-mode";
+import { MatchCommentaryStream } from "./MatchCommentaryStream.tsx";
+import { MatchMomentum } from "./MatchMomentum.tsx";
+import { MatchZoneStrip } from "./MatchZoneStrip.tsx";
 import { Scoreboard } from "./Scoreboard";
 import { TacticsBoard } from "./TacticsBoard";
 import { buildSandboxMatchView } from "./build-sandbox-match-view.ts";
-import { useMatchPlayback } from "./useMatchPlayback";
+import {
+  MATCH_HIGHLIGHT_LEVELS,
+  useMatchHighlightLevel,
+  type MatchHighlightLevel,
+} from "./match-highlight-level.ts";
+import { frameIndexForSeq, lineMinuteLabel } from "./text-playback.ts";
+import { frameAt, useMatchPlayback } from "./useMatchPlayback.ts";
 
 async function loadMatch(input: {
   seed: number;
@@ -33,8 +39,13 @@ export function Matchday() {
   const [awayPlan, setAwayPlan] = useState<SandboxPlan>(() =>
     sandboxPlanFromTactics(SEED_MATCHUP.away.tactics),
   );
-  const playback = useMatchPlayback(view);
-  const [presentationMode, setPresentationMode] = useMatchPresentationMode();
+  const [highlightLevel, setHighlightLevel] = useMatchHighlightLevel();
+  const playback = useMatchPlayback(view, highlightLevel);
+  const minuteOf = useCallback(
+    (line: MatchViewLine) =>
+      view ? lineMinuteLabel(frameAt(view, frameIndexForSeq(view.frames, line.seq)).clock) : "",
+    [view],
+  );
 
   const load = useCallback(
     async (nextSeed: number, home: SandboxPlan, away: SandboxPlan) => {
@@ -150,13 +161,19 @@ export function Matchday() {
         <button type="button" onClick={playback.restart} disabled={!view}>
           Restart
         </button>
-        <div className="segmented-control">
-          <MatchPresentationToggle
-            value={presentationMode}
-            onChange={setPresentationMode}
-            disabled={!view || loading}
-          />
-        </div>
+        <label>
+          Level
+          <select
+            value={highlightLevel}
+            onChange={(event) => setHighlightLevel(event.target.value as MatchHighlightLevel)}
+          >
+            {MATCH_HIGHLIGHT_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {level}
+              </option>
+            ))}
+          </select>
+        </label>
         <label>
           Speed
           <select
@@ -186,15 +203,9 @@ export function Matchday() {
 
       {view && frame ? (
         <>
-          <MatchStage
-            mode={presentationMode}
-            view={view}
-            frame={frame}
-            previous={playback.previous}
-            playing={playback.playing}
-            frameDurationMs={playback.frameDurationMs}
-            visibleLines={playback.visibleLines}
-          />
+          <MatchMomentum view={view} frameIndex={playback.frameIndex} ownTeamId={view.home.id} />
+          <MatchZoneStrip frame={frame} homeTeamId={view.home.id} ownTeamId={view.home.id} />
+          <MatchCommentaryStream lines={playback.visibleLines} minuteOf={minuteOf} />
           <Lineup view={view} frame={frame} />
         </>
       ) : null}

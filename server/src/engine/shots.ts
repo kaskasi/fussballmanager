@@ -26,6 +26,7 @@ import { shotOutcomeChances } from "./weights.ts";
 import { beginTransition, inGainedBall } from "./moments.ts";
 import { defendingPressure } from "./pressure.ts";
 import { outOfPlayRestart, penaltySpot, throwInSpot } from "./laws.ts";
+import { setPieceBoxTarget } from "./shape.ts";
 
 function keeperOf(
   state: MatchState,
@@ -77,19 +78,20 @@ function resolveOutcome(
     restCovers: pressure.restCovers,
     penalty: state.phase === "penalty",
   });
-  const onTargetRoll = nextUnit(state.rng);
-  if (onTargetRoll.n >= chances.onTarget) {
-    const wood = nextUnit(onTargetRoll.rng);
-    return {
-      outcome: wood.n < 0.12 ? "woodwork" : "wide",
-      rng: wood.rng,
-    };
-  }
-  const blockRoll = nextUnit(onTargetRoll.rng);
+  // A body in the way comes first; only unblocked shots can miss or hit the target.
+  const blockRoll = nextUnit(state.rng);
   if (chances.block > 0 && blockRoll.n < chances.block) {
     return { outcome: "block", rng: blockRoll.rng };
   }
-  const finish = nextUnit(blockRoll.rng);
+  const onTargetRoll = nextUnit(blockRoll.rng);
+  if (onTargetRoll.n >= chances.onTarget) {
+    const wood = nextUnit(onTargetRoll.rng);
+    return {
+      outcome: wood.n < 0.08 ? "woodwork" : "wide",
+      rng: wood.rng,
+    };
+  }
+  const finish = nextUnit(onTargetRoll.rng);
   if (!keeper) {
     return {
       outcome: finish.n < 0.94 ? "goal" : "wide",
@@ -624,6 +626,16 @@ export function stepRestart(
     throw new Error("No corner taker");
   }
   const takerInv = { ...asInvolved(taker), position: corner };
+  // The corner gives time to set up: centre-backs are already in the box.
+  const attackOwnGoal = goalMouth(
+    timed.homeTeamId,
+    takingTeamId === timed.homeTeamId ? timed.awayTeamId : timed.homeTeamId,
+  );
+  const attackSign = takingTeamId === timed.homeTeamId ? 1 : -1;
+  const upForIt = onPitchFor(timed.players, takingTeamId).flatMap((player) => {
+    const spot = setPieceBoxTarget(player, corner, attackOwnGoal, attackSign);
+    return spot ? [{ playerId: player.playerId, position: spot }] : [];
+  });
   const event: MatchEvent = {
     type: "restart",
     seq: timed.nextSeq,
@@ -645,6 +657,7 @@ export function stepRestart(
       possessionTeamId: takingTeamId,
       players: patchPlayers(timed.players, [
         { playerId: taker.playerId, position: corner },
+        ...upForIt,
       ]),
       pending: null,
       ballInAir: false,

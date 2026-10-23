@@ -24,6 +24,8 @@
     "play-match": "npm run play-match -w @fussballmanager/server",
     "play-matchday": "npm run play-matchday -w @fussballmanager/server",
     "play-probe": "npm run play-probe -w @fussballmanager/server",
+    "play-calibration": "npm run play-calibration -w @fussballmanager/server --",
+    "calibrate:career": "npx vite-node scripts/run-engine-calibration.ts",
     "persist-match": "npm run persist-match -w @fussballmanager/server",
     "bake:hub-photos": "node scripts/bake-hub-photos.mjs",
     "bake:camp-photos": "node scripts/bake-camp-photos.mjs",

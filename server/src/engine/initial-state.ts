@@ -9,6 +9,7 @@ import {
   type Squad,
   type TeamId,
 } from "@fussballmanager/shared";
+import { normalizeMatchAttributes } from "./normalize-attributes.ts";
 
 function toStatus(
   player: Player,
@@ -44,7 +45,7 @@ export function createInitialState(input: {
   const awayLineup = kickoffLineup(input.away, "away");
   const kickingTeamId = input.kickingTeamId ?? input.home.team.id;
 
-  const players: PlayerMatchStatus[] = [
+  const players: PlayerMatchStatus[] = normalizeMatchAttributes([
     ...homeLineup.map((place) =>
       toStatus(place.player, place.position, true, place.slot),
     ),
@@ -57,7 +58,7 @@ export function createInitialState(input: {
     ...input.away.bench.map((player) =>
       toStatus(player, { x: 98, y: 98 }, false),
     ),
-  ];
+  ]);
 
   const kicker =
     players.find(

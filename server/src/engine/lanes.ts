@@ -67,18 +67,18 @@ export function openKeeperLook(input: {
   return true;
 }
 
+/** Lane defender reads the pass: positioning against the passer, not raw pace. */
 export function interceptChance(
   defender: PlayerMatchStatus,
   pressing: number,
   lostBall: boolean,
+  passerPassing = 50,
 ): number {
+  const edge = (defender.attributes.positioning - passerPassing) / 100;
   const base =
-    0.18 +
-    defender.attributes.positioning / 200 +
-    defender.attributes.pace / 900 +
-    pressing / 400;
-  const shape = lostBall ? 0.42 : 1;
-  return clamp(base * shape, 0.04, 0.62);
+    0.2 + 0.35 * edge + defender.attributes.pace / 2000 + pressing / 1000;
+  const shape = lostBall ? 0.5 : 1;
+  return clamp(base * shape, 0.04, 0.45);
 }
 
 export function bestLaneCover(

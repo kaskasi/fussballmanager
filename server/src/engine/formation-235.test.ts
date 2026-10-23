@@ -114,10 +114,15 @@ function defendersBehind(
 
 describe("2-3-5 pyramid vs a modern back four", () => {
   it("plays a full match in the pyramid", () => {
-    const { events, finalState } = run(nordsternPyramidSquad, 2026);
+    const { events } = run(nordsternPyramidSquad, 2026);
     expect(events[0]?.type).toBe("kickoff");
     expect(events[events.length - 1]?.type).toBe("match_end");
-    expect(finalState.score.home + finalState.score.away).toBeGreaterThan(0);
+    // A single 0–0 is football; across a few seeds the pyramid must score.
+    const goals = [2026, 2027, 2028, 2029].reduce((sum, seed) => {
+      const { finalState } = run(nordsternPyramidSquad, seed);
+      return sum + finalState.score.home + finalState.score.away;
+    }, 0);
+    expect(goals).toBeGreaterThan(0);
   });
 
   it("presses with numbers high up, then is thin once the ball is behind the line", () => {

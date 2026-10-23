@@ -121,6 +121,7 @@ describe("attribute match battery", () => {
     const giants = tally(mapSquad(nordsternSquad, withHeight(200)));
     const youth = tally(mapSquad(nordsternSquad, withHeight(165)));
     expect(giants.aerials + youth.aerials).toBeGreaterThan(8);
-    expect(giants.aerialWins).toBeGreaterThan(youth.aerialWins);
+    // Compare win rates: how many headers each side contests depends on the run of play.
+    expect(giants.aerialWins / giants.aerials).toBeGreaterThan(youth.aerialWins / youth.aerials);
   });
 });

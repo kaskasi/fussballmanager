@@ -1,6 +1,7 @@
 import type {
   MatchEvent,
   MatchState,
+  PitchPosition,
   StepResult,
 } from "@fussballmanager/shared";
 import { nextRange } from "@fussballmanager/shared";
@@ -16,6 +17,8 @@ import {
   requirePlayer,
 } from "./helpers.ts";
 import { outOfPlayRestart } from "./laws.ts";
+import { pointToSegmentDistance } from "./lanes.ts";
+import { wideDutyFor } from "./shape.ts";
 
 /** Pace adds a little length; dribbling is the main carry skill. */
 export function carryLengthMax(dribbling: number, pace: number): number {
@@ -42,6 +45,41 @@ export function carryStepLength(
   return base * tempoMentality * (1 + 0.4 * drive) + 3.4 * drive;
 }
 
+/** A defender this close to the carry line stands in the way. */
+export const CARRY_BLOCK_RADIUS = 4;
+
+/**
+ * A carry runs until the first opponent standing in its path, not through him:
+ * getting past a defender is a dribble duel, not a free carry (ADR 0003).
+ */
+export function stopShortOfBlocker(
+  state: MatchState,
+  carrierTeamId: MatchState["homeTeamId"],
+  from: PitchPosition,
+  to: PitchPosition,
+): PitchPosition {
+  const length = distance(from, to);
+  if (length < 0.5) {
+    return to;
+  }
+  let first = 1;
+  for (const player of state.players) {
+    if (!player.onPitch || player.sentOff || player.teamId === carrierTeamId) {
+      continue;
+    }
+    const { distance: off, t } = pointToSegmentDistance(player.position, from, to);
+    if (t > 0 && off <= CARRY_BLOCK_RADIUS && t < first) {
+      first = t;
+    }
+  }
+  if (first >= 1) {
+    return to;
+  }
+  const reach = Math.max(1, first * length - 2);
+  const k = Math.min(1, reach / length);
+  return { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k };
+}
+
 export function stepCarry(state: MatchState): StepResult {
   if (!state.possessionTeamId || !state.ballCarrierId) {
     throw new Error("Cannot carry without possession and a ball carrier");
@@ -61,7 +99,15 @@ export function stepCarry(state: MatchState): StepResult {
   const mouth = goalMouth(state.homeTeamId, carrier.teamId);
   const distGoal = distance(from, mouth);
   const drive = carryDrive(distGoal);
-  const towardBox = clamp((26 - distGoal) / 14, 0, 1);
+  const depth = carrier.teamId === state.homeTeamId ? from.x : 100 - from.x;
+  const cutsInside =
+    (carrier.role === "W" && wideDutyFor(carrier, tactics) === "invert") ||
+    carrier.role === "AM";
+  // Inverted wingers and tens cut inside from the final third (wide wingers stay wide to cross).
+  const towardBox = Math.max(
+    clamp((26 - distGoal) / 14, 0, 1),
+    cutsInside && depth > 62 ? 0.7 : 0,
+  );
   const step = carryStepLength(
     length.n,
     tactics.tempo,
@@ -75,10 +121,11 @@ export function stepCarry(state: MatchState): StepResult {
       (0.65 + tactics.width / 180) *
       (1 - 0.75 * towardBox) +
     (50 - from.y) * (0.45 * towardBox + 0.2 * drive);
-  const raw = {
+  const free = {
     x: from.x + sign * step,
     y: from.y + yShift,
   };
+  const raw = stopShortOfBlocker(state, carrier.teamId, from, free);
   const out = outOfPlayRestart(
     raw,
     carrier.teamId,

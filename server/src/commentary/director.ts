@@ -1,8 +1,14 @@
 import type { BroadcastStoryContext, MatchEvent, TeamId } from "@fussballmanager/shared";
 import { classifyBeat, type BroadcastBeatId } from "./beats.ts";
-import { chainFlushLine, shotLinePrefix, type MacroBeatId } from "./chain-copy.ts";
+import {
+  chainFlushI18nKey,
+  chainFlushLine,
+  shotLinePrefix,
+  type MacroBeatId,
+} from "./chain-copy.ts";
 import type { CommentaryContext } from "./render.ts";
 import { commentaryI18n, macroCommentaryI18n } from "./i18n-keys.ts";
+import { lineCopyI18n } from "./line-copy.ts";
 import { momentI18nKey, momentI18nParams, momentLineText } from "./moment-copy.ts";
 import { attackingThird, defensiveThird } from "./pitch-thirds.ts";
 import { commentate, formatClock, isCommentaryWorthy } from "./render.ts";
@@ -13,10 +19,14 @@ export type { MacroBeatId } from "./chain-copy.ts";
 
 export type DirectorMode = "idle" | "set_piece" | "attack" | "stoppage";
 
+export type HighlightLevel = "key" | "extended" | "full";
+
 export type DirectorEmittedLine = {
   seq: number;
   beatId: BroadcastBeatId;
   voice: "pbp" | "color" | "moment";
+  /** ADR 0004 — which highlight level shows this line. */
+  level: HighlightLevel;
   text: string;
   macroId?: MacroBeatId;
   storySlot?: StorySlotId;
@@ -39,6 +49,7 @@ export type DirectorState = {
   storySlotsFired: Set<StorySlotId>;
   lastMomentSeq: number;
   lastMomentBeat: BroadcastBeatId | null;
+  lastFullLineSeq: number;
 };
 
 const RECENT_MAX = 12;
@@ -55,6 +66,31 @@ const CHAIN_BREAK_BEATS: ReadonlySet<BroadcastBeatId> = new Set([
   "restart_goal_kick",
   "restart_throw_in",
   "foul",
+]);
+/** Build-up lines for the Full level: a pass into space, a run, a duel won. */
+const BUILDUP_BEATS: ReadonlySet<BroadcastBeatId> = new Set([
+  "pass_key",
+  "carry_progress",
+  "duel_won",
+  "turnover",
+  "foul",
+]);
+/** At most one build-up line every few events (~15 s), so Full reads like radio, not a pass log. */
+const FULL_LINE_MIN_SEQ_GAP = 4;
+/** Shots from inside this distance are big chances and show at the Key level. */
+const BIG_CHANCE_DISTANCE = 12;
+const KEY_BEATS: ReadonlySet<BroadcastBeatId> = new Set([
+  "match_opening",
+  "second_half_open",
+  "half_time",
+  "full_time",
+  "shot_goal",
+  "shot_woodwork",
+  "card_yellow",
+  "card_red",
+  "restart_penalty",
+  "injury",
+  "substitution",
 ]);
 const SET_PIECE_SHOT_WINDOW = 15;
 const COUNTER_SHOT_WINDOW = 12;
@@ -108,6 +144,31 @@ function isSetPieceRestart(beat: BroadcastBeatId): boolean {
 
 function isShotBeat(beat: BroadcastBeatId): boolean {
   return beat.startsWith("shot_");
+}
+
+/** Shot (or its save) from close range: a big chance. Uses only the event's own positions. */
+function isBigChance(event: MatchEvent, homeTeamId: TeamId): boolean {
+  const shooter =
+    event.type === "shot" ? event.shooter : event.type === "save" ? event.shooter : null;
+  if (!shooter) return false;
+  const mouthX = shooter.teamId === homeTeamId ? 100 : 0;
+  return (
+    Math.hypot(mouthX - shooter.position.x, 50 - shooter.position.y) <= BIG_CHANCE_DISTANCE
+  );
+}
+
+/** Play-by-play level: structure, goals, cards and big chances are Key; other shots Extended. */
+function pbpLevel(
+  beat: BroadcastBeatId,
+  event: MatchEvent,
+  macroId: MacroBeatId | null,
+  homeTeamId: TeamId,
+): HighlightLevel {
+  if (KEY_BEATS.has(beat)) return "key";
+  if (isShotBeat(beat)) {
+    return macroId === "macro_near_miss" || isBigChance(event, homeTeamId) ? "key" : "extended";
+  }
+  return BUILDUP_BEATS.has(beat) ? "full" : "extended";
 }
 
 function updateMode(
@@ -289,6 +350,7 @@ export function createInitialDirectorState(): DirectorState {
     storySlotsFired: new Set(),
     lastMomentSeq: -99,
     lastMomentBeat: null,
+    lastFullLineSeq: -99,
   };
 }
 
@@ -371,7 +433,10 @@ export function createBroadcastDirector(input: {
         seq: event.seq,
         beatId: beat,
         voice: "pbp",
+        level: "full",
         text: `${formatClock(event.clock)}  ${chainFlushLine(seed, event.seq, teamLabel)}`,
+        i18nKey: chainFlushI18nKey(seed, event.seq),
+        i18nParams: { team: teamLabel },
       });
     };
 
@@ -394,6 +459,7 @@ export function createBroadcastDirector(input: {
           seq: event.seq,
           beatId: beat,
           voice: "moment",
+          level: beat === "restart_penalty" ? "key" : "extended",
           text: momentLineText(event, ctx, beat),
           i18nKey: key ?? undefined,
           i18nParams: momentI18nParams(event, ctx, beat),
@@ -403,21 +469,43 @@ export function createBroadcastDirector(input: {
       }
     }
 
+    const emitBuildupLine = (): void => {
+      if (event.seq - state.lastFullLineSeq < FULL_LINE_MIN_SEQ_GAP) return;
+      const copy = lineCopyI18n(event, ctx, seed);
+      if (!copy) return;
+      lines.push({
+        seq: event.seq,
+        beatId: beat,
+        voice: "pbp",
+        level: "full",
+        text: `${formatClock(event.clock)}  ${commentate(event, ctx)}`,
+        i18nKey: copy.key,
+        i18nParams: copy.params,
+      });
+      state.lastFullLineSeq = event.seq;
+    };
+
     if (worthy && CHAIN_BUFFER_BEATS.has(beat) && !isShotBeat(beat)) {
+      if (BUILDUP_BEATS.has(beat)) emitBuildupLine();
       applyDirectorStateAfterBeat(state, beat, event);
       return lines;
+    }
+
+    if (worthy && BUILDUP_BEATS.has(beat) && !shouldEmitPlayByPlay(beat)) {
+      emitBuildupLine();
     }
 
     if (worthy && shouldEmitPlayByPlay(beat)) {
       const deferGoalPbp = event.type === "shot" && event.outcome === "goal";
       if (!deferGoalPbp) {
-        const pbpI18n = commentaryI18n(event, ctx, beat);
+        const pbpI18n = lineCopyI18n(event, ctx, seed) ?? commentaryI18n(event, ctx, beat);
         const prefix = isShotBeat(beat) ? shotLinePrefix(seed, event.seq, macroId) : "";
         const body = commentate(event, ctx);
         lines.push({
           seq: event.seq,
           beatId: beat,
           voice: "pbp",
+          level: pbpLevel(beat, event, macroId, homeTeamId),
           text: `${formatClock(event.clock)}  ${prefix}${body}`,
           i18nKey: pbpI18n?.key,
           i18nParams: pbpI18n?.params,
@@ -437,6 +525,7 @@ export function createBroadcastDirector(input: {
           seq: event.seq,
           beatId: beat,
           voice: "color",
+          level: "extended",
           macroId,
           text: `${formatClock(event.clock)}  ${colorTemplate(seed, event.seq, macroId)}`,
           i18nKey: macroI18n.key,
@@ -459,6 +548,7 @@ export function createBroadcastDirector(input: {
             seq: event.seq,
             beatId: beat,
             voice: "color",
+            level: "extended",
             storySlot: storyLine.slot,
             text: `${formatClock(event.clock)}  ${storyLine.text}`,
           });

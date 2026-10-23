@@ -34,6 +34,11 @@ export function chainFlushLine(seed: number, seq: number, teamLabel: string): st
   return CHAIN_FLUSH[index]!.replace("{team}", teamLabel);
 }
 
+/** Same variant as `chainFlushLine`, as a locale key (`match.chain.flush.<n>`). */
+export function chainFlushI18nKey(seed: number, seq: number): string {
+  return `match.chain.flush.${hashPickVariant(seed, seq, "chain-flush", CHAIN_FLUSH.length)}`;
+}
+
 export function shotLinePrefix(seed: number, seq: number, macroId: MacroBeatId | null): string {
   if (!macroId) return "";
   const options = MACRO_SHOT_PREFIX[macroId];

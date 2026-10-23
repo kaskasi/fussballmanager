@@ -92,6 +92,7 @@ import { migration092MedicalCareFlow } from "./migration_092_medical_care_flow.t
 import { migration093TutorialState } from "./migration_093_tutorial_state.ts";
 import { migration095ClubKits } from "./migration_095_club_kits.ts";
 import { migration096CampConstruction } from "./migration_096_camp_construction.ts";
+import { migration097StoryModeActs } from "./migration_097_story_mode_acts.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -193,6 +194,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration093TutorialState,
   migration095ClubKits,
   migration096CampConstruction,
+  migration097StoryModeActs,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

@@ -15,7 +15,7 @@ export type BroadcastStoryTable = {
 };
 
 export type BroadcastStoryContext = {
-  activeArc?: "relegation_battle" | null;
+  activeArc?: "relegation_battle" | "promotion_push" | null;
   fanFeedHead?: BroadcastStoryFanHead | null;
   chronicleHead?: BroadcastStoryChronicleHead | null;
   playerTable?: BroadcastStoryTable | null;

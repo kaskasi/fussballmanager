@@ -1,15 +1,20 @@
 import { describe, expect, it } from "vitest";
 import {
   act1AssistantTrainingPlan,
+  deriveFeatureCurtain,
   featureCurtainForPhase,
+  fullFeatureCurtain,
   filterTeamNavScreens,
   isNavScreenVisible,
+  resolveFeatureCurtain,
   resolvePresentationMode,
   resolveTrainingPlanAfterWeek,
 } from "./career-presentation.ts";
 import {
   defaultStoryState,
   fullGameStoryState,
+  grantCurtainUnlock,
+  normalizeStoryState,
   storyModeAct1StoryState,
 } from "./story-state.ts";
 import { SLOT_COUNT } from "../development/weekly-plan.ts";
@@ -32,12 +37,59 @@ describe("career presentation (PRD 19)", () => {
     expect(isNavScreenVisible("scouting", state)).toBe(true);
   });
 
-  it("act1 keeps full team nav (story arc no longer hides menu screens)", () => {
+  it("act1 hides scouting, transfers, stadium, finances and merch (PRD 19 matrix)", () => {
     const state = storyModeAct1StoryState();
     expect(state.career_phase).toBe("act1_nordstern");
-    expect(isNavScreenVisible("scouting", state)).toBe(true);
-    expect(isNavScreenVisible("finances", state)).toBe(true);
-    expect(isNavScreenVisible("hub", state)).toBe(true);
+    for (const screen of ["scouting", "transfers", "stadium", "finances", "merchandising"] as const) {
+      expect(isNavScreenVisible(screen, state)).toBe(false);
+    }
+    for (const screen of ["hub", "postfach", "squad", "training", "calendar", "leagues"] as const) {
+      expect(isNavScreenVisible(screen, state)).toBe(true);
+    }
+  });
+
+  it("act1 curtain is assistant training with formation-only tactics", () => {
+    const curtain = resolveFeatureCurtain(storyModeAct1StoryState());
+    expect(curtain.auto_training).toBe(true);
+    expect(curtain.manual_training).toBe(false);
+    expect(curtain.tactics_sliders).toBe(false);
+    expect(curtain.opponent_scout_module).toBe(false);
+  });
+
+  it("regionalliga manager stays full even with an act phase or stray unlocks", () => {
+    expect(deriveFeatureCurtain("regionalliga_manager", "act1_nordstern", [])).toEqual(
+      fullFeatureCurtain(),
+    );
+    expect(deriveFeatureCurtain("new_game_plus", "act2_regional", ["stadium"])).toEqual(
+      fullFeatureCurtain(),
+    );
+  });
+
+  it("act2 with only the stadium unlock shows just the stadium", () => {
+    const state = grantCurtainUnlock(
+      { ...storyModeAct1StoryState(), career_phase: "act2_regional" },
+      "stadium",
+    );
+    expect(isNavScreenVisible("stadium", state)).toBe(true);
+    expect(isNavScreenVisible("scouting", state)).toBe(false);
+    expect(isNavScreenVisible("transfers", state)).toBe(false);
+    expect(state.feature_curtain.stadium_nav).toBe(true);
+  });
+
+  it("manual_training unlock turns the assistant plan off", () => {
+    const curtain = deriveFeatureCurtain("story_mode", "act2_regional", ["manual_training"]);
+    expect(curtain.manual_training).toBe(true);
+    expect(curtain.auto_training).toBe(false);
+  });
+
+  it("grantCurtainUnlock is idempotent", () => {
+    const once = grantCurtainUnlock(storyModeAct1StoryState(), "transfers");
+    expect(grantCurtainUnlock(once, "transfers")).toBe(once);
+  });
+
+  it("act3 and later are full in story mode", () => {
+    expect(deriveFeatureCurtain("story_mode", "act3_empire", [])).toEqual(fullFeatureCurtain());
+    expect(deriveFeatureCurtain("story_mode", "act4_complete", [])).toEqual(fullFeatureCurtain());
   });
 
   it("full game shows all nav screens", () => {
@@ -46,13 +98,13 @@ describe("career presentation (PRD 19)", () => {
     expect(isNavScreenVisible("stadium", state)).toBe(true);
   });
 
-  it("keeps all team menu entries for act1", () => {
+  it("filters curtained team menu entries for act1", () => {
     const items = [
       { screen: "hub" as const, labelKey: "a" },
       { screen: "scouting" as const, labelKey: "b" },
     ];
     const filtered = filterTeamNavScreens(items, storyModeAct1StoryState());
-    expect(filtered.map((i) => i.screen)).toEqual(["hub", "scouting"]);
+    expect(filtered.map((i) => i.screen)).toEqual(["hub"]);
   });
 
   it("act1 assistant plan fills all slots without focus", () => {
@@ -62,9 +114,9 @@ describe("career presentation (PRD 19)", () => {
     expect(plan.some((slot) => slot.focus)).toBe(false);
   });
 
-  it("resolveTrainingPlanAfterWeek clears plan in act1 (manual training)", () => {
+  it("resolveTrainingPlanAfterWeek returns the assistant plan in act1", () => {
     const plan = resolveTrainingPlanAfterWeek(storyModeAct1StoryState());
-    expect(plan.every((slot) => slot.unitId === "")).toBe(true);
+    expect(plan).toEqual(act1AssistantTrainingPlan());
   });
 
   it("resolveTrainingPlanAfterWeek clears plan when manual", () => {
@@ -73,10 +125,38 @@ describe("career presentation (PRD 19)", () => {
     expect(plan.every((slot) => slot.unitId === "")).toBe(true);
   });
 
-  it("featureCurtainForPhase act2 matches full until beats land", () => {
+  it("featureCurtainForPhase act2 starts curtained until beats land", () => {
     const curtain = featureCurtainForPhase("act2_regional");
-    expect(curtain.manual_training).toBe(true);
-    expect(curtain.scouting_nav).toBe(true);
+    expect(curtain.manual_training).toBe(false);
+    expect(curtain.scouting_nav).toBe(false);
+  });
+});
+
+describe("normalizeStoryState (ADR 0005)", () => {
+  it("keeps story-mode act fields and rebuilds the curtain cache", () => {
+    const raw = {
+      ...storyModeAct1StoryState(),
+      career_phase: "act2_regional" as const,
+      curtain_unlocks: ["stadium" as const, "stadium" as const],
+      feature_curtain: fullFeatureCurtain(),
+    };
+    const normalized = normalizeStoryState(raw);
+    expect(normalized.career_phase).toBe("act2_regional");
+    expect(normalized.curtain_unlocks).toEqual(["stadium"]);
+    expect(normalized.feature_curtain.scouting_nav).toBe(false);
+    expect(normalized.feature_curtain.stadium_nav).toBe(true);
+  });
+
+  it("strips act fields for regionalliga manager", () => {
+    const raw = {
+      ...defaultStoryState(),
+      career_phase: "act1_nordstern" as const,
+      curtain_unlocks: ["stadium" as const],
+    };
+    const normalized = normalizeStoryState(raw);
+    expect(normalized.career_phase).toBe("full");
+    expect(normalized.curtain_unlocks).toEqual([]);
+    expect(normalized.act_transition).toBeNull();
   });
 });
 
@@ -94,6 +174,9 @@ describe("resolvePresentationMode (PRD 20)", () => {
         ...storyModeAct1StoryState(),
         career_phase: "act3_empire",
       }),
+    ).toBe("manager_desk");
+    expect(
+      resolvePresentationMode({ ...storyModeAct1StoryState(), career_phase: "act4_complete" }),
     ).toBe("manager_desk");
   });
 });

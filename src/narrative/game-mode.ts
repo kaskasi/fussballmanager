@@ -20,3 +20,6 @@ export function isStoryCareerArcMode(mode: ProductGameMode): boolean {
 export function isEliteWorldMode(mode: ProductGameMode): boolean {
   return mode === "new_game_plus";
 }
+
+/** PRD 24 — shows the new-game mode card; off until the Act 1 → Act 2 transition ships. */
+export const STORY_MODE_PICKER_ENABLED = false;

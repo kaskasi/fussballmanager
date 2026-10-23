@@ -1,19 +1,52 @@
 /** Persisted narrative state (PRD 13, PRD 19) — lives in `pipeline.story_state`. */
 
+import type { TeamId } from "@fussballmanager/shared";
 import {
+  deriveFeatureCurtain,
   featureCurtainForPhase,
   fullFeatureCurtain,
   type CareerPhase,
+  type CurtainUnlockId,
   type FeatureCurtain,
 } from "./career-presentation.ts";
 import { resolveProductGameMode, type ProductGameMode } from "./game-mode.ts";
 
-export type { CareerPhase, FeatureCurtain } from "./career-presentation.ts";
+export type { CareerPhase, CurtainUnlockId, FeatureCurtain } from "./career-presentation.ts";
 export type { ProductGameMode } from "./game-mode.ts";
 
 export type CareerOrigin = "raffle" | "passionate_letter" | "community_takeover";
 
-export type ActiveArc = "relegation_battle" | null;
+export type ActiveArc = "relegation_battle" | "promotion_push" | null;
+
+/** Act 1 season-end outcome — read from promotion/relegation movements, never forced. */
+export type Act1Outcome = "relegated" | "survived";
+
+/** ADR 0005 — frozen at Act 1 season end so offers/followers don't drift before the pick. */
+export interface CareerActTransition {
+  kind: "act1_end";
+  ending_season: number;
+  from_team_id: TeamId;
+  outcome: Act1Outcome;
+  via_playoff: boolean;
+  final_place: number;
+  offer_team_ids: TeamId[];
+  companion_ids: string[];
+}
+
+export interface ActStarted {
+  phase: CareerPhase;
+  season: number;
+  week: number;
+}
+
+/** Name snapshot of bonded players — survives the old club's youth being regenerated. */
+export interface LegendPlayerRef {
+  player_id: string;
+  name: string;
+  position: string;
+  from_team_id: TeamId;
+  followed: boolean;
+}
 
 export interface StoryChoiceRecord {
   season: number;
@@ -45,6 +78,8 @@ export interface StoryCast {
   journalist_hostile_name: string;
   journalist_ally_name: string;
   groundskeeper_name: string;
+  /** Story Mode Act 2 employer chairman (generated at the transition). */
+  chairman_name?: string;
 }
 
 export interface FanFeedBeat {
@@ -109,7 +144,14 @@ export interface StoryState {
   opening_complete: boolean;
   /** PRD 24 — product mode; default regionalliga_manager for new saves. */
   game_mode?: ProductGameMode;
+  /** PRD 24 — false until the new-game mode card is answered (absent on older saves = confirmed). */
+  game_mode_confirmed?: boolean;
   career_phase: CareerPhase;
+  /** Story Mode only — append-only Act 2 unlocks (ADR 0005). */
+  curtain_unlocks: CurtainUnlockId[];
+  act_transition: CareerActTransition | null;
+  act_started: ActStarted | null;
+  legend_players: LegendPlayerRef[];
   feature_curtain: FeatureCurtain;
   choices: Record<string, StoryChoiceRecord>;
   scheduled_payoffs: ScheduledPayoff[];
@@ -147,6 +189,10 @@ export function regionalligaManagerStoryState(week = 1): StoryState {
     opening_complete: false,
     game_mode: "regionalliga_manager",
     career_phase,
+    curtain_unlocks: [],
+    act_transition: null,
+    act_started: null,
+    legend_players: [],
     feature_curtain: fullFeatureCurtain(),
     choices: {},
     scheduled_payoffs: [],
@@ -166,6 +212,7 @@ export function storyModeAct1StoryState(week = 1): StoryState {
     ...regionalligaManagerStoryState(week),
     game_mode: "story_mode",
     career_phase,
+    act_started: { phase: career_phase, season: 1, week },
     feature_curtain: featureCurtainForPhase(career_phase),
   };
 }
@@ -187,16 +234,19 @@ export function normalizeStoryState(state?: StoryState, week = 1): StoryState {
   const base = defaultStoryState(week);
   if (!state) return base;
   const game_mode = resolveProductGameMode(state);
-  let career_phase = state.career_phase ?? base.career_phase;
-  if (game_mode === "regionalliga_manager" || game_mode === "new_game_plus") {
-    career_phase = "full";
-  }
+  const storyMode = game_mode === "story_mode";
+  const career_phase = storyMode ? (state.career_phase ?? base.career_phase) : "full";
+  const curtain_unlocks = storyMode ? [...new Set(state.curtain_unlocks ?? [])] : [];
   return {
     ...base,
     ...state,
     game_mode,
     career_phase,
-    feature_curtain: featureCurtainForPhase(career_phase),
+    curtain_unlocks,
+    act_transition: storyMode ? (state.act_transition ?? null) : null,
+    act_started: storyMode ? (state.act_started ?? null) : null,
+    legend_players: storyMode ? (state.legend_players ?? []) : [],
+    feature_curtain: deriveFeatureCurtain(game_mode, career_phase, curtain_unlocks),
     choices: state.choices ?? {},
     scheduled_payoffs: state.scheduled_payoffs ?? [],
     cast: { ...base.cast, ...state.cast },
@@ -205,6 +255,21 @@ export function normalizeStoryState(state?: StoryState, week = 1): StoryState {
     chronicle_entries: state.chronicle_entries ?? [],
     media_hype: clampMediaHype(state.media_hype ?? base.media_hype),
     tutorial: normalizeTutorialState(state.tutorial ?? base.tutorial),
+  };
+}
+
+/** ADR 0005 — idempotent; the curtain cache follows from the unlock list. */
+export function grantCurtainUnlock(state: StoryState, unlock: CurtainUnlockId): StoryState {
+  if (state.curtain_unlocks.includes(unlock)) return state;
+  const curtain_unlocks = [...state.curtain_unlocks, unlock];
+  return {
+    ...state,
+    curtain_unlocks,
+    feature_curtain: deriveFeatureCurtain(
+      resolveProductGameMode(state),
+      state.career_phase,
+      curtain_unlocks,
+    ),
   };
 }
 

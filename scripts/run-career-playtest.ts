@@ -54,6 +54,13 @@ if (report.seasonEnd) {
       (report.seasonEnd.summary ? ` — ${report.seasonEnd.summary}` : ""),
   );
 }
+const transition = report.seasonEnd?.actTransition;
+if (transition) {
+  console.log(
+    `  act 1 end: ${transition.outcome}${transition.via_playoff ? " (playoff)" : ""} in place ${transition.final_place}` +
+      ` · offers ${transition.offer_team_ids.join(", ")} · followers ${transition.companion_ids.join(", ")}`,
+  );
+}
 for (const anomaly of report.anomalies) {
   console.log(`  [${anomaly.severity}] ${anomaly.id}: ${anomaly.message}`);
 }

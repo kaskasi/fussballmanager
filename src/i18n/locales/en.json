@@ -3066,5 +3066,14 @@
   "newCareer.mode.regionalliga_manager.title": "Regionalliga Manager",
   "newCareer.mode.regionalliga_manager.hint": "Everything from day one: scouting, transfers, stadium, finances and training are yours.",
   "newCareer.mode.story_mode.title": "Story Mode",
-  "newCareer.mode.story_mode.hint": "A guided career in acts: your assistant runs training while you learn the core – new areas unlock as the story moves on."
+  "newCareer.mode.story_mode.hint": "A guided career in acts: your assistant runs training while you learn the core – new areas unlock as the story moves on.",
+  "board.act1.verdict": "Act 1 ends – the board passes no verdict, the story goes on.",
+  "story.act1End.relegated.title": "Relegated – but not the end",
+  "story.act1End.relegated.body": "{club} finish in place {place} and go down. The stand sings anyway. Without {names} this year would have been just a number in the table.",
+  "story.act1End.playoffLost.title": "Beaten in the playoff",
+  "story.act1End.playoffLost.body": "Place {place}, then one match for everything – lost. {club} go down. What remains: {names} and a club that believes in itself again.",
+  "story.act1End.survived.title": "Survival secured",
+  "story.act1End.survived.body": "{club} stay up in place {place}. Nobody expected it – {names} did.",
+  "story.act1End.playoffWon.title": "Saved through the playoff",
+  "story.act1End.playoffWon.body": "Place {place}, the playoff, nerves to the last minute – and {club} stay up. They won't forget {names} here."
 }

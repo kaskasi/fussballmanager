@@ -25,7 +25,7 @@ export function clubStandingTier(league: LeagueState, teamId: TeamId): ClubStand
   const place = tablePlaceForClub(league, teamId);
   if (place <= 4) return "ambition";
   if (place <= 11) return "upper_half";
-  if (place <= 15) return "survival_mid";
+  if (place <= SURVIVAL_TARGET_PLACE) return "survival_mid";
   return "survival_low";
 }
 

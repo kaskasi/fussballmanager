@@ -3,9 +3,9 @@ import type { BoardObjective } from "../board/board-state.ts";
 import { defaultLeagueState } from "../persistence/league-state.ts";
 import { generateSeasonObjectives } from "../board/season-objectives.ts";
 
-/** Bottom three places in an 18-team league. */
-export const RELEGATION_ZONE_PLACE = 16;
-export const SURVIVAL_TARGET_PLACE = 15;
+/** Matches the sim (promotion-relegation.ts): 17th plays the playoff, 18th goes down. */
+export const RELEGATION_ZONE_PLACE = 17;
+export const SURVIVAL_TARGET_PLACE = 16;
 
 export function survivalSeasonObjectives(
   employerClubId: TeamId,

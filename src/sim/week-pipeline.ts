@@ -1,3 +1,4 @@
+import { guardInSeasonDismissal } from "../narrative/career-acts.ts";
 import { t } from "../i18n/index.ts";
 import { formatWholeNumber } from "../i18n/number-display.ts";
 import { updateInSeasonPressure } from "../board/season-objectives.ts";
@@ -576,7 +577,10 @@ export async function simulateGameWeek(
   let financingAfterLoans = crisisStep.financing;
   board = crisisStep.board;
   if (leagueStep.matchdayPlayed > 0 && !footballSeasonEnded) {
-    const pressureStep = updateInSeasonPressure(board, leagueStep.league, session.season);
+    const pressureStep = guardInSeasonDismissal(
+      updateInSeasonPressure(board, leagueStep.league, session.season),
+      session.storyState,
+    );
     board = pressureStep.board;
     if (pressureStep.warning) {
       clubEvents = withClubEvent(

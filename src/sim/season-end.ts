@@ -41,6 +41,10 @@ import type { GameSession } from "../persistence/game-session.ts";
 import { activatePendingPreContracts } from "../transfers/pre-contracts.ts";
 import { computeSeasonAwards } from "./season-awards.ts";
 import { appendSeasonCoda } from "../narrative/season-end-narrative.ts";
+import {
+  guardSeasonEndEvaluation,
+  resolveCareerActSeasonEnd,
+} from "../narrative/career-acts.ts";
 
 export interface SeasonEndResult {
   session: GameSession;
@@ -124,12 +128,15 @@ export function runSeasonEnd(
     youthCamps: session.youthCamps,
     weeklyWageBill: weeklyWageBill(session.players, session.clubId),
   };
-  const boardStep = evaluateSeasonObjectives(
-    session.board,
-    session.league,
-    financesAfterPrizes,
-    endingSeason,
-    boardCtx,
+  const boardStep = guardSeasonEndEvaluation(
+    evaluateSeasonObjectives(
+      session.board,
+      session.league,
+      financesAfterPrizes,
+      endingSeason,
+      boardCtx,
+    ),
+    session.storyState,
   );
   let finances = boardStep.finances;
   let board = boardStep.board;
@@ -177,12 +184,18 @@ export function runSeasonEnd(
     promotionRelegation.pools,
     leagueNormalized.player_club_id,
   );
-  const storyState = appendSeasonCoda(
-    session.storyState,
-    session.league,
-    endingSeason,
-    SEASON_END_WEEK,
-  );
+  const storyState =
+    resolveCareerActSeasonEnd({
+      story: session.storyState,
+      league: leagueNormalized,
+      promotionRelegation,
+      players: session.players,
+      rivalPlayers: session.rivalPlayers,
+      careerClubId: session.clubId,
+      endingSeason,
+      nextSeason: session.season,
+      week: SEASON_END_WEEK,
+    }) ?? appendSeasonCoda(session.storyState, session.league, endingSeason, SEASON_END_WEEK);
 
   return {
     session: {

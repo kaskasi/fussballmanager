@@ -3066,5 +3066,14 @@
   "newCareer.mode.regionalliga_manager.title": "Regionalliga Manager",
   "newCareer.mode.regionalliga_manager.hint": "Alle Bereiche ab Tag 1: Scouting, Transfers, Stadion, Finanzen und Training in deiner Hand.",
   "newCareer.mode.story_mode.title": "Story Mode",
-  "newCareer.mode.story_mode.hint": "Eine geführte Karriere in Akten: Dein Assistent trainiert, du lernst den Kern – neue Bereiche schaltest du nach und nach frei."
+  "newCareer.mode.story_mode.hint": "Eine geführte Karriere in Akten: Dein Assistent trainiert, du lernst den Kern – neue Bereiche schaltest du nach und nach frei.",
+  "board.act1.verdict": "Akt 1 endet – der Vorstand fällt kein Urteil, die Geschichte geht weiter.",
+  "story.act1End.relegated.title": "Abstieg – aber kein Ende",
+  "story.act1End.relegated.body": "{club} beendet die Saison auf Platz {place} und steigt ab. Die Kurve singt trotzdem. Ohne {names} wäre dieses Jahr nur eine Zahl in der Tabelle gewesen.",
+  "story.act1End.playoffLost.title": "In der Relegation gescheitert",
+  "story.act1End.playoffLost.body": "Platz {place}, dann ein Spiel um alles – verloren. {club} muss runter. Was bleibt: {names} und ein Verein, der wieder an sich glaubt.",
+  "story.act1End.survived.title": "Klassenerhalt geschafft",
+  "story.act1End.survived.body": "{club} hält auf Platz {place} die Klasse. Niemand hatte damit gerechnet – {names} schon.",
+  "story.act1End.playoffWon.title": "Über die Relegation gerettet",
+  "story.act1End.playoffWon.body": "Platz {place}, Relegation, Zittern bis zum Schluss – und {club} bleibt drin. {names} werden sie hier nicht vergessen."
 }

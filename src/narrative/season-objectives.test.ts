@@ -21,8 +21,8 @@ describe("survival season objectives", () => {
     expect(place?.icon).toBe("🛡️");
   });
 
-  it("flags relegation zone from place 16", () => {
-    expect(isInRelegationZone(16)).toBe(true);
-    expect(isInRelegationZone(15)).toBe(false);
+  it("flags the relegation zone from the playoff place (17) like the sim", () => {
+    expect(isInRelegationZone(17)).toBe(true);
+    expect(isInRelegationZone(16)).toBe(false);
   });
 });

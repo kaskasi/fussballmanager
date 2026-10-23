@@ -15,6 +15,7 @@ import type { ClubEvent } from "../inbox/club-events.ts";
 import { appendMatchdayClubEvents } from "../match/post-match-events.ts";
 import { resolveFeatureCurtain } from "../narrative/career-presentation.ts";
 import type { ProductGameMode } from "../narrative/game-mode.ts";
+import type { CareerActTransition } from "../narrative/story-state.ts";
 import { newGameSession, type GameSession } from "../persistence/game-session.ts";
 import { formatFixtureResult, playerTableRow } from "../sim/league-week.ts";
 import { sessionAfterWeekSimulation } from "../sim/fast-forward-to-month.ts";
@@ -54,7 +55,14 @@ export interface CareerPlaytestReport {
   /** Last in-season week (before the season-end rollover). */
   final: CareerPlaytestWeek;
   /** Board verdict after the last matchday, when the season ended inside the run. */
-  seasonEnd?: { lastResult?: string; jobStatus: string; pressure: number; summary?: string };
+  seasonEnd?: {
+    lastResult?: string;
+    jobStatus: string;
+    pressure: number;
+    summary?: string;
+    /** Story Mode — frozen Act 1 → 2 transition (PRD 19). */
+    actTransition?: CareerActTransition | null;
+  };
   promoted: string[];
   anomalies: CareerPlaytestAnomaly[];
 }
@@ -275,6 +283,7 @@ export async function runCareerPlaytest(options: CareerPlaytestOptions): Promise
         jobStatus: session.board.job_status,
         pressure: Math.round(session.board.pressure),
         summary: session.board.last_evaluation?.summary,
+        actTransition: session.storyState.act_transition,
       };
       break;
     }

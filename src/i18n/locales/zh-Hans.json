@@ -2937,5 +2937,14 @@
   "newCareer.mode.regionalliga_manager.title": "地区联赛经理",
   "newCareer.mode.regionalliga_manager.hint": "第一天起全部开放：球探、转会、球场、财务和训练都由你负责。",
   "newCareer.mode.story_mode.title": "故事模式",
-  "newCareer.mode.story_mode.hint": "分幕推进的引导式职业生涯：助教负责训练，你先掌握核心——新功能随剧情逐步解锁。"
+  "newCareer.mode.story_mode.hint": "分幕推进的引导式职业生涯：助教负责训练，你先掌握核心——新功能随剧情逐步解锁。",
+  "board.act1.verdict": "第一幕结束——董事会不作评判，故事继续。",
+  "story.act1End.relegated.title": "降级——但不是结局",
+  "story.act1End.relegated.body": "{club} 以第 {place} 名结束赛季并降级。看台上的歌声依旧。没有 {names}，这一年只会是积分榜上的一个数字。",
+  "story.act1End.playoffLost.title": "附加赛失利",
+  "story.act1End.playoffLost.body": "第 {place} 名，然后是决定一切的一战——输了。{club} 降级。留下的是：{names}，以及一个重新相信自己的俱乐部。",
+  "story.act1End.survived.title": "成功保级",
+  "story.act1End.survived.body": "{club} 以第 {place} 名保级成功。没人料到——除了 {names}。",
+  "story.act1End.playoffWon.title": "通过附加赛保级",
+  "story.act1End.playoffWon.body": "第 {place} 名，附加赛，紧张到最后一刻——{club} 留在了联赛。这里的人不会忘记 {names}。"
 }

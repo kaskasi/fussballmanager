@@ -91,6 +91,7 @@ import {
 } from "../narrative/career-presentation.ts";
 import { isTrainingPlanNeglected } from "../development/training-neglect.ts";
 import { normalizeStoryState, type StoryState } from "../narrative/story-state.ts";
+import type { ProductGameMode } from "../narrative/game-mode.ts";
 import { boardWithSurvivalArc, initializeStoryForNewGame } from "../narrative/opening.ts";
 import {
   normalizeAssistantDelegation,
@@ -168,7 +169,15 @@ export interface GameSession {
   orthopedistHire: OrthopedistHireState;
 }
 
-export function newGameSession(now = new Date()): GameSession {
+export interface NewGameOptions {
+  /** PRD 24 — default Regionalliga Manager. */
+  mode?: ProductGameMode;
+  /** False shows the new-game mode card before the opening (UI default). */
+  modeConfirmed?: boolean;
+}
+
+export function newGameSession(now = new Date(), options: NewGameOptions = {}): GameSession {
+  const mode = options.mode ?? "regionalliga_manager";
   const world = generateWorld(DEFAULT_MASTER_SEED);
   const academy = loadDemoRoster().filter((player) => player.squad_status !== "pro");
   const save = createSave({
@@ -194,11 +203,10 @@ export function newGameSession(now = new Date()): GameSession {
       world.clubs.find((club) => club.id === NORDSTERN_CLUB_ID) ??
       null;
     save.state.pipeline.scout_board = createScoutBoard(rivalPlayers, playerClub);
-    save.state.pipeline.story_state = initializeStoryForNewGame(
-      DEFAULT_MASTER_SEED,
-      DEFAULT_MANAGER,
-      1,
-    );
+    save.state.pipeline.story_state = {
+      ...initializeStoryForNewGame(DEFAULT_MASTER_SEED, DEFAULT_MANAGER, 1, mode),
+      game_mode_confirmed: options.modeConfirmed ?? options.mode !== undefined,
+    };
     save.state.pipeline.board = boardWithSurvivalArc(
       save.state.pipeline.board ??
         startBoardSeason(
@@ -255,7 +263,7 @@ function isAssistantDefaultTrainingPlan(plan: readonly TrainingSlot[]): boolean 
   if (plan.length !== assistant.length) return false;
   return plan.every(
     (slot, index) =>
-      slot.unitId === assistant[index]?.unitId && slot.focus === false,
+      slot.unitId === assistant[index]?.unitId && slot.focus === assistant[index]?.focus,
   );
 }
 

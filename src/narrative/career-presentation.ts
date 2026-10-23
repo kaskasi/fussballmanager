@@ -158,12 +158,15 @@ const ACT1_UNIT_ROTATION = [
   "phys_power",
 ] as const;
 
-/** Assistant-run week plan for Act 1 — all slots filled, no focus marks. */
+/** Two focus slots — a plan without focus counts as training neglect (morale, board, fans). */
+const ACT1_FOCUS_SLOTS = new Set([0, 8]);
+
+/** Assistant-run week plan for Act 1 — all slots filled, two focus marks. */
 export function act1AssistantTrainingPlan(): TrainingSlot[] {
   const plan = emptyWeeklyTrainingPlan();
   for (let i = 0; i < SLOT_COUNT; i++) {
     const unitId = ACT1_UNIT_ROTATION[i % ACT1_UNIT_ROTATION.length]!;
-    plan[i] = { unitId, focus: false };
+    plan[i] = { unitId, focus: ACT1_FOCUS_SLOTS.has(i) };
   }
   return plan;
 }

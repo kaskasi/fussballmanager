@@ -19,7 +19,9 @@ import {
   normalizeStoryState,
   storyModeAct1StoryState,
 } from "./story-state.ts";
-import { SLOT_COUNT } from "../development/weekly-plan.ts";
+import { SLOT_COUNT, validateWeeklyPlan } from "../development/weekly-plan.ts";
+import { isTrainingPlanNeglected } from "../development/training-neglect.ts";
+import { planToSessions } from "../development/training-units.ts";
 
 describe("career presentation (PRD 19)", () => {
   it("ignores stale saved feature_curtain when resolving nav", () => {
@@ -109,11 +111,12 @@ describe("career presentation (PRD 19)", () => {
     expect(filtered.map((i) => i.screen)).toEqual(["hub"]);
   });
 
-  it("act1 assistant plan fills all slots without focus", () => {
+  it("act1 assistant plan fills all slots and never counts as neglect", () => {
     const plan = act1AssistantTrainingPlan();
     expect(plan.length).toBe(SLOT_COUNT);
     expect(plan.every((slot) => slot.unitId.length > 0)).toBe(true);
-    expect(plan.some((slot) => slot.focus)).toBe(false);
+    expect(isTrainingPlanNeglected(plan)).toBe(false);
+    expect(validateWeeklyPlan(planToSessions(plan)).valid).toBe(true);
   });
 
   it("resolveTrainingPlanAfterWeek returns the assistant plan in act1", () => {

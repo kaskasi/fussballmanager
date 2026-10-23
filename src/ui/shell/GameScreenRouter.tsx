@@ -5,7 +5,11 @@ import { prepareCareerMatch } from "../../sim/career-match-setup.ts";
 import { usesTrainingNextNexus } from "../../sim/training-next.ts";
 import { worldCareerClubId } from "../../world/world-generator.ts";
 import { isPlayerListed, listPlayerForSale, unlistPlayer } from "../../transfers/transfer-listings.ts";
-import { openingBlocked } from "../../narrative/opening.ts";
+import {
+  chooseNewCareerMode,
+  modePickPending,
+  openingBlocked,
+} from "../../narrative/opening.ts";
 import { curtainLinkTargets, resolveFeatureCurtain } from "../../narrative/career-presentation.ts";
 import {
   normalizeClubStadium,
@@ -23,6 +27,7 @@ import { CampLeaderDismissModal } from "../components/CampLeaderDismissModal.tsx
 import { ClubProfileModal } from "../components/ClubProfileModal.tsx";
 import { JobOffersModal } from "../components/JobOffersModal.tsx";
 import { OpeningStoryModal } from "../components/OpeningStoryModal.tsx";
+import { NewCareerModeCard } from "../components/NewCareerModeCard.tsx";
 import { CalendarScreen } from "../screens/CalendarScreen.tsx";
 import { ClubEventsScreen } from "../screens/ClubEventsScreen.tsx";
 import { FinancesScreen } from "../screens/FinancesScreen.tsx";
@@ -322,7 +327,11 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           treterSession={session}
         />
       ) : null}
-      {openingBlocked(session) ? (
+      {modePickPending(session) && accessibility.localeChosen ? (
+        <NewCareerModeCard
+          onPick={(mode) => patchSession((current) => chooseNewCareerMode(current, mode))}
+        />
+      ) : openingBlocked(session) ? (
         <OpeningStoryModal
           managerName={session.managerName}
           players={players}

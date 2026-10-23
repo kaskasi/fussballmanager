@@ -4,8 +4,11 @@ import { defaultLeagueState } from "../persistence/league-state.ts";
 import { startBoardSeason } from "../board/season-objectives.ts";
 import { generateStoryCast } from "./cast.ts";
 import { applyChronicleEntry } from "./apply.ts";
+import { act1AssistantTrainingPlan } from "./career-presentation.ts";
+import { STORY_MODE_PICKER_ENABLED, type ProductGameMode } from "./game-mode.ts";
 import {
   regionalligaManagerStoryState,
+  storyModeAct1StoryState,
   type CareerOrigin,
   type ChronicleEntry,
   type StoryState,
@@ -38,10 +41,13 @@ export function initializeStoryForNewGame(
   masterSeed: number,
   managerName: string,
   week = 1,
+  mode: ProductGameMode = "regionalliga_manager",
 ): StoryState {
   const cast = generateStoryCast(masterSeed);
+  const base =
+    mode === "story_mode" ? storyModeAct1StoryState(week) : regionalligaManagerStoryState(week);
   return {
-    ...regionalligaManagerStoryState(week),
+    ...base,
     cast,
     fan_feed: [
       {
@@ -136,6 +142,38 @@ export function completeOpening(
     board,
     players,
     youthInbox,
+  };
+}
+
+/** PRD 24 — fresh save waits for the mode card (saves without the field count as confirmed). */
+export function modePickPending(
+  session: Pick<GameSession, "storyState">,
+  pickerEnabled = STORY_MODE_PICKER_ENABLED,
+): boolean {
+  return (
+    pickerEnabled &&
+    !session.storyState.opening_complete &&
+    session.storyState.game_mode_confirmed === false
+  );
+}
+
+/** PRD 24 — apply the mode card choice to a fresh save before the opening runs. */
+export function chooseNewCareerMode(session: GameSession, mode: ProductGameMode): GameSession {
+  const story = session.storyState;
+  if (mode !== "story_mode") {
+    return { ...session, storyState: { ...story, game_mode_confirmed: true } };
+  }
+  return {
+    ...session,
+    storyState: {
+      ...storyModeAct1StoryState(session.week),
+      cast: story.cast,
+      fan_feed: story.fan_feed,
+      tutorial: story.tutorial,
+      game_mode_confirmed: true,
+    },
+    trainingPlan: act1AssistantTrainingPlan(),
+    trainingCalendarGateDone: true,
   };
 }
 

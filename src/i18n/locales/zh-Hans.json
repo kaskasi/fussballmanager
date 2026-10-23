@@ -2929,5 +2929,13 @@
   "match.momentum.ariaQuiet": "每分钟压迫。暂无威胁。",
   "match.momentum.minute": "第 {minute} 分钟：{own} {ownPct}% · {other} {otherPct}%",
   "match.momentum.title": "比赛势头",
-  "match.zones.aria": "比赛区域：{third}，{lateral}"
+  "match.zones.aria": "比赛区域：{third}，{lateral}",
+  "newCareer.mode.dialogLabel": "选择游戏模式",
+  "newCareer.mode.eyebrow": "新的职业生涯",
+  "newCareer.mode.title": "你想怎么玩？",
+  "newCareer.mode.lead": "同样的模拟，同样的联赛——模式决定你从一开始能掌控多少。",
+  "newCareer.mode.regionalliga_manager.title": "地区联赛经理",
+  "newCareer.mode.regionalliga_manager.hint": "第一天起全部开放：球探、转会、球场、财务和训练都由你负责。",
+  "newCareer.mode.story_mode.title": "故事模式",
+  "newCareer.mode.story_mode.hint": "分幕推进的引导式职业生涯：助教负责训练，你先掌握核心——新功能随剧情逐步解锁。"
 }

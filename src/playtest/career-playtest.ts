@@ -13,6 +13,8 @@ import { hasMerchStockout } from "../economy/merchandising.ts";
 import { setLocale } from "../i18n/index.ts";
 import type { ClubEvent } from "../inbox/club-events.ts";
 import { appendMatchdayClubEvents } from "../match/post-match-events.ts";
+import { resolveFeatureCurtain } from "../narrative/career-presentation.ts";
+import type { ProductGameMode } from "../narrative/game-mode.ts";
 import { newGameSession, type GameSession } from "../persistence/game-session.ts";
 import { formatFixtureResult, playerTableRow } from "../sim/league-week.ts";
 import { sessionAfterWeekSimulation } from "../sim/fast-forward-to-month.ts";
@@ -46,6 +48,7 @@ export interface CareerPlaytestAnomaly {
 
 export interface CareerPlaytestReport {
   strategy: CareerPlaytestStrategy;
+  mode: ProductGameMode;
   club: TeamId;
   weeks: CareerPlaytestWeek[];
   /** Last in-season week (before the season-end rollover). */
@@ -58,6 +61,8 @@ export interface CareerPlaytestReport {
 
 export interface CareerPlaytestOptions {
   strategy: CareerPlaytestStrategy;
+  /** PRD 24 — default Regionalliga Manager. */
+  mode?: ProductGameMode;
   /** Stop early (smoke runs). Default: until the football season ends. */
   maxWeeks?: number;
   now?: Date;
@@ -225,7 +230,8 @@ export function detectAnomalies(input: {
 
 export async function runCareerPlaytest(options: CareerPlaytestOptions): Promise<CareerPlaytestReport> {
   setLocale("en");
-  let session = newGameSession(options.now ?? new Date("2026-08-01T12:00:00Z"));
+  const mode = options.mode ?? "regionalliga_manager";
+  let session = newGameSession(options.now ?? new Date("2026-08-01T12:00:00Z"), { mode });
   let promoted: string[] = [];
   if (options.strategy === "youth") {
     const step = promoteStrongYouth(session);
@@ -240,7 +246,9 @@ export async function runCareerPlaytest(options: CareerPlaytestOptions): Promise
   const limit = Math.min(options.maxWeeks ?? MAX_SEASON_WEEKS, MAX_SEASON_WEEKS);
 
   for (let index = 0; index < limit; index++) {
-    session = { ...session, trainingPlan: loadTrainingPlanPreset(session.trainingPlanPresets, 1) };
+    if (!resolveFeatureCurtain(session.storyState).auto_training) {
+      session = { ...session, trainingPlan: loadTrainingPlanPreset(session.trainingPlanPresets, 1) };
+    }
     const before = session.clubEvents;
     const result = await simulateGameWeek(session);
     let next = sessionAfterWeekSimulation(result.session);
@@ -279,6 +287,7 @@ export async function runCareerPlaytest(options: CareerPlaytestOptions): Promise
   const final = weeks[weeks.length - 1] ?? weekRow(session);
   return {
     strategy: options.strategy,
+    mode,
     club: session.league.player_club_id,
     weeks,
     final,

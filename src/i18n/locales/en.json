@@ -3058,5 +3058,13 @@
   "match.momentum.ariaQuiet": "Pressure per minute. No threat yet.",
   "match.momentum.minute": "{minute}': {own} {ownPct}% · {other} {otherPct}%",
   "match.momentum.title": "Momentum",
-  "match.zones.aria": "Play zone: {third}, {lateral}"
+  "match.zones.aria": "Play zone: {third}, {lateral}",
+  "newCareer.mode.dialogLabel": "Choose game mode",
+  "newCareer.mode.eyebrow": "New career",
+  "newCareer.mode.title": "How do you want to play?",
+  "newCareer.mode.lead": "Same simulation, same league – the mode decides how much you control from day one.",
+  "newCareer.mode.regionalliga_manager.title": "Regionalliga Manager",
+  "newCareer.mode.regionalliga_manager.hint": "Everything from day one: scouting, transfers, stadium, finances and training are yours.",
+  "newCareer.mode.story_mode.title": "Story Mode",
+  "newCareer.mode.story_mode.hint": "A guided career in acts: your assistant runs training while you learn the core – new areas unlock as the story moves on."
 }

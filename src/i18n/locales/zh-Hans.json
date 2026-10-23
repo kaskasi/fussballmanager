@@ -642,6 +642,7 @@
   "hub.inbox.scoutReports": "球探报告",
   "hub.inbox.title": "邮件 · {current}/{max}",
   "hub.lastMatch": "上一场：{result}",
+  "merch.expert.restockMail": "周边商品专家已加急补货：{items}（合计 {total}）。",
   "merch.stockAlert.soldOut": "球迷商店：{sku} 已售罄 — 请在周边商品中补货。",
   "merch.stockAlert.low": "球迷商店：{sku} 仅剩 {units} 件 — 请在下一场主场前补货。",
   "merch.skuName.trikots": "球衣",

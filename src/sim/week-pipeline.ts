@@ -43,7 +43,9 @@ import { advanceCareerConstruction } from "./advance-construction.ts";
 import { loanClubName } from "../transfers/loan-roster.ts";
 import { refreshAiListings, scanListingBids } from "../transfers/transfer-listings.ts";
 import { advanceMerchandisingWeek } from "../economy/merchandising.ts";
+import { merchExpertWageWeekly, runMerchExpertRestock } from "../economy/merchandising-expert.ts";
 import {
+  merchExpertRestockClubEventMessage,
   merchSaleSummaryClubEventMessage,
   merchStockAlertClubEventMessages,
   merchBargainAlertClubEventMessages,
@@ -456,6 +458,20 @@ export async function simulateGameWeek(
   for (const message of merchBargainAlertClubEventMessages(session.stadium, merchAdvance.stadium)) {
     clubEvents = withClubEvent(clubEvents, session.season, nextWeek, "finance", message);
   }
+  const merchRestock = runMerchExpertRestock(merchAdvance.stadium, {
+    cash: session.finances.cash,
+    season: session.season,
+    week: nextWeek,
+  });
+  if (merchRestock.lines.length > 0) {
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "finance",
+      merchExpertRestockClubEventMessage(merchRestock),
+    );
+  }
   const fanbaseDelta =
     weeklyFanbaseDelta(
       leagueWithCareerStats,
@@ -465,7 +481,7 @@ export async function simulateGameWeek(
     precinctWeeklyFanbaseBonus(merchAdvance.stadium.precinct, occupancy) +
     (trainingPlanNeglected ? TRAINING_NEGLECT_FANBASE_PENALTY : 0);
   const stadiumAfterFanbase = (() => {
-    let stadium = advanceClubFanbase(merchAdvance.stadium, fanbaseDelta);
+    let stadium = advanceClubFanbase(merchRestock.stadium, fanbaseDelta);
     const blockAdvance = advanceBlockExpansionProjects(stadium, session.season, nextWeek);
     stadium = normalizeClubStadium(blockAdvance.stadium);
     for (const completion of blockAdvance.completions) {
@@ -556,6 +572,8 @@ export async function simulateGameWeek(
     scoutWagesWeekly: scoutNetworkWeeklyWage(session.scoutNetwork),
     medicalWagesWeekly: medicalStaffWageBill(session.medicalStaff),
     campUpkeepWeekly: weeklyCampUpkeep(youthCamps),
+    merchExpertWagesWeekly: merchExpertWageWeekly(merchRestock.stadium.merchandising),
+    merchRestockCost: merchRestock.cost,
     hospitalityIncome,
     overtimeCost: overtimeDue,
     commerceOccupancy: occupancy,

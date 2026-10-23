@@ -93,6 +93,7 @@ import { migration093TutorialState } from "./migration_093_tutorial_state.ts";
 import { migration095ClubKits } from "./migration_095_club_kits.ts";
 import { migration096CampConstruction } from "./migration_096_camp_construction.ts";
 import { migration097StoryModeActs } from "./migration_097_story_mode_acts.ts";
+import { migration098MerchExpert } from "./migration_098_merch_expert.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -195,6 +196,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration095ClubKits,
   migration096CampConstruction,
   migration097StoryModeActs,
+  migration098MerchExpert,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

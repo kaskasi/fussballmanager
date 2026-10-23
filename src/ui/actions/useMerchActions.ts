@@ -8,9 +8,18 @@ import {
   ensureMerchBulkMarket,
   orderMerchOnDemand,
   canAffordMerchPurchase,
+  normalizeClubMerchandising,
   startMerchSkuSale,
   type MerchSkuId,
 } from "../../economy/merchandising.ts";
+import {
+  commissionMerchExpertAgency,
+  dismissMerchExpert,
+  hireMerchExpert,
+  normalizeMerchExpert,
+  type MerchExpertCandidate,
+  type MerchExpertState,
+} from "../../economy/merchandising-expert.ts";
 import { normalizeClubStadium, type ClubStadium } from "../../stadium/club-stadium.ts";
 import type { Screen } from "../shell/types.ts";
 import { trackEvent } from "../../telemetry/analytics.ts";
@@ -153,11 +162,51 @@ export function useMerchActions(args: {
     [finances, requestClubSpend, season, stadium, week, weekday],
   );
 
+  const patchMerchExpert = useCallback(
+    (update: (current: GameSession, expert: MerchExpertState) => MerchExpertState) => {
+      patchSession((current) => {
+        const merch = normalizeClubMerchandising(current.stadium.merchandising);
+        return {
+          ...current,
+          stadium: normalizeClubStadium({
+            ...current.stadium,
+            merchandising: { ...merch, expert: update(current, normalizeMerchExpert(merch.expert)) },
+          }),
+        };
+      });
+    },
+    [patchSession],
+  );
+
+  const handleCommissionMerchExpert = useCallback(() => {
+    patchMerchExpert((current, expert) =>
+      commissionMerchExpertAgency(expert, {
+        season: current.season,
+        week: current.week,
+        weekday: current.weekday,
+      }),
+    );
+  }, [patchMerchExpert]);
+
+  const handleHireMerchExpert = useCallback(
+    (candidate: MerchExpertCandidate) => {
+      patchMerchExpert((_current, expert) => hireMerchExpert(expert, candidate));
+    },
+    [patchMerchExpert],
+  );
+
+  const handleDismissMerchExpert = useCallback(() => {
+    patchMerchExpert(() => dismissMerchExpert());
+  }, [patchMerchExpert]);
+
   return {
     handleMerchandisingChange,
     handleMerchBulkPurchase,
     handleMerchSaleStart,
     handleMerchOnDemand,
+    handleCommissionMerchExpert,
+    handleHireMerchExpert,
+    handleDismissMerchExpert,
   };
 }
 

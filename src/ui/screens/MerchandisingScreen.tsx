@@ -12,6 +12,11 @@ import { MerchEinkaufStockOverview } from "../components/MerchEinkaufStockOvervi
 import { MerchVendorMarketTable } from "../components/MerchVendorMarketTable.tsx";
 import { MerchVendorStrip, type MerchVendorFilter } from "../components/MerchVendorStrip.tsx";
 import { MerchOnDemandPanel } from "../components/MerchOnDemandPanel.tsx";
+import { MerchExpertPanel } from "../components/MerchExpertPanel.tsx";
+import {
+  merchExpertHirePhase,
+  type MerchExpertCandidate,
+} from "../../economy/merchandising-expert.ts";
 import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import {
   activeMerchSaleSkus,
@@ -45,7 +50,7 @@ import { merchCareerWeekIndex } from "../../economy/merchandising-market.ts";
 import { weekCommerceOccupancy } from "../../stadium/matchday-commerce.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 
-type MerchTab = "preise" | "einkauf";
+type MerchTab = "preise" | "einkauf" | "experte";
 
 const OTHER_SKUS = MERCH_SKU_IDS.filter((id) => id !== "trikots");
 
@@ -73,6 +78,9 @@ export function MerchandisingScreen({
   onRequestBulkPurchase,
   onRequestOnDemand,
   onStartMerchSale,
+  onCommissionExpert,
+  onHireExpert,
+  onDismissExpert,
 }: {
   stadium: ClubStadium;
   players: readonly Player[];
@@ -87,6 +95,9 @@ export function MerchandisingScreen({
   onRequestBulkPurchase: (offerId: string) => void;
   onRequestOnDemand: (sku: MerchSkuId, qty: number) => void;
   onStartMerchSale: (sku: MerchSkuId, salePrice: number) => void;
+  onCommissionExpert: () => void;
+  onHireExpert: (candidate: MerchExpertCandidate) => void;
+  onDismissExpert: () => void;
 }) {
   const t = useT();
   const [tab, setTab] = useState<MerchTab>("preise");
@@ -97,6 +108,9 @@ export function MerchandisingScreen({
   const [vendorFilter, setVendorFilter] = useState<MerchVendorFilter>("all");
 
   const merch = normalizeClubMerchandising(stadium.merchandising);
+  const expertNow = { season, week, weekday };
+  const expertCandidatesReady =
+    merchExpertHirePhase(merch.expert, expertNow) === "candidates_ready";
   const expressPromoActive = isExpressPromoWeek(week);
   const expressTier = vendorRelationTier(merch.vendor_relations, "express");
   const onDemandUnit = customOrderUnitCost(
@@ -286,6 +300,7 @@ export function MerchandisingScreen({
           [
             ["preise", "Preise"],
             ["einkauf", "Einkauf"],
+            ["experte", "Experte"],
           ] as const
         ).map(([id, label]) => (
           <FmScreenTab
@@ -296,6 +311,9 @@ export function MerchandisingScreen({
             onClick={() => setTab(id)}
           >
             {label}
+            {id === "experte" && expertCandidatesReady ? (
+              <span className="merch-tab-dot" role="img" aria-label="Kandidaten bereit" />
+            ) : null}
           </FmScreenTab>
         ))}
       </FmScreenTabBar>
@@ -360,6 +378,21 @@ export function MerchandisingScreen({
               <MerchEinkaufStockOverview merch={merch} fanshopLevel={fanshopLevel} />
             </div>
           </div>
+        </div>
+      ) : null}
+
+      {tab === "experte" ? (
+        <div className="fm-tab-panel merch-panel" role="tabpanel" aria-label="Experte">
+          {screenHeader}
+          <MerchExpertPanel
+            merch={merch}
+            now={expertNow}
+            masterSeed={masterSeed}
+            fanshopLevel={fanshopLevel}
+            onCommission={onCommissionExpert}
+            onHire={onHireExpert}
+            onDismiss={onDismissExpert}
+          />
         </div>
       ) : null}
 

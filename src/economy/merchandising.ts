@@ -10,6 +10,7 @@ import {
   scaleMerchFootfallIncome,
 } from "../stadium/precinct-effects.ts";
 import type { ClubFinances } from "./club-finances.ts";
+import type { MerchExpertState } from "./merchandising-expert.ts";
 import {
   ageBulkOffers,
   brandingLeadWeeks,
@@ -161,6 +162,8 @@ export interface ClubMerchandising {
   limited_drop_demand_multiplier?: number;
   /** Käufe je Händler → Beziehungsstufe (Neu … Partner). */
   vendor_relations?: MerchVendorRelations;
+  /** Merchandising-Experte: Agentur-Suche, Gehalt, automatischer Express-Nachkauf. */
+  expert?: MerchExpertState;
 }
 
 export interface MerchandisingEconomics {
@@ -260,6 +263,7 @@ export function migrateLegacyMerchandising(raw: unknown): ClubMerchandising {
       over_capacity_weeks: typed.over_capacity_weeks,
       pending_sale_summaries: typed.pending_sale_summaries,
       vendor_relations: normalizeMerchVendorRelations(typed.vendor_relations),
+      ...(typed.expert ? { expert: typed.expert } : {}),
     };
   }
   return defaultClubMerchandising();
@@ -906,7 +910,10 @@ export function buyBulkOffer(
   };
 }
 
-/** On Demand Produktion — Lieferung nach {@link MERCH_ON_DEMAND_LEAD_DAYS} Tagen. */
+/**
+ * On Demand Produktion — Lieferung nach {@link MERCH_ON_DEMAND_LEAD_DAYS} Tagen.
+ * `priceFactor` < 1 = Verhandlungsrabatt (Merchandising-Experte).
+ */
 export function orderMerchOnDemand(
   stadium: ClubStadium,
   sku: MerchSkuId,
@@ -914,13 +921,19 @@ export function orderMerchOnDemand(
   season: number,
   week: number,
   weekday: number,
+  priceFactor = 1,
 ): { stadium: ClubStadium; cost: number } | null {
   if (qty <= 0) return null;
   const merch = normalizeClubMerchandising(stadium.merchandising);
   const row = merch.skus[sku] ?? emptySkuState(sku);
   const tier = vendorRelationTier(merch.vendor_relations, "express");
-  const cost = customOrderQuote(sku, qty, row.avg_cost, week, merch.bulk_offers, tier);
-  const unitCost = customOrderUnitCost(sku, row.avg_cost, week, merch.bulk_offers, tier);
+  const cost = Math.round(
+    customOrderQuote(sku, qty, row.avg_cost, week, merch.bulk_offers, tier) * priceFactor,
+  );
+  const unitCost =
+    Math.round(
+      customOrderUnitCost(sku, row.avg_cost, week, merch.bulk_offers, tier) * priceFactor * 100,
+    ) / 100;
   const orderedDay = merchCareerDayIndex(season, week, weekday);
   const order: MerchOnDemandOrder = {
     id: `od_${sku}_${orderedDay}_${merch.on_demand_queue?.length ?? 0}`,

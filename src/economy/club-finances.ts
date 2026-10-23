@@ -48,6 +48,10 @@ export interface WeeklyFinanceContext {
   scoutWagesWeekly?: number;
   medicalWagesWeekly?: number;
   campUpkeepWeekly?: number;
+  /** Merchandising-Experte Wochengehalt. */
+  merchExpertWagesWeekly?: number;
+  /** Express-Nachkäufe des Merchandising-Experten dieser Woche. */
+  merchRestockCost?: number;
   hospitalityIncome?: number;
   overtimeCost?: number;
   commerceOccupancy?: number;
@@ -192,7 +196,8 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
           : economy.staff_wages_weekly) +
         (context.scoutWagesWeekly ?? 0) +
         (context.medicalWagesWeekly ?? 0) +
-        (context.campUpkeepWeekly ?? 0)
+        (context.campUpkeepWeekly ?? 0) +
+        (context.merchExpertWagesWeekly ?? 0)
       ),
       week,
     },
@@ -242,6 +247,9 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
     }).net;
   if (merchNet > 0) {
     lines.push({ kind: "merchandising", amount: merchNet, week });
+  }
+  if ((context.merchRestockCost ?? 0) > 0) {
+    lines.push({ kind: "merchandising", amount: -context.merchRestockCost!, week });
   }
   if ((context.overtimeCost ?? 0) > 0) {
     lines.push({ kind: "other", amount: -context.overtimeCost!, week });

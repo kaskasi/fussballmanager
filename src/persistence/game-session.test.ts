@@ -153,14 +153,14 @@ describe("game session", () => {
     expect(session.storyState.feature_curtain.scouting_nav).toBe(true);
   });
 
-  it("drops legacy assistant default plan when manual training is active", () => {
+  it("keeps the assistant plan as a starting point once training is manual (ADR 0005)", () => {
     const session = newGameSession(new Date("2026-09-22T14:00:00Z"));
     const withAssistant = {
       ...session,
       trainingPlan: act1AssistantTrainingPlan(),
     };
     const loaded = sessionFromSave(saveFromSession(withAssistant));
-    expect(loaded.trainingPlan.every((slot) => slot.unitId === "")).toBe(true);
+    expect(loaded.trainingPlan).toEqual(act1AssistantTrainingPlan());
   });
 
   it("recomputes stale market_value when hydrating from save", () => {

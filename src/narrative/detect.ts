@@ -138,18 +138,21 @@ export function detectWeeklyBeats(context: DetectContext): DetectedBeat[] {
   if (!context.story.opening_complete) return [];
 
   const hospitality = detectHospitalityBeats(context);
-  if (context.story.active_arc !== "relegation_battle") return hospitality;
+  const arc = context.story.active_arc;
+  if (arc !== "relegation_battle" && arc !== "promotion_push") return hospitality;
+  const survivalArc = arc === "relegation_battle";
 
   const beats: DetectedBeat[] = [...hospitality];
   const fired = new Set(context.story.beats_fired);
   const place = playerTablePlace(context.league);
   const roll = (beatId: string) => narrativeRoll(context.masterSeed, context.season, context.week, beatId);
 
-  if (!fired.has("board_survival_intro") && context.week <= 2) {
+  if (survivalArc && !fired.has("board_survival_intro") && context.week <= 2) {
     beats.push({ beatId: "board_survival_intro", kind: "inbox" });
   }
 
   if (
+    survivalArc &&
     !fired.has("arc_climax_week30") &&
     context.week >= 30 &&
     place >= RELEGATION_ZONE_PLACE - 1
@@ -274,7 +277,7 @@ export function detectWeeklyBeats(context: DetectContext): DetectedBeat[] {
     beats.push({ beatId: "sell_star_press", kind: "inbox" });
   }
 
-  if (isInRelegationZone(place) && context.week >= 10 && roll("fan_worry_table") < 0.25) {
+  if (survivalArc && isInRelegationZone(place) && context.week >= 10 && roll("fan_worry_table") < 0.25) {
     beats.push({
       beatId: `fan_table_worry_${context.week}`,
       kind: "fan_feed",

@@ -54,7 +54,7 @@ import {
   normalizeTrainingPlanPresets,
   type TrainingPlanPresetSlot,
 } from "../development/training-plan-presets.ts";
-import { createInitialTrainingPlan, migrateLegacyTrainingPlan } from "../development/training-units.ts";
+import { migrateLegacyTrainingPlan } from "../development/training-units.ts";
 import { createSave, type SaveGame } from "./savegame-model.ts";
 import {
   defaultCoachingStaff,
@@ -258,15 +258,6 @@ function syncManagerClubWithBoard(session: GameSession): GameSession {
   return session;
 }
 
-function isAssistantDefaultTrainingPlan(plan: readonly TrainingSlot[]): boolean {
-  const assistant = act1AssistantTrainingPlan();
-  if (plan.length !== assistant.length) return false;
-  return plan.every(
-    (slot, index) =>
-      slot.unitId === assistant[index]?.unitId && slot.focus === assistant[index]?.focus,
-  );
-}
-
 function resolveTrainingCalendarGateDone(
   pipeline: PipelineState,
   storyState: StoryState,
@@ -301,15 +292,10 @@ export function sessionFromSave(save: SaveGame, options?: SessionFromSaveOptions
     trainingPlan: (() => {
       const storyState = normalizeStoryState(pipeline.story_state, save.state.week);
       const manual = !resolveFeatureCurtain(storyState).auto_training;
-      let plan = migrateLegacyTrainingPlan(pipeline.training_plan);
-      if (manual && isAssistantDefaultTrainingPlan(plan)) {
-        plan = createInitialTrainingPlan();
-      } else if (
-        !manual &&
-        isTrainingPlanNeglected(plan)
-      ) {
-        return act1AssistantTrainingPlan();
-      }
+      const plan = migrateLegacyTrainingPlan(pipeline.training_plan);
+      // Assistant-run weeks (Story Mode Act 1/2) never start from an empty plan. After the
+      // manual-training unlock the assistant's plan stays as an editable starting point.
+      if (!manual && isTrainingPlanNeglected(plan)) return act1AssistantTrainingPlan();
       return plan;
     })(),
     trainingPlanPresets: normalizeTrainingPlanPresets(pipeline.training_plan_presets),

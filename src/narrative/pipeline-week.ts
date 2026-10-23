@@ -8,6 +8,7 @@ import {
 } from "../youth/decision-inbox.ts";
 import { applyFanFeedBeat, applyStoryChoice } from "./apply.ts";
 import { detectWeeklyBeats } from "./detect.ts";
+import { detectCareerActBeats, resolveDuePayoffs } from "./career-act2.ts";
 import { fanFeedMessage, storyInboxPayload } from "./render.ts";
 import {
   markBeatFired,
@@ -90,6 +91,13 @@ export function advanceNarrativeWeek(
     story = markBeatFired(story, beat.beatId);
   }
 
+  // Story Mode Act 2 (PRD 19): delayed unlocks land, then the next scheduled unlock beat.
+  story = resolveDuePayoffs(story, session.season, session.week);
+  for (const payload of detectCareerActBeats(story, session.season, session.week)) {
+    inbox = enqueueStoryInboxItem(inbox, session.week, payload, payload.beatId);
+    story = markBeatFired(story, payload.beatId);
+  }
+
   return { storyState: story, youthInbox: inbox, board, stadium, players };
 }
 
@@ -103,6 +111,7 @@ export function resolveStoryInboxDecision(
     board: session.board,
     stadium: session.stadium,
     players: session.players,
+    finances: session.finances,
     clubId: session.clubId,
     season: session.season,
     week: session.week,
@@ -113,6 +122,7 @@ export function resolveStoryInboxDecision(
     board: applied.board ?? session.board,
     stadium: applied.stadium ?? session.stadium,
     players: applied.players ?? session.players,
+    finances: applied.finances ?? session.finances,
   };
 }
 

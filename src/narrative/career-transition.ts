@@ -12,7 +12,8 @@ import { applyChronicleEntry } from "./apply.ts";
 import { act1AssistantTrainingPlan } from "./career-presentation.ts";
 import { generateChairmanName } from "./cast.ts";
 import { applyPatientChairmanObjectives } from "./season-objectives.ts";
-import { appendFanFeed, grantCurtainUnlock, type StoryState } from "./story-state.ts";
+import { grantStoryUnlock } from "./career-act2.ts";
+import type { StoryState } from "./story-state.ts";
 
 /** Act 2 opens with the first unlock: presets and sliders on the lineup screen. */
 function openAct2(story: StoryState, session: GameSession, teamId: TeamId): StoryState {
@@ -43,22 +44,7 @@ function openAct2(story: StoryState, session: GameSession, teamId: TeamId): Stor
       ? t("story.act2Start.bodyWithFollowers", { club, chairman, names })
       : t("story.act2Start.body", { club, chairman }),
   });
-  next = grantCurtainUnlock(next, "tactics_sliders");
-  next = applyChronicleEntry(next, {
-    id: `chronicle_unlock_tactics_sliders`,
-    season: session.season,
-    week: session.week,
-    icon: "📋",
-    title: t("story.unlock.tactics_sliders.title"),
-    body: t("story.unlock.tactics_sliders.body", { assistant: story.cast.assistant_name }),
-  });
-  return appendFanFeed(next, {
-    id: `act2_unlock_tactics_sliders`,
-    week: session.week,
-    icon: "📋",
-    speaker: story.cast.assistant_name,
-    message: t("story.unlock.tactics_sliders.feed"),
-  });
+  return grantStoryUnlock(next, "tactics_sliders", session.season, session.week);
 }
 
 /**

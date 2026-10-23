@@ -169,7 +169,7 @@ Mit dem Ligen-Screen (F1) dazugekommen: `tc-page-head` / `tc-page-title` / `tc-p
 
 Mit Medizin und Postfach (F1) dazugekommen: keine neuen gemeinsamen Bausteine. Medizin nutzt `tc-page-head`, `tc-stats`, `tc-tabs--page`, `tc-cards` und `tc-table` (Layout in `design/surfaces/medical.css`). Das Postfach nutzt `tc-split` (offene Post + Archiv) und **Der Treter** jetzt `tc-news`; die alten Postfach-Karten sind auf dem Screen per `.postfach-screen` auf Tokens gezogen, die Hub-Spalte behält ihren Look (`design/surfaces/postfach.css`).
 
-Mit Aufstellung, Matchday und Spielbericht (F1) dazugekommen: keine neuen Bausteine in `components.css`. Die Spiel-Bausteine stehen in `design/surfaces/matchday.css`: `tc-score` (Spielstand-Kopf, `--lg` im Bericht), `tc-eventlog` (Tore und Karten in Zeitstrahl-Notation, live und im Bericht), `tc-matchstats` (Doppelbalken: eigener Verein `--accent`, Gegner `--info`), `tc-stars` (Drei Sterne, der erste mit `--next`-Rahmen). Spielfeld `tc-pitch` mit eigenen Tokens (`--pitch-*`, in beiden Themes gleich): eigene Spieler als Tinte-Chips, Gegner weiß mit Tinte-Rand, Ballführer gelber Rand; Antippen öffnet eine Mini-Karte (Nummer, Name, Verein · Position, Ballkontakte) mit weißem Halo am Chip, Escape schließt. Die Bank steht unter dem Spielfeld (3 × 3). „Direkt zum Spielbericht“ steht im Menü unter „Spiel“; der Karriere-Matchday hat keinen Spielfeld/Kommentar-Umschalter mehr, der Kommentar läuft unter dem Spielfeld (§9.15).
+Mit Aufstellung, Matchday und Spielbericht (F1) dazugekommen: keine neuen Bausteine in `components.css`. Die Spiel-Bausteine stehen in `design/surfaces/matchday.css`: `tc-score` (Spielstand-Kopf, `--lg` im Bericht), `tc-eventlog` (Tore und Karten in Zeitstrahl-Notation, live und im Bericht), `tc-matchstats` (Doppelbalken: eigener Verein `--accent`, Gegner `--info`), `tc-stars` (Drei Sterne, der erste mit `--next`-Rahmen). Spielfeld `tc-pitch` mit eigenen Tokens (`--pitch-*`, in beiden Themes gleich): eigene Spieler als Tinte-Chips, Gegner weiß mit Tinte-Rand, Ballführer gelber Rand; Antippen öffnet eine Mini-Karte (Nummer, Name, Verein · Position, Ballkontakte) mit weißem Halo am Chip, Escape schließt. Die Bank steht unter dem Spielfeld (3 × 3). „Direkt zum Spielbericht“ steht im Menü unter „Spiel“; `tc-pitch` gilt nur noch für die Aufstellung; der Live-Matchday ist Text-first ohne Spielfeld (§9.15, ADR 0004).
 
 **UI-Galerie:** Einstellungen → Entwickler → „UI gallery“ oder `?ui=gallery`. Zeigt Farbrollen, Typo, Abstände, alle Komponenten mit Beispieldaten, Titelleisten für sieben Trikots (jeder Zweig von §2.4) und einen Hell/Dunkel-Schalter. Lädt als eigener Chunk; Spieler sehen sie nicht. Beim Bau oder Umzug eines Screens zuerst hier prüfen.
 
@@ -1164,7 +1164,7 @@ Regeln:
 - **Mobile:** Score-Kopf, Momentum und Zone oben; Stream darunter;
   Live-Regeln als Leiste über dem Stream.
 
-Der Pitch lebt nur noch auf dem Aufstellungs-Screen (§9.14, Drag & Drop).
+Der Pitch lebt nur noch auf dem Aufstellungs-Screen (§9.1, Drag & Drop).
 
 
 ### 9.17 Merchandising (Tabs: Preise | Einkauf)

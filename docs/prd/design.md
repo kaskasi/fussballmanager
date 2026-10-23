@@ -169,6 +169,8 @@ Mit dem Ligen-Screen (F1) dazugekommen: `tc-page-head` / `tc-page-title` / `tc-p
 
 Mit Medizin und Postfach (F1) dazugekommen: keine neuen gemeinsamen Bausteine. Medizin nutzt `tc-page-head`, `tc-stats`, `tc-tabs--page`, `tc-cards` und `tc-table` (Layout in `design/surfaces/medical.css`). Das Postfach nutzt `tc-split` (offene Post + Archiv) und **Der Treter** jetzt `tc-news`; die alten Postfach-Karten sind auf dem Screen per `.postfach-screen` auf Tokens gezogen, die Hub-Spalte behält ihren Look (`design/surfaces/postfach.css`).
 
+Mit Aufstellung, Matchday und Spielbericht (F1) dazugekommen: keine neuen Bausteine in `components.css`. Die Spiel-Bausteine stehen in `design/surfaces/matchday.css`: `tc-score` (Spielstand-Kopf, `--lg` im Bericht), `tc-eventlog` (Tore und Karten in Zeitstrahl-Notation, live und im Bericht), `tc-matchstats` (Doppelbalken: eigener Verein `--accent`, Gegner `--info`), `tc-stars` (Drei Sterne, der erste mit `--next`-Rahmen). Die Bank steht unter dem Spielfeld (3 × 3). „Direkt zum Spielbericht“ steht im Menü unter „Spiel“; der Karriere-Matchday hat keinen Spielfeld/Kommentar-Umschalter mehr, der Kommentar läuft unter dem Spielfeld (§9.15).
+
 **UI-Galerie:** Einstellungen → Entwickler → „UI gallery“ oder `?ui=gallery`. Zeigt Farbrollen, Typo, Abstände, alle Komponenten mit Beispieldaten, Titelleisten für sieben Trikots (jeder Zweig von §2.4) und einen Hell/Dunkel-Schalter. Lädt als eigener Chunk; Spieler sehen sie nicht. Beim Bau oder Umzug eines Screens zuerst hier prüfen.
 
 **Migration Screen für Screen:** Screen auf `tc-`-Klassen und Rollen-Tokens umstellen, Legacy-Regeln aus `index.css` löschen, `npm run check:design-tokens -- --update` committen, Vorher/Nachher-Screenshot in den PR.

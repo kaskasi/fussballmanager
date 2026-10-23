@@ -426,6 +426,7 @@ export default function App() {
     title: string;
     cost: number;
     earlySeasonHint: boolean;
+    construction: boolean;
     apply: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>;
   } | null>(null);
   const [campDebutReveal, setCampDebutReveal] = useState<{
@@ -635,7 +636,7 @@ export default function App() {
       cost: number,
       title: string,
       apply: (current: ReturnType<typeof sessionFromSave>) => ReturnType<typeof sessionFromSave>,
-      options?: { infrastructure?: boolean },
+      options?: { infrastructure?: boolean; construction?: boolean },
     ) => {
       const wageBill = weeklyWageBill(players, session.clubId);
       const needsConfirm = options?.infrastructure
@@ -646,6 +647,7 @@ export default function App() {
           title,
           cost,
           earlySeasonHint: Boolean(options?.infrastructure && isEarlyCapitalSeason(session.week)),
+          construction: Boolean(options?.construction),
           apply,
         });
         return;
@@ -1653,7 +1655,7 @@ export default function App() {
     <SpendConfirmSheet
       title={pendingSpend.title}
       earlySeasonHint={pendingSpend.earlySeasonHint}
-      constructionSnapshot={constructionSnapshot}
+      constructionSnapshot={pendingSpend.construction ? constructionSnapshot : null}
       runway={spendRunway(
         finances,
         weeklyWageBill(players, session.clubId),

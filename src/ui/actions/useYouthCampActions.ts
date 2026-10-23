@@ -26,7 +26,7 @@ type RequestClubSpend = (
   cost: number,
   title: string,
   apply: (current: GameSession) => GameSession,
-  options?: { infrastructure?: boolean },
+  options?: { infrastructure?: boolean; construction?: boolean },
 ) => void;
 
 export function useYouthCampActions(args: {
@@ -94,6 +94,7 @@ export function useYouthCampActions(args: {
             finances: spendClubCash(current.finances, next.cost, current.week),
           };
         },
+        { construction: true },
       );
     },
     [finances.cash, requestClubSpend, youthCamps],

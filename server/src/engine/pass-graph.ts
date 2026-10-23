@@ -26,8 +26,8 @@ const ROLE_LINK: Record<PlayerRole, Partial<Record<PlayerRole, number>>> = {
   DM: { CB: 1.7, FB: 1.35, CM: 2.1, W: 1.25, ST: 0.7, GK: 1.15, AM: 0.9, DM: 0.8 },
   CM: { DM: 1.55, CM: 1.45, W: 1.7, ST: 0.9, FB: 1.05, CB: 0.75, AM: 1.2, GK: 0.28 },
   AM: { ST: 1.3, W: 1.5, CM: 1.3, FB: 0.7, DM: 0.9, CB: 0.25, GK: 0.1 },
-  W: { ST: 1.5, AM: 1.3, CM: 1.15, W: 1.65, FB: 1.05, DM: 0.55, CB: 0.18, GK: 0.08 },
-  ST: { W: 1.55, AM: 1.45, CM: 1.4, ST: 1.15, FB: 0.7, DM: 0.55, CB: 0.12, GK: 0.1 },
+  W: { ST: 1.5, AM: 1.3, CM: 1.7, W: 1.65, FB: 1.05, DM: 0.55, CB: 0.18, GK: 0.08 },
+  ST: { W: 1.55, AM: 1.45, CM: 1.9, ST: 1.15, FB: 0.7, DM: 0.55, CB: 0.12, GK: 0.1 },
 };
 
 export function rolePassLink(from: PlayerRole, to: PlayerRole): number {
@@ -398,8 +398,12 @@ export function passTargetWeight(input: {
     const runner =
       target.role === "ST" || target.role === "AM" || target.role === "W"
         ? 1.4
-        : 0.15;
-    return graph * box * runner * offside * (0.55 + 0.45 * space);
+        : target.role === "CB" && box > 1
+          ? 1.3 * (1 + (target.attributes.aerial - 60) / 100)
+          : 0.15;
+    // A cross is aimed at the box, not at a familiar passing partner.
+    const crossLink = Math.max(graph, 0.9);
+    return crossLink * box * runner * offside * (0.55 + 0.45 * space);
   }
   if (kind === "through") {
     const targetDepth = depthFromOwnGoal(dest, input.ownGoal, input.attackSign);
@@ -464,7 +468,9 @@ export function passTargetWeight(input: {
   // Teams look forward: ~40 % of real passes gain ground. Without this the
   // ball circulates in the build-up and attacks never reach the box.
   const gain = targetDepth - passerDepth;
-  const forward = 1 + FORWARD_PASS_PULL * clamp(gain / 20, -0.4, 1);
+  // In the final third a cut-back to the edge of the box is a good pass, not a retreat.
+  const backFloor = passerDepth > 66 ? -0.1 : -0.4;
+  const forward = 1 + FORWARD_PASS_PULL * clamp(gain / 20, backFloor, 1);
   return (
     graph *
     feed *

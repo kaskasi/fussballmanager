@@ -711,6 +711,28 @@ export function occupyBoxTarget(
   return null;
 }
 
+/**
+ * Own corner: the centre-backs go up for it (real teams score a quarter of
+ * their goals from set pieces, many of them headers by defenders).
+ */
+export function setPieceBoxTarget(
+  player: PlayerMatchStatus,
+  ball: PitchPosition,
+  ownGoal: PitchPosition,
+  attackSign: 1 | -1,
+): PitchPosition | null {
+  if (player.role !== "CB") {
+    return null;
+  }
+  const depth = depthFromOwnGoal(ball, ownGoal, attackSign);
+  const atFlag = depth > 94 && (ball.y < 12 || ball.y > 88);
+  if (!atFlag) {
+    return null;
+  }
+  const right = isRightChannel(player);
+  return atDepth(ownGoal, attackSign, 91, right ? 56 : 44);
+}
+
 /** Outfield attackers defend in lanes, not by collapsing onto the ball. */
 export function restDefendTarget(
   player: PlayerMatchStatus,
@@ -903,13 +925,15 @@ export function applyShape(
                 defendTactics,
               );
     } else {
-      const box = occupyBoxTarget(
-        player,
-        state.ball,
-        ownGoal,
-        teamSign,
-        attackTactics,
-      );
+      const box =
+        setPieceBoxTarget(player, state.ball, ownGoal, teamSign) ??
+        occupyBoxTarget(
+          player,
+          state.ball,
+          ownGoal,
+          teamSign,
+          attackTactics,
+        );
       occupiedBox = box !== null;
       target =
         box ??
@@ -922,7 +946,9 @@ export function applyShape(
           attackTactics,
         );
     }
-    target = clampBackLine(player, target, ownGoal, teamSign, teamTactics);
+    if (!(occupiedBox && player.role === "CB")) {
+      target = clampBackLine(player, target, ownGoal, teamSign, teamTactics);
+    }
     if (!defending) {
       target = stayOnside(player, target, ownGoal, teamSign, defenders);
     }

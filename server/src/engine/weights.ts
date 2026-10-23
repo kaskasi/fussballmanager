@@ -48,7 +48,7 @@ export type OpenPlayWeights = {
 export const SHOT_APPETITE = 1.1;
 
 /** Weight of a speculative strike from 16–32 out with a yard of space. */
-export const LONG_SHOT_APPETITE = 0.2;
+export const LONG_SHOT_APPETITE = 0.35;
 
 /** How much a player near goal stops looking for a teammate (1 = never passes). */
 const LAYOFF_DAMP = 0.45;
@@ -136,7 +136,7 @@ export function openPlayWeights(input: {
     LONG_SHOT_APPETITE *
     Math.max(0, range) *
     space *
-    clamp(0.4 + (input.shooting - MATCH_REFERENCE_SKILL) / 50, 0.1, 1.4);
+    clamp(0.75 + (input.shooting - MATCH_REFERENCE_SKILL) / 80, 0.3, 1.3);
   const swarm = Math.min(input.localPress ?? 1, 6) / 4;
   const carryBoost = input.transitionAttack ? 1.12 : 1;
   const passDamp = input.transitionAttack ? 0.92 : 1;

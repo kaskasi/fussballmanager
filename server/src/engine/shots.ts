@@ -26,6 +26,7 @@ import { shotOutcomeChances } from "./weights.ts";
 import { beginTransition, inGainedBall } from "./moments.ts";
 import { defendingPressure } from "./pressure.ts";
 import { outOfPlayRestart, penaltySpot, throwInSpot } from "./laws.ts";
+import { setPieceBoxTarget } from "./shape.ts";
 
 function keeperOf(
   state: MatchState,
@@ -625,6 +626,16 @@ export function stepRestart(
     throw new Error("No corner taker");
   }
   const takerInv = { ...asInvolved(taker), position: corner };
+  // The corner gives time to set up: centre-backs are already in the box.
+  const attackOwnGoal = goalMouth(
+    timed.homeTeamId,
+    takingTeamId === timed.homeTeamId ? timed.awayTeamId : timed.homeTeamId,
+  );
+  const attackSign = takingTeamId === timed.homeTeamId ? 1 : -1;
+  const upForIt = onPitchFor(timed.players, takingTeamId).flatMap((player) => {
+    const spot = setPieceBoxTarget(player, corner, attackOwnGoal, attackSign);
+    return spot ? [{ playerId: player.playerId, position: spot }] : [];
+  });
   const event: MatchEvent = {
     type: "restart",
     seq: timed.nextSeq,
@@ -646,6 +657,7 @@ export function stepRestart(
       possessionTeamId: takingTeamId,
       players: patchPlayers(timed.players, [
         { playerId: taker.playerId, position: corner },
+        ...upForIt,
       ]),
       pending: null,
       ballInAir: false,

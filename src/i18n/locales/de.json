@@ -3125,5 +3125,9 @@
   "story.unlock.opponent_scout.feed": "Erste Gegneranalyse liegt auf deinem Tisch.",
   "story.unlock.transfers.title": "Transfermarkt freigeschaltet",
   "story.unlock.transfers.body": "{chairman} vertraut dir das Budget an – Kaufen, Verkaufen und Leihen laufen jetzt über dich.",
-  "story.unlock.transfers.feed": "Machen Sie was draus. Aber keine Abenteuer."
+  "story.unlock.transfers.feed": "Machen Sie was draus. Aber keine Abenteuer.",
+  "story.act2End.title": "Aufstieg mit {club}",
+  "story.act2End.body": "{club} steigt in die Regionalliga auf. Aus dem geduldigen Projekt ist ein Verein mit Ambitionen geworden.",
+  "story.act2End.bodyWithLegends": "{club} steigt in die Regionalliga auf. Irgendwo freuen sich {names} mit – ohne sie hätte diese Geschichte nie begonnen.",
+  "story.act2End.feed": "Aufstieg! Ab jetzt spielen wir eine Liga höher – und Sie haben freie Hand."
 }

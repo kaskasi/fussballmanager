@@ -3125,5 +3125,9 @@
   "story.unlock.opponent_scout.feed": "The first opponent report is on your desk.",
   "story.unlock.transfers.title": "Transfer market unlocked",
   "story.unlock.transfers.body": "{chairman} trusts you with the budget – buying, selling and loans now go through you.",
-  "story.unlock.transfers.feed": "Make something of it. But no adventures."
+  "story.unlock.transfers.feed": "Make something of it. But no adventures.",
+  "story.act2End.title": "Promoted with {club}",
+  "story.act2End.body": "{club} go up to the Regionalliga. The patient project has become a club with ambition.",
+  "story.act2End.bodyWithLegends": "{club} go up to the Regionalliga. Somewhere, {names} are celebrating too – without them this story would never have started.",
+  "story.act2End.feed": "Promotion! We play a league higher now – and you have a free hand."
 }

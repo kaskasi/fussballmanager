@@ -2996,5 +2996,9 @@
   "story.unlock.opponent_scout.feed": "第一份对手报告已放在你桌上。",
   "story.unlock.transfers.title": "转会市场已解锁",
   "story.unlock.transfers.body": "{chairman} 把预算交给你——买人、卖人和租借现在都由你负责。",
-  "story.unlock.transfers.feed": "好好利用。但别冒险。"
+  "story.unlock.transfers.feed": "好好利用。但别冒险。",
+  "story.act2End.title": "率 {club} 升级",
+  "story.act2End.body": "{club} 升入地区联赛。一个耐心经营的项目，已经成长为有雄心的俱乐部。",
+  "story.act2End.bodyWithLegends": "{club} 升入地区联赛。{names} 也在某处一同欢庆——没有他们，这个故事根本不会开始。",
+  "story.act2End.feed": "升级了！我们现在踢更高级别的联赛——你可以放手去干。"
 }

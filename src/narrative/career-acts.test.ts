@@ -5,8 +5,10 @@ import type { InSeasonPressureStep } from "../board/season-objectives.ts";
 import { newGameSession, type GameSession } from "../persistence/game-session.ts";
 import { defaultLeaguePools } from "../sim/league-divisions.ts";
 import type { PromotionRelegationResult } from "../sim/promotion-relegation.ts";
+import { fullFeatureCurtain, resolveFeatureCurtain, resolvePresentationMode } from "./career-presentation.ts";
 import {
   act1OutcomeFromMovements,
+  careerActBoardObjectives,
   careerDismissalPolicy,
   guardInSeasonDismissal,
   guardSeasonEndEvaluation,
@@ -157,5 +159,49 @@ describe("dismissal guards", () => {
     expect(careerDismissalPolicy(state)).toBe("standard");
     expect(guardInSeasonDismissal(pressureStep(regionalliga.board), state).dismissed).toBe(true);
     expect(guardSeasonEndEvaluation(evaluationStep(regionalliga.board), state).evaluation.dismissed).toBe(true);
+  });
+});
+
+describe("Act 2 season end (PRD 19 — promotion opens Act 3)", () => {
+  const act2Story: StoryState = {
+    ...story.storyState,
+    career_phase: "act2_regional",
+    active_arc: "promotion_push",
+    act_started: { phase: "act2_regional", season: 2, week: 1 },
+    curtain_unlocks: ["tactics_sliders", "stadium"],
+    legend_players: [
+      { player_id: "pl_1", name: "Jonas Petersen", position: "ST", from_team_id: NORDSTERN_ID, followed: true },
+    ],
+  };
+  const act2Session = { ...story, storyState: act2Story };
+
+  for (const reason of ["promoted", "playoff_won"] as const) {
+    it(`${reason} into the Regionalliga opens Act 3 with the full curtain`, () => {
+      const next = seasonEnd(act2Session, {
+        pools: defaultLeaguePools(),
+        movements: [{ teamId: NORDSTERN_ID, from: "oberliga-nord", to: "regionalliga-nord", reason }],
+      })!;
+      expect(next.career_phase).toBe("act3_empire");
+      expect(resolveFeatureCurtain(next)).toEqual(fullFeatureCurtain());
+      expect(resolvePresentationMode(next)).toBe("manager_desk");
+      expect(next.chronicle_entries[0]?.body).toContain("Jonas Petersen");
+      expect(careerDismissalPolicy(next)).toBe("standard");
+    });
+  }
+
+  it("without promotion Act 2 continues under the patient chairman", () => {
+    const next = seasonEnd(act2Session, { pools: defaultLeaguePools(), movements: [] })!;
+    expect(next.career_phase).toBe("act2_regional");
+    expect(next.curtain_unlocks).toEqual(act2Story.curtain_unlocks);
+    const objectives = careerActBoardObjectives(story.board.objectives, next, 3);
+    expect(objectives.filter((objective) => objective.mandatory).map((objective) => objective.id)).toEqual([
+      "league_place",
+    ]);
+  });
+
+  it("leaves Regionalliga Manager objectives untouched", () => {
+    expect(careerActBoardObjectives(regionalliga.board.objectives, regionalliga.storyState, 2)).toEqual(
+      regionalliga.board.objectives,
+    );
   });
 });

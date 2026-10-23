@@ -42,6 +42,7 @@ import { activatePendingPreContracts } from "../transfers/pre-contracts.ts";
 import { computeSeasonAwards } from "./season-awards.ts";
 import { appendSeasonCoda } from "../narrative/season-end-narrative.ts";
 import {
+  careerActBoardObjectives,
   guardSeasonEndEvaluation,
   resolveCareerActSeasonEnd,
 } from "../narrative/career-acts.ts";
@@ -196,6 +197,9 @@ export function runSeasonEnd(
       nextSeason: session.season,
       week: SEASON_END_WEEK,
     }) ?? appendSeasonCoda(session.storyState, session.league, endingSeason, SEASON_END_WEEK);
+  if (!boardStep.evaluation.dismissed) {
+    board = { ...board, objectives: careerActBoardObjectives(board.objectives, storyState, session.season) };
+  }
 
   return {
     session: {

@@ -11,7 +11,7 @@ import { useMatchPresentationMode } from "./match-presentation-mode";
 import { Scoreboard } from "./Scoreboard";
 import { TacticsBoard } from "./TacticsBoard";
 import { buildSandboxMatchView } from "./build-sandbox-match-view.ts";
-import { useMatchPlayback } from "./useMatchPlayback";
+import { useFramePlayback } from "./useFramePlayback.ts";
 
 async function loadMatch(input: {
   seed: number;
@@ -33,7 +33,7 @@ export function Matchday() {
   const [awayPlan, setAwayPlan] = useState<SandboxPlan>(() =>
     sandboxPlanFromTactics(SEED_MATCHUP.away.tactics),
   );
-  const playback = useMatchPlayback(view);
+  const playback = useFramePlayback(view);
   const [presentationMode, setPresentationMode] = useMatchPresentationMode();
 
   const load = useCallback(

@@ -28,7 +28,8 @@
     border-radius: 0;
   }
 
-  main.club-shell-card-body {
+  main.club-shell-card-body,
+  main.career-match {
     height: calc(100dvh - var(--club-header-height, 4.5rem));
     overflow: auto;
     overscroll-behavior-y: contain;

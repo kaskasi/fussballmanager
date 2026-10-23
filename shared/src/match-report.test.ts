@@ -56,4 +56,32 @@ describe("buildMatchReport", () => {
     expect(report.cards).toHaveLength(1);
     expect(report.playerStats.find((row) => row.playerId === scorer.id)?.goals).toBe(1);
   });
+
+  it("lists a carded foul once (foul event plus its card event)", () => {
+    const home = SEED_MATCHUP.home;
+    const away = SEED_MATCHUP.away;
+    const fouler = away.starters[2]!.player;
+    const fouled = home.starters[4]!.player;
+    const base = {
+      matchId: asMatchId("m1"),
+      clock: { period: "second_half" as const, minute: 62, second: 0, stoppageMinute: 0 },
+      ball: { x: 0.5, y: 0.5 },
+      involved: [],
+      possessionTeamId: home.team.id,
+    };
+    const foulerRef = { playerId: fouler.id, teamId: away.team.id, position: { x: 0.5, y: 0.5 } };
+    const events: MatchEvent[] = [
+      {
+        ...base,
+        type: "foul",
+        seq: 1,
+        fouler: foulerRef,
+        fouled: { playerId: fouled.id, teamId: home.team.id, position: { x: 0.5, y: 0.5 } },
+        card: "yellow",
+      },
+      { ...base, type: "card", seq: 2, player: foulerRef, color: "yellow" },
+    ];
+    const report = buildMatchReport(events, home, away, 42, { playerName: () => "Fouler" });
+    expect(report.cards).toHaveLength(1);
+  });
 });

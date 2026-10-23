@@ -8,6 +8,7 @@ import {
   type MerchSaleSummary,
   type MerchStockDisposal,
 } from "../economy/merchandising.ts";
+import type { MerchExpertRestockResult } from "../economy/merchandising-expert.ts";
 import { MERCH_SKU_IDS, type MerchSkuId } from "../economy/merchandising-skus.ts";
 import { HUB_MERCH_LOW_STOCK_THRESHOLD } from "../hub/hub-finance-merch.ts";
 import { t } from "../i18n/index.ts";
@@ -38,6 +39,13 @@ export function merchStockDisposalClubEventMessage(disposal: MerchStockDisposal)
     sku: merchSkuName(disposal.sku),
     units: disposal.unitsDiscarded,
     loss: formatClubCash(disposal.writeOff),
+  });
+}
+
+export function merchExpertRestockClubEventMessage(restock: MerchExpertRestockResult): string {
+  return t("merch.expert.restockMail", {
+    items: restock.lines.map((line) => `${line.qty}× ${merchSkuName(line.sku)}`).join(", "),
+    total: formatClubCash(restock.cost),
   });
 }
 

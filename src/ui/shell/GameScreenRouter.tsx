@@ -169,6 +169,9 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
     handleMerchBulkPurchase,
     handleMerchOnDemand,
     handleMerchSaleStart,
+    handleCommissionMerchExpert,
+    handleHireMerchExpert,
+    handleDismissMerchExpert,
     handleDrawBankLoan,
     handleStartBlockExpansion,
     handlePlacePrecinct,
@@ -588,6 +591,9 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           onRequestBulkPurchase={handleMerchBulkPurchase}
           onRequestOnDemand={handleMerchOnDemand}
           onStartMerchSale={handleMerchSaleStart}
+          onCommissionExpert={handleCommissionMerchExpert}
+          onHireExpert={handleHireMerchExpert}
+          onDismissExpert={handleDismissMerchExpert}
         />
       ) : null}
       {screen === "finances" ? (

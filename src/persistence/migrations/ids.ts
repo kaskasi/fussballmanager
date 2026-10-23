@@ -93,4 +93,5 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_095_club_kits",
   "migration_096_camp_construction",
   "migration_097_story_mode_acts",
+  "migration_098_merch_expert",
 ] as const;

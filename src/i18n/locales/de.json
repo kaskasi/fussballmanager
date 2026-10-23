@@ -1359,6 +1359,7 @@
   "merch.saleSummary.revenue": "Umsatz {amount}",
   "merch.saleSummary.dismiss": "Verstanden",
   "merch.disposal.mail": "Fanshop: Lager monatelang überfüllt — Mitarbeiter haben {units}× {sku} entsorgt (Buchwert {loss})",
+  "merch.expert.restockMail": "Merch-Experte hat per Express nachbestellt: {items} (Gesamt {total}).",
   "merch.stockAlert.soldOut": "Fanshop: {sku} ausverkauft — im Merchandising nachbestellen.",
   "merch.stockAlert.low": "Fanshop: nur noch {units}× {sku} — vor dem nächsten Heimspiel im Merchandising nachbestellen.",
   "merch.skuName.trikots": "Trikots",

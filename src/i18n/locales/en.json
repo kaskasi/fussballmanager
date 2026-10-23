@@ -1359,6 +1359,7 @@
   "merch.saleSummary.revenue": "revenue {amount}",
   "merch.saleSummary.dismiss": "Got it",
   "merch.disposal.mail": "Fan shop: warehouse over capacity for weeks — staff disposed of {units}× {sku} (book value {loss})",
+  "merch.expert.restockMail": "Merch expert placed an Express reorder: {items} (total {total}).",
   "merch.stockAlert.soldOut": "Fan shop: {sku} sold out — restock in Merchandising.",
   "merch.stockAlert.low": "Fan shop: only {units}× {sku} left — restock in Merchandising before the next home game.",
   "merch.skuName.trikots": "Jerseys",

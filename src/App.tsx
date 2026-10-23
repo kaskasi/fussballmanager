@@ -824,6 +824,9 @@ export default function App() {
     handleMerchBulkPurchase,
     handleMerchSaleStart,
     handleMerchOnDemand,
+    handleCommissionMerchExpert,
+    handleHireMerchExpert,
+    handleDismissMerchExpert,
   } = useMerchActions({
     screen,
     season,
@@ -2137,6 +2140,9 @@ export default function App() {
               handleMerchBulkPurchase={handleMerchBulkPurchase}
               handleMerchOnDemand={handleMerchOnDemand}
               handleMerchSaleStart={handleMerchSaleStart}
+              handleCommissionMerchExpert={handleCommissionMerchExpert}
+              handleHireMerchExpert={handleHireMerchExpert}
+              handleDismissMerchExpert={handleDismissMerchExpert}
               handleDrawBankLoan={handleDrawBankLoan}
               handleStartBlockExpansion={handleStartBlockExpansion}
               handlePurchaseStadiumUpgrade={handlePurchaseStadiumUpgrade}

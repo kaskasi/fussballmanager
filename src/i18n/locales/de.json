@@ -2429,6 +2429,7 @@
   "training.autoNext.active": "Auto-NEXT — alle 2 Sekunden (stoppt bei Postfach oder Spieltag)",
   "training.autoNext.buttonLabel": "Auto-NEXT ▶",
   "training.autoNext.stop": "Auto aus",
+  "training.assistantRuns": "{name} plant die Trainingswoche. Du übernimmst später in der Karriere.",
   "training.presets.aria": "Trainings-Vorlagen",
   "training.presets.loadTitle": "Vorlage „{label}“ laden",
   "training.presets.saveTitle": "Aktuellen Plan unter „{label}“ speichern",

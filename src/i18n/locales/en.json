@@ -2429,6 +2429,7 @@
   "training.autoNext.active": "Auto-NEXT — every 2 seconds (stops for inbox or match day)",
   "training.autoNext.buttonLabel": "Auto-NEXT ▶",
   "training.autoNext.stop": "Stop auto",
+  "training.assistantRuns": "{name} plans the training week. You take over later in your career.",
   "training.presets.aria": "Training templates",
   "training.presets.loadTitle": "Load template “{label}”",
   "training.presets.saveTitle": "Save current plan to “{label}”",

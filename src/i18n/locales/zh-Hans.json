@@ -2308,6 +2308,7 @@
   "training.autoNext.active": "自动 NEXT — 每 2 秒（遇收件箱或比赛日停止）",
   "training.autoNext.buttonLabel": "自动 NEXT ▶",
   "training.autoNext.stop": "关闭自动",
+  "training.assistantRuns": "{name} 负责安排本周训练。你将在之后的职业生涯中接手。",
   "training.presets.aria": "训练模板",
   "training.presets.loadTitle": "加载模板「{label}」",
   "training.presets.saveTitle": "将当前计划保存到「{label}」",

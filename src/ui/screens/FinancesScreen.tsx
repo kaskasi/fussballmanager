@@ -117,7 +117,7 @@ export function FinancesScreen({
   boardCashFloor?: number;
   boardPressure?: number;
   financing: FinancingCareerState;
-  onOpenStadium: () => void;
+  onOpenStadium?: () => void;
   onStadiumChange?: (stadium: ClubStadium) => void;
   onDrawBankLoan?: (amount: number) => void;
 }) {
@@ -371,7 +371,12 @@ export function FinancesScreen({
               <p className="tc-caption tc-cards__note">{t("finances.concessions.noShop")}</p>
             </section>
 
-            <button type="button" className="tc-panel tc-finances__link" onClick={onOpenStadium}>
+            <button
+              type="button"
+              className="tc-panel tc-finances__link"
+              onClick={onOpenStadium}
+              disabled={!onOpenStadium}
+            >
               <span className="tc-panel__head">
                 <span className="tc-panel__title tc-finances__title">
                   <Landmark className="tc-icon" aria-hidden />

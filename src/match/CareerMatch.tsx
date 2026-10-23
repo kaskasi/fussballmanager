@@ -1,5 +1,6 @@
 /** WIREFRAME: docs/prd/design.md §9.15 — Matchday live */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { TacticsMode } from "../narrative/career-presentation.ts";
 import type { BroadcastStoryContext, MatchViewLine, SandboxPlan, Squad } from "@fussballmanager/shared";
 import type { TacticsPresetId, TacticsPresetSlot } from "./tactics-presets.ts";
 import type { Player } from "../types/player.ts";
@@ -64,6 +65,8 @@ export function CareerMatch({
   onLineupPhaseChange,
   league,
   worldClubs,
+  tacticsMode = "full",
+  showOpponentScout = true,
 }: {
   setup: CareerMatchSetup;
   players: readonly Player[];
@@ -92,6 +95,8 @@ export function CareerMatch({
   onLineupPhaseChange?: (inLineup: boolean) => void;
   league: LeagueState;
   worldClubs?: readonly WorldClub[];
+  tacticsMode?: TacticsMode;
+  showOpponentScout?: boolean;
 }) {
   const t = useT();
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
@@ -137,6 +142,8 @@ export function CareerMatch({
         onOpenOpponentScoutReport={onOpenOpponentScoutReport}
         onOpenPlayer={onSelectMatchPlayer}
         kasse={kasse}
+        tacticsMode={tacticsMode}
+        showOpponentScout={showOpponentScout}
       />
     );
   }

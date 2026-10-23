@@ -1,5 +1,6 @@
 /** WIREFRAME: docs/prd/design.md §9.1 — Aufstellung */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import type { TacticsMode } from "../narrative/career-presentation.ts";
 import {
   FORMATION_IDS,
   getFormation,
@@ -82,6 +83,10 @@ type CareerLineupScreenProps = {
   onOpenOpponentScoutReport?: (postfachItemId: string) => void;
   onOpenPlayer?: (playerId: string) => void;
   kasse?: MatchdayCashBreakdown;
+  /** PRD 19 Act 1 — formation only, no presets or sliders. */
+  tacticsMode?: TacticsMode;
+  /** PRD 19 — opponent scout module behind the Story Mode curtain. */
+  showOpponentScout?: boolean;
 };
 
 const TACTICS_STYLE_IDS: TacticsPresetId[] = [1, 2, 3];
@@ -108,6 +113,8 @@ export function CareerLineupScreen({
   onOpenOpponentScoutReport,
   onOpenPlayer,
   kasse,
+  tacticsMode = "full",
+  showOpponentScout = true,
 }: CareerLineupScreenProps) {
   const t = useT();
   const managerClubId = careerTeamId(setup.playerClubId);
@@ -361,7 +368,7 @@ export function CareerLineupScreen({
               onDragPlayer={setDragPlayerId}
               onOpenPlayer={onOpenPlayer}
             />
-            {scoutBoard && onOpenOpponentScoutReport ? (
+            {showOpponentScout && scoutBoard && onOpenOpponentScoutReport ? (
               <OpponentScoutMatchAction
                 mode="lineup"
                 setup={setup}
@@ -460,6 +467,7 @@ export function CareerLineupScreen({
             </dl>
           </section>
 
+          {tacticsMode === "full" ? (
           <section className="tc-panel">
             <div className="tc-panel__head">
               <h2 className="tc-panel__title">{t("match.lineup.tactics")}</h2>
@@ -534,6 +542,7 @@ export function CareerLineupScreen({
               </div>
             </details>
           </section>
+          ) : null}
         </aside>
       </div>
 

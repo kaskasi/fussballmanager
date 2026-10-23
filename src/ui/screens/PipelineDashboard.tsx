@@ -108,8 +108,8 @@ export function PipelineDashboard({
   masterSeed: number;
   onHireCampLeader: (campId: string, candidate: import("../../youth/camp-leader-hire.ts").CampLeaderCandidate) => void;
   onDismissScoutJob: (itemId: string) => void;
-  onOpenScoutingNetwork: () => void;
-  onOpenScoutingHits: () => void;
+  onOpenScoutingNetwork?: () => void;
+  onOpenScoutingHits?: () => void;
   onOpenJugend: () => void;
   onSelectScoutTarget: (playerId: string) => void;
   youthInbox: YouthInboxState;

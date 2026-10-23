@@ -27,6 +27,7 @@ import { HubThreeDayTrainingCalendar } from "../components/HubThreeDayTrainingCa
 import { DecisionInboxPanel } from "../components/DecisionInboxPanel.tsx";
 import type { PostfachPanelProps } from "./postfach-panel-props.ts";
 import { usesTrainingNextNexus } from "../../sim/training-next.ts";
+import { curtainLinkTargets, resolveFeatureCurtain } from "../../narrative/career-presentation.ts";
 import { hubLatestTreterEdition, treterTickerLines } from "../../hub/hub-treter-ticker.ts";
 import { HubTreterTicker } from "../components/HubTreterTicker.tsx";
 import { HubOpponentScoutCompact } from "../components/HubOpponentScoutCompact.tsx";
@@ -70,8 +71,8 @@ export function ManagerDeskHub({
   board: BoardState;
   stadium: ClubStadium;
   onOpenTraining: () => void;
-  onOpenScouting: () => void;
-  onOpenTransfers: () => void;
+  onOpenScouting?: () => void;
+  onOpenTransfers?: () => void;
   onSelectPlayer: (playerId: string) => void;
   onOpenNegotiation?: (playerId: string) => void;
   rivalPlayers?: readonly Player[];
@@ -104,6 +105,7 @@ export function ManagerDeskHub({
     () => resolveHubCommerceFocus(finances, board, stadium),
     [finances, board, stadium],
   );
+  const curtainLinks = curtainLinkTargets(resolveFeatureCurtain(session.storyState));
   const merchDesk = useMemo(() => buildHubMerchDeskView(stadium), [stadium]);
   const leagueSnippet = useMemo(() => hubLeagueSnippet(league), [league]);
   const developmentMovers = useMemo(
@@ -225,7 +227,7 @@ export function ManagerDeskHub({
               <strong>{t("hub.desk.cash")}</strong>: {formatClubCash(commerce.cash)} ·{" "}
               {t("hub.desk.boardFloor")} {formatClubCash(commerce.boardFloor)}
             </>
-          ) : merchDesk ? (
+          ) : merchDesk && curtainLinks.finances ? (
             <HubMerchDeskPanel view={merchDesk} />
           ) : (
             <div className="tc-empty-state hub-merch-desk__fallback">
@@ -250,7 +252,7 @@ export function ManagerDeskHub({
       </div>
 
       <div className="manager-desk__bottom">
-        {deskScoutBoard ? (
+        {deskScoutBoard && (onOpenScouting || onOpenTransfers) ? (
           <HubScoutingTransferDeskPanel
             players={players}
             rivalPlayers={rivalPlayers}
@@ -315,7 +317,7 @@ export function ManagerDeskHub({
               season={season}
             />
           </div>
-          {deskScoutBoard && scoutNetwork ? (
+          {deskScoutBoard && scoutNetwork && curtainLinks.opponentScout ? (
             <HubOpponentScoutCompact
               season={season}
               matchSetup={matchSetup ?? null}

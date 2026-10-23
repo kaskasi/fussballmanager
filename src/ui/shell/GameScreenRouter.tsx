@@ -6,6 +6,7 @@ import { usesTrainingNextNexus } from "../../sim/training-next.ts";
 import { worldCareerClubId } from "../../world/world-generator.ts";
 import { isPlayerListed, listPlayerForSale, unlistPlayer } from "../../transfers/transfer-listings.ts";
 import { openingBlocked } from "../../narrative/opening.ts";
+import { curtainLinkTargets, resolveFeatureCurtain } from "../../narrative/career-presentation.ts";
 import {
   normalizeClubStadium,
   matchdayCapacity,
@@ -179,6 +180,18 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
     handleAcceptJobOffer,
   } = props;
 
+  const curtain = resolveFeatureCurtain(storyState);
+  const links = curtainLinkTargets(curtain);
+  const openScoutingAt = (tab: "map" | "hits" | null) =>
+    links.scouting
+      ? () => {
+          setScoutingInitialTab(tab);
+          setScreen("scouting");
+        }
+      : undefined;
+  const openStadium = links.stadium ? () => setScreen("stadium") : undefined;
+  const openTransfers = links.transfers ? () => setScreen("transfers") : undefined;
+
   return (
     <>
       {screen === "hub" ? (
@@ -202,11 +215,8 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
             rivalPlayers={rivalPlayers}
             onOpenNegotiation={openMarketNegotiation}
             onOpenTraining={() => setScreen("training")}
-            onOpenScouting={() => {
-              setScoutingInitialTab(null);
-              setScreen("scouting");
-            }}
-            onOpenTransfers={() => setScreen("transfers")}
+            onOpenScouting={openScoutingAt(null)}
+            onOpenTransfers={openTransfers}
             transferState={session.transferState}
             worldClubs={session.world.clubs}
             postfach={{
@@ -227,14 +237,8 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
               onHireOrthopedist: handleHireOrthopedist,
               scoutBoard,
               onDismissScoutJob: handleDismissScoutJob,
-              onOpenScoutingNetwork: () => {
-                setScoutingInitialTab("map");
-                setScreen("scouting");
-              },
-              onOpenScoutingHits: () => {
-                setScoutingInitialTab("hits");
-                setScreen("scouting");
-              },
+              onOpenScoutingNetwork: openScoutingAt("map"),
+              onOpenScoutingHits: openScoutingAt("hits"),
               onApplyOpponentScoutPlan: handleApplyOpponentScoutPlan,
               clubEvents,
               kickerEdition: session.kickerEdition ?? null,
@@ -271,14 +275,8 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
             masterSeed={session.masterSeed}
             onHireCampLeader={handleHireCampLeader}
             onDismissScoutJob={handleDismissScoutJob}
-            onOpenScoutingNetwork={() => {
-              setScoutingInitialTab("map");
-              setScreen("scouting");
-            }}
-            onOpenScoutingHits={() => {
-              setScoutingInitialTab("hits");
-              setScreen("scouting");
-            }}
+            onOpenScoutingNetwork={openScoutingAt("map")}
+            onOpenScoutingHits={openScoutingAt("hits")}
             onOpenJugend={() => setScreen("campus")}
             onSelectScoutTarget={(playerId) => setForeignPlayerId(playerId)}
             youthInbox={youthInbox}
@@ -312,14 +310,8 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           onHireOrthopedist={handleHireOrthopedist}
           scoutBoard={scoutBoard}
           onDismissScoutJob={handleDismissScoutJob}
-          onOpenScoutingNetwork={() => {
-            setScoutingInitialTab("map");
-            setScreen("scouting");
-          }}
-          onOpenScoutingHits={() => {
-            setScoutingInitialTab("hits");
-            setScreen("scouting");
-          }}
+          onOpenScoutingNetwork={openScoutingAt("map")}
+          onOpenScoutingHits={openScoutingAt("hits")}
           onApplyOpponentScoutPlan={handleApplyOpponentScoutPlan}
           clubEvents={clubEvents}
           kickerEdition={session.kickerEdition ?? null}
@@ -379,6 +371,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           trainingUnitsCompleted={trainingUnitsCompleted}
           trainingUnitOutcomes={trainingUnitOutcomes}
           useTrainingUnitProgress={usesTrainingNextNexus(storyState)}
+          readOnly={curtain.auto_training}
           trainingPlanPresets={trainingPlanPresets}
           onTrainingPlanPresetsChange={handleTrainingPlanPresetsChange}
           onTrainingPresetNotice={flashNotice}
@@ -596,7 +589,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           boardPressure={board.pressure}
           financing={financing}
           onDrawBankLoan={handleDrawBankLoan}
-          onOpenStadium={() => setScreen("stadium")}
+          onOpenStadium={openStadium}
           onStadiumChange={(next) =>
             patchSession((current: PersistedSession) => ({
               ...current,
@@ -614,7 +607,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           rivalPlayers={rivalPlayers}
           worldClubs={world.clubs}
           stadium={stadium}
-          onOpenStadium={() => setScreen("stadium")}
+          onOpenStadium={openStadium}
         />
       ) : null}
       {screen === "stadium" ? (
@@ -671,10 +664,14 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           stadium={stadium}
           worldClubs={world.clubs}
           onClose={() => setClubProfileId(null)}
-          onOpenStadium={() => {
-            setClubProfileId(null);
-            setScreen("stadium");
-          }}
+          onOpenStadium={
+            openStadium
+              ? () => {
+                  setClubProfileId(null);
+                  openStadium();
+                }
+              : undefined
+          }
         />
       ) : null}
       {screen === "help" ? <HelpScreen /> : null}

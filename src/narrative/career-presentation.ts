@@ -208,3 +208,29 @@ export function filterTeamNavScreens<T extends { screen: CurtainNavScreen }>(
 ): T[] {
   return items.filter((item) => isNavScreenVisible(item.screen, storyState));
 }
+
+/** Which cross-screen links a surface may render — a hidden screen gets no button (PRD 19 no dead ends). */
+export interface CurtainLinkTargets {
+  scouting: boolean;
+  transfers: boolean;
+  stadium: boolean;
+  finances: boolean;
+  opponentScout: boolean;
+}
+
+export function curtainLinkTargets(curtain: FeatureCurtain): CurtainLinkTargets {
+  return {
+    scouting: curtain.scouting_nav,
+    transfers: curtain.transfers_nav,
+    stadium: curtain.stadium_nav,
+    finances: curtain.finances_deep_nav,
+    opponentScout: curtain.opponent_scout_module,
+  };
+}
+
+export type TacticsMode = "formation_only" | "full";
+
+/** PRD 19 Act 1 — formation picker only, presets and sliders arrive with the Act 2 beat. */
+export function tacticsModeForCurtain(curtain: FeatureCurtain): TacticsMode {
+  return curtain.tactics_sliders ? "full" : "formation_only";
+}

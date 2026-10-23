@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   act1AssistantTrainingPlan,
+  curtainLinkTargets,
+  tacticsModeForCurtain,
   deriveFeatureCurtain,
   featureCurtainForPhase,
   fullFeatureCurtain,
@@ -178,5 +180,32 @@ describe("resolvePresentationMode (PRD 20)", () => {
     expect(
       resolvePresentationMode({ ...storyModeAct1StoryState(), career_phase: "act4_complete" }),
     ).toBe("manager_desk");
+  });
+});
+
+describe("curtain UI helpers (PRD 19 no dead ends)", () => {
+  it("act1 offers no links to hidden screens and formation-only tactics", () => {
+    const curtain = resolveFeatureCurtain(storyModeAct1StoryState());
+    expect(curtainLinkTargets(curtain)).toEqual({
+      scouting: false,
+      transfers: false,
+      stadium: false,
+      finances: false,
+      opponentScout: false,
+    });
+    expect(tacticsModeForCurtain(curtain)).toBe("formation_only");
+  });
+
+  it("regionalliga manager keeps every link and full tactics", () => {
+    const curtain = resolveFeatureCurtain(defaultStoryState());
+    expect(Object.values(curtainLinkTargets(curtain)).every(Boolean)).toBe(true);
+    expect(tacticsModeForCurtain(curtain)).toBe("full");
+  });
+
+  it("every screen NEXT can route to stays visible in act1", () => {
+    const state = storyModeAct1StoryState();
+    for (const screen of ["hub", "postfach", "calendar", "training", "matchday"] as const) {
+      expect(isNavScreenVisible(screen, state)).toBe(true);
+    }
   });
 });

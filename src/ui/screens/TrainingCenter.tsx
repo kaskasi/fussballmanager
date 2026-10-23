@@ -110,6 +110,7 @@ export function TrainingCenter({
   trainingUnitsCompleted = 0,
   trainingUnitOutcomes = [],
   useTrainingUnitProgress = false,
+  readOnly = false,
   trainingPlanPresets,
   onTrainingPlanPresetsChange,
   onTrainingPresetNotice,
@@ -146,6 +147,8 @@ export function TrainingCenter({
   trainingUnitsCompleted?: number;
   trainingUnitOutcomes?: (TrainingSlotOutcome | null)[];
   useTrainingUnitProgress?: boolean;
+  /** PRD 19 Act 1 — assistant owns the plan; the screen is view-only. */
+  readOnly?: boolean;
   trainingPlanPresets: TrainingPlanPresetSlot[];
   onTrainingPlanPresetsChange: (presets: TrainingPlanPresetSlot[]) => void;
   onTrainingPresetNotice: (text: string, tone?: "ok" | "warn") => void;
@@ -207,6 +210,13 @@ export function TrainingCenter({
         </div>
       ) : null}
 
+      {readOnly ? (
+        <div className="training-auto-next-banner" role="status">
+          <span>{tr("training.assistantRuns", { name: assistantName })}</span>
+        </div>
+      ) : null}
+
+      <fieldset className="training-readonly-scope" disabled={readOnly}>
       {tab === "team" ? (
         <div className="fm-tab-panel">
           <TeamPlan
@@ -250,6 +260,7 @@ export function TrainingCenter({
           />
         </div>
       ) : null}
+      </fieldset>
     </main>
   );
 }

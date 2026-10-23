@@ -6,6 +6,10 @@ import { weeklyWageBill } from "../../economy/club-finances.ts";
 import { matchdayCashBreakdown } from "../../stadium/matchday-commerce.ts";
 import { matchdayCapacity } from "../../stadium/club-stadium.ts";
 import { CareerMatch } from "../../match/CareerMatch.tsx";
+import {
+  resolveFeatureCurtain,
+  tacticsModeForCurtain,
+} from "../../narrative/career-presentation.ts";
 import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
 import type { BroadcastStoryContext } from "@fussballmanager/shared";
 import type { FanbaseMood } from "../../stadium/fanbase.ts";
@@ -128,6 +132,8 @@ export function CareerMatchLiveShell({
         league={league}
         worldClubs={world.clubs}
         scoutBoard={scoutBoard}
+        tacticsMode={tacticsModeForCurtain(resolveFeatureCurtain(session.storyState))}
+        showOpponentScout={resolveFeatureCurtain(session.storyState).opponent_scout_module}
         onOpenOpponentScoutReport={onOpenOpponentScoutReport}
         onLineupPhaseChange={onLineupPhaseChange}
       />

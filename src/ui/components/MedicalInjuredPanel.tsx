@@ -73,33 +73,47 @@ export function MedicalInjuredPanel({
   const manualPhysioIds = physioManualPlayerIds(medicalState, players, season, week, medicalCenterLevel);
   const autoSlots = physioAutoSlotsPerWeek(medicalCenterLevel);
 
+  const nothing = rehab.length === 0 && waiting.length === 0 && surgeryQueue.length === 0;
+
   return (
-    <div className="medical-injured-panel">
+    <div className="tc-stack tc-medical__injured">
+      {nothing ? (
+        <section className="tc-panel">
+          <div className="tc-empty-state">
+            <HeartPulse className="tc-icon" aria-hidden />
+            <p className="tc-empty-state__title">{t("medical.injured.noneTitle")}</p>
+            <p>{t("medical.injured.none")}</p>
+          </div>
+        </section>
+      ) : null}
+
       {waiting.length > 0 ? (
-        <section className="medical-injured-section">
-          <h3 className="medical-section-title">
-            <Stethoscope size={16} aria-hidden /> {t("medical.injured.waitingRoom")}
-          </h3>
-          <ul className="medical-case-list">
+        <section className="tc-panel" aria-label={t("medical.injured.waitingRoom")}>
+          <h2 className="tc-card__title">
+            <Stethoscope className="tc-icon" aria-hidden /> {t("medical.injured.waitingRoom")}
+          </h2>
+          <ul className="tc-list">
             {waiting.map(({ row, player }) => {
               const ready = row.phase === "ready_doctor" || row.doctor_ready;
               return (
-                <li key={player.id} className="medical-case-row">
+                <li key={player.id} className="tc-medical__case">
                   <PlayerPortrait seed={player.portrait_seed} nationality={player.nationality} clubId={player.club_id} size="sm" />
-                  <div className="medical-case-copy">
-                    <button type="button" className="medical-case-name" onClick={() => onSelectPlayer(player.id)}>
+                  <span className="tc-list__main">
+                    <button type="button" className="tc-linkbtn" onClick={() => onSelectPlayer(player.id)}>
                       {formatPlayerName(player)}
                     </button>
-                    <p className="medical-case-symptom">{t(row.symptom_key ?? "medical.symptom.genericPain")}</p>
+                    <span className="tc-medical__quote">{t(row.symptom_key ?? "medical.symptom.genericPain")}</span>
                     {!ready ? (
-                      <span className="medical-muted">{t("medical.injured.praxisWait", { days: row.days_remaining })}</span>
+                      <span className="tc-list__meta">{t("medical.injured.praxisWait", { days: row.days_remaining })}</span>
                     ) : null}
-                  </div>
+                  </span>
                   {ready ? (
-                    <button type="button" className="ui-btn ui-btn--sm" onClick={() => onDoctorExam(player.id)}>
+                    <button type="button" className="tc-btn tc-btn--sm tc-btn--primary" onClick={() => onDoctorExam(player.id)}>
                       {t("medical.injured.doctorExam")}
                     </button>
-                  ) : null}
+                  ) : (
+                    <span />
+                  )}
                 </li>
               );
             })}
@@ -108,94 +122,79 @@ export function MedicalInjuredPanel({
       ) : null}
 
       {surgeryQueue.length > 0 ? (
-        <section className="medical-injured-section">
-          <h3 className="medical-section-title">
-            <Scissors size={16} aria-hidden /> {t("medical.injured.surgery")}
-          </h3>
-          <ul className="medical-case-list">
+        <section className="tc-panel" aria-label={t("medical.injured.surgery")}>
+          <h2 className="tc-card__title">
+            <Scissors className="tc-icon" aria-hidden /> {t("medical.injured.surgery")}
+          </h2>
+          <ul className="tc-list">
             {surgeryQueue.map(({ row, player }) => (
-              <li key={player.id} className="medical-case-row">
+              <li key={player.id} className="tc-medical__case">
                 <PlayerPortrait seed={player.portrait_seed} nationality={player.nationality} clubId={player.club_id} size="sm" />
-                <div className="medical-case-copy">
-                  <strong>{formatPlayerName(player)}</strong>
-                  <p>{diagnosisRevealLabel(row)}</p>
-                  {row.phase === "external_surgery" ? (
-                    <span className="medical-muted">
-                      {t("medical.injured.externalOp", { weeks: row.surgery_weeks_remaining ?? 1 })}
-                    </span>
-                  ) : (
-                    <button type="button" className="ui-btn ui-btn--sm" onClick={() => onSurgery(player.id)}>
-                      {t("medical.injured.opInHouse")}
-                    </button>
-                  )}
-                </div>
+                <span className="tc-list__main">
+                  <button type="button" className="tc-linkbtn" onClick={() => onSelectPlayer(player.id)}>
+                    {formatPlayerName(player)}
+                  </button>
+                  <span className="tc-list__meta">{diagnosisRevealLabel(row)}</span>
+                </span>
+                {row.phase === "external_surgery" ? (
+                  <span className="tc-caption">
+                    {t("medical.injured.externalOp", { weeks: row.surgery_weeks_remaining ?? 1 })}
+                  </span>
+                ) : (
+                  <button type="button" className="tc-btn tc-btn--sm tc-btn--primary" onClick={() => onSurgery(player.id)}>
+                    {t("medical.injured.opInHouse")}
+                  </button>
+                )}
               </li>
             ))}
           </ul>
         </section>
       ) : null}
 
-      <section className="medical-injured-section">
-        <h3 className="medical-section-title">
-          <HeartPulse size={16} aria-hidden /> {t("medical.injured.rehabSection")}
-        </h3>
-        <p className="medical-muted">
-          {t("medical.physio.autoCapacity", { auto: autoSlots, total: rehab.length })}
-        </p>
-        {rehab.length === 0 && waiting.length === 0 && surgeryQueue.length === 0 ? (
-          <p className="hub-inbox-empty">{t("medical.injured.none")}</p>
-        ) : (
-          <ul className="medical-case-list">
+      {rehab.length > 0 ? (
+        <section className="tc-panel" aria-label={t("medical.injured.rehabSection")}>
+          <div className="tc-panel__head">
+            <h2 className="tc-card__title">
+              <HeartPulse className="tc-icon" aria-hidden /> {t("medical.injured.rehabSection")}
+            </h2>
+            <span className="tc-panel__meta">
+              {t("medical.physio.autoCapacity", { auto: autoSlots, total: rehab.length })}
+            </span>
+          </div>
+          <ul className="tc-list">
             {rehab.map((player) => {
               const injury = player.state.injury!;
               const needsManual = manualPhysioIds.includes(player.id);
-              const manualOutcome = physioManualOutcomeForPlayer(
-                medicalState,
-                season,
-                week,
-                player.id,
-              );
+              const manualOutcome = physioManualOutcomeForPlayer(medicalState, season, week, player.id);
               const region = symptomPresentation(injury.type_id, player.id, masterSeed).body_region;
               return (
-                <li key={player.id} className="medical-case-row">
+                <li key={player.id} className="tc-medical__case">
                   <PlayerPortrait seed={player.portrait_seed} nationality={player.nationality} clubId={player.club_id} size="sm" />
-                  <div className="medical-case-copy">
-                    <button type="button" className="medical-case-name" onClick={() => onSelectPlayer(player.id)}>
+                  <span className="tc-list__main">
+                    <button type="button" className="tc-linkbtn" onClick={() => onSelectPlayer(player.id)}>
                       {formatPlayerName(player)}
                     </button>
-                    <span className="medical-muted">
+                    <span className="tc-list__meta">
                       {injuryTypeLabel(injury.type_id)} · {t("medical.injured.weeksLeft", { weeks: injury.weeks_remaining })}
                     </span>
-                  </div>
+                  </span>
                   {needsManual ? (
-                    <button
-                      type="button"
-                      className="ui-btn ui-btn--sm ui-btn--ghost"
-                      onClick={() => setPhysioTarget({ player, region })}
-                    >
+                    <button type="button" className="tc-btn tc-btn--sm" onClick={() => setPhysioTarget({ player, region })}>
                       {t("medical.physio.help")}
                     </button>
                   ) : manualOutcome ? (
-                    <span
-                      className={
-                        manualOutcome === "success"
-                          ? "medical-physio-result is-success"
-                          : "medical-physio-result is-fail"
-                      }
-                    >
-                      {manualOutcome === "success"
-                        ? t("medical.physio.resultSuccess")
-                        : t("medical.physio.resultFail")}
+                    <span className={manualOutcome === "success" ? "tc-state tc-state--good" : "tc-state tc-state--low"}>
+                      {manualOutcome === "success" ? t("medical.physio.resultSuccess") : t("medical.physio.resultFail")}
                     </span>
                   ) : (
-                    <span className="medical-tag-auto">{t("medical.physio.auto")}</span>
+                    <span className="tc-caption">{t("medical.physio.auto")}</span>
                   )}
                 </li>
               );
             })}
           </ul>
-        )}
-      </section>
+        </section>
+      ) : null}
 
       {physioTarget ? (
         <MedicalPhysioTreatModal

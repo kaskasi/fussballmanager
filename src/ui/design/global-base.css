@@ -17,26 +17,22 @@ html[data-color-scheme="contrast"] {
 
 html[data-color-scheme="contrast"] .scoreboard,
 html[data-color-scheme="contrast"] .training,
-html[data-color-scheme="contrast"] .squad,
-html[data-color-scheme="contrast"] .fitness-panel {
+html[data-color-scheme="contrast"] .squad {
   border: 2px solid #0f172a;
 }
 
 html[data-color-scheme="contrast"] .pipeline-light.is-set,
-html[data-color-scheme="contrast"] .squad-form.is-good,
-html[data-color-scheme="contrast"] .fitness-col-mark.is-good {
+html[data-color-scheme="contrast"] .squad-form.is-good {
   color: #065f46;
 }
 
 html[data-color-scheme="contrast"] .pipeline-light.is-watch,
-html[data-color-scheme="contrast"] .squad-form.is-mid,
-html[data-color-scheme="contrast"] .fitness-col-mark.is-mid {
+html[data-color-scheme="contrast"] .squad-form.is-mid {
   color: #92400e;
 }
 
 html[data-color-scheme="contrast"] .pipeline-light.is-risk,
 html[data-color-scheme="contrast"] .squad-form.is-low,
-html[data-color-scheme="contrast"] .fitness-col-mark.is-low,
 html[data-color-scheme="contrast"] .squad-risk.is-risk {
   color: #991b1b;
 }

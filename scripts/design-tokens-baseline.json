@@ -1,8 +1,8 @@
 {
   "files": {
     "src/index.css": {
-      "colors": 903,
-      "fontSizes": 376
+      "colors": 889,
+      "fontSizes": 365
     },
     "src/match/pitch-markings.tsx": {
       "colors": 3,
@@ -43,10 +43,6 @@
     "src/ui/layout/screen-layout.css": {
       "colors": 2,
       "fontSizes": 7
-    },
-    "src/ui/screens/TrainingCenter.tsx": {
-      "colors": 3,
-      "fontSizes": 0
     }
   }
 }

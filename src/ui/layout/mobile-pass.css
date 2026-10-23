@@ -137,7 +137,6 @@
   }
 
   main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab svg,
-  main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab .medical-tab-badge,
   main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar--screen-tabs .fm-tab .fm-tab-count {
     display: none;
   }

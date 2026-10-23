@@ -22,39 +22,44 @@ export function MedicalDoctorExamModal({
   const symptomKey = pending.symptom_key ?? "medical.symptom.genericPain";
   return (
     <ModalShell
+      variant="tc"
       ariaLabel={t("medical.exam.modalTitle")}
       title={
-        <h3 className="medical-exam-modal-title">
-          <Stethoscope size={18} aria-hidden /> {t("medical.exam.modalTitle")}
-        </h3>
+        <>
+          <span className="tc-label">{t("medical.exam.modalTitle")}</span>
+          <h2 className="tc-modal__title">{formatPlayerName(player)}</h2>
+        </>
       }
       onClose={onClose}
-      panelClassName="medical-exam-modal"
+      footer={
+        <>
+          <button type="button" className="tc-btn tc-btn--ghost" onClick={onClose}>
+            {t("inbox.modal.close")}
+          </button>
+          <button type="button" className="tc-btn tc-btn--primary" onClick={onConfirm}>
+            {t("medical.exam.confirm")}
+          </button>
+        </>
+      }
     >
-      <div className="medical-exam-player">
-        <PlayerPortrait seed={player.portrait_seed} nationality={player.nationality} clubId={player.club_id} size="md" />
-        <strong>{formatPlayerName(player)}</strong>
-      </div>
-      <blockquote className="medical-exam-quote">{t(symptomKey)}</blockquote>
-      <p className="medical-muted">{t("medical.exam.doctorIntro")}</p>
-      <div className="medical-exam-verdict">
-        <span className="medical-exam-label">{t("medical.exam.verdict")}</span>
-        <strong>{diagnosisRevealLabel(pending)}</strong>
-        <span className="medical-muted">
-          {t("medical.exam.rehabHint", { weeks: pending.base_weeks_remaining })}
-        </span>
+      <div className="tc-stack tc-medical__exam">
+        <div className="tc-medical__member">
+          <PlayerPortrait seed={player.portrait_seed} nationality={player.nationality} clubId={player.club_id} size="md" />
+          <blockquote className="tc-medical__quote">{t(symptomKey)}</blockquote>
+        </div>
+        <p className="tc-caption">
+          <Stethoscope className="tc-icon" aria-hidden /> {t("medical.exam.doctorIntro")}
+        </p>
+        <dl className="tc-kv">
+          <dt>{t("medical.exam.verdict")}</dt>
+          <dd>{diagnosisRevealLabel(pending)}</dd>
+          <dt>{t("medical.exam.rehabLabel")}</dt>
+          <dd>{t("medical.exam.rehabWeeks", { weeks: pending.base_weeks_remaining })}</dd>
+        </dl>
         {pending.needs_surgery ? (
-          <span className="medical-exam-op-hint">{t("medical.exam.surgeryLikely")}</span>
+          <p className="tc-callout tc-callout--warn">{t("medical.exam.surgeryLikely")}</p>
         ) : null}
       </div>
-      <footer className="medical-exam-actions">
-        <button type="button" className="ui-btn ui-btn--ghost" onClick={onClose}>
-          {t("inbox.modal.close")}
-        </button>
-        <button type="button" className="ui-btn ui-btn--sm" onClick={onConfirm}>
-          {t("medical.exam.confirm")}
-        </button>
-      </footer>
     </ModalShell>
   );
 }

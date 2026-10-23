@@ -5,7 +5,6 @@ import {
   isPlayerTired,
   playerInjuryRisk,
 } from "../../development/fitness-management.ts";
-import { fatigueAmpelClassName } from "../../development/training-load.ts";
 import { stateMark } from "../player-profile.ts";
 import { useT } from "../../i18n/react.ts";
 import { Hint } from "./Hint.tsx";
@@ -53,63 +52,66 @@ export function FitnessManagementPanel({
       : 0;
 
   return (
-    <section className="fitness-panel" aria-label={t("fitness.panelAria")}>
-      <Hint text={t("fitness.hint")} block>
-        <p className="fitness-summary">
-          {t("fitness.summary", {
-            count: rows.length,
-            avgFitness,
-            tired: tiredCount,
-            intensity,
-          })}
-        </p>
-      </Hint>
+    <section className="tc-panel" aria-label={t("fitness.panelAria")}>
+      <div className="tc-panel__head">
+        <h2 className="tc-panel__title">{t("fitness.title")}</h2>
+        <Hint text={t("fitness.hint")}>
+          <span className="tc-panel__meta">
+            {t("fitness.summary", {
+              count: rows.length,
+              avgFitness,
+              tired: tiredCount,
+              intensity,
+            })}
+          </span>
+        </Hint>
+      </div>
 
       {rows.length === 0 ? (
-        <p className="fitness-empty">{t("fitness.empty")}</p>
+        <p className="tc-empty">{t("fitness.empty")}</p>
       ) : (
-        <div className="fitness-table-wrap">
-          <table className="fitness-table">
+        <div className="tc-table-wrap">
+          <table className="tc-table tc-table--compact">
             <thead>
               <tr>
                 <th scope="col">{t("fitness.col.player")}</th>
                 <th scope="col">{t("fitness.col.pos")}</th>
-                <th scope="col">{t("fitness.col.fitness")}</th>
-                <th scope="col">{t("fitness.col.minutesWeek")}</th>
+                <th scope="col" className="tc-num">{t("fitness.col.fitness")}</th>
+                <th scope="col" className="tc-num">{t("fitness.col.minutesWeek")}</th>
                 <th scope="col">{t("fitness.col.status")}</th>
-                <th scope="col">{t("fitness.col.injuryRisk")}</th>
+                <th scope="col" className="tc-num">{t("fitness.col.injuryRisk")}</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.playerId} className={row.tired ? "fitness-row is-tired" : "fitness-row"}>
-                  <td className="fitness-col-name">{row.name}</td>
+                <tr key={row.playerId} className={row.tired ? "tc-row--mark" : undefined}>
+                  <td className="tc-strong">{row.name}</td>
                   <td>{row.position}</td>
-                  <td className={`fitness-col-mark is-${row.fitness.tone}`} title={t("fitness.fitnessTitle", { value: row.fitnessValue })}>
-                    <span className="fitness-mark" aria-hidden="true">{row.fitness.mark}</span>
-                    {row.fitnessValue}
+                  <td className="tc-num" title={t("fitness.fitnessTitle", { value: row.fitnessValue })}>
+                    <span className={`tc-state tc-state--${row.fitness.tone}`}>
+                      <span aria-hidden="true">{row.fitness.mark}</span> {row.fitnessValue}
+                    </span>
                   </td>
-                  <td>{row.weeklyMinutes}</td>
+                  <td className="tc-num">{row.weeklyMinutes}</td>
                   <td>
                     {row.injured ? (
-                      <span className="fitness-status is-risk" title={t("fitness.status.injuredTitle")}>
+                      <span className="tc-state tc-state--low" title={t("fitness.status.injuredTitle")}>
                         {t("fitness.status.injured")}
                       </span>
                     ) : row.tired ? (
-                      <span className="fitness-status is-watch" title={t("fitness.status.tiredTitle")}>
+                      <span className="tc-state tc-state--mid" title={t("fitness.status.tiredTitle")}>
                         <span aria-hidden="true">▲</span> {t("fitness.status.tired")}
                       </span>
                     ) : (
-                      <span className="fitness-status is-good" title={t("fitness.status.fitTitle")}>
+                      <span className="tc-state tc-state--good" title={t("fitness.status.fitTitle")}>
                         <span aria-hidden="true">●</span> {t("fitness.status.fit")}
                       </span>
                     )}
                   </td>
-                  <td className={`fitness-col-risk is-${row.risk.ampel}`} title={row.risk.label}>
-                    <span className={`pipeline-light ${fatigueAmpelClassName(row.risk.ampel)}`} aria-hidden="true">
-                      {row.risk.icon}
+                  <td className="tc-num" title={row.risk.label}>
+                    <span className={`tc-state ${riskTone(row.risk.ampel)}`}>
+                      <span aria-hidden="true">{row.risk.icon}</span> {row.risk.score}
                     </span>
-                    {row.risk.score}
                   </td>
                 </tr>
               ))}
@@ -119,4 +121,10 @@ export function FitnessManagementPanel({
       )}
     </section>
   );
+}
+
+function riskTone(ampel: string): string {
+  if (ampel === "risk") return "tc-state--low";
+  if (ampel === "watch") return "tc-state--mid";
+  return "tc-state--good";
 }

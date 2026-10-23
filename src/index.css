@@ -5625,79 +5625,6 @@
   color: #dc2626;
 }
 
-.fitness-panel {
-  background: #fff;
-  border-radius: 1rem;
-  padding: 1rem 1.1rem 1.2rem;
-  box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
-}
-
-.fitness-summary {
-  margin: 0 0 0.85rem;
-  color: #475569;
-  font-size: 0.9rem;
-}
-
-.fitness-empty {
-  margin: 0;
-  color: #64748b;
-}
-
-.fitness-table-wrap {
-  overflow-x: auto;
-}
-
-.fitness-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.88rem;
-}
-
-.fitness-table th,
-.fitness-table td {
-  padding: 0.45rem 0.55rem;
-  border-bottom: 1px solid #e2e8f0;
-  text-align: center;
-}
-
-.fitness-table th:first-child,
-.fitness-table td:first-child,
-.fitness-col-name {
-  text-align: left;
-}
-
-.fitness-col-mark,
-.fitness-col-risk {
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.fitness-col-mark.is-good,
-.fitness-status.is-good,
-.fitness-col-risk.is-good {
-  color: #059669;
-}
-
-.fitness-col-mark.is-mid,
-.fitness-status.is-watch,
-.fitness-col-risk.is-watch {
-  color: #d97706;
-}
-
-.fitness-col-mark.is-low,
-.fitness-status.is-risk,
-.fitness-col-risk.is-risk {
-  color: #dc2626;
-}
-
-.fitness-row.is-tired {
-  background: #fffbeb;
-}
-
-.fitness-mark {
-  margin-right: 0.25rem;
-}
-
 .a11y-menu-field {
   display: grid;
   gap: 0.25rem;
@@ -9676,12 +9603,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   font-size: 0.9rem;
 }
 
-.medical-tab-badge {
-  margin-left: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
 .medical-rehab-track {
   position: relative;
   height: 2.5rem;
@@ -9729,111 +9650,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   margin-left: -1px;
   background: var(--tinte-strong, #1a1512);
   pointer-events: none;
-}
-
-.medical-injured-row {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  width: 100%;
-  padding: 0.5rem 0;
-  border: none;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-
-.medical-legend-badge {
-  display: inline-flex;
-  vertical-align: middle;
-  margin-left: 0.25rem;
-  color: var(--sonnengelb, #f5c518);
-}
-
-.medical-staff-panel.training-staff {
-  gap: 0.65rem;
-}
-
-.medical-staff-panel .training-staff-head {
-  margin-bottom: 0.25rem;
-}
-
-.medical-staff-panel .merch-section-title {
-  margin: 0.35rem 0 0.25rem;
-  font-size: 0.95rem;
-}
-
-.medical-member-row,
-.medical-candidate-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0;
-}
-
-.medical-member-meta {
-  display: block;
-  font-size: 0.82rem;
-  color: var(--tinte-muted);
-}
-
-.medical-candidate-list,
-.medical-physio-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.medical-injured-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.medical-section-title {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.95rem;
-  margin: 0 0 0.35rem;
-}
-
-.medical-case-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.medical-case-row {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.45rem 0;
-  border-bottom: 1px solid var(--line-soft, #e8e2da);
-}
-
-.medical-case-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.medical-case-name {
-  border: none;
-  background: none;
-  padding: 0;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: left;
-}
-
-.medical-case-symptom {
-  margin: 0.15rem 0 0;
-  font-size: 0.88rem;
-}
-
-.medical-tag-auto {
-  font-size: 0.75rem;
-  color: var(--tinte-muted);
 }
 
 .medical-body-silhouette {
@@ -9975,20 +9791,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   width: 1.6rem;
 }
 
-.medical-physio-result {
-  font-size: 0.75rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.medical-physio-result.is-success {
-  color: var(--pitch-gruen, #2d6a4f);
-}
-
-.medical-physio-result.is-fail {
-  color: var(--warn-rot, #c0392b);
-}
-
 .medical-xray-status {
   margin: 0;
   font-size: 0.82rem;
@@ -10002,46 +9804,6 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   padding: 0;
   border: none;
   background: transparent;
-}
-
-.medical-exam-modal {
-  max-width: 24rem;
-}
-
-.medical-exam-player {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  margin-bottom: 0.75rem;
-}
-
-.medical-exam-quote {
-  margin: 0 0 0.75rem;
-  padding: 0.65rem 0.75rem;
-  border-left: 3px solid var(--line-soft, #ddd6ce);
-  font-size: 0.95rem;
-  font-style: italic;
-}
-
-.medical-exam-verdict {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.65rem 0;
-  margin-bottom: 0.75rem;
-}
-
-.medical-exam-label {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--tinte-muted);
-}
-
-.medical-exam-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
 }
 
 /* PRD 25 — contextual tutorial coach marks */

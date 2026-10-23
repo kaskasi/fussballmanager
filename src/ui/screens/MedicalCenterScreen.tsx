@@ -3,6 +3,9 @@
  */
 import { useMemo, useState, useCallback } from "react";
 import { HeartPulse, Users, Activity } from "lucide-react";
+import { isPlayerTired } from "../../development/fitness-management.ts";
+import { formatClubCashWeekly } from "../../economy/club-finances.ts";
+import { medicalStaffWageBill } from "../../staff/medical-staff.ts";
 import type { Player } from "../../types/player.ts";
 import { formatPlayerName } from "../../types/player-display.ts";
 import type { ClubStadium } from "../../stadium/club-stadium.ts";
@@ -16,7 +19,6 @@ import { OrthopedistInboxCard } from "../components/OrthopedistInboxCard.tsx";
 import { orthopedistAwaitingPostfach } from "../../medical/orthopedist-hire.ts";
 import { useT } from "../../i18n/react.ts";
 import { MedicalInjuredPanel } from "../components/MedicalInjuredPanel.tsx";
-import { FmScreenTab, FmScreenTabBar } from "../components/FmScreenTabBar.tsx";
 import { MedicalDoctorExamModal } from "../components/MedicalDoctorExamModal.tsx";
 import { precinctMedicalCenterLevel } from "../../stadium/precinct-effects.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
@@ -111,31 +113,68 @@ export function MedicalCenterScreen({
     { id: "practice", label: t("medical.tab.practice"), icon: Activity },
   ];
 
+  const tiredCount = proPlayers.filter((p) => p.state.injury === null && isPlayerTired(p)).length;
+  const avgFitness =
+    proPlayers.length > 0
+      ? Math.round(proPlayers.reduce((sum, p) => sum + p.state.fitness, 0) / proPlayers.length)
+      : 0;
+  const stats: { id: string; label: string; value: string; tone?: "good" | "mid" | "low" }[] = [
+    { id: "injured", label: t("medical.stat.injured"), value: String(injured.length), tone: injured.length > 0 ? "low" : "good" },
+    { id: "waiting", label: t("medical.stat.waiting"), value: String(pending.length), tone: pending.length > 0 ? "mid" : undefined },
+    { id: "tired", label: t("medical.stat.tired"), value: String(tiredCount), tone: tiredCount > 0 ? "mid" : undefined },
+    { id: "fitness", label: t("medical.stat.avgFitness"), value: String(avgFitness), tone: avgFitness >= 75 ? "good" : avgFitness >= 50 ? "mid" : "low" },
+  ];
+
   return (
     <main className="medical-screen club-shell-card-body">
-      <FmScreenTabBar
+      <header className="tc-page-head">
+        <span className="tc-label">{t("medical.page.eyebrow")}</span>
+        <h1 className="tc-page-title">{t("medical.page.title")}</h1>
+        <p className="tc-page-sub">
+          {medicalCenterLevel > 0
+            ? `${t("medical.staff.buildingLevel", { level: medicalCenterLevel })} · ${t("medical.staff.wageBill", {
+                amount: formatClubCashWeekly(medicalStaffWageBill(medicalStaff)),
+              })}`
+            : t("medical.page.noBuilding")}
+        </p>
+      </header>
+
+      <dl className="tc-stats tc-medical__stats" aria-label={t("medical.stat.aria")}>
+        {stats.map((stat) => (
+          <div key={stat.id} className="tc-stats__item">
+            <dt className="tc-label">{stat.label}</dt>
+            <dd>
+              <span className={stat.tone ? `tc-stat__value tc-state--${stat.tone}` : "tc-stat__value"}>{stat.value}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <div
+        className="tc-tabs tc-tabs--page"
         role="tablist"
         aria-label={t("medical.tab.aria")}
         data-coach-target={COACH_TARGET.medicalTabs}
       >
         {tabs.map(({ id, label, icon: Icon }) => (
-          <FmScreenTab
+          <button
             key={id}
+            type="button"
             role="tab"
+            className="tc-tab"
             aria-selected={tab === id}
-            className={tab === id ? "is-active" : undefined}
             onClick={() => setTab(id)}
           >
-            <Icon size={16} strokeWidth={2.2} aria-hidden /> {label}
+            <Icon className="tc-icon" aria-hidden /> {label}
             {id === "injured" && (injured.length + pending.length) > 0 ? (
-              <span className="medical-tab-badge">{injured.length + pending.length}</span>
+              <span className="tc-tab__meta">{injured.length + pending.length}</span>
             ) : null}
-          </FmScreenTab>
+          </button>
         ))}
-      </FmScreenTabBar>
+      </div>
 
       {tab === "staff" ? (
-        <div className="fm-tab-panel">
+        <div className="tc-stack">
           <MedicalStaffPanel
             staff={medicalStaff}
             stadium={stadium}
@@ -160,7 +199,7 @@ export function MedicalCenterScreen({
       ) : null}
 
       {tab === "injured" ? (
-        <div className="fm-tab-panel">
+        <div className="tc-stack">
           <MedicalInjuredPanel
             players={players}
             clubId={clubId}
@@ -189,31 +228,37 @@ export function MedicalCenterScreen({
       ) : null}
 
       {tab === "practice" ? (
-        <div className="fm-tab-panel" data-coach-target={COACH_TARGET.medicalFitness}>
+        <div className="tc-stack" data-coach-target={COACH_TARGET.medicalFitness}>
           <FitnessManagementPanel
             players={players}
             clubId={clubId}
             intensity={trainingIntensity}
             injuryRiskFactor={injuryRiskFactor}
           />
-          <div className="medical-rehab-picker">
-            <label className="medical-rehab-label" htmlFor="medical-rehab-player">
-              {t("medical.rehab.pickPlayer")}
-            </label>
-            <select
-              id="medical-rehab-player"
-              className="ui-select"
-              value={rehabPlayerId ?? ""}
-              onChange={(event) => setRehabPlayerId(event.target.value || null)}
-            >
-              <option value="">{t("medical.rehab.pickPlaceholder")}</option>
-              {injured.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {formatPlayerName(player)}
-                </option>
-              ))}
-            </select>
-          </div>
+          <section className="tc-panel tc-medical__rehab" aria-label={t("medical.rehab.aria")}>
+            <h2 className="tc-panel__title">{t("medical.rehab.sectionTitle")}</h2>
+            <p className="tc-caption">{t("medical.rehab.sectionHint")}</p>
+            {injured.length === 0 ? (
+              <p className="tc-empty">{t("medical.rehab.noneInjured")}</p>
+            ) : (
+              <label className="tc-medical__field">
+                <span className="tc-label">{t("medical.rehab.pickPlayer")}</span>
+                <select
+                  id="medical-rehab-player"
+                  className="tc-select"
+                  value={rehabPlayerId ?? ""}
+                  onChange={(event) => setRehabPlayerId(event.target.value || null)}
+                >
+                  <option value="">{t("medical.rehab.pickPlaceholder")}</option>
+                  {injured.map((player) => (
+                    <option key={player.id} value={player.id}>
+                      {formatPlayerName(player)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </section>
           {rehabPlayer ? (
             <RehabMinigamePanel
               playerId={rehabPlayer.id}

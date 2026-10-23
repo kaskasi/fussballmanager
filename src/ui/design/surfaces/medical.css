@@ -1,0 +1,43 @@
+/* Medizin (F1) — design.md §9.16. Layout only; components come from components.css. */
+.tc-medical__stats { margin-bottom: var(--space-4); }
+@media (min-width: 768px) {
+  .tc-medical__stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.medical-screen .tc-tabs--page { margin-bottom: var(--space-4); }
+.medical-screen .tc-tab { display: inline-flex; align-items: center; gap: var(--space-1); }
+.medical-screen .tc-tab .tc-icon { width: 16px; height: 16px; }
+
+.tc-medical__role { align-content: start; }
+.tc-medical__slots { margin-left: auto; color: var(--text-muted); font-family: var(--font-text); font-size: var(--font-size-xs); font-weight: 700; font-variant-numeric: tabular-nums; }
+.tc-medical__member { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; }
+.tc-medical__legend { display: inline-flex; margin-left: var(--space-1); color: var(--warning); vertical-align: middle; }
+.tc-medical__legend .tc-icon { width: 14px; height: 14px; }
+.tc-medical__candidates { display: grid; gap: var(--space-1); padding-top: var(--space-2); border-top: 1px solid var(--line); }
+
+.tc-medical__ladder { display: grid; gap: var(--space-2); }
+.tc-medical__ladder h3 { margin: 0; }
+.tc-medical__ladder .tc-kv { grid-template-columns: minmax(0, 1fr); }
+.tc-medical__ladder-row { display: grid; grid-template-columns: 6rem minmax(0, 1fr); gap: var(--space-3); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); }
+.tc-medical__ladder-row dd { text-align: left; font-weight: 400; }
+.tc-medical__ladder-row.is-current { background: var(--accent-soft); }
+.tc-medical__ladder-row.is-current dt { color: var(--text); font-weight: 700; }
+
+.tc-medical__case { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--line); }
+.tc-medical__case:last-child { border-bottom: 0; }
+.tc-medical__case .tc-list__main { gap: 2px; }
+.tc-medical__case .tc-linkbtn { justify-self: start; }
+.tc-medical__quote { margin: 0; color: var(--text); font-style: italic; font-size: var(--font-size-sm); line-height: 1.25rem; }
+.tc-medical__quote { quotes: auto; }
+.tc-medical__quote::before { content: open-quote; }
+.tc-medical__quote::after { content: close-quote; }
+.tc-medical__exam .tc-caption { display: flex; align-items: center; gap: var(--space-1); margin: 0; }
+.tc-medical__exam .tc-icon { width: 16px; height: 16px; }
+
+.tc-medical__rehab { display: grid; gap: var(--space-2); }
+.tc-medical__rehab .tc-panel__title { margin: 0; }
+.tc-medical__field { display: grid; gap: var(--space-1); max-width: 24rem; }
+
+@media (max-width: 767px) {
+  .tc-medical__case { grid-template-columns: auto minmax(0, 1fr); }
+  .tc-medical__case > :last-child { grid-column: 2; justify-self: start; }
+}

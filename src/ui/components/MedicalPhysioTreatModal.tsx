@@ -6,6 +6,7 @@ import { formatPlayerName } from "../../types/player-display.ts";
 import type { Player } from "../../types/player.ts";
 import { MedicalXraySlideMinigame } from "./MedicalXraySlideMinigame.tsx";
 import { RehabMinigamePanel } from "./RehabMinigamePanel.tsx";
+import { ModalShell } from "./primitives/ModalShell.tsx";
 import { useT } from "../../i18n/react.ts";
 
 export function MedicalPhysioTreatModal({
@@ -38,39 +39,28 @@ export function MedicalPhysioTreatModal({
   };
 
   return (
-    <div className="modal-backdrop" role="presentation" onClick={onClose}>
-      <div
-        className={
-          minigame === "xray_slide"
-            ? "modal-panel medical-physio-modal medical-physio-modal--xray"
-            : "modal-panel medical-physio-modal medical-physio-modal--rehab"
-        }
-        role="dialog"
-        aria-labelledby="medical-physio-title"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <header className="modal-head">
-          <h2 id="medical-physio-title">{t("medical.physio.modalTitle", { name: formatPlayerName(player) })}</h2>
-          <button type="button" className="ui-btn ui-btn--ghost ui-btn--sm" onClick={onClose}>
-            {t("inbox.modal.close")}
-          </button>
-        </header>
-        {minigame === "xray_slide" ? (
-          <MedicalXraySlideMinigame targetRegion={targetRegion} onComplete={finishAssist} />
-        ) : (
-          <RehabMinigamePanel
-            playerId={player.id}
-            playerName={formatPlayerName(player)}
-            season={season}
-            week={week}
-            masterSeed={masterSeed}
-            medicalState={medicalState}
-            bypassWeeklyCap
-            embedded
-            onComplete={finishAssist}
-          />
-        )}
-      </div>
-    </div>
+    <ModalShell
+      variant="tc"
+      ariaLabel={t("medical.physio.modalTitle", { name: formatPlayerName(player) })}
+      title={<h2 className="tc-modal__title">{t("medical.physio.modalTitle", { name: formatPlayerName(player) })}</h2>}
+      onClose={onClose}
+      panelClassName={minigame === "xray_slide" ? "tc-modal--wide medical-physio-modal--xray" : "medical-physio-modal--rehab"}
+    >
+      {minigame === "xray_slide" ? (
+        <MedicalXraySlideMinigame targetRegion={targetRegion} onComplete={finishAssist} />
+      ) : (
+        <RehabMinigamePanel
+          playerId={player.id}
+          playerName={formatPlayerName(player)}
+          season={season}
+          week={week}
+          masterSeed={masterSeed}
+          medicalState={medicalState}
+          bypassWeeklyCap
+          embedded
+          onComplete={finishAssist}
+        />
+      )}
+    </ModalShell>
   );
 }

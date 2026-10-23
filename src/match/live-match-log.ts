@@ -31,6 +31,26 @@ export function liveMatchLog(
   clock: MatchClock,
   score: { home: number; away: number },
 ): LiveMatchLogEntry[] {
+  return buildMatchLog(report, homeTeamId, clockOrder(clock), score);
+}
+
+/** Every goal and card of a finished match (report screen). */
+export function fullMatchLog(
+  report: Pick<MatchReport, "goals" | "cards">,
+  homeTeamId: string,
+): LiveMatchLogEntry[] {
+  return buildMatchLog(report, homeTeamId, Number.POSITIVE_INFINITY, {
+    home: Number.POSITIVE_INFINITY,
+    away: Number.POSITIVE_INFINITY,
+  });
+}
+
+function buildMatchLog(
+  report: Pick<MatchReport, "goals" | "cards">,
+  homeTeamId: string,
+  now: number,
+  score: { home: number; away: number },
+): LiveMatchLogEntry[] {
   const seen = { home: 0, away: 0 };
   const entries: LiveMatchLogEntry[] = [];
   for (const goal of report.goals) {
@@ -45,7 +65,6 @@ export function liveMatchLog(
       assistName: goal.assistName,
     });
   }
-  const now = clockOrder(clock);
   for (const card of report.cards) {
     if (minuteLabelOrder(card.minuteLabel) > now) continue;
     entries.push({

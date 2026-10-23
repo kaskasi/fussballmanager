@@ -8,22 +8,13 @@ export type MatchStarPick = {
   teamShortName: string;
   role: string;
   shirt: number;
-  line: string;
+  goals: number;
+  assists: number;
+  yellowCards: number;
 };
 
 function starPoints(row: PlayerSeasonStat): number {
   return row.goals * 5 + row.assists * 3 - row.yellowCards * 2;
-}
-
-function starLine(row: PlayerSeasonStat): string {
-  const parts: string[] = [];
-  if (row.goals === 1) parts.push("1 Tor");
-  else if (row.goals > 1) parts.push(`${row.goals} Tore`);
-  if (row.assists === 1) parts.push("1 Vorlage");
-  else if (row.assists > 1) parts.push(`${row.assists} Vorlagen`);
-  if (parts.length > 0) return parts.join(" · ");
-  if (row.yellowCards > 0) return "Solide ohne Aussetzer";
-  return "Starkes Spiel";
 }
 
 /** NHL-style top three from goal contributions (G/A), minus cards. */
@@ -56,7 +47,9 @@ export function pickMatchThreeStars(
       teamShortName: teamShort(entry.row.teamId),
       role: meta?.role ?? "—",
       shirt: meta?.shirt ?? 0,
-      line: starLine(entry.row),
+      goals: entry.row.goals,
+      assists: entry.row.assists,
+      yellowCards: entry.row.yellowCards,
     };
   });
 }

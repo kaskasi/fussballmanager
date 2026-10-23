@@ -448,7 +448,6 @@ function CareerMatchPlayback({
           week={week}
           weekday={weekday}
           kasse={kasse}
-          stadiumPhotoUrl={backdropPhotoUrl}
           portraitSeedForPlayerId={portraitSeedForPlayerId}
           onSelectPlayer={onSelectMatchPlayer}
         />

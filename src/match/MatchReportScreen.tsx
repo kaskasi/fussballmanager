@@ -1,7 +1,6 @@
 /** WIREFRAME: docs/prd/design.md §9.14 — Spiel Zusammenfassung */
 import { useState } from "react";
-import { Square, Star } from "lucide-react";
-import type { MatchReportCard, MatchView, PlayerSeasonStat, TeamId } from "@fussballmanager/shared";
+import type { MatchView, PlayerSeasonStat, TeamId } from "@fussballmanager/shared";
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
 import { formatCalendarWeek } from "../sim/game-calendar.ts";
 import { weekdayLabel } from "../sim/day-calendar.ts";
@@ -13,17 +12,19 @@ import { pickMatchThreeStars } from "./match-three-stars.ts";
 import { useT } from "../i18n/react.ts";
 import { formatMatchWeatherDisplay } from "./match-weather-display.ts";
 import { normalizeMatchView } from "./normalize-match-view.ts";
-import { MatchGoalTimeline } from "./MatchGoalTimeline.tsx";
+import { MatchEventLog } from "./MatchEventLog.tsx";
+import { MatchScoreHead } from "./MatchScoreHead.tsx";
+import { fullMatchLog } from "./live-match-log.ts";
 import { PlayerPortrait } from "../ui/components/PlayerPortrait.tsx";
 import { resolvePortraitSeed } from "../ui/portraits/portrait-seed-fallback.ts";
 import { worldCareerClubId } from "../world/world-generator.ts";
+
 export function MatchReportScreen({
   view,
   setup,
   week,
   weekday,
   kasse,
-  stadiumPhotoUrl,
   portraitSeedForPlayerId,
   onSelectPlayer,
 }: {
@@ -32,19 +33,20 @@ export function MatchReportScreen({
   week: number;
   weekday: number;
   kasse?: MatchdayCashBreakdown;
-  stadiumPhotoUrl?: string;
   portraitSeedForPlayerId?: (id: string) => number | undefined;
   onSelectPlayer?: (playerId: string) => void;
 }) {
   const t = useT();
   const normalized = normalizeMatchView(view);
   const lastFrame = normalized.frames[normalized.frames.length - 1] ?? normalized.kickoff;
-  const stats = lastFrame.stats;
   const report = normalized.report;
   const threeStars = pickMatchThreeStars(normalized, report.playerStats);
-  const [teamTab, setTeamTab] = useState<"home" | "away">("home");
-  const activeTeamId = (teamTab === "home" ? normalized.home.id : normalized.away.id) as TeamId;
-  const activeTeamLabel = teamTab === "home" ? normalized.home.shortName : normalized.away.shortName;
+  const ownTeamId = setup.isHome ? normalized.home.id : normalized.away.id;
+  const [teamTab, setTeamTab] = useState<"home" | "away">(setup.isHome ? "home" : "away");
+  const activeTeam = teamTab === "home" ? normalized.home : normalized.away;
+  const log = fullMatchLog(report, normalized.home.id);
+  const goals = log.filter((entry) => entry.kind === "goal");
+  const cards = log.filter((entry) => entry.kind !== "goal");
 
   const metaLine = [
     formatMatchWeatherDisplay(normalized.seed),
@@ -54,143 +56,114 @@ export function MatchReportScreen({
   ].join(" · ");
 
   return (
-    <section className="match-report game-panel match-report--compact" aria-label="Spielbericht">
-      <p className="match-report-kicker eyebrow">
-        Spieltag {setup.matchday} · {weekdayLabel(weekday)} · {formatCalendarWeek(week)}
-      </p>
-
-      <h1 className="match-report-scoreline">
-        <span>{normalized.home.shortName}</span>
-        <strong>
-          {normalized.finalScore.home} : {normalized.finalScore.away}
-        </strong>
-        <span>{normalized.away.shortName}</span>
-      </h1>
-
-      <div className="match-report-body-grid">
-        <div className="match-report-main">
-          <p className="match-report-meta-line">{metaLine}</p>
-
-          <section className="match-report-stats-block" aria-label="Statistik">
-            <p className="match-report-inline-label">Statistik</p>
-            <MatchStats view={normalized} stats={stats} compact />
+    <section className="tc-report" aria-label={t("match.report.aria")}>
+      <div className="tc-split tc-report__top">
+        <div className="tc-stack">
+          <MatchScoreHead
+            size="lg"
+            kicker={`${t("match.lineup.matchday", { matchday: setup.matchday })} · ${weekdayLabel(weekday)} · ${formatCalendarWeek(week)}`}
+            home={normalized.home.name}
+            away={normalized.away.name}
+            center={`${normalized.finalScore.home} : ${normalized.finalScore.away}`}
+            meta={metaLine}
+          />
+          <section className="tc-panel" aria-label={t("match.report.goals")}>
+            <h2 className="tc-label tc-report__label">{t("match.report.goals")}</h2>
+            <MatchEventLog
+              entries={goals}
+              homeShort={normalized.home.shortName}
+              awayShort={normalized.away.shortName}
+              emptyLabel={t("match.report.noGoals")}
+              ariaLabel={t("match.report.goals")}
+            />
           </section>
+        </div>
 
-          <div className="match-report-events-row">
-            <section className="match-report-goals-col" aria-label="Tore">
-              <p className="match-report-inline-label">Tore</p>
-              <MatchGoalTimeline goals={report.goals} homeTeamId={normalized.home.id as TeamId} />
-            </section>
-            <MatchReportCardsColumn cards={report.cards} />
-          </div>
-
+        <div className="tc-stack">
           <MatchThreeStars
             stars={threeStars}
             portraitSeedForPlayerId={portraitSeedForPlayerId}
             onSelectPlayer={onSelectPlayer}
           />
-
-          <details className="match-report-roster-details">
-            <summary>Kader anzeigen</summary>
-            <div className="match-report-roster" aria-label="Spielerlisten">
-              <div className="match-report-roster-tabs" role="tablist">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={teamTab === "home"}
-                  className={teamTab === "home" ? "is-active" : undefined}
-                  onClick={() => setTeamTab("home")}
-                >
-                  {normalized.home.shortName}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={teamTab === "away"}
-                  className={teamTab === "away" ? "is-active" : undefined}
-                  onClick={() => setTeamTab("away")}
-                >
-                  {normalized.away.shortName}
-                </button>
-              </div>
-              <MatchReportRosterTable
-                teamId={activeTeamId}
-                teamLabel={activeTeamLabel}
-                view={normalized}
-                playerStats={report.playerStats}
-                portraitSeedForPlayerId={portraitSeedForPlayerId}
-                onSelectPlayer={onSelectPlayer}
+          {cards.length > 0 ? (
+            <section className="tc-panel" aria-label={t("match.report.cards")}>
+              <h2 className="tc-label tc-report__label">{t("match.report.cards")}</h2>
+              <MatchEventLog
+                entries={cards}
+                homeShort={normalized.home.shortName}
+                awayShort={normalized.away.shortName}
+                emptyLabel=""
+                ariaLabel={t("match.report.cards")}
               />
-            </div>
-          </details>
-        </div>
-
-        <aside className="match-report-aside" aria-label="Spieltag">
-          <MatchReportKasseCompact kasse={kasse} />
-          {stadiumPhotoUrl ? (
-            <figure className="match-report-ambience">
-              <img
-                src={stadiumPhotoUrl}
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-            </figure>
+            </section>
           ) : null}
-        </aside>
+        </div>
       </div>
+
+      <div className="tc-split tc-report__mid">
+        <section className="tc-panel" aria-label={t("match.stats.aria")}>
+          <h2 className="tc-label tc-report__label">{t("match.report.stats")}</h2>
+          <MatchStats view={normalized} stats={lastFrame.stats} ownTeamId={ownTeamId} />
+        </section>
+        <MatchReportKasse kasse={kasse} />
+      </div>
+
+      <section className="tc-panel tc-report__rosters" aria-label={t("match.report.rostersAria")}>
+        <div className="tc-tabs" role="tablist" aria-label={t("match.report.rostersAria")}>
+          {(["home", "away"] as const).map((side) => {
+            const team = side === "home" ? normalized.home : normalized.away;
+            return (
+              <button
+                key={side}
+                type="button"
+                role="tab"
+                className="tc-tab"
+                aria-selected={teamTab === side}
+                onClick={() => setTeamTab(side)}
+              >
+                {team.name}
+              </button>
+            );
+          })}
+        </div>
+        <MatchReportRosterTable
+          teamId={activeTeam.id as TeamId}
+          teamLabel={activeTeam.name}
+          view={normalized}
+          playerStats={report.playerStats}
+          portraitSeedForPlayerId={portraitSeedForPlayerId}
+          onSelectPlayer={onSelectPlayer}
+        />
+      </section>
     </section>
   );
 }
 
-function MatchReportCardsColumn({ cards }: { cards: readonly MatchReportCard[] }) {
-  return (
-    <section className="match-report-cards-col" aria-label="Karten">
-      <p className="match-report-inline-label">Karten</p>
-      {cards.length === 0 ? (
-        <p className="match-report-cards-empty">Keine Karten.</p>
-      ) : (
-        <ul className="match-card-list">
-          {cards.map((card, index) => (
-            <li key={`${card.minuteLabel}-${card.playerName}-${index}`}>
-              <span className="match-goal-minute">{card.minuteLabel}</span>
-              {card.color === "red" ? (
-                <Square size={14} strokeWidth={2.5} className="match-card-icon is-red" aria-hidden />
-              ) : (
-                <Square size={14} strokeWidth={2.5} className="match-card-icon is-yellow" aria-hidden />
-              )}
-              <strong>{card.playerName}</strong>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-function MatchReportKasseCompact({ kasse }: { kasse?: MatchdayCashBreakdown }) {
+function MatchReportKasse({ kasse }: { kasse?: MatchdayCashBreakdown }) {
+  const t = useT();
   if (!kasse) {
     return null;
   }
-  if (!kasse.home) {
-    return (
-      <p className="match-report-kasse-away match-report-kasse-compact">
-        Imbiss läuft über die Woche in Finanzen.
-      </p>
-    );
-  }
-  const line = [
-    `Eintritt ${formatClubCash(kasse.tickets)}`,
-    `Wurst ${formatClubCash(kasse.kiosk)}`,
-    `Bier ${formatClubCash(kasse.beer)}`,
-    "Merch → Menü",
-    `Summe ${formatClubCash(kasse.total)}`,
-  ].join(" · ");
   return (
-    <section className="match-report-kasse-compact" aria-label="Kasse">
-      <p className="match-report-inline-label">Kasse</p>
-      <p className="match-report-kasse-oneline">{line}</p>
-      <p className="match-report-kasse-hint">Details im Finanz-Screen.</p>
+    <section className="tc-panel" aria-label={t("match.report.kasse")}>
+      <h2 className="tc-label tc-report__label">{t("match.report.kasse")}</h2>
+      {kasse.home ? (
+        <>
+          <dl className="tc-kv">
+            <dt>{t("match.report.kasse.tickets")}</dt>
+            <dd>{formatClubCash(kasse.tickets)}</dd>
+            <dt>{t("match.report.kasse.kiosk")}</dt>
+            <dd>{formatClubCash(kasse.kiosk)}</dd>
+            <dt>{t("match.report.kasse.beer")}</dt>
+            <dd>{formatClubCash(kasse.beer)}</dd>
+            <dt className="tc-report__total">{t("match.report.kasse.total")}</dt>
+            <dd className="tc-report__total">{formatClubCash(kasse.total)}</dd>
+          </dl>
+          <p className="tc-caption tc-report__hint">{t("match.report.kasse.hint")}</p>
+        </>
+      ) : (
+        <p className="tc-caption">{t("match.report.kasse.away")}</p>
+      )}
     </section>
   );
 }
@@ -210,76 +183,92 @@ function MatchReportRosterTable({
   portraitSeedForPlayerId?: (id: string) => number | undefined;
   onSelectPlayer?: (playerId: string) => void;
 }) {
+  const t = useT();
   const rows = view.roster
     .filter((entry) => entry.teamId === teamId && entry.starter)
     .slice()
     .sort((a, b) => a.shirt - b.shirt);
 
   return (
-    <table className="match-report-roster-table">
-      <caption className="sr-only">{teamLabel} — Startelf</caption>
-      <thead>
-        <tr>
-          <th scope="col">Nr</th>
-          <th scope="col">Name</th>
-          <th scope="col">Pos</th>
-          <th scope="col">Ereignisse</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row) => {
-          const stat = playerStats.find((entry) => entry.playerId === row.id);
-          return (
-            <tr key={row.id}>
-              <td>{row.shirt}</td>
-              <td>
-                {onSelectPlayer ? (
-                  <button type="button" className="match-roster-name-btn" onClick={() => onSelectPlayer(row.id)}>
+    <div className="tc-table-wrap">
+      <table className="tc-table tc-table--compact">
+        <caption className="tc-sr">{t("match.report.rosterCaption", { team: teamLabel })}</caption>
+        <thead>
+          <tr>
+            <th scope="col" className="tc-num">
+              {t("match.col.shirt")}
+            </th>
+            <th scope="col">{t("squad.col.name")}</th>
+            <th scope="col">{t("squad.col.pos")}</th>
+            <th scope="col">{t("match.report.col.events")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const stat = playerStats.find((entry) => entry.playerId === row.id);
+            return (
+              <tr key={row.id}>
+                <td className="tc-num">{row.shirt}</td>
+                <td>
+                  <span className="tc-namecell">
                     <PlayerPortrait
                       seed={resolvePortraitSeed(row.id, portraitSeedForPlayerId)}
                       clubId={worldCareerClubId(teamId)}
                       size="sm"
                     />
-                    {row.name}
-                  </button>
-                ) : (
-                  row.name
-                )}
-              </td>
-              <td>{row.role}</td>
-              <td>
-                <MatchEventBadges stat={stat} />
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+                    {onSelectPlayer ? (
+                      <button type="button" className="tc-linkbtn" onClick={() => onSelectPlayer(row.id)}>
+                        {row.name}
+                      </button>
+                    ) : (
+                      row.name
+                    )}
+                  </span>
+                </td>
+                <td>{row.role}</td>
+                <td>
+                  <MatchEventBadges stat={stat} />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
 function MatchEventBadges({ stat }: { stat?: PlayerSeasonStat }) {
-  if (!stat || (stat.goals === 0 && stat.assists === 0 && stat.yellowCards === 0)) {
-    return <span className="match-event-badge is-muted">—</span>;
+  const t = useT();
+  const reds = stat?.redCards ?? 0;
+  if (!stat || (stat.goals === 0 && stat.assists === 0 && stat.yellowCards === 0 && reds === 0)) {
+    return <span className="tc-caption">—</span>;
   }
   return (
-    <span className="match-event-badges">
+    <span className="tc-report__badges">
       {stat.goals > 0 ? (
-        <span className="match-event-badge" title="Tore">
-          <Star size={12} strokeWidth={2.5} aria-hidden /> {stat.goals}
+        <span className="tc-report__badge" title={t("match.report.badge.goals")}>
+          {t("match.report.badge.goalsShort", { count: stat.goals })}
         </span>
       ) : null}
       {stat.assists > 0 ? (
-        <span className="match-event-badge" title="Vorlagen">
-          A {stat.assists}
+        <span className="tc-report__badge" title={t("match.report.badge.assists")}>
+          {t("match.report.badge.assistsShort", { count: stat.assists })}
         </span>
       ) : null}
       {stat.yellowCards > 0 ? (
-        <span className="match-event-badge is-card" title="Gelbe Karten">
-          K {stat.yellowCards}
+        <span className="tc-report__badge" title={t("match.log.yellow")}>
+          <span className="tc-eventlog__card tc-eventlog__card--yellow" aria-hidden="true" />
+          {stat.yellowCards > 1 ? stat.yellowCards : null}
+          <span className="tc-sr">{t("match.log.yellow")}</span>
+        </span>
+      ) : null}
+      {reds > 0 ? (
+        <span className="tc-report__badge" title={t("match.log.red")}>
+          <span className="tc-eventlog__card tc-eventlog__card--red" aria-hidden="true" />
+          <span className="tc-sr">{t("match.log.red")}</span>
         </span>
       ) : null}
     </span>
   );
 }
-

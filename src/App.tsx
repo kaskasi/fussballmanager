@@ -202,7 +202,7 @@ import {
 } from "./stadium/club-stadium.ts";
 import { clubDisplayName, clubShortLabel, worldClubForTeam } from "./sim/league-divisions.ts";
 import { clubFlavorFanbase } from "./sim/club-profiles.ts";
-import { clubShortName, playerFixture } from "./sim/league-week.ts";
+import { playerFixture } from "./sim/league-week.ts";
 import { fanbaseMood } from "./stadium/fanbase.ts";
 import { teamForm } from "./sim/league-form.ts";
 import { teamPoorRecentForm } from "./ui/assets/mood-photos.ts";
@@ -2176,7 +2176,7 @@ export default function App() {
       ) : storyTransition ? (
         <StoryActTransitionModal
           transition={storyTransition}
-          clubName={clubShortName(storyTransition.from_team_id)}
+          clubName={clubDisplayName(storyTransition.from_team_id, world.clubs)}
           offers={storyOffers}
           followerNames={storyFollowerNames(session)}
           onAccept={handleAcceptStoryOffer}

@@ -6,7 +6,7 @@ import { movePlayerToClub } from "../board/companion-pick.ts";
 import { jobOfferForTeam } from "../board/job-offers.ts";
 import { t } from "../i18n/index.ts";
 import type { GameSession } from "../persistence/game-session.ts";
-import { clubShortName } from "../sim/league-week.ts";
+import { clubDisplayName } from "../sim/league-divisions.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { applyChronicleEntry } from "./apply.ts";
 import { act1AssistantTrainingPlan } from "./career-presentation.ts";
@@ -17,7 +17,7 @@ import type { StoryState } from "./story-state.ts";
 
 /** Act 2 opens with the first unlock: presets and sliders on the lineup screen. */
 function openAct2(story: StoryState, session: GameSession, teamId: TeamId): StoryState {
-  const club = clubShortName(teamId);
+  const club = clubDisplayName(teamId);
   const chairman = generateChairmanName(session.masterSeed, teamId);
   const followerIds = new Set(story.act_transition?.companion_ids ?? []);
   const followers = story.legend_players.filter((ref) => followerIds.has(ref.player_id));

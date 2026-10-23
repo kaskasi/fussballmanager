@@ -11,7 +11,8 @@ import type { InSeasonPressureStep } from "../board/season-objectives.ts";
 import { pickStoryCompanions, rankStoryBonds } from "../board/story-companions.ts";
 import { t } from "../i18n/index.ts";
 import type { LeagueState } from "../persistence/league-state.ts";
-import { clubShortName, leagueTable } from "../sim/league-week.ts";
+import { clubDisplayName } from "../sim/league-divisions.ts";
+import { leagueTable } from "../sim/league-week.ts";
 import type { PromotionRelegationResult } from "../sim/promotion-relegation.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import type { Player } from "../types/player.ts";
@@ -124,7 +125,7 @@ function resolveAct2SeasonEnd(input: CareerActSeasonEndInput): StoryState {
   const teamId = league.player_club_id;
   if (!act2PromotedFromMovements(teamId, input.promotionRelegation)) return story;
   const legends = story.legend_players.map((ref) => ref.name).join(", ");
-  const params = { club: clubShortName(teamId), names: legends };
+  const params = { club: clubDisplayName(teamId), names: legends };
   const chronicled = applyChronicleEntry(story, {
     id: `chronicle_act2_promotion_${input.endingSeason}`,
     season: input.endingSeason,
@@ -203,7 +204,7 @@ export function resolveCareerActSeasonEnd(input: CareerActSeasonEndInput): Story
 
   const key = act1EndChronicleKey(outcome, viaPlayoff);
   const params = {
-    club: clubShortName(teamId),
+    club: clubDisplayName(teamId),
     place: String(finalPlace),
     names: legends.map(formatPlayerName).join(", "),
   };

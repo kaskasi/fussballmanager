@@ -223,3 +223,14 @@ button.tc-stars__card:hover { background: var(--sunken); }
   .tc-stream__line.is-latest.is-goal { animation: none; }
   .tc-zones__seg { transition: none; }
 }
+
+/* Tactics menu screen: portrait pitch left, bench right, tactics/analysis panels underneath. */
+.tc-lineup--menu .tc-lineup__split { grid-template-columns: minmax(0, 1fr); }
+.tc-lineup--menu .tc-lineup__board { grid-template-columns: minmax(0, 1fr); align-items: start; }
+.tc-lineup--menu .lineup-pitch-wrap--vertical { aspect-ratio: 68 / 105; width: 100%; max-height: none; min-height: 0; flex: none; }
+.tc-lineup--menu .lineup-slot { width: clamp(3rem, 7vw, 4.25rem); }
+.tc-lineup--menu .lineup-bench-list--fixed { grid-template-columns: minmax(0, 1fr); }
+.tc-lineup--menu .tc-stack { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); align-items: start; gap: var(--space-3); }
+@media (min-width: 720px) {
+  .tc-lineup--menu .tc-lineup__board { grid-template-columns: minmax(0, 30rem) minmax(0, 1fr); }
+}

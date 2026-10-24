@@ -69,19 +69,4 @@ describe("fastForwardToMonth", () => {
     expect(compareCivilDates(month, current)).toBeGreaterThan(0);
     expect(month.monthIndex).toBe((current.monthIndex + 1) % 12);
   });
-
-  it("pauses before the first step while a decision is open", async () => {
-    const session = newGameSession();
-    const outcome = await fastForwardToMonthEnd(
-      session,
-      simulateUntilTarget("next_week", session.season, session.week, session.weekday),
-      {
-        simulateWeek: async (current) => current,
-        advanceSessionDays: (current) => current,
-        shouldPause: () => true,
-      },
-    );
-    expect(outcome.reason).toBe("inbox");
-    expect(outcome.steps).toBe(0);
-  });
 });

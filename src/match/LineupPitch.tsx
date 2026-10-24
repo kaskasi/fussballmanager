@@ -32,7 +32,18 @@ type LineupPitchProps = {
   onAssign: (slotId: FormationSlotId, playerId: string | null) => void;
   onDragPlayer: (playerId: string | null) => void;
   onOpenPlayer?: (playerId: string) => void;
+  /** "vertical": goalkeeper at the bottom, strikers at the top. */
+  orientation?: "horizontal" | "vertical";
 };
+
+type PitchPoint = { x: number; y: number };
+
+/** Formation coordinates attack to the right; vertical turns the pitch a quarter turn so attack points up. */
+function slotStyle(position: PitchPoint, orientation: "horizontal" | "vertical") {
+  return orientation === "vertical"
+    ? { left: `${position.y}%`, top: `${100 - position.x}%` }
+    : { left: `${position.x}%`, top: `${position.y}%` };
+}
 
 export function LineupPitch({
   formation,
@@ -44,6 +55,7 @@ export function LineupPitch({
   onAssign,
   onDragPlayer,
   onOpenPlayer,
+  orientation = "horizontal",
 }: LineupPitchProps) {
   const t = useT();
   const [view, setView] = useState<LineupPitchView>("own");
@@ -87,8 +99,11 @@ export function LineupPitch({
         ) : null}
       </div>
 
-      <div className="lineup-pitch-wrap" aria-label="Aufstellungsfeld">
-        <PitchSvg />
+      <div
+        className={`lineup-pitch-wrap${orientation === "vertical" ? " lineup-pitch-wrap--vertical" : ""}`}
+        aria-label="Aufstellungsfeld"
+      >
+        <PitchSvg orientation={orientation} />
 
         {view === "own" ? (
           <div className="lineup-pitch-slots" id="lineup-pitch-own" role="tabpanel" aria-labelledby="lineup-tab-own">
@@ -100,10 +115,7 @@ export function LineupPitch({
                 <div
                   key={slot.id}
                   className={`lineup-slot${player ? " has-player" : ""}${isTarget ? " is-target" : ""}`}
-                  style={{
-                    left: `${slot.homePosition.x}%`,
-                    top: `${slot.homePosition.y}%`,
-                  }}
+                  style={slotStyle(slot.homePosition, orientation)}
                   onDragOver={(event) => event.preventDefault()}
                   onDrop={(event) => handleDrop(slot.id, event)}
                 >
@@ -145,10 +157,7 @@ export function LineupPitch({
               <div
                 key={`opp-${entry.slotId}`}
                 className="lineup-slot lineup-slot-opponent has-player"
-                style={{
-                  left: `${entry.position.x}%`,
-                  top: `${entry.position.y}%`,
-                }}
+                style={slotStyle(entry.position, orientation)}
               >
                 <span className="lineup-slot-label">{entry.slotId}</span>
                 <button
@@ -172,7 +181,19 @@ export function LineupPitch({
   );
 }
 
-function PitchSvg() {
+function PitchSvg({ orientation }: { orientation: "horizontal" | "vertical" }) {
+  if (orientation === "vertical") {
+    return (
+      <svg className="lineup-pitch-svg" viewBox="0 0 68 105" role="img" aria-hidden="true">
+        <rect x="0" y="0" width="68" height="105" className="lineup-pitch-grass" />
+        <rect x="0.8" y="0.8" width="66.4" height="103.4" className="lineup-pitch-line" fill="none" />
+        <line x1="0" y1="52.5" x2="68" y2="52.5" className="lineup-pitch-line" />
+        <circle cx="34" cy="52.5" r="9" className="lineup-pitch-line" fill="none" />
+        <rect x="17" y="0" width="34" height="16" className="lineup-pitch-line" fill="none" />
+        <rect x="17" y="89" width="34" height="16" className="lineup-pitch-line" fill="none" />
+      </svg>
+    );
+  }
   return (
     <svg className="lineup-pitch-svg" viewBox="0 0 105 68" role="img" aria-hidden="true">
       <rect x="0" y="0" width="105" height="68" className="lineup-pitch-grass" />

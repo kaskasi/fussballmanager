@@ -17,6 +17,7 @@ import type { SaveGame } from "../../persistence/savegame-model.ts";
 import { advanceScoutWorkingDay } from "../../scouting/scout-board.ts";
 import { buildOpponentScoutWorkingDayContext } from "../../scouting/opponent-scout-job.ts";
 import { prepareCareerMatch, type CareerMatchSetup } from "../../sim/career-match-setup.ts";
+import { ignoreOpenInbox } from "../../inbox/ignore-open-inbox.ts";
 import { MONDAY, resolveSmartSkip } from "../../sim/day-calendar.ts";
 import {
   fastForwardToMonthEnd,
@@ -233,7 +234,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
     async (
       resolveTarget: (snapshot: ReturnType<typeof sessionFromSave>) => number | CivilDate,
       reachedMessage: (steps: number) => string,
-      pauseOnInbox: boolean,
+      ignoreInbox: boolean,
     ) => {
       if (simulating) return;
       setSimulating(true);
@@ -300,9 +301,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
           fastForwardToMonthEnd(snapshot, resolveTarget(snapshot), {
             simulateWeek: simulateWeekForFastForward,
             advanceSessionDays,
-            shouldPause: pauseOnInbox
-              ? (current) => hasInboxBlockerForNext(current, current.youthInbox, current.players)
-              : undefined,
+            beforeStep: ignoreInbox ? ignoreOpenInbox : undefined,
             onProgress: async (sessionAfterStep) => {
               await new Promise<void>((resolve) => {
                 window.setTimeout(resolve, 0);
@@ -321,8 +320,6 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
         });
         if (outcome.reason === "reached") {
           flashNotice(reachedMessage(outcome.steps), "ok");
-        } else if (outcome.reason === "inbox") {
-          flashNotice(t("shell.simulate.inbox"), "warn");
         } else if (outcome.reason === "training_plan") {
           flashNotice(t("calendar.fastForward.trainingPlan"), "warn");
         } else if (outcome.reason === "season_complete") {
@@ -363,7 +360,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
     [runFastForward],
   );
 
-  /** Header menu "Simulate": next week / next month, pausing for open inbox decisions. */
+  /** Header menu "Simulate": next week / next month; open inbox items count as ignored. */
   const handleSimulateUntil = useCallback(
     (kind: SimulateUntil) =>
       runFastForward(

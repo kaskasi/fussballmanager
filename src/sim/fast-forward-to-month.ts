@@ -21,8 +21,6 @@ export type FastForwardStopReason =
   | "training_plan"
   | "season_complete"
   | "stall"
-  /** An open Postfach decision needs the player before time may continue. */
-  | "inbox"
   /** Story Mode Act 1 ended — the employer pick blocks time (PRD 19). */
   | "story_transition";
 
@@ -39,8 +37,8 @@ export interface FastForwardDeps {
     daysAdvanced: number,
     targetWeekday: number,
   ) => GameSession;
-  /** Optional: stop before the next step while this returns true (e.g. open inbox decisions). */
-  shouldPause?: (session: GameSession) => boolean;
+  /** Optional: transform the session before every step (e.g. auto-ignore open inbox items). */
+  beforeStep?: (session: GameSession) => GameSession;
   /** Optional: yield to the UI thread between heavy steps. */
   onProgress?: (session: GameSession, steps: number) => void | Promise<void>;
 }
@@ -202,8 +200,8 @@ export async function fastForwardToDate(
     if (isCareerTransitionPending(session.storyState)) {
       return { session, steps, reason: "story_transition" };
     }
-    if (deps.shouldPause?.(session)) {
-      return { session, steps, reason: "inbox" };
+    if (deps.beforeStep) {
+      session = deps.beforeStep(session);
     }
 
     const trainingStep = applyTrainingGateAndUnits(session);

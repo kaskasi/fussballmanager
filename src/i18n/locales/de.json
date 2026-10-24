@@ -1694,8 +1694,6 @@
   "shell.nav.postfach": "Postfach",
   "shell.nav.scouting": "Scouting",
   "shell.nav.squad": "Kader",
-  "shell.simulate.stopped": "Nach {steps} Schritten vorzeitig gestoppt.",
-  "shell.simulate.inbox": "Erledige zuerst deine offenen Postfach-Entscheidungen.",
   "shell.simulate.done": "{steps} Schritte simuliert.",
   "shell.simulate.nextMonth": "Bis nächsten Monat",
   "shell.simulate.nextWeek": "Bis nächste Woche",

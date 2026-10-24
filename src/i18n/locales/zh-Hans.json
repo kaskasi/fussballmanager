@@ -1632,8 +1632,6 @@
   "shell.nav.postfach": "收件箱",
   "shell.nav.scouting": "球探",
   "shell.nav.squad": "阵容",
-  "shell.simulate.stopped": "在 {steps} 步后提前停止。",
-  "shell.simulate.inbox": "请先处理收件箱中的待决事项。",
   "shell.simulate.done": "已模拟 {steps} 步。",
   "shell.simulate.nextMonth": "模拟到下月",
   "shell.simulate.nextWeek": "模拟到下周",

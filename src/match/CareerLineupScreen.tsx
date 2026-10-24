@@ -325,7 +325,7 @@ export function CareerLineupScreen({
     : Math.round(12_000 + (setup.seed % 9_000));
 
   return (
-    <main className="matchday career-lineup tc-lineup">
+    <main className={`matchday career-lineup tc-lineup${variant === "menu" ? " tc-lineup--menu" : ""}`}>
       <MatchdayLineupAmbience
         setup={setup}
         homeStadiumCapacity={homeStadiumCapacity}
@@ -392,6 +392,7 @@ export function CareerLineupScreen({
               onAssign={setSlot}
               onDragPlayer={setDragPlayerId}
               onOpenPlayer={onOpenPlayer}
+              orientation={variant === "menu" ? "vertical" : "horizontal"}
             />
             {variant === "match" && showOpponentScout && scoutBoard && onOpenOpponentScoutReport ? (
               <OpponentScoutMatchAction
@@ -599,6 +600,7 @@ export function CareerLineupScreen({
         </aside>
       </div>
 
+      {variant === "menu" ? null : (
       <section className="tc-panel tc-lineup__squad" aria-label={t("match.lineup.squadAria")}>
         <div className="tc-panel__head">
           <h2 className="tc-panel__title">{t("match.lineup.squadSummary", { count: squadTableRows.length })}</h2>
@@ -663,6 +665,7 @@ export function CareerLineupScreen({
           </table>
         </div>
       </section>
+      )}
     </main>
   );
 }

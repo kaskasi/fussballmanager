@@ -1694,8 +1694,6 @@
   "shell.nav.postfach": "Inbox",
   "shell.nav.scouting": "Scouting",
   "shell.nav.squad": "Squad",
-  "shell.simulate.stopped": "Stopped early after {steps} steps.",
-  "shell.simulate.inbox": "Resolve your open inbox decisions first.",
   "shell.simulate.done": "Simulated {steps} steps.",
   "shell.simulate.nextMonth": "Until next month",
   "shell.simulate.nextWeek": "Until next week",

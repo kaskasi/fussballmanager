@@ -7,6 +7,7 @@ import {
   fastForwardTargetDate,
   fastForwardToMonthEnd,
   hasReachedFastForwardTarget,
+  simulateUntilTarget,
 } from "./fast-forward-to-month.ts";
 import { civilDateFromSession } from "./session-civil-date.ts";
 import { isTrainingNextActive } from "./training-next.ts";
@@ -55,4 +56,17 @@ describe("fastForwardToMonth", () => {
     expect(outcome.reason).not.toBe("stall");
     expect(steps).toBeGreaterThan(0);
   }, 15_000);
+
+  it("simulate-until targets: Monday of next week, 1st of next month", () => {
+    const session = newGameSession();
+    const week = simulateUntilTarget("next_week", session.season, session.week, session.weekday);
+    const nextMonday = civilDateFromSession(session.season, session.week + 1, 1);
+    expect(week).toEqual(nextMonday);
+
+    const month = simulateUntilTarget("next_month", session.season, session.week, session.weekday);
+    const current = civilDateFromSession(session.season, session.week, session.weekday);
+    expect(month.day).toBe(1);
+    expect(compareCivilDates(month, current)).toBeGreaterThan(0);
+    expect(month.monthIndex).toBe((current.monthIndex + 1) % 12);
+  });
 });

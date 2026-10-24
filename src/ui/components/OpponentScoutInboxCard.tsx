@@ -86,6 +86,7 @@ export function OpponentScoutInboxCard({
   onApplyPlan,
   embedded = false,
   readOnly = false,
+  hidePostCount = false,
 }: {
   notice: ScoutJobCompleteNotice;
   postIndex: number;
@@ -94,6 +95,8 @@ export function OpponentScoutInboxCard({
   onApplyPlan?: (plan: SandboxPlan) => void;
   embedded?: boolean;
   readOnly?: boolean;
+  /** Tactics screen shows the report outside the inbox — no "post 1 of 3" counter. */
+  hidePostCount?: boolean;
 }) {
   useT();
   const report = notice.report;
@@ -110,13 +113,14 @@ export function OpponentScoutInboxCard({
       <div className="inbox-story">
         {embedded ? (
           <p className="inbox-scout-job-lead inbox-scout-job-lead--compact">
-            {t("postfach.scoutJob.postCount", { index: postIndex, total: postTotal })}
-            {" · "}
+            {hidePostCount
+              ? null
+              : `${t("postfach.scoutJob.postCount", { index: postIndex, total: postTotal })} · `}
             {report?.bundleSummary
               ? t("postfach.opponentScout.simRuns", { count: report.bundleSummary.simCount })
               : null}
             {notice.assignedScoutName
-              ? ` · ${t("postfach.opponentScout.scout", { name: notice.assignedScoutName })}`
+              ? `${hidePostCount && !report?.bundleSummary ? "" : " · "}${t("postfach.opponentScout.scout", { name: notice.assignedScoutName })}`
               : null}
           </p>
         ) : (

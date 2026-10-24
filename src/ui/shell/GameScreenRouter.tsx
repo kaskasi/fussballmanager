@@ -1,7 +1,7 @@
 /** WIREFRAME: PRD 09 — routed pipeline screens (extracted from App). */
 import { activeScoutCount, listBoardTargets } from "../../scouting/scout-board.ts";
 import { boardCashFloor } from "../../economy/spend-runway.ts";
-import { prepareCareerMatch } from "../../sim/career-match-setup.ts";
+import { prepareCareerMatch, prepareUpcomingCareerMatch } from "../../sim/career-match-setup.ts";
 import { usesTrainingNextNexus } from "../../sim/training-next.ts";
 import { worldCareerClubId } from "../../world/world-generator.ts";
 import { isPlayerListed, listPlayerForSale, unlistPlayer } from "../../transfers/transfer-listings.ts";
@@ -45,6 +45,8 @@ import { ManagerDeskHub } from "../screens/ManagerDeskHub.tsx";
 import { PipelineDashboard } from "../screens/PipelineDashboard.tsx";
 import { PostfachScreen } from "../screens/PostfachScreen.tsx";
 import { ScoutingCenter } from "../screens/ScoutingCenter.tsx";
+import { TacticsScreen } from "../screens/TacticsScreen.tsx";
+import { saveTacticsPreset } from "../../match/tactics-presets.ts";
 import { StadiumScreen } from "../screens/StadiumScreen.tsx";
 import { TrainingCenter } from "../screens/TrainingCenter.tsx";
 import { TransfersScreen } from "../screens/TransfersScreen.tsx";
@@ -548,6 +550,34 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           onClearMentor={handleClearMentor}
           onOpenMedical={() => setScreen("medical")}
           onSelectPlayer={setProfileId}
+        />
+      ) : null}
+      {screen === "tactics" ? (
+        <TacticsScreen
+          setup={prepareUpcomingCareerMatch(session)}
+          players={players}
+          rivalPlayers={rivalPlayers}
+          season={season}
+          week={week}
+          weekday={weekday}
+          stadium={stadium}
+          storyState={storyState}
+          tacticsPresets={session.tacticsPresets}
+          matchLineup={session.matchLineup}
+          scoutBoard={scoutBoard}
+          scoutNetwork={scoutNetwork}
+          onSaveTacticsPreset={(id, plan) =>
+            patchSession((current) => ({
+              ...current,
+              tacticsPresets: saveTacticsPreset(current.tacticsPresets, id, plan),
+            }))
+          }
+          onSaveMatchLineup={(lineup) =>
+            patchSession((current) => ({ ...current, matchLineup: lineup }))
+          }
+          onStartOpponentScout={handleStartOpponentScout}
+          onApplyOpponentScoutPlan={handleApplyOpponentScoutPlan}
+          onOpenPlayer={setProfileId}
         />
       ) : null}
       {screen === "medical" ? (

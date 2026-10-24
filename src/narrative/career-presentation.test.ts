@@ -75,6 +75,17 @@ describe("career presentation (PRD 19)", () => {
     );
   });
 
+  it("tactics menu is hidden in act1 and arrives with the tactics_sliders unlock", () => {
+    const act1 = storyModeAct1StoryState();
+    expect(isNavScreenVisible("tactics", act1)).toBe(false);
+    const unlocked = grantCurtainUnlock(
+      { ...act1, career_phase: "act2_regional" },
+      "tactics_sliders",
+    );
+    expect(isNavScreenVisible("tactics", unlocked)).toBe(true);
+    expect(isNavScreenVisible("tactics", defaultStoryState())).toBe(true);
+  });
+
   it("act2 with only the stadium unlock shows just the stadium", () => {
     const state = grantCurtainUnlock(
       { ...storyModeAct1StoryState(), career_phase: "act2_regional" },

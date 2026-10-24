@@ -775,7 +775,11 @@ export default function App() {
     careerMatchSetup,
     careerMatchUiVisible,
     setCareerMatchUiVisible,
-    openPostfach,
+    openTactics: () => {
+      setProfileId(null);
+      setForeignPlayerId(null);
+      setScreen("tactics");
+    },
     scoutMapDetailBackRef,
     setScoutMapDetailNav,
   });
@@ -869,6 +873,7 @@ export default function App() {
     handleNext,
     handleNextRef,
     handleFastForwardToMonth,
+    handleSimulateUntil,
     finishWeekSimulation,
   } = useWeekAdvance({
     save,
@@ -1486,6 +1491,7 @@ export default function App() {
       "club-events": t("hub.events.screenTitle"),
       training: t("shell.nav.training"),
       squad: t("shell.nav.squad"),
+      tactics: t("shell.nav.tactics"),
       medical: t("shell.nav.medical"),
     };
     const drillTitle = hubDrilldownTitle[screen];
@@ -1630,6 +1636,7 @@ export default function App() {
     onHeaderPrimaryClick: handleHeaderPrimaryClick,
     onNewGame: resetGame,
     onOpenSaves: () => setScreen("settings"),
+    onSimulateUntil: careerMatchSetup ? undefined : (kind) => void handleSimulateUntil(kind),
     matchFlowActive: Boolean(careerMatchSetup && careerMatchUiVisible),
     primaryAction: matchFlowBrowsing
       ? backToLineupAction

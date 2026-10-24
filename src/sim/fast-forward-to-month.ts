@@ -37,6 +37,8 @@ export interface FastForwardDeps {
     daysAdvanced: number,
     targetWeekday: number,
   ) => GameSession;
+  /** Optional: transform the session before every step (e.g. auto-ignore open inbox items). */
+  beforeStep?: (session: GameSession) => GameSession;
   /** Optional: yield to the UI thread between heavy steps. */
   onProgress?: (session: GameSession, steps: number) => void | Promise<void>;
 }
@@ -73,6 +75,23 @@ export function fastForwardTargetDate(
     return current;
   }
   return end;
+}
+
+export type SimulateUntil = "next_week" | "next_month";
+
+/** "Simulate until" presets: Monday of the next season week, or the 1st of the next month. */
+export function simulateUntilTarget(
+  kind: SimulateUntil,
+  season: number,
+  week: number,
+  weekday: number,
+): CivilDate {
+  if (kind === "next_week") {
+    return civilDateFromSession(season, week + 1, MONDAY);
+  }
+  const current = civilDateFromSession(season, week, weekday);
+  const first = new Date(current.year, current.monthIndex + 1, 1);
+  return { year: first.getFullYear(), monthIndex: first.getMonth(), day: 1 };
 }
 
 export function hasReachedFastForwardTarget(
@@ -137,16 +156,28 @@ const DEFAULT_MAX_STEPS = 120;
 /** Playtest: advance time until civil date reaches target month end (inclusive). */
 export async function fastForwardToMonthEnd(
   sessionInput: GameSession,
-  targetMonthIndex: number,
+  target: number | CivilDate,
   deps: FastForwardDeps,
   maxSteps = DEFAULT_MAX_STEPS,
 ): Promise<FastForwardResult> {
-  const target = fastForwardTargetDate(
-    sessionInput.season,
-    sessionInput.week,
-    sessionInput.weekday,
-    targetMonthIndex,
-  );
+  const targetDate =
+    typeof target === "number"
+      ? fastForwardTargetDate(
+          sessionInput.season,
+          sessionInput.week,
+          sessionInput.weekday,
+          target,
+        )
+      : target;
+  return fastForwardToDate(sessionInput, targetDate, deps, maxSteps);
+}
+
+export async function fastForwardToDate(
+  sessionInput: GameSession,
+  target: CivilDate,
+  deps: FastForwardDeps,
+  maxSteps = DEFAULT_MAX_STEPS,
+): Promise<FastForwardResult> {
 
   if (
     hasReachedFastForwardTarget(
@@ -168,6 +199,9 @@ export async function fastForwardToMonthEnd(
     }
     if (isCareerTransitionPending(session.storyState)) {
       return { session, steps, reason: "story_transition" };
+    }
+    if (deps.beforeStep) {
+      session = deps.beforeStep(session);
     }
 
     const trainingStep = applyTrainingGateAndUnits(session);

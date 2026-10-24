@@ -60,6 +60,10 @@ import { LineupFatigueBars } from "./LineupFatigueBars.tsx";
 import { stateMark } from "../ui/player-profile.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
 import { OpponentScoutMatchAction } from "../ui/components/OpponentScoutMatchAction.tsx";
+import { OpponentScoutInboxCard } from "../ui/components/OpponentScoutInboxCard.tsx";
+import type { ScoutNetworkState } from "../scouting/scout-network.ts";
+import { opponentScoutMatchIdFromSetup } from "../scouting/opponent-scout-match-id.ts";
+import { opponentScoutNoticeForMatch } from "../scouting/scout-job-postfach.ts";
 import { LineupIndicatorLegend } from "../ui/components/LineupIndicatorLegend.tsx";
 import { useT } from "../i18n/react.ts";
 
@@ -87,6 +91,14 @@ type CareerLineupScreenProps = {
   tacticsMode?: TacticsMode;
   /** PRD 19 — opponent scout module behind the Story Mode curtain. */
   showOpponentScout?: boolean;
+  /**
+   * "match": pre-kickoff step of the match flow (confirm button in the header NEXT).
+   * "menu": standalone Tactics screen — edits persist, no kickoff, analysis panel inline.
+   */
+  variant?: "match" | "menu";
+  scoutNetwork?: ScoutNetworkState;
+  onStartOpponentScout?: () => void;
+  onApplyOpponentScoutPlan?: (plan: SandboxPlan) => void;
 };
 
 const TACTICS_STYLE_IDS: TacticsPresetId[] = [1, 2, 3];
@@ -115,6 +127,10 @@ export function CareerLineupScreen({
   kasse,
   tacticsMode = "full",
   showOpponentScout = true,
+  variant = "match",
+  scoutNetwork,
+  onStartOpponentScout,
+  onApplyOpponentScoutPlan,
 }: CareerLineupScreenProps) {
   const t = useT();
   const managerClubId = careerTeamId(setup.playerClubId);
@@ -136,7 +152,9 @@ export function CareerLineupScreen({
     () => benchPlayers(players, assignments, managerClubId),
     [players, assignments, managerClubId],
   );
-  const benchPageCount = Math.max(1, Math.ceil(bench.length / LINEUP_BENCH_PAGE_SIZE));
+  // The Tactics screen shows the whole bench as a tile grid; the match flow pages a fixed-height list.
+  const benchPageSize = variant === "menu" ? Math.max(bench.length, 1) : LINEUP_BENCH_PAGE_SIZE;
+  const benchPageCount = Math.max(1, Math.ceil(bench.length / benchPageSize));
 
   useEffect(() => {
     setBenchPage((current) => Math.min(current, benchPageCount - 1));
@@ -159,10 +177,11 @@ export function CareerLineupScreen({
   }, [matchLineup, players, fallbackPlan, managerClubId]);
 
   const benchPageSlots = useMemo(() => {
-    const start = benchPage * LINEUP_BENCH_PAGE_SIZE;
-    const slice = bench.slice(start, start + LINEUP_BENCH_PAGE_SIZE);
-    return Array.from({ length: LINEUP_BENCH_PAGE_SIZE }, (_, index) => slice[index] ?? null);
-  }, [bench, benchPage]);
+    const start = benchPage * benchPageSize;
+    const slice = bench.slice(start, start + benchPageSize);
+    if (variant === "menu") return slice;
+    return Array.from({ length: benchPageSize }, (_, index) => slice[index] ?? null);
+  }, [bench, benchPage, benchPageSize, variant]);
   const opponentPreview = useMemo(
     () => buildOpponentLineupPreview(setup, rivalPlayers),
     [setup, rivalPlayers],
@@ -180,6 +199,14 @@ export function CareerLineupScreen({
   const squad = useMemo(
     () => buildSquadFromAssignments(players, plan, assignments, setup.playerClubId, managerClubId),
     [players, plan, assignments, setup.playerClubId, managerClubId],
+  );
+
+  const analysisNotice = useMemo(
+    () =>
+      scoutBoard
+        ? opponentScoutNoticeForMatch(scoutBoard, opponentScoutMatchIdFromSetup(season, setup))
+        : undefined,
+    [scoutBoard, season, setup],
   );
 
   const persistLineup = useCallback(
@@ -267,6 +294,7 @@ export function CareerLineupScreen({
   );
 
   useLayoutEffect(() => {
+    if (variant === "menu") return;
     if (!squad || filledCount < 11) {
       onNavActionChange(null);
       return;
@@ -279,7 +307,7 @@ export function CareerLineupScreen({
       title: t("match.lineup.confirmSelectionTitle"),
     });
     return () => onNavActionChange(null);
-  }, [squad, filledCount, onConfirm, onNavActionChange, t]);
+  }, [squad, filledCount, onConfirm, onNavActionChange, t, variant]);
 
   if (!squad) {
     return (
@@ -300,13 +328,15 @@ export function CareerLineupScreen({
     : Math.round(12_000 + (setup.seed % 9_000));
 
   return (
-    <main className="matchday career-lineup tc-lineup">
+    <main className={`matchday career-lineup tc-lineup${variant === "menu" ? " tc-lineup--menu club-shell-card-body" : ""}`}>
+      {variant === "menu" ? null : (
       <MatchdayLineupAmbience
         setup={setup}
         homeStadiumCapacity={homeStadiumCapacity}
         fanbaseMood={fanbaseMood}
         poorForm={poorForm}
       />
+      )}
       <header className="tc-page-head tc-lineup__head">
         <div className="tc-lineup__title">
           <h1 className="tc-page-title">{t("match.lineup.title")}</h1>
@@ -367,8 +397,9 @@ export function CareerLineupScreen({
               onAssign={setSlot}
               onDragPlayer={setDragPlayerId}
               onOpenPlayer={onOpenPlayer}
+              orientation={variant === "menu" ? "vertical" : "horizontal"}
             />
-            {showOpponentScout && scoutBoard && onOpenOpponentScoutReport ? (
+            {variant === "match" && showOpponentScout && scoutBoard && onOpenOpponentScoutReport ? (
               <OpponentScoutMatchAction
                 mode="lineup"
                 setup={setup}
@@ -411,7 +442,7 @@ export function CareerLineupScreen({
             </div>
             <LineupIndicatorLegend />
             <div
-              className="lineup-bench-list lineup-bench-list--fixed"
+              className={`lineup-bench-list ${variant === "menu" ? "lineup-bench-grid" : "lineup-bench-list--fixed"}`}
               onDragOver={(event) => {
                 if (dragPlayerId) event.preventDefault();
               }}
@@ -430,6 +461,7 @@ export function CareerLineupScreen({
                   <LineupPlayerCard
                     key={player.id}
                     player={player}
+                    tile={variant === "menu"}
                     onDragStart={setDragPlayerId}
                     onDragEnd={() => setDragPlayerId(null)}
                     onOpenPlayer={onOpenPlayer}
@@ -466,6 +498,34 @@ export function CareerLineupScreen({
               <dd>~{expectedSpectators.toLocaleString(numberFormat)}</dd>
             </dl>
           </section>
+
+          {variant === "menu" && showOpponentScout && scoutBoard ? (
+            <section className="tc-panel tc-lineup__analysis" aria-label={t("tactics.analysis.title")}>
+              <div className="tc-panel__head">
+                <h2 className="tc-panel__title">{t("tactics.analysis.title")}</h2>
+              </div>
+              {analysisNotice ? (
+                <OpponentScoutInboxCard
+                  notice={analysisNotice}
+                  postIndex={1}
+                  postTotal={1}
+                  onDismiss={() => undefined}
+                  onApplyPlan={tacticsMode === "full" ? onApplyOpponentScoutPlan : undefined}
+                  embedded
+                  readOnly
+                  hidePostCount
+                />
+              ) : (
+                <OpponentScoutMatchAction
+                  setup={setup}
+                  season={season}
+                  scoutBoard={scoutBoard}
+                  scoutNetwork={scoutNetwork}
+                  onStart={onStartOpponentScout}
+                />
+              )}
+            </section>
+          ) : null}
 
           {tacticsMode === "full" ? (
           <section className="tc-panel">
@@ -546,6 +606,7 @@ export function CareerLineupScreen({
         </aside>
       </div>
 
+      {variant === "menu" ? null : (
       <section className="tc-panel tc-lineup__squad" aria-label={t("match.lineup.squadAria")}>
         <div className="tc-panel__head">
           <h2 className="tc-panel__title">{t("match.lineup.squadSummary", { count: squadTableRows.length })}</h2>
@@ -610,6 +671,7 @@ export function CareerLineupScreen({
           </table>
         </div>
       </section>
+      )}
     </main>
   );
 }

@@ -1,5 +1,6 @@
 /** Shell navigation and header contract (extracted from App). */
 
+import type { SimulateUntil } from "../../sim/fast-forward-to-month.ts";
 import type { NavPrimaryAction } from "../nav-primary-action.ts";
 
 export type Screen =
@@ -10,6 +11,7 @@ export type Screen =
   | "scouting"
   | "transfers"
   | "squad"
+  | "tactics"
   | "medical"
   | "finances"
   | "merchandising"
@@ -29,6 +31,7 @@ export const SCREEN_DOCUMENT_TITLE_KEYS: Record<Screen, string> = {
   scouting: "shell.nav.scouting",
   transfers: "shell.nav.transfers",
   squad: "shell.nav.squad",
+  tactics: "shell.nav.tactics",
   medical: "shell.nav.medical",
   finances: "shell.nav.finances",
   merchandising: "shell.nav.merchandising",
@@ -52,6 +55,8 @@ export interface HubNavActions {
   onNext: () => void;
   onHeaderPrimaryClick?: () => void;
   onNewGame: () => void;
+  /** Header menu "Simulate": run time forward until next week / next month. */
+  onSimulateUntil?: (kind: SimulateUntil) => void;
   /** @deprecated use onNavigate("settings") */
   onOpenSaves?: () => void;
   /** When true, header NEXT must never fall back to smart-skip (match lineup / live). */

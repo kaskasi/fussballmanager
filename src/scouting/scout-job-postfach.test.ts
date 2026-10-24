@@ -5,7 +5,9 @@ import {
   createScoutBoard,
 } from "./scout-board.ts";
 import {
+  appendScoutJobNotices,
   consumeScoutJobNotice,
+  opponentScoutNoticeForMatch,
   unconsumedScoutJobNotices,
 } from "./scout-job-postfach.ts";
 import { emptyDiscovery } from "./scout-discovery.ts";
@@ -33,5 +35,20 @@ describe("scout job postfach", () => {
 
     const dismissed = consumeScoutJobNotice(next, notices[0]!.id);
     expect(unconsumedScoutJobNotices(dismissed)).toHaveLength(0);
+  });
+
+  it("keeps opponent analysis reports out of the inbox but findable for the Tactics screen", () => {
+    const board = appendScoutJobNotices(createScoutBoard(), [
+      {
+        id: "opp-1",
+        kind: "opponent_scout_complete",
+        season: 1,
+        week: 3,
+        consumed: false,
+        matchId: "s1_w3_md3_a_b",
+      },
+    ]);
+    expect(unconsumedScoutJobNotices(board)).toHaveLength(0);
+    expect(opponentScoutNoticeForMatch(board, "s1_w3_md3_a_b")?.id).toBe("opp-1");
   });
 });

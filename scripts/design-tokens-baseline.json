@@ -1,7 +1,7 @@
 {
   "files": {
     "src/index.css": {
-      "colors": 740,
+      "colors": 607,
       "fontSizes": 303
     },
     "src/ui/design/design-repair.css": {
@@ -9,7 +9,7 @@
       "fontSizes": 1
     },
     "src/ui/design/game-surfaces.css": {
-      "colors": 27,
+      "colors": 23,
       "fontSizes": 59
     },
     "src/ui/design/global-base.css": {
@@ -21,16 +21,16 @@
       "fontSizes": 0
     },
     "src/ui/design/surfaces/scouting.css": {
-      "colors": 102,
+      "colors": 101,
       "fontSizes": 35
     },
     "src/ui/design/surfaces/training.css": {
-      "colors": 147,
+      "colors": 115,
       "fontSizes": 53
     },
     "src/ui/layout/mobile-pass.css": {
       "colors": 3,
-      "fontSizes": 8
+      "fontSizes": 7
     },
     "src/ui/layout/screen-layout.css": {
       "colors": 2,

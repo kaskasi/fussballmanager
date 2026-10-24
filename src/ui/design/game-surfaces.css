@@ -479,8 +479,8 @@ button.cash-chip:hover {
 }
 
 .pipeline-menu-item.is-active {
-  background: var(--rasen);
-  color: var(--tinte);
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 700;
 }
 
@@ -536,8 +536,8 @@ button.cash-chip:hover {
 
 .lineup-pitch-tab.is-active {
   border-color: var(--tinte);
-  background: var(--rasen);
-  color: var(--tinte);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .lineup-pitch-tab.is-opponent.is-active {
@@ -706,8 +706,8 @@ button.cash-chip:hover {
 }
 
 .calendar-cell.is-today {
-  background: var(--rasen);
-  color: var(--panel);
+  background: var(--accent);
+  color: var(--on-accent);
   border: 3px solid var(--tinte);
   box-shadow: 0 2px 0 rgba(62, 49, 40, 0.25);
   z-index: 1;
@@ -731,7 +731,7 @@ button.cash-chip:hover {
   margin: 0.15rem 0 0;
   padding: 0.1rem 0.25rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--rasen) 18%, var(--panel));
+  background: color-mix(in srgb, var(--accent) 18%, var(--panel));
   color: var(--rasen-dunkel, var(--tinte));
   font-size: 0.62rem;
   font-weight: 800;
@@ -750,7 +750,7 @@ button.cash-chip:hover {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--rasen);
+  color: var(--accent);
   font-size: 0.78rem;
   font-weight: 800;
   cursor: pointer;
@@ -810,7 +810,7 @@ button.cash-chip:hover {
 
 .calendar-cell.is-today.is-transfer-summer,
 .calendar-cell.is-today.is-transfer-winter {
-  background: var(--rasen);
+  background: var(--accent);
 }
 
 .calendar-cell.has-match {
@@ -1226,16 +1226,16 @@ button.cash-chip:hover {
 }
 
 .postfach-screen .inbox-action:hover {
-  background: var(--rasen-hell, #ecfdf5);
+  background: var(--accent-soft);
 }
 
 .postfach-screen .inbox-action.is-primary {
-  background: var(--rasen, #047857);
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .postfach-screen .inbox-action.is-primary:hover {
-  background: var(--rasen-mittel, #059669);
+  background: var(--accent-strong);
 }
 
 .postfach-decision-tile-tokens {
@@ -1396,7 +1396,7 @@ button.cash-chip:hover {
 }
 
 .postfach-archive-page.is-active {
-  background: color-mix(in srgb, var(--rasen) 18%, var(--panel-muted));
+  background: color-mix(in srgb, var(--accent) 18%, var(--panel-muted));
   color: var(--tinte);
 }
 
@@ -1776,13 +1776,13 @@ button.cash-chip:hover {
 }
 
 .scout-route-club.is-visited .scout-route-node {
-  stroke: var(--rasen);
+  stroke: var(--accent);
   stroke-width: 2.2;
   fill: var(--panel);
 }
 
 .scout-route-club.is-visited .scout-route-node.is-done {
-  fill: color-mix(in srgb, var(--rasen) 22%, var(--panel));
+  fill: color-mix(in srgb, var(--accent) 22%, var(--panel));
 }
 
 .scout-region-map-confidence-counts span {
@@ -1991,9 +1991,9 @@ button.cash-chip:hover {
 }
 
 .storyboard-poc-seq-btn.is-active {
-  background: var(--rasen);
-  color: var(--panel);
-  border-color: var(--rasen-dunkel);
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent-strong);
 }
 
 .storyboard-poc-panel {
@@ -2049,9 +2049,9 @@ button.cash-chip:hover {
 }
 
 .storyboard-poc-btn-primary {
-  background: var(--rasen);
-  color: var(--panel);
-  border-color: var(--rasen-dunkel);
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent-strong);
 }
 
 .storyboard-poc-skip {
@@ -2116,7 +2116,7 @@ main.stadium.club-shell-card-body .stadium-precinct-status-group h3 {
 }
 
 main.stadium.club-shell-card-body .stadium-precinct-buff {
-  border-color: var(--rasen);
+  border-color: var(--positive);
   background: var(--rasen-hell);
   color: var(--tinte);
 }
@@ -2133,7 +2133,7 @@ main.stadium.club-shell-card-body .stadium-precinct-buff.is-warn {
 }
 
 main.stadium.club-shell-card-body .stadium-precinct-buff.is-active {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rasen) 28%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--positive) 28%, transparent);
 }
 
 main.stadium.club-shell-card-body .stadium-precinct-buff[data-tooltip]:hover::after,
@@ -2161,7 +2161,7 @@ main.stadium.club-shell-card-body .stadium-precinct-detail-live {
 }
 
 main.stadium.club-shell-card-body .stadium-precinct-detail-upgrade {
-  border-color: var(--rasen);
+  border-color: var(--accent);
   background: var(--rasen-hell);
   color: var(--rasen-dunkel);
 }

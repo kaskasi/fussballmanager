@@ -775,7 +775,7 @@
 }
 
 .opponent-scout-wdl-seg.is-win {
-  background: var(--rasen, #047857);
+  background: var(--positive);
 }
 
 .opponent-scout-wdl-seg.is-draw {

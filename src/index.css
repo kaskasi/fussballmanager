@@ -15,7 +15,7 @@
 
 .eyebrow {
   margin: 0 0 0.35rem;
-  color: #059669;
+  color: var(--accent);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -46,7 +46,7 @@
 
 .clock {
   margin: 0.35rem 0 0;
-  color: #047857;
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 
@@ -66,7 +66,7 @@
 .tactics-side {
   margin: 0;
   padding: 0.75rem 0.9rem 0.9rem;
-  border: 1px solid #a7f3d0;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--panel));
   border-radius: 0.9rem;
   background: #fff;
   display: grid;
@@ -76,7 +76,7 @@
 
 .tactics-side legend {
   padding: 0 0.35rem;
-  color: #059669;
+  color: var(--accent);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -88,7 +88,7 @@
   gap: 0.15rem;
   font-size: 0.7rem;
   font-weight: 700;
-  color: #047857;
+  color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -96,13 +96,13 @@
 .tactics-side select,
 .tactics-side input[type="range"] {
   width: 100%;
-  accent-color: #059669;
+  accent-color: var(--accent);
 }
 
 .tactics-side select {
   font: inherit;
   border-radius: 0.45rem;
-  border: 1px solid #a7f3d0;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--panel));
   padding: 0.25rem 0.4rem;
   background: #fff;
 }
@@ -120,7 +120,7 @@
   gap: 0.2rem;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #047857;
+  color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -130,15 +130,15 @@
 .controls button {
   font: inherit;
   border-radius: 0.55rem;
-  border: 1px solid #a7f3d0;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--panel));
   padding: 0.4rem 0.7rem;
   background: #fff;
 }
 
 .controls button {
-  background: #059669;
-  color: #fff;
-  border-color: #059669;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
   font-weight: 700;
   cursor: pointer;
 }
@@ -158,7 +158,7 @@
   min-width: 7.5rem;
   padding: 0.65rem 1.1rem;
   font-size: 1.05rem;
-  background: #047857;
+  background: var(--accent);
 }
 
 .controls .playpause.is-playing {
@@ -177,7 +177,7 @@
   margin: 0 0 0.15rem;
   align-self: center;
   font-size: 0.75rem;
-  color: #047857;
+  color: var(--accent);
 }
 
 .status {
@@ -379,7 +379,7 @@
 
 .match-stats-drawer {
   margin-top: 0.35rem;
-  border-top: 1px solid #ecfdf5;
+  border-top: 1px solid var(--accent-soft);
 }
 
 .match-stats-drawer summary {
@@ -387,7 +387,7 @@
   padding: 0.35rem 0;
   font-size: 0.68rem;
   font-weight: 700;
-  color: #047857;
+  color: var(--accent);
   list-style: none;
 }
 
@@ -558,9 +558,9 @@
 }
 
 .lineup-pitch-tab.is-active {
-  border-color: #059669;
-  background: #ecfdf5;
-  color: #047857;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .lineup-pitch-tab.is-opponent.is-active {
@@ -719,7 +719,7 @@
 }
 
 .lineup-fitness-pill.is-good {
-  color: #047857;
+  color: var(--positive);
 }
 
 .lineup-fitness-pill.is-mid {
@@ -760,7 +760,7 @@
 }
 
 .lineup-icon.is-good {
-  color: #059669;
+  color: var(--positive);
 }
 
 .lineup-icon.is-mid {
@@ -796,7 +796,7 @@
 }
 
 .lineup-form-value.is-good {
-  color: #047857;
+  color: var(--positive);
 }
 
 .lineup-form-value.is-mid {
@@ -838,7 +838,7 @@
 }
 
 .lineup-fatigue-bars.is-good .lineup-fatigue-bar.is-on {
-  background: #16a34a;
+  background: var(--positive);
 }
 
 .lineup-fatigue-bars.is-mid .lineup-fatigue-bar.is-on {
@@ -966,7 +966,7 @@
 .lineup-player-pos {
   grid-row: 1 / span 2;
   font-weight: 800;
-  color: #047857;
+  color: var(--accent);
   font-size: 0.62rem;
   align-self: center;
 }
@@ -1009,7 +1009,7 @@
   font-size: 0.8rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #059669;
+  color: var(--accent);
 }
 
 .lineups {
@@ -1058,7 +1058,7 @@
 }
 
 .role {
-  color: #047857;
+  color: var(--accent);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -1098,7 +1098,7 @@
 
 .pipeline-eyebrow {
   margin: 0;
-  color: #059669;
+  color: var(--accent);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1220,7 +1220,7 @@
   margin-bottom: 1rem;
   padding: 0.85rem 1rem;
   border-radius: 1rem;
-  background: linear-gradient(135deg, #f0fdf4, #fff);
+  background: linear-gradient(135deg, var(--accent-soft), #fff);
   box-shadow: 0 12px 40px rgb(15 23 42 / 8%);
 }
 
@@ -1263,7 +1263,7 @@
 }
 
 .summer-checklist-list li.is-done {
-  color: #166534;
+  color: var(--positive);
 }
 
 .summer-checklist-list li.is-pending {
@@ -2133,7 +2133,7 @@
 }
 
 .merch-sale-net-pos {
-  color: var(--pitch-gruen, #15803d);
+  color: var(--positive);
 }
 
 .merch-sale-net-neg {
@@ -2200,8 +2200,8 @@
 }
 
 .spend-confirm-go {
-  background: #047857;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .spend-confirm-abort {
@@ -2293,7 +2293,7 @@
 }
 
 .board-panel.is-good {
-  border-color: #a7f3d0;
+  border-color: color-mix(in srgb, var(--positive) 40%, var(--panel));
 }
 
 .board-panel.is-warn {
@@ -2364,7 +2364,7 @@
 }
 
 .board-objective.is-met {
-  color: #047857;
+  color: var(--positive);
 }
 
 .board-objective-value {
@@ -3586,8 +3586,8 @@
   max-width: min(28rem, calc(100vw - 2rem));
   padding: 0.65rem 0.95rem;
   border-radius: 0.85rem;
-  background: #047857;
-  color: #fff;
+  background: var(--positive);
+  color: var(--on-positive);
   font-size: 0.82rem;
   font-weight: 700;
   line-height: 1.35;
@@ -3654,8 +3654,8 @@
   margin: 0 0 0.75rem;
   padding: 0.55rem 0.75rem;
   border-radius: 0.65rem;
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--accent-soft);
+  color: var(--accent);
   font-size: 0.88rem;
   font-weight: 600;
 }
@@ -3677,8 +3677,8 @@
 }
 
 .pipeline-legend-toggle[aria-pressed="true"] {
-  outline: 2px solid #059669;
-  color: #047857;
+  outline: 2px solid var(--accent);
+  color: var(--accent);
 }
 
 /* pipeline-menu-* — game-surfaces.css */
@@ -3740,7 +3740,7 @@
 .pipeline-fill-bar {
   width: 0.55rem;
   border-radius: 999px;
-  background: #059669;
+  background: var(--accent);
 }
 
 .pipeline-fill-count {
@@ -3772,7 +3772,7 @@
 }
 
 .pipeline-light.is-set {
-  color: #059669;
+  color: var(--accent);
 }
 
 .pipeline-light.is-watch {
@@ -3794,8 +3794,8 @@
 }
 
 .pipeline-board-pressure.is-good {
-  border-color: #a7f3d0;
-  color: #047857;
+  border-color: color-mix(in srgb, var(--positive) 40%, var(--panel));
+  color: var(--positive);
 }
 
 .pipeline-board-pressure.is-warn {
@@ -3815,7 +3815,7 @@
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 999px;
-  background: #059669;
+  background: var(--accent);
 }
 
 .pipeline-heat-block {
@@ -3948,7 +3948,7 @@
   flex: 0 0 auto;
   border: 0;
   background: transparent;
-  color: #047857;
+  color: var(--accent);
   font-weight: 800;
   font-size: 0.82rem;
   padding: 0;
@@ -3958,8 +3958,8 @@
 
 .pipeline-go {
   border: 0;
-  background: #059669;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   border-radius: 999px;
   padding: 0.55rem 0.95rem;
   font-size: 0.88rem;
@@ -4041,8 +4041,8 @@
   margin: 0 0 0.75rem;
   padding: 0.55rem 0.85rem;
   border-radius: 0.75rem;
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--accent-soft);
+  color: var(--accent);
   font-weight: 600;
   font-size: 0.92rem;
 }
@@ -4075,7 +4075,7 @@
 
 .profile-talk-row input[type="range"] {
   width: 100%;
-  accent-color: #059669;
+  accent-color: var(--accent);
 }
 
 .dev-hub {
@@ -4123,7 +4123,7 @@
   margin-left: auto;
   font-size: 0.62rem;
   font-weight: 800;
-  color: var(--rasen, #16a34a);
+  color: var(--positive);
 }
 
 .dev-hub-scout-grid .scout-stat-rect-row {
@@ -4141,8 +4141,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: #047857;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 900;
   font-size: 0.68rem;
 }
@@ -4173,7 +4173,7 @@
   flex-shrink: 0;
   font-size: 0.78rem;
   font-weight: 900;
-  color: #047857;
+  color: var(--positive);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -4298,7 +4298,7 @@
 
 .squad-col-ca {
   font-weight: 900;
-  color: #047857;
+  color: var(--accent);
 }
 
 .squad-col-delta {
@@ -4308,7 +4308,7 @@
 }
 
 .squad-col-delta.is-up {
-  color: #047857;
+  color: var(--positive);
 }
 
 .squad-col-delta.is-down {
@@ -4333,7 +4333,7 @@
 }
 
 .squad-form.is-good {
-  color: #059669;
+  color: var(--positive);
 }
 
 .squad-form.is-mid {
@@ -4351,7 +4351,7 @@
 }
 
 .squad-risk.is-good {
-  color: #059669;
+  color: var(--positive);
 }
 
 .squad-risk.is-watch {
@@ -4437,7 +4437,7 @@
   margin: 0.45rem 0 0;
   font-size: 0.9rem;
   font-weight: 700;
-  color: #059669;
+  color: var(--accent);
 }
 
 .loans-head {
@@ -4547,7 +4547,7 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   margin: 0.35rem 0 0;
-  color: #047857;
+  color: var(--accent);
   font-weight: 700;
 }
 
@@ -4694,7 +4694,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 .scout-hit-card-assignment-cta {
   font-size: 0.62rem;
   font-weight: 800;
-  color: var(--rasen);
+  color: var(--accent);
   text-align: center;
   line-height: 1.2;
 }
@@ -4711,7 +4711,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .scout-hit-card-main:hover {
-  background: color-mix(in srgb, var(--rasen) 6%, var(--panel));
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
 }
 
 .scout-hit-card-top {
@@ -4750,7 +4750,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 .scout-hit-card-scout {
   font-size: 0.6rem;
   font-weight: 700;
-  color: var(--rasen);
+  color: var(--accent);
   margin-top: 0.1rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4785,13 +4785,13 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .scout-hit-cta:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--rasen) 12%, var(--panel));
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
   color: var(--tinte);
 }
 
 .scout-hit-cta.is-on {
-  color: var(--rasen);
-  background: color-mix(in srgb, var(--rasen) 10%, var(--panel));
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
 }
 
 .scout-hit-cta:disabled {
@@ -4833,7 +4833,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .scout-work-tile[role="button"]:hover {
-  background: color-mix(in srgb, var(--rasen) 4%, var(--panel));
+  background: color-mix(in srgb, var(--accent) 4%, var(--panel));
 }
 
 .scout-work-tile-remove {
@@ -4860,7 +4860,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .scout-work-tile.is-active {
-  border-color: color-mix(in srgb, var(--rasen) 45%, var(--tinte-weich));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--tinte-weich));
 }
 
 .scout-work-tile.is-cancelling {
@@ -4928,7 +4928,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 .scout-work-tile-progress span {
   display: block;
   height: 100%;
-  background: var(--rasen);
+  background: var(--accent);
   border-radius: inherit;
 }
 
@@ -4945,8 +4945,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .scout-work-tile-badge.is-active {
-  background: color-mix(in srgb, var(--rasen) 18%, var(--panel));
-  color: var(--rasen);
+  background: color-mix(in srgb, var(--accent) 18%, var(--panel));
+  color: var(--accent);
 }
 
 .scout-work-assignment-actions {
@@ -5061,12 +5061,12 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .scout-segment.is-on {
-  background: var(--rasen);
-  border-color: color-mix(in srgb, var(--rasen) 80%, var(--tinte));
+  background: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 80%, var(--tinte));
 }
 
 .scout-segment-glyphs.is-fuzzy .scout-segment.is-on {
-  background: color-mix(in srgb, var(--rasen) 42%, var(--panel));
+  background: color-mix(in srgb, var(--accent) 42%, var(--panel));
   border-style: dashed;
 }
 
@@ -5168,8 +5168,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 
 .row-menu-trigger:hover,
 .row-menu-trigger[aria-expanded="true"] {
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .row-menu-popover {
@@ -5197,7 +5197,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .row-menu-item:hover:not(:disabled) {
-  background: #ecfdf5;
+  background: var(--accent-soft);
 }
 
 .row-menu-item:disabled {
@@ -5268,7 +5268,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   position: relative;
   height: 0.45rem;
   border-radius: 999px;
-  background: #ecfdf5;
+  background: var(--accent-soft);
   overflow: hidden;
 }
 
@@ -5284,7 +5284,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: #059669;
+  background: var(--accent);
 }
 
 .scouting-network-card {
@@ -5306,7 +5306,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .scouting-network-card-link:hover {
-  border-color: #a7f3d0;
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--panel));
   background: #f8fffb;
 }
 
@@ -5338,7 +5338,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   flex: 0 0 auto;
   font-size: 1.1rem;
   font-weight: 800;
-  color: #047857;
+  color: var(--accent);
 }
 
 .scouting-network-screen .scout-network {
@@ -5435,8 +5435,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   width: 2.1rem;
   height: 2.1rem;
   border-radius: var(--radius-klein, 0.55rem);
-  background: color-mix(in srgb, var(--rasen) 14%, var(--panel));
-  color: var(--rasen-dunkel, var(--rasen));
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+  color: var(--accent);
 }
 
 .scout-network-card-icon.is-empty {
@@ -5493,11 +5493,11 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .scout-network-btn--hire {
-  color: var(--rasen);
+  color: var(--accent);
 }
 
 .scout-network-btn--hire:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--rasen) 12%, var(--panel));
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
   color: var(--tinte);
 }
 
@@ -5530,9 +5530,9 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 .scouting-assignments {
   margin: 1rem 0;
   padding: 0.75rem 1rem;
-  border: 1px solid #d1fae5;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--panel));
   border-radius: 0.75rem;
-  background: #f0fdf4;
+  background: var(--accent-soft);
 }
 
 .scouting-assignments-head {
@@ -5625,8 +5625,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   letter-spacing: 0.04em;
   padding: 0.2rem 0.35rem;
   border-radius: 0.25rem;
-  background: var(--rasen, #16a34a);
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   white-space: nowrap;
 }
 
@@ -5700,9 +5700,9 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .negotiation-btn-primary {
-  background: #059669;
-  border-color: #059669;
-  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
 }
 
 .negotiation-btn-primary.is-disabled {
@@ -5768,7 +5768,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   padding: 0.2rem 0.35rem;
   border-radius: 999px;
   background: #fff;
-  border: 1px solid #a7f3d0;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--panel));
 }
 
 .weekday-strip-day {
@@ -5782,13 +5782,13 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .weekday-strip-day.is-today {
-  background: #059669;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .weekday-strip-day.is-matchday:not(.is-today) {
-  color: #047857;
-  border: 1px dashed #6ee7b7;
+  color: var(--accent);
+  border: 1px dashed color-mix(in srgb, var(--accent) 40%, var(--panel));
 }
 
 .app-nav-menu .row-menu-trigger {
@@ -5805,7 +5805,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .app-nav-tabs button[aria-pressed="true"] {
-  outline: 2px solid #059669;
+  outline: 2px solid var(--accent);
 }
 
 .transfer-ambience {
@@ -5949,7 +5949,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 .campus-gate {
   display: block;
   margin-top: 0.35rem;
-  color: #047857;
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 
@@ -6107,7 +6107,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 
 .campus-ca {
   font-weight: 900;
-  color: #047857;
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 
@@ -6141,7 +6141,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .campus-chip.is-active {
-  outline: 2px solid #059669;
+  outline: 2px solid var(--accent);
 }
 
 .campus-report {
@@ -6182,8 +6182,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 
 .youth-report-campus-btn {
   border: 0;
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--accent-soft);
+  color: var(--accent);
   border-radius: 999px;
   padding: 0.2rem 0.7rem;
   font: inherit;
@@ -6266,7 +6266,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .youth-progress i.is-on {
-  background: #059669;
+  background: var(--accent);
 }
 
 .youth-report-actions {
@@ -6287,8 +6287,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .youth-report-drop.is-hot {
-  border-color: #059669;
-  background: #ecfdf5;
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .campus-inbox-open {
@@ -6365,7 +6365,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 .hub-inbox-queue-note {
   margin: 0 0 0.65rem;
   font-size: 0.82rem;
-  color: #047857;
+  color: var(--accent);
 }
 
 .hub-inbox-queue-note {
@@ -6399,8 +6399,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .inbox-queue-item.is-active {
-  border-color: #059669;
-  background: #ecfdf5;
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .inbox-queue-index {
@@ -6459,8 +6459,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .postfach-decision-tile.is-active {
-  border-color: color-mix(in srgb, var(--rasen) 45%, var(--tinte-weich));
-  background: color-mix(in srgb, var(--rasen) 6%, var(--panel));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--tinte-weich));
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
 }
 
 .postfach-decision-tile-visual {
@@ -6621,7 +6621,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .postfach-archive-page.is-active {
-  background: color-mix(in srgb, var(--rasen) 18%, var(--panel-muted));
+  background: color-mix(in srgb, var(--accent) 18%, var(--panel-muted));
   color: var(--tinte);
 }
 
@@ -6712,17 +6712,17 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .inbox-action:hover {
-  background: #ecfdf5;
+  background: var(--accent-soft);
 }
 
 .inbox-action.is-primary {
-  background: #047857;
-  color: #fff;
-  box-shadow: 0 8px 20px rgb(4 120 87 / 22%);
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .inbox-action.is-primary:hover {
-  background: #059669;
+  background: var(--accent-strong);
 }
 
 .inbox-action.is-disabled {
@@ -6932,7 +6932,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .pipeline-tile-inbox {
-  outline: 2px solid #059669;
+  outline: 2px solid var(--accent);
 }
 
 .save-modal-backdrop {
@@ -7005,8 +7005,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .save-slot-card.is-active {
-  border-color: #059669;
-  background: #ecfdf5;
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .save-slot-card.is-empty {
@@ -7076,7 +7076,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #047857;
+  color: var(--accent);
 }
 
 .save-modal-actions {
@@ -7130,14 +7130,14 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 .save-cloud-reveal {
   padding: 0.65rem 0.75rem;
   border-radius: 0.75rem;
-  background: #ecfdf5;
-  border: 1px solid #6ee7b7;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--panel));
 }
 
 .save-cloud-code-label {
   margin: 0;
   font-size: 0.78rem;
-  color: #047857;
+  color: var(--accent);
 }
 
 .save-cloud-code {
@@ -7214,7 +7214,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
     padding: 0.45rem max(0.55rem, env(safe-area-inset-right)) 0.4rem
       max(0.55rem, env(safe-area-inset-left));
     background: rgb(236 253 245 / 96%);
-    box-shadow: 0 1px 0 rgb(5 150 105 / 12%);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 12%, transparent);
     backdrop-filter: blur(10px);
   }
 
@@ -7254,10 +7254,10 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
     height: 2.25rem;
     align-items: center;
     justify-content: center;
-    border: 1px solid #a7f3d0;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--panel));
     border-radius: 999px;
     background: #fff;
-    color: #047857;
+    color: var(--accent);
     font-size: 1.15rem;
     font-weight: 900;
   }
@@ -7385,8 +7385,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   margin: 0 0 0.85rem;
   padding: 0.65rem 0.85rem;
   border-radius: 0.85rem;
-  background: linear-gradient(90deg, #f0fdf4, #fff);
-  border: 1px solid #bbf7d0;
+  background: linear-gradient(90deg, var(--accent-soft), #fff);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--panel));
   min-width: 0;
   max-width: 100%;
 }
@@ -7411,7 +7411,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   display: flex;
   gap: 0.45rem;
   font-size: 0.82rem;
-  color: #14532d;
+  color: var(--accent-strong);
   min-width: 0;
 }
 
@@ -7562,9 +7562,9 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .opening-name-field input:focus {
-  outline: 2px solid #16a34a;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-color: #16a34a;
+  border-color: var(--accent);
 }
 
 .opening-origin-grid {
@@ -7587,8 +7587,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .opening-origin-card.is-active {
-  border-color: #16a34a;
-  box-shadow: 0 0 0 2px rgb(22 163 74 / 15%);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 .opening-origin-icon {
@@ -7627,7 +7627,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .opening-captain-row.is-active {
-  border-color: #16a34a;
+  border-color: var(--accent);
 }
 
 .opening-captain-stats span {
@@ -7658,8 +7658,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   padding: 0.65rem 1rem;
   border: 0;
   border-radius: 0.65rem;
-  background: #16a34a;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 700;
   cursor: pointer;
 }
@@ -7738,7 +7738,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .hub-inbox-row-story {
-  border-left: 3px solid #16a34a;
+  border-left: 3px solid var(--accent);
 }
 
 /* ── F12.7 Hilfe & Doku ───────────────────────────── */
@@ -7782,8 +7782,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .help-tab.is-active {
-  outline: 2px solid #059669;
-  color: #047857;
+  outline: 2px solid var(--accent);
+  color: var(--accent);
 }
 
 .help-panel {
@@ -7825,11 +7825,11 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 .help-quote {
   margin: 0;
   padding: 0.65rem 0.8rem;
-  border-left: 3px solid #059669;
-  background: #ecfdf5;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
   border-radius: 0 0.65rem 0.65rem 0;
   font-weight: 700;
-  color: #065f46;
+  color: var(--accent-strong);
 }
 
 .help-icon-list,
@@ -7858,7 +7858,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   font-weight: 550;
   line-height: 1.4;
   padding-left: 0.85rem;
-  border-left: 2px solid #a7f3d0;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 40%, var(--panel));
 }
 
 .help-steps {
@@ -7881,8 +7881,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   width: 1.35rem;
   height: 1.35rem;
   border-radius: 999px;
-  background: #059669;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-size: 0.72rem;
   font-weight: 800;
   display: grid;
@@ -7921,7 +7921,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 0.65rem;
-  background: #ecfdf5;
+  background: var(--accent-soft);
   display: grid;
   place-items: center;
   font-size: 1.15rem;
@@ -7996,8 +7996,8 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   align-items: start;
   padding: 0.85rem;
   border-radius: 0.85rem;
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 45%, #f8fafc 100%);
-  border: 1px solid #bbf7d0;
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--accent-soft) 45%, #f8fafc 100%);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--panel));
 }
 
 .camp-debut-name {
@@ -8053,15 +8053,15 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .youth-camp-roster-row.is-headline {
-  border-color: #86efac;
-  background: #f0fdf4;
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--panel));
+  background: var(--accent-soft);
 }
 
 .youth-camp-headline-badge {
   display: inline-block;
   vertical-align: middle;
   margin-right: 0.25rem;
-  color: #16a34a;
+  color: var(--accent);
 }
 
 .app-error-boundary {
@@ -8471,7 +8471,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
 }
 
 .tutorial-coach-mission.is-done .tutorial-coach-mission-icon {
-  color: var(--rasen);
+  color: var(--positive);
 }
 
 .tutorial-coach-dismiss-row {

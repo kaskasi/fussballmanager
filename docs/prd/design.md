@@ -14,7 +14,7 @@ Ruhiges, helles Grün-Grau mit klaren Haarlinien; Farbe trägt Bedeutung, nicht 
 
 **Sechs Grundregeln:**
 
-1. **Grün ist der Star.** Rasen-Grün (`--accent`) ist die Aktionsfarbe; keine andere Farbe konkurriert damit.
+1. **Die Vereinsfarbe ist die Aktionsfarbe.** `--accent` folgt dem Trikot des eigenen Vereins (§2.5); Rasen-Grün ist der Default (Kieler FC). Keine andere Farbe konkurriert damit; Status-Grün (`--positive`, Bewertung) bleibt fest.
 2. **Nur 1× Gelb.** Der NEXT-Button (`--next`) ist das einzige gelbe Element im Spiel.
 3. **Titelleiste in Vereinsfarbe.** Die Leiste oben trägt die Trikotfarbe des eigenen Vereins (§2.4) — das ist die einzige Stelle, an der Vereinsfarbe Fläche wird.
 4. **Aus einem Guss.** Gleiche Icon-Familie, gleiche Radien, 1px-Haarlinien (`--line`) statt Comic-Outline. **Emojis sind verboten** außer im **Postfach** (§4.2).
@@ -34,7 +34,7 @@ Ruhiges, helles Grün-Grau mit klaren Haarlinien; Farbe trägt Bedeutung, nicht 
 | Grund | `--page` · `--panel` · `--sunken` | #F3F5F1 · #FFFFFF · #E8ECE6 |
 | Linien | `--line` · `--line-strong` · `--control-border` | #D6DDD3 · #AEB8AB · #7E8A81 |
 | Text | `--text` · `--text-muted` | #16211A · #56635A |
-| Aktion | `--accent` · `--accent-strong` · `--accent-soft` · `--on-accent` | #1E7A3C · #145A2B · #E0F0E4 · #FFFFFF |
+| Aktion | `--accent` · `--accent-strong` · `--accent-soft` · `--on-accent` | aus dem Trikot (§2.5), Default #1E7A3C · #145A2B · #E0F0E4 · #FFFFFF |
 | NEXT | `--next` · `--on-next` | #FFC933 · #16211A |
 | Verein | `--club` · `--on-club` | aus dem Trikot (§2.4), Default #2E9E46 · #16211A |
 | Status | `--positive` · `--negative` · `--warning` · `--info` · `--draw` (+ `--on-…`) | #1E7A3C · #B5452A · #8F5A0E · #2E6A93 · #D0D7CC |
@@ -81,6 +81,21 @@ Komponenten-Verträge, CSS-Kaskade, Migrations-Phasen und Screen-Audits leben in
 4. Sonst Tinte als Leiste, Weiß als Text.
 
 Auf der Leiste: Wappen auf einer `--panel`-Scheibe, Vereinsname in `--font-display` 700 20px, Menü/Zurück in `--on-club`, Warn-Icons auf `--panel`-Scheiben, NEXT mit 1px-Ring in `--on-club` (Gelb auf hellem Grün hat nur ~2.2:1), Fokusringe in `--on-club`.
+
+### 2.5 Akzent aus der Vereinsfarbe
+
+`clubAccentColors(kit)` in `src/ui/shell/club-accent-colors.ts` leitet `--accent` · `--accent-strong` · `--accent-soft` · `--on-accent` aus dem Trikot ab; `useClubAccent` (in `AppChrome`) setzt sie inline auf `<html>`. Begründung: ADR 0006.
+
+1. Kein Trikot oder das Kieler-FC-Trikot → keine Überschreibung, die Werte aus `design-tokens.css` gelten.
+2. Erst `kit.primary`, dann `kit.secondary`. Rot/Orange/Gelb (Farbton ≤ 50° oder ≥ 340°, Sättigung > 25 %) scheidet aus — sonst verwechselbar mit `--negative`, `--warning` und NEXT.
+3. Farbton und Sättigung bleiben; die Helligkeit sinkt, bis der Akzent ≥ 4.5:1 auf `--page` und `--panel` erreicht. `--accent-strong` = 8 Helligkeitspunkte dunkler, `--accent-soft` = 12 % Akzent in Weiß, `--on-accent` = Weiß oder Tinte (mehr Kontrast).
+4. Scheiden beide aus → Schiefer (`#33475B` · `#22303E` · `#E4E8EC` · Weiß).
+
+**Muss auf `<html>`:** Die Legacy-Aliase (`--rasen-dunkel`, `--rasen-hell` …) werden auf `:root` aufgelöst und folgen einem tiefer gesetzten Wert nicht; Portale hängen unter `<body>`.
+
+**Rolle statt Farbton:** Aktion, Auswahl, aktive Tabs, Hover-Flächen, Fortschritt → `--accent*`. „Gut / gestiegen / erfüllt“ → `--positive`. Rasen-Grafiken (Aufstellungs-Pitch), Heatmaps, Heim/Auswärts-Kodierung und Karten bleiben eigene Farben. `--rasen` ist nur noch für den Pitch reserviert.
+
+Nur das helle Theme wird überschrieben; das Dark Theme (nur UI-Galerie) definiert die Rollen auf seinem Teilbaum selbst.
 
 ### Asset-Farbanpassung (Remapping)
 Kenney-Tiles und SVGs kommen in eigenen Farben. Bevor sie ins Projekt einfließen, müssen ihre Fill-Farben auf unsere Tokens gemapped werden.

@@ -7489,10 +7489,38 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   max-width: 40rem;
 }
 
-/* PRD 24 club pick — 36 rows stay scrollable inside the modal. */
+/* PRD 24 club pick — single scroller: only the 36-row list scrolls, head/lead/actions stay put. */
+.new-career-modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.new-career-modal .modal-shell-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.new-career-modal .opening-actions {
+  flex-shrink: 0;
+}
+
 .new-career-clubs {
-  max-height: min(52vh, 28rem);
+  flex: 1 1 auto;
+  min-height: 8rem;
+  max-height: none;
   overflow-y: auto;
+}
+
+.new-career-clubs thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel, #fff);
 }
 
 .new-career-clubs .tc-sort {

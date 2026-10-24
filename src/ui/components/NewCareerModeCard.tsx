@@ -32,7 +32,7 @@ export function NewCareerModeCard({
       ariaLabel={t("newCareer.mode.dialogLabel")}
       closeOnBackdrop={false}
       showCloseButton={false}
-      panelClassName="opening-modal inbox-modal"
+      panelClassName="opening-modal inbox-modal new-career-modal"
       bodyClassName=""
     >
       <header className="inbox-head">

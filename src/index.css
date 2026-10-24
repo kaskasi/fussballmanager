@@ -7520,7 +7520,7 @@ main.scouting-has-primary-tabs > .scouting-primary-tab-bar .fm-tab-count {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: var(--panel, #fff);
+  background: var(--panel);
 }
 
 .new-career-clubs .tc-sort {

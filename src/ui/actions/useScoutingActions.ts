@@ -74,7 +74,8 @@ export function useScoutingActions(args: {
   careerMatchSetup: CareerMatchSetup | null;
   careerMatchUiVisible: boolean;
   setCareerMatchUiVisible: (visible: boolean) => void;
-  openPostfach: (itemId?: string) => void;
+  /** Opponent analysis reports live on the Tactics screen, not in the inbox. */
+  openTactics: () => void;
   scoutMapDetailBackRef: MutableRefObject<(() => void) | null>;
   setScoutMapDetailNav: (
     value: { onBack: () => void; title: string } | null,
@@ -89,7 +90,7 @@ export function useScoutingActions(args: {
     careerMatchSetup,
     careerMatchUiVisible,
     setCareerMatchUiVisible,
-    openPostfach,
+    openTactics,
     scoutMapDetailBackRef,
     setScoutMapDetailNav,
   } = args;
@@ -139,13 +140,13 @@ export function useScoutingActions(args: {
   }, [flashNotice, patchSession, session]);
 
   const handleOpenOpponentScoutReport = useCallback(
-    (itemId: string) => {
+    (_itemId: string) => {
       if (careerMatchSetup && careerMatchUiVisible) {
         setCareerMatchUiVisible(false);
       }
-      openPostfach(itemId);
+      openTactics();
     },
-    [careerMatchSetup, careerMatchUiVisible, openPostfach, setCareerMatchUiVisible],
+    [careerMatchSetup, careerMatchUiVisible, openTactics, setCareerMatchUiVisible],
   );
 
   const handleApplyOpponentScoutPlan = useCallback(

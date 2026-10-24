@@ -60,6 +60,10 @@ import { LineupFatigueBars } from "./LineupFatigueBars.tsx";
 import { stateMark } from "../ui/player-profile.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
 import { OpponentScoutMatchAction } from "../ui/components/OpponentScoutMatchAction.tsx";
+import { OpponentScoutInboxCard } from "../ui/components/OpponentScoutInboxCard.tsx";
+import type { ScoutNetworkState } from "../scouting/scout-network.ts";
+import { opponentScoutMatchIdFromSetup } from "../scouting/opponent-scout-match-id.ts";
+import { opponentScoutNoticeForMatch } from "../scouting/scout-job-postfach.ts";
 import { LineupIndicatorLegend } from "../ui/components/LineupIndicatorLegend.tsx";
 import { useT } from "../i18n/react.ts";
 
@@ -87,6 +91,14 @@ type CareerLineupScreenProps = {
   tacticsMode?: TacticsMode;
   /** PRD 19 — opponent scout module behind the Story Mode curtain. */
   showOpponentScout?: boolean;
+  /**
+   * "match": pre-kickoff step of the match flow (confirm button in the header NEXT).
+   * "menu": standalone Tactics screen — edits persist, no kickoff, analysis panel inline.
+   */
+  variant?: "match" | "menu";
+  scoutNetwork?: ScoutNetworkState;
+  onStartOpponentScout?: () => void;
+  onApplyOpponentScoutPlan?: (plan: SandboxPlan) => void;
 };
 
 const TACTICS_STYLE_IDS: TacticsPresetId[] = [1, 2, 3];
@@ -115,6 +127,10 @@ export function CareerLineupScreen({
   kasse,
   tacticsMode = "full",
   showOpponentScout = true,
+  variant = "match",
+  scoutNetwork,
+  onStartOpponentScout,
+  onApplyOpponentScoutPlan,
 }: CareerLineupScreenProps) {
   const t = useT();
   const managerClubId = careerTeamId(setup.playerClubId);
@@ -180,6 +196,14 @@ export function CareerLineupScreen({
   const squad = useMemo(
     () => buildSquadFromAssignments(players, plan, assignments, setup.playerClubId, managerClubId),
     [players, plan, assignments, setup.playerClubId, managerClubId],
+  );
+
+  const analysisNotice = useMemo(
+    () =>
+      scoutBoard
+        ? opponentScoutNoticeForMatch(scoutBoard, opponentScoutMatchIdFromSetup(season, setup))
+        : undefined,
+    [scoutBoard, season, setup],
   );
 
   const persistLineup = useCallback(
@@ -267,6 +291,7 @@ export function CareerLineupScreen({
   );
 
   useLayoutEffect(() => {
+    if (variant === "menu") return;
     if (!squad || filledCount < 11) {
       onNavActionChange(null);
       return;
@@ -279,7 +304,7 @@ export function CareerLineupScreen({
       title: t("match.lineup.confirmSelectionTitle"),
     });
     return () => onNavActionChange(null);
-  }, [squad, filledCount, onConfirm, onNavActionChange, t]);
+  }, [squad, filledCount, onConfirm, onNavActionChange, t, variant]);
 
   if (!squad) {
     return (
@@ -368,7 +393,7 @@ export function CareerLineupScreen({
               onDragPlayer={setDragPlayerId}
               onOpenPlayer={onOpenPlayer}
             />
-            {showOpponentScout && scoutBoard && onOpenOpponentScoutReport ? (
+            {variant === "match" && showOpponentScout && scoutBoard && onOpenOpponentScoutReport ? (
               <OpponentScoutMatchAction
                 mode="lineup"
                 setup={setup}
@@ -466,6 +491,34 @@ export function CareerLineupScreen({
               <dd>~{expectedSpectators.toLocaleString(numberFormat)}</dd>
             </dl>
           </section>
+
+          {variant === "menu" && showOpponentScout && scoutBoard ? (
+            <section className="tc-panel tc-lineup__analysis" aria-label={t("tactics.analysis.title")}>
+              <div className="tc-panel__head">
+                <h2 className="tc-panel__title">{t("tactics.analysis.title")}</h2>
+              </div>
+              {analysisNotice ? (
+                <OpponentScoutInboxCard
+                  notice={analysisNotice}
+                  postIndex={1}
+                  postTotal={1}
+                  onDismiss={() => undefined}
+                  onApplyPlan={tacticsMode === "full" ? onApplyOpponentScoutPlan : undefined}
+                  embedded
+                  readOnly
+                  hidePostCount
+                />
+              ) : (
+                <OpponentScoutMatchAction
+                  setup={setup}
+                  season={season}
+                  scoutBoard={scoutBoard}
+                  scoutNetwork={scoutNetwork}
+                  onStart={onStartOpponentScout}
+                />
+              )}
+            </section>
+          ) : null}
 
           {tacticsMode === "full" ? (
           <section className="tc-panel">

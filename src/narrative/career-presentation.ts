@@ -67,6 +67,7 @@ export type CurtainNavScreen =
   | "hub"
   | "postfach"
   | "squad"
+  | "tactics"
   | "training"
   | "medical"
   | "campus"
@@ -189,6 +190,8 @@ export function suppressTrainingPlanWarning(storyState: CareerPresentationState)
 
 function navFlagForScreen(screen: CurtainNavScreen, curtain: FeatureCurtain): boolean {
   switch (screen) {
+    case "tactics":
+      return curtain.tactics_sliders;
     case "scouting":
       return curtain.scouting_nav;
     case "transfers":

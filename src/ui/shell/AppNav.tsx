@@ -120,6 +120,7 @@ export function AppNav({
       { screen: "hub" as const, labelKey: "shell.nav.pipeline" },
       { screen: "postfach" as const, labelKey: "shell.nav.postfach" },
       { screen: "squad" as const, labelKey: "shell.nav.squad" },
+      { screen: "tactics" as const, labelKey: "shell.nav.tactics" },
       { screen: "training" as const, labelKey: "shell.nav.training" },
       { screen: "medical" as const, labelKey: "shell.nav.medical" },
       { screen: "campus" as const, labelKey: "shell.nav.campus" },
@@ -313,6 +314,28 @@ export function AppNav({
                         ) : null}
                       </button>
                     ))}
+                    {hubActions.onSimulateUntil ? (
+                      <>
+                        <p className="pipeline-menu-section-title">{tr("shell.menu.simulate")}</p>
+                        {(["next_week", "next_month"] as const).map((kind) => (
+                          <button
+                            key={kind}
+                            type="button"
+                            role="menuitem"
+                            className="row-menu-item pipeline-menu-item"
+                            disabled={hubActions.simulating}
+                            onClick={() => {
+                              hubActions.onSimulateUntil?.(kind);
+                              setMenuOpen(false);
+                            }}
+                          >
+                            <span className="pipeline-menu-item-label">
+                              {tr(kind === "next_week" ? "shell.simulate.nextWeek" : "shell.simulate.nextMonth")}
+                            </span>
+                          </button>
+                        ))}
+                      </>
+                    ) : null}
                     <p className="pipeline-menu-section-title">{tr("shell.menu.options")}</p>
                     <button
                       type="button"

@@ -21,7 +21,10 @@ import { MONDAY, resolveSmartSkip } from "../../sim/day-calendar.ts";
 import {
   fastForwardToMonthEnd,
   sessionAfterWeekSimulation,
+  simulateUntilTarget,
+  type SimulateUntil,
 } from "../../sim/fast-forward-to-month.ts";
+import type { CivilDate } from "../../sim/session-civil-date.ts";
 import { shouldPauseTrainingAutoNext } from "../../sim/training-auto-next.ts";
 import {
   isTrainingCalendarGatePending,
@@ -226,8 +229,12 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
     }
   }, [finishWeekSimulation, flashNotice, session.storyState, setSimulating, simulating]);
 
-  const handleFastForwardToMonth = useCallback(
-    async (targetMonthIndex: number) => {
+  const runFastForward = useCallback(
+    async (
+      resolveTarget: (snapshot: ReturnType<typeof sessionFromSave>) => number | CivilDate,
+      reachedMessage: (steps: number) => string,
+      pauseOnInbox: boolean,
+    ) => {
       if (simulating) return;
       setSimulating(true);
       try {
@@ -290,9 +297,12 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
           return next;
         };
         const outcome = await Promise.race([
-          fastForwardToMonthEnd(snapshot, targetMonthIndex, {
+          fastForwardToMonthEnd(snapshot, resolveTarget(snapshot), {
             simulateWeek: simulateWeekForFastForward,
             advanceSessionDays,
+            shouldPause: pauseOnInbox
+              ? (current) => hasInboxBlockerForNext(current, current.youthInbox, current.players)
+              : undefined,
             onProgress: async (sessionAfterStep) => {
               await new Promise<void>((resolve) => {
                 window.setTimeout(resolve, 0);
@@ -304,22 +314,15 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
             window.setTimeout(() => reject(new Error("Fast-forward timeout (90s)")), 90_000);
           }),
         ]);
-        const monthLabel = t(
-          CALENDAR_MONTH_KEYS[targetMonthIndex] ?? "calendar.month.january",
-        );
         replaceSave((current) => saveFromSession(outcome.session, current));
         trackEvent("calendar_fast_forward_completed", {
           outcome: outcome.reason,
           steps: outcome.steps,
         });
         if (outcome.reason === "reached") {
-          flashNotice(
-            t("calendar.fastForward.done", {
-              month: monthLabel,
-              steps: String(outcome.steps),
-            }),
-            "ok",
-          );
+          flashNotice(reachedMessage(outcome.steps), "ok");
+        } else if (outcome.reason === "inbox") {
+          flashNotice(t("shell.simulate.inbox"), "warn");
         } else if (outcome.reason === "training_plan") {
           flashNotice(t("calendar.fastForward.trainingPlan"), "warn");
         } else if (outcome.reason === "season_complete") {
@@ -346,6 +349,29 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
       }
     },
     [flashNotice, replaceSave, save, setSave, setSimulating, simulating],
+  );
+
+  const handleFastForwardToMonth = useCallback(
+    (targetMonthIndex: number) => {
+      const monthLabel = t(CALENDAR_MONTH_KEYS[targetMonthIndex] ?? "calendar.month.january");
+      return runFastForward(
+        () => targetMonthIndex,
+        (steps) => t("calendar.fastForward.done", { month: monthLabel, steps: String(steps) }),
+        false,
+      );
+    },
+    [runFastForward],
+  );
+
+  /** Header menu "Simulate": next week / next month, pausing for open inbox decisions. */
+  const handleSimulateUntil = useCallback(
+    (kind: SimulateUntil) =>
+      runFastForward(
+        (snapshot) => simulateUntilTarget(kind, snapshot.season, snapshot.week, snapshot.weekday),
+        (steps) => t("shell.simulate.done", { steps: String(steps) }),
+        true,
+      ),
+    [runFastForward],
   );
 
   const handleNext = useCallback(
@@ -651,6 +677,7 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
     handleNext,
     handleNextRef,
     handleFastForwardToMonth,
+    handleSimulateUntil,
     finishWeekSimulation,
     simulateWeek,
   };

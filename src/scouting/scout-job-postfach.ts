@@ -56,8 +56,11 @@ export interface ScoutJobCompleteNotice {
 
 const MAX_QUEUE = 24;
 
+/** Inbox notices — opponent analysis reports are shown on the Tactics screen instead. */
 export function unconsumedScoutJobNotices(board: ScoutBoard): ScoutJobCompleteNotice[] {
-  return (board.discovery_postfach_queue ?? []).filter((entry) => !entry.consumed);
+  return (board.discovery_postfach_queue ?? []).filter(
+    (entry) => !entry.consumed && entry.kind !== "opponent_scout_complete",
+  );
 }
 
 export function consumeScoutJobNotice(board: ScoutBoard, itemId: string): ScoutBoard {

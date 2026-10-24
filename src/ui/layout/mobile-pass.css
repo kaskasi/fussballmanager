@@ -32,11 +32,11 @@
   }
 
   /* Screen tabs: sticky horizontal segmented band under the header (not a side rail).
-     Scrolls sideways if labels overflow (Scouting has five). Help keeps its own tabs. */
+     Scrolls sideways if labels overflow (Scouting has five). Help keeps its own tabs.
+     Block flow, not grid: the bar is a scroll container (overflow-x), so in a fixed-height
+     grid its auto row collapses to 0 once the content below overflows. */
   main.club-shell-card-body:has(> .fm-tab-bar):not(.help) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
+    display: block;
   }
 
   main.club-shell-card-body:has(> .fm-tab-bar):not(.help) > .fm-tab-bar {

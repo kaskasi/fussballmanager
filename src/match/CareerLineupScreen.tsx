@@ -152,7 +152,9 @@ export function CareerLineupScreen({
     () => benchPlayers(players, assignments, managerClubId),
     [players, assignments, managerClubId],
   );
-  const benchPageCount = Math.max(1, Math.ceil(bench.length / LINEUP_BENCH_PAGE_SIZE));
+  // The Tactics screen shows the whole bench as a tile grid; the match flow pages a fixed-height list.
+  const benchPageSize = variant === "menu" ? Math.max(bench.length, 1) : LINEUP_BENCH_PAGE_SIZE;
+  const benchPageCount = Math.max(1, Math.ceil(bench.length / benchPageSize));
 
   useEffect(() => {
     setBenchPage((current) => Math.min(current, benchPageCount - 1));
@@ -175,10 +177,11 @@ export function CareerLineupScreen({
   }, [matchLineup, players, fallbackPlan, managerClubId]);
 
   const benchPageSlots = useMemo(() => {
-    const start = benchPage * LINEUP_BENCH_PAGE_SIZE;
-    const slice = bench.slice(start, start + LINEUP_BENCH_PAGE_SIZE);
-    return Array.from({ length: LINEUP_BENCH_PAGE_SIZE }, (_, index) => slice[index] ?? null);
-  }, [bench, benchPage]);
+    const start = benchPage * benchPageSize;
+    const slice = bench.slice(start, start + benchPageSize);
+    if (variant === "menu") return slice;
+    return Array.from({ length: benchPageSize }, (_, index) => slice[index] ?? null);
+  }, [bench, benchPage, benchPageSize, variant]);
   const opponentPreview = useMemo(
     () => buildOpponentLineupPreview(setup, rivalPlayers),
     [setup, rivalPlayers],
@@ -439,7 +442,7 @@ export function CareerLineupScreen({
             </div>
             <LineupIndicatorLegend />
             <div
-              className="lineup-bench-list lineup-bench-list--fixed"
+              className={`lineup-bench-list ${variant === "menu" ? "lineup-bench-grid" : "lineup-bench-list--fixed"}`}
               onDragOver={(event) => {
                 if (dragPlayerId) event.preventDefault();
               }}
@@ -458,6 +461,7 @@ export function CareerLineupScreen({
                   <LineupPlayerCard
                     key={player.id}
                     player={player}
+                    tile={variant === "menu"}
                     onDragStart={setDragPlayerId}
                     onDragEnd={() => setDragPlayerId(null)}
                     onOpenPlayer={onOpenPlayer}

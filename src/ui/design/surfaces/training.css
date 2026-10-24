@@ -360,8 +360,8 @@
 
 .training-overview-go {
   border: 0;
-  background: #059669;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   border-radius: 999px;
   padding: 0.5rem 0.9rem;
   font-size: 0.88rem;
@@ -387,8 +387,8 @@
 }
 
 .training-tab.is-active {
-  background: #047857;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .scout-network {
@@ -493,12 +493,12 @@
 }
 
 .ui-btn--primary {
-  background: #047857;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .ui-btn--primary:hover:not(:disabled) {
-  background: #059669;
+  background: var(--accent-strong);
 }
 
 .ui-btn--danger {
@@ -552,24 +552,24 @@
   margin: 0 0 0.75rem;
   padding: 0.45rem 0.65rem;
   border-radius: 0.55rem;
-  background: #ecfdf5;
-  border: 1px solid #6ee7b7;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--panel));
   font-size: 0.78rem;
-  color: #047857;
+  color: var(--accent);
 }
 
 .training-auto-next-stop {
   padding: 0.2rem 0.55rem;
-  border: 1px solid #6ee7b7;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--panel));
   border-radius: 0.45rem;
   background: #fff;
   font-size: 0.72rem;
-  color: #047857;
+  color: var(--accent);
   cursor: pointer;
 }
 
 .training-auto-next-stop:hover {
-  background: #f0fdf4;
+  background: var(--accent-soft);
 }
 
 .training-warn {
@@ -805,7 +805,7 @@
 }
 
 .training-slot.is-past.is-focus {
-  border-color: color-mix(in srgb, var(--rasen, #047857) 35%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
   box-shadow: none;
 }
 
@@ -897,9 +897,9 @@
 }
 
 .training-intensity-preset.is-active {
-  border-color: #059669;
-  background: #ecfdf5;
-  color: #047857;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .training-status-load {
@@ -941,14 +941,14 @@
 .training-focus-mode input {
   width: 1rem;
   height: 1rem;
-  accent-color: #059669;
+  accent-color: var(--accent);
 }
 
 .training-focus-hint {
   margin: 0 0 0.75rem;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #047857;
+  color: var(--accent);
 }
 
 .training-day-head {
@@ -998,14 +998,14 @@
 }
 
 .training-slot.is-focus {
-  border-color: #059669;
+  border-color: var(--accent);
   box-shadow:
-    0 0 0 3px rgb(5 150 105 / 22%),
-    0 8px 24px rgb(5 150 105 / 18%);
+    0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 8px 24px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .training-slot.is-active {
-  border-color: #0d9488;
+  border-color: var(--accent-strong);
 }
 
 .training-slot[data-coach-target="training-pick-slot"] {
@@ -1044,9 +1044,9 @@
 }
 
 .training-slot-focus-toggle.is-on {
-  border-color: #059669;
-  background: #ecfdf5;
-  color: #047857;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .training-slot-focus-toggle:disabled {
@@ -1113,7 +1113,7 @@
 .training-group {
   font-size: 0.78rem;
   font-weight: 800;
-  color: #047857;
+  color: var(--accent);
 }
 
 .training-skills {
@@ -1207,7 +1207,7 @@ html[data-tutorial-coach-step="training.set_plan"] .training-modal-backdrop {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #047857;
+  color: var(--accent);
   font-weight: 800;
 }
 
@@ -1233,7 +1233,7 @@ html[data-tutorial-coach-step="training.set_plan"] .training-modal-backdrop {
 }
 
 .training-modal-unit:hover {
-  background: #ecfdf5;
+  background: var(--accent-soft);
 }
 
 .training-modal-unit.is-locked,
@@ -1303,7 +1303,7 @@ html[data-tutorial-coach-step="training.set_plan"] .training-modal-backdrop {
 }
 
 .training-roster-program.is-active {
-  color: #047857;
+  color: var(--accent);
 }
 
 .training-roster-name {
@@ -1492,8 +1492,8 @@ html[data-tutorial-coach-step="training.set_plan"] .training-modal-backdrop {
 }
 
 .training-individual-confirm {
-  background: #059669;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .training-individual-confirm:disabled {

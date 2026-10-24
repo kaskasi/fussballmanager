@@ -7,6 +7,7 @@ import type { AccessibilityPreferences } from "../accessibility.ts";
 import { AppNav } from "./AppNav.tsx";
 import type { KitColors } from "./title-bar-colors.ts";
 import type { HubNavActions, Screen } from "./types.ts";
+import { useClubAccent } from "./useClubAccent.ts";
 
 export function AppChrome({
   week,
@@ -45,7 +46,7 @@ export function AppChrome({
   clubName: string;
   clubInitials: string;
   clubLogoSrc?: string;
-  /** Managed club's kit; paints the title bar (design.md §2.4). */
+  /** Managed club's kit; paints the title bar (design.md §2.4) and tints --accent (§2.5). */
   clubKit?: KitColors;
   leaguePlace: number | null;
   screen: Screen;
@@ -58,6 +59,7 @@ export function AppChrome({
   onAccessibilityChange: (preferences: AccessibilityPreferences) => void;
   shellChrome?: "card" | "plain";
 }) {
+  useClubAccent(clubKit);
   return (
     <AppNav
       screen={screen}

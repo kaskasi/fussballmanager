@@ -101,7 +101,7 @@
   /* Text */
   --text: #16211a;
   --text-muted: #56635a;
-  /* Action */
+  /* Action: Kieler FC defaults; overridden on <html> from the managed club's kit (clubAccentColors) */
   --accent: #1e7a3c;
   --accent-strong: #145a2b;
   --accent-soft: #e0f0e4;

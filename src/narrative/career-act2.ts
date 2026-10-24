@@ -98,6 +98,7 @@ const UNLOCK_SPEAKER: Record<CurtainUnlockId, "assistant" | "chairman"> = {
   manual_training: "assistant",
   opponent_scout: "assistant",
   transfers: "chairman",
+  youth_camps: "chairman",
 };
 
 /** Curtain flag + chronicle line + cast beat — one unit, never one without the others. */

@@ -63,6 +63,12 @@ export const ACT2_UNLOCK_BEATS: readonly Act2UnlockBeat[] = [
     source: "board",
     choices: [{ id: "ok", icon: "✍️", unlocks: ["transfers"] }],
   },
+  {
+    beatId: "act2_youth_camps",
+    actWeek: 23,
+    source: "board",
+    choices: [{ id: "ok", icon: "⛺", unlocks: ["youth_camps"] }],
+  },
 ];
 
 /** One-off price of the video analysis module (salesman beat, choice "buy"). */

@@ -25,7 +25,8 @@ export type CurtainUnlockId =
   | "scouting_regions"
   | "manual_training"
   | "opponent_scout"
-  | "transfers";
+  | "transfers"
+  | "youth_camps";
 
 export type PresentationMode = "storybook" | "manager_desk";
 
@@ -52,6 +53,7 @@ export interface FeatureCurtain {
   finances_deep_nav: boolean;
   opponent_scout_module: boolean;
   tactics_sliders: boolean;
+  youth_camps: boolean;
 }
 
 export interface CareerPresentationState extends GameModeState {
@@ -88,6 +90,7 @@ export function fullFeatureCurtain(): FeatureCurtain {
     finances_deep_nav: true,
     opponent_scout_module: true,
     tactics_sliders: true,
+    youth_camps: true,
   };
 }
 
@@ -102,6 +105,7 @@ export function act1FeatureCurtain(): FeatureCurtain {
     finances_deep_nav: false,
     opponent_scout_module: false,
     tactics_sliders: false,
+    youth_camps: false,
   };
 }
 
@@ -121,6 +125,8 @@ function applyUnlock(curtain: FeatureCurtain, unlock: CurtainUnlockId): FeatureC
       return { ...curtain, opponent_scout_module: true };
     case "transfers":
       return { ...curtain, transfers_nav: true };
+    case "youth_camps":
+      return { ...curtain, youth_camps: true };
   }
 }
 

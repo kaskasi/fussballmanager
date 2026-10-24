@@ -224,13 +224,23 @@ button.tc-stars__card:hover { background: var(--sunken); }
   .tc-zones__seg { transition: none; }
 }
 
-/* Tactics menu screen: portrait pitch left, bench right, tactics/analysis panels underneath. */
-.tc-lineup--menu .tc-lineup__split { grid-template-columns: minmax(0, 1fr); }
-.tc-lineup--menu .tc-lineup__board { grid-template-columns: minmax(0, 1fr); align-items: start; }
+/* Tactics menu screen: tactics/analysis panels | portrait pitch | bench (stacked on small screens). */
+.tc-lineup--menu { max-width: none; margin: 0; }
+.tc-lineup--menu .tc-lineup__split,
+.tc-lineup--menu .tc-lineup__board { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); align-items: start; }
+.tc-lineup--menu .tc-lineup__board { display: contents; }
+.tc-lineup--menu .tc-lineup__pitch { order: 1; width: min(100%, 25rem, calc((100dvh - 16rem) * 0.648)); justify-self: center; }
+.tc-lineup--menu .tc-lineup__bench { order: 2; }
+.tc-lineup--menu .tc-stack { order: 3; }
 .tc-lineup--menu .lineup-pitch-wrap--vertical { aspect-ratio: 68 / 105; width: 100%; max-height: none; min-height: 0; flex: none; }
-.tc-lineup--menu .lineup-slot { width: clamp(3rem, 7vw, 4.25rem); }
+.tc-lineup--menu .lineup-slot { width: 3.9rem; }
+.tc-lineup--menu .lineup-slot-card { padding: 0.2rem 0.25rem; }
 .tc-lineup--menu .lineup-bench-list--fixed { grid-template-columns: minmax(0, 1fr); }
-.tc-lineup--menu .tc-stack { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); align-items: start; gap: var(--space-3); }
 @media (min-width: 720px) {
-  .tc-lineup--menu .tc-lineup__board { grid-template-columns: minmax(0, 30rem) minmax(0, 1fr); }
+  .tc-lineup--menu .tc-lineup__split { grid-template-columns: minmax(0, 25rem) minmax(0, 1fr); }
+  .tc-lineup--menu .tc-stack { order: 3; grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); align-items: start; gap: var(--space-3); }
+}
+@media (min-width: 1100px) {
+  .tc-lineup--menu .tc-lineup__split { grid-template-columns: minmax(16rem, 20rem) minmax(0, 25rem) minmax(14rem, 1fr); }
+  .tc-lineup--menu .tc-stack { order: 0; grid-column: 1; display: flex; flex-direction: column; align-items: stretch; }
 }

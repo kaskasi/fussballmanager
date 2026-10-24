@@ -1,7 +1,7 @@
 /** WIREFRAME: PRD 09 — routed pipeline screens (extracted from App). */
 import { activeScoutCount, listBoardTargets } from "../../scouting/scout-board.ts";
 import { boardCashFloor } from "../../economy/spend-runway.ts";
-import { prepareCareerMatch } from "../../sim/career-match-setup.ts";
+import { prepareCareerMatch, prepareUpcomingCareerMatch } from "../../sim/career-match-setup.ts";
 import { usesTrainingNextNexus } from "../../sim/training-next.ts";
 import { worldCareerClubId } from "../../world/world-generator.ts";
 import { isPlayerListed, listPlayerForSale, unlistPlayer } from "../../transfers/transfer-listings.ts";
@@ -554,7 +554,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
       ) : null}
       {screen === "tactics" ? (
         <TacticsScreen
-          setup={prepareCareerMatch(session)}
+          setup={prepareUpcomingCareerMatch(session)}
           players={players}
           rivalPlayers={rivalPlayers}
           season={season}

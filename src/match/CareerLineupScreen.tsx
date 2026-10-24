@@ -325,13 +325,15 @@ export function CareerLineupScreen({
     : Math.round(12_000 + (setup.seed % 9_000));
 
   return (
-    <main className={`matchday career-lineup tc-lineup${variant === "menu" ? " tc-lineup--menu" : ""}`}>
+    <main className={`matchday career-lineup tc-lineup${variant === "menu" ? " tc-lineup--menu club-shell-card-body" : ""}`}>
+      {variant === "menu" ? null : (
       <MatchdayLineupAmbience
         setup={setup}
         homeStadiumCapacity={homeStadiumCapacity}
         fanbaseMood={fanbaseMood}
         poorForm={poorForm}
       />
+      )}
       <header className="tc-page-head tc-lineup__head">
         <div className="tc-lineup__title">
           <h1 className="tc-page-title">{t("match.lineup.title")}</h1>

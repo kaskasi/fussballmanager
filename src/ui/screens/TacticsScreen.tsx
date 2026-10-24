@@ -53,7 +53,7 @@ export function TacticsScreen({
   const t = useT();
   if (!setup) {
     return (
-      <main className="matchday career-lineup tc-lineup">
+      <main className="matchday career-lineup tc-lineup club-shell-card-body">
         <p className="tc-callout" role="status">
           {t("tactics.noFixture")}
         </p>

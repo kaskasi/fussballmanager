@@ -314,28 +314,6 @@ export function AppNav({
                         ) : null}
                       </button>
                     ))}
-                    {hubActions.onSimulateUntil ? (
-                      <>
-                        <p className="pipeline-menu-section-title">{tr("shell.menu.simulate")}</p>
-                        {(["next_week", "next_month"] as const).map((kind) => (
-                          <button
-                            key={kind}
-                            type="button"
-                            role="menuitem"
-                            className="row-menu-item pipeline-menu-item"
-                            disabled={hubActions.simulating}
-                            onClick={() => {
-                              hubActions.onSimulateUntil?.(kind);
-                              setMenuOpen(false);
-                            }}
-                          >
-                            <span className="pipeline-menu-item-label">
-                              {tr(kind === "next_week" ? "shell.simulate.nextWeek" : "shell.simulate.nextMonth")}
-                            </span>
-                          </button>
-                        ))}
-                      </>
-                    ) : null}
                     <p className="pipeline-menu-section-title">{tr("shell.menu.options")}</p>
                     <button
                       type="button"

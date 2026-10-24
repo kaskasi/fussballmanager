@@ -2165,6 +2165,7 @@ export default function App() {
               handleStartOpponentScout={handleStartOpponentScout}
               handleOpenOpponentScoutReport={handleOpenOpponentScoutReport}
               handleFastForwardToMonth={handleFastForwardToMonth}
+              onSimulateUntil={careerMatchSetup ? undefined : (kind) => void handleSimulateUntil(kind)}
               handleAcceptJobOffer={handleAcceptJobOffer}
             />
         </TutorialUiProvider>

@@ -7,7 +7,11 @@ import { CalendarSeasonStrip } from "../components/CalendarSeasonStrip.tsx";
 import { formatSeasonLabel } from "../../sim/season-label.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { civilDateFromSession } from "../../sim/session-civil-date.ts";
-import { civilDateEndOfMonth, hasReachedFastForwardTarget } from "../../sim/fast-forward-to-month.ts";
+import {
+  civilDateEndOfMonth,
+  hasReachedFastForwardTarget,
+  type SimulateUntil,
+} from "../../sim/fast-forward-to-month.ts";
 import { calendarWeek } from "../../sim/game-calendar.ts";
 import { buildMonthGrid, type CalendarMonthCell } from "../calendar/month-grid.ts";
 import { buildMonthJournal } from "../calendar/month-journal.ts";
@@ -53,7 +57,8 @@ export function CalendarScreen({
   editions = [],
   chronicle = [],
   onFastForwardToMonth,
-  fastForwardBusy = false,
+  onSimulateUntil,
+  busy = false,
 }: {
   season: number;
   week: number;
@@ -65,7 +70,10 @@ export function CalendarScreen({
   editions?: readonly TreterEdition[];
   chronicle?: readonly ChronicleEntry[];
   onFastForwardToMonth?: (monthIndex: number) => void;
-  fastForwardBusy?: boolean;
+  /** Header "Simulate until": run time forward to the next week / next month. */
+  onSimulateUntil?: (kind: SimulateUntil) => void;
+  /** Any simulation (fast-forward, week advance) in flight — keeps the controls inert. */
+  busy?: boolean;
 }) {
   const t = useT();
   const today = useMemo(() => ({ week, weekday }), [week, weekday]);
@@ -157,33 +165,50 @@ export function CalendarScreen({
           </span>
           <div className="tc-cal__titlerow">
             <h1 className="tc-page-title">{monthTitle}</h1>
-            <div className="tc-cal__nav" role="group" aria-label={t("calendar.nav.monthAria")}>
-              <button
-                type="button"
-                className="tc-iconbtn"
-                aria-label={t("calendar.nav.prev")}
-                disabled={position <= 0}
-                onClick={() => setMonthIndex(months[position - 1]?.monthIndex ?? monthIndex)}
-              >
-                <ChevronLeft className="tc-icon" aria-hidden />
-              </button>
-              <button
-                type="button"
-                className="tc-btn tc-btn--sm"
-                disabled={monthIndex === todayMonth}
-                onClick={() => setMonthIndex(todayMonth)}
-              >
-                {t("calendar.nav.today")}
-              </button>
-              <button
-                type="button"
-                className="tc-iconbtn"
-                aria-label={t("calendar.nav.next")}
-                disabled={position < 0 || position >= months.length - 1}
-                onClick={() => setMonthIndex(months[position + 1]?.monthIndex ?? monthIndex)}
-              >
-                <ChevronRight className="tc-icon" aria-hidden />
-              </button>
+            <div className="tc-cal__controls">
+              <div className="tc-cal__nav" role="group" aria-label={t("calendar.nav.monthAria")}>
+                <button
+                  type="button"
+                  className="tc-iconbtn"
+                  aria-label={t("calendar.nav.prev")}
+                  disabled={position <= 0}
+                  onClick={() => setMonthIndex(months[position - 1]?.monthIndex ?? monthIndex)}
+                >
+                  <ChevronLeft className="tc-icon" aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className="tc-btn tc-btn--sm"
+                  disabled={monthIndex === todayMonth}
+                  onClick={() => setMonthIndex(todayMonth)}
+                >
+                  {t("calendar.nav.today")}
+                </button>
+                <button
+                  type="button"
+                  className="tc-iconbtn"
+                  aria-label={t("calendar.nav.next")}
+                  disabled={position < 0 || position >= months.length - 1}
+                  onClick={() => setMonthIndex(months[position + 1]?.monthIndex ?? monthIndex)}
+                >
+                  <ChevronRight className="tc-icon" aria-hidden />
+                </button>
+              </div>
+              {onSimulateUntil ? (
+                <div className="tc-cal__nav" role="group" aria-label={t("calendar.simulate.aria")}>
+                  {(["next_week", "next_month"] as const).map((kind) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      className="tc-btn tc-btn--sm"
+                      disabled={busy}
+                      onClick={() => onSimulateUntil(kind)}
+                    >
+                      {t(kind === "next_week" ? "shell.simulate.nextWeek" : "shell.simulate.nextMonth")}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
           <p className="tc-page-sub tc-cal__summary">
@@ -200,10 +225,10 @@ export function CalendarScreen({
             <button
               type="button"
               className="tc-btn tc-btn--sm"
-              disabled={fastForwardBusy || monthTargetReached}
+              disabled={busy || monthTargetReached}
               onClick={() => onFastForwardToMonth(monthIndex)}
             >
-              {fastForwardBusy
+              {busy
                 ? t("calendar.fastForward.busy")
                 : monthTargetReached
                   ? t("calendar.fastForward.alreadyThere", { month: monthName })

@@ -188,6 +188,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
     handleStartOpponentScout,
     handleOpenOpponentScoutReport,
     handleFastForwardToMonth,
+    onSimulateUntil,
     handleAcceptJobOffer,
   } = props;
 
@@ -706,7 +707,8 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           editions={session.kickerEditionArchive}
           chronicle={storyState.chronicle_entries}
           onFastForwardToMonth={handleFastForwardToMonth}
-          fastForwardBusy={simulating}
+          onSimulateUntil={onSimulateUntil}
+          busy={simulating}
         />
       ) : null}
       {clubProfileId && screen !== "leagues" ? (

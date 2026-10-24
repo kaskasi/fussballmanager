@@ -14,6 +14,7 @@ import type { StoryState } from "../../narrative/story-state.ts";
 import type { YouthCamp } from "../../youth/satellite-camps.ts";
 import type { TransferState } from "../../transfers/negotiations.ts";
 import type { SeasonAwardsSnapshot } from "../../sim/season-awards.ts";
+import type { SimulateUntil } from "../../sim/fast-forward-to-month.ts";
 import type { CoachingStaff } from "../../staff/coaching-staff.ts";
 import type { AssistantDelegation } from "../../staff/assistant-delegation.ts";
 import type { WorldDivisionId, WorldState } from "../../world/world-generator.ts";
@@ -137,6 +138,8 @@ export interface GameScreenRouterCoreProps {
   handleToggleShortlist: (playerId: string) => void;
   handleRecallLoan: (playerId: string) => void;
   handleFastForwardToMonth: (targetMonthIndex: number) => Promise<void>;
+  /** Header "Simulate until": next week / next month. Absent while a career match runs. */
+  onSimulateUntil?: (kind: SimulateUntil) => void;
   handleAcceptJobOffer: (clubId: TeamId) => void;
 }
 

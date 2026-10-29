@@ -100,7 +100,7 @@ describe("club finances", () => {
     });
     const afterSale = applyPlayerSaleIncome(finances, 1_000_000, 28, 2_800_000);
     expect(afterSale.cash).toBe(3_000_000);
-    expect(afterSale.transfer_budget).toBe(defaultClubFinances().transfer_budget + 500_000);
+    expect(afterSale.transfer_budget).toBe(finances.transfer_budget + 500_000);
   });
 
   it("uses transfer_budget for affordability and fees", () => {

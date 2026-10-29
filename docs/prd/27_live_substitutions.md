@@ -1,8 +1,8 @@
 # /docs/prd/27_live_substitutions.md
 
-**Version:** 0.1
-**Last Updated:** 2026-10-21
-**Status:** Draft — Feature **F1.9** (Slice 1), vorgezogen nach Agent-Playtest 2026-10-21
+**Version:** 0.2
+**Last Updated:** 2026-10-29
+**Status:** Slice 1 umgesetzt (ohne Preset-Wechsel zur Halbzeit) — Feature **F1.9**, vorgezogen nach Agent-Playtest 2026-10-21
 
 ---
 
@@ -71,6 +71,21 @@ Das Spiel wird heute **vollständig vorab simuliert** (`buildMatchView`,
 - Spielbericht: Wechsel mit Minute.
 
 ---
+
+## Umsetzung (2026-10-29)
+
+- **Replay statt Checkpoint:** `buildMatchView({ substitutions, assistantFromSeq })` simuliert ab Anpfiff
+  neu; jeder Wechsel trägt `afterSeq` (pausierter Tick). Gleicher Seed ⇒ identischer Stream bis dahin,
+  das Playback behält seinen Cursor (`useMatchPlayback` mit `resetKey`).
+- **Wann der Wechsel greift:** beim nächsten toten Ball (Restart, Halbzeit); ein verletzt ausgeschiedener
+  Spieler wird sofort ersetzt (`server/src/api/manual-substitution.ts`). Der Neue übernimmt Slot und Rolle.
+- **Haltepunkte:** Halbzeit und eigene Verletzung (ausgeschieden oder Torwart) pausieren automatisch und
+  öffnen Halbzeit-Karte bzw. Verletzungs-Prompt (`MatchPausePrompt.tsx`).
+- **Wechsel-Tab** in den Live-Regeln (`MatchSubstitutionPanel.tsx`): Elf mit Kraftbalken aus
+  `frame.dots[].fatigue`, frische Bank, geplante Wechsel, Zähler x/3.
+- **„Direkt zur Zusammenfassung"** übergibt die restlichen Wechsel an den Assistenten (`assistantFromSeq`).
+- Bericht und Ereignisse-Tab listen Wechsel (`MatchReport.substitutions`).
+- Offen: Preset-Wechsel zur Halbzeit; Einsatzminuten der Eingewechselten (Woche zählt weiter nur die Startelf).
 
 ## Invarianten
 

@@ -2,11 +2,13 @@
 import type { MatchClock, MatchReport } from "@fussballmanager/shared";
 
 export type LiveMatchLogEntry = {
-  kind: "goal" | "yellow" | "red";
+  kind: "goal" | "yellow" | "red" | "sub";
   minuteLabel: string;
   side: "home" | "away";
   name: string;
   assistName?: string;
+  /** Substitutions: the player who went off (`name` came on). */
+  offName?: string;
 };
 
 /** "45+2'" → 4502, "67'" → 6700; stoppage time sorts before the next half's first minute. */
@@ -26,7 +28,7 @@ function clockOrder(clock: MatchClock): number {
  * Report entries are chronological, so the first n goals per side are the ones already scored.
  */
 export function liveMatchLog(
-  report: Pick<MatchReport, "goals" | "cards">,
+  report: Pick<MatchReport, "goals" | "cards" | "substitutions">,
   homeTeamId: string,
   clock: MatchClock,
   score: { home: number; away: number },
@@ -36,7 +38,7 @@ export function liveMatchLog(
 
 /** Every goal and card of a finished match (report screen). */
 export function fullMatchLog(
-  report: Pick<MatchReport, "goals" | "cards">,
+  report: Pick<MatchReport, "goals" | "cards" | "substitutions">,
   homeTeamId: string,
 ): LiveMatchLogEntry[] {
   return buildMatchLog(report, homeTeamId, Number.POSITIVE_INFINITY, {
@@ -46,7 +48,7 @@ export function fullMatchLog(
 }
 
 function buildMatchLog(
-  report: Pick<MatchReport, "goals" | "cards">,
+  report: Pick<MatchReport, "goals" | "cards" | "substitutions">,
   homeTeamId: string,
   now: number,
   score: { home: number; away: number },
@@ -72,6 +74,16 @@ function buildMatchLog(
       minuteLabel: card.minuteLabel,
       side: card.teamId === homeTeamId ? "home" : "away",
       name: card.playerName,
+    });
+  }
+  for (const change of report.substitutions ?? []) {
+    if (minuteLabelOrder(change.minuteLabel) > now) continue;
+    entries.push({
+      kind: "sub",
+      minuteLabel: change.minuteLabel,
+      side: change.teamId === homeTeamId ? "home" : "away",
+      name: change.playerOnName,
+      offName: change.playerOffName,
     });
   }
   return entries.sort((a, b) => minuteLabelOrder(a.minuteLabel) - minuteLabelOrder(b.minuteLabel));

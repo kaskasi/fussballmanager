@@ -1,12 +1,14 @@
 /** WIREFRAME: docs/prd/design.md §9.1 — Aufstellung */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { TacticsMode } from "../narrative/career-presentation.ts";
 import {
   FORMATION_IDS,
   getFormation,
   sandboxPlanFromFormation,
+  sanitizeSlotZones,
   type FormationId,
   type FormationSlotId,
+  type PitchZoneId,
   type SandboxPlan,
   type Squad,
 } from "@fussballmanager/shared";
@@ -15,6 +17,7 @@ import {
   ChevronRight,
   RefreshCw,
   Rocket,
+  RotateCcw,
   Save,
   Star,
 } from "lucide-react";
@@ -29,7 +32,7 @@ import {
   type AutoLineupIcon,
   type AutoLineupMode,
 } from "./auto-lineup.ts";
-import { LineupPitch } from "./LineupPitch.tsx";
+import { LineupPitch, type LineupDrag } from "./LineupPitch.tsx";
 import { LineupPlayerCard } from "./LineupPlayerCard.tsx";
 import {
   benchPlayers,
@@ -54,10 +57,6 @@ import { getLocale } from "../i18n/index.ts";
 import { localeBcp47 } from "../i18n/locale-id.ts";
 import { formatLeagueMatchKickoffLabel } from "./match-kickoff-format.ts";
 import { formatMatchWeatherDisplay } from "./match-weather-display.ts";
-import { listProSquad, sortProSquadRows } from "../squad/pro-roster.ts";
-import { lineupFormFromCareer } from "./lineup-player-status.ts";
-import { LineupFatigueBars } from "./LineupFatigueBars.tsx";
-import { stateMark } from "../ui/player-profile.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
 import { OpponentScoutMatchAction } from "../ui/components/OpponentScoutMatchAction.tsx";
 import { OpponentScoutInboxCard } from "../ui/components/OpponentScoutInboxCard.tsx";
@@ -84,7 +83,6 @@ type CareerLineupScreenProps = {
   poorForm?: boolean;
   season?: number;
   scoutBoard?: ScoutBoard;
-  onOpenOpponentScoutReport?: (postfachItemId: string) => void;
   onOpenPlayer?: (playerId: string) => void;
   kasse?: MatchdayCashBreakdown;
   /** PRD 19 Act 1 — formation only, no presets or sliders. */
@@ -92,8 +90,9 @@ type CareerLineupScreenProps = {
   /** PRD 19 — opponent scout module behind the Story Mode curtain. */
   showOpponentScout?: boolean;
   /**
-   * "match": pre-kickoff step of the match flow (confirm button in the header NEXT).
-   * "menu": standalone Tactics screen — edits persist, no kickoff, analysis panel inline.
+   * Both use the same board (portrait pitch, paged bench, tactics/analysis column).
+   * "match": pre-kickoff step of the match flow — stadium banner, confirm button in the header NEXT.
+   * "menu": standalone Tactics screen — edits persist, no kickoff, opponent scout can be started.
    */
   variant?: "match" | "menu";
   scoutNetwork?: ScoutNetworkState;
@@ -102,8 +101,8 @@ type CareerLineupScreenProps = {
 };
 
 const TACTICS_STYLE_IDS: TacticsPresetId[] = [1, 2, 3];
-/** Fixed bench rows per page — panel height stays constant (empty slots padded). */
-const LINEUP_BENCH_PAGE_SIZE = 9;
+/** Bench cards per page — the panel keeps its height (empty places padded). */
+const LINEUP_BENCH_PAGE_SIZE = 8;
 
 export function CareerLineupScreen({
   setup,
@@ -122,7 +121,6 @@ export function CareerLineupScreen({
   poorForm,
   season = 1,
   scoutBoard,
-  onOpenOpponentScoutReport,
   onOpenPlayer,
   kasse,
   tacticsMode = "full",
@@ -141,7 +139,7 @@ export function CareerLineupScreen({
   const [assignments, setAssignments] = useState<LineupAssignments>(() =>
     normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId).assignments,
   );
-  const [dragPlayerId, setDragPlayerId] = useState<string | null>(null);
+  const [drag, setDrag] = useState<LineupDrag | null>(null);
   const [benchPage, setBenchPage] = useState(0);
 
   const playersById = useMemo(
@@ -152,21 +150,33 @@ export function CareerLineupScreen({
     () => benchPlayers(players, assignments, managerClubId),
     [players, assignments, managerClubId],
   );
-  // The Tactics screen shows the whole bench as a tile grid; the match flow pages a fixed-height list.
-  const benchPageSize = variant === "menu" ? Math.max(bench.length, 1) : LINEUP_BENCH_PAGE_SIZE;
-  const benchPageCount = Math.max(1, Math.ceil(bench.length / benchPageSize));
+  const benchPageCount = Math.max(1, Math.ceil(bench.length / LINEUP_BENCH_PAGE_SIZE));
 
   useEffect(() => {
     setBenchPage((current) => Math.min(current, benchPageCount - 1));
   }, [benchPageCount]);
 
+  /** The lineup this screen saved last: its echo through props must not refill a slot just emptied. */
+  const persistedRef = useRef<MatchLineupState | undefined>(undefined);
+
   useEffect(() => {
+    const echo = persistedRef.current;
+    if (
+      matchLineup &&
+      echo &&
+      matchLineup.formation === echo.formation &&
+      lineupAssignmentsEqual(matchLineup.assignments, echo.assignments) &&
+      JSON.stringify(matchLineup.plan) === JSON.stringify(echo.plan)
+    ) {
+      return;
+    }
     const normalized = normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId);
     setPlan((current) =>
       current.formation === normalized.plan.formation &&
       current.mentality === normalized.plan.mentality &&
       current.pressing === normalized.plan.pressing &&
-      current.lineHeight === normalized.plan.lineHeight
+      current.lineHeight === normalized.plan.lineHeight &&
+      JSON.stringify(current.slotZones ?? {}) === JSON.stringify(normalized.plan.slotZones ?? {})
         ? current
         : normalized.plan,
     );
@@ -177,25 +187,18 @@ export function CareerLineupScreen({
   }, [matchLineup, players, fallbackPlan, managerClubId]);
 
   const benchPageSlots = useMemo(() => {
-    const start = benchPage * benchPageSize;
-    const slice = bench.slice(start, start + benchPageSize);
-    if (variant === "menu") return slice;
-    return Array.from({ length: benchPageSize }, (_, index) => slice[index] ?? null);
-  }, [bench, benchPage, benchPageSize, variant]);
+    const start = benchPage * LINEUP_BENCH_PAGE_SIZE;
+    const slice = bench.slice(start, start + LINEUP_BENCH_PAGE_SIZE);
+    // Pad a short last page only when there are several, so paging never moves the pager.
+    if (benchPageCount === 1) return slice;
+    return Array.from({ length: LINEUP_BENCH_PAGE_SIZE }, (_, index) => slice[index] ?? null);
+  }, [bench, benchPage, benchPageCount]);
   const opponentPreview = useMemo(
     () => buildOpponentLineupPreview(setup, rivalPlayers),
     [setup, rivalPlayers],
   );
   const playerTeamLabel = clubShortName(setup.playerClubId);
   const filledCount = lineupSlotCount(assignments, plan.formation);
-  const squadTableRows = useMemo(() => {
-    const assigned = new Set(Object.values(assignments).filter(Boolean));
-    const rows = listProSquad(players, managerClubId);
-    return sortProSquadRows(rows, "position", "asc").map((row) => ({
-      ...row,
-      role: assigned.has(row.playerId) ? ("start" as const) : ("bench" as const),
-    }));
-  }, [players, managerClubId, assignments]);
   const squad = useMemo(
     () => buildSquadFromAssignments(players, plan, assignments, setup.playerClubId, managerClubId),
     [players, plan, assignments, setup.playerClubId, managerClubId],
@@ -211,26 +214,29 @@ export function CareerLineupScreen({
 
   const persistLineup = useCallback(
     (nextAssignments: LineupAssignments, nextPlan: SandboxPlan) => {
-      onSaveMatchLineup({
+      const lineup: MatchLineupState = {
         formation: nextPlan.formation,
         plan: nextPlan,
         assignments: nextAssignments,
-      });
+      };
+      persistedRef.current = lineup;
+      onSaveMatchLineup(lineup);
     },
     [onSaveMatchLineup],
   );
 
-  const setSlot = useCallback(
-    (slotId: FormationSlotId, playerId: string | null) => {
+  /** Bench → slot: the man there goes to the bench. Slot → slot: the two swap places. */
+  const dropOnSlot = useCallback(
+    (slotId: FormationSlotId, playerId: string, fromSlot: FormationSlotId | null) => {
       setAssignments((current) => {
         const next = { ...current };
-        if (playerId) {
-          for (const [slot, id] of Object.entries(next)) {
-            if (id === playerId) delete next[slot as FormationSlotId];
-          }
-          next[slotId] = playerId;
-        } else {
-          delete next[slotId];
+        const displaced = next[slotId];
+        for (const [slot, id] of Object.entries(next)) {
+          if (id === playerId) delete next[slot as FormationSlotId];
+        }
+        next[slotId] = playerId;
+        if (fromSlot && fromSlot !== slotId && displaced && displaced !== playerId) {
+          next[fromSlot] = displaced;
         }
         persistLineup(next, plan);
         return next;
@@ -238,6 +244,24 @@ export function CareerLineupScreen({
     },
     [persistLineup, plan],
   );
+
+  /** F1.6 — move a slot to another zone (IV → Libero, ZM → DM); the player keeps the slot. */
+  const moveSlot = useCallback(
+    (slotId: FormationSlotId, zoneId: PitchZoneId) => {
+      const slotZones = sanitizeSlotZones(plan.formation, { ...plan.slotZones, [slotId]: zoneId });
+      const { slotZones: _previous, ...rest } = plan;
+      const next: SandboxPlan = { ...rest, ...(slotZones ? { slotZones } : {}) };
+      setPlan(next);
+      persistLineup(assignments, next);
+    },
+    [assignments, persistLineup, plan],
+  );
+
+  const resetZones = useCallback(() => {
+    const { slotZones: _previous, ...next } = plan;
+    setPlan(next);
+    persistLineup(assignments, next);
+  }, [assignments, persistLineup, plan]);
 
   const unassignPlayer = useCallback(
     (playerId: string) => {
@@ -328,7 +352,7 @@ export function CareerLineupScreen({
     : Math.round(12_000 + (setup.seed % 9_000));
 
   return (
-    <main className={`matchday career-lineup tc-lineup${variant === "menu" ? " tc-lineup--menu club-shell-card-body" : ""}`}>
+    <main className={`matchday career-lineup tc-lineup tc-lineup--board${variant === "menu" ? " tc-lineup--menu club-shell-card-body" : ""}`}>
       {variant === "menu" ? null : (
       <MatchdayLineupAmbience
         setup={setup}
@@ -361,8 +385,21 @@ export function CareerLineupScreen({
               </button>
             ))}
           </div>
+          {plan.slotZones ? (
+            <button
+              type="button"
+              className="tc-chip tc-chip--icon"
+              title={t("match.lineup.resetZonesTitle")}
+              onClick={resetZones}
+            >
+              <RotateCcw className="tc-icon" strokeWidth={2.5} aria-hidden />
+              {t("match.lineup.resetZones")}
+            </button>
+          ) : null}
           <label className="tc-lineup__formation">
-            <span className="tc-label">{t("match.lineup.formation")}</span>
+            <span className="tc-label">
+              {plan.slotZones ? t("match.lineup.formationCustom") : t("match.lineup.formation")}
+            </span>
             <select
               className="tc-select tc-lineup__select"
               value={plan.formation}
@@ -389,25 +426,20 @@ export function CareerLineupScreen({
           <section className="tc-panel tc-lineup__pitch lineup-pitch-panel" aria-label={t("match.lineup.pitchViewAria")}>
             <LineupPitch
               formation={plan.formation}
+              slotZones={plan.slotZones}
               assignments={assignments}
               playersById={playersById}
-              dragPlayerId={dragPlayerId}
+              drag={drag}
               playerTeamLabel={playerTeamLabel}
+              kitClubId={managerClubId}
               opponent={opponentPreview}
-              onAssign={setSlot}
-              onDragPlayer={setDragPlayerId}
+              onDropOnSlot={dropOnSlot}
+              onMoveSlot={moveSlot}
+              onDrag={setDrag}
               onOpenPlayer={onOpenPlayer}
-              orientation={variant === "menu" ? "vertical" : "horizontal"}
+              orientation="vertical"
             />
-            {variant === "match" && showOpponentScout && scoutBoard && onOpenOpponentScoutReport ? (
-              <OpponentScoutMatchAction
-                mode="lineup"
-                setup={setup}
-                season={season}
-                scoutBoard={scoutBoard}
-                onViewReport={onOpenOpponentScoutReport}
-              />
-            ) : null}
+            <p className="tc-caption tc-lineup__hint">{t("match.lineup.moveHint")}</p>
           </section>
           <aside className="tc-panel tc-lineup__bench lineup-bench" aria-label={t("match.lineup.benchAria")}>
             <div className="tc-panel__head tc-lineup__bench-head">
@@ -442,9 +474,9 @@ export function CareerLineupScreen({
             </div>
             <LineupIndicatorLegend />
             <div
-              className={`lineup-bench-list ${variant === "menu" ? "lineup-bench-grid" : "lineup-bench-list--fixed"}`}
+              className="lineup-bench-list lineup-bench-grid"
               onDragOver={(event) => {
-                if (dragPlayerId) event.preventDefault();
+                if (drag?.fromSlot) event.preventDefault();
               }}
               onDrop={(event) => {
                 event.preventDefault();
@@ -453,7 +485,7 @@ export function CareerLineupScreen({
                 if (Object.values(assignments).includes(playerId)) {
                   unassignPlayer(playerId);
                 }
-                setDragPlayerId(null);
+                setDrag(null);
               }}
             >
               {benchPageSlots.map((player, index) =>
@@ -461,9 +493,9 @@ export function CareerLineupScreen({
                   <LineupPlayerCard
                     key={player.id}
                     player={player}
-                    tile={variant === "menu"}
-                    onDragStart={setDragPlayerId}
-                    onDragEnd={() => setDragPlayerId(null)}
+                    selected={drag?.playerId === player.id}
+                    onDragStart={(playerId) => setDrag({ playerId, fromSlot: null })}
+                    onDragEnd={() => setDrag(null)}
                     onOpenPlayer={onOpenPlayer}
                   />
                 ) : (
@@ -499,7 +531,8 @@ export function CareerLineupScreen({
             </dl>
           </section>
 
-          {variant === "menu" && showOpponentScout && scoutBoard ? (
+          {/* Matchday: scouting is over, so the panel only shows a finished report. */}
+          {showOpponentScout && scoutBoard && (variant === "menu" || analysisNotice) ? (
             <section className="tc-panel tc-lineup__analysis" aria-label={t("tactics.analysis.title")}>
               <div className="tc-panel__head">
                 <h2 className="tc-panel__title">{t("tactics.analysis.title")}</h2>
@@ -606,72 +639,6 @@ export function CareerLineupScreen({
         </aside>
       </div>
 
-      {variant === "menu" ? null : (
-      <section className="tc-panel tc-lineup__squad" aria-label={t("match.lineup.squadAria")}>
-        <div className="tc-panel__head">
-          <h2 className="tc-panel__title">{t("match.lineup.squadSummary", { count: squadTableRows.length })}</h2>
-          <span className="tc-panel__meta">{t("match.lineup.startersMeta", { count: filledCount })}</span>
-        </div>
-        <div className="tc-table-wrap">
-          <table className="tc-table tc-table--compact">
-            <thead>
-              <tr>
-                <th scope="col">{t("squad.col.pos")}</th>
-                <th scope="col">{t("squad.col.name")}</th>
-                <th scope="col" className="tc-num">
-                  {t("squad.col.age")}
-                </th>
-                <th scope="col" className="tc-num">
-                  CA
-                </th>
-                <th scope="col" className="tc-num">
-                  {t("match.lineup.col.form")}
-                </th>
-                <th scope="col" className="tc-num">
-                  {t("match.lineup.col.fitness")}
-                </th>
-                <th scope="col">{t("match.lineup.col.usage")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {squadTableRows.map((row) => {
-                const form = lineupFormFromCareer(row.form);
-                const fit = stateMark(row.fitness, 75, 50);
-                return (
-                  <tr key={row.playerId} className={row.role === "start" ? "tc-row--mark" : undefined}>
-                    <td>{row.positionLabel}</td>
-                    <td>
-                      {onOpenPlayer ? (
-                        <button type="button" className="tc-linkbtn" onClick={() => onOpenPlayer(row.playerId)}>
-                          {row.displayName}
-                        </button>
-                      ) : (
-                        row.displayName
-                      )}
-                    </td>
-                    <td className="tc-num">{row.age}</td>
-                    <td className="tc-num">{row.ca}</td>
-                    <td className={`tc-num tc-state--${form.tone}`}>{form.label}</td>
-                    <td className={`tc-num tc-state--${fit.tone}`}>
-                      <span className="tc-lineup__fit">
-                        <LineupFatigueBars fitness={row.fitness} compact />
-                        <span aria-hidden>{fit.mark}</span>
-                        {row.fitness}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`tc-lineup__role${row.role === "start" ? " is-start" : ""}`}>
-                        {row.role === "start" ? t("match.lineup.role.start") : t("match.lineup.role.bench")}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-      )}
     </main>
   );
 }

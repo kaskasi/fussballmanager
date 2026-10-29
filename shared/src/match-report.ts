@@ -17,6 +17,13 @@ export type MatchReportCard = {
   teamId: TeamId;
 };
 
+export type MatchReportSubstitution = {
+  minuteLabel: string;
+  playerOffName: string;
+  playerOnName: string;
+  teamId: TeamId;
+};
+
 export type MatchReportConditions = {
   referee: string;
   weather: string;
@@ -26,6 +33,8 @@ export type MatchReport = {
   conditions: MatchReportConditions;
   goals: MatchReportGoal[];
   cards: MatchReportCard[];
+  /** Absent on reports from before live substitutions (PRD 27). */
+  substitutions?: MatchReportSubstitution[];
   playerStats: PlayerSeasonStat[];
 };
 
@@ -99,6 +108,7 @@ export function buildMatchReport(
 ): MatchReport {
   const goals: MatchReportGoal[] = [];
   const cards: MatchReportCard[] = [];
+  const substitutions: MatchReportSubstitution[] = [];
 
   for (const event of events) {
     if (event.type === "goal") {
@@ -120,6 +130,15 @@ export function buildMatchReport(
         color,
         teamId: event.player.teamId,
       });
+      continue;
+    }
+    if (event.type === "substitution") {
+      substitutions.push({
+        minuteLabel: formatMatchMinuteLabel(event.clock),
+        playerOffName: ctx.playerName(event.playerOff.playerId),
+        playerOnName: ctx.playerName(event.playerOn.playerId),
+        teamId: event.teamId,
+      });
     }
   }
 
@@ -127,6 +146,7 @@ export function buildMatchReport(
     conditions: buildMatchConditions(seed),
     goals,
     cards,
+    substitutions,
     playerStats: aggregatePlayerMatchStats(events, home, away),
   };
 }

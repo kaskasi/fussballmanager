@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MatchView, MatchViewFrame, MatchViewLine } from "@fussballmanager/shared";
 import type { MatchHighlightLevel } from "./match-highlight-level.ts";
 import {
@@ -13,21 +13,45 @@ export { frameAt } from "./text-playback.ts";
 
 const FIRST_LINE_DELAY_MS = 300;
 
+export type MatchPlaybackOptions = {
+  /**
+   * Playback restarts when this changes. Default: seed + event count. The career match passes its
+   * fixture key, so a replay with a substitution (PRD 27) keeps the cursor: the stream is identical
+   * up to the paused line.
+   */
+  resetKey?: string;
+  /** Seqs where the timer halts (own injury, half-time); `onStop` fires once per crossing. */
+  stops?: readonly number[];
+  onStop?: (seq: number) => void;
+};
+
 /**
  * Career matchday playback, driven by commentary lines (design.md §9.15, text-first).
  * `cursor` is an index into `view.lines` and sets the match moment (clock, score, frame); the stream
  * shows the lines at or before it that play at `level`. Switching levels never moves the clock.
  * Step back / forward and the timer move between lines of the chosen level.
  */
-export function useMatchPlayback(view: MatchView | null, level: MatchHighlightLevel) {
+export function useMatchPlayback(
+  view: MatchView | null,
+  level: MatchHighlightLevel,
+  options: MatchPlaybackOptions = {},
+) {
   const [cursor, setCursor] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
+  const resetKey = options.resetKey ?? `${view?.seed}:${view?.eventCount}`;
+  const stopsRef = useRef(options);
+  stopsRef.current = options;
 
   useEffect(() => {
     setCursor(0);
     setPlaying(false);
-  }, [view?.seed, view?.eventCount]);
+  }, [resetKey]);
+
+  const lineCount = view?.lines.length ?? 0;
+  useEffect(() => {
+    setCursor((current) => Math.min(current, Math.max(0, lineCount - 1)));
+  }, [lineCount]);
 
   const lines = view?.lines;
   const timeline = useMemo(() => (lines ? buildLineTimeline(lines, level) : []), [lines, level]);
@@ -72,9 +96,23 @@ export function useMatchPlayback(view: MatchView | null, level: MatchHighlightLe
       setPlaying(false);
       return;
     }
-    const timer = window.setTimeout(() => setCursor(nextLineIndex), dwellMs);
+    const timer = window.setTimeout(() => {
+      const from = view.lines[cursor]?.seq ?? -1;
+      const to = view.lines[nextLineIndex]?.seq ?? from;
+      const stop = stopsRef.current.stops?.find((seq) => seq > from && seq <= to);
+      if (stop === undefined) {
+        setCursor(nextLineIndex);
+        return;
+      }
+      // Land on the last line at or before the stop, whatever its level, and hold there.
+      let landing = nextLineIndex;
+      while (landing > cursor && (view.lines[landing]?.seq ?? 0) > stop) landing -= 1;
+      setCursor(landing);
+      setPlaying(false);
+      stopsRef.current.onStop?.(stop);
+    }, dwellMs);
     return () => window.clearTimeout(timer);
-  }, [view, playing, atEnd, nextLineIndex, dwellMs]);
+  }, [view, playing, atEnd, cursor, nextLineIndex, dwellMs]);
 
   const visibleLines = useMemo(
     () =>

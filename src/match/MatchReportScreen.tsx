@@ -47,6 +47,9 @@ export function MatchReportScreen({
   const log = fullMatchLog(report, normalized.home.id);
   const goals = log.filter((entry) => entry.kind === "goal");
   const cards = log.filter((entry) => entry.kind !== "goal");
+  const cardsTitle = cards.some((entry) => entry.kind === "sub")
+    ? t("match.report.cardsAndSubs")
+    : t("match.report.cards");
 
   const metaLine = [
     formatMatchWeatherDisplay(normalized.seed),
@@ -86,14 +89,14 @@ export function MatchReportScreen({
             onSelectPlayer={onSelectPlayer}
           />
           {cards.length > 0 ? (
-            <section className="tc-panel" aria-label={t("match.report.cards")}>
-              <h2 className="tc-label tc-report__label">{t("match.report.cards")}</h2>
+            <section className="tc-panel" aria-label={cardsTitle}>
+              <h2 className="tc-label tc-report__label">{cardsTitle}</h2>
               <MatchEventLog
                 entries={cards}
                 homeShort={normalized.home.shortName}
                 awayShort={normalized.away.shortName}
                 emptyLabel=""
-                ariaLabel={t("match.report.cards")}
+                ariaLabel={cardsTitle}
               />
             </section>
           ) : null}

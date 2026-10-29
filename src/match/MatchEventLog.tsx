@@ -1,4 +1,5 @@
 /** design.md §9.14 / §9.15 — event log in timeline notation: 18' ● Peters (A: Aydin). ● home · ○ away. */
+import { ArrowLeftRight } from "lucide-react";
 import { useT } from "../i18n/react.ts";
 import type { LiveMatchLogEntry } from "./live-match-log.ts";
 
@@ -29,13 +30,19 @@ export function MatchEventLog({
             <span className="tc-sr">{entry.side === "home" ? homeShort : awayShort}</span>
           </span>
           <span className="tc-eventlog__text">
-            {entry.name}
+            {entry.kind === "sub" && entry.offName
+              ? t("match.log.subFor", { on: entry.name, off: entry.offName })
+              : entry.name}
             {entry.assistName ? (
               <span className="tc-eventlog__assist"> {t("match.log.assist", { name: entry.assistName })}</span>
             ) : null}
           </span>
           {entry.kind === "goal" ? (
             <span className="tc-sr">{t("match.log.goal")}</span>
+          ) : entry.kind === "sub" ? (
+            <span className="tc-eventlog__sub" role="img" aria-label={t("match.log.sub")}>
+              <ArrowLeftRight className="tc-icon" strokeWidth={2.5} aria-hidden />
+            </span>
           ) : (
             <span
               className={`tc-eventlog__card tc-eventlog__card--${entry.kind}`}

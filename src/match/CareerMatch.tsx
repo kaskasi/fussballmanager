@@ -2,6 +2,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { TacticsMode } from "../narrative/career-presentation.ts";
 import type { BroadcastStoryContext, MatchViewLine, SandboxPlan, Squad } from "@fussballmanager/shared";
+import { formatMatchMinuteLabel } from "@fussballmanager/shared";
+import type { MatchSubstitutionRequest } from "../../server/src/api/manual-substitution.ts";
+import type { CareerMatchBuildInput } from "./build-career-match-view.ts";
 import type { TacticsPresetId, TacticsPresetSlot } from "./tactics-presets.ts";
 import type { Player } from "../types/player.ts";
 import type { NavPrimaryAction } from "../ui/nav-primary-action.ts";
@@ -26,7 +29,16 @@ import { MatchCommentaryStream } from "./MatchCommentaryStream.tsx";
 import { MatchMomentum } from "./MatchMomentum.tsx";
 import { MatchZoneStrip } from "./MatchZoneStrip.tsx";
 import { MatchReportScreen } from "./MatchReportScreen.tsx";
-import { MatchdayLivePanel } from "./MatchdayLivePanel.tsx";
+import { MatchdayLivePanel, type MatchSideTab } from "./MatchdayLivePanel.tsx";
+import { MatchSubstitutionPanel, type MatchPortraitLookup } from "./MatchSubstitutionPanel.tsx";
+import { MatchHalfTimePrompt, MatchInjuryPrompt } from "./MatchPausePrompt.tsx";
+import {
+  halfTimeSeq,
+  liveSubstitutionState,
+  ownInjurySeqs,
+  substituteSuggestions,
+} from "./live-substitutions.ts";
+import { estimateCa } from "../transfers/market-value.ts";
 import { MatchdayPreviewPanel } from "./MatchdayPreviewPanel.tsx";
 import { MatchdayLeagueSidePanel } from "./MatchdayLeagueSidePanel.tsx";
 import type { LeagueState } from "../persistence/league-state.ts";
@@ -65,7 +77,6 @@ export function CareerMatch({
   season = 1,
   masterSeed,
   scoutBoard,
-  onOpenOpponentScoutReport,
   onLineupPhaseChange,
   league,
   worldClubs,
@@ -96,7 +107,6 @@ export function CareerMatch({
   season?: number;
   masterSeed: number;
   scoutBoard?: ScoutBoard;
-  onOpenOpponentScoutReport?: (postfachItemId: string) => void;
   onLineupPhaseChange?: (inLineup: boolean) => void;
   league: LeagueState;
   worldClubs?: readonly WorldClub[];
@@ -182,7 +192,6 @@ export function CareerMatch({
         poorForm={poorForm}
         season={season}
         scoutBoard={scoutBoard}
-        onOpenOpponentScoutReport={onOpenOpponentScoutReport}
         onOpenPlayer={onSelectMatchPlayer}
         kasse={kasse}
         tacticsMode={tacticsMode}
@@ -263,6 +272,16 @@ function CareerMatchPlayback({
   const [loading, setLoading] = useState(true);
   const [reportOpen, setReportOpen] = useState(false);
   const [fastSim, setFastSim] = useState(false);
+  /** PRD 27 — the manager's changes so far; every new one replays the match from kickoff. */
+  const [subRequests, setSubRequests] = useState<MatchSubstitutionRequest[]>([]);
+  const [rebuilding, setRebuilding] = useState(false);
+  const [prompt, setPrompt] = useState<{ kind: "injury" | "halftime"; seq: number } | null>(null);
+  /** Injury stops already shown; half-time is tracked apart, its seq moves when a change lands there. */
+  const [handledStops, setHandledStops] = useState<ReadonlySet<number>>(() => new Set());
+  const [halfTimeHandled, setHalfTimeHandled] = useState(false);
+  /** Seq of the stop playback is holding at; a change made now comes after it. */
+  const [holdSeq, setHoldSeq] = useState<number | null>(null);
+  const [sideTab, setSideTab] = useState<MatchSideTab>("events");
 
   const portraitSeedForPlayerId = useMemo(() => {
     const map = new Map<string, number>();
@@ -274,8 +293,40 @@ function CareerMatchPlayback({
     }
     return (id: string) => map.get(id);
   }, [players, rivalPlayers]);
+  const careerById = useMemo(
+    () => new Map([...players, ...rivalPlayers].map((player) => [player.id, player])),
+    [players, rivalPlayers],
+  );
+  const portraitFor = useCallback<MatchPortraitLookup>(
+    (id) => {
+      const player = careerById.get(id);
+      return player
+        ? { seed: player.portrait_seed, clubId: player.club_id, nationality: player.nationality }
+        : undefined;
+    },
+    [careerById],
+  );
+  const ownTeamId = view ? (setup.isHome ? view.home.id : view.away.id) : setup.playerClubId;
+  const halfTime = useMemo(() => (view ? halfTimeSeq(view) : null), [view]);
+  const stops = useMemo(() => {
+    if (!view) return [];
+    const injuries = ownInjurySeqs(view, ownTeamId).filter((seq) => !handledStops.has(seq));
+    const half = halfTime !== null && !halfTimeHandled ? [halfTime] : [];
+    return [...half, ...injuries].sort((a, b) => a - b);
+  }, [view, halfTime, halfTimeHandled, ownTeamId, handledStops]);
+  const onStop = useCallback(
+    (seq: number) => {
+      const isHalfTime = seq === halfTime && !halfTimeHandled;
+      if (isHalfTime) setHalfTimeHandled(true);
+      else setHandledStops((current) => new Set(current).add(seq));
+      setHoldSeq(seq);
+      setPrompt({ kind: isHalfTime ? "halftime" : "injury", seq });
+    },
+    [halfTime, halfTimeHandled],
+  );
   const [highlightLevel, setHighlightLevel] = useMatchHighlightLevel();
-  const playback = useMatchPlayback(view, highlightLevel);
+  const matchFetchKey = `${setup.seed}:${setup.homeTeamId}:${setup.awayTeamId}:${setup.playerClubId}`;
+  const playback = useMatchPlayback(view, highlightLevel, { resetKey: matchFetchKey, stops, onStop });
   const minuteOf = useCallback(
     (line: MatchViewLine) =>
       view ? lineMinuteLabel(frameAt(view, frameIndexForSeq(view.frames, line.seq)).clock) : "",
@@ -290,7 +341,42 @@ function CareerMatchPlayback({
   broadcastStoryRef.current = broadcastStory;
   const playerClubSquadRef = useRef(playerClubSquad);
   playerClubSquadRef.current = playerClubSquad;
-  const matchFetchKey = `${setup.seed}:${setup.homeTeamId}:${setup.awayTeamId}:${setup.playerClubId}`;
+  const subRequestsRef = useRef(subRequests);
+  subRequestsRef.current = subRequests;
+  const frameSeqRef = useRef(0);
+  frameSeqRef.current = playback.frame?.seq ?? 0;
+  const promptRef = useRef(prompt);
+  promptRef.current = prompt;
+  /** Skip to report waits for the assistant's replay, then jumps to the end. */
+  const pendingEndRef = useRef(false);
+
+  /** One simulation of this fixture; the manager's changes and the assistant hand-over replay on the same seed. */
+  const loadView = useCallback(
+    async (extra: Pick<CareerMatchBuildInput, "substitutions" | "assistantFromSeq"> = {}) => {
+      const squad = playerClubSquadRef.current;
+      const opponentId =
+        setup.homeTeamId === setup.playerClubId ? setup.awayTeamId : setup.homeTeamId;
+      const opponentSquad = squadForLeagueClub(opponentId, rivalPlayersRef.current);
+      if (!opponentSquad) {
+        throw new Error(t("match.career.loadRivalFailed"));
+      }
+      const homeSquad = setup.homeTeamId === setup.playerClubId ? squad : opponentSquad;
+      const awaySquad = setup.awayTeamId === setup.playerClubId ? squad : opponentSquad;
+      return fetchCareerMatchView({
+        seed: setup.seed,
+        homeTeamId: setup.homeTeamId,
+        awayTeamId: setup.awayTeamId,
+        homeSquad,
+        awaySquad,
+        playerClubSquad: squad,
+        broadcastStory: broadcastStoryRef.current,
+        ...extra,
+      });
+    },
+    [setup.seed, setup.homeTeamId, setup.awayTeamId, setup.playerClubId, t],
+  );
+  const loadViewRef = useRef(loadView);
+  loadViewRef.current = loadView;
   const preMatch = useMemo(
     () => buildPreMatchBrief(setup, playerClubSquad.tactics.formation, rivalPlayers),
     [setup, playerClubSquad.tactics.formation, rivalPlayers],
@@ -302,31 +388,18 @@ function CareerMatchPlayback({
     setError(null);
     setReportOpen(false);
     setFastSim(false);
+    setSubRequests([]);
+    setPrompt(null);
+    setHandledStops(new Set());
+    setHalfTimeHandled(false);
+    setHoldSeq(null);
+    pendingEndRef.current = false;
     userStartedPlaybackRef.current = false;
     setUserStartedPlayback(false);
 
     void (async () => {
       try {
-        const squad = playerClubSquadRef.current;
-        const opponentId =
-          setup.homeTeamId === setup.playerClubId ? setup.awayTeamId : setup.homeTeamId;
-        const opponentSquad = squadForLeagueClub(opponentId, rivalPlayersRef.current);
-        if (!opponentSquad) {
-          throw new Error(t("match.career.loadRivalFailed"));
-        }
-        const homeSquad =
-          setup.homeTeamId === setup.playerClubId ? squad : opponentSquad;
-        const awaySquad =
-          setup.awayTeamId === setup.playerClubId ? squad : opponentSquad;
-        const next = await fetchCareerMatchView({
-          seed: setup.seed,
-          homeTeamId: setup.homeTeamId,
-          awayTeamId: setup.awayTeamId,
-          homeSquad,
-          awaySquad,
-          playerClubSquad: squad,
-          broadcastStory: broadcastStoryRef.current,
-        });
+        const next = await loadViewRef.current();
         if (cancelled) return;
         setView(next);
       } catch (caught) {
@@ -343,6 +416,41 @@ function CareerMatchPlayback({
     };
   }, [matchFetchKey]);
 
+  useEffect(() => {
+    if (playback.playing) setHoldSeq(null);
+  }, [playback.playing]);
+
+  /**
+   * PRD 27 — queue a change and replay: the stream is identical up to the paused tick, the new
+   * player comes on at the next dead ball (at once for a man who already went off injured).
+   */
+  const requestSubstitution = useCallback(
+    async (playerOffId: string, playerOnId: string | undefined, options: { atSeq?: number; resume?: boolean } = {}) => {
+      playback.pause();
+      const afterSeq = Math.max(options.atSeq ?? 0, holdSeq ?? 0, frameSeqRef.current);
+      const next = [...subRequestsRef.current, { afterSeq, playerOffId, ...(playerOnId ? { playerOnId } : {}) }];
+      setSubRequests(next);
+      setRebuilding(true);
+      try {
+        const rebuilt = await loadViewRef.current({ substitutions: next });
+        setView(rebuilt);
+        if (options.resume) playback.play();
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : t("match.career.loadFailed"));
+      } finally {
+        setRebuilding(false);
+      }
+    },
+    [holdSeq, playback.pause, playback.play, t],
+  );
+
+  useEffect(() => {
+    if (!pendingEndRef.current || !view) return;
+    pendingEndRef.current = false;
+    playback.goToEnd();
+    setReportOpen(true);
+  }, [view, playback.goToEnd]);
+
   const markUserStartedPlayback = useCallback(() => {
     userStartedPlaybackRef.current = true;
     setUserStartedPlayback(true);
@@ -351,6 +459,7 @@ function CareerMatchPlayback({
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (
+        promptRef.current ||
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLSelectElement ||
         event.target instanceof HTMLTextAreaElement
@@ -413,9 +522,21 @@ function CareerMatchPlayback({
     onRegisterSkipToReport(() => {
       userStartedPlaybackRef.current = true;
       setUserStartedPlayback(true);
-      playback.goToEnd();
+      setPrompt(null);
       setFastSim(true);
-      setReportOpen(true);
+      // "Simulate" hands the remaining changes to the assistant, like the AI (PRD 27).
+      setRebuilding(true);
+      void loadViewRef
+        .current({ substitutions: subRequestsRef.current, assistantFromSeq: frameSeqRef.current })
+        .then((rebuilt) => {
+          pendingEndRef.current = true;
+          setView(rebuilt);
+        })
+        .catch(() => {
+          playback.goToEnd();
+          setReportOpen(true);
+        })
+        .finally(() => setRebuilding(false));
     });
     return () => onRegisterSkipToReport(null);
   }, [loading, onRegisterSkipToReport, playback.goToEnd, reportOpen, userStartedPlayback, view]);
@@ -462,7 +583,7 @@ function CareerMatchPlayback({
         markUserStartedPlayback();
         playback.play();
       },
-      disabled: simulating || loading || !outcome,
+      disabled: simulating || loading || rebuilding || prompt !== null || !outcome,
       title: reportOpen
         ? t("match.career.nav.finishHint")
         : awaitingKickoff
@@ -489,6 +610,8 @@ function CareerMatchPlayback({
     setup.seed,
     userStartedPlayback,
     view,
+    rebuilding,
+    prompt,
   ]);
 
   if (postMatchPress && press && view) {
@@ -504,8 +627,20 @@ function CareerMatchPlayback({
     );
   }
 
-  const ownTeamId = view ? (setup.isHome ? view.home.id : view.away.id) : setup.playerClubId;
   const live = Boolean(view && frame && !reportOpen && userStartedPlayback);
+  const subsState = view && live ? liveSubstitutionState(view, playback.frameIndex, ownTeamId) : null;
+  const ownSide: "home" | "away" = view && ownTeamId === view.away.id ? "away" : "home";
+  const injuryFrame =
+    prompt?.kind === "injury" && view ? view.frames.find((entry) => entry.seq === prompt.seq) : undefined;
+  const injured = injuryFrame?.injury
+    ? view?.roster.find((entry) => entry.id === injuryFrame.injury!.playerId)
+    : undefined;
+  const halfFrame =
+    prompt?.kind === "halftime" && view ? (view.frames.find((entry) => entry.seq === prompt.seq) ?? frame) : null;
+  const rankByCa = (id: string) => {
+    const player = careerById.get(id);
+    return player ? estimateCa(player.attributes, player.position) : 0;
+  };
   const formations = view ? `${view.home.formation} vs ${view.away.formation}` : null;
 
   return (
@@ -603,6 +738,21 @@ function CareerMatchPlayback({
               onStepForward={playback.stepForward}
               stepBackDisabled={!playback.canStepBack}
               stepForwardDisabled={playback.atEnd}
+              transportDisabled={rebuilding || prompt !== null}
+              sideTab={sideTab}
+              onSideTabChange={setSideTab}
+              subsPanel={
+                subsState ? (
+                  <MatchSubstitutionPanel
+                    state={subsState}
+                    paused={!playback.playing}
+                    busy={rebuilding}
+                    portraitFor={portraitFor}
+                    onPause={playback.pause}
+                    onSubstitute={(offId, onId) => void requestSubstitution(offId, onId)}
+                  />
+                ) : undefined
+              }
             />
           ) : !view && !error ? (
             <aside className="tc-panel" aria-label={t("match.preview.kicker")}>
@@ -621,6 +771,51 @@ function CareerMatchPlayback({
           ) : null}
         </div>
       )}
+
+      {live && view && subsState && prompt?.kind === "injury" && injured && injuryFrame?.injury ? (
+        <MatchInjuryPrompt
+          minuteLabel={formatMatchMinuteLabel(injuryFrame.clock)}
+          injured={{ id: injured.id, name: injured.name }}
+          left={injuryFrame.injury.left}
+          suggestions={substituteSuggestions(subsState.bench, injured.role, rankByCa)}
+          subsLeft={subsState.left}
+          portraitFor={portraitFor}
+          onSubstitute={(onId) => {
+            setPrompt(null);
+            void requestSubstitution(injured.id, onId, { atSeq: prompt.seq, resume: true });
+          }}
+          onAssistant={() => {
+            setPrompt(null);
+            void requestSubstitution(injured.id, undefined, { atSeq: prompt.seq, resume: true });
+          }}
+          onPlayOn={() => {
+            setPrompt(null);
+            playback.play();
+          }}
+        />
+      ) : null}
+
+      {live && view && subsState && halfFrame ? (
+        <MatchHalfTimePrompt
+          score={`${view.home.shortName} ${halfFrame.score.home} : ${halfFrame.score.away} ${view.away.shortName}`}
+          stats={halfFrame.stats}
+          ownSide={ownSide}
+          tired={subsState.onPitch
+            .filter((row) => (row.fatigue ?? 0) >= 45)
+            .sort((a, b) => (b.fatigue ?? 0) - (a.fatigue ?? 0))
+            .slice(0, 4)}
+          subsLeft={subsState.left}
+          portraitFor={portraitFor}
+          onOpenSubs={() => {
+            setPrompt(null);
+            setSideTab("subs");
+          }}
+          onResume={() => {
+            setPrompt(null);
+            playback.play();
+          }}
+        />
+      ) : null}
     </main>
   );
 }

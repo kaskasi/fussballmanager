@@ -5,12 +5,19 @@
 import type { DragEvent } from "react";
 import { useState } from "react";
 import {
+  effectiveFormation,
   getFormation,
+  getPitchZone,
+  PITCH_ZONE_IDS,
+  slotZoneId,
   type FormationId,
   type FormationSlotId,
+  type PitchZoneId,
+  type SlotZones,
 } from "@fussballmanager/shared";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
+import { PlayerPortrait } from "../ui/components/PlayerPortrait.tsx";
 import type { LineupAssignments } from "./lineup-board.ts";
 import type { OpponentLineupEntry, OpponentLineupPreview } from "./opponent-lineup-preview.ts";
 import {
@@ -18,19 +25,29 @@ import {
   lineupStatusFromPlayer,
   type LineupStatusView,
 } from "./LineupPlayerStatusStrip.tsx";
+import { LineupJersey } from "./LineupJersey.tsx";
 import { useT } from "../i18n/react.ts";
 
 type LineupPitchView = "own" | "opponent";
 
+/** What is being dragged: a bench player (no slot) or the player of a pitch slot. */
+export type LineupDrag = { playerId: string; fromSlot: FormationSlotId | null };
+
 type LineupPitchProps = {
   formation: FormationId;
+  /** Slots moved to another zone (F1.6). */
+  slotZones?: SlotZones;
   assignments: LineupAssignments;
   playersById: Map<string, Player>;
-  dragPlayerId: string | null;
+  drag: LineupDrag | null;
   playerTeamLabel: string;
+  /** Career club id: empty slots are shirts in this club's home kit. */
+  kitClubId?: string;
   opponent?: OpponentLineupPreview | null;
-  onAssign: (slotId: FormationSlotId, playerId: string | null) => void;
-  onDragPlayer: (playerId: string | null) => void;
+  onDropOnSlot: (slotId: FormationSlotId, playerId: string, fromSlot: FormationSlotId | null) => void;
+  /** A pitch player dropped on a free zone: that slot moves there (IV → Libero, ZM → DM, …). */
+  onMoveSlot?: (slotId: FormationSlotId, zoneId: PitchZoneId) => void;
+  onDrag: (drag: LineupDrag | null) => void;
   onOpenPlayer?: (playerId: string) => void;
   /** "vertical": goalkeeper at the bottom, strikers at the top. */
   orientation?: "horizontal" | "vertical";
@@ -38,36 +55,107 @@ type LineupPitchProps = {
 
 type PitchPoint = { x: number; y: number };
 
+/** A free zone inside this ellipse (board %, across × along) around a placed card would sit under it. */
+const ZONE_CLEARANCE = { across: 16, along: 9 };
+
+/**
+ * Kickoff shapes sit in the own half (keeper 6 … strikers 74). The board spreads the lines evenly
+ * over the whole pitch (keeper, libero, back line, DM, midfield, AM, strikers) so the portrait
+ * cards of neighbouring lines do not overlap.
+ */
+const BOARD_DEPTHS: ReadonlyArray<readonly [number, number]> = [
+  [0, 3],
+  [6, 7],
+  [12, 19],
+  [18, 30],
+  [33, 46],
+  [42, 60],
+  [58, 74],
+  [70, 88],
+  [100, 97],
+];
+
+function boardDepth(x: number): number {
+  for (let index = 1; index < BOARD_DEPTHS.length; index += 1) {
+    const [x1, d1] = BOARD_DEPTHS[index]!;
+    const [x0, d0] = BOARD_DEPTHS[index - 1]!;
+    if (x <= x1) return d0 + ((x - x0) / (x1 - x0)) * (d1 - d0);
+  }
+  return 97;
+}
+
 /** Formation coordinates attack to the right; vertical turns the pitch a quarter turn so attack points up. */
 function slotStyle(position: PitchPoint, orientation: "horizontal" | "vertical") {
+  const depth = boardDepth(position.x);
   return orientation === "vertical"
-    ? { left: `${position.y}%`, top: `${100 - position.x}%` }
-    : { left: `${position.x}%`, top: `${position.y}%` };
+    ? { left: `${position.y}%`, top: `${100 - depth}%` }
+    : { left: `${depth}%`, top: `${position.y}%` };
+}
+
+/** Short pitch label of a zone ("LIB" for the libero in German, else the position code). */
+export function useZoneLabel() {
+  const t = useT();
+  return (zoneId: PitchZoneId) => (zoneId === "SW" ? t("match.lineup.zoneShort.SW") : zoneId);
+}
+
+function readDrag(event: DragEvent): LineupDrag | null {
+  const playerId = event.dataTransfer.getData("text/player-id");
+  if (!playerId) return null;
+  const fromSlot = event.dataTransfer.getData("text/from-slot");
+  return { playerId, fromSlot: fromSlot ? (fromSlot as FormationSlotId) : null };
 }
 
 export function LineupPitch({
   formation,
+  slotZones,
   assignments,
   playersById,
-  dragPlayerId,
+  drag,
   playerTeamLabel,
+  kitClubId,
   opponent,
-  onAssign,
-  onDragPlayer,
+  onDropOnSlot,
+  onMoveSlot,
+  onDrag,
   onOpenPlayer,
   orientation = "horizontal",
 }: LineupPitchProps) {
   const t = useT();
+  const zoneLabel = useZoneLabel();
   const [view, setView] = useState<LineupPitchView>("own");
-  const slots = getFormation(formation);
+  const [overTarget, setOverTarget] = useState<string | null>(null);
+  const slots = effectiveFormation(formation, slotZones);
   const opponentEntries = opponent ? opponentFullPitchEntries(opponent) : [];
+  const movingSlot = drag?.fromSlot && drag.fromSlot !== "GK" && onMoveSlot ? drag.fromSlot : null;
+  const occupied = new Set(slots.map((slot) => slotZoneId(slot.id, slotZones)));
+  const freeZones = movingSlot
+    ? PITCH_ZONE_IDS.filter((zoneId) => {
+        if (zoneId === "GK" || occupied.has(zoneId)) return false;
+        const at = getPitchZone(zoneId).homePosition;
+        return slots.every((slot) => {
+          if (slot.id === movingSlot) return true;
+          const along = (boardDepth(slot.homePosition.x) - boardDepth(at.x)) / ZONE_CLEARANCE.along;
+          const across = (slot.homePosition.y - at.y) / ZONE_CLEARANCE.across;
+          return along * along + across * across >= 1;
+        });
+      })
+    : [];
 
-  const handleDrop = (slotId: FormationSlotId, event: DragEvent) => {
+  const handleSlotDrop = (slotId: FormationSlotId, event: DragEvent) => {
     event.preventDefault();
-    const playerId = event.dataTransfer.getData("text/player-id");
-    if (!playerId) return;
-    onAssign(slotId, playerId);
-    onDragPlayer(null);
+    setOverTarget(null);
+    const dropped = readDrag(event);
+    if (!dropped) return;
+    onDropOnSlot(slotId, dropped.playerId, dropped.fromSlot);
+    onDrag(null);
+  };
+
+  const handleZoneDrop = (zoneId: PitchZoneId, event: DragEvent) => {
+    event.preventDefault();
+    setOverTarget(null);
+    const dropped = readDrag(event);
+    if (dropped?.fromSlot && dropped.fromSlot !== "GK") onMoveSlot?.(dropped.fromSlot, zoneId);
+    onDrag(null);
   };
 
   return (
@@ -100,46 +188,97 @@ export function LineupPitch({
       </div>
 
       <div
-        className={`lineup-pitch-wrap${orientation === "vertical" ? " lineup-pitch-wrap--vertical" : ""}`}
+        className={`lineup-pitch-wrap${orientation === "vertical" ? " lineup-pitch-wrap--vertical" : ""}${drag ? " is-dragging" : ""}`}
         aria-label="Aufstellungsfeld"
       >
         <PitchSvg orientation={orientation} />
 
         {view === "own" ? (
           <div className="lineup-pitch-slots" id="lineup-pitch-own" role="tabpanel" aria-labelledby="lineup-tab-own">
+            {freeZones.map((zoneId) => (
+              <div
+                key={`zone-${zoneId}`}
+                className={`lineup-zone${overTarget === `zone-${zoneId}` ? " is-over" : ""}`}
+                style={slotStyle(getPitchZone(zoneId).homePosition, orientation)}
+                title={t("match.lineup.zoneDrop", { zone: t(`match.lineup.zone.${zoneId}`) })}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setOverTarget(`zone-${zoneId}`);
+                }}
+                onDragLeave={() => setOverTarget(null)}
+                onDrop={(event) => handleZoneDrop(zoneId, event)}
+              >
+                {zoneLabel(zoneId)}
+              </div>
+            ))}
             {slots.map((slot) => {
               const playerId = assignments[slot.id];
               const player = playerId ? playersById.get(playerId) : undefined;
-              const isTarget = dragPlayerId !== null;
+              const zoneId = slotZoneId(slot.id, slotZones);
+              const moved = Boolean(slotZones?.[slot.id]);
+              const label = zoneLabel(zoneId);
+              const isTarget = drag !== null && drag.fromSlot !== slot.id;
               return (
                 <div
                   key={slot.id}
-                  className={`lineup-slot${player ? " has-player" : ""}${isTarget ? " is-target" : ""}`}
+                  className={[
+                    "lineup-slot",
+                    player ? "has-player" : "",
+                    isTarget ? "is-target" : "",
+                    overTarget === slot.id ? "is-over" : "",
+                    moved ? "is-moved" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                   style={slotStyle(slot.homePosition, orientation)}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={(event) => handleDrop(slot.id, event)}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setOverTarget(slot.id);
+                  }}
+                  onDragLeave={() => setOverTarget(null)}
+                  onDrop={(event) => handleSlotDrop(slot.id, event)}
                 >
-                  <span className="lineup-slot-label">{slot.id}</span>
                   {player ? (
-                    <button
-                      type="button"
-                      className="lineup-slot-card"
-                      draggable
-                      title={t("match.lineup.openPlayerProfile", { name: formatPlayerName(player) })}
-                      onClick={() => onOpenPlayer?.(player.id)}
-                      onDragStart={(event) => {
-                        event.dataTransfer.setData("text/player-id", player.id);
-                        event.dataTransfer.effectAllowed = "move";
-                        onDragPlayer(player.id);
-                      }}
-                      onDragEnd={() => onDragPlayer(null)}
-                    >
-                      <PlayerSlotStatus player={player} />
-                      <span className="lineup-slot-name">{formatPlayerName(player)}</span>
-                    </button>
+                    <>
+                      <span className="lineup-slot-label" title={t(`match.lineup.zone.${zoneId}`)}>
+                        {label}
+                      </span>
+                      <button
+                        type="button"
+                        className="lineup-slot-card"
+                        draggable
+                        title={t("match.lineup.openPlayerProfile", { name: formatPlayerName(player) })}
+                        onClick={() => onOpenPlayer?.(player.id)}
+                        onDragStart={(event) => {
+                          event.dataTransfer.setData("text/player-id", player.id);
+                          event.dataTransfer.setData("text/from-slot", slot.id);
+                          event.dataTransfer.effectAllowed = "move";
+                          onDrag({ playerId: player.id, fromSlot: slot.id });
+                        }}
+                        onDragEnd={() => {
+                          setOverTarget(null);
+                          onDrag(null);
+                        }}
+                      >
+                        <PlayerPortrait
+                          seed={player.portrait_seed}
+                          nationality={player.nationality}
+                          clubId={player.club_id}
+                          size="sm"
+                          className="lineup-slot-face"
+                        />
+                        <span className="lineup-slot-name">{formatPlayerName(player)}</span>
+                        <PlayerSlotStatus player={player} />
+                      </button>
+                    </>
                   ) : (
-                    <div className="lineup-slot-empty" aria-label={t("match.lineup.slotEmpty", { slot: slot.id })}>
-                      +
+                    <div
+                      className="lineup-slot-empty"
+                      role="img"
+                      aria-label={t("match.lineup.slotEmpty", { slot: label })}
+                      title={t("match.lineup.slotEmpty", { slot: t(`match.lineup.zone.${zoneId}`) })}
+                    >
+                      <LineupJersey clubId={kitClubId} label={label} />
                     </div>
                   )}
                 </div>
@@ -166,11 +305,11 @@ export function LineupPitch({
                   title={t("match.lineup.openPlayerProfile", { name: entry.name })}
                   onClick={() => onOpenPlayer?.(entry.playerId)}
                 >
+                  <span className="lineup-slot-name">{entry.name}</span>
                   <LineupPlayerStatusStrip
                     status={opponentStatusFromEntry(entry)}
                     variant="pitch"
                   />
-                  <span className="lineup-slot-name">{entry.name}</span>
                 </button>
               </div>
             ))}

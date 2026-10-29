@@ -613,11 +613,6 @@
   z-index: 2;
 }
 
-.lineup-slot.is-target .lineup-slot-empty {
-  border-color: #fde68a;
-  background: rgb(254 243 199 / 35%);
-}
-
 .lineup-slot-label {
   display: block;
   font-size: 0.55rem;
@@ -625,19 +620,6 @@
   color: rgb(255 255 255 / 75%);
   text-align: center;
   letter-spacing: 0.04em;
-}
-
-.lineup-slot-empty {
-  display: grid;
-  place-items: center;
-  width: 3rem;
-  height: 3rem;
-  margin: 0.1rem auto 0;
-  border: 1.5px dashed rgb(255 255 255 / 55%);
-  border-radius: 999px;
-  color: rgb(255 255 255 / 80%);
-  font-size: 1.1rem;
-  font-weight: 800;
 }
 
 .lineup-slot-card {
@@ -865,22 +847,6 @@
   gap: 0.45rem;
 }
 
-.lineup-player-open {
-  border: 0;
-  background: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-}
-
-.lineup-player-open:hover {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
 .lineup-bench-legend-block {
   display: flex;
   flex-direction: column;
@@ -921,65 +887,11 @@
   scrollbar-gutter: stable;
 }
 
-.lineup-bench-list--fixed {
-  flex: none;
-  overflow: hidden;
-  grid-template-rows: repeat(9, minmax(var(--lineup-bench-slot-h), var(--lineup-bench-slot-h)));
-  height: calc(9 * var(--lineup-bench-slot-h) + 8 * 0.3rem);
-}
-
 .lineup-bench-slot--empty {
   height: var(--lineup-bench-slot-h);
   border: 1px dashed #e2e8f0;
   border-radius: 0.5rem;
   background: rgb(248 250 252 / 65%);
-}
-
-.lineup-player-card {
-  display: grid;
-  grid-template-columns: 1.8rem 1fr auto;
-  grid-template-rows: auto auto;
-  gap: 0.1rem 0.35rem;
-  align-items: center;
-  padding: 0.35rem 0.4rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
-  background: #fff;
-  cursor: grab;
-  font-size: 0.72rem;
-  min-height: var(--lineup-bench-slot-h, 2.55rem);
-  box-sizing: border-box;
-}
-
-.lineup-bench-list--fixed .lineup-player-card {
-  overflow: hidden;
-}
-
-.lineup-player-card:active {
-  cursor: grabbing;
-}
-
-.lineup-player-card--compact {
-  grid-template-columns: auto 1fr auto;
-}
-
-.lineup-player-pos {
-  grid-row: 1 / span 2;
-  font-weight: 800;
-  color: var(--accent);
-  font-size: 0.62rem;
-  align-self: center;
-}
-
-.lineup-player-name,
-.lineup-player-open {
-  grid-column: 2;
-  font-weight: 700;
-  white-space: normal;
-  overflow: visible;
-  word-break: break-word;
-  line-height: 1.2;
-  min-width: 0;
 }
 
 @keyframes incident-pop {

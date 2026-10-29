@@ -1,11 +1,15 @@
 /** WIREFRAME: design.md — full-screen career matchday (header + CareerMatch). */
 
-import type { ComponentProps, ReactNode } from "react";
+import { useMemo, type ComponentProps, type ReactNode } from "react";
 import { boardCashFloor } from "../../economy/spend-runway.ts";
 import { weeklyWageBill } from "../../economy/club-finances.ts";
 import { matchdayCashBreakdown } from "../../stadium/matchday-commerce.ts";
 import { matchdayCapacity } from "../../stadium/club-stadium.ts";
 import { CareerMatch } from "../../match/CareerMatch.tsx";
+import type { PressConferenceBridge } from "../../match/PressConferenceStep.tsx";
+import { pressAnswerEffects } from "../../press/press-conference.ts";
+import { pressConferenceFor, sessionPressState } from "../../press/press-session.ts";
+import { assistantQuality, assistantQualityTier } from "../../staff/assistant-delegation.ts";
 import {
   resolveFeatureCurtain,
   tacticsModeForCurtain,
@@ -45,6 +49,7 @@ export function CareerMatchLiveShell({
   poorForm,
   onOpenOpponentScoutReport,
   onLineupPhaseChange,
+  onResolvePress,
   overlays,
 }: {
   setup: CareerMatchSetup;
@@ -76,10 +81,24 @@ export function CareerMatchLiveShell({
   poorForm: boolean;
   onOpenOpponentScoutReport: (itemId: string) => void;
   onLineupPhaseChange: (inLineup: boolean) => void;
+  /** PRD 28 — applies a presser to the save and returns what it did. */
+  onResolvePress: PressConferenceBridge["resolve"];
   overlays: ReactNode;
 }) {
   const { week, weekday, trainingPlan, storyState, stadium, finances, board, tacticsPresets, matchLineup, masterSeed, league, world, scoutBoard, season } =
     session;
+  const pressBridge = useMemo<PressConferenceBridge>(
+    () => ({
+      cast: session.storyState.cast,
+      relationship: sessionPressState(session).relationship,
+      assistantTier: assistantQualityTier(assistantQuality(session.coachingStaff)),
+      conferenceFor: (phase, context) => pressConferenceFor(session, phase, context),
+      preview: (question, tone) =>
+        pressAnswerEffects(question, tone, { players: session.players, clubId: session.clubId }),
+      resolve: onResolvePress,
+    }),
+    [onResolvePress, session],
+  );
 
   return (
     <>
@@ -136,6 +155,7 @@ export function CareerMatchLiveShell({
         showOpponentScout={resolveFeatureCurtain(session.storyState).opponent_scout_module}
         onOpenOpponentScoutReport={onOpenOpponentScoutReport}
         onLineupPhaseChange={onLineupPhaseChange}
+        press={pressBridge}
       />
       {overlays}
     </>

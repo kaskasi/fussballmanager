@@ -10,6 +10,8 @@ import { applyFanFeedBeat, applyStoryChoice } from "./apply.ts";
 import { detectWeeklyBeats } from "./detect.ts";
 import { detectCareerActBeats, resolveDuePayoffs } from "./career-act2.ts";
 import { fanFeedMessage, storyInboxPayload } from "./render.ts";
+import { advancePressWeek } from "../press/press-week.ts";
+import { assistantQuality } from "../staff/assistant-delegation.ts";
 import {
   markBeatFired,
   type FanFeedBeat,
@@ -40,11 +42,21 @@ export function advanceNarrativeWeek(
   playerFixture: FixtureResult | null,
   recentSale = false,
 ): NarrativeWeekResult {
-  let story = session.storyState;
+  const pressWeek = advancePressWeek({
+    story: session.storyState,
+    players: session.players,
+    board: session.board,
+    stadium: session.stadium,
+    clubId: session.clubId,
+    season: session.season,
+    week: session.week,
+    topicSession: session,
+  });
+  let story = pressWeek.story;
   let inbox = session.youthInbox;
-  let board = session.board;
-  let stadium = session.stadium;
-  let players = session.players;
+  let board = pressWeek.board;
+  let stadium = pressWeek.stadium;
+  let players = pressWeek.players;
 
   const detected = detectWeeklyBeats({
     story,
@@ -59,6 +71,7 @@ export function advanceNarrativeWeek(
     world: session.world,
     playerFixture,
     recentSale,
+    assistantQuality: assistantQuality(session.coachingStaff),
   });
 
   for (const beat of detected) {
@@ -86,7 +99,10 @@ export function advanceNarrativeWeek(
     }
 
     if (story.beats_fired.includes(beat.beatId)) continue;
-    const payload = storyInboxPayload(beat.beatId, story.cast, beat.context ?? {});
+    const payload = {
+      ...storyInboxPayload(beat.beatId, story.cast, beat.context ?? {}),
+      ...(beat.context ? { context: beat.context } : {}),
+    };
     inbox = enqueueStoryInboxItem(inbox, session.week, payload, beat.beatId);
     story = markBeatFired(story, beat.beatId);
   }
@@ -115,6 +131,7 @@ export function resolveStoryInboxDecision(
     clubId: session.clubId,
     season: session.season,
     week: session.week,
+    assistantQuality: assistantQuality(session.coachingStaff),
   });
   return {
     ...session,

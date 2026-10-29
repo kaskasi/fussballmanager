@@ -74,10 +74,14 @@ export {
 export type { CareerPlayerAttributes, CareerPlayerInput } from "./career-squad-bridge.ts";
 export {
   buildCareerEngineSquad,
+  careerEngineForm,
   careerPositionToRole,
   mapCareerAttributes,
   mapCareerFatigue,
   mapCareerForm,
+  MORALE_FORM_SWING,
+  MORALE_NEUTRAL,
+  moraleFormOffset,
   scaleCareerAttribute,
   squadAverageStrength,
 } from "./career-squad-bridge.ts";

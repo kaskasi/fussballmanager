@@ -23,6 +23,7 @@ export default defineConfig({
       "src/board/**/*.test.ts",
       "src/match/**/*.test.ts",
       "src/playtest/**/*.test.ts",
+      "src/press/**/*.test.ts",
     ],
     testTimeout: 120_000,
     hookTimeout: 120_000,

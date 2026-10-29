@@ -2,8 +2,13 @@ import { describe, expect, it } from "vitest";
 import { nordsternSquad } from "./seed-clubs.ts";
 import {
   buildCareerEngineSquad,
+  careerEngineForm,
   careerPositionToRole,
   mapCareerAttributes,
+  mapCareerForm,
+  MORALE_FORM_SWING,
+  MORALE_NEUTRAL,
+  moraleFormOffset,
   scaleCareerAttribute,
 } from "./career-squad-bridge.ts";
 import { squadIssues } from "./squad.ts";
@@ -19,6 +24,23 @@ describe("career squad bridge", () => {
     expect(scaleCareerAttribute(0)).toBe(1);
     expect(scaleCareerAttribute(199)).toBe(99);
     expect(scaleCareerAttribute(100)).toBe(50);
+  });
+
+  it("keeps morale's match effect subtle and neutral at typical morale", () => {
+    expect(moraleFormOffset(undefined)).toBe(0);
+    expect(moraleFormOffset(MORALE_NEUTRAL)).toBe(0);
+    expect(moraleFormOffset(100)).toBeCloseTo(MORALE_FORM_SWING);
+    expect(moraleFormOffset(0)).toBeCloseTo(-MORALE_FORM_SWING);
+    expect(moraleFormOffset(30)).toBeCloseTo(-MORALE_FORM_SWING);
+    expect(moraleFormOffset(80)).toBeGreaterThan(0);
+    expect(moraleFormOffset(80)).toBeLessThan(MORALE_FORM_SWING);
+  });
+
+  it("shifts engine form by at most five points from morale", () => {
+    const base = mapCareerForm(1);
+    expect(careerEngineForm({ form: 1 })).toBe(base);
+    expect(careerEngineForm({ form: 1, morale: 100 }) - base).toBe(5);
+    expect(careerEngineForm({ form: 1, morale: 5 }) - base).toBe(-5);
   });
 
   it("scales positioning, tackling and aerial by derived experience", () => {

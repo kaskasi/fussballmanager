@@ -356,6 +356,8 @@ import {
 import { useCareerMatchFlow } from "./ui/actions/useCareerMatchFlow.ts";
 import { useWeekAdvance } from "./ui/actions/useWeekAdvance.ts";
 import { CareerMatchLiveShell } from "./ui/shell/CareerMatchLiveShell.tsx";
+import type { PressConference } from "./press/press-conference.ts";
+import { resolvePressConference, type PressAnswer } from "./press/press-session.ts";
 import { PortraitKitProvider } from "./ui/portraits/PortraitKitContext.tsx";
 import { GameScreenRouter } from "./ui/shell/GameScreenRouter.tsx";
 import { clearTransientUi } from "./ui/shell/bootstrap.ts";
@@ -939,6 +941,15 @@ export default function App() {
       setCareerMatchUiVisible(true);
     },
     [finishWeekSimulation, flashNotice, patchSession, simulating],
+  );
+  // PRD 28: the presser lands in the save right away, before kickoff / before the week closes.
+  const handleResolvePress = useCallback(
+    (conference: PressConference, answer: PressAnswer) => {
+      const resolution = resolvePressConference(session, conference, answer);
+      patchSession((current) => resolvePressConference(current, conference, answer).session);
+      return resolution;
+    },
+    [patchSession, session],
   );
   const handleCareerMatchComplete = useCallback(
     (outcome: WatchedPlayerMatch) => void completeCareerMatch(outcome, false),
@@ -1803,6 +1814,7 @@ export default function App() {
         onLineupPhaseChange={(inLineup) => {
           careerMatchInLineupRef.current = inLineup;
         }}
+        onResolvePress={handleResolvePress}
         overlays={
           <>
             {spendConfirmOverlay}

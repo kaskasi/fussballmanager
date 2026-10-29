@@ -134,6 +134,12 @@ export function buildOpeningTransferMarket(input: {
 
   const archetypes: OpeningMarketArchetype[] = [];
   const pickedIds = new Set<string>();
+  const pickedPositions = new Set<string>();
+  /** One curated listing per position, so the opening board is not all keepers (GK CA reads high). */
+  const unpickedPositions = (pool: Player[]) => {
+    const fresh = pool.filter((player) => !pickedPositions.has(player.position));
+    return fresh.length > 0 ? fresh : pool;
+  };
   const listings: TransferListing[] = [];
   let rivalPlayers = [...input.rivalPlayers];
 
@@ -146,6 +152,7 @@ export function buildOpeningTransferMarket(input: {
   ) => {
     if (pickedIds.has(player.id)) return;
     pickedIds.add(player.id);
+    pickedPositions.add(player.position);
     const next = mutate ? mutate(player) : player;
     rivalPlayers = rivalPlayers.map((row) => (row.id === player.id ? next : row));
     listings.push(listingFor(next, input.season, input.week, priceFactor));
@@ -157,7 +164,7 @@ export function buildOpeningTransferMarket(input: {
   };
 
   const stepUpPool = oberliga.filter((player) => player.age >= 20 && player.age <= 26);
-  const stepUpPick = pickBest(stepUpPool, (player) => ca(player) + (player.age <= 23 ? 8 : 0), rng)[0];
+  const stepUpPick = pickBest(unpickedPositions(stepUpPool), (player) => ca(player) + (player.age <= 23 ? 8 : 0), rng)[0];
   if (stepUpPick) {
     const club = clubLabel(input.worldClubs, stepUpPick.club_id!);
     commit(
@@ -174,7 +181,7 @@ export function buildOpeningTransferMarket(input: {
   }
 
   const veteranPool = regionalliga.filter((player) => player.age >= 32 && ca(player) >= 68);
-  const veteran = pickBest(veteranPool, (player) => ca(player) - player.age * 0.2, rng)[0];
+  const veteran = pickBest(unpickedPositions(veteranPool), (player) => ca(player) - player.age * 0.2, rng)[0];
   if (veteran) {
     const club = clubLabel(input.worldClubs, veteran.club_id!);
     commit(
@@ -185,7 +192,7 @@ export function buildOpeningTransferMarket(input: {
     );
   }
 
-  const starPool = [...regionalliga].sort((a, b) => ca(b) - ca(a)).slice(0, 6);
+  const starPool = unpickedPositions(regionalliga).sort((a, b) => ca(b) - ca(a)).slice(0, 6);
   const star = starPool[Math.floor(rng() * Math.min(4, starPool.length))];
   if (star && !pickedIds.has(star.id)) {
     const club = clubLabel(input.worldClubs, star.club_id!);
@@ -205,7 +212,7 @@ export function buildOpeningTransferMarket(input: {
 
   const campIds = YOUTH_CAMP_NATIONS.map((n) => n.id);
   const youngPool = pros.filter((player) => player.age >= 17 && player.age <= 20 && ca(player) >= 62);
-  const campGems = pickBest(youngPool, (player) => ca(player) + (20 - player.age), rng, 2).filter(
+  const campGems = pickBest(unpickedPositions(youngPool), (player) => ca(player) + (20 - player.age), rng, 2).filter(
     (player, index, arr) =>
       arr.findIndex((other) => other.club_id === player.club_id) === index,
   );

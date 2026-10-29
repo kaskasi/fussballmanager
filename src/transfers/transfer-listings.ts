@@ -9,6 +9,7 @@ import { isTransferWindowOpen } from "../sim/transfer-windows.ts";
 import { scheduledPlayerIds, scheduleTransfer, type ScheduledTransfer } from "./scheduled-transfers.ts";
 import { openingMarketListings } from "./opening-transfer-market.ts";
 import { estimateCa } from "./market-value.ts";
+import { worldCareerClubId } from "../world/world-generator.ts";
 import {
   MAX_NEGOTIATION_ROUNDS,
   sellerAskingPrice,
@@ -57,6 +58,20 @@ export function clubListingsForPlayers(
   );
 }
 
+/** The user club may have at most this many own players on the transfer list at once. */
+export const MAX_OWN_LISTINGS = 5;
+
+export function ownListingCount(state: TransferState, clubId: string): number {
+  return (state.listings ?? []).filter((row) => row.club_id === clubId).length;
+}
+
+/** Reason the user cannot add another player to their transfer list, or null. */
+export function ownListingLimitReason(state: TransferState, clubId: string, playerId: string): string | null {
+  if (isPlayerListed(state, playerId)) return null;
+  if (ownListingCount(state, clubId) < MAX_OWN_LISTINGS) return null;
+  return t("transfer.profile.listFull", { max: MAX_OWN_LISTINGS });
+}
+
 export function listPlayerForSale(
   state: TransferState,
   player: Player,
@@ -64,6 +79,7 @@ export function listPlayerForSale(
   week: number,
 ): TransferState {
   if (!player.club_id) return state;
+  if (ownListingLimitReason(state, player.club_id, player.id)) return state;
   const listing: TransferListing = {
     player_id: player.id,
     club_id: player.club_id,
@@ -108,6 +124,13 @@ export function searchListings(
 }
 
 const MAX_RIVAL_LISTINGS_ON_BOARD = 32;
+/** Keep the rival board spread across positions instead of piling up one role. */
+const MAX_RIVAL_LISTINGS_PER_POSITION = 4;
+
+/** League rows carry world team ids (`world-…-1`); rosters use career ids (`cl_world_…_1`). */
+function careerClubId(clubId: string): string {
+  return clubId.startsWith("cl_") ? clubId : worldCareerClubId(clubId);
+}
 
 function listingStillValid(
   listing: TransferListing,
@@ -154,21 +177,37 @@ export function refreshAiListings(input: {
     ...persistedRival.map((row) => row.club_id),
   ]);
 
+  const playerById = new Map(input.players.map((player) => [player.id, player]));
+  const positionCounts = new Map<string, number>();
+  for (const row of [...opening, ...persistedRival]) {
+    const position = playerById.get(row.player_id)?.position;
+    if (position) positionCounts.set(position, (positionCounts.get(position) ?? 0) + 1);
+  }
+
   const rng = weekRng(input.masterSeed, input.season, input.week);
   const ai: TransferListing[] = [];
   const rivalCount = opening.length + persistedRival.length;
   if (rivalCount < MAX_RIVAL_LISTINGS_ON_BOARD) {
-    for (const clubId of input.leagueClubIds) {
+    for (const leagueClubId of input.leagueClubIds) {
+      const clubId = careerClubId(leagueClubId);
       if (clubId === input.userClubId) continue;
       if (clubsWithListing.has(clubId)) continue;
       if (rivalCount + ai.length >= MAX_RIVAL_LISTINGS_ON_BOARD) break;
       const squad = input.players.filter(
-        (player) => player.club_id === clubId && player.squad_status === "pro",
+        (player) =>
+          player.club_id === clubId &&
+          player.squad_status === "pro" &&
+          !reservedIds.has(player.id) &&
+          (positionCounts.get(player.position) ?? 0) < MAX_RIVAL_LISTINGS_PER_POSITION,
       );
       if (squad.length === 0) continue;
-      const ranked = [...squad].sort((a, b) => b.age - a.age || a.market_value - b.market_value);
+      const ranked = [...squad].sort(
+        (a, b) =>
+          (positionCounts.get(a.position) ?? 0) - (positionCounts.get(b.position) ?? 0) ||
+          b.age - a.age ||
+          a.market_value - b.market_value,
+      );
       const pick = ranked[Math.floor(rng() * Math.min(4, ranked.length))]!;
-      if (reservedIds.has(pick.id)) continue;
       if (rng() > 0.72) continue;
       ai.push({
         player_id: pick.id,
@@ -179,6 +218,7 @@ export function refreshAiListings(input: {
       });
       reservedIds.add(pick.id);
       clubsWithListing.add(clubId);
+      positionCounts.set(pick.position, (positionCounts.get(pick.position) ?? 0) + 1);
     }
   }
   return { ...input.state, listings: [...own, ...opening, ...persistedRival, ...ai] };

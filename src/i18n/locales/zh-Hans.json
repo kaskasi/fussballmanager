@@ -2480,6 +2480,7 @@
   "transfer.profile.listed": "已挂牌",
   "transfer.profile.listHint": "球员出现在转会名单 — 窗口期内可收到报价。",
   "transfer.profile.listedHint": "已在转会名单上。",
+  "transfer.profile.listFull": "转会名单已满——最多同时挂牌 {max} 名球员。请先撤下一名球员。",
   "transfer.profile.buyLater": "转会窗关闭——现在达成的交易将在下一个转会窗开启时完成（{when}）。",
   "transfer.listConfirm.eyebrow": "转会",
   "transfer.listConfirm.title": "球员挂牌",

@@ -53,18 +53,23 @@ export function TransferMarketPanel({
   onToggleShortlist: (playerId: string) => void;
 }) {
   const t = useT();
-  const [flow, setFlow] = useState<"incoming" | "outgoing">("incoming");
+  const [flow, setFlow] = useState<"incoming" | "outgoing">("outgoing");
   const [position, setPosition] = useState<PositionPrimary | "all">("all");
   const [page, setPage] = useState(0);
 
   const everyone = useMemo(() => [...players, ...rivalPlayers], [players, rivalPlayers]);
-  const listingRows = useMemo(
-    () =>
-      searchListings(transferState.listings ?? [], everyone, {
-        position: position === "all" ? undefined : position,
-      }),
-    [transferState.listings, everyone, position],
-  );
+  const listingRows = useMemo(() => {
+    // A signed, agreed or contract-pending player leaves the board at once, not on the next week tick.
+    const dealtIds = new Set([
+      ...(transferState.pending_purchases ?? []).map((row) => row.player_id),
+      ...(transferState.scheduled_transfers ?? []).map((row) => row.player_id),
+    ]);
+    return searchListings(transferState.listings ?? [], everyone, {
+      position: position === "all" ? undefined : position,
+    }).filter(
+      ({ listing, player }) => player.club_id === listing.club_id && !dealtIds.has(listing.player_id),
+    );
+  }, [transferState.listings, transferState.pending_purchases, transferState.scheduled_transfers, everyone, position]);
 
   const saleTalks = useMemo(
     () =>
@@ -152,11 +157,11 @@ export function TransferMarketPanel({
           <p className="tc-caption tc-transfers__lead">{t("transfers.market.lead")}</p>
         </div>
         <FilterToolbar ariaLabel={t("transfers.market.flowFilter")}>
-          <FilterChip active={flow === "incoming"} onClick={() => setFlow("incoming")}>
-            {t("transfers.market.flowIncoming")}
-          </FilterChip>
           <FilterChip active={flow === "outgoing"} onClick={() => setFlow("outgoing")}>
             {t("transfers.market.flowOutgoing")}
+          </FilterChip>
+          <FilterChip active={flow === "incoming"} onClick={() => setFlow("incoming")}>
+            {t("transfers.market.flowIncoming")}
           </FilterChip>
         </FilterToolbar>
       </div>

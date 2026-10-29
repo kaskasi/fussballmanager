@@ -43,6 +43,7 @@ function normalizeTransferState(state?: TransferState): TransferState {
 import { MONDAY } from "../sim/day-calendar.ts";
 import { CAREER_START_WEEK } from "../sim/game-calendar.ts";
 import { applyOpeningTransferMarket } from "../transfers/opening-transfer-market.ts";
+import { refreshAiListings } from "../transfers/transfer-listings.ts";
 import { defaultLeagueState, normalizeLeagueState, type LeagueState } from "./league-state.ts";
 import { defaultPipelineState, type PipelineState } from "./pipeline-state.ts";
 import type {
@@ -236,8 +237,20 @@ export function newGameSession(now = new Date(), options: NewGameOptions = {}): 
       1,
     );
   }
-  const session = withFreshInbox(sessionFromSave(save));
-  return applyOpeningTransferMarket(session);
+  const session = applyOpeningTransferMarket(withFreshInbox(sessionFromSave(save)));
+  // Fill the rest of the rival board now, not only after the first week tick.
+  return {
+    ...session,
+    transferState: refreshAiListings({
+      state: session.transferState,
+      players: [...session.players, ...session.rivalPlayers],
+      userClubId: session.clubId,
+      season: session.season,
+      week: session.week,
+      masterSeed: session.masterSeed,
+      leagueClubIds: session.league.club_ids,
+    }),
+  };
 }
 
 function ensureBoardObjectives(session: GameSession): BoardState {

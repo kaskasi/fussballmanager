@@ -17,6 +17,17 @@ describe("opening transfer market", () => {
     }
   });
 
+  it("starts with a full board spread across positions", () => {
+    const session = newGameSession(new Date("2026-08-10T12:00:00Z"));
+    const everyone = [...session.players, ...session.rivalPlayers];
+    const positions = (session.transferState.listings ?? []).map(
+      (row) => everyone.find((player) => player.id === row.player_id)?.position,
+    );
+    expect(positions.length).toBeGreaterThan(5);
+    expect(new Set(positions).size).toBeGreaterThanOrEqual(6);
+    expect(positions.filter((position) => position === "GK").length).toBeLessThanOrEqual(2);
+  });
+
   it("preserves opening listings through weekly AI refresh", () => {
     const session = newGameSession(new Date("2026-08-10T12:00:00Z"));
     const before = openingMarketListings(

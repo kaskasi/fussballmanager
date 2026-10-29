@@ -12,6 +12,7 @@ import { resolvePurchaseTarget } from "./resolve-purchase-target.ts";
 import { appendTransferRecord, createPurchaseRecord } from "./transfer-history.ts";
 import { completePurchase, type TransferState } from "./negotiations.ts";
 import { isTransferWindowOpen } from "../sim/transfer-windows.ts";
+import { unlistPlayer } from "./transfer-listings.ts";
 import {
   committedTransferFees,
   hasScheduledTransfer,
@@ -171,7 +172,10 @@ export function commitPendingPurchase(
   );
   if (!isTransferWindowOpen(current.week)) {
     const scheduled = scheduleTransfer({
-      state: { ...session.transferState, pending_purchases: withoutPendingPurchase },
+      state: {
+        ...unlistPlayer(session.transferState, playerId),
+        pending_purchases: withoutPendingPurchase,
+      },
       player: talk.player,
       direction: "in",
       otherClubId: pending.seller_club_id,
@@ -218,7 +222,7 @@ export function commitPendingPurchase(
     rivalPlayers: session.rivalPlayers.filter((player) => player.id !== playerId),
     transferState: appendTransferRecord(
       {
-        ...session.transferState,
+        ...unlistPlayer(session.transferState, playerId),
         pending_purchases: withoutPendingPurchase,
       },
       purchaseRecord,

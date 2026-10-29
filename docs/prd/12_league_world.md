@@ -172,8 +172,10 @@ Der Standard-Spielerclub **FC Nordstern** behält seine originale Identität und
 lokale Story-Rolle aus PRD 01. Seine Spieler und sportlichen Ausgangswerte
 werden pro Save neu erzeugt.
 
-Die weiteren 35 Clubs werden aus kombinierbaren, kuratierten Namensbausteinen
-erzeugt:
+Die weiteren 35 Clubs der Nord-Ligen werden aus kombinierbaren, kuratierten
+Namensbausteinen erzeugt. Die 54 Clubs der Spielklassen 1–3 (PRD 32 §5) kommen
+danach, mit eigenen Salts, aus einer bundesweiten Städteliste; sie verändern die
+36 Nord-Clubs und deren Spieler nicht:
 
 ```text
 prefix:  FC | VfB | TSV | SV | Union | Eintracht | Fortuna | SC
@@ -359,7 +361,7 @@ Export-Sanitizer:
 
 ### Kader
 
-- 36 Clubs × 22 Spieler = 792 aktive Profispieler zum Start.
+- 90 Clubs × 22 Spieler = 1.980 aktive Profispieler zum Start (36 Nord-Clubs plus 54 in den Spielklassen 1–3, PRD 32).
 - Jede Mannschaft kann eine gültige Elf und Bank stellen.
 - Alle Attribute, Hidden-Werte, Verträge und Alterswerte sind im erlaubten
   Bereich.

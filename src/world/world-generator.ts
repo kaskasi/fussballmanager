@@ -4,14 +4,17 @@ import { seedPhaseStamps } from "../development/ability-stamps.ts";
 import { estimateCa, marketValue } from "../transfers/market-value.ts";
 import type { Attributes, Player, PlayerName, PositionPrimary } from "../types/player.ts";
 import { deriveClubKitColors } from "./club-kit.ts";
-import { realCityForWorldRegion } from "./real-cities.ts";
+import { NATIONAL_CITIES, realCityForWorldRegion } from "./real-cities.ts";
 import { applyClubCameoPlayers, unionRendsburgClub } from "./world-cameos.ts";
-import { careerStartDivisionIds, emptyDivisionPools, tierOf, type DivisionId } from "../sim/league-pyramid.ts";
+import { careerStartDivisionIds, emptyDivisionPools, PYRAMID, tierOf, type DivisionId } from "../sim/league-pyramid.ts";
 
 export const WORLD_GENERATION_VERSION = 1;
 export const CLUBS_PER_DIVISION = 18;
 export const PLAYERS_PER_CLUB = 22;
-export const GENERATED_CLUB_COUNT = CLUBS_PER_DIVISION * 2;
+/** The 36 northern clubs of Regionalliga Nord and Oberliga Nord (PRD 12); generated first. */
+export const NORTHERN_CLUB_COUNT = CLUBS_PER_DIVISION * careerStartDivisionIds().length;
+/** Every club of the pyramid (PRD 32): the northern clubs, then tiers 1–3 top first. */
+export const GENERATED_CLUB_COUNT = CLUBS_PER_DIVISION * PYRAMID.length;
 export const GENERATED_PLAYER_COUNT = GENERATED_CLUB_COUNT * PLAYERS_PER_CLUB;
 export const NORDSTERN_TEAM_ID: TeamId = asTeamId("fc-nordstern");
 export const NORDSTERN_CLUB_ID = "cl_fc_nordstern";
@@ -19,8 +22,8 @@ export const NORDSTERN_CLUB_ID = "cl_fc_nordstern";
 export type WorldDivisionId = DivisionId;
 /** Divisions of the 36 original clubs, 18 each, in generation order (PRD 12). */
 const GENERATED_DIVISIONS = careerStartDivisionIds();
-/** Reputation base of generated clubs per tier. */
-const REPUTATION_BASE_BY_TIER: Record<number, number> = { 4: 40, 5: 24 };
+/** Divisions above them (PRD 32), generated after the northern clubs, top tier first. */
+const NATIONAL_DIVISIONS = PYRAMID.filter((division) => !division.careerStart).map((division) => division.id);
 export type ClubIdentity =
   | "community"
   | "workers"
@@ -79,6 +82,44 @@ const CLUB_PREFIXES = [
 ] as const;
 
 const CLUB_SUFFIXES = ["", "", "", "04", "1912", "Nord", "Hafen"] as const;
+const NATIONAL_CLUB_SUFFIXES = ["", "", "", "04", "1909", "1919", "Süd", "West"] as const;
+
+/**
+ * Real professional and semi-professional clubs a generated name must not copy
+ * (PRD 12: no names of real clubs). Checked for the national tiers, whose
+ * cities host real clubs; a hit re-draws the prefix.
+ */
+export const REAL_CLUB_NAMES: ReadonlySet<string> = new Set([
+  "FC Gütersloh",
+  "SV Lippstadt",
+  "FC Memmingen",
+  "FC Gießen",
+  "Eintracht Bamberg",
+  "FC Bamberg",
+  "SV Straubing",
+  "SC Paderborn",
+  "FC Kassel",
+  "SV Siegburg",
+  "FC Bonn",
+  "SC Bonn",
+  "TSV Landshut",
+  "SV Wetzlar",
+  "FC Erlangen",
+  "SC Pforzheim",
+  "FC Pforzheim",
+  "SV Göttingen",
+  "SC Göttingen",
+  "FC Krefeld",
+  "Union Solingen",
+  "SC Weimar",
+  "FC Potsdam",
+]);
+
+/** Archived seasons a national-tier veteran keeps (save budget, PRD 32 §9: 14 → 1 saves ~300 KB gz). */
+const NATIONAL_BACKSTORY_SEASONS = 1;
+
+/** Generated-club reputation base per tier (plus 0–20). */
+const REPUTATION_BASE_BY_TIER: Record<number, number> = { 1: 75, 2: 62, 3: 50, 4: 40, 5: 24 };
 
 const PLACES = [
   "Auenhafen",
@@ -340,6 +381,143 @@ const LAST_NAMES = [
   "Ziegler",
 ] as const;
 
+/** PRD 32 — extra names for the national tiers, so 1,980 players rarely share a name. */
+const NATIONAL_FIRST_NAMES = [
+  "Andreas",
+  "Benedikt",
+  "Christoph",
+  "Dennis",
+  "Gregor",
+  "Janik",
+  "Jannis",
+  "Johannes",
+  "Jonathan",
+  "Justus",
+  "Konstantin",
+  "Leander",
+  "Lennart",
+  "Leonard",
+  "Lorenz",
+  "Lucas",
+  "Malte",
+  "Manuel",
+  "Marco",
+  "Marius",
+  "Markus",
+  "Martin",
+  "Matthias",
+  "Maximilian",
+  "Michael",
+  "Niklas",
+  "Oliver",
+  "Raphael",
+  "Sascha",
+  "Sebastian",
+  "Stefan",
+  "Steffen",
+  "Thomas",
+  "Tobias",
+  "Valentin",
+  "Vincent",
+  "Yannick",
+  "Emre",
+  "Kerem",
+  "Mert",
+  "Burak",
+  "Marko",
+  "Luka",
+  "Ivan",
+  "Nikola",
+  "Mateo",
+  "Dario",
+  "Artur",
+  "Dawid",
+  "Kacper",
+  "Mateusz",
+  "Szymon",
+  "Diego",
+  "Joao",
+  "Tiago",
+  "Moussa",
+  "Amadou",
+  "Kwame",
+  "Samuel",
+  "Kofi",
+  "Omar",
+] as const;
+
+const NATIONAL_LAST_NAMES = [
+  "Arnold",
+  "Baumann",
+  "Beck",
+  "Busch",
+  "Ernst",
+  "Frank",
+  "Fuchs",
+  "Graf",
+  "Haas",
+  "Hahn",
+  "Heinrich",
+  "Herrmann",
+  "Hofmann",
+  "Horn",
+  "Jung",
+  "Kaiser",
+  "Kraus",
+  "Krüger",
+  "Kuhn",
+  "Lange",
+  "Lehmann",
+  "Ludwig",
+  "Martin",
+  "Mayer",
+  "Müller",
+  "Otto",
+  "Roth",
+  "Sauer",
+  "Scholz",
+  "Schubert",
+  "Schuster",
+  "Simon",
+  "Stein",
+  "Thomas",
+  "Vogel",
+  "Vogt",
+  "Weiß",
+  "Winkler",
+  "Wolf",
+  "Şahin",
+  "Kovač",
+  "Horvat",
+  "Novak",
+  "Petrović",
+  "Jovanović",
+  "Marić",
+  "Kowalski",
+  "Wiśniewski",
+  "Lewandowski",
+  "Zieliński",
+  "Silva",
+  "Santos",
+  "Ferreira",
+  "Costa",
+  "Diallo",
+  "Traoré",
+  "Mensah",
+  "Owusu",
+  "Boateng",
+  "Haddad",
+  "Nasser",
+  "Rossi",
+  "Bianchi",
+  "Esposito",
+  "Romano",
+  "Brandl",
+  "Wenzel",
+  "Hauser",
+  "Lindner",
+] as const;
+
 const ROSTER_POSITIONS = [
   "GK",
   "GK",
@@ -463,7 +641,7 @@ export function generateClubs(masterSeed: number): WorldClub[] {
   const clubs: WorldClub[] = [];
   const usedShortNames = new Set<string>(["NOR"]);
 
-  for (let index = 0; index < GENERATED_CLUB_COUNT; index++) {
+  for (let index = 0; index < NORTHERN_CLUB_COUNT; index++) {
     const division_id: WorldDivisionId = GENERATED_DIVISIONS[Math.floor(index / CLUBS_PER_DIVISION)]!;
 
     if (index === 0) {
@@ -517,7 +695,44 @@ export function generateClubs(masterSeed: number): WorldClub[] {
     });
   }
 
+  clubs.push(...generateNationalClubs(masterSeed, usedShortNames));
   return assignLocalRivalries(clubs);
+}
+
+/**
+ * PRD 32 §5 — the 54 clubs of tiers 1–3, indices 36–89. Own salts, appended
+ * after the northern clubs, so the 36 existing clubs and their players stay
+ * the same for a given seed (PRD 12 principle 4).
+ */
+function generateNationalClubs(masterSeed: number, usedShortNames: Set<string>): WorldClub[] {
+  const cities = shuffled(NATIONAL_CITIES, deriveWorldSeed(masterSeed, "national-cities", 0));
+  return NATIONAL_DIVISIONS.flatMap((division_id, divisionIndex) =>
+    Array.from({ length: CLUBS_PER_DIVISION }, (_, slot) => {
+      const offset = divisionIndex * CLUBS_PER_DIVISION + slot;
+      const index = NORTHERN_CLUB_COUNT + offset;
+      const random = mulberry32(deriveWorldSeed(masterSeed, "national-club", index));
+      const city = cities[offset % cities.length]!;
+      let prefix = pick(CLUB_PREFIXES, random);
+      for (let tries = 0; REAL_CLUB_NAMES.has(`${prefix} ${city.name}`) && tries < 8; tries++) {
+        prefix = pick(CLUB_PREFIXES, random);
+      }
+      const suffix = pick(NATIONAL_CLUB_SUFFIXES, random);
+      const idHash = deriveWorldSeed(masterSeed, "club-id", index).toString(16).padStart(8, "0");
+      const teamId = `world-${idHash}-${index}`;
+      return {
+        id: teamId,
+        name: `${prefix} ${city.name}${suffix ? ` ${suffix}` : ""}`,
+        short_name: clubShortNameFromPlace(city.name, usedShortNames, index),
+        place: city.name,
+        region: city.worldRegion,
+        division_id,
+        identity: pick(IDENTITIES, random),
+        reputation: Math.min(100, (REPUTATION_BASE_BY_TIER[tierOf(division_id)] ?? 50) + Math.floor(random() * 21)),
+        rivalry_ids: [],
+        kit: deriveClubKitColors(masterSeed, teamId, index),
+      } satisfies WorldClub;
+    }),
+  );
 }
 
 export function generateClubRoster(
@@ -598,7 +813,12 @@ export function startingClubStrength(masterSeed: number, club: WorldClub, clubIn
   if (club.id === NORDSTERN_TEAM_ID) return 68.3;
   if (club.name === "Union Rendsburg") return 71;
   const random = mulberry32(deriveWorldSeed(masterSeed, "club-strength", clubIndex));
-  if (tierOf(club.division_id) === 5) return 60 + random() * 14;
+  const tier = tierOf(club.division_id);
+  // PRD 32 §5: national tiers, calibrated with `npm run calibrate:career -- --division=<id>`.
+  if (tier === 1) return 101 + random() * 11;
+  if (tier === 2) return 92 + random() * 9;
+  if (tier === 3) return 84 + random() * 8;
+  if (tier === 5) return 60 + random() * 14;
   // Three nearby survival rivals keep the underdog start difficult but playable.
   if (clubIndex <= 3) return 69.5 + random() * 2;
   return 78 + random() * 5;
@@ -640,6 +860,7 @@ function generateProfessional(
   const withStory = applyVeteranBackstory(
     player,
     deriveWorldSeed(masterSeed, "veteran-backstory", stableIndex),
+    clubIndex >= NORTHERN_CLUB_COUNT ? NATIONAL_BACKSTORY_SEASONS : undefined,
   );
   return seedPhaseStamps(withStory, 1, 1);
 }
@@ -876,11 +1097,16 @@ function birthDate(age: number, random: () => number, anchorYear = 2026): string
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+const ALL_FIRST_NAMES = [...FIRST_NAMES, ...NATIONAL_FIRST_NAMES];
+const ALL_LAST_NAMES = [...LAST_NAMES, ...NATIONAL_LAST_NAMES];
+
+/** Northern clubs keep the original pool (existing names do not change); national clubs draw from both. */
 function generatedPlayerName(masterSeed: number, stableIndex: number): PlayerName {
   const random = mulberry32(deriveWorldSeed(masterSeed, "player-name", stableIndex));
+  const national = stableIndex >= NORTHERN_CLUB_COUNT * PLAYERS_PER_CLUB;
   return {
-    first: pick(FIRST_NAMES, random),
-    last: pick(LAST_NAMES, random),
+    first: pick(national ? ALL_FIRST_NAMES : FIRST_NAMES, random),
+    last: pick(national ? ALL_LAST_NAMES : LAST_NAMES, random),
   };
 }
 

@@ -1,6 +1,6 @@
 # PRD 32 — League pyramid (five tiers), season archive, late-career decline
 
-**Status:** In progress · 2026-10-29 · Phase 2 of PRD 30. Slices 0–1 built.
+**Status:** In progress · 2026-10-29 · Phase 2 of PRD 30. Slices 0–2 built.
 **Features:** F10.8 (PRD 10, M4 → now), F10.3. **Touches:** PRD 02 (decline),
 PRD 03/31 (AI youth level), PRD 11 (tier economies), PRD 12 (structure),
 PRD 19 (Act 3), PRD 23 (objectives), PRD 24 (modes).
@@ -153,6 +153,11 @@ in `DIVISION_ECONOMY` (proper names, not translated).
   are typed `Record<DivisionId, …>`, so slice 2 cannot forget an entry.
   `server/src/db/squad-map.ts` keeps its own `DIVISION_ID`: the server package
   does not import client code.
+- Rollout switches, removed when their slice lands: `boundaryBelow.closed`
+  (no movement; Nationalliga ↔ Regionalliga until slice 3) and
+  `transferMarket` (tiers 1–3 off the AI market until slice 4). Club events
+  are written only for boundaries the manager's division touches;
+  `PromotionRelegationResult.playoffs` lists every playoff.
 - Promotion and relegation club events are i18n strings now
   (`clubEvent.promoted`, `clubEvent.relegated`, `clubEvent.playoff`); the
   arrow and target emoji are gone (PRD 30 cross-cutting rule).
@@ -164,27 +169,63 @@ in `DIVISION_ECONOMY` (proper names, not translated).
   seed, same tables, same movements. A golden test records today's season-end
   movements for one seed before the refactor.
 
-## 5. World generation for tiers 1–3 (slice 2)
+## 5. World generation for tiers 1–3 (slice 2, built)
 
-- 54 new clubs, generated with a new salt per tier (PRD 12 principle 4: the
-  36 existing clubs and their players do not change for a given seed). Cities
-  come from the nationwide list (`src/world/real-cities.ts`). Club ids follow
-  the existing scheme with a tier-specific stable index.
-- Club strength (generator scale, today Oberliga 60–74, Regionalliga 78–83):
-  starting targets are tier 3 about 88–94, tier 2 about 97–104, tier 1 about
-  106–116, with overlap between neighbors. Reputation rises by tier. These are
-  targets for the calibration run, not final values: ADR 0003 calibrates up to
-  "Elite ×1.3", and tier 1 must stay inside the bands
-  (`npm run calibrate:career` with tier rosters).
-- The fixed club layer (`WORLD_CLUB_SEED`, PRD 24) grows from 36 to 90 clubs.
-  Rosters vary per career as today.
-- Existing worlds: `src/world/upgrade-generated-world.ts` adds the 54 clubs
-  and their players. Save migration (PRD 08.10).
-- Age shape and journeymen calibrated against the steady state (§2, still open).
+- **Clubs.** 54 new clubs at world indices 36–89 (Meisterliga 36–53,
+  Meisterliga 2 54–71, Nationalliga 72–89), generated after the 36 northern
+  clubs with their own salts (`national-club`, `national-cities`). The northern
+  clubs and their 792 players are byte-identical with and without the new
+  tiers (checked on seeds 2026 and 7). Rivalries stay inside a division.
+- **Cities.** `NATIONAL_CITIES_BY_WORLD_REGION` (`src/world/real-cities.ts`):
+  54 mid-sized cities in six invented regions (Rheinschiene, Westfalenpforte,
+  Mittelgebirge, Elbtal, Oberrhein, Alpenvorland), shuffled per club seed.
+  Cities with well-known professional clubs were left out; generated names
+  are also checked against `REAL_CLUB_NAMES` (real semi-pro clubs in those
+  cities) and re-draw the prefix on a hit. Suffixes: 04, 1909, 1919, Süd, West.
+- **Strength** (`startingClubStrength`, generator scale): tier 1 101–112,
+  tier 2 92–101, tier 3 84–92. Lowered from the first targets so neighbours
+  overlap. Seed 2026, new career, mean CA of pros and best-XI range:
 
-## 6. Economy per tier (slice 2, PRD 11)
+  | Tier | Mean CA | Best XI min / median / max |
+  |---|---|---|
+  | Meisterliga | 116.4 | 120.5 / 128.3 / 135.3 |
+  | Meisterliga 2 | 108.0 | 113.9 / 120.3 / 127.0 |
+  | Nationalliga | 100.9 | 107.3 / 112.3 / 116.8 |
+  | Regionalliga Nord | 89.6 | 92.1 / 104.1 / 108.3 |
+  | Oberliga Nord | 79.0 | 85.1 / 92.2 / 99.2 |
 
-Starting values, to be checked against the club-economy tests:
+- **Reputation base** per tier (plus 0–20): 75, 62, 50, 40, 24.
+- **Names.** National players draw from the northern name pool plus 61 first
+  and 69 last names (`NATIONAL_FIRST_NAMES`, `NATIONAL_LAST_NAMES`); with only
+  the old 95 × 99 pool, 1,980 players shared names too often. Northern names
+  do not change.
+- **Backstory.** Generated veterans carry archived growth snapshots
+  (`applyVeteranBackstory`, up to 14 seasons, about 3 KB per player). National
+  players keep one archived season (`NATIONAL_BACKSTORY_SEASONS`): a new
+  career save drops from 1,208 KB to 901 KB gzipped.
+- **Background tiers until slices 3–4.** Tiers 1–3 grow, age, retire, recruit
+  youth and play a season-end batch with promotion and relegation among
+  themselves. The Nationalliga ↔ Regionalliga boundary is `closed` (slice 3
+  opens it). Their players are not on the AI transfer market
+  (`transferMarket: false`, slice 4); AI clubs only buy from tiers 4–5. Their
+  regions are not scout zones, so they do not reach the scouting pool. The
+  Leagues screen shows all five tabs and builds only the open tab's table.
+- **Calibration** (`npm run calibrate:career -- --division=<id>`, 8 matchdays
+  × 3 seeds, 216 matches, no engine change): every tier shows the three
+  misses the career set already had before this slice (goals 2.0–2.3 against
+  2.40–3.60, top-shooter share about 53–55 %, hat-tricks 4–9 %; pre-slice
+  Regionalliga: 2.24 / 54.7 % / 10.6 %). No new misses at top-flight strength;
+  Meisterliga draw rate 22.7 % (Regionalliga 29 %).
+- **Existing saves:** `migration_102_league_pyramid` (SAVE_VERSION 102) adds
+  the 54 clubs, their pools and rosters from the save's own seeds, moves the
+  new players' birth years, contracts and club history to the save's season,
+  and gives any id clash a free id. `normalizeLeagueState` fills a missing
+  national pool on its own instead of resetting all pools.
+
+## 6. Economy per tier (slice 2, PRD 11, built)
+
+In `DIVISION_ECONOMY` (places 2–6 step down from first place as in the
+existing tiers):
 
 | Tier | Sponsorship/wk | TV/wk | Staff/wk | Maintenance/wk | Stadium (cap · fill · ticket) | Prize 1st | TV season bonus 1st |
 |---|---|---|---|---|---|---|---|
@@ -194,8 +235,8 @@ Starting values, to be checked against the club-economy tests:
 | 4 | 55,000 | 12,000 | 18,000 | 9,000 | 8,000 · 0.72 · €18 | 180,000 | 250,000 |
 | 5 | 28,000 | 4,500 | 11,000 | 6,000 | 4,500 · 0.62 · €12 | 45,000 | 55,000 |
 
-Tiers 4 and 5 keep today's values. AI transfer budgets scale with the tier's
-sponsorship and TV (`src/transfers/ai-transfer-market.ts`).
+Tiers 4 and 5 keep today's values. AI transfer budgets per tier come with the
+cross-tier market in slice 4 (today: full budget for tier ≤ 4, 60 % below).
 
 ## 7. Live tables (slice 3)
 
@@ -226,6 +267,9 @@ sponsorship and TV (`src/transfers/ai-transfer-market.ts`).
 
 ## 9. Budgets and long run
 
+Measured after slice 2 (all five tiers, Progress below): week sim +5 % over
+slice 0, save within 2× at seasons 1 and 6. Dormant tiers not needed so far.
+
 - Week sim at most +30 % and gzipped save at most 2× the 2026-10-29 baseline
   (PRD 30): week sim 2.1 s, save 623 KB at season 1. About 1,200 more AI
   players get weekly growth. If the week-sim budget breaks, use dormant
@@ -255,8 +299,9 @@ sponsorship and TV (`src/transfers/ai-transfer-market.ts`).
 
 ## 12. Save
 
-Slice 0 changes no schema. Slices 1–4 bump `SAVE_VERSION` once per slice that
-changes the schema (pool keys, new clubs, `division_results`, archive).
+Slices 0–1 change no schema. Slice 2: `SAVE_VERSION` 102,
+`migration_102_league_pyramid` (§5). Slices 3–4 bump again for
+`division_results` and the archive.
 
 ## Progress
 
@@ -273,5 +318,16 @@ changes the schema (pool keys, new clubs, `division_results`, archive).
   done. `promotion-relegation.golden.test.ts` was recorded on the two-tier
   code (three seeds, player in either division) and passes unchanged on the
   registry loop.
-- Next: slice 2 (world generation for tiers 1–3, economies, calibration, save
-  migration, steady-state age shape for the CA hump).
+- Slice 2 (age shape, tiers 1–3, economies, calibration, migration 102):
+  done. World-only run with all five tiers (seed 2026, 20 seasons): AI mean
+  CA drift peaks at +6.3 %, tier order 122 > 114 > 107 > 91 > 82 at season 20.
+  Full long run (`scripts/longrun-world.ts`, seed 2026, 10 seasons, all
+  invariants hold): AI mean CA 99.4 → peak 105.8 (+6.4 %, season 7) → 103.1;
+  tier order holds every season (season 10: 121.8 > 111.8 > 104.3 > 94.3 >
+  82.3); mean age 25.3–26.0; 35+ share 0.8–2.7 %; rosters ≥ 22 with ≥ 2 GK.
+  Week sim 1.67–1.89 s (slice 0 run 1.6–1.9 s; budget 2.73 s). Save 1,169 KB
+  gz at season 1 (budget 1,246 KB), 1,234 KB at season 6 (budget 1,584 KB),
+  1,417 KB at season 10; rival players 939 KB, autopilot Postfach queue
+  304 KB. The dormant-tier fallback is not needed.
+- Next: slice 3 (live quick-sim tables for all tiers, open the Nationalliga ↔
+  Regionalliga boundary, tier zones on the Leagues screen).

@@ -118,7 +118,16 @@ function rollCareerStamps(age: number, ca: number, random: () => number): string
  * Synthesizes pre-career growth archives and display stamps for pros older than 20.
  * Deterministic per player id + optional extra seed.
  */
-export function applyVeteranBackstory(player: Player, storySeed: number): Player {
+/**
+ * `keepSeasons` keeps only the most recent archived seasons (the draws are the
+ * same, so stamps do not change). PRD 32: national-tier players keep one to
+ * hold the save budget.
+ */
+export function applyVeteranBackstory(
+  player: Player,
+  storySeed: number,
+  keepSeasons = Number.POSITIVE_INFINITY,
+): Player {
   if (player.age < PRO_DEBUT_AGE || player.squad_status === "u17" || player.squad_status === "u19") {
     return player;
   }
@@ -155,7 +164,9 @@ export function applyVeteranBackstory(player: Player, storySeed: number): Player
     ...player,
     history: {
       ...player.history,
-      growth: [...growth, ...keptGrowth].sort((left, right) => left.season - right.season),
+      growth: [...growth.slice(Math.max(0, growth.length - keepSeasons)), ...keptGrowth].sort(
+        (left, right) => left.season - right.season,
+      ),
       career_stamps: career_stamps.length > 0 ? career_stamps : player.history.career_stamps,
     },
   };

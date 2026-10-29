@@ -97,6 +97,7 @@ import { migration098MerchExpert } from "./migration_098_merch_expert.ts";
 import { migration099PressConferences } from "./migration_099_press_conferences.ts";
 import { migration100MentoringSlots } from "./migration_100_mentoring_slots.ts";
 import { migration101Retirement } from "./migration_101_retirement.ts";
+import { migration102LeaguePyramid } from "./migration_102_league_pyramid.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -203,6 +204,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration099PressConferences,
   migration100MentoringSlots,
   migration101Retirement,
+  migration102LeaguePyramid,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

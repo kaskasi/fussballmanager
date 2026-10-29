@@ -40,7 +40,7 @@ it, so it sits between phases 3 and 5.
 | # | Phase | Status | Phase PRD | Est. sessions | Depends on |
 |---|---|---|---|---|---|
 | 1 | World longevity: retirement, AI youth, roster upkeep | Done (PR #34); CA drift moved to phase 2 | [31](31_world_longevity.md) | 2 | — |
-| 2 | League pyramid (5 tiers) + season archive + CA drift | In progress (slice 1/4) | [32](32_league_pyramid.md) | 3–4 | 1 |
+| 2 | League pyramid (5 tiers) + season archive + CA drift | In progress (slice 2/4) | [32](32_league_pyramid.md) | 3–4 | 1 |
 | 3 | Suspensions | Not started | — | 1 | — |
 | 4 | Season calendar: breaks every season | Not started | — | 2–3 | — |
 | 5 | Cups (regional + national) | Not started | — | 3 | 3, 4 (2 for national cup entrants) |
@@ -302,7 +302,11 @@ run (seed 2026, 20 seasons): drift +13.2 % at season 7, +11.8 % at 10, +5.9 % at
 season 20, 35+ share 3.1 % in season 19). The remaining hump in seasons 6–11 comes from the
 generated youngsters and is slice 2 work. Slice 1 built: `src/sim/league-pyramid.ts`
 registry, generic promotion and relegation (golden test unchanged), no
-hard-coded division ids left in client code. Next: slice 2 (tiers 1–3).
+hard-coded division ids left in client code. Slice 2 built: worlds start
+near the growth steady state (drift peak +7.6 %, was +13.2 %); 54 clubs in
+Meisterliga, Meisterliga 2 and Nationalliga with economies, background
+season-end sims and SAVE_VERSION 102; calibration shows no new misses at
+tier-1 strength. Next: slice 3 (live tables, open the 3 ↔ 4 boundary).
 
 ---
 

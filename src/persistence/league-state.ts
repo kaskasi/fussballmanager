@@ -61,12 +61,20 @@ export function normalizeLeagueState(
   const base = league ?? defaultLeagueState();
   const division_id = base.division_id ?? DEFAULT_DIVISION_ID;
   const storedPools = base.league_pools;
-  const poolsIncomplete = PYRAMID.some(
-    (division) => (storedPools?.[division.id]?.length ?? 0) < division.clubCount,
-  );
-  const pools = poolsIncomplete || !storedPools
-    ? defaultLeaguePools()
-    : storedPools;
+  const incomplete = (division: (typeof PYRAMID)[number]) =>
+    (storedPools?.[division.id]?.length ?? 0) < division.clubCount;
+  // A broken northern pool resets the layer (legacy saves); a missing national
+  // tier (saves from before PRD 32 slice 2) is filled on its own, so stored
+  // promotions survive.
+  const defaults = defaultLeaguePools();
+  const pools = !storedPools || PYRAMID.some((division) => division.careerStart && incomplete(division))
+    ? defaults
+    : Object.fromEntries(
+        PYRAMID.map((division) => [
+          division.id,
+          incomplete(division) ? defaults[division.id] : storedPools[division.id],
+        ]),
+      ) as LeagueState["league_pools"] & object;
   const clubIdsIncomplete = (base.club_ids?.length ?? 0) < CLUBS_PER_DIVISION;
   return {
     ...base,

@@ -21,16 +21,21 @@ export interface PromotionMovement {
   reason: "promoted" | "relegated" | "playoff_won" | "playoff_lost";
 }
 
+export interface PlayoffResult {
+  homeTeamId: TeamId;
+  awayTeamId: TeamId;
+  homeGoals: number;
+  awayGoals: number;
+  winnerId: TeamId;
+  upperDivisionId: DivisionId;
+  lowerDivisionId: DivisionId;
+}
+
 export interface PromotionRelegationResult {
   pools: Record<DivisionEconomyId, TeamId[]>;
   movements: PromotionMovement[];
-  playoff?: {
-    homeTeamId: TeamId;
-    awayTeamId: TeamId;
-    homeGoals: number;
-    awayGoals: number;
-    winnerId: TeamId;
-  };
+  /** Every playoff of the season, top boundary first. */
+  playoffs: PlayoffResult[];
   messages: string[];
 }
 
@@ -162,13 +167,15 @@ export function applyPromotionRelegation(
   for (const division of PYRAMID) nextPools[division.id] = [...(pools[division.id] ?? [])];
   const movements: PromotionMovement[] = [];
   const messages: string[] = [];
-  let playoff: PromotionRelegationResult["playoff"];
+  const playoffs: PlayoffResult[] = [];
 
   for (const division of PYRAMID) {
     const boundary = division.boundaryBelow;
     const upperId = division.id;
     const lowerId = divisionBelow(upperId);
-    if (!boundary || !lowerId) continue;
+    if (!boundary || boundary.closed || !lowerId) continue;
+    // Club events only for the boundaries the manager's division touches.
+    const announce = league.division_id === upperId || league.division_id === lowerId;
     const upperTable = tables.get(upperId) ?? [];
     const lowerTable = tables.get(lowerId) ?? [];
 
@@ -181,10 +188,12 @@ export function applyPromotionRelegation(
         { teamId: promoted, from: lowerId, to: upperId, reason: "promoted" },
         { teamId: relegated, from: upperId, to: lowerId, reason: "relegated" },
       );
-      messages.push(
-        t("clubEvent.promoted", { club: clubShortName(promoted), division: divisionLabel(upperId) }),
-        t("clubEvent.relegated", { club: clubShortName(relegated), division: divisionLabel(lowerId) }),
-      );
+      if (announce) {
+        messages.push(
+          t("clubEvent.promoted", { club: clubShortName(promoted), division: divisionLabel(upperId) }),
+          t("clubEvent.relegated", { club: clubShortName(relegated), division: divisionLabel(lowerId) }),
+        );
+      }
     }
 
     if (!boundary.playoff) continue;
@@ -205,8 +214,8 @@ export function applyPromotionRelegation(
         { teamId: upperPlayoff, from: upperId, to: lowerId, reason: "playoff_lost" },
       );
     }
-    // The result keeps one playoff (the player's tiers have one boundary until PRD 32 slice 3).
-    playoff ??= { ...match, winnerId };
+    playoffs.push({ ...match, winnerId, upperDivisionId: upperId, lowerDivisionId: lowerId });
+    if (!announce) continue;
     messages.push(
       t("clubEvent.playoff", {
         home: clubShortName(match.homeTeamId),
@@ -217,7 +226,7 @@ export function applyPromotionRelegation(
     );
   }
 
-  return { pools: nextPools, movements, playoff, messages };
+  return { pools: nextPools, movements, playoffs, messages };
 }
 
 function swapClub(

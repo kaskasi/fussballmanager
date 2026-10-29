@@ -3,7 +3,8 @@
  */
 import type { TeamId } from "@fussballmanager/shared";
 import type { DivisionEconomyId } from "../economy/division-economy.ts";
-import { tierOf } from "../sim/league-pyramid.ts";
+import { PYRAMID, tierOf, type DivisionId } from "../sim/league-pyramid.ts";
+import { defaultLeaguePools } from "../sim/league-divisions.ts";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { processTransferBreakout } from "../development/breakouts.ts";
 import { careerTeamId } from "../sim/rival-growth.ts";
@@ -263,6 +264,17 @@ export interface AiTransferWeekInput {
   week: number;
   masterSeed: number;
   worldClubs?: readonly WorldClub[];
+  /** Current division pools; defaults to the generated layer. Only `transferMarket` tiers sell. */
+  leaguePools?: Partial<Record<DivisionId, readonly TeamId[]>>;
+}
+
+/** Career club ids whose players AI clubs may buy (PRD 32 §8: tiers 1–3 join in slice 4). */
+function marketClubIds(pools: Partial<Record<DivisionId, readonly TeamId[]>>): Set<string> {
+  return new Set(
+    PYRAMID.filter((division) => division.transferMarket).flatMap((division) =>
+      (pools[division.id] ?? []).map((teamId) => careerTeamId(teamId)),
+    ),
+  );
 }
 
 export interface AiTransferWeekResult {
@@ -292,6 +304,7 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
     input.transferState.ai_budgets,
   );
   let players = [...input.rivalPlayers];
+  const onMarket = marketClubIds(input.leaguePools ?? defaultLeaguePools());
   let transferState = input.transferState;
   const records: TransferRecord[] = [];
   const messages: string[] = [];
@@ -323,7 +336,9 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
     const shortlist = buildAiClubShortlist({
       buyerClubId,
       buyerSquad,
-      marketPlayers: players.filter((row) => !transferredThisWeek.has(row.id)),
+      marketPlayers: players.filter(
+        (row) => !transferredThisWeek.has(row.id) && (!row.club_id || onMarket.has(row.club_id)),
+      ),
       season: input.season,
       week: input.week,
       masterSeed: input.masterSeed,

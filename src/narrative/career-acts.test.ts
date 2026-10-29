@@ -26,12 +26,13 @@ function relegatedPools() {
   const pools = defaultLeaguePools();
   const promoted = pools["oberliga-nord"][0]!;
   return {
+    ...pools,
     "regionalliga-nord": [...pools["regionalliga-nord"].filter((id) => id !== NORDSTERN_ID), promoted],
     "oberliga-nord": [NORDSTERN_ID, ...pools["oberliga-nord"].slice(1)],
   };
 }
 
-function seasonEnd(session: GameSession, pr: Pick<PromotionRelegationResult, "pools" | "movements" | "playoff">) {
+function seasonEnd(session: GameSession, pr: Pick<PromotionRelegationResult, "pools" | "movements"> & Partial<Pick<PromotionRelegationResult, "playoffs">>) {
   return resolveCareerActSeasonEnd({
     story: session.storyState,
     league: session.league,
@@ -88,7 +89,17 @@ describe("act 1 outcome from sim movements (PRD 19 — no forced loss)", () => {
     expect(
       act1OutcomeFromMovements(NORDSTERN_ID, {
         movements: [],
-        playoff: { homeTeamId: NORDSTERN_ID, awayTeamId: OBER_TEAM, homeGoals: 2, awayGoals: 1, winnerId: NORDSTERN_ID },
+        playoffs: [
+          {
+            homeTeamId: NORDSTERN_ID,
+            awayTeamId: OBER_TEAM,
+            homeGoals: 2,
+            awayGoals: 1,
+            winnerId: NORDSTERN_ID,
+            upperDivisionId: "regionalliga-nord",
+            lowerDivisionId: "oberliga-nord",
+          },
+        ],
       }),
     ).toEqual({ outcome: "survived", viaPlayoff: true });
   });

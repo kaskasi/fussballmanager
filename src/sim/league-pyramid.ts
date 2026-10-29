@@ -17,6 +17,8 @@ export interface PyramidBoundary {
   playoff: boolean;
   /** Seed salt of the playoff match (`masterSeed ^ season ^ salt`). */
   playoffSalt: number;
+  /** No movement across this boundary yet (PRD 32: Nationalliga ↔ Regionalliga opens in slice 3). */
+  closed?: boolean;
 }
 
 export interface PyramidDivision {
@@ -30,11 +32,43 @@ export interface PyramidDivision {
   tableSalt: number;
   /** Starting division for a new career (club pick, PRD 24). */
   careerStart: boolean;
+  /** Its players are on the AI transfer market (PRD 32: tiers 1–3 join in slice 4). */
+  transferMarket: boolean;
   /** Rules to the division directly below; absent on the bottom tier. */
   boundaryBelow?: PyramidBoundary;
 }
 
 const PYRAMID_DEFINITION = [
+  {
+    id: "meisterliga",
+    tier: 1,
+    clubCount: 18,
+    simSalt: 0x3b1,
+    tableSalt: 0x51c3_77a1,
+    careerStart: false,
+    transferMarket: false,
+    boundaryBelow: { direct: 2, playoff: true, playoffSalt: 0x3c5 },
+  },
+  {
+    id: "meisterliga-2",
+    tier: 2,
+    clubCount: 18,
+    simSalt: 0x3b2,
+    tableSalt: 0x62d4_88b2,
+    careerStart: false,
+    transferMarket: false,
+    boundaryBelow: { direct: 2, playoff: true, playoffSalt: 0x3c6 },
+  },
+  {
+    id: "nationalliga",
+    tier: 3,
+    clubCount: 18,
+    simSalt: 0x3b3,
+    tableSalt: 0x73e5_99c3,
+    careerStart: false,
+    transferMarket: false,
+    boundaryBelow: { direct: 2, playoff: true, playoffSalt: 0x3c7, closed: true },
+  },
   {
     id: "regionalliga-nord",
     tier: 4,
@@ -42,6 +76,7 @@ const PYRAMID_DEFINITION = [
     simSalt: 11,
     tableSalt: 0,
     careerStart: true,
+    transferMarket: true,
     boundaryBelow: { direct: 1, playoff: true, playoffSalt: 71 },
   },
   {
@@ -51,6 +86,7 @@ const PYRAMID_DEFINITION = [
     simSalt: 29,
     tableSalt: 0x29a2_4f11,
     careerStart: true,
+    transferMarket: true,
   },
 ] as const satisfies readonly PyramidDivision[];
 
@@ -115,6 +151,10 @@ export function divisionOfClub<T>(
   return pyramidDivisionIds().find((id) => pools[id]?.includes(clubId));
 }
 
+function openBoundary(boundary: PyramidBoundary | undefined): PyramidBoundary | undefined {
+  return boundary && !boundary.closed ? boundary : undefined;
+}
+
 export type TableZone = "promoted" | "playoff" | "safe" | "relegated";
 
 /**
@@ -124,8 +164,8 @@ export type TableZone = "promoted" | "playoff" | "safe" | "relegated";
 export function tableZone(divisionId: DivisionId, index: number, teamCount: number): TableZone {
   const place = index + 1;
   const above = divisionAbove(divisionId);
-  const up = above ? pyramidDivision(above).boundaryBelow : undefined;
-  const down = pyramidDivision(divisionId).boundaryBelow;
+  const up = openBoundary(above ? pyramidDivision(above).boundaryBelow : undefined);
+  const down = openBoundary(pyramidDivision(divisionId).boundaryBelow);
   if (up && place <= up.direct) return "promoted";
   if (up?.playoff && place === up.direct + 1) return "playoff";
   if (down && place > teamCount - down.direct) return "relegated";

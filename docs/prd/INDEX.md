@@ -41,6 +41,7 @@ One line per doc, so agents open only what a task needs.
 | [27_live_substitutions](27_live_substitutions.md) | Live substitutions and half-time changes (draft) |
 | [28_press_conferences](28_press_conferences.md) | Press conferences moving morale, press, board, fans (draft) |
 | [29_mentoring](29_mentoring.md) | Mentor/talent pairs |
+| [30_core_gaps_roadmap](30_core_gaps_roadmap.md) | Multi-session plan + status board: retirement, 5-tier pyramid, suspensions, season calendar, cups, in-match management, chronicle, friendlies, set pieces, difficulty, player happiness |
 | [design.md](design.md) | Visual language: tokens, type, icons, header, layout, Definition of Done |
 | [design/](design/) | Per-screen wireframes, `09.NN-<screen>.md` (design.md §9.NN) |
 | [PRD.md](PRD.md) | Archived original vision; §4 scope table (in/out of v1) |

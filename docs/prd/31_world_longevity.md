@@ -148,14 +148,38 @@ least 18 players and 2 GK, AI mean CA drift under 10 % from season 1, no
 retired id in a roster, the market or the shortlist. Exit code 1 on failure.
 Not part of vitest (a season takes about 75 s).
 
-Baseline (unchanged build, seed 2026, this container): week sim about 2.1 s,
-save 609 KB gzipped after season 1 and 773 KB after season 6.
+**Measured (seed 2026, this container, 2026-10-29):**
+
+| | Unchanged build | PRD 31 build |
+|---|---|---|
+| Seasons run | 6 | 20 |
+| AI mean age | 26.5 → 31.5 | 25.1–26.0 every season |
+| AI 35+ share | 7.7 % → 27 % | 0.4–2.9 % |
+| Smallest AI roster / fewest keepers | 21 / 2 | 22 / 2 |
+| Retired ids still in play | — | 0 |
+| AI mean CA | 89.9 → 109.7 (+22 % in 6) | 88.2 → plateau about 113–116 from season 10 (+31 % at the end) |
+| Tier order (Regionalliga > Oberliga) | holds | holds (119.6 > 111.7 at season 20) |
+| Week sim (mean) | 2.1 s | 2.2 s (+5 %, budget +30 %) |
+| Save, gzipped | 623 KB (S1), 792 KB (S6) | 590 KB (S1), 655 KB (S6), 1,780 KB (S20) |
+
+Save at season 20 by part: `pipeline.youth_inbox` 1,137 KB, rival players
+335 KB, own players 239 KB, `retired.json` 55 KB. The inbox is an autopilot
+artifact this phase did not cause: nobody answers the Postfach, so its queue
+grows every week (a real save that ignores the Postfach would grow too; worth a
+cap, outside this phase). Retirement data (records plus season lines) is under
+70 KB after 20 seasons. Measured per season the PRD 31 build stays below the
+unchanged build.
+
+A world-only loop (growth and season end, no matches; about 18 s for 20
+seasons) gave the same age and roster results on seeds 7, 99 and 4242; the
+35+ share peaks at 2.6–3.2 % there. Keepers aged 35–37 (they retire two years
+later by design) set a floor of about 1.5 %.
 
 ## 11. Open questions
 
 | Question | Default if unanswered |
 |---|---|
-| Change the PRD 02 growth curve so play declines from about 31 (all players)? | Not in this phase; CA drift stays a known failure of the long run |
+| How to stop the CA plateau (+30 %)? Measured options: (a) AI-only growth ×0.4 → drift under 5 % over 20 seasons (×0.6 → +12 %), but own players keep full growth and pull away; (b) late-career decline for everyone (age factor 0.45 at 28–30, 0.2 from 31, stronger decay) → plateau 112, almost no effect, because the gain comes from ages 18–27; (c) leave it and recalibrate with PRD 30 phase 2, which resets tier strengths and runs `calibrate:career` anyway | (c): no growth change in this phase |
 | Free-agent pool for released or expired players? | No; refill uses generated players |
 | Retired legends as staff (F11.5)? | No; the record is kept |
 

@@ -113,6 +113,8 @@ import {
   type FinancingCareerState,
 } from "../economy/financing.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
+import { normalizeRetiredPlayers, type RetiredPlayer } from "../development/retired-players.ts";
+import { reassignClashingIds } from "../player/player-ids.ts";
 
 export const DEFAULT_SLOT = 1;
 export const DEFAULT_CLUB_ID = "cl_fc_nordstern";
@@ -141,6 +143,8 @@ export interface GameSession {
   board: BoardState;
   clubEvents: ClubEvent[];
   rivalPlayers: Player[];
+  /** PRD 31 — retired players (`retired.json`), own and AI. */
+  retiredPlayers: RetiredPlayer[];
   /** PRD 06 — Liga-Spieler Breakout-Texte der laufenden Woche (Treter/Scout). */
   rivalBreakoutNarratives: import("../development/breakouts.ts").BreakoutNarrative[];
   coachingStaff: CoachingStaff;
@@ -198,10 +202,15 @@ export function newGameSession(now = new Date(), options: NewGameOptions = {}): 
   const world = generateWorld(seed, WORLD_CLUB_SEED);
   const pros = world.players.filter((player) => player.club_id === NORDSTERN_CLUB_ID);
   // The default seed keeps the curated demo academy (tests, calibration, scripts).
-  const academy =
+  const academySquad =
     seed === DEFAULT_MASTER_SEED
       ? loadDemoRoster().filter((player) => player.squad_status !== "pro")
       : seedYouthSquad(NORDSTERN_TEAM_ID, { season: 1, masterSeed: seed, players: pros });
+  // Academy ids are sequential from pl_00001; generated world ids share that space.
+  const academy = reassignClashingIds(
+    academySquad,
+    new Set(world.players.map((player) => player.id)),
+  );
   const save = createSave({
     nowIso: now.toISOString(),
     playerClubId: DEFAULT_CLUB_ID,
@@ -350,6 +359,7 @@ export function sessionFromSave(save: SaveGame, options?: SessionFromSaveOptions
     board: normalizeBoardState(pipeline.board, defaultEmployerClubId()),
     clubEvents: pipeline.club_events ?? emptyClubEvents(),
     rivalPlayers,
+    retiredPlayers: normalizeRetiredPlayers(save.retired),
     rivalBreakoutNarratives: pipeline.rival_breakout_narratives ?? [],
     coachingStaff: normalizeCoachingStaff(pipeline.coaching_staff, save.state.season),
     clubId: save.manifest.player_club_id,
@@ -446,6 +456,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
         world: session.world,
       },
       players: session.players,
+      retired: session.retiredPlayers,
       chronicle: session.storyState.chronicle_entries,
       rng_state: {
         ...base.rng_state,
@@ -465,6 +476,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
   });
   return {
     ...save,
+    retired: session.retiredPlayers,
     manifest: {
       ...save.manifest,
       last_played: iso,

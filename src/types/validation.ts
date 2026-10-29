@@ -85,8 +85,9 @@ function hiddenErrors(hidden: Player["hidden"]): string[] {
 export function validatePlayer(player: Player): ValidationResult {
   const errors: string[] = [];
 
-  if (!/^pl_\d{5}$/.test(player.id)) {
-    errors.push("id must match /^pl_\\d{5}$/");
+  // PRD 31 — players created after world generation use `pl_s<season>c<club>n<slot>`.
+  if (!/^pl_(\d{5}|s\d+c\d+n\d+)$/.test(player.id)) {
+    errors.push("id must match /^pl_\\d{5}$/ or /^pl_s\\d+c\\d+n\\d+$/");
   }
 
   errors.push(...attributeErrors(player.attributes));

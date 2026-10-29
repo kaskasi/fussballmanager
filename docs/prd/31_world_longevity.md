@@ -41,7 +41,9 @@ same decisions give the same retirements.
 2. Own squad: growth snapshot, aging, loan returns, pre-contracts (unchanged).
 3. **AI retirement**: rolled players leave `rivalPlayers` and become
    `retired.json` records. Their transfer entries (shortlist, offers,
-   negotiations, pending deals, listings, scheduled transfers) are dropped.
+   negotiations, listings) are dropped. A player with an agreed move
+   (pre-contract, pending purchase, scheduled transfer) does not roll that
+   season: the deal goes through first.
 4. Own academy intake (ids now from the free-id allocator, §7).
 5. Promotion and relegation (unchanged).
 6. **AI roster upkeep** for the division each club plays in next season (§5).

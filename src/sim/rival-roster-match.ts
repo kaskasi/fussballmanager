@@ -1,8 +1,9 @@
 import type { Player as EnginePlayer } from "@fussballmanager/shared";
 import type { Player } from "../types/player.ts";
 
+/** Only legacy `rp_<team>_<shirt>` ids carry a shirt; generated, youth and refill ids do not (PRD 31). */
 function shirtFromRivalId(id: string): number | null {
-  const match = id.match(/_(\d+)$/);
+  const match = id.match(/^rp_.+_(\d+)$/);
   const shirt = match?.[1];
   if (!shirt) return null;
   return Number.parseInt(shirt, 10);

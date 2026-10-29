@@ -97,6 +97,7 @@ export {
   MORALE_FORM_SWING,
   MORALE_NEUTRAL,
   moraleFormOffset,
+  rankCareerSelection,
   scaleCareerAttribute,
   squadAverageStrength,
 } from "./career-squad-bridge.ts";

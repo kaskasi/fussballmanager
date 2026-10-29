@@ -1,6 +1,6 @@
 import { asPlayerId } from "./ids.ts";
 import type { TeamId } from "./ids.ts";
-import { getFormation } from "./formations.ts";
+import { getFormation, type FormationId, type FormationSlot } from "./formations.ts";
 import type { Player, PlayerAttributes, PlayerRole } from "./player.ts";
 import type { Squad } from "./squad.ts";
 import { assertValidSquad } from "./squad.ts";
@@ -147,7 +147,7 @@ function toEnginePlayer(career: CareerPlayerInput, role: PlayerRole, teamId: Tea
   };
 }
 
-function compareCareerPlayers(left: CareerPlayerInput, right: CareerPlayerInput): number {
+function compareCareerPlayers(left: RankedCareerPlayer, right: RankedCareerPlayer): number {
   const leftOverall = left.overall ?? left.attributes.shooting;
   const rightOverall = right.overall ?? right.attributes.shooting;
   return rightOverall - leftOverall;
@@ -157,12 +157,14 @@ function compareCareerPlayers(left: CareerPlayerInput, right: CareerPlayerInput)
  * Seat career pros on the template formation. Bench fillers come from the
  * template when the career roster is short.
  */
-export function buildCareerEngineSquad(template: Squad, careerPlayers: readonly CareerPlayerInput[]): Squad {
-  const ranked = [...careerPlayers].sort(compareCareerPlayers);
-  const slots = getFormation(template.tactics.formation);
-  const pool = [...ranked];
+type RankedCareerPlayer = Pick<CareerPlayerInput, "position" | "overall" | "attributes">;
 
-  const starters = slots.map((slot) => {
+/** Best-fit pick per slot from the ranked pool; picked players leave `pool`. */
+function pickStarters<T extends RankedCareerPlayer>(
+  slots: readonly FormationSlot[],
+  pool: T[],
+): (T | undefined)[] {
+  return slots.map((slot) => {
     let bestIndex = 0;
     let bestFit = Number.POSITIVE_INFINITY;
     for (let index = 0; index < pool.length; index += 1) {
@@ -174,7 +176,33 @@ export function buildCareerEngineSquad(template: Squad, careerPlayers: readonly 
         bestIndex = index;
       }
     }
-    const chosen = pool.splice(bestIndex, 1)[0];
+    return pool.splice(bestIndex, 1)[0];
+  });
+}
+
+/**
+ * The XI {@link buildCareerEngineSquad} would field, in slot order, then the rest
+ * ranked best first. Same ranking and slot fit, no template needed.
+ */
+export function rankCareerSelection<T extends RankedCareerPlayer>(
+  formation: FormationId,
+  careerPlayers: readonly T[],
+): { starters: T[]; bench: T[] } {
+  const pool = [...careerPlayers].sort(compareCareerPlayers);
+  const starters = pickStarters(getFormation(formation), pool).filter(
+    (player): player is T => player !== undefined,
+  );
+  return { starters, bench: pool };
+}
+
+export function buildCareerEngineSquad(template: Squad, careerPlayers: readonly CareerPlayerInput[]): Squad {
+  const ranked = [...careerPlayers].sort(compareCareerPlayers);
+  const slots = getFormation(template.tactics.formation);
+  const pool = [...ranked];
+  const picks = pickStarters(slots, pool);
+
+  const starters = slots.map((slot, slotIndex) => {
+    const chosen = picks[slotIndex];
     if (!chosen) {
       const fallback = template.starters.find((place) => place.slot === slot.id)?.player;
       if (!fallback) {

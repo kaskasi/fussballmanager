@@ -202,14 +202,17 @@ export function applyStoryChoice(
         adjustPressure(-3);
         adjustHype(2);
         adjustSquadMorale(3);
+        adjustRelationship(-1);
       } else if (choiceId === "attack_press") {
         adjustPressure(6);
         adjustHype(-4);
         adjustFanbase(0.4);
+        adjustRelationship(-6);
       } else {
         adjustPressure(4);
         adjustHype(-2);
         adjustSquadMorale(-2);
+        adjustRelationship(3);
       }
       break;
     case "press_ally_support":
@@ -217,6 +220,7 @@ export function applyStoryChoice(
         adjustHype(8);
         adjustFanbase(0.6);
         adjustPressure(-2);
+        adjustRelationship(4);
       } else {
         adjustHype(2);
       }
@@ -243,9 +247,11 @@ export function applyStoryChoice(
       if (choiceId === "project") {
         adjustHype(3);
         adjustFanbase(0.3);
+        adjustRelationship(1);
       } else {
         adjustPressure(-2);
         adjustHype(-3);
+        adjustRelationship(2);
       }
       break;
     case "arc_climax_week30":

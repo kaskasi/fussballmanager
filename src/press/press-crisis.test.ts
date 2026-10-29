@@ -189,6 +189,14 @@ describe("crisis choices", () => {
     expect(sharp.finances!.cash).toBe(session.finances.cash - MORALE_CRISIS_TRIP_COST);
   });
 
+  it("the existing press beats feed the same relationship", () => {
+    const session = withRelationship(newGameSession(), 50);
+    const attack = applyStoryChoice(session.storyState, "press_hostile_bad_week", "attack_press", context(session));
+    const honest = applyStoryChoice(session.storyState, "press_hostile_bad_week", "honest", context(session));
+    expect(normalizePressState(attack.story.press).relationship).toBe(44);
+    expect(normalizePressState(honest.story.press).relationship).toBe(53);
+  });
+
   it("an apology mends the press relationship", () => {
     const session = withRelationship(newGameSession(), 15);
     const result = applyStoryChoice(

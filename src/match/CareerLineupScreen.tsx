@@ -57,10 +57,6 @@ import { getLocale } from "../i18n/index.ts";
 import { localeBcp47 } from "../i18n/locale-id.ts";
 import { formatLeagueMatchKickoffLabel } from "./match-kickoff-format.ts";
 import { formatMatchWeatherDisplay } from "./match-weather-display.ts";
-import { listProSquad, sortProSquadRows } from "../squad/pro-roster.ts";
-import { lineupFormFromCareer } from "./lineup-player-status.ts";
-import { LineupFatigueBars } from "./LineupFatigueBars.tsx";
-import { stateMark } from "../ui/player-profile.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
 import { OpponentScoutMatchAction } from "../ui/components/OpponentScoutMatchAction.tsx";
 import { OpponentScoutInboxCard } from "../ui/components/OpponentScoutInboxCard.tsx";
@@ -68,7 +64,6 @@ import type { ScoutNetworkState } from "../scouting/scout-network.ts";
 import { opponentScoutMatchIdFromSetup } from "../scouting/opponent-scout-match-id.ts";
 import { opponentScoutNoticeForMatch } from "../scouting/scout-job-postfach.ts";
 import { LineupIndicatorLegend } from "../ui/components/LineupIndicatorLegend.tsx";
-import { useMobileNarrow } from "../ui/hooks/use-mobile-narrow.ts";
 import { useT } from "../i18n/react.ts";
 
 type CareerLineupScreenProps = {
@@ -88,7 +83,6 @@ type CareerLineupScreenProps = {
   poorForm?: boolean;
   season?: number;
   scoutBoard?: ScoutBoard;
-  onOpenOpponentScoutReport?: (postfachItemId: string) => void;
   onOpenPlayer?: (playerId: string) => void;
   kasse?: MatchdayCashBreakdown;
   /** PRD 19 Act 1 — formation only, no presets or sliders. */
@@ -96,8 +90,9 @@ type CareerLineupScreenProps = {
   /** PRD 19 — opponent scout module behind the Story Mode curtain. */
   showOpponentScout?: boolean;
   /**
-   * "match": pre-kickoff step of the match flow (confirm button in the header NEXT).
-   * "menu": standalone Tactics screen — edits persist, no kickoff, analysis panel inline.
+   * Both use the same board (portrait pitch, paged bench, tactics/analysis column).
+   * "match": pre-kickoff step of the match flow — stadium banner, confirm button in the header NEXT.
+   * "menu": standalone Tactics screen — edits persist, no kickoff, opponent scout can be started.
    */
   variant?: "match" | "menu";
   scoutNetwork?: ScoutNetworkState;
@@ -106,8 +101,8 @@ type CareerLineupScreenProps = {
 };
 
 const TACTICS_STYLE_IDS: TacticsPresetId[] = [1, 2, 3];
-/** Fixed bench rows per page — panel height stays constant (empty slots padded). */
-const LINEUP_BENCH_PAGE_SIZE = 9;
+/** Bench cards per page — the panel keeps its height (empty places padded). */
+const LINEUP_BENCH_PAGE_SIZE = 8;
 
 export function CareerLineupScreen({
   setup,
@@ -126,7 +121,6 @@ export function CareerLineupScreen({
   poorForm,
   season = 1,
   scoutBoard,
-  onOpenOpponentScoutReport,
   onOpenPlayer,
   kasse,
   tacticsMode = "full",
@@ -146,8 +140,6 @@ export function CareerLineupScreen({
     normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId).assignments,
   );
   const [drag, setDrag] = useState<LineupDrag | null>(null);
-  // Portrait cards need room: phones get the upright pitch the Tactics menu uses.
-  const narrow = useMobileNarrow();
   const [benchPage, setBenchPage] = useState(0);
 
   const playersById = useMemo(
@@ -158,9 +150,7 @@ export function CareerLineupScreen({
     () => benchPlayers(players, assignments, managerClubId),
     [players, assignments, managerClubId],
   );
-  // The Tactics screen shows the whole bench as a tile grid; the match flow pages a fixed-height list.
-  const benchPageSize = variant === "menu" ? Math.max(bench.length, 1) : LINEUP_BENCH_PAGE_SIZE;
-  const benchPageCount = Math.max(1, Math.ceil(bench.length / benchPageSize));
+  const benchPageCount = Math.max(1, Math.ceil(bench.length / LINEUP_BENCH_PAGE_SIZE));
 
   useEffect(() => {
     setBenchPage((current) => Math.min(current, benchPageCount - 1));
@@ -197,25 +187,18 @@ export function CareerLineupScreen({
   }, [matchLineup, players, fallbackPlan, managerClubId]);
 
   const benchPageSlots = useMemo(() => {
-    const start = benchPage * benchPageSize;
-    const slice = bench.slice(start, start + benchPageSize);
-    if (variant === "menu") return slice;
-    return Array.from({ length: benchPageSize }, (_, index) => slice[index] ?? null);
-  }, [bench, benchPage, benchPageSize, variant]);
+    const start = benchPage * LINEUP_BENCH_PAGE_SIZE;
+    const slice = bench.slice(start, start + LINEUP_BENCH_PAGE_SIZE);
+    // Pad a short last page only when there are several, so paging never moves the pager.
+    if (benchPageCount === 1) return slice;
+    return Array.from({ length: LINEUP_BENCH_PAGE_SIZE }, (_, index) => slice[index] ?? null);
+  }, [bench, benchPage, benchPageCount]);
   const opponentPreview = useMemo(
     () => buildOpponentLineupPreview(setup, rivalPlayers),
     [setup, rivalPlayers],
   );
   const playerTeamLabel = clubShortName(setup.playerClubId);
   const filledCount = lineupSlotCount(assignments, plan.formation);
-  const squadTableRows = useMemo(() => {
-    const assigned = new Set(Object.values(assignments).filter(Boolean));
-    const rows = listProSquad(players, managerClubId);
-    return sortProSquadRows(rows, "position", "asc").map((row) => ({
-      ...row,
-      role: assigned.has(row.playerId) ? ("start" as const) : ("bench" as const),
-    }));
-  }, [players, managerClubId, assignments]);
   const squad = useMemo(
     () => buildSquadFromAssignments(players, plan, assignments, setup.playerClubId, managerClubId),
     [players, plan, assignments, setup.playerClubId, managerClubId],
@@ -369,7 +352,7 @@ export function CareerLineupScreen({
     : Math.round(12_000 + (setup.seed % 9_000));
 
   return (
-    <main className={`matchday career-lineup tc-lineup${variant === "menu" ? " tc-lineup--menu club-shell-card-body" : ""}`}>
+    <main className={`matchday career-lineup tc-lineup tc-lineup--board${variant === "menu" ? " tc-lineup--menu club-shell-card-body" : ""}`}>
       {variant === "menu" ? null : (
       <MatchdayLineupAmbience
         setup={setup}
@@ -454,18 +437,9 @@ export function CareerLineupScreen({
               onMoveSlot={moveSlot}
               onDrag={setDrag}
               onOpenPlayer={onOpenPlayer}
-              orientation={variant === "menu" || narrow ? "vertical" : "horizontal"}
+              orientation="vertical"
             />
             <p className="tc-caption tc-lineup__hint">{t("match.lineup.moveHint")}</p>
-            {variant === "match" && showOpponentScout && scoutBoard && onOpenOpponentScoutReport ? (
-              <OpponentScoutMatchAction
-                mode="lineup"
-                setup={setup}
-                season={season}
-                scoutBoard={scoutBoard}
-                onViewReport={onOpenOpponentScoutReport}
-              />
-            ) : null}
           </section>
           <aside className="tc-panel tc-lineup__bench lineup-bench" aria-label={t("match.lineup.benchAria")}>
             <div className="tc-panel__head tc-lineup__bench-head">
@@ -500,7 +474,7 @@ export function CareerLineupScreen({
             </div>
             <LineupIndicatorLegend />
             <div
-              className={`lineup-bench-list ${variant === "menu" ? "lineup-bench-grid" : "lineup-bench-list--fixed"}`}
+              className="lineup-bench-list lineup-bench-grid"
               onDragOver={(event) => {
                 if (drag?.fromSlot) event.preventDefault();
               }}
@@ -557,7 +531,8 @@ export function CareerLineupScreen({
             </dl>
           </section>
 
-          {variant === "menu" && showOpponentScout && scoutBoard ? (
+          {/* Matchday: scouting is over, so the panel only shows a finished report. */}
+          {showOpponentScout && scoutBoard && (variant === "menu" || analysisNotice) ? (
             <section className="tc-panel tc-lineup__analysis" aria-label={t("tactics.analysis.title")}>
               <div className="tc-panel__head">
                 <h2 className="tc-panel__title">{t("tactics.analysis.title")}</h2>
@@ -664,72 +639,6 @@ export function CareerLineupScreen({
         </aside>
       </div>
 
-      {variant === "menu" ? null : (
-      <section className="tc-panel tc-lineup__squad" aria-label={t("match.lineup.squadAria")}>
-        <div className="tc-panel__head">
-          <h2 className="tc-panel__title">{t("match.lineup.squadSummary", { count: squadTableRows.length })}</h2>
-          <span className="tc-panel__meta">{t("match.lineup.startersMeta", { count: filledCount })}</span>
-        </div>
-        <div className="tc-table-wrap">
-          <table className="tc-table tc-table--compact">
-            <thead>
-              <tr>
-                <th scope="col">{t("squad.col.pos")}</th>
-                <th scope="col">{t("squad.col.name")}</th>
-                <th scope="col" className="tc-num">
-                  {t("squad.col.age")}
-                </th>
-                <th scope="col" className="tc-num">
-                  CA
-                </th>
-                <th scope="col" className="tc-num">
-                  {t("match.lineup.col.form")}
-                </th>
-                <th scope="col" className="tc-num">
-                  {t("match.lineup.col.fitness")}
-                </th>
-                <th scope="col">{t("match.lineup.col.usage")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {squadTableRows.map((row) => {
-                const form = lineupFormFromCareer(row.form);
-                const fit = stateMark(row.fitness, 75, 50);
-                return (
-                  <tr key={row.playerId} className={row.role === "start" ? "tc-row--mark" : undefined}>
-                    <td>{row.positionLabel}</td>
-                    <td>
-                      {onOpenPlayer ? (
-                        <button type="button" className="tc-linkbtn" onClick={() => onOpenPlayer(row.playerId)}>
-                          {row.displayName}
-                        </button>
-                      ) : (
-                        row.displayName
-                      )}
-                    </td>
-                    <td className="tc-num">{row.age}</td>
-                    <td className="tc-num">{row.ca}</td>
-                    <td className={`tc-num tc-state--${form.tone}`}>{form.label}</td>
-                    <td className={`tc-num tc-state--${fit.tone}`}>
-                      <span className="tc-lineup__fit">
-                        <LineupFatigueBars fitness={row.fitness} compact />
-                        <span aria-hidden>{fit.mark}</span>
-                        {row.fitness}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`tc-lineup__role${row.role === "start" ? " is-start" : ""}`}>
-                        {row.role === "start" ? t("match.lineup.role.start") : t("match.lineup.role.bench")}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-      )}
     </main>
   );
 }

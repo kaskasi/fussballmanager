@@ -77,7 +77,6 @@ export function CareerMatch({
   season = 1,
   masterSeed,
   scoutBoard,
-  onOpenOpponentScoutReport,
   onLineupPhaseChange,
   league,
   worldClubs,
@@ -108,7 +107,6 @@ export function CareerMatch({
   season?: number;
   masterSeed: number;
   scoutBoard?: ScoutBoard;
-  onOpenOpponentScoutReport?: (postfachItemId: string) => void;
   onLineupPhaseChange?: (inLineup: boolean) => void;
   league: LeagueState;
   worldClubs?: readonly WorldClub[];
@@ -194,7 +192,6 @@ export function CareerMatch({
         poorForm={poorForm}
         season={season}
         scoutBoard={scoutBoard}
-        onOpenOpponentScoutReport={onOpenOpponentScoutReport}
         onOpenPlayer={onSelectMatchPlayer}
         kasse={kasse}
         tacticsMode={tacticsMode}

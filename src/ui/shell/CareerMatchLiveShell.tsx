@@ -47,7 +47,6 @@ export function CareerMatchLiveShell({
   broadcastStory,
   fanbaseMood,
   poorForm,
-  onOpenOpponentScoutReport,
   onLineupPhaseChange,
   onResolvePress,
   overlays,
@@ -79,7 +78,6 @@ export function CareerMatchLiveShell({
   broadcastStory?: BroadcastStoryContext;
   fanbaseMood: FanbaseMood;
   poorForm: boolean;
-  onOpenOpponentScoutReport: (itemId: string) => void;
   onLineupPhaseChange: (inLineup: boolean) => void;
   /** PRD 28 — applies a presser to the save and returns what it did. */
   onResolvePress: PressConferenceBridge["resolve"];
@@ -153,7 +151,6 @@ export function CareerMatchLiveShell({
         scoutBoard={scoutBoard}
         tacticsMode={tacticsModeForCurtain(resolveFeatureCurtain(session.storyState))}
         showOpponentScout={resolveFeatureCurtain(session.storyState).opponent_scout_module}
-        onOpenOpponentScoutReport={onOpenOpponentScoutReport}
         onLineupPhaseChange={onLineupPhaseChange}
         press={pressBridge}
       />

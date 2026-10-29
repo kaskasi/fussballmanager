@@ -887,13 +887,6 @@
   scrollbar-gutter: stable;
 }
 
-.lineup-bench-list--fixed {
-  flex: none;
-  overflow: hidden;
-  grid-template-rows: repeat(9, minmax(var(--lineup-bench-slot-h), var(--lineup-bench-slot-h)));
-  height: calc(9 * var(--lineup-bench-slot-h) + 8 * 0.3rem);
-}
-
 .lineup-bench-slot--empty {
   height: var(--lineup-bench-slot-h);
   border: 1px dashed #e2e8f0;

@@ -1811,7 +1811,6 @@ export default function App() {
         broadcastStory={careerBroadcastStory}
         fanbaseMood={matchFanbaseMood}
         poorForm={matchPoorForm}
-        onOpenOpponentScoutReport={handleOpenOpponentScoutReport}
         onLineupPhaseChange={(inLineup) => {
           careerMatchInLineupRef.current = inLineup;
         }}

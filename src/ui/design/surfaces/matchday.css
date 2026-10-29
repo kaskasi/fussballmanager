@@ -15,14 +15,9 @@
 .tc-lineup__pitch { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2); }
 .tc-lineup__pitch .lineup-pitch-wrap { max-height: none; }
 .tc-lineup__pitch .opponent-scout-action .inbox-action { width: 100%; justify-content: center; }
-.tc-lineup__bench { --lineup-bench-slot-h: 4.6rem; display: grid; gap: var(--space-2); padding: var(--space-3); }
+.tc-lineup__bench { --lineup-bench-slot-h: 4.9rem; display: grid; gap: var(--space-2); padding: var(--space-3); }
 .tc-lineup__bench-head { align-items: center; margin-bottom: 0; }
 .tc-lineup__bench-head .tc-label { margin: 0; }
-/* Bench below the pitch: 3 × 3 on wide screens, one column on phones (page size stays 9). */
-.tc-lineup .lineup-bench-list--fixed { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-rows: var(--lineup-bench-slot-h); height: auto; gap: var(--space-2); }
-@media (min-width: 640px) {
-  .tc-lineup .lineup-bench-list--fixed { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
 .tc-lineup__pager { display: inline-flex; align-items: center; gap: var(--space-1); }
 .tc-lineup__pager .tc-iconbtn { width: var(--control-sm); height: var(--control-sm); }
 .tc-lineup__pager .tc-iconbtn:disabled { opacity: 0.4; cursor: default; }
@@ -36,10 +31,6 @@
 .tc-lineup__tuning summary { cursor: pointer; }
 .tc-lineup__ranges { display: grid; gap: var(--space-3); margin-top: var(--space-3); }
 
-.tc-lineup__squad { margin-top: var(--space-4); }
-.tc-lineup__fit { display: inline-flex; align-items: center; justify-content: flex-end; gap: var(--space-1); }
-.tc-lineup__role { color: var(--text-muted); font-size: var(--font-size-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-.tc-lineup__role.is-start { color: var(--positive); }
 
 /* §9.15 Matchday: Vorschau + Live */
 .tc-match__status { margin-bottom: var(--space-3); }
@@ -225,23 +216,25 @@ button.tc-stars__card:hover { background: var(--sunken); }
   .tc-zones__seg { transition: none; }
 }
 
-/* Tactics menu screen: tactics/analysis panels | portrait pitch | bench (stacked on small screens). */
+/* Lineup board (Tactics menu and matchday): tactics/analysis panels | portrait pitch | bench (stacked on small screens). */
 .tc-lineup--menu { max-width: none; margin: 0; }
-.tc-lineup--menu .tc-lineup__split,
-.tc-lineup--menu .tc-lineup__board { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); align-items: start; }
-.tc-lineup--menu .tc-lineup__board { display: contents; }
-.tc-lineup--menu .tc-lineup__pitch { order: 1; width: min(100%, 25rem, calc((100dvh - 16rem) * 0.648)); justify-self: center; }
-.tc-lineup--menu .tc-lineup__bench { order: 2; }
-.tc-lineup--menu .tc-stack { order: 3; }
-.tc-lineup--menu .lineup-pitch-wrap--vertical { aspect-ratio: 68 / 105; width: 100%; max-height: none; min-height: 0; flex: none; }
-.tc-lineup--menu .lineup-bench-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: var(--space-2); height: auto; }
+.tc-lineup--board .tc-lineup__split,
+.tc-lineup--board .tc-lineup__board { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); align-items: start; }
+.tc-lineup--board .tc-lineup__board { display: contents; }
+.tc-lineup--board .tc-lineup__pitch { order: 1; width: min(100%, 25rem, calc((100dvh - 16rem) * 0.648)); justify-self: center; }
+.tc-lineup--board .tc-lineup__bench { order: 2; }
+.tc-lineup--board .tc-stack { order: 3; }
+.tc-lineup--board .lineup-pitch-wrap--vertical { aspect-ratio: 68 / 105; width: 100%; max-height: none; min-height: 0; flex: none; }
+/* Paged bench: fixed row height, so a short last page keeps the panel's size. */
+.tc-lineup--board .lineup-bench-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); grid-auto-rows: var(--lineup-bench-slot-h); gap: var(--space-2); height: auto; overflow: visible; }
+.tc-lineup--board .lineup-bench-grid .lineup-pcard { overflow: hidden; }
 @media (min-width: 720px) {
-  .tc-lineup--menu .tc-lineup__split { grid-template-columns: minmax(0, 25rem) minmax(0, 1fr); }
-  .tc-lineup--menu .tc-stack { order: 3; grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); align-items: start; gap: var(--space-3); }
+  .tc-lineup--board .tc-lineup__split { grid-template-columns: minmax(0, 25rem) minmax(0, 1fr); }
+  .tc-lineup--board .tc-stack { order: 3; grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); align-items: start; gap: var(--space-3); }
 }
 @media (min-width: 1100px) {
-  .tc-lineup--menu .tc-lineup__split { grid-template-columns: minmax(16rem, 20rem) minmax(0, 25rem) minmax(14rem, 1fr); }
-  .tc-lineup--menu .tc-stack { order: 0; grid-column: 1; display: flex; flex-direction: column; align-items: stretch; }
+  .tc-lineup--board .tc-lineup__split { grid-template-columns: minmax(16rem, 20rem) minmax(0, 25rem) minmax(14rem, 1fr); }
+  .tc-lineup--board .tc-stack { order: 0; grid-column: 1; display: flex; flex-direction: column; align-items: stretch; }
 }
 
 /* §9.1 player cards: bench and pitch use the shared portrait-card look (faces.js in the club kit). */
@@ -257,10 +250,9 @@ button.tc-stars__card:hover { background: var(--sunken); }
 .lineup-pcard__meta { overflow: hidden; color: var(--text-muted); font-size: var(--font-size-xs); line-height: 1rem; text-overflow: ellipsis; white-space: nowrap; }
 .lineup-pcard__strip { padding-top: var(--space-1); border-top: 1px solid var(--line); }
 .lineup-pcard__strip .lineup-status-strip { justify-content: flex-start; }
-.tc-lineup .lineup-bench-list--fixed .lineup-pcard { overflow: hidden; }
 
 .tc-lineup .lineup-slot { display: grid; justify-items: center; width: 4.6rem; }
-.tc-lineup.tc-lineup--menu .lineup-slot { width: 4rem; }
+.tc-lineup.tc-lineup--board .lineup-slot { width: 4rem; }
 /* Pitch card: the portrait sits on the card's top edge like a sticker; one name line, slim strip. */
 .tc-lineup .lineup-slot-card { justify-items: center; gap: 1px; margin-top: 0.85rem; padding: 0 0.25rem 0.2rem; }
 .lineup-slot-face.tc-face { width: 1.75rem; height: 1.75rem; margin-top: -0.875rem; border: 2px solid var(--panel); box-shadow: 0 2px 6px rgb(15 23 42 / 22%); }
@@ -316,7 +308,3 @@ button.tc-stars__card:hover { background: var(--sunken); }
 .tc-matchprompt__pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .tc-eventlog__sub { display: inline-flex; color: var(--info); }
 .tc-eventlog__sub .tc-icon { width: 14px; height: 14px; }
-@media (max-width: 720px) {
-  .tc-lineup .lineup-pitch-wrap--vertical { aspect-ratio: 68 / 105; width: 100%; max-height: none; }
-  .tc-lineup .lineup-slot { width: 4rem; }
-}

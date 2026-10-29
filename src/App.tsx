@@ -379,6 +379,7 @@ import { hubBlockerCount } from "./hub/hub-blockers.ts";
 import { initAnalytics, trackScreen } from "./telemetry/analytics.ts";
 import { weekContextLabel } from "./telemetry/context.ts";
 import { committedTransferFees, scheduledTransferReason } from "./transfers/scheduled-transfers.ts";
+import { DEFAULT_DIVISION_ID } from "./sim/league-pyramid.ts";
 
 export default function App() {
   const locale = useLocale();
@@ -581,7 +582,7 @@ export default function App() {
   );
   const playerDivisionId = useMemo((): WorldDivisionId => {
     const club = world.clubs.find((entry) => worldCareerClubId(entry.id) === session.clubId);
-    return club?.division_id ?? "regionalliga-nord";
+    return club?.division_id ?? DEFAULT_DIVISION_ID;
   }, [session.clubId, world.clubs]);
 
   const shellClub = useMemo(() => {

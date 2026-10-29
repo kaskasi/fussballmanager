@@ -12,6 +12,7 @@ import { divisionLabel } from "./league-divisions.ts";
 import type { WorldClub } from "../world/world-generator.ts";
 import { indexRivalRoster, resolveCareerPlayer } from "./rival-roster-match.ts";
 import { rivalPlayersForTeam } from "./rival-engine-squad.ts";
+import { DEFAULT_DIVISION_ID, divisionOfClub, pyramidDivisionIds } from "./league-pyramid.ts";
 
 export interface ClubProfilePlayer {
   name: string;
@@ -140,10 +141,7 @@ export function divisionForClub(
   pools: Record<DivisionEconomyId, TeamId[]>,
   teamId: TeamId,
 ): DivisionEconomyId {
-  for (const divisionId of ["regionalliga-nord", "oberliga-nord"] as const) {
-    if (pools[divisionId]?.includes(teamId)) return divisionId;
-  }
-  return "regionalliga-nord";
+  return divisionOfClub(pools, teamId) ?? DEFAULT_DIVISION_ID;
 }
 
 function careerCaForStarter(
@@ -263,8 +261,5 @@ export function buildClubProfile(
 }
 
 export function clubsInPools(pools: Record<DivisionEconomyId, TeamId[]>): TeamId[] {
-  return [
-    ...clubIdsForDivision(pools, "regionalliga-nord"),
-    ...clubIdsForDivision(pools, "oberliga-nord"),
-  ];
+  return pyramidDivisionIds().flatMap((divisionId) => clubIdsForDivision(pools, divisionId));
 }

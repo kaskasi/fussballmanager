@@ -4,7 +4,8 @@ import type { Player } from "../../types/player.ts";
 import type { ClubStadium } from "../../stadium/club-stadium.ts";
 import type { DivisionEconomyId } from "../../economy/division-economy.ts";
 import { totalSeasonMatchdays, type LeagueState } from "../../persistence/league-state.ts";
-import { divisionLabel, REGIONALLIGA_ID, OBERLIGA_ID } from "../../sim/league-divisions.ts";
+import { divisionLabel } from "../../sim/league-divisions.ts";
+import { pyramidDivisionIds } from "../../sim/league-pyramid.ts";
 import { divisionLeaderLists, divisionStandings, leagueSliceForForm } from "../../sim/league-standings.ts";
 import { ClubProfileModal } from "../components/ClubProfileModal.tsx";
 import { LeagueLeaderLists } from "../components/LeagueLeaderLists.tsx";
@@ -13,7 +14,7 @@ import type { WorldClub } from "../../world/world-generator.ts";
 import { useT } from "../../i18n/react.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
 
-const DIVISIONS: DivisionEconomyId[] = [REGIONALLIGA_ID, OBERLIGA_ID];
+const DIVISIONS: DivisionEconomyId[] = pyramidDivisionIds();
 
 /**
  * WIREFRAME: docs/prd/design.md §9.7 — Tabellen. Built from tc- components (design.md §4.3).

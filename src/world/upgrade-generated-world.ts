@@ -11,30 +11,21 @@ import {
   persistedWorldState,
   WORLD_GENERATION_VERSION,
 } from "./world-generator.ts";
+import { DEFAULT_DIVISION_ID, divisionOfClub, emptyDivisionPools, PYRAMID } from "../sim/league-pyramid.ts";
 
 export function worldNeedsExpansion(save: SaveGame): boolean {
   const world = save.state.world;
   const league = save.state.league ?? defaultLeagueState();
-  const regCount = league.league_pools?.["regionalliga-nord"]?.length ?? league.club_ids.length;
-  const oberCount = league.league_pools?.["oberliga-nord"]?.length ?? 0;
+  const poolCount = (divisionId: DivisionEconomyId) =>
+    league.league_pools?.[divisionId]?.length ??
+    (divisionId === DEFAULT_DIVISION_ID ? league.club_ids.length : 0);
 
   return (
     world?.generation_version !== WORLD_GENERATION_VERSION ||
     (world?.clubs?.length ?? 0) < GENERATED_CLUB_COUNT ||
-    regCount < CLUBS_PER_DIVISION ||
-    oberCount < CLUBS_PER_DIVISION ||
+    PYRAMID.some((division) => poolCount(division.id) < division.clubCount) ||
     league.club_ids.length < CLUBS_PER_DIVISION
   );
-}
-
-function divisionForClub(
-  pools: Record<DivisionEconomyId, TeamId[]>,
-  clubId: TeamId,
-  fallback: DivisionEconomyId,
-): DivisionEconomyId {
-  if (pools["regionalliga-nord"].includes(clubId)) return "regionalliga-nord";
-  if (pools["oberliga-nord"].includes(clubId)) return "oberliga-nord";
-  return fallback;
 }
 
 export function expandGeneratedWorld(save: SaveGame): SaveGame {
@@ -44,11 +35,11 @@ export function expandGeneratedWorld(save: SaveGame): SaveGame {
   const playerEngineId = engineTeamId(playerCareerClubId);
   const existingLeague = save.state.league ?? defaultLeagueState();
 
-  const pools: Record<DivisionEconomyId, TeamId[]> = {
-    "regionalliga-nord": generated.league_pools["regionalliga-nord"].map(asTeamId),
-    "oberliga-nord": generated.league_pools["oberliga-nord"].map(asTeamId),
-  };
-  const divisionId = divisionForClub(pools, playerEngineId, existingLeague.division_id);
+  const pools = emptyDivisionPools<TeamId>();
+  for (const division of PYRAMID) {
+    pools[division.id] = (generated.league_pools[division.id] ?? []).map(asTeamId);
+  }
+  const divisionId = divisionOfClub(pools, playerEngineId) ?? existingLeague.division_id;
 
   save.state.world = persistedWorldState(generated);
   save.state.league = {

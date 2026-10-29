@@ -1,3 +1,4 @@
+import { tierOf } from "../sim/league-pyramid.ts";
 import type { TeamId } from "@fussballmanager/shared";
 import { divisionEconomy, normalizeFinances, type ClubFinances } from "../economy/club-finances.ts";
 import { defaultFinancingState, normalizeFinancingState } from "../economy/financing.ts";
@@ -88,8 +89,7 @@ export function financesForTeam(
 ): ClubFinances {
   const pools = session.league.league_pools ?? defaultLeaguePools();
   const divisionId = divisionForClub(pools, teamId);
-  const economy = divisionEconomy(divisionId);
-  const tierScale = economy.tier === 4 ? 0.55 : 1;
+  const tierScale = tierOf(divisionId) === 5 ? 0.55 : 1;
   const cash = Math.round(5_500_000 * tierScale);
   const transferBudget = Math.round(2_200_000 * tierScale);
   const wageBudget = Math.round(85_000 * tierScale);

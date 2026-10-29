@@ -3,6 +3,7 @@ import type { FixtureResult, PlayerSeasonStat, TeamId } from "@fussballmanager/s
 import type { DivisionEconomyId } from "../economy/division-economy.ts";
 import { CLUBS_PER_DIVISION } from "../world/world-generator.ts";
 import { DEFAULT_WORLD_SEED, defaultLeaguePools } from "../sim/league-divisions.ts";
+import { DEFAULT_DIVISION_ID, PYRAMID } from "../sim/league-pyramid.ts";
 
 /** 18-team double round robin: 17 opponents × 2 = 34 league games. */
 export const LEAGUE_MEETINGS_PER_OPPONENT = 2;
@@ -58,11 +59,11 @@ export function normalizeLeagueState(
   masterSeed = DEFAULT_WORLD_SEED,
 ): LeagueState {
   const base = league ?? defaultLeagueState();
-  const division_id = base.division_id ?? "regionalliga-nord";
+  const division_id = base.division_id ?? DEFAULT_DIVISION_ID;
   const storedPools = base.league_pools;
-  const regCount = storedPools?.["regionalliga-nord"]?.length ?? 0;
-  const oberCount = storedPools?.["oberliga-nord"]?.length ?? 0;
-  const poolsIncomplete = regCount < CLUBS_PER_DIVISION || oberCount < CLUBS_PER_DIVISION;
+  const poolsIncomplete = PYRAMID.some(
+    (division) => (storedPools?.[division.id]?.length ?? 0) < division.clubCount,
+  );
   const pools = poolsIncomplete || !storedPools
     ? defaultLeaguePools()
     : storedPools;
@@ -83,9 +84,9 @@ export function normalizeLeagueState(
 
 export function defaultLeagueState(): LeagueState {
   const pools = defaultLeaguePools();
-  const club_ids = pools["regionalliga-nord"];
+  const club_ids = pools[DEFAULT_DIVISION_ID];
   return {
-    division_id: "regionalliga-nord",
+    division_id: DEFAULT_DIVISION_ID,
     player_club_id: PLAYER_ENGINE_CLUB_ID,
     club_ids: [...club_ids],
     league_pools: pools,

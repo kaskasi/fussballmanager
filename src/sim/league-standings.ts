@@ -20,6 +20,7 @@ import {
 } from "./league-week.ts";
 import { simulatePartialDivisionSeason } from "./promotion-relegation.ts";
 import type { Player } from "../types/player.ts";
+import { pyramidDivision } from "./league-pyramid.ts";
 
 export interface DivisionStandings {
   divisionId: DivisionEconomyId;
@@ -31,9 +32,7 @@ export interface DivisionStandings {
 }
 
 function divisionSeed(masterSeed: number, season: number, divisionId: DivisionEconomyId): number {
-  let hash = masterSeed ^ season;
-  if (divisionId === "oberliga-nord") hash ^= 0x29a2_4f11;
-  return hash >>> 0;
+  return (masterSeed ^ season ^ pyramidDivision(divisionId).tableSalt) >>> 0;
 }
 
 export function divisionStandings(

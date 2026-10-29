@@ -163,12 +163,12 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 |---|---|---|---|
 | F10.1 | Liga-Betrieb Auto-Sim | M1 | Engine-Wrapper, Compressor-Modus für Fremdspiele |
 | F10.2 | Tabelle & Statistiken | M1 | Visuell: Formkurven, Sparklines |
-| F10.3 | Aufstieg/Abstieg | M1 | Real, inkl. Playoffs. M1 hat genau zwei Spielklassen, damit der Wechsel die Tabelle verlässt |
+| F10.3 | Aufstieg/Abstieg | M1 | Real, inkl. Playoffs, über alle fünf Spielklassen mit Regeln pro Grenze (PRD 32) |
 | F10.4 | KI nutzt Growth Engine | M1 | Rivalen entwickeln dieselben Regeln (Anti-Boredom, PRD 02) |
 | F10.5 | Liga-Drift | M2 | Ökonomie vieler Clubs hebt Ligadurchschnitt |
 | F10.6 | Internationaler Cup | M2 | Ab Qualifikationsrang, größerer Markt |
 | F10.7 | Nationalmannschaft | M3 | Berufungen als Event (Stolz/Belastung) |
-| F10.8 | Multi-League | M4 | Dritte Spielklasse und weitere Ligen über die zwei Klassen aus F10.3 hinaus |
+| F10.8 | Multi-League | M1 (Pyramide) / M4 (Ausland) | Fünfstufige Pyramide bis zur fiktiven Meisterliga mit Live-Tabellen (PRD 32, PRD 30 Phase 2); weitere Länder bleiben M4 |
 
 ### Modul 11 · Saison-Zyklus & Historie
 

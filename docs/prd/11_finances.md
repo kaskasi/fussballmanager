@@ -138,7 +138,7 @@ Alle Einnahmen laufen über `applyIncome(finances, line)` → erhöht `cash`. Tr
 | `tv_bonus` | Saisonende | `division.tv_season_bonus[table_place]` |
 | `player_sale` | Transfer Verkauf | Ablöse (PRD 05) |
 
-**Division-Defaults** (`/src/economy/division-economy.ts`):
+**Division-Defaults** (`/src/economy/division-economy.ts`). PRD 32 §6 ergänzt Meisterliga, Meisterliga 2 und Nationalliga und nummeriert die Stufen neu (Regionalliga 4, Oberliga 5); die Werte unten gelten weiter für diese beiden:
 
 ```json
 {

@@ -6,6 +6,7 @@ import type { Attributes, Player, PlayerName, PositionPrimary } from "../types/p
 import { deriveClubKitColors } from "./club-kit.ts";
 import { realCityForWorldRegion } from "./real-cities.ts";
 import { applyClubCameoPlayers, unionRendsburgClub } from "./world-cameos.ts";
+import { careerStartDivisionIds, emptyDivisionPools, tierOf, type DivisionId } from "../sim/league-pyramid.ts";
 
 export const WORLD_GENERATION_VERSION = 1;
 export const CLUBS_PER_DIVISION = 18;
@@ -15,7 +16,11 @@ export const GENERATED_PLAYER_COUNT = GENERATED_CLUB_COUNT * PLAYERS_PER_CLUB;
 export const NORDSTERN_TEAM_ID: TeamId = asTeamId("fc-nordstern");
 export const NORDSTERN_CLUB_ID = "cl_fc_nordstern";
 
-export type WorldDivisionId = "regionalliga-nord" | "oberliga-nord";
+export type WorldDivisionId = DivisionId;
+/** Divisions of the 36 original clubs, 18 each, in generation order (PRD 12). */
+const GENERATED_DIVISIONS = careerStartDivisionIds();
+/** Reputation base of generated clubs per tier. */
+const REPUTATION_BASE_BY_TIER: Record<number, number> = { 4: 40, 5: 24 };
 export type ClubIdentity =
   | "community"
   | "workers"
@@ -459,8 +464,7 @@ export function generateClubs(masterSeed: number): WorldClub[] {
   const usedShortNames = new Set<string>(["NOR"]);
 
   for (let index = 0; index < GENERATED_CLUB_COUNT; index++) {
-    const division_id: WorldDivisionId =
-      index < CLUBS_PER_DIVISION ? "regionalliga-nord" : "oberliga-nord";
+    const division_id: WorldDivisionId = GENERATED_DIVISIONS[Math.floor(index / CLUBS_PER_DIVISION)]!;
 
     if (index === 0) {
       clubs.push({
@@ -496,7 +500,7 @@ export function generateClubs(masterSeed: number): WorldClub[] {
     const prefix = pick(CLUB_PREFIXES, random);
     const suffix = pick(CLUB_SUFFIXES, random);
     const idHash = deriveWorldSeed(masterSeed, "club-id", index).toString(16).padStart(8, "0");
-    const reputationBase = division_id === "regionalliga-nord" ? 40 : 24;
+    const reputationBase = REPUTATION_BASE_BY_TIER[tierOf(division_id)] ?? 24;
 
     const teamId = `world-${idHash}-${index}`;
     clubs.push({
@@ -577,14 +581,9 @@ function assignLocalRivalries(clubs: readonly WorldClub[]): WorldClub[] {
 }
 
 function divisionPools(clubs: readonly WorldClub[]): Record<WorldDivisionId, string[]> {
-  return {
-    "regionalliga-nord": clubs
-      .filter((club) => club.division_id === "regionalliga-nord")
-      .map((club) => club.id),
-    "oberliga-nord": clubs
-      .filter((club) => club.division_id === "oberliga-nord")
-      .map((club) => club.id),
-  };
+  const pools = emptyDivisionPools<string>();
+  for (const club of clubs) pools[club.division_id].push(club.id);
+  return pools;
 }
 
 /** Club strength the roster was generated at (attribute base scale). */
@@ -592,7 +591,7 @@ export function startingClubStrength(masterSeed: number, club: WorldClub, clubIn
   if (club.id === NORDSTERN_TEAM_ID) return 68.5;
   if (club.name === "Union Rendsburg") return 71;
   const random = mulberry32(deriveWorldSeed(masterSeed, "club-strength", clubIndex));
-  if (club.division_id === "oberliga-nord") return 60 + random() * 14;
+  if (tierOf(club.division_id) === 5) return 60 + random() * 14;
   // Three nearby survival rivals keep the underdog start difficult but playable.
   if (clubIndex <= 3) return 69.5 + random() * 2;
   return 78 + random() * 5;

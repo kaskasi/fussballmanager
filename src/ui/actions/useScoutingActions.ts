@@ -57,6 +57,7 @@ import type { ClubEventKind } from "../../inbox/club-events.ts";
 import type { MarketFilters } from "../../scouting/market-list.ts";
 import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
 import { trackEvent } from "../../telemetry/analytics.ts";
+import { DEFAULT_DIVISION_ID } from "../../sim/league-pyramid.ts";
 
 type PatchSession = (updater: (current: GameSession) => GameSession) => void;
 type SessionWithEvent = (
@@ -246,7 +247,7 @@ export function useScoutingActions(args: {
         if (!club) return current;
         const division =
           current.world.clubs.find((entry) => worldCareerClubId(entry.id) === current.clubId)
-            ?.division_id ?? "regionalliga-nord";
+            ?.division_id ?? DEFAULT_DIVISION_ID;
         const discovery = normalizeDiscovery(current.scoutBoard.discovery);
         if (!canEnqueueScoutTrip(club, division, discovery, current.world.clubs)) {
           return current;

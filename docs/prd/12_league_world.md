@@ -22,7 +22,7 @@ Demo-Datensatzes.
 
 **In (M1):**
 
-- zwei Spielklassen mit je 18 Clubs,
+- fünf Spielklassen mit je 18 Clubs (PRD 32, PRD 30 Phase 2; bis PRD 32 Slice 2 nur Regionalliga Nord und Oberliga Nord),
 - 34 Ligaspieltage pro Club als Hin- und Rückrunde,
 - fiktionale Club- und Spieleridentitäten,
 - Vereins-Heimfarben (`WorldClub.kit`) für Bust-Portraits — PRD 26,
@@ -35,7 +35,7 @@ Demo-Datensatzes.
 **Out:**
 
 - reale Clubs, Spieler, Ligen oder Lizenzdaten,
-- dritte Spielklasse und weitere Länder (F10.8, M4),
+- weitere Länder (F10.8 bleibt für Ausland M4; die Spielklassen 1–3 kommen mit PRD 32),
 - internationale Wettbewerbe (F10.6),
 - Nationalmannschaften (F10.7),
 - dynamisch neu erzeugte Welt beim Laden eines Saves,
@@ -102,7 +102,7 @@ interface WorldClub {
   name: string;
   short_name: string;
   region: string;
-  division_id: "regionalliga-nord" | "oberliga-nord";
+  division_id: DivisionId; // PRD 32 Registry: "meisterliga" | "meisterliga-2" | "nationalliga" | "regionalliga-nord" | "oberliga-nord"
   identity: "community" | "workers" | "academy" | "traditional" | "ambitious";
   reputation: number; // 0–100, keine Spieler-Potentialskala
   rivalry_ids: string[];
@@ -143,8 +143,11 @@ das spätere Einfügen eines Clubs alle folgenden Spieler verändern.
 
 | Spielklasse | Clubs | Begegnungen | Spiele pro Club |
 |---|---:|---:|---:|
-| Regionalliga Nord | 18 | Hin- und Rückrunde | 34 |
-| Oberliga Nord | 18 | Hin- und Rückrunde | 34 |
+| Meisterliga (Stufe 1, PRD 32) | 18 | Hin- und Rückrunde | 34 |
+| Meisterliga 2 (Stufe 2, PRD 32) | 18 | Hin- und Rückrunde | 34 |
+| Nationalliga (Stufe 3, PRD 32) | 18 | Hin- und Rückrunde | 34 |
+| Regionalliga Nord (Stufe 4) | 18 | Hin- und Rückrunde | 34 |
+| Oberliga Nord (Stufe 5) | 18 | Hin- und Rückrunde | 34 |
 
 Regeln:
 
@@ -155,7 +158,7 @@ Regeln:
 - Oberliga Platz 1 steigt direkt auf.
 - Regionalliga Platz 17 und Oberliga Platz 2 spielen Relegation.
 - Der Spielerclub kann auf- und absteigen. Kein Schutz.
-- Die Welt enthält in M1 genau diese zwei Spielklassen, entsprechend F10.3.
+- Grenzen über der Regionalliga: je 2 direkte Auf- und Absteiger plus Relegation (16. gegen 3.), PRD 32 §3. Bis PRD 32 Slice 3 bleibt die Grenze Nationalliga ↔ Regionalliga geschlossen.
 
 Der Ligakalender umfasst 34 Spieltage. Spieltag 1 liegt Ende August (KW 35),
 nicht in KW 1. Saisonabschluss, Awards, Vorstandsauswertung und Intake laufen

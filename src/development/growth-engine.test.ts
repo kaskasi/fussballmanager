@@ -4,7 +4,9 @@ import {
   applyGrowth,
   attributeSigma,
   calculateWeeklyGrowth,
+  DECLINE_CURVES,
   decayPerWeek,
+  declinePercentPerYear,
   sampleNoise,
   type WeeklyGrowthInput,
 } from "./growth-engine.ts";
@@ -56,7 +58,7 @@ describe("PRD 02.7 growth invariants", () => {
     expect(delta).toBeGreaterThan(0.25);
   });
 
-  it("age 30, unused, grows slowly", () => {
+  it("age 30, unused, technique starts to slip", () => {
     const delta = growth({
       age: 30,
       attribute: "passing",
@@ -65,8 +67,8 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 0.8,
       minutes: 0,
     });
-    expect(delta).toBeCloseTo(0.07 * 0.65 * 1 * 0.8 * 0.7 * 1.25, 5);
-    expect(delta).toBeLessThan(0.04);
+    expect(delta).toBeCloseTo(0.07 * 0.15 * 1 * 0.8 * 0.7 * 1.25 - (140 * 1.75) / 100 / 52, 5);
+    expect(delta).toBeLessThan(0);
   });
 
   it("age 25 at 180 applies the 0.3 soft cap before the clamp", () => {
@@ -93,9 +95,10 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 1,
       minutes: 0,
     });
-    expect(delta).toBeCloseTo(0.07 * 0.28 * 0.7 * 1.25 - 1.5 / 52, 5);
+    // Pace from 27: 1.5 % + 1 % per year → 7.5 % of 130 per year at 33.
+    expect(delta).toBeCloseTo(0.07 * 0.05 * 0.7 * 1.25 - (130 * 7.5) / 100 / 52, 5);
     expect(delta).toBeLessThan(0);
-    expect(decayPerWeek("pace", 33)).toBeCloseTo(1.5 / 52, 8);
+    expect(decayPerWeek("pace", 33, 130)).toBeCloseTo((130 * 0.075) / 52, 8);
   });
 });
 
@@ -147,22 +150,37 @@ describe("growth constraints", () => {
     }
   });
 
-  it("loads the published decline ages", () => {
+  it("mirrors the published decline curves", () => {
     const curves = JSON.parse(
       readFileSync(new URL("../../data/rules/growth_curves.json", import.meta.url), "utf8"),
     ) as {
       learning_base_points_per_week: number;
-      pace: { decline_start: number };
-      stamina: { decline_start: number };
-      leadership: { per_year: number };
+      decline_percent_per_year: Record<
+        string,
+        { start: number; first: number; step: number; cap: number } | null | string
+      >;
     };
     expect(curves.learning_base_points_per_week).toBe(0.07);
-    expect(curves.pace.decline_start).toBe(25);
-    expect(curves.stamina.decline_start).toBe(27);
-    expect(curves.leadership.per_year).toBe(0);
-    expect(decayPerWeek("pace", 24)).toBe(0);
-    expect(decayPerWeek("stamina", 27)).toBeCloseTo(1.2 / 52, 8);
-    expect(decayPerWeek("leadership", 40)).toBe(0);
+    for (const [group, curve] of Object.entries(DECLINE_CURVES)) {
+      expect(curves.decline_percent_per_year[group]).toEqual({
+        start: curve.start,
+        first: curve.firstPct,
+        step: curve.stepPct,
+        cap: curve.capPct,
+      });
+    }
+    expect(curves.decline_percent_per_year.leadership).toBeNull();
+    expect(decayPerWeek("pace", 26, 120)).toBe(0);
+    expect(decayPerWeek("stamina", 28, 100)).toBeCloseTo(1.5 / 52, 8);
+    expect(decayPerWeek("leadership", 40, 150)).toBe(0);
+  });
+
+  it("takes pace and stamina first, technique later, the head last", () => {
+    expect(declinePercentPerYear("pace", 30)).toBeGreaterThan(declinePercentPerYear("passing", 30));
+    expect(declinePercentPerYear("passing", 30)).toBeGreaterThan(declinePercentPerYear("positioning", 30));
+    expect(declinePercentPerYear("positioning", 30)).toBe(0);
+    expect(declinePercentPerYear("gk_handling", 31)).toBe(0);
+    expect(declinePercentPerYear("pace", 45)).toBe(8);
   });
 
   it("an injured week has no positive term, so only decay remains", () => {
@@ -176,7 +194,7 @@ describe("growth constraints", () => {
       injured: true,
       focusSlots: 1,
     });
-    expect(delta).toBeCloseTo(-(1.5 / 52), 5);
+    expect(delta).toBeCloseTo(-(130 * 7.5) / 100 / 52, 5);
   });
 
   it("clamps a weekly delta to +5 and stores at most 199", () => {

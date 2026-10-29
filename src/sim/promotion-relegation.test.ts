@@ -20,7 +20,6 @@ describe("promotion and relegation", () => {
   it("swaps champion and relegated club after a full season", () => {
     const pools = defaultLeaguePools();
     const regIds = pools["regionalliga-nord"];
-    const oberIds = pools["oberliga-nord"];
     const results = simulateFullDivisionSeason(regIds, 2, 4242);
     const league = {
       ...defaultLeagueState(),

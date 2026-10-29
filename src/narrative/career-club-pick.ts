@@ -16,6 +16,7 @@ import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
 import { applySurvivalObjectivesToBoard } from "./season-objectives.ts";
 import type { ActiveArc } from "./story-state.ts";
+import { bottomDivisionId, careerStartDivisionIds } from "../sim/league-pyramid.ts";
 
 export interface CareerClubChoice {
   teamId: TeamId;
@@ -41,7 +42,7 @@ function averageCa(players: readonly Player[], careerClubId: string): number {
 }
 
 export function careerArcForChoice(divisionId: DivisionEconomyId, tier: ClubStandingTier): ActiveArc {
-  if (divisionId === "oberliga-nord") return "promotion_push";
+  if (divisionId === bottomDivisionId()) return "promotion_push";
   return tier === "survival_low" || tier === "survival_mid" ? "relegation_battle" : "club_ambition";
 }
 
@@ -50,7 +51,7 @@ export function careerClubChoices(session: GameSession): CareerClubChoice[] {
   const pools = session.league.league_pools ?? defaultLeaguePools();
   const squads = [...session.players, ...session.rivalPlayers];
   const choices: CareerClubChoice[] = [];
-  for (const divisionId of ["regionalliga-nord", "oberliga-nord"] as const) {
+  for (const divisionId of careerStartDivisionIds()) {
     const ranked = (pools[divisionId] ?? [])
       .map((teamId) => ({ teamId, avgCa: averageCa(squads, careerTeamId(teamId)) }))
       .sort((left, right) => right.avgCa - left.avgCa || left.teamId.localeCompare(right.teamId));

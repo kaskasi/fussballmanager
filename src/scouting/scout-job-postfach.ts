@@ -22,6 +22,7 @@ import { SCOUT_MAP_ZONES } from "./scout-region-map.ts";
 import { initialEstimateForPlayer } from "./market-list.ts";
 
 import type { OpponentScoutReport } from "./opponent-scout-bundle.ts";
+import { DEFAULT_DIVISION_ID } from "../sim/league-pyramid.ts";
 
 export type ScoutJobCompleteKind = "region_complete" | "club_complete" | "opponent_scout_complete";
 
@@ -173,7 +174,7 @@ export function noticesFromDiscoveryJobAdvance(input: {
   if (input.before.active_region_scout && !input.after.active_region_scout) {
     const zoneId = input.before.active_region_scout.zone_id;
     const tier = regionScoutTier(afterDiscovery, zoneId);
-    const division = input.playerDivisionId ?? "regionalliga-nord";
+    const division = input.playerDivisionId ?? DEFAULT_DIVISION_ID;
     const visibleCount = clubsInZone(input.worldClubs, zoneId).filter((club) =>
       isClubDirectoryVisible(club, division, afterDiscovery, input.worldClubs),
     ).length;

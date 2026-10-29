@@ -21,6 +21,7 @@ import { estimateCa } from "./market-value.ts";
 import { sellerAskingPrice, type TransferState } from "./negotiations.ts";
 import type { TransferListing } from "./transfer-listings.ts";
 import { YOUTH_CAMP_NATIONS } from "../youth/satellite-camps.ts";
+import { bottomDivisionId, divisionAbove } from "../sim/league-pyramid.ts";
 
 export interface OpeningMarketArchetype {
   id: "oberliga_step_up" | "veteran_challenge" | "wage_unrest_star" | "camp_export_gem";
@@ -129,8 +130,9 @@ export function buildOpeningTransferMarket(input: {
   const byDivision = (division: WorldDivisionId) =>
     pros.filter((player) => clubDivision(input.worldClubs, player.club_id!) === division);
 
-  const oberliga = byDivision("oberliga-nord");
-  const regionalliga = byDivision("regionalliga-nord");
+  // The bottom tier and the one above it: step-up talents from below, veterans and stars from the career's tier.
+  const oberliga = byDivision(bottomDivisionId());
+  const regionalliga = byDivision(divisionAbove(bottomDivisionId()) ?? bottomDivisionId());
 
   const archetypes: OpeningMarketArchetype[] = [];
   const pickedIds = new Set<string>();

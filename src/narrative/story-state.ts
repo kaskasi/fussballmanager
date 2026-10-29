@@ -110,6 +110,16 @@ export interface StoryInboxPayload {
   body: string;
   source: StoryBeatSource;
   choices: Array<{ id: string; label: string; icon: string }>;
+  /** Detection context (names, tiers) so the localized body can be rebuilt at render time. */
+  context?: Record<string, string | number>;
+}
+
+/** PRD 28 crisis beats fire once a season (`<template>_s<season>`); text and effects key on the template. */
+const SEASONAL_BEAT_PREFIXES = ["morale_crisis_", "press_crisis_"] as const;
+
+export function storyBeatTemplateId(beatId: string): string {
+  if (!SEASONAL_BEAT_PREFIXES.some((prefix) => beatId.startsWith(prefix))) return beatId;
+  return beatId.replace(/_s\d+$/, "");
 }
 
 /** PRD 25 — per-save coach mark progress (screen ids match shell Screen). */

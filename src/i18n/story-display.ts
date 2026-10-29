@@ -1,4 +1,9 @@
-import type { FanFeedBeat, StoryCast, StoryInboxPayload } from "../narrative/story-state.ts";
+import {
+  storyBeatTemplateId,
+  type FanFeedBeat,
+  type StoryCast,
+  type StoryInboxPayload,
+} from "../narrative/story-state.ts";
 import { t } from "./index.ts";
 
 type StoryContext = Record<string, string | number | undefined>;
@@ -14,9 +19,10 @@ export function localizeStoryInbox(
   cast: StoryCast,
   context: StoryContext = {},
 ): StoryInboxPayload {
-  const beatId = payload.beatId;
+  const beatId = storyBeatTemplateId(payload.beatId);
+  const merged: StoryContext = { ...payload.context, ...context };
   const title = localizedStoryTitle(beatId, cast, payload.title);
-  const body = localizedStoryBody(beatId, cast, context, payload.body);
+  const body = localizedStoryBody(beatId, cast, merged, payload.body);
   const choices = payload.choices.map((choice) => ({
     ...choice,
     label: localizedChoiceLabel(beatId, choice.id, choice.label),
@@ -28,10 +34,15 @@ function localizedStoryTitle(beatId: string, cast: StoryCast, fallback: string):
   switch (beatId) {
     case "press_hostile_bad_week":
     case "sell_star_press":
+    case "morale_crisis_leak":
+    case "press_crisis_campaign":
       return cast.journalist_hostile_name;
     case "press_ally_support":
+    case "press_crisis_boycott":
       return cast.journalist_ally_name;
     case "assistant_low_morale":
+    case "morale_crisis_assistant":
+    case "press_crisis_papers":
       return cast.assistant_name;
     case "captain_speak":
       return t("story.beat.captain_speak.title");
@@ -69,6 +80,20 @@ function localizedStoryBody(
       return context.opponent
         ? t("story.beat.derby_week.bodyNamed", { opponent: String(context.opponent) })
         : t("story.beat.derby_week.body");
+    case "morale_crisis_council":
+      return context.captainName
+        ? t("story.beat.morale_crisis_council.bodyNamed", { captainName: String(context.captainName) })
+        : t(key);
+    case "morale_crisis_assistant":
+      return t(`story.beat.morale_crisis_assistant.body.${String(context.tier ?? "solid")}`, {
+        assistantName: cast.assistant_name,
+      });
+    case "morale_crisis_requests":
+      return context.players
+        ? t("story.beat.morale_crisis_requests.bodyNamed", { players: String(context.players) })
+        : t(key);
+    case "press_crisis_boycott":
+      return t(key, { allyName: cast.journalist_ally_name });
     default: {
       let value = t(key, {
         assistant: cast.assistant_name,

@@ -6,7 +6,7 @@
  * pipeline, so a presser never blocks a skip and never fires twice.
  */
 
-import type { FixtureResult } from "@fussballmanager/shared";
+import type { FixtureResult, TeamId } from "@fussballmanager/shared";
 import type { GameSession } from "../persistence/game-session.ts";
 import { clampMediaHype } from "../narrative/story-state.ts";
 import { assistantQuality } from "../staff/assistant-delegation.ts";
@@ -45,8 +45,8 @@ export function pressFixtureKey(season: number, matchday: number): string {
 
 export interface PressMatchContext {
   matchday: number;
-  homeTeamId: string;
-  awayTeamId: string;
+  homeTeamId: TeamId;
+  awayTeamId: TeamId;
   opponentName: string;
   /** Pre-match: the confirmed XI. */
   starterIds?: readonly string[];

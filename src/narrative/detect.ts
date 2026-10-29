@@ -10,6 +10,18 @@ import { isInRelegationZone, RELEGATION_ZONE_PLACE } from "./season-objectives.t
 import { hospitalityDocked } from "../stadium/hospitality.ts";
 import { shouldRepeatRestaurantWedding } from "../stadium/precinct-campus-events.ts";
 import type { StoryState } from "./story-state.ts";
+import { assistantQualityTier } from "../staff/assistant-delegation.ts";
+import { careerWeekIndex } from "../stadium/hospitality.ts";
+import { formatPlayerName } from "../types/player-display.ts";
+import { isPressBoycott, normalizePressState } from "../press/press-state.ts";
+import {
+  MORALE_CRISIS_DEEP_WEEKS,
+  MORALE_CRISIS_WEEKS,
+  PRESS_PAPERS_LINE,
+  PRESS_ULTIMATUM_CAMPAIGN_WEEKS,
+  PRESS_ULTIMATUM_LINE,
+  seasonBeatId,
+} from "../press/press-week.ts";
 
 export type NarrativeBeatKind = "fan_feed" | "inbox";
 
@@ -132,6 +144,59 @@ export interface DetectContext {
   world: WorldState;
   playerFixture: FixtureResult | null;
   recentSale?: boolean;
+  /** PRD 28 — the crisis proposal reads like the assistant's skill. */
+  assistantQuality?: number;
+}
+
+/** PRD 28 — dressing-room collapse and press relationship ladder (once a season each). */
+function detectCrisisBeats(context: DetectContext): DetectedBeat[] {
+  const beats: DetectedBeat[] = [];
+  const id = (templateId: string) => seasonBeatId(templateId, context.season);
+  const lowWeeks = context.story.morale_low_weeks ?? 0;
+
+  if (lowWeeks >= MORALE_CRISIS_WEEKS) {
+    const captain = context.players.find((player) => player.id === context.story.cast.captain_player_id);
+    beats.push({
+      beatId: id("morale_crisis_council"),
+      kind: "inbox",
+      context: captain ? { captainName: formatPlayerName(captain) } : {},
+    });
+    beats.push({
+      beatId: id("morale_crisis_assistant"),
+      kind: "inbox",
+      context: { tier: assistantQualityTier(context.assistantQuality ?? 55) },
+    });
+  }
+  if (lowWeeks >= MORALE_CRISIS_DEEP_WEEKS) {
+    beats.push({ beatId: id("morale_crisis_leak"), kind: "inbox" });
+    const leaving = proSquad(context.players, context.clubId).filter((player) => player.state.desire_to_leave);
+    if (leaving.length > 0) {
+      beats.push({
+        beatId: id("morale_crisis_requests"),
+        kind: "inbox",
+        context: { players: leaving.slice(0, 2).map(formatPlayerName).join(" & ") },
+      });
+    }
+  }
+
+  const press = normalizePressState(context.story.press);
+  const now = careerWeekIndex(context.season, context.week);
+  if (press.campaign_since != null) {
+    beats.push({ beatId: id("press_crisis_campaign"), kind: "inbox" });
+    if (
+      press.relationship < PRESS_ULTIMATUM_LINE &&
+      now - press.campaign_since >= PRESS_ULTIMATUM_CAMPAIGN_WEEKS
+    ) {
+      beats.push({ beatId: id("press_crisis_ultimatum"), kind: "inbox" });
+    }
+  }
+  if (press.relationship < PRESS_PAPERS_LINE) {
+    beats.push({ beatId: id("press_crisis_papers"), kind: "inbox" });
+  }
+  if (isPressBoycott(press, now)) {
+    beats.push({ beatId: id("press_crisis_boycott"), kind: "inbox" });
+  }
+  return beats;
 }
 
 export function detectWeeklyBeats(context: DetectContext): DetectedBeat[] {
@@ -276,6 +341,8 @@ export function detectWeeklyBeats(context: DetectContext): DetectedBeat[] {
   if (context.recentSale && !fired.has(`sell_star_press_${context.week}`)) {
     beats.push({ beatId: "sell_star_press", kind: "inbox" });
   }
+
+  beats.push(...detectCrisisBeats(context));
 
   if (survivalArc && isInRelegationZone(place) && context.week >= 10 && roll("fan_worry_table") < 0.25) {
     beats.push({

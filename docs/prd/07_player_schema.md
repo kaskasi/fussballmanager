@@ -41,7 +41,7 @@ Task-ID: `F-TYP-1` (P0, vor F2.2). Reiner Schema-Task, zählt nicht in die 92 Fe
 ```typescript
 interface Player {
   // ── Identität ─────────────────────────────
-  id: string;                    // "pl_" + genau 5 Ziffern, unique global
+  id: string;                    // "pl_" + 5 Ziffern, oder "pl_s<Saison>c<Klub>n<Slot>" für KI-Neuzugänge (PRD 31); unique global, nie wiederverwendet
   name: PlayerName;
   birth: { date: string; place: string; region: string }; // date = ISO YYYY-MM-DD
   nationality: string;
@@ -87,6 +87,7 @@ interface Player {
     scoring_streak?: number;                 // F2.8 Chancentod
     last_match_goals?: number;               // F2.8 hat-trick clear
     youth_site?: "hq" | string;              // F3.9; missing = "hq"
+    peak_ca?: number;                        // PRD 31, bester CA, am Saisonende aktualisiert
   };
 
   // ── Geschichte & Analytics ──────────────────
@@ -97,6 +98,8 @@ interface Player {
     milestones: MilestoneEvent[];
     /** Pre-F2.8 flavor labels only (veteran wallpaper). Not mechanical. */
     career_stamps?: string[];
+    /** PRD 31: [season, club_id, division_id, apps, goals] pro beendeter Saison, eigene und KI-Spieler. */
+    season_lines?: SeasonLine[];
   };
 
   // ── F2.8 Fähigkeiten / Bonus-Stamps ────────
@@ -275,7 +278,7 @@ const SKILLS = [
 ] as const;
 
 function validatePlayer(p: Player, asOfIso: string): boolean {
-  if (!/^pl_\d{5}$/.test(p.id)) return false;
+  if (!/^pl_(\d{5}|s\d+c\d+n\d+)$/.test(p.id)) return false;
 
   for (const key of SKILLS) {
     const value = p.attributes[key];

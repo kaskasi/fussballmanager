@@ -176,7 +176,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 |---|---|---|---|
 | F11.1 | Sommerpause-Flow | M1 | Timeline-Checklist: Verträge, Intake, Planung |
 | F11.2 | Saison-Awards | M1 | Torschützenkönig etc. als Karten-Galerie |
-| F11.3 | Karriere-Enden | M2 | Ruhestand mit `retired.json`-Schreiben |
+| F11.3 | Karriere-Enden | M1 | Ruhestand für eigene und KI-Spieler mit `retired.json`-Schreiben, KI-Jugend und Kaderauffüllung (PRD 31) |
 | F11.4 | Vereinschronik | M3 | Grafische Timeline, Trophäenschrank 2D |
 | F11.5 | Wiedergänger | M3 | Ex-Profis als Trainer/Scout/Mentor |
 | F11.6 | Meilensteine | M3 | „500. Ligaspiel" (Player-Schema `milestones`) |

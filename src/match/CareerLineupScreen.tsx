@@ -68,6 +68,7 @@ import type { ScoutNetworkState } from "../scouting/scout-network.ts";
 import { opponentScoutMatchIdFromSetup } from "../scouting/opponent-scout-match-id.ts";
 import { opponentScoutNoticeForMatch } from "../scouting/scout-job-postfach.ts";
 import { LineupIndicatorLegend } from "../ui/components/LineupIndicatorLegend.tsx";
+import { useMobileNarrow } from "../ui/hooks/use-mobile-narrow.ts";
 import { useT } from "../i18n/react.ts";
 
 type CareerLineupScreenProps = {
@@ -145,6 +146,8 @@ export function CareerLineupScreen({
     normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId).assignments,
   );
   const [drag, setDrag] = useState<LineupDrag | null>(null);
+  // Portrait cards need room: phones get the upright pitch the Tactics menu uses.
+  const narrow = useMobileNarrow();
   const [benchPage, setBenchPage] = useState(0);
 
   const playersById = useMemo(
@@ -451,7 +454,7 @@ export function CareerLineupScreen({
               onMoveSlot={moveSlot}
               onDrag={setDrag}
               onOpenPlayer={onOpenPlayer}
-              orientation={variant === "menu" ? "vertical" : "horizontal"}
+              orientation={variant === "menu" || narrow ? "vertical" : "horizontal"}
             />
             <p className="tc-caption tc-lineup__hint">{t("match.lineup.moveHint")}</p>
             {variant === "match" && showOpponentScout && scoutBoard && onOpenOpponentScoutReport ? (

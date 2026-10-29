@@ -1100,6 +1100,7 @@
   "match.report.badge.goals": "进球",
   "match.report.badge.goalsShort": "{count} 球",
   "match.report.cards": "红黄牌",
+  "match.report.cardsAndSubs": "红黄牌与换人",
   "match.report.col.events": "事件",
   "match.report.goals": "进球",
   "match.report.kasse": "比赛日收入",

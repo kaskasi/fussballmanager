@@ -1137,6 +1137,7 @@
   "match.report.badge.goals": "Goals",
   "match.report.badge.goalsShort": "{count} G",
   "match.report.cards": "Cards",
+  "match.report.cardsAndSubs": "Cards & substitutions",
   "match.report.col.events": "Events",
   "match.report.goals": "Goals",
   "match.report.kasse": "Gate",

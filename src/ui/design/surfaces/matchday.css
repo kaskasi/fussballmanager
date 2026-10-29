@@ -89,7 +89,8 @@
 .tc-match__play:hover { background: var(--accent-strong); }
 .tc-match__speed { display: inline-flex; align-items: center; gap: var(--space-2); margin-left: auto; }
 .tc-match__speed .tc-select { min-width: 4.5rem; }
-.tc-match__side .tc-tabs { gap: var(--space-4); }
+/* Four tabs (incl. Wechsel) share the 320px column: tighter gap, no clipped label. */
+.tc-match__side .tc-tabs { gap: var(--space-3); }
 .tc-match__tabpanel { display: grid; gap: var(--space-3); min-height: 12rem; align-content: start; }
 
 /* Event log (live tab and report): minute · ●/○ · name (A: …) · card */
@@ -315,3 +316,7 @@ button.tc-stars__card:hover { background: var(--sunken); }
 .tc-matchprompt__pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .tc-eventlog__sub { display: inline-flex; color: var(--info); }
 .tc-eventlog__sub .tc-icon { width: 14px; height: 14px; }
+@media (max-width: 720px) {
+  .tc-lineup .lineup-pitch-wrap--vertical { aspect-ratio: 68 / 105; width: 100%; max-height: none; }
+  .tc-lineup .lineup-slot { width: 4rem; }
+}

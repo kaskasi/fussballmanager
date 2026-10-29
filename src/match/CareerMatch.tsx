@@ -279,7 +279,9 @@ function CareerMatchPlayback({
   const [subRequests, setSubRequests] = useState<MatchSubstitutionRequest[]>([]);
   const [rebuilding, setRebuilding] = useState(false);
   const [prompt, setPrompt] = useState<{ kind: "injury" | "halftime"; seq: number } | null>(null);
+  /** Injury stops already shown; half-time is tracked apart, its seq moves when a change lands there. */
   const [handledStops, setHandledStops] = useState<ReadonlySet<number>>(() => new Set());
+  const [halfTimeHandled, setHalfTimeHandled] = useState(false);
   /** Seq of the stop playback is holding at; a change made now comes after it. */
   const [holdSeq, setHoldSeq] = useState<number | null>(null);
   const [sideTab, setSideTab] = useState<MatchSideTab>("events");
@@ -311,16 +313,19 @@ function CareerMatchPlayback({
   const halfTime = useMemo(() => (view ? halfTimeSeq(view) : null), [view]);
   const stops = useMemo(() => {
     if (!view) return [];
-    const seqs = [...(halfTime !== null ? [halfTime] : []), ...ownInjurySeqs(view, ownTeamId)];
-    return seqs.filter((seq) => !handledStops.has(seq)).sort((a, b) => a - b);
-  }, [view, halfTime, ownTeamId, handledStops]);
+    const injuries = ownInjurySeqs(view, ownTeamId).filter((seq) => !handledStops.has(seq));
+    const half = halfTime !== null && !halfTimeHandled ? [halfTime] : [];
+    return [...half, ...injuries].sort((a, b) => a - b);
+  }, [view, halfTime, halfTimeHandled, ownTeamId, handledStops]);
   const onStop = useCallback(
     (seq: number) => {
-      setHandledStops((current) => new Set(current).add(seq));
+      const isHalfTime = seq === halfTime && !halfTimeHandled;
+      if (isHalfTime) setHalfTimeHandled(true);
+      else setHandledStops((current) => new Set(current).add(seq));
       setHoldSeq(seq);
-      setPrompt({ kind: seq === halfTime ? "halftime" : "injury", seq });
+      setPrompt({ kind: isHalfTime ? "halftime" : "injury", seq });
     },
-    [halfTime],
+    [halfTime, halfTimeHandled],
   );
   const [highlightLevel, setHighlightLevel] = useMatchHighlightLevel();
   const matchFetchKey = `${setup.seed}:${setup.homeTeamId}:${setup.awayTeamId}:${setup.playerClubId}`;
@@ -389,6 +394,7 @@ function CareerMatchPlayback({
     setSubRequests([]);
     setPrompt(null);
     setHandledStops(new Set());
+    setHalfTimeHandled(false);
     setHoldSeq(null);
     pendingEndRef.current = false;
     userStartedPlaybackRef.current = false;

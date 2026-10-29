@@ -96,6 +96,20 @@ if (outPath) {
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, `${JSON.stringify({ seed, seasons, rows }, null, 2)}\n`);
 }
+// Where the save bytes go at the end (gzipped KB): top-level files and pipeline keys.
+{
+  const save = saveFromSession(session, undefined, new Date(0));
+  const parts: [string, unknown][] = [
+    ...Object.entries(save).filter(([key]) => key !== "state"),
+    ...Object.entries(save.state).filter(([key]) => key !== "pipeline"),
+    ...Object.entries(save.state.pipeline ?? {}).map(([key, value]) => [`pipeline.${key}`, value] as [string, unknown]),
+  ];
+  const sizes = parts
+    .map(([key, value]) => [key, gzipSync(JSON.stringify(value ?? null)).length] as const)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+  console.log(`  save parts: ${sizes.map(([key, bytes]) => `${key} ${(bytes / 1024).toFixed(0)} KB`).join(" · ")}`);
+}
 const elapsed = ((Date.now() - started) / 1000).toFixed(0);
 console.log(
   `Done in ${elapsed}s · ${failures.length === 0 ? "all invariants hold" : `${failures.length} failures`}`,

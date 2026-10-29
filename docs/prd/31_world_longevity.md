@@ -17,7 +17,7 @@ Rolled once per player at season end, on the age the player would play
 
 | Next-season age | 31 | 32 | 33 | 34 | 35 | 36 | 37–39 | 40 |
 |---|---|---|---|---|---|---|---|---|
-| Outfield base chance | 2 % | 5 % | 10 % | 30 % | 50 % | 70 % | 90 % | 100 % |
+| Outfield base chance | 2 % | 5 % | 12 % | 35 % | 60 % | 80 % | 90 % | 100 % |
 
 Keepers use the same row two years later (a keeper at 35 rolls like an
 outfield player at 33). 40 is a hard stop for everyone.
@@ -66,7 +66,8 @@ Own players retire only through the spring announcement (§9).
 Per AI club, after retirement:
 
 - **Youth:** 2–4 players (seeded), but only while the roster has room below
-  **24**. Built with the academy mixture (PRD 03.1), skill mean = recruiting
+  **23**. (24 let every club take two or three youths at the first season end;
+  that cohort turned 35 together 18 seasons later.) Built with the academy mixture (PRD 03.1), skill mean = recruiting
   strength − 12 + (reputation − 40) × 0.1. Age 17–18 after the season change,
   pro status, three-year contract (`fairInitialProContract`).
 - **Refill:** journeymen until the roster has **22** players and the
@@ -161,7 +162,8 @@ save 609 KB gzipped after season 1 and 773 KB after season 6.
 ## 12. Save
 
 `SAVE_VERSION` 101, `migration_101_retirement`: normalizes `retired.json` and
-sets `peak_ca` on every player. `season_lines` start empty.
+sets `peak_ca` on every player. `season_lines` start empty; `state.retirement`
+is optional and needs no backfill.
 
 ## Progress
 

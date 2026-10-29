@@ -21,7 +21,7 @@ import {
 
 export const AI_ROSTER_TARGET = 22;
 /** Youth come in only while the roster has room below this size. */
-export const AI_ROSTER_YOUTH_CAP = 24;
+export const AI_ROSTER_YOUTH_CAP = 23;
 export const AI_YOUTH_MIN = 2;
 export const AI_YOUTH_MAX = 4;
 /** Youth skill mean sits this far below the club's strength; growth closes the gap. */

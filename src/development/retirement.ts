@@ -17,10 +17,10 @@ const MAX_SOFT_CHANCE = 0.97;
 const OUTFIELD_BASE: Record<number, number> = {
   31: 0.02,
   32: 0.05,
-  33: 0.1,
-  34: 0.3,
-  35: 0.5,
-  36: 0.7,
+  33: 0.12,
+  34: 0.35,
+  35: 0.6,
+  36: 0.8,
   37: 0.9,
 };
 

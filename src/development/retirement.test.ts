@@ -24,16 +24,16 @@ function veteran(age: number, patch: Partial<Player["state"]> = {}, position: Pl
 describe("retirement chance", () => {
   it("follows the outfield curve and the keeper shift", () => {
     expect(baseRetirementChance(30, false)).toBe(0);
-    expect(baseRetirementChance(33, false)).toBeCloseTo(0.1);
-    expect(baseRetirementChance(35, false)).toBeCloseTo(0.5);
+    expect(baseRetirementChance(33, false)).toBeCloseTo(0.12);
+    expect(baseRetirementChance(35, false)).toBeCloseTo(0.6);
     expect(baseRetirementChance(38, false)).toBeCloseTo(0.9);
-    expect(baseRetirementChance(35, true)).toBeCloseTo(0.1);
+    expect(baseRetirementChance(35, true)).toBeCloseTo(0.12);
     expect(baseRetirementChance(40, true)).toBe(1);
   });
 
   it("rolls on next season's age", () => {
     expect(retirementChance(veteran(29), { endingSeason: 1 })).toBe(0);
-    expect(retirementChance(veteran(34), { endingSeason: 1 })).toBeCloseTo(0.5);
+    expect(retirementChance(veteran(34), { endingSeason: 1 })).toBeCloseTo(0.6);
     expect(retirementChance(veteran(39), { endingSeason: 1 })).toBe(1);
   });
 
@@ -50,14 +50,14 @@ describe("retirement chance", () => {
   });
 
   it("is deterministic per seed, season and player", () => {
-    // 34 now, 35 next season, contract ended: 0.5 × 1.4 = 0.7.
-    const players = Array.from({ length: 200 }, (_, index) => ({ ...veteran(34), id: `pl_r${index}` }));
+    // 33 now, 34 next season, contract ended: 0.35 × 1.4 = 0.49.
+    const players = Array.from({ length: 200 }, (_, index) => ({ ...veteran(33), id: `pl_r${index}` }));
     const roll = (seed: number) =>
       players.filter((player) => rollsRetirement(player, { endingSeason: 3, masterSeed: seed })).map((p) => p.id);
     expect(roll(11)).toEqual(roll(11));
     expect(roll(11)).not.toEqual(roll(12));
-    expect(roll(11).length).toBeGreaterThan(115);
-    expect(roll(11).length).toBeLessThan(165);
+    expect(roll(11).length).toBeGreaterThan(75);
+    expect(roll(11).length).toBeLessThan(122);
   });
 });
 

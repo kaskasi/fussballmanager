@@ -90,7 +90,7 @@ Die Gewichte summieren sich auf 1.
 
 #### 03.1.1 KI-Jugend (PRD 31)
 
-KI-Klubs bekommen am Saisonende **2–4 Jugendspieler** (17–18 Jahre nach dem Saisonwechsel, direkt im Profikader), aber nur bis **23 Spieler** im Kader. Qualität: dieselbe Mixture, Mittelwert = Rekrutierungsstärke des Klubs − 34 (+ Ruf-Zuschlag; PRD 32 §2, war − 12). Danach füllt der Klub mit Routiniers auf **22 Spieler** und die Positions-Mindestzahlen (2 TW, 6 Abwehr, 6 Mittelfeld, 4 Angriff) auf. Details: PRD 31 §5.
+KI-Klubs bekommen am Saisonende **2–4 Jugendspieler** (17–18 Jahre nach dem Saisonwechsel, direkt im Profikader), aber nur bis **23 Spieler** im Kader. Qualität: dieselbe Mixture, Mittelwert = Rekrutierungsstärke des Klubs − 38 (+ Ruf-Zuschlag; PRD 32 §2, war − 12). Danach füllt der Klub mit Routiniers auf **22 Spieler** und die Positions-Mindestzahlen (2 TW, 6 Abwehr, 6 Mittelfeld, 4 Angriff) auf. Details: PRD 31 §5.
 
 ### 03.2 Jugend-Campus (Grid + Stufen, F3.2 / F3.7)
 

@@ -68,7 +68,7 @@ Per AI club, after retirement:
 - **Youth:** 2–4 players (seeded), but only while the roster has room below
   **23**. (24 let every club take two or three youths at the first season end;
   that cohort turned 35 together 18 seasons later.) Built with the academy mixture (PRD 03.1), skill mean = recruiting
-  strength − 34 + (reputation − 40) × 0.1 (PRD 32 §2; − 12 until then). Age 17–18 after the season change,
+  strength − 38 + (reputation − 40) × 0.1 (PRD 32 §2; − 12 until then). Age 17–18 after the season change,
   pro status, three-year contract (`fairInitialProContract`).
 - **Refill:** journeymen until the roster has **22** players and the
   positional minimums **2 GK, 6 DEF, 6 MID, 4 ATT**. Positions go to the

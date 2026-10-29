@@ -530,6 +530,13 @@ export function generateClubRoster(
     Array.from({ length: PLAYERS_PER_CLUB }, (_, index) => index),
     deriveWorldSeed(masterSeed, "roster-age-order", clubIndex),
   );
+  // The age shape is steep, so a club that drew young ages would end up weak by
+  // chance: shift the club so its roster averages the expected shape (PRD 32 §2).
+  const ages = ROSTER_POSITIONS.map((_, playerIndex) =>
+    rosterAge(ageSlots[playerIndex] ?? playerIndex, playerRandom(masterSeed, clubIndex, playerIndex)),
+  );
+  const ageCorrection =
+    WORLD_AGE_SHAPE_MEAN - ages.reduce((sum, age) => sum + worldAgeShape(age), 0) / ages.length;
   const roster = ROSTER_POSITIONS.map((position, playerIndex) =>
     generateProfessional(
       masterSeed,
@@ -537,7 +544,7 @@ export function generateClubRoster(
       clubIndex,
       playerIndex,
       position,
-      clubStrength,
+      clubStrength + ageCorrection,
       ageSlots[playerIndex] ?? playerIndex,
     ),
   );
@@ -588,13 +595,17 @@ function divisionPools(clubs: readonly WorldClub[]): Record<WorldDivisionId, str
 
 /** Club strength the roster was generated at (attribute base scale). */
 export function startingClubStrength(masterSeed: number, club: WorldClub, clubIndex: number): number {
-  if (club.id === NORDSTERN_TEAM_ID) return 68.5;
+  if (club.id === NORDSTERN_TEAM_ID) return 68.3;
   if (club.name === "Union Rendsburg") return 71;
   const random = mulberry32(deriveWorldSeed(masterSeed, "club-strength", clubIndex));
   if (tierOf(club.division_id) === 5) return 60 + random() * 14;
   // Three nearby survival rivals keep the underdog start difficult but playable.
   if (clubIndex <= 3) return 69.5 + random() * 2;
   return 78 + random() * 5;
+}
+
+function playerRandom(masterSeed: number, clubIndex: number, playerIndex: number): () => number {
+  return mulberry32(deriveWorldSeed(masterSeed, "player", clubIndex * PLAYERS_PER_CLUB + playerIndex));
 }
 
 function generateProfessional(
@@ -607,7 +618,7 @@ function generateProfessional(
   ageSlot: number,
 ): Player {
   const stableIndex = clubIndex * PLAYERS_PER_CLUB + playerIndex;
-  const random = mulberry32(deriveWorldSeed(masterSeed, "player", stableIndex));
+  const random = playerRandom(masterSeed, clubIndex, playerIndex);
   const age = rosterAge(ageSlot, random);
   const player = buildGeneratedPro({
     id: generatedPlayerId(masterSeed, stableIndex),
@@ -620,6 +631,7 @@ function generateProfessional(
     joinedSeason: 1,
     contractFromSeason: 1,
     starter: playerIndex < 11,
+    ageAdjustment: worldAgeShape(age),
     random,
     hiddenRandom: mulberry32(deriveWorldSeed(masterSeed, "player-hidden", stableIndex)),
     contractRandom: mulberry32(deriveWorldSeed(masterSeed, "contract", stableIndex)),
@@ -645,6 +657,8 @@ interface GeneratedProSpec {
   /** Contract length is drawn from this season on (`+1…+4`). */
   contractFromSeason: number;
   starter: boolean;
+  /** Base shift by age; defaults to {@link peakCaBaseAdjustment} (journeymen). */
+  ageAdjustment?: number;
   random: () => number;
   hiddenRandom: () => number;
   contractRandom: () => number;
@@ -654,7 +668,8 @@ interface GeneratedProSpec {
 /** One professional from seeded streams; draw order is fixed (existing worlds must not change). */
 function buildGeneratedPro(spec: GeneratedProSpec): Player {
   const { club, position, age, random, hiddenRandom, contractRandom } = spec;
-  const playerBase = spec.clubStrength + sampleStandardNormal(random) * 6 + peakCaBaseAdjustment(age);
+  const playerBase =
+    spec.clubStrength + sampleStandardNormal(random) * 6 + (spec.ageAdjustment ?? peakCaBaseAdjustment(age));
   const attributes = generateAttributes(position, playerBase, random);
   const ca = estimateCa(attributes, position);
   const contractYears = 1 + Math.floor(contractRandom() * 4);
@@ -812,12 +827,47 @@ function generateAttributes(
   ) as unknown as Attributes;
 }
 
-function rosterAge(ageSlot: number, random: () => number): number {
-  if (ageSlot < 5) return 18 + Math.floor(random() * 4);
-  if (ageSlot < 15) return 22 + Math.floor(random() * 6);
-  if (ageSlot < 20) return 28 + Math.floor(random() * 5);
-  return 33 + Math.floor(random() * 4);
+/**
+ * PRD 32 §2 — the season-1 world starts near the steady state of the growth
+ * curve: young players well below the club's level (they grow into it),
+ * prime-age players above it, veterans past their peak.
+ */
+export function worldAgeShape(age: number): number {
+  if (age <= 20) return -22;
+  if (age <= 22) return -10;
+  if (age <= 24) return 0;
+  if (age <= 28) return 10;
+  if (age <= 31) return 14;
+  if (age <= 34) return 8;
+  return 2;
 }
+
+/** Age band per roster slot: [first slot after the band, youngest age, number of ages]. */
+const ROSTER_AGE_BANDS: readonly (readonly [number, number, number])[] = [
+  [5, 18, 4],
+  [15, 22, 6],
+  [20, 28, 5],
+  [PLAYERS_PER_CLUB, 33, 4],
+];
+
+function rosterAgeBand(ageSlot: number): readonly [number, number, number] {
+  return ROSTER_AGE_BANDS.find(([end]) => ageSlot < end) ?? ROSTER_AGE_BANDS[ROSTER_AGE_BANDS.length - 1]!;
+}
+
+function rosterAge(ageSlot: number, random: () => number): number {
+  const [, youngest, span] = rosterAgeBand(ageSlot);
+  return youngest + Math.floor(random() * span);
+}
+
+/** Expected {@link worldAgeShape} of one generated roster (every slot, every age equally likely). */
+const WORLD_AGE_SHAPE_MEAN = (() => {
+  let sum = 0;
+  for (let slot = 0; slot < PLAYERS_PER_CLUB; slot++) {
+    const [, youngest, span] = rosterAgeBand(slot);
+    for (let offset = 0; offset < span; offset++) sum += worldAgeShape(youngest + offset) / span;
+  }
+  return sum / PLAYERS_PER_CLUB;
+})();
 
 function birthDate(age: number, random: () => number, anchorYear = 2026): string {
   const year = anchorYear - age;

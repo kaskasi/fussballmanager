@@ -61,7 +61,7 @@ The extra CA comes from young players, not old ones. AI youth arrived only 12
 points below club strength and grew about 45 CA by their mid-twenties, so a
 club's 21–24-year-olds ended up 20 points above its generated players. Slice 0
 therefore also lowers AI youth: skill mean = recruiting strength − **34**
-(was − 12) + (reputation − 40) × 0.1 (PRD 31 §5). AI 17–20-year-olds now sit
+(− 38 since slice 2; was − 12) + (reputation − 40) × 0.1 (PRD 31 §5). AI 17–20-year-olds now sit
 at about 60 CA in a world whose generated players average about 88. They
 reach about 87 at 21–24 and the first team in their mid-twenties.
 
@@ -70,14 +70,31 @@ It is what makes old players worse than players in their prime. At season 20
 of the built run, the 32–34 band averages 103 CA against 113 for 29–31; before,
 it was 142 against 141.
 
-**Still open (slice 2):** the remaining +12–13 % hump in seasons 6–11. The
-generated 18–21-year-olds start at club level (`peakCaBaseAdjustment` is only
-−5 at 20 and under) and then grow 30+ CA. An age-shaped generator that keeps
-the club mean the same (−15 at ≤20, −8 at 21–22, +2/+6/+7 at 23–31) only
-lowered the hump to +12 %. Slice 2 regenerates all tiers anyway. There,
-generated youngsters and journeymen (`AI_JOURNEYMAN_STRENGTH_GAP`, ages 22–29)
-are calibrated against the steady state, and the full long run must keep
-drift under 10 % in every season.
+**The hump (fixed in slice 2).** After slice 0, drift still peaked at +13 % in
+seasons 6–11: the generated world started flat by age (`peakCaBaseAdjustment`
+only −5 at 20 and under), so its young players grew 30+ CA past the level the
+world settles at. The season-1 world now starts near that steady state:
+`worldAgeShape` (generated rosters only; journeymen keep the old adjustment)
+shifts a player's base by age.
+
+| Age | ≤20 | 21–22 | 23–24 | 25–28 | 29–31 | 32–34 | 35+ |
+|---|---|---|---|---|---|---|---|
+| Base shift | −22 | −10 | 0 | +10 | +14 | +8 | +2 |
+
+A steep shape makes a club's strength depend on the ages it happened to
+draw, which pushed FC Nordstern out of its PRD 12 underdog corridor on some
+seeds. Each generated club is therefore shifted so its roster averages the
+expected shape; club strength stays independent of the age draw. Nordstern's
+base moved from 68.5 to 68.3 to keep the corridor on all 100 test seeds
+(median gap 6.1–16.4, second-weakest gap ≤ 5.6). AI youth moved from − 34 to
+**− 38**. Journeyman strength barely matters (few are recruited): gap 3, 8 and
+12 gave the same curve.
+
+| Build (world-only, 20 seasons) | Seed 2026 peak | Seed 2026 S20 | Seed 7 peak | Seed 99 peak |
+|---|---|---|---|---|
+| Slice 0 | +13.2 % | +5.9 % | — | — |
+| Age shape, no club correction, youth − 38 | +7.7 % | +2.4 % | +6.8 % | +7.6 % |
+| **Built** (club correction, Nordstern 68.3) | **+7.6 %** | **+2.1 %** | **+6.8 %** | — |
 
 ## 3. Pyramid
 

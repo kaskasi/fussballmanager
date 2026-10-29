@@ -197,6 +197,9 @@ Regeln:
 - Regionalliga-Clubs sind im Median stärker als Oberliga-Clubs.
 - Die Verteilungen überlappen: ein guter Oberligist kann schwächer
   Regionalligisten schlagen.
+- Alter formt die Startstärke (PRD 32 §2, `worldAgeShape`): junge Spieler liegen
+  deutlich unter dem Clubniveau, Spieler im besten Alter darüber; jeder Club wird
+  so verschoben, dass sein Kader im Mittel die erwartete Altersform hat.
 - FC Nordsterns Startelf liegt 8–15 CA-Punkte unter dem
   Regionalliga-Median und höchstens 5 Punkte unter dem zweitschlechtesten
   Club. Dadurch ist Klassenerhalt schwer, aber nicht vorbestimmt.

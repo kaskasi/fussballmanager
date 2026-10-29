@@ -87,6 +87,8 @@ export interface Player {
     severe_injuries_logged?: number;
     /** PRD 31 — best CA so far, refreshed at season end (retirement decline). */
     peak_ca?: number;
+    /** PRD 31 — spring retirement announcement for `season` and the manager's answer. */
+    retirement?: RetirementPlan;
     /** F3.9 — face of the camp purchase reveal (max hidden profile). */
     camp_opening_headline?: boolean;
     /** Index into `youth.camp.debut.hook.{nation}.{index}` copy. */
@@ -211,6 +213,12 @@ export interface Injury {
   weeks_remaining: number;
   severity: "minor" | "moderate" | "severe";
   sustained_week: number;
+}
+
+/** PRD 31 — `announced` until the manager answers; `staying` after a successful persuade. */
+export interface RetirementPlan {
+  season: number;
+  status: "announced" | "retiring" | "staying";
 }
 
 /** PRD 31 — `[season, club_id, division_id, apps, goals]`; tuple keeps `retired.json` small. */

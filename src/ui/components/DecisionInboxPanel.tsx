@@ -432,6 +432,9 @@ export function DecisionInboxPanel({
 
               {promotionBlock ? <p className="inbox-promotion-block">{promotionBlock}</p> : null}
               {trialHint ? <p className="inbox-trial-hint">{trialHint}</p> : null}
+              {active.kind === "retirement_announce" ? (
+                <p className="inbox-trial-hint">{t("inbox.retirement.hint")}</p>
+              ) : null}
 
               <div
                 className="inbox-actions"
@@ -553,6 +556,8 @@ function primaryInboxAction(
               ? ["dismiss"]
               : item.kind === "kicker_transfer"
                 ? ["dismiss"]
-                : [];
+                : item.kind === "retirement_announce"
+                  ? ["retire_persuade", "retire_accept"]
+                  : [];
   return preferred.find((action) => actions.includes(action)) ?? actions[0] ?? null;
 }

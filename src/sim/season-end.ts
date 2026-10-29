@@ -42,7 +42,8 @@ import { activatePendingPreContracts } from "../transfers/pre-contracts.ts";
 import { computeSeasonAwards } from "./season-awards.ts";
 import { appendSeasonCoda } from "../narrative/season-end-narrative.ts";
 import { withPeakCa } from "../development/retirement.ts";
-import { appendSeasonLine } from "../development/retired-players.ts";
+import { appendSeasonLine, retiredRecord, type RetiredPlayer } from "../development/retired-players.ts";
+import { clearMentorshipsTo, retiresAtSeasonEnd } from "../development/own-retirement.ts";
 import { assignFreePlayerIds, nextNumericIdHint } from "../player/player-ids.ts";
 import { upkeepAiRosters } from "./ai-roster-upkeep.ts";
 import {
@@ -60,8 +61,10 @@ import {
 export interface SeasonEndResult {
   session: GameSession;
   intakeCount: number;
-  /** PRD 31 — players who retired this season end. */
+  /** PRD 31 — players who retired this season end, own and AI. */
   retiredCount: number;
+  /** PRD 31 — own players among them (club events). */
+  ownRetired: RetiredPlayer[];
   /** PRD 31 — AI youth and refill players added this season end. */
   aiYouthCount: number;
   aiRefillCount: number;
@@ -83,7 +86,15 @@ export function runSeasonEnd(
   const snapshotted = session.players.map((player) =>
     appendSeasonSnapshot(careerLine(player), endingSeason),
   );
-  const aged = snapshotted.map((player) => ({
+  // PRD 31 §9 — announced own retirements leave before aging and the intake.
+  const ownRetiring = snapshotted.filter((player) => retiresAtSeasonEnd(player, endingSeason));
+  const ownRetiredIds = new Set(ownRetiring.map((player) => player.id));
+  const remainingOwn = clearMentorshipsTo(
+    snapshotted.filter((player) => !ownRetiredIds.has(player.id)),
+    ownRetiredIds,
+  );
+  const ownRetired = ownRetiring.map((player) => retiredRecord(player, endingSeason));
+  const aged = remainingOwn.map((player) => ({
     ...resetSeasonMinutes(player),
     age: player.age + 1,
   }));
@@ -107,6 +118,7 @@ export function runSeasonEnd(
     ...preContractStep.players.map((player) => player.id),
     ...preContractStep.rivalPlayers.map((player) => player.id),
     ...(session.retiredPlayers ?? []).map((entry) => entry.id),
+    ...ownRetiredIds,
   ]);
   const intakeRaw = generateYouthIntake({
     season: session.season,
@@ -176,7 +188,7 @@ export function runSeasonEnd(
   );
   let transferState = pruneRetiredFromTransferState(
     preContractStep.transferState,
-    new Set(aiRetirement.retired.map((entry) => entry.id)),
+    new Set([...ownRetiredIds, ...aiRetirement.retired.map((entry) => entry.id)]),
   );
   for (const record of loanReturns) {
     transferState = appendTransferRecord(transferState, record);
@@ -246,13 +258,14 @@ export function runSeasonEnd(
       stadium,
       board,
       rivalPlayers: ageRivalPlayers(aiUpkeep.rivalPlayers),
-      retiredPlayers: [...(session.retiredPlayers ?? []), ...aiRetirement.retired],
+      retiredPlayers: [...(session.retiredPlayers ?? []), ...ownRetired, ...aiRetirement.retired],
       lastSeasonAwards,
       league: resetLeagueSeason(leagueAfterMovement),
       storyState,
     },
     intakeCount: intake.length + campIntake.length,
-    retiredCount: aiRetirement.retired.length,
+    retiredCount: ownRetired.length + aiRetirement.retired.length,
+    ownRetired,
     aiYouthCount: aiUpkeep.youth,
     aiRefillCount: aiUpkeep.refill,
     loanReturns,

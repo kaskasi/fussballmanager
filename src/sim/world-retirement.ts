@@ -1,4 +1,5 @@
 import { rollsRetirement, type RetirementContext } from "../development/retirement.ts";
+import { retiresAtSeasonEnd } from "../development/own-retirement.ts";
 import { retiredRecord, type RetiredPlayer } from "../development/retired-players.ts";
 import type { LeagueState } from "../persistence/league-state.ts";
 import type { TransferState } from "../transfers/negotiations.ts";
@@ -29,7 +30,9 @@ export function retireAiPlayers(
   const remaining: Player[] = [];
   const retired: RetiredPlayer[] = [];
   for (const player of rivalPlayers) {
-    if (!exempt.has(player.id) && rollsRetirement(player, ctx)) {
+    // A player sold after announcing retirement keeps to it.
+    const retires = retiresAtSeasonEnd(player, ctx.endingSeason) || rollsRetirement(player, ctx);
+    if (!exempt.has(player.id) && retires) {
       retired.push(retiredRecord(player, ctx.endingSeason));
     } else {
       remaining.push(player);

@@ -1,6 +1,6 @@
 # PRD 31 — World longevity: retirement, AI youth, roster upkeep
 
-**Status:** In progress (slices 1–2 built, slice 3 open) · 2026-10-29 · Phase 1 of PRD 30.
+**Status:** Built (slices 1–3) · 2026-10-29 · Phase 1 of PRD 30. CA drift open (§8).
 **Feature:** F11.3 (PRD 10). **Touches:** PRD 03 (§03.1.1 AI youth), PRD 07 (id rule, `peak_ca`, `season_lines`).
 
 ## 1. Problem
@@ -49,7 +49,7 @@ same decisions give the same retirements.
 6. **AI roster upkeep** for the division each club plays in next season (§5).
 7. AI aging; AI season counters reset (they never reset before).
 
-Own players do not retire before slice 3 (§9).
+Own players retire only through the spring announcement (§9).
 
 ## 4. Records
 
@@ -117,14 +117,26 @@ there; tier order holds. The PRD 30 acceptance line "drift under 10 %" cannot
 be met without changing the growth curve, which is PRD 02 and affects own
 players too. **Open question for the owner** (§11).
 
-## 9. Own players (slice 3, open)
+## 9. Own players
 
-- On matchday 28, own players whose roll says "retires" get a Postfach
-  decision: accept, or one "persuade to play on" attempt (chance from morale,
-  minutes and an offered one-year contract). A failed attempt is final.
-- At season end retirement runs before the intake: the contract ends,
-  mentorship links clear, the wage bill drops, a `retired.json` record is written.
-- "Retires at season end" badge and a career summary on the player profile.
+- **Announcement:** on entering league week 28 (`RETIREMENT_ANNOUNCE_WEEK`),
+  own pros (and loaned-out pros) roll with the §2 curve. A "retires" result
+  sets `state.retirement = { season, status: "announced" }` and queues a
+  Postfach decision (`retirement_announce`, priority 0).
+- **Answer:** "Accept the decision" → `retiring`. "Persuade (one-year deal)"
+  rolls once (`hash(master_seed, "persuade", season, player_id)`):
+  chance = 30 % + (morale − 50) %, +20 points with at least half the
+  matchdays played, −10 under a fifth, −15 at 37+ next season, clamped to
+  5–85 %, and 0 at the hard-stop age. Success → `staying`, and a contract that
+  ends this season runs one more. Failure → `retiring`; it is final.
+- **Unanswered** announcements count as retiring. "Simulate until" leaves the
+  item open, like departure risks.
+- **Season end:** announced players leave before aging and the intake; mentor
+  links to them clear; the wage bill drops with them; a `retired.json` record
+  and a club event ("Retirement: name (age)") are written. A league-wide
+  count event follows. A player sold after announcing keeps to it.
+- **Profile:** a "Retires at season end" callout in the identity rail and a
+  career table (season, club, league, apps, goals, total) under season stats.
 
 ## 10. Long run and budgets
 
@@ -155,4 +167,4 @@ sets `peak_ca` on every player. `season_lines` start empty.
 
 - Slice 1 (roll, AI execution, `retired` persistence, long-run script): done.
 - Slice 2 (AI youth, roster upkeep, selection-based AI minutes): done.
-- Slice 3 (own-player announcement, persuade flow, Postfach, badge, profile): next.
+- Slice 3 (own-player announcement, persuade flow, Postfach, badge, career table): done.

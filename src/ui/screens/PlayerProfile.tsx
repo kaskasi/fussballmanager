@@ -13,6 +13,7 @@ import {
   Dumbbell,
   Flag,
   Footprints,
+  Hourglass,
   Lightbulb,
   PenLine,
   Star,
@@ -36,6 +37,10 @@ import {
 } from "../../transfers/contract-talks.ts";
 import type { Player } from "../../types/player.ts";
 import { careerSeasonStatsForSeason, listCareerStatSeasons } from "../../player/season-stats.ts";
+import { retiresAtSeasonEnd } from "../../development/own-retirement.ts";
+import { DIVISION_ECONOMY, type DivisionEconomyId } from "../../economy/division-economy.ts";
+import { loanClubName } from "../../transfers/loan-roster.ts";
+import { DEFAULT_GENERATED_WORLD } from "../../sim/league-divisions.ts";
 import { formatSeasonLabel, seasonCalendarYear } from "../../sim/season-label.ts";
 import { t as translate } from "../../i18n/index.ts";
 import { useT } from "../../i18n/react.ts";
@@ -517,6 +522,13 @@ export function PlayerProfile({
             ) : null}
           </ProfileBio>
 
+          {retiresAtSeasonEnd(player, season) ? (
+            <p className="tc-callout tc-callout--warn tc-profile__retiring" role="status">
+              <Hourglass className="tc-icon" aria-hidden />
+              {t("profile.retiresAtSeasonEnd")}
+            </p>
+          ) : null}
+
           {owned && transferLockReason ? (
             <p className="tc-callout tc-callout--warn" role="status">
               {transferLockReason}
@@ -825,7 +837,10 @@ export function PlayerProfile({
             ) : null}
 
             {tab === "stats" ? (
-              <StatsTab player={player} season={season} owned={owned} scoutEstimate={scoutEstimate} />
+              <>
+                <StatsTab player={player} season={season} owned={owned} scoutEstimate={scoutEstimate} />
+                <CareerPanel player={player} />
+              </>
             ) : null}
           </div>
         </div>
@@ -1071,6 +1086,58 @@ function StatsTab({
       ) : (
         <p className="tc-empty">{owned ? t("profile.stats.none") : t("profile.stats.unknown")}</p>
       )}
+    </section>
+  );
+}
+
+/** PRD 31 — one row per finished season from `history.season_lines`. */
+function CareerPanel({ player }: { player: Player }) {
+  const t = useT();
+  const lines = player.history.season_lines ?? [];
+  if (lines.length === 0) return null;
+  const totals = lines.reduce(
+    (sum, [, , , apps, goals]) => ({ apps: sum.apps + apps, goals: sum.goals + goals }),
+    { apps: 0, goals: 0 },
+  );
+  return (
+    <section className="tc-panel" aria-labelledby="profile-career-title">
+      <div className="tc-panel__head">
+        <span className="tc-label" id="profile-career-title">
+          {t("profile.career.title")}
+        </span>
+        <span className="tc-caption">{t("profile.career.seasons", { count: lines.length })}</span>
+      </div>
+      <div className="tc-table-wrap">
+        <table className="tc-table tc-table--compact">
+          <thead>
+            <tr>
+              <th scope="col">{t("profile.career.season")}</th>
+              <th scope="col">{t("profile.career.club")}</th>
+              <th scope="col">{t("profile.career.league")}</th>
+              <th scope="col" className="tc-num">{t("profile.stats.apps")}</th>
+              <th scope="col" className="tc-num">{t("profile.stats.goals")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lines.map(([lineSeason, clubId, divisionId, apps, goals]) => (
+              <tr key={lineSeason}>
+                <td>{seasonCalendarYear(lineSeason)}</td>
+                <td>{loanClubName(clubId, DEFAULT_GENERATED_WORLD.clubs)}</td>
+                <td>{DIVISION_ECONOMY[divisionId as DivisionEconomyId]?.label ?? divisionId}</td>
+                <td className="tc-num">{apps}</td>
+                <td className="tc-num">{goals}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th scope="row" colSpan={3}>{t("profile.career.total")}</th>
+              <td className="tc-num">{totals.apps}</td>
+              <td className="tc-num">{totals.goals}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </section>
   );
 }

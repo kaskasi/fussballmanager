@@ -98,6 +98,7 @@ import {
   leagueTablePlace,
 } from "./economy/club-finances.ts";
 import { formatPlayerName } from "./types/player-display.ts";
+import { playerTableRow } from "./sim/league-week.ts";
 import { sellerAskingPrice, toggleShortlist } from "./transfers/negotiations.ts";
 import { unsolicitedAskingPrice, unsolicitedRefusalReason } from "./transfers/unsolicited-approach.ts";
 import { useTransferNegotiation } from "./ui/components/TransferNegotiationHost.tsx";
@@ -1015,6 +1016,10 @@ export default function App() {
           action,
           current.season,
           current.week,
+          {
+            masterSeed: current.masterSeed,
+            matchdaysPlayed: playerTableRow(current.league)?.played ?? 0,
+          },
         );
         if (pendingInboxItems(result.inbox, result.players).length === 0) {
           setPostfachItemId(null);
@@ -1024,6 +1029,23 @@ export default function App() {
           players: result.players,
           youthInbox: result.inbox,
         };
+        if (result.retirementOutcome && player) {
+          next = {
+            ...next,
+            clubEvents: withClubEvent(
+              next.clubEvents,
+              current.season,
+              current.week,
+              "profile",
+              t(
+                result.retirementOutcome === "staying"
+                  ? "clubEvent.retirementPersuaded"
+                  : "clubEvent.retirementConfirmed",
+                { name: formatPlayerName(player) },
+              ),
+            ),
+          };
+        }
         if (item?.kind === "assistant_training_reminder") {
           next = {
             ...next,

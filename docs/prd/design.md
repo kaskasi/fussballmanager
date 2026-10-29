@@ -858,11 +858,10 @@ Tab "Liste":
 Vollständige Spielerliste mit Filtern (Position, Alter, CA, Vertrag) und Sortieroptionen.
 Jede Zeile zeigt Avatar, Name, Position, Alter, CA, Status (Fit/Müde/Verletzung), Mentor-Info (falls vorhanden), Vertrag, Wert und Aktionen ([Profil], [Verkaufen]).
 Klick auf einen Spieler öffnet das Spielerprofil (§9.8).
-Tab "Mentoring":
-Liste aller Spieler, die potenzielle Mentoren oder Mentees sein können (z.B. unter 23 Jahre oder mit niedriger CA).
-Für jeden Spieler: Name, Position, Alter, Moral, aktueller Mentor (falls vorhanden).
-Dropdown-Menü "Mentor wählen", das eine Liste der verfügbaren, erfahrenen Spieler anzeigt.
-Visuelles Feedback, wenn ein Mentor zugewiesen wurde (z.B. grüner Haken oder Icon).
+Tab "Mentoring" (Layout wie Training → Individuell, PRD 29):
+Kopf: "x / n Plätze belegt", Chips mit Herkunft der Plätze (Basis, Vereinsgebäude, Restaurant), nächste Freischaltung.
+Grid: eine Karte pro Platz. Belegt = Talent, Mentor, Lern-Chips (Attribut + Vorsprung), Wochenbalken bis zur Vorbild-Wirkung, Zuwachs, Moral/Form. Frei = [+ Paar bilden]. Gesperrt = was den Platz freischaltet.
+Freier Platz → Talent wählen → Mentor wählen (Profi-Jahre, Führung, Qualitätsbalken, Lern-Chips). Belegte Karte → Mentor wechseln oder Mentoring beenden.
 Tab "Staff":
 Übersicht Trainer (Angriff/Verteidigung/Fitness) und Assistenten-Delegation. **Fitness/Verletzungen/Ermüdung → Screen Medizin (§9.16).**
 

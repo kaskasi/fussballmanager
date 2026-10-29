@@ -1,6 +1,7 @@
 import { individualTrainingSlots } from "../../development/individual-training-capacity.ts";
 import { useCallback } from "react";
 import { assignMentor, clearMentor } from "../../development/mentoring.ts";
+import { mentoringSlots } from "../../development/mentoring-capacity.ts";
 import type { TrainingPlanPresetSlot } from "../../development/training-plan-presets.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
 import { assignIndividualProgram } from "../../development/individual-training.ts";
@@ -113,7 +114,10 @@ export function useTrainingActions(args: {
         const mentee = current.players.find((player) => player.id === menteeId);
         const mentor = current.players.find((player) => player.id === mentorId);
         if (!mentee || !mentor) return current;
-        const result = assignMentor(mentee, mentor, current.season, current.week);
+        const result = assignMentor(mentee, mentor, current.season, current.week, {
+          players: current.players,
+          maxSlots: mentoringSlots(current.stadium.precinct).total,
+        });
         if ("error" in result) {
           return sessionWithEvent(current, "info", result.error);
         }

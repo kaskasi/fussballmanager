@@ -56,7 +56,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F2.1 | Wochenplanung Training | M1 | 15 Trainingsslots (3/Tag, Mo–Fr), bis zu 2 Fokus (+33 % pro Fokus auf Attributgruppe); Plan **leer nach jeder Wochensim**; **3 Vorlagen** speichern/laden im Save; ohne Fokus keine Entwicklung + Fan/Vorstand-Reaktion |
 | F2.2 | Growth Engine | M1 | Kernformel PRD 02.1 — kein Potential, Varianz, Soft Cap 180 |
 | F2.3 | Individualprogramme | M2 | Schwaches Bein, Positionsumschulung (`flexibility`, Roll PRD 07.7) |
-| F2.4 | Mentoring | M2 | Routinier → Talent, `drive`-Bonus (Trigger-Quelle für PRD 06.2) |
+| F2.4 | Mentoring | M2 | Routinier (≥ 5 Profi-Jahre) → Talent in Slots; Moral, Form, Attribute wo der Mentor besser ist; Trigger-Quelle für PRD 06.2 (PRD 29) |
 | F2.5 | Trainingslager | M2 | Sichtbarkeits-Bonus auf Drive-Einschätzungen in Pausen |
 | F2.6 | Rehasystem | M3 | Verletzungsverlauf-Stufen, Reha-Trainer-Qualität |
 | F2.7 | Wachstums-Heatmap | M1 | Team-Leiste: 1 Quadrat = 1 Spieler-Wochenzuwachs (PRD 09 Screen 1) |

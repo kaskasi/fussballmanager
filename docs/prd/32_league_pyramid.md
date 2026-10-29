@@ -244,8 +244,14 @@ changes the schema (pool keys, new clubs, `division_results`, archive).
 ## Progress
 
 - Slice 0 (late-career decline, AI youth level, world-only long run): done.
-  The full long run (`scripts/longrun-world.ts`) has not been re-run on this
-  build yet.
+  Full long run (`scripts/longrun-world.ts`, seed 2026, 20 seasons): AI mean CA
+  85.3 at season 1, peak 96.6 (+13.2 %) at seasons 7–8, 90.4 (+6.0 %) at
+  season 20 (PRD 31 build: +31 %). Drift fails the 10 % line in seasons 5–12
+  (the hump, slice 2). Mean age 25.1–26.0; 35+ share 0.4–3.1 % (3.1 % in
+  season 19 fails the 3 % line by 0.1 point; PRD 31 build peaked at 2.9 %);
+  every roster ≥ 22 with ≥ 2 GK; week sim 1.6–1.9 s; save 1,820 KB gz at
+  season 20 (Postfach queue, as in PRD 31). Slice 2 rechecks the 35+ share
+  with the hump fix.
 - Slice 1 (registry, generic promotion and relegation, no hard-coded ids):
   done. `promotion-relegation.golden.test.ts` was recorded on the two-tier
   code (three seeds, player in either division) and passes unchanged on the

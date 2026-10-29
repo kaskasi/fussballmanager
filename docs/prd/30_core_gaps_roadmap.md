@@ -298,7 +298,8 @@ objectives), PRD 19 (Act 3 = climbing the pyramid), PRD 24 (mode table).
 **Progress:** PRD 32 written; scope docs updated. Slice 0 built: decline
 curve (PRD 02.2) for all players, AI youth at recruiting strength − 34. World-only
 run (seed 2026, 20 seasons): drift +13.2 % at season 7, +11.8 % at 10, +5.9 % at
-20 (was +23 / +27 / +31 %). The remaining hump in seasons 6–11 comes from the
+20 (was +23 / +27 / +31 %); the full long run agrees (+13.2 % peak, +6.0 % at
+season 20, 35+ share 3.1 % in season 19). The remaining hump in seasons 6–11 comes from the
 generated youngsters and is slice 2 work. Slice 1 built: `src/sim/league-pyramid.ts`
 registry, generic promotion and relegation (golden test unchanged), no
 hard-coded division ids left in client code. Next: slice 2 (tiers 1–3).

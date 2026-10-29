@@ -3,7 +3,7 @@
  */
 import type { TeamId } from "@fussballmanager/shared";
 import type { DivisionEconomyId } from "../economy/division-economy.ts";
-import { DIVISION_ECONOMY } from "../economy/division-economy.ts";
+import { tierOf } from "../sim/league-pyramid.ts";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { processTransferBreakout } from "../development/breakouts.ts";
 import { careerTeamId } from "../sim/rival-growth.ts";
@@ -54,8 +54,8 @@ const POSITION_SLOTS: Record<PositionPrimary, number> = {
 };
 
 export function defaultAiClubBudget(divisionId: DivisionEconomyId): number {
-  const tier = DIVISION_ECONOMY[divisionId].tier;
-  return tier <= 3 ? STARTING_TRANSFER_BUDGET : Math.round(STARTING_TRANSFER_BUDGET * 0.6);
+  const tier = tierOf(divisionId);
+  return tier <= 4 ? STARTING_TRANSFER_BUDGET : Math.round(STARTING_TRANSFER_BUDGET * 0.6);
 }
 
 export function normalizeAiBudgets(
@@ -318,7 +318,7 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
     const headroom = buyerBudget.transfer_budget - buyerBudget.spent;
     if (headroom < 80_000) continue;
 
-    const tier = DIVISION_ECONOMY[input.divisionId].tier;
+    const tier = tierOf(input.divisionId);
     const buyerRep = clubReputation(buyerClubId, input.worldClubs);
     const shortlist = buildAiClubShortlist({
       buyerClubId,
@@ -327,7 +327,7 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
       season: input.season,
       week: input.week,
       masterSeed: input.masterSeed,
-      topClub: tier <= 2,
+      topClub: tier <= 3,
       buyerReputation: buyerRep,
     });
 

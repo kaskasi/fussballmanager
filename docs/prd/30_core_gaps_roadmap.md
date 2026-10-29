@@ -40,7 +40,7 @@ it, so it sits between phases 3 and 5.
 | # | Phase | Status | Phase PRD | Est. sessions | Depends on |
 |---|---|---|---|---|---|
 | 1 | World longevity: retirement, AI youth, roster upkeep | Done (PR #34); CA drift moved to phase 2 | [31](31_world_longevity.md) | 2 | — |
-| 2 | League pyramid (5 tiers) + season archive + CA drift | In progress (slice 0 done, next 1/4) | [32](32_league_pyramid.md) | 3–4 | 1 |
+| 2 | League pyramid (5 tiers) + season archive + CA drift | In progress (slice 1/4) | [32](32_league_pyramid.md) | 3–4 | 1 |
 | 3 | Suspensions | Not started | — | 1 | — |
 | 4 | Season calendar: breaks every season | Not started | — | 2–3 | — |
 | 5 | Cups (regional + national) | Not started | — | 3 | 3, 4 (2 for national cup entrants) |
@@ -299,7 +299,9 @@ objectives), PRD 19 (Act 3 = climbing the pyramid), PRD 24 (mode table).
 curve (PRD 02.2) for all players, AI youth at recruiting strength − 34. World-only
 run (seed 2026, 20 seasons): drift +13.2 % at season 7, +11.8 % at 10, +5.9 % at
 20 (was +23 / +27 / +31 %). The remaining hump in seasons 6–11 comes from the
-generated youngsters and is slice 2 work. Next: slice 1 (registry).
+generated youngsters and is slice 2 work. Slice 1 built: `src/sim/league-pyramid.ts`
+registry, generic promotion and relegation (golden test unchanged), no
+hard-coded division ids left in client code. Next: slice 2 (tiers 1–3).
 
 ---
 

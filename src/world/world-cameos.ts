@@ -8,6 +8,7 @@ import type { Attributes, Player } from "../types/player.ts";
 import { deriveClubKitColors } from "./club-kit.ts";
 import type { WorldClub } from "./world-generator.ts";
 import { deriveWorldSeed, worldCareerClubId } from "./world-generator.ts";
+import { bottomDivisionId } from "../sim/league-pyramid.ts";
 
 export const UNION_RENDSBURG_TEAM_ID: TeamId = asTeamId("union-rendsburg");
 
@@ -19,7 +20,7 @@ export function unionRendsburgClub(masterSeed: number, clubIndex: number): World
     short_name: "URD",
     place: "Rendsburg",
     region: "Fördeküste",
-    division_id: "oberliga-nord",
+    division_id: bottomDivisionId(),
     identity: "traditional",
     reputation: 38,
     rivalry_ids: [],

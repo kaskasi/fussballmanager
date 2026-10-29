@@ -1,6 +1,7 @@
 /** UI gallery fixtures: kits for the title bar samples (one per branch of titleBarColors) and a mini league. */
 import { standings, type FixtureResult, type TableRow, type TeamId } from "@fussballmanager/shared";
-import { DEFAULT_GENERATED_WORLD, defaultLeaguePools, REGIONALLIGA_ID } from "../../sim/league-divisions.ts";
+import { DEFAULT_GENERATED_WORLD, defaultLeaguePools } from "../../sim/league-divisions.ts";
+import { DEFAULT_DIVISION_ID } from "../../sim/league-pyramid.ts";
 import { PLAYER_CLUB_KIT_PRIMARY, PLAYER_CLUB_KIT_SECONDARY } from "../../world/club-kit.ts";
 import { NORDSTERN_TEAM_ID, type WorldClub } from "../../world/world-generator.ts";
 import type { KitColors } from "../shell/title-bar-colors.ts";
@@ -24,7 +25,7 @@ export function galleryLeague(): {
   worldClubs: readonly WorldClub[];
 } {
   const pools = defaultLeaguePools();
-  const pool = pools[REGIONALLIGA_ID] ?? [];
+  const pool = pools[DEFAULT_DIVISION_ID] ?? [];
   const clubIds = [NORDSTERN_TEAM_ID, ...pool.filter((id) => id !== NORDSTERN_TEAM_ID)].slice(0, 10);
   let seed = 20261022;
   const goals = () => {

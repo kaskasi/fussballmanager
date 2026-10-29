@@ -56,6 +56,7 @@ import { attributeLabel } from "../player-profile.ts";
 import type { Attributes } from "../../types/player.ts";
 import type { Player } from "../../types/player.ts";
 import type { YouthInboxState } from "../../youth/decision-inbox.ts";
+import { DEFAULT_DIVISION_ID } from "../../sim/league-pyramid.ts";
 
 const CALENDAR_MONTH_KEYS = [
   "calendar.month.january",
@@ -106,7 +107,7 @@ function advanceScoutBoardForSession(current: PersistedSession, weekday: number)
   const club = current.world.clubs.find(
     (entry) => worldCareerClubId(entry.id) === current.clubId,
   );
-  const division = club?.division_id ?? "regionalliga-nord";
+  const division = club?.division_id ?? DEFAULT_DIVISION_ID;
   const opponentCtx = buildOpponentScoutWorkingDayContext(current);
   return advanceScoutWorkingDay(
     current.scoutBoard,

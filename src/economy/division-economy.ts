@@ -1,6 +1,19 @@
-export const DIVISION_ECONOMY = {
+import type { DivisionId } from "../sim/league-pyramid.ts";
+
+export interface DivisionEconomy {
+  label: string;
+  sponsorship_weekly: number;
+  tv_weekly: number;
+  staff_wages_weekly: number;
+  maintenance_weekly: number;
+  stadium_defaults: { capacity: number; fill_rate: number; avg_ticket_eur: number };
+  prize_by_place: readonly number[];
+  tv_season_bonus: readonly number[];
+}
+
+/** Per-division money (PRD 11). The tier number lives in the pyramid registry (PRD 32). */
+export const DIVISION_ECONOMY: Record<DivisionId, DivisionEconomy> = {
   "regionalliga-nord": {
-    tier: 3,
     label: "Regionalliga Nord",
     sponsorship_weekly: 55_000,
     tv_weekly: 12_000,
@@ -15,7 +28,6 @@ export const DIVISION_ECONOMY = {
     tv_season_bonus: [0, 250_000, 180_000, 120_000, 80_000, 50_000, 25_000],
   },
   "oberliga-nord": {
-    tier: 4,
     label: "Oberliga Nord",
     sponsorship_weekly: 28_000,
     tv_weekly: 4_500,
@@ -29,6 +41,7 @@ export const DIVISION_ECONOMY = {
     prize_by_place: [0, 45_000, 32_000, 22_000, 14_000, 9_000, 5_000],
     tv_season_bonus: [0, 55_000, 38_000, 24_000, 15_000, 10_000, 5_000],
   },
-} as const;
+};
 
-export type DivisionEconomyId = keyof typeof DIVISION_ECONOMY;
+/** Alias kept for existing imports; the registry owns the union (PRD 32 §4). */
+export type DivisionEconomyId = DivisionId;

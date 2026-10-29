@@ -25,6 +25,7 @@ import {
   type LegendPlayerRef,
   type StoryState,
 } from "./story-state.ts";
+import { bottomDivisionId, divisionAbove } from "../sim/league-pyramid.ts";
 
 export type CareerDismissalPolicy = "none" | "season_end_only" | "standard";
 
@@ -107,7 +108,7 @@ function act1EndChronicleKey(outcome: Act1Outcome, viaPlayoff: boolean): string 
   return viaPlayoff ? "playoffWon" : "survived";
 }
 
-/** Act 2 is won by promotion into the Regionalliga — direct or through the playoff (sim-derived). */
+/** Act 2 is won by promotion out of the Oberliga — direct or through the playoff (sim-derived). */
 export function act2PromotedFromMovements(
   teamId: TeamId,
   result: Pick<PromotionRelegationResult, "movements">,
@@ -115,7 +116,7 @@ export function act2PromotedFromMovements(
   return result.movements.some(
     (entry) =>
       entry.teamId === teamId &&
-      entry.to === "regionalliga-nord" &&
+      entry.from === bottomDivisionId() &&
       (entry.reason === "promoted" || entry.reason === "playoff_won"),
   );
 }
@@ -179,12 +180,12 @@ export function resolveCareerActSeasonEnd(input: CareerActSeasonEndInput): Story
   const offerOptions = { excludeTeamIds: [teamId], rivalPlayers: input.rivalPlayers };
   let offers = listJobOffers(teamId, input.nextSeason, leagueAfter, {
     ...offerOptions,
-    divisionId: "oberliga-nord",
+    divisionId: bottomDivisionId(),
   });
   if (offers.length === 0) {
     offers = listJobOffers(teamId, input.nextSeason, leagueAfter, {
       ...offerOptions,
-      divisionId: "regionalliga-nord",
+      divisionId: divisionAbove(bottomDivisionId()),
     });
   }
 

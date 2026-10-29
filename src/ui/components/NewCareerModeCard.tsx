@@ -4,6 +4,7 @@ import type { CareerClubChoice } from "../../narrative/career-club-pick.ts";
 import type { ProductGameMode } from "../../narrative/game-mode.ts";
 import { useT } from "../../i18n/react.ts";
 import { ModalShell } from "./primitives/ModalShell.tsx";
+import { careerStartDivisionIds } from "../../sim/league-pyramid.ts";
 
 const MODES: ReadonlyArray<{ id: ProductGameMode; icon: string }> = [
   { id: "regionalliga_manager", icon: "📋" },
@@ -78,7 +79,7 @@ export function NewCareerModeCard({
                   <th scope="col">{t("newCareer.club.col.goal")}</th>
                 </tr>
               </thead>
-              {(["regionalliga-nord", "oberliga-nord"] as const).map((divisionId) => {
+              {careerStartDivisionIds().map((divisionId) => {
                 const rows = clubChoices.filter((choice) => choice.divisionId === divisionId);
                 return (
                   <tbody key={divisionId}>

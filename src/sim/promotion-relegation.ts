@@ -7,8 +7,10 @@ import {
 import type { DivisionEconomyId } from "../economy/division-economy.ts";
 import type { LeagueState } from "../persistence/league-state.ts";
 import { totalSeasonMatchdays } from "../persistence/league-state.ts";
+import { t } from "../i18n/index.ts";
 import { clubShortName } from "./league-week.ts";
-import { squadForLeagueClub } from "./league-divisions.ts";
+import { divisionLabel, squadForLeagueClub } from "./league-divisions.ts";
+import { divisionBelow, divisionOfClub, emptyDivisionPools, PYRAMID, type DivisionId } from "./league-pyramid.ts";
 import { squadAverageStrength } from "@fussballmanager/shared";
 import type { Player } from "../types/player.ts";
 
@@ -117,6 +119,37 @@ function simulatePlayoffMatch(
   return { homeTeamId, awayTeamId, homeGoals, awayGoals };
 }
 
+/** Final table order of every division: the player's from its results, the rest batch-simulated. */
+function finalTables(
+  league: LeagueState,
+  pools: Record<DivisionEconomyId, TeamId[]>,
+  masterSeed: number,
+  season: number,
+  rivalPlayers?: readonly Player[],
+): Map<DivisionId, TeamId[]> {
+  const tables = new Map<DivisionId, TeamId[]>();
+  for (const division of PYRAMID) {
+    const ids = [...(pools[division.id] ?? [])];
+    const results =
+      league.division_id === division.id
+        ? league.results
+        : simulateFullDivisionSeason(
+            ids,
+            league.meetings_per_opponent,
+            masterSeed ^ season ^ division.simSalt,
+            rivalPlayers,
+          );
+    tables.set(division.id, standings(ids, results).map((row) => row.teamId));
+  }
+  return tables;
+}
+
+/**
+ * PRD 32 §3 — season-end movements over every boundary of the pyramid, top
+ * to bottom, from final tables: `direct` clubs swap places, then the playoff
+ * (first place above the drop zone at home vs first place below the direct
+ * promotion places). A club sits in exactly one boundary per season.
+ */
 export function applyPromotionRelegation(
   league: LeagueState,
   pools: Record<DivisionEconomyId, TeamId[]>,
@@ -124,76 +157,63 @@ export function applyPromotionRelegation(
   season: number,
   rivalPlayers?: readonly Player[],
 ): PromotionRelegationResult {
-  const regionalligaId = "regionalliga-nord";
-  const oberligaId = "oberliga-nord";
-  const regIds = [...pools[regionalligaId]];
-  const oberIds = [...pools[oberligaId]];
-  const meetings = league.meetings_per_opponent;
-
-  const regResults =
-    league.division_id === regionalligaId
-      ? league.results
-      : simulateFullDivisionSeason(regIds, meetings, masterSeed ^ season ^ 11, rivalPlayers);
-  const oberResults =
-    league.division_id === oberligaId
-      ? league.results
-      : simulateFullDivisionSeason(oberIds, meetings, masterSeed ^ season ^ 29, rivalPlayers);
-
-  const regTable = standings(regIds, regResults);
-  const oberTable = standings(oberIds, oberResults);
-  const regChampion = regTable[0]?.teamId;
-  const regRelegated = regTable[regTable.length - 1]?.teamId;
-  const regPlayoff = regTable[regTable.length - 2]?.teamId;
-  const oberChampion = oberTable[0]?.teamId;
-  const oberPlayoff = oberTable[1]?.teamId;
-
-  const nextPools: Record<DivisionEconomyId, TeamId[]> = {
-    [regionalligaId]: [...regIds],
-    [oberligaId]: [...oberIds],
-  };
+  const tables = finalTables(league, pools, masterSeed, season, rivalPlayers);
+  const nextPools = emptyDivisionPools<TeamId>();
+  for (const division of PYRAMID) nextPools[division.id] = [...(pools[division.id] ?? [])];
   const movements: PromotionMovement[] = [];
   const messages: string[] = [];
-
-  if (regRelegated && oberChampion) {
-    swapClub(nextPools, regionalligaId, oberligaId, regRelegated, oberChampion);
-    movements.push(
-      { teamId: oberChampion, from: oberligaId, to: regionalligaId, reason: "promoted" },
-      { teamId: regRelegated!, from: regionalligaId, to: oberligaId, reason: "relegated" },
-    );
-    messages.push(
-      `⬆️ ${clubShortName(oberChampion)} steigt auf`,
-      `⬇️ ${clubShortName(regRelegated!)} steigt ab`,
-    );
-  }
-
   let playoff: PromotionRelegationResult["playoff"];
-  if (regPlayoff && oberPlayoff) {
-    const playoffMatch = simulatePlayoffMatch(
-      regPlayoff,
-      oberPlayoff,
-      masterSeed ^ season ^ 71,
-      rivalPlayers,
-    );
-    const winnerId =
-      playoffMatch.homeGoals >= playoffMatch.awayGoals
-        ? playoffMatch.homeTeamId
-        : playoffMatch.awayTeamId;
-    if (winnerId === oberPlayoff) {
-      swapClub(nextPools, regionalligaId, oberligaId, regPlayoff, oberPlayoff);
+
+  for (const division of PYRAMID) {
+    const boundary = division.boundaryBelow;
+    const upperId = division.id;
+    const lowerId = divisionBelow(upperId);
+    if (!boundary || !lowerId) continue;
+    const upperTable = tables.get(upperId) ?? [];
+    const lowerTable = tables.get(lowerId) ?? [];
+
+    for (let slot = 0; slot < boundary.direct; slot++) {
+      const relegated = upperTable[upperTable.length - 1 - slot];
+      const promoted = lowerTable[slot];
+      if (!relegated || !promoted) continue;
+      swapClub(nextPools, upperId, lowerId, relegated, promoted);
       movements.push(
-        { teamId: oberPlayoff, from: oberligaId, to: regionalligaId, reason: "playoff_won" },
-        { teamId: regPlayoff, from: regionalligaId, to: oberligaId, reason: "playoff_lost" },
+        { teamId: promoted, from: lowerId, to: upperId, reason: "promoted" },
+        { teamId: relegated, from: upperId, to: lowerId, reason: "relegated" },
+      );
+      messages.push(
+        t("clubEvent.promoted", { club: clubShortName(promoted), division: divisionLabel(upperId) }),
+        t("clubEvent.relegated", { club: clubShortName(relegated), division: divisionLabel(lowerId) }),
       );
     }
-    playoff = {
-      homeTeamId: playoffMatch.homeTeamId,
-      awayTeamId: playoffMatch.awayTeamId,
-      homeGoals: playoffMatch.homeGoals,
-      awayGoals: playoffMatch.awayGoals,
-      winnerId,
-    };
+
+    if (!boundary.playoff) continue;
+    const upperPlayoff = upperTable[upperTable.length - 1 - boundary.direct];
+    const lowerPlayoff = lowerTable[boundary.direct];
+    if (!upperPlayoff || !lowerPlayoff) continue;
+    const match = simulatePlayoffMatch(
+      upperPlayoff,
+      lowerPlayoff,
+      masterSeed ^ season ^ boundary.playoffSalt,
+      rivalPlayers,
+    );
+    const winnerId = match.homeGoals >= match.awayGoals ? match.homeTeamId : match.awayTeamId;
+    if (winnerId === lowerPlayoff) {
+      swapClub(nextPools, upperId, lowerId, upperPlayoff, lowerPlayoff);
+      movements.push(
+        { teamId: lowerPlayoff, from: lowerId, to: upperId, reason: "playoff_won" },
+        { teamId: upperPlayoff, from: upperId, to: lowerId, reason: "playoff_lost" },
+      );
+    }
+    // The result keeps one playoff (the player's tiers have one boundary until PRD 32 slice 3).
+    playoff ??= { ...match, winnerId };
     messages.push(
-      `🎯 Relegation: ${clubShortName(playoffMatch.homeTeamId)} ${playoffMatch.homeGoals}:${playoffMatch.awayGoals} ${clubShortName(playoffMatch.awayTeamId)}`,
+      t("clubEvent.playoff", {
+        home: clubShortName(match.homeTeamId),
+        away: clubShortName(match.awayTeamId),
+        homeGoals: match.homeGoals,
+        awayGoals: match.awayGoals,
+      }),
     );
   }
 
@@ -204,10 +224,9 @@ function swapClub(
   pools: Record<DivisionEconomyId, TeamId[]>,
   upperId: DivisionEconomyId,
   lowerId: DivisionEconomyId,
-  upperTeamId: TeamId | undefined,
-  lowerTeamId: TeamId | undefined,
+  upperTeamId: TeamId,
+  lowerTeamId: TeamId,
 ): void {
-  if (!upperTeamId || !lowerTeamId) return;
   const upper = pools[upperId];
   const lower = pools[lowerId];
   const upperIndex = upper.indexOf(upperTeamId);
@@ -222,10 +241,7 @@ export function leagueStateAfterMovement(
   pools: Record<DivisionEconomyId, TeamId[]>,
   playerClubId: TeamId,
 ): LeagueState {
-  const playerDivision = (["regionalliga-nord", "oberliga-nord"] as const).find((divisionId) =>
-    pools[divisionId]?.includes(playerClubId),
-  );
-  const division_id = playerDivision ?? league.division_id;
+  const division_id = divisionOfClub(pools, playerClubId) ?? league.division_id;
   return {
     ...league,
     division_id,

@@ -1,6 +1,6 @@
 # PRD 32 — League pyramid (five tiers), season archive, late-career decline
 
-**Status:** In progress · 2026-10-29 · Phase 2 of PRD 30. Slice 0 built.
+**Status:** In progress · 2026-10-29 · Phase 2 of PRD 30. Slices 0–1 built.
 **Features:** F10.8 (PRD 10, M4 → now), F10.3. **Touches:** PRD 02 (decline),
 PRD 03/31 (AI youth level), PRD 11 (tier economies), PRD 12 (structure),
 PRD 19 (Act 3), PRD 23 (objectives), PRD 24 (modes).
@@ -108,18 +108,37 @@ to bottom from final tables, so a pool always keeps 18 clubs.
 ## 4. Registry (`src/sim/league-pyramid.ts`)
 
 ```ts
-interface PyramidTier {
+interface PyramidDivision {
   id: DivisionId;
-  tier: 1 | 2 | 3 | 4 | 5;
-  labelKey: string; // i18n
-  clubCount: 18;
-  boundaryBelow?: { direct: number; playoff: boolean; upperPlayoffRank: number; lowerPlayoffRank: number };
+  tier: number;          // 1 = top flight
+  clubCount: number;     // 18
+  simSalt: number;       // season-end batch sim seed salt
+  tableSalt: number;     // Leagues-screen table seed salt (until slice 3)
+  careerStart: boolean;  // offered in the new-career club pick
+  boundaryBelow?: { direct: number; playoff: boolean; playoffSalt: number };
 }
 ```
 
-- `PYRAMID` is ordered top to bottom. `DivisionId` (today `DivisionEconomyId`)
-  is the union of its ids. Helpers: `tierOf`, `divisionAbove`,
-  `divisionBelow`, `pyramidDivisionIds()`.
+The playoff always pairs the first place above the upper division's drop zone
+(home) with the first place below the lower division's direct promotion
+places: 17th vs 2nd with one direct place, 16th vs 3rd with two. Labels stay
+in `DIVISION_ECONOMY` (proper names, not translated).
+
+- `PYRAMID` is ordered top to bottom. `DivisionId` is the union of its ids;
+  `DivisionEconomyId` stays as an alias. Helpers: `tierOf`, `divisionAbove`,
+  `divisionBelow`, `bottomDivisionId`, `careerStartDivisionIds`,
+  `divisionOfClub`, `emptyDivisionPools`, `tableZone`.
+- The tier number moved from `DIVISION_ECONOMY` to the registry and was
+  renumbered (Regionalliga 3 → 4, Oberliga 4 → 5). The three places that
+  compared tier numbers (AI budgets, AI "top club" flag, loan cap fallback,
+  club-pipeline finances) were shifted with it, so they behave as before.
+- Data tables keyed by division id (`DIVISION_ECONOMY`, `CAP_BY_DIVISION`)
+  are typed `Record<DivisionId, …>`, so slice 2 cannot forget an entry.
+  `server/src/db/squad-map.ts` keeps its own `DIVISION_ID`: the server package
+  does not import client code.
+- Promotion and relegation club events are i18n strings now
+  (`clubEvent.promoted`, `clubEvent.relegated`, `clubEvent.playoff`); the
+  arrow and target emoji are gone (PRD 30 cross-cutting rule).
 - Pairwise code goes: `REGIONALLIGA_ID`/`OBERLIGA_ID`, the two-key
   `league_pools`, the pool checks in `normalizeLeagueState`, the hard-coded
   pair in `leagueStateAfterMovement` and `applyPromotionRelegation`. All become
@@ -227,5 +246,9 @@ changes the schema (pool keys, new clubs, `division_results`, archive).
 - Slice 0 (late-career decline, AI youth level, world-only long run): done.
   The full long run (`scripts/longrun-world.ts`) has not been re-run on this
   build yet.
-- Next: slice 1 (registry plus generic promotion and relegation over tiers 4–5,
-  no behavior change).
+- Slice 1 (registry, generic promotion and relegation, no hard-coded ids):
+  done. `promotion-relegation.golden.test.ts` was recorded on the two-tier
+  code (three seeds, player in either division) and passes unchanged on the
+  registry loop.
+- Next: slice 2 (world generation for tiers 1–3, economies, calibration, save
+  migration, steady-state age shape for the CA hump).

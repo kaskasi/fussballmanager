@@ -1,5 +1,6 @@
 import type { DivisionEconomyId } from "./division-economy.ts";
 import { divisionEconomy } from "./club-finances.ts";
+import { tierOf } from "../sim/league-pyramid.ts";
 import { appendPendingFinanceLines, type FinanceLine } from "./finance-ledger.ts";
 import { applyFinanceLines, type ClubFinances } from "./club-finances.ts";
 import { careerWeekIndex } from "../stadium/hospitality.ts";
@@ -47,10 +48,10 @@ export const CAP_BY_DIVISION: Partial<Record<DivisionEconomyId, number>> = {
 export function loanCapForDivision(divisionId: DivisionEconomyId): number {
   const explicit = CAP_BY_DIVISION[divisionId];
   if (explicit !== undefined) return explicit;
-  const tier = divisionEconomy(divisionId).tier;
-  if (tier <= 2) return ABS_MAX_BANK_PRINCIPAL;
-  if (tier === 3) return 950_000;
-  if (tier === 4) return 650_000;
+  const tier = tierOf(divisionId);
+  if (tier <= 3) return ABS_MAX_BANK_PRINCIPAL;
+  if (tier === 4) return 950_000;
+  if (tier === 5) return 650_000;
   return 500_000;
 }
 

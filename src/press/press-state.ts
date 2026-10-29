@@ -34,7 +34,7 @@ export interface PressTopic {
   params: Record<string, string | number>;
 }
 
-/** One match's conference pair: topics are frozen at the pre-match presser. */
+/** One match's conference pair: topics are frozen at the pre-match presser; kept until the next pair. */
 export interface PressConferenceState {
   fixture_key: string;
   topics: PressTopic[];

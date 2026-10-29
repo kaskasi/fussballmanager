@@ -1,0 +1,56 @@
+/** PRD 28 — press conference step in the match flow. Tokens only (design.md §2). */
+
+.press__questions { display: grid; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.press__item { display: grid; gap: var(--space-2); padding-bottom: var(--space-4); border-bottom: 1px solid var(--line); }
+.press__item:last-child { padding-bottom: 0; border-bottom: 0; }
+
+.press__asker { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0; font-size: var(--font-size-sm); line-height: 1.25rem; }
+.press__asker .tc-icon { width: 16px; height: 16px; color: var(--text-muted); }
+
+.press__question { margin: 0; padding-left: var(--space-3); border-left: 3px solid var(--line-strong); font-family: var(--font-display); font-weight: 700; font-size: var(--font-size-lg); line-height: 1.5rem; }
+
+.press__tones { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
+.press__tone { display: grid; gap: var(--space-1); justify-items: start; min-height: var(--control-md); padding: var(--space-2) var(--space-3); border: 1px solid var(--control-border); border-radius: var(--radius-md); background: var(--panel); color: var(--text); font-family: var(--font-text); text-align: left; cursor: pointer; }
+.press__tone:hover { background: var(--sunken); }
+.press__tone:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.press__tone.is-chosen { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.press__tone:disabled { cursor: default; }
+.press__tone:disabled:not(.is-chosen) { color: var(--text-muted); background: var(--sunken); border-color: var(--line); }
+.press__tone-label { font-weight: 700; font-size: var(--font-size-sm); line-height: 1.25rem; }
+
+.press__hints { display: inline-flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); }
+.press__hint { display: inline-flex; align-items: center; }
+.press__hint .tc-icon { width: 14px; height: 14px; }
+.press__hint .press__arrow { width: 12px; height: 12px; stroke-width: 3; }
+.press__hint--up { color: var(--positive); }
+.press__hint--down { color: var(--negative); }
+.press__tone.is-chosen .press__hint { color: var(--on-accent); }
+
+.press__answer { margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--sunken); font-size: var(--font-size-sm); line-height: 1.25rem; font-style: italic; }
+
+.press__delegate { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-4); }
+.press__delegate .tc-caption { margin: 0; }
+
+.press__side { display: grid; gap: var(--space-4); }
+.press__meter { display: grid; gap: var(--space-2); }
+.press__meter .tc-caption { margin: 0; }
+.press__meter-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); font-family: var(--font-display); font-size: var(--font-size-lg); line-height: 1.5rem; }
+.press__meter-track { position: relative; height: var(--space-3); border-radius: var(--radius-pill); background: var(--sunken); border: 1px solid var(--line); overflow: hidden; }
+.press__meter-zone { position: absolute; top: 0; bottom: 0; left: 0; }
+.press__meter-zone--boycott { background: var(--negative); opacity: 0.35; }
+.press__meter-zone--hostile { background: var(--warning); opacity: 0.25; }
+.press__meter-marker { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1px; background: var(--text); }
+
+.press__effects { display: grid; gap: var(--space-2); }
+.press__effects .tc-caption, .press__effects .tc-label { margin: 0; }
+.press__effect-row { display: contents; }
+.press__effect-row dt { display: inline-flex; align-items: center; gap: var(--space-2); }
+.press__effect-row dt .tc-icon { width: 16px; height: 16px; }
+.press__delta--up { color: var(--positive); }
+.press__delta--down { color: var(--negative); }
+.press__delta--flat { color: var(--text-muted); }
+
+@media (max-width: 767px) {
+  .press__tones { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .press__tone { min-height: var(--touch-min); }
+}

@@ -4,6 +4,7 @@
  * this page is for building screens, players never see it.
  */
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { PressGallerySample } from "./PressGallerySample.tsx";
 import { Check, Minus, Plus, X } from "lucide-react";
 import { titleBarColors, type KitColors, type TitleBarTheme } from "../shell/title-bar-colors.ts";
 import { ratingBand } from "../design/rating-band.ts";
@@ -621,6 +622,14 @@ export function UiGallery() {
             <dt>Wages covered</dt>
             <dd className="tc-attention">3 weeks</dd>
           </dl>
+        </Section>
+
+        <Section
+          id="press"
+          title="Press conference"
+          note="PRD 28. A match-flow step: tone chips with direction hints, relationship meter, effect summary. Header NEXT submits, then kicks off."
+        >
+          <PressGallerySample />
         </Section>
 
         <Section id="treter" title="Der Treter" note="A newspaper object, the same in both themes. Newsreader and UnifrakturMaguntia are self-hosted in public/fonts.">

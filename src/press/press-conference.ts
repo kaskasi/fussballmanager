@@ -51,6 +51,7 @@ export interface PressConference {
   topics: PressTopic[];
   boycott: boolean;
   result?: PressMatchResult;
+  opponentName?: string;
 }
 
 export const PRESS_MAX_QUESTIONS = 3;
@@ -223,6 +224,7 @@ export function buildPressConference(input: BuildConferenceInput): PressConferen
     topics: [...input.topics],
     boycott: input.boycott,
     result: input.result,
+    opponentName: input.opponentName,
   };
 }
 

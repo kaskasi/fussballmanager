@@ -157,7 +157,8 @@ describe("press conference flow", () => {
     expect(post).not.toBeNull();
     expect(post!.questions[0]!.kind).toMatch(/^result_/);
     const done = resolvePressConference(afterPre, post!, "delegate").session;
-    expect(sessionPressState(done).conference).toBeNull();
+    expect(sessionPressState(done).conference).toMatchObject({ pre_done: true, post_done: true });
+    expect(pressConferenceFor(done, "pre", context)).toBeNull();
     expect(sessionPressState(done).history).toHaveLength(2);
     expect(pressConferenceFor(done, "post", { ...context, homeGoals: 2, awayGoals: 0 })).toBeNull();
   });
@@ -171,7 +172,7 @@ describe("press conference flow", () => {
 
     const fixture = { homeTeamId: context.homeTeamId, awayTeamId: context.awayTeamId, homeGoals: 1, awayGoals: 1 };
     const done = autoPostMatchPress(afterPre, fixture, afterPre.season, context.matchday);
-    expect(sessionPressState(done).conference).toBeNull();
+    expect(sessionPressState(done).conference?.post_done).toBe(true);
     expect(done.season).toBe(afterPre.season);
     expect(sessionPressState(done).history.every((record) => record.delegated)).toBe(true);
   });
@@ -274,5 +275,52 @@ describe("press state", () => {
     expect(press.relationship).toBe(55);
     expect(press.known_topic_ids).toBeUndefined();
     expect(press.conference).toBeNull();
+  });
+});
+
+describe("press in the week pipeline", () => {
+  async function derbyWeek(): Promise<GameSession> {
+    const { newGameSession: create } = await import("../persistence/game-session.ts");
+    const { defaultTrainingPlan } = await import("../development/training-units.ts");
+    const { prepareCareerMatch } = await import("../sim/career-match-setup.ts");
+    let session = create(new Date("2026-08-01T12:00:00Z"));
+    session = { ...session, week: 1, weekday: 7, trainingPlan: defaultTrainingPlan() };
+    const setup = prepareCareerMatch(session)!;
+    const clubId = session.league.player_club_id;
+    const opponentId = setup.homeTeamId === clubId ? setup.awayTeamId : setup.homeTeamId;
+    return {
+      ...session,
+      world: {
+        ...session.world,
+        clubs: session.world.clubs.map((club) =>
+          club.id === clubId ? { ...club, rivalry_ids: [opponentId] } : club,
+        ),
+      },
+    };
+  }
+
+  it("delegates both pressers of an unwatched key match", async () => {
+    const { simulateGameWeek } = await import("../sim/week-pipeline.ts");
+    const result = await simulateGameWeek(await derbyWeek());
+    const press = sessionPressState(result.session);
+    expect(press.conference?.post_done).toBe(true);
+    expect(press.history.map((record) => record.phase).sort()).toEqual(["post", "pre"]);
+    expect(press.history.every((record) => record.delegated)).toBe(true);
+  });
+
+  it("leaves pressers the manager held alone", async () => {
+    const { simulateGameWeek } = await import("../sim/week-pipeline.ts");
+    const { prepareCareerMatch } = await import("../sim/career-match-setup.ts");
+    let session = await derbyWeek();
+    const context = pressMatchContext(prepareCareerMatch(session)!);
+    const pre = pressConferenceFor(session, "pre", context)!;
+    session = resolvePressConference(session, pre, pre.questions.map(() => "calm")).session;
+    const post = pressConferenceFor(session, "post", { ...context, homeGoals: 1, awayGoals: 0 })!;
+    session = resolvePressConference(session, post, post.questions.map(() => "calm")).session;
+
+    const result = await simulateGameWeek(session);
+    const press = sessionPressState(result.session);
+    expect(press.history).toHaveLength(2);
+    expect(press.history.some((record) => record.delegated)).toBe(false);
   });
 });

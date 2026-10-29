@@ -36,6 +36,10 @@ import { useT } from "../i18n/react.ts";
 import type { FanbaseMood } from "../stadium/fanbase.ts";
 import { t } from "../i18n/index.ts";
 import type { ScoutBoard } from "../scouting/scout-board.ts";
+import type { PressConference } from "../press/press-conference.ts";
+import { pressMatchContext, type PressResolution } from "../press/press-session.ts";
+import { standoutPlayerId, withMoraleForms } from "../press/press-squad.ts";
+import { PressConferenceStep, type PressConferenceBridge } from "./PressConferenceStep.tsx";
 
 export function CareerMatch({
   setup,
@@ -67,6 +71,7 @@ export function CareerMatch({
   worldClubs,
   tacticsMode = "full",
   showOpponentScout = true,
+  press,
 }: {
   setup: CareerMatchSetup;
   players: readonly Player[];
@@ -97,28 +102,66 @@ export function CareerMatch({
   worldClubs?: readonly WorldClub[];
   tacticsMode?: TacticsMode;
   showOpponentScout?: boolean;
+  /** PRD 28 — pressers around this match (absent in tests / sandbox). */
+  press?: PressConferenceBridge;
 }) {
   const t = useT();
   const [playerClubSquad, setPlayerClubSquad] = useState<Squad | null>(null);
+  const [preMatchPress, setPreMatchPress] = useState<{ conference: PressConference; squad: Squad } | null>(null);
   const capacity = homeStadiumCapacity ?? 8_000;
   const mood = fanbaseMood ?? "steady";
 
   useEffect(() => {
     setPlayerClubSquad(null);
+    setPreMatchPress(null);
   }, [setup.playerClubId, setup.homeTeamId, setup.awayTeamId]);
 
   useEffect(() => {
     onLineupPhaseChange?.(playerClubSquad == null);
   }, [playerClubSquad, onLineupPhaseChange]);
 
-  const handleLineupConfirm = useCallback((squad: Squad) => {
-    setPlayerClubSquad(squad);
-  }, []);
+  // PRD 28: the pre-match presser follows squad selection, so journalists can ask about the XI.
+  const handleLineupConfirm = useCallback(
+    (squad: Squad) => {
+      const conference = press?.conferenceFor(
+        "pre",
+        pressMatchContext(setup, { starterIds: squad.starters.map((place) => place.player.id) }),
+      );
+      if (conference) {
+        setPreMatchPress({ conference, squad });
+        return;
+      }
+      setPlayerClubSquad(squad);
+    },
+    [press, setup],
+  );
+
+  // The presser's morale swing reaches the engine squad confirmed before it.
+  const handlePreMatchPressDone = useCallback(
+    (resolution: PressResolution) => {
+      if (!preMatchPress) return;
+      setPlayerClubSquad(withMoraleForms(preMatchPress.squad, resolution.session.players));
+      setPreMatchPress(null);
+    },
+    [preMatchPress],
+  );
 
   useEffect(() => {
     if (!playerClubSquad) return;
     return () => onNavActionChange(null);
   }, [playerClubSquad, onNavActionChange]);
+
+  if (!playerClubSquad && preMatchPress && press) {
+    return (
+      <PressConferenceStep
+        conference={preMatchPress.conference}
+        bridge={press}
+        opponentName={setup.opponentShortName}
+        onNavActionChange={onNavActionChange}
+        onDone={handlePreMatchPressDone}
+      />
+    );
+  }
 
   if (!playerClubSquad) {
     return (
@@ -168,6 +211,7 @@ export function CareerMatch({
       worldClubs={worldClubs}
       season={season}
       masterSeed={masterSeed}
+      press={press}
     />
   );
 }
@@ -191,6 +235,7 @@ function CareerMatchPlayback({
   worldClubs,
   season,
   masterSeed,
+  press,
 }: {
   setup: CareerMatchSetup;
   players: readonly Player[];
@@ -210,8 +255,10 @@ function CareerMatchPlayback({
   kasse?: MatchdayCashBreakdown;
   league: LeagueState;
   worldClubs?: readonly WorldClub[];
+  press?: PressConferenceBridge;
 }) {
   const [view, setView] = useState<Awaited<ReturnType<typeof fetchCareerMatchView>> | null>(null);
+  const [postMatchPress, setPostMatchPress] = useState<PressConference | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [reportOpen, setReportOpen] = useState(false);
@@ -374,6 +421,8 @@ function CareerMatchPlayback({
   }, [loading, onRegisterSkipToReport, playback.goToEnd, reportOpen, userStartedPlayback, view]);
 
   useLayoutEffect(() => {
+    // The post-match presser owns NEXT while it is open.
+    if (postMatchPress) return;
     const outcome = view ? watchedMatchFromView(setup, view) : null;
     const awaitingKickoff = Boolean(view && !loading && !reportOpen && !userStartedPlayback);
     const navLabel = simulating
@@ -390,6 +439,18 @@ function CareerMatchPlayback({
       onClick: () => {
         if (!outcome) return;
         if (reportOpen) {
+          const conference = press?.conferenceFor(
+            "post",
+            pressMatchContext(setup, {
+              homeGoals: outcome.homeGoals,
+              awayGoals: outcome.awayGoals,
+              standoutPlayerId: standoutPlayerId(outcome.playerClubStats),
+            }),
+          );
+          if (conference) {
+            setPostMatchPress(conference);
+            return;
+          }
           if (fastSim) onSkip(outcome);
           else onComplete(outcome);
           return;
@@ -418,6 +479,8 @@ function CareerMatchPlayback({
     onNavActionChange,
     onSkip,
     playback.pause,
+    postMatchPress,
+    press,
     markUserStartedPlayback,
     playback.play,
     playback.playing,
@@ -427,6 +490,19 @@ function CareerMatchPlayback({
     userStartedPlayback,
     view,
   ]);
+
+  if (postMatchPress && press && view) {
+    const outcome = watchedMatchFromView(setup, view);
+    return (
+      <PressConferenceStep
+        conference={postMatchPress}
+        bridge={press}
+        opponentName={setup.opponentShortName}
+        onNavActionChange={onNavActionChange}
+        onDone={() => (fastSim ? onSkip(outcome) : onComplete(outcome))}
+      />
+    );
+  }
 
   const ownTeamId = view ? (setup.isHome ? view.home.id : view.away.id) : setup.playerClubId;
   const live = Boolean(view && frame && !reportOpen && userStartedPlayback);

@@ -21,6 +21,7 @@ import "./ui/design/surfaces/merch.css";
 import "./ui/design/surfaces/medical.css";
 import "./ui/design/surfaces/postfach.css";
 import "./ui/design/surfaces/matchday.css";
+import "./ui/design/surfaces/press.css";
 import "./ui/design/presentation-modes.css";
 import "./index.css";
 import "./ui/layout/mobile-pass.css";

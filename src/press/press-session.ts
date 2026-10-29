@@ -114,6 +114,12 @@ export function pressConferenceFor(
   }
 
   const home = context.homeTeamId === session.league.player_club_id;
+  const opponentId = home ? context.awayTeamId : context.homeTeamId;
+  // Journalists say the club's name, not the three-letter table code.
+  const opponentName = session.world.clubs.find((club) => club.id === opponentId)?.name ?? context.opponentName;
+  topics = topics.map((topic) =>
+    topic.params.opponent != null ? { ...topic, params: { ...topic.params, opponent: opponentName } } : topic,
+  );
   return buildPressConference({
     phase,
     fixtureKey: key,
@@ -128,7 +134,7 @@ export function pressConferenceFor(
     result: phase === "post" ? matchResult(session, context) : undefined,
     goalsFor: home ? context.homeGoals : context.awayGoals,
     goalsAgainst: home ? context.awayGoals : context.homeGoals,
-    opponentName: context.opponentName,
+    opponentName,
     standoutPlayerId: context.standoutPlayerId,
     boardPressure: session.board.pressure,
   });
@@ -221,8 +227,9 @@ export function resolvePressConference(
       },
       leak_pending: false,
     };
-  } else {
-    next = { ...next, conference: null };
+  } else if (next.conference) {
+    // Keep the finished pair: it marks this fixture as covered until the next match's presser.
+    next = { ...next, conference: { ...next.conference, post_done: true } };
   }
 
   return {

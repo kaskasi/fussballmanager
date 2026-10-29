@@ -10,6 +10,7 @@ import {
   type FeatureCurtain,
 } from "./career-presentation.ts";
 import { resolveProductGameMode, type ProductGameMode } from "./game-mode.ts";
+import { defaultPressState, normalizePressState, type PressState } from "../press/press-state.ts";
 
 export type { CareerPhase, CurtainUnlockId, FeatureCurtain } from "./career-presentation.ts";
 export type { ProductGameMode } from "./game-mode.ts";
@@ -165,6 +166,10 @@ export interface StoryState {
   fan_feed: FanFeedBeat[];
   chronicle_entries: ChronicleEntry[];
   tutorial?: TutorialState;
+  /** PRD 28 — press relationship, current conference pair, crisis ladder. */
+  press?: PressState;
+  /** PRD 28 — consecutive weeks the pro squad's average morale sat below the crisis line. */
+  morale_low_weeks?: number;
 }
 
 export const FAN_FEED_MAX = 8;
@@ -206,6 +211,8 @@ export function regionalligaManagerStoryState(week = 1): StoryState {
     fan_feed: [],
     chronicle_entries: [],
     tutorial: defaultTutorialState(),
+    press: defaultPressState(),
+    morale_low_weeks: 0,
   };
 }
 
@@ -259,6 +266,8 @@ export function normalizeStoryState(state?: StoryState, week = 1): StoryState {
     chronicle_entries: state.chronicle_entries ?? [],
     media_hype: clampMediaHype(state.media_hype ?? base.media_hype),
     tutorial: normalizeTutorialState(state.tutorial ?? base.tutorial),
+    press: normalizePressState(state.press),
+    morale_low_weeks: state.morale_low_weeks ?? 0,
   };
 }
 

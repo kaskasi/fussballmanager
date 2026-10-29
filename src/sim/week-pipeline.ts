@@ -116,6 +116,7 @@ import { startPhysioWeek } from "../medical/injury-care.ts";
 import { merchCareerDayIndex } from "../economy/merchandising-market.ts";
 import type { WatchedPlayerMatch } from "./watched-player-match.ts";
 import { advanceNarrativeWeek } from "../narrative/pipeline-week.ts";
+import { autoPostMatchPress, autoPreMatchPress } from "../press/press-session.ts";
 import { advanceMentorshipWeek } from "../development/mentoring.ts";
 import {
   careerWeekIndex,
@@ -179,6 +180,11 @@ export async function simulateGameWeek(
     ...sessionInput,
     league: normalizeLeagueState(sessionInput.league, sessionInput.masterSeed),
   };
+  // PRD 28: a pre-match presser the manager did not hold (unwatched match) goes to the assistant,
+  // before kickoff, so its morale swing reaches this week's engine squad.
+  const pressSeason = session.season;
+  const pressMatchday = session.league.matchday;
+  session = autoPreMatchPress(session);
   const { nextWeek, footballSeasonEnded } = advanceCalendarWeek(session.week);
   // The matchday belongs to the week that is ending (its Saturday), not the next one —
   // otherwise MD1 is simulated blind in preseason week 0 and the calendar runs a week late.
@@ -951,6 +957,8 @@ export async function simulateGameWeek(
     medicalStaff: session.medicalStaff,
     orthopedistHire: session.orthopedistHire,
   };
+
+  nextSession = autoPostMatchPress(nextSession, leagueStep.playerFixture, pressSeason, pressMatchday);
 
   let intakeCount = 0;
   if (seasonEnded) {

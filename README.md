@@ -2,7 +2,7 @@
 
 A single-player football management game about running an underdog club, not just picking a lineup.
 
-You take a small, locally rooted club with a thin squad, a tight budget, and a real chance of relegation. The season is simulated. You decide who to trust, what to train, what to spend, and which story the club tells about itself. Matches are watched as a text-and-2D broadcast of the same event stream. There is no 3D, and there is no multiplayer.
+You take a small, locally rooted club with a thin squad, a tight budget, and a real chance of relegation. The season is simulated. You decide who to trust, what to train, what to spend, and which story the club tells about itself. Matches are followed as a text broadcast: live commentary plus momentum, zone, and stat visuals derived from the same event stream. There is no 3D, and there is no multiplayer.
 
 Play the current build: [fussi.imgarten.party](https://fussi.imgarten.party)
 
@@ -32,7 +32,7 @@ The playable loop already includes:
 - Stadium and construction, with a club-wide build queue
 - Finances, matchday commerce, and merchandising
 - Medical and rehab
-- A text match with a 2D pitch that reads the same events
+- A text-first live match with event-derived momentum, zones, and stats (the 2D pitch is on the lineup screen)
 - Local saves, plus an optional cloud save behind a sync code
 
 It is pre-release. Balance, copy, and mobile layout are still moving. The numbered docs under [`docs/prd/`](docs/prd/) are the source of truth for what belongs in the game. If a feature is not in those docs, it is not a feature.

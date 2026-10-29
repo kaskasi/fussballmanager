@@ -25,6 +25,8 @@ export interface CareerPlayerInput {
   attributes: CareerPlayerAttributes;
   form: number;
   fitness: number;
+  /** 0–100; shifts engine form by up to ±MORALE_FORM_SWING career-form points. Defaults to neutral. */
+  morale?: number;
   portraitSeed: number;
   overall?: number;
   /** Derived 0.62–1.0 match-greenness. Defaults to 1 (full sheet). */
@@ -82,6 +84,26 @@ export function mapCareerForm(form: number): number {
   return Math.min(100, Math.max(0, Math.round(((form + 5) / 10) * 100)));
 }
 
+/**
+ * Press & dressing room (PRD 28): morale nudges engine form by at most ±MORALE_FORM_SWING career-form
+ * points (≈ ±5 engine form). Neutral sits at the world's typical morale (generator 55–85), so an
+ * average squad plays exactly as before; 100 reaches the cap, 30 and below the floor.
+ */
+export const MORALE_FORM_SWING = 0.5;
+export const MORALE_NEUTRAL = 65;
+const MORALE_FORM_SPAN = 35;
+
+export function moraleFormOffset(morale: number | undefined): number {
+  if (morale === undefined || !Number.isFinite(morale)) return 0;
+  const scaled = ((morale - MORALE_NEUTRAL) / MORALE_FORM_SPAN) * MORALE_FORM_SWING;
+  return Math.min(MORALE_FORM_SWING, Math.max(-MORALE_FORM_SWING, scaled));
+}
+
+/** Engine form (0–100) from career form plus the subtle morale offset (press & dressing room). */
+export function careerEngineForm(career: Pick<CareerPlayerInput, "form" | "morale">): number {
+  return mapCareerForm(career.form + moraleFormOffset(career.morale));
+}
+
 export function mapCareerFatigue(fitness: number): number {
   return Math.min(100, Math.max(0, Math.round(100 - fitness)));
 }
@@ -118,7 +140,7 @@ function toEnginePlayer(career: CareerPlayerInput, role: PlayerRole, teamId: Tea
     teamId,
     name: career.displayName,
     role,
-    form: mapCareerForm(career.form),
+    form: careerEngineForm(career),
     fatigue: mapCareerFatigue(career.fitness),
     shirt: (career.portraitSeed % 98) + 1,
     attributes: mapCareerAttributes(career.attributes, role, career.experience ?? 1),

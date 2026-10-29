@@ -33,6 +33,7 @@ export function careerPlayerInputs(
       attributes: player.attributes,
       form: player.state.form,
       fitness: player.state.fitness,
+      morale: player.state.morale,
       portraitSeed: player.portrait_seed,
       overall: estimateCa(player.attributes, player.position),
       experience: derivedExperienceFactor(player),

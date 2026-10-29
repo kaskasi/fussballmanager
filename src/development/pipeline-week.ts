@@ -272,7 +272,12 @@ export function applyTrainingUnit(
 export function applyWeeklyAttributeDecay(player: Player): Player {
   const attributes = { ...player.attributes };
   for (const key of SKILLS) {
-    const delta = weeklyDecayDelta(key, player.age, player.hidden.maturity_offset);
+    const delta = weeklyDecayDelta(
+      key,
+      player.age,
+      player.hidden.maturity_offset,
+      player.attributes[key],
+    );
     if (delta === 0) continue;
     attributes[key] = applyGrowth(player.attributes[key], delta);
   }

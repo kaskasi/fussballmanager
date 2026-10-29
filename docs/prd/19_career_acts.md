@@ -78,7 +78,7 @@ act1_nordstern   Tutorial season · FC Nordstern · curtain heavy
        ↓ relegation + offer beat (employer switch TBD)
 act2_regional    Patient chairman · unlock pillars one-by-one
        ↓ promotion to regional top tier (win condition Act 2)
-act3_empire      National success · camps/market depth · F10.6 path
+act3_empire      National success = climbing the pyramid to the Meisterliga (PRD 32) · camps/market depth · F10.6 path
        ↓ win international cup final (sim-derived)
 act4_complete    Underdog arc complete on this save · unlock Elite World (client profile)
        ↓ optional new save

@@ -13,6 +13,8 @@ Zu Saisonstart (und bei Job-Wechsel) leitet das System den **Club-Standing-Tier*
 
 Nebenziele: Liquidität (Gehalts-Wochen), Cash-Puffer (nicht Pflicht), Ø-CA, Punkte — je nach Tier.
 
+**Pyramide (PRD 32 §8, ab Slice 4):** Der Standing-Tier wird aus dem Ruf-Rang des Clubs innerhalb seiner Spielklasse abgeleitet. Aufsteiger starten mit `survival_mid` („Klasse halten“). Jobangebote können nach Erfolg aus höheren Spielklassen kommen.
+
 ## Projektziel
 
 Jede Saison genau **ein** optionales Projektziel (deterministisch aus Seed): Jugendcamp besetzen, Stadionausbau, Arztzentrum, Fanshop-Umsatz +25 %.

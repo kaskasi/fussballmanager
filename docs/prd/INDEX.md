@@ -43,6 +43,7 @@ One line per doc, so agents open only what a task needs.
 | [29_mentoring](29_mentoring.md) | Mentor/talent pairs |
 | [30_core_gaps_roadmap](30_core_gaps_roadmap.md) | Multi-session plan + status board: retirement, 5-tier pyramid, suspensions, season calendar, cups, in-match management, chronicle, friendlies, set pieces, difficulty, player happiness |
 | [31_world_longevity](31_world_longevity.md) | PRD 30 phase 1: retirement roll, AI youth and roster upkeep, retired records, long-run guard |
+| [32_league_pyramid](32_league_pyramid.md) | PRD 30 phase 2: five-tier pyramid, tier economies, live tables, season archive; late-career decline (CA drift) |
 | [design.md](design.md) | Visual language: tokens, type, icons, header, layout, Definition of Done |
 | [design/](design/) | Per-screen wireframes, `09.NN-<screen>.md` (design.md §9.NN) |
 | [PRD.md](PRD.md) | Archived original vision; §4 scope table (in/out of v1) |

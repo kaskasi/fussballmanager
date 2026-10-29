@@ -1,8 +1,13 @@
 {
   "learning_base_points_per_week": 0.07,
-  "pace": { "decline_start": 25, "per_year": -1.5 },
-  "stamina": { "decline_start": 27, "per_year": -1.2 },
-  "strength": { "decline_start": 30, "per_year": -0.8 },
-  "all_other": { "decline_start": 32, "per_year": -0.3 },
-  "leadership": { "decline_start": null, "per_year": 0 }
+  "decline_percent_per_year": {
+    "formula": "min(cap, first + step * (effective_age - start)) percent of the current value per year, applied weekly as value * pct / 100 / 52",
+    "pace": { "start": 27, "first": 1.5, "step": 1, "cap": 8 },
+    "stamina": { "start": 28, "first": 1.5, "step": 1, "cap": 8 },
+    "strength": { "start": 30, "first": 1, "step": 0.75, "cap": 5 },
+    "goalkeeping": { "start": 32, "first": 1, "step": 0.75, "cap": 5 },
+    "technical": { "start": 29, "first": 1, "step": 0.75, "cap": 5 },
+    "mental": { "start": 31, "first": 0.5, "step": 0.5, "cap": 3 },
+    "leadership": null
+  }
 }

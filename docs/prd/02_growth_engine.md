@@ -1,7 +1,7 @@
 # /docs/prd/02_growth_engine.md
 
-**Version:** 1.4
-**Last Updated:** 2026-10-10
+**Version:** 1.5
+**Last Updated:** 2026-10-29 (PRD 32: late-career decline)
 **Status:** Final
 
 ---
@@ -61,7 +61,7 @@ Sie sind kein zweiter Multiplikator. Der numerische Alterseffekt ist
 
 `environment()` kommt aus Trainerstab (F8.1) und Gelände-Training (`precinctTrainingEnvironment`). Mentoring ist kein Faktor in `environment()`; es läuft als eigener Wochenschritt nach der Formel (PRD 29). Minuten und Fokus-Slots werden nicht doppelt in `environment()` gezählt.
 
-`weak_foot` wächst mit derselben Formel, σ der technischen Attribute, Decay der Gruppe `all_other`. `gk_handling` zählt als physisches Attribut für σ und als `all_other` für Decay.
+`weak_foot` wächst mit derselben Formel, σ der technischen Attribute, Decay der Gruppe `mental`. `gk_handling` zählt als physisches Attribut für σ und hat eine eigene Decay-Gruppe `goalkeeping` (Torhüter altern später).
 
 **ageDevelopmentFactor** (`effective_age`):
 
@@ -70,11 +70,12 @@ age < 15        → 1.1
 15 <= age <= 20 → 2.4   // starker Lernspurt
 20 < age <= 25  → 1.45  // normal
 25 < age <= 27  → 1.0
-27 < age <= 32  → 0.65
-age > 32        → 0.28
+27 < age <= 29  → 0.35  // PRD 32: Lernen läuft aus
+29 < age <= 31  → 0.15
+age > 31        → 0.05
 ```
 
-Intake startet mit 15 (PRD 03). Ab ~25 flacht Entwicklung ab; ab 33 kaum noch positives Lernen ohne Decay.
+Intake startet mit 15 (PRD 03). Ab ~25 flacht Entwicklung ab; ab 28 läuft das Lernen aus, ab etwa 30 überwiegt der Abbau (PRD 32 §2: Athletik und Tempo zuerst).
 
 **Constraints:**
 
@@ -84,50 +85,34 @@ Intake startet mit 15 (PRD 03). Ab ~25 flacht Entwicklung ab; ab 33 kaum noch po
 
 ### 02.2 Alterskurven (`/data/rules/growth_curves.json`)
 
-`decline_start` ist der erste effektive Geburtstag, ab dem der Jahres-Decay läuft. Pro Woche wird `per_year / 52` abgezogen.
+**Stand PRD 32 (2026-10-29, Owner-Entscheidung):** Der Abbau im Alter ist ein
+Anteil des aktuellen Werts pro Jahr und steigt mit jedem Jahr nach `start`:
 
-```json
-{
-  "age_curves": {
-    "technical_attributes": {
-      "shooting": { "peak": 28, "decline_start": 32, "curve": "bell" },
-      "passing":  { "peak": 27, "decline_start": 32, "curve": "bell" },
-      "dribbling":{ "peak": 25, "decline_start": 32, "curve": "bell" },
-      "technique":{ "peak": 26, "decline_start": 32, "curve": "bell" }
-    },
-    "physical_attributes": {
-      "pace":     { "peak": 23, "decline_start": 25, "curve": "early_peak" },
-      "strength": { "peak": 29, "decline_start": 30, "curve": "late_peak" },
-      "stamina":  { "peak": 26, "decline_start": 27, "curve": "bell" }
-    },
-    "mental_attributes": {
-      "composure":    { "peak": 30, "decline_start": 32, "curve": "plateau" },
-      "leadership":   { "peak": 32, "decline_start": null, "curve": "continuous_growth" },
-      "positioning":  { "peak": 29, "decline_start": 32, "curve": "bell" },
-      "vision":       { "peak": 27, "decline_start": 32, "curve": "bell" },
-      "concentration":{ "peak": 28, "decline_start": 32, "curve": "bell" },
-      "teamwork":     { "peak": 30, "decline_start": 32, "curve": "plateau" }
-    }
-  },
-  "learning_base_by_age": {
-    "points_per_week": 0.06,
-    "formula": "age_factor = (15 <= age <= 23 ? 1.5 : 1.0) * (age > 27 ? 0.7 : 1.0) * (age > 32 ? 0.4 : 1.0)"
-  },
-  "decay_rates": {
-    "pace":      { "per_year_from_decline_start": -1.5 },
-    "stamina":   { "per_year_from_decline_start": -1.2 },
-    "strength":  { "per_year_from_decline_start": -0.8 },
-    "all_other": { "per_year_from_decline_start": -0.3 }
-  },
-  "attribute_bounds": {
-    "min": 0,
-    "soft_cap": 180,
-    "hard_cap": 199
-  }
-}
+```text
+decline_pct(attr, effective_age) =
+  effective_age < start ? 0 : min(cap, first + step × (effective_age − start))
+decay_per_week = value × decline_pct / 100 / 52
 ```
 
-Leadership hat `decline_start: null` und keinen Jahres-Decay.
+| Gruppe | Attribute | start | first | step | cap |
+|---|---|---|---|---|---|
+| pace | pace | 27 | 1.5 % | 1 % | 8 % |
+| stamina | stamina | 28 | 1.5 % | 1 % | 8 % |
+| strength | strength | 30 | 1 % | 0.75 % | 5 % |
+| technical | shooting, passing, dribbling, technique | 29 | 1 % | 0.75 % | 5 % |
+| goalkeeping | gk_handling | 32 | 1 % | 0.75 % | 5 % |
+| mental | composure, positioning, vision, concentration, teamwork, weak_foot | 31 | 0.5 % | 0.5 % | 3 % |
+| — | leadership | kein Abbau | | | |
+
+Prozent statt fester Punkte, damit der Abbau mit der Ligastärke skaliert
+(PRD 30 Phase 2: fünf Ligen). Die Saison hat heute 34 Wochen; pro Saison wirken
+also 34/52 der Jahresrate (PRD 30 Phase 4 normalisiert das).
+
+Die alte Tabelle (feste Punkte: pace −1.5/Jahr ab 25, stamina −1.2 ab 27,
+strength −0.8 ab 30, Rest −0.3 ab 32) war kleiner als der Trainingszuwachs in
+jedem Alter: kein Spieler baute je ab (PRD 31 §8).
+
+Leadership hat keinen Abbau.
 
 Entscheidung zur vorherigen Doppelzahl: Pace 25, Stamina 27, Strength 30, alle übrigen Skills 32. Ältere Kurven-Labels (Stamina 28, Strength 31, einzelne Technik-Werte vor 32) hatten keinen eigenen Wochenwert und gelten nicht mehr.
 
@@ -181,8 +166,8 @@ function calculateMatchPractice(minutes: number, injured: boolean, playingTimeFa
 
 ### 02.6 Decay-Regeln
 
-- Decay startet bei `effective_age >= decline_start` des Attributs.
-- Decay ist subtraktiv: `per_year / 52` pro Woche.
+- Decay startet bei `effective_age >= start` der Gruppe (02.2).
+- Decay ist subtraktiv: `value × decline_pct / 100 / 52` pro Woche.
 - Leadership hat keinen Decay.
 - Mentoring ist kein Faktor dieser Formel. Den kleinen Wochen-Zuwachs (nur Attribute, in denen der Mentor besser ist) regelt PRD 29; der einmalige Drive-Sprung steht in PRD 06.2 (`mentor_ignition`, +0.25).
 
@@ -193,9 +178,9 @@ Annahmen der Tests: `environment = 1`, Noise = 1, kein Fokus, `maturity_offset =
 | Testfall | Erwartetes Ergebnis |
 |---|---|
 | Spieler age 19, attribute 100, anlage 1.2, drive 1.4, 90 Min | growth ≈ 0.07 × 2.4 × 1.2 × 1.4 × 1.15 |
-| Spieler age 30, attribute 140, anlage 1.0, drive 0.8, 0 Min | growth ≈ 0.07 × 0.65 × 1.0 × 0.8 × 0.7 |
+| Spieler age 30, attribute 140, anlage 1.0, drive 0.8, 0 Min | growth ≈ 0.07 × 0.15 × 1.0 × 0.8 × 0.7 × 1.25 − 140 × 1.75 % / 52 (netto negativ) |
 | Spieler age 25, attribute 180, anlage 1.1, drive 1.2, 45 Min | positives Wachstum × 0.3 (soft cap), danach Clamp |
-| Spieler age 33, pace 130, anlage 1.0, drive 1.0, 0 Min, gesund | Wachstumsteil klein, Decay 1.5/52, Netto negativ — Tempo sinkt |
+| Spieler age 33, pace 130, anlage 1.0, drive 1.0, 0 Min, gesund | Wachstumsteil klein, Decay 130 × 7.5 % / 52, Netto negativ — Tempo sinkt |
 
 ### 02.8 Balance-Korridore
 
@@ -206,7 +191,10 @@ Diese Korridore sind Regression-Gates, keine Potentialgrenzen:
 - U17-Spieler (`developmentScale ≈ 0.88`) mit Talent und Einsatz: über 30 Wochen
   oft 4–14 CA — deutlich langsamer als im Profi mit Volleinsatz, aber spürbar.
 - Ein gesunder 33-Jähriger ohne Einsatz verliert über 52 Wochen mindestens
-  0.5 Pace-Punkte.
+  5 % seines Pace-Werts.
+- PRD 32: Eine Kohorte durchschnittlicher Profis erreicht ihren CA-Höchststand
+  mit etwa 29–31 und verliert danach jede Saison; Pace und Stamina sinken ab
+  etwa 29, Positionsspiel und Übersicht erst ab etwa 33.
 - Ein Spieler darf durch eine normale Saison niemals von Intake-Niveau zum
   Weltstar springen.
 - Elite-Verläufe entstehen aus hoher Anlage, hohem Drive, Fokus, Spielpraxis

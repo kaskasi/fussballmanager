@@ -1,6 +1,6 @@
 # PRD 31 — World longevity: retirement, AI youth, roster upkeep
 
-**Status:** Built (slices 1–3) · 2026-10-29 · Phase 1 of PRD 30. CA drift open (§8).
+**Status:** Done (slices 1–3, PR #34) · 2026-10-29 · Phase 1 of PRD 30. CA drift moved to PRD 32 (§11).
 **Feature:** F11.3 (PRD 10). **Touches:** PRD 03 (§03.1.1 AI youth), PRD 07 (id rule, `peak_ca`, `season_lines`).
 
 ## 1. Problem
@@ -68,7 +68,7 @@ Per AI club, after retirement:
 - **Youth:** 2–4 players (seeded), but only while the roster has room below
   **23**. (24 let every club take two or three youths at the first season end;
   that cohort turned 35 together 18 seasons later.) Built with the academy mixture (PRD 03.1), skill mean = recruiting
-  strength − 12 + (reputation − 40) × 0.1. Age 17–18 after the season change,
+  strength − 34 + (reputation − 40) × 0.1 (PRD 32 §2; − 12 until then). Age 17–18 after the season change,
   pro status, three-year contract (`fairInitialProContract`).
 - **Refill:** journeymen until the roster has **22** players and the
   positional minimums **2 GK, 6 DEF, 6 MID, 4 ATT**. Positions go to the
@@ -116,7 +116,7 @@ With retirement, youth and anchored recruiting, AI mean CA still rises from
 87.6 (season 1) to a plateau of about 113 by season 10 (+29 %) and stays
 there; tier order holds. The PRD 30 acceptance line "drift under 10 %" cannot
 be met without changing the growth curve, which is PRD 02 and affects own
-players too. **Open question for the owner** (§11).
+players too. **Owner decision (§11):** fixed in PRD 32 (phase 2).
 
 ## 9. Own players
 
@@ -179,7 +179,7 @@ later by design) set a floor of about 1.5 %.
 
 | Question | Default if unanswered |
 |---|---|
-| How to stop the CA plateau (+30 %)? Measured options: (a) AI-only growth ×0.4 → drift under 5 % over 20 seasons (×0.6 → +12 %), but own players keep full growth and pull away; (b) late-career decline for everyone (age factor 0.45 at 28–30, 0.2 from 31, stronger decay) → plateau 112, almost no effect, because the gain comes from ages 18–27; (c) leave it and recalibrate with PRD 30 phase 2, which resets tier strengths and runs `calibrate:career` anyway | (c): no growth change in this phase |
+| How to stop the CA plateau (+30 %)? Measured options: (a) AI-only growth ×0.4 → drift under 5 % over 20 seasons (×0.6 → +12 %), but own players keep full growth and pull away; (b) late-career decline for everyone (age factor 0.45 at 28–30, 0.2 from 31, stronger decay) → plateau 112, almost no effect, because the gain comes from ages 18–27; (c) leave it and recalibrate with PRD 30 phase 2, which resets tier strengths and runs `calibrate:career` anyway | **Decided 2026-10-29:** in phase 2, with real late-career decline (athletics and pace first). Built in PRD 32 §2 together with a lower AI youth level, which is where most of the drift came from |
 | Free-agent pool for released or expired players? | No; refill uses generated players |
 | Retired legends as staff (F11.5)? | No; the record is kept |
 

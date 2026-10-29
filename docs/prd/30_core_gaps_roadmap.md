@@ -39,8 +39,8 @@ it, so it sits between phases 3 and 5.
 
 | # | Phase | Status | Phase PRD | Est. sessions | Depends on |
 |---|---|---|---|---|---|
-| 1 | World longevity: retirement, AI youth, roster upkeep | In progress (slice 3/3, CA drift open) | [31](31_world_longevity.md) | 2 | — |
-| 2 | League pyramid (5 tiers) + season archive | Not started | — | 3–4 | 1 |
+| 1 | World longevity: retirement, AI youth, roster upkeep | Done (PR #34); CA drift moved to phase 2 | [31](31_world_longevity.md) | 2 | — |
+| 2 | League pyramid (5 tiers) + season archive + CA drift | In progress (slice 0 done, next 1/4) | [32](32_league_pyramid.md) | 3–4 | 1 |
 | 3 | Suspensions | Not started | — | 1 | — |
 | 4 | Season calendar: breaks every season | Not started | — | 2–3 | — |
 | 5 | Cups (regional + national) | Not started | — | 3 | 3, 4 (2 for national cup entrants) |
@@ -181,7 +181,9 @@ fields), PRD 03 (AI intake).
 The PRD 02 growth curve never turns negative, so AI mean CA plateaus about 30 %
 above season 1 from season 10 on (PRD 31 §8, §11, owner question). Save at
 season 20 is 1.8 MB gzipped, but 1.1 MB of that is the never-answered autopilot
-Postfach queue, not this phase. Next: owner decision on CA drift, then mark Done.
+Postfach queue, not this phase. Owner decision on CA drift (2026-10-29): fix it
+in phase 2 with real late-career decline, athletics and pace first. Phase 1 is
+done; its drift acceptance line moves to phase 2.
 
 ---
 
@@ -267,6 +269,8 @@ PRD 10 (F10.8 → now, F10.3 text), PRD 11 (tier economies), PRD 23 (tier
 objectives), PRD 19 (Act 3 = climbing the pyramid), PRD 24 (mode table).
 
 **Slices**
+0. CA drift (owner decision 2026-10-29): late-career decline for all players
+   (pace and stamina first) and a lower AI youth level. PRD 32 §2.
 1. Registry plus generic promotion and relegation over today's two tiers,
    with no behavior change. All hard-coded ids gone.
 2. World generation for tiers 1–3, economy entries, calibration run, save migration.
@@ -278,19 +282,24 @@ objectives), PRD 19 (Act 3 = climbing the pyramid), PRD 24 (mode table).
 **Acceptance**
 - A club can climb from Oberliga Nord to top-flight champion inside one save
   (scripted test that forces results).
-- Every tier has 18 clubs every season, and the 20-season long run passes.
+- Every tier has 18 clubs every season, and the 20-season long run passes,
+  including AI mean CA drift under 10 % in every season (moved from phase 1).
 - Tier strength order still holds after 20 seasons (mean CA tier 1 > 2 > 3 > 4 > 5).
 - Budgets are met, or the dormant-tier fallback is active and documented.
 
 **Open questions (default if unanswered)**
-- Tier names: the phase PRD picks invented names.
+- Tier names: Meisterliga, Meisterliga 2, Nationalliga (PRD 32 §3).
 - Stadium licensing (minimum capacity for promotion)? Default: no hard block
   in v1; a board warning plus a capacity cap on attendance.
 - Clubs from all over the country relegated into "Regionalliga Nord":
   accepted as fiction (default), rather than drawing tiers 1–3 from northern
   cities only.
 
-**Progress:** —
+**Progress:** PRD 32 written; scope docs updated. Slice 0 built: decline
+curve (PRD 02.2) for all players, AI youth at recruiting strength − 34. World-only
+run (seed 2026, 20 seasons): drift +13.2 % at season 7, +11.8 % at 10, +5.9 % at
+20 (was +23 / +27 / +31 %). The remaining hump in seasons 6–11 comes from the
+generated youngsters and is slice 2 work. Next: slice 1 (registry).
 
 ---
 

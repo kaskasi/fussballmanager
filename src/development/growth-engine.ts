@@ -23,7 +23,7 @@ const TECHNICAL = new Set<keyof Attributes>([
   "weak_foot",
 ]);
 
-const PHYSICAL = new Set<keyof Attributes>([
+const PHYSICAL_SIGMA = new Set<keyof Attributes>([
   "pace",
   "strength",
   "stamina",
@@ -36,7 +36,7 @@ export interface WeeklyGrowthInput {
   age: number;
   maturityOffset: number;
   attribute: keyof Attributes;
-  /** Stored value, used only for the soft cap at 180. */
+  /** Stored value: soft cap at 180 and the size of late-career decline. */
   value: number;
   anlage: number;
   drive: number;
@@ -72,8 +72,9 @@ export function ageDevelopmentFactor(effectiveAgeValue: number): number {
   if (effectiveAgeValue <= 20) return 2.4;
   if (effectiveAgeValue <= 25) return 1.45;
   if (effectiveAgeValue <= 27) return 1;
-  if (effectiveAgeValue <= 32) return 0.65;
-  return 0.28;
+  if (effectiveAgeValue <= 29) return 0.35;
+  if (effectiveAgeValue <= 31) return 0.15;
+  return 0.05;
 }
 
 /** `LEARNING_BASE × ageDevelopmentFactor`. */
@@ -83,7 +84,7 @@ export function learningBase(effectiveAgeValue: number): number {
 
 export function attributeSigma(attribute: keyof Attributes): number {
   if (TECHNICAL.has(attribute)) return 0.15;
-  if (PHYSICAL.has(attribute)) return 0.2;
+  if (PHYSICAL_SIGMA.has(attribute)) return 0.2;
   return 0.1;
 }
 
@@ -127,19 +128,56 @@ export function environment(factor = 1): number {
   return factor;
 }
 
-/** Subtractive weekly decay. Leadership never decays. `gk_handling` uses `all_other`. */
-export function decayPerWeek(attribute: keyof Attributes, effectiveAgeValue: number): number {
-  if (attribute === "leadership") return 0;
-  if (attribute === "pace") {
-    return effectiveAgeValue >= 25 ? 1.5 / 52 : 0;
-  }
-  if (attribute === "stamina") {
-    return effectiveAgeValue >= 27 ? 1.2 / 52 : 0;
-  }
-  if (attribute === "strength") {
-    return effectiveAgeValue >= 30 ? 0.8 / 52 : 0;
-  }
-  return effectiveAgeValue >= 32 ? 0.3 / 52 : 0;
+/**
+ * Late-career decline (PRD 32 §2, owner decision 2026-10-29): physical attributes
+ * go first, technique later, the head last. A share of the current value per
+ * year (so it scales with tier strength), rising each year past `start`:
+ * `min(cap, first + step × (effective_age − start))` percent.
+ */
+export interface DeclineCurve {
+  start: number;
+  firstPct: number;
+  stepPct: number;
+  capPct: number;
+}
+
+export type DeclineGroup = "pace" | "stamina" | "strength" | "goalkeeping" | "technical" | "mental";
+
+export const DECLINE_CURVES: Record<DeclineGroup, DeclineCurve> = {
+  pace: { start: 27, firstPct: 1.5, stepPct: 1, capPct: 8 },
+  stamina: { start: 28, firstPct: 1.5, stepPct: 1, capPct: 8 },
+  strength: { start: 30, firstPct: 1, stepPct: 0.75, capPct: 5 },
+  goalkeeping: { start: 32, firstPct: 1, stepPct: 0.75, capPct: 5 },
+  technical: { start: 29, firstPct: 1, stepPct: 0.75, capPct: 5 },
+  mental: { start: 31, firstPct: 0.5, stepPct: 0.5, capPct: 3 },
+};
+
+/** Leadership never declines. */
+export function declineGroup(attribute: keyof Attributes): DeclineGroup | null {
+  if (attribute === "leadership") return null;
+  if (attribute === "pace" || attribute === "stamina" || attribute === "strength") return attribute;
+  if (attribute === "gk_handling") return "goalkeeping";
+  if (attribute === "weak_foot") return "mental";
+  if (TECHNICAL.has(attribute)) return "technical";
+  return "mental";
+}
+
+/** Percent of the current value lost per year at this effective age. */
+export function declinePercentPerYear(attribute: keyof Attributes, effectiveAgeValue: number): number {
+  const group = declineGroup(attribute);
+  if (!group) return 0;
+  const curve = DECLINE_CURVES[group];
+  if (effectiveAgeValue < curve.start) return 0;
+  return Math.min(curve.capPct, curve.firstPct + curve.stepPct * (effectiveAgeValue - curve.start));
+}
+
+/** Subtractive weekly decay in points: `value × percent / 100 / 52`. */
+export function decayPerWeek(
+  attribute: keyof Attributes,
+  effectiveAgeValue: number,
+  value: number,
+): number {
+  return (Math.max(0, value) * declinePercentPerYear(attribute, effectiveAgeValue)) / 100 / 52;
 }
 
 export function sampleNoise(attribute: keyof Attributes, random: () => number = Math.random): number {
@@ -184,9 +222,10 @@ export function weeklyDecayDelta(
   attribute: keyof Attributes,
   age: number,
   maturityOffset: number,
+  value: number,
 ): number {
   const effectiveAgeValue = effectiveAge(age, maturityOffset);
-  const decay = decayPerWeek(attribute, effectiveAgeValue);
+  const decay = decayPerWeek(attribute, effectiveAgeValue, value);
   if (decay === 0) return 0;
   return Math.max(GROWTH_MIN, -decay);
 }
@@ -197,7 +236,7 @@ export function weeklyDecayDelta(
  */
 export function calculateWeeklyGrowth(input: WeeklyGrowthInput): number {
   const age = effectiveAge(input.age, input.maturityOffset);
-  let growth = calculateWeeklyTrainingGain(input) - decayPerWeek(input.attribute, age);
+  let growth = calculateWeeklyTrainingGain(input) - decayPerWeek(input.attribute, age, input.value);
 
   if (input.value >= SOFT_CAP && growth > 0) {
     growth *= 0.3;

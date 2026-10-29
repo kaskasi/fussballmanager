@@ -540,6 +540,7 @@ Der Transferbereich besteht aus zwei Ansichten: **Überblick** (Standard) und **
 ```
 
 #### B) Markt (Interaktiv)
+- **Ein Blick, keine Zugänge/Abgänge-Tabs:** oben die eigene Transferliste als Raster mit 5 festen Plätzen (max. 5 Spieler; Gebot/Verkaufsgespräch erscheint im Platz des Spielers, freie Plätze gestrichelt), darunter die Tabelle aller möglichen Transferziele (laufende Käufe zuerst, dann fremde Listings) mit Positionsfilter.
 - **Trigger:** Button "Markt durchsuchen" im Überblick oder direkter Link.
 - **Filter-Leiste:** Position, Alter, Max. Marktwert, Nur Talente (Checkbox).
 - **Tabelle:** Dichte Liste mit Pos, Name, Alter, CA, MW, Interesse (Wappen-Reihe).

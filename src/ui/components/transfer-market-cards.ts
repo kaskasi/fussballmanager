@@ -21,97 +21,128 @@ export type TransferMarketCardModel = {
   showScoutAction?: boolean;
 };
 
-export function buildTransferMarketCards(input: {
-  flow: "incoming" | "outgoing";
+type ListingRow = { listing: { player_id: string; club_id: string; asking_price: number }; player: Player };
+
+/** Own transfer list (max 5 slots): each listed player shows its open bid or sale talk, if any. */
+export function buildOwnListingCards(input: {
   clubId: string;
   everyone: readonly Player[];
-  listingRows: Array<{ listing: { player_id: string; club_id: string; asking_price: number }; player: Player }>;
-  purchaseTalks: readonly TransferNegotiation[];
+  listingRows: readonly ListingRow[];
   saleTalks: readonly TransferNegotiation[];
   inboundOffers: readonly InboundTransferOffer[];
   worldClubs?: readonly WorldClub[];
-  scoutAssignedByPlayer: ReadonlyMap<string, boolean>;
 }): TransferMarketCardModel[] {
   const findPlayer = (id: string) => input.everyone.find((row) => row.id === id);
-  const purchaseIds = new Set(input.purchaseTalks.map((row) => row.player_id));
-  const saleIds = new Set(input.saleTalks.map((row) => row.player_id));
-  const inboundIds = new Set(input.inboundOffers.map((row) => row.player_id));
-  const cards: TransferMarketCardModel[] = [];
+  const offerFor = (id: string) => input.inboundOffers.find((row) => row.player_id === id);
+  const talkFor = (id: string) => input.saleTalks.find((row) => row.player_id === id);
 
-  if (input.flow === "incoming") {
-    for (const talk of input.purchaseTalks) {
-      const player = findPlayer(talk.player_id);
-      cards.push({
-        id: talk.id,
-        playerId: talk.player_id,
-        player,
-        kind: "purchase_talk",
-        clubLabel: loanClubName(talk.seller_club_id, input.worldClubs),
-        priceLabel: formatClubCash(talk.counter_offer ?? talk.current_offer),
-        detailLine: t("transfers.market.roundDetail", { round: talk.round }),
-        ca: player ? listedPlayerCa(player) : undefined,
-        scoutAssigned: input.scoutAssignedByPlayer.get(talk.player_id),
-        showScoutAction: Boolean(player),
-      });
-    }
-    for (const { listing, player } of input.listingRows) {
-      if (listing.club_id === input.clubId) continue;
-      if (purchaseIds.has(listing.player_id)) continue;
-      cards.push({
-        id: `list_${listing.player_id}`,
-        playerId: listing.player_id,
-        player,
-        kind: "rival_listing",
-        clubLabel: loanClubName(listing.club_id, input.worldClubs),
-        priceLabel: formatClubCash(listing.asking_price),
-        ca: listedPlayerCa(player),
-        scoutAssigned: input.scoutAssignedByPlayer.get(player.id),
-        showScoutAction: true,
-      });
-    }
-  } else {
-    for (const offer of input.inboundOffers) {
-      const player = findPlayer(offer.player_id);
-      cards.push({
-        id: offer.id,
-        playerId: offer.player_id,
-        player,
-        kind: "inbound_offer",
-        clubLabel: loanClubName(offer.buyer_club_id, input.worldClubs),
-        priceLabel: formatClubCash(offer.fee),
-        detailLine: t("transfers.market.inboundDetail"),
-        ca: player ? listedPlayerCa(player) : undefined,
-      });
-    }
-    for (const talk of input.saleTalks) {
-      const player = findPlayer(talk.player_id);
-      cards.push({
-        id: talk.id,
-        playerId: talk.player_id,
-        player,
-        kind: "sale_talk",
-        clubLabel: talk.buyer_club_id
-          ? loanClubName(talk.buyer_club_id, input.worldClubs)
-          : t("transfers.market.buyerUnknown"),
-        priceLabel: formatClubCash(talk.counter_offer ?? talk.current_offer),
-        detailLine: t("transfers.saleNegotiationsHeading"),
-        ca: player ? listedPlayerCa(player) : undefined,
-      });
-    }
-    for (const { listing, player } of input.listingRows) {
-      if (listing.club_id !== input.clubId) continue;
-      if (saleIds.has(listing.player_id) || inboundIds.has(listing.player_id)) continue;
+  const offerCard = (offer: InboundTransferOffer): TransferMarketCardModel => {
+    const player = findPlayer(offer.player_id);
+    return {
+      id: offer.id,
+      playerId: offer.player_id,
+      player,
+      kind: "inbound_offer",
+      clubLabel: loanClubName(offer.buyer_club_id, input.worldClubs),
+      priceLabel: formatClubCash(offer.fee),
+      detailLine: t("transfers.market.inboundDetail"),
+      ca: player ? listedPlayerCa(player) : undefined,
+    };
+  };
+  const talkCard = (talk: TransferNegotiation): TransferMarketCardModel => {
+    const player = findPlayer(talk.player_id);
+    return {
+      id: talk.id,
+      playerId: talk.player_id,
+      player,
+      kind: "sale_talk",
+      clubLabel: talk.buyer_club_id
+        ? loanClubName(talk.buyer_club_id, input.worldClubs)
+        : t("transfers.market.buyerUnknown"),
+      priceLabel: formatClubCash(talk.counter_offer ?? talk.current_offer),
+      detailLine: t("transfers.saleNegotiationsHeading"),
+      ca: player ? listedPlayerCa(player) : undefined,
+    };
+  };
+
+  const cards: TransferMarketCardModel[] = [];
+  const shown = new Set<string>();
+  for (const { listing, player } of input.listingRows) {
+    if (listing.club_id !== input.clubId) continue;
+    shown.add(listing.player_id);
+    const offer = offerFor(listing.player_id);
+    const talk = talkFor(listing.player_id);
+    if (offer) {
+      cards.push(offerCard(offer));
+    } else if (talk) {
+      cards.push(talkCard(talk));
+    } else {
       cards.push({
         id: `own_${listing.player_id}`,
         playerId: listing.player_id,
         player,
         kind: "own_listing",
-        clubLabel: t("transfers.market.ownListing"),
+        clubLabel: t("transfers.market.saleAwaitBidShort"),
         priceLabel: formatClubCash(listing.asking_price),
         ca: listedPlayerCa(player),
       });
     }
   }
+  // Unsolicited bids and talks on players who are not listed still belong to the sales side.
+  for (const offer of input.inboundOffers) {
+    if (shown.has(offer.player_id)) continue;
+    shown.add(offer.player_id);
+    cards.push(offerCard(offer));
+  }
+  for (const talk of input.saleTalks) {
+    if (shown.has(talk.player_id)) continue;
+    shown.add(talk.player_id);
+    cards.push(talkCard(talk));
+  }
+  return cards;
+}
 
+/** Possible transfer targets: running purchase talks first, then rival listings. */
+export function buildTransferTargetCards(input: {
+  clubId: string;
+  everyone: readonly Player[];
+  listingRows: readonly ListingRow[];
+  purchaseTalks: readonly TransferNegotiation[];
+  worldClubs?: readonly WorldClub[];
+  scoutAssignedByPlayer: ReadonlyMap<string, boolean>;
+}): TransferMarketCardModel[] {
+  const findPlayer = (id: string) => input.everyone.find((row) => row.id === id);
+  const purchaseIds = new Set(input.purchaseTalks.map((row) => row.player_id));
+  const cards: TransferMarketCardModel[] = [];
+  for (const talk of input.purchaseTalks) {
+    const player = findPlayer(talk.player_id);
+    cards.push({
+      id: talk.id,
+      playerId: talk.player_id,
+      player,
+      kind: "purchase_talk",
+      clubLabel: loanClubName(talk.seller_club_id, input.worldClubs),
+      priceLabel: formatClubCash(talk.counter_offer ?? talk.current_offer),
+      detailLine: t("transfers.market.roundDetail", { round: talk.round }),
+      ca: player ? listedPlayerCa(player) : undefined,
+      scoutAssigned: input.scoutAssignedByPlayer.get(talk.player_id),
+      showScoutAction: Boolean(player),
+    });
+  }
+  for (const { listing, player } of input.listingRows) {
+    if (listing.club_id === input.clubId) continue;
+    if (purchaseIds.has(listing.player_id)) continue;
+    cards.push({
+      id: `list_${listing.player_id}`,
+      playerId: listing.player_id,
+      player,
+      kind: "rival_listing",
+      clubLabel: loanClubName(listing.club_id, input.worldClubs),
+      priceLabel: formatClubCash(listing.asking_price),
+      ca: listedPlayerCa(player),
+      scoutAssigned: input.scoutAssignedByPlayer.get(player.id),
+      showScoutAction: true,
+    });
+  }
   return cards;
 }

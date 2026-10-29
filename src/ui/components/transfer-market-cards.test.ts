@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { clonePlayer } from "../../types/__tests__/fixtures.ts";
 import { emptyTransferState } from "../../transfers/negotiations.ts";
-import { buildTransferMarketCards } from "./transfer-market-cards.ts";
+import { buildOwnListingCards, buildTransferTargetCards } from "./transfer-market-cards.ts";
 
-describe("buildTransferMarketCards", () => {
-  it("splits incoming rival listings from outgoing own listings", () => {
+describe("transfer market cards", () => {
+  it("splits own listings (slots) from rival listings (targets)", () => {
     const own = clonePlayer();
     own.id = "pl_own";
     own.club_id = "cl_me";
@@ -20,27 +20,46 @@ describe("buildTransferMarketCards", () => {
       listing,
       player: listing.player_id === own.id ? own : rival,
     }));
-    const incoming = buildTransferMarketCards({
-      flow: "incoming",
+    const slots = buildOwnListingCards({
+      clubId: "cl_me",
+      everyone: [own, rival],
+      listingRows: rows,
+      saleTalks: [],
+      inboundOffers: [],
+    });
+    const targets = buildTransferTargetCards({
       clubId: "cl_me",
       everyone: [own, rival],
       listingRows: rows,
       purchaseTalks: [],
-      saleTalks: [],
-      inboundOffers: [],
       scoutAssignedByPlayer: new Map(),
     });
-    const outgoing = buildTransferMarketCards({
-      flow: "outgoing",
+    expect(slots.map((c) => [c.playerId, c.kind])).toEqual([["pl_own", "own_listing"]]);
+    expect(targets.map((c) => c.playerId)).toEqual(["pl_rival"]);
+  });
+
+  it("shows an open bid in the listed player's slot instead of a second card", () => {
+    const own = clonePlayer();
+    own.id = "pl_own";
+    own.club_id = "cl_me";
+    const listing = { player_id: own.id, club_id: "cl_me", asking_price: 100_000, listed_season: 1, listed_week: 2 };
+    const slots = buildOwnListingCards({
       clubId: "cl_me",
-      everyone: [own, rival],
-      listingRows: rows,
-      purchaseTalks: [],
+      everyone: [own],
+      listingRows: [{ listing, player: own }],
       saleTalks: [],
-      inboundOffers: [],
-      scoutAssignedByPlayer: new Map(),
+      inboundOffers: [
+        {
+          id: "io_1",
+          player_id: own.id,
+          buyer_club_id: "cl_away",
+          fee: 120_000,
+          season: 1,
+          week: 3,
+          status: "pending",
+        },
+      ],
     });
-    expect(incoming.map((c) => c.playerId)).toEqual(["pl_rival"]);
-    expect(outgoing.map((c) => c.playerId)).toEqual(["pl_own"]);
+    expect(slots.map((c) => c.kind)).toEqual(["inbound_offer"]);
   });
 });

@@ -142,6 +142,7 @@ import { canSellPlayer, estimateSaleOffer } from "./transfers/player-sales.ts";
 import {
   isPlayerListed,
   listPlayerForSale,
+  ownListingLimitReason,
   unlistPlayer,
 } from "./transfers/transfer-listings.ts";
 import { COACH_ROLE_LABELS, hireCoach, type Coach } from "./staff/coaching-staff.ts";
@@ -1956,7 +1957,8 @@ export default function App() {
           saleOffer={estimateSaleOffer(profilePlayer, season)}
           saleBlockedReason={(() => {
             const eligibility = canSellPlayer(profilePlayer, players, session.clubId, week);
-            return eligibility.allowed ? null : eligibility.reason ?? null;
+            if (!eligibility.allowed) return eligibility.reason ?? null;
+            return ownListingLimitReason(transferState, session.clubId, profilePlayer.id);
           })()}
           transferLockReason={scheduledTransferReason(transferState, profilePlayer.id, season)}
           individualPrograms={individualPrograms}

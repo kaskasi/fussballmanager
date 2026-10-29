@@ -336,6 +336,15 @@
 .tc-deal__actions { display: flex; justify-content: flex-end; gap: var(--space-1); padding: 0 var(--space-2) var(--space-1); border-top: 1px solid var(--line); }
 .tc-deal__actions .tc-iconbtn[aria-pressed="true"] { color: var(--accent); }
 .tc-deal__actions .tc-iconbtn:disabled { cursor: default; }
+/* Own transfer list: fixed 5 slots in one row on wide screens; empty slots stay visible */
+.tc-deals--slots { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.tc-deals--slots .tc-deal__main { grid-template-columns: auto minmax(0, 1fr); }
+.tc-deals--slots .tc-deal__price { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.tc-deals--slots .tc-deal__detail { grid-column: 1 / -1; }
+.tc-deal--empty { align-content: center; justify-items: center; gap: 2px; min-height: 6rem; padding: var(--space-3); background: transparent; border-style: dashed; color: var(--text-muted); text-align: center; }
+.tc-transfers__actions { display: inline-flex; gap: var(--space-1); }
+@media (max-width: 1279px) { .tc-deals--slots { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 719px) { .tc-deals--slots { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); } .tc-deal--empty { min-height: 4rem; } }
 
 /* Der Treter */
 .tc-news { padding: var(--space-6); background: var(--newsprint); color: var(--newsprint-ink); border: 1px solid var(--newsprint-rule); font-family: var(--font-news); }

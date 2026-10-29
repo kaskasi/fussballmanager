@@ -1,12 +1,14 @@
 /** WIREFRAME: docs/prd/design.md §9.1 — Aufstellung */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { TacticsMode } from "../narrative/career-presentation.ts";
 import {
   FORMATION_IDS,
   getFormation,
   sandboxPlanFromFormation,
+  sanitizeSlotZones,
   type FormationId,
   type FormationSlotId,
+  type PitchZoneId,
   type SandboxPlan,
   type Squad,
 } from "@fussballmanager/shared";
@@ -15,6 +17,7 @@ import {
   ChevronRight,
   RefreshCw,
   Rocket,
+  RotateCcw,
   Save,
   Star,
 } from "lucide-react";
@@ -29,7 +32,7 @@ import {
   type AutoLineupIcon,
   type AutoLineupMode,
 } from "./auto-lineup.ts";
-import { LineupPitch } from "./LineupPitch.tsx";
+import { LineupPitch, type LineupDrag } from "./LineupPitch.tsx";
 import { LineupPlayerCard } from "./LineupPlayerCard.tsx";
 import {
   benchPlayers,
@@ -141,7 +144,7 @@ export function CareerLineupScreen({
   const [assignments, setAssignments] = useState<LineupAssignments>(() =>
     normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId).assignments,
   );
-  const [dragPlayerId, setDragPlayerId] = useState<string | null>(null);
+  const [drag, setDrag] = useState<LineupDrag | null>(null);
   const [benchPage, setBenchPage] = useState(0);
 
   const playersById = useMemo(
@@ -160,13 +163,27 @@ export function CareerLineupScreen({
     setBenchPage((current) => Math.min(current, benchPageCount - 1));
   }, [benchPageCount]);
 
+  /** The lineup this screen saved last: its echo through props must not refill a slot just emptied. */
+  const persistedRef = useRef<MatchLineupState | undefined>(undefined);
+
   useEffect(() => {
+    const echo = persistedRef.current;
+    if (
+      matchLineup &&
+      echo &&
+      matchLineup.formation === echo.formation &&
+      lineupAssignmentsEqual(matchLineup.assignments, echo.assignments) &&
+      JSON.stringify(matchLineup.plan) === JSON.stringify(echo.plan)
+    ) {
+      return;
+    }
     const normalized = normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId);
     setPlan((current) =>
       current.formation === normalized.plan.formation &&
       current.mentality === normalized.plan.mentality &&
       current.pressing === normalized.plan.pressing &&
-      current.lineHeight === normalized.plan.lineHeight
+      current.lineHeight === normalized.plan.lineHeight &&
+      JSON.stringify(current.slotZones ?? {}) === JSON.stringify(normalized.plan.slotZones ?? {})
         ? current
         : normalized.plan,
     );
@@ -211,26 +228,29 @@ export function CareerLineupScreen({
 
   const persistLineup = useCallback(
     (nextAssignments: LineupAssignments, nextPlan: SandboxPlan) => {
-      onSaveMatchLineup({
+      const lineup: MatchLineupState = {
         formation: nextPlan.formation,
         plan: nextPlan,
         assignments: nextAssignments,
-      });
+      };
+      persistedRef.current = lineup;
+      onSaveMatchLineup(lineup);
     },
     [onSaveMatchLineup],
   );
 
-  const setSlot = useCallback(
-    (slotId: FormationSlotId, playerId: string | null) => {
+  /** Bench → slot: the man there goes to the bench. Slot → slot: the two swap places. */
+  const dropOnSlot = useCallback(
+    (slotId: FormationSlotId, playerId: string, fromSlot: FormationSlotId | null) => {
       setAssignments((current) => {
         const next = { ...current };
-        if (playerId) {
-          for (const [slot, id] of Object.entries(next)) {
-            if (id === playerId) delete next[slot as FormationSlotId];
-          }
-          next[slotId] = playerId;
-        } else {
-          delete next[slotId];
+        const displaced = next[slotId];
+        for (const [slot, id] of Object.entries(next)) {
+          if (id === playerId) delete next[slot as FormationSlotId];
+        }
+        next[slotId] = playerId;
+        if (fromSlot && fromSlot !== slotId && displaced && displaced !== playerId) {
+          next[fromSlot] = displaced;
         }
         persistLineup(next, plan);
         return next;
@@ -238,6 +258,24 @@ export function CareerLineupScreen({
     },
     [persistLineup, plan],
   );
+
+  /** F1.6 — move a slot to another zone (IV → Libero, ZM → DM); the player keeps the slot. */
+  const moveSlot = useCallback(
+    (slotId: FormationSlotId, zoneId: PitchZoneId) => {
+      const slotZones = sanitizeSlotZones(plan.formation, { ...plan.slotZones, [slotId]: zoneId });
+      const { slotZones: _previous, ...rest } = plan;
+      const next: SandboxPlan = { ...rest, ...(slotZones ? { slotZones } : {}) };
+      setPlan(next);
+      persistLineup(assignments, next);
+    },
+    [assignments, persistLineup, plan],
+  );
+
+  const resetZones = useCallback(() => {
+    const { slotZones: _previous, ...next } = plan;
+    setPlan(next);
+    persistLineup(assignments, next);
+  }, [assignments, persistLineup, plan]);
 
   const unassignPlayer = useCallback(
     (playerId: string) => {
@@ -361,8 +399,21 @@ export function CareerLineupScreen({
               </button>
             ))}
           </div>
+          {plan.slotZones ? (
+            <button
+              type="button"
+              className="tc-chip tc-chip--icon"
+              title={t("match.lineup.resetZonesTitle")}
+              onClick={resetZones}
+            >
+              <RotateCcw className="tc-icon" strokeWidth={2.5} aria-hidden />
+              {t("match.lineup.resetZones")}
+            </button>
+          ) : null}
           <label className="tc-lineup__formation">
-            <span className="tc-label">{t("match.lineup.formation")}</span>
+            <span className="tc-label">
+              {plan.slotZones ? t("match.lineup.formationCustom") : t("match.lineup.formation")}
+            </span>
             <select
               className="tc-select tc-lineup__select"
               value={plan.formation}
@@ -389,16 +440,20 @@ export function CareerLineupScreen({
           <section className="tc-panel tc-lineup__pitch lineup-pitch-panel" aria-label={t("match.lineup.pitchViewAria")}>
             <LineupPitch
               formation={plan.formation}
+              slotZones={plan.slotZones}
               assignments={assignments}
               playersById={playersById}
-              dragPlayerId={dragPlayerId}
+              drag={drag}
               playerTeamLabel={playerTeamLabel}
+              kitClubId={managerClubId}
               opponent={opponentPreview}
-              onAssign={setSlot}
-              onDragPlayer={setDragPlayerId}
+              onDropOnSlot={dropOnSlot}
+              onMoveSlot={moveSlot}
+              onDrag={setDrag}
               onOpenPlayer={onOpenPlayer}
               orientation={variant === "menu" ? "vertical" : "horizontal"}
             />
+            <p className="tc-caption tc-lineup__hint">{t("match.lineup.moveHint")}</p>
             {variant === "match" && showOpponentScout && scoutBoard && onOpenOpponentScoutReport ? (
               <OpponentScoutMatchAction
                 mode="lineup"
@@ -444,7 +499,7 @@ export function CareerLineupScreen({
             <div
               className={`lineup-bench-list ${variant === "menu" ? "lineup-bench-grid" : "lineup-bench-list--fixed"}`}
               onDragOver={(event) => {
-                if (dragPlayerId) event.preventDefault();
+                if (drag?.fromSlot) event.preventDefault();
               }}
               onDrop={(event) => {
                 event.preventDefault();
@@ -453,7 +508,7 @@ export function CareerLineupScreen({
                 if (Object.values(assignments).includes(playerId)) {
                   unassignPlayer(playerId);
                 }
-                setDragPlayerId(null);
+                setDrag(null);
               }}
             >
               {benchPageSlots.map((player, index) =>
@@ -461,9 +516,9 @@ export function CareerLineupScreen({
                   <LineupPlayerCard
                     key={player.id}
                     player={player}
-                    tile={variant === "menu"}
-                    onDragStart={setDragPlayerId}
-                    onDragEnd={() => setDragPlayerId(null)}
+                    selected={drag?.playerId === player.id}
+                    onDragStart={(playerId) => setDrag({ playerId, fromSlot: null })}
+                    onDragEnd={() => setDrag(null)}
                     onOpenPlayer={onOpenPlayer}
                   />
                 ) : (

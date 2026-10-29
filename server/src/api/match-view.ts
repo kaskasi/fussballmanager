@@ -25,6 +25,15 @@ import {
   type CommentaryContext,
 } from "../commentary/index.ts";
 import { createInitialState, step } from "../engine/index.ts";
+import {
+  applySubstitutionRequest,
+  recordSubstitution,
+  substitutionDue,
+  substitutionLedger,
+  type MatchSubstitutionRequest,
+} from "./manual-substitution.ts";
+
+export type { MatchSubstitutionRequest } from "./manual-substitution.ts";
 
 function rosterOf(squad: Squad): MatchViewRosterPlayer[] {
   return [
@@ -101,7 +110,30 @@ function frameFrom(
         teamId: player.teamId,
         x: player.position.x,
         y: player.position.y,
+        fatigue: Math.round(player.fatigue),
       })),
+    substitutionsUsed: { ...state.substitutionsUsed },
+    ...(event?.type === "substitution"
+      ? {
+          substitution: {
+            teamId: event.teamId,
+            playerOffId: event.playerOff.playerId,
+            playerOnId: event.playerOn.playerId,
+          },
+        }
+      : {}),
+    ...(event?.type === "injury"
+      ? {
+          injury: {
+            playerId: event.player.playerId,
+            teamId: event.player.teamId,
+            left: !(
+              state.players.find((player) => player.playerId === event.player.playerId)?.onPitch ??
+              false
+            ),
+          },
+        }
+      : {}),
   };
 }
 
@@ -125,6 +157,13 @@ export function buildMatchView(input: {
   humanTeamId?: TeamId;
   maxSteps?: number;
   broadcastStory?: BroadcastStoryContext;
+  /**
+   * PRD 27 — the manager's changes, replayed on the same seed: up to each request the match
+   * is identical, so playback can carry on from the paused tick.
+   */
+  substitutions?: readonly MatchSubstitutionRequest[];
+  /** From this seq on the assistant makes the human side's changes, like the AI ("simulate"). */
+  assistantFromSeq?: number;
 }): MatchView {
   const homeBase = input.home ?? SEED_MATCHUP.home;
   const awayBase = input.away ?? SEED_MATCHUP.away;
@@ -156,13 +195,33 @@ export function buildMatchView(input: {
   let current = initial;
   let previousEvent: MatchEvent | undefined;
   let running = stats;
+  const humanTeamId = initial.humanTeamId;
+  const requests = [...(input.substitutions ?? [])].sort((a, b) => a.afterSeq - b.afterSeq);
+  const ledger = substitutionLedger(initial);
 
   for (let i = 0; i < maxSteps; i += 1) {
-    const result = step({
-      state: current,
-      homeTactics: current.homeTactics,
-      awayTactics: current.awayTactics,
-    });
+    if (
+      input.assistantFromSeq !== undefined &&
+      current.humanTeamId !== null &&
+      current.nextSeq - 1 >= input.assistantFromSeq
+    ) {
+      current = { ...current, humanTeamId: null };
+    }
+    const due = requests[0];
+    const manual =
+      due && humanTeamId && substitutionDue(current, due)
+        ? applySubstitutionRequest(current, humanTeamId, requests.shift()!, ledger)
+        : null;
+    const result =
+      manual ??
+      step({
+        state: current,
+        homeTactics: current.homeTactics,
+        awayTactics: current.awayTactics,
+      });
+    if (!manual && result.event.type === "substitution") {
+      recordSubstitution(ledger, result.event.playerOff.playerId, result.event.playerOn.playerId);
+    }
     current = result.state;
     events.push(result.event);
     running = applyMatchStatEvent(running, result.event, home.team.id);

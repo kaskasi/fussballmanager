@@ -1,10 +1,14 @@
 import {
   awayKickoffPosition,
+  effectiveFormation,
   FORMATION_IDS,
+  formationSlotFor,
   type FormationId,
   type FormationSlotId,
   getFormation,
   getFormationSlot,
+  sanitizeSlotZones,
+  type SlotZones,
 } from "./formations.ts";
 import type { PitchPosition } from "./pitch.ts";
 import { isOnPitch } from "./pitch.ts";
@@ -90,9 +94,9 @@ export function kickoffLineup(
 ): KickoffPlace[] {
   assertValidSquad(squad);
   return squad.starters.map((place) => {
-    const homePosition = getFormationSlot(
-      squad.tactics.formation,
-      place.slot,
+    const homePosition = (
+      formationSlotFor(squad.tactics.formation, place.slot, squad.tactics.slotZones) ??
+      getFormationSlot(squad.tactics.formation, place.slot)
     ).homePosition;
     const position =
       side === "home" ? homePosition : awayKickoffPosition(homePosition);
@@ -128,9 +132,14 @@ function roleFit(playerRole: PlayerRole, slotRole: PlayerRole): number {
 /**
  * Re-seat a squad on a fixed formation. Players keep names/attributes;
  * slot + role follow the template so the engine shape matches the XI.
+ * Moved slots (`zones`) take the role of their zone.
  */
-export function selectFormation(squad: Squad, formation: FormationId): Squad {
-  const slots = getFormation(formation);
+export function selectFormation(
+  squad: Squad,
+  formation: FormationId,
+  zones?: SlotZones,
+): Squad {
+  const slots = effectiveFormation(formation, zones);
   const preset = FORMATION_PRESETS[formation];
   const pool = [...squad.starters.map((place) => place.player)];
   const starters = slots.map((slot) => {
@@ -156,12 +165,14 @@ export function selectFormation(squad: Squad, formation: FormationId): Squad {
       slot: slot.id,
     };
   });
+  const { slotZones: _previousZones, ...tactics } = squad.tactics;
   return {
     ...squad,
     starters,
     tactics: {
-      ...squad.tactics,
+      ...tactics,
       formation,
+      ...(zones ? { slotZones: zones } : {}),
       pressing: preset.pressing,
       lineHeight: preset.lineHeight,
       intensity: preset.intensity,
@@ -190,6 +201,8 @@ export type SandboxPlan = {
   fullbackDuty: TeamTactics["fullbackDuty"]["LB"];
   wideDuty: TeamTactics["wideDuty"]["left"];
   strikerDuty: TeamTactics["strikerDuty"]["ST"];
+  /** Slots moved to another zone on the lineup board; only valid for `formation`. */
+  slotZones?: SlotZones;
 };
 
 function clampStat(value: number, min: number, max: number): number {
@@ -214,6 +227,7 @@ export function sandboxPlanFromTactics(tactics: TeamTactics): SandboxPlan {
     fullbackDuty: tactics.fullbackDuty.LB,
     wideDuty: tactics.wideDuty.left,
     strikerDuty: tactics.strikerDuty.ST,
+    ...(tactics.slotZones ? { slotZones: tactics.slotZones } : {}),
   };
 }
 
@@ -282,7 +296,11 @@ export function sandboxPlanFromFormation(formation: FormationId): SandboxPlan {
 /** Re-seat the XI, then overlay the sandbox sliders the engine actually reads. */
 export function applySandboxPlan(squad: Squad, plan: SandboxPlan): Squad {
   const formation = isFormationId(plan.formation) ? plan.formation : squad.tactics.formation;
-  const seated = selectFormation(squad, formation);
+  const seated = selectFormation(
+    squad,
+    formation,
+    formation === plan.formation ? sanitizeSlotZones(formation, plan.slotZones) : undefined,
+  );
   const fullback = plan.fullbackDuty === "overlap" ? "overlap" : "inside";
   const wide = plan.wideDuty === "invert" ? "invert" : "wide";
   const striker =
@@ -331,6 +349,7 @@ export function parseSandboxPlan(
       min,
       max,
     );
+  const slotZones = sanitizeSlotZones(formation, value.slotZones);
   const strikerRaw = value.strikerDuty;
   const striker =
     strikerRaw === "target" ||
@@ -372,5 +391,6 @@ export function parseSandboxPlan(
           ? "wide"
           : base.wideDuty,
     strikerDuty: striker,
+    ...(slotZones ? { slotZones } : {}),
   };
 }

@@ -1,4 +1,4 @@
-import type { FormationId } from "./formations.ts";
+import type { FormationId, SlotZones } from "./formations.ts";
 import type { TeamId } from "./ids.ts";
 
 /** Zonal: occupy passing lanes. Man: stay with a designated attacker. */
@@ -45,6 +45,8 @@ export type TeamTactics = {
   intensity: number;
   /** 0–100. How far outfield players may leave their slot. 0 sits on the dot. */
   fluidity: number;
+  /** Slots the manager moved to another zone (F1.6). Absent for every stock formation. */
+  slotZones?: SlotZones;
 } & LineDuties;
 
 /** Possession 4-3-3: inverted full-backs, inverted wingers, false nine. */

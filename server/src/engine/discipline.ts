@@ -314,13 +314,28 @@ function pickSubstitute(
   );
 }
 
+/**
+ * `playerOnId` is the manager's pick (PRD 27); without it, or when that player cannot come on,
+ * the assistant picks like the AI does.
+ */
 export function stepSubstitution(
   state: MatchState,
   teamId: PlayerMatchStatus["teamId"],
   playerOffId: PlayerId,
+  playerOnId?: PlayerId,
 ): StepResult {
   const off = requirePlayer(state.players, playerOffId);
-  const on = pickSubstitute(state, teamId, off);
+  const wanted = playerOnId
+    ? state.players.find(
+        (player) =>
+          player.playerId === playerOnId &&
+          player.teamId === teamId &&
+          player.playerId !== off.playerId &&
+          !player.onPitch &&
+          !player.sentOff,
+      )
+    : undefined;
+  const on = wanted ?? pickSubstitute(state, teamId, off);
   if (!on) {
     const timed = withTime(state, 1, state.rng);
     return {

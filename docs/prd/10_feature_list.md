@@ -44,7 +44,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F1.3 | Auto-Aufstellung | M1 | Assistent: „Best Eleven" / „Rotation" / „Talente einbauen" |
 | F1.4 | Fitness-Management | M1 | Einsatzzeiten → Ermüdung, Risiko-Anzeige, leichte Verletzungs-Rolls (PRD 07.6) |
 | F1.5 | Spielerprofile | M1 | Attribute-Charts, Icon-Stimmung/Form/Fitness (PRD 09 Screen 4) |
-| F1.6 | Formation-Editor | M2 | Freie Positionen statt festes Raster |
+| F1.6 | Formation-Editor | M2 | Freie Positionen statt festes Raster. Stand 2026-10-29: Feldspieler per Drag auf eine freie Zone schieben (25 Zonen inkl. Libero, Schienenspieler, Doppel-Sechs); Zone setzt Rolle + Laufweg (`TeamTactics.slotZones`, ohne Override Engine unverändert) |
 | F1.7 | Spieler-Gespräche | M2 | Spielzeit-Zusagen beeinflussen `drive`-Wahrnehmung & Moral |
 | F1.8 | Individualtaktik | M2 | Schützen-Rollen, Kapitän, Pressing-Anweisungen pro Spieler |
 | F1.9 | Live-Eingriff Matchday | M2 | Slice 1 (vorgezogen 2026-10-21): manuelle Wechsel bei Pause/Halbzeit/Verletzung + Preset-Wechsel zur HZ (PRD 27); Slice 2 Taktik live bleibt später |

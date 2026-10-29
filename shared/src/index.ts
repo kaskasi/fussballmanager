@@ -10,8 +10,23 @@ export type {
   FormationId,
   FormationSlot,
   FormationSlotId,
+  PitchZone,
+  PitchZoneId,
+  SlotZones,
 } from "./formations.ts";
-export { awayKickoffPosition, FORMATION_IDS, getFormation, getFormationSlot } from "./formations.ts";
+export {
+  awayKickoffPosition,
+  effectiveFormation,
+  FORMATION_IDS,
+  formationSlotFor,
+  getFormation,
+  getFormationSlot,
+  getPitchZone,
+  isPitchZoneId,
+  PITCH_ZONE_IDS,
+  sanitizeSlotZones,
+  slotZoneId,
+} from "./formations.ts";
 
 export type { KickoffPlace, SandboxPlan, Squad, StartingPlace } from "./squad.ts";
 export {
@@ -155,6 +170,7 @@ export type {
 export type {
   MatchView,
   MatchViewCue,
+  MatchViewInjury,
   MatchViewCueDetail,
   MatchViewDot,
   MatchViewFrame,
@@ -166,6 +182,7 @@ export type {
 export type {
   MatchReport,
   MatchReportCard,
+  MatchReportSubstitution,
   MatchReportConditions,
   MatchReportGoal,
 } from "./match-report.ts";

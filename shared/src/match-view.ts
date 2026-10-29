@@ -29,6 +29,15 @@ export type MatchViewDot = {
   teamId: string;
   x: number;
   y: number;
+  /** 0–100 engine fatigue, rounded (PRD 27 — who needs to come off). Older views omit it. */
+  fatigue?: number;
+};
+
+/** A player hurt on this tick (PRD 27 injury prompt). `left`: he could not carry on. */
+export type MatchViewInjury = {
+  playerId: string;
+  teamId: string;
+  left: boolean;
 };
 
 export type MatchViewFrame = {
@@ -46,6 +55,11 @@ export type MatchViewFrame = {
   cueDetail?: MatchViewCueDetail;
   /** Running totals up to this tick, same event stream as commentary. */
   stats: MatchPairStats;
+  /** Substitutions made so far (max. 3 per side). Older views omit it. */
+  substitutionsUsed?: { home: number; away: number };
+  injury?: MatchViewInjury;
+  /** The change made on this tick, if any. */
+  substitution?: { teamId: string; playerOffId: string; playerOnId: string };
 };
 
 export type MatchViewLine = {

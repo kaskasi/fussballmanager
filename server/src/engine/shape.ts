@@ -1,5 +1,5 @@
 import {
-  getFormation,
+  formationSlotFor,
   type CentreMidDuty,
   type FullbackDuty,
   type HoldingDuty,
@@ -158,9 +158,7 @@ export function channelY(
 ): number {
   let home = 50;
   if (player.slot) {
-    const slot = getFormation(tactics.formation).find(
-      (entry) => entry.id === player.slot,
-    );
+    const slot = formationSlotFor(tactics.formation, player.slot, tactics.slotZones);
     if (slot) {
       home = slot.homePosition.y;
     }
@@ -175,6 +173,32 @@ export function channelY(
     return 50;
   }
   return widenedY(home, tactics.width);
+}
+
+/** Depth push of a slot the manager moved to a libero or wing-back zone; 0 on stock formations. */
+export function slotDepthShift(player: PlayerMatchStatus, tactics: TeamTactics): number {
+  if (!player.slot || !tactics.slotZones?.[player.slot]) {
+    return 0;
+  }
+  return formationSlotFor(tactics.formation, player.slot, tactics.slotZones)?.depthShift ?? 0;
+}
+
+/** The libero is the free man: he covers behind the line and marks nobody. */
+function isLibero(player: PlayerMatchStatus, tactics: TeamTactics): boolean {
+  return player.slot !== undefined && tactics.slotZones?.[player.slot] === "SW";
+}
+
+/** Move a shape target along the attack axis; a dropped slot never sits on its own keeper. */
+function shiftDepth(
+  target: PitchPosition,
+  ownGoal: PitchPosition,
+  attackSign: 1 | -1,
+  shift: number,
+): PitchPosition {
+  const depth = depthFromOwnGoal(target, ownGoal, attackSign);
+  const next =
+    shift < 0 ? Math.max(depth + shift, Math.min(depth, 9)) : Math.min(depth + shift, 92);
+  return atDepth(ownGoal, attackSign, next, target.y);
 }
 
 /** How far this player may sit off the slot before shape reels them in. */
@@ -856,7 +880,10 @@ export function applyShape(
   const defendTactics = defendingTactics(state, defendId);
   const marks =
     defendTactics.marking === "man"
-      ? manMarkAssignments(defenders, attackers)
+      ? manMarkAssignments(
+          defenders.filter((player) => !isLibero(player, defendTactics)),
+          attackers,
+        )
       : new Map<PlayerId, PlayerId>();
   const sign = attackingSign(state.homeTeamId, attackId);
   const carrier = state.ballCarrierId
@@ -948,6 +975,10 @@ export function applyShape(
     }
     if (!(occupiedBox && player.role === "CB")) {
       target = clampBackLine(player, target, ownGoal, teamSign, teamTactics);
+    }
+    const depthShift = slotDepthShift(player, teamTactics);
+    if (depthShift !== 0 && !occupiedBox) {
+      target = shiftDepth(target, ownGoal, teamSign, depthShift);
     }
     if (!defending) {
       target = stayOnside(player, target, ownGoal, teamSign, defenders);

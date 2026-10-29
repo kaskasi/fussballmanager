@@ -2,14 +2,17 @@ import {
   asPlayerId,
   buildCareerEngineSquad,
   careerEngineForm,
+  effectiveFormation,
   getFormation,
   isFormationId,
   mapCareerAttributes,
   mapCareerFatigue,
   nordsternSquad,
+  sanitizeSlotZones,
   type FormationId,
   type FormationSlotId,
   type SandboxPlan,
+  type SlotZones,
   type Squad,
 } from "@fussballmanager/shared";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
@@ -103,7 +106,9 @@ export function normalizeMatchLineup(
   if (!saved?.formation || !saved.plan) {
     return defaultMatchLineup(players, fallbackPlan, managerClubId);
   }
-  const plan = { ...saved.plan, formation: saved.formation };
+  const { slotZones: savedZones, ...savedPlan } = saved.plan;
+  const slotZones = sanitizeSlotZones(saved.formation, savedZones);
+  const plan: SandboxPlan = { ...savedPlan, formation: saved.formation, ...(slotZones ? { slotZones } : {}) };
   const slots = getFormation(plan.formation);
   const proIds = new Set(
     players
@@ -124,7 +129,7 @@ export function normalizeMatchLineup(
       used.add(playerId);
     }
   }
-  const filled = fillMissingAssignments(players, plan.formation, assignments, managerClubId);
+  const filled = fillMissingAssignments(players, plan.formation, assignments, managerClubId, slotZones);
   return { formation: plan.formation, plan, assignments: filled };
 }
 
@@ -148,8 +153,9 @@ export function fillMissingAssignments(
   formation: FormationId,
   assignments: LineupAssignments,
   managerClubId: string = DEFAULT_CLUB_ID,
+  zones?: SlotZones,
 ): LineupAssignments {
-  const slots = getFormation(formation);
+  const slots = effectiveFormation(formation, zones);
   const used = new Set(Object.values(assignments).filter(Boolean) as string[]);
   const next = { ...assignments };
   const pool = players
@@ -254,7 +260,8 @@ export function buildSquadFromAssignments(
   playerClubId: TeamId,
   managerClubId: string = DEFAULT_CLUB_ID,
 ): Squad | undefined {
-  const filled = fillMissingAssignments(players, plan.formation, assignments, managerClubId);
+  const zones = sanitizeSlotZones(plan.formation, plan.slotZones);
+  const filled = fillMissingAssignments(players, plan.formation, assignments, managerClubId, zones);
   const input = careerPlayerInputs(players, managerClubId);
   if (input.length === 0) return undefined;
 
@@ -269,7 +276,8 @@ export function buildSquadFromAssignments(
 
   const auto = buildCareerEngineSquad(template, input);
   const byId = new Map(input.map((player) => [player.id, player]));
-  const slots = getFormation(plan.formation);
+  // A moved slot plays the role of its zone (F1.6): a libero is a CB, a wing-back a FB.
+  const slots = effectiveFormation(plan.formation, zones);
 
   const starters = slots.map((slot) => {
     const playerId = filled[slot.id];
@@ -323,11 +331,14 @@ function applyPlanTactics(squad: Squad, plan: SandboxPlan): Squad {
     plan.strikerDuty === "target" || plan.strikerDuty === "false_nine"
       ? plan.strikerDuty
       : "poacher";
+  const { slotZones: _stale, ...tactics } = squad.tactics;
+  const slotZones = formation === plan.formation ? sanitizeSlotZones(formation, plan.slotZones) : undefined;
   return {
     ...squad,
     tactics: {
-      ...squad.tactics,
+      ...tactics,
       formation,
+      ...(slotZones ? { slotZones } : {}),
       mentality: clamp(plan.mentality, 0, 100),
       pressing: clamp(plan.pressing, 0, 100),
       width: clamp(plan.width, 0, 100),

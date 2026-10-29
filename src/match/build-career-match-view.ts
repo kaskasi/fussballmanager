@@ -1,4 +1,5 @@
 import type { BroadcastStoryContext, MatchView, Squad, TeamId } from "@fussballmanager/shared";
+import type { MatchSubstitutionRequest } from "../../server/src/api/manual-substitution.ts";
 
 export type CareerMatchBuildInput = {
   seed: number;
@@ -8,6 +9,10 @@ export type CareerMatchBuildInput = {
   awaySquad: Squad;
   playerClubSquad?: Squad;
   broadcastStory?: BroadcastStoryContext;
+  /** PRD 27 — the manager's live changes; the match replays identically up to each one. */
+  substitutions?: readonly MatchSubstitutionRequest[];
+  /** The assistant takes over the manager's changes from this seq ("skip to report"). */
+  assistantFromSeq?: number;
 };
 
 function squadsForCareerMatch(input: CareerMatchBuildInput): {
@@ -43,5 +48,7 @@ export async function buildCareerMatchViewLocally(
     away,
     humanTeamId,
     broadcastStory: input.broadcastStory,
+    substitutions: input.substitutions,
+    assistantFromSeq: input.assistantFromSeq,
   });
 }

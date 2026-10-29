@@ -1,5 +1,5 @@
-/** WIREFRAME: docs/prd/design.md §9.15 — Live-Regeln (rechte Spalte): Transport + Tempo, Tabs Ereignisse | Statistik | Aufstellungen */
-import { useMemo, useState } from "react";
+/** WIREFRAME: docs/prd/design.md §9.15 — Live-Regeln (rechte Spalte): Transport + Tempo, Tabs Ereignisse | Statistik | Aufstellungen | Wechsel (PRD 27) */
+import { useMemo, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import type { MatchView, MatchViewFrame } from "@fussballmanager/shared";
 import { useT } from "../i18n/react.ts";
@@ -10,12 +10,13 @@ import { CAREER_MATCH_SPEED_OPTIONS } from "./match-playback-speed.ts";
 import { normalizeMatchView } from "./normalize-match-view.ts";
 import { MATCH_HIGHLIGHT_LEVELS, type MatchHighlightLevel } from "./match-highlight-level.ts";
 
-type SideTab = "events" | "stats" | "lineups";
+export type MatchSideTab = "events" | "stats" | "lineups" | "subs";
 
-const TABS: { id: SideTab; labelKey: string }[] = [
+const TABS: { id: MatchSideTab; labelKey: string }[] = [
   { id: "events", labelKey: "match.sideTab.events" },
   { id: "stats", labelKey: "match.sideTab.stats" },
   { id: "lineups", labelKey: "match.sideTab.lineups" },
+  { id: "subs", labelKey: "match.sideTab.subs" },
 ];
 
 export function MatchdayLivePanel({
@@ -32,6 +33,10 @@ export function MatchdayLivePanel({
   onStepForward,
   stepBackDisabled,
   stepForwardDisabled,
+  transportDisabled = false,
+  sideTab: controlledTab,
+  onSideTabChange,
+  subsPanel,
 }: {
   view: MatchView;
   frame: MatchViewFrame;
@@ -46,9 +51,21 @@ export function MatchdayLivePanel({
   onStepForward: () => void;
   stepBackDisabled?: boolean;
   stepForwardDisabled?: boolean;
+  /** A substitution replay is running: hold the clock. */
+  transportDisabled?: boolean;
+  sideTab?: MatchSideTab;
+  onSideTabChange?: (tab: MatchSideTab) => void;
+  /** Own changes (PRD 27); without it the Wechsel tab is hidden. */
+  subsPanel?: ReactNode;
 }) {
   const t = useT();
-  const [sideTab, setSideTab] = useState<SideTab>("events");
+  const [ownTab, setOwnTab] = useState<MatchSideTab>("events");
+  const sideTab = controlledTab ?? ownTab;
+  const setSideTab = (tab: MatchSideTab) => {
+    setOwnTab(tab);
+    onSideTabChange?.(tab);
+  };
+  const tabs = subsPanel ? TABS : TABS.filter((tab) => tab.id !== "subs");
   const [lineupSide, setLineupSide] = useState<"home" | "away">(
     ownTeamId === view.away.id ? "away" : "home",
   );
@@ -71,7 +88,7 @@ export function MatchdayLivePanel({
           type="button"
           className="tc-iconbtn"
           onClick={onStepBack}
-          disabled={stepBackDisabled}
+          disabled={stepBackDisabled || transportDisabled}
           aria-label={t("match.career.debug.stepBack")}
         >
           <ChevronLeft className="tc-icon" strokeWidth={2.5} aria-hidden />
@@ -80,6 +97,7 @@ export function MatchdayLivePanel({
           type="button"
           className="tc-iconbtn tc-match__play"
           onClick={onPlayPause}
+          disabled={transportDisabled}
           aria-label={playing ? t("match.career.nav.pauseSim") : t("match.career.nav.resumeSim")}
         >
           {playing ? (
@@ -92,7 +110,7 @@ export function MatchdayLivePanel({
           type="button"
           className="tc-iconbtn"
           onClick={onStepForward}
-          disabled={stepForwardDisabled}
+          disabled={stepForwardDisabled || transportDisabled}
           aria-label={t("match.career.debug.stepForward")}
         >
           <ChevronRight className="tc-icon" strokeWidth={2.5} aria-hidden />
@@ -132,7 +150,7 @@ export function MatchdayLivePanel({
       </div>
 
       <div className="tc-tabs" role="tablist" aria-label={t("match.live.sideTabsAria")}>
-        {TABS.map(({ id, labelKey }) => (
+        {tabs.map(({ id, labelKey }) => (
           <button
             key={id}
             type="button"
@@ -160,6 +178,8 @@ export function MatchdayLivePanel({
         {sideTab === "stats" ? (
           <MatchStats view={view} stats={frame.stats} ownTeamId={ownTeamId} compact />
         ) : null}
+
+        {sideTab === "subs" && subsPanel ? subsPanel : null}
 
         {sideTab === "lineups" ? (
           <>

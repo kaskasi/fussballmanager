@@ -248,7 +248,7 @@ Definition des Breakout/Slump-Event-Systems: seltene Lebensereignisse, die `driv
 }
 ```
 
-Mentoring als Beziehung (Mentor zugewiesen, Monate, Drive des Mentors) ist Feature F2.4 und noch nicht als eigene Formel spezifiziert. Bis dahin liest `mentor_ignition` diese drei Bedingungen, sobald F2.4 sie an den Spieler schreibt. Es gibt keinen wöchentlichen Drive-Trickle von +0.05.
+Mentoring als Beziehung (Mentor zugewiesen, Monate, Drive des Mentors) ist Feature F2.4, spezifiziert in PRD 29. `mentor_ignition` liest diese drei Bedingungen vom Spieler. Es gibt keinen wöchentlichen Drive-Trickle von +0.05.
 
 ### 06.3 Trigger-Typen
 

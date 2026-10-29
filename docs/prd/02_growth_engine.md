@@ -59,7 +59,7 @@ growth(attr) =
 Sie sind kein zweiter Multiplikator. Der numerische Alterseffekt ist
 `ageDevelopmentFactor` plus der subtraktive Decay.
 
-`environment()` kommt aus Trainerstab (F8.1) und Gelände-Training (`precinctTrainingEnvironment`). Mentoring ist kein Wochenfaktor. Minuten und Fokus-Slots werden nicht doppelt in `environment()` gezählt.
+`environment()` kommt aus Trainerstab (F8.1) und Gelände-Training (`precinctTrainingEnvironment`). Mentoring ist kein Faktor in `environment()`; es läuft als eigener Wochenschritt nach der Formel (PRD 29). Minuten und Fokus-Slots werden nicht doppelt in `environment()` gezählt.
 
 `weak_foot` wächst mit derselben Formel, σ der technischen Attribute, Decay der Gruppe `all_other`. `gk_handling` zählt als physisches Attribut für σ und als `all_other` für Decay.
 
@@ -184,7 +184,7 @@ function calculateMatchPractice(minutes: number, injured: boolean, playingTimeFa
 - Decay startet bei `effective_age >= decline_start` des Attributs.
 - Decay ist subtraktiv: `per_year / 52` pro Woche.
 - Leadership hat keinen Decay.
-- Mentoring ist kein Wachstumsfaktor in dieser Datei. Der einmalige Drive-Sprung steht in PRD 06.2 (`mentor_ignition`, +0.25).
+- Mentoring ist kein Faktor dieser Formel. Den kleinen Wochen-Zuwachs (nur Attribute, in denen der Mentor besser ist) regelt PRD 29; der einmalige Drive-Sprung steht in PRD 06.2 (`mentor_ignition`, +0.25).
 
 ### 02.7 Invarianten (Test-Cases)
 

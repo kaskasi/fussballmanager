@@ -54,7 +54,7 @@ export interface Player {
     recent_weekly_minutes: number[];
     /** F3.5 — trains with pros for `ends_week` inclusive, then auto-promotion check. */
     pro_trial?: ProTrialState;
-    /** F2.4 — assigned veteran mentor for breakout eligibility (PRD 06.2). */
+    /** F2.4 — assigned veteran mentor: weekly morale/form/attribute lift + PRD 06.2 signal. */
     mentorship?: MentorshipState;
     /** F5.4 — consecutive rejected contract offers. */
     contract_failed_offers?: number;
@@ -173,6 +173,8 @@ export interface MentorshipState {
   mentor_player_id: string;
   since_season: number;
   since_week: number;
+  /** Attribute points passed on so far (sum over all taught attributes). */
+  gained?: number;
 }
 
 export interface TemporaryModifier {

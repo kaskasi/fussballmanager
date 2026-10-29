@@ -1,4 +1,8 @@
-# CLAUDE.md — Football Manager Design Pass Mode
+@AGENTS.md
+
+# CLAUDE.md — Claude-specific additions
+
+Project rules live in `AGENTS.md` (imported above). With a `CLAUDE.md` present, Claude Code reads `AGENTS.md` only through that import.
 
 ## Workspace Scope (Token Savings)
 - DO NOT read full repository trees or run background test runners unless explicitly requested.
@@ -6,11 +10,11 @@
 - Bypass strict Hexagonal abstraction layer boundaries for UI component/styling files to keep code lean.
 
 ## Stack & Architecture
-- Frontend: React (Functional Components, TypeScript, TailwindCSS).
+- Frontend: React (Functional Components, TypeScript). Plain CSS with design tokens (`src/ui/design/design-tokens.css`, per-screen files in `src/ui/design/surfaces/`). No Tailwind.
 - State: Keep state close to the UI. Do not generate complex Redux/Zustand boilerplate for simple UI tweaks.
 - Styling Strategy: High-fidelity, data-dense layout (similar to Football Manager). Maximize screen real estate using tables, grids, and collapsible panels for player attributes.
 
-## Design Pass Rules (Fast Execution)
+## Design Pass Rules (UI/CSS-only tasks, Fast Execution)
 - Batch UI changes: Write complete layout modifications in a single pass instead of incremental, conversational adjustments.
 - Skip global linting/formatting checks on every file touch. Only run formatting at the very end of the task if asked.
 - Omit writing new test files or updating CI configs during active design/CSS passes.

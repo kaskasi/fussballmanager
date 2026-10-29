@@ -18,9 +18,8 @@ import {
   topScorers,
   topYellowCards,
 } from "./league-week.ts";
-import { simulatePartialDivisionSeason } from "./promotion-relegation.ts";
+import { divisionSeasonSeed, simulatePartialDivisionSeason } from "./promotion-relegation.ts";
 import type { Player } from "../types/player.ts";
-import { pyramidDivision } from "./league-pyramid.ts";
 
 export interface DivisionStandings {
   divisionId: DivisionEconomyId;
@@ -31,9 +30,6 @@ export interface DivisionStandings {
   matchdaysPlayed: number;
 }
 
-function divisionSeed(masterSeed: number, season: number, divisionId: DivisionEconomyId): number {
-  return (masterSeed ^ season ^ pyramidDivision(divisionId).tableSalt) >>> 0;
-}
 
 export function divisionStandings(
   league: LeagueState,
@@ -61,13 +57,17 @@ export function divisionStandings(
     };
   }
 
-  const results =
-    matchdaysPlayed > 0
+  // Live results (PRD 32 §7); a league without them (older tests) is simulated
+  // up to the same matchday with the same seed.
+  const live = league.division_results?.[divisionId];
+  const results = live
+    ? live
+    : matchdaysPlayed > 0
       ? simulatePartialDivisionSeason(
           clubIds,
           meetings,
           matchdaysPlayed,
-          divisionSeed(masterSeed, season, divisionId),
+          divisionSeasonSeed(masterSeed, season, divisionId),
           rivalPlayers,
         )
       : [];
@@ -118,7 +118,7 @@ export function divisionLeaderLists(
 
   const stats = playerStatsFromResults(
     standings.results,
-    divisionSeed(masterSeed, season, standings.divisionId),
+    divisionSeasonSeed(masterSeed, season, standings.divisionId),
     undefined,
     rivalPlayers,
   );

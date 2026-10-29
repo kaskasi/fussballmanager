@@ -1,5 +1,4 @@
 import {
-  matchdayFixtures,
   standings,
   type FixtureResult,
   type TeamId,
@@ -9,9 +8,27 @@ import type { LeagueState } from "../persistence/league-state.ts";
 import { totalSeasonMatchdays } from "../persistence/league-state.ts";
 import { t } from "../i18n/index.ts";
 import { clubShortName } from "./league-week.ts";
-import { divisionLabel, squadForLeagueClub } from "./league-divisions.ts";
-import { divisionBelow, divisionOfClub, emptyDivisionPools, PYRAMID, type DivisionId } from "./league-pyramid.ts";
-import { squadAverageStrength } from "@fussballmanager/shared";
+import { divisionLabel } from "./league-divisions.ts";
+import {
+  divisionSeasonSeed,
+  seededRoll,
+  simulateFullDivisionSeason,
+  teamStrength,
+} from "./division-matchday.ts";
+
+export {
+  divisionSeasonSeed,
+  simulateDivisionMatchday,
+  simulateFullDivisionSeason,
+  simulatePartialDivisionSeason,
+} from "./division-matchday.ts";
+import {
+  divisionBelow,
+  divisionOfClub,
+  emptyDivisionPools,
+  PYRAMID,
+  type DivisionId,
+} from "./league-pyramid.ts";
 import type { Player } from "../types/player.ts";
 
 export interface PromotionMovement {
@@ -37,71 +54,6 @@ export interface PromotionRelegationResult {
   /** Every playoff of the season, top boundary first. */
   playoffs: PlayoffResult[];
   messages: string[];
-}
-
-function seededRoll(seed: number, salt: number): number {
-  let hash = seed ^ salt;
-  hash = Math.imul(hash ^ 0x517cc1b7, 0x9e3779b1);
-  return ((hash >>> 0) % 10_000) / 10_000;
-}
-
-function teamStrength(teamId: TeamId, rivalPlayers?: readonly Player[]): number {
-  const squad = squadForLeagueClub(teamId, rivalPlayers);
-  return squad ? squadAverageStrength(squad) : 48;
-}
-
-function simulateMatchdayResults(
-  clubIds: readonly TeamId[],
-  matchday: number,
-  baseSeed: number,
-  rivalPlayers?: readonly Player[],
-): FixtureResult[] {
-  const fixtures = matchdayFixtures(clubIds, matchday);
-  return fixtures.map((fixture, index) => {
-    const homeStrength = teamStrength(fixture.homeTeamId, rivalPlayers);
-    const awayStrength = teamStrength(fixture.awayTeamId, rivalPlayers);
-    const edge = (homeStrength - awayStrength) / 20;
-    const homeGoals = Math.min(
-      5,
-      Math.max(0, Math.round(1.1 + edge + seededRoll(baseSeed, matchday * 17 + index) * 2.4)),
-    );
-    const awayGoals = Math.min(
-      5,
-      Math.max(0, Math.round(1.0 - edge * 0.6 + seededRoll(baseSeed, matchday * 19 + index + 3) * 2.2)),
-    );
-    return {
-      homeTeamId: fixture.homeTeamId,
-      awayTeamId: fixture.awayTeamId,
-      homeGoals,
-      awayGoals,
-    };
-  });
-}
-
-export function simulatePartialDivisionSeason(
-  clubIds: readonly TeamId[],
-  meetingsPerOpponent: number,
-  matchdays: number,
-  baseSeed: number,
-  rivalPlayers?: readonly Player[],
-): FixtureResult[] {
-  const maxMatchdays = (clubIds.length - 1) * meetingsPerOpponent;
-  const limit = Math.max(0, Math.min(matchdays, maxMatchdays));
-  const results: FixtureResult[] = [];
-  for (let matchday = 1; matchday <= limit; matchday++) {
-    results.push(...simulateMatchdayResults(clubIds, matchday, baseSeed, rivalPlayers));
-  }
-  return results;
-}
-
-export function simulateFullDivisionSeason(
-  clubIds: readonly TeamId[],
-  meetingsPerOpponent: number,
-  baseSeed: number,
-  rivalPlayers?: readonly Player[],
-): FixtureResult[] {
-  const matchdays = (clubIds.length - 1) * meetingsPerOpponent;
-  return simulatePartialDivisionSeason(clubIds, meetingsPerOpponent, matchdays, baseSeed, rivalPlayers);
 }
 
 function simulatePlayoffMatch(
@@ -135,15 +87,22 @@ function finalTables(
   const tables = new Map<DivisionId, TeamId[]>();
   for (const division of PYRAMID) {
     const ids = [...(pools[division.id] ?? [])];
+    const live = league.division_results?.[division.id] ?? [];
+    const fullSeason = totalSeasonMatchdays({ club_ids: ids, meetings_per_opponent: league.meetings_per_opponent });
+    const liveComplete = live.length >= (fullSeason * ids.length) / 2;
+    // Live results when the season was played week by week (PRD 32 §7); the
+    // batch only for leagues without them (tests, saves from before slice 3).
     const results =
       league.division_id === division.id
         ? league.results
-        : simulateFullDivisionSeason(
-            ids,
-            league.meetings_per_opponent,
-            masterSeed ^ season ^ division.simSalt,
-            rivalPlayers,
-          );
+        : liveComplete
+          ? live
+          : simulateFullDivisionSeason(
+              ids,
+              league.meetings_per_opponent,
+              divisionSeasonSeed(masterSeed, season, division.id),
+              rivalPlayers,
+            );
     tables.set(division.id, standings(ids, results).map((row) => row.teamId));
   }
   return tables;
@@ -173,7 +132,7 @@ export function applyPromotionRelegation(
     const boundary = division.boundaryBelow;
     const upperId = division.id;
     const lowerId = divisionBelow(upperId);
-    if (!boundary || boundary.closed || !lowerId) continue;
+    if (!boundary || !lowerId) continue;
     // Club events only for the boundaries the manager's division touches.
     const announce = league.division_id === upperId || league.division_id === lowerId;
     const upperTable = tables.get(upperId) ?? [];
@@ -257,12 +216,4 @@ export function leagueStateAfterMovement(
     league_pools: pools,
     club_ids: [...(pools[division_id] ?? league.club_ids)],
   };
-}
-
-export function promotionZoneRank(index: number, teamCount: number): "promoted" | "playoff" | "safe" | "relegated" | null {
-  if (index === 0) return "promoted";
-  if (index === 1) return "playoff";
-  if (index === teamCount - 1) return "relegated";
-  if (index === teamCount - 2) return "playoff";
-  return "safe";
 }

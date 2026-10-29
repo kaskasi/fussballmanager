@@ -53,6 +53,7 @@ export function MatchdayLeagueSidePanel({
           </div>
         </div>
         <LeagueTable
+          divisionId={league.division_id}
           table={standings.table}
           leagueSlice={leagueSlice}
           playerClubId={league.player_club_id}

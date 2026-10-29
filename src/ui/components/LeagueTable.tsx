@@ -3,7 +3,7 @@ import type { TableRow, TeamId } from "@fussballmanager/shared";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { teamFormPoints, teamFormSlots } from "../../sim/league-form.ts";
 import { LeagueFormStrip, LeaguePointsSparkline } from "./LeagueFormVisuals.tsx";
-import { promotionZoneRank } from "../../sim/promotion-relegation.ts";
+import { divisionZones, tableZone, type DivisionId, type TableZone } from "../../sim/league-pyramid.ts";
 import { clubDisplayName, clubPlaceName } from "../../sim/league-divisions.ts";
 import type { WorldClub } from "../../world/world-generator.ts";
 import { useT } from "../../i18n/react.ts";
@@ -17,6 +17,7 @@ const ZONE_CLASS = {
 
 /** WIREFRAME: docs/prd/design.md §9.7 — league table on tc-table (design.md §4.3). */
 export function LeagueTable({
+  divisionId,
   table,
   leagueSlice,
   playerClubId,
@@ -26,6 +27,8 @@ export function LeagueTable({
   caption,
   compact = false,
 }: {
+  /** Zones come from this division's boundaries (PRD 32 §3). */
+  divisionId: DivisionId;
   table: TableRow[];
   leagueSlice: Pick<LeagueState, "club_ids" | "results">;
   playerClubId: TeamId;
@@ -99,14 +102,14 @@ export function LeagueTable({
         </thead>
         <tbody>
           {table.map((row, index) => {
-            const zone = promotionZoneRank(index, table.length);
+            const zone = tableZone(divisionId, index, table.length);
             const isOwn = row.teamId === playerClubId;
             const rowClass = isOwn ? "tc-row--own" : highlight.has(row.teamId) ? "tc-row--mark" : undefined;
             const name = clubDisplayName(row.teamId, worldClubs);
             return (
               <tr key={row.teamId} className={rowClass}>
                 <td className="tc-num">
-                  <span className={`tc-place ${zone ? ZONE_CLASS[zone] : ""}`.trim()}>{index + 1}</span>
+                  <span className={`tc-place ${ZONE_CLASS[zone]}`.trim()}>{index + 1}</span>
                 </td>
                 {compact ? null : <td className="tc-hide-narrow">{clubPlaceName(row.teamId, worldClubs) || "—"}</td>}
                 <td>
@@ -153,14 +156,20 @@ export function LeagueTable({
   );
 }
 
-/** Zone key under the table: the same place badges as the rank column. */
-export function LeagueZoneLegend() {
+const ZONE_LEGEND_KEY: Record<Exclude<TableZone, "safe">, string> = {
+  promoted: "leagues.legend.promotion",
+  playoff: "leagues.legend.playoff",
+  relegated: "leagues.legend.relegation",
+};
+
+/** Zone key under the table: the same place badges as the rank column, only the zones this division has. */
+export function LeagueZoneLegend({ divisionId }: { divisionId: DivisionId }) {
   const t = useT();
-  const items = [
-    { className: "tc-place--up", label: t("leagues.legend.promotion") },
-    { className: "tc-place--playoff", label: t("leagues.legend.playoff") },
-    { className: "tc-place--down", label: t("leagues.legend.relegation") },
-  ];
+  const items = divisionZones(divisionId).map((zone) => ({
+    className: ZONE_CLASS[zone],
+    label: t(ZONE_LEGEND_KEY[zone]),
+  }));
+  if (items.length === 0) return null;
   return (
     <ul className="tc-legend" aria-label={t("leagues.legendAria")}>
       {items.map((item) => (

@@ -30,6 +30,11 @@ export interface LeagueState {
   /** Next matchday to play (1-based). */
   matchday: number;
   results: FixtureResult[];
+  /**
+   * PRD 32 §7 — this season's quick-sim results of every other division, one
+   * matchday per league week. The manager's division keeps `results`.
+   */
+  division_results?: Partial<Record<DivisionEconomyId, FixtureResult[]>>;
   player_stats: PlayerSeasonStat[];
   career_player_stats?: CareerLeagueStat[];
   /** Set after the final matchday until the next week sim clears the table. */
@@ -48,6 +53,7 @@ export function resetLeagueSeason(league: LeagueState): LeagueState {
     ...league,
     matchday: 1,
     results: [],
+    division_results: {},
     player_stats: [],
     career_player_stats: [],
     season_complete: false,
@@ -84,6 +90,7 @@ export function normalizeLeagueState(
       ? [...(pools[division_id] ?? [])]
       : [...base.club_ids],
     meetings_per_opponent: base.meetings_per_opponent ?? LEAGUE_MEETINGS_PER_OPPONENT,
+    division_results: base.division_results ?? {},
     player_stats: base.player_stats ?? [],
     career_player_stats: base.career_player_stats ?? [],
     season_complete: base.season_complete ?? false,

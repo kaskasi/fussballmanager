@@ -158,7 +158,7 @@ Regeln:
 - Oberliga Platz 1 steigt direkt auf.
 - Regionalliga Platz 17 und Oberliga Platz 2 spielen Relegation.
 - Der Spielerclub kann auf- und absteigen. Kein Schutz.
-- Grenzen über der Regionalliga: je 2 direkte Auf- und Absteiger plus Relegation (16. gegen 3.), PRD 32 §3. Bis PRD 32 Slice 3 bleibt die Grenze Nationalliga ↔ Regionalliga geschlossen.
+- Grenzen über der Regionalliga: je 2 direkte Auf- und Absteiger plus Relegation (16. gegen 3.), PRD 32 §3. Seit PRD 32 Slice 3 ist auch die Grenze Nationalliga ↔ Regionalliga offen; alle Spielklassen spielen jeden Spieltag (Live-Tabellen).
 
 Der Ligakalender umfasst 34 Spieltage. Spieltag 1 liegt Ende August (KW 35),
 nicht in KW 1. Saisonabschluss, Awards, Vorstandsauswertung und Intake laufen

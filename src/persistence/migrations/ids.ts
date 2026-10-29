@@ -98,4 +98,5 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_100_mentoring_slots",
   "migration_101_retirement",
   "migration_102_league_pyramid",
+  "migration_103_live_division_tables",
 ] as const;

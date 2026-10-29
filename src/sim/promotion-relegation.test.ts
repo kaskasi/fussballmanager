@@ -4,19 +4,10 @@ import { defaultLeaguePools } from "./league-divisions.ts";
 import {
   applyPromotionRelegation,
   leagueStateAfterMovement,
-  promotionZoneRank,
   simulateFullDivisionSeason,
 } from "./promotion-relegation.ts";
 
 describe("promotion and relegation", () => {
-  it("labels promotion and relegation zones", () => {
-    expect(promotionZoneRank(0, 6)).toBe("promoted");
-    expect(promotionZoneRank(1, 6)).toBe("playoff");
-    expect(promotionZoneRank(3, 6)).toBe("safe");
-    expect(promotionZoneRank(4, 6)).toBe("playoff");
-    expect(promotionZoneRank(5, 6)).toBe("relegated");
-  });
-
   it("swaps champion and relegated club after a full season", () => {
     const pools = defaultLeaguePools();
     const regIds = pools["regionalliga-nord"];

@@ -29,6 +29,8 @@ import {
   templateSquadForClub,
 } from "./league-divisions.ts";
 import { t } from "../i18n/index.ts";
+import { divisionSeasonSeed, simulateDivisionMatchday } from "./division-matchday.ts";
+import { pyramidDivisionIds } from "./league-pyramid.ts";
 import type { WorldClub } from "../world/world-generator.ts";
 import type { WatchedPlayerMatch } from "./watched-player-match.ts";
 import { assertFixtureStatsConsistent } from "./league-player-stats-integrity.ts";
@@ -336,6 +338,31 @@ function applyWatchedPlayerFixture(
   return { results, playerStats };
 }
 
+/**
+ * PRD 32 §7 — every division the manager is not in plays the same matchday
+ * with the quick strength model, so all tables are live.
+ */
+function advanceOtherDivisions(
+  league: LeagueState,
+  matchday: number,
+  season: number,
+  masterSeed: number,
+  rivalPlayers: readonly Player[],
+): NonNullable<LeagueState["division_results"]> {
+  const next = { ...(league.division_results ?? {}) };
+  for (const divisionId of pyramidDivisionIds()) {
+    if (divisionId === league.division_id) continue;
+    const clubIds = league.league_pools?.[divisionId] ?? [];
+    if (clubIds.length < 2) continue;
+    const seed = divisionSeasonSeed(masterSeed, season, divisionId);
+    next[divisionId] = [
+      ...(next[divisionId] ?? []),
+      ...simulateDivisionMatchday(clubIds, matchday, seed, rivalPlayers),
+    ];
+  }
+  return next;
+}
+
 export async function advanceLeagueWeek(
   league: LeagueState | undefined,
   season: number,
@@ -396,6 +423,7 @@ export async function advanceLeagueWeek(
       ...current,
       matchday: seasonComplete ? 1 : matchdayPlayed + 1,
       results: [...current.results, ...payload.results],
+      division_results: advanceOtherDivisions(current, matchdayPlayed, season, masterSeed, rivalPlayers),
       player_stats: mergePlayerSeasonStats(current.player_stats, payload.playerStats),
       season_complete: seasonComplete,
     },

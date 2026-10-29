@@ -7,6 +7,7 @@ import {
   divisionAbove,
   divisionBelow,
   divisionOfClub,
+  divisionZones,
   emptyDivisionPools,
   PYRAMID,
   pyramidDivisionIds,
@@ -46,13 +47,24 @@ describe("league pyramid registry (PRD 32 §4)", () => {
   });
 
   it("marks table zones from the boundaries above and below", () => {
-    // Regionalliga Nord: nothing above yet (PRD 32 slice 3 opens it), one direct place plus a playoff below.
-    expect(tableZone("regionalliga-nord", 0, 18)).toBe("safe");
+    // Meisterliga: nothing above; two down plus a playoff.
+    expect(tableZone("meisterliga", 0, 18)).toBe("safe");
+    expect(tableZone("meisterliga", 15, 18)).toBe("playoff");
+    expect(tableZone("meisterliga", 16, 18)).toBe("relegated");
+    // Regionalliga Nord: two up plus a playoff to the Nationalliga, one down plus a playoff.
+    expect(tableZone("regionalliga-nord", 0, 18)).toBe("promoted");
+    expect(tableZone("regionalliga-nord", 1, 18)).toBe("promoted");
+    expect(tableZone("regionalliga-nord", 2, 18)).toBe("playoff");
     expect(tableZone("regionalliga-nord", 16, 18)).toBe("playoff");
     expect(tableZone("regionalliga-nord", 17, 18)).toBe("relegated");
     expect(tableZone("oberliga-nord", 0, 18)).toBe("promoted");
     expect(tableZone("oberliga-nord", 1, 18)).toBe("playoff");
-    expect(tableZone("oberliga-nord", 2, 18)).toBe("safe");
     expect(tableZone("oberliga-nord", 17, 18)).toBe("safe");
+  });
+
+  it("lists only the zones a division has", () => {
+    expect(divisionZones("meisterliga")).toEqual(["playoff", "relegated"]);
+    expect(divisionZones("nationalliga")).toEqual(["promoted", "playoff", "relegated"]);
+    expect(divisionZones("oberliga-nord")).toEqual(["promoted", "playoff"]);
   });
 });

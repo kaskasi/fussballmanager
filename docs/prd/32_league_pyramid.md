@@ -1,6 +1,6 @@
 # PRD 32 — League pyramid (five tiers), season archive, late-career decline
 
-**Status:** In progress · 2026-10-29 · Phase 2 of PRD 30. Slices 0–2 built.
+**Status:** In progress · 2026-10-29 · Phase 2 of PRD 30. Slices 0–3 built.
 **Features:** F10.8 (PRD 10, M4 → now), F10.3. **Touches:** PRD 02 (decline),
 PRD 03/31 (AI youth level), PRD 11 (tier economies), PRD 12 (structure),
 PRD 19 (Act 3), PRD 23 (objectives), PRD 24 (modes).
@@ -129,8 +129,7 @@ interface PyramidDivision {
   id: DivisionId;
   tier: number;          // 1 = top flight
   clubCount: number;     // 18
-  simSalt: number;       // season-end batch sim seed salt
-  tableSalt: number;     // Leagues-screen table seed salt (until slice 3)
+  simSalt: number;       // quick-sim seed salt (live matchdays and season-end fallback)
   careerStart: boolean;  // offered in the new-career club pick
   boundaryBelow?: { direct: number; playoff: boolean; playoffSalt: number };
 }
@@ -154,8 +153,8 @@ in `DIVISION_ECONOMY` (proper names, not translated).
   `server/src/db/squad-map.ts` keeps its own `DIVISION_ID`: the server package
   does not import client code.
 - Rollout switches, removed when their slice lands: `boundaryBelow.closed`
-  (no movement; Nationalliga ↔ Regionalliga until slice 3) and
-  `transferMarket` (tiers 1–3 off the AI market until slice 4). Club events
+  (Nationalliga ↔ Regionalliga; removed in slice 3) and `transferMarket`
+  (tiers 1–3 off the AI market until slice 4). Club events
   are written only for boundaries the manager's division touches;
   `PromotionRelegationResult.playoffs` lists every playoff.
 - Promotion and relegation club events are i18n strings now
@@ -205,8 +204,8 @@ in `DIVISION_ECONOMY` (proper names, not translated).
   career save drops from 1,208 KB to 901 KB gzipped.
 - **Background tiers until slices 3–4.** Tiers 1–3 grow, age, retire, recruit
   youth and play a season-end batch with promotion and relegation among
-  themselves. The Nationalliga ↔ Regionalliga boundary is `closed` (slice 3
-  opens it). Their players are not on the AI transfer market
+  themselves. Slice 3 made their tables live and opened the Nationalliga ↔
+  Regionalliga boundary (§7). Their players are not on the AI transfer market
   (`transferMarket: false`, slice 4); AI clubs only buy from tiers 4–5. Their
   regions are not scout zones, so they do not reach the scouting pool. The
   Leagues screen shows all five tabs and builds only the open tab's table.
@@ -238,20 +237,36 @@ existing tiers):
 Tiers 4 and 5 keep today's values. AI transfer budgets per tier come with the
 cross-tier market in slice 4 (today: full budget for tier ≤ 4, 60 % below).
 
-## 7. Live tables (slice 3)
+## 7. Live tables (slice 3, built)
 
-- The player's division stays engine-simulated per matchday
-  (`advanceLeagueWeek`). Every other tier plays its matchday each week with the
-  quick strength model (`simulateMatchdayResults`, today used only at season
-  end), so its table is live. Results are stored per division:
-  `league.division_results: Record<DivisionId, FixtureResult[]>`, which
-  replaces the season-end batch.
-- Player stats stay limited to the player's division.
-- Leagues screen: tier switcher (wireframe update first, design.md §9.NN of
-  the Leagues screen). Zone colors per boundary (`promotionZoneRank` reads the
-  registry).
-- Promotion out of Regionalliga Nord is switched on in this slice. Before
-  that, tiers 1–3 exist but the 3 ↔ 4 boundary is closed.
+- **Every division plays every league week.** The manager's division stays
+  engine-simulated (`advanceLeagueWeek`). Every other division plays the same
+  matchday with the quick strength model (`simulateDivisionMatchday` in
+  `src/sim/division-matchday.ts`, the model the season-end batch used), seed
+  `divisionSeasonSeed = masterSeed ^ season ^ simSalt`. Results go to
+  `league.division_results[divisionId]`; `resetLeagueSeason` clears them.
+- **Season end** reads those results. The batch (`simulateFullDivisionSeason`,
+  same seed) runs only for a division without a full live season (tests, or a
+  save that skipped weeks). Rosters change during the season, so live
+  results differ from what the old end-of-season batch gave.
+- **Player stats** stay limited to the manager's division. The leader lists
+  of other divisions are still synthesized from their results.
+- **Leagues screen** (wireframe `docs/prd/design/09.07-tabellen.md` updated
+  first): five tabs "tier · name", top tier first; every table is live, and
+  other divisions say "live · quick results". Place badges come from
+  `tableZone(divisionId, …)`, and the legend lists only the zones of the shown
+  division (`divisionZones`): no promotion zone in the Meisterliga, no
+  relegation zone in the Oberliga. `promotionZoneRank` is gone; the matchday
+  side panel uses the same zones.
+- **Nationalliga ↔ Regionalliga is open**: Regionalliga places 1–2 go up,
+  3rd plays the Nationalliga's 16th, Nationalliga 17–18 go down. The `closed`
+  switch and `tableSalt` (Leagues-screen seed for foreign tables) are removed.
+- **Acceptance test** `src/sim/pyramid-climb.test.ts`: a club wins every match
+  in Oberliga Nord and climbs one tier per season to Meisterliga champion,
+  with 18 clubs in every pool and no club lost or duplicated each season.
+- **Smoke run**: the manager's club moved into the Nationalliga, 12 weeks
+  through the real pipeline. It plays 10 matchdays, all four other tables
+  stay live, the Nationalliga economy applies, and a week takes 1.48 s.
 
 ## 8. Market, board, jobs, archive (slice 4)
 
@@ -300,8 +315,10 @@ slice 0, save within 2× at seasons 1 and 6. Dormant tiers not needed so far.
 ## 12. Save
 
 Slices 0–1 change no schema. Slice 2: `SAVE_VERSION` 102,
-`migration_102_league_pyramid` (§5). Slices 3–4 bump again for
-`division_results` and the archive.
+`migration_102_league_pyramid` (§5). Slice 3: `SAVE_VERSION` 103,
+`migration_103_live_division_tables` backfills the matchdays already played
+in every other division (quick model, live seed), so a save from mid-season
+keeps full tables. Slice 4 bumps again for the archive.
 
 ## Progress
 
@@ -329,5 +346,12 @@ Slices 0–1 change no schema. Slice 2: `SAVE_VERSION` 102,
   gz at season 1 (budget 1,246 KB), 1,234 KB at season 6 (budget 1,584 KB),
   1,417 KB at season 10; rival players 939 KB, autopilot Postfach queue
   304 KB. The dormant-tier fallback is not needed.
-- Next: slice 3 (live quick-sim tables for all tiers, open the Nationalliga ↔
-  Regionalliga boundary, tier zones on the Leagues screen).
+- Slice 3 (live tables for every division, Nationalliga ↔ Regionalliga
+  open, zones per division, migration 103, climb acceptance test): done.
+  Long run (seed 2026, 10 seasons, all invariants hold): drift peak +6.5 %
+  (season 7); tier order holds every season (season 10: 121.4 > 112.8 >
+  103.6 > 94.0 > 82.8); 35+ share 0.8–2.7 %; week sim 1.65–1.87 s (slice 2:
+  1.67–1.89 s, so the weekly matchdays of four divisions cost nothing
+  measurable); save 1,169 KB gz at season 1, 1,382 KB at season 10.
+- Next: slice 4 (AI market across tiers, board objectives and job offers by
+  tier, season archive, 20-season long run).

@@ -1,0 +1,20 @@
+# Search noise for ripgrep (and tools built on it: Claude Code Grep, VS Code/Cursor search).
+# Files stay tracked and served; this only keeps them out of searches.
+# Search them anyway with `rg -uu …` or by passing the file path directly.
+
+# Generated/baked SVGs: up to 6.8 MB, single lines up to 768 KB
+public/assets/
+public/match/
+
+package-lock.json
+
+# Study/playtest output data (the .md summaries next to them stay searchable)
+docs/research/*.json
+docs/research/*.csv
+docs/research/playtest-logs/
+
+# One-off locale patches, already merged into src/i18n/locales/*.json
+scripts/help-locale-patch.json
+scripts/story-help-locale-extra.json
+scripts/p2-spend-locale.json
+scripts/sponsor-locale.json

@@ -41,6 +41,17 @@ import type { GameSession } from "../persistence/game-session.ts";
 import { activatePendingPreContracts } from "../transfers/pre-contracts.ts";
 import { computeSeasonAwards } from "./season-awards.ts";
 import { appendSeasonCoda } from "../narrative/season-end-narrative.ts";
+import { withPeakCa } from "../development/retirement.ts";
+import { appendSeasonLine, retiredRecord, type RetiredPlayer } from "../development/retired-players.ts";
+import { clearMentorshipsTo, retiresAtSeasonEnd } from "../development/own-retirement.ts";
+import { assignFreePlayerIds, nextNumericIdHint } from "../player/player-ids.ts";
+import { upkeepAiRosters } from "./ai-roster-upkeep.ts";
+import {
+  clubDivisionLookup,
+  playersInAgreedDeals,
+  pruneRetiredFromTransferState,
+  retireAiPlayers,
+} from "./world-retirement.ts";
 import {
   careerActBoardObjectives,
   guardSeasonEndEvaluation,
@@ -50,19 +61,16 @@ import {
 export interface SeasonEndResult {
   session: GameSession;
   intakeCount: number;
+  /** PRD 31 — players who retired this season end, own and AI. */
+  retiredCount: number;
+  /** PRD 31 — own players among them (club events). */
+  ownRetired: RetiredPlayer[];
+  /** PRD 31 — AI youth and refill players added this season end. */
+  aiYouthCount: number;
+  aiRefillCount: number;
   loanReturns: TransferRecord[];
   boardEvaluation?: SeasonObjectiveEvaluation;
   promotionRelegation?: PromotionRelegationResult;
-}
-
-function nextIntakeIdStart(players: readonly Player[]): number {
-  let max = 0;
-  for (const player of players) {
-    const match = /^pl_(\d+)$/.exec(player.id);
-    if (!match) continue;
-    max = Math.max(max, Number.parseInt(match[1]!, 10));
-  }
-  return max + 1;
 }
 
 /** PRD 03.1 — intake, aging, growth snapshots at league season end. */
@@ -71,8 +79,22 @@ export function runSeasonEnd(
   endingSeason: number,
   facility: AcademyFacility = session.academyFacility ?? "academy_basic",
 ): SeasonEndResult {
-  const snapshotted = session.players.map((player) => appendSeasonSnapshot(player, endingSeason));
-  const aged = snapshotted.map((player) => ({
+  // PRD 31 — season line and peak CA first, while club and season stats are still the ending season's.
+  const divisionOf = clubDivisionLookup(normalizeLeagueState(session.league));
+  const careerLine = (player: Player) => withPeakCa(appendSeasonLine(player, endingSeason, divisionOf));
+  const rivalsWithLines = session.rivalPlayers.map(careerLine);
+  const snapshotted = session.players.map((player) =>
+    appendSeasonSnapshot(careerLine(player), endingSeason),
+  );
+  // PRD 31 §9 — announced own retirements leave before aging and the intake.
+  const ownRetiring = snapshotted.filter((player) => retiresAtSeasonEnd(player, endingSeason));
+  const ownRetiredIds = new Set(ownRetiring.map((player) => player.id));
+  const remainingOwn = clearMentorshipsTo(
+    snapshotted.filter((player) => !ownRetiredIds.has(player.id)),
+    ownRetiredIds,
+  );
+  const ownRetired = ownRetiring.map((player) => retiredRecord(player, endingSeason));
+  const aged = remainingOwn.map((player) => ({
     ...resetSeasonMinutes(player),
     age: player.age + 1,
   }));
@@ -83,15 +105,22 @@ export function runSeasonEnd(
   );
   const preContractStep = activatePendingPreContracts(
     afterReturns,
-    session.rivalPlayers,
+    rivalsWithLines,
     session.transferState,
     endingSeason,
     SEASON_END_WEEK,
     session.clubId,
   );
 
-  const idStart = nextIntakeIdStart(preContractStep.players);
-  const intake = generateYouthIntake({
+  // PRD 31 — intake ids skip every id in play or retired (AI ids share the five-digit space).
+  const idStart = nextNumericIdHint(preContractStep.players);
+  const usedIds = new Set([
+    ...preContractStep.players.map((player) => player.id),
+    ...preContractStep.rivalPlayers.map((player) => player.id),
+    ...(session.retiredPlayers ?? []).map((entry) => entry.id),
+    ...ownRetiredIds,
+  ]);
+  const intakeRaw = generateYouthIntake({
     season: session.season,
     week: SEASON_END_WEEK,
     seasonYear: seasonCalendarYear(session.season),
@@ -99,10 +128,11 @@ export function runSeasonEnd(
     nationality: "DE",
     region: "Schleswig-Holstein",
     facility,
-    idStart,
+    idStart: 0,
     random: mulberry32(session.masterSeed ^ endingSeason),
   });
-  const campIntake = generateCampIntakes(
+  const intake = assignFreePlayerIds(intakeRaw, usedIds, idStart);
+  const campIntakeRaw = generateCampIntakes(
     session.youthCamps ?? [],
     session.clubId,
     session.season,
@@ -111,6 +141,7 @@ export function runSeasonEnd(
     idStart + intake.length,
     facility,
   );
+  const campIntake = assignFreePlayerIds(campIntakeRaw, usedIds, idStart + intake.length);
   const players = refreshAllMarketValues(
     [...preContractStep.players, ...intake, ...campIntake],
     session.season,
@@ -150,7 +181,15 @@ export function runSeasonEnd(
       session,
     );
   }
-  let transferState = preContractStep.transferState;
+  const aiRetirement = retireAiPlayers(
+    preContractStep.rivalPlayers,
+    { endingSeason, masterSeed: session.masterSeed },
+    playersInAgreedDeals(preContractStep.transferState),
+  );
+  let transferState = pruneRetiredFromTransferState(
+    preContractStep.transferState,
+    new Set([...ownRetiredIds, ...aiRetirement.retired.map((entry) => entry.id)]),
+  );
   for (const record of loanReturns) {
     transferState = appendTransferRecord(transferState, record);
   }
@@ -185,6 +224,15 @@ export function runSeasonEnd(
     promotionRelegation.pools,
     leagueNormalized.player_club_id,
   );
+  // Recruit for the division each club plays in next season.
+  const aiUpkeep = upkeepAiRosters({
+    rivalPlayers: aiRetirement.rivalPlayers,
+    clubs: session.world.clubs,
+    playerClubId: session.clubId,
+    endingSeason,
+    masterSeed: session.masterSeed,
+    divisionOf: clubDivisionLookup(leagueAfterMovement),
+  });
   const storyState =
     resolveCareerActSeasonEnd({
       story: session.storyState,
@@ -209,12 +257,17 @@ export function runSeasonEnd(
       transferState,
       stadium,
       board,
-      rivalPlayers: ageRivalPlayers(preContractStep.rivalPlayers),
+      rivalPlayers: ageRivalPlayers(aiUpkeep.rivalPlayers),
+      retiredPlayers: [...(session.retiredPlayers ?? []), ...ownRetired, ...aiRetirement.retired],
       lastSeasonAwards,
       league: resetLeagueSeason(leagueAfterMovement),
       storyState,
     },
     intakeCount: intake.length + campIntake.length,
+    retiredCount: ownRetired.length + aiRetirement.retired.length,
+    ownRetired,
+    aiYouthCount: aiUpkeep.youth,
+    aiRefillCount: aiUpkeep.refill,
     loanReturns,
     boardEvaluation: boardStep.evaluation,
     promotionRelegation,
@@ -244,7 +297,8 @@ function generateCampIntakes(
       nationality: nation.code,
       region: nation.region,
       facility,
-      idStart: cursor,
+      // Ids are assigned by the caller; the cursor only seeds the batch.
+      idStart: 0,
       random: mulberry32(masterSeed ^ endingSeason ^ cursor),
       count: campIntakeCountForCamp(camp),
       youthSite: camp.id,

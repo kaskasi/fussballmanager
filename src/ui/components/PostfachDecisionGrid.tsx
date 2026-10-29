@@ -4,6 +4,7 @@ import {
   Building2,
   ClipboardList,
   FileSignature,
+  Hourglass,
   Flag,
   MapPin,
   Newspaper,
@@ -60,6 +61,8 @@ function playerIcon(kind: DecisionInboxItem["kind"]): LucideIcon {
     case "contract_offer":
     case "contract_renegotiate":
       return FileSignature;
+    case "retirement_announce":
+      return Hourglass;
     default:
       return ClipboardList;
   }

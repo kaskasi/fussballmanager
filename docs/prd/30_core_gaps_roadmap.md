@@ -39,7 +39,7 @@ it, so it sits between phases 3 and 5.
 
 | # | Phase | Status | Phase PRD | Est. sessions | Depends on |
 |---|---|---|---|---|---|
-| 1 | World longevity: retirement, AI youth, roster upkeep | Not started | — | 2 | — |
+| 1 | World longevity: retirement, AI youth, roster upkeep | In progress (slice 3/3, CA drift open) | [31](31_world_longevity.md) | 2 | — |
 | 2 | League pyramid (5 tiers) + season archive | Not started | — | 3–4 | 1 |
 | 3 | Suspensions | Not started | — | 1 | — |
 | 4 | Season calendar: breaks every season | Not started | — | 2–3 | — |
@@ -175,7 +175,13 @@ fields), PRD 03 (AI intake).
   refill uses generated players.
 - Retiring legends as staff? Default: no (F11.5 later), but the record is kept.
 
-**Progress:** —
+**Progress:** Slices 1–3 built (PRD 31, SAVE_VERSION 101). 20-season long run
+(seed 2026): AI mean age 25.1–26.0, 35+ share at most 2.9 %, every AI roster
+≥ 22 with ≥ 2 GK, no retired-id leaks, week sim 2.2 s (+5 %). Open: CA drift.
+The PRD 02 growth curve never turns negative, so AI mean CA plateaus about 30 %
+above season 1 from season 10 on (PRD 31 §8, §11, owner question). Save at
+season 20 is 1.8 MB gzipped, but 1.1 MB of that is the never-answered autopilot
+Postfach queue, not this phase. Next: owner decision on CA drift, then mark Done.
 
 ---
 

@@ -85,6 +85,10 @@ export interface Player {
     bench_weeks_streak?: number;
     /** PRD 06 — logged severe injuries for injury_spiral. */
     severe_injuries_logged?: number;
+    /** PRD 31 — best CA so far, refreshed at season end (retirement decline). */
+    peak_ca?: number;
+    /** PRD 31 — spring retirement announcement for `season` and the manager's answer. */
+    retirement?: RetirementPlan;
     /** F3.9 — face of the camp purchase reveal (max hidden profile). */
     camp_opening_headline?: boolean;
     /** Index into `youth.camp.debut.hook.{nation}.{index}` copy. */
@@ -101,6 +105,8 @@ export interface Player {
     milestones: MilestoneEvent[];
     /** Pre-F2.8 flavor labels only (veteran wallpaper). Not mechanical. */
     career_stamps?: string[];
+    /** PRD 31 — one line per finished season, own and AI players alike. */
+    season_lines?: SeasonLine[];
   };
 
   /** F2.8 — earned named bonuses. Effects baked into `attributes` on award. */
@@ -208,6 +214,15 @@ export interface Injury {
   severity: "minor" | "moderate" | "severe";
   sustained_week: number;
 }
+
+/** PRD 31 — `announced` until the manager answers; `staying` after a successful persuade. */
+export interface RetirementPlan {
+  season: number;
+  status: "announced" | "retiring" | "staying";
+}
+
+/** PRD 31 — `[season, club_id, division_id, apps, goals]`; tuple keeps `retired.json` small. */
+export type SeasonLine = [season: number, clubId: string, divisionId: string, apps: number, goals: number];
 
 export interface GrowthSnapshot {
   season: number;

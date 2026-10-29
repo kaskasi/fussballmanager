@@ -587,7 +587,8 @@ function divisionPools(clubs: readonly WorldClub[]): Record<WorldDivisionId, str
   };
 }
 
-function startingClubStrength(masterSeed: number, club: WorldClub, clubIndex: number): number {
+/** Club strength the roster was generated at (attribute base scale). */
+export function startingClubStrength(masterSeed: number, club: WorldClub, clubIndex: number): number {
   if (club.id === NORDSTERN_TEAM_ID) return 68.5;
   if (club.name === "Union Rendsburg") return 71;
   const random = mulberry32(deriveWorldSeed(masterSeed, "club-strength", clubIndex));
@@ -608,13 +609,57 @@ function generateProfessional(
 ): Player {
   const stableIndex = clubIndex * PLAYERS_PER_CLUB + playerIndex;
   const random = mulberry32(deriveWorldSeed(masterSeed, "player", stableIndex));
-  const hiddenRandom = mulberry32(deriveWorldSeed(masterSeed, "player-hidden", stableIndex));
-  const contractRandom = mulberry32(deriveWorldSeed(masterSeed, "contract", stableIndex));
   const age = rosterAge(ageSlot, random);
-  const playerBase = clubStrength + sampleStandardNormal(random) * 6 + peakCaBaseAdjustment(age);
+  const player = buildGeneratedPro({
+    id: generatedPlayerId(masterSeed, stableIndex),
+    name: generatedPlayerName(masterSeed, stableIndex),
+    club,
+    position,
+    clubStrength,
+    age,
+    birthYearAnchor: 2026,
+    joinedSeason: 1,
+    contractFromSeason: 1,
+    starter: playerIndex < 11,
+    random,
+    hiddenRandom: mulberry32(deriveWorldSeed(masterSeed, "player-hidden", stableIndex)),
+    contractRandom: mulberry32(deriveWorldSeed(masterSeed, "contract", stableIndex)),
+    portraitSeed: deriveWorldSeed(masterSeed, "portrait", stableIndex),
+  });
+  const withStory = applyVeteranBackstory(
+    player,
+    deriveWorldSeed(masterSeed, "veteran-backstory", stableIndex),
+  );
+  return seedPhaseStamps(withStory, 1, 1);
+}
+
+interface GeneratedProSpec {
+  id: string;
+  name: PlayerName;
+  club: WorldClub;
+  position: PositionPrimary;
+  clubStrength: number;
+  age: number;
+  /** Calendar year the age is counted from (2026 = season 1). */
+  birthYearAnchor: number;
+  joinedSeason: number;
+  /** Contract length is drawn from this season on (`+1…+4`). */
+  contractFromSeason: number;
+  starter: boolean;
+  random: () => number;
+  hiddenRandom: () => number;
+  contractRandom: () => number;
+  portraitSeed: number;
+}
+
+/** One professional from seeded streams; draw order is fixed (existing worlds must not change). */
+function buildGeneratedPro(spec: GeneratedProSpec): Player {
+  const { club, position, age, random, hiddenRandom, contractRandom } = spec;
+  const playerBase = spec.clubStrength + sampleStandardNormal(random) * 6 + peakCaBaseAdjustment(age);
   const attributes = generateAttributes(position, playerBase, random);
   const ca = estimateCa(attributes, position);
-  const untilSeason = 2 + Math.floor(contractRandom() * 4);
+  const contractYears = 1 + Math.floor(contractRandom() * 4);
+  const untilSeason = spec.contractFromSeason + contractYears;
   const wage = Math.max(
     250,
     Math.round((350 + Math.pow(Math.max(30, ca) / 60, 3.1) * 700) / 25) * 25,
@@ -622,20 +667,18 @@ function generateProfessional(
   const value = marketValue({
     ca,
     age,
-    monthsRemaining: (untilSeason - 1) * 12,
+    monthsRemaining: contractYears * 12,
     wage,
     marketWage: wage,
     demandFactor: 1,
     reputationFactor: 1,
   });
-  const portraitSeed = deriveWorldSeed(masterSeed, "portrait", stableIndex);
-  const name = generatedPlayerName(masterSeed, stableIndex);
 
-  const basePlayer: Player = {
-    id: generatedPlayerId(masterSeed, stableIndex),
-    name,
+  return {
+    id: spec.id,
+    name: spec.name,
     birth: {
-      date: birthDate(age, random),
+      date: birthDate(age, random, spec.birthYearAnchor),
       place: club.region,
       region: club.region,
     },
@@ -650,7 +693,7 @@ function generateProfessional(
       bonus_goal: position === "CF" ? Math.round(wage * 0.2) : Math.round(wage * 0.08),
       bonus_appearance: Math.round(wage * 0.1),
       until_season: untilSeason,
-      guaranteed_minutes_promise: playerIndex < 11 ? "starter" : "rotation",
+      guaranteed_minutes_promise: spec.starter ? "starter" : "rotation",
     },
     market_value: value,
     attributes,
@@ -684,19 +727,68 @@ function generateProfessional(
     },
     history: {
       growth: [],
-      clubs: [{ club_id: worldCareerClubId(club.id), from_season: 1, to_season: null, apps: 0, goals: 0 }],
+      clubs: [
+        {
+          club_id: worldCareerClubId(club.id),
+          from_season: spec.joinedSeason,
+          to_season: null,
+          apps: 0,
+          goals: 0,
+        },
+      ],
       achievements: [],
       milestones: [],
     },
     stamps: [],
-    portrait_seed: portraitSeed,
+    portrait_seed: spec.portraitSeed,
   };
+}
 
-  const withStory = applyVeteranBackstory(
-    basePlayer,
-    deriveWorldSeed(masterSeed, "veteran-backstory", stableIndex),
-  );
-  return seedPhaseStamps(withStory, 1, 1);
+export interface JourneymanSpec {
+  /** Season the player joins at its end (contracts start the season after). */
+  season: number;
+  /** Stable index of the club in `world.clubs` (or the sorted club list). */
+  clubIndex: number;
+  /** Running number of this club's new players this season end. */
+  slot: number;
+  position: PositionPrimary;
+  /** Same scale as the generator's club strength ({@link startingClubStrength}). */
+  clubStrength: number;
+  /** Age in the ending season; season-end aging adds the year after. */
+  age: number;
+}
+
+/**
+ * PRD 31 — new id namespace for players created after world generation
+ * (AI youth, roster refill): `pl_s<season>c<club>n<slot>`. Never collides with
+ * the five-digit generated or academy ids.
+ */
+export function laterPlayerId(season: number, clubIndex: number, slot: number): string {
+  return `pl_s${season}c${clubIndex}n${slot}`;
+}
+
+/** PRD 31 — refill professional for an AI club; seeds never touch existing entities. */
+export function generateJourneyman(masterSeed: number, club: WorldClub, spec: JourneymanSpec): Player {
+  const key = `journeyman:${spec.season}:${spec.clubIndex}`;
+  const random = mulberry32(deriveWorldSeed(masterSeed, key, spec.slot));
+  const nameRandom = mulberry32(deriveWorldSeed(masterSeed, `${key}:name`, spec.slot));
+  const player = buildGeneratedPro({
+    id: laterPlayerId(spec.season, spec.clubIndex, spec.slot),
+    name: { first: pick(FIRST_NAMES, nameRandom), last: pick(LAST_NAMES, nameRandom) },
+    club,
+    position: spec.position,
+    clubStrength: spec.clubStrength,
+    age: spec.age,
+    birthYearAnchor: 2025 + spec.season,
+    joinedSeason: spec.season + 1,
+    contractFromSeason: spec.season,
+    starter: false,
+    random,
+    hiddenRandom: mulberry32(deriveWorldSeed(masterSeed, `${key}:hidden`, spec.slot)),
+    contractRandom: mulberry32(deriveWorldSeed(masterSeed, `${key}:contract`, spec.slot)),
+    portraitSeed: deriveWorldSeed(masterSeed, `${key}:portrait`, spec.slot),
+  });
+  return seedPhaseStamps(player, spec.season + 1, 1);
 }
 
 function generateAttributes(
@@ -728,8 +820,8 @@ function rosterAge(ageSlot: number, random: () => number): number {
   return 33 + Math.floor(random() * 4);
 }
 
-function birthDate(age: number, random: () => number): string {
-  const year = 2026 - age;
+function birthDate(age: number, random: () => number, anchorYear = 2026): string {
+  const year = anchorYear - age;
   const month = 1 + Math.floor(random() * 12);
   const day = 1 + Math.floor(random() * 28);
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;

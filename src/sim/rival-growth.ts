@@ -1,4 +1,6 @@
 import {
+  rankCareerSelection,
+  type FormationId,
   type Player as EnginePlayer,
   type PlayerRole,
   type PlayerAttributes as EngineAttributes,
@@ -17,6 +19,8 @@ import { isLeagueMatchWeek } from "./game-calendar.ts";
 import { generateContractWeights } from "../transfers/contract-priorities.ts";
 import { fairInitialProContract } from "../transfers/fair-initial-contract.ts";
 import { refreshPlayerMarketValue } from "../transfers/refresh-market-values.ts";
+import { estimateCa } from "../transfers/market-value.ts";
+import { resetSeasonMinutes } from "../player/minute-history.ts";
 
 const AI_TRAINING = planToSessions(defaultTrainingPlan());
 
@@ -209,11 +213,42 @@ export function normalizeRivalPlayers(
   return initializeRivalPlayers(masterSeed);
 }
 
-function rivalMinutesFromId(playerId: string, leagueMatchWeek: boolean): number {
-  const shirt = Number.parseInt(playerId.split("_").pop() ?? "12", 10);
-  if (!leagueMatchWeek) return 12;
-  if (shirt <= 11) return 68 + (shirt % 5) * 3;
-  return 8 + (shirt % 4) * 5;
+/** Formation for AI minute shares only; the match itself uses the club template. */
+const AI_MINUTES_FORMATION: FormationId = "4-4-2";
+const AI_SUBS_PER_MATCH = 3;
+const NON_MATCH_WEEK_MINUTES = 12;
+
+/**
+ * PRD 31 — AI minutes from the XI {@link buildCareerEngineSquad} would pick (same
+ * ranking and slot fit): starters play, the last three outfield starters make way
+ * for the best three on the bench. Injured players sit out.
+ */
+export function rivalMatchMinutes(rivalPlayers: readonly Player[]): Map<string, number> {
+  const byClub = new Map<string, Player[]>();
+  for (const player of rivalPlayers) {
+    if (!player.club_id || player.state.injury) continue;
+    const roster = byClub.get(player.club_id) ?? [];
+    roster.push(player);
+    byClub.set(player.club_id, roster);
+  }
+  const minutes = new Map<string, number>();
+  for (const roster of byClub.values()) {
+    const ranked = roster.map((player) => ({
+      id: player.id,
+      position: player.position,
+      attributes: player.attributes,
+      overall: estimateCa(player.attributes, player.position),
+    }));
+    const { starters, bench } = rankCareerSelection(AI_MINUTES_FORMATION, ranked);
+    const outfield = starters.filter((entry) => entry.position !== "GK");
+    const subbedOff = new Set(
+      [...outfield].sort((a, b) => a.overall - b.overall).slice(0, AI_SUBS_PER_MATCH).map((entry) => entry.id),
+    );
+    for (const entry of starters) minutes.set(entry.id, subbedOff.has(entry.id) ? 68 : 90);
+    const subsOn = bench.filter((entry) => entry.position !== "GK").slice(0, AI_SUBS_PER_MATCH);
+    for (const entry of subsOn) minutes.set(entry.id, 22);
+  }
+  return minutes;
 }
 
 export function advanceRivalGrowthWeek(
@@ -225,14 +260,16 @@ export function advanceRivalGrowthWeek(
 ): Player[] {
   const context = { season, week, masterSeed };
   const playedWeek = leagueMatchWeek && isLeagueMatchWeek(week);
+  const matchMinutes = playedWeek ? rivalMatchMinutes(rivalPlayers) : null;
   return rivalPlayers.map((player) => {
-    const minutes = rivalMinutesFromId(player.id, playedWeek);
-    const appeared = playedWeek && minutes >= 45;
+    const minutes = matchMinutes ? (matchMinutes.get(player.id) ?? 0) : NON_MATCH_WEEK_MINUTES;
+    const appeared = matchMinutes !== null && minutes > 0;
     const withMinutes = {
       ...player,
       state: {
         ...player.state,
         weekly_minutes: minutes,
+        season_minutes: player.state.season_minutes + (matchMinutes ? minutes : 0),
         season_apps: player.state.season_apps + (appeared ? 1 : 0),
       },
     };
@@ -240,9 +277,10 @@ export function advanceRivalGrowthWeek(
   });
 }
 
+/** Season end: one year older, season counters back to zero (PRD 31 season lines read them first). */
 export function ageRivalPlayers(rivalPlayers: readonly Player[]): Player[] {
   return rivalPlayers.map((player) => ({
-    ...player,
+    ...resetSeasonMinutes(player),
     age: player.age + 1,
   }));
 }

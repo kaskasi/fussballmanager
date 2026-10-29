@@ -12,6 +12,7 @@ import { localizeStoryInbox } from "../i18n/story-display.ts";
 import { t } from "../i18n/index.ts";
 import type { StoryCast, StoryInboxPayload } from "../narrative/story-state.ts";
 import { isHqYouth } from "./youth-site.ts";
+import { answerRetirement } from "../development/own-retirement.ts";
 import type { YouthReport } from "./youth-sim.ts";
 
 /** PRD 03.4 — max open decisions at once; extra candidates wait in queue. */
@@ -24,6 +25,8 @@ export type DecisionAction =
   | "contract"
   | "training_focus"
   | "dismiss"
+  | "retire_persuade"
+  | "retire_accept"
   | StoryDecisionAction;
 
 export type InboxItemKind =
@@ -39,6 +42,7 @@ export type InboxItemKind =
   | "assistant_training_reminder"
   | "kicker_transfer"
   | "contract_renegotiate"
+  | "retirement_announce"
   | "financing_offer";
 
 export interface DecisionInboxItem {
@@ -122,6 +126,7 @@ const KIND_PRIORITY: Record<InboxItemKind, number> = {
   assistant_training_reminder: 0,
   kicker_transfer: 1,
   contract_renegotiate: 2,
+  retirement_announce: 0,
 };
 
 export function emptyInbox(week: number): YouthInboxState {
@@ -160,7 +165,9 @@ function keepInboxItem(
   if (item.kind === "financing_offer") return true;
   if (item.kind === "assistant_training_reminder") return true;
   if (item.kind === "kicker_transfer") return true;
-  if (item.kind === "contract_renegotiate") return clubSquadIds.has(item.playerId);
+  if (item.kind === "contract_renegotiate" || item.kind === "retirement_announce") {
+    return clubSquadIds.has(item.playerId);
+  }
   return youthIds.has(item.playerId);
 }
 
@@ -430,6 +437,8 @@ export function inboxItemLabel(item: DecisionInboxItem, cast?: StoryCast): strin
       return t("inbox.reason.underpaid9mo");
     case "underpaid_12mo":
       return t("inbox.reason.underpaid12mo");
+    case "retirement_announce":
+      return t("inbox.reason.retirementAnnounce");
     default:
       return item.reason;
   }
@@ -460,6 +469,8 @@ export function allowedActions(
         return ["dismiss"];
       case "contract_renegotiate":
         return ["contract", "dismiss"];
+      case "retirement_announce":
+        return ["retire_persuade", "retire_accept"];
       case "financing_offer":
       case "story_press":
       case "story_fan":
@@ -536,6 +547,10 @@ export function actionLabel(action: DecisionAction, context?: DecisionActionCont
       return t("inbox.action.trainingFocus");
     case "dismiss":
       return t("inbox.action.dismiss");
+    case "retire_persuade":
+      return t("inbox.action.retirePersuade");
+    case "retire_accept":
+      return t("inbox.action.retireAccept");
     default:
       return action;
   }
@@ -777,6 +792,14 @@ export interface InboxDecisionResult {
   players: Player[];
   transferRecord?: TransferRecord;
   loanFee?: number;
+  /** PRD 31 — answer to a retirement announcement. */
+  retirementOutcome?: "retiring" | "staying";
+}
+
+/** PRD 31 — persuade roll inputs for retirement answers. */
+export interface RetirementDecisionContext {
+  masterSeed: number;
+  matchdaysPlayed: number;
 }
 
 export function applyInboxDecision(
@@ -786,6 +809,7 @@ export function applyInboxDecision(
   action: DecisionAction,
   season: number,
   currentWeek: number,
+  retirementContext: RetirementDecisionContext = { masterSeed: 0, matchdaysPlayed: 0 },
 ): InboxDecisionResult {
   const item = inbox.items.find((entry) => entry.id === itemId);
   if (!item || inbox.resolvedIds.includes(itemId)) {
@@ -815,6 +839,21 @@ export function applyInboxDecision(
   }
 
   switch (action) {
+    case "retire_persuade":
+    case "retire_accept": {
+      const answered = answerRetirement(
+        player,
+        action === "retire_persuade" ? "persuade" : "accept",
+        season,
+        retirementContext.masterSeed,
+        retirementContext.matchdaysPlayed,
+      );
+      return {
+        inbox: { ...inbox, resolvedIds: [...inbox.resolvedIds, itemId] },
+        players: nextPlayers.map((entry) => (entry.id === player.id ? answered.player : entry)),
+        retirementOutcome: answered.outcome,
+      };
+    }
     case "loan": {
       const eligibility = canLoanPlayerOut(nextPlayers, clubId, currentWeek, player);
       if (!eligibility.allowed) break;

@@ -88,6 +88,10 @@ Die Gewichte summieren sich auf 1.
 
 „Intake-Base +10 / +25“ aus 03.2 verschiebt jeden Mixture-Mean um diesen Betrag. Die Verschiebungen stapeln nicht: Elite ersetzt Performance, Performance ersetzt Basis.
 
+#### 03.1.1 KI-Jugend (PRD 31)
+
+KI-Klubs bekommen am Saisonende **2–4 Jugendspieler** (17–18 Jahre nach dem Saisonwechsel, direkt im Profikader), aber nur bis **24 Spieler** im Kader. Qualität: dieselbe Mixture, Mittelwert = Rekrutierungsstärke des Klubs − 12 (+ Ruf-Zuschlag). Danach füllt der Klub mit Routiniers auf **22 Spieler** und die Positions-Mindestzahlen (2 TW, 6 Abwehr, 6 Mittelfeld, 4 Angriff) auf. Details: PRD 31 §5.
+
 ### 03.2 Jugend-Campus (Grid + Stufen, F3.2 / F3.7)
 
 Kein isometrisches Stadtmodell. Heimat ist der Report (PRD 14.4); der Campus-Tab

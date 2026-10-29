@@ -2,6 +2,8 @@ import {
   ArrowUp,
   Clock,
   Dumbbell,
+  Handshake,
+  LogOut,
   PenLine,
   RefreshCw,
   type LucideIcon,
@@ -20,6 +22,10 @@ function inboxActionIcon(action: DecisionAction): LucideIcon {
       return Dumbbell;
     case "dismiss":
       return Clock;
+    case "retire_persuade":
+      return Handshake;
+    case "retire_accept":
+      return LogOut;
     default:
       return Clock;
   }

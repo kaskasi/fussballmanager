@@ -88,6 +88,8 @@ import { applyRivalMatchdayStats } from "./rival-matchday-stats.ts";
 import { advanceCalendarWeek, SEASON_END_WEEK } from "./game-calendar.ts";
 import { advanceLeagueWeek } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
+import { announceOwnRetirements, RETIREMENT_ANNOUNCE_WEEK } from "../development/own-retirement.ts";
+import { enqueueRetirementItems } from "../inbox/retirement-inbox.ts";
 import { environmentFromCoachingStaff } from "../staff/coaching-staff.ts";
 import { weekCommerceOccupancy } from "../stadium/matchday-commerce.ts";
 import {
@@ -800,13 +802,30 @@ export async function simulateGameWeek(
     }
     return step.player;
   });
-  const youthInboxWithUnderpaid = enqueueUnderpaidRenegotiateItems(
+  let youthInboxWithUnderpaid = enqueueUnderpaidRenegotiateItems(
     advanced.inbox,
     underpaidPrompts,
     nextWeek,
     playersWithCaStamp,
     session.clubId,
   );
+  // PRD 31 — spring retirement announcements for own players.
+  if (!seasonEnded && nextWeek === RETIREMENT_ANNOUNCE_WEEK) {
+    const announced = announceOwnRetirements(
+      playersWithCaStamp,
+      session.clubId,
+      session.season,
+      session.masterSeed,
+    );
+    playersWithCaStamp = announced.players;
+    youthInboxWithUnderpaid = enqueueRetirementItems(
+      youthInboxWithUnderpaid,
+      announced.announcedIds,
+      session.season,
+      nextWeek,
+      playersWithCaStamp,
+    );
+  }
 
   const reconciledScoutBoard = reconcileScoutBoard(
     advanceScoutWeek(
@@ -986,6 +1005,25 @@ export async function simulateGameWeek(
       for (const message of ended.promotionRelegation.messages) {
         clubEvents = withClubEvent(clubEvents, session.season, SEASON_END_WEEK, "info", message);
       }
+    }
+    for (const record of ended.ownRetired) {
+      clubEvents = withClubEvent(
+        clubEvents,
+        session.season,
+        SEASON_END_WEEK,
+        "profile",
+        t("clubEvent.playerRetired", { name: formatPlayerName({ name: record.name, portrait_seed: 0 }), age: record.age }),
+      );
+    }
+    const leagueRetirements = ended.retiredCount - ended.ownRetired.length;
+    if (leagueRetirements > 0) {
+      clubEvents = withClubEvent(
+        clubEvents,
+        session.season,
+        SEASON_END_WEEK,
+        "info",
+        t("clubEvent.leagueRetirements", { count: leagueRetirements }),
+      );
     }
     nextSession = { ...ended.session, clubEvents };
     intakeCount = ended.intakeCount;

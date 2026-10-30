@@ -13,7 +13,7 @@ Zu Saisonstart (und bei Job-Wechsel) leitet das System den **Club-Standing-Tier*
 
 Nebenziele: Liquidität (Gehalts-Wochen), Cash-Puffer (nicht Pflicht), Ø-CA, Punkte — je nach Tier.
 
-**Pyramide (PRD 32 §8, ab Slice 4):** Der Standing-Tier wird aus dem Ruf-Rang des Clubs innerhalb seiner Spielklasse abgeleitet. Aufsteiger starten mit `survival_mid` („Klasse halten“). Jobangebote können nach Erfolg aus höheren Spielklassen kommen.
+**Pyramide (PRD 32 §8):** Wer aufsteigt, startet die neue Saison mit `survival_mid` („Klasse halten“); wer absteigt, mit `ambition` („direkter Wiederaufstieg“); wer bleibt, behält den Tier aus dem Tabellenplatz. Ein Club außerhalb der eigenen Tabelle (Jobangebot aus einer anderen Liga) wird nach seinem Ruf-Rang in seiner Spielklasse eingestuft. Nach einer starken Saison (Top 4 nach mindestens 10 Spieltagen) kommen zwei der drei Jobangebote von den schwächsten Clubs der Liga darüber.
 
 ## Projektziel
 

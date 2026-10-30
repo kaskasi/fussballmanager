@@ -1,3 +1,4 @@
+import type { SeasonArchiveEntry } from "../sim/season-archive.ts";
 import { defaultBoardState, type BoardState } from "../board/board-state.ts";
 import { startBoardSeason } from "../board/season-objectives.ts";
 import { defaultLeagueState } from "./league-state.ts";
@@ -75,6 +76,8 @@ export interface PipelineState {
   youth_camps?: YouthCamp[];
   /** F11.2 — last completed season award gallery. */
   last_season_awards?: SeasonAwardsSnapshot;
+  /** PRD 32 §8 — one entry per finished season. */
+  season_archive?: SeasonArchiveEntry[];
   /** PRD 13 — relegation narrative slice state. */
   story_state?: StoryState;
   /** F8.5 — per-task assistant auto-delegation. */

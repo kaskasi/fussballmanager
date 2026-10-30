@@ -31,8 +31,6 @@ export interface PyramidDivision {
   simSalt: number;
   /** Starting division for a new career (club pick, PRD 24). */
   careerStart: boolean;
-  /** Its players are on the AI transfer market (PRD 32: tiers 1–3 join in slice 4). */
-  transferMarket: boolean;
   /** Rules to the division directly below; absent on the bottom tier. */
   boundaryBelow?: PyramidBoundary;
 }
@@ -44,7 +42,6 @@ const PYRAMID_DEFINITION = [
     clubCount: 18,
     simSalt: 0x3b1,
     careerStart: false,
-    transferMarket: false,
     boundaryBelow: { direct: 2, playoff: true, playoffSalt: 0x3c5 },
   },
   {
@@ -53,7 +50,6 @@ const PYRAMID_DEFINITION = [
     clubCount: 18,
     simSalt: 0x3b2,
     careerStart: false,
-    transferMarket: false,
     boundaryBelow: { direct: 2, playoff: true, playoffSalt: 0x3c6 },
   },
   {
@@ -62,7 +58,6 @@ const PYRAMID_DEFINITION = [
     clubCount: 18,
     simSalt: 0x3b3,
     careerStart: false,
-    transferMarket: false,
     boundaryBelow: { direct: 2, playoff: true, playoffSalt: 0x3c7 },
   },
   {
@@ -71,7 +66,6 @@ const PYRAMID_DEFINITION = [
     clubCount: 18,
     simSalt: 11,
     careerStart: true,
-    transferMarket: true,
     boundaryBelow: { direct: 1, playoff: true, playoffSalt: 71 },
   },
   {
@@ -80,7 +74,6 @@ const PYRAMID_DEFINITION = [
     clubCount: 18,
     simSalt: 29,
     careerStart: true,
-    transferMarket: true,
   },
 ] as const satisfies readonly PyramidDivision[];
 

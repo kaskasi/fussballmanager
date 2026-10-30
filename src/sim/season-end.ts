@@ -2,8 +2,7 @@ import { appendSeasonSnapshot } from "../ui/player-profile.ts";
 import type { Player } from "../types/player.ts";
 import { resetSeasonMinutes } from "../player/minute-history.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
-import { resetAiBudgetsForSeason } from "../transfers/ai-transfer-market.ts";
-import { careerTeamId } from "./rival-growth.ts";
+import { resetPyramidAiBudgets } from "../transfers/ai-transfer-market.ts";
 import { seasonCalendarYear } from "./season-label.ts";
 import {
   appendTransferRecord,
@@ -32,6 +31,8 @@ import {
 } from "../youth/satellite-camps.ts";
 import { isCampOperational } from "../youth/camp-construction.ts";
 import { evaluateSeasonObjectives, startBoardSeason } from "../board/season-objectives.ts";
+import { standingTierAfterMovement } from "../board/club-standing-tier.ts";
+import { seasonArchiveEntry } from "./season-archive.ts";
 import { weeklyWageBill } from "../economy/club-finances.ts";
 import { applySeasonEndFinances } from "../economy/club-finances.ts";
 import type { SeasonObjectiveEvaluation } from "../board/board-state.ts";
@@ -172,15 +173,6 @@ export function runSeasonEnd(
   );
   let finances = boardStep.finances;
   let board = boardStep.board;
-  if (!boardStep.evaluation.dismissed) {
-    board = startBoardSeason(
-      board,
-      board.employer_club_id,
-      session.season,
-      session.league,
-      session,
-    );
-  }
   const aiRetirement = retireAiPlayers(
     preContractStep.rivalPlayers,
     { endingSeason, masterSeed: session.masterSeed },
@@ -193,12 +185,6 @@ export function runSeasonEnd(
   for (const record of loanReturns) {
     transferState = appendTransferRecord(transferState, record);
   }
-  const leagueNormalizedForBudgets = normalizeLeagueState(session.league);
-  const budgetClubIds = leagueNormalizedForBudgets.club_ids.map((teamId) => careerTeamId(teamId));
-  transferState = {
-    ...transferState,
-    ai_budgets: resetAiBudgetsForSeason(budgetClubIds, leagueNormalizedForBudgets.division_id),
-  };
   const stadiumAdvanced = advanceClubFanbase(session.stadium, seasonEndFanbaseBonus(session.league));
   const stadium = {
     ...stadiumAdvanced,
@@ -224,6 +210,22 @@ export function runSeasonEnd(
     promotionRelegation.pools,
     leagueNormalized.player_club_id,
   );
+  // PRD 32 §8 — a club that changed division gets objectives for the new one.
+  if (!boardStep.evaluation.dismissed) {
+    board = startBoardSeason(
+      board,
+      board.employer_club_id,
+      session.season,
+      session.league,
+      session,
+      standingTierAfterMovement(board.employer_club_id, promotionRelegation.movements),
+    );
+  }
+  // PRD 32 §8 — every AI club gets a fresh budget at its next season's level.
+  transferState = {
+    ...transferState,
+    ai_budgets: resetPyramidAiBudgets(leagueAfterMovement.league_pools ?? pools),
+  };
   // Recruit for the division each club plays in next season.
   const aiUpkeep = upkeepAiRosters({
     rivalPlayers: aiRetirement.rivalPlayers,
@@ -260,6 +262,10 @@ export function runSeasonEnd(
       rivalPlayers: ageRivalPlayers(aiUpkeep.rivalPlayers),
       retiredPlayers: [...(session.retiredPlayers ?? []), ...ownRetired, ...aiRetirement.retired],
       lastSeasonAwards,
+      seasonArchive: [
+        ...(session.seasonArchive ?? []),
+        seasonArchiveEntry(endingSeason, leagueNormalized, promotionRelegation, lastSeasonAwards),
+      ],
       league: resetLeagueSeason(leagueAfterMovement),
       storyState,
     },

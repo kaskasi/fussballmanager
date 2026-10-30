@@ -54,9 +54,11 @@ const POSITION_SLOTS: Record<PositionPrimary, number> = {
   CF: 2,
 };
 
+/** Season transfer budget per tier, × the Regionalliga budget (PRD 32 §8). */
+const AI_BUDGET_FACTOR_BY_TIER: Record<number, number> = { 1: 15, 2: 6, 3: 2.5, 4: 1, 5: 0.6 };
+
 export function defaultAiClubBudget(divisionId: DivisionEconomyId): number {
-  const tier = tierOf(divisionId);
-  return tier <= 4 ? STARTING_TRANSFER_BUDGET : Math.round(STARTING_TRANSFER_BUDGET * 0.6);
+  return Math.round(STARTING_TRANSFER_BUDGET * (AI_BUDGET_FACTOR_BY_TIER[tierOf(divisionId)] ?? 1));
 }
 
 export function normalizeAiBudgets(
@@ -82,6 +84,19 @@ export function resetAiBudgetsForSeason(
   divisionId: DivisionEconomyId,
 ): Record<string, AiClubBudget> {
   return normalizeAiBudgets(clubIds, divisionId);
+}
+
+/** Fresh budgets for every AI club of the pyramid, each at its division's level. */
+export function resetPyramidAiBudgets(
+  pools: Partial<Record<DivisionId, readonly TeamId[]>>,
+): Record<string, AiClubBudget> {
+  return Object.fromEntries(
+    PYRAMID.flatMap((division) =>
+      Object.entries(
+        normalizeAiBudgets((pools[division.id] ?? []).map((teamId) => careerTeamId(teamId)), division.id),
+      ),
+    ),
+  );
 }
 
 function weekRng(masterSeed: number, season: number, week: number, salt: number): () => number {
@@ -268,13 +283,13 @@ export interface AiTransferWeekInput {
   leaguePools?: Partial<Record<DivisionId, readonly TeamId[]>>;
 }
 
-/** Career club ids whose players AI clubs may buy (PRD 32 §8: tiers 1–3 join in slice 4). */
-function marketClubIds(pools: Partial<Record<DivisionId, readonly TeamId[]>>): Set<string> {
-  return new Set(
-    PYRAMID.filter((division) => division.transferMarket).flatMap((division) =>
-      (pools[division.id] ?? []).map((teamId) => careerTeamId(teamId)),
-    ),
-  );
+/** Career club id → its division (PRD 32 §8: a club buys from its own tier or below). */
+function clubDivisions(pools: Partial<Record<DivisionId, readonly TeamId[]>>): Map<string, DivisionId> {
+  const divisions = new Map<string, DivisionId>();
+  for (const division of PYRAMID) {
+    for (const teamId of pools[division.id] ?? []) divisions.set(careerTeamId(teamId), division.id);
+  }
+  return divisions;
 }
 
 export interface AiTransferWeekResult {
@@ -298,134 +313,152 @@ export function advanceAiTransferWeek(input: AiTransferWeekInput): AiTransferWee
     .map((teamId) => careerTeamId(teamId))
     .filter((clubId) => clubId !== DEFAULT_CLUB_ID);
 
-  let budgets = normalizeAiBudgets(
-    careerClubIds,
-    input.divisionId,
-    input.transferState.ai_budgets,
-  );
+  const divisionOf = clubDivisions(input.leaguePools ?? defaultLeaguePools());
+  const localClubs = new Set(careerClubIds);
+  // PRD 32 §8 — clubs of every other division buy in a smaller background pass.
+  const backgroundClubIds = input.leaguePools
+    ? [...divisionOf.keys()].filter((clubId) => !localClubs.has(clubId) && clubId !== DEFAULT_CLUB_ID)
+    : [];
+  let budgets = normalizeAiBudgets(careerClubIds, input.divisionId, input.transferState.ai_budgets);
+  for (const clubId of backgroundClubIds) {
+    budgets = {
+      ...normalizeAiBudgets([clubId], divisionOf.get(clubId) ?? input.divisionId, budgets),
+      ...budgets,
+    };
+  }
   let players = [...input.rivalPlayers];
-  const onMarket = marketClubIds(input.leaguePools ?? defaultLeaguePools());
   let transferState = input.transferState;
   const records: TransferRecord[] = [];
   const messages: string[] = [];
 
-  const maxDeals = transferWindowKind(input.week) === "summer" ? 4 : 3;
-  const rng = weekRng(input.masterSeed, input.season, input.week, 0x5f6);
+  const summer = transferWindowKind(input.week) === "summer";
+  const passes = [
+    { buyers: careerClubIds, maxDeals: summer ? 4 : 3, salt: 0x5f6 },
+    { buyers: backgroundClubIds, maxDeals: summer ? 3 : 2, salt: 0x5f7 },
+  ];
   // Players with an agreed (waiting) move are off the AI market.
   const transferredThisWeek = scheduledPlayerIds(input.transferState);
   const salesByClub = new Map<string, number>();
   const maxSalesPerClub = 1;
+  const tierOfClub = (clubId: string) => tierOf(divisionOf.get(clubId) ?? input.divisionId);
 
-  for (let attempt = 0; attempt < maxDeals; attempt++) {
-    const squads = squadByClub(players);
-    const buyerClubId = pickBuyerClub(careerClubIds, squads, budgets, rng);
-    if (!buyerClubId) break;
+  for (const pass of passes) {
+    const rng = weekRng(input.masterSeed, input.season, input.week, pass.salt);
+    for (let attempt = 0; attempt < pass.maxDeals; attempt++) {
+      const squads = squadByClub(players);
+      const buyerClubId = pickBuyerClub(pass.buyers, squads, budgets, rng);
+      if (!buyerClubId) break;
 
-    const buyerSquad = squads.get(buyerClubId) ?? [];
-    const needs = squadNeedPositions(buyerSquad);
-    const targetPosition = needs[0] ?? pickSurplusPosition(buyerSquad, rng);
-    if (!targetPosition) continue;
+      const buyerSquad = squads.get(buyerClubId) ?? [];
+      const needs = squadNeedPositions(buyerSquad);
+      const targetPosition = needs[0] ?? pickSurplusPosition(buyerSquad, rng);
+      if (!targetPosition) continue;
 
-    const buyerBudget = budgets[buyerClubId];
-    if (!buyerBudget) continue;
-    const headroom = buyerBudget.transfer_budget - buyerBudget.spent;
-    if (headroom < 80_000) continue;
+      const buyerBudget = budgets[buyerClubId];
+      if (!buyerBudget) continue;
+      const headroom = buyerBudget.transfer_budget - buyerBudget.spent;
+      if (headroom < 80_000) continue;
 
-    const tier = tierOf(input.divisionId);
-    const buyerRep = clubReputation(buyerClubId, input.worldClubs);
-    const shortlist = buildAiClubShortlist({
-      buyerClubId,
-      buyerSquad,
-      marketPlayers: players.filter(
-        (row) => !transferredThisWeek.has(row.id) && (!row.club_id || onMarket.has(row.club_id)),
-      ),
-      season: input.season,
-      week: input.week,
-      masterSeed: input.masterSeed,
-      topClub: tier <= 3,
-      buyerReputation: buyerRep,
-    });
+      const tier = tierOfClub(buyerClubId);
+      const buyerRep = clubReputation(buyerClubId, input.worldClubs);
+      const shortlist = buildAiClubShortlist({
+        buyerClubId,
+        buyerSquad,
+        // Own tier or below: nobody steps down a league to join a smaller club.
+        marketPlayers: players.filter(
+          (row) => !transferredThisWeek.has(row.id) && (!row.club_id || tierOfClub(row.club_id) >= tier),
+        ),
+        season: input.season,
+        week: input.week,
+        masterSeed: input.masterSeed,
+        topClub: tier <= 3,
+        buyerReputation: buyerRep,
+      });
 
-    let deal: { player: Player; fee: number; distressed?: boolean } | null = null;
-    for (const entry of shortlist.slice(0, 8)) {
-      const player = players.find((row) => row.id === entry.playerId);
-      if (!player?.club_id || player.club_id === buyerClubId) continue;
-      if (transferredThisWeek.has(player.id)) continue;
-      const sellerClubId = player.club_id;
-      const sellerSales = salesByClub.get(sellerClubId) ?? 0;
-      const sellerBudget = budgets[sellerClubId];
-      const sellerDistressed = Boolean(sellerBudget?.distressed);
-      if (sellerSales >= maxSalesPerClub && !sellerDistressed) continue;
+      let deal: { player: Player; fee: number; distressed?: boolean } | null = null;
+      for (const entry of shortlist.slice(0, 8)) {
+        const player = players.find((row) => row.id === entry.playerId);
+        if (!player?.club_id || player.club_id === buyerClubId) continue;
+        if (transferredThisWeek.has(player.id)) continue;
+        const sellerClubId = player.club_id;
+        const sellerSales = salesByClub.get(sellerClubId) ?? 0;
+        const sellerBudget = budgets[sellerClubId];
+        const sellerDistressed = Boolean(sellerBudget?.distressed);
+        if (sellerSales >= maxSalesPerClub && !sellerDistressed) continue;
 
-      const sellerRep = clubReputation(sellerClubId, input.worldClubs);
-      const playerCa = estimateCa(player.attributes, player.position);
-      if (playerCa < 82 && buyerRep > sellerRep + 8) continue;
+        const sellerRep = clubReputation(sellerClubId, input.worldClubs);
+        const playerCa = estimateCa(player.attributes, player.position);
+        if (playerCa < 82 && buyerRep > sellerRep + 8) continue;
 
-      const sellerSquad = squads.get(sellerClubId) ?? [];
-      const releaseIds = new Set(
-        sellerReleaseCandidates(sellerSquad, input.season).map((p) => p.id),
-      );
-      const forced = releaseIds.has(player.id);
-      const distressed = sellerDistressed;
-      let asking = sellerAskingPrice(player, input.season);
-      if (distressed && player.age <= 21) asking = Math.round(asking * 0.65);
-      if (playerCa < 78 && buyerRep < sellerRep) asking = Math.round(asking * 0.92);
-      if (asking > headroom * 1.15) continue;
-      const fee = negotiateFee(asking, headroom, rng);
-      if (fee <= 0) continue;
-      if (!sellerWillSell(player, input.season, fee, asking, forced || distressed)) continue;
-      deal = { player, fee, distressed };
-      break;
-    }
-    if (!deal) continue;
+        const sellerSquad = squads.get(sellerClubId) ?? [];
+        const releaseIds = new Set(
+          sellerReleaseCandidates(sellerSquad, input.season).map((p) => p.id),
+        );
+        const forced = releaseIds.has(player.id);
+        const distressed = sellerDistressed;
+        let asking = sellerAskingPrice(player, input.season);
+        if (distressed && player.age <= 21) asking = Math.round(asking * 0.65);
+        if (playerCa < 78 && buyerRep < sellerRep) asking = Math.round(asking * 0.92);
+        if (asking > headroom * 1.15) continue;
+        const fee = negotiateFee(asking, headroom, rng);
+        if (fee <= 0) continue;
+        if (!sellerWillSell(player, input.season, fee, asking, forced || distressed)) continue;
+        deal = { player, fee, distressed };
+        break;
+      }
+      if (!deal) continue;
 
-    const sellerClubId = deal.player.club_id ?? "cl_rival_pool";
-    transferredThisWeek.add(deal.player.id);
-    salesByClub.set(sellerClubId, (salesByClub.get(sellerClubId) ?? 0) + 1);
-    const bought = completePurchase(deal.player, buyerClubId, input.season);
-    const shifted = processTransferBreakout(bought, {
-      masterSeed: input.masterSeed,
-      worldEventId: `ai_transfer_${input.season}_${input.week}_${deal.player.id}_${buyerClubId}`,
-      week: input.week,
-      previousMorale: deal.player.state.morale,
-      matchFitPoor: false,
-    });
-    const valued = refreshPlayerMarketValue(shifted.player, input.season);
-    players = players.map((player) => (player.id === deal.player.id ? valued : player));
+      const sellerClubId = deal.player.club_id ?? "cl_rival_pool";
+      transferredThisWeek.add(deal.player.id);
+      salesByClub.set(sellerClubId, (salesByClub.get(sellerClubId) ?? 0) + 1);
+      const bought = completePurchase(deal.player, buyerClubId, input.season);
+      const shifted = processTransferBreakout(bought, {
+        masterSeed: input.masterSeed,
+        worldEventId: `ai_transfer_${input.season}_${input.week}_${deal.player.id}_${buyerClubId}`,
+        week: input.week,
+        previousMorale: deal.player.state.morale,
+        matchFitPoor: false,
+      });
+      const valued = refreshPlayerMarketValue(shifted.player, input.season);
+      players = players.map((player) => (player.id === deal.player.id ? valued : player));
 
-    budgets = {
-      ...budgets,
-      [buyerClubId]: {
-        ...budgets[buyerClubId]!,
-        spent: budgets[buyerClubId]!.spent + deal.fee,
-      },
-      [sellerClubId]: {
-        ...budgets[sellerClubId] ?? {
-          transfer_budget: defaultAiClubBudget(input.divisionId),
-          spent: 0,
-          earned: 0,
+      budgets = {
+        ...budgets,
+        [buyerClubId]: {
+          ...budgets[buyerClubId]!,
+          spent: budgets[buyerClubId]!.spent + deal.fee,
         },
-        earned: (budgets[sellerClubId]?.earned ?? 0) + deal.fee,
-      },
-    };
+        [sellerClubId]: {
+          ...budgets[sellerClubId] ?? {
+            transfer_budget: defaultAiClubBudget(divisionOf.get(sellerClubId) ?? input.divisionId),
+            spent: 0,
+            earned: 0,
+          },
+          earned: (budgets[sellerClubId]?.earned ?? 0) + deal.fee,
+        },
+      };
 
-    const record = createAiTransferRecord(
-      valued,
-      deal.fee,
-      input.season,
-      input.week,
-      sellerClubId,
-      buyerClubId,
-      input.worldClubs,
-    );
-    transferState = appendTransferRecord(transferState, record);
-    records.push(record);
+      const record = createAiTransferRecord(
+        valued,
+        deal.fee,
+        input.season,
+        input.week,
+        sellerClubId,
+        buyerClubId,
+        input.worldClubs,
+      );
+      transferState = appendTransferRecord(transferState, record);
+      records.push(record);
 
-    const message = `Liga: ${formatPlayerName(valued)} · ${loanClubName(sellerClubId, input.worldClubs)} → ${loanClubName(buyerClubId, input.worldClubs)} (${formatFeeShort(deal.fee)})`;
-    messages.push(message);
+      // Club events only for deals that touch the manager's division.
+      if (localClubs.has(buyerClubId) || localClubs.has(sellerClubId)) {
+        const message = `Liga: ${formatPlayerName(valued)} · ${loanClubName(sellerClubId, input.worldClubs)} → ${loanClubName(buyerClubId, input.worldClubs)} (${formatFeeShort(deal.fee)})`;
+        messages.push(message);
+      }
+    }
   }
 
-  for (const clubId of careerClubIds) {
+  for (const clubId of [...careerClubIds, ...backgroundClubIds]) {
     const budget = budgets[clubId];
     if (!budget) continue;
     const headroom = budget.transfer_budget - budget.spent;

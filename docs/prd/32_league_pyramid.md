@@ -1,6 +1,6 @@
 # PRD 32 — League pyramid (five tiers), season archive, late-career decline
 
-**Status:** In progress · 2026-10-29 · Phase 2 of PRD 30. Slices 0–3 built.
+**Status:** Built (slices 0–4) · 2026-10-30 · Phase 2 of PRD 30. National scouting open (§11).
 **Features:** F10.8 (PRD 10, M4 → now), F10.3. **Touches:** PRD 02 (decline),
 PRD 03/31 (AI youth level), PRD 11 (tier economies), PRD 12 (structure),
 PRD 19 (Act 3), PRD 23 (objectives), PRD 24 (modes).
@@ -154,7 +154,7 @@ in `DIVISION_ECONOMY` (proper names, not translated).
   does not import client code.
 - Rollout switches, removed when their slice lands: `boundaryBelow.closed`
   (Nationalliga ↔ Regionalliga; removed in slice 3) and `transferMarket`
-  (tiers 1–3 off the AI market until slice 4). Club events
+  (tiers 1–3 off the AI market; removed in slice 4). Club events
   are written only for boundaries the manager's division touches;
   `PromotionRelegationResult.playoffs` lists every playoff.
 - Promotion and relegation club events are i18n strings now
@@ -205,9 +205,8 @@ in `DIVISION_ECONOMY` (proper names, not translated).
 - **Background tiers until slices 3–4.** Tiers 1–3 grow, age, retire, recruit
   youth and play a season-end batch with promotion and relegation among
   themselves. Slice 3 made their tables live and opened the Nationalliga ↔
-  Regionalliga boundary (§7). Their players are not on the AI transfer market
-  (`transferMarket: false`, slice 4); AI clubs only buy from tiers 4–5. Their
-  regions are not scout zones, so they do not reach the scouting pool. The
+  Regionalliga boundary (§7); slice 4 put their players on the AI transfer
+  market (§8). Their regions are not scout zones, so they do not reach the scouting pool. The
   Leagues screen shows all five tabs and builds only the open tab's table.
 - **Calibration** (`npm run calibrate:career -- --division=<id>`, 8 matchdays
   × 3 seeds, 216 matches, no engine change): every tier shows the three
@@ -234,8 +233,7 @@ existing tiers):
 | 4 | 55,000 | 12,000 | 18,000 | 9,000 | 8,000 · 0.72 · €18 | 180,000 | 250,000 |
 | 5 | 28,000 | 4,500 | 11,000 | 6,000 | 4,500 · 0.62 · €12 | 45,000 | 55,000 |
 
-Tiers 4 and 5 keep today's values. AI transfer budgets per tier come with the
-cross-tier market in slice 4 (today: full budget for tier ≤ 4, 60 % below).
+Tiers 4 and 5 keep today's values. AI transfer budgets per tier: §8.
 
 ## 7. Live tables (slice 3, built)
 
@@ -268,17 +266,36 @@ cross-tier market in slice 4 (today: full budget for tier ≤ 4, 60 % below).
   through the real pipeline. It plays 10 matchdays, all four other tables
   stay live, the Nationalliga economy applies, and a week takes 1.48 s.
 
-## 8. Market, board, jobs, archive (slice 4)
+## 8. Market, board, jobs, archive (slice 4, built)
 
-- AI market across tiers: higher-tier clubs buy from lower tiers; budgets per
-  tier. The scouting market covers all tiers (measure list build time).
-- Board (PRD 23): objectives derive from the club's reputation rank inside its
-  tier; promoted clubs default to "stay up".
-- Job offers (`src/board/job-offers.ts`) can come from higher tiers after
-  success.
-- Season archive, appended at season end:
-  `{ season, divisions: [{ id, table: [teamId, P, W, D, L, GF, GA, Pts][], champion, promoted, relegated, playoff }], awards, own: { division, place, points, results } }`.
-  Ids and numbers only. Phase 5 adds cup results, phase 7 the UI.
+- **AI market across tiers** (`advanceAiTransferWeek`). Two passes per
+  transfer week: the manager's division as before (4 deals in summer, 3 in
+  winter), then a background pass for every other AI club (3 / 2). A club
+  buys only from its own tier or below; nobody drops a league to join a
+  smaller club. Club events are written only for deals that touch the
+  manager's division; every deal goes into the transfer history. Season
+  budgets per tier, × the Regionalliga budget (€2.2 M): 15 / 6 / 2.5 / 1 /
+  0.6, reset for all 89 AI clubs at season end at their next season's level
+  (`resetPyramidAiBudgets`). The `transferMarket` switch is gone.
+- **Board** (PRD 23). A club that went up starts the new season at
+  `survival_mid` ("stay up"); one that went down at `ambition` ("straight back
+  up"); a club that stayed keeps the place-based tier
+  (`standingTierAfterMovement`). A club outside the manager's table (a job
+  offer from another division) is ranked by reputation inside its own
+  division (`reputationRankInDivision`) instead of defaulting to 10th place.
+- **Job offers** (`listJobOffers`). After a strong season so far (top four
+  with at least 10 matchdays played, or a finished season) two of the three
+  offers come from the weakest clubs of the division above; otherwise all
+  three stay in the manager's division. Story Mode's explicit division
+  requests are unchanged.
+- **Season archive** (`src/sim/season-archive.ts`,
+  `pipeline.season_archive`, appended in `runSeasonEnd`):
+  `{ season, divisions: [{ id, table: [teamId, P, W, D, L, GF, GA, Pts][], champion, promoted, relegated, playoff }], awards: [kind, playerId, clubId, value][], own: { division, place, points, results: [home, away, hg, ag][] } }`.
+  Under 12 KB raw per season. Phase 5 adds cup results, phase 7 the UI.
+- **Not built: national scouting.** Scouting runs on map zones with northern
+  geometry (`SCOUT_MAP_ZONES`, region scouts, city maps); tiers 1–3 sit in
+  six new regions that are not zones. Players there can be bought by AI clubs
+  but the manager cannot scout them yet (§11).
 
 ## 9. Budgets and long run
 
@@ -311,6 +328,7 @@ slice 0, save within 2× at seasons 1 and 6. Dormant tiers not needed so far.
 | Stadium licensing (minimum capacity for promotion)? | No hard block in v1: a board warning plus a capacity cap on attendance |
 | Clubs from all over the country relegated into "Regionalliga Nord" | Accepted as fiction |
 | Decline for own players too? | Yes, one curve for everyone (PRD 02 is shared) |
+| National scouting (tiers 1–3 in the scouting pool)? | Not in this phase: needs scout zones and map geometry for six new regions. Follow-up before or with phase 11 (ambition moves to bigger clubs) |
 
 ## 12. Save
 
@@ -318,7 +336,9 @@ Slices 0–1 change no schema. Slice 2: `SAVE_VERSION` 102,
 `migration_102_league_pyramid` (§5). Slice 3: `SAVE_VERSION` 103,
 `migration_103_live_division_tables` backfills the matchdays already played
 in every other division (quick model, live seed), so a save from mid-season
-keeps full tables. Slice 4 bumps again for the archive.
+keeps full tables. Slice 4: `SAVE_VERSION` 104,
+`migration_104_season_archive` starts an empty archive (past seasons cannot
+be rebuilt).
 
 ## Progress
 
@@ -353,5 +373,17 @@ keeps full tables. Slice 4 bumps again for the archive.
   103.6 > 94.0 > 82.8); 35+ share 0.8–2.7 %; week sim 1.65–1.87 s (slice 2:
   1.67–1.89 s, so the weekly matchdays of four divisions cost nothing
   measurable); save 1,169 KB gz at season 1, 1,382 KB at season 10.
-- Next: slice 4 (AI market across tiers, board objectives and job offers by
-  tier, season archive, 20-season long run).
+- Slice 4 (AI market across tiers, board and job offers by tier, season
+  archive, tier-order invariant in the long run): done.
+  **Acceptance run** (`scripts/longrun-world.ts`, seed 2026, 20 seasons, all
+  invariants hold, tier order now one of them): AI mean CA 99.4 at season 1,
+  peak 106.0 (+6.6 %, season 7), 103.9 (+4.5 %) at season 20; tier order every
+  season (season 20: 121.6 > 115.4 > 105.9 > 96.9 > 80.8); mean age
+  25.1–26.0; 35+ share 0.8–2.7 %; rosters ≥ 22 with ≥ 2 GK; no retired-id
+  leaks. Week sim 1.61–1.87 s (budget 2.73 s). Save 1,171 KB gz at season 1,
+  1,247 KB at season 6 (budget 1,584 KB), 2,463 KB at season 20, of which
+  1,135 KB is the autopilot Postfach queue (as in PRD 31) and 23 KB the season
+  archive. The dormant-tier fallback was never needed.
+- Phase acceptance (§10): climb test, 18 clubs per tier, drift < 10 % every
+  season, tier order after 20 seasons, budgets, determinism (fixed seeds
+  throughout): met. Open: national scouting (§11).

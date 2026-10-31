@@ -29,6 +29,7 @@ the older PRD in its first commit.
 | Cups | Regional cup (tiers 4–5) and national cup (all tiers); the regional winner qualifies for next season's national cup |
 | Cup dates | Dedicated cup weeks with no league game. "At most one competitive match per club per week" stays an invariant |
 | Season breaks | Every season gets a pre-season (friendlies, summer window) and a winter break (winter window) |
+| Final form (2026-10-31) | Extract the match engine as a deterministic library (PRD 33); build, not buy (ADR 0007) |
 
 Phase 4 (calendar) was not on the original gap list. Cups and friendlies need
 it, so it sits between phases 3 and 5.
@@ -50,8 +51,14 @@ it, so it sits between phases 3 and 5.
 | 9 | Set-piece takers | Not started | — | 1 | — |
 | 10 | Difficulty settings | Not started | — | 1 | — |
 | 11 | Player happiness: promises, transfer requests | Not started | — | 2 | 2 (ambition) |
+| E | Engine library: deterministic core, attribute schemas, event pitch, commentary | Proposed (order pending owner decision) | [33](33_engine_library.md) | 8–12 | — |
 
 Status values: `Not started` · `In progress (slice x/y)` · `Done (PR #n)`.
+
+Proposed order for E (PRD 33 §15, not yet confirmed by the owner): after
+phase 2 is merged and before phases 5, 6 and 9. Cups need extra time and
+shootouts, in-match management is the engine's decision API, and set-piece
+takers change the engine. Phases 3 and 4 are game-side and can run alongside.
 
 ---
 

@@ -189,7 +189,7 @@ coordinates 0–100 from the home goal line). No engine change is needed.
 Commentary stays the hero. The event pitch is a panel beside it on desktop and
 a collapsible panel above it on phones. It reuses the lineup pitch (`tc-pitch`
 tokens) and its mini card (number, name, club · position, touches; design.md
-§4). The matchday wireframe (`design/09.15-matchday.md`) is updated before it
+§4.3). The matchday wireframe (`design/09.15-matchday.md`) is updated before it
 is built.
 
 ## 10. Commentary: text and voice

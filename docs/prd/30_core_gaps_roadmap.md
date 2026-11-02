@@ -41,7 +41,7 @@ it, so it sits between phases 3 and 5.
 | # | Phase | Status | Phase PRD | Est. sessions | Depends on |
 |---|---|---|---|---|---|
 | 1 | World longevity: retirement, AI youth, roster upkeep | Done (PR #34); CA drift moved to phase 2 | [31](31_world_longevity.md) | 2 | — |
-| 2 | League pyramid (5 tiers) + season archive + CA drift | Built (slices 0–4); slices 0–1 merged (PR #35), slices 2–4 in a follow-up PR; national scouting open | [32](32_league_pyramid.md) | 3–4 | 1 |
+| 2 | League pyramid (5 tiers) + season archive + CA drift | Done (PR #35, #36); national scouting open (PRD 32 §11) | [32](32_league_pyramid.md) | 3–4 | 1 |
 | 3 | Suspensions | Not started | — | 1 | — |
 | 4 | Season calendar: breaks every season | Not started | — | 2–3 | — |
 | 5 | Cups (regional + national) | Not started | — | 3 | 3, 4 (2 for national cup entrants) |
@@ -320,8 +320,9 @@ market across tiers (own tier or below, budgets per tier), board tier after
 promotion or relegation, job offers from the division above after a strong
 season, season archive (SAVE_VERSION 104). 20-season run: all invariants hold,
 drift peak +6.6 %, tier order every season, week sim 1.61–1.87 s. Open:
-national scouting (PRD 32 §11). Next: phase 3 (suspensions) once this phase
-is merged.
+national scouting (PRD 32 §11). Merged in PR #35 (slices 0–1) and PR #36
+(slices 2a–4). Next: phase 3 (suspensions), or the engine library first if the
+owner confirms the order proposed in PRD 33 §15.
 
 ---
 

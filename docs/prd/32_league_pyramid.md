@@ -1,6 +1,6 @@
 # PRD 32 — League pyramid (five tiers), season archive, late-career decline
 
-**Status:** Built (slices 0–4) · 2026-10-30 · Phase 2 of PRD 30. National scouting open (§11).
+**Status:** Done (PR #35, #36) · 2026-11-02 · Phase 2 of PRD 30. National scouting open (§11).
 **Features:** F10.8 (PRD 10, M4 → now), F10.3. **Touches:** PRD 02 (decline),
 PRD 03/31 (AI youth level), PRD 11 (tier economies), PRD 12 (structure),
 PRD 19 (Act 3), PRD 23 (objectives), PRD 24 (modes).

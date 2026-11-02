@@ -41,7 +41,7 @@ it, so it sits between phases 3 and 5.
 | # | Phase | Status | Phase PRD | Est. sessions | Depends on |
 |---|---|---|---|---|---|
 | 1 | World longevity: retirement, AI youth, roster upkeep | Done (PR #34); CA drift moved to phase 2 | [31](31_world_longevity.md) | 2 | — |
-| 2 | League pyramid (5 tiers) + season archive + CA drift | Built (slices 0–4), PR not opened yet; national scouting open | [32](32_league_pyramid.md) | 3–4 | 1 |
+| 2 | League pyramid (5 tiers) + season archive + CA drift | Built (slices 0–4); slices 0–1 merged (PR #35), slices 2–4 in a follow-up PR; national scouting open | [32](32_league_pyramid.md) | 3–4 | 1 |
 | 3 | Suspensions | Not started | — | 1 | — |
 | 4 | Season calendar: breaks every season | Not started | — | 2–3 | — |
 | 5 | Cups (regional + national) | Not started | — | 3 | 3, 4 (2 for national cup entrants) |

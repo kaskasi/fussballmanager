@@ -158,7 +158,7 @@ Regeln:
 - Oberliga Platz 1 steigt direkt auf.
 - Regionalliga Platz 17 und Oberliga Platz 2 spielen Relegation.
 - Der Spielerclub kann auf- und absteigen. Kein Schutz.
-- Grenzen über der Regionalliga: je 2 direkte Auf- und Absteiger plus Relegation (16. gegen 3.), PRD 32 §3. Bis PRD 32 Slice 3 bleibt die Grenze Nationalliga ↔ Regionalliga geschlossen.
+- Grenzen über der Regionalliga: je 2 direkte Auf- und Absteiger plus Relegation (16. gegen 3.), PRD 32 §3. Seit PRD 32 Slice 3 ist auch die Grenze Nationalliga ↔ Regionalliga offen; alle Spielklassen spielen jeden Spieltag (Live-Tabellen).
 
 Der Ligakalender umfasst 34 Spieltage. Spieltag 1 liegt Ende August (KW 35),
 nicht in KW 1. Saisonabschluss, Awards, Vorstandsauswertung und Intake laufen
@@ -172,8 +172,10 @@ Der Standard-Spielerclub **FC Nordstern** behält seine originale Identität und
 lokale Story-Rolle aus PRD 01. Seine Spieler und sportlichen Ausgangswerte
 werden pro Save neu erzeugt.
 
-Die weiteren 35 Clubs werden aus kombinierbaren, kuratierten Namensbausteinen
-erzeugt:
+Die weiteren 35 Clubs der Nord-Ligen werden aus kombinierbaren, kuratierten
+Namensbausteinen erzeugt. Die 54 Clubs der Spielklassen 1–3 (PRD 32 §5) kommen
+danach, mit eigenen Salts, aus einer bundesweiten Städteliste; sie verändern die
+36 Nord-Clubs und deren Spieler nicht:
 
 ```text
 prefix:  FC | VfB | TSV | SV | Union | Eintracht | Fortuna | SC
@@ -197,6 +199,9 @@ Regeln:
 - Regionalliga-Clubs sind im Median stärker als Oberliga-Clubs.
 - Die Verteilungen überlappen: ein guter Oberligist kann schwächer
   Regionalligisten schlagen.
+- Alter formt die Startstärke (PRD 32 §2, `worldAgeShape`): junge Spieler liegen
+  deutlich unter dem Clubniveau, Spieler im besten Alter darüber; jeder Club wird
+  so verschoben, dass sein Kader im Mittel die erwartete Altersform hat.
 - FC Nordsterns Startelf liegt 8–15 CA-Punkte unter dem
   Regionalliga-Median und höchstens 5 Punkte unter dem zweitschlechtesten
   Club. Dadurch ist Klassenerhalt schwer, aber nicht vorbestimmt.
@@ -356,7 +361,7 @@ Export-Sanitizer:
 
 ### Kader
 
-- 36 Clubs × 22 Spieler = 792 aktive Profispieler zum Start.
+- 90 Clubs × 22 Spieler = 1.980 aktive Profispieler zum Start (36 Nord-Clubs plus 54 in den Spielklassen 1–3, PRD 32).
 - Jede Mannschaft kann eine gültige Elf und Bank stellen.
 - Alle Attribute, Hidden-Werte, Verträge und Alterswerte sind im erlaubten
   Bereich.

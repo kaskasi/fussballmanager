@@ -17,10 +17,21 @@ describe("promotion and relegation golden (PRD 32 §4)", () => {
     const results = simulateFullDivisionSeason(pools[divisionId], 2, seed ^ 5);
     const league = { ...defaultLeagueState(), division_id: divisionId, club_ids: pools[divisionId], results };
     const outcome = applyPromotionRelegation(league, pools, seed, season);
+    // Tiers 4–5 only. Recorded on the two-tier code; re-recorded in slice 3 when the
+    // Nationalliga boundary opened: only the Regionalliga pool changed (two clubs up,
+    // two down), the Regionalliga ↔ Oberliga movements and playoff did not.
+    const lower = new Set(["regionalliga-nord", "oberliga-nord"]);
+    const playoff = outcome.playoffs.find((match) => match.upperDivisionId === "regionalliga-nord");
     expect({
-      pools: outcome.pools,
-      movements: outcome.movements,
-      playoff: outcome.playoff,
+      pools: { "regionalliga-nord": outcome.pools["regionalliga-nord"], "oberliga-nord": outcome.pools["oberliga-nord"] },
+      movements: outcome.movements.filter((entry) => lower.has(entry.from) && lower.has(entry.to)),
+      playoff: playoff && {
+        homeTeamId: playoff.homeTeamId,
+        awayTeamId: playoff.awayTeamId,
+        homeGoals: playoff.homeGoals,
+        awayGoals: playoff.awayGoals,
+        winnerId: playoff.winnerId,
+      },
     }).toMatchSnapshot();
   });
 });

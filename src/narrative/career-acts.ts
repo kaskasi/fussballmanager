@@ -69,13 +69,13 @@ export function isCareerTransitionPending(story: StoryState): boolean {
 /** Read the Act 1 result from the sim's movements — never a forced loss (PRD 19). */
 export function act1OutcomeFromMovements(
   teamId: TeamId,
-  result: Pick<PromotionRelegationResult, "movements" | "playoff">,
+  result: Pick<PromotionRelegationResult, "movements"> & Partial<Pick<PromotionRelegationResult, "playoffs">>,
 ): { outcome: Act1Outcome; viaPlayoff: boolean } {
   const movement = result.movements.find((entry) => entry.teamId === teamId);
   if (movement?.reason === "relegated") return { outcome: "relegated", viaPlayoff: false };
   if (movement?.reason === "playoff_lost") return { outcome: "relegated", viaPlayoff: true };
   const playedPlayoff =
-    result.playoff?.homeTeamId === teamId || result.playoff?.awayTeamId === teamId;
+    (result.playoffs ?? []).some((match) => match.homeTeamId === teamId || match.awayTeamId === teamId);
   return { outcome: "survived", viaPlayoff: playedPlayoff };
 }
 
@@ -83,7 +83,7 @@ export interface CareerActSeasonEndInput {
   story: StoryState;
   /** Pre-reset league (final table, player club, division). */
   league: LeagueState;
-  promotionRelegation: Pick<PromotionRelegationResult, "pools" | "movements" | "playoff">;
+  promotionRelegation: Pick<PromotionRelegationResult, "pools" | "movements"> & Partial<Pick<PromotionRelegationResult, "playoffs">>;
   /** Players before aging/intake — bond signals intact. */
   players: readonly Player[];
   rivalPlayers: readonly Player[];

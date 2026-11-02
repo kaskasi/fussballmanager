@@ -12,6 +12,7 @@ function act1Ended(): GameSession {
   const base = defaultLeaguePools();
   const promoted = base["oberliga-nord"][0]!;
   const pools = {
+    ...base,
     "regionalliga-nord": [...base["regionalliga-nord"].filter((id) => id !== NORDSTERN_ID), promoted],
     "oberliga-nord": [NORDSTERN_ID, ...base["oberliga-nord"].slice(1)],
   };

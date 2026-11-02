@@ -30,6 +30,11 @@ export interface LeagueState {
   /** Next matchday to play (1-based). */
   matchday: number;
   results: FixtureResult[];
+  /**
+   * PRD 32 §7 — this season's quick-sim results of every other division, one
+   * matchday per league week. The manager's division keeps `results`.
+   */
+  division_results?: Partial<Record<DivisionEconomyId, FixtureResult[]>>;
   player_stats: PlayerSeasonStat[];
   career_player_stats?: CareerLeagueStat[];
   /** Set after the final matchday until the next week sim clears the table. */
@@ -48,6 +53,7 @@ export function resetLeagueSeason(league: LeagueState): LeagueState {
     ...league,
     matchday: 1,
     results: [],
+    division_results: {},
     player_stats: [],
     career_player_stats: [],
     season_complete: false,
@@ -61,12 +67,20 @@ export function normalizeLeagueState(
   const base = league ?? defaultLeagueState();
   const division_id = base.division_id ?? DEFAULT_DIVISION_ID;
   const storedPools = base.league_pools;
-  const poolsIncomplete = PYRAMID.some(
-    (division) => (storedPools?.[division.id]?.length ?? 0) < division.clubCount,
-  );
-  const pools = poolsIncomplete || !storedPools
-    ? defaultLeaguePools()
-    : storedPools;
+  const incomplete = (division: (typeof PYRAMID)[number]) =>
+    (storedPools?.[division.id]?.length ?? 0) < division.clubCount;
+  // A broken northern pool resets the layer (legacy saves); a missing national
+  // tier (saves from before PRD 32 slice 2) is filled on its own, so stored
+  // promotions survive.
+  const defaults = defaultLeaguePools();
+  const pools = !storedPools || PYRAMID.some((division) => division.careerStart && incomplete(division))
+    ? defaults
+    : Object.fromEntries(
+        PYRAMID.map((division) => [
+          division.id,
+          incomplete(division) ? defaults[division.id] : storedPools[division.id],
+        ]),
+      ) as LeagueState["league_pools"] & object;
   const clubIdsIncomplete = (base.club_ids?.length ?? 0) < CLUBS_PER_DIVISION;
   return {
     ...base,
@@ -76,6 +90,7 @@ export function normalizeLeagueState(
       ? [...(pools[division_id] ?? [])]
       : [...base.club_ids],
     meetings_per_opponent: base.meetings_per_opponent ?? LEAGUE_MEETINGS_PER_OPPONENT,
+    division_results: base.division_results ?? {},
     player_stats: base.player_stats ?? [],
     career_player_stats: base.career_player_stats ?? [],
     season_complete: base.season_complete ?? false,

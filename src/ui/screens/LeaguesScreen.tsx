@@ -5,7 +5,7 @@ import type { ClubStadium } from "../../stadium/club-stadium.ts";
 import type { DivisionEconomyId } from "../../economy/division-economy.ts";
 import { totalSeasonMatchdays, type LeagueState } from "../../persistence/league-state.ts";
 import { divisionLabel } from "../../sim/league-divisions.ts";
-import { pyramidDivisionIds } from "../../sim/league-pyramid.ts";
+import { pyramidDivisionIds, tierOf } from "../../sim/league-pyramid.ts";
 import { divisionLeaderLists, divisionStandings, leagueSliceForForm } from "../../sim/league-standings.ts";
 import { ClubProfileModal } from "../components/ClubProfileModal.tsx";
 import { LeagueLeaderLists } from "../components/LeagueLeaderLists.tsx";
@@ -76,7 +76,7 @@ export function LeaguesScreen({
             aria-selected={divisionId === id}
             onClick={() => setDivisionId(id)}
           >
-            {divisionLabel(id)}
+            {t("leagues.tierTab", { tier: tierOf(id), name: divisionLabel(id) })}
             {id === league.division_id ? <span className="tc-tab__meta">{t("leagues.yourClub")}</span> : null}
           </button>
         ))}
@@ -98,6 +98,7 @@ export function LeaguesScreen({
             </span>
           </div>
           <LeagueTable
+            divisionId={divisionId}
             table={standings.table}
             leagueSlice={leagueSlice}
             playerClubId={league.player_club_id}
@@ -108,7 +109,7 @@ export function LeaguesScreen({
               total: matchdays,
             })}`}
           />
-          <LeagueZoneLegend />
+          <LeagueZoneLegend divisionId={divisionId} />
         </section>
         <aside className="tc-panel" aria-label={t("leagues.sidebar.statsAria")}>
           <LeagueLeaderLists

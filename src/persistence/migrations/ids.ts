@@ -97,4 +97,7 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_099_press_conferences",
   "migration_100_mentoring_slots",
   "migration_101_retirement",
+  "migration_102_league_pyramid",
+  "migration_103_live_division_tables",
+  "migration_104_season_archive",
 ] as const;

@@ -6,7 +6,7 @@ import { createScoutBoard } from "../scouting/scout-board.ts";
 import { engineTeamId } from "../sim/rival-growth.ts";
 import {
   CLUBS_PER_DIVISION,
-  GENERATED_CLUB_COUNT,
+  NORTHERN_CLUB_COUNT,
   generateWorld,
   persistedWorldState,
   WORLD_GENERATION_VERSION,
@@ -22,8 +22,8 @@ export function worldNeedsExpansion(save: SaveGame): boolean {
 
   return (
     world?.generation_version !== WORLD_GENERATION_VERSION ||
-    (world?.clubs?.length ?? 0) < GENERATED_CLUB_COUNT ||
-    PYRAMID.some((division) => poolCount(division.id) < division.clubCount) ||
+    (world?.clubs?.length ?? 0) < NORTHERN_CLUB_COUNT ||
+    PYRAMID.some((division) => division.careerStart && poolCount(division.id) < division.clubCount) ||
     league.club_ids.length < CLUBS_PER_DIVISION
   );
 }

@@ -8,6 +8,7 @@ import {
   weeklySeed,
 } from "./league-week.ts";
 import { applyCareerMatchWeek } from "./career-match-sync.ts";
+import { pyramidDivisionIds } from "./league-pyramid.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 
 describe("league week", () => {
@@ -27,6 +28,17 @@ describe("league week", () => {
     expect(advanced.playerFixture).not.toBeNull();
     expect(advanced.league.player_stats.length).toBeGreaterThan(0);
     expect(totalSeasonMatchdays(league)).toBe(34);
+  });
+
+  it("plays every other division's matchday too, so all tables are live (PRD 32 §7)", async () => {
+    const league = defaultLeagueState();
+    const advanced = await advanceLeagueWeek(league, 1, 1, 2026);
+    const others = Object.entries(advanced.league.division_results ?? {});
+    expect(others.map(([id]) => id).sort()).toEqual(
+      pyramidDivisionIds().filter((id) => id !== league.division_id).sort(),
+    );
+    for (const [, results] of others) expect(results).toHaveLength(9);
+    expect(advanced.league.division_results?.[league.division_id]).toBeUndefined();
   });
 
   it("completes the season on matchday 34 and skips league play afterwards", async () => {

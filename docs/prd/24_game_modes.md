@@ -30,7 +30,7 @@ One simulation, three **product modes**. **Regionalliga Manager** stays the defa
 - **Presentation:** `manager_desk` (PRD 20) — dense club UI, not storybook spacing.
 - **Not** a “no narrative” mode: opening, survival board, fan feed, and PRD 13 beats remain; only the **act-based feature curtain** and **forced act progression** are off.
 - Story Mode and NG+ reuse the same sim and save shape; differentiation is `game_mode` + world seed/template + presentation/curtain rules.
-- **Random careers (2026-10-23):** every UI career gets its own roster seed (`newCareerSession`). The 36 clubs (names, ids, divisions) stay fixed (`WORLD_CLUB_SEED`; 90 once PRD 32 slice 2 adds tiers 1–3); squads, talents, youth and the story cast vary. Story Mode uses the same random rosters with Kieler FC as the Act 1 club.
+- **Random careers (2026-10-23):** every UI career gets its own roster seed (`newCareerSession`). The 36 clubs (names, ids, divisions) stay fixed (`WORLD_CLUB_SEED`; 90 since PRD 32 slice 2 added tiers 1–3); squads, talents, youth and the story cast vary. Story Mode uses the same random rosters with Kieler FC as the Act 1 club.
 - **Club pick:** after choosing the mode, Regionalliga Manager offers all 36 clubs ranked by squad strength (`career-club-pick.ts`). The story frame follows the tier: bottom Regionalliga clubs get the relegation battle and survival goal, stronger ones `club_ambition` with tier goals, Oberliga clubs `promotion_push`.
 
 ### Story Mode (Acts 1–2 shipped 2026-10-23)

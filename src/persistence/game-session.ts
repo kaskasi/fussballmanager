@@ -1,3 +1,4 @@
+import type { SeasonArchiveEntry } from "../sim/season-archive.ts";
 import type { TrainingSlotOutcome } from "../development/training-unit-result.ts";
 import type { TrainingSlot } from "../development/training-units.ts";
 import {
@@ -153,6 +154,8 @@ export interface GameSession {
   masterSeed: number;
   world: WorldState;
   lastSeasonAwards?: SeasonAwardsSnapshot;
+  /** PRD 32 §8 — finished seasons, oldest first (chronicle data, phase 7). */
+  seasonArchive: SeasonArchiveEntry[];
   storyState: StoryState;
   assistantDelegation: AssistantDelegation;
   scoutNetwork: ScoutNetworkState;
@@ -367,6 +370,7 @@ export function sessionFromSave(save: SaveGame, options?: SessionFromSaveOptions
     masterSeed: save.rng_state.master_seed,
     world: save.state.world ?? legacyWorldState(save.rng_state.master_seed),
     lastSeasonAwards: pipeline.last_season_awards,
+    seasonArchive: pipeline.season_archive ?? [],
     storyState: normalizeStoryState(pipeline.story_state, save.state.week),
     assistantDelegation: normalizeAssistantDelegation(pipeline.assistant_delegation),
     scoutNetwork: normalizeScoutNetwork(
@@ -416,6 +420,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     rival_breakout_narratives: session.rivalBreakoutNarratives,
     coaching_staff: session.coachingStaff,
     last_season_awards: session.lastSeasonAwards,
+    season_archive: session.seasonArchive,
     story_state: session.storyState,
     assistant_delegation: session.assistantDelegation,
     scout_network: session.scoutNetwork,

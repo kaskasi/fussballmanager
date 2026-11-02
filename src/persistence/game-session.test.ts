@@ -1,3 +1,4 @@
+import { GENERATED_CLUB_COUNT } from "../world/world-generator.ts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createInitialTrainingPlan } from "../development/training-units.ts";
 import { act1AssistantTrainingPlan } from "../narrative/career-presentation.ts";
@@ -81,7 +82,7 @@ describe("game session", () => {
     expect(save.state.pipeline?.youth_inbox).toEqual(updated.youthInbox);
     expect(save.state.world).toEqual(session.world);
     expect(loaded.world.generation_version).toBe(1);
-    expect(loaded.world.clubs).toHaveLength(36);
+    expect(loaded.world.clubs).toHaveLength(GENERATED_CLUB_COUNT);
     expect(save.manifest.save_version).toBe(SAVE_VERSION);
   });
 

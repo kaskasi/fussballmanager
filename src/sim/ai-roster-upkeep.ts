@@ -25,7 +25,7 @@ export const AI_ROSTER_YOUTH_CAP = 23;
 export const AI_YOUTH_MIN = 2;
 export const AI_YOUTH_MAX = 4;
 /** Youth skill mean sits this far below the club's strength; growth closes the gap. */
-export const AI_YOUTH_STRENGTH_GAP = 34;
+export const AI_YOUTH_STRENGTH_GAP = 38;
 /** Refill players are a little below the club's level. */
 export const AI_JOURNEYMAN_STRENGTH_GAP = 3;
 const YOUTH_SKILL_BASE = 65;

@@ -24,10 +24,11 @@ export interface PyramidDivision {
   /** 1 = top flight. */
   tier: number;
   clubCount: number;
-  /** Salt for the season-end batch sim of this division (`masterSeed ^ season ^ salt`). */
+  /**
+   * Seed salt of this division's quick-sim matchdays when the manager is not in
+   * it (`masterSeed ^ season ^ salt`, PRD 32 §7).
+   */
   simSalt: number;
-  /** Salt for the Leagues-screen table of a division the player is not in. */
-  tableSalt: number;
   /** Starting division for a new career (club pick, PRD 24). */
   careerStart: boolean;
   /** Rules to the division directly below; absent on the bottom tier. */
@@ -36,11 +37,34 @@ export interface PyramidDivision {
 
 const PYRAMID_DEFINITION = [
   {
+    id: "meisterliga",
+    tier: 1,
+    clubCount: 18,
+    simSalt: 0x3b1,
+    careerStart: false,
+    boundaryBelow: { direct: 2, playoff: true, playoffSalt: 0x3c5 },
+  },
+  {
+    id: "meisterliga-2",
+    tier: 2,
+    clubCount: 18,
+    simSalt: 0x3b2,
+    careerStart: false,
+    boundaryBelow: { direct: 2, playoff: true, playoffSalt: 0x3c6 },
+  },
+  {
+    id: "nationalliga",
+    tier: 3,
+    clubCount: 18,
+    simSalt: 0x3b3,
+    careerStart: false,
+    boundaryBelow: { direct: 2, playoff: true, playoffSalt: 0x3c7 },
+  },
+  {
     id: "regionalliga-nord",
     tier: 4,
     clubCount: 18,
     simSalt: 11,
-    tableSalt: 0,
     careerStart: true,
     boundaryBelow: { direct: 1, playoff: true, playoffSalt: 71 },
   },
@@ -49,7 +73,6 @@ const PYRAMID_DEFINITION = [
     tier: 5,
     clubCount: 18,
     simSalt: 29,
-    tableSalt: 0x29a2_4f11,
     careerStart: true,
   },
 ] as const satisfies readonly PyramidDivision[];
@@ -131,4 +154,16 @@ export function tableZone(divisionId: DivisionId, index: number, teamCount: numb
   if (down && place > teamCount - down.direct) return "relegated";
   if (down?.playoff && place === teamCount - down.direct) return "playoff";
   return "safe";
+}
+
+/** Zones a division's table can show, in legend order. */
+export function divisionZones(divisionId: DivisionId): Exclude<TableZone, "safe">[] {
+  const above = divisionAbove(divisionId);
+  const up = above ? pyramidDivision(above).boundaryBelow : undefined;
+  const down = pyramidDivision(divisionId).boundaryBelow;
+  const zones: Exclude<TableZone, "safe">[] = [];
+  if (up) zones.push("promoted");
+  if (up?.playoff || down?.playoff) zones.push("playoff");
+  if (down) zones.push("relegated");
+  return zones;
 }

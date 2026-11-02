@@ -1,3 +1,4 @@
+import { emptyDivisionPools } from "../sim/league-pyramid.ts";
 import { describe, expect, it } from "vitest";
 import { CLUBS_PER_DIVISION, GENERATED_CLUB_COUNT } from "./world-generator.ts";
 import { expandGeneratedWorld, worldNeedsExpansion } from "./upgrade-generated-world.ts";
@@ -21,6 +22,7 @@ describe("upgrade generated world", () => {
     save.state.league = {
       ...defaultLeagueState(),
       league_pools: {
+        ...emptyDivisionPools(),
         "regionalliga-nord": SEED_DIVISION.map((squad) => squad.team.id),
         "oberliga-nord": SEED_OBERLIGA.map((squad) => squad.team.id),
       },

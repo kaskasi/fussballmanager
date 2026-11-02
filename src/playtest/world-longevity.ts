@@ -4,6 +4,7 @@
  * invariant checks. Not part of the default vitest run beyond its unit test.
  */
 import type { GameSession } from "../persistence/game-session.ts";
+import { pyramidDivisionIds } from "../sim/league-pyramid.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player, PositionPrimary } from "../types/player.ts";
 
@@ -142,5 +143,15 @@ export function checkWorldInvariants(
       ok: row.retiredLeaks === 0,
       detail: `retired ids still in play ${row.retiredLeaks}`,
     },
+    tierOrderCheck(row),
   ];
+}
+
+/** PRD 32 §10 — mean CA falls from tier to tier (1 > 2 > 3 > 4 > 5). */
+function tierOrderCheck(row: WorldSeasonMetrics): WorldInvariantResult {
+  const means = pyramidDivisionIds()
+    .map((id) => row.divisionMeanCa[id])
+    .filter((mean): mean is number => mean !== undefined);
+  const ok = means.every((mean, index) => index === 0 || mean < means[index - 1]!);
+  return { id: "tier_order", ok, detail: `tier mean CA ${means.join(" > ")}` };
 }

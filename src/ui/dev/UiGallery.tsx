@@ -350,6 +350,7 @@ export function UiGallery() {
         >
           <div className="tc-panel">
             <LeagueTable
+              divisionId="regionalliga-nord"
               table={league.table}
               leagueSlice={{ club_ids: league.clubIds, results: league.results }}
               playerClubId={league.playerClubId}
@@ -357,11 +358,12 @@ export function UiGallery() {
               onSelectClub={() => setModalOpen(true)}
               caption="Gallery league after six rounds"
             />
-            <LeagueZoneLegend />
+            <LeagueZoneLegend divisionId="regionalliga-nord" />
           </div>
           <p className="tc-label">Compact (matchday side panel), both sides of the next match marked</p>
           <div className="tc-panel ui-gallery__narrow">
             <LeagueTable
+              divisionId="regionalliga-nord"
               table={league.table}
               leagueSlice={{ club_ids: league.clubIds, results: league.results }}
               playerClubId={league.playerClubId}

@@ -40,8 +40,8 @@ it, so it sits between phases 3 and 5.
 | # | Phase | Status | Phase PRD | Est. sessions | Depends on |
 |---|---|---|---|---|---|
 | 1 | World longevity: retirement, AI youth, roster upkeep | Done (PR #34); CA drift moved to phase 2 | [31](31_world_longevity.md) | 2 | — |
-| 2 | League pyramid (5 tiers) + season archive + CA drift | Built (slices 0–4); slices 0–1 merged (PR #35), slices 2–4 in a follow-up PR; national scouting open | [32](32_league_pyramid.md) | 3–4 | 1 |
-| 3 | Suspensions | Not started | — | 1 | — |
+| 2 | League pyramid (5 tiers) + season archive + CA drift | Done (PR #35, PR #36); national scouting open | [32](32_league_pyramid.md) | 3–4 | 1 |
+| 3 | Suspensions | Built, not merged; lineup badge, match-report line and opponent-analysis list open | [34](34_suspensions.md) | 1 | — |
 | 4 | Season calendar: breaks every season | Not started | — | 2–3 | — |
 | 5 | Cups (regional + national) | Not started | — | 3 | 3, 4 (2 for national cup entrants) |
 | 6 | In-match management | Not started | — | 2 | — |
@@ -364,7 +364,14 @@ players; engine golden tests unchanged (no engine edit).
 **Open question (default):** red-card length by severity? Default: a flat two
 matches, because the engine has no severity tag.
 
-**Progress:** —
+**Progress:** PRD 34 written. Built: rules module `src/discipline/suspensions.ts`,
+bans for own and AI players, eligibility in lineup, auto-lineup and AI squads,
+season carry-over, squad-table and profile badges, club-event lines for bans
+and four-yellow warnings, SAVE_VERSION 105. No engine edit. The sent-off
+reason is derived from the one-match row instead of a new shared field
+(PRD 34 §3). Open: suspended badge on lineup cards and the status strip,
+match-report line, banned players in the opponent analysis; the long run
+(`scripts/longrun-world.ts`) was not re-run for this phase. Next: phase 4.
 
 ---
 

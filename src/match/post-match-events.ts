@@ -4,6 +4,19 @@ import { t } from "../i18n/index.ts";
 import { formatFixtureResult } from "../sim/league-week.ts";
 import type { ClubEvent } from "../inbox/club-events.ts";
 import { withClubEvent } from "../inbox/club-events.ts";
+import type { DisciplineNotice } from "../sim/career-match-sync.ts";
+
+/** PRD 34 — club-event line for a new ban or a four-yellow warning. */
+export function disciplineNoticeMessage(notice: DisciplineNotice): string {
+  if (notice.banMatches <= 0 || !notice.reason) {
+    return t("discipline.notice.warning", { name: notice.name });
+  }
+  return t(notice.banMatches > 1 ? "discipline.notice.ban.many" : "discipline.notice.ban.one", {
+    name: notice.name,
+    count: notice.banMatches,
+    reason: t(`discipline.reason.${notice.reason}`),
+  });
+}
 
 export function matchdayClubEventMessages(
   fixture: FixtureResult,
@@ -30,7 +43,7 @@ export function matchdayClubEventMessages(
       );
     }
     if (row.yellowCards > 0) {
-      messages.push(`🟨 ${row.name}`);
+      messages.push(t("league.result.yellow", { name: row.name }));
     }
   }
 

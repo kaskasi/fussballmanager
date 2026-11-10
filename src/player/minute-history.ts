@@ -1,3 +1,4 @@
+import { resetSeasonDiscipline } from "../discipline/suspensions.ts";
 import type { Player } from "../types/player.ts";
 
 /** PRD 03.5 — departure trigger window. */
@@ -31,7 +32,7 @@ export function minutesLast4Weeks(player: Player): number {
 }
 
 export function resetSeasonMinutes(player: Player): Player {
-  const state = normalizeMinuteState(player.state);
+  const state = resetSeasonDiscipline(normalizeMinuteState(player.state));
   return {
     ...player,
     state: {

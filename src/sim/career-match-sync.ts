@@ -4,12 +4,28 @@ import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import type { CareerLeagueStat } from "../persistence/league-state.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import { recordAppearanceGoals } from "../development/ability-stamps.ts";
+import {
+  applyMatchCards,
+  isSuspended,
+  serveBanMatch,
+  type BanReason,
+} from "../discipline/suspensions.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
+
+/** PRD 34 — a new ban, or a player one yellow short of one, after the club's match. */
+export interface DisciplineNotice {
+  playerId: string;
+  name: string;
+  /** Ban matches added by this match; 0 = four-yellow warning. */
+  banMatches: number;
+  reason?: BanReason;
+}
 
 export interface CareerMatchWeekResult {
   players: Player[];
   matchdayStats: CareerLeagueStat[];
+  disciplineNotices: DisciplineNotice[];
 }
 
 export function mergeCareerLeagueStats(
@@ -42,18 +58,25 @@ export function applyCareerMatchWeek(
   engineClubStats?: readonly PlayerSeasonStat[],
   starterIds?: readonly string[],
 ): CareerMatchWeekResult {
-  if (!fixture) return { players: [...players], matchdayStats: [] };
+  if (!fixture) return { players: [...players], matchdayStats: [], disciplineNotices: [] };
 
   const played =
     fixture.homeTeamId === playerClubEngineId || fixture.awayTeamId === playerClubEngineId;
-  if (!played) return { players: [...players], matchdayStats: [] };
+  if (!played) return { players: [...players], matchdayStats: [], disciplineNotices: [] };
 
   const squad = players.filter(
     (player) => player.club_id === DEFAULT_CLUB_ID && player.squad_status === "pro",
   );
-  if (squad.length === 0) return { players: [...players], matchdayStats: [] };
+  if (squad.length === 0) return { players: [...players], matchdayStats: [], disciplineNotices: [] };
 
-  const lineup = pickLineup(squad, masterSeed, season, matchday, starterIds);
+  // PRD 34: banned players get no minutes; their ban is served below.
+  const lineup = pickLineup(
+    squad.filter((player) => !isSuspended(player)),
+    masterSeed,
+    season,
+    matchday,
+    starterIds,
+  );
   const goalsFor =
     fixture.homeTeamId === playerClubEngineId ? fixture.homeGoals : fixture.awayGoals;
   const goalsAgainst =
@@ -69,18 +92,49 @@ export function applyCareerMatchWeek(
   const cardMap = useEngineStats
     ? statsFieldMap(engineClubStats, squad, "yellowCards")
     : distributeCards(lineup.played, masterSeed, season, matchday);
+  const redMap = useEngineStats
+    ? statsFieldMap(engineClubStats, squad, "redCards")
+    : new Map<string, number>();
 
   const minutesById = new Map(lineup.minutes);
   const matchdayStats: CareerLeagueStat[] = [];
   const updated = new Map(players.map((player) => [player.id, player]));
+  const disciplineNotices: DisciplineNotice[] = [];
+  const book = (player: Player, yellowCards: number): Player => {
+    const outcome = applyMatchCards(player, { yellowCards, redCards: redMap.get(player.id) ?? 0 });
+    if (outcome.banAdded > 0 || outcome.yellowWarning) {
+      disciplineNotices.push({
+        playerId: player.id,
+        name: formatPlayerName(player),
+        banMatches: outcome.banAdded,
+        ...(outcome.reason ? { reason: outcome.reason } : {}),
+      });
+    }
+    return outcome.player;
+  };
 
-  for (const player of squad) {
+  for (const squadPlayer of squad) {
+    const player = serveBanMatch(squadPlayer);
+    if (player !== squadPlayer) updated.set(player.id, player);
     const minutes = minutesById.get(player.id) ?? 0;
-    if (minutes <= 0) continue;
+    const yellowCards = cardMap.get(player.id) ?? 0;
+    if (minutes <= 0) {
+      // The engine's substitutions can differ from the minutes model: cards still count.
+      const booked = book(player, yellowCards);
+      if (booked !== player) {
+        updated.set(player.id, {
+          ...booked,
+          state: {
+            ...booked.state,
+            season_yellow_cards: (booked.state.season_yellow_cards ?? 0) + yellowCards,
+          },
+        });
+      }
+      continue;
+    }
 
     const goals = goalMap.get(player.id) ?? 0;
     const assists = assistMap.get(player.id) ?? 0;
-    const yellowCards = cardMap.get(player.id) ?? 0;
     const tackles = matchTackles(player, minutes, masterSeed, season, matchday);
     const headers = matchHeaders(player, minutes, masterSeed, season, matchday);
     const withMinutes = pushWeeklyMinutes(player, minutes);
@@ -97,7 +151,7 @@ export function applyCareerMatchWeek(
         form: adjustForm(withMinutes.state.form, goals, assists, goalsAgainst, minutes),
       },
     };
-    updated.set(player.id, recordAppearanceGoals(next, goals));
+    updated.set(player.id, recordAppearanceGoals(book(next, yellowCards), goals));
     matchdayStats.push({
       playerId: player.id,
       name: formatPlayerName(player),
@@ -112,20 +166,21 @@ export function applyCareerMatchWeek(
   return {
     players: players.map((player) => updated.get(player.id) ?? player),
     matchdayStats,
+    disciplineNotices,
   };
 }
 
 function statsFieldMap(
   engineClubStats: readonly PlayerSeasonStat[],
   squad: readonly Player[],
-  field: "goals" | "assists" | "yellowCards",
+  field: "goals" | "assists" | "yellowCards" | "redCards",
 ): Map<string, number> {
   const squadIds = new Set(squad.map((player) => player.id));
   const counts = new Map<string, number>();
   for (const row of engineClubStats) {
     const playerId = String(row.playerId);
     if (!squadIds.has(playerId)) continue;
-    counts.set(playerId, row[field]);
+    counts.set(playerId, row[field] ?? 0);
   }
   return counts;
 }

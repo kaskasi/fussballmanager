@@ -5,6 +5,11 @@ import { formatPlayerName } from "../types/player-display.ts";
 import type { PendingDiagnosis } from "../medical/diagnosis-queue.ts";
 import { buildPendingFromRoll } from "../medical/diagnosis-queue.ts";
 import { t } from "../i18n/index.ts";
+import {
+  LEAGUE_COMPETITION,
+  isSuspended,
+  type CompetitionId,
+} from "../discipline/suspensions.ts";
 
 export const INJURY_MIN_SCORE = 40;
 export const INJURY_SCORE_CAP = 92;
@@ -19,8 +24,11 @@ const INJURY_TYPES: { id: string; label: string }[] = [
   { id: "back", label: "Rücken" },
 ];
 
-export function isPlayerMatchEligible(player: Player): boolean {
-  return player.state.injury === null;
+export function isPlayerMatchEligible(
+  player: Player,
+  competition: CompetitionId = LEAGUE_COMPETITION,
+): boolean {
+  return player.state.injury === null && !isSuspended(player, competition);
 }
 
 export function injuryWeeklyChance(riskScore: number): number {

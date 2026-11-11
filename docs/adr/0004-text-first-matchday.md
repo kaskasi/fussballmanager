@@ -1,7 +1,8 @@
 # ADR 0004 — Spieltag Text-first, kein Live-Pitch
 
-- Status: angenommen
+- Status: angenommen; Punkt 3 geändert am 2026-10-31
 - Datum: 2026-10-23
+- Nachtrag 2026-10-31: Punkt 3 wird durch den Ereignis-Platz geändert (PRD 33 §9). Diskrete Ereignis-Szenen auf dem Platz sind erlaubt: Ort des Ereignisses, beteiligte Spieler und ihre Karten. Interpolation und synthetische Bewegung bleiben ausgeschlossen, und der Kommentar bleibt der Hero.
 
 ## Kontext
 

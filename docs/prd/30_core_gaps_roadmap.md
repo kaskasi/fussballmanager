@@ -29,6 +29,7 @@ the older PRD in its first commit.
 | Cups | Regional cup (tiers 4–5) and national cup (all tiers); the regional winner qualifies for next season's national cup |
 | Cup dates | Dedicated cup weeks with no league game. "At most one competitive match per club per week" stays an invariant |
 | Season breaks | Every season gets a pre-season (friendlies, summer window) and a winter break (winter window) |
+| Final form (2026-10-31) | Extract the match engine as a deterministic library (PRD 33); build, not buy (ADR 0007) |
 
 Phase 4 (calendar) was not on the original gap list. Cups and friendlies need
 it, so it sits between phases 3 and 5.
@@ -40,7 +41,7 @@ it, so it sits between phases 3 and 5.
 | # | Phase | Status | Phase PRD | Est. sessions | Depends on |
 |---|---|---|---|---|---|
 | 1 | World longevity: retirement, AI youth, roster upkeep | Done (PR #34); CA drift moved to phase 2 | [31](31_world_longevity.md) | 2 | — |
-| 2 | League pyramid (5 tiers) + season archive + CA drift | Built (slices 0–4); slices 0–1 merged (PR #35), slices 2–4 in a follow-up PR; national scouting open | [32](32_league_pyramid.md) | 3–4 | 1 |
+| 2 | League pyramid (5 tiers) + season archive + CA drift | Done (PR #35, #36); national scouting open (PRD 32 §11) | [32](32_league_pyramid.md) | 3–4 | 1 |
 | 3 | Suspensions | Not started | — | 1 | — |
 | 4 | Season calendar: breaks every season | Not started | — | 2–3 | — |
 | 5 | Cups (regional + national) | Not started | — | 3 | 3, 4 (2 for national cup entrants) |
@@ -50,8 +51,14 @@ it, so it sits between phases 3 and 5.
 | 9 | Set-piece takers | Not started | — | 1 | — |
 | 10 | Difficulty settings | Not started | — | 1 | — |
 | 11 | Player happiness: promises, transfer requests | Not started | — | 2 | 2 (ambition) |
+| E | Engine library: deterministic core, attribute schemas, event pitch, commentary | Proposed (order pending owner decision) | [33](33_engine_library.md) | 8–12 | — |
 
 Status values: `Not started` · `In progress (slice x/y)` · `Done (PR #n)`.
+
+Proposed order for E (PRD 33 §15, not yet confirmed by the owner): after
+phase 2 is merged and before phases 5, 6 and 9. Cups need extra time and
+shootouts, in-match management is the engine's decision API, and set-piece
+takers change the engine. Phases 3 and 4 are game-side and can run alongside.
 
 ---
 
@@ -313,8 +320,9 @@ market across tiers (own tier or below, budgets per tier), board tier after
 promotion or relegation, job offers from the division above after a strong
 season, season archive (SAVE_VERSION 104). 20-season run: all invariants hold,
 drift peak +6.6 %, tier order every season, week sim 1.61–1.87 s. Open:
-national scouting (PRD 32 §11). Next: phase 3 (suspensions) once this phase
-is merged.
+national scouting (PRD 32 §11). Merged in PR #35 (slices 0–1) and PR #36
+(slices 2a–4). Next: phase 3 (suspensions), or the engine library first if the
+owner confirms the order proposed in PRD 33 §15.
 
 ---
 

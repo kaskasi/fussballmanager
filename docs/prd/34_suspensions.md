@@ -2,7 +2,7 @@
 
 **Status:** Built · 2026-11-10 · Phase 3 of PRD 30. UI rest open (§5).
 **Features:** F1.10 (PRD 10, new). **Touches:** PRD 07 (state fields).
-PRD 33 is the engine-library PRD (open PR), so this phase takes 34.
+PRD 33 is the engine-library PRD, so this phase takes 34.
 
 ## 1. Problem
 

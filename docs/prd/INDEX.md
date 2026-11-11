@@ -44,6 +44,7 @@ One line per doc, so agents open only what a task needs.
 | [30_core_gaps_roadmap](30_core_gaps_roadmap.md) | Multi-session plan + status board: retirement, 5-tier pyramid, suspensions, season calendar, cups, in-match management, chronicle, friendlies, set pieces, difficulty, player happiness |
 | [31_world_longevity](31_world_longevity.md) | PRD 30 phase 1: retirement roll, AI youth and roster upkeep, retired records, long-run guard |
 | [32_league_pyramid](32_league_pyramid.md) | PRD 30 phase 2: five-tier pyramid, tier economies, live tables, season archive; late-career decline (CA drift) |
+| [33_engine_library](33_engine_library.md) | Match engine as a deterministic library: core, attribute schemas, event pitch, text and voice commentary, licensing, platforms (ADR 0007, 0008) |
 | [34_suspensions](34_suspensions.md) | PRD 30 phase 3: yellow-card tallies, bans per competition, eligibility |
 | [design.md](design.md) | Visual language: tokens, type, icons, header, layout, Definition of Done |
 | [design/](design/) | Per-screen wireframes, `09.NN-<screen>.md` (design.md §9.NN) |

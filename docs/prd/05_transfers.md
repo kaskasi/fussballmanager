@@ -27,9 +27,9 @@ Transfersystem, Vertragsverhandlungen und den KI-Transfermarkt spezifizieren. Ze
 
 1. **Market Value ist deterministisch:** Eine Funktion aus Attributen, Alter, Vertrag und Reputation. Kein Random Walk. Verhandlungen bewegen sich um diesen Wert.
 2. **Der Eigentümer kennt seinen Spieler zu 100 %.** Käufer schätzen. Preisverhandlungen mit unbekannten Talenten sind Risk-Analytics.
-3. **Fenster-Disziplin:** Deutsches Ligajahr. Spieltag 1 = KW 35 (Ende August).
-   Sommerfenster KW 33–36 (Vorbereitung einer neuen Karriere + Spieltag 1–2), Winter KW 2–4 (Januar, Saisonwoche 20–22).
-   Intern bleibt `week` 1–34 der Spieltag. Kaufen und Verkaufen geht das ganze Jahr:
+3. **Fenster-Disziplin:** Deutsches Ligajahr mit 52 Saisonwochen (PRD 35): Saisonwoche 1 = KW 27, Spieltag 1 = KW 33.
+   Sommerfenster = die vier Vorbereitungswochen (KW 29–32), Winterfenster KW 52, 1, 2 (Winterpause + erste Rückrundenwoche).
+   Sieben Fensterwochen pro Jahr wie bisher. Welche Woche welcher Spieltag ist, sagt `SeasonSchedule` (`src/sim/season-schedule.ts`). Kaufen und Verkaufen geht das ganze Jahr:
    - Im Fenster: Wechsel sofort nach Vertragsunterschrift bzw. Zusage.
    - Außerhalb: Einigung wird als wartender Wechsel gespeichert (`transfer_state.scheduled_transfers`, `src/transfers/scheduled-transfers.ts`). Der Spieler bleibt bis zum ersten Tag des nächsten Fensters bei seinem Verein und spielt weiter; dann wechselt er, die Ablöse fließt. Die Ablöse eines wartenden Kaufs ist bis dahin im Transfer-Topf reserviert.
    - Der wartende Wechsel steht sofort in der Transfer-Historie („Wechsel am KW …“).

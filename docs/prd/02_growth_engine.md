@@ -105,8 +105,10 @@ decay_per_week = value × decline_pct / 100 / 52
 | — | leadership | kein Abbau | | | |
 
 Prozent statt fester Punkte, damit der Abbau mit der Ligastärke skaliert
-(PRD 30 Phase 2: fünf Ligen). Die Saison hat heute 34 Wochen; pro Saison wirken
-also 34/52 der Jahresrate (PRD 30 Phase 4 normalisiert das).
+(PRD 30 Phase 2: fünf Ligen). Seit PRD 35 hat die Saison 52 Wochen. Training
+und Abbau pro Woche werden mit `SEASON_RATE_SCALE = 34/52` multipliziert, damit
+Wachstum und Abbau pro Jahr gleich bleiben wie mit der alten 34-Wochen-Saison:
+pro Saison wirken weiter 34/52 der Jahresrate aus der Tabelle.
 
 Die alte Tabelle (feste Punkte: pace −1.5/Jahr ab 25, stamina −1.2 ab 27,
 strength −0.8 ab 30, Rest −0.3 ab 32) war kleiner als der Trainingszuwachs in

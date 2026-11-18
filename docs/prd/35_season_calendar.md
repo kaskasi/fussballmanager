@@ -1,6 +1,6 @@
 # PRD 35 — Season calendar
 
-**Status:** In progress · 2026-11-18 · Phase 4 of PRD 30.
+**Status:** Built · 2026-11-18 · Phase 4 of PRD 30.
 **Features:** F11.1 (PRD 10, summer flow moves into the pre-season).
 **Touches:** PRD 02 (growth per year), PRD 05 (windows), PRD 11 (weekly vs.
 yearly amounts), PRD 18 Ruhephase (quiet weeks), PRD 08.10 (save bump).
@@ -67,10 +67,12 @@ interface SeasonSchedule {
 }
 ```
 
-Every question about the calendar goes through it: `slotFor(season, week)`,
-`isLeagueWeek`, `matchdayForWeek`, `weekForMatchday`, `seasonEndWeek`,
-`leagueWeeksBefore(week)` (= matchdays reached), `nextSeasonStartWeek`,
-`advanceWeek`. `isLeagueMatchWeek`, `isMatchSaturday`, `LEAGUE_*_WEEK`,
+Every question about the calendar goes through it: `slotForWeek(week)`,
+`slotKind`, `isLeagueWeek`, `isQuietWeek`, `matchdayForWeek`,
+`weekForMatchday`, `matchdayClock` (matchdays reached), `seasonEndWeek`,
+`seasonFirstWeek`, `careerStartWeek`, `advanceSeasonWeek`,
+`careerWeekOrdinal`. Every season runs the same template, so slot lookups take
+the week only. `isLeagueMatchWeek`, `isMatchSaturday`, `LEAGUE_*_WEEK`,
 `SEASON_END_WEEK`, `CAREER_START_WEEK` and `PRESEASON_WEEKS` are gone from
 call sites.
 
@@ -81,8 +83,8 @@ the schedule. Slice 2 swaps the default to the 52-week template.
 
 Code that used a raw week number as "how far into the season" (story beats,
 tutorial gates, retirement announcement, early pacing) reads the matchday
-reached (`leagueWeeksBefore`) or the weeks since the pre-season started
-instead, so the beat lands at the same point of the season.
+reached (`matchdayClock`) instead, so the beat lands at the same point of the
+season.
 
 ## 4. Per-week systems: normalization
 
@@ -108,15 +110,25 @@ What is scaled:
 | System | Scaled | Why |
 |---|---|---|
 | Growth: training gain (`learningBase`) and age decay (`decayPerWeek`) | × 34/52 | Per-year development unchanged. PRD 02 keeps the yearly decline table; the effective decline stays 34/52 of it, as today. |
-| Recurring finance lines: sponsorship, TV, sponsor inventory, player wages, staff wages, maintenance, concessions | × 34/52 | Per-year cash unchanged. Contract `wage_weekly` stays the nominal rate shown on contracts; the ledger books the scaled amount. |
-| Merchandising weekly demand | × 34/52 | Per-year units and cash unchanged; stock and lead times stay in real weeks. |
+| Recurring finance lines: sponsorship, TV, sponsor inventory, player wages, staff wages, maintenance | × 34/52 | Per-year cash unchanged. Contract `wage_weekly` stays the nominal rate shown on contracts; the ledger books the scaled amount. |
+| Concessions (incl. hospitality) and merchandising demand | × 1 in home-match weeks, × 17/35 in other weeks (`OFF_MATCH_WEEK_SCALE`) | These are larger in home weeks. There are 17 home weeks in both layouts; the other 35 weeks share what 17 legacy away weeks earned. Stock and lead times stay in real weeks. |
 | Loan interest and repayment per week | × 34/52 | Same cost per year; the loan runs the same number of seasons. |
 | Spend runway and other weekly cash projections | × 34/52 | They project what the ledger books. |
+
+**Match practice in weeks without a match.** Growth has a match-practice term
+(0.7 for 0 minutes, up to 1.15 for 90). With a flat value in the 18 weeks
+without a league match, per-year growth of regular starters would drop by about
+14 %. Rule: a week without a league match keeps the player's last league-week
+minutes (`weekly_minutes`), for own and AI players, and `weekly_minutes`
+survives the season-end reset. AI players used a flat 12 minutes in non-match
+weeks before; that constant is gone.
 
 What is not scaled, on purpose (real time, not per-year budgets):
 
 - Injury recovery, fitness, morale drift toward baseline, contract and
   cooldown durations: they are measured in weeks or days of real time.
+- Bench streaks (`bench_weeks_streak`) and the youth sides' weekly games keep
+  counting in breaks. Youth play every week, so their growth scales cleanly.
 - Scout jobs and trips: they advance per working day. More weeks per year
   give more scouting per season; quiet weeks are when the manager scouts
   (PRD 18). Reviewed after the long run.
@@ -124,9 +136,19 @@ What is not scaled, on purpose (real time, not per-year budgets):
   bonus: per match or per season, unchanged by calendar length.
 
 Regression test (`src/sim/season-calendar-normalization.test.ts`): one
-simulated year of growth (fixed player set, fixed seed, every slot of the
-season) and of weekly finance lines, under the legacy 34-week schedule and
-the 52-week template. Totals within ±5 %.
+simulated year of growth (36 profiles: ages 17–33 × four minutes roles, five
+attributes, noise 1) and of weekly finance lines (every line kind), legacy
+34-week year at scale 1 vs. every slot of the 52-week template. Totals within
+±5 %, per minutes role and per finance line. Both growth (`rateScale`) and
+finance (`WeekRateScales`) take the scale as an optional argument, so the test
+runs both years without switching templates.
+
+Code that read a raw week as a season position now reads `matchdayClock(week)`
+(matchdays reached, ≤ 0 before matchday 1): story beats (`narrative/detect.ts`),
+tutorial phase 2 gate, early capital pacing, express promo weeks; the
+retirement announcement fires in the week of matchday 28. Story Mode Act 2
+beats count real weeks since the act started (actWeek 3 and 7 now land in the
+pre-season and on matchday 1).
 
 ## 5. Stored values and migration
 
@@ -145,17 +167,35 @@ same way. Short-lived stamps that only gate a cooldown are mapped where they
 are cheap to find and otherwise left to expire (PRD 08.10: pre-release saves
 have no legacy guarantee).
 
+Built as `migration_106_season_calendar` (SAVE_VERSION 106). It maps
+`state.week` and the manifest week; the two contract day stamps on own and AI
+players; every `*_career_week` / `*_career_day` number and the restaurant
+stamps in the stadium, medical, orthopedist and financing state; the story act
+start and scheduled payoffs; scheduled-transfer effective weeks; the training
+reminder and Kicker week stamps. Not mapped (expire on their own): loan,
+injury, pro-trial and praise week stamps.
+
 ## 6. UI
 
 - Calendar (`season-timeline.ts`, `month-grid.ts`, `month-journal.ts`):
-  shows every slot kind, with the breaks and cup weeks as their own bands.
+  breaks, free (cup) weeks and the season-end week get their own left-edge band
+  and legend entry; the day title names the phase. Matchday chips use
+  `weekForMatchday`, not week = matchday. A 364-day season touches its start
+  month twice (a few days in late June or early July at one end); the grid and
+  the month list show that month in the year that holds most of its season days
+  (`calendarGridYear`), the few other days are not shown.
 - Phase label: summer break, pre-season, matchday n, free week (cup), winter
   break, season end.
-- **Simulate until next event:** one click advances through consecutive quiet
-  weeks (summer break, free cup weeks, winter break without a pending inbox
-  item, decision or window opening) and stops at the next league week,
-  window change, season end or inbox interrupt. A 52-week year does not cost
-  more NEXT presses than a 34-week year.
+- **Simulate until next event** (Calendar, between "next week" and "next
+  month"): one click advances through consecutive quiet weeks (summer break,
+  free cup weeks, winter break) and stops at the next league week, the
+  pre-season, the season end, or a week where a window opens or closes
+  (`nextEventWeek`). It runs on the existing fast-forward loop, so its stops for
+  the training plan, story transitions and inbox handling apply.
+- Header NEXT is unchanged: it still steps one day at a time (training-NEXT
+  gates and Kicker delivery depend on it), so a quiet week costs the same NEXT
+  presses as a pre-season week did. Jumping to Sunday in quiet weeks is a
+  possible follow-up.
 
 ## 7. Slices
 

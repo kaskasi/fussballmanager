@@ -1,4 +1,5 @@
 /** Offline FC Nordstern lattice study — calendar MDs or CA strength buckets (PRD 22 v2). */
+import { weekForMatchday } from "../sim/season-schedule.ts";
 import { matchdayFixtures, type ScheduledFixture, type TeamId } from "@fussballmanager/shared";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -127,7 +128,7 @@ export interface NordsternStudyProgress {
 const STUDY_SYNTHETIC_MATCHDAY_BASE = 90;
 
 function setupForMatchday(session: GameSession, matchday: number): CareerMatchSetup | null {
-  const week = matchday;
+  const week = weekForMatchday(matchday);
   const fixture = matchdayFixtures(session.league.club_ids, matchday).find(
     (entry) =>
       entry.homeTeamId === NORDSTERN_TEAM_ID || entry.awayTeamId === NORDSTERN_TEAM_ID,

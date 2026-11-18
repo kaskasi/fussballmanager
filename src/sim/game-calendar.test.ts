@@ -2,20 +2,18 @@ import { describe, expect, it } from "vitest";
 import {
   advanceCalendarWeek,
   calendarWeek,
-  isLeagueMatchWeek,
   isSummerTransferWindow,
   isWinterTransferWindow,
-  LEAGUE_LAST_WEEK,
   nextTransferWindowStart,
-  SEASON_END_WEEK,
 } from "./game-calendar.ts";
+import { isLeagueWeek, leagueLastWeek, seasonEndWeek } from "./season-schedule.ts";
 
 describe("game calendar", () => {
   it("plays league on weeks 1-34 only", () => {
-    expect(isLeagueMatchWeek(1)).toBe(true);
-    expect(isLeagueMatchWeek(LEAGUE_LAST_WEEK)).toBe(true);
-    expect(isLeagueMatchWeek(31)).toBe(true);
-    expect(isLeagueMatchWeek(35)).toBe(false);
+    expect(isLeagueWeek(1)).toBe(true);
+    expect(isLeagueWeek(leagueLastWeek())).toBe(true);
+    expect(isLeagueWeek(31)).toBe(true);
+    expect(isLeagueWeek(35)).toBe(false);
   });
 
   it("maps preseason weeks before Spieltag 1 (KW 35)", () => {
@@ -54,7 +52,7 @@ describe("game calendar", () => {
   });
 
   it("ends the football season after week 34", () => {
-    const step = advanceCalendarWeek(SEASON_END_WEEK);
+    const step = advanceCalendarWeek(seasonEndWeek());
     expect(step.footballSeasonEnded).toBe(true);
     expect(step.nextWeek).toBe(1);
   });

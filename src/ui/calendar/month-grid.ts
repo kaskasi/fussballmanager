@@ -1,8 +1,4 @@
-import {
-  isLeagueMatchWeek,
-  LEAGUE_FIRST_WEEK,
-  LEAGUE_LAST_WEEK,
-} from "../../sim/game-calendar.ts";
+import { LEAGUE_MATCHDAYS, weekForMatchday } from "../../sim/season-schedule.ts";
 import { SATURDAY, SUNDAY } from "../../sim/day-calendar.ts";
 import {
   calendarGridYear,
@@ -56,12 +52,12 @@ function civilDateKey(year: number, monthIndex: number, day: number): string {
   return `${year}-${monthIndex}-${day}`;
 }
 
-function leagueMatchSaturdayWeeks(season: number): Map<string, number> {
+/** Civil Saturday → matchday played on it. */
+function leagueMatchSaturdays(season: number): Map<string, number> {
   const map = new Map<string, number>();
-  for (let week = LEAGUE_FIRST_WEEK; week <= LEAGUE_LAST_WEEK; week += 1) {
-    if (!isLeagueMatchWeek(week)) continue;
-    const sat = civilDateFromSession(season, week, SATURDAY);
-    map.set(civilDateKey(sat.year, sat.monthIndex, sat.day), week);
+  for (let matchday = 1; matchday <= LEAGUE_MATCHDAYS; matchday += 1) {
+    const sat = civilDateFromSession(season, weekForMatchday(matchday), SATURDAY);
+    map.set(civilDateKey(sat.year, sat.monthIndex, sat.day), matchday);
   }
   return map;
 }
@@ -74,7 +70,7 @@ export function buildMonthGrid(
   milestones: readonly CalendarMilestone[] = [],
 ): CalendarMonthCell[] {
   const year = calendarGridYear(season, monthIndex);
-  const matchSaturdays = leagueMatchSaturdayWeeks(season);
+  const matchSaturdays = leagueMatchSaturdays(season);
   const first = new Date(year, monthIndex, 1);
   const startPad = (first.getDay() + 6) % 7;
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
@@ -86,9 +82,9 @@ export function buildMonthGrid(
   }
 
   for (let day = 1; day <= daysInMonth; day += 1) {
-    const seasonWeek = matchSaturdays.get(civilDateKey(year, monthIndex, day));
+    const matchday = matchSaturdays.get(civilDateKey(year, monthIndex, day));
     let match: CalendarMonthCell["match"];
-    const fixture = seasonWeek ? playerMatch(league, seasonWeek) : undefined;
+    const fixture = matchday ? playerMatch(league, matchday) : undefined;
     if (fixture) {
       match = {
         label: t(fixture.home ? "calendar.match.home" : "calendar.match.away", {

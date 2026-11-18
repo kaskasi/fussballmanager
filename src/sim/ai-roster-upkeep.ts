@@ -2,7 +2,7 @@ import { fairInitialProContract } from "../transfers/fair-initial-contract.ts";
 import { refreshPlayerMarketValue } from "../transfers/refresh-market-values.ts";
 import type { Player, PositionPrimary } from "../types/player.ts";
 import { buildAcademyCohort } from "../youth/intake-generator.ts";
-import { SEASON_END_WEEK } from "./game-calendar.ts";
+import { seasonEndWeek } from "./season-schedule.ts";
 import { seasonCalendarYear } from "./season-label.ts";
 import {
   deriveWorldSeed,
@@ -120,7 +120,7 @@ function youthArrivals(input: ClubUpkeepInput, positions: readonly PositionPrima
   const target = strength - AI_YOUTH_STRENGTH_GAP + (club.reputation - 40) * 0.1;
   const cohort = buildAcademyCohort({
     season: endingSeason,
-    week: SEASON_END_WEEK,
+    week: seasonEndWeek(),
     seasonYear: seasonCalendarYear(endingSeason),
     clubId: worldCareerClubId(club.id),
     nationality: "DE",

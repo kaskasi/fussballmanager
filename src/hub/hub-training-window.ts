@@ -5,7 +5,8 @@ import {
   type TrainingSlot,
 } from "../development/training-units.ts";
 import { UNITS_PER_DAY } from "../development/weekly-plan.ts";
-import { isMatchSaturday, weekdayLabel, SATURDAY } from "../sim/day-calendar.ts";
+import { weekdayLabel, SATURDAY } from "../sim/day-calendar.ts";
+import { isLeagueWeek } from "../sim/season-schedule.ts";
 
 import { prepareCareerMatch } from "../sim/career-match-setup.ts";
 import type { GameSession } from "../persistence/game-session.ts";
@@ -48,7 +49,7 @@ export function buildHubTrainingWindow(
   session: Pick<GameSession, "season" | "week" | "weekday" | "league" | "matchPlayedThisWeek">,
   trainingPlan: TrainingSlot[],
 ): HubTrainingDayColumn[] {
-  const matchWeek = isMatchSaturday(session.week);
+  const matchWeek = isLeagueWeek(session.week);
   const matchSetup =
     matchWeek && !session.league.season_complete && !session.matchPlayedThisWeek
       ? prepareCareerMatch(session as GameSession)

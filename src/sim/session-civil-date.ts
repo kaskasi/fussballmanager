@@ -1,4 +1,5 @@
-import { calendarWeek, LEAGUE_FIRST_WEEK, SEASON_START_CALENDAR_WEEK } from "./game-calendar.ts";
+import { calendarWeek } from "./game-calendar.ts";
+import { gridFirstMonthIndex, isoWeekOfWeekOne } from "./season-schedule.ts";
 import { seasonCalendarYear } from "./season-label.ts";
 
 export interface CivilDate {
@@ -22,7 +23,7 @@ function civilDateFromIsoWeek(year: number, isoWeek: number, weekday: number): C
 
 /**
  * Map career week + weekday (Mo=1) to a civil date for calendar UI.
- * Spieltag 1 = KW 35 (late summer) in the season label year; Rückrunde = KW 1–16 in the following calendar year.
+ * Season week 1 falls in the season label year; weeks past New Year fall in the following calendar year (PRD 35).
  */
 export function civilDateFromSession(
   season: number,
@@ -40,16 +41,16 @@ function civilYearForSessionWeek(
   isoWeek: number,
   anchorYear: number,
 ): number {
-  if (seasonWeek < LEAGUE_FIRST_WEEK) {
+  if (seasonWeek < 1) {
     return anchorYear;
   }
-  return isoWeek >= SEASON_START_CALENDAR_WEEK ? anchorYear : anchorYear + 1;
+  return isoWeek >= isoWeekOfWeekOne() ? anchorYear : anchorYear + 1;
 }
 
-/** Civil year shown on the month grid (Aug–Dec = label year, Jan–Jul = label year + 1). */
+/** Civil year shown on the month grid (season start month–Dec = label year, earlier months = label year + 1). */
 export function calendarGridYear(season: number, monthIndex: number): number {
   const anchorYear = seasonCalendarYear(season);
-  return monthIndex >= 7 ? anchorYear : anchorYear + 1;
+  return monthIndex >= gridFirstMonthIndex() ? anchorYear : anchorYear + 1;
 }
 
 /** Month index (0=Jan) for the calendar grid that should show “today”. */

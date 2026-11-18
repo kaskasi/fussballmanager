@@ -7,7 +7,7 @@
 import type { BoardState } from "../board/board-state.ts";
 import { spendClubCash, type ClubFinances } from "../economy/club-finances.ts";
 import { t } from "../i18n/index.ts";
-import { CAREER_START_WEEK, SEASON_END_WEEK } from "../sim/game-calendar.ts";
+import { careerStartWeek, seasonEndWeek } from "../sim/season-schedule.ts";
 import { advanceClubFanbase } from "../stadium/fanbase.ts";
 import type { ClubStadium } from "../stadium/club-stadium.ts";
 import type { Player } from "../types/player.ts";
@@ -28,17 +28,18 @@ import {
   type StoryState,
 } from "./story-state.ts";
 
-const WEEKS_PER_SEASON = SEASON_END_WEEK - CAREER_START_WEEK + 1;
+const START_WEEK = careerStartWeek();
+const WEEKS_PER_SEASON = seasonEndWeek() - START_WEEK + 1;
 
-/** Monotonic week counter across seasons (season weeks run CAREER_START_WEEK..SEASON_END_WEEK). */
+/** Monotonic week counter across seasons (season weeks run the career start week..season end week). */
 export function seasonWeekOrdinal(season: number, week: number): number {
-  return (season - 1) * WEEKS_PER_SEASON + (week - CAREER_START_WEEK);
+  return (season - 1) * WEEKS_PER_SEASON + (week - START_WEEK);
 }
 
 function ordinalToSeasonWeek(ordinal: number): { season: number; week: number } {
   return {
     season: Math.floor(ordinal / WEEKS_PER_SEASON) + 1,
-    week: (ordinal % WEEKS_PER_SEASON) + CAREER_START_WEEK,
+    week: (ordinal % WEEKS_PER_SEASON) + START_WEEK,
   };
 }
 

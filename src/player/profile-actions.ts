@@ -2,7 +2,7 @@ import { ACHIEVEMENT, grantAchievement } from "./achievements.ts";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { needsYouthContract } from "./youth-contract.ts";
 import { estimateCa } from "../transfers/market-value.ts";
-import { LEAGUE_LAST_WEEK } from "../sim/game-calendar.ts";
+import { weeksPerSeason } from "../sim/season-schedule.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { canPromotePlayer } from "../youth/promotion-gate.ts";
@@ -23,7 +23,7 @@ const MIN_PRO_SQUAD = 11;
 export const PRAISE_COOLDOWN_WEEKS = 4;
 
 function seasonWeekOrdinal(season: number, week: number): number {
-  return (Math.max(1, season) - 1) * LEAGUE_LAST_WEEK + Math.max(1, week);
+  return (Math.max(1, season) - 1) * weeksPerSeason() + Math.max(1, week);
 }
 
 /** Whole weeks until praise is allowed again (0 = now). */
@@ -156,7 +156,7 @@ export function contractTerminationPayout(
     return Math.max(800, Math.round(ca(player) * 45));
   }
   const months = contractMonthsRemaining(season, week, contract.until_season);
-  const weeksLeft = Math.max(1, Math.round(months * (LEAGUE_LAST_WEEK / 12)));
+  const weeksLeft = Math.max(1, Math.round(months * (weeksPerSeason() / 12)));
   return Math.round(contract.wage_weekly * weeksLeft * 0.65);
 }
 

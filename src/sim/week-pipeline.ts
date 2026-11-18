@@ -86,7 +86,8 @@ import { simulateYouthWeek } from "../youth/youth-sim.ts";
 import { careerStarterIds } from "../match/lineup-board.ts";
 import { mergeCareerLeagueStats, applyCareerMatchWeek } from "./career-match-sync.ts";
 import { applyRivalMatchdayStats } from "./rival-matchday-stats.ts";
-import { advanceCalendarWeek, SEASON_END_WEEK } from "./game-calendar.ts";
+import { advanceCalendarWeek } from "./game-calendar.ts";
+import { seasonEndWeek } from "./season-schedule.ts";
 import { advanceLeagueWeek } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
 import { announceOwnRetirements, RETIREMENT_ANNOUNCE_WEEK } from "../development/own-retirement.ts";
@@ -1007,21 +1008,21 @@ export async function simulateGameWeek(
       clubEvents = withClubEvent(
         clubEvents,
         session.season,
-        SEASON_END_WEEK,
+        seasonEndWeek(),
         "info",
         ended.boardEvaluation.summary,
       );
     }
     if (ended.promotionRelegation) {
       for (const message of ended.promotionRelegation.messages) {
-        clubEvents = withClubEvent(clubEvents, session.season, SEASON_END_WEEK, "info", message);
+        clubEvents = withClubEvent(clubEvents, session.season, seasonEndWeek(), "info", message);
       }
     }
     for (const record of ended.ownRetired) {
       clubEvents = withClubEvent(
         clubEvents,
         session.season,
-        SEASON_END_WEEK,
+        seasonEndWeek(),
         "profile",
         t("clubEvent.playerRetired", { name: formatPlayerName({ name: record.name, portrait_seed: 0 }), age: record.age }),
       );
@@ -1031,7 +1032,7 @@ export async function simulateGameWeek(
       clubEvents = withClubEvent(
         clubEvents,
         session.season,
-        SEASON_END_WEEK,
+        seasonEndWeek(),
         "info",
         t("clubEvent.leagueRetirements", { count: leagueRetirements }),
       );

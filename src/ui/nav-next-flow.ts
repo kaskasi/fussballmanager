@@ -1,7 +1,8 @@
 import type { GameSession } from "../persistence/game-session.ts";
 import type { Player } from "../types/player.ts";
 import { pendingInboxItems, type YouthInboxState } from "../youth/decision-inbox.ts";
-import { isMatchSaturday, SATURDAY, type SmartSkipTarget } from "../sim/day-calendar.ts";
+import { SATURDAY, type SmartSkipTarget } from "../sim/day-calendar.ts";
+import { isLeagueWeek } from "../sim/season-schedule.ts";
 import { MANAGER_DESK_HUB_ENABLED } from "../hub/config.ts";
 import { isTrainingCalendarGatePending, isTrainingNextActive } from "../sim/training-next.ts";
 
@@ -31,7 +32,7 @@ export function shouldOpenLineupFromCalendar(
   if (skip.action === "match") return true;
   if (skip.action !== "advance") return false;
   if (skip.weekday !== SATURDAY) return false;
-  return isMatchSaturday(session.week) && !session.matchPlayedThisWeek;
+  return isLeagueWeek(session.week) && !session.matchPlayedThisWeek;
 }
 
 export function shouldNavigateToCalendarBeforeTimeStep(

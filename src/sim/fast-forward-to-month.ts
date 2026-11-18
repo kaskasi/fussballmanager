@@ -6,7 +6,7 @@ import {
   type CivilDate,
 } from "./session-civil-date.ts";
 import { MONDAY, resolveSmartSkip, SUNDAY } from "./day-calendar.ts";
-import { isLeagueMatchWeek } from "./game-calendar.ts";
+import { isLeagueWeek } from "./season-schedule.ts";
 import { SLOT_COUNT } from "../development/weekly-plan.ts";
 import {
   isTrainingCalendarGatePending,
@@ -228,7 +228,7 @@ export async function fastForwardToDate(
 
     if (skip.action === "simulate_week") {
       if (
-        isLeagueMatchWeek(session.week) &&
+        isLeagueWeek(session.week) &&
         !session.league.season_complete &&
         !session.matchPlayedThisWeek
       ) {

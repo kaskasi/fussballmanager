@@ -42,7 +42,7 @@ function normalizeTransferState(state?: TransferState): TransferState {
   };
 }
 import { MONDAY } from "../sim/day-calendar.ts";
-import { CAREER_START_WEEK } from "../sim/game-calendar.ts";
+import { careerStartWeek } from "../sim/season-schedule.ts";
 import { applyOpeningTransferMarket } from "../transfers/opening-transfer-market.ts";
 import { refreshAiListings } from "../transfers/transfer-listings.ts";
 import { defaultLeagueState, normalizeLeagueState, type LeagueState } from "./league-state.ts";
@@ -219,7 +219,7 @@ export function newGameSession(now = new Date(), options: NewGameOptions = {}): 
     playerClubId: DEFAULT_CLUB_ID,
     managerName: DEFAULT_MANAGER,
     season: 1,
-    week: CAREER_START_WEEK,
+    week: careerStartWeek(),
     masterSeed: seed,
     players: [...pros, ...academy],
   });

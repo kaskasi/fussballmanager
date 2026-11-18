@@ -1,7 +1,8 @@
-import { SEASON_END_WEEK } from "./game-calendar.ts";
+import { weeksPerSeason } from "./season-schedule.ts";
 
 export const DAYS_PER_WEEK = 7;
-export const DAYS_PER_SEASON = SEASON_END_WEEK * DAYS_PER_WEEK;
+/** One season of day indices (PRD 35: weeks per season × 7). */
+export const DAYS_PER_SEASON = weeksPerSeason() * DAYS_PER_WEEK;
 
 export interface CalendarPoint {
   season: number;
@@ -11,7 +12,7 @@ export interface CalendarPoint {
 
 export function calendarDayIndex(season: number, week: number, weekday: number): number {
   const s = Math.max(1, Math.round(season));
-  const w = Math.min(SEASON_END_WEEK, Math.max(1, Math.round(week)));
+  const w = Math.min(weeksPerSeason(), Math.max(1, Math.round(week)));
   const d = Math.min(DAYS_PER_WEEK, Math.max(1, Math.round(weekday)));
   return (s - 1) * DAYS_PER_SEASON + (w - 1) * DAYS_PER_WEEK + (d - 1);
 }

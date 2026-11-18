@@ -1,4 +1,4 @@
-import { SEASON_END_WEEK } from "../sim/game-calendar.ts";
+import { seasonEndWeek } from "../sim/season-schedule.ts";
 
 /** PRD 05.6 — pre-contract window opens six months before expiry. */
 export const PRE_CONTRACT_MONTHS = 6;
@@ -11,9 +11,9 @@ export function contractMonthsRemaining(
 ): number {
   if (untilSeason < season) return 0;
   const seasonsAfter = untilSeason - season;
-  const weeksLeftThisSeason =
-    seasonsAfter === 0 ? Math.max(0, SEASON_END_WEEK - week + 1) : SEASON_END_WEEK;
-  const monthFraction = weeksLeftThisSeason / (SEASON_END_WEEK / 12);
+  const endWeek = seasonEndWeek();
+  const weeksLeftThisSeason = seasonsAfter === 0 ? Math.max(0, endWeek - week + 1) : endWeek;
+  const monthFraction = weeksLeftThisSeason / (endWeek / 12);
   return Math.round(seasonsAfter * 12 + monthFraction);
 }
 

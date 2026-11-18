@@ -7,12 +7,11 @@ import type { TeamId } from "@fussballmanager/shared";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { MONDAY, SATURDAY, SUNDAY } from "../../sim/day-calendar.ts";
 import {
-  CAREER_START_WEEK,
-  isLeagueMatchWeek,
-  LEAGUE_FIRST_WEEK,
-  LEAGUE_LAST_WEEK,
-  SEASON_END_WEEK,
-} from "../../sim/game-calendar.ts";
+  LEAGUE_MATCHDAYS,
+  seasonEndWeek,
+  seasonFirstWeek as scheduleSeasonFirstWeek,
+  weekForMatchday,
+} from "../../sim/season-schedule.ts";
 import { fixtureResult, playerFixture } from "../../sim/league-week.ts";
 import { civilDateFromSession, type CivilDate } from "../../sim/session-civil-date.ts";
 
@@ -35,15 +34,15 @@ export function civilKey(date: CivilDate): string {
   return `${date.year}-${date.monthIndex}-${date.day}`;
 }
 
-/** Pre-season weeks only exist in a career's first season; later seasons start on matchday 1. */
+/** First week of a season (season 1: the career start week). */
 export function seasonFirstWeek(season: number): number {
-  return season === 1 ? CAREER_START_WEEK : LEAGUE_FIRST_WEEK;
+  return scheduleSeasonFirstWeek(season);
 }
 
 /** Every civil day the season covers, keyed by `civilKey`. Days outside (summer break, ISO week 53) are never lived. */
 export function seasonDays(season: number): Map<string, SessionDay> {
   const days = new Map<string, SessionDay>();
-  for (let week = seasonFirstWeek(season); week <= SEASON_END_WEEK; week += 1) {
+  for (let week = seasonFirstWeek(season); week <= seasonEndWeek(); week += 1) {
     for (let weekday = MONDAY; weekday <= SUNDAY; weekday += 1) {
       days.set(civilKey(civilDateFromSession(season, week, weekday)), { week, weekday });
     }
@@ -65,7 +64,7 @@ export function dayPhase(day: SessionDay | undefined, today: SessionDay): DayPha
 /** Months the season touches, in season order (late August → April). */
 export function seasonMonths(season: number): Array<{ year: number; monthIndex: number }> {
   const start = civilDateFromSession(season, seasonFirstWeek(season), MONDAY);
-  const end = civilDateFromSession(season, SEASON_END_WEEK, SUNDAY);
+  const end = civilDateFromSession(season, seasonEndWeek(), SUNDAY);
   const months: Array<{ year: number; monthIndex: number }> = [];
   let year = start.year;
   let monthIndex = start.monthIndex;
@@ -87,7 +86,7 @@ export function matchOutcome(goalsFor: number, goalsAgainst: number): MatchOutco
 
 /** The player's fixture on a matchday, with the score once it is played. */
 export function playerMatch(league: LeagueState, matchday: number): PlayerMatch | undefined {
-  if (!isLeagueMatchWeek(matchday)) return undefined;
+  if (matchday < 1 || matchday > LEAGUE_MATCHDAYS) return undefined;
   const fixture = playerFixture(league, matchday);
   if (!fixture) return undefined;
   const home = fixture.homeTeamId === league.player_club_id;
@@ -131,10 +130,10 @@ export function buildSeasonStrip(
   }
 
   const matchesByMonth = new Map<string, SeasonStripMonth["matches"]>();
-  for (let matchday = LEAGUE_FIRST_WEEK; matchday <= LEAGUE_LAST_WEEK; matchday += 1) {
+  for (let matchday = 1; matchday <= LEAGUE_MATCHDAYS; matchday += 1) {
     const match = playerMatch(league, matchday);
     if (!match) continue;
-    const date = civilDateFromSession(season, matchday, SATURDAY);
+    const date = civilDateFromSession(season, weekForMatchday(matchday), SATURDAY);
     const monthKey = `${date.year}-${date.monthIndex}`;
     const list = matchesByMonth.get(monthKey) ?? [];
     list.push({ matchday, outcome: match.result?.outcome ?? null });

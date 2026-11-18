@@ -15,7 +15,7 @@ import {
   WORLD_CLUB_SEED,
   NORDSTERN_CLUB_ID,
 } from "../world/world-generator.ts";
-import { isLeagueMatchWeek } from "./game-calendar.ts";
+import { isLeagueWeek } from "./season-schedule.ts";
 import { generateContractWeights } from "../transfers/contract-priorities.ts";
 import { fairInitialProContract } from "../transfers/fair-initial-contract.ts";
 import { refreshPlayerMarketValue } from "../transfers/refresh-market-values.ts";
@@ -259,7 +259,7 @@ export function advanceRivalGrowthWeek(
   leagueMatchWeek: boolean,
 ): Player[] {
   const context = { season, week, masterSeed };
-  const playedWeek = leagueMatchWeek && isLeagueMatchWeek(week);
+  const playedWeek = leagueMatchWeek && isLeagueWeek(week);
   const matchMinutes = playedWeek ? rivalMatchMinutes(rivalPlayers) : null;
   return rivalPlayers.map((player) => {
     const minutes = matchMinutes ? (matchMinutes.get(player.id) ?? 0) : NON_MATCH_WEEK_MINUTES;

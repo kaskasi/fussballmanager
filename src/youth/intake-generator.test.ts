@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { validatePlayer } from "../types/validation.ts";
 import {
   INTAKE_COUNT,
-  SEASON_END_WEEK,
+  seasonEndWeek,
   academyMixture,
   adjustDrive,
   generateYouthIntake,
@@ -25,7 +25,7 @@ function mulberry32(seed: number): () => number {
 function input(overrides: Partial<GenerateIntakeInput> = {}): GenerateIntakeInput {
   return {
     season: 1,
-    week: SEASON_END_WEEK,
+    week: seasonEndWeek(),
     seasonYear: 2026,
     clubId: "cl_fc_nordstern",
     nationality: "DE",

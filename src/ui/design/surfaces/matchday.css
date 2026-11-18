@@ -92,7 +92,7 @@
 .tc-eventlog__side { color: var(--text); text-align: center; }
 .tc-eventlog__text { min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
 .tc-eventlog__assist { color: var(--text-muted); font-weight: 400; }
-.tc-eventlog__card { width: 10px; height: 14px; border-radius: 2px; }
+.tc-eventlog__card { display: inline-block; flex: none; width: 10px; height: 14px; border-radius: 2px; vertical-align: -0.15em; }
 .tc-eventlog__card--yellow { background: var(--warning); }
 .tc-eventlog__card--red { background: var(--negative); }
 
@@ -308,3 +308,9 @@ button.tc-stars__card:hover { background: var(--sunken); }
 .tc-matchprompt__pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .tc-eventlog__sub { display: inline-flex; color: var(--info); }
 .tc-eventlog__sub .tc-icon { width: 14px; height: 14px; }
+
+/* PRD 34 — suspended or injured: shown on the bench, cannot be lined up */
+.lineup-pcard.is-unavailable { cursor: not-allowed; opacity: 0.62; }
+.lineup-pcard.is-unavailable:hover { border-color: var(--line); }
+.lineup-unavailable { display: inline-flex; align-items: center; gap: 0.2rem; color: var(--negative); font-size: var(--font-size-xs); font-weight: 800; white-space: nowrap; }
+.lineup-unavailable .tc-eventlog__card { width: 7px; height: 10px; }

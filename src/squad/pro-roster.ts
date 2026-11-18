@@ -7,6 +7,7 @@ import {
 import { seasonMatchRating } from "../player/season-stats.ts";
 import { weeklyCaDelta } from "../player/ca-tracking.ts";
 import { injuryRiskScore } from "../development/fitness-management.ts";
+import { competitionDiscipline, isOneYellowFromBan } from "../discipline/suspensions.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 
 export interface ProSquadRow {
@@ -23,6 +24,10 @@ export interface ProSquadRow {
   weeklyMinutes: number;
   injuryRisk: number;
   injuryWeeks: number | null;
+  /** PRD 34 — league matches still to sit out. */
+  banMatches: number;
+  /** PRD 34 — one more league yellow means a ban. */
+  yellowWarning: boolean;
   seasonMinutes: number;
   marketValue: number;
   goals: number;
@@ -104,6 +109,8 @@ export function listProSquad(
       weeklyMinutes: player.state.weekly_minutes,
       injuryRisk: injuryRiskScore(player, trainingIntensity),
       injuryWeeks: player.state.injury?.weeks_remaining ?? null,
+      banMatches: competitionDiscipline(player).ban_matches,
+      yellowWarning: isOneYellowFromBan(player),
       seasonMinutes: player.state.season_minutes,
       marketValue: player.market_value,
       goals: player.state.season_goals ?? 0,

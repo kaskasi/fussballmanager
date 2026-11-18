@@ -67,6 +67,7 @@ import {
 } from "../scouting/scout-board.ts";
 import { refreshAllMarketValues } from "../transfers/refresh-market-values.ts";
 import { withClubEvent, type ClubEvent } from "../inbox/club-events.ts";
+import { disciplineNoticeMessage } from "../match/post-match-events.ts";
 import { advanceAiTransferWeek } from "../transfers/ai-transfer-market.ts";
 import { scanInboundOffers } from "../transfers/inbound-offers.ts";
 import { executeScheduledTransfers } from "../transfers/scheduled-transfers.ts";
@@ -316,6 +317,15 @@ export async function simulateGameWeek(
     leagueStep.clubPlayerStats,
     savedStarters,
   );
+  for (const notice of careerMatch.disciplineNotices) {
+    clubEvents = withClubEvent(
+      clubEvents,
+      session.season,
+      nextWeek,
+      "match",
+      disciplineNoticeMessage(notice),
+    );
+  }
   players = applyWeeklyFitnessBatch(careerMatch.players, {
     intensity: session.trainingIntensity,
     coachingStaff: session.coachingStaff,
@@ -647,7 +657,7 @@ export async function simulateGameWeek(
     session.masterSeed,
     leagueStep.matchdayPlayed > 0,
   );
-  if (leagueStep.matchdayPlayed > 0 && leagueStep.matchdayPlayerStats.length > 0) {
+  if (leagueStep.matchdayPlayed > 0) {
     rivalPlayers = applyRivalMatchdayStats(
       rivalPlayers,
       leagueStep.matchdayPlayerStats,

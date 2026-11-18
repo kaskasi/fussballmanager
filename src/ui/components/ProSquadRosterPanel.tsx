@@ -162,6 +162,12 @@ export function ProSquadRosterPanel({
                           <PlayerPortrait seed={player.portrait_seed} nationality={player.nationality} clubId={player.club_id} size="sm" />
                         ) : null}
                         {row.displayName}
+                        {row.yellowWarning && row.banMatches === 0 ? (
+                          <span title={t("squad.yellowWarningHint")}>
+                            <span className="tc-eventlog__card tc-eventlog__card--yellow" aria-hidden="true" />
+                            <span className="tc-sr">{t("squad.yellowWarningHint")}</span>
+                          </span>
+                        ) : null}
                       </span>
                     </td>
                     <td className="tc-num">{row.positionLabel}</td>
@@ -186,6 +192,11 @@ export function ProSquadRosterPanel({
                       {row.injuryWeeks !== null ? (
                         <span className="tc-state tc-state--low" title={t("squad.injuredHint")}>
                           {t("squad.injuredWeeks", { count: row.injuryWeeks })}
+                        </span>
+                      ) : row.banMatches > 0 ? (
+                        <span className="tc-state tc-state--low" title={t("squad.suspendedHint")}>
+                          <span className="tc-eventlog__card tc-eventlog__card--red" aria-hidden="true" />{" "}
+                          {t("squad.suspendedMatches", { count: row.banMatches })}
                         </span>
                       ) : (
                         <>

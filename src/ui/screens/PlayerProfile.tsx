@@ -104,6 +104,7 @@ import {
 } from "../../development/ability-stamps.ts";
 import { formatGrowthDelta } from "../../player/growth-history.ts";
 import { ratingBand } from "../design/rating-band.ts";
+import { competitionDiscipline } from "../../discipline/suspensions.ts";
 import { useMobileNarrow } from "../hooks/use-mobile-narrow.ts";
 
 type ProfileTab = "overview" | "development" | "stats";
@@ -313,6 +314,7 @@ export function PlayerProfile({
             })
           : undefined;
   const fitness = stateMark(player.state.fitness);
+  const ban = competitionDiscipline(player);
   const morale = stateMark(player.state.morale);
   const form = formMark(player.state.form);
   const bars = attributeBars(player, owned, scoutEstimate);
@@ -443,6 +445,14 @@ export function PlayerProfile({
           </div>
 
           <dl className="tc-stats tc-profile__state" aria-label={t("profile.state.aria")}>
+            {ban.ban_matches > 0 ? (
+              <StateTile
+                label={t("squad.suspendedHint")}
+                mark="◆"
+                tone="low"
+                value={`${ban.reason ? `${t(`discipline.reason.${ban.reason}`)} · ` : ""}${t(ban.ban_matches > 1 ? "discipline.matchesLeft.many" : "discipline.matchesLeft.one", { count: ban.ban_matches })}`}
+              />
+            ) : null}
             {player.state.injury ? (
               <StateTile
                 label={t("squad.injuredHint")}

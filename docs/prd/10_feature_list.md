@@ -48,6 +48,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F1.7 | Spieler-Gespräche | M2 | Spielzeit-Zusagen beeinflussen `drive`-Wahrnehmung & Moral |
 | F1.8 | Individualtaktik | M2 | Schützen-Rollen, Kapitän, Pressing-Anweisungen pro Spieler |
 | F1.9 | Live-Eingriff Matchday | M2 | Slice 1 (vorgezogen 2026-10-21): manuelle Wechsel bei Pause/Halbzeit/Verletzung + Preset-Wechsel zur HZ (PRD 27); Slice 2 Taktik live bleibt später |
+| F1.10 | Sperren | jetzt | Jede 5. Gelbe, Gelb-Rot (1 Spiel), Rot (2 Spiele), je Wettbewerb; gilt auch für KI-Klubs der eigenen Liga (PRD 34, PRD 30 Phase 3) |
 
 ### Modul 2 · Training & Entwicklung *(PRD 02)*
 

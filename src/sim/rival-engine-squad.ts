@@ -5,6 +5,7 @@ import {
   type TeamId,
 } from "@fussballmanager/shared";
 import { derivedExperienceFactor } from "../development/experience.ts";
+import { isSuspended } from "../discipline/suspensions.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
@@ -41,5 +42,7 @@ export function squadWithRivalRoster(
   if (!template) return undefined;
   const roster = rivalPlayersForTeam(rivalPlayers, template.team.id);
   if (roster.length === 0) return template;
-  return buildRivalEngineSquad(template, roster);
+  // PRD 34: banned players sit out, unless that leaves no full eleven.
+  const available = roster.filter((player) => !isSuspended(player));
+  return buildRivalEngineSquad(template, available.length >= 11 ? available : roster);
 }

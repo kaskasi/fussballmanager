@@ -37,6 +37,10 @@ export interface Player {
     season_goals: number;
     season_assists: number;
     season_yellow_cards: number;
+    /** PRD 34 — direct reds and yellow-reds this season. */
+    season_red_cards?: number;
+    /** PRD 34 — yellow tally and open ban per competition. */
+    discipline?: Record<string, import("../discipline/suspensions.ts").CompetitionDiscipline>;
     season_tackles: number;
     season_headers: number;
     /** Rolling sum of attribute growth over the last 26 weeks (PRD 06.3). */

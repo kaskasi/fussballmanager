@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     include: [
       "src/development/**/*.test.ts",
+      "src/discipline/**/*.test.ts",
       "src/hub/**/*.test.ts",
       "src/player/**/*.test.ts",
       "src/youth/**/*.test.ts",

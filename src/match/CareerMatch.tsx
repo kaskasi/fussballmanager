@@ -668,6 +668,7 @@ function CareerMatchPlayback({
           kasse={kasse}
           portraitSeedForPlayerId={portraitSeedForPlayerId}
           onSelectPlayer={onSelectMatchPlayer}
+          playersById={careerById}
         />
       ) : (
         <div className="tc-split tc-match__split">

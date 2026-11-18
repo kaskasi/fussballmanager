@@ -30,7 +30,7 @@ describe("post-match events", () => {
     );
     expect(messages[0]).toContain("2:1");
     expect(messages.some((message) => message.includes("Max Müller"))).toBe(true);
-    expect(messages.some((message) => message.includes("🟨"))).toBe(true);
+    expect(messages).toContain("Yellow card: Max Müller");
   });
 
   it("puts the player club's goals first in away games", () => {

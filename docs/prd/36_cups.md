@@ -107,4 +107,13 @@ SAVE_VERSION 107.
 
 ## 8. Progress
 
-—
+Slice 1 built (SAVE_VERSION 107): `src/competitions/` (definition, tie,
+season), cups created for new careers, at season end and on load of older
+saves; the manager's ties are quick-simmed with the career squad's strength
+and reported as club-event lines. Tests: entrants (36 / 64), one round per
+week outside league weeks, one winner per cup, no club twice in a week,
+lower tier at home, determinism, finalists qualify, catch-up on load.
+10-season long run (seed 2026): all invariants hold, including the new cup
+checks (both winners, Nordpokal finalists in the next Meisterpokal);
+season sim 28.7–29.8 s from season 2 (was 28.5–30.9 s); save 1,618 KB gz at
+season 10 (was 1,608), `pipeline.cups` 1 KB, archive 21 KB. Next: slice 2.

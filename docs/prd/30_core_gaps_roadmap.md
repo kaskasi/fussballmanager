@@ -518,7 +518,7 @@ national cup; the long run passes.
 **Open questions (default):** extra time (default: national cup only, after
 slice 3); cup names (invented).
 
-**Progress:** —
+**Progress:** PRD 36 written. Slice 1 built: cup state, entrants, draws, quick-sim rounds, archive, finalists qualify (SAVE_VERSION 107); long run passes with cup checks. Next: slice 2 (the manager's ties through the match flow, shootout, cup money, per-competition discipline).
 
 ---
 

@@ -175,3 +175,8 @@ objective met, calendar cell, gate split home and away, press key,
 giant-killing against a same-week baseline. Checked in the browser: the cup
 tabs and the Nordpokal round view of a new career. Not seen in a browser: the
 calendar cup entry and the hub line (both need a drawn tie of the manager).
+10-season long run (seed 2026, idle machine): all invariants hold including
+the cup checks; season sim 28.3–29.7 s from season 2 (PRD 35 baseline
+28.5–30.9 s), save 1,617 KB gz at season 10. Season 1 includes warm-up and
+varied between runs (35–61 s); a first run with an 89 s season 8 overlapped a
+browser session and did not repeat.

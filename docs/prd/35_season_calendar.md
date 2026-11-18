@@ -1,6 +1,6 @@
 # PRD 35 — Season calendar
 
-**Status:** Built · 2026-11-18 · Phase 4 of PRD 30.
+**Status:** Built (PR #40) · 2026-11-18 · Phase 4 of PRD 30.
 **Features:** F11.1 (PRD 10, summer flow moves into the pre-season).
 **Touches:** PRD 02 (growth per year), PRD 05 (windows), PRD 11 (weekly vs.
 yearly amounts), PRD 18 Ruhephase (quiet weeks), PRD 08.10 (save bump).

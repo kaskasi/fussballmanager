@@ -232,21 +232,20 @@ export function CareerLineupScreen({
       // PRD 34: suspended or injured players cannot be lined up.
       const dropped = players.find((player) => player.id === playerId);
       if (dropped && !isPlayerMatchEligible(dropped)) return;
-      setAssignments((current) => {
-        const next = { ...current };
-        const displaced = next[slotId];
-        for (const [slot, id] of Object.entries(next)) {
-          if (id === playerId) delete next[slot as FormationSlotId];
-        }
-        next[slotId] = playerId;
-        if (fromSlot && fromSlot !== slotId && displaced && displaced !== playerId) {
-          next[fromSlot] = displaced;
-        }
-        persistLineup(next, plan);
-        return next;
-      });
+      // Compute outside a state updater: persisting updates App state, which must not run during render.
+      const next = { ...assignments };
+      const displaced = next[slotId];
+      for (const [slot, id] of Object.entries(next)) {
+        if (id === playerId) delete next[slot as FormationSlotId];
+      }
+      next[slotId] = playerId;
+      if (fromSlot && fromSlot !== slotId && displaced && displaced !== playerId) {
+        next[fromSlot] = displaced;
+      }
+      setAssignments(next);
+      persistLineup(next, plan);
     },
-    [persistLineup, plan, players],
+    [assignments, persistLineup, plan, players],
   );
 
   /** F1.6 — move a slot to another zone (IV → Libero, ZM → DM); the player keeps the slot. */
@@ -269,18 +268,16 @@ export function CareerLineupScreen({
 
   const unassignPlayer = useCallback(
     (playerId: string) => {
-      setAssignments((current) => {
-        const next = { ...current };
-        for (const slot of getFormation(plan.formation)) {
-          if (next[slot.id] === playerId) {
-            delete next[slot.id];
-          }
+      const next = { ...assignments };
+      for (const slot of getFormation(plan.formation)) {
+        if (next[slot.id] === playerId) {
+          delete next[slot.id];
         }
-        persistLineup(next, plan);
-        return next;
-      });
+      }
+      setAssignments(next);
+      persistLineup(next, plan);
     },
-    [persistLineup, plan],
+    [assignments, persistLineup, plan],
   );
 
   const applyAuto = useCallback(

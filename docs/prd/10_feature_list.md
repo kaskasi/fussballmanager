@@ -170,6 +170,7 @@ Jedes Feature hat eine ID (`F<modul>.<nr>`) für Tracking in Cursor-Tasks.
 | F10.6 | Internationaler Cup | M2 | Ab Qualifikationsrang, größerer Markt |
 | F10.7 | Nationalmannschaft | M3 | Berufungen als Event (Stolz/Belastung) |
 | F10.8 | Multi-League | M1 (Pyramide) / M4 (Ausland) | Fünfstufige Pyramide bis zur fiktiven Meisterliga mit Live-Tabellen (PRD 32, PRD 30 Phase 2); weitere Länder bleiben M4 |
+| F10.9 | Nationale Pokale | jetzt | Nordpokal (Regionalliga + Oberliga Nord) und Meisterpokal (64 Klubs, Stufen 1–3 + Nordpokal-Finalisten); eigene Pokalwochen, einfache K.-o.-Runden, Elfmeterschießen (PRD 36, PRD 30 Phase 5) |
 
 ### Modul 11 · Saison-Zyklus & Historie
 

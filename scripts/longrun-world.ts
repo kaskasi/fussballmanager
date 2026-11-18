@@ -57,6 +57,28 @@ function keepEmployed(session: GameSession): GameSession {
 setLocale("en");
 let session = newGameSession(new Date("2026-08-01T12:00:00Z"), { seed });
 const rows: SeasonRow[] = [];
+/**
+ * PRD 36 acceptance: both cups of the ending season have one winner, and its
+ * Nordpokal finalists are in the new season's Meisterpokal.
+ */
+function cupChecks(current: GameSession, endingSeason: number) {
+  const archived = current.seasonArchive.find((entry) => entry.season === endingSeason)?.cups ?? [];
+  const regional = archived.find((cup) => cup.id === "regional");
+  const national = current.cups?.cups.find((cup) => cup.id === "national");
+  const finalists = [regional?.winner, regional?.runnerUp].filter(Boolean);
+  return [
+    ...(["regional", "national"] as const).map((id) => {
+      const cup = archived.find((entry) => entry.id === id);
+      return { id: `cup_${id}_winner`, ok: Boolean(cup?.winner), detail: `${id} winner ${cup?.winner ?? "missing"}` };
+    }),
+    {
+      id: "cup_regional_finalists_qualify",
+      ok: finalists.length === 2 && finalists.every((teamId) => national?.entrants.includes(teamId!)),
+      detail: `finalists ${finalists.join(", ")} in next national cup`,
+    },
+  ];
+}
+
 let baseline: WorldSeasonMetrics | null = null;
 const started = Date.now();
 
@@ -92,6 +114,7 @@ for (let played = 0; played < seasons; played++) {
         ok: kinds.has(kind),
         detail: `${kind} ${kinds.has(kind) ? "visited" : "missing"}`,
       })),
+      ...cupChecks(session, endingSeason),
     ],
   };
   rows.push(row);

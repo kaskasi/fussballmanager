@@ -43,8 +43,8 @@ it, so it sits between phases 3 and 5.
 | 1 | World longevity: retirement, AI youth, roster upkeep | Done (PR #34); CA drift moved to phase 2 | [31](31_world_longevity.md) | 2 | — |
 | 2 | League pyramid (5 tiers) + season archive + CA drift | Done (PR #35, #36); national scouting open (PRD 32 §11) | [32](32_league_pyramid.md) | 3–4 | 1 |
 | 3 | Suspensions | Done (PR #38) | [34](34_suspensions.md) | 1 | — |
-| 4 | Season calendar: breaks every season | Built (PR #40, not merged) | [35](35_season_calendar.md) | 2–3 | — |
-| 5 | Cups (regional + national) | Not started | — | 3 | 3, 4 (2 for national cup entrants) |
+| 4 | Season calendar: breaks every season | Done (PR #40) | [35](35_season_calendar.md) | 2–3 | — |
+| 5 | Cups (regional + national) | In progress (slice 1/3) | [36](36_cups.md) | 3 | 3, 4 (2 for national cup entrants) |
 | 6 | In-match management | Not started | — | 2 | — |
 | 7 | Club history and chronicle | Not started | — | 2 | 2, ideally 5 |
 | 8 | Pre-season friendlies | Not started | — | 1 | 4 |

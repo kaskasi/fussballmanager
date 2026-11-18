@@ -143,6 +143,10 @@ import { clubFlavorFanbase } from "./club-profiles.ts";
 import { campNationById, weeklyCampUpkeep } from "../youth/satellite-camps.ts";
 import { advanceYouthCampsForWeek, type CampWeekDebut } from "../youth/camp-construction-week.ts";
 import { scoutNetworkWeeklyWage } from "../scouting/scout-network.ts";
+import { cupStrengthLookup, hasCupRoundInWeek, playCupWeek } from "../competitions/cup-season.ts";
+import { cupResultMessage } from "../competitions/cup-messages.ts";
+import { careerEngineSquadFromPlayers } from "./career-engine-squad.ts";
+import { squadAverageStrength } from "@fussballmanager/shared";
 import {
   applyAssistantDelegationWeek,
   assistantQuality,
@@ -326,6 +330,31 @@ export async function simulateGameWeek(
       "match",
       disciplineNoticeMessage(notice),
     );
+  }
+  // PRD 36 slice 1 — cup rounds of the ending week, quick-simmed (the manager's tie too).
+  let cups = session.cups;
+  if (cups && hasCupRoundInWeek(cups, session.week)) {
+    const ownTeamId = session.league.player_club_id;
+    const ownSquad = careerEngineSquadFromPlayers(session.players, ownTeamId);
+    const cupStep = playCupWeek(cups, session.week, {
+      masterSeed: session.masterSeed,
+      pools: session.league.league_pools ?? {},
+      strengthOf: cupStrengthLookup(
+        session.rivalPlayers,
+        ownSquad ? { teamId: ownTeamId, strength: squadAverageStrength(ownSquad) } : undefined,
+      ),
+    });
+    cups = cupStep.state;
+    for (const played of cupStep.played) {
+      if (played.tie.home !== ownTeamId && played.tie.away !== ownTeamId) continue;
+      clubEvents = withClubEvent(
+        clubEvents,
+        session.season,
+        nextWeek,
+        "match",
+        cupResultMessage(played, session.world.clubs),
+      );
+    }
   }
   players = applyWeeklyFitnessBatch(careerMatch.players, {
     intensity: session.trainingIntensity,
@@ -960,6 +989,7 @@ export async function simulateGameWeek(
     scoutBoard,
     youthInbox: financingOfferStep.youthInbox,
     league: leagueWithCareerStats,
+    ...(cups ? { cups } : {}),
       finances,
       financing: financingAfterLoans,
       stadium: stadiumAfterNaming,

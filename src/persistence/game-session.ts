@@ -1,4 +1,5 @@
 import type { SeasonArchiveEntry } from "../sim/season-archive.ts";
+import { ensureCupSeason, type CupSeason } from "../competitions/cup-season.ts";
 import type { TrainingSlotOutcome } from "../development/training-unit-result.ts";
 import type { TrainingSlot } from "../development/training-units.ts";
 import {
@@ -156,6 +157,8 @@ export interface GameSession {
   lastSeasonAwards?: SeasonAwardsSnapshot;
   /** PRD 32 §8 — finished seasons, oldest first (chronicle data, phase 7). */
   seasonArchive: SeasonArchiveEntry[];
+  /** PRD 36 — this season's domestic cups (set on every loaded or new session). */
+  cups?: CupSeason;
   storyState: StoryState;
   assistantDelegation: AssistantDelegation;
   scoutNetwork: ScoutNetworkState;
@@ -397,7 +400,22 @@ export function sessionFromSave(save: SaveGame, options?: SessionFromSaveOptions
     orthopedistHire: pipeline.orthopedist_hire ?? defaultOrthopedistHireState(),
   };
   const withBoard = { ...session, board: ensureBoardObjectives(session) };
-  return syncManagerClubWithBoard(withBoard);
+  const lastArchive = session.seasonArchive[session.seasonArchive.length - 1];
+  const lastRegional =
+    lastArchive?.season === session.season - 1 ? lastArchive.cups?.find((cup) => cup.id === "regional") : undefined;
+  const cups = ensureCupSeason({
+    cups: pipeline.cups,
+    season: session.season,
+    week: session.week,
+    masterSeed: session.masterSeed,
+    pools: session.league?.league_pools ?? {},
+    worldClubs: session.world.clubs,
+    rivalPlayers: session.rivalPlayers,
+    regionalFinalists: [lastRegional?.winner, lastRegional?.runnerUp].filter(
+      (teamId): teamId is NonNullable<typeof teamId> => Boolean(teamId),
+    ),
+  });
+  return syncManagerClubWithBoard({ ...withBoard, cups });
 }
 
 export function saveFromSession(session: GameSession, base?: SaveGame, now = new Date()): SaveGame {
@@ -421,6 +439,7 @@ export function saveFromSession(session: GameSession, base?: SaveGame, now = new
     coaching_staff: session.coachingStaff,
     last_season_awards: session.lastSeasonAwards,
     season_archive: session.seasonArchive,
+    ...(session.cups ? { cups: session.cups } : {}),
     story_state: session.storyState,
     assistant_delegation: session.assistantDelegation,
     scout_network: session.scoutNetwork,

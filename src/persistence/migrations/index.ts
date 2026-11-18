@@ -102,6 +102,7 @@ import { migration103LiveDivisionTables } from "./migration_103_live_division_ta
 import { migration104SeasonArchive } from "./migration_104_season_archive.ts";
 import { migration105Suspensions } from "./migration_105_suspensions.ts";
 import { migration106SeasonCalendar } from "./migration_106_season_calendar.ts";
+import { migration107Cups } from "./migration_107_cups.ts";
 import { SaveReadOnlyError } from "./errors.ts";
 
 export interface SaveMigration {
@@ -213,6 +214,7 @@ export const MIGRATIONS: readonly SaveMigration[] = [
   migration104SeasonArchive,
   migration105Suspensions,
   migration106SeasonCalendar,
+  migration107Cups,
 ];
 
 export { SaveReadOnlyError } from "./errors.ts";

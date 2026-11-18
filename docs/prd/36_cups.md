@@ -1,6 +1,6 @@
 # PRD 36 — Domestic cups
 
-**Status:** In progress (slice 1/3) · 2026-11-18 · Phase 5 of PRD 30.
+**Status:** In progress (slice 2/3 built) · 2026-11-18 · Phase 5 of PRD 30.
 **Features:** F10.9 (PRD 10, new; F10.6 stays the international cup).
 **Touches:** PRD 11 (cup money, slice 2), PRD 16 (shootout beats, slice 3),
 PRD 23 (cup objectives, slice 3), PRD 32 (season archive), PRD 35 (cup weeks).
@@ -59,6 +59,21 @@ All 13 non-league slots that can hold a match are used except pre-season 1
   comes in slice 3 if approved (PRD 30 open question).
 - Ties use the quick strength model (`teamStrength`, the same model as the
   promotion playoffs). The manager's club uses its own career squad.
+- The manager's tie is played on the Saturday of its week through the normal
+  match flow (lineup, live match, report). A level score goes to a kick-by-kick
+  shootout at wrapper level (`src/competitions/cup-shootout.ts`): the starters
+  take the kicks in order, goalkeeper last, from the match seed, so the report
+  and the week sim show the same shootout. Quick-simmed ties use totals only.
+- Cup minutes count for fitness and growth (weekly minutes), not for league
+  season stats (apps, goals, cards). Cards go to the cup's discipline key
+  (`"regional"`, `"national"`, PRD 34); a league ban does not block a cup
+  match and the other way round. AI cup bans come only from the manager's
+  watched tie; every club that plays a tie serves one cup ban match.
+- Prize money per round won (`cupPrizeForWin`, finance line `cup_prize`,
+  also into the transfer pool like the league prize): Nordpokal 5k–120k €,
+  Meisterpokal 120k–2.5 M €.
+- A home cup tie is a home matchday for gate, concessions and merch; the final
+  is neutral and pays no gate.
 
 ## 5. Data
 
@@ -87,11 +102,15 @@ SAVE_VERSION 107.
 
 1. Cup state, entrants, draw, quick-sim rounds for every tie (the manager's
    too, with a club-event line), archive results, next season's entrants.
-2. The manager's ties through the match flow (lineup, press, live match,
-   report), penalty shootout with commentary beats, prize and TV money per
-   round (PRD 11), gate split, per-competition discipline (PRD 34 keys:
-   `"regional"`, `"national"`), "simulate until next event" stops at the
-   manager's cup weeks.
+2. The manager's ties through the match flow (lineup, live match, report),
+   penalty shootout shown kick by kick in the report, prize money per round
+   (PRD 11), per-competition discipline (PRD 34 keys: `"regional"`,
+   `"national"`), "simulate until next event" stops at the manager's cup
+   weeks. Changed from the plan: no gate split (the home side keeps the gate;
+   the finance step only knows "home matchday or not", a split needs gate
+   accounting first) and no press conference around cup ties (pressers are
+   keyed by league matchday); both move to slice 3. Shootout commentary in
+   the live stream also moves to slice 3 (the report shows the kicks).
 3. UI: bracket or rounds view on the Leagues screen (wireframe first),
    fixtures in the calendar, hub snippet, competition in the match header;
    giant-killing story and press beats; cup board objectives; extra time if
@@ -116,4 +135,19 @@ lower tier at home, determinism, finalists qualify, catch-up on load.
 10-season long run (seed 2026): all invariants hold, including the new cup
 checks (both winners, Nordpokal finalists in the next Meisterpokal);
 season sim 28.7–29.8 s from season 2 (was 28.5–30.9 s); save 1,618 KB gz at
-season 10 (was 1,608), `pipeline.cups` 1 KB, archive 21 KB. Next: slice 2.
+season 10 (was 1,608), `pipeline.cups` 1 KB, archive 21 KB.
+
+Slice 2 built (no save change): cup match setup and Saturday stop in the Next
+flow, watched result replaces the quick sim, kick-by-kick shootout, cup
+minutes and per-cup discipline for own and AI players, home gate, prize
+money, eligibility per competition through lineup, auto-lineup, bench,
+opponent preview and report, "until the next event" stops at the manager's
+cup weeks, match header names cup and round. `cup-lookup.ts` holds the
+read-only lookups so calendar and navigation modules avoid import cycles.
+Tests: setup and Next stop, full week sim with a watched 1:1 won on
+penalties (result, cup ban not league ban, prize line, club event), league
+ban vs cup eligibility, next-event stop, shootout rules. 10-season long run:
+all invariants hold; season sim 29.0–33.4 s (run alongside the test suite),
+save 1,617 KB at season 10. Not seen in a browser: the cup lineup label, the
+shootout panel and the per-cup bench (a dev save edited to a cup week did
+not load). Next: slice 3.

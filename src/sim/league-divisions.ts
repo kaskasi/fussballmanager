@@ -10,6 +10,7 @@ import {
   type TeamId,
   type TeamTactics,
 } from "@fussballmanager/shared";
+import type { CompetitionId } from "../discipline/suspensions.ts";
 import type { DivisionEconomyId } from "../economy/division-economy.ts";
 import { DIVISION_ECONOMY } from "../economy/division-economy.ts";
 import type { Player } from "../types/player.ts";
@@ -106,12 +107,13 @@ export function squadForLeagueClub(
   teamId: TeamId,
   rivalPlayers?: readonly Player[],
   playerClubId?: TeamId,
+  competition?: CompetitionId,
 ): Squad | undefined {
   const template = templateSquadForClub(teamId);
   if (!template || teamId === playerClubId || !rivalPlayers?.length) {
     return template;
   }
-  return squadWithRivalRoster(template, rivalPlayers) ?? template;
+  return squadWithRivalRoster(template, rivalPlayers, competition) ?? template;
 }
 
 export function clubIdsForDivision(

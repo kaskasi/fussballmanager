@@ -251,7 +251,8 @@ export function autoResolvePress(
 
 export function autoPreMatchPress(session: GameSession): GameSession {
   const setup = prepareCareerMatch(session);
-  if (!setup) return session;
+  // PRD 36: press conferences are keyed by league matchday; cup pressers come with slice 3.
+  if (!setup || setup.cup) return session;
   return autoResolvePress(session, "pre", pressMatchContext(setup));
 }
 

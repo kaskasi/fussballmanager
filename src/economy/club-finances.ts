@@ -54,6 +54,8 @@ export interface WeeklyFinanceContext {
   /** Express-Nachkäufe des Merchandising-Experten dieser Woche. */
   merchRestockCost?: number;
   hospitalityIncome?: number;
+  /** PRD 36 — prize money for cup rounds won this week. */
+  cupPrizeIncome?: number;
   overtimeCost?: number;
   commerceOccupancy?: number;
   /** Set after advanceMerchandisingWeek in pipeline (stock already sold). */
@@ -174,7 +176,7 @@ export function applyFinanceLines(
   let next = finances;
   for (const line of lines) {
     next = applyCashLine(next, line);
-    if (line.amount > 0 && (line.kind === "league_prize" || line.kind === "tv_bonus")) {
+    if (line.amount > 0 && (line.kind === "league_prize" || line.kind === "cup_prize" || line.kind === "tv_bonus")) {
       next = applyTransferPoolIncome(next, line.amount);
     }
   }
@@ -266,6 +268,9 @@ export function buildWeeklyFinanceLines(
   }
   if ((context.merchRestockCost ?? 0) > 0) {
     lines.push({ kind: "merchandising", amount: -context.merchRestockCost!, week });
+  }
+  if ((context.cupPrizeIncome ?? 0) > 0) {
+    lines.push({ kind: "cup_prize", amount: Math.round(context.cupPrizeIncome!), week });
   }
   if ((context.overtimeCost ?? 0) > 0) {
     lines.push({ kind: "other", amount: -context.overtimeCost!, week });

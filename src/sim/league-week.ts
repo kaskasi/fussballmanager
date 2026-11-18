@@ -399,6 +399,7 @@ export async function advanceLeagueWeek(
   const scheduled = playerFixture(current, matchdayPlayed);
   const watchedApplies =
     watchedPlayerMatch != null &&
+    watchedPlayerMatch.cup == null &&
     scheduled != null &&
     watchedPlayerMatch.matchday === matchdayPlayed &&
     watchedPlayerMatch.homeTeamId === scheduled.homeTeamId &&

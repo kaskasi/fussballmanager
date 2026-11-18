@@ -1,4 +1,5 @@
 import { isPlayerMatchEligible } from "../development/injury-roll.ts";
+import { LEAGUE_COMPETITION, type CompetitionId } from "../discipline/suspensions.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName, formatPlayerPositionLabel } from "../types/player-display.ts";
 import { PlayerPortrait } from "../ui/components/PlayerPortrait.tsx";
@@ -17,16 +18,19 @@ export function LineupPlayerCard({
   onDragStart,
   onDragEnd,
   onOpenPlayer,
+  competition = LEAGUE_COMPETITION,
 }: {
   player: Player;
+  /** PRD 36: eligibility of the match being prepared (league or a cup). */
+  competition?: CompetitionId;
   selected?: boolean;
   onDragStart?: (playerId: string) => void;
   onDragEnd?: () => void;
   onOpenPlayer?: (playerId: string) => void;
 }) {
-  const status = lineupStatusFromPlayer(player);
+  const status = lineupStatusFromPlayer(player, competition);
   // PRD 34: suspended or injured players stay on the bench.
-  const available = isPlayerMatchEligible(player);
+  const available = isPlayerMatchEligible(player, competition);
 
   return (
     <div

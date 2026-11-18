@@ -1,4 +1,6 @@
 /** WIREFRAME: docs/prd/design.md §9.1 — Aufstellung */
+import { matchKicker } from "./match-kicker.ts";
+import { matchCompetition } from "../sim/career-match-setup.ts";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { TacticsMode } from "../narrative/career-presentation.ts";
 import {
@@ -133,12 +135,14 @@ export function CareerLineupScreen({
 }: CareerLineupScreenProps) {
   const t = useT();
   const managerClubId = careerTeamId(setup.playerClubId);
+  // PRD 36: eligibility of this match (league or a cup), PRD 34 discipline keys.
+  const competition = matchCompetition(setup);
   const fallbackPlan = useMemo(() => loadTacticsPreset(tacticsPresets, 1), [tacticsPresets]);
   const [plan, setPlan] = useState<SandboxPlan>(() => matchLineup?.plan ?? fallbackPlan);
   const [activePreset, setActivePreset] = useState<TacticsPresetId | null>(matchLineup ? null : 1);
   const [activeAutoMode, setActiveAutoMode] = useState<AutoLineupMode | null>(null);
   const [assignments, setAssignments] = useState<LineupAssignments>(() =>
-    normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId).assignments,
+    normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId, competition).assignments,
   );
   const [drag, setDrag] = useState<LineupDrag | null>(null);
   const [benchPage, setBenchPage] = useState(0);
@@ -148,8 +152,8 @@ export function CareerLineupScreen({
     [players],
   );
   const bench = useMemo(
-    () => benchPlayers(players, assignments, managerClubId),
-    [players, assignments, managerClubId],
+    () => benchPlayers(players, assignments, managerClubId, competition),
+    [players, assignments, managerClubId, competition],
   );
   const benchPageCount = Math.max(1, Math.ceil(bench.length / LINEUP_BENCH_PAGE_SIZE));
 
@@ -171,7 +175,7 @@ export function CareerLineupScreen({
     ) {
       return;
     }
-    const normalized = normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId);
+    const normalized = normalizeMatchLineup(matchLineup, players, fallbackPlan, managerClubId, competition);
     setPlan((current) =>
       current.formation === normalized.plan.formation &&
       current.mentality === normalized.plan.mentality &&
@@ -201,8 +205,8 @@ export function CareerLineupScreen({
   const playerTeamLabel = clubShortName(setup.playerClubId);
   const filledCount = lineupSlotCount(assignments, plan.formation);
   const squad = useMemo(
-    () => buildSquadFromAssignments(players, plan, assignments, setup.playerClubId, managerClubId),
-    [players, plan, assignments, setup.playerClubId, managerClubId],
+    () => buildSquadFromAssignments(players, plan, assignments, setup.playerClubId, managerClubId, competition),
+    [players, plan, assignments, setup.playerClubId, managerClubId, competition],
   );
 
   const analysisNotice = useMemo(
@@ -231,7 +235,7 @@ export function CareerLineupScreen({
     (slotId: FormationSlotId, playerId: string, fromSlot: FormationSlotId | null) => {
       // PRD 34: suspended or injured players cannot be lined up.
       const dropped = players.find((player) => player.id === playerId);
-      if (dropped && !isPlayerMatchEligible(dropped)) return;
+      if (dropped && !isPlayerMatchEligible(dropped, competition)) return;
       // Compute outside a state updater: persisting updates App state, which must not run during render.
       const next = { ...assignments };
       const displaced = next[slotId];
@@ -245,7 +249,7 @@ export function CareerLineupScreen({
       setAssignments(next);
       persistLineup(next, plan);
     },
-    [assignments, persistLineup, plan, players],
+    [assignments, persistLineup, plan, players, competition],
   );
 
   /** F1.6 — move a slot to another zone (IV → Libero, ZM → DM); the player keeps the slot. */
@@ -282,12 +286,12 @@ export function CareerLineupScreen({
 
   const applyAuto = useCallback(
     (mode: AutoLineupMode) => {
-      const next = autoLineupAssignments(players, plan.formation, mode, managerClubId);
+      const next = autoLineupAssignments(players, plan.formation, mode, managerClubId, competition);
       setActiveAutoMode(mode);
       setAssignments(next);
       persistLineup(next, plan);
     },
-    [players, plan, persistLineup, managerClubId],
+    [players, plan, persistLineup, managerClubId, competition],
   );
 
   const changeFormation = useCallback(
@@ -295,11 +299,11 @@ export function CareerLineupScreen({
       const nextPlan = sandboxPlanFromFormation(formation);
       setActivePreset(null);
       setPlan(nextPlan);
-      const nextAssignments = fillMissingAssignments(players, formation, {}, managerClubId);
+      const nextAssignments = fillMissingAssignments(players, formation, {}, managerClubId, undefined, competition);
       setAssignments(nextAssignments);
       persistLineup(nextAssignments, nextPlan);
     },
-    [players, persistLineup, managerClubId],
+    [players, persistLineup, managerClubId, competition],
   );
 
   const applyStylePreset = useCallback(
@@ -366,7 +370,7 @@ export function CareerLineupScreen({
         <div className="tc-lineup__title">
           <h1 className="tc-page-title">{t("match.lineup.title")}</h1>
           <p className="tc-page-sub">
-            {t("match.lineup.matchday", { matchday: setup.matchday })} · {matchdayLabel}{" "}
+            {matchKicker(setup)} · {matchdayLabel}{" "}
             {t("match.lineup.vs", { opponent: setup.opponentShortName })} · {kickoffLabel}
           </p>
         </div>
@@ -498,6 +502,7 @@ export function CareerLineupScreen({
                     onDragStart={(playerId) => setDrag({ playerId, fromSlot: null })}
                     onDragEnd={() => setDrag(null)}
                     onOpenPlayer={onOpenPlayer}
+                    competition={competition}
                   />
                 ) : (
                   <div

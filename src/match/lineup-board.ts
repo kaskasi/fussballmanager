@@ -15,6 +15,7 @@ import {
   type SlotZones,
   type Squad,
 } from "@fussballmanager/shared";
+import { LEAGUE_COMPETITION, type CompetitionId } from "../discipline/suspensions.ts";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import { isPlayerMatchEligible } from "../development/injury-roll.ts";
@@ -66,12 +67,13 @@ export function defaultMatchLineup(
   plan: SandboxPlan,
   managerClubId: string = DEFAULT_CLUB_ID,
   playerClubId?: TeamId,
+  competition: CompetitionId = LEAGUE_COMPETITION,
 ): MatchLineupState {
   const teamId = playerClubId ?? nordsternSquad.team.id;
   return {
     formation: plan.formation,
     plan,
-    assignments: suggestLineupAssignments(players, plan.formation, teamId, managerClubId),
+    assignments: suggestLineupAssignments(players, plan.formation, teamId, managerClubId, competition),
   };
 }
 
@@ -102,9 +104,10 @@ export function normalizeMatchLineup(
   players: readonly Player[],
   fallbackPlan: SandboxPlan,
   managerClubId: string = DEFAULT_CLUB_ID,
+  competition: CompetitionId = LEAGUE_COMPETITION,
 ): MatchLineupState {
   if (!saved?.formation || !saved.plan) {
-    return defaultMatchLineup(players, fallbackPlan, managerClubId);
+    return defaultMatchLineup(players, fallbackPlan, managerClubId, undefined, competition);
   }
   const { slotZones: savedZones, ...savedPlan } = saved.plan;
   const slotZones = sanitizeSlotZones(saved.formation, savedZones);
@@ -116,7 +119,7 @@ export function normalizeMatchLineup(
         (player) =>
           player.club_id === managerClubId &&
           player.squad_status === "pro" &&
-          isPlayerMatchEligible(player),
+          isPlayerMatchEligible(player, competition),
       )
       .map((player) => player.id),
   );
@@ -129,7 +132,7 @@ export function normalizeMatchLineup(
       used.add(playerId);
     }
   }
-  const filled = fillMissingAssignments(players, plan.formation, assignments, managerClubId, slotZones);
+  const filled = fillMissingAssignments(players, plan.formation, assignments, managerClubId, slotZones, competition);
   return { formation: plan.formation, plan, assignments: filled };
 }
 
@@ -138,8 +141,9 @@ export function suggestLineupAssignments(
   formation: FormationId,
   playerClubId: TeamId,
   managerClubId: string = DEFAULT_CLUB_ID,
+  competition: CompetitionId = LEAGUE_COMPETITION,
 ): LineupAssignments {
-  const squad = suggestCareerSquad(players, formation, playerClubId, managerClubId);
+  const squad = suggestCareerSquad(players, formation, playerClubId, managerClubId, competition);
   if (!squad) return {};
   const assignments: LineupAssignments = {};
   for (const place of squad.starters) {
@@ -154,6 +158,7 @@ export function fillMissingAssignments(
   assignments: LineupAssignments,
   managerClubId: string = DEFAULT_CLUB_ID,
   zones?: SlotZones,
+  competition: CompetitionId = LEAGUE_COMPETITION,
 ): LineupAssignments {
   const slots = effectiveFormation(formation, zones);
   const used = new Set(Object.values(assignments).filter(Boolean) as string[]);
@@ -163,7 +168,7 @@ export function fillMissingAssignments(
       (player) =>
         player.club_id === managerClubId &&
         player.squad_status === "pro" &&
-        isPlayerMatchEligible(player) &&
+        isPlayerMatchEligible(player, competition) &&
         !used.has(player.id),
     )
     .sort(
@@ -233,6 +238,7 @@ export function benchPlayers(
   players: readonly Player[],
   assignments: LineupAssignments,
   managerClubId: string = DEFAULT_CLUB_ID,
+  competition: CompetitionId = LEAGUE_COMPETITION,
 ): Player[] {
   const used = new Set(Object.values(assignments).filter(Boolean) as string[]);
   return players
@@ -244,7 +250,7 @@ export function benchPlayers(
     )
     .sort(
       (left, right) =>
-        Number(isPlayerMatchEligible(right)) - Number(isPlayerMatchEligible(left)) ||
+        Number(isPlayerMatchEligible(right, competition)) - Number(isPlayerMatchEligible(left, competition)) ||
         estimateCa(right.attributes, right.position) - estimateCa(left.attributes, left.position),
     );
 }
@@ -260,10 +266,11 @@ export function buildSquadFromAssignments(
   assignments: LineupAssignments,
   playerClubId: TeamId,
   managerClubId: string = DEFAULT_CLUB_ID,
+  competition: CompetitionId = LEAGUE_COMPETITION,
 ): Squad | undefined {
   const zones = sanitizeSlotZones(plan.formation, plan.slotZones);
-  const filled = fillMissingAssignments(players, plan.formation, assignments, managerClubId, zones);
-  const input = careerPlayerInputs(players, managerClubId);
+  const filled = fillMissingAssignments(players, plan.formation, assignments, managerClubId, zones, competition);
+  const input = careerPlayerInputs(players, managerClubId, competition);
   if (input.length === 0) return undefined;
 
   const baseTemplate = templateSquadForClub(playerClubId) ?? nordsternSquad;

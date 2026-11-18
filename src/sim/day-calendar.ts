@@ -1,5 +1,6 @@
 import type { GameSession } from "../persistence/game-session.ts";
 import { isLeagueWeek } from "./season-schedule.ts";
+import { managerCupTie } from "../competitions/cup-lookup.ts";
 
 export const MONDAY = 1;
 export const TUESDAY = 2;
@@ -29,7 +30,9 @@ export function resolveSmartSkip(
   blockKickerDeliveryDay = false,
 ): SmartSkipTarget {
   const { week, weekday, matchPlayedThisWeek } = session;
-  const matchWeek = isLeagueWeek(week);
+  // PRD 36: the manager's cup tie is played on the Saturday of its week, like a league match.
+  const leagueMatchWeek = isLeagueWeek(week) && !session.league.season_complete;
+  const cupMatchWeek = managerCupTie(session.cups, week, session.league.player_club_id) != null;
 
   if (blockKickerDeliveryDay && weekday === THURSDAY) {
     return { weekday: THURSDAY, action: "inbox", daysAdvanced: 0 };
@@ -44,8 +47,7 @@ export function resolveSmartSkip(
   }
 
   if (
-    matchWeek &&
-    !session.league.season_complete &&
+    (leagueMatchWeek || cupMatchWeek) &&
     !matchPlayedThisWeek &&
     weekday === SATURDAY
   ) {

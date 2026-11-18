@@ -3,7 +3,7 @@
  * playoffs), and a seeded penalty shootout when it is level after 90 minutes.
  */
 import type { TeamId } from "@fussballmanager/shared";
-import { seededRoll } from "../sim/division-matchday.ts";
+import { cupRoll as seededRoll } from "./cup-roll.ts";
 
 export interface CupTieResult {
   homeGoals: number;

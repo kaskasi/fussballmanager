@@ -6,6 +6,7 @@ export type FinanceLineKind =
   | "tv_rights"
   | "matchday_tickets"
   | "league_prize"
+  | "cup_prize"
   | "tv_bonus"
   | "player_sale"
   | "player_wages"
@@ -69,6 +70,8 @@ function financeLineGermanLabel(kind: FinanceLineKind): string {
       return "Eintritt";
     case "league_prize":
       return "Saisonprämie";
+    case "cup_prize":
+      return "Pokalprämie";
     case "tv_bonus":
       return "TV-Bonus";
     case "player_sale":

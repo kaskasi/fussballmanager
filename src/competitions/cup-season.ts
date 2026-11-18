@@ -25,6 +25,17 @@ import {
   type CupRoundKey,
 } from "./cup-definition.ts";
 import { simulateCupTie, type CupTieResult, type StrengthOf } from "./cup-tie.ts";
+import { cupSurvivors } from "./cup-lookup.ts";
+
+export {
+  cupCompetition,
+  cupSurvivors,
+  hasCupRoundInWeek,
+  managerCupTie,
+  managerCupWeeks,
+  regionalFinalists,
+  type ManagerCupTie,
+} from "./cup-lookup.ts";
 
 export interface CupTie {
   home: TeamId;
@@ -89,6 +100,12 @@ export interface CupWeekContext {
   masterSeed: number;
   pools: Pools;
   strengthOf: StrengthOf;
+  /** Results that replace the quick sim (the manager's watched tie), keyed by `cupTieKey`. */
+  overrides?: ReadonlyMap<string, CupTieResult>;
+}
+
+export function cupTieKey(home: TeamId, away: TeamId): string {
+  return `${home}|${away}`;
 }
 
 function mix(...parts: number[]): number {
@@ -221,22 +238,6 @@ export function createCupSeason(ctx: CupSeasonContext): CupSeason {
   };
 }
 
-function losers(cup: CupCompetition): Set<TeamId> {
-  const out = new Set<TeamId>();
-  for (const round of cup.rounds) {
-    for (const tie of round.ties) {
-      if (tie.result) out.add(tie.result.winner === tie.home ? tie.away : tie.home);
-    }
-  }
-  return out;
-}
-
-/** Clubs still in the cup: entrants that have not lost a tie. */
-export function cupSurvivors(cup: CupCompetition): TeamId[] {
-  const out = losers(cup);
-  return cup.entrants.filter((teamId) => !out.has(teamId));
-}
-
 function playRound(
   season: number,
   cup: CupCompetition,
@@ -247,7 +248,7 @@ function playRound(
   const played: PlayedCupTie[] = [];
   const ties = round.ties.map((tie, index) => {
     if (tie.result) return tie;
-    const result = simulateCupTie(
+    const result = ctx.overrides?.get(cupTieKey(tie.home, tie.away)) ?? simulateCupTie(
       tie.home,
       tie.away,
       tieSeed(ctx.masterSeed, season, cup.id, round.round, index),
@@ -311,16 +312,6 @@ export function catchUpCupSeason(state: CupSeason, week: number, ctx: CupWeekCon
     current = playCupWeek(current, Math.min(...pending), ctx).state;
   }
   return current;
-}
-
-export function cupCompetition(state: CupSeason | undefined, id: CupId): CupCompetition | undefined {
-  return state?.cups.find((cup) => cup.id === id);
-}
-
-/** Nordpokal winner and runner-up of a finished season (empty while it runs). */
-export function regionalFinalists(state: CupSeason | undefined): TeamId[] {
-  const regional = cupCompetition(state, "regional");
-  return [regional?.winner, regional?.runnerUp].filter((teamId): teamId is TeamId => Boolean(teamId));
 }
 
 export function archiveCups(state: CupSeason | undefined): ArchiveCup[] {
@@ -390,11 +381,4 @@ export function ensureCupSeason(input: {
     pools: input.pools,
     strengthOf: cupStrengthLookup(input.rivalPlayers),
   });
-}
-
-/** True when a cup round of `state` is scheduled in `week` and not played yet. */
-export function hasCupRoundInWeek(state: CupSeason | undefined, week: number): boolean {
-  return (state?.cups ?? []).some((cup) =>
-    cup.rounds.some((round) => round.week === week && round.ties.some((tie) => !tie.result)),
-  );
 }

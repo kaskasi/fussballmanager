@@ -9,6 +9,7 @@ import {
   disciplineNotice,
   isSuspended,
   serveBanMatch,
+  type CompetitionId,
   type DisciplineNotice,
 } from "../discipline/suspensions.ts";
 import type { Player } from "../types/player.ts";
@@ -152,6 +153,58 @@ export function applyCareerMatchWeek(
   return {
     players: players.map((player) => updated.get(player.id) ?? player),
     matchdayStats,
+    disciplineNotices,
+  };
+}
+
+/**
+ * PRD 36 slice 2 — the manager's cup tie. Minutes count for fitness and growth
+ * (weekly minutes), not for league season stats; cards go to the cup's
+ * discipline key (PRD 34); open bans in that cup are served first. Without
+ * engine stats (a quick-simmed tie) there are minutes but no cards.
+ */
+export function applyCareerCupMatch(input: {
+  players: readonly Player[];
+  competition: CompetitionId;
+  masterSeed: number;
+  season: number;
+  round: number;
+  engineClubStats?: readonly PlayerSeasonStat[];
+  starterIds?: readonly string[];
+}): { players: Player[]; disciplineNotices: DisciplineNotice[] } {
+  const { competition } = input;
+  const squad = input.players
+    .filter((player) => player.club_id === DEFAULT_CLUB_ID && player.squad_status === "pro")
+    .map((player) => serveBanMatch(player, competition));
+  if (squad.length === 0) return { players: [...input.players], disciplineNotices: [] };
+
+  // Cup rounds use their own minutes seed, apart from the 34 league matchdays.
+  const lineup = pickLineup(
+    squad.filter((player) => !isSuspended(player, competition)),
+    input.masterSeed,
+    input.season,
+    100 + input.round,
+    input.starterIds,
+  );
+  const stats = input.engineClubStats ?? [];
+  const yellows = statsFieldMap(stats, squad, "yellowCards");
+  const reds = statsFieldMap(stats, squad, "redCards");
+  const disciplineNotices: DisciplineNotice[] = [];
+  const updated = new Map<string, Player>();
+  for (const player of squad) {
+    const minutes = lineup.minutes.get(player.id) ?? 0;
+    const withMinutes = minutes > 0 ? pushWeeklyMinutes(player, minutes) : player;
+    const outcome = applyMatchCards(
+      withMinutes,
+      { yellowCards: yellows.get(player.id) ?? 0, redCards: reds.get(player.id) ?? 0 },
+      competition,
+    );
+    const notice = disciplineNotice(withMinutes, outcome);
+    if (notice) disciplineNotices.push(notice);
+    updated.set(player.id, outcome.player);
+  }
+  return {
+    players: input.players.map((player) => updated.get(player.id) ?? player),
     disciplineNotices,
   };
 }

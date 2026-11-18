@@ -85,3 +85,18 @@ export function cupRoundKey(id: CupId, round: number): CupRoundKey {
 export function cupRoundCount(id: CupId): number {
   return cupDefinition(id).rounds.length;
 }
+
+/**
+ * PRD 36 slice 2 — prize money (€) for winning a round, i.e. reaching the
+ * next one; the final pays the winner. Scaled to the tier economies (PRD 11):
+ * a Nordpokal run is worth a few weeks of Oberliga TV money, a Meisterpokal
+ * run for a lower-tier club is a season-changing windfall.
+ */
+const CUP_PRIZE_FOR_WIN: Record<CupId, Partial<Record<CupRoundKey, number>>> = {
+  regional: { prelim: 5_000, r32: 10_000, r16: 20_000, qf: 35_000, sf: 60_000, final: 120_000 },
+  national: { r64: 120_000, r32: 220_000, r16: 400_000, qf: 750_000, sf: 1_400_000, final: 2_500_000 },
+};
+
+export function cupPrizeForWin(id: CupId, key: CupRoundKey): number {
+  return CUP_PRIZE_FOR_WIN[id][key] ?? 0;
+}

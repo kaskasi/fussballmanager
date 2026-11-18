@@ -10,6 +10,7 @@ import {
 import { applyCareerMatchWeek } from "./career-match-sync.ts";
 import { pyramidDivisionIds } from "./league-pyramid.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
+import { weekForMatchday as md } from "./season-schedule.ts";
 
 describe("league week", () => {
   it("plays a deterministic quick matchday", () => {
@@ -22,7 +23,7 @@ describe("league week", () => {
 
   it("advances league state offline", async () => {
     const league = defaultLeagueState();
-    const advanced = await advanceLeagueWeek(league, 1, 1, 2026);
+    const advanced = await advanceLeagueWeek(league, 1, md(1), 2026);
     expect(advanced.league.results.length).toBeGreaterThan(0);
     expect(advanced.league.matchday).toBe(2);
     expect(advanced.playerFixture).not.toBeNull();
@@ -32,7 +33,7 @@ describe("league week", () => {
 
   it("plays every other division's matchday too, so all tables are live (PRD 32 §7)", async () => {
     const league = defaultLeagueState();
-    const advanced = await advanceLeagueWeek(league, 1, 1, 2026);
+    const advanced = await advanceLeagueWeek(league, 1, md(1), 2026);
     const others = Object.entries(advanced.league.division_results ?? {});
     expect(others.map(([id]) => id).sort()).toEqual(
       pyramidDivisionIds().filter((id) => id !== league.division_id).sort(),
@@ -43,11 +44,11 @@ describe("league week", () => {
 
   it("completes the season on matchday 34 and skips league play afterwards", async () => {
     const league = { ...defaultLeagueState(), matchday: 34 };
-    const last = await advanceLeagueWeek(league, 1, 34, 2026);
+    const last = await advanceLeagueWeek(league, 1, md(34), 2026);
     expect(last.seasonComplete).toBe(true);
     expect(last.league.season_complete).toBe(true);
     expect(last.league.matchday).toBe(1);
-    const offseason = await advanceLeagueWeek(last.league, 1, 35, 2026);
+    const offseason = await advanceLeagueWeek(last.league, 1, md(34) + 1, 2026);
     expect(offseason.league.results).toEqual(last.league.results);
     expect(offseason.playerFixture).toBeNull();
   });
@@ -91,7 +92,7 @@ describe("league week", () => {
         },
       ],
     };
-    const advanced = await advanceLeagueWeek(league, 1, 1, 2026, [], [], watched);
+    const advanced = await advanceLeagueWeek(league, 1, md(1), 2026, [], [], watched);
     expect(advanced.playerFixture).toEqual({
       homeTeamId: watched.homeTeamId,
       awayTeamId: watched.awayTeamId,

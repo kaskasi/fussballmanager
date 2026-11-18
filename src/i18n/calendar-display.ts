@@ -1,11 +1,5 @@
-import {
-  calendarWeek,
-  isLeagueMatchWeek,
-  isSummerTransferWindow,
-  isWinterTransferWindow,
-  LEAGUE_LAST_WEEK,
-  SEASON_END_WEEK,
-} from "../sim/game-calendar.ts";
+import { calendarWeek, isSummerTransferWindow, isWinterTransferWindow } from "../sim/game-calendar.ts";
+import { matchdayForWeek, seasonEndWeek, slotKind } from "../sim/season-schedule.ts";
 import { seasonCalendarYear } from "../sim/season-label.ts";
 import { transferWindowKind, type TransferWindowKind } from "../sim/transfer-windows.ts";
 import { t } from "./index.ts";
@@ -21,14 +15,23 @@ export function formatSeasonDisplay(season: number): string {
 }
 
 export function calendarPhaseDisplay(week: number): string {
-  if (isLeagueMatchWeek(week)) {
-    return t("calendar.phase.league", { matchday: week });
+  const matchday = matchdayForWeek(week);
+  if (matchday != null) {
+    return t("calendar.phase.league", { matchday });
   }
-  if (week === SEASON_END_WEEK) return t("calendar.phase.seasonEnd");
-  if (week > LEAGUE_LAST_WEEK && week < SEASON_END_WEEK) return t("calendar.phase.offSeason");
+  if (week === seasonEndWeek()) return t("calendar.phase.seasonEnd");
   if (isSummerTransferWindow(week)) return t("calendar.phase.summerWindow");
   if (isWinterTransferWindow(week)) return t("calendar.phase.winterWindow");
-  return t("calendar.phase.prep");
+  switch (slotKind(week)) {
+    case "summer_break":
+      return t("calendar.phase.summerBreak");
+    case "winter_break":
+      return t("calendar.phase.winterBreak");
+    case "cup":
+      return t("calendar.phase.freeWeek");
+    default:
+      return t("calendar.phase.prep");
+  }
 }
 
 export function transferWindowDisplay(week: number): string {

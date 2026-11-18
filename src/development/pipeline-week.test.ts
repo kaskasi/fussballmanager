@@ -14,12 +14,14 @@ import {
 import { ageDevelopmentFactor, LEARNING_BASE_POINTS_PER_WEEK } from "./growth-engine.ts";
 import { emptyWeeklyTrainingPlan } from "./training-plan-state.ts";
 import { planToSessions, trainingUnit } from "./training-units.ts";
+import { SEASON_RATE_SCALE as S } from "../sim/season-schedule.ts";
 
 describe("pipeline week", () => {
   it("projects the age-19 passing gain from two technical focus sessions", () => {
     const player = clonePlayer();
     const passing =
       LEARNING_BASE_POINTS_PER_WEEK *
+      S *
       ageDevelopmentFactor(19) *
       1.1 *
       1 *

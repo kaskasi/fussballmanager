@@ -1,76 +1,108 @@
 /**
- * In-game calendar (PRD 05 transfer windows + PRD 03 intake timing).
- * Intern: Saisonwochen 1–34 = Spieltage 1–34.
- * Anzeige-KW: deutsches Ligajahr, Spieltag 1 = Ende August (KW 35).
+ * In-game calendar display and transfer windows (PRD 05, PRD 35).
+ * Which week is a match week, pre-season or season end: `season-schedule.ts`.
+ * Anzeige-KW: ISO-Kalenderwoche der Saisonwoche.
  */
+import {
+  advanceSeasonWeek,
+  isLeagueWeek,
+  isQuietWeek,
+  isoWeekForWeek,
+  isoWeekOfWeekOne,
+  matchdayForWeek,
+  seasonEndWeek,
+  seasonFirstWeek,
+  slotKind,
+  summerWindowIsoWeeks,
+  winterWindowIsoWeeks,
+} from "./season-schedule.ts";
 
 export const WEEKS_PER_YEAR = 52;
-export const SEASON_END_WEEK = 34;
-export const LEAGUE_FIRST_WEEK = 1;
-export const LEAGUE_LAST_WEEK = 34;
-/** Prep weeks before Spieltag 1 (new careers start here). Playtest 2026-10-09. */
-export const PRESEASON_WEEKS = 2;
-export const CAREER_START_WEEK = LEAGUE_FIRST_WEEK - PRESEASON_WEEKS;
-/** ISO-style calendar week of Spieltag 1 (late August in Germany). */
-export const SEASON_START_CALENDAR_WEEK = 35;
-/** ISO weeks (PRD 05): preseason KW 33–34 (new careers) plus Spieltag 1–2 (KW 35–36); winter KW 2–4. */
-export const SUMMER_WINDOW_CALENDAR_WEEKS = [33, 34, 35, 36] as const;
-export const WINTER_WINDOW_CALENDAR_WEEKS = [2, 3, 4] as const;
 
-function wrapIsoWeek(raw: number): number {
-  let iso = raw;
-  while (iso < 1) iso += WEEKS_PER_YEAR;
-  while (iso > WEEKS_PER_YEAR) iso -= WEEKS_PER_YEAR;
-  return iso;
+/** ISO calendar week of season week 1. */
+export function seasonStartCalendarWeek(): number {
+  return isoWeekOfWeekOne();
 }
 
 export function calendarWeek(seasonWeek: number): number {
-  const week = Math.round(seasonWeek);
-  return wrapIsoWeek(SEASON_START_CALENDAR_WEEK + week - 1);
+  return isoWeekForWeek(seasonWeek);
 }
 
 export function formatCalendarWeek(seasonWeek: number): string {
   return `KW ${calendarWeek(seasonWeek)}`;
 }
 
-export function isLeagueMatchWeek(week: number): boolean {
-  return week >= LEAGUE_FIRST_WEEK && week <= LEAGUE_LAST_WEEK;
-}
-
 export function isSummerTransferWindow(week: number): boolean {
-  const kw = calendarWeek(week);
-  return (SUMMER_WINDOW_CALENDAR_WEEKS as readonly number[]).includes(kw);
+  return summerWindowIsoWeeks().includes(calendarWeek(week));
 }
 
 export function isWinterTransferWindow(week: number): boolean {
-  const kw = calendarWeek(week);
-  return (WINTER_WINDOW_CALENDAR_WEEKS as readonly number[]).includes(kw);
+  return winterWindowIsoWeeks().includes(calendarWeek(week));
 }
 
 export function calendarPhaseLabel(week: number): string {
-  if (isLeagueMatchWeek(week)) return `Liga · Spieltag ${week}`;
-  if (week === SEASON_END_WEEK) return "Saisonende · Intake";
-  if (week > LEAGUE_LAST_WEEK && week < SEASON_END_WEEK) return "Nachsaison";
+  const matchday = matchdayForWeek(week);
+  if (isLeagueWeek(week) && matchday != null) return `Liga · Spieltag ${matchday}`;
+  if (week === seasonEndWeek()) return "Saisonende · Intake";
   if (isSummerTransferWindow(week)) return "Sommerfenster";
   if (isWinterTransferWindow(week)) return "Winterfenster";
-  return "Vorbereitung";
+  switch (slotKind(week)) {
+    case "summer_break":
+      return "Sommerpause";
+    case "winter_break":
+      return "Winterpause";
+    case "cup":
+      return "Freie Woche";
+    default:
+      return "Vorbereitung";
+  }
 }
 
-/** Advance one calendar week; football season ends after week 34. */
 /**
  * First week of the next transfer window strictly after `week` — when a deal agreed outside a window
- * is executed. After the winter window it is Spieltag 1 of the next season (the summer window).
+ * is executed. After the winter window it is the first summer-window week of the next season.
  */
 export function nextTransferWindowStart(season: number, week: number): { season: number; week: number } {
-  for (let next = week + 1; next <= SEASON_END_WEEK; next += 1) {
-    if (isSummerTransferWindow(next) || isWinterTransferWindow(next)) return { season, week: next };
+  const isWindow = (w: number) => isSummerTransferWindow(w) || isWinterTransferWindow(w);
+  for (let next = week + 1; next <= seasonEndWeek(); next += 1) {
+    if (isWindow(next)) return { season, week: next };
   }
-  return { season: season + 1, week: LEAGUE_FIRST_WEEK };
+  for (let next = seasonFirstWeek(season + 1); next <= seasonEndWeek(); next += 1) {
+    if (isWindow(next)) return { season: season + 1, week: next };
+  }
+  return { season: season + 1, week: seasonFirstWeek(season + 1) };
 }
 
-export function advanceCalendarWeek(week: number): { nextWeek: number; footballSeasonEnded: boolean } {
-  if (week >= SEASON_END_WEEK) {
-    return { nextWeek: 1, footballSeasonEnded: true };
+function windowKindOf(week: number): "summer" | "winter" | null {
+  if (isSummerTransferWindow(week)) return "summer";
+  if (isWinterTransferWindow(week)) return "winter";
+  return null;
+}
+
+/**
+ * PRD 35 §6 — the next week worth stopping in after `week`: skips consecutive quiet
+ * weeks (breaks, free cup weeks) and stops at a league week, the pre-season, the
+ * season end, or a week where a transfer window opens or closes.
+ */
+export function nextEventWeek(season: number, week: number): { season: number; week: number } {
+  let s = season;
+  let previous = week;
+  let next = week + 1;
+  for (let guard = 0; guard < 2 * seasonEndWeek() + 2; guard += 1) {
+    if (next > seasonEndWeek()) {
+      s += 1;
+      next = seasonFirstWeek(s);
+    }
+    if (!isQuietWeek(next) || windowKindOf(next) !== windowKindOf(previous)) {
+      return { season: s, week: next };
+    }
+    previous = next;
+    next += 1;
   }
-  return { nextWeek: week + 1, footballSeasonEnded: false };
+  return { season: s, week: next };
+}
+
+/** Advance one calendar week; the football season rolls over after its season-end week. */
+export function advanceCalendarWeek(week: number): { nextWeek: number; footballSeasonEnded: boolean } {
+  return advanceSeasonWeek(week);
 }

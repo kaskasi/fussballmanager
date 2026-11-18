@@ -1,3 +1,4 @@
+import { SEASON_RATE_SCALE } from "../sim/season-schedule.ts";
 import type { DivisionEconomyId } from "./division-economy.ts";
 import { divisionEconomy } from "./club-finances.ts";
 import { tierOf } from "../sim/league-pyramid.ts";
@@ -191,10 +192,11 @@ function advanceOneLoan(
   if (loan.remaining <= 0) {
     return { finances, loan: undefined, lines: [] };
   }
-  const interest = Math.round(loan.remaining * loan.apr_weekly);
+  // PRD 35 §4: rate and payment are per legacy (34-week) season week; same cost per season.
+  const interest = Math.round(loan.remaining * loan.apr_weekly * SEASON_RATE_SCALE);
   const principalPart = Math.min(
     loan.remaining,
-    Math.max(0, loan.weekly_payment - interest),
+    Math.max(0, Math.round(loan.weekly_payment * SEASON_RATE_SCALE) - interest),
   );
   const lines: FinanceLine[] = [];
   if (interest > 0) {

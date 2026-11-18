@@ -1,3 +1,4 @@
+import { matchdayForWeek } from "../sim/season-schedule.ts";
 import { calendarWeek } from "../sim/game-calendar.ts";
 
 /** Merch-Händler: drei Marktplatz-Archetypen plus Express-Druckerei (On Demand). */
@@ -180,10 +181,11 @@ export function merchVendorPerkPct(vendor: MerchVendorId, tier: MerchVendorTier)
 
 export const EXPRESS_PROMO_DISCOUNT = 0.33;
 
-/** Season weeks 2–3 (Saisonstart) and calendar weeks 2–3 (January). */
+/** Matchdays 2–3 (Saisonstart) and calendar weeks 2–3 (January). */
 export function isExpressPromoWeek(seasonWeek: number): boolean {
   const week = Math.round(seasonWeek);
-  if (week === 2 || week === 3) return true;
+  const matchday = matchdayForWeek(week);
+  if (matchday === 2 || matchday === 3) return true;
   const kw = calendarWeek(week);
   return kw === 2 || kw === 3;
 }

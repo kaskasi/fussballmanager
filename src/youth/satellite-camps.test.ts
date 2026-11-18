@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import { generateYouthIntake, maxAnlageProfile } from "./intake-generator.ts";
-import { SEASON_END_WEEK } from "../sim/game-calendar.ts";
+import { seasonEndWeek } from "../sim/season-schedule.ts";
 import { seasonCalendarYear } from "../sim/season-label.ts";
 import {
   buyYouthCamp,
@@ -92,7 +92,7 @@ describe("satellite youth camps", () => {
     })();
     const hq = generateYouthIntake({
       season: 1,
-      week: SEASON_END_WEEK,
+      week: seasonEndWeek(),
       seasonYear: seasonCalendarYear(1),
       clubId: "cl_test",
       nationality: "DE",
@@ -113,7 +113,7 @@ describe("satellite youth camps", () => {
     })();
     const camp = generateYouthIntake({
       season: 1,
-      week: SEASON_END_WEEK,
+      week: seasonEndWeek(),
       seasonYear: seasonCalendarYear(1),
       clubId: "cl_test",
       nationality: "BR",

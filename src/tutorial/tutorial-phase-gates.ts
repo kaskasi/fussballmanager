@@ -1,3 +1,4 @@
+import { matchdayClock } from "../sim/season-schedule.ts";
 import type { GameSession } from "../persistence/game-session.ts";
 import {
   isNavScreenVisible,
@@ -8,7 +9,7 @@ import type { StoryState } from "../narrative/story-state.ts";
 import type { TutorialScreenId } from "./tutorial-types.ts";
 import { isStepCompleted } from "./tutorial-progress.ts";
 
-/** PRD 25 — Phase 2 may run after desk track or from calendar week 2. */
+/** PRD 25 — Phase 2 may run after desk track or from matchday 2 (PRD 35: matchday clock). */
 export const PHASE2_MIN_WEEK = 2;
 
 export function phase1DeskTrackComplete(story: StoryState): boolean {
@@ -16,7 +17,7 @@ export function phase1DeskTrackComplete(story: StoryState): boolean {
 }
 
 export function phase2Eligible(session: GameSession): boolean {
-  return phase1DeskTrackComplete(session.storyState) || session.week >= PHASE2_MIN_WEEK;
+  return phase1DeskTrackComplete(session.storyState) || matchdayClock(session.week) >= PHASE2_MIN_WEEK;
 }
 
 export function phase3ScoutingEligible(session: GameSession): boolean {

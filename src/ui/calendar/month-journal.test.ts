@@ -7,6 +7,7 @@ import { civilDateFromSession } from "../../sim/session-civil-date.ts";
 import type { TransferRecord } from "../../transfers/transfer-history.ts";
 import type { CalendarMilestone } from "./calendar-milestones.ts";
 import { buildMonthJournal } from "./month-journal.ts";
+import { weekForMatchday } from "../../sim/season-schedule.ts";
 
 const SEASON = 2;
 
@@ -68,13 +69,14 @@ function edition(week: number): TreterEdition {
   } as unknown as TreterEdition;
 }
 
-/** Matchdays 5–8 fall in one civil month; pick that month. */
-const month = civilDateFromSession(SEASON, 6, SATURDAY);
-const monthWeeks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].filter((week) => {
-  const sat = civilDateFromSession(SEASON, week, SATURDAY);
+/** Pick the civil month of matchday 6 and the matchdays played in it (PRD 35: week ≠ matchday). */
+const month = civilDateFromSession(SEASON, weekForMatchday(6), SATURDAY);
+const monthMatchdays = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].filter((matchday) => {
+  const sat = civilDateFromSession(SEASON, weekForMatchday(matchday), SATURDAY);
   return sat.year === month.year && sat.monthIndex === month.monthIndex;
 });
-const [firstWeek, secondWeek, thirdWeek] = monthWeeks as [number, number, number];
+const [firstMd, secondMd, thirdMd] = monthMatchdays as [number, number, number];
+const [firstWeek, secondWeek, thirdWeek] = [firstMd, secondMd, thirdMd].map((matchday) => weekForMatchday(matchday)) as [number, number, number];
 
 function journal(overrides: Partial<Parameters<typeof buildMonthJournal>[0]> = {}) {
   return buildMonthJournal({
@@ -90,12 +92,12 @@ function journal(overrides: Partial<Parameters<typeof buildMonthJournal>[0]> = {
 describe("buildMonthJournal", () => {
   it("sums played matches and leaves the rest as upcoming", () => {
     let league = minimalLeague();
-    for (let matchday = 1; matchday < firstWeek; matchday += 1) league = play(league, matchday, 0, 0);
-    league = play(league, firstWeek, 3, 1);
-    league = play(league, secondWeek, 0, 2);
+    for (let matchday = 1; matchday < firstMd; matchday += 1) league = play(league, matchday, 0, 0);
+    league = play(league, firstMd, 3, 1);
+    league = play(league, secondMd, 0, 2);
     const result = journal({ league });
     expect(result.summary).toMatchObject({ played: 2, won: 1, lost: 1, drawn: 0, goalsFor: 3, goalsAgainst: 3 });
-    expect(result.summary.remaining).toBe(monthWeeks.length - 2);
+    expect(result.summary.remaining).toBe(monthMatchdays.length - 2);
     expect(result.upcoming[0]).toMatchObject({ kind: "match", week: thirdWeek });
   });
 

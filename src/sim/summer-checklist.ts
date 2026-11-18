@@ -3,7 +3,8 @@ import type { TrainingSlot } from "../development/training-units.ts";
 import { validateWeeklyPlan } from "../development/weekly-plan.ts";
 import type { BoardState } from "../board/board-state.ts";
 import type { LeagueState } from "../persistence/league-state.ts";
-import { isSummerTransferWindow, LEAGUE_LAST_WEEK } from "./game-calendar.ts";
+import { isSummerTransferWindow } from "./game-calendar.ts";
+import { leagueFirstWeek, leagueLastWeek, slotKind } from "./season-schedule.ts";
 
 export interface SummerChecklistItem {
   id: string;
@@ -12,8 +13,11 @@ export interface SummerChecklistItem {
   done: boolean;
 }
 
-export function showSummerChecklist(week: number, league: LeagueState): boolean {
-  return week > LEAGUE_LAST_WEEK || league.season_complete === true;
+/** After the last matchday, and (PRD 35) through the summer break and pre-season of every later season. */
+export function showSummerChecklist(week: number, league: LeagueState, season = 2): boolean {
+  if (week > leagueLastWeek() || league.season_complete === true) return true;
+  const kind = slotKind(week);
+  return season > 1 && (kind === "summer_break" || kind === "preseason");
 }
 
 export function buildSummerChecklist({
@@ -41,7 +45,8 @@ export function buildSummerChecklist({
       id: "season_done",
       icon: "🏁",
       label: "Liga-Saison abgeschlossen",
-      done: league.season_complete || week > LEAGUE_LAST_WEEK,
+      done:
+        league.season_complete || week > leagueLastWeek() || (season > 1 && week < leagueFirstWeek()),
     },
     {
       id: "board_review",

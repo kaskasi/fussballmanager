@@ -1,6 +1,7 @@
 /** WIREFRAME: PRD 09.2 — week day strip (Mo–So), match day highlighted */
 import { weekdayShortDisplay, weekdayStripAriaLabel } from "../../i18n/calendar-display.ts";
-import { isMatchSaturday, SATURDAY } from "../../sim/day-calendar.ts";
+import { SATURDAY } from "../../sim/day-calendar.ts";
+import { isLeagueWeek } from "../../sim/season-schedule.ts";
 
 export function WeekdayStrip({
   week,
@@ -9,7 +10,7 @@ export function WeekdayStrip({
   week: number;
   weekday: number;
 }) {
-  const matchWeek = isMatchSaturday(week);
+  const matchWeek = isLeagueWeek(week);
   const dayLabels = [1, 2, 3, 4, 5, 6, 7].map((day) => weekdayShortDisplay(day));
 
   return (

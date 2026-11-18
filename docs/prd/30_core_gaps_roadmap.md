@@ -42,8 +42,8 @@ it, so it sits between phases 3 and 5.
 |---|---|---|---|---|---|
 | 1 | World longevity: retirement, AI youth, roster upkeep | Done (PR #34); CA drift moved to phase 2 | [31](31_world_longevity.md) | 2 | — |
 | 2 | League pyramid (5 tiers) + season archive + CA drift | Done (PR #35, #36); national scouting open (PRD 32 §11) | [32](32_league_pyramid.md) | 3–4 | 1 |
-| 3 | Suspensions | Built (PR #38, not merged) | [34](34_suspensions.md) | 1 | — |
-| 4 | Season calendar: breaks every season | Not started | — | 2–3 | — |
+| 3 | Suspensions | Done (PR #38) | [34](34_suspensions.md) | 1 | — |
+| 4 | Season calendar: breaks every season | Built (PR #40, not merged) | [35](35_season_calendar.md) | 2–3 | — |
 | 5 | Cups (regional + national) | Not started | — | 3 | 3, 4 (2 for national cup entrants) |
 | 6 | In-match management | Not started | — | 2 | — |
 | 7 | Club history and chronicle | Not started | — | 2 | 2, ideally 5 |
@@ -447,7 +447,21 @@ PRD 02 (growth per year), PRD 18 (Ruhephase), PRD 10 (F11.1 summer flow).
 and a season end; per-year growth and finance totals within ±5 %; existing
 calendar tests updated, not deleted; the long run passes.
 
-**Progress:** —
+**Progress:** PRD 35 written; scope docs updated. Slice 1 (SeasonSchedule,
+legacy layout, all call sites switched, no behavior change) and slice 2 built:
+52-week template (summer break, 4-week pre-season, 34 league + 9 free cup weeks,
+winter break, season end; one season = one ISO year), rate scaling 34/52
+(17/35 for concessions/merch outside home weeks), minutes carry-over in weeks
+without a match, migration 106 (SAVE_VERSION 106), calendar bands, "Until the
+next event" preset. Normalization test: growth per minutes role 1.000, decline
+0.9998, finances 0.9997 total (merch 0.994). 10-season long run (seed 2026):
+all invariants hold, every season has pre-season, winter break and season end;
+season sim 28.5–30.9 s vs 27.9–28.8 s before (+3 to +8 %; mean week 554–595 ms
+vs 776–1067 ms because quiet weeks are cheap); save 1,216 KB gz at S1 (was
+1,214), 1,608 KB at S10 (was 1,443, +11 %: weekly youth reports,
+`pipeline.youth_inbox` 306 → 469 KB); mean AI CA at S10 102.5 (was 103.3).
+Next: owner review of the normalization choice and four prep weeks for new
+careers; then phase 5.
 
 ---
 

@@ -60,8 +60,9 @@ Matchday-Commerce (Wurst/Bier/Shirt-Preise) und Stadion-Editor liegen in F7; bis
 2. **Zwei Budget-Töpfe:** Transfergeld und Gehaltsbudget sind **getrennte Limits**, nicht nur ein Cash-Konto.
 3. **Cash ist Wahrheit:** `cash` ist die liquide Bilanz nach allen Buchungen. Budgets sind **Caps**, keine zweite Währung.
 4. **Wöchentliche Simulation, monatliche Berichte:** Die Woche simuliert (PRD 08); der Spieler sieht Cashflow in **4-Wochen-Monaten** (13 Perioden/Jahr).
-5. **Icon-first:** Finanzscreen = Wasserfall + Ampeln, keine Tabelle mit 40 Zeilen.
-6. **Finanzierung (F6.6):** Negatives Cash ist erlaubt (Warnung). **Bankdarlehen** nur ab Slice F6.6-A (§11.12) — ein aktives Darlehen, Plausibilitätsprüfung. **Story-Kanäle** (Fan-Anteil, Knochenbrecher, …) nur Postfach, karrierebegrenzt; **kein** Knochenbrecher-Button im Finanzscreen. Investoren/Deep Debt bleiben out.
+5. **Wochen- vs. Jahresbeträge (PRD 35):** Die Saison hat 52 Wochen. Alle `*_weekly`-Werte (Division, `wage_weekly`, Merch-Nachfrage, Kreditrate) sind Nennwerte einer 34-Wochen-Saison; das Ledger bucht jede Woche `Nennwert × 34/52` (`SEASON_RATE_SCALE`). So bleiben Jahressummen gleich. Pro Spiel oder pro Saison gebuchte Posten (Eintritt, Hospitality pro Heimspiel, Saisonprämie, TV-Bonus) werden nicht skaliert.
+6. **Icon-first:** Finanzscreen = Wasserfall + Ampeln, keine Tabelle mit 40 Zeilen.
+7. **Finanzierung (F6.6):** Negatives Cash ist erlaubt (Warnung). **Bankdarlehen** nur ab Slice F6.6-A (§11.12) — ein aktives Darlehen, Plausibilitätsprüfung. **Story-Kanäle** (Fan-Anteil, Knochenbrecher, …) nur Postfach, karrierebegrenzt; **kein** Knochenbrecher-Button im Finanzscreen. Investoren/Deep Debt bleiben out.
 
 ---
 

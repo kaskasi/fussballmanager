@@ -1,8 +1,4 @@
-import {
-  isLeagueMatchWeek,
-  LEAGUE_FIRST_WEEK,
-  LEAGUE_LAST_WEEK,
-} from "../../sim/game-calendar.ts";
+import { LEAGUE_MATCHDAYS, slotKind, type SeasonSlotKind, weekForMatchday } from "../../sim/season-schedule.ts";
 import { SATURDAY, SUNDAY } from "../../sim/day-calendar.ts";
 import {
   calendarGridYear,
@@ -39,6 +35,8 @@ export interface CalendarMonthCell {
   phase?: DayPhase;
   transferWindow?: TransferWindowKind;
   transferLastDay?: boolean;
+  /** PRD 35 — break, free (cup) week or season end; absent for league and pre-season days. */
+  slotKind?: Exclude<SeasonSlotKind, "league" | "preseason">;
   match?: {
     label: string;
     initials: string;
@@ -56,12 +54,17 @@ function civilDateKey(year: number, monthIndex: number, day: number): string {
   return `${year}-${monthIndex}-${day}`;
 }
 
-function leagueMatchSaturdayWeeks(season: number): Map<string, number> {
+function bandKind(week: number): CalendarMonthCell["slotKind"] {
+  const kind = slotKind(week);
+  return kind === "league" || kind === "preseason" ? undefined : kind;
+}
+
+/** Civil Saturday → matchday played on it. */
+function leagueMatchSaturdays(season: number): Map<string, number> {
   const map = new Map<string, number>();
-  for (let week = LEAGUE_FIRST_WEEK; week <= LEAGUE_LAST_WEEK; week += 1) {
-    if (!isLeagueMatchWeek(week)) continue;
-    const sat = civilDateFromSession(season, week, SATURDAY);
-    map.set(civilDateKey(sat.year, sat.monthIndex, sat.day), week);
+  for (let matchday = 1; matchday <= LEAGUE_MATCHDAYS; matchday += 1) {
+    const sat = civilDateFromSession(season, weekForMatchday(matchday), SATURDAY);
+    map.set(civilDateKey(sat.year, sat.monthIndex, sat.day), matchday);
   }
   return map;
 }
@@ -74,7 +77,7 @@ export function buildMonthGrid(
   milestones: readonly CalendarMilestone[] = [],
 ): CalendarMonthCell[] {
   const year = calendarGridYear(season, monthIndex);
-  const matchSaturdays = leagueMatchSaturdayWeeks(season);
+  const matchSaturdays = leagueMatchSaturdays(season);
   const first = new Date(year, monthIndex, 1);
   const startPad = (first.getDay() + 6) % 7;
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
@@ -86,9 +89,9 @@ export function buildMonthGrid(
   }
 
   for (let day = 1; day <= daysInMonth; day += 1) {
-    const seasonWeek = matchSaturdays.get(civilDateKey(year, monthIndex, day));
+    const matchday = matchSaturdays.get(civilDateKey(year, monthIndex, day));
     let match: CalendarMonthCell["match"];
-    const fixture = seasonWeek ? playerMatch(league, seasonWeek) : undefined;
+    const fixture = matchday ? playerMatch(league, matchday) : undefined;
     if (fixture) {
       match = {
         label: t(fixture.home ? "calendar.match.home" : "calendar.match.away", {
@@ -111,7 +114,7 @@ export function buildMonthGrid(
       })();
 
     const session = sessionDays.get(civilKey({ year, monthIndex, day }));
-    // Windows follow the game's season weeks (KW 33–36, KW 2–4), not fixed civil dates.
+    // Windows follow the game's season weeks (PRD 35: KW 29–32, KW 52–2), not fixed civil dates.
     const transferWindow = session ? transferWindowKind(session.week) : null;
     const transferLastDay =
       transferWindow != null && session?.weekday === SUNDAY && transferWindowKind(session.week + 1) == null;
@@ -124,6 +127,7 @@ export function buildMonthGrid(
       phase: today ? dayPhase(session, today) : undefined,
       transferWindow: transferWindow ?? undefined,
       transferLastDay: transferLastDay || undefined,
+      slotKind: session ? bandKind(session.week) : undefined,
       match,
     });
   }

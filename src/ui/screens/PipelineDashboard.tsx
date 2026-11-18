@@ -184,7 +184,7 @@ export function PipelineDashboard({
         board={board}
         trainingPlan={trainingPlan}
       />
-      {lastSeasonAwards && showSummerChecklist(week, league) ? (
+      {lastSeasonAwards && showSummerChecklist(week, league, season) ? (
         <SeasonAwardsGallery snapshot={lastSeasonAwards} />
       ) : null}
 

@@ -6,7 +6,7 @@ import type { TreterArticle, TreterEdition } from "../../media/kicker-digest.ts"
 import type { ChronicleEntry } from "../../narrative/story-state.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { SATURDAY } from "../../sim/day-calendar.ts";
-import { LEAGUE_FIRST_WEEK, LEAGUE_LAST_WEEK } from "../../sim/game-calendar.ts";
+import { LEAGUE_MATCHDAYS, weekForMatchday } from "../../sim/season-schedule.ts";
 import { civilDateFromSession } from "../../sim/session-civil-date.ts";
 import type { TransferRecord } from "../../transfers/transfer-history.ts";
 import type { CalendarMilestone } from "./calendar-milestones.ts";
@@ -106,9 +106,10 @@ export function buildMonthJournal(input: {
     remaining: 0,
   };
 
-  for (let week = LEAGUE_FIRST_WEEK; week <= LEAGUE_LAST_WEEK; week += 1) {
+  for (let matchday = 1; matchday <= LEAGUE_MATCHDAYS; matchday += 1) {
+    const week = weekForMatchday(matchday);
     const day = inMonth(week, SATURDAY);
-    const match = day == null ? undefined : playerMatch(league, week);
+    const match = day == null ? undefined : playerMatch(league, matchday);
     if (day == null || !match) continue;
     const entry: JournalEntry = { kind: "match", id: `match-${week}`, week, weekday: SATURDAY, day, match };
     if (match.result) {

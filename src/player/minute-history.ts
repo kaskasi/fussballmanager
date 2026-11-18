@@ -37,7 +37,8 @@ export function resetSeasonMinutes(player: Player): Player {
     ...player,
     state: {
       ...state,
-      weekly_minutes: 0,
+      // PRD 35 §4: `weekly_minutes` (the last league week) carries into the summer break and
+      // pre-season, so weeks without a match keep each player's development rhythm.
       season_minutes: 0,
       season_apps: 0,
       season_goals: 0,

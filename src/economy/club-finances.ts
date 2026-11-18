@@ -1,5 +1,6 @@
 import type { LeagueState } from "../persistence/league-state.ts";
 import { leagueTable, topScorers } from "../sim/league-week.ts";
+import { OFF_MATCH_WEEK_SCALE, SEASON_RATE_SCALE } from "../sim/season-schedule.ts";
 import { stadiumMatchdayIncome, type ClubStadium } from "../stadium/club-stadium.ts";
 import { weekCommerceOccupancy } from "../stadium/matchday-commerce.ts";
 import { weeklyMerchandisingEconomics } from "./merchandising.ts";
@@ -180,17 +181,29 @@ export function applyFinanceLines(
   return normalizeFinances(next);
 }
 
-export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceLine[] {
+/** PRD 35 §4 — per-week scales of the season template (defaults: the active template). */
+export interface WeekRateScales {
+  perWeek: number;
+  offMatch: number;
+}
+
+export function buildWeeklyFinanceLines(
+  context: WeeklyFinanceContext,
+  scales: WeekRateScales = { perWeek: SEASON_RATE_SCALE, offMatch: OFF_MATCH_WEEK_SCALE },
+): FinanceLine[] {
   const economy = divisionEconomy(context.divisionId);
   const week = context.week;
+  // PRD 35 §4: `*_weekly` values are nominal for a 34-week season; book the per-week share of a 52-week one.
+  const perWeek = (nominal: number) => Math.round(nominal * scales.perWeek);
+  const offMatch = context.isHomeMatchWeek ? 1 : scales.offMatch;
   const boardIncome = weeklySponsorInventoryIncome(context.stadium?.sponsor_deals, context.season);
   const lines: FinanceLine[] = [
-    { kind: "sponsorship", amount: economy.sponsorship_weekly + boardIncome, week },
-    { kind: "tv_rights", amount: economy.tv_weekly, week },
-    { kind: "player_wages", amount: -weeklyWageBill(context.players, context.clubId), week },
+    { kind: "sponsorship", amount: perWeek(economy.sponsorship_weekly + boardIncome), week },
+    { kind: "tv_rights", amount: perWeek(economy.tv_weekly), week },
+    { kind: "player_wages", amount: -perWeek(weeklyWageBill(context.players, context.clubId)), week },
     {
       kind: "staff_wages",
-      amount: -(
+      amount: -perWeek(
         (context.coachingStaff
           ? weeklyStaffWageBill(context.coachingStaff)
           : economy.staff_wages_weekly) +
@@ -201,7 +214,7 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
       ),
       week,
     },
-    { kind: "facility_maintenance", amount: -economy.maintenance_weekly, week },
+    { kind: "facility_maintenance", amount: -perWeek(economy.maintenance_weekly), week },
   ];
   const tickets = matchdayTicketIncome(
     context.divisionId,
@@ -224,15 +237,17 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
   const fanbase = context.stadium?.fanbase;
   const concessionPrices = resolveConcessionPrices(context.stadium);
   const concessions =
-    weeklyPrecinctConcessionsCash(
+    offMatch *
+    (weeklyPrecinctConcessionsCash(
       context.stadium?.precinct,
       occupancy,
       fanbase,
       context.isHomeMatchWeek,
       concessionPrices,
-    ) + (context.hospitalityIncome ?? 0);
+    ) +
+      (context.hospitalityIncome ?? 0));
   if (concessions > 0) {
-    lines.push({ kind: "concessions", amount: concessions, week });
+    lines.push({ kind: "concessions", amount: Math.round(concessions), week });
   }
   const merchNet =
     context.merchandisingNet ??
@@ -244,6 +259,7 @@ export function buildWeeklyFinanceLines(context: WeeklyFinanceContext): FinanceL
       isHomeMatchWeek: context.isHomeMatchWeek,
       week: context.week,
       season: context.season,
+      weekScale: offMatch,
     }).net;
   if (merchNet > 0) {
     lines.push({ kind: "merchandising", amount: merchNet, week });

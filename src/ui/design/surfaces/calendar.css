@@ -257,6 +257,20 @@
   border-top: 3px solid var(--info);
 }
 
+/* PRD 35 — breaks, free (cup) weeks and the season-end week as their own bands */
+.tc-cal__day.is-band-summer_break,
+.tc-cal__day.is-band-winter_break {
+  border-inline-start: 3px solid var(--line-strong);
+}
+
+.tc-cal__day.is-band-cup {
+  border-inline-start: 3px dashed var(--line-strong);
+}
+
+.tc-cal__day.is-band-season_end {
+  border-inline-start: 3px solid var(--accent);
+}
+
 .tc-cal__day.is-today {
   border: 2px solid var(--accent);
   background: var(--panel);
@@ -455,6 +469,17 @@
   border-top: 3px solid var(--info);
   background: var(--panel);
   box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.tc-cal__swatch.is-break {
+  background: var(--panel);
+  box-shadow: inset 3px 0 0 var(--line-strong), inset 0 0 0 1px var(--line);
+}
+
+.tc-cal__swatch.is-free {
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--line);
+  border-inline-start: 3px dashed var(--line-strong);
 }
 
 .tc-cal__swatch.is-off {

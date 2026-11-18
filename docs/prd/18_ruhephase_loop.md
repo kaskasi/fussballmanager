@@ -33,6 +33,15 @@ Referenz-Implementierungen: PRD 03.6.2 (Camp-Leiter), Training-Reminder-Inbox, P
 
 ---
 
+## Ruhige Wochen (PRD 35)
+
+Die Saison hat 52 Wochen: Sommerpause, Vorbereitung, freie Pokalwochen, Winterpause.
+**Bis zum nächsten Ereignis simulieren** überspringt aufeinanderfolgende ruhige Wochen
+mit einem Klick und hält am nächsten Spieltag, an einem Fensterwechsel, am Saisonende
+oder an einem Interrupt aus der Tabelle oben. Ein längeres Jahr kostet so nicht mehr NEXT-Klicks.
+
+---
+
 ## Nicht in v1
 
 - Assistent startet Regions-/Vereins-Jobs.

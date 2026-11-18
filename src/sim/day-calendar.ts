@@ -1,5 +1,5 @@
 import type { GameSession } from "../persistence/game-session.ts";
-import { isLeagueMatchWeek } from "./game-calendar.ts";
+import { isLeagueWeek } from "./season-schedule.ts";
 
 export const MONDAY = 1;
 export const TUESDAY = 2;
@@ -23,17 +23,13 @@ export function weekdayLabel(weekday: number): string {
   return WEEKDAY_LABELS[index] ?? "?";
 }
 
-export function isMatchSaturday(week: number): boolean {
-  return isLeagueMatchWeek(week);
-}
-
 export function resolveSmartSkip(
   session: GameSession,
   hasPendingInbox: boolean,
   blockKickerDeliveryDay = false,
 ): SmartSkipTarget {
   const { week, weekday, matchPlayedThisWeek } = session;
-  const matchWeek = isMatchSaturday(week);
+  const matchWeek = isLeagueWeek(week);
 
   if (blockKickerDeliveryDay && weekday === THURSDAY) {
     return { weekday: THURSDAY, action: "inbox", daysAdvanced: 0 };

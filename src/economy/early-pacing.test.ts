@@ -15,6 +15,7 @@ import {
   infrastructureCostForWeek,
   needsInfrastructureSpendConfirm,
 } from "./early-pacing.ts";
+import { weekForMatchday } from "../sim/season-schedule.ts";
 
 function minimalFinanceContext(week: number): WeeklyFinanceContext {
   return {
@@ -39,31 +40,34 @@ function cheapestInfraBingeBaseCost(): number {
   return sum;
 }
 
+/** PRD 35: early pacing reads the matchday clock; test by matchday. */
+const md = weekForMatchday;
+
 describe("infrastructureCostForWeek", () => {
   it("adds up to 20% surcharge in week 1 and none after week 6", () => {
-    expect(infrastructureCostForWeek(100_000, 1)).toBe(120_000);
-    expect(infrastructureCostForWeek(100_000, 7)).toBe(100_000);
-    expect(infrastructureCostForWeek(100_000, 10)).toBe(100_000);
+    expect(infrastructureCostForWeek(100_000, md(1))).toBe(120_000);
+    expect(infrastructureCostForWeek(100_000, md(7))).toBe(100_000);
+    expect(infrastructureCostForWeek(100_000, md(10))).toBe(100_000);
   });
 
   it("week 2 costs more than week 10 for the same base", () => {
-    expect(infrastructureCostForWeek(85_000, 2)).toBeGreaterThan(infrastructureCostForWeek(85_000, 10));
+    expect(infrastructureCostForWeek(85_000, md(2))).toBeGreaterThan(infrastructureCostForWeek(85_000, md(10)));
   });
 });
 
 describe("needsInfrastructureSpendConfirm", () => {
   it("requires confirm for small early-season spends", () => {
-    expect(needsInfrastructureSpendConfirm(15_000, 2, 50_000)).toBe(true);
+    expect(needsInfrastructureSpendConfirm(15_000, md(2), 50_000)).toBe(true);
   });
 
   it("allows tiny late-season spends without infrastructure rules", () => {
-    expect(needsInfrastructureSpendConfirm(10_000, 12, 50_000)).toBe(false);
+    expect(needsInfrastructureSpendConfirm(10_000, md(12), 50_000)).toBe(false);
   });
 });
 
 describe("early economy diagnosis", () => {
   it("cheapest binge at week 1 exceeds half of starting cash before income", () => {
-    const binge = infrastructureCostForWeek(cheapestInfraBingeBaseCost(), 1);
+    const binge = infrastructureCostForWeek(cheapestInfraBingeBaseCost(), md(1));
     expect(binge).toBeGreaterThan(STARTING_CLUB_CASH * 0.5);
   });
 
@@ -73,7 +77,7 @@ describe("early economy diagnosis", () => {
       const lines = buildWeeklyFinanceLines(minimalFinanceContext(week));
       net += lines.reduce((sum, line) => sum + line.amount, 0);
     }
-    const binge = infrastructureCostForWeek(cheapestInfraBingeBaseCost(), 1);
+    const binge = infrastructureCostForWeek(cheapestInfraBingeBaseCost(), md(1));
     expect(binge).toBeGreaterThan(net + STARTING_CLUB_CASH * 0.3);
   });
 });

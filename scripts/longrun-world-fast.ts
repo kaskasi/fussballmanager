@@ -7,7 +7,7 @@
  */
 import { setLocale } from "../src/i18n/index.ts";
 import { newGameSession, type GameSession } from "../src/persistence/game-session.ts";
-import { LEAGUE_FIRST_WEEK, LEAGUE_LAST_WEEK } from "../src/sim/game-calendar.ts";
+import { seasonWeeks } from "../src/sim/season-schedule.ts";
 import { advanceRivalGrowthWeek } from "../src/sim/rival-growth.ts";
 import { runSeasonEnd } from "../src/sim/season-end.ts";
 import { estimateCa } from "../src/transfers/market-value.ts";
@@ -46,7 +46,7 @@ console.log(`World-only run · ${seasons} seasons · seed ${seed}`);
 for (let played = 0; played < seasons; played++) {
   const season = session.season;
   let rivals = session.rivalPlayers;
-  for (let week = LEAGUE_FIRST_WEEK; week <= LEAGUE_LAST_WEEK; week++) {
+  for (const week of seasonWeeks(season)) {
     rivals = advanceRivalGrowthWeek(rivals, season, week, session.masterSeed, true);
   }
   const before = { ...session, rivalPlayers: rivals };

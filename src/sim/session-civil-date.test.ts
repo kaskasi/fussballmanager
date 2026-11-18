@@ -1,41 +1,42 @@
 import { describe, expect, it } from "vitest";
-import { CAREER_START_WEEK, calendarWeek } from "./game-calendar.ts";
-import { civilDateFromSession, sessionMonthIndex } from "./session-civil-date.ts";
+import { calendarWeek } from "./game-calendar.ts";
+import { careerStartWeek, leagueFirstWeek, seasonEndWeek } from "./season-schedule.ts";
+import { calendarGridYear, civilDateFromSession, sessionMonthIndex } from "./session-civil-date.ts";
 
 describe("session civil date", () => {
-  it("starts new careers on 10 August (Monday KW 33), Spieltag 1 on 24 August", () => {
-    expect(CAREER_START_WEEK).toBe(-1);
-    expect(calendarWeek(CAREER_START_WEEK)).toBe(33);
-    const start = civilDateFromSession(1, CAREER_START_WEEK, 1);
-    expect(start).toEqual({ year: 2026, monthIndex: 7, day: 10 });
-    const matchday1 = civilDateFromSession(1, 1, 1);
-    expect(matchday1).toEqual({ year: 2026, monthIndex: 7, day: 24 });
+  it("starts new careers on 13 July (Monday KW 29), Spieltag 1 on 10 August (PRD 35)", () => {
+    expect(careerStartWeek()).toBe(3);
+    expect(calendarWeek(careerStartWeek())).toBe(29);
+    expect(civilDateFromSession(1, careerStartWeek(), 1)).toEqual({ year: 2026, monthIndex: 6, day: 13 });
+    expect(civilDateFromSession(1, leagueFirstWeek(), 1)).toEqual({ year: 2026, monthIndex: 7, day: 10 });
   });
 
   it("maps season week and weekday to a stable civil day", () => {
-    const wed = civilDateFromSession(1, 3, 3);
-    expect(wed.monthIndex).toBeGreaterThanOrEqual(0);
-    expect(wed.day).toBeGreaterThanOrEqual(1);
-    const same = civilDateFromSession(1, 3, 3);
-    expect(same).toEqual(wed);
-    const thu = civilDateFromSession(1, 3, 4);
+    const wed = civilDateFromSession(1, 10, 3);
+    expect(civilDateFromSession(1, 10, 3)).toEqual(wed);
+    const thu = civilDateFromSession(1, 10, 4);
     expect(thu.day).toBe(wed.day + 1);
   });
 
-  it("opens September for Spieltag 2 (KW 36), not August KW heuristic", () => {
-    expect(calendarWeek(2)).toBe(36);
-    expect(sessionMonthIndex(1, 2, 3)).toBe(8);
-    const civil = civilDateFromSession(1, 2, 3);
-    expect(civil.monthIndex).toBe(8);
+  it("puts matchday 4 (week 10) in September", () => {
+    expect(calendarWeek(10)).toBe(36);
+    expect(sessionMonthIndex(1, 10, 3)).toBe(8);
   });
 
-  it("places Rückrunde in the calendar year after the season label", () => {
-    const autumn = civilDateFromSession(2, 6, 1);
-    const spring = civilDateFromSession(2, 24, 1);
+  it("places the second half and the season end in the calendar year after the season label", () => {
+    const autumn = civilDateFromSession(2, 10, 1);
+    const spring = civilDateFromSession(2, 35, 1);
+    const end = civilDateFromSession(2, seasonEndWeek(), 7);
     expect(autumn.year).toBe(2027);
     expect(spring.year).toBe(2028);
-    const autumnTime = new Date(autumn.year, autumn.monthIndex, autumn.day).getTime();
-    const springTime = new Date(spring.year, spring.monthIndex, spring.day).getTime();
-    expect(springTime).toBeGreaterThan(autumnTime);
+    expect(end.year).toBe(2028);
+    expect(end.monthIndex).toBeGreaterThanOrEqual(5);
+  });
+
+  it("shows each month of the season in the year that holds most of its season days", () => {
+    expect(calendarGridYear(1, 7)).toBe(2026); // August: autumn
+    expect(calendarGridYear(1, 1)).toBe(2027); // February: spring
+    expect(calendarGridYear(1, 6)).toBe(2026); // July: season start
+    expect(calendarGridYear(1, 5)).toBe(2027); // June: season end
   });
 });

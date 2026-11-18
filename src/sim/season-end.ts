@@ -17,7 +17,7 @@ import {
   type PromotionRelegationResult,
 } from "./promotion-relegation.ts";
 import { ageRivalPlayers } from "./rival-growth.ts";
-import { SEASON_END_WEEK } from "../sim/game-calendar.ts";
+import { seasonEndWeek } from "../sim/season-schedule.ts";
 import {
   generateYouthIntake,
   type AcademyFacility,
@@ -102,14 +102,14 @@ export function runSeasonEnd(
   const { players: afterReturns, records: loanReturns } = processLoanReturns(
     aged,
     endingSeason,
-    SEASON_END_WEEK,
+    seasonEndWeek(),
   );
   const preContractStep = activatePendingPreContracts(
     afterReturns,
     rivalsWithLines,
     session.transferState,
     endingSeason,
-    SEASON_END_WEEK,
+    seasonEndWeek(),
     session.clubId,
   );
 
@@ -123,7 +123,7 @@ export function runSeasonEnd(
   ]);
   const intakeRaw = generateYouthIntake({
     season: session.season,
-    week: SEASON_END_WEEK,
+    week: seasonEndWeek(),
     seasonYear: seasonCalendarYear(session.season),
     clubId: session.clubId,
     nationality: "DE",
@@ -151,7 +151,7 @@ export function runSeasonEnd(
     session.finances,
     session.league,
     endingSeason,
-    SEASON_END_WEEK,
+    seasonEndWeek(),
     session.stadium,
   );
   const boardCtx = {
@@ -245,8 +245,8 @@ export function runSeasonEnd(
       careerClubId: session.clubId,
       endingSeason,
       nextSeason: session.season,
-      week: SEASON_END_WEEK,
-    }) ?? appendSeasonCoda(session.storyState, session.league, endingSeason, SEASON_END_WEEK);
+      week: seasonEndWeek(),
+    }) ?? appendSeasonCoda(session.storyState, session.league, endingSeason, seasonEndWeek());
   if (!boardStep.evaluation.dismissed) {
     board = { ...board, objectives: careerActBoardObjectives(board.objectives, storyState, session.season) };
   }
@@ -294,10 +294,10 @@ function generateCampIntakes(
   for (const camp of camps) {
     const nation = campNationById(camp.id);
     if (!nation) continue;
-    if (!isCampOperational(camp, season, SEASON_END_WEEK)) continue;
+    if (!isCampOperational(camp, season, seasonEndWeek())) continue;
     const batch = generateYouthIntake({
       season,
-      week: SEASON_END_WEEK,
+      week: seasonEndWeek(),
       seasonYear: seasonCalendarYear(season),
       clubId,
       nationality: nation.code,

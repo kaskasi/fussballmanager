@@ -46,6 +46,12 @@ function weekRows(cells: readonly CalendarMonthCell[]): CalendarMonthCell[][] {
   return rows;
 }
 
+const SIMULATE_LABEL: Record<SimulateUntil, string> = {
+  next_week: "shell.simulate.nextWeek",
+  next_event: "shell.simulate.nextEvent",
+  next_month: "shell.simulate.nextMonth",
+};
+
 export function CalendarScreen({
   season,
   week,
@@ -154,6 +160,10 @@ export function CalendarScreen({
   if (summary.transfers > 0) summaryParts.push(t("calendar.summary.transfers", { count: summary.transfers }));
 
   const hasOffDays = cells.some((cell) => cell.phase === "off");
+  const hasBreakDays = cells.some(
+    (cell) => cell.slotKind === "summer_break" || cell.slotKind === "winter_break",
+  );
+  const hasFreeWeek = cells.some((cell) => cell.slotKind === "cup");
   const hasWindow = cells.some((cell) => cell.transferWindow);
 
   return (
@@ -196,7 +206,7 @@ export function CalendarScreen({
               </div>
               {onSimulateUntil ? (
                 <div className="tc-cal__nav" role="group" aria-label={t("calendar.simulate.aria")}>
-                  {(["next_week", "next_month"] as const).map((kind) => (
+                  {(["next_week", "next_event", "next_month"] as const).map((kind) => (
                     <button
                       key={kind}
                       type="button"
@@ -204,7 +214,7 @@ export function CalendarScreen({
                       disabled={busy}
                       onClick={() => onSimulateUntil(kind)}
                     >
-                      {t(kind === "next_week" ? "shell.simulate.nextWeek" : "shell.simulate.nextMonth")}
+                      {t(SIMULATE_LABEL[kind])}
                     </button>
                   ))}
                 </div>
@@ -291,6 +301,18 @@ export function CalendarScreen({
                 <li className="tc-legend__item">
                   <span className="tc-cal__swatch is-window" aria-hidden />
                   {t("calendar.legend.window")}
+                </li>
+              ) : null}
+              {hasBreakDays ? (
+                <li className="tc-legend__item">
+                  <span className="tc-cal__swatch is-break" aria-hidden />
+                  {t("calendar.legend.break")}
+                </li>
+              ) : null}
+              {hasFreeWeek ? (
+                <li className="tc-legend__item">
+                  <span className="tc-cal__swatch is-free" aria-hidden />
+                  {t("calendar.phase.freeWeek")}
                 </li>
               ) : null}
               {hasOffDays ? (

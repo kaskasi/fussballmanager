@@ -1,6 +1,6 @@
 import { matchdayFixtures, type ScheduledFixture, type TeamId } from "@fussballmanager/shared";
 import type { GameSession } from "../persistence/game-session.ts";
-import { isLeagueMatchWeek, LEAGUE_FIRST_WEEK } from "./game-calendar.ts";
+import { isLeagueWeek, weekForMatchday } from "./season-schedule.ts";
 import { clubShortName, playerFixture, weeklySeed } from "./league-week.ts";
 
 export interface CareerMatchSetup {
@@ -38,12 +38,14 @@ export function prepareCareerMatch(session: GameSession): CareerMatchSetup | nul
 
 /** This week's fixture, or — in the preseason — the season opener, so lineup and analysis can be prepared early. */
 export function prepareUpcomingCareerMatch(session: GameSession): CareerMatchSetup | null {
-  const matchWeek = session.week < LEAGUE_FIRST_WEEK ? LEAGUE_FIRST_WEEK : session.week;
+  // Before this season's first matchday (pre-season, breaks between seasons) prepare the next fixture.
+  const nextMatchWeek = weekForMatchday(session.league.matchday);
+  const matchWeek = isLeagueWeek(session.week) ? session.week : nextMatchWeek;
   return careerMatchForWeek(session, matchWeek);
 }
 
 function careerMatchForWeek(session: GameSession, matchWeek: number): CareerMatchSetup | null {
-  if (!isLeagueMatchWeek(matchWeek) || session.league.season_complete) {
+  if (!isLeagueWeek(matchWeek) || session.league.season_complete) {
     return null;
   }
 

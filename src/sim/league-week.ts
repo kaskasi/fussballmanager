@@ -21,7 +21,7 @@ import {
 } from "../persistence/league-state.ts";
 import type { Player } from "../types/player.ts";
 import { careerEngineSquadFromPlayers } from "./career-engine-squad.ts";
-import { isLeagueMatchWeek } from "./game-calendar.ts";
+import { isLeagueWeek } from "./season-schedule.ts";
 import {
   clubDisplayName,
   clubShortLabel,
@@ -374,7 +374,7 @@ export async function advanceLeagueWeek(
 ): Promise<LeagueWeekAdvance> {
   const current = normalizeLeagueState(league, masterSeed);
 
-  if (!isLeagueMatchWeek(calendarWeek) || current.season_complete) {
+  if (!isLeagueWeek(calendarWeek) || current.season_complete) {
     return {
       league: current,
       playerFixture: null,

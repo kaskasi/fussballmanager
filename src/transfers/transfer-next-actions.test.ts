@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import { listTransferNextActions } from "./transfer-next-actions.ts";
+import { weekForMatchday as md } from "../sim/season-schedule.ts";
 
 describe("transfer next actions", () => {
   it("lists youth without a deal first", () => {
@@ -52,7 +53,7 @@ describe("transfer next actions", () => {
       rivalPlayers: [rival],
       clubId: "cl_fc_nordstern",
       season: 2,
-      week: 20,
+      week: md(20),
       scoutTargetIds: ["pl_rival"],
       pending: [],
     });
@@ -70,7 +71,7 @@ describe("transfer next actions", () => {
       rivalPlayers: [rival],
       clubId: "cl_fc_nordstern",
       season: 2,
-      week: 20,
+      week: md(20),
       scoutTargetIds: ["pl_pending"],
       pending: [
         {

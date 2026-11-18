@@ -5,8 +5,9 @@ import { storyModeAct1StoryState } from "../narrative/story-state.ts";
 
 describe("career playtest", () => {
   it("plays the first weeks of a career through the real week pipeline", async () => {
-    const report = await runCareerPlaytest({ strategy: "autopilot", maxWeeks: 3 });
-    expect(report.weeks).toHaveLength(3);
+    // PRD 35: four pre-season weeks before matchday 1.
+    const report = await runCareerPlaytest({ strategy: "autopilot", maxWeeks: 5 });
+    expect(report.weeks).toHaveLength(5);
     expect(report.final.matchday).toBeGreaterThanOrEqual(1);
     expect(report.final.result).toMatch(/^[WDL] \d+:\d+ (vs|at) /);
   });

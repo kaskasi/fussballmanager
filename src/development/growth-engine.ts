@@ -1,4 +1,5 @@
 import type { Attributes } from "../types/player.ts";
+import { SEASON_RATE_SCALE } from "../sim/season-schedule.ts";
 
 /**
  * Weekly attribute growth (PRD 02.1).
@@ -11,6 +12,7 @@ import type { Attributes } from "../types/player.ts";
 const SOFT_CAP = 180;
 const GROWTH_MIN = -3;
 const GROWTH_MAX = 5;
+/** Tuned to a 34-week season; `learningBase` and `decayPerWeek` apply `SEASON_RATE_SCALE` (PRD 35 §4). */
 export const LEARNING_BASE_POINTS_PER_WEEK = 0.07;
 /** Team and individual training term. Decay is unchanged. */
 export const TRAINING_POWER = 1.25;
@@ -54,6 +56,8 @@ export interface WeeklyGrowthInput {
   growthMultiplier?: number;
   squadStatus?: "pro" | "u17" | "u19" | "loaned_out";
   seasonApps?: number;
+  /** Per-week rate scale of the season template (PRD 35 §4). Default `SEASON_RATE_SCALE`. */
+  rateScale?: number;
   /** League matchdays already completed this season (for pro playing-time gate). */
   leagueMatchdaysPlayed?: number;
   random?: () => number;
@@ -78,8 +82,8 @@ export function ageDevelopmentFactor(effectiveAgeValue: number): number {
 }
 
 /** `LEARNING_BASE × ageDevelopmentFactor`. */
-export function learningBase(effectiveAgeValue: number): number {
-  return LEARNING_BASE_POINTS_PER_WEEK * ageDevelopmentFactor(effectiveAgeValue);
+export function learningBase(effectiveAgeValue: number, rateScale = SEASON_RATE_SCALE): number {
+  return LEARNING_BASE_POINTS_PER_WEEK * rateScale * ageDevelopmentFactor(effectiveAgeValue);
 }
 
 export function attributeSigma(attribute: keyof Attributes): number {
@@ -176,8 +180,9 @@ export function decayPerWeek(
   attribute: keyof Attributes,
   effectiveAgeValue: number,
   value: number,
+  rateScale = SEASON_RATE_SCALE,
 ): number {
-  return (Math.max(0, value) * declinePercentPerYear(attribute, effectiveAgeValue)) / 100 / 52;
+  return ((Math.max(0, value) * declinePercentPerYear(attribute, effectiveAgeValue)) / 100 / 52) * rateScale;
 }
 
 export function sampleNoise(attribute: keyof Attributes, random: () => number = Math.random): number {
@@ -205,7 +210,7 @@ export function calculateWeeklyTrainingGain(input: WeeklyGrowthInput): number {
   );
 
   return (
-    learningBase(age) *
+    learningBase(age, input.rateScale) *
     input.anlage *
     input.drive *
     environment(input.environmentFactor ?? 1) *
@@ -236,7 +241,8 @@ export function weeklyDecayDelta(
  */
 export function calculateWeeklyGrowth(input: WeeklyGrowthInput): number {
   const age = effectiveAge(input.age, input.maturityOffset);
-  let growth = calculateWeeklyTrainingGain(input) - decayPerWeek(input.attribute, age, input.value);
+  let growth =
+    calculateWeeklyTrainingGain(input) - decayPerWeek(input.attribute, age, input.value, input.rateScale);
 
   if (input.value >= SOFT_CAP && growth > 0) {
     growth *= 0.3;

@@ -1,12 +1,14 @@
-import { SEASON_END_WEEK } from "../../sim/game-calendar.ts";
 import { ensureYouthContract } from "../../player/youth-contract.ts";
 import type { SaveMigration } from "./index.ts";
+
+/** Frozen: the 34-week season this migration was written for. */
+const LEGACY_LAST_WEEK = 34;
 
 export const migration008Calendar: SaveMigration = {
   id: "migration_008_calendar",
   apply: (save) => {
-    if (save.state.week > SEASON_END_WEEK) {
-      save.state.week = ((save.state.week - 1) % SEASON_END_WEEK) + 1;
+    if (save.state.week > LEGACY_LAST_WEEK) {
+      save.state.week = ((save.state.week - 1) % LEGACY_LAST_WEEK) + 1;
     }
     if (save.state.week === 0) {
       save.state.week = 1;

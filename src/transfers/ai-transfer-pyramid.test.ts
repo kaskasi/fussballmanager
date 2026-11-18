@@ -31,7 +31,7 @@ describe("AI transfer market across the pyramid (PRD 32 §8)", () => {
         divisionId: session.league.division_id,
         leaguePools: pools,
         season: 1,
-        week: 1,
+        week: 3,
         masterSeed: seed,
         worldClubs: session.world.clubs,
       });

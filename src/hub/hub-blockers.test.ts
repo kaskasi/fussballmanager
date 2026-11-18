@@ -3,7 +3,7 @@ import { newGameSession } from "../persistence/game-session.ts";
 import { hubBlockerCount, listHubBlockers } from "./hub-blockers.ts";
 import { buildHubTrainingWindow } from "./hub-training-window.ts";
 import { MONDAY, SATURDAY, THURSDAY, FRIDAY } from "../sim/day-calendar.ts";
-import { isLeagueMatchWeek } from "../sim/game-calendar.ts";
+import { isLeagueWeek } from "../sim/season-schedule.ts";
 
 describe("hub blockers", () => {
   it("lists no blockers on a fresh game Monday after calendar gate", () => {
@@ -40,7 +40,7 @@ describe("hub training window", () => {
   it("shows match preview on Saturday only, not on Friday eve", () => {
     const session = newGameSession();
     const matchWeek = [session.week, session.week + 1, session.week + 2].find((week) =>
-      isLeagueMatchWeek(week),
+      isLeagueWeek(week),
     );
     if (matchWeek == null) return;
     session.week = matchWeek;
@@ -63,7 +63,7 @@ describe("hub training window", () => {
   it("exposes opponent on match Saturday when it is today", () => {
     const session = newGameSession();
     const matchWeek = [session.week, session.week + 1, session.week + 2].find((week) =>
-      isLeagueMatchWeek(week),
+      isLeagueWeek(week),
     );
     if (matchWeek == null) return;
     session.week = matchWeek;

@@ -1,7 +1,7 @@
 import type { Attributes, Player, PlayerName, PositionPrimary } from "../types/player.ts";
 import { generatePlayerName } from "../types/player-display.ts";
 import { ensureYouthContract } from "../player/youth-contract.ts";
-import { SEASON_END_WEEK } from "../sim/game-calendar.ts";
+import { seasonEndWeek } from "../sim/season-schedule.ts";
 import { estimateCa, marketValue } from "../transfers/market-value.ts";
 import { seedPhaseStamps } from "../development/ability-stamps.ts";
 import { YOUTH_SITE_HQ } from "./youth-site.ts";
@@ -31,7 +31,7 @@ export function hqIntakeCount(facility: AcademyFacility): number {
   return HQ_INTAKE_BY_FACILITY[facility];
 }
 /** Re-export for callers that already import from this module. */
-export { SEASON_END_WEEK } from "../sim/game-calendar.ts";
+export { seasonEndWeek } from "../sim/season-schedule.ts";
 
 const PRODIGY_FLAG = "prodigy_foundation";
 const ANLAGE_MIN = 0.85;
@@ -41,7 +41,7 @@ const DRIVE_CORRELATION = -0.15;
 
 export class IntakeOutOfSeasonError extends Error {
   constructor(week: number) {
-    super(`Youth intake runs at season end (week ${SEASON_END_WEEK}), not week ${week}`);
+    super(`Youth intake runs at season end (week ${seasonEndWeek()}), not week ${week}`);
     this.name = "IntakeOutOfSeasonError";
   }
 }
@@ -222,7 +222,7 @@ export function buildAcademyCohort(input: GenerateIntakeInput): Player[] {
 }
 
 export function generateYouthIntake(input: GenerateIntakeInput): Player[] {
-  if (input.week !== SEASON_END_WEEK) {
+  if (input.week !== seasonEndWeek()) {
     throw new IntakeOutOfSeasonError(input.week);
   }
   return buildAcademyCohort(input);

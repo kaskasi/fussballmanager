@@ -5,6 +5,13 @@ import { clubLogoUrlForId } from "../assets/club-logo.ts";
 import type { CalendarMonthCell } from "../calendar/month-grid.ts";
 import { useT } from "../../i18n/react.ts";
 
+const BAND_LABEL: Record<NonNullable<CalendarMonthCell["slotKind"]>, string> = {
+  summer_break: "calendar.phase.summerBreak",
+  winter_break: "calendar.phase.winterBreak",
+  cup: "calendar.phase.freeWeek",
+  season_end: "calendar.phase.seasonEnd",
+};
+
 export function CalendarDay({
   cell,
   scoutBusy = false,
@@ -26,6 +33,7 @@ export function CalendarDay({
     result ? `has-result is-${result.outcome}` : "",
     cell.milestones?.length ? "has-notes" : "",
     cell.transferWindow ? "is-window" : "",
+    cell.slotKind ? `is-band-${cell.slotKind}` : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -34,7 +42,9 @@ export function CalendarDay({
       ? t("calendar.transferSummerTitle")
       : cell.transferWindow === "winter"
         ? t("calendar.transferWinterTitle")
-        : undefined;
+        : cell.slotKind
+          ? t(BAND_LABEL[cell.slotKind])
+          : undefined;
 
   return (
     <div className={className} aria-current={phase === "today" ? "date" : undefined} title={windowTitle}>

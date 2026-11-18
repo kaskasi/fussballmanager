@@ -51,6 +51,7 @@ import {
 } from "./tactics-presets.ts";
 import { MatchdayLineupAmbience } from "../ui/components/MatchdayLineupAmbience.tsx";
 import { buildOpponentLineupPreview } from "./opponent-lineup-preview.ts";
+import { isPlayerMatchEligible } from "../development/injury-roll.ts";
 import { clubShortName } from "../sim/league-week.ts";
 import { careerTeamId } from "../sim/rival-growth.ts";
 import { getLocale } from "../i18n/index.ts";
@@ -228,6 +229,9 @@ export function CareerLineupScreen({
   /** Bench → slot: the man there goes to the bench. Slot → slot: the two swap places. */
   const dropOnSlot = useCallback(
     (slotId: FormationSlotId, playerId: string, fromSlot: FormationSlotId | null) => {
+      // PRD 34: suspended or injured players cannot be lined up.
+      const dropped = players.find((player) => player.id === playerId);
+      if (dropped && !isPlayerMatchEligible(dropped)) return;
       setAssignments((current) => {
         const next = { ...current };
         const displaced = next[slotId];
@@ -242,7 +246,7 @@ export function CareerLineupScreen({
         return next;
       });
     },
-    [persistLineup, plan],
+    [persistLineup, plan, players],
   );
 
   /** F1.6 — move a slot to another zone (IV → Libero, ZM → DM); the player keeps the slot. */
@@ -528,6 +532,16 @@ export function CareerLineupScreen({
               <dd>{weatherLabel}</dd>
               <dt>{t("match.lineup.fact.spectators")}</dt>
               <dd>~{expectedSpectators.toLocaleString(numberFormat)}</dd>
+              {opponentPreview && opponentPreview.suspended.length > 0 ? (
+                <>
+                  <dt>{t("match.lineup.fact.suspended")}</dt>
+                  <dd>
+                    {opponentPreview.suspended
+                      .map((entry) => `${entry.name} (${entry.matches})`)
+                      .join(" · ")}
+                  </dd>
+                </>
+              ) : null}
             </dl>
           </section>
 

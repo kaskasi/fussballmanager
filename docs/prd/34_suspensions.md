@@ -1,6 +1,6 @@
 # PRD 34 — Suspensions
 
-**Status:** Built · 2026-11-10 · Phase 3 of PRD 30. UI rest open (§5).
+**Status:** Built · 2026-11-18 · Phase 3 of PRD 30.
 **Features:** F1.10 (PRD 10, new). **Touches:** PRD 07 (state fields).
 PRD 33 is the engine-library PRD, so this phase takes 34.
 
@@ -60,13 +60,20 @@ red cards are not stored on the player. Eligibility only checks injuries.
 - After the match: a club-event line for every new ban and for every player
   who reaches four yellows. The yellow-card emoji line in
   `src/match/post-match-events.ts` becomes plain text.
-- Suspended players drop out of the lineup pool and the auto-lineup.
+- Lineup: suspended and injured players stay on the bench, last, greyed out
+  and not draggable. Their status strip shows "Suspended · n" (or the injury
+  weeks) instead of fitness and weak foot. A drop onto the pitch is ignored.
+  Auto-lineup and restored lineups skip them.
+- Match report: a "Suspensions" panel with the bans this match causes (own
+  side also four-yellow warnings), projected from the pre-match state with
+  the same rules the week sim books afterwards.
+- Opponent panel on the lineup screen: the opponent's banned players with
+  matches left. They are also missing from the opponent's pitch preview.
 
-## 5. Open (not in this pass)
+## 5. Not covered
 
-- Suspended badge on lineup cards and the status strip (today the player
-  simply is not offered).
-- Match-report line and the opponent analysis listing the other side's bans.
+- The long-run script does not count bans, so there is no measured ban rate
+  per season yet.
 
 ## 6. Acceptance
 

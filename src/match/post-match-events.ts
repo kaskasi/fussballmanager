@@ -4,7 +4,7 @@ import { t } from "../i18n/index.ts";
 import { formatFixtureResult } from "../sim/league-week.ts";
 import type { ClubEvent } from "../inbox/club-events.ts";
 import { withClubEvent } from "../inbox/club-events.ts";
-import type { DisciplineNotice } from "../sim/career-match-sync.ts";
+import type { DisciplineNotice } from "../discipline/suspensions.ts";
 
 /** PRD 34 — club-event line for a new ban or a four-yellow warning. */
 export function disciplineNoticeMessage(notice: DisciplineNotice): string {

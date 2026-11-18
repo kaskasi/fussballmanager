@@ -6,6 +6,7 @@ import { useT } from "../i18n/react.ts";
 import { LineupFatigueBars } from "./LineupFatigueBars.tsx";
 import { LineupFormValue } from "./LineupFormValue.tsx";
 import { matchPlayerWeakFoot } from "./player-match-icons.ts";
+import { competitionDiscipline } from "../discipline/suspensions.ts";
 
 export interface LineupStatusView {
   careerForm: number;
@@ -13,11 +14,22 @@ export interface LineupStatusView {
   ca: number;
   weakFootShow?: boolean;
   weakFootTitle?: string;
+  /** PRD 34 — not available for the next league match (ban matches or injury weeks left). */
+  unavailable?: { kind: "suspended" | "injured"; count: number };
 }
 
 export function lineupStatusFromPlayer(player: Player): LineupStatusView {
   const weakFoot = matchPlayerWeakFoot(player);
+  const banMatches = competitionDiscipline(player).ban_matches;
+  const injury = player.state.injury;
+  const unavailable =
+    banMatches > 0
+      ? ({ kind: "suspended", count: banMatches } as const)
+      : injury
+        ? ({ kind: "injured", count: injury.weeks_remaining } as const)
+        : null;
   return {
+    ...(unavailable ? { unavailable } : {}),
     careerForm: player.state.form,
     fitness: player.state.fitness,
     ca: roundStat(estimateCa(player.attributes, player.position)),
@@ -40,19 +52,37 @@ export function LineupPlayerStatusStrip({
   return (
     <span className={`lineup-status-strip is-${variant}`}>
       <LineupFormValue careerForm={status.careerForm} compact />
-      <LineupFatigueBars fitness={status.fitness} compact />
-      <span
-        className={`lineup-fitness-pill is-${fit.tone}`}
-        title={t("match.lineup.fitnessValueTitle", { value: Math.round(status.fitness) })}
-      >
-        <span className="lineup-shape-mark" aria-hidden>
-          {fit.mark}
-        </span>
-        <span className="lineup-fitness-num">{Math.round(status.fitness)}</span>
-      </span>
-      {status.weakFootShow ? (
-        <span className="lineup-icon lineup-icon-wa" title={status.weakFootTitle}>
-          WA
+      {/* Unavailable: fitness and weak foot do not matter, the ban/injury pill takes their place. */}
+      {status.unavailable ? null : (
+        <>
+          <LineupFatigueBars fitness={status.fitness} compact />
+          <span
+            className={`lineup-fitness-pill is-${fit.tone}`}
+            title={t("match.lineup.fitnessValueTitle", { value: Math.round(status.fitness) })}
+          >
+            <span className="lineup-shape-mark" aria-hidden>
+              {fit.mark}
+            </span>
+            <span className="lineup-fitness-num">{Math.round(status.fitness)}</span>
+          </span>
+          {status.weakFootShow ? (
+            <span className="lineup-icon lineup-icon-wa" title={status.weakFootTitle}>
+              WA
+            </span>
+          ) : null}
+        </>
+      )}
+      {status.unavailable ? (
+        <span
+          className={`lineup-unavailable is-${status.unavailable.kind}`}
+          title={t(status.unavailable.kind === "suspended" ? "squad.suspendedHint" : "squad.injuredHint")}
+        >
+          {status.unavailable.kind === "suspended" ? (
+            <span className="tc-eventlog__card tc-eventlog__card--red" aria-hidden="true" />
+          ) : null}
+          {status.unavailable.kind === "suspended"
+            ? t("squad.suspendedMatches", { count: status.unavailable.count })
+            : `${t("squad.injuredHint")} · ${t("squad.injuredWeeks", { count: status.unavailable.count })}`}
         </span>
       ) : null}
       <span className="lineup-status-ca" title="Current Ability">

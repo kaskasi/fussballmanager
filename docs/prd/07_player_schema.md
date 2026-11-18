@@ -88,6 +88,12 @@ interface Player {
     last_match_goals?: number;               // F2.8 hat-trick clear
     youth_site?: "hq" | string;              // F3.9; missing = "hq"
     peak_ca?: number;                        // PRD 31, bester CA, am Saisonende aktualisiert
+    season_red_cards?: number;               // PRD 34, Rote + Gelb-Rote der Saison
+    discipline?: Record<CompetitionId, {     // PRD 34, je Wettbewerb ("league", später Pokale)
+      yellows: number;                       //   Gelbe bis zur nächsten Sperre, Saisonende → 0
+      ban_matches: number;                   //   offene Sperrspiele, bleiben über Saisonende
+      reason?: "yellows" | "second_yellow" | "red";
+    }>;
   };
 
   // ── Geschichte & Analytics ──────────────────

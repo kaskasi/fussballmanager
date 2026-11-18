@@ -1,4 +1,5 @@
 import type { Player } from "../types/player.ts";
+import { formatPlayerName } from "../types/player-display.ts";
 
 /** PRD 34 — `"league"` today; cup ids arrive with PRD 30 phase 5. */
 export type CompetitionId = string;
@@ -30,6 +31,15 @@ export interface MatchDisciplineOutcome {
   reason?: BanReason;
   /** True when this match took the player to one yellow short of a ban. */
   yellowWarning: boolean;
+}
+
+/** PRD 34 — a new ban, or a player one yellow short of one, after a match. */
+export interface DisciplineNotice {
+  playerId: string;
+  name: string;
+  /** Ban matches added by this match; 0 = four-yellow warning. */
+  banMatches: number;
+  reason?: BanReason;
 }
 
 const CLEAN: CompetitionDiscipline = { yellows: 0, ban_matches: 0 };
@@ -145,4 +155,37 @@ export function resetSeasonDiscipline(state: Player["state"]): Player["state"] {
     if (entry.ban_matches > 0) open[competition] = { ...entry, yellows: 0 };
   }
   return Object.keys(open).length > 0 ? { ...rest, discipline: open } : rest;
+}
+
+export function disciplineNotice(
+  player: Player,
+  outcome: MatchDisciplineOutcome,
+): DisciplineNotice | null {
+  if (outcome.banAdded <= 0 && !outcome.yellowWarning) return null;
+  return {
+    playerId: player.id,
+    name: formatPlayerName(player),
+    banMatches: outcome.banAdded,
+    ...(outcome.reason ? { reason: outcome.reason } : {}),
+  };
+}
+
+/**
+ * Match report (PRD 34 §4): the bans this match causes, projected from the
+ * pre-match state. The week sim books the same cards afterwards. Opponents
+ * show bans only, not four-yellow warnings.
+ */
+export function projectMatchDisciplineNotices(
+  rows: readonly (MatchCards & { playerId: string; teamId: string })[],
+  playersById: ReadonlyMap<string, Player>,
+  ownTeamId: string,
+): DisciplineNotice[] {
+  const notices: DisciplineNotice[] = [];
+  for (const row of rows) {
+    const player = playersById.get(String(row.playerId));
+    if (!player) continue;
+    const notice = disciplineNotice(player, applyMatchCards(player, row));
+    if (notice && (row.teamId === ownTeamId || notice.banMatches > 0)) notices.push(notice);
+  }
+  return notices;
 }

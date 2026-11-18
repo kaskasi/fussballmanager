@@ -244,6 +244,7 @@ export function benchPlayers(
     )
     .sort(
       (left, right) =>
+        Number(isPlayerMatchEligible(right)) - Number(isPlayerMatchEligible(left)) ||
         estimateCa(right.attributes, right.position) - estimateCa(left.attributes, left.position),
     );
 }

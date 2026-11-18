@@ -3,6 +3,8 @@ import { prepareCareerMatch } from "../sim/career-match-setup.ts";
 import { newGameSession } from "../persistence/game-session.ts";
 import { buildClubProfile } from "../sim/club-profiles.ts";
 import { buildOpponentLineupPreview } from "./opponent-lineup-preview.ts";
+import { applyMatchCards } from "../discipline/suspensions.ts";
+import { rivalPlayersForTeam } from "../sim/rival-engine-squad.ts";
 
 describe("opponent lineup preview", () => {
   it("builds opponent starters with career CA and form", () => {
@@ -52,5 +54,24 @@ describe("opponent lineup preview", () => {
     } else {
       expect(gk!.position.x).toBeLessThan(50);
     }
+  });
+
+  it("lists banned opponents and keeps them out of the starters (PRD 34)", () => {
+    const session = newGameSession();
+    session.week = 1;
+    const setup = prepareCareerMatch(session)!;
+    const opponentId = setup.isHome ? setup.awayTeamId : setup.homeTeamId;
+    const before = buildOpponentLineupPreview(setup, session.rivalPlayers)!;
+    expect(before.suspended).toEqual([]);
+
+    const bannedId = before.starters[0]!.playerId;
+    const rivals = session.rivalPlayers.map((player) =>
+      player.id === bannedId ? applyMatchCards(player, { yellowCards: 0, redCards: 1 }).player : player,
+    );
+    expect(rivalPlayersForTeam(rivals, opponentId).some((player) => player.id === bannedId)).toBe(true);
+
+    const after = buildOpponentLineupPreview(setup, rivals)!;
+    expect(after.suspended).toEqual([{ playerId: bannedId, name: expect.any(String), matches: 2 }]);
+    expect(after.starters.map((entry) => entry.playerId)).not.toContain(bannedId);
   });
 });

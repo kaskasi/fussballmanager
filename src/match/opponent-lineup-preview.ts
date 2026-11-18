@@ -14,6 +14,7 @@ import { indexRivalRoster, resolveCareerPlayer } from "../sim/rival-roster-match
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
 import { rivalPlayersForTeam } from "../sim/rival-engine-squad.ts";
 import { estimateCa } from "../transfers/market-value.ts";
+import { competitionDiscipline, isSuspended } from "../discipline/suspensions.ts";
 import {
   lineupFormFromCareer,
   lineupFormFromEngineForm,
@@ -33,10 +34,19 @@ export interface OpponentLineupEntry {
   position: PitchPosition;
 }
 
+export interface OpponentSuspension {
+  playerId: string;
+  name: string;
+  /** League matches still to sit out, this one included. */
+  matches: number;
+}
+
 export interface OpponentLineupPreview {
   teamShortName: string;
   formation: FormationId;
   starters: OpponentLineupEntry[];
+  /** PRD 34 — banned opponents, best first. */
+  suspended: OpponentSuspension[];
 }
 
 function pitchSide(isHome: boolean): "home" | "away" {
@@ -94,10 +104,23 @@ export function previewFromSquad(
     };
   });
 
+  const suspended = rivalRoster
+    .filter((player) => isSuspended(player))
+    .sort(
+      (left, right) =>
+        estimateCa(right.attributes, right.position) - estimateCa(left.attributes, left.position),
+    )
+    .map((player) => ({
+      playerId: player.id,
+      name: formatPlayerName(player),
+      matches: competitionDiscipline(player).ban_matches,
+    }));
+
   return {
     teamShortName,
     formation,
     starters,
+    suspended,
   };
 }
 

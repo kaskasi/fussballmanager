@@ -10,7 +10,14 @@ import { squadWithRivalRoster } from "../sim/rival-engine-squad.ts";
 import { careerTeamId } from "../sim/rival-growth.ts";
 import { clonePlayer } from "../types/__tests__/fixtures.ts";
 import type { Player } from "../types/player.ts";
-import { applyMatchCards, competitionDiscipline, isSuspended } from "./suspensions.ts";
+import { benchPlayers } from "../match/lineup-board.ts";
+import { lineupStatusFromPlayer } from "../match/LineupPlayerStatusStrip.tsx";
+import {
+  applyMatchCards,
+  competitionDiscipline,
+  isSuspended,
+  projectMatchDisciplineNotices,
+} from "./suspensions.ts";
 
 const CLUB = "cl_fc_nordstern";
 const FIXTURE = {
@@ -128,5 +135,45 @@ describe("suspension flow (PRD 34)", () => {
     ).player;
     const reset = resetSeasonMinutes(banned);
     expect(competitionDiscipline(reset)).toEqual({ yellows: 0, ban_matches: 1, reason: "yellows" });
+  });
+
+  it("projects the report's ban lines: own bans and warnings, opponent bans only", () => {
+    const own = { ...pro("pl_0"), state: { ...pro("pl_0").state, discipline: { league: { yellows: 3, ban_matches: 0 } } } };
+    const ownRed = pro("pl_1");
+    const rivalWarned = { ...pro("rp_0"), state: { ...pro("rp_0").state, discipline: { league: { yellows: 3, ban_matches: 0 } } } };
+    const rivalRed = pro("rp_1");
+    const byId = new Map([own, ownRed, rivalWarned, rivalRed].map((player) => [player.id, player]));
+    const away = asTeamId("eck");
+
+    const notices = projectMatchDisciplineNotices(
+      [
+        statRow("pl_0", 1),
+        statRow("pl_1", 0, 1),
+        { ...statRow("rp_0", 1), teamId: away },
+        { ...statRow("rp_1", 2, 1), teamId: away },
+        statRow("pl_unknown", 0, 1),
+      ],
+      byId,
+      NORDSTERN_ID,
+    );
+    expect(notices.map((notice) => [notice.playerId, notice.banMatches, notice.reason])).toEqual([
+      ["pl_0", 0, undefined],
+      ["pl_1", 2, "red"],
+      ["rp_1", 1, "second_yellow"],
+    ]);
+  });
+
+  it("shows suspended and injured players at the end of the bench, marked unavailable", () => {
+    const squad = squadOf(4);
+    squad[1] = applyMatchCards(squad[1]!, { yellowCards: 0, redCards: 1 }).player;
+    squad[1]!.attributes = { ...squad[1]!.attributes, shooting: 199, passing: 199 };
+    squad[2] = { ...squad[2]!, state: { ...squad[2]!.state, injury: { type_id: "knee", weeks_remaining: 3, severity: "moderate", sustained_week: 1 } } };
+
+    const bench = benchPlayers(squad, {}, CLUB);
+    expect(bench.slice(-2).map((player) => player.id).sort()).toEqual([squad[1]!.id, squad[2]!.id].sort());
+
+    expect(lineupStatusFromPlayer(squad[1]!).unavailable).toEqual({ kind: "suspended", count: 2 });
+    expect(lineupStatusFromPlayer(squad[2]!).unavailable).toEqual({ kind: "injured", count: 3 });
+    expect(lineupStatusFromPlayer(squad[0]!).unavailable).toBeUndefined();
   });
 });

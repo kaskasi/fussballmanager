@@ -6,21 +6,13 @@ import { estimateCa } from "../transfers/market-value.ts";
 import { recordAppearanceGoals } from "../development/ability-stamps.ts";
 import {
   applyMatchCards,
+  disciplineNotice,
   isSuspended,
   serveBanMatch,
-  type BanReason,
+  type DisciplineNotice,
 } from "../discipline/suspensions.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
-
-/** PRD 34 — a new ban, or a player one yellow short of one, after the club's match. */
-export interface DisciplineNotice {
-  playerId: string;
-  name: string;
-  /** Ban matches added by this match; 0 = four-yellow warning. */
-  banMatches: number;
-  reason?: BanReason;
-}
 
 export interface CareerMatchWeekResult {
   players: Player[];
@@ -102,14 +94,8 @@ export function applyCareerMatchWeek(
   const disciplineNotices: DisciplineNotice[] = [];
   const book = (player: Player, yellowCards: number): Player => {
     const outcome = applyMatchCards(player, { yellowCards, redCards: redMap.get(player.id) ?? 0 });
-    if (outcome.banAdded > 0 || outcome.yellowWarning) {
-      disciplineNotices.push({
-        playerId: player.id,
-        name: formatPlayerName(player),
-        banMatches: outcome.banAdded,
-        ...(outcome.reason ? { reason: outcome.reason } : {}),
-      });
-    }
+    const notice = disciplineNotice(player, outcome);
+    if (notice) disciplineNotices.push(notice);
     return outcome.player;
   };
 

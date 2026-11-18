@@ -18,6 +18,9 @@ import { fullMatchLog } from "./live-match-log.ts";
 import { PlayerPortrait } from "../ui/components/PlayerPortrait.tsx";
 import { resolvePortraitSeed } from "../ui/portraits/portrait-seed-fallback.ts";
 import { worldCareerClubId } from "../world/world-generator.ts";
+import { projectMatchDisciplineNotices } from "../discipline/suspensions.ts";
+import type { Player } from "../types/player.ts";
+import { disciplineNoticeMessage } from "./post-match-events.ts";
 
 export function MatchReportScreen({
   view,
@@ -27,6 +30,7 @@ export function MatchReportScreen({
   kasse,
   portraitSeedForPlayerId,
   onSelectPlayer,
+  playersById,
 }: {
   view: MatchView;
   setup: CareerMatchSetup;
@@ -35,6 +39,8 @@ export function MatchReportScreen({
   kasse?: MatchdayCashBreakdown;
   portraitSeedForPlayerId?: (id: string) => number | undefined;
   onSelectPlayer?: (playerId: string) => void;
+  /** Career players (own and rivals) before this match's cards are booked. */
+  playersById?: ReadonlyMap<string, Player>;
 }) {
   const t = useT();
   const normalized = normalizeMatchView(view);
@@ -42,6 +48,9 @@ export function MatchReportScreen({
   const report = normalized.report;
   const threeStars = pickMatchThreeStars(normalized, report.playerStats);
   const ownTeamId = setup.isHome ? normalized.home.id : normalized.away.id;
+  const disciplineNotices = playersById
+    ? projectMatchDisciplineNotices(report.playerStats, playersById, ownTeamId)
+    : [];
   const [teamTab, setTeamTab] = useState<"home" | "away">(setup.isHome ? "home" : "away");
   const activeTeam = teamTab === "home" ? normalized.home : normalized.away;
   const log = fullMatchLog(report, normalized.home.id);
@@ -98,6 +107,18 @@ export function MatchReportScreen({
                 emptyLabel=""
                 ariaLabel={cardsTitle}
               />
+            </section>
+          ) : null}
+          {disciplineNotices.length > 0 ? (
+            <section className="tc-panel" aria-label={t("match.report.suspensions")}>
+              <h2 className="tc-label tc-report__label">{t("match.report.suspensions")}</h2>
+              <ul className="tc-list">
+                {disciplineNotices.map((notice) => (
+                  <li key={notice.playerId} className="tc-list__item tc-list__item--wide">
+                    <span>{disciplineNoticeMessage(notice)}</span>
+                  </li>
+                ))}
+              </ul>
             </section>
           ) : null}
         </div>

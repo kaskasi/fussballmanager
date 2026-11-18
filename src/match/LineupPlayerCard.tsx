@@ -1,3 +1,4 @@
+import { isPlayerMatchEligible } from "../development/injury-roll.ts";
 import type { Player } from "../types/player.ts";
 import { formatPlayerName, formatPlayerPositionLabel } from "../types/player-display.ts";
 import { PlayerPortrait } from "../ui/components/PlayerPortrait.tsx";
@@ -24,12 +25,18 @@ export function LineupPlayerCard({
   onOpenPlayer?: (playerId: string) => void;
 }) {
   const status = lineupStatusFromPlayer(player);
+  // PRD 34: suspended or injured players stay on the bench.
+  const available = isPlayerMatchEligible(player);
 
   return (
     <div
-      className={`lineup-pcard${selected ? " is-selected" : ""}`}
-      draggable
+      className={`lineup-pcard${selected ? " is-selected" : ""}${available ? "" : " is-unavailable"}`}
+      draggable={available}
       onDragStart={(event) => {
+        if (!available) {
+          event.preventDefault();
+          return;
+        }
         event.dataTransfer.setData("text/player-id", player.id);
         event.dataTransfer.effectAllowed = "move";
         onDragStart?.(player.id);

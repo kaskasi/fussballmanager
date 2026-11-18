@@ -13,7 +13,7 @@ import {
   weekForMatchday,
 } from "../../sim/season-schedule.ts";
 import { fixtureResult, playerFixture } from "../../sim/league-week.ts";
-import { civilDateFromSession, type CivilDate } from "../../sim/session-civil-date.ts";
+import { calendarGridYear, civilDateFromSession, type CivilDate } from "../../sim/session-civil-date.ts";
 
 export type DayPhase = "past" | "today" | "future" | "off";
 export type MatchOutcome = "win" | "draw" | "loss";
@@ -61,7 +61,10 @@ export function dayPhase(day: SessionDay | undefined, today: SessionDay): DayPha
   return order === 0 ? "today" : "future";
 }
 
-/** Months the season touches, in season order (late August → April). */
+/**
+ * Months the season touches, in season order (July → June). A 52-week season touches its
+ * start month twice; only the year the grid shows (`calendarGridYear`) is listed.
+ */
 export function seasonMonths(season: number): Array<{ year: number; monthIndex: number }> {
   const start = civilDateFromSession(season, seasonFirstWeek(season), MONDAY);
   const end = civilDateFromSession(season, seasonEndWeek(), SUNDAY);
@@ -69,7 +72,7 @@ export function seasonMonths(season: number): Array<{ year: number; monthIndex: 
   let year = start.year;
   let monthIndex = start.monthIndex;
   while (year < end.year || (year === end.year && monthIndex <= end.monthIndex)) {
-    months.push({ year, monthIndex });
+    if (calendarGridYear(season, monthIndex) === year) months.push({ year, monthIndex });
     monthIndex += 1;
     if (monthIndex > 11) {
       monthIndex = 0;

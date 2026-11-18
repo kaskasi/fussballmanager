@@ -58,7 +58,7 @@ export const LEAGUE_MATCHDAYS = 34;
 export const LEGACY_WEEKS_PER_SEASON = 34;
 
 /** The template every season runs. */
-export const ACTIVE_SEASON_TEMPLATE: SeasonTemplateId = "legacy";
+export const ACTIVE_SEASON_TEMPLATE: SeasonTemplateId = "standard";
 
 function wrapIsoWeek(raw: number): number {
   let iso = raw;
@@ -78,8 +78,6 @@ interface TemplateSpec {
   seasonEndWeek: number;
   summerWindowIsoWeeks: readonly number[];
   winterWindowIsoWeeks: readonly number[];
-  /** First month (0 = Jan) the month grid counts to the season label year. */
-  gridFirstMonthIndex: number;
 }
 
 function repeat<T>(value: T, count: number): T[] {
@@ -104,7 +102,6 @@ const TEMPLATES: Record<SeasonTemplateId, TemplateSpec> = {
     seasonEndWeek: LEAGUE_MATCHDAYS,
     summerWindowIsoWeeks: [33, 34, 35, 36],
     winterWindowIsoWeeks: [2, 3, 4],
-    gridFirstMonthIndex: 7,
   },
   standard: {
     isoWeekOfWeekOne: 27,
@@ -121,7 +118,6 @@ const TEMPLATES: Record<SeasonTemplateId, TemplateSpec> = {
     seasonEndWeek: 52,
     summerWindowIsoWeeks: [29, 30, 31, 32],
     winterWindowIsoWeeks: [52, 1, 2],
-    gridFirstMonthIndex: 6,
   },
 };
 
@@ -265,6 +261,63 @@ export function seasonRateScale(template: SeasonTemplateId = ACTIVE_SEASON_TEMPL
 
 export const SEASON_RATE_SCALE = seasonRateScale();
 
+/** Home league matches per season (half of the matchdays). */
+const HOME_MATCH_WEEKS = LEAGUE_MATCHDAYS / 2;
+
+/**
+ * Scale for income that is larger in home-match weeks (concessions, merchandising)
+ * in every other week (PRD 35 §4). Home-match weeks stay at 1: there are 17 in
+ * both layouts. The other weeks share what 17 legacy weeks earned.
+ */
+export function offMatchWeekScale(template: SeasonTemplateId = ACTIVE_SEASON_TEMPLATE): number {
+  return (LEGACY_WEEKS_PER_SEASON - HOME_MATCH_WEEKS) / (weeksPerSeason(template) - HOME_MATCH_WEEKS);
+}
+
+export const OFF_MATCH_WEEK_SCALE = offMatchWeekScale();
+
+/**
+ * Position of a week on the matchday clock: matchdays reached (1–34) from the
+ * first league week on, and 0, −1, … for the weeks before matchday 1. Story beats,
+ * tutorial gates and early pacing that used to read the raw week (= matchday
+ * before PRD 35) read this, so they land at the same point of the season.
+ */
+export function matchdayClock(week: number): number {
+  const first = leagueFirstWeek();
+  const w = Math.round(week);
+  if (w < first) return w - first + 1;
+  return matchdaysThrough(w);
+}
+
+/** Monotonic week counter across seasons. */
+export function careerWeekOrdinal(season: number, week: number): number {
+  return (Math.max(1, Math.round(season)) - 1) * weeksPerSeason() + Math.round(week);
+}
+
+export function seasonWeekFromOrdinal(ordinal: number): { season: number; week: number } {
+  const perSeason = weeksPerSeason();
+  const zero = Math.round(ordinal) - 1;
+  return {
+    season: Math.floor(zero / perSeason) + 1,
+    week: (((zero % perSeason) + perSeason) % perSeason) + 1,
+  };
+}
+
+/** No league match and nothing else scheduled (breaks, free cup weeks). */
+export function isQuietWeek(week: number): boolean {
+  const kind = slotKind(week);
+  return kind === "summer_break" || kind === "winter_break" || kind === "cup";
+}
+
+/**
+ * PRD 35 §5 migration: the standard week with the same matchday as a legacy week
+ * (legacy week = matchday; weeks −1 and 0 = the two weeks before matchday 1).
+ */
+export function standardWeekForLegacyWeek(legacyWeek: number): number {
+  const w = Math.round(legacyWeek);
+  if (w >= 1) return weekForMatchday(Math.min(LEAGUE_MATCHDAYS, w), "standard");
+  return weekForMatchday(1, "standard") + w - 1;
+}
+
 /** ISO calendar week of a season week. */
 export function isoWeekForWeek(week: number, template: SeasonTemplateId = ACTIVE_SEASON_TEMPLATE): number {
   return wrapIsoWeek(activeSpec(template).isoWeekOfWeekOne + Math.round(week) - 1);
@@ -272,10 +325,6 @@ export function isoWeekForWeek(week: number, template: SeasonTemplateId = ACTIVE
 
 export function isoWeekOfWeekOne(template: SeasonTemplateId = ACTIVE_SEASON_TEMPLATE): number {
   return activeSpec(template).isoWeekOfWeekOne;
-}
-
-export function gridFirstMonthIndex(): number {
-  return activeSpec().gridFirstMonthIndex;
 }
 
 export function summerWindowIsoWeeks(): readonly number[] {

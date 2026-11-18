@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { addCalendarDays, calendarDayIndex, daysUntil } from "./calendar-days.ts";
+import { addCalendarDays, calendarDayIndex, DAYS_PER_SEASON, daysUntil } from "./calendar-days.ts";
+import { seasonEndWeek } from "./season-schedule.ts";
 
 describe("calendar days", () => {
   it("adds 60 days inside a season", () => {
@@ -9,8 +10,12 @@ describe("calendar days", () => {
     expect(next.season).toBe(1);
   });
 
-  it("wraps into the next season after week 34", () => {
-    const next = addCalendarDays({ season: 1, week: 34, weekday: 7 }, 1);
+  it("has 52 weeks of days per season (PRD 35)", () => {
+    expect(DAYS_PER_SEASON).toBe(52 * 7);
+  });
+
+  it("wraps into the next season after the season-end week", () => {
+    const next = addCalendarDays({ season: 1, week: seasonEndWeek(), weekday: 7 }, 1);
     expect(next).toMatchObject({ season: 2, week: 1, weekday: 1 });
   });
 

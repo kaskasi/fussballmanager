@@ -216,7 +216,6 @@ export function normalizeRivalPlayers(
 /** Formation for AI minute shares only; the match itself uses the club template. */
 const AI_MINUTES_FORMATION: FormationId = "4-4-2";
 const AI_SUBS_PER_MATCH = 3;
-const NON_MATCH_WEEK_MINUTES = 12;
 
 /**
  * PRD 31 — AI minutes from the XI {@link buildCareerEngineSquad} would pick (same
@@ -262,7 +261,9 @@ export function advanceRivalGrowthWeek(
   const playedWeek = leagueMatchWeek && isLeagueWeek(week);
   const matchMinutes = playedWeek ? rivalMatchMinutes(rivalPlayers) : null;
   return rivalPlayers.map((player) => {
-    const minutes = matchMinutes ? (matchMinutes.get(player.id) ?? 0) : NON_MATCH_WEEK_MINUTES;
+    // PRD 35 §4: a week without a league match keeps the last league week's minutes for
+    // development, so breaks and free weeks do not change per-year growth.
+    const minutes = matchMinutes ? (matchMinutes.get(player.id) ?? 0) : player.state.weekly_minutes;
     const appeared = matchMinutes !== null && minutes > 0;
     const withMinutes = {
       ...player,

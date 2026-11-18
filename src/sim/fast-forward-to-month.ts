@@ -7,6 +7,7 @@ import {
 } from "./session-civil-date.ts";
 import { MONDAY, resolveSmartSkip, SUNDAY } from "./day-calendar.ts";
 import { isLeagueWeek } from "./season-schedule.ts";
+import { nextEventWeek } from "./game-calendar.ts";
 import { SLOT_COUNT } from "../development/weekly-plan.ts";
 import {
   isTrainingCalendarGatePending,
@@ -77,9 +78,12 @@ export function fastForwardTargetDate(
   return end;
 }
 
-export type SimulateUntil = "next_week" | "next_month";
+export type SimulateUntil = "next_week" | "next_event" | "next_month";
 
-/** "Simulate until" presets: Monday of the next season week, or the 1st of the next month. */
+/**
+ * "Simulate until" presets: Monday of the next season week, Monday of the next week that
+ * is not a quiet break or free week (PRD 35 §6), or the 1st of the next month.
+ */
 export function simulateUntilTarget(
   kind: SimulateUntil,
   season: number,
@@ -88,6 +92,10 @@ export function simulateUntilTarget(
 ): CivilDate {
   if (kind === "next_week") {
     return civilDateFromSession(season, week + 1, MONDAY);
+  }
+  if (kind === "next_event") {
+    const next = nextEventWeek(season, week);
+    return civilDateFromSession(next.season, next.week, MONDAY);
   }
   const current = civilDateFromSession(season, week, weekday);
   const first = new Date(current.year, current.monthIndex + 1, 1);

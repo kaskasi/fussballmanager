@@ -6,6 +6,7 @@
 import {
   advanceSeasonWeek,
   isLeagueWeek,
+  isQuietWeek,
   isoWeekForWeek,
   isoWeekOfWeekOne,
   matchdayForWeek,
@@ -70,6 +71,35 @@ export function nextTransferWindowStart(season: number, week: number): { season:
     if (isWindow(next)) return { season: season + 1, week: next };
   }
   return { season: season + 1, week: seasonFirstWeek(season + 1) };
+}
+
+function windowKindOf(week: number): "summer" | "winter" | null {
+  if (isSummerTransferWindow(week)) return "summer";
+  if (isWinterTransferWindow(week)) return "winter";
+  return null;
+}
+
+/**
+ * PRD 35 §6 — the next week worth stopping in after `week`: skips consecutive quiet
+ * weeks (breaks, free cup weeks) and stops at a league week, the pre-season, the
+ * season end, or a week where a transfer window opens or closes.
+ */
+export function nextEventWeek(season: number, week: number): { season: number; week: number } {
+  let s = season;
+  let previous = week;
+  let next = week + 1;
+  for (let guard = 0; guard < 2 * seasonEndWeek() + 2; guard += 1) {
+    if (next > seasonEndWeek()) {
+      s += 1;
+      next = seasonFirstWeek(s);
+    }
+    if (!isQuietWeek(next) || windowKindOf(next) !== windowKindOf(previous)) {
+      return { season: s, week: next };
+    }
+    previous = next;
+    next += 1;
+  }
+  return { season: s, week: next };
 }
 
 /** Advance one calendar week; the football season rolls over after its season-end week. */

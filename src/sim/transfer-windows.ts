@@ -3,8 +3,8 @@ import {
   isWinterTransferWindow,
 } from "./game-calendar.ts";
 
-/** PRD 05 — summer KW 33–36 (preseason and Spieltag 1–2), winter KW 2–4. */
-export const TRANSFER_WINDOW_HINT = "Sommer: KW 33–36 · Winter: KW 2–4.";
+/** PRD 05 / PRD 35 — summer = pre-season KW 29–32, winter KW 52, 1, 2. */
+export const TRANSFER_WINDOW_HINT = "Sommer: KW 29–32 · Winter: KW 52–2.";
 
 export function isTransferWindowOpen(week: number): boolean {
   return isSummerTransferWindow(week) || isWinterTransferWindow(week);

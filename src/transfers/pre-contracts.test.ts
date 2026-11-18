@@ -7,6 +7,7 @@ import {
   canSignPreContract,
   signingBonusFromSavedFee,
 } from "./pre-contracts.ts";
+import { seasonEndWeek, weekForMatchday as md } from "../sim/season-schedule.ts";
 
 describe("pre-contracts", () => {
   it("computes signing bonus as 10–15% of saved fee", () => {
@@ -23,7 +24,7 @@ describe("pre-contracts", () => {
       until_season: 2,
       guaranteed_minutes_promise: "none",
     };
-    const eligibility = canSignPreContract(player, "cl_fc_nordstern", 2, 20, []);
+    const eligibility = canSignPreContract(player, "cl_fc_nordstern", 2, md(20), []);
     expect(eligibility.allowed).toBe(true);
   });
 
@@ -55,7 +56,7 @@ describe("pre-contracts", () => {
         },
       ],
     };
-    const result = activatePendingPreContracts([], [player], state, 1, 34, "cl_fc_nordstern");
+    const result = activatePendingPreContracts([], [player], state, 1, seasonEndWeek(), "cl_fc_nordstern");
     expect(result.players.some((entry) => entry.id === "pl_pre")).toBe(true);
     expect(result.transferState.pending_transfers).toHaveLength(0);
   });
@@ -76,7 +77,7 @@ describe("pre-contracts", () => {
       player,
       "cl_fc_nordstern",
       2,
-      22,
+      md(22),
       4242,
       ["cl_fc_nordstern", "cl_rival_a", "cl_rival_b"],
     );

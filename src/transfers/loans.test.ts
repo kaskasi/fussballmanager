@@ -17,8 +17,8 @@ describe("loans F5.3", () => {
     const player = clonePlayer();
     player.squad_status = "u19";
     expect(canLoanPlayerOut([player], CLUB, 10, player).allowed).toBe(false);
-    expect(canLoanPlayerOut([player], CLUB, 1, player).allowed).toBe(true);
-    expect(canLoanPlayerOut([player], CLUB, 20, player).allowed).toBe(true);
+    expect(canLoanPlayerOut([player], CLUB, 3, player).allowed).toBe(true);
+    expect(canLoanPlayerOut([player], CLUB, 26, player).allowed).toBe(true);
   });
 
   it("enforces max five outgoing loans", () => {
@@ -55,8 +55,8 @@ describe("loans F5.3", () => {
       has_option: true,
     };
     expect(canRecallLoan(10, player).allowed).toBe(false);
-    expect(canRecallLoan(20, player).allowed).toBe(true);
-    const recalled = recallLoanPlayer(player, 1, 20);
+    expect(canRecallLoan(26, player).allowed).toBe(true);
+    const recalled = recallLoanPlayer(player, 1, 26);
     expect(recalled?.player.squad_status).toBe("pro");
     expect(recalled?.record.kind).toBe("loan_return");
   });

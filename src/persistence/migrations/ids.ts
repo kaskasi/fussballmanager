@@ -101,4 +101,5 @@ export const APPLIED_MIGRATION_IDS = [
   "migration_103_live_division_tables",
   "migration_104_season_archive",
   "migration_105_suspensions",
+  "migration_106_season_calendar",
 ] as const;

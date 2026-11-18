@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  careerWeekOrdinal,
   LEAGUE_MATCHDAYS,
+  matchdayClock,
   seasonRateScale,
+  seasonWeekFromOrdinal,
+  weekForMatchday,
   seasonSchedule,
   type SeasonSlotKind,
 } from "./season-schedule.ts";
@@ -89,5 +93,21 @@ describe("season schedule — standard 52-week template (PRD 35 §2)", () => {
 
   it("scales per-week rates by 34/52", () => {
     expect(seasonRateScale("standard")).toBeCloseTo(34 / 52, 10);
+  });
+});
+
+describe("season schedule — active template helpers", () => {
+  it("reads the matchday clock: matchdays reached, ≤ 0 before matchday 1", () => {
+    expect(matchdayClock(weekForMatchday(1))).toBe(1);
+    expect(matchdayClock(weekForMatchday(1) - 1)).toBe(0);
+    expect(matchdayClock(weekForMatchday(5) + 1)).toBe(5); // free week after matchday 5
+    expect(matchdayClock(52)).toBe(34);
+  });
+
+  it("counts career weeks monotonically and back", () => {
+    expect(careerWeekOrdinal(2, 1)).toBe(careerWeekOrdinal(1, 52) + 1);
+    for (const [season, week] of [[1, 3], [2, 1], [3, 52]] as const) {
+      expect(seasonWeekFromOrdinal(careerWeekOrdinal(season, week))).toEqual({ season, week });
+    }
   });
 });

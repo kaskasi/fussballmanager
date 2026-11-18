@@ -1,57 +1,56 @@
 import { describe, expect, it } from "vitest";
 import {
   advanceCalendarWeek,
+  calendarPhaseLabel,
   calendarWeek,
   isSummerTransferWindow,
   isWinterTransferWindow,
+  nextEventWeek,
   nextTransferWindowStart,
 } from "./game-calendar.ts";
-import { isLeagueWeek, leagueLastWeek, seasonEndWeek } from "./season-schedule.ts";
+import { isLeagueWeek, leagueFirstWeek, leagueLastWeek, seasonEndWeek } from "./season-schedule.ts";
 
-describe("game calendar", () => {
-  it("plays league on weeks 1-34 only", () => {
-    expect(isLeagueWeek(1)).toBe(true);
+describe("game calendar (PRD 35: 52-week season)", () => {
+  it("plays league only in league weeks, not in breaks, cup weeks or the season end", () => {
+    expect(leagueFirstWeek()).toBe(7);
+    expect(leagueLastWeek()).toBe(51);
+    expect(isLeagueWeek(7)).toBe(true);
     expect(isLeagueWeek(leagueLastWeek())).toBe(true);
-    expect(isLeagueWeek(31)).toBe(true);
-    expect(isLeagueWeek(35)).toBe(false);
+    expect(isLeagueWeek(1)).toBe(false);
+    expect(isLeagueWeek(12)).toBe(false);
+    expect(isLeagueWeek(26)).toBe(false);
+    expect(isLeagueWeek(seasonEndWeek())).toBe(false);
   });
 
-  it("maps preseason weeks before Spieltag 1 (KW 35)", () => {
-    expect(calendarWeek(-1)).toBe(33);
-    expect(calendarWeek(0)).toBe(34);
-    expect(calendarWeek(1)).toBe(35);
+  it("maps season week 1 to KW 27 and matchday 1 to KW 33", () => {
+    expect(calendarWeek(1)).toBe(27);
+    expect(calendarWeek(3)).toBe(29);
+    expect(calendarWeek(leagueFirstWeek())).toBe(33);
   });
 
-  it("puts Spieltag 1 in late August and wraps past New Year", () => {
-    expect(calendarWeek(1)).toBe(35);
-    expect(calendarWeek(2)).toBe(36);
-    expect(calendarWeek(18)).toBe(52);
-    expect(calendarWeek(19)).toBe(1);
-    expect(calendarWeek(20)).toBe(2);
-    expect(calendarWeek(34)).toBe(16);
+  it("wraps past New Year in the winter break and ends in KW 26", () => {
+    expect(calendarWeek(26)).toBe(52);
+    expect(calendarWeek(27)).toBe(1);
+    expect(calendarWeek(seasonEndWeek())).toBe(26);
   });
 
-  it("opens summer KW 33–36 and winter KW 2–4 (PRD 05)", () => {
-    expect(isSummerTransferWindow(-1)).toBe(true);
-    expect(isSummerTransferWindow(0)).toBe(true);
-    expect(isSummerTransferWindow(1)).toBe(true);
-    expect(isSummerTransferWindow(2)).toBe(true);
-    expect(isSummerTransferWindow(3)).toBe(false);
-    expect(isWinterTransferWindow(19)).toBe(false);
-    expect(isWinterTransferWindow(20)).toBe(true);
-    expect(isWinterTransferWindow(22)).toBe(true);
-    expect(isWinterTransferWindow(23)).toBe(false);
-    expect(isWinterTransferWindow(3)).toBe(false);
+  it("opens summer in the pre-season (KW 29–32) and winter in KW 52, 1, 2 (PRD 05)", () => {
+    expect(isSummerTransferWindow(2)).toBe(false);
+    for (const week of [3, 4, 5, 6]) expect(isSummerTransferWindow(week)).toBe(true);
+    expect(isSummerTransferWindow(7)).toBe(false);
+    expect(isWinterTransferWindow(25)).toBe(false);
+    for (const week of [26, 27, 28]) expect(isWinterTransferWindow(week)).toBe(true);
+    expect(isWinterTransferWindow(29)).toBe(false);
   });
 
   it("finds the first week of the next window", () => {
-    expect(nextTransferWindowStart(1, 3)).toEqual({ season: 1, week: 20 });
-    expect(nextTransferWindowStart(1, 19)).toEqual({ season: 1, week: 20 });
-    expect(nextTransferWindowStart(1, 23)).toEqual({ season: 2, week: 1 });
-    expect(nextTransferWindowStart(1, 34)).toEqual({ season: 2, week: 1 });
+    expect(nextTransferWindowStart(1, 7)).toEqual({ season: 1, week: 26 });
+    expect(nextTransferWindowStart(1, 26)).toEqual({ season: 1, week: 27 });
+    expect(nextTransferWindowStart(1, 28)).toEqual({ season: 2, week: 3 });
+    expect(nextTransferWindowStart(1, 52)).toEqual({ season: 2, week: 3 });
   });
 
-  it("ends the football season after week 34", () => {
+  it("ends the football season after the season-end week", () => {
     const step = advanceCalendarWeek(seasonEndWeek());
     expect(step.footballSeasonEnded).toBe(true);
     expect(step.nextWeek).toBe(1);
@@ -59,5 +58,24 @@ describe("game calendar", () => {
 
   it("advances normally before season end", () => {
     expect(advanceCalendarWeek(10)).toEqual({ nextWeek: 11, footballSeasonEnded: false });
+    expect(advanceCalendarWeek(51)).toEqual({ nextWeek: 52, footballSeasonEnded: false });
+  });
+
+  it("labels breaks and free weeks", () => {
+    expect(calendarPhaseLabel(1)).toBe("Sommerpause");
+    expect(calendarPhaseLabel(7)).toBe("Liga · Spieltag 1");
+    expect(calendarPhaseLabel(12)).toBe("Freie Woche");
+    expect(calendarPhaseLabel(seasonEndWeek())).toBe("Saisonende · Intake");
+  });
+
+  it("skips quiet weeks to the next event (PRD 35 §6)", () => {
+    // Matchday 5 → free week → matchday 6: stop at matchday 6.
+    expect(nextEventWeek(1, 11)).toEqual({ season: 1, week: 13 });
+    // Last first-half matchday → winter break opens the winter window: stop there.
+    expect(nextEventWeek(1, 25)).toEqual({ season: 1, week: 26 });
+    // Season end → summer break (quiet) → pre-season opens the summer window.
+    expect(nextEventWeek(1, 52)).toEqual({ season: 2, week: 3 });
+    // Ordinary league week → next league week.
+    expect(nextEventWeek(1, 7)).toEqual({ season: 1, week: 8 });
   });
 });

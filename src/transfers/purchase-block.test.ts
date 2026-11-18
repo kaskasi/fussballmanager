@@ -12,7 +12,7 @@ describe("purchase block reasons", () => {
     expect(cannotOpenPurchaseReason(6, true)).toBeNull();
     expect(cannotSubmitPurchaseOfferReason(6, true)).toBeNull();
     expect(cannotSubmitPurchaseOfferReason(1, true)).toBeNull();
-    expect(transferWindowClosedReason(6)).toMatch(/Transferfenster zu/);
+    expect(transferWindowClosedReason(10)).toMatch(/Transferfenster zu/);
   });
 
   it("keeps fees for waiting purchases out of the pot", () => {

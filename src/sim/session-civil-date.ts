@@ -1,5 +1,5 @@
 import { calendarWeek } from "./game-calendar.ts";
-import { gridFirstMonthIndex, isoWeekOfWeekOne } from "./season-schedule.ts";
+import { isoWeekOfWeekOne, seasonEndWeek } from "./season-schedule.ts";
 import { seasonCalendarYear } from "./season-label.ts";
 
 export interface CivilDate {
@@ -47,10 +47,23 @@ function civilYearForSessionWeek(
   return isoWeek >= isoWeekOfWeekOne() ? anchorYear : anchorYear + 1;
 }
 
-/** Civil year shown on the month grid (season start month–Dec = label year, earlier months = label year + 1). */
+/**
+ * Civil year shown on the month grid for a month of the season. A 52-week season
+ * (PRD 35) touches its start month twice — a few days at one end, most of the month
+ * at the other — so the grid shows the year in which the season has more days.
+ */
 export function calendarGridYear(season: number, monthIndex: number): number {
   const anchorYear = seasonCalendarYear(season);
-  return monthIndex >= gridFirstMonthIndex() ? anchorYear : anchorYear + 1;
+  const start = civilDateFromSession(season, 1, 1);
+  const end = civilDateFromSession(season, seasonEndWeek(), 7);
+  const startTime = Date.UTC(start.year, start.monthIndex, start.day);
+  const endTime = Date.UTC(end.year, end.monthIndex, end.day);
+  const daysIn = (year: number) => {
+    const first = Date.UTC(year, monthIndex, 1);
+    const last = Date.UTC(year, monthIndex + 1, 0);
+    return Math.max(0, Math.min(last, endTime) - Math.max(first, startTime));
+  };
+  return daysIn(anchorYear + 1) > daysIn(anchorYear) ? anchorYear + 1 : anchorYear;
 }
 
 /** Month index (0=Jan) for the calendar grid that should show “today”. */

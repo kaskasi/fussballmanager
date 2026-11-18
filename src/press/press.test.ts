@@ -20,6 +20,7 @@ import {
 } from "./press-session.ts";
 import { normalizePressState, PRESS_TONES } from "./press-state.ts";
 import { keyMatchTopic, pendingPressTopics, seedKnownTopicIds } from "./press-triggers.ts";
+import { weekForMatchday as md } from "../sim/season-schedule.ts";
 
 function seeded(session: GameSession): GameSession {
   const press = sessionPressState(session);
@@ -284,7 +285,7 @@ describe("press in the week pipeline", () => {
     const { defaultTrainingPlan } = await import("../development/training-units.ts");
     const { prepareCareerMatch } = await import("../sim/career-match-setup.ts");
     let session = create(new Date("2026-08-01T12:00:00Z"));
-    session = { ...session, week: 1, weekday: 7, trainingPlan: defaultTrainingPlan() };
+    session = { ...session, week: md(1), weekday: 7, trainingPlan: defaultTrainingPlan() };
     const setup = prepareCareerMatch(session)!;
     const clubId = session.league.player_club_id;
     const opponentId = setup.homeTeamId === clubId ? setup.awayTeamId : setup.homeTeamId;

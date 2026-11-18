@@ -12,10 +12,10 @@ import {
 import { transferWindowKind } from "../sim/transfer-windows.ts";
 import { sellerAskingPrice } from "./negotiations.ts";
 
-describe("purchase flow — season week 2 summer window", () => {
-  it("keeps the transfer window open on season week 2", () => {
-    expect(transferWindowKind(2)).toBe("summer");
-    expect(cannotOpenPurchaseReason(2, true)).toBeNull();
+describe("purchase flow — pre-season summer window", () => {
+  it("keeps the transfer window open in the pre-season (PRD 35: week 4)", () => {
+    expect(transferWindowKind(4)).toBe("summer");
+    expect(cannotOpenPurchaseReason(4, true)).toBeNull();
   });
 
   it("resolves a rival player only when they are in the scout pool", () => {

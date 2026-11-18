@@ -18,6 +18,7 @@ import { setLocale } from "../src/i18n/index.ts";
 import { newGameSession, saveFromSession, type GameSession } from "../src/persistence/game-session.ts";
 import { sessionAfterWeekSimulation } from "../src/sim/fast-forward-to-month.ts";
 import { simulateGameWeek } from "../src/sim/week-pipeline.ts";
+import { slotKind, type SeasonSlotKind } from "../src/sim/season-schedule.ts";
 import {
   checkWorldInvariants,
   worldSeasonMetrics,
@@ -36,6 +37,9 @@ const MAX_WEEKS_PER_SEASON = 60;
 
 interface SeasonRow extends WorldSeasonMetrics {
   weekSimMs: number;
+  /** PRD 35: weeks simulated and total sim time this season. */
+  weeks: number;
+  seasonSimS: number;
   saveGzipBytes: number;
   checks: WorldInvariantResult[];
 }
@@ -62,7 +66,9 @@ for (let played = 0; played < seasons; played++) {
   let weekMs = 0;
   let weeks = 0;
   let ended = false;
+  const kinds = new Set<SeasonSlotKind>();
   while (!ended && weeks < MAX_WEEKS_PER_SEASON) {
+    kinds.add(slotKind(session.week));
     const t0 = performance.now();
     const result = await simulateGameWeek(session);
     weekMs += performance.now() - t0;
@@ -75,8 +81,18 @@ for (let played = 0; played < seasons; played++) {
   const row: SeasonRow = {
     ...metrics,
     weekSimMs: Math.round(weekMs / Math.max(1, weeks)),
+    weeks,
+    seasonSimS: Math.round(weekMs / 100) / 10,
     saveGzipBytes: saveGzipBytes(session),
-    checks: checkWorldInvariants(metrics, baseline),
+    checks: [
+      ...checkWorldInvariants(metrics, baseline),
+      // PRD 35 acceptance: every season has a pre-season, a winter break and a season end.
+      ...(["preseason", "winter_break", "season_end"] as const).map((kind) => ({
+        id: `calendar_${kind}`,
+        ok: kinds.has(kind),
+        detail: `${kind} ${kinds.has(kind) ? "visited" : "missing"}`,
+      })),
+    ],
   };
   rows.push(row);
   const failed = row.checks.filter((check) => !check.ok);
@@ -84,7 +100,7 @@ for (let played = 0; played < seasons; played++) {
     `  S${String(endingSeason).padStart(2)} · age ${row.aiMeanAge.toFixed(2)} · 35+ ${(row.aiShare35Plus * 100).toFixed(1)} %` +
       ` · roster ≥${row.aiMinRoster} · GK ≥${row.aiMinGoalkeepers} · CA ${row.aiMeanCa}` +
       ` ${JSON.stringify(row.divisionMeanCa)} · retired ${row.retiredTotal}` +
-      ` · week ${row.weekSimMs} ms · save ${(row.saveGzipBytes / 1024).toFixed(0)} KB gz` +
+      ` · ${row.weeks} wk ${row.seasonSimS} s · week ${row.weekSimMs} ms · save ${(row.saveGzipBytes / 1024).toFixed(0)} KB gz` +
       (failed.length > 0 ? ` · FAIL ${failed.map((check) => check.id).join(", ")}` : ""),
   );
 }

@@ -1,3 +1,4 @@
+import { OFF_MATCH_WEEK_SCALE } from "../sim/season-schedule.ts";
 import type { Player } from "../types/player.ts";
 import { DEFAULT_FANBASE, type ClubStadium } from "../stadium/club-stadium.ts";
 import {
@@ -184,6 +185,8 @@ export interface WeeklyMerchandisingContext {
   clubId: string;
   occupancy: number;
   isHomeMatchWeek: boolean;
+  /** PRD 35 §4 — demand scale for this week; default 1 in home-match weeks, `OFF_MATCH_WEEK_SCALE` otherwise. */
+  weekScale?: number;
   week?: number;
   season?: number;
   masterSeed?: number;
@@ -317,9 +320,11 @@ function simulateWeeklySales(
     ctx.isHomeMatchWeek,
   );
   const channel = merchChannelScale(precinct);
+  // PRD 35 §4: weeks without a home match share what 17 legacy weeks sold.
+  const weekScale = ctx.weekScale ?? (ctx.isHomeMatchWeek ? 1 : OFF_MATCH_WEEK_SCALE);
   const unitPool = Math.max(
     0,
-    Math.round((footfall / 24) * channel * MERCH_UNIT_SCALE),
+    Math.round((footfall / 24) * channel * MERCH_UNIT_SCALE * weekScale),
   );
   const starBoost = trikotStarBoost(ctx.players, ctx.clubId);
   let limitedDropScale = 1;

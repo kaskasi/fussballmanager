@@ -1,6 +1,7 @@
 import { needsSpendConfirm } from "./spend-runway.ts";
+import { matchdayClock } from "../sim/season-schedule.ts";
 
-/** Through this season week, capital projects cost more and always ask for confirm. */
+/** Through this matchday (PRD 35: matchday clock of the week), capital projects cost more and always ask for confirm. */
 export const EARLY_PACING_LAST_WEEK = 6;
 export const EARLY_CAPITAL_SURCHARGE = 0.2;
 export const INFRASTRUCTURE_CONFIRM_FLOOR = 25_000;
@@ -8,15 +9,17 @@ export const INFRASTRUCTURE_CONFIRM_FLOOR = 25_000;
 /** PRD 11.7 — scale precinct/stadium spend down after the opening weeks. */
 export function infrastructureCostForWeek(baseCost: number, seasonWeek: number): number {
   if (baseCost <= 0) return 0;
-  if (seasonWeek > EARLY_PACING_LAST_WEEK) return baseCost;
+  const clock = matchdayClock(seasonWeek);
+  if (clock > EARLY_PACING_LAST_WEEK) return baseCost;
   const weeksLeft =
-    (EARLY_PACING_LAST_WEEK - Math.min(EARLY_PACING_LAST_WEEK, Math.max(1, seasonWeek)) + 1) /
+    (EARLY_PACING_LAST_WEEK - Math.min(EARLY_PACING_LAST_WEEK, Math.max(1, clock)) + 1) /
     EARLY_PACING_LAST_WEEK;
   return Math.round(baseCost * (1 + EARLY_CAPITAL_SURCHARGE * weeksLeft));
 }
 
 export function isEarlyCapitalSeason(seasonWeek: number): boolean {
-  return seasonWeek >= 1 && seasonWeek <= EARLY_PACING_LAST_WEEK;
+  const clock = matchdayClock(seasonWeek);
+  return clock >= 1 && clock <= EARLY_PACING_LAST_WEEK;
 }
 
 export function needsInfrastructureSpendConfirm(

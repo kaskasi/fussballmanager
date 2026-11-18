@@ -6,8 +6,8 @@ import { RETIREMENT_HARD_STOP_AGE, rollsRetirement } from "./retirement.ts";
  * tries once to persuade them with a one-year contract. Retirement runs at season end.
  */
 
-/** Spring week (league matchday) the announcements arrive. */
-export const RETIREMENT_ANNOUNCE_WEEK = 28;
+/** Spring matchday the announcements arrive (PRD 35: read the week via `weekForMatchday`). */
+export const RETIREMENT_ANNOUNCE_MATCHDAY = 28;
 const PERSUADE_BASE = 0.3;
 const PERSUADE_MIN = 0.05;
 const PERSUADE_MAX = 0.85;

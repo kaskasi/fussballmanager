@@ -10,6 +10,7 @@ import {
   sampleNoise,
   type WeeklyGrowthInput,
 } from "./growth-engine.ts";
+import { SEASON_RATE_SCALE as S } from "../sim/season-schedule.ts";
 
 const quiet = {
   maturityOffset: 0,
@@ -54,7 +55,7 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 1.4,
       minutes: 90,
     });
-    expect(delta).toBeCloseTo(0.07 * 2.4 * 1.2 * 1.4 * 1.15 * 1.25, 5);
+    expect(delta).toBeCloseTo(0.07 * S * 2.4 * 1.2 * 1.4 * 1.15 * 1.25, 5);
     expect(delta).toBeGreaterThan(0.25);
   });
 
@@ -67,7 +68,7 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 0.8,
       minutes: 0,
     });
-    expect(delta).toBeCloseTo(0.07 * 0.15 * 1 * 0.8 * 0.7 * 1.25 - (140 * 1.75) / 100 / 52, 5);
+    expect(delta).toBeCloseTo(0.07 * S * 0.15 * 1 * 0.8 * 0.7 * 1.25 - (140 * 1.75) / 100 / 52 * S, 5);
     expect(delta).toBeLessThan(0);
   });
 
@@ -80,7 +81,7 @@ describe("PRD 02.7 growth invariants", () => {
       drive: 1.2,
       minutes: 45,
     });
-    const uncapped = 0.07 * 1.45 * 1.1 * 1.2 * (1 + (45 / 90) * 0.15) * 1.25;
+    const uncapped = 0.07 * S * 1.45 * 1.1 * 1.2 * (1 + (45 / 90) * 0.15) * 1.25;
     expect(delta).toBeCloseTo(uncapped * 0.3, 5);
     expect(delta).toBeGreaterThan(0);
     expect(delta).toBeLessThanOrEqual(5);
@@ -96,9 +97,9 @@ describe("PRD 02.7 growth invariants", () => {
       minutes: 0,
     });
     // Pace from 27: 1.5 % + 1 % per year → 7.5 % of 130 per year at 33.
-    expect(delta).toBeCloseTo(0.07 * 0.05 * 0.7 * 1.25 - (130 * 7.5) / 100 / 52, 5);
+    expect(delta).toBeCloseTo(0.07 * S * 0.05 * 0.7 * 1.25 - (130 * 7.5) / 100 / 52 * S, 5);
     expect(delta).toBeLessThan(0);
-    expect(decayPerWeek("pace", 33, 130)).toBeCloseTo((130 * 0.075) / 52, 8);
+    expect(decayPerWeek("pace", 33, 130)).toBeCloseTo(((130 * 0.075) / 52) * S, 8);
   });
 });
 
@@ -171,7 +172,7 @@ describe("growth constraints", () => {
     }
     expect(curves.decline_percent_per_year.leadership).toBeNull();
     expect(decayPerWeek("pace", 26, 120)).toBe(0);
-    expect(decayPerWeek("stamina", 28, 100)).toBeCloseTo(1.5 / 52, 8);
+    expect(decayPerWeek("stamina", 28, 100)).toBeCloseTo((1.5 / 52) * S, 8);
     expect(decayPerWeek("leadership", 40, 150)).toBe(0);
   });
 
@@ -194,7 +195,7 @@ describe("growth constraints", () => {
       injured: true,
       focusSlots: 1,
     });
-    expect(delta).toBeCloseTo(-(130 * 7.5) / 100 / 52, 5);
+    expect(delta).toBeCloseTo(-(130 * 7.5) / 100 / 52 * S, 5);
   });
 
   it("clamps a weekly delta to +5 and stores at most 199", () => {

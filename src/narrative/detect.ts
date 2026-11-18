@@ -1,3 +1,4 @@
+import { matchdayClock } from "../sim/season-schedule.ts";
 import type { FixtureResult } from "@fussballmanager/shared";
 import type { BoardState } from "../board/board-state.ts";
 import type { ClubStadium } from "../stadium/club-stadium.ts";
@@ -211,15 +212,17 @@ export function detectWeeklyBeats(context: DetectContext): DetectedBeat[] {
   const fired = new Set(context.story.beats_fired);
   const place = playerTablePlace(context.league);
   const roll = (beatId: string) => narrativeRoll(context.masterSeed, context.season, context.week, beatId);
+  // PRD 35: thresholds are matchdays reached, not raw weeks.
+  const clock = matchdayClock(context.week);
 
-  if (survivalArc && !fired.has("board_survival_intro") && context.week <= 2) {
+  if (survivalArc && !fired.has("board_survival_intro") && clock <= 2) {
     beats.push({ beatId: "board_survival_intro", kind: "inbox" });
   }
 
   if (
     survivalArc &&
     !fired.has("arc_climax_week30") &&
-    context.week >= 30 &&
+    clock >= 30 &&
     place >= RELEGATION_ZONE_PLACE - 1
   ) {
     beats.push({ beatId: "arc_climax_week30", kind: "inbox" });
@@ -286,7 +289,7 @@ export function detectWeeklyBeats(context: DetectContext): DetectedBeat[] {
   }
 
   if (
-    context.week >= 20 &&
+    clock >= 20 &&
     context.story.media_hype >= 55 &&
     !fired.has(`fan_supporters_bus_s${context.season}`) &&
     roll("fan_supporters_bus") < 0.4
@@ -344,7 +347,7 @@ export function detectWeeklyBeats(context: DetectContext): DetectedBeat[] {
 
   beats.push(...detectCrisisBeats(context));
 
-  if (survivalArc && isInRelegationZone(place) && context.week >= 10 && roll("fan_worry_table") < 0.25) {
+  if (survivalArc && isInRelegationZone(place) && clock >= 10 && roll("fan_worry_table") < 0.25) {
     beats.push({
       beatId: `fan_table_worry_${context.week}`,
       kind: "fan_feed",
@@ -365,6 +368,7 @@ export function detectWeeklyBeats(context: DetectContext): DetectedBeat[] {
 
 function detectHospitalityBeats(context: DetectContext): DetectedBeat[] {
   const precinct = context.stadium.precinct;
+  const clock = matchdayClock(context.week);
   const fired = new Set(context.story.beats_fired);
   const beats: DetectedBeat[] = [];
 
@@ -382,13 +386,13 @@ function detectHospitalityBeats(context: DetectContext): DetectedBeat[] {
     beats.push({ beatId: weddingRepeatId, kind: "fan_feed", fanbaseDelta: 0.7 });
   }
   const legacyStory = context.stadium.restaurant_story_last_season == null;
-  if (legacyStory && !fired.has("hospitality_engagement") && context.week >= 6) {
+  if (legacyStory && !fired.has("hospitality_engagement") && clock >= 6) {
     beats.push({ beatId: "hospitality_engagement", kind: "fan_feed", fanbaseDelta: 0.4 });
   }
   if (
     fired.has("hospitality_engagement") &&
     !fired.has("hospitality_overtime") &&
-    context.week >= 14
+    clock >= 14
   ) {
     beats.push({ beatId: "hospitality_overtime", kind: "fan_feed" });
   }

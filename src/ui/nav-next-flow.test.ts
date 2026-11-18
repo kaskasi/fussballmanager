@@ -9,6 +9,7 @@ import {
   shouldNavigateToCalendarBeforeTimeStep,
   shouldOpenLineupFromCalendar,
 } from "./nav-next-flow.ts";
+import { weekForMatchday as md } from "../sim/season-schedule.ts";
 
 describe("nav-next-flow", () => {
   it("does not treat Der Treter as a NEXT blocker", () => {
@@ -27,7 +28,7 @@ describe("nav-next-flow", () => {
 
   it("opens lineup when skip is match or advance to Saturday in match week", () => {
     const session = newGameSession();
-    session.week = 3;
+    session.week = md(3);
     session.weekday = SATURDAY;
     session.matchPlayedThisWeek = false;
     const matchSkip = resolveSmartSkip(session, false);
@@ -43,7 +44,7 @@ describe("nav-next-flow", () => {
 
   it("does not open lineup when the league season is complete", () => {
     const session = newGameSession();
-    session.week = 16;
+    session.week = md(16);
     session.weekday = SATURDAY;
     session.matchPlayedThisWeek = false;
     session.league.season_complete = true;
@@ -54,7 +55,7 @@ describe("nav-next-flow", () => {
 
   it("does not open lineup on advance to non-match Saturday", () => {
     const session = newGameSession();
-    session.week = 35;
+    session.week = 1; // summer break (PRD 35)
     session.weekday = 5;
     const skip = resolveSmartSkip(session, false);
     expect(skip.weekday).toBe(SATURDAY);

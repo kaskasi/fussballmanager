@@ -11,6 +11,7 @@ import {
   seasonDays,
   seasonMonths,
 } from "./season-timeline.ts";
+import { careerStartWeek, weekForMatchday } from "../../sim/season-schedule.ts";
 
 function minimalLeague(): LeagueState {
   const club_ids = Array.from({ length: 18 }, (_, index) => asTeamId(`cl_${index}`));
@@ -46,11 +47,9 @@ function withResult(league: LeagueState, matchday: number, goalsFor: number, goa
 }
 
 describe("seasonMonths", () => {
-  it("runs from August to April in season order", () => {
+  it("runs from July to June in season order, each month once (PRD 35)", () => {
     const months = seasonMonths(2).map((month) => month.monthIndex);
-    expect(months[0]).toBe(7);
-    expect(months.at(-1)).toBe(3);
-    expect(months).toEqual([7, 8, 9, 10, 11, 0, 1, 2, 3]);
+    expect(months).toEqual([6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5]);
   });
 
   it("puts the spring months in the following calendar year", () => {
@@ -60,10 +59,11 @@ describe("seasonMonths", () => {
 });
 
 describe("seasonDays / dayPhase", () => {
-  it("covers pre-season only in the first season", () => {
-    const preseason = civilKey(civilDateFromSession(1, -1, MONDAY));
-    expect(seasonDays(1).get(preseason)).toEqual({ week: -1, weekday: MONDAY });
-    expect(seasonDays(2).has(civilKey(civilDateFromSession(2, -1, MONDAY)))).toBe(false);
+  it("starts the first season at the career start and later seasons with the summer break", () => {
+    const start = civilKey(civilDateFromSession(1, careerStartWeek(), MONDAY));
+    expect(seasonDays(1).get(start)).toEqual({ week: careerStartWeek(), weekday: MONDAY });
+    expect(seasonDays(1).has(civilKey(civilDateFromSession(1, 1, MONDAY)))).toBe(false);
+    expect(seasonDays(2).get(civilKey(civilDateFromSession(2, 1, MONDAY)))).toEqual({ week: 1, weekday: MONDAY });
   });
 
   it("orders days around today and marks the summer break as off", () => {
@@ -113,12 +113,12 @@ describe("buildSeasonStrip", () => {
 
   it("lists every matchday once with its outcome when played", () => {
     const league = withResult(minimalLeague(), 1, 3, 0);
-    const strip = buildSeasonStrip(2, league, { week: 2, weekday: MONDAY });
+    const strip = buildSeasonStrip(2, league, { week: weekForMatchday(2), weekday: MONDAY });
     const matches = strip.flatMap((month) => month.matches);
     expect(matches).toHaveLength(34);
     expect(matches[0]).toEqual({ matchday: 1, outcome: "win" });
     expect(matches[1]).toEqual({ matchday: 2, outcome: null });
-    const sat = civilDateFromSession(2, 1, SATURDAY);
+    const sat = civilDateFromSession(2, weekForMatchday(1), SATURDAY);
     const month = strip.find((entry) => entry.monthIndex === sat.monthIndex && entry.year === sat.year)!;
     expect(month.matches.some((entry) => entry.matchday === 1)).toBe(true);
   });

@@ -13,6 +13,7 @@ import {
   restpostenPoolShare,
   vendorRelationTier,
 } from "./merchandising-vendors.ts";
+import { weekForMatchday } from "../sim/season-schedule.ts";
 
 describe("vendor relationship tiers", () => {
   it("starts at Neu and climbs at 3 / 8 / 15 purchases", () => {
@@ -43,12 +44,12 @@ describe("vendor relationship tiers", () => {
 });
 
 describe("Express promo weeks (former Phillip sale)", () => {
-  it("covers season weeks 2–3 and calendar weeks 2–3", () => {
-    expect(isExpressPromoWeek(2)).toBe(true);
-    expect(isExpressPromoWeek(3)).toBe(true);
-    expect(isExpressPromoWeek(1)).toBe(false);
-    expect(isExpressPromoWeek(4)).toBe(false);
-    const january = Array.from({ length: 30 }, (_, i) => i + 10).filter(
+  it("covers matchdays 2–3 and calendar weeks 2–3", () => {
+    expect(isExpressPromoWeek(weekForMatchday(2))).toBe(true);
+    expect(isExpressPromoWeek(weekForMatchday(3))).toBe(true);
+    expect(isExpressPromoWeek(weekForMatchday(1))).toBe(false);
+    expect(isExpressPromoWeek(weekForMatchday(4))).toBe(false);
+    const january = Array.from({ length: 52 }, (_, i) => i + 1).filter(
       (w) => calendarWeek(w) === 2 || calendarWeek(w) === 3,
     );
     expect(january.length).toBeGreaterThan(0);
@@ -56,8 +57,8 @@ describe("Express promo weeks (former Phillip sale)", () => {
   });
 
   it("discounts only via the multiplier", () => {
-    expect(expressPromoMultiplier(2)).toBeCloseTo(1 - EXPRESS_PROMO_DISCOUNT);
-    expect(expressPromoMultiplier(5)).toBe(1);
+    expect(expressPromoMultiplier(weekForMatchday(2))).toBeCloseTo(1 - EXPRESS_PROMO_DISCOUNT);
+    expect(expressPromoMultiplier(weekForMatchday(5))).toBe(1);
   });
 });
 

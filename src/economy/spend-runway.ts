@@ -1,3 +1,4 @@
+import { SEASON_RATE_SCALE } from "../sim/season-schedule.ts";
 import type { BoardState } from "../board/board-state.ts";
 import { formatClubCash, formatSignedCash, type ClubFinances } from "./club-finances.ts";
 import { t } from "../i18n/index.ts";
@@ -19,7 +20,8 @@ export function boardCashFloor(board: BoardState): number {
 
 export function weeksOfWages(cash: number, weeklyWageBill: number): number | null {
   if (!(weeklyWageBill > 0)) return null;
-  return cash / weeklyWageBill;
+  // The ledger books the nominal weekly bill × SEASON_RATE_SCALE (PRD 35 §4).
+  return cash / (weeklyWageBill * SEASON_RATE_SCALE);
 }
 
 export function needsSpendConfirm(cost: number, weeklyWageBill: number): boolean {

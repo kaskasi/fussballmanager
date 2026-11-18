@@ -1,5 +1,5 @@
 import { calendarWeek, isSummerTransferWindow, isWinterTransferWindow } from "../sim/game-calendar.ts";
-import { matchdayForWeek, seasonEndWeek } from "../sim/season-schedule.ts";
+import { matchdayForWeek, seasonEndWeek, slotKind } from "../sim/season-schedule.ts";
 import { seasonCalendarYear } from "../sim/season-label.ts";
 import { transferWindowKind, type TransferWindowKind } from "../sim/transfer-windows.ts";
 import { t } from "./index.ts";
@@ -22,7 +22,16 @@ export function calendarPhaseDisplay(week: number): string {
   if (week === seasonEndWeek()) return t("calendar.phase.seasonEnd");
   if (isSummerTransferWindow(week)) return t("calendar.phase.summerWindow");
   if (isWinterTransferWindow(week)) return t("calendar.phase.winterWindow");
-  return t("calendar.phase.prep");
+  switch (slotKind(week)) {
+    case "summer_break":
+      return t("calendar.phase.summerBreak");
+    case "winter_break":
+      return t("calendar.phase.winterBreak");
+    case "cup":
+      return t("calendar.phase.freeWeek");
+    default:
+      return t("calendar.phase.prep");
+  }
 }
 
 export function transferWindowDisplay(week: number): string {

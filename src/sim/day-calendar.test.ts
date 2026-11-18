@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { newGameSession } from "../persistence/game-session.ts";
 import { MONDAY, resolveSmartSkip, SATURDAY, SUNDAY } from "./day-calendar.ts";
+import { weekForMatchday as md } from "./season-schedule.ts";
 
 describe("day calendar smart skip", () => {
   it("stops on the current weekday when the inbox has pending decisions", () => {
@@ -21,7 +22,7 @@ describe("day calendar smart skip", () => {
 
   it("advances one weekday at a time on a league match week until Saturday", () => {
     const session = newGameSession();
-    session.week = 3;
+    session.week = md(3);
     session.weekday = MONDAY;
     expect(resolveSmartSkip(session, false)).toEqual({
       weekday: 2,
@@ -44,7 +45,7 @@ describe("day calendar smart skip", () => {
 
   it("steps past Saturday when the league season is already complete", () => {
     const session = newGameSession();
-    session.week = 16;
+    session.week = md(16);
     session.weekday = SATURDAY;
     session.matchPlayedThisWeek = false;
     session.league.season_complete = true;
@@ -57,7 +58,7 @@ describe("day calendar smart skip", () => {
 
   it("steps daily toward Sunday on a non-match week", () => {
     const session = newGameSession();
-    session.week = 35;
+    session.week = 1; // summer break (PRD 35)
     session.weekday = 2;
     expect(resolveSmartSkip(session, false)).toEqual({
       weekday: 3,

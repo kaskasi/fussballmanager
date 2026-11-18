@@ -25,6 +25,7 @@ import {
   type MerchExpertState,
 } from "./merchandising-expert.ts";
 import { MERCH_SKU_IDS } from "./merchandising-skus.ts";
+import { SEASON_RATE_SCALE } from "../sim/season-schedule.ts";
 
 const MONDAY = { season: 1, week: 2, weekday: 1 };
 
@@ -205,7 +206,8 @@ describe("merch expert finances", () => {
       merchRestockCost: 1_500,
     });
     const staff = (lines: typeof without) => lines.find((line) => line.kind === "staff_wages")!.amount;
-    expect(staff(withExpert) - staff(without)).toBe(-900);
+    // PRD 35 §4: wages are booked × SEASON_RATE_SCALE.
+    expect(staff(withExpert) - staff(without)).toBeCloseTo(-900 * SEASON_RATE_SCALE, -1);
     expect(withExpert.find((line) => line.kind === "merchandising")?.amount).toBe(-1_500);
   });
 });

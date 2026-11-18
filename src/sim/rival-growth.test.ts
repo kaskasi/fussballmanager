@@ -45,4 +45,12 @@ describe("rival growth", () => {
     const enginePlayer = template.starters[0]!.player;
     expect(rivalCareerId(enginePlayer)).toBe(`rp_${enginePlayer.teamId}_${enginePlayer.shirt}`);
   });
+
+  it("keeps the last league week's minutes in weeks without a match (PRD 35 §4)", () => {
+    const rivals = initializeRivalPlayers(2026)
+      .slice(0, 6)
+      .map((player) => ({ ...player, state: { ...player.state, weekly_minutes: 77 } }));
+    const quiet = advanceRivalGrowthWeek(rivals, 1, 1, 2026, true); // summer break
+    expect(quiet.every((player) => player.state.weekly_minutes === 77)).toBe(true);
+  });
 });

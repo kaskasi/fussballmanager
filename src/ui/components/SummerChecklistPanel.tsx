@@ -17,7 +17,7 @@ export function SummerChecklistPanel({
   board: BoardState;
   trainingPlan: TrainingSlot[];
 }) {
-  if (!showSummerChecklist(week, league)) return null;
+  if (!showSummerChecklist(week, league, season)) return null;
 
   const items = buildSummerChecklist({ week, season, league, board, trainingPlan });
   const doneCount = items.filter((item) => item.done).length;

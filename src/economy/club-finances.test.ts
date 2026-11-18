@@ -22,6 +22,10 @@ import { financeMonthForWeek } from "./finance-ledger.ts";
 import { defaultCoachingStaff, weeklyStaffWageBill } from "../staff/coaching-staff.ts";
 import { defaultClubStadium } from "../stadium/club-stadium.ts";
 import { defaultSponsorOffer, signSponsorDeal } from "../stadium/sponsor-deals.ts";
+import { SEASON_RATE_SCALE } from "../sim/season-schedule.ts";
+
+/** PRD 35 §4: the ledger books nominal weekly amounts × SEASON_RATE_SCALE. */
+const w = (nominal: number) => Math.round(nominal * SEASON_RATE_SCALE);
 
 describe("club finances", () => {
   it("sums weekly wages for owned players", () => {
@@ -44,7 +48,7 @@ describe("club finances", () => {
       merchandisingNet: 0,
     });
     expect(finances.cash).toBe(
-      defaultClubFinances().cash + 55_000 + 12_000 - weeklyStaffWageBill(staff) - 9_000,
+      defaultClubFinances().cash + w(55_000) + w(12_000) - w(weeklyStaffWageBill(staff)) - w(9_000),
     );
   });
 
@@ -61,7 +65,9 @@ describe("club finances", () => {
       week: 1,
       merchandisingNet: 0,
     });
-    expect(finances.cash).toBe(defaultClubFinances().cash + 55_000 + 12_000 - 5_000 - 18_000 - 9_000);
+    expect(finances.cash).toBe(
+      defaultClubFinances().cash + w(55_000) + w(12_000) - w(5_000) - w(18_000) - w(9_000),
+    );
     expect(finances.pending_lines).toHaveLength(5);
   });
 
@@ -77,10 +83,10 @@ describe("club finances", () => {
     });
     expect(finances.cash).toBe(
       defaultClubFinances().cash +
-        55_000 +
-        12_000 -
-        18_000 -
-        9_000 +
+        w(55_000) +
+        w(12_000) -
+        w(18_000) -
+        w(9_000) +
         matchdayTicketIncome("regionalliga-nord", true),
     );
   });
@@ -167,7 +173,7 @@ describe("club finances", () => {
       merchandisingNet: 0,
     });
     expect(finances.cash).toBe(
-      defaultClubFinances().cash + 55_000 + offer.weeklyAmount + 12_000 - 18_000 - 9_000,
+      defaultClubFinances().cash + w(55_000 + offer.weeklyAmount) + w(12_000) - w(18_000) - w(9_000),
     );
   });
 

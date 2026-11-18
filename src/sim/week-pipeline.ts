@@ -87,10 +87,10 @@ import { careerStarterIds } from "../match/lineup-board.ts";
 import { mergeCareerLeagueStats, applyCareerMatchWeek } from "./career-match-sync.ts";
 import { applyRivalMatchdayStats } from "./rival-matchday-stats.ts";
 import { advanceCalendarWeek } from "./game-calendar.ts";
-import { seasonEndWeek } from "./season-schedule.ts";
+import { seasonEndWeek, weekForMatchday } from "./season-schedule.ts";
 import { advanceLeagueWeek } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
-import { announceOwnRetirements, RETIREMENT_ANNOUNCE_WEEK } from "../development/own-retirement.ts";
+import { announceOwnRetirements, RETIREMENT_ANNOUNCE_MATCHDAY } from "../development/own-retirement.ts";
 import { enqueueRetirementItems } from "../inbox/retirement-inbox.ts";
 import { environmentFromCoachingStaff } from "../staff/coaching-staff.ts";
 import { weekCommerceOccupancy } from "../stadium/matchday-commerce.ts";
@@ -822,7 +822,7 @@ export async function simulateGameWeek(
     session.clubId,
   );
   // PRD 31 — spring retirement announcements for own players.
-  if (!seasonEnded && nextWeek === RETIREMENT_ANNOUNCE_WEEK) {
+  if (!seasonEnded && nextWeek === weekForMatchday(RETIREMENT_ANNOUNCE_MATCHDAY)) {
     const announced = announceOwnRetirements(
       playersWithCaStamp,
       session.clubId,

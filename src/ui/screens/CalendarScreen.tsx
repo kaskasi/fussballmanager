@@ -1,4 +1,5 @@
 /** WIREFRAME: docs/prd/design.md §9.5 — Kalender */
+import type { CupSeason } from "../../competitions/cup-season.ts";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeftRight, BookMarked, ChevronLeft, ChevronRight } from "lucide-react";
 import { CalendarDay } from "../components/CalendarDay.tsx";
@@ -65,11 +66,14 @@ export function CalendarScreen({
   onFastForwardToMonth,
   onSimulateUntil,
   busy = false,
+  cups,
 }: {
   season: number;
   week: number;
   weekday: number;
   league: LeagueState;
+  /** PRD 36 — the manager's cup ties appear on their Saturdays. */
+  cups?: CupSeason;
   milestones?: readonly CalendarMilestone[];
   scoutBoard?: ScoutBoard;
   transfers?: readonly TransferRecord[];
@@ -96,7 +100,7 @@ export function CalendarScreen({
   const year = calendarGridYear(season, monthIndex);
 
   const cells = useMemo(
-    () => buildMonthGrid(season, monthIndex, league, today, milestones),
+    () => buildMonthGrid(season, monthIndex, league, today, milestones, cups),
     [season, monthIndex, league, today, milestones],
   );
   const journal = useMemo(

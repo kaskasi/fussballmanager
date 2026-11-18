@@ -1,6 +1,6 @@
 # PRD 36 — Domestic cups
 
-**Status:** In progress (slice 2/3 built) · 2026-11-18 · Phase 5 of PRD 30.
+**Status:** Built (slices 1–3) · 2026-11-18 · Phase 5 of PRD 30. Extra time open (owner decision).
 **Features:** F10.9 (PRD 10, new; F10.6 stays the international cup).
 **Touches:** PRD 11 (cup money, slice 2), PRD 16 (shootout beats, slice 3),
 PRD 23 (cup objectives, slice 3), PRD 32 (season archive), PRD 35 (cup weeks).
@@ -72,8 +72,19 @@ All 13 non-league slots that can hold a match are used except pre-season 1
 - Prize money per round won (`cupPrizeForWin`, finance line `cup_prize`,
   also into the transfer pool like the league prize): Nordpokal 5k–120k €,
   Meisterpokal 120k–2.5 M €.
-- A home cup tie is a home matchday for gate, concessions and merch; the final
-  is neutral and pays no gate.
+- A home cup tie is a home matchday for concessions and merch. The gate is
+  split 50/50 (slice 3): at home the club keeps half its own gate, away it
+  gets half the host's gate, estimated from the host division's stadium
+  defaults. The final is neutral and pays no gate.
+- Board (PRD 23): a non-mandatory cup objective every season, "reach round
+  n" of the club's cup (tiers 1–3 Meisterpokal, 4–5 Nordpokal): survival
+  tiers the second round of the bracket (Nordpokal R16, Meisterpokal R32),
+  upper-half and ambition tiers one round further.
+- Giant-killing: a cup win against a club from a higher tier is a club-event
+  line and takes 5 points off board pressure.
+- Press (PRD 28): the manager holds pre- and post-match conferences around a
+  watched cup tie, keyed per cup round (`pressConferenceKey`); the league-only
+  key-match topic is skipped. The assistant does not hold cup pressers.
 
 ## 5. Data
 
@@ -111,10 +122,13 @@ SAVE_VERSION 107.
    accounting first) and no press conference around cup ties (pressers are
    keyed by league matchday); both move to slice 3. Shootout commentary in
    the live stream also moves to slice 3 (the report shows the kicks).
-3. UI: bracket or rounds view on the Leagues screen (wireframe first),
-   fixtures in the calendar, hub snippet, competition in the match header;
-   giant-killing story and press beats; cup board objectives; extra time if
-   approved.
+3. UI: a tab per cup on the Leagues screen with a rounds view and the
+   manager's cup run (wireframe: `design/09.07-tabellen.md`, Pokale), cup
+   ties in the calendar, a hub line under the league snippet; giant-killing
+   beat; cup board objective; gate split; cup press conferences. Not built:
+   extra time (needs an engine or wrapper change, ADR 0003: owner decision),
+   shootout lines in the live commentary stream (the report lists the kicks),
+   cup entries in the month journal.
 
 ## 7. Acceptance
 
@@ -151,3 +165,13 @@ all invariants hold; season sim 29.0–33.4 s (run alongside the test suite),
 save 1,617 KB at season 10. Not seen in a browser: the cup lineup label, the
 shootout panel and the per-cup bench (a dev save edited to a cup week did
 not load). Next: slice 3.
+
+Slice 3 built (no save change): Leagues cup tabs (`CupPanel`, rounds chips,
+ties with tiers and penalties, cup run, prize table), calendar cup ties on
+their Saturday, hub cup line, `cup_round_min` board objective with progress
+and labels, giant-killing club event and board relief, 50/50 gate split,
+cup press conferences. Tests: cup run states, furthest round, board
+objective met, calendar cell, gate split home and away, press key,
+giant-killing against a same-week baseline. Checked in the browser: the cup
+tabs and the Nordpokal round view of a new career. Not seen in a browser: the
+calendar cup entry and the hub line (both need a drawn tie of the manager).

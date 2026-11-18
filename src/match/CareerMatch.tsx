@@ -135,8 +135,7 @@ export function CareerMatch({
   // PRD 28: the pre-match presser follows squad selection, so journalists can ask about the XI.
   const handleLineupConfirm = useCallback(
     (squad: Squad) => {
-      // PRD 36: no press conference around cup ties yet (slice 3).
-      const conference = setup.cup ? null : press?.conferenceFor(
+      const conference = press?.conferenceFor(
         "pre",
         pressMatchContext(setup, { starterIds: squad.starters.map((place) => place.player.id) }),
       );
@@ -568,7 +567,7 @@ function CareerMatchPlayback({
       onClick: () => {
         if (!outcome) return;
         if (reportOpen) {
-          const conference = setup.cup ? null : press?.conferenceFor(
+          const conference = press?.conferenceFor(
             "post",
             pressMatchContext(setup, {
               homeGoals: outcome.homeGoals,

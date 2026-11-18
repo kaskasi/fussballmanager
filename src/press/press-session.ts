@@ -43,6 +43,17 @@ export function pressFixtureKey(season: number, matchday: number): string {
   return `${season}:${matchday}`;
 }
 
+/** PRD 36 — a cup tie's conference key, apart from the league matchdays. */
+export function pressConferenceKey(season: number, context: Pick<PressMatchContext, "matchday" | "cup">): string {
+  return context.cup ? `${season}:cup-${context.cup.id}-${context.cup.round}` : pressFixtureKey(season, context.matchday);
+}
+
+/** Seed component of a conference: the matchday, or a value above any matchday for a cup round. */
+function pressFixtureOrdinal(context: Pick<PressMatchContext, "matchday" | "cup">): number {
+  if (!context.cup) return context.matchday;
+  return 1000 + context.cup.round * 10 + (context.cup.id === "national" ? 1 : 0);
+}
+
 export interface PressMatchContext {
   matchday: number;
   homeTeamId: TeamId;
@@ -54,13 +65,16 @@ export interface PressMatchContext {
   homeGoals?: number;
   awayGoals?: number;
   standoutPlayerId?: string;
+  /** PRD 36 — set for a cup tie. */
+  cup?: { id: string; round: number };
 }
 
 export function pressMatchContext(
-  setup: Pick<CareerMatchSetup, "matchday" | "homeTeamId" | "awayTeamId" | "opponentShortName">,
+  setup: Pick<CareerMatchSetup, "matchday" | "homeTeamId" | "awayTeamId" | "opponentShortName" | "cup">,
   extra: Partial<PressMatchContext> = {},
 ): PressMatchContext {
   return {
+    ...(setup.cup ? { cup: { id: setup.cup.id, round: setup.cup.round } } : {}),
     matchday: setup.matchday,
     homeTeamId: setup.homeTeamId,
     awayTeamId: setup.awayTeamId,
@@ -90,7 +104,7 @@ export function pressConferenceFor(
   context: PressMatchContext,
 ): PressConference | null {
   const press = sessionPressState(session);
-  const key = pressFixtureKey(session.season, context.matchday);
+  const key = pressConferenceKey(session.season, context);
   const current = press.conference?.fixture_key === key ? press.conference : null;
   const weekIndex = careerWeekIndex(session.season, session.week);
 
@@ -98,7 +112,8 @@ export function pressConferenceFor(
   if (phase === "pre") {
     if (current?.pre_done) return null;
     if (!current) {
-      const keyMatch = keyMatchTopic({
+      // The key-match topic talks about the table and derbies: league matches only.
+      const keyMatch = context.cup ? null : keyMatchTopic({
         league: session.league,
         world: session.world,
         homeTeamId: context.homeTeamId,
@@ -123,7 +138,7 @@ export function pressConferenceFor(
   return buildPressConference({
     phase,
     fixtureKey: key,
-    seed: pressSeed([session.masterSeed, session.season, context.matchday, phase]),
+    seed: pressSeed([session.masterSeed, session.season, pressFixtureOrdinal(context), phase]),
     relationship: press.relationship,
     boycott: isPressBoycott(press, weekIndex),
     topics,
@@ -251,7 +266,7 @@ export function autoResolvePress(
 
 export function autoPreMatchPress(session: GameSession): GameSession {
   const setup = prepareCareerMatch(session);
-  // PRD 36: press conferences are keyed by league matchday; cup pressers come with slice 3.
+  // PRD 36: the assistant holds league pressers only; a cup presser is the manager's (watched tie).
   if (!setup || setup.cup) return session;
   return autoResolvePress(session, "pre", pressMatchContext(setup));
 }

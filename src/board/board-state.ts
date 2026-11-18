@@ -7,6 +7,7 @@ export type BoardObjectiveKind =
   | "min_runway_weeks"
   | "avg_ca_min"
   | "goal_difference_min"
+  | "cup_round_min"
   | "project";
 
 export type BoardProjectId =
@@ -28,6 +29,8 @@ export interface BoardObjective {
   icon: string;
   mandatory?: boolean;
   projectId?: BoardProjectId;
+  /** PRD 36 — `cup_round_min`: the cup whose round `target` (1-based) must be reached. */
+  cupId?: import("../competitions/cup-definition.ts").CupId;
 }
 
 export interface ObjectiveProgress {

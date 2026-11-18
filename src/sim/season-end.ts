@@ -161,6 +161,7 @@ export function runSeasonEnd(
     stadium: session.stadium,
     youthCamps: session.youthCamps,
     weeklyWageBill: weeklyWageBill(session.players, session.clubId),
+    ...(session.cups ? { cups: session.cups } : {}),
   };
   const boardStep = guardSeasonEndEvaluation(
     evaluateSeasonObjectives(

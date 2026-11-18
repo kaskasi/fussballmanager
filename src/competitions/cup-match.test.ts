@@ -102,6 +102,66 @@ describe("the manager's cup tie (PRD 36 slice 2)", () => {
   });
 });
 
+describe("giant-killing (PRD 36 slice 3)", () => {
+  it("reports a cup win over a higher tier and relieves board pressure", async () => {
+    const base = atCupWeek();
+    const own = base.league.player_club_id;
+    const topClub = base.league.league_pools!.meisterliga![0]!;
+    // Put a top-flight club into the manager's R32 tie.
+    const cups = {
+      ...base.cups!,
+      cups: base.cups!.cups.map((cup) =>
+        cup.id !== "regional"
+          ? cup
+          : {
+              ...cup,
+              rounds: cup.rounds.map((round) =>
+                round.round !== 2
+                  ? round
+                  : {
+                      ...round,
+                      ties: round.ties.map((tie) =>
+                        tie.home === own ? { ...tie, away: topClub } : tie.away === own ? { ...tie, home: own, away: topClub } : tie,
+                      ),
+                    },
+              ),
+            },
+      ),
+    };
+    const session = { ...base, cups, board: { ...base.board, pressure: 50 } };
+    // Same week, same result against the drawn same-tier opponent: no upset.
+    const plainSetup = prepareCareerMatch({ ...base, board: { ...base.board, pressure: 50 } })!;
+    const plainOwnHome = plainSetup.homeTeamId === own;
+    const plain = (
+      await simulateGameWeek(
+        { ...base, board: { ...base.board, pressure: 50 } },
+        {
+          homeTeamId: plainSetup.homeTeamId,
+          awayTeamId: plainSetup.awayTeamId,
+          homeGoals: plainOwnHome ? 2 : 1,
+          awayGoals: plainOwnHome ? 1 : 2,
+          matchday: plainSetup.matchday,
+          cup: plainSetup.cup!,
+        },
+      )
+    ).session;
+    const setup = prepareCareerMatch(session)!;
+    expect(setup.awayTeamId).toBe(topClub);
+    const watched: WatchedPlayerMatch = {
+      homeTeamId: own,
+      awayTeamId: topClub,
+      homeGoals: 2,
+      awayGoals: 1,
+      matchday: setup.matchday,
+      cup: setup.cup!,
+    };
+    const next = (await simulateGameWeek(session, watched)).session;
+    expect(next.clubEvents.some((event) => /Cup upset|Pokalsensation/.test(event.message))).toBe(true);
+    expect(plain.clubEvents.some((event) => /Cup upset|Pokalsensation/.test(event.message))).toBe(false);
+    expect(next.board.pressure).toBe(Math.max(0, plain.board.pressure - 5));
+  });
+});
+
 describe("penalty shootout (PRD 36 slice 2)", () => {
   const takers = (side: string) =>
     Array.from({ length: 11 }, (_, index) => ({ id: `${side}${index}`, name: `${side} ${index}` }));

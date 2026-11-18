@@ -1505,3 +1505,6 @@
     height: var(--desk-heatmap-pixel);
   }
 }
+
+/* PRD 36 — next cup tie under the league snippet */
+.manager-desk__cup { margin: var(--space-2) 0 0; color: var(--text-muted); font-size: var(--font-size-xs); line-height: 1rem; }

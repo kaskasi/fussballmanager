@@ -1,4 +1,5 @@
 import { guardInSeasonDismissal } from "../narrative/career-acts.ts";
+import { divisionOfClub, tierOf } from "./league-pyramid.ts";
 import { t } from "../i18n/index.ts";
 import { formatWholeNumber } from "../i18n/number-display.ts";
 import { updateInSeasonPressure } from "../board/season-objectives.ts";
@@ -88,7 +89,7 @@ import { mergeCareerLeagueStats, applyCareerMatchWeek, applyCareerCupMatch } fro
 import { applyRivalMatchdayStats } from "./rival-matchday-stats.ts";
 import { advanceCalendarWeek } from "./game-calendar.ts";
 import { seasonEndWeek, weekForMatchday } from "./season-schedule.ts";
-import { advanceLeagueWeek } from "./league-week.ts";
+import { advanceLeagueWeek, clubShortName } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
 import { announceOwnRetirements, RETIREMENT_ANNOUNCE_MATCHDAY } from "../development/own-retirement.ts";
 import { enqueueRetirementItems } from "../inbox/retirement-inbox.ts";
@@ -189,6 +190,9 @@ export function appendBreakoutNarrativesToEvents(
   }
   return next;
 }
+
+/** PRD 36 — board pressure relief for a cup win against a higher-tier club. */
+const GIANT_KILLING_PRESSURE_RELIEF = 5;
 
 export async function simulateGameWeek(
   sessionInput: GameSession,
@@ -379,7 +383,27 @@ export async function simulateGameWeek(
         "match",
         cupResultMessage(played, session.world.clubs),
       );
-      if (played.tie.result.winner === ownTeamId) cupPrizeIncome += cupPrizeForWin(played.cup, played.key);
+      if (played.tie.result.winner !== ownTeamId) continue;
+      cupPrizeIncome += cupPrizeForWin(played.cup, played.key);
+      // PRD 36 slice 3 — giant-killing: beating a club from a higher tier pleases the board.
+      const opponent = played.tie.home === ownTeamId ? played.tie.away : played.tie.home;
+      const pools = session.league.league_pools ?? {};
+      const ownDivision = divisionOfClub(pools, ownTeamId);
+      const opponentDivision = divisionOfClub(pools, opponent);
+      if (ownDivision && opponentDivision && tierOf(opponentDivision) < tierOf(ownDivision)) {
+        board = { ...board, pressure: Math.max(0, board.pressure - GIANT_KILLING_PRESSURE_RELIEF) };
+        clubEvents = withClubEvent(
+          clubEvents,
+          session.season,
+          nextWeek,
+          "info",
+          t("cup.giantKilling", {
+            cup: t(`cup.name.${played.cup}`),
+            opponent: clubShortName(opponent, session.world.clubs),
+            tiers: tierOf(ownDivision) - tierOf(opponentDivision),
+          }),
+        );
+      }
     }
   }
   if (ownCupTie) {
@@ -652,8 +676,19 @@ export async function simulateGameWeek(
     stadium.restaurant_overtime_week === careerWeekIndex(session.season, nextWeek)
       ? RESTAURANT_OVERTIME_COST
       : 0;
+  // PRD 36 — the gate of a cup tie (not the neutral final) is split 50/50.
+  const cupHostDivision = ownCupTie ? divisionOfClub(session.league.league_pools ?? {}, ownCupTie.tie.home) : undefined;
+  const cupGate =
+    !ownCupTie || ownCupTie.tie.neutral
+      ? undefined
+      : ownCupTie.tie.home === ownTeamId
+        ? ({ home: true } as const)
+        : cupHostDivision
+          ? ({ home: false, hostDivisionId: cupHostDivision } as const)
+          : undefined;
   const financeStep = advanceWeeklyClubFinances(session.finances, {
     cupPrizeIncome,
+    ...(cupGate ? { cupGate } : {}),
     players: playersWithMorale,
     clubId: session.clubId,
     divisionId: session.league.division_id,

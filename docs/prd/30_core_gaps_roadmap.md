@@ -44,7 +44,7 @@ it, so it sits between phases 3 and 5.
 | 2 | League pyramid (5 tiers) + season archive + CA drift | Done (PR #35, #36); national scouting open (PRD 32 §11) | [32](32_league_pyramid.md) | 3–4 | 1 |
 | 3 | Suspensions | Done (PR #38) | [34](34_suspensions.md) | 1 | — |
 | 4 | Season calendar: breaks every season | Done (PR #40) | [35](35_season_calendar.md) | 2–3 | — |
-| 5 | Cups (regional + national) | In progress (slice 2/3) | [36](36_cups.md) | 3 | 3, 4 (2 for national cup entrants) |
+| 5 | Cups (regional + national) | Built (slices 1–3, not merged); extra time open | [36](36_cups.md) | 3 | 3, 4 (2 for national cup entrants) |
 | 6 | In-match management | Not started | — | 2 | — |
 | 7 | Club history and chronicle | Not started | — | 2 | 2, ideally 5 |
 | 8 | Pre-season friendlies | Not started | — | 1 | 4 |
@@ -518,7 +518,7 @@ national cup; the long run passes.
 **Open questions (default):** extra time (default: national cup only, after
 slice 3); cup names (invented).
 
-**Progress:** PRD 36 written. Slice 1 built: cup state, entrants, draws, quick-sim rounds, archive, finalists qualify (SAVE_VERSION 107); long run passes with cup checks. Slice 2 built: the manager's ties through the match flow, kick-by-kick shootout, prize money, per-cup discipline and eligibility, next-event stop at cup weeks; gate split and cup pressers moved to slice 3. Next: slice 3 (bracket UI, calendar, hub, story and press beats, cup objectives, extra time if approved).
+**Progress:** PRD 36 written. Slice 1 built: cup state, entrants, draws, quick-sim rounds, archive, finalists qualify (SAVE_VERSION 107); long run passes with cup checks. Slice 2 built: the manager's ties through the match flow, kick-by-kick shootout, prize money, per-cup discipline and eligibility, next-event stop at cup weeks; gate split and cup pressers moved to slice 3. Slice 3 built: Leagues cup tabs, calendar and hub, cup board objective, giant-killing beat, gate split, cup press conferences. Open: extra time (owner decision: engine or wrapper change under ADR 0003). Next: phase 6 (in-match management) or phase 7 (chronicle, now that cups feed the archive).
 
 ---
 

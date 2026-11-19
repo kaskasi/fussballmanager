@@ -13,6 +13,10 @@ import { LeagueTable, LeagueZoneLegend } from "../components/LeagueTable.tsx";
 import type { WorldClub } from "../../world/world-generator.ts";
 import { useT } from "../../i18n/react.ts";
 import { COACH_TARGET } from "../../tutorial/tutorial-targets.ts";
+import type { CupSeason } from "../../competitions/cup-season.ts";
+import type { CupId } from "../../competitions/cup-definition.ts";
+import type { SeasonArchiveEntry } from "../../sim/season-archive.ts";
+import { CupPanel } from "../components/CupPanel.tsx";
 
 const DIVISIONS: DivisionEconomyId[] = pyramidDivisionIds();
 
@@ -28,6 +32,8 @@ export function LeaguesScreen({
   worldClubs,
   stadium,
   onOpenStadium,
+  cups,
+  seasonArchive = [],
 }: {
   league: LeagueState;
   season: number;
@@ -37,9 +43,15 @@ export function LeaguesScreen({
   worldClubs: readonly WorldClub[];
   stadium: ClubStadium;
   onOpenStadium?: () => void;
+  /** PRD 36 — this season's cups (a tab each behind the divisions). */
+  cups?: CupSeason;
+  seasonArchive?: readonly SeasonArchiveEntry[];
 }) {
   const t = useT();
-  const [divisionId, setDivisionId] = useState<DivisionEconomyId>(league.division_id);
+  const [tab, setTab] = useState<DivisionEconomyId | CupId>(league.division_id);
+  const cupTab = cups?.cups.find((cup) => cup.id === tab);
+  const divisionId: DivisionEconomyId = cupTab ? league.division_id : (tab as DivisionEconomyId);
+  const lastArchive = seasonArchive[seasonArchive.length - 1];
   const [selectedClubId, setSelectedClubId] = useState<TeamId | null>(null);
 
   const standings = useMemo(
@@ -73,15 +85,41 @@ export function LeaguesScreen({
             type="button"
             role="tab"
             className="tc-tab"
-            aria-selected={divisionId === id}
-            onClick={() => setDivisionId(id)}
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
           >
             {t("leagues.tierTab", { tier: tierOf(id), name: divisionLabel(id) })}
             {id === league.division_id ? <span className="tc-tab__meta">{t("leagues.yourClub")}</span> : null}
           </button>
         ))}
+        {cups?.cups.map((cup) => (
+          <button
+            key={cup.id}
+            type="button"
+            role="tab"
+            className="tc-tab"
+            aria-selected={tab === cup.id}
+            onClick={() => setTab(cup.id)}
+          >
+            {t(`cup.name.${cup.id}`)}
+            {cup.entrants.includes(league.player_club_id) ? (
+              <span className="tc-tab__meta">{t("leagues.yourClub")}</span>
+            ) : null}
+          </button>
+        ))}
       </div>
 
+      {cupTab ? (
+        <CupPanel
+          key={cupTab.id}
+          cup={cupTab}
+          holder={lastArchive?.cups?.find((cup) => cup.id === cupTab.id)?.winner ?? null}
+          playerClubId={league.player_club_id}
+          pools={league.league_pools ?? {}}
+          worldClubs={worldClubs}
+          onSelectClub={setSelectedClubId}
+        />
+      ) : (
       <div className="tc-split">
         <section
           className="tc-panel"
@@ -122,6 +160,7 @@ export function LeaguesScreen({
           />
         </aside>
       </div>
+      )}
 
       {selectedClubId ? (
         <ClubProfileModal

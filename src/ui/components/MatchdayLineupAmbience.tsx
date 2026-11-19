@@ -1,4 +1,5 @@
 import type { CareerMatchSetup } from "../../sim/career-match-setup.ts";
+import { matchKicker } from "../../match/match-kicker.ts";
 import type { FanbaseMood } from "../../stadium/fanbase.ts";
 import { useT } from "../../i18n/react.ts";
 import { matchAmbiencePhotoUrl } from "../assets/mood-photos.ts";
@@ -38,7 +39,7 @@ export function MatchdayLineupAmbience({
             <span className="matchday-lineup-dot" aria-hidden="true">
               ●
             </span>
-            {t("match.lineup.matchday", { matchday: setup.matchday })}
+            {matchKicker(setup)}
           </p>
           <h2 className="matchday-lineup-title">
             {t("match.ambience.vsTitle", { side: sideLabel, opponent: setup.opponentShortName })}

@@ -166,6 +166,7 @@ export function financeFlowCategory(kind: FinanceLineKind): FinanceFlowCategory 
     case "tv_rights":
     case "tv_bonus":
     case "league_prize":
+    case "cup_prize":
     case "facility_maintenance":
       return "operations";
     case "player_wages":

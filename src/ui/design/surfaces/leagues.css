@@ -1,0 +1,10 @@
+/* PRD 36 — cup tabs on the Leagues screen (docs/prd/design/09.07-tabellen.md, Pokale) */
+.tc-cup__rounds { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-bottom: var(--space-2); }
+.tc-cup__round-head { margin: 0 0 var(--space-2); }
+.tc-cup__club { display: inline-flex; align-items: baseline; gap: var(--space-1); }
+.tc-cup__club .tc-linkbtn { font-weight: 400; }
+.tc-cup__club .tc-linkbtn.tc-cup__winner { font-weight: 800; }
+.tc-cup__tier { color: var(--text-muted); font-size: var(--font-size-xs); font-variant-numeric: tabular-nums; }
+.tc-cup__run { margin: 0 0 var(--space-3); font-weight: 700; }
+.tc-cup__prize-round { display: inline-flex; align-items: center; gap: var(--space-1); }
+.tc-cup__won { width: 14px; height: 14px; color: var(--positive); }

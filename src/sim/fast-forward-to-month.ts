@@ -89,12 +89,13 @@ export function simulateUntilTarget(
   season: number,
   week: number,
   weekday: number,
+  isEventWeek?: (season: number, week: number) => boolean,
 ): CivilDate {
   if (kind === "next_week") {
     return civilDateFromSession(season, week + 1, MONDAY);
   }
   if (kind === "next_event") {
-    const next = nextEventWeek(season, week);
+    const next = nextEventWeek(season, week, isEventWeek);
     return civilDateFromSession(next.season, next.week, MONDAY);
   }
   const current = civilDateFromSession(season, week, weekday);

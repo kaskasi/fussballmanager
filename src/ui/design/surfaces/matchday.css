@@ -314,3 +314,13 @@ button.tc-stars__card:hover { background: var(--sunken); }
 .lineup-pcard.is-unavailable:hover { border-color: var(--line); }
 .lineup-unavailable { display: inline-flex; align-items: center; gap: 0.2rem; color: var(--negative); font-size: var(--font-size-xs); font-weight: 800; white-space: nowrap; }
 .lineup-unavailable .tc-eventlog__card { width: 7px; height: 10px; }
+
+/* PRD 36 — penalty shootout in the match report: one row per kick, filled = scored */
+.tc-report__shootout { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; font-size: var(--font-size-sm); }
+.tc-report__kick { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); padding: 2px 0; border-bottom: 1px solid var(--line); }
+.tc-report__kick:last-child { border-bottom: 0; }
+.tc-report__kick-side { color: var(--text-muted); font-size: var(--font-size-xs); font-weight: 700; }
+.tc-report__kick-taker { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc-report__kick-mark { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--positive); }
+.tc-report__kick-mark.is-scored { background: var(--positive); }
+.tc-report__kick-mark.is-missed { border-color: var(--negative); background: transparent; }

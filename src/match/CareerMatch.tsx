@@ -1,4 +1,6 @@
 /** WIREFRAME: docs/prd/design.md §9.15 — Matchday live */
+import { matchKicker } from "./match-kicker.ts";
+import { matchCompetition } from "../sim/career-match-setup.ts";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { TacticsMode } from "../narrative/career-presentation.ts";
 import type { BroadcastStoryContext, MatchViewLine, SandboxPlan, Squad } from "@fussballmanager/shared";
@@ -356,7 +358,12 @@ function CareerMatchPlayback({
       const squad = playerClubSquadRef.current;
       const opponentId =
         setup.homeTeamId === setup.playerClubId ? setup.awayTeamId : setup.homeTeamId;
-      const opponentSquad = squadForLeagueClub(opponentId, rivalPlayersRef.current);
+      const opponentSquad = squadForLeagueClub(
+        opponentId,
+        rivalPlayersRef.current,
+        undefined,
+        matchCompetition(setup),
+      );
       if (!opponentSquad) {
         throw new Error(t("match.career.loadRivalFailed"));
       }
@@ -373,7 +380,7 @@ function CareerMatchPlayback({
         ...extra,
       });
     },
-    [setup.seed, setup.homeTeamId, setup.awayTeamId, setup.playerClubId, t],
+    [setup, t],
   );
   const loadViewRef = useRef(loadView);
   loadViewRef.current = loadView;
@@ -675,7 +682,7 @@ function CareerMatchPlayback({
           <div className="tc-stack tc-match__main">
             {view && heroFrame ? (
               <MatchScoreHead
-                kicker={t("match.lineup.matchday", { matchday: setup.matchday })}
+                kicker={matchKicker(setup)}
                 home={view.home.name}
                 away={view.away.name}
                 center={
@@ -692,7 +699,7 @@ function CareerMatchPlayback({
               />
             ) : (
               <MatchScoreHead
-                kicker={t("match.lineup.matchday", { matchday: setup.matchday })}
+                kicker={matchKicker(setup)}
                 home={setup.isHome ? preMatch.playerClubShortName : preMatch.opponentShortName}
                 away={setup.isHome ? preMatch.opponentShortName : preMatch.playerClubShortName}
                 center="–"

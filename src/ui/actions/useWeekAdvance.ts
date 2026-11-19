@@ -1,4 +1,5 @@
 import { isCareerTransitionPending } from "../../narrative/career-acts.ts";
+import { managerCupWeeks } from "../../competitions/cup-lookup.ts";
 import { useCallback, useRef, type MutableRefObject } from "react";
 import { deliverMerchandisingOrders } from "../../economy/merchandising.ts";
 import { t } from "../../i18n/index.ts";
@@ -365,7 +366,17 @@ export function useWeekAdvance(params: UseWeekAdvanceParams) {
   const handleSimulateUntil = useCallback(
     (kind: SimulateUntil) =>
       runFastForward(
-        (snapshot) => simulateUntilTarget(kind, snapshot.season, snapshot.week, snapshot.weekday),
+        (snapshot) => {
+          // PRD 36: stop in the weeks of the manager's cup ties.
+          const cupWeeks = managerCupWeeks(snapshot.cups, snapshot.league.player_club_id);
+          return simulateUntilTarget(
+            kind,
+            snapshot.season,
+            snapshot.week,
+            snapshot.weekday,
+            (season, week) => season === snapshot.season && cupWeeks.has(week),
+          );
+        },
         (steps) => t("shell.simulate.done", { steps: String(steps) }),
         true,
       ),

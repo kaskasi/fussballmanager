@@ -84,7 +84,12 @@ function windowKindOf(week: number): "summer" | "winter" | null {
  * weeks (breaks, free cup weeks) and stops at a league week, the pre-season, the
  * season end, or a week where a transfer window opens or closes.
  */
-export function nextEventWeek(season: number, week: number): { season: number; week: number } {
+export function nextEventWeek(
+  season: number,
+  week: number,
+  /** PRD 36: extra weeks to stop in (the manager's cup ties). */
+  isEventWeek?: (season: number, week: number) => boolean,
+): { season: number; week: number } {
   let s = season;
   let previous = week;
   let next = week + 1;
@@ -93,7 +98,7 @@ export function nextEventWeek(season: number, week: number): { season: number; w
       s += 1;
       next = seasonFirstWeek(s);
     }
-    if (!isQuietWeek(next) || windowKindOf(next) !== windowKindOf(previous)) {
+    if (!isQuietWeek(next) || windowKindOf(next) !== windowKindOf(previous) || isEventWeek?.(s, next)) {
       return { season: s, week: next };
     }
     previous = next;

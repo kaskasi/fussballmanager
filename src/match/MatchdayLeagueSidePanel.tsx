@@ -1,4 +1,5 @@
 /** WIREFRAME: docs/prd/design.md §9.15 — Vorschau rechts: Tabelle + Spieltag */
+import { matchKicker } from "./match-kicker.ts";
 import { useMemo } from "react";
 import { matchdayFixtures, type TeamId } from "@fussballmanager/shared";
 import type { LeagueState } from "../persistence/league-state.ts";
@@ -48,7 +49,7 @@ export function MatchdayLeagueSidePanel({
       <section className="tc-panel tc-match__league">
         <div className="tc-panel__head">
           <div>
-            <p className="tc-label">{t("match.lineup.matchday", { matchday: setup.matchday })}</p>
+            <p className="tc-label">{matchKicker(setup)}</p>
             <h2 className="tc-panel__title">{t("match.leagueSide.tableTitle")}</h2>
           </div>
         </div>

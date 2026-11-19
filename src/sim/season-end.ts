@@ -33,6 +33,7 @@ import { isCampOperational } from "../youth/camp-construction.ts";
 import { evaluateSeasonObjectives, startBoardSeason } from "../board/season-objectives.ts";
 import { standingTierAfterMovement } from "../board/club-standing-tier.ts";
 import { seasonArchiveEntry } from "./season-archive.ts";
+import { createCupSeason, regionalFinalists } from "../competitions/cup-season.ts";
 import { weeklyWageBill } from "../economy/club-finances.ts";
 import { applySeasonEndFinances } from "../economy/club-finances.ts";
 import type { SeasonObjectiveEvaluation } from "../board/board-state.ts";
@@ -160,6 +161,7 @@ export function runSeasonEnd(
     stadium: session.stadium,
     youthCamps: session.youthCamps,
     weeklyWageBill: weeklyWageBill(session.players, session.clubId),
+    ...(session.cups ? { cups: session.cups } : {}),
   };
   const boardStep = guardSeasonEndEvaluation(
     evaluateSeasonObjectives(
@@ -264,8 +266,16 @@ export function runSeasonEnd(
       lastSeasonAwards,
       seasonArchive: [
         ...(session.seasonArchive ?? []),
-        seasonArchiveEntry(endingSeason, leagueNormalized, promotionRelegation, lastSeasonAwards),
+        seasonArchiveEntry(endingSeason, leagueNormalized, promotionRelegation, lastSeasonAwards, session.cups),
       ],
+      // PRD 36 — next season's cups from the new pools; this season's Nordpokal finalists enter the Meisterpokal.
+      cups: createCupSeason({
+        season: session.season,
+        masterSeed: session.masterSeed,
+        pools: leagueAfterMovement.league_pools ?? {},
+        worldClubs: session.world.clubs,
+        regionalFinalists: regionalFinalists(session.cups),
+      }),
       league: resetLeagueSeason(leagueAfterMovement),
       storyState,
     },

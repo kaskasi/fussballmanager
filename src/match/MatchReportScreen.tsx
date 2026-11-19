@@ -1,4 +1,7 @@
 /** WIREFRAME: docs/prd/design.md §9.14 — Spiel Zusammenfassung */
+import { cupShootoutForView } from "../sim/watched-player-match.ts";
+import { matchKicker } from "./match-kicker.ts";
+import { matchCompetition } from "../sim/career-match-setup.ts";
 import { useState } from "react";
 import type { MatchView, PlayerSeasonStat, TeamId } from "@fussballmanager/shared";
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
@@ -48,8 +51,10 @@ export function MatchReportScreen({
   const report = normalized.report;
   const threeStars = pickMatchThreeStars(normalized, report.playerStats);
   const ownTeamId = setup.isHome ? normalized.home.id : normalized.away.id;
+  // PRD 36: a level cup tie is decided on penalties (same seed as the week sim).
+  const shootout = cupShootoutForView(setup, normalized);
   const disciplineNotices = playersById
-    ? projectMatchDisciplineNotices(report.playerStats, playersById, ownTeamId)
+    ? projectMatchDisciplineNotices(report.playerStats, playersById, ownTeamId, matchCompetition(setup))
     : [];
   const [teamTab, setTeamTab] = useState<"home" | "away">(setup.isHome ? "home" : "away");
   const activeTeam = teamTab === "home" ? normalized.home : normalized.away;
@@ -73,11 +78,15 @@ export function MatchReportScreen({
         <div className="tc-stack">
           <MatchScoreHead
             size="lg"
-            kicker={`${t("match.lineup.matchday", { matchday: setup.matchday })} · ${weekdayLabel(weekday)} · ${formatCalendarWeek(week)}`}
+            kicker={`${matchKicker(setup)} · ${weekdayLabel(weekday)} · ${formatCalendarWeek(week)}`}
             home={normalized.home.name}
             away={normalized.away.name}
             center={`${normalized.finalScore.home} : ${normalized.finalScore.away}`}
-            meta={metaLine}
+            meta={
+              shootout
+                ? `${t("cup.result.penalties", { score: `${shootout.score[0]}:${shootout.score[1]}` })} · ${metaLine}`
+                : metaLine
+            }
           />
           <section className="tc-panel" aria-label={t("match.report.goals")}>
             <h2 className="tc-label tc-report__label">{t("match.report.goals")}</h2>
@@ -107,6 +116,31 @@ export function MatchReportScreen({
                 emptyLabel=""
                 ariaLabel={cardsTitle}
               />
+            </section>
+          ) : null}
+          {shootout ? (
+            <section className="tc-panel" aria-label={t("match.report.shootout")}>
+              <h2 className="tc-label tc-report__label">
+                {t("match.report.shootout")} · {shootout.score[0]}:{shootout.score[1]}
+              </h2>
+              <ol className="tc-report__shootout">
+                {shootout.kicks.map((kick, index) => (
+                  <li key={index} className={`tc-report__kick is-${kick.side}`}>
+                    <span className="tc-report__kick-side">
+                      {kick.side === "home" ? normalized.home.shortName : normalized.away.shortName}
+                    </span>
+                    <span className="tc-report__kick-taker">{kick.taker}</span>
+                    <span
+                      className={`tc-report__kick-mark ${kick.scored ? "is-scored" : "is-missed"}`}
+                      title={t(kick.scored ? "match.report.shootout.scored" : "match.report.shootout.missed")}
+                    >
+                      <span className="tc-sr">
+                        {t(kick.scored ? "match.report.shootout.scored" : "match.report.shootout.missed")}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
             </section>
           ) : null}
           {disciplineNotices.length > 0 ? (

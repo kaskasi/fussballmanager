@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { CupSeason } from "../../competitions/cup-season.ts";
 import { planToSessions } from "../../development/training-units.ts";
 import type { TrainingSlot } from "../../development/training-units.ts";
 import type { Player } from "../../types/player.ts";
@@ -61,6 +62,7 @@ import type { YouthCamp } from "../../youth/satellite-camps.ts";
  */
 
 export function PipelineDashboard({
+  cups,
   players,
   season,
   week,
@@ -93,6 +95,8 @@ export function PipelineDashboard({
   youthCamps,
   transferState,
 }: {
+  /** PRD 36 — for the cup board objective. */
+  cups?: CupSeason;
   players: Player[];
   season: number;
   week: number;
@@ -289,6 +293,7 @@ export function PipelineDashboard({
               players={players}
               clubId={clubId}
               youthCamps={youthCamps}
+              cups={cups}
             />
           ) : null}
           <DevelopmentHubPanel movers={developmentMovers} onSelectPlayer={onSelectPlayer} />

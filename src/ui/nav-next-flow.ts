@@ -1,4 +1,5 @@
 import type { GameSession } from "../persistence/game-session.ts";
+import { managerCupTie } from "../competitions/cup-lookup.ts";
 import type { Player } from "../types/player.ts";
 import { pendingInboxItems, type YouthInboxState } from "../youth/decision-inbox.ts";
 import { SATURDAY, type SmartSkipTarget } from "../sim/day-calendar.ts";
@@ -26,13 +27,15 @@ export function hasInboxBlockerForNext(
 /** Kalender-NEXT: Spiel einleiten (Aufstellung), inkl. Fr→Sa in Spielwoche. */
 export function shouldOpenLineupFromCalendar(
   skip: SmartSkipTarget,
-  session: Pick<GameSession, "week" | "matchPlayedThisWeek" | "league">,
+  session: Pick<GameSession, "week" | "matchPlayedThisWeek" | "league" | "cups">,
 ): boolean {
   if (session.league.season_complete) return false;
   if (skip.action === "match") return true;
   if (skip.action !== "advance") return false;
   if (skip.weekday !== SATURDAY) return false;
-  return isLeagueWeek(session.week) && !session.matchPlayedThisWeek;
+  // PRD 36: a cup tie week opens the lineup like a league week.
+  const cupTie = managerCupTie(session.cups, session.week, session.league.player_club_id) != null;
+  return (isLeagueWeek(session.week) || cupTie) && !session.matchPlayedThisWeek;
 }
 
 export function shouldNavigateToCalendarBeforeTimeStep(

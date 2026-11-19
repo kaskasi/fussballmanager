@@ -9,6 +9,7 @@ import {
   type Squad,
   type TeamId,
 } from "@fussballmanager/shared";
+import { LEAGUE_COMPETITION, type CompetitionId } from "../discipline/suspensions.ts";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import { derivedExperienceFactor } from "../development/experience.ts";
@@ -20,11 +21,12 @@ import { templateSquadForClub } from "./league-divisions.ts";
 export function careerPlayerInputs(
   players: readonly Player[],
   clubId: string = DEFAULT_CLUB_ID,
+  competition: CompetitionId = LEAGUE_COMPETITION,
 ): CareerPlayerInput[] {
   return players
     .filter(
       (player) =>
-        player.club_id === clubId && player.squad_status === "pro" && isPlayerMatchEligible(player),
+        player.club_id === clubId && player.squad_status === "pro" && isPlayerMatchEligible(player, competition),
     )
     .map((player) => ({
       id: player.id,
@@ -45,8 +47,9 @@ export function suggestCareerSquad(
   plan: SandboxPlan | FormationId = nordsternSquad.tactics.formation,
   playerClubId: TeamId = nordsternSquad.team.id,
   clubId: string = DEFAULT_CLUB_ID,
+  competition: CompetitionId = LEAGUE_COMPETITION,
 ): Squad | undefined {
-  const input = careerPlayerInputs(players, clubId);
+  const input = careerPlayerInputs(players, clubId, competition);
   if (input.length === 0) return undefined;
 
   const sandbox =

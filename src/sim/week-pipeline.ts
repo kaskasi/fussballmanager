@@ -1,4 +1,5 @@
 import { guardInSeasonDismissal } from "../narrative/career-acts.ts";
+import { divisionOfClub, tierOf } from "./league-pyramid.ts";
 import { t } from "../i18n/index.ts";
 import { formatWholeNumber } from "../i18n/number-display.ts";
 import { updateInSeasonPressure } from "../board/season-objectives.ts";
@@ -84,11 +85,11 @@ import { advanceClubFanbase, weeklyFanbaseDelta } from "../stadium/fanbase.ts";
 import { advanceProTrials } from "../youth/pro-trial.ts";
 import { simulateYouthWeek } from "../youth/youth-sim.ts";
 import { careerStarterIds } from "../match/lineup-board.ts";
-import { mergeCareerLeagueStats, applyCareerMatchWeek } from "./career-match-sync.ts";
+import { mergeCareerLeagueStats, applyCareerMatchWeek, applyCareerCupMatch } from "./career-match-sync.ts";
 import { applyRivalMatchdayStats } from "./rival-matchday-stats.ts";
 import { advanceCalendarWeek } from "./game-calendar.ts";
 import { seasonEndWeek, weekForMatchday } from "./season-schedule.ts";
-import { advanceLeagueWeek } from "./league-week.ts";
+import { advanceLeagueWeek, clubShortName } from "./league-week.ts";
 import { runSeasonEnd } from "./season-end.ts";
 import { announceOwnRetirements, RETIREMENT_ANNOUNCE_MATCHDAY } from "../development/own-retirement.ts";
 import { enqueueRetirementItems } from "../inbox/retirement-inbox.ts";
@@ -144,6 +145,20 @@ import { campNationById, weeklyCampUpkeep } from "../youth/satellite-camps.ts";
 import { advanceYouthCampsForWeek, type CampWeekDebut } from "../youth/camp-construction-week.ts";
 import { scoutNetworkWeeklyWage } from "../scouting/scout-network.ts";
 import {
+  cupStrengthLookup,
+  cupTieKey,
+  hasCupRoundInWeek,
+  managerCupTie,
+  playCupWeek,
+  type PlayedCupTie,
+} from "../competitions/cup-season.ts";
+import { cupPrizeForWin } from "../competitions/cup-definition.ts";
+import { applyRivalCupWeek } from "../competitions/cup-discipline.ts";
+import { watchedCupResult } from "./watched-player-match.ts";
+import { cupResultMessage } from "../competitions/cup-messages.ts";
+import { careerEngineSquadFromPlayers } from "./career-engine-squad.ts";
+import { squadAverageStrength } from "@fussballmanager/shared";
+import {
   applyAssistantDelegationWeek,
   assistantQuality,
 } from "../staff/assistant-delegation.ts";
@@ -175,6 +190,9 @@ export function appendBreakoutNarrativesToEvents(
   }
   return next;
 }
+
+/** PRD 36 — board pressure relief for a cup win against a higher-tier club. */
+const GIANT_KILLING_PRESSURE_RELIEF = 5;
 
 export async function simulateGameWeek(
   sessionInput: GameSession,
@@ -327,7 +345,83 @@ export async function simulateGameWeek(
       disciplineNoticeMessage(notice),
     );
   }
-  players = applyWeeklyFitnessBatch(careerMatch.players, {
+  // PRD 36 — cup rounds of the ending week. The manager's watched tie replaces its quick sim.
+  let cups = session.cups;
+  const ownTeamId = session.league.player_club_id;
+  const ownCupTie = managerCupTie(cups, session.week, ownTeamId);
+  const watchedCup =
+    ownCupTie &&
+    watchedPlayerMatch?.cup?.id === ownCupTie.cup &&
+    watchedPlayerMatch.homeTeamId === ownCupTie.tie.home &&
+    watchedPlayerMatch.awayTeamId === ownCupTie.tie.away
+      ? watchedPlayerMatch
+      : null;
+  let cupPlayed: PlayedCupTie[] = [];
+  let cupPrizeIncome = 0;
+  let playersAfterMatches = careerMatch.players;
+  if (cups && hasCupRoundInWeek(cups, session.week)) {
+    const ownSquad = careerEngineSquadFromPlayers(session.players, ownTeamId);
+    const cupStep = playCupWeek(cups, session.week, {
+      masterSeed: session.masterSeed,
+      pools: session.league.league_pools ?? {},
+      strengthOf: cupStrengthLookup(
+        session.rivalPlayers,
+        ownSquad ? { teamId: ownTeamId, strength: squadAverageStrength(ownSquad) } : undefined,
+      ),
+      ...(watchedCup
+        ? { overrides: new Map([[cupTieKey(watchedCup.homeTeamId, watchedCup.awayTeamId), watchedCupResult(watchedCup)]]) }
+        : {}),
+    });
+    cups = cupStep.state;
+    cupPlayed = cupStep.played;
+    for (const played of cupPlayed) {
+      if (played.tie.home !== ownTeamId && played.tie.away !== ownTeamId) continue;
+      clubEvents = withClubEvent(
+        clubEvents,
+        session.season,
+        nextWeek,
+        "match",
+        cupResultMessage(played, session.world.clubs),
+      );
+      if (played.tie.result.winner !== ownTeamId) continue;
+      cupPrizeIncome += cupPrizeForWin(played.cup, played.key);
+      // PRD 36 slice 3 — giant-killing: beating a club from a higher tier pleases the board.
+      const opponent = played.tie.home === ownTeamId ? played.tie.away : played.tie.home;
+      const pools = session.league.league_pools ?? {};
+      const ownDivision = divisionOfClub(pools, ownTeamId);
+      const opponentDivision = divisionOfClub(pools, opponent);
+      if (ownDivision && opponentDivision && tierOf(opponentDivision) < tierOf(ownDivision)) {
+        board = { ...board, pressure: Math.max(0, board.pressure - GIANT_KILLING_PRESSURE_RELIEF) };
+        clubEvents = withClubEvent(
+          clubEvents,
+          session.season,
+          nextWeek,
+          "info",
+          t("cup.giantKilling", {
+            cup: t(`cup.name.${played.cup}`),
+            opponent: clubShortName(opponent, session.world.clubs),
+            tiers: tierOf(ownDivision) - tierOf(opponentDivision),
+          }),
+        );
+      }
+    }
+  }
+  if (ownCupTie) {
+    const cupMatch = applyCareerCupMatch({
+      players: playersAfterMatches,
+      competition: ownCupTie.cup,
+      masterSeed: session.masterSeed,
+      season: session.season,
+      round: ownCupTie.round,
+      ...(watchedCup?.playerClubStats ? { engineClubStats: watchedCup.playerClubStats } : {}),
+      ...(savedStarters ? { starterIds: savedStarters } : {}),
+    });
+    playersAfterMatches = cupMatch.players;
+    for (const notice of cupMatch.disciplineNotices) {
+      clubEvents = withClubEvent(clubEvents, session.season, nextWeek, "match", disciplineNoticeMessage(notice));
+    }
+  }
+  players = applyWeeklyFitnessBatch(playersAfterMatches, {
     intensity: session.trainingIntensity,
     coachingStaff: session.coachingStaff,
     precinctRegen: precinctFitnessRegen(session.stadium.precinct),
@@ -435,8 +529,10 @@ export async function simulateGameWeek(
   if (trainingPlanNeglected) {
     playersWithMorale = applyTrainingNeglectMorale(playersWithMorale, session.clubId);
   }
+  // PRD 36: a cup home tie is a home matchday (the home side keeps the gate; the final is neutral).
   const isHomeMatchWeek =
-    leagueStep.playerFixture?.homeTeamId === session.league.player_club_id;
+    leagueStep.playerFixture?.homeTeamId === session.league.player_club_id ||
+    (ownCupTie != null && !ownCupTie.tie.neutral && ownCupTie.tie.home === ownTeamId);
   const occupancy = weekCommerceOccupancy(
     isHomeMatchWeek,
     session.stadium,
@@ -559,10 +655,11 @@ export async function simulateGameWeek(
   academyFacility = construction.academyFacility;
   academyProject = construction.academyProject;
   clubEvents = construction.clubEvents;
-  const opponentId =
-    isHomeMatchWeek && leagueStep.playerFixture
+  const opponentId = !isHomeMatchWeek
+    ? null
+    : leagueStep.playerFixture
       ? leagueStep.playerFixture.awayTeamId
-      : null;
+      : (ownCupTie?.tie.away ?? null);
   const ownFans = stadium.fanbase ?? DEFAULT_FANBASE;
   const hotelOcc = hotelOccupancyPct(
     ownFans,
@@ -579,7 +676,19 @@ export async function simulateGameWeek(
     stadium.restaurant_overtime_week === careerWeekIndex(session.season, nextWeek)
       ? RESTAURANT_OVERTIME_COST
       : 0;
+  // PRD 36 — the gate of a cup tie (not the neutral final) is split 50/50.
+  const cupHostDivision = ownCupTie ? divisionOfClub(session.league.league_pools ?? {}, ownCupTie.tie.home) : undefined;
+  const cupGate =
+    !ownCupTie || ownCupTie.tie.neutral
+      ? undefined
+      : ownCupTie.tie.home === ownTeamId
+        ? ({ home: true } as const)
+        : cupHostDivision
+          ? ({ home: false, hostDivisionId: cupHostDivision } as const)
+          : undefined;
   const financeStep = advanceWeeklyClubFinances(session.finances, {
+    cupPrizeIncome,
+    ...(cupGate ? { cupGate } : {}),
     players: playersWithMorale,
     clubId: session.clubId,
     divisionId: session.league.division_id,
@@ -665,6 +774,7 @@ export async function simulateGameWeek(
       leagueStep.league.player_club_id,
     );
   }
+  rivalPlayers = applyRivalCupWeek(rivalPlayers, cupPlayed, watchedCup?.fixtureStats ?? [], ownTeamId);
   const rivalBreakouts = processWeeklyBreakoutChecks(
     rivalPlayers,
     nextWeek,
@@ -960,6 +1070,7 @@ export async function simulateGameWeek(
     scoutBoard,
     youthInbox: financingOfferStep.youthInbox,
     league: leagueWithCareerStats,
+    ...(cups ? { cups } : {}),
       finances,
       financing: financingAfterLoans,
       stadium: stadiumAfterNaming,

@@ -8,6 +8,7 @@ import type { LeagueState } from "../persistence/league-state.ts";
 import { PYRAMID, type DivisionId } from "./league-pyramid.ts";
 import type { PromotionRelegationResult } from "./promotion-relegation.ts";
 import type { SeasonAwardsSnapshot } from "./season-awards.ts";
+import { archiveCups, type ArchiveCup, type CupSeason } from "../competitions/cup-season.ts";
 
 /** `[teamId, played, won, drawn, lost, goalsFor, goalsAgainst, points]`. */
 export type ArchiveTableRow = [TeamId, number, number, number, number, number, number, number];
@@ -30,6 +31,8 @@ export interface SeasonArchiveEntry {
   /** `[kind, playerId, clubId, value]`. */
   awards: [string, string, string, number][];
   own: { division: DivisionId; place: number; points: number; results: ArchiveResult[] };
+  /** PRD 36 — both domestic cups (seasons from SAVE_VERSION 107 on). */
+  cups?: ArchiveCup[];
 }
 
 function divisionResults(league: LeagueState, divisionId: DivisionId): FixtureResult[] {
@@ -42,6 +45,7 @@ export function seasonArchiveEntry(
   league: LeagueState,
   movement: Pick<PromotionRelegationResult, "movements" | "playoffs">,
   awards?: SeasonAwardsSnapshot,
+  cups?: CupSeason,
 ): SeasonArchiveEntry {
   const divisions = PYRAMID.map((division): ArchiveDivision => {
     const clubIds = league.league_pools?.[division.id] ?? [];
@@ -87,5 +91,6 @@ export function seasonArchiveEntry(
       points: ownTable[ownIndex]?.points ?? 0,
       results: ownResults,
     },
+    ...(cups ? { cups: archiveCups(cups) } : {}),
   };
 }

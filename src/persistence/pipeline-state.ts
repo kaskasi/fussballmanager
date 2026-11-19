@@ -1,4 +1,5 @@
 import type { SeasonArchiveEntry } from "../sim/season-archive.ts";
+import type { CupSeason } from "../competitions/cup-season.ts";
 import { defaultBoardState, type BoardState } from "../board/board-state.ts";
 import { startBoardSeason } from "../board/season-objectives.ts";
 import { defaultLeagueState } from "./league-state.ts";
@@ -78,6 +79,8 @@ export interface PipelineState {
   last_season_awards?: SeasonAwardsSnapshot;
   /** PRD 32 §8 — one entry per finished season. */
   season_archive?: SeasonArchiveEntry[];
+  /** PRD 36 — this season's domestic cups. */
+  cups?: CupSeason;
   /** PRD 13 — relegation narrative slice state. */
   story_state?: StoryState;
   /** F8.5 — per-task assistant auto-delegation. */

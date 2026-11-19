@@ -1,4 +1,7 @@
 /** WIREFRAME: design.md §9.9 — Manager Desk hub (PRD 14.15) */
+import { nextCupFixture } from "../../competitions/cup-run.ts";
+import { cupRunText } from "../cup-run-text.ts";
+import { clubShortName } from "../../sim/league-week.ts";
 import { useMemo, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import type { CalendarMilestone } from "../calendar/calendar-milestones.ts";
@@ -108,6 +111,12 @@ export function ManagerDeskHub({
   const curtainLinks = curtainLinkTargets(resolveFeatureCurtain(session.storyState));
   const merchDesk = useMemo(() => buildHubMerchDeskView(stadium), [stadium]);
   const leagueSnippet = useMemo(() => hubLeagueSnippet(league), [league]);
+  // PRD 36: the manager's next cup tie under the league snippet.
+  const cupLine = useMemo(() => {
+    const next = nextCupFixture(session.cups, league.player_club_id);
+    if (!next) return null;
+    return `${t(`cup.name.${next.cup}`)}: ${cupRunText(next, (teamId) => clubShortName(teamId, session.world.clubs))}`;
+  }, [session.cups, session.world.clubs, league.player_club_id, t]);
   const developmentMovers = useMemo(
     () => listDevelopmentMovers(players, clubId, 3, devPeriod),
     [players, clubId, devPeriod],
@@ -193,6 +202,7 @@ export function ManagerDeskHub({
               players={players}
               clubId={clubId}
               youthCamps={postfach.youthCamps}
+              cups={session.cups}
             />
           ) : null}
           {wildcard === "league" ? (
@@ -215,6 +225,7 @@ export function ManagerDeskHub({
                   ))}
                 </tbody>
               </table>
+              {cupLine ? <p className="manager-desk__cup">{cupLine}</p> : null}
             </div>
           ) : null}
         </div>

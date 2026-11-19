@@ -22,6 +22,7 @@ const ICONS: Record<FinanceLineKind, LucideIcon> = {
   tv_bonus: Tv,
   matchday_tickets: Ticket,
   league_prize: Trophy,
+  cup_prize: Trophy,
   player_sale: Wallet,
   player_wages: Shirt,
   staff_wages: UserCog,

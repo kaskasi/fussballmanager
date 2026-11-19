@@ -54,6 +54,14 @@ export interface WeeklyFinanceContext {
   /** Express-Nachkäufe des Merchandising-Experten dieser Woche. */
   merchRestockCost?: number;
   hospitalityIncome?: number;
+  /** PRD 36 — prize money for cup rounds won this week. */
+  cupPrizeIncome?: number;
+  /**
+   * PRD 36 — a cup tie this week: the gate is split 50/50. Home: half of our
+   * own gate. Away: half of the host's gate, estimated from its division's
+   * stadium defaults.
+   */
+  cupGate?: { home: true } | { home: false; hostDivisionId: DivisionEconomyId };
   overtimeCost?: number;
   commerceOccupancy?: number;
   /** Set after advanceMerchandisingWeek in pipeline (stock already sold). */
@@ -135,6 +143,9 @@ export function wageBudgetStatus(
   return "good";
 }
 
+/** PRD 36 — each club's share of a cup tie's gate. */
+export const CUP_GATE_SHARE = 0.5;
+
 export function matchdayTicketIncome(
   divisionId: DivisionEconomyId,
   isHomeMatch: boolean,
@@ -174,7 +185,7 @@ export function applyFinanceLines(
   let next = finances;
   for (const line of lines) {
     next = applyCashLine(next, line);
-    if (line.amount > 0 && (line.kind === "league_prize" || line.kind === "tv_bonus")) {
+    if (line.amount > 0 && (line.kind === "league_prize" || line.kind === "cup_prize" || line.kind === "tv_bonus")) {
       next = applyTransferPoolIncome(next, line.amount);
     }
   }
@@ -216,13 +227,20 @@ export function buildWeeklyFinanceLines(
     },
     { kind: "facility_maintenance", amount: -perWeek(economy.maintenance_weekly), week },
   ];
-  const tickets = matchdayTicketIncome(
-    context.divisionId,
-    context.isHomeMatchWeek,
-    context.stadium,
-    context.season,
-    context.week,
-  );
+  const tickets = context.cupGate
+    ? Math.round(
+        CUP_GATE_SHARE *
+          (context.cupGate.home
+            ? matchdayTicketIncome(context.divisionId, true, context.stadium, context.season, context.week)
+            : matchdayTicketIncome(context.cupGate.hostDivisionId, true)),
+      )
+    : matchdayTicketIncome(
+        context.divisionId,
+        context.isHomeMatchWeek,
+        context.stadium,
+        context.season,
+        context.week,
+      );
   if (tickets > 0) {
     lines.push({ kind: "matchday_tickets", amount: tickets, week });
   }
@@ -266,6 +284,9 @@ export function buildWeeklyFinanceLines(
   }
   if ((context.merchRestockCost ?? 0) > 0) {
     lines.push({ kind: "merchandising", amount: -context.merchRestockCost!, week });
+  }
+  if ((context.cupPrizeIncome ?? 0) > 0) {
+    lines.push({ kind: "cup_prize", amount: Math.round(context.cupPrizeIncome!), week });
   }
   if ((context.overtimeCost ?? 0) > 0) {
     lines.push({ kind: "other", amount: -context.overtimeCost!, week });

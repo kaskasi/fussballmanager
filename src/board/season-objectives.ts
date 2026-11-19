@@ -1,4 +1,8 @@
 import { NORDSTERN_ID, type TeamId } from "@fussballmanager/shared";
+import { tierOf } from "../sim/league-pyramid.ts";
+import type { CupSeason } from "../competitions/cup-season.ts";
+import { cupRoundReached } from "../competitions/cup-run.ts";
+import { cupRoundCount, cupRoundKey, type CupId } from "../competitions/cup-definition.ts";
 import { leagueTablePlace, type ClubFinances } from "../economy/club-finances.ts";
 import { weeksOfWages } from "../economy/spend-runway.ts";
 import { weeklyMerchandisingEconomics } from "../economy/merchandising.ts";
@@ -103,12 +107,47 @@ function projectObjective(projectId: BoardProjectId, season: number): BoardObjec
   }
 }
 
+/** PRD 36 — German round names for the code-side labels (display goes through i18n). */
+const CUP_ROUND_LABEL_DE: Record<string, string> = {
+  prelim: "Vorrunde",
+  r64: "1. Runde",
+  r32: "Runde der letzten 32",
+  r16: "Achtelfinale",
+  qf: "Viertelfinale",
+  sf: "Halbfinale",
+  final: "Finale",
+};
+
+/**
+ * PRD 36 — a bonus cup objective: tiers 1–3 play the Meisterpokal, tiers 4–5
+ * the Nordpokal. Survival tiers aim for the second round of the bracket,
+ * stronger clubs for one round further.
+ */
+function cupObjective(tier: ClubStandingTier, pyramidTier: number, season: number): BoardObjective {
+  const cupId: CupId = pyramidTier <= 3 ? "national" : "regional";
+  const ambitious = tier === "upper_half" || tier === "ambition";
+  // Regional round 1 is the preliminary round, so its bracket starts one round later.
+  const target = (cupId === "regional" ? 3 : 2) + (ambitious ? 1 : 0);
+  const suffix = season > 1 ? ` (S${season})` : "";
+  const cupName = cupId === "regional" ? "Nordpokal" : "Meisterpokal";
+  return {
+    id: "cup_round",
+    kind: "cup_round_min",
+    target,
+    cupId,
+    mandatory: false,
+    label: `${cupName} — ${CUP_ROUND_LABEL_DE[cupRoundKey(cupId, target)]} erreichen${suffix}`,
+    icon: "trophy",
+  };
+}
+
 function objectivesForTier(
   tier: ClubStandingTier,
   employerClubId: TeamId,
   season: number,
   baselines: BoardSeasonBaselines,
   projectId: BoardProjectId,
+  pyramidTier = 4,
 ): BoardObjective[] {
   const suffix = season > 1 ? ` (S${season})` : "";
   const survivalTarget = survivalPlaceTarget();
@@ -205,6 +244,7 @@ function objectivesForTier(
       break;
   }
 
+  objectives.push(cupObjective(tier, pyramidTier, season));
   objectives.push(projectObjective(projectId, season));
   return objectives;
 }
@@ -215,6 +255,8 @@ export interface BoardProgressContext {
   stadium: GameSession["stadium"];
   youthCamps: GameSession["youthCamps"];
   weeklyWageBill: number;
+  /** PRD 36 — this season's cups, for `cup_round_min`. */
+  cups?: CupSeason;
 }
 
 export function generateSeasonObjectives(
@@ -227,7 +269,7 @@ export function generateSeasonObjectives(
 ): BoardObjective[] {
   const tier = tierOverride ?? clubStandingTier(league, employerClubId);
   const projectId = pickProjectId(hashString(`${masterSeed}:${employerClubId}:${season}:project`));
-  return objectivesForTier(tier, employerClubId, season, baselines, projectId);
+  return objectivesForTier(tier, employerClubId, season, baselines, projectId, tierOf(league.division_id));
 }
 
 export function startBoardSeason(
@@ -365,6 +407,10 @@ export function objectiveProgress(
     case "avg_ca_min": {
       const avg = ctx ? squadAvgCa(ctx.players, ctx.clubId) : 0;
       return { objectiveId: objective.id, current: avg, met: avg >= objective.target };
+    }
+    case "cup_round_min": {
+      const reached = objective.cupId ? cupRoundReached(ctx?.cups, objective.cupId, league.player_club_id) : 0;
+      return { objectiveId: objective.id, current: reached, met: reached >= objective.target };
     }
     case "goal_difference_min": {
       const gf = row?.goalsFor ?? 0;
@@ -567,7 +613,21 @@ export function formatObjectiveProgress(
       return `Ø ${progress.current}`;
     case "goal_difference_min":
       return progress.current > 0 ? `+${progress.current}` : String(progress.current);
+    case "cup_round_min":
+      return cupRoundProgressLabel(objective, progress.current, (key) => CUP_ROUND_LABEL_DE[key] ?? key);
     case "project":
       return objective.projectId === "merch_revenue" ? `${progress.current}%` : String(progress.current);
   }
+}
+
+/** Furthest round reached as a label: "—" before the first tie, the cup's round name, or the winner label. */
+export function cupRoundProgressLabel(
+  objective: BoardObjective,
+  reached: number,
+  roundName: (key: string) => string,
+  winnerLabel = "Pokalsieger",
+): string {
+  if (!objective.cupId || reached <= 0) return "—";
+  if (reached > cupRoundCount(objective.cupId)) return winnerLabel;
+  return roundName(cupRoundKey(objective.cupId, reached));
 }

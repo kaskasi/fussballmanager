@@ -1,4 +1,6 @@
 import type { BoardObjective, ObjectiveProgress } from "../board/board-state.ts";
+import { cupRoundProgressLabel } from "../board/season-objectives.ts";
+import { cupRoundKey } from "../competitions/cup-definition.ts";
 import { SURVIVAL_TARGET_PLACE } from "../narrative/season-objectives.ts";
 import { t } from "./index.ts";
 
@@ -26,6 +28,14 @@ export function objectiveDisplayLabel(objective: BoardObjective, season: number)
       return t("board.objective.avgCa", { target: objective.target, suffix });
     case "goal_difference_min":
       return t("board.objective.goalDiff", { suffix });
+    case "cup_round_min":
+      return objective.cupId
+        ? t("board.objective.cupRound", {
+            cup: t(`cup.name.${objective.cupId}`),
+            round: t(`cup.round.${cupRoundKey(objective.cupId, objective.target)}`),
+            suffix,
+          })
+        : objective.label;
     case "project":
       switch (objective.projectId) {
         case "merch_revenue":
@@ -64,6 +74,8 @@ export function formatObjectiveProgressDisplay(
       return progress.current > 0
         ? t("board.progress.goalDiffPlus", { value: progress.current })
         : String(progress.current);
+    case "cup_round_min":
+      return cupRoundProgressLabel(objective, progress.current, (key) => t(`cup.round.${key}`), t("cup.run.winner"));
     case "project":
       return objective.projectId === "merch_revenue"
         ? t("board.progress.percent", { value: progress.current })

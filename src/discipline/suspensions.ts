@@ -179,12 +179,13 @@ export function projectMatchDisciplineNotices(
   rows: readonly (MatchCards & { playerId: string; teamId: string })[],
   playersById: ReadonlyMap<string, Player>,
   ownTeamId: string,
+  competition: CompetitionId = LEAGUE_COMPETITION,
 ): DisciplineNotice[] {
   const notices: DisciplineNotice[] = [];
   for (const row of rows) {
     const player = playersById.get(String(row.playerId));
     if (!player) continue;
-    const notice = disciplineNotice(player, applyMatchCards(player, row));
+    const notice = disciplineNotice(player, applyMatchCards(player, row, competition));
     if (notice && (row.teamId === ownTeamId || notice.banMatches > 0)) notices.push(notice);
   }
   return notices;

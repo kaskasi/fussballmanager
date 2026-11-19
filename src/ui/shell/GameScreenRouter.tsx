@@ -265,6 +265,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
         ) : (
           <PipelineDashboard
             key={save.manifest.created}
+            cups={session.cups}
             players={players}
             season={season}
             week={week}
@@ -663,6 +664,8 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           worldClubs={world.clubs}
           stadium={stadium}
           onOpenStadium={openStadium}
+          cups={session.cups}
+          seasonArchive={session.seasonArchive}
         />
       ) : null}
       {screen === "stadium" ? (
@@ -701,6 +704,7 @@ export function GameScreenRouter(props: GameScreenRouterProps) {
           week={week}
           weekday={weekday}
           league={league}
+          cups={session.cups}
           milestones={calendarMilestones}
           scoutBoard={scoutBoard}
           transfers={transferState.history ?? []}

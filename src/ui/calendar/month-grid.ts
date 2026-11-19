@@ -1,4 +1,7 @@
 import { LEAGUE_MATCHDAYS, slotKind, type SeasonSlotKind, weekForMatchday } from "../../sim/season-schedule.ts";
+import type { TeamId } from "@fussballmanager/shared";
+import type { CupSeason } from "../../competitions/cup-season.ts";
+import type { CupId, CupRoundKey } from "../../competitions/cup-definition.ts";
 import { SATURDAY, SUNDAY } from "../../sim/day-calendar.ts";
 import {
   calendarGridYear,
@@ -45,6 +48,8 @@ export interface CalendarMonthCell {
     home: boolean;
     matchday: number;
     result?: PlayerMatch["result"];
+    /** PRD 36 — set on the manager's cup tie. */
+    cup?: { id: CupId; key: CupRoundKey };
   };
   milestones?: CalendarMilestoneView[];
   milestoneOverflow?: number;
@@ -69,15 +74,47 @@ function leagueMatchSaturdays(season: number): Map<string, number> {
   return map;
 }
 
+interface CupSaturday {
+  cup: { id: CupId; key: CupRoundKey };
+  opponentId: TeamId;
+  home: boolean;
+  result?: PlayerMatch["result"];
+}
+
+/** Civil Saturday → the manager's cup tie on it (PRD 36). */
+function managerCupSaturdays(season: number, teamId: TeamId, cups?: CupSeason): Map<string, CupSaturday> {
+  const map = new Map<string, CupSaturday>();
+  if (!cups || cups.season !== season) return map;
+  for (const cup of cups.cups) {
+    for (const round of cup.rounds) {
+      const tie = round.ties.find((entry) => entry.home === teamId || entry.away === teamId);
+      if (!tie) continue;
+      const home = tie.home === teamId;
+      const sat = civilDateFromSession(season, round.week, SATURDAY);
+      const entry: CupSaturday = { cup: { id: cup.id, key: round.key }, opponentId: home ? tie.away : tie.home, home };
+      if (tie.result) {
+        const goalsFor = home ? tie.result.homeGoals : tie.result.awayGoals;
+        const goalsAgainst = home ? tie.result.awayGoals : tie.result.homeGoals;
+        // A shootout decides the tie: the calendar shows who went through.
+        entry.result = { goalsFor, goalsAgainst, outcome: tie.result.winner === teamId ? "win" : "loss" };
+      }
+      map.set(civilDateKey(sat.year, sat.monthIndex, sat.day), entry);
+    }
+  }
+  return map;
+}
+
 export function buildMonthGrid(
   season: number,
   monthIndex: number,
   league: LeagueState,
   today?: { week: number; weekday: number },
   milestones: readonly CalendarMilestone[] = [],
+  cups?: CupSeason,
 ): CalendarMonthCell[] {
   const year = calendarGridYear(season, monthIndex);
   const matchSaturdays = leagueMatchSaturdays(season);
+  const cupSaturdays = managerCupSaturdays(season, league.player_club_id, cups);
   const first = new Date(year, monthIndex, 1);
   const startPad = (first.getDay() + 6) % 7;
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
@@ -92,7 +129,22 @@ export function buildMonthGrid(
     const matchday = matchSaturdays.get(civilDateKey(year, monthIndex, day));
     let match: CalendarMonthCell["match"];
     const fixture = matchday ? playerMatch(league, matchday) : undefined;
-    if (fixture) {
+    const cupMatch = cupSaturdays.get(civilDateKey(year, monthIndex, day));
+    if (cupMatch) {
+      match = {
+        label: t("calendar.match.cup", {
+          cup: t(`cup.name.${cupMatch.cup.id}`),
+          club: clubDisplayName(cupMatch.opponentId),
+        }),
+        initials: clubShortName(cupMatch.opponentId).slice(0, 2).toUpperCase(),
+        clubId: cupMatch.opponentId,
+        short: clubShortName(cupMatch.opponentId),
+        home: cupMatch.home,
+        matchday: 0,
+        ...(cupMatch.result ? { result: cupMatch.result } : {}),
+        cup: cupMatch.cup,
+      };
+    } else if (fixture) {
       match = {
         label: t(fixture.home ? "calendar.match.home" : "calendar.match.away", {
           club: clubDisplayName(fixture.opponentId),

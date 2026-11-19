@@ -6,7 +6,7 @@ import { useT } from "../i18n/react.ts";
 import { LineupFatigueBars } from "./LineupFatigueBars.tsx";
 import { LineupFormValue } from "./LineupFormValue.tsx";
 import { matchPlayerWeakFoot } from "./player-match-icons.ts";
-import { competitionDiscipline } from "../discipline/suspensions.ts";
+import { LEAGUE_COMPETITION, competitionDiscipline, type CompetitionId } from "../discipline/suspensions.ts";
 
 export interface LineupStatusView {
   careerForm: number;
@@ -18,9 +18,12 @@ export interface LineupStatusView {
   unavailable?: { kind: "suspended" | "injured"; count: number };
 }
 
-export function lineupStatusFromPlayer(player: Player): LineupStatusView {
+export function lineupStatusFromPlayer(
+  player: Player,
+  competition: CompetitionId = LEAGUE_COMPETITION,
+): LineupStatusView {
   const weakFoot = matchPlayerWeakFoot(player);
-  const banMatches = competitionDiscipline(player).ban_matches;
+  const banMatches = competitionDiscipline(player, competition).ban_matches;
   const injury = player.state.injury;
   const unavailable =
     banMatches > 0

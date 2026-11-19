@@ -1,4 +1,5 @@
 import type { Squad } from "@fussballmanager/shared";
+import { matchCompetition } from "../sim/career-match-setup.ts";
 import type { Player } from "../types/player.ts";
 import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
 import { squadForLeagueClub } from "../sim/league-divisions.ts";
@@ -31,6 +32,7 @@ export function resolveCareerMatchSquads(input: {
     input.players,
     fallbackPlan,
     managerClubId,
+    matchCompetition(input.setup),
   );
   const playerClubSquad = buildSquadFromAssignments(
     input.players,
@@ -38,6 +40,7 @@ export function resolveCareerMatchSquads(input: {
     normalized.assignments,
     input.setup.playerClubId,
     managerClubId,
+    matchCompetition(input.setup),
   );
   if (!playerClubSquad) return null;
 
@@ -45,7 +48,7 @@ export function resolveCareerMatchSquads(input: {
     input.setup.homeTeamId === input.setup.playerClubId
       ? input.setup.awayTeamId
       : input.setup.homeTeamId;
-  const opponentSquad = squadForLeagueClub(opponentId, input.rivalPlayers);
+  const opponentSquad = squadForLeagueClub(opponentId, input.rivalPlayers, undefined, matchCompetition(input.setup));
   if (!opponentSquad) return null;
 
   const homeSquad =

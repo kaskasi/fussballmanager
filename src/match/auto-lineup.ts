@@ -1,4 +1,5 @@
 import { getFormation, type FormationId, type FormationSlotId } from "@fussballmanager/shared";
+import { LEAGUE_COMPETITION, type CompetitionId } from "../discipline/suspensions.ts";
 import { DEFAULT_CLUB_ID } from "../persistence/game-session.ts";
 import { estimateCa } from "../transfers/market-value.ts";
 import { isPlayerMatchEligible } from "../development/injury-roll.ts";
@@ -41,8 +42,9 @@ export function autoLineupAssignments(
   formation: FormationId,
   mode: AutoLineupMode,
   managerClubId: string = DEFAULT_CLUB_ID,
+  competition: CompetitionId = LEAGUE_COMPETITION,
 ): LineupAssignments {
-  const pool = proSquad(players, managerClubId);
+  const pool = proSquad(players, managerClubId, competition);
   if (pool.length === 0) return {};
 
   const ranked = rankPool(pool, mode);
@@ -59,12 +61,12 @@ export function autoLineupAssignments(
   return assignments;
 }
 
-function proSquad(players: readonly Player[], managerClubId: string): Player[] {
+function proSquad(players: readonly Player[], managerClubId: string, competition: CompetitionId): Player[] {
   return players.filter(
     (player) =>
       player.club_id === managerClubId &&
       player.squad_status === "pro" &&
-      isPlayerMatchEligible(player),
+      isPlayerMatchEligible(player, competition),
   );
 }
 

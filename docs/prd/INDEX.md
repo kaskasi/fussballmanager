@@ -47,6 +47,7 @@ One line per doc, so agents open only what a task needs.
 | [33_engine_library](33_engine_library.md) | Match engine as a deterministic library: core, attribute schemas, event pitch, text and voice commentary, licensing, platforms (ADR 0007, 0008) |
 | [34_suspensions](34_suspensions.md) | PRD 30 phase 3: yellow-card tallies, bans per competition, eligibility |
 | [35_season_calendar](35_season_calendar.md) | PRD 30 phase 4: 52-week season template (breaks, cup weeks), `SeasonSchedule`, per-week rate scaling, day-index migration |
+| [36_cups](36_cups.md) | PRD 30 phase 5: Nordpokal (tiers 4–5) and Meisterpokal (national), cup weeks, draws, ties, archive |
 | [design.md](design.md) | Visual language: tokens, type, icons, header, layout, Definition of Done |
 | [design/](design/) | Per-screen wireframes, `09.NN-<screen>.md` (design.md §9.NN) |
 | [PRD.md](PRD.md) | Archived original vision; §4 scope table (in/out of v1) |

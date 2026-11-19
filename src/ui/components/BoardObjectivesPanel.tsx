@@ -1,4 +1,5 @@
 import type { ClubFinances } from "../../economy/club-finances.ts";
+import type { CupSeason } from "../../competitions/cup-season.ts";
 import type { LeagueState } from "../../persistence/league-state.ts";
 import { boardObjectiveProgress, boardPressureTone } from "../../board/season-objectives.ts";
 import { weeklyWageBill } from "../../economy/club-finances.ts";
@@ -26,6 +27,7 @@ export function BoardObjectivesPanel({
   clubId = "",
   stadium,
   youthCamps = [],
+  cups,
 }: {
   board: BoardState;
   league: LeagueState;
@@ -34,6 +36,8 @@ export function BoardObjectivesPanel({
   players?: readonly Player[];
   clubId?: string;
   stadium?: ClubStadium;
+  /** PRD 36 — for the cup objective. */
+  cups?: CupSeason;
   youthCamps?: readonly YouthCamp[];
 }) {
   useT();
@@ -44,6 +48,7 @@ export function BoardObjectivesPanel({
     stadium: stadium ?? { name: "", blocks: [] },
     youthCamps: [...youthCamps],
     weeklyWageBill: weeklyWageBill(players, clubId),
+    ...(cups ? { cups } : {}),
   });
   const tone = boardPressureTone(board.pressure);
   const employer = clubShortName(board.employer_club_id);

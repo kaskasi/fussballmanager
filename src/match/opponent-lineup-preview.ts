@@ -11,10 +11,15 @@ import type { Player } from "../types/player.ts";
 import { formatPlayerName } from "../types/player-display.ts";
 import { squadForLeagueClub } from "../sim/league-divisions.ts";
 import { indexRivalRoster, resolveCareerPlayer } from "../sim/rival-roster-match.ts";
-import type { CareerMatchSetup } from "../sim/career-match-setup.ts";
+import { matchCompetition, type CareerMatchSetup } from "../sim/career-match-setup.ts";
 import { rivalPlayersForTeam } from "../sim/rival-engine-squad.ts";
 import { estimateCa } from "../transfers/market-value.ts";
-import { competitionDiscipline, isSuspended } from "../discipline/suspensions.ts";
+import {
+  LEAGUE_COMPETITION,
+  competitionDiscipline,
+  isSuspended,
+  type CompetitionId,
+} from "../discipline/suspensions.ts";
 import {
   lineupFormFromCareer,
   lineupFormFromEngineForm,
@@ -68,6 +73,7 @@ export function previewFromSquad(
   teamShortName: string,
   opponentSide: "home" | "away",
   rivalRoster: readonly Player[] = [],
+  competition: CompetitionId = LEAGUE_COMPETITION,
 ): OpponentLineupPreview {
   const formation = squad.tactics.formation;
   const slots = getFormation(formation);
@@ -105,7 +111,7 @@ export function previewFromSquad(
   });
 
   const suspended = rivalRoster
-    .filter((player) => isSuspended(player))
+    .filter((player) => isSuspended(player, competition))
     .sort(
       (left, right) =>
         estimateCa(right.attributes, right.position) - estimateCa(left.attributes, left.position),
@@ -113,7 +119,7 @@ export function previewFromSquad(
     .map((player) => ({
       playerId: player.id,
       name: formatPlayerName(player),
-      matches: competitionDiscipline(player).ban_matches,
+      matches: competitionDiscipline(player, competition).ban_matches,
     }));
 
   return {
@@ -129,8 +135,9 @@ export function buildOpponentLineupPreview(
   rivalPlayers: readonly Player[],
 ): OpponentLineupPreview | null {
   const opponentId: TeamId = setup.isHome ? setup.awayTeamId : setup.homeTeamId;
-  const squad = squadForLeagueClub(opponentId, rivalPlayers);
+  const competition = matchCompetition(setup);
+  const squad = squadForLeagueClub(opponentId, rivalPlayers, undefined, competition);
   if (!squad) return null;
   const roster = rivalPlayersForTeam(rivalPlayers, opponentId);
-  return previewFromSquad(squad, setup.opponentShortName, pitchSide(!setup.isHome), roster);
+  return previewFromSquad(squad, setup.opponentShortName, pitchSide(!setup.isHome), roster, competition);
 }
